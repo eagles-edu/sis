@@ -1,0 +1,1344 @@
+{
+  "extractedAt": "2026-02-24T18:23:51.601Z",
+  "wrapperId": "cf_3",
+  "formId": "cf3",
+  "fieldGroupsTotal": 80,
+  "fieldInputsTotal": 55,
+  "requiredFieldInputsTotal": 35,
+  "fields": [
+    {
+      "sourceOrder": 0,
+      "key": 2,
+      "keyRaw": "2",
+      "dataName": "heading_2",
+      "label": "Hình thức thành viên",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 1,
+      "key": 3,
+      "keyRaw": "3",
+      "dataName": "heading_3",
+      "label": "Thông tin của người học",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 2,
+      "key": 4,
+      "keyRaw": "4",
+      "dataName": "Full-Name-student",
+      "label": "Họ tên của người học *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[Full-Name-student]",
+      "placeholder": "Họ tên",
+      "options": null
+    },
+    {
+      "sourceOrder": 3,
+      "key": 5,
+      "keyRaw": "5",
+      "dataName": "English-Name",
+      "label": "Tên tiếng Anh",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[English-Name]",
+      "placeholder": "Tên tiếng anh nếu bạn có",
+      "options": null
+    },
+    {
+      "sourceOrder": 4,
+      "key": 6,
+      "keyRaw": "6",
+      "dataName": "gender",
+      "label": "Giới tính *",
+      "dataType": "checkbox",
+      "control": "checkbox",
+      "required": true,
+      "name": "cf[gender][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Male",
+          "label": "nam"
+        },
+        {
+          "value": "Female",
+          "label": "nữ"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 5,
+      "key": 77,
+      "keyRaw": "77",
+      "dataName": "student-phone",
+      "label": "Số điện thoại của học sinh",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[student-phone]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 6,
+      "key": 79,
+      "keyRaw": "79",
+      "dataName": "student-email",
+      "label": "Email của học sinh",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[student-email]",
+      "placeholder": "ten@vidu.com",
+      "options": null
+    },
+    {
+      "sourceOrder": 7,
+      "key": 81,
+      "keyRaw": "81",
+      "dataName": "hobbies",
+      "label": "Sở thích, thú vui và nhạc cụ",
+      "dataType": "textarea",
+      "control": "textarea",
+      "required": false,
+      "name": "cf[hobbies]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 8,
+      "key": 9,
+      "keyRaw": "9",
+      "dataName": "DOB",
+      "label": "Ngày sinh *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[DOB]",
+      "placeholder": "ví dụ: 2011-03-17",
+      "options": null
+    },
+    {
+      "sourceOrder": 9,
+      "key": 10,
+      "keyRaw": "10",
+      "dataName": "birth-order",
+      "label": "Thứ tự sinh *",
+      "dataType": "number",
+      "control": "number",
+      "required": true,
+      "name": "cf[birth-order]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 10,
+      "key": 8,
+      "keyRaw": "8",
+      "dataName": "number-of-siblings-male",
+      "label": "Người học có bao nhiêu anh em? *",
+      "dataType": "number",
+      "control": "number",
+      "required": true,
+      "name": "cf[number-of-siblings-male]",
+      "placeholder": "Số anh em",
+      "options": null
+    },
+    {
+      "sourceOrder": 11,
+      "key": 11,
+      "keyRaw": "11",
+      "dataName": "number-of-siblings-female",
+      "label": "Người học có bao nhiêu chị em? *",
+      "dataType": "number",
+      "control": "number",
+      "required": true,
+      "name": "cf[number-of-siblings-female]",
+      "placeholder": "Số chị em",
+      "options": null
+    },
+    {
+      "sourceOrder": 12,
+      "key": 12,
+      "keyRaw": "12",
+      "dataName": "Ethnicity",
+      "label": "Dân tộc *",
+      "dataType": "dropdown",
+      "control": "select",
+      "required": true,
+      "name": "cf[Ethnicity]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "",
+          "label": "Vui lòng chọn một"
+        },
+        {
+          "value": "Người Việt Nam",
+          "label": "Người Việt Nam"
+        },
+        {
+          "value": "Viet Hoa (Chinese-Vietnamese)",
+          "label": "Viet Hoa (Chinese-Vietnamese)"
+        },
+        {
+          "value": "Người dân tộc (Hmông, Tày, Khmer, v.v.)",
+          "label": "Người dân tộc (Hmông, Tày, Khmer, v.v.)"
+        },
+        {
+          "value": "Người Thái",
+          "label": "Người Thái"
+        },
+        {
+          "value": "Người Campuchia",
+          "label": "Người Campuchia"
+        },
+        {
+          "value": "Người Lào",
+          "label": "Người Lào"
+        },
+        {
+          "value": "Người Hàn Quốc",
+          "label": "Người Hàn Quốc"
+        },
+        {
+          "value": "Người Nhật",
+          "label": "Người Nhật"
+        },
+        {
+          "value": "Người Trung Quốc",
+          "label": "Người Trung Quốc"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 13,
+      "key": 13,
+      "keyRaw": "13",
+      "dataName": "Which languages are spoken at home",
+      "label": "Các ngôn ngữ được nói ở nhà *",
+      "dataType": "checkbox",
+      "control": "checkbox",
+      "required": true,
+      "name": "cf[Which languages are spoken at home][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Tiếng Việt ",
+          "label": "Tiếng Việt"
+        },
+        {
+          "value": "Tiếng Anh",
+          "label": "Tiếng Anh"
+        },
+        {
+          "value": "Tiếng Phổ thông Trung quốc",
+          "label": "Tiếng Phổ thông Trung quốc"
+        },
+        {
+          "value": "Tiếng Quảng Đông",
+          "label": "Tiếng Quảng Đông"
+        },
+        {
+          "value": "Tiếng dân tộc (H'mông, Tày, Khmer, v.v.)",
+          "label": "Tiếng dân tộc (H'mông, Tày, Khmer, v.v.)"
+        },
+        {
+          "value": "Tiếng Thái",
+          "label": "Tiếng Thái"
+        },
+        {
+          "value": "Tiếng Campuchia",
+          "label": "Tiếng Campuchia"
+        },
+        {
+          "value": "Tiếng Lào",
+          "label": "Tiếng Lào"
+        },
+        {
+          "value": "Tiếng Hàn Quốc",
+          "label": "Tiếng Hàn Quốc"
+        },
+        {
+          "value": "Tiếng Nhật",
+          "label": "Tiếng Nhật"
+        },
+        {
+          "value": "Tiếng Khác...",
+          "label": "Tiếng Khác..."
+        }
+      ]
+    },
+    {
+      "sourceOrder": 14,
+      "key": 14,
+      "keyRaw": "14",
+      "dataName": "describe-other-language",
+      "label": "Vui lòng cho biết ngôn ngữ khác",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[describe-other-language]",
+      "placeholder": "ngôn ngữ khác",
+      "options": null
+    },
+    {
+      "sourceOrder": 15,
+      "key": 15,
+      "keyRaw": "15",
+      "dataName": "Student-school",
+      "label": "Đang học ở trường *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[Student-school]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 16,
+      "key": 16,
+      "keyRaw": "16",
+      "dataName": "Student-current-grade",
+      "label": "Hiện tại đang học lớp *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[Student-current-grade]",
+      "placeholder": "Số lớp của học sinh",
+      "options": null
+    },
+    {
+      "sourceOrder": 17,
+      "key": 18,
+      "keyRaw": "18",
+      "dataName": "divider_18",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 18,
+      "key": 17,
+      "keyRaw": "17",
+      "dataName": "heading_17",
+      "label": "Liên hệ của mẹ hoặc học sinh trưởng thành",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 19,
+      "key": 19,
+      "keyRaw": "19",
+      "dataName": "Full-Name_mother",
+      "label": "Họ tên của mẹ hoặc học sinh trưởng thành *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[Full-Name_mother]",
+      "placeholder": "Họ tên của mẹ hoặc học sinh trưởng thành",
+      "options": null
+    },
+    {
+      "sourceOrder": 20,
+      "key": 78,
+      "keyRaw": "78",
+      "dataName": "email-ma",
+      "label": "Email của mẹ hoặc học sinh trưởng thành *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[email-ma]",
+      "placeholder": "ten@vidu.com",
+      "options": null
+    },
+    {
+      "sourceOrder": 21,
+      "key": 21,
+      "keyRaw": "21",
+      "dataName": "ma-is-homework-proctor",
+      "label": "Người mẹ hoặc học sinh trưởng thành sẽ có trách nhiệm đảm bảo rằng bài tập về nhà được hoàn thành đúng hạn và chính xác và các bài học được ôn tập 2-3 lần mỗi tuần. *",
+      "dataType": "checkbox",
+      "control": "checkbox",
+      "required": true,
+      "name": "cf[ma-is-homework-proctor][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 22,
+      "key": 22,
+      "keyRaw": "22",
+      "dataName": "Mothers-phone",
+      "label": "Số điện thoại của mẹ hoặc học sinh trưởng thành *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[Mothers-phone]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 23,
+      "key": 23,
+      "keyRaw": "23",
+      "dataName": "emergency-contact-mother",
+      "label": "Khi khẩn cấp, sẽ gọi mẹ trước *",
+      "dataType": "checkbox",
+      "control": "checkbox",
+      "required": false,
+      "name": "cf[emergency-contact-mother][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "Có"
+        },
+        {
+          "value": "N",
+          "label": "Không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 24,
+      "key": 24,
+      "keyRaw": "24",
+      "dataName": "Zalo-IM-ID-mother",
+      "label": "Số Zalo hoặc cách khác để nhắn tin nhanh cho mẹ hoặc học sinh trưởng thành",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[Zalo-IM-ID-mother]",
+      "placeholder": "Số Zalo hoặc cách khác để nhắn tin nhanh",
+      "options": null
+    },
+    {
+      "sourceOrder": 25,
+      "key": 25,
+      "keyRaw": "25",
+      "dataName": "divider_25",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 26,
+      "key": 26,
+      "keyRaw": "26",
+      "dataName": "heading_26",
+      "label": "Liên hệ của ba",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 27,
+      "key": 27,
+      "keyRaw": "27",
+      "dataName": "Full-Name_father",
+      "label": "Họ tên của ba",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[Full-Name_father]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 28,
+      "key": 28,
+      "keyRaw": "28",
+      "dataName": "email-ba",
+      "label": "Email của ba",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[email-ba]",
+      "placeholder": "ten@vidu.com",
+      "options": null
+    },
+    {
+      "sourceOrder": 29,
+      "key": 32,
+      "keyRaw": "32",
+      "dataName": "ba-is-homework-proctor",
+      "label": "Ba sẽ có trách nhiệm đảm bảo hoàn thành bài tập về nhà và việc học ở n",
+      "dataType": "radio",
+      "control": "radio",
+      "required": false,
+      "name": "cf[ba-is-homework-proctor][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 30,
+      "key": 30,
+      "keyRaw": "30",
+      "dataName": "Fathers-phone",
+      "label": "Số điện thoại của ba",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[Fathers-phone]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 31,
+      "key": 31,
+      "keyRaw": "31",
+      "dataName": "emergency-contact-father",
+      "label": "Khi khẩn cấp, sẽ gọi ba trước",
+      "dataType": "radio",
+      "control": "radio",
+      "required": false,
+      "name": "cf[emergency-contact-father][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 32,
+      "key": 82,
+      "keyRaw": "82",
+      "dataName": "Zalo-IM-ID-ba",
+      "label": "Số Zalo hoặc cách khác để nhắn tin nhanh cho ba",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[Zalo-IM-ID-ba]",
+      "placeholder": "Số Zalo hoặc cách khác để nhắn tin nhanh",
+      "options": null
+    },
+    {
+      "sourceOrder": 33,
+      "key": 33,
+      "keyRaw": "33",
+      "dataName": "divider_33",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 34,
+      "key": 41,
+      "keyRaw": "41",
+      "dataName": "heading_41",
+      "label": "Địa chỉ",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 35,
+      "key": 34,
+      "keyRaw": "34",
+      "dataName": "street-address",
+      "label": "Số nhà và tên đường *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[street-address]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 36,
+      "key": 35,
+      "keyRaw": "35",
+      "dataName": "ward-district",
+      "label": "Phường và Quận *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[ward-district]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 37,
+      "key": 36,
+      "keyRaw": "36",
+      "dataName": "City",
+      "label": "Thành phố *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[City]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 38,
+      "key": 42,
+      "keyRaw": "42",
+      "dataName": "divider_42",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 39,
+      "key": 37,
+      "keyRaw": "37",
+      "dataName": "heading_37",
+      "label": "Thông tin sức khỏe của người học",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 40,
+      "key": 38,
+      "keyRaw": "38",
+      "dataName": "heading_38",
+      "label": "Thị giác",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 41,
+      "key": 39,
+      "keyRaw": "39",
+      "dataName": "wear-glasses?",
+      "label": "Người học có dùng kính cận không? *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[wear-glasses?][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 42,
+      "key": 40,
+      "keyRaw": "40",
+      "dataName": "eye-exam?",
+      "label": "Người học đã bao giờ đi khám mắt chưa? *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[eye-exam?][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 43,
+      "key": 44,
+      "keyRaw": "44",
+      "dataName": "date-last-eye-exam",
+      "label": "Ngày khám mắt gần đây nhất",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[date-last-eye-exam]",
+      "placeholder": "ví dụ: 2011-03-17",
+      "options": null
+    },
+    {
+      "sourceOrder": 44,
+      "key": 45,
+      "keyRaw": "45",
+      "dataName": "divider_45",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 45,
+      "key": 43,
+      "keyRaw": "43",
+      "dataName": "heading_43",
+      "label": "Thuốc uống",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 46,
+      "key": 46,
+      "keyRaw": "46",
+      "dataName": "prescription-medicine?",
+      "label": "Người học có uống thuốc theo đơn không? *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[prescription-medicine?][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 47,
+      "key": 47,
+      "keyRaw": "47",
+      "dataName": "explain-list-rx-meds",
+      "label": "Vui lòng nêu tên thuốc theo toa và lý do dùng *",
+      "dataType": "textarea",
+      "control": "textarea",
+      "required": true,
+      "name": "cf[explain-list-rx-meds]",
+      "placeholder": "Thông tin này được bảo mật",
+      "options": null
+    },
+    {
+      "sourceOrder": 48,
+      "key": 48,
+      "keyRaw": "48",
+      "dataName": "divider_48",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 49,
+      "key": 49,
+      "keyRaw": "49",
+      "dataName": "heading_49",
+      "label": "Những khó khăn khi học",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 50,
+      "key": 50,
+      "keyRaw": "50",
+      "dataName": "learning-disorders",
+      "label": "Học sinh có bất kỳ rối loạn hoặc triệu chứng nào sau đây không? *",
+      "dataType": "checkbox",
+      "control": "checkbox",
+      "required": true,
+      "name": "cf[learning-disorders][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Speech Disorders",
+          "label": "Rối loạn lời nói"
+        },
+        {
+          "value": "amblyopia",
+          "label": "Nhược thị (hội chứng mắt lười)"
+        },
+        {
+          "value": "ADHD",
+          "label": "Rối loạn tăng động giảm chú ý"
+        },
+        {
+          "value": "Asperger / Autism",
+          "label": "Hội chứng Asperger / phổ tự kỷ"
+        },
+        {
+          "value": "Learning disorders",
+          "label": "Rối loạn học tập (vui lòng giải thích bên dưới)"
+        },
+        {
+          "value": "Dyslexia ",
+          "label": "Chứng khó đọc"
+        },
+        {
+          "value": "Behavioral disorders",
+          "label": "Rối loạn hành vi (vui lòng giải thích bên dưới)"
+        },
+        {
+          "value": "N",
+          "label": "Không có"
+        },
+        {
+          "value": "Other",
+          "label": "Khác (vui lòng giải thích bên dưới)"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 51,
+      "key": 51,
+      "keyRaw": "51",
+      "dataName": "Explain-LD-BD",
+      "label": "Giải thích tất cả rối loạn học tập, rối loạn hành vi, hoặc những thách thức khác đối với việc học",
+      "dataType": "textarea",
+      "control": "textarea",
+      "required": false,
+      "name": "cf[Explain-LD-BD]",
+      "placeholder": "Thông tin này được bảo mật",
+      "options": null
+    },
+    {
+      "sourceOrder": 52,
+      "key": 52,
+      "keyRaw": "52",
+      "dataName": "divider_52",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 53,
+      "key": 53,
+      "keyRaw": "53",
+      "dataName": "heading_53",
+      "label": "Dị ứng",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 54,
+      "key": 54,
+      "keyRaw": "54",
+      "dataName": "drug-allergies-list",
+      "label": "Liệt kê tất cả các trường hợp dị ứng với các loại thuốc: *",
+      "dataType": "textarea",
+      "control": "textarea",
+      "required": true,
+      "name": "cf[drug-allergies-list]",
+      "placeholder": "vui lòng nhập \"không,\" nếu không có dị ứng",
+      "options": null
+    },
+    {
+      "sourceOrder": 55,
+      "key": 55,
+      "keyRaw": "55",
+      "dataName": "food-environmental-allergies-list",
+      "label": "Liệt kê các dị ứng do thực phẩm và môi trường *",
+      "dataType": "textarea",
+      "control": "textarea",
+      "required": true,
+      "name": "cf[food-environmental-allergies-list]",
+      "placeholder": "vui lòng nhập \"không,\" nếu không có",
+      "options": null
+    },
+    {
+      "sourceOrder": 56,
+      "key": 56,
+      "keyRaw": "56",
+      "dataName": "divider_56",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 57,
+      "key": 57,
+      "keyRaw": "57",
+      "dataName": "heading_57",
+      "label": "Tiêm chủng",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 58,
+      "key": 58,
+      "keyRaw": "58",
+      "dataName": "childhood-vaccines-utd",
+      "label": "Tất cả các loại vắc xin bắt buộc dành cho trẻ nhỏ có phải là loại mới nhất không? *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[childhood-vaccines-utd][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "Có"
+        },
+        {
+          "value": "N",
+          "label": "Không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 59,
+      "key": 59,
+      "keyRaw": "59",
+      "dataName": "childhood-vaccine-record",
+      "label": "Tải lên bản sao hồ sơ vắc xin khi còn nhỏ",
+      "dataType": "fileupload",
+      "control": "unknown",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 60,
+      "key": 75,
+      "keyRaw": "75",
+      "dataName": "divider_75",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 61,
+      "key": 60,
+      "keyRaw": "60",
+      "dataName": "COVID-19-positive-or-had-it",
+      "label": "Người học đã từng có COVID-19 chưa hoặc kết quả dương tính với COVID-19? *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[COVID-19-positive-or-had-it][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có́"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 62,
+      "key": 61,
+      "keyRaw": "61",
+      "dataName": "date-negative-after-infections",
+      "label": "Bắt buộc: Nếu bạn đã xét nghiệm dương tính với COVID, thì vui lòng cung cấp ngày bạn xét nghiệm âm tính với COVID bên dưới. **Nếu bạn trả lời \"không\" ở trên, vui lòng nhập \"không\" vào đây. *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[date-negative-after-infections]",
+      "placeholder": "ví dụ: 2011-03-17 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh",
+      "options": null
+    },
+    {
+      "sourceOrder": 63,
+      "key": 67,
+      "keyRaw": "67",
+      "dataName": "divider_67",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 64,
+      "key": 63,
+      "keyRaw": "63",
+      "dataName": "had-covid-SHOT-already",
+      "label": "Người học đã được chủng ngừa COVID-19 chưa? *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[had-covid-SHOT-already][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có́"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 65,
+      "key": 64,
+      "keyRaw": "64",
+      "dataName": "Are COVID-19 vaccines up-to-date?",
+      "label": "Vắc xin COVID-19 có được cập nhật không? *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[Are COVID-19 vaccines up-to-date?][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "có"
+        },
+        {
+          "value": "N",
+          "label": "không"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 66,
+      "key": 85,
+      "keyRaw": "85",
+      "dataName": "most-recent-covid-shot",
+      "label": "Ngày tiêm phòng COVID gần đây nhất của học sinh",
+      "dataType": "text",
+      "control": "text",
+      "required": false,
+      "name": "cf[most-recent-covid-shot]",
+      "placeholder": "ví dụ: 2023-03-17",
+      "options": null
+    },
+    {
+      "sourceOrder": 67,
+      "key": 86,
+      "keyRaw": "86",
+      "dataName": "comments",
+      "label": "Bình luận",
+      "dataType": "textarea",
+      "control": "textarea",
+      "required": false,
+      "name": "cf[comments]",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 68,
+      "key": 65,
+      "keyRaw": "65",
+      "dataName": "check-each-covid-injection-student-has-had",
+      "label": "Vui lòng cho biết các loại chủng ngừa COVID-19 mà người học đã được nhận: *",
+      "dataType": "checkbox",
+      "control": "checkbox",
+      "required": true,
+      "name": "cf[check-each-covid-injection-student-has-had][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "not yet",
+          "label": "Chưa"
+        },
+        {
+          "value": "first COVID injection",
+          "label": "Tiêm chủng COVID lần đầu tiên"
+        },
+        {
+          "value": "second COVID injection",
+          "label": "Tiêm chủng COVID thứ hai"
+        },
+        {
+          "value": "third COVID injection",
+          "label": "Tiêm chủng COVID thứ ba"
+        },
+        {
+          "value": "fourth COVID injection",
+          "label": "Tiêm chủng COVID thứ tư"
+        },
+        {
+          "value": "fifth COVID injection",
+          "label": "Tiêm chủng COVID thứ năm"
+        },
+        {
+          "value": "sixth COVID injection",
+          "label": "Tiêm chủng COVID thứ sáu"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 69,
+      "key": 83,
+      "keyRaw": "83",
+      "dataName": "covid-vaccine-records",
+      "label": "Hồ sơ tiêm phòng COVID",
+      "dataType": "fileupload",
+      "control": "unknown",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 70,
+      "key": 71,
+      "keyRaw": "71",
+      "dataName": "divider_71",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 71,
+      "key": 68,
+      "keyRaw": "68",
+      "dataName": "heading_68",
+      "label": "Chăm sóc trong giờ học (nếu người học là trẻ em)",
+      "dataType": "heading",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 72,
+      "key": 69,
+      "keyRaw": "69",
+      "dataName": "fever-medicine",
+      "label": "Trẻ có thể dùng một liều thuốc uống bằng một trong các loại thuốc sau đây khi cần thiết để hạ sốt. *",
+      "dataType": "checkbox",
+      "control": "checkbox",
+      "required": true,
+      "name": "cf[fever-medicine][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "children's aspirin ",
+          "label": "Axit salicylic trẻ em"
+        },
+        {
+          "value": "Ibuprofen trẻ em",
+          "label": "Ibuprofen trẻ em"
+        },
+        {
+          "value": "Paracetamol trẻ em",
+          "label": "Paracetamol trẻ em"
+        },
+        {
+          "value": "NO",
+          "label": "Không cho"
+        },
+        {
+          "value": "adult",
+          "label": "Tôi 18 tuổi trở lên"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 73,
+      "key": 70,
+      "keyRaw": "70",
+      "dataName": "dau-trang-duoc",
+      "label": "Trẻ có thể dùng dầu trắng nếu muốn *",
+      "dataType": "radio",
+      "control": "radio",
+      "required": true,
+      "name": "cf[dau-trang-duoc][]",
+      "placeholder": null,
+      "options": [
+        {
+          "value": "Y",
+          "label": "Cho"
+        },
+        {
+          "value": "N",
+          "label": "Không cho"
+        },
+        {
+          "value": "adult",
+          "label": "Tôi 18 tuổi trở lên"
+        }
+      ]
+    },
+    {
+      "sourceOrder": 74,
+      "key": 62,
+      "keyRaw": "62",
+      "dataName": "divider_62",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 75,
+      "key": 72,
+      "keyRaw": "72",
+      "dataName": "Signature",
+      "label": "Tôi xác nhận rằng tất cả thông tin tôi đã cung cấp; là sự thật được chứng minh; theo hiểu biết tốt nhất của tôi; chịu sự trừng phạt của pháp luật; tại nước Cộng hòa xã hội chủ nghĩa Việt Nam. *",
+      "dataType": "text",
+      "control": "text",
+      "required": true,
+      "name": "cf[Signature]",
+      "placeholder": "họ tên của người điền đơn",
+      "options": null
+    },
+    {
+      "sourceOrder": 76,
+      "key": 76,
+      "keyRaw": "76",
+      "dataName": "email-form-sig",
+      "label": "email của bạn *",
+      "dataType": "email",
+      "control": "email",
+      "required": true,
+      "name": "cf[email-form-sig]",
+      "placeholder": "ten@vidu.com",
+      "options": null
+    },
+    {
+      "sourceOrder": 77,
+      "key": 73,
+      "keyRaw": "73",
+      "dataName": "divider_73",
+      "label": "",
+      "dataType": "divider",
+      "control": "meta",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 78,
+      "key": 84,
+      "keyRaw": "84",
+      "dataName": "hcaptcha_84",
+      "label": "hCaptcha *",
+      "dataType": "hcaptcha",
+      "control": "unknown",
+      "required": true,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    },
+    {
+      "sourceOrder": 79,
+      "key": 1,
+      "keyRaw": "1",
+      "dataName": "submit_1",
+      "label": "",
+      "dataType": "submit",
+      "control": "unknown",
+      "required": false,
+      "name": "",
+      "placeholder": null,
+      "options": null
+    }
+  ]
+}

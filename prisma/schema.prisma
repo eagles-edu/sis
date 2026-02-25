@@ -1,0 +1,250 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Student {
+  id                String              @id @default(cuid())
+  externalKey       String              @unique
+  studentId         String?             @unique
+  email             String?
+  submissions       ExerciseSubmission[]
+  profile           StudentProfile?
+  intakeSubmissions StudentIntakeSubmission[]
+  attendanceRecords StudentAttendance[]
+  gradeRecords      StudentGradeRecord[]
+  parentReports     ParentClassReport[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([email])
+}
+
+model Exercise {
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  title       String
+  submissions ExerciseSubmission[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model ExerciseSubmission {
+  id                 String   @id @default(cuid())
+  studentRefId       String
+  exerciseRefId      String
+  student            Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  exercise           Exercise @relation(fields: [exerciseRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  submittedStudentId String
+  submittedEmail     String?
+  completedAt        DateTime
+  totalQuestions     Int
+  correctCount       Int
+  pendingCount       Int
+  incorrectCount     Int
+  scorePercent       Float
+  answersJson        Json
+  recipientsJson     Json?
+  createdAt          DateTime @default(now())
+
+  @@index([studentRefId, completedAt])
+  @@index([exerciseRefId, completedAt])
+  @@index([submittedStudentId, completedAt])
+}
+
+enum IntakeControlType {
+  text
+  textarea
+  number
+  email
+  select
+  checkbox
+  radio
+  date
+  unknown
+  meta
+}
+
+enum SchoolQuarter {
+  q1
+  q2
+  q3
+  q4
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+}
+
+model IntakeFieldDefinition {
+  id           String            @id @default(cuid())
+  formId       String
+  fieldKey     Int
+  dataName     String
+  label        String?
+  controlType  IntakeControlType
+  required     Boolean           @default(false)
+  sourceOrder  Int
+  optionsJson  Json?
+  metadataJson Json?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([formId, fieldKey])
+  @@index([formId, dataName])
+}
+
+model StudentProfile {
+  id                         String   @id @default(cuid())
+  studentRefId               String   @unique
+  student                    Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceFormId               String
+  sourceUrl                  String?
+  fullName                   String?
+  englishName                String?
+  photoUrl                   String?
+  genderSelections           String[]
+  studentPhone               String?
+  studentEmail               String?
+  hobbies                    String?
+  dobText                    String?
+  birthOrder                 Int?
+  siblingBrothers            Int?
+  siblingSisters             Int?
+  ethnicity                  String?
+  languagesAtHome            String[]
+  otherLanguage              String?
+  schoolName                 String?
+  currentGrade               String?
+  motherName                 String?
+  motherEmail                String?
+  motherPhone                String?
+  motherEmergencyContact     String?
+  motherMessenger            String?
+  fatherName                 String?
+  fatherEmail                String?
+  fatherPhone                String?
+  fatherEmergencyContact     String?
+  fatherMessenger            String?
+  streetAddress              String?
+  wardDistrict               String?
+  city                       String?
+  hasGlasses                 String?
+  hadEyeExam                 String?
+  lastEyeExamDateText        String?
+  prescriptionMedicine       String?
+  prescriptionDetails        String?
+  learningDisorders          String[]
+  learningDisorderDetails    String?
+  drugAllergies              String?
+  foodEnvironmentalAllergies String?
+  vaccinesChildhoodUpToDate  String?
+  hadCovidPositive           String?
+  covidNegativeDateText      String?
+  covidShotAlready           String?
+  covidVaccinesUpToDate      String?
+  covidShotHistory           String[]
+  mostRecentCovidShotDate    String?
+  feverMedicineAllowed       String[]
+  whiteOilAllowed            String?
+  signatureFullName          String?
+  signatureEmail             String?
+  extraComments              String?
+  requiredValidationOk       Boolean?
+  rawFormPayload             Json?
+  normalizedFormPayload      Json?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@index([sourceFormId, createdAt])
+}
+
+model StudentIntakeSubmission {
+  id                   String   @id @default(cuid())
+  studentRefId         String
+  student              Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sourceFormId         String
+  sourceUrl            String?
+  submittedAt          DateTime
+  fieldsJson           Json
+  missingRequiredJson  Json?
+  requiredValidationOk Boolean?
+  createdAt            DateTime @default(now())
+
+  @@index([studentRefId, submittedAt])
+  @@index([sourceFormId, submittedAt])
+}
+
+model StudentAttendance {
+  id             String           @id @default(cuid())
+  studentRefId   String
+  student        Student          @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  className      String
+  level          String?
+  schoolYear     String
+  quarter        SchoolQuarter
+  attendanceDate DateTime
+  status         AttendanceStatus @default(present)
+  comments       String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([studentRefId, className, attendanceDate])
+  @@index([studentRefId, attendanceDate])
+  @@index([level, schoolYear, quarter, attendanceDate])
+}
+
+model StudentGradeRecord {
+  id                String        @id @default(cuid())
+  studentRefId      String
+  student           Student       @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  className         String
+  level             String?
+  schoolYear        String
+  quarter           SchoolQuarter
+  assignmentName    String
+  dueAt             DateTime?
+  submittedAt       DateTime?
+  score             Float?
+  maxScore          Float?
+  homeworkCompleted Boolean?
+  homeworkOnTime    Boolean?
+  behaviorScore     Int?
+  participationScore Int?
+  inClassScore      Int?
+  comments          String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([studentRefId, schoolYear, quarter])
+  @@index([className, schoolYear, quarter])
+  @@index([dueAt])
+}
+
+model ParentClassReport {
+  id                     String        @id @default(cuid())
+  studentRefId           String
+  student                Student       @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  className              String
+  level                  String?
+  schoolYear             String
+  quarter                SchoolQuarter
+  homeworkCompletionRate Float?
+  homeworkOnTimeRate     Float?
+  behaviorScore          Float?
+  participationScore     Float?
+  inClassScore           Float?
+  comments               String?
+  generatedAt            DateTime      @default(now())
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  @@unique([studentRefId, className, schoolYear, quarter])
+  @@index([level, schoolYear, quarter])
+}
