@@ -1,11 +1,15 @@
 // server/exercise-mailer.mjs
 import { createRequire } from "node:module"
+import fs from "node:fs"
 import http from "node:http"
 import path from "node:path"
 import { URL, fileURLToPath } from "node:url"
 import { isExerciseStoreRequired, persistExerciseSubmission } from "./exercise-store.mjs"
 import { persistStudentIntakeSubmission } from "./student-intake-store.mjs"
-import { handleStudentAdminRequest } from "./student-admin-routes.mjs"
+import {
+  getStudentAdminRuntimeStatus,
+  handleStudentAdminRequest,
+} from "./student-admin-routes.mjs"
 
 const require = createRequire(import.meta.url)
 const isDebugEnabled = () =>
@@ -54,6 +58,21 @@ function getOriginList() {
     .filter(Boolean)
 }
 
+function isLoopbackOrigin(origin) {
+  const text = String(origin || "").trim()
+  if (!text) return false
+  try {
+    const parsed = new URL(text)
+    const protocol = String(parsed.protocol || "").trim().toLowerCase()
+    if (protocol !== "http:" && protocol !== "https:") return false
+    const hostname = String(parsed.hostname || "").trim().toLowerCase()
+    return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "::1"
+  } catch (error) {
+    void error
+    return false
+  }
+}
+
 // Toggle verbose logs
 const MAILER_DEBUG = isDebugEnabled()
 
@@ -80,6 +99,22 @@ const STATUS = {
   lastError: null,
 }
 
+const SELF_HEAL_RELATIVE_ADMIN_HTML = path.join("web-asset", "admin", "student-admin.html")
+const SELF_HEAL_STATUS = {
+  enabled: false,
+  sourceRoot: "",
+  runtimeRoot: "",
+  sourceHtmlPath: "",
+  runtimeHtmlPath: "",
+  intervalMs: null,
+  lastCheckedAt: null,
+  lastMismatchAt: null,
+  lastSyncAt: null,
+  syncCount: 0,
+  lastResult: "disabled",
+  lastError: "",
+}
+
 /* =========================
     Helpers
    ========================= */
@@ -95,6 +130,170 @@ function resolveBoolean(value, fallback) {
     if (["false", "0", "no"].includes(normalized)) return false
   }
   return fallback
+}
+
+function normalizeString(value) {
+  if (value === undefined || value === null) return ""
+  return String(value).trim()
+}
+
+function resolveRuntimeSelfHealConfig() {
+  const enabled = resolveBoolean(process.env.SIS_RUNTIME_SELF_HEAL_ENABLED, true)
+  const runtimeRoot = path.resolve(
+    normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT) || process.cwd()
+  )
+
+  let sourceRoot = normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT)
+  if (!sourceRoot) {
+    const cwd = process.cwd()
+    if (path.basename(cwd).toLowerCase() === "megs") {
+      sourceRoot = path.resolve(cwd, "..", "sis")
+    }
+  }
+
+  if (!enabled) {
+    return { enabled: false, reason: "disabled-by-env", sourceRoot, runtimeRoot }
+  }
+
+  if (!sourceRoot) {
+    return { enabled: false, reason: "missing-source-root", sourceRoot, runtimeRoot }
+  }
+
+  const resolvedSourceRoot = path.resolve(sourceRoot)
+  const sourceHtmlPath = path.join(resolvedSourceRoot, SELF_HEAL_RELATIVE_ADMIN_HTML)
+  const runtimeHtmlPath = path.join(runtimeRoot, SELF_HEAL_RELATIVE_ADMIN_HTML)
+
+  if (!fs.existsSync(sourceHtmlPath)) {
+    return {
+      enabled: false,
+      reason: "missing-source-html",
+      sourceRoot: resolvedSourceRoot,
+      runtimeRoot,
+      sourceHtmlPath,
+      runtimeHtmlPath,
+    }
+  }
+
+  if (path.resolve(sourceHtmlPath) === path.resolve(runtimeHtmlPath)) {
+    return {
+      enabled: false,
+      reason: "same-source-runtime",
+      sourceRoot: resolvedSourceRoot,
+      runtimeRoot,
+      sourceHtmlPath,
+      runtimeHtmlPath,
+    }
+  }
+
+  const intervalRaw = Number.parseInt(
+    normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS) || "15000",
+    10
+  )
+  const intervalMs = Number.isFinite(intervalRaw) && intervalRaw >= 1000 ? intervalRaw : 15000
+
+  return {
+    enabled: true,
+    reason: "",
+    sourceRoot: resolvedSourceRoot,
+    runtimeRoot,
+    sourceHtmlPath,
+    runtimeHtmlPath,
+    intervalMs,
+  }
+}
+
+function applyRuntimeSelfHealStatus(config) {
+  SELF_HEAL_STATUS.enabled = Boolean(config?.enabled)
+  SELF_HEAL_STATUS.sourceRoot = config?.sourceRoot || ""
+  SELF_HEAL_STATUS.runtimeRoot = config?.runtimeRoot || ""
+  SELF_HEAL_STATUS.sourceHtmlPath = config?.sourceHtmlPath || ""
+  SELF_HEAL_STATUS.runtimeHtmlPath = config?.runtimeHtmlPath || ""
+  SELF_HEAL_STATUS.intervalMs = config?.enabled ? config?.intervalMs || null : null
+  SELF_HEAL_STATUS.lastCheckedAt = null
+  SELF_HEAL_STATUS.lastMismatchAt = null
+  SELF_HEAL_STATUS.lastSyncAt = null
+  SELF_HEAL_STATUS.syncCount = 0
+  SELF_HEAL_STATUS.lastResult = config?.enabled ? "pending" : config?.reason || "disabled"
+  SELF_HEAL_STATUS.lastError = ""
+}
+
+function runRuntimeSelfHealCheck(config) {
+  const checkedAt = new Date().toISOString()
+  SELF_HEAL_STATUS.lastCheckedAt = checkedAt
+  if (!config?.enabled) return
+
+  try {
+    const sourceBuffer = fs.readFileSync(config.sourceHtmlPath)
+    let runtimeBuffer = null
+    try {
+      runtimeBuffer = fs.readFileSync(config.runtimeHtmlPath)
+    } catch (error) {
+      if (!error || error.code !== "ENOENT") throw error
+    }
+
+    const mismatch = !runtimeBuffer || !sourceBuffer.equals(runtimeBuffer)
+    if (!mismatch) {
+      SELF_HEAL_STATUS.lastResult = "in-sync"
+      SELF_HEAL_STATUS.lastError = ""
+      return
+    }
+
+    SELF_HEAL_STATUS.lastMismatchAt = checkedAt
+    fs.mkdirSync(path.dirname(config.runtimeHtmlPath), { recursive: true })
+    fs.writeFileSync(config.runtimeHtmlPath, sourceBuffer)
+    SELF_HEAL_STATUS.lastSyncAt = new Date().toISOString()
+    SELF_HEAL_STATUS.syncCount += 1
+    SELF_HEAL_STATUS.lastResult = "synced"
+    SELF_HEAL_STATUS.lastError = ""
+
+    console.log(
+      `[self-heal] synced ${config.runtimeHtmlPath} from ${config.sourceHtmlPath}`
+    )
+  } catch (error) {
+    SELF_HEAL_STATUS.lastResult = "error"
+    SELF_HEAL_STATUS.lastError = String(error?.message || error)
+    if (MAILER_DEBUG) {
+      console.warn(`[self-heal] check failed: ${SELF_HEAL_STATUS.lastError}`)
+    }
+  }
+}
+
+function startRuntimeSelfHealLoop() {
+  const config = resolveRuntimeSelfHealConfig()
+  applyRuntimeSelfHealStatus(config)
+
+  if (!config.enabled) {
+    return { stop() {} }
+  }
+
+  runRuntimeSelfHealCheck(config)
+  const timer = setInterval(() => {
+    runRuntimeSelfHealCheck(config)
+  }, config.intervalMs)
+  if (typeof timer.unref === "function") timer.unref()
+
+  return {
+    stop() {
+      clearInterval(timer)
+    },
+  }
+}
+
+function getRuntimeSelfHealStatus() {
+  return {
+    enabled: SELF_HEAL_STATUS.enabled,
+    sourceRoot: SELF_HEAL_STATUS.sourceRoot,
+    runtimeRoot: SELF_HEAL_STATUS.runtimeRoot,
+    sourceHtmlPath: SELF_HEAL_STATUS.sourceHtmlPath,
+    runtimeHtmlPath: SELF_HEAL_STATUS.runtimeHtmlPath,
+    intervalMs: SELF_HEAL_STATUS.intervalMs,
+    lastCheckedAt: SELF_HEAL_STATUS.lastCheckedAt,
+    lastMismatchAt: SELF_HEAL_STATUS.lastMismatchAt,
+    lastSyncAt: SELF_HEAL_STATUS.lastSyncAt,
+    syncCount: SELF_HEAL_STATUS.syncCount,
+    lastResult: SELF_HEAL_STATUS.lastResult,
+    lastError: SELF_HEAL_STATUS.lastError,
+  }
 }
 
 function coerceArray(value) {
@@ -416,7 +615,7 @@ function allowCors(request, response) {
 
   if (origins.includes("*")) {
     allowOrigin = "*"
-  } else if (reqOrigin && origins.includes(reqOrigin)) {
+  } else if (reqOrigin && (origins.includes(reqOrigin) || isLoopbackOrigin(reqOrigin))) {
     allowOrigin = reqOrigin // echo back allowed origin
   }
 
@@ -500,6 +699,7 @@ async function handleRequest(request, response, transporter) {
 
   // Health endpoint (no CORS needed, but harmless if included)
   if (method === "GET" && url.pathname === "/healthz") {
+    const studentAdminRuntime = getStudentAdminRuntimeStatus()
     const body = {
       status: "ok",
       startedAt: STATUS.startedAt,
@@ -516,7 +716,10 @@ async function handleRequest(request, response, transporter) {
       node: process.version,
       endpoint: DEFAULT_PATH,
       intakeEndpoint: DEFAULT_INTAKE_PATH,
+      studentAdminRuntime,
+      runtimeSelfHeal: getRuntimeSelfHealStatus(),
     }
+    allowCors(request, response)
     response.writeHead(200, { "Content-Type": "application/json" })
     response.end(JSON.stringify(body))
     return
@@ -669,6 +872,7 @@ export function startExerciseMailer(options = {}) {
     options.port === undefined || options.port === null ? DEFAULT_PORT : Number(options.port)
   const host =
     options.host === undefined || options.host === null ? DEFAULT_HOST : String(options.host)
+  const selfHealLoop = startRuntimeSelfHealLoop()
 
   const server = http.createServer((request, response) => {
     handleRequest(request, response, transporter).catch((error) => {
@@ -693,6 +897,12 @@ export function startExerciseMailer(options = {}) {
     console.log(
       `exercise-mailer listening on ${boundHost}:${boundPort} at ${DEFAULT_PATH} and ${DEFAULT_INTAKE_PATH} (health: /healthz)${extra}`
     )
+  })
+
+  server.once("close", () => {
+    if (selfHealLoop && typeof selfHealLoop.stop === "function") {
+      selfHealLoop.stop()
+    }
   })
 
   return server

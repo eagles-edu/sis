@@ -1,0 +1,14 @@
+{
+  "cookies": [
+    {
+      "name": "student_admin_sid",
+      "value": "SkgdXTPlwXAUcN9dc3Md1jmJWkoD3DZ4Y7z_E0xcGXU",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

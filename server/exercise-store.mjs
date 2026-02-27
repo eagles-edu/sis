@@ -1,5 +1,7 @@
 // server/exercise-store.mjs
 
+import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
+
 function resolveBoolean(value, fallback) {
   if (value === undefined || value === null || value === "") return fallback
   if (typeof value === "boolean") return value
@@ -37,16 +39,7 @@ async function getPrismaClient() {
   if (!isStoreEnabled()) return null
   if (prismaClientPromise) return prismaClientPromise
 
-  prismaClientPromise = (async () => {
-    const pkg = await import("@prisma/client")
-    const PrismaClient = pkg?.PrismaClient
-    if (typeof PrismaClient !== "function") {
-      throw new Error("Unable to initialize Prisma client")
-    }
-    const prisma = new PrismaClient()
-    await prisma.$connect()
-    return prisma
-  })()
+  prismaClientPromise = getSharedPrismaClient()
 
   try {
     return await prismaClientPromise

@@ -1,0 +1,138 @@
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - heading "Navigation" [level=2] [ref=e6]
+    - paragraph [ref=e7]: Expandable section menus keep related tools grouped on separate pages.
+    - navigation [ref=e8]:
+      - generic [ref=e9]:
+        - button "Students" [ref=e10] [cursor=pointer]
+        - generic [ref=e11]:
+          - link "Overview" [ref=e12] [cursor=pointer]:
+            - /url: "#"
+          - link "Profile" [ref=e13] [cursor=pointer]:
+            - /url: "#"
+      - button "Tracking" [ref=e15] [cursor=pointer]
+      - button "Support" [ref=e17] [cursor=pointer]
+      - button "Administration" [ref=e19] [cursor=pointer]
+  - generic [ref=e20]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Search student
+        - searchbox "Search student" [ref=e25]
+      - generic [ref=e26]:
+        - generic [ref=e27]: Level
+        - combobox "Level" [ref=e28]:
+          - option "All levels" [selected]
+          - option "EggChic"
+          - option "Starters"
+          - option "Movers"
+          - option "Flyers"
+          - option "KET"
+          - option "PET"
+          - option "IELTS"
+          - option "Private"
+          - option "TAYK"
+          - option "G10"
+          - option "G4"
+          - option "G5"
+          - option "G6"
+          - option "G7"
+          - option "G8"
+          - option "G9"
+      - generic [ref=e29]:
+        - generic [ref=e30]: Family phone lookup
+        - textbox "Family phone lookup" [ref=e31]:
+          - /placeholder: parent emergency phone
+      - button "Search" [ref=e33] [cursor=pointer]
+      - button "Find Family" [ref=e35] [cursor=pointer]
+      - button "Refresh" [ref=e37] [cursor=pointer]
+      - button "Logout" [ref=e39] [cursor=pointer]
+      - generic [ref=e40]:
+        - generic [ref=e41]: SIS Hub Connection
+        - generic [ref=e42]:
+          - generic [ref=e43]: Connected
+          - button "Ping Hub" [ref=e44] [cursor=pointer]
+        - paragraph [ref=e45]: endpoint=/healthz | latency=20ms | checked=12:21:07 PM | detail=healthz ok
+    - generic [ref=e48]:
+      - heading "Overview" [level=2] [ref=e49]
+      - paragraph [ref=e50]: Dashboard sections are stacked for quick scanning. Use detail buttons by level to send reminders to uncompleted students.
+      - paragraph [ref=e51]: No student selected.
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - heading "Systems Health" [level=3] [ref=e54]
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e59]: Hub API
+              - generic [ref=e60]: healthz ok
+            - generic [ref=e61]:
+              - generic [ref=e64]: Admin Runtime
+              - generic [ref=e65]: page=/admin/students | api=/api/admin
+            - generic [ref=e66]:
+              - generic [ref=e69]: Session Store
+              - generic [ref=e70]: driver=redis | ttl=28800s
+            - generic [ref=e71]:
+              - generic [ref=e74]: Filter Cache
+              - generic [ref=e75]: backend=redis | hit/miss=29/7
+            - generic [ref=e76]:
+              - generic [ref=e79]: Self-Heal
+              - generic [ref=e80]: result=in-sync | syncs=12
+            - generic [ref=e81]:
+              - generic [ref=e84]: SMTP Verify
+              - generic [ref=e85]: last verify 2026-02-26T20:21:21.585Z
+            - generic [ref=e86]:
+              - generic [ref=e89]: Recent Pipeline
+              - generic [ref=e90]: exercise=n/a | intake=n/a | send=n/a
+          - paragraph [ref=e91]: OK 6 | Warning 1 | Error 0 | Pending 0
+        - generic [ref=e92]:
+          - heading "Today Snapshot" [level=3] [ref=e93]
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - generic [ref=e96]: Today Attendance
+              - generic [ref=e97]: "0"
+            - generic [ref=e98]:
+              - generic [ref=e99]: Today Absences
+              - generic [ref=e100]: "0"
+            - generic [ref=e101]:
+              - generic [ref=e102]: Tardy 10+ / 30+
+              - generic [ref=e103]: 0% / 0%
+            - generic [ref=e104]:
+              - generic [ref=e105]: At-Risk This Week
+              - generic [ref=e106]: "0"
+            - generic [ref=e107]:
+              - generic [ref=e108]: Assignments Outstanding
+              - generic [ref=e109]: "0"
+            - generic [ref=e110]:
+              - generic [ref=e111]: Outstanding YTD
+              - generic [ref=e112]: "0"
+        - generic [ref=e113]:
+          - heading "Assignment vs Completion (Line)" [level=3] [ref=e114]
+          - generic [ref=e115]:
+            - img "Assignment completion trend" [ref=e116]
+            - generic [ref=e117]:
+              - generic [ref=e118]: Assigned
+              - generic [ref=e120]: Completed
+        - generic [ref=e122]:
+          - heading "Students vs Completions (Bar by Level)" [level=3] [ref=e123]
+          - generic [ref=e124]:
+            - img "Students versus completions by level" [ref=e125]
+            - paragraph [ref=e126]: Detail buttons open uncompleted student lists for reminders.
+        - generic [ref=e127]:
+          - heading "Enrolled vs Attendance (Today)" [level=3] [ref=e128]
+          - table [ref=e129]:
+            - rowgroup [ref=e130]:
+              - row "Class Level Enrolled Attendance Today" [ref=e131]:
+                - columnheader "Class Level" [ref=e132]
+                - columnheader "Enrolled" [ref=e133]
+                - columnheader "Attendance Today" [ref=e134]
+            - rowgroup
+        - generic [ref=e135]:
+          - heading "Assignment Completion Snapshot" [level=3] [ref=e136]
+          - table [ref=e137]:
+            - rowgroup [ref=e138]:
+              - row "Metric Count" [ref=e139]:
+                - columnheader "Metric" [ref=e140]
+                - columnheader "Count" [ref=e141]
+            - rowgroup
+        - generic [ref=e142]:
+          - heading "At-Risk Students (Week)" [level=3] [ref=e143]
+          - generic [ref=e144]: No at-risk students flagged.
+    - generic [ref=e145]: Authenticated as admin.

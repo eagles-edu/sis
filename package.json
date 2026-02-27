@@ -24,6 +24,8 @@
     "db:restore": "node tools/db-restore-failsafe.mjs",
     "db:restore:verify": "node tools/db-restore-failsafe.mjs --verify-only",
     "test": "node --test test/*.spec.mjs",
+    "test:redis": "timeout 120s env STUDENT_ADMIN_SESSION_DRIVER=redis STUDENT_ADMIN_SESSION_REDIS_CONNECT_TIMEOUT_MS=1200 REDIS_SESSION_URL=${REDIS_SESSION_URL:-redis://127.0.0.1:6379/0} node --test test/*.spec.mjs",
+    "test:session-store": "node --test test/student-admin-session-store.spec.mjs",
     "test:watch": "node --test --watch test/*.spec.mjs"
   },
   "keywords": [
@@ -55,6 +57,7 @@
     "stylelint-config-standard": "^36.0.0"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "archiver": "^7.0.1",
     "argparse": "^2.0.1",
@@ -67,6 +70,7 @@
     "js-yaml": "^4.1.1",
     "nodemailer": "^7.0.10",
     "pdfkit": "^0.17.2",
+    "pg": "^8.19.0",
     "postcss": "^8.5.6",
     "redis": "^5.11.0",
     "xlsx": "^0.18.5"

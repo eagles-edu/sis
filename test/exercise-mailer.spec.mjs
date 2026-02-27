@@ -1,6 +1,9 @@
 // test/exercise-mailer.spec.mjs
 import test from "node:test"
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 
 process.env.NODE_ENV = "test"
 // allow any origin during test, then override in a CORS test
@@ -63,6 +66,12 @@ test("GET /healthz returns ok + endpoint", async () => {
   assert.equal(body.status, "ok")
   assert.equal(body.endpoint, "/api/exercise-submission")
   assert.equal(body.intakeEndpoint, "/api/student-intake-submission")
+  assert.equal(body.studentAdminRuntime?.pagePath, "/admin/students")
+  assert.equal(body.studentAdminRuntime?.apiPrefix, "/api/admin")
+  assert.ok(Array.isArray(body.studentAdminRuntime?.pageSections))
+  assert.ok(body.studentAdminRuntime.pageSections.includes("overview"))
+  assert.ok(["memory", "redis"].includes(body.studentAdminRuntime?.sessionDriver))
+  assert.ok(body.studentAdminRuntime?.filterCache)
 })
 
 test("POST /api/exercise-submission succeeds (204) and dispatches notifications", async () => {
@@ -206,6 +215,80 @@ test("CORS echoes back allowed origin when specific origin is configured", async
   // Cleanup temp
   await new Promise((res) => tmp.close(res))
   process.env.EXERCISE_MAILER_ORIGIN = "*"
+})
+
+test("GET /healthz includes CORS headers for allowed loopback preview origin", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const t3Transport = makeMockTransport()
+
+  process.env.EXERCISE_MAILER_ORIGIN = "http://example.com"
+  const tmp = await startExerciseMailer({ transporter: t3Transport, port: 0 })
+  await new Promise((r) => tmp.once("listening", r))
+  const tmpPort = tmp.address().port
+
+  const res = await fetch(`http://127.0.0.1:${tmpPort}/healthz`, {
+    headers: {
+      Origin: "http://127.0.0.1:46145",
+    },
+  })
+  assert.equal(res.status, 200)
+  assert.equal(res.headers.get("access-control-allow-origin"), "http://127.0.0.1:46145")
+
+  await new Promise((done) => tmp.close(done))
+  process.env.EXERCISE_MAILER_ORIGIN = "*"
+})
+
+test("runtime self-heal syncs admin html on mismatch when enabled", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const sourceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sis-self-heal-src-"))
+  const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sis-self-heal-runtime-"))
+  const sourceHtmlPath = path.join(sourceRoot, "web-asset", "admin", "student-admin.html")
+  const runtimeHtmlPath = path.join(runtimeRoot, "web-asset", "admin", "student-admin.html")
+  fs.mkdirSync(path.dirname(sourceHtmlPath), { recursive: true })
+  fs.mkdirSync(path.dirname(runtimeHtmlPath), { recursive: true })
+  fs.writeFileSync(sourceHtmlPath, "<html>source-v2</html>\n")
+  fs.writeFileSync(runtimeHtmlPath, "<html>runtime-v1</html>\n")
+
+  const prevEnabled = process.env.SIS_RUNTIME_SELF_HEAL_ENABLED
+  const prevSourceRoot = process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT
+  const prevRuntimeRoot = process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT
+  const prevInterval = process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
+
+  process.env.SIS_RUNTIME_SELF_HEAL_ENABLED = "true"
+  process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT = sourceRoot
+  process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT = runtimeRoot
+  process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = "1000"
+
+  let tmp = null
+  try {
+    tmp = await startExerciseMailer({ transporter: makeMockTransport(), port: 0, host: "127.0.0.1" })
+    await new Promise((r) => tmp.once("listening", r))
+
+    const synced = fs.readFileSync(runtimeHtmlPath, "utf8")
+    assert.equal(synced, "<html>source-v2</html>\n")
+
+    const tmpPort = tmp.address().port
+    const res = await fetch(`http://127.0.0.1:${tmpPort}/healthz`)
+    assert.equal(res.status, 200)
+    const body = await res.json()
+    assert.equal(body.runtimeSelfHeal?.enabled, true)
+    assert.equal(body.runtimeSelfHeal?.lastResult, "synced")
+    assert.ok(Number(body.runtimeSelfHeal?.syncCount) >= 1)
+  } finally {
+    if (tmp) await new Promise((done) => tmp.close(done))
+
+    if (prevEnabled === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_ENABLED
+    else process.env.SIS_RUNTIME_SELF_HEAL_ENABLED = prevEnabled
+
+    if (prevSourceRoot === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT
+    else process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT = prevSourceRoot
+
+    if (prevRuntimeRoot === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT
+    else process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT = prevRuntimeRoot
+
+    if (prevInterval === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
+    else process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = prevInterval
+  }
 })
 
 test("shutdown", async () => {

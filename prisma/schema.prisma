@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -80,6 +81,11 @@ enum AttendanceStatus {
   absent
   late
   excused
+}
+
+enum AdminUserRole {
+  admin
+  teacher
 }
 
 model IntakeFieldDefinition {
@@ -247,4 +253,15 @@ model ParentClassReport {
 
   @@unique([studentRefId, className, schoolYear, quarter])
   @@index([level, schoolYear, quarter])
+}
+
+model AdminUser {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  role         AdminUserRole @default(teacher)
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([role])
 }

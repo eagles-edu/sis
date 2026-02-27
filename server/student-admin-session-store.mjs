@@ -101,12 +101,15 @@ function createMemoryStore(ttlSeconds) {
     return sessions.delete(key)
   }
 
+  async function close() {}
+
   return {
     driver: "memory",
     createSession,
     getSession,
     touchSession,
     deleteSession,
+    close,
   }
 }
 
@@ -116,6 +119,8 @@ function createRedisBackedStore({
   keyPrefix,
   required,
   fallbackStore,
+  createRedisClient,
+  redisConnectTimeoutMs,
 }) {
   let redisClient = null
   let redisConnectPromise = null
@@ -130,13 +135,17 @@ function createRedisBackedStore({
 
     redisConnectPromise = (async () => {
       try {
-        const { createClient } = await import("redis")
-        const client = createClient({ url: redisUrl })
-        client.on("error", (error) => {
-          if (!required) {
-            console.warn(`student-admin session redis error: ${error.message}`)
-          }
-        })
+        const client = await createRedisClient(redisUrl, redisConnectTimeoutMs)
+        if (!client || typeof client.connect !== "function") {
+          throw new Error("Redis client factory returned an invalid client")
+        }
+        if (typeof client.on === "function") {
+          client.on("error", (error) => {
+            if (!required) {
+              console.warn(`student-admin session redis error: ${error.message}`)
+            }
+          })
+        }
         await client.connect()
         redisClient = client
         return client
@@ -151,6 +160,41 @@ function createRedisBackedStore({
     })()
 
     return redisConnectPromise
+  }
+
+  async function close() {
+    await Promise.resolve(fallbackStore?.close?.())
+
+    let client = redisClient
+    if (!client && redisConnectPromise) {
+      try {
+        client = await redisConnectPromise
+      } catch (error) {
+        void error
+      }
+    }
+
+    redisClient = null
+    redisConnectPromise = null
+
+    if (!client) return
+
+    try {
+      if (typeof client.quit === "function") {
+        await client.quit()
+      } else if (typeof client.disconnect === "function") {
+        client.disconnect()
+      }
+    } catch (error) {
+      if (typeof client.disconnect === "function") {
+        try {
+          client.disconnect()
+        } catch (disconnectError) {
+          void disconnectError
+        }
+      }
+      if (required) throw error
+    }
   }
 
   async function createSession(principal) {
@@ -211,7 +255,19 @@ function createRedisBackedStore({
     getSession,
     touchSession,
     deleteSession,
+    close,
   }
+}
+
+function defaultCreateRedisClient(redisUrl, connectTimeoutMs) {
+  return import("redis").then(({ createClient }) =>
+    createClient({
+      url: redisUrl,
+      socket: {
+        connectTimeout: connectTimeoutMs,
+      },
+    })
+  )
 }
 
 export function createStudentAdminSessionStore(options = {}) {
@@ -226,6 +282,12 @@ export function createStudentAdminSessionStore(options = {}) {
   const keyPrefix =
     normalizeText(options.keyPrefix ?? process.env.STUDENT_ADMIN_SESSION_KEY_PREFIX) ||
     "sis:admin:session:"
+  const redisConnectTimeoutMs = toPositiveInt(
+    options.redisConnectTimeoutMs ?? process.env.STUDENT_ADMIN_SESSION_REDIS_CONNECT_TIMEOUT_MS,
+    3000
+  )
+  const createRedisClient =
+    typeof options.createRedisClient === "function" ? options.createRedisClient : defaultCreateRedisClient
 
   const memoryStore = createMemoryStore(ttlSeconds)
 
@@ -244,5 +306,7 @@ export function createStudentAdminSessionStore(options = {}) {
     keyPrefix,
     required: driver === "redis",
     fallbackStore: memoryStore,
+    createRedisClient,
+    redisConnectTimeoutMs,
   })
 }

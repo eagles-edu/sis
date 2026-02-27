@@ -162,4 +162,3 @@ Before final handoff:
 2. Provide explicit list of touched paths.
 3. Report test command outcomes and failures.
 4. Call out residual risks and open gaps.
-

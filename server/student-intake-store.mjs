@@ -2,6 +2,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
+import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
 
 const DEFAULT_SCHEMA_PATH = path.resolve(process.cwd(), "schemas/member-intake-cf3.schema.json")
 const SKIPPED_REQUIRED_FIELDS = new Set(["hcaptcha_84", "submit_1"])
@@ -195,16 +196,7 @@ async function getPrismaClient() {
   if (!isStoreEnabled()) return null
   if (prismaClientPromise) return prismaClientPromise
 
-  prismaClientPromise = (async () => {
-    const pkg = await import("@prisma/client")
-    const PrismaClient = pkg?.PrismaClient
-    if (typeof PrismaClient !== "function") {
-      throw new Error("Unable to initialize Prisma client")
-    }
-    const prisma = new PrismaClient()
-    await prisma.$connect()
-    return prisma
-  })()
+  prismaClientPromise = getSharedPrismaClient()
 
   try {
     return await prismaClientPromise

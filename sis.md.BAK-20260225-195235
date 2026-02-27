@@ -1,0 +1,108 @@
+# SIS Project Notes
+
+## Scope
+
+- Workspace: `/home/eagles/dockerz/sis`
+- Runtime: Node `v20.19.4`
+- Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
+- Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
+
+## Current Endpoint Inventory (from `server/student-admin-routes.mjs`)
+
+- Base API prefix: `STUDENT_ADMIN_API_PREFIX` (default `/api/admin`)
+- Admin page path: `STUDENT_ADMIN_PAGE_PATH` (default `/admin/students`)
+- Auth endpoints:
+  - `POST /api/admin/auth/login`
+  - `POST /api/admin/login` (legacy alias, still accepted)
+  - `POST /api/admin/auth/logout`
+  - `GET /api/admin/auth/me`
+- Protected admin endpoints:
+  - `GET /api/admin/students/import-template.xlsx`
+  - `GET /api/admin/filters`
+  - `GET /api/admin/students`
+  - `POST /api/admin/students`
+  - `POST /api/admin/students/import`
+  - `GET /api/admin/family?phone=...`
+  - `GET /api/admin/students/:studentRefId`
+  - `PUT /api/admin/students/:studentRefId`
+  - `DELETE /api/admin/students/:studentRefId`
+  - `GET /api/admin/students/:studentRefId/report-card.pdf`
+  - `POST /api/admin/students/:studentRefId/attendance`
+  - `DELETE /api/admin/students/:studentRefId/attendance/:recordId`
+  - `POST /api/admin/students/:studentRefId/grades`
+  - `DELETE /api/admin/students/:studentRefId/grades/:recordId`
+  - `POST /api/admin/students/:studentRefId/reports`
+  - `POST /api/admin/students/:studentRefId/reports/generate`
+  - `DELETE /api/admin/students/:studentRefId/reports/:reportId`
+
+## Test Completeness Review (2026-02-25)
+
+### Executed
+
+```bash
+npm test
+```
+
+Result: `28` tests total, `28` pass, `0` fail.
+
+### Verification of Path Fix
+
+- All path links in this file now point to existing files.
+- Previous broken style (`/abs/path/file:line`) was removed because it resolves to a non-existent filename.
+- Current link style uses file-only targets, with line numbers described in text.
+
+### Findings (ordered by severity)
+
+1. Medium: admin API breadth is still only partially covered.
+   - Auth path is now aligned with cookie-session flow in [test/student-admin.spec.mjs](test/student-admin.spec.mjs) (login case around line 164).
+   - A large route surface in [server/student-admin-routes.mjs](server/student-admin-routes.mjs) remains minimally covered (`students`, `attendance`, `grades`, `reports`, `family`, `filters`).
+
+2. Medium: session lifecycle endpoints remain uncovered.
+   - Missing focused tests for `/api/admin/auth/me` and `/api/admin/auth/logout` in [server/student-admin-routes.mjs](server/student-admin-routes.mjs) (around lines 554 and 549).
+   - Cookie refresh behavior (`touchSession`) around line 418 is not asserted.
+
+3. Medium: role enforcement is not tested.
+   - `teacher` role write restrictions (`403` on non-GET) are implemented in [server/student-admin-routes.mjs](server/student-admin-routes.mjs) (around line 422) but unvalidated in tests.
+
+4. Medium: DB-backed behavior is still mostly untested.
+   - Current tests disable persistence flags in [test/exercise-mailer.spec.mjs](test/exercise-mailer.spec.mjs) and [test/student-admin.spec.mjs](test/student-admin.spec.mjs).
+   - Store modules with limited test coverage:
+     - [server/exercise-store.mjs](server/exercise-store.mjs)
+     - [server/student-intake-store.mjs](server/student-intake-store.mjs)
+     - [server/student-admin-store.mjs](server/student-admin-store.mjs)
+
+5. Medium: parser negative testing is thin.
+   - `.xlsx` happy path exists in [test/student-admin.spec.mjs](test/student-admin.spec.mjs) (around line 36).
+   - Missing malformed base64, empty payload, unsupported format, and CSV/TSV edge-case tests.
+
+6. Low: malformed/oversize payload branches need explicit tests.
+   - `Payload too large` branches exist in [server/exercise-mailer.mjs](server/exercise-mailer.mjs) (around line 296) and [server/student-admin-routes.mjs](server/student-admin-routes.mjs) (around line 437).
+
+7. Low: custom prefix runtime is now covered at route level.
+   - Tests include `STUDENT_ADMIN_API_PREFIX` override and verify regex-backed routes match under non-default prefix.
+
+## Coverage Snapshot
+
+| Subsystem | Current coverage | Status |
+| --- | --- | --- |
+| Exercise submission API | health, success path, invalid answers, recipient decoding, CORS preflight | Partial |
+| Intake submission API | valid payload and missing fields | Partial |
+| Admin auth | invalid + valid login, authenticated template/download/store-disabled checks | Partial |
+| Admin session lifecycle | no `me`/`logout` contract tests | Incomplete |
+| Admin CRUD APIs | minimal, mostly store-disabled paths | Incomplete |
+| PDF generation | buffer/sanity header only | Partial |
+| Spreadsheet import parser | xlsx happy path only | Incomplete |
+| Session store (memory/redis fallback) | no direct unit tests | Incomplete |
+
+## Recommended Next Test Work
+
+1. Add `/auth/me` and `/auth/logout` contract tests with cookie lifecycle assertions.
+2. Add role-based tests for `teacher` vs `admin` write behavior.
+3. Add full admin endpoint matrix tests (`filters`, `family`, CRUD, attendance, grades, reports, generate/delete, report-card PDF).
+4. Add parser hardening tests (invalid base64, empty file, unsupported format, CSV/TSV quoting edge cases).
+5. Add DB-enabled integration profile against disposable Postgres schema.
+
+## Current Risk Summary
+
+- Auth mismatch blocker is resolved and suite is green.
+- Main remaining risk is insufficient integration depth for DB-backed admin workflows.

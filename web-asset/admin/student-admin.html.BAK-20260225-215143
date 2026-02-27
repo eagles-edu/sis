@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Eagles Club Student Info System </title>
+  <style>
+    :root {
+
+  --font-base:
+    system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+
+  /* prettier-ignore  */
+  --font-header:
+    system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+
+  /* Brand core */
+  --primary-color: #B50010; /* locked */
+  --secondary-color: #f9faff; /* white */
+  --tertiary-color: #002786; /* locked */
+  --text-color: #212121; /* locked */
+  --text-muted: #414141;
+  --icon-color-on-lt: #8a94a8; /* locked */
+  --icon-color-on-dk: #f5f8ff; /* locked */
+
+  /* Original Layout surfaces */
+  --bg: var(--secondary-color);
+  --panel: var(--secondary-color);
+  --border:  var(--icon-color-on-lt);
+  --ink: var(--text-color);
+  --ink-muted: var(--ink-muted);
+  --brand:var(--tertiary-color);
+  --danger: #B50010;
+
+  /* Layout surfaces */
+  --background-color: #798ea4; /* page background behind light content */
+  --footer-background: #3e4b5b;
+  --blkquot-background: #f0f2f5;
+  --body-bgcolor: var(--secondary-color); /* body background */
+  --surface-color: #eee; /* menu/content surface */
+  --surface-muted: #f0f0ee; /* light alt surface */
+  --surface-soft: #fffaf0; /* neutral soft background */
+  --surface-warm: #fff; /* hover menu warm neutral alt */
+  --surface-1: #fffffa; /* medium light surface */
+  --surface-2: #fffaf0; /* very light gray surface */
+  --link-aaa: #B50010;
+
+  /* Links */
+  --link-color: var(--link-aaa); /* derived from brand blue */
+  --link-hover: var(--tertiary-color);
+  --link-visited: #630094;
+  --link-active: var(--primary-color) /* Semantic states */;
+  --pager-text-color: var(--text-color);
+  --pager-hover-background: #fff;
+  --success-color: #0f6d2a;
+  --success-bg: #e6f7ee;
+  --success-border: #2f7d51;
+  --danger-color: #B50010; /* align with primary */
+  --danger-bg: #fce9e9;
+  --danger-border: #870200;
+  --warning-color: #66008e;
+  --warning-bg: #f0f0ee;
+  --warning-border: #6330da;
+  --info-color: #005e8d;
+  --info-bg: #d9edf7;
+  --info-border: #3a87ad;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(45deg, var(--background-color) 0%, #8a94a8 100%);
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 500px;
+      margin: 10% auto;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    h1 { font-size: 20px; }
+    h2 { font-size: 16px; }
+    h3 { font-size: 14px; }
+    .muted { color: var(--ink-muted); font-size: 12px; }
+    .hidden { display: none !important; }
+    .row {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+    .col-2 { grid-column: span 2; }
+    .col-3 { grid-column: span 3; }
+    .col-4 { grid-column: span 4; }
+    .col-5 { grid-column: span 5; }
+    .col-6 { grid-column: span 6; }
+    .col-8 { grid-column: span 8; }
+    .col-1 { grid-column: span 1; }
+    .col-12 { grid-column: span 12; }
+    label {
+      font-size: 12px;
+      color: var(--ink-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    input, select, textarea, button {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--ink);
+      inline-size: 100%;
+    }
+    textarea { min-height: 64px; resize: vertical; }
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      background: #f8fbff;
+    }
+    button.primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+    button.danger {
+      background: #fff2f2;
+      border-color: #efc4c4;
+      color: var(--danger);
+    }
+    .grid-main {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 360px 1fr;
+    }
+    .list-box {
+      max-height: 70vh;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #e9eef7;
+      vertical-align: top;
+      text-align: left;
+    }
+    tr.active { background: #edf4ff; }
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .actions-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .section-stack {
+      display: grid;
+      gap: 12px;
+    }
+    .small {
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+    #status {
+      min-height: 28px;
+      white-space: pre-wrap;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+    @media (max-width: 1100px) {
+      .grid-main { grid-template-columns: 1fr; }
+      .col-2, .col-3, .col-4, .col-6, .col-8 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel" id="authPanel">
+      <h1>Student Admin Login</h1>
+      <form id="loginForm">
+        <div class="row">
+          <div class="col-4">
+            <label for="loginUser">Username</label>
+            <input id="loginUser" type="text" autocomplete="username" value="admin">
+          </div>
+          <div class="col-4">
+            <label for="loginPass">Password</label>
+            <input id="loginPass" type="password" autocomplete="current-password">
+          </div>
+          <div class="col-2">
+            <button id="loginBtn" type="submit" class="primary">Login</button>
+          </div>
+        </div>
+      </form>
+      <p class="muted">Session-based secure login is required for all admin API operations.</p>
+    </div>
+
+    <div id="app" class="hidden section-stack">
+      <div class="panel">
+        <div class="row">
+          <div class="col-3">
+            <label for="searchQ">Search student</label>
+            <input id="searchQ" type="search" placeholder="name, student id, parent name">
+          </div>
+          <div class="col-2">
+            <label for="filterLevel">Level</label>
+            <select id="filterLevel"><option value="">All levels</option></select>
+          </div>
+          <div class="col-2">
+            <label for="filterSchool">School</label>
+            <select id="filterSchool"><option value="">All schools</option></select>
+          </div>
+          <div class="col-3">
+            <label for="familyPhone">Family phone lookup</label>
+            <input id="familyPhone" type="tel" placeholder="parent emergency phone">
+          </div>
+          <div class="col-2">
+            <button id="searchBtn" type="button">Search</button>
+          </div>
+          <div class="col-2">
+            <button id="familyBtn" type="button">Find Family</button>
+          </div>
+          <div class="col-2">
+            <button id="refreshBtn" type="button">Refresh</button>
+          </div>
+          <div class="col-2">
+            <button id="logoutBtn" type="button" class="danger">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-main">
+        <div class="panel">
+          <h2>Students</h2>
+          <div class="list-box">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Level</th>
+                  <th>School</th>
+                </tr>
+              </thead>
+              <tbody id="studentRows"></tbody>
+            </table>
+          </div>
+          <p class="small" id="studentCount">0 students</p>
+
+          <hr>
+          <h3>Import Spreadsheet (CSV/TSV/XLSX)</h3>
+          <div class="row">
+            <div class="col-6">
+              <input id="importFile" type="file" accept=".csv,.tsv,.xlsx,.xls,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+            </div>
+            <div class="col-3">
+              <button id="importTemplateBtn" type="button">Download Template</button>
+            </div>
+            <div class="col-3">
+              <button id="importBtn" type="button">Import File</button>
+            </div>
+          </div>
+          <p class="small">`studentId` column is required and must be unique.</p>
+        </div>
+
+        <div class="section-stack">
+          <div class="panel">
+            <h2>Student Profile (linked to individual)</h2>
+            <div class="row">
+              <div class="col-3"><label>Student ID *</label><input id="f_studentId" type="text"></div>
+              <div class="col-4"><label>Full Name</label><input id="f_fullName" type="text"></div>
+              <div class="col-3"><label>English Name</label><input id="f_englishName" type="text"></div>
+              <div class="col-2"><label>Date of Birth</label><input id="f_dobText" type="text"></div>
+              <div class="col-12"><label>Photo URL (for PDF report card image)</label><input id="f_photoUrl" type="url" placeholder="https://... or data:image/..."></div>
+
+              <div class="col-3"><label>Student Email</label><input id="f_studentEmail" type="email"></div>
+              <div class="col-3"><label>Student Phone (Child)</label><input id="f_studentPhone" type="tel"></div>
+              <div class="col-2"><label>Level / Grade</label><input id="f_currentGrade" type="text"></div>
+              <div class="col-4"><label>School Name</label><input id="f_schoolName" type="text"></div>
+
+              <div class="col-8"><label>Address</label><input id="f_streetAddress" type="text"></div>
+              <div class="col-2"><label>Ward/District</label><input id="f_wardDistrict" type="text"></div>
+              <div class="col-2"><label>City</label><input id="f_city" type="text"></div>
+
+              <div class="col-4"><label>Mother Name</label><input id="f_motherName" type="text"></div>
+              <div class="col-3"><label>Mother Phone</label><input id="f_motherPhone" type="tel"></div>
+              <div class="col-3"><label>Mother Emergency Phone</label><input id="f_motherEmergencyContact" type="tel"></div>
+              <div class="col-2"><label>Mother Email</label><input id="f_motherEmail" type="email"></div>
+
+              <div class="col-4"><label>Father Name</label><input id="f_fatherName" type="text"></div>
+              <div class="col-3"><label>Father Phone</label><input id="f_fatherPhone" type="tel"></div>
+              <div class="col-3"><label>Father Emergency Phone</label><input id="f_fatherEmergencyContact" type="tel"></div>
+              <div class="col-2"><label>Father Email</label><input id="f_fatherEmail" type="email"></div>
+
+              <div class="col-12"><label>Comments</label><textarea id="f_extraComments"></textarea></div>
+            </div>
+            <div class="actions">
+              <button id="newBtn" type="button">Create New</button>
+              <button id="saveBtn" type="button" class="primary">Save / Update</button>
+              <button id="deleteBtn" type="button" class="danger">Delete Student</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Attendance by Quarter</h2>
+            <div class="row">
+              <input id="a_id" type="hidden">
+              <div class="col-3"><label>Class</label><input id="a_className" type="text"></div>
+              <div class="col-2"><label>School Year</label><input id="a_schoolYear" type="text" placeholder="2026-2027"></div>
+              <div class="col-2"><label>Quarter</label><select id="a_quarter"><option>q1</option><option>q2</option><option>q3</option><option>q4</option></select></div>
+              <div class="col-2"><label>Date</label><input id="a_date" type="date"></div>
+              <div class="col-2"><label>Status</label><select id="a_status"><option>present</option><option>absent</option><option>late</option><option>excused</option></select></div>
+              <div class="col-1"><label>&nbsp;</label><button id="attendanceSaveBtn" type="button">Save</button></div>
+              <div class="col-12"><label>Comments</label><input id="a_comments" type="text"></div>
+            </div>
+            <table>
+              <thead><tr><th>Date</th><th>Class</th><th>Quarter</th><th>Status</th><th>Comments</th><th>Action</th></tr></thead>
+              <tbody id="attendanceRows"></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <h2>Grades / Homework / Behavior / Participation</h2>
+            <div class="row">
+              <input id="g_id" type="hidden">
+              <div class="col-3"><label>Class</label><input id="g_className" type="text"></div>
+              <div class="col-2"><label>School Year</label><input id="g_schoolYear" type="text"></div>
+              <div class="col-2"><label>Quarter</label><select id="g_quarter"><option>q1</option><option>q2</option><option>q3</option><option>q4</option></select></div>
+              <div class="col-5"><label>Assignment</label><input id="g_assignmentName" type="text"></div>
+
+              <div class="col-2"><label>Due Date</label><input id="g_dueAt" type="date"></div>
+              <div class="col-2"><label>Submitted Date</label><input id="g_submittedAt" type="date"></div>
+              <div class="col-1"><label>Score</label><input id="g_score" type="number" step="0.01"></div>
+              <div class="col-1"><label>Max</label><input id="g_maxScore" type="number" step="0.01"></div>
+              <div class="col-2"><label>HW Done</label><select id="g_homeworkCompleted"><option value="">-</option><option value="true">Yes</option><option value="false">No</option></select></div>
+              <div class="col-2"><label>On Time</label><select id="g_homeworkOnTime"><option value="">-</option><option value="true">Yes</option><option value="false">No</option></select></div>
+              <div class="col-2"><label>Behavior</label><input id="g_behaviorScore" type="number"></div>
+
+              <div class="col-2"><label>Participation</label><input id="g_participationScore" type="number"></div>
+              <div class="col-2"><label>In Class</label><input id="g_inClassScore" type="number"></div>
+              <div class="col-6"><label>Comments</label><input id="g_comments" type="text"></div>
+              <div class="col-2"><label>&nbsp;</label><button id="gradeSaveBtn" type="button">Save</button></div>
+            </div>
+            <table>
+              <thead><tr><th>Due</th><th>Class</th><th>Assignment</th><th>Score</th><th>HW</th><th>Behavior</th><th>Participation</th><th>In Class</th><th>Action</th></tr></thead>
+              <tbody id="gradeRows"></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <h2>Parent Reports Per Class</h2>
+            <div class="row">
+              <input id="r_id" type="hidden">
+              <div class="col-3"><label>Class</label><input id="r_className" type="text"></div>
+              <div class="col-2"><label>School Year</label><input id="r_schoolYear" type="text"></div>
+              <div class="col-2"><label>Quarter</label><select id="r_quarter"><option>q1</option><option>q2</option><option>q3</option><option>q4</option></select></div>
+              <div class="col-2"><label>HW %</label><input id="r_homeworkCompletionRate" type="number" step="0.01"></div>
+              <div class="col-2"><label>On-Time %</label><input id="r_homeworkOnTimeRate" type="number" step="0.01"></div>
+              <div class="col-1"><label>&nbsp;</label><button id="reportSaveBtn" type="button">Save</button></div>
+
+              <div class="col-2"><label>Behavior</label><input id="r_behaviorScore" type="number" step="0.01"></div>
+              <div class="col-2"><label>Participation</label><input id="r_participationScore" type="number" step="0.01"></div>
+              <div class="col-2"><label>In Class</label><input id="r_inClassScore" type="number" step="0.01"></div>
+              <div class="col-6"><label>Comments</label><input id="r_comments" type="text"></div>
+            </div>
+            <div class="actions actions-3">
+              <button id="reportGenerateBtn" type="button">Generate from Grade Records</button>
+              <button id="reportCardBtn" type="button">Download PDF Report Card</button>
+              <button id="reportClearBtn" type="button">Clear Report Form</button>
+            </div>
+            <table>
+              <thead><tr><th>Generated</th><th>Class</th><th>Quarter</th><th>HW %</th><th>On-Time %</th><th>Behavior</th><th>Participation</th><th>In Class</th><th>Action</th></tr></thead>
+              <tbody id="reportRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      authUser: null,
+      students: [],
+      currentStudent: null,
+    }
+
+    const statusEl = document.getElementById("status")
+
+    const profileFields = [
+      "studentId", "fullName", "englishName", "dobText", "photoUrl", "studentEmail", "studentPhone", "currentGrade", "schoolName",
+      "streetAddress", "wardDistrict", "city", "motherName", "motherPhone", "motherEmergencyContact", "motherEmail",
+      "fatherName", "fatherPhone", "fatherEmergencyContact", "fatherEmail", "extraComments"
+    ]
+
+    function setStatus(message, isError = false) {
+      statusEl.style.color = isError ? "#bd2f2f" : "#5f6d87"
+      statusEl.textContent = message
+    }
+
+    function normalizeText(value) {
+      if (value === undefined || value === null) return ""
+      return String(value).trim()
+    }
+
+    const DEFAULT_ADMIN_API_PREFIX = "/api/admin"
+    const DEFAULT_ADMIN_PAGE_PATH = "/admin/students"
+
+    function normalizePathPrefix(value, fallback = DEFAULT_ADMIN_API_PREFIX) {
+      let normalized = normalizeText(value || fallback)
+      if (!normalized) normalized = fallback
+      if (!normalized.startsWith("/")) normalized = `/${normalized}`
+      if (normalized.length > 1) normalized = normalized.replace(/\/+$/, "")
+      return normalized
+    }
+
+    function resolveApiPrefix() {
+      const params = new URLSearchParams(window.location.search || "")
+      const queryPrefix = normalizeText(params.get("apiPrefix"))
+      const injectedPrefix = normalizeText(window.__SIS_ADMIN_API_PREFIX)
+      let storedPrefix = ""
+      try {
+        storedPrefix = normalizeText(window.localStorage.getItem("sis.admin.apiPrefix"))
+      } catch (error) {
+        void error
+      }
+      const resolvedPrefix = normalizePathPrefix(
+        queryPrefix || injectedPrefix || storedPrefix,
+        DEFAULT_ADMIN_API_PREFIX
+      )
+
+      if (queryPrefix) {
+        try {
+          window.localStorage.setItem("sis.admin.apiPrefix", resolvedPrefix)
+        } catch (error) {
+          void error
+        }
+      }
+
+      return resolvedPrefix
+    }
+
+    function resolveAdminPagePath() {
+      const injectedPath = normalizeText(window.__SIS_ADMIN_PAGE_PATH)
+      return normalizePathPrefix(injectedPath || DEFAULT_ADMIN_PAGE_PATH, DEFAULT_ADMIN_PAGE_PATH)
+    }
+
+    function resolveApiOrigin() {
+      const params = new URLSearchParams(window.location.search || "")
+      const queryOrigin = normalizeText(params.get("apiOrigin"))
+      const injectedOrigin = normalizeText(window.__SIS_ADMIN_API_ORIGIN)
+      let storedOrigin = ""
+      try {
+        storedOrigin = normalizeText(window.localStorage.getItem("sis.admin.apiOrigin"))
+      } catch (error) {
+        void error
+      }
+
+      const selectedOrigin = queryOrigin || injectedOrigin || storedOrigin
+      if (!selectedOrigin) return ""
+      try {
+        const resolved = new URL(selectedOrigin, window.location.origin).origin
+        if (queryOrigin) {
+          try {
+            window.localStorage.setItem("sis.admin.apiOrigin", resolved)
+          } catch (error) {
+            void error
+          }
+        }
+        return resolved
+      } catch (error) {
+        void error
+        return ""
+      }
+    }
+
+    const ADMIN_API_PREFIX = resolveApiPrefix()
+    const ADMIN_PAGE_PATH = resolveAdminPagePath()
+    const ADMIN_API_ORIGIN = resolveApiOrigin()
+
+    function resolveApiUrl(path) {
+      const rawPath = normalizeText(path)
+      if (!rawPath) return rawPath
+      if (/^https?:\/\//i.test(rawPath)) return rawPath
+
+      let resolvedPath = rawPath
+      if (resolvedPath.startsWith(DEFAULT_ADMIN_API_PREFIX)) {
+        resolvedPath = `${ADMIN_API_PREFIX}${resolvedPath.slice(DEFAULT_ADMIN_API_PREFIX.length)}`
+      }
+      if (!resolvedPath.startsWith("/")) {
+        resolvedPath = `/${resolvedPath}`
+      }
+
+      if (ADMIN_API_ORIGIN) {
+        return new URL(resolvedPath, ADMIN_API_ORIGIN).toString()
+      }
+      return resolvedPath
+    }
+
+    function isStaticAdminPreviewMode() {
+      return normalizeText(window.location.pathname).endsWith("/web-asset/admin/student-admin.html")
+    }
+
+    function staticPreviewHelpMessage() {
+      return `Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening ${ADMIN_PAGE_PATH}.`
+    }
+
+    function assertApiOriginConfiguredForStaticPreview() {
+      if (!isStaticAdminPreviewMode() || ADMIN_API_ORIGIN) return
+      const error = new Error(staticPreviewHelpMessage())
+      error.status = 400
+      throw error
+    }
+
+    function selectedStudentId() {
+      return state.currentStudent && state.currentStudent.id ? state.currentStudent.id : ""
+    }
+
+    function toBoolOrNull(value) {
+      if (value === "true") return true
+      if (value === "false") return false
+      return null
+    }
+
+    async function api(path, options = {}) {
+      const method = options.method || "GET"
+      const headers = {}
+      if (options.body !== undefined) {
+        headers["Content-Type"] = "application/json"
+      }
+
+      const response = await fetch(resolveApiUrl(path), {
+        method,
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        credentials: "include",
+      })
+
+      if (response.status === 204) return null
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        const error = new Error(data.error || `HTTP ${response.status}`)
+        error.status = response.status
+        throw error
+      }
+
+      return data
+    }
+
+    function showApp() {
+      document.getElementById("authPanel").classList.add("hidden")
+      document.getElementById("app").classList.remove("hidden")
+    }
+
+    function showLogin() {
+      document.getElementById("authPanel").classList.remove("hidden")
+      document.getElementById("app").classList.add("hidden")
+    }
+
+    async function login() {
+      assertApiOriginConfiguredForStaticPreview()
+      const username = document.getElementById("loginUser").value
+      const password = document.getElementById("loginPass").value
+      const result = await api("/api/admin/auth/login", {
+        method: "POST",
+        body: { username, password },
+      })
+      state.authUser = result.user || null
+      showApp()
+      await bootAfterLogin()
+      setStatus(`Authenticated as ${state.authUser?.username || "admin"}. Student admin loaded.`)
+    }
+
+    async function logout(remote = true) {
+      if (remote) {
+        try {
+          await api("/api/admin/auth/logout", { method: "POST" })
+        } catch (error) {
+          void error
+        }
+      }
+      state.authUser = null
+      state.currentStudent = null
+      state.students = []
+      showLogin()
+      setStatus("Logged out.")
+    }
+
+    function renderStudents() {
+      const tbody = document.getElementById("studentRows")
+      tbody.innerHTML = ""
+
+      state.students.forEach((student) => {
+        const tr = document.createElement("tr")
+        if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
+        tr.innerHTML = `
+          <td>${student.studentId || ""}</td>
+          <td>${student.profile?.fullName || ""}</td>
+          <td>${student.profile?.currentGrade || ""}</td>
+          <td>${student.profile?.schoolName || ""}</td>
+        `
+        tr.addEventListener("click", () => loadStudentDetail(student.id))
+        tbody.appendChild(tr)
+      })
+
+      document.getElementById("studentCount").textContent = `${state.students.length} students`
+    }
+
+    function setFormValue(field, value) {
+      const el = document.getElementById(`f_${field}`)
+      if (!el) return
+      el.value = value || ""
+    }
+
+    function getFormValue(field) {
+      const el = document.getElementById(`f_${field}`)
+      return el ? normalizeText(el.value) : ""
+    }
+
+    function clearStudentForm() {
+      state.currentStudent = null
+      profileFields.forEach((field) => setFormValue(field, ""))
+      document.getElementById("a_id").value = ""
+      document.getElementById("g_id").value = ""
+      document.getElementById("r_id").value = ""
+      document.getElementById("attendanceRows").innerHTML = ""
+      document.getElementById("gradeRows").innerHTML = ""
+      document.getElementById("reportRows").innerHTML = ""
+      renderStudents()
+    }
+
+    function fillStudentForm(student) {
+      const p = student.profile || {}
+      setFormValue("studentId", student.studentId)
+      setFormValue("fullName", p.fullName)
+      setFormValue("englishName", p.englishName)
+      setFormValue("dobText", p.dobText)
+      setFormValue("photoUrl", p.photoUrl)
+      setFormValue("studentEmail", p.studentEmail || student.email)
+      setFormValue("studentPhone", p.studentPhone)
+      setFormValue("currentGrade", p.currentGrade)
+      setFormValue("schoolName", p.schoolName)
+      setFormValue("streetAddress", p.streetAddress)
+      setFormValue("wardDistrict", p.wardDistrict)
+      setFormValue("city", p.city)
+      setFormValue("motherName", p.motherName)
+      setFormValue("motherPhone", p.motherPhone)
+      setFormValue("motherEmergencyContact", p.motherEmergencyContact)
+      setFormValue("motherEmail", p.motherEmail)
+      setFormValue("fatherName", p.fatherName)
+      setFormValue("fatherPhone", p.fatherPhone)
+      setFormValue("fatherEmergencyContact", p.fatherEmergencyContact)
+      setFormValue("fatherEmail", p.fatherEmail)
+      setFormValue("extraComments", p.extraComments)
+
+      renderAttendanceRows(student.attendanceRecords || [])
+      renderGradeRows(student.gradeRecords || [])
+      renderReportRows(student.parentReports || [])
+    }
+
+    function collectStudentPayload() {
+      return {
+        studentId: getFormValue("studentId"),
+        email: getFormValue("studentEmail"),
+        profile: {
+          sourceFormId: "admin-manual",
+          sourceUrl: "admin/students",
+          fullName: getFormValue("fullName"),
+          englishName: getFormValue("englishName"),
+          dobText: getFormValue("dobText"),
+          photoUrl: getFormValue("photoUrl"),
+          studentEmail: getFormValue("studentEmail"),
+          studentPhone: getFormValue("studentPhone"),
+          currentGrade: getFormValue("currentGrade"),
+          schoolName: getFormValue("schoolName"),
+          streetAddress: getFormValue("streetAddress"),
+          wardDistrict: getFormValue("wardDistrict"),
+          city: getFormValue("city"),
+          motherName: getFormValue("motherName"),
+          motherPhone: getFormValue("motherPhone"),
+          motherEmergencyContact: getFormValue("motherEmergencyContact"),
+          motherEmail: getFormValue("motherEmail"),
+          fatherName: getFormValue("fatherName"),
+          fatherPhone: getFormValue("fatherPhone"),
+          fatherEmergencyContact: getFormValue("fatherEmergencyContact"),
+          fatherEmail: getFormValue("fatherEmail"),
+          extraComments: getFormValue("extraComments"),
+        },
+      }
+    }
+
+    async function loadFilters() {
+      const data = await api("/api/admin/filters")
+      const levelSelect = document.getElementById("filterLevel")
+      const schoolSelect = document.getElementById("filterSchool")
+
+      levelSelect.innerHTML = '<option value="">All levels</option>'
+      schoolSelect.innerHTML = '<option value="">All schools</option>'
+
+      ;(data.levels || []).forEach((level) => {
+        const option = document.createElement("option")
+        option.value = level
+        option.textContent = level
+        levelSelect.appendChild(option)
+      })
+
+      ;(data.schools || []).forEach((school) => {
+        const option = document.createElement("option")
+        option.value = school
+        option.textContent = school
+        schoolSelect.appendChild(option)
+      })
+    }
+
+    async function loadStudents() {
+      const q = encodeURIComponent(document.getElementById("searchQ").value || "")
+      const level = encodeURIComponent(document.getElementById("filterLevel").value || "")
+      const school = encodeURIComponent(document.getElementById("filterSchool").value || "")
+
+      const data = await api(`/api/admin/students?q=${q}&level=${level}&school=${school}`)
+      state.students = data.items || []
+      renderStudents()
+
+      if (state.currentStudent) {
+        const exists = state.students.find((entry) => entry.id === state.currentStudent.id)
+        if (!exists) clearStudentForm()
+      }
+    }
+
+    async function loadStudentDetail(studentId) {
+      const student = await api(`/api/admin/students/${encodeURIComponent(studentId)}`)
+      state.currentStudent = student
+      fillStudentForm(student)
+      renderStudents()
+    }
+
+    async function saveStudent() {
+      const payload = collectStudentPayload()
+      if (!payload.studentId) throw new Error("studentId is required")
+
+      if (state.currentStudent && state.currentStudent.id) {
+        const result = await api(`/api/admin/students/${encodeURIComponent(state.currentStudent.id)}`, {
+          method: "PUT",
+          body: payload,
+        })
+        state.currentStudent = result.student
+      } else {
+        const result = await api("/api/admin/students", {
+          method: "POST",
+          body: payload,
+        })
+        state.currentStudent = result.student
+      }
+
+      await loadFilters()
+      await loadStudents()
+      if (state.currentStudent?.id) await loadStudentDetail(state.currentStudent.id)
+      setStatus("Student saved.")
+    }
+
+    async function deleteCurrentStudent() {
+      const id = selectedStudentId()
+      if (!id) throw new Error("Select a student first")
+      if (!confirm("Delete this student and linked records?")) return
+
+      await api(`/api/admin/students/${encodeURIComponent(id)}`, { method: "DELETE" })
+      clearStudentForm()
+      await loadFilters()
+      await loadStudents()
+      setStatus("Student deleted.")
+    }
+
+    function parseDelimited(text, delimiter) {
+      const rows = []
+      let row = []
+      let value = ""
+      let inQuotes = false
+
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i]
+        const next = text[i + 1]
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            value += '"'
+            i += 1
+          } else {
+            inQuotes = !inQuotes
+          }
+          continue
+        }
+
+        if (!inQuotes && char === delimiter) {
+          row.push(value)
+          value = ""
+          continue
+        }
+
+        if (!inQuotes && (char === "\n" || char === "\r")) {
+          if (char === "\r" && next === "\n") i += 1
+          row.push(value)
+          value = ""
+          if (row.some((cell) => normalizeText(cell))) rows.push(row)
+          row = []
+          continue
+        }
+
+        value += char
+      }
+
+      if (value || row.length) {
+        row.push(value)
+        if (row.some((cell) => normalizeText(cell))) rows.push(row)
+      }
+
+      return rows
+    }
+
+    function arrayBufferToBase64(arrayBuffer) {
+      const bytes = new Uint8Array(arrayBuffer)
+      let binary = ""
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize)
+        binary += String.fromCharCode(...chunk)
+      }
+      return btoa(binary)
+    }
+
+    function detectImportFormat(fileName) {
+      const lower = normalizeText(fileName).toLowerCase()
+      if (lower.endsWith(".xlsx")) return "xlsx"
+      if (lower.endsWith(".xls")) return "xls"
+      if (lower.endsWith(".tsv")) return "tsv"
+      return "csv"
+    }
+
+    async function importSpreadsheet() {
+      const fileInput = document.getElementById("importFile")
+      const file = fileInput.files[0]
+      if (!file) throw new Error("Choose a CSV/TSV/XLSX file first")
+
+      const format = detectImportFormat(file.name)
+      let result = null
+
+      if (format === "xlsx" || format === "xls") {
+        const arrayBuffer = await file.arrayBuffer()
+        const fileDataBase64 = arrayBufferToBase64(arrayBuffer)
+        result = await api("/api/admin/students/import", {
+          method: "POST",
+          body: {
+            fileName: file.name,
+            format,
+            fileDataBase64,
+          },
+        })
+      } else {
+        const text = await file.text()
+        const delimiter = format === "tsv" ? "\t" : ","
+        const matrix = parseDelimited(text, delimiter)
+        if (!matrix.length) throw new Error("Import file is empty")
+
+        const headers = matrix[0].map((cell) => normalizeText(cell))
+        const rows = matrix.slice(1).map((line) => {
+          const row = {}
+          headers.forEach((header, index) => {
+            row[header || `col_${index + 1}`] = normalizeText(line[index] || "")
+          })
+          return row
+        })
+
+        result = await api("/api/admin/students/import", {
+          method: "POST",
+          body: { rows },
+        })
+      }
+
+      await loadFilters()
+      await loadStudents()
+      setStatus(`Import completed: processed=${result.processed}, created=${result.created}, updated=${result.updated}, failed=${result.failed}`)
+    }
+
+    async function downloadImportTemplate() {
+      const response = await fetch(resolveApiUrl("/api/admin/students/import-template.xlsx"), {
+        credentials: "include",
+      })
+
+      if (!response.ok) {
+        let message = `HTTP ${response.status}`
+        try {
+          const payload = await response.json()
+          if (payload && payload.error) message = payload.error
+        } catch (error) {
+          void error
+        }
+        const apiError = new Error(message)
+        apiError.status = response.status
+        throw apiError
+      }
+
+      const blob = await response.blob()
+      const downloadUrl = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      const disposition = response.headers.get("content-disposition") || ""
+      const suggestedName = parseFilenameFromDisposition(disposition)
+      link.href = downloadUrl
+      link.download = suggestedName || "student-import-template.xlsx"
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(downloadUrl)
+      setStatus("Import template downloaded.")
+    }
+
+    function attendancePayload() {
+      return {
+        id: normalizeText(document.getElementById("a_id").value),
+        className: normalizeText(document.getElementById("a_className").value),
+        schoolYear: normalizeText(document.getElementById("a_schoolYear").value),
+        quarter: normalizeText(document.getElementById("a_quarter").value),
+        attendanceDate: normalizeText(document.getElementById("a_date").value),
+        status: normalizeText(document.getElementById("a_status").value),
+        comments: normalizeText(document.getElementById("a_comments").value),
+        level: getFormValue("currentGrade"),
+      }
+    }
+
+    async function saveAttendance() {
+      const id = selectedStudentId()
+      if (!id) throw new Error("Select a student first")
+      const payload = attendancePayload()
+      const result = await api(`/api/admin/students/${encodeURIComponent(id)}/attendance`, {
+        method: "POST",
+        body: payload,
+      })
+      state.currentStudent = result.student
+      fillStudentForm(state.currentStudent)
+      document.getElementById("a_id").value = ""
+      setStatus("Attendance record saved.")
+    }
+
+    async function deleteAttendance(recordId) {
+      const id = selectedStudentId()
+      const result = await api(`/api/admin/students/${encodeURIComponent(id)}/attendance/${encodeURIComponent(recordId)}`, {
+        method: "DELETE",
+      })
+      state.currentStudent = result.student
+      fillStudentForm(state.currentStudent)
+      setStatus("Attendance record deleted.")
+    }
+
+    function renderAttendanceRows(rows) {
+      const tbody = document.getElementById("attendanceRows")
+      tbody.innerHTML = ""
+      rows.forEach((row) => {
+        const tr = document.createElement("tr")
+        tr.innerHTML = `
+          <td>${row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : ""}</td>
+          <td>${row.className || ""}</td>
+          <td>${row.quarter || ""}</td>
+          <td>${row.status || ""}</td>
+          <td>${row.comments || ""}</td>
+          <td>
+            <button type="button" data-edit="${row.id}">Edit</button>
+            <button type="button" data-del="${row.id}">Delete</button>
+          </td>
+        `
+        tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
+          document.getElementById("a_id").value = row.id
+          document.getElementById("a_className").value = row.className || ""
+          document.getElementById("a_schoolYear").value = row.schoolYear || ""
+          document.getElementById("a_quarter").value = row.quarter || "q1"
+          document.getElementById("a_date").value = row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : ""
+          document.getElementById("a_status").value = row.status || "present"
+          document.getElementById("a_comments").value = row.comments || ""
+        })
+        tr.querySelector(`[data-del="${row.id}"]`).addEventListener("click", () => deleteAttendance(row.id).catch(handleError))
+        tbody.appendChild(tr)
+      })
+    }
+
+    function gradePayload() {
+      return {
+        id: normalizeText(document.getElementById("g_id").value),
+        className: normalizeText(document.getElementById("g_className").value),
+        schoolYear: normalizeText(document.getElementById("g_schoolYear").value),
+        quarter: normalizeText(document.getElementById("g_quarter").value),
+        assignmentName: normalizeText(document.getElementById("g_assignmentName").value),
+        dueAt: normalizeText(document.getElementById("g_dueAt").value),
+        submittedAt: normalizeText(document.getElementById("g_submittedAt").value),
+        score: normalizeText(document.getElementById("g_score").value),
+        maxScore: normalizeText(document.getElementById("g_maxScore").value),
+        homeworkCompleted: toBoolOrNull(document.getElementById("g_homeworkCompleted").value),
+        homeworkOnTime: toBoolOrNull(document.getElementById("g_homeworkOnTime").value),
+        behaviorScore: normalizeText(document.getElementById("g_behaviorScore").value),
+        participationScore: normalizeText(document.getElementById("g_participationScore").value),
+        inClassScore: normalizeText(document.getElementById("g_inClassScore").value),
+        comments: normalizeText(document.getElementById("g_comments").value),
+        level: getFormValue("currentGrade"),
+      }
+    }
+
+    async function saveGrade() {
+      const id = selectedStudentId()
+      if (!id) throw new Error("Select a student first")
+      const result = await api(`/api/admin/students/${encodeURIComponent(id)}/grades`, {
+        method: "POST",
+        body: gradePayload(),
+      })
+      state.currentStudent = result.student
+      fillStudentForm(state.currentStudent)
+      document.getElementById("g_id").value = ""
+      setStatus("Grade record saved.")
+    }
+
+    async function deleteGrade(recordId) {
+      const id = selectedStudentId()
+      const result = await api(`/api/admin/students/${encodeURIComponent(id)}/grades/${encodeURIComponent(recordId)}`, {
+        method: "DELETE",
+      })
+      state.currentStudent = result.student
+      fillStudentForm(state.currentStudent)
+      setStatus("Grade record deleted.")
+    }
+
+    function renderGradeRows(rows) {
+      const tbody = document.getElementById("gradeRows")
+      tbody.innerHTML = ""
+      rows.forEach((row) => {
+        const tr = document.createElement("tr")
+        tr.innerHTML = `
+          <td>${row.dueAt ? String(row.dueAt).slice(0, 10) : ""}</td>
+          <td>${row.className || ""}</td>
+          <td>${row.assignmentName || ""}</td>
+          <td>${row.score ?? ""}/${row.maxScore ?? ""}</td>
+          <td>${row.homeworkCompleted === true ? "Yes" : row.homeworkCompleted === false ? "No" : ""}</td>
+          <td>${row.behaviorScore ?? ""}</td>
+          <td>${row.participationScore ?? ""}</td>
+          <td>${row.inClassScore ?? ""}</td>
+          <td>
+            <button type="button" data-edit="${row.id}">Edit</button>
+            <button type="button" data-del="${row.id}">Delete</button>
+          </td>
+        `
+        tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
+          document.getElementById("g_id").value = row.id
+          document.getElementById("g_className").value = row.className || ""
+          document.getElementById("g_schoolYear").value = row.schoolYear || ""
+          document.getElementById("g_quarter").value = row.quarter || "q1"
+          document.getElementById("g_assignmentName").value = row.assignmentName || ""
+          document.getElementById("g_dueAt").value = row.dueAt ? String(row.dueAt).slice(0, 10) : ""
+          document.getElementById("g_submittedAt").value = row.submittedAt ? String(row.submittedAt).slice(0, 10) : ""
+          document.getElementById("g_score").value = row.score ?? ""
+          document.getElementById("g_maxScore").value = row.maxScore ?? ""
+          document.getElementById("g_homeworkCompleted").value = row.homeworkCompleted === null ? "" : String(row.homeworkCompleted)
+          document.getElementById("g_homeworkOnTime").value = row.homeworkOnTime === null ? "" : String(row.homeworkOnTime)
+          document.getElementById("g_behaviorScore").value = row.behaviorScore ?? ""
+          document.getElementById("g_participationScore").value = row.participationScore ?? ""
+          document.getElementById("g_inClassScore").value = row.inClassScore ?? ""
+          document.getElementById("g_comments").value = row.comments || ""
+        })
+        tr.querySelector(`[data-del="${row.id}"]`).addEventListener("click", () => deleteGrade(row.id).catch(handleError))
+        tbody.appendChild(tr)
+      })
+    }
+
+    function reportPayload() {
+      return {
+        id: normalizeText(document.getElementById("r_id").value),
+        className: normalizeText(document.getElementById("r_className").value),
+        schoolYear: normalizeText(document.getElementById("r_schoolYear").value),
+        quarter: normalizeText(document.getElementById("r_quarter").value),
+        homeworkCompletionRate: normalizeText(document.getElementById("r_homeworkCompletionRate").value),
+        homeworkOnTimeRate: normalizeText(document.getElementById("r_homeworkOnTimeRate").value),
+        behaviorScore: normalizeText(document.getElementById("r_behaviorScore").value),
+        participationScore: normalizeText(document.getElementById("r_participationScore").value),
+        inClassScore: normalizeText(document.getElementById("r_inClassScore").value),
+        comments: normalizeText(document.getElementById("r_comments").value),
+        level: getFormValue("currentGrade"),
+      }
+    }
+
+    async function saveReport() {
+      const id = selectedStudentId()
+      if (!id) throw new Error("Select a student first")
+      const result = await api(`/api/admin/students/${encodeURIComponent(id)}/reports`, {
+        method: "POST",
+        body: reportPayload(),
+      })
+      state.currentStudent = result.student
+      fillStudentForm(state.currentStudent)
+      document.getElementById("r_id").value = ""
+      setStatus("Parent report saved.")
+    }
+
+    async function generateReport() {
+      const id = selectedStudentId()
+      if (!id) throw new Error("Select a student first")
+      const result = await api(`/api/admin/students/${encodeURIComponent(id)}/reports/generate`, {
+        method: "POST",
+        body: reportPayload(),
+      })
+      state.currentStudent = result.student
+      fillStudentForm(state.currentStudent)
+      setStatus("Parent report generated from grade records.")
+    }
+
+    function parseFilenameFromDisposition(value) {
+      const text = normalizeText(value)
+      if (!text) return ""
+      const utf8Match = text.match(/filename\\*=UTF-8''([^;]+)/i)
+      if (utf8Match && utf8Match[1]) return decodeURIComponent(utf8Match[1])
+      const quotedMatch = text.match(/filename=\"([^\"]+)\"/i)
+      if (quotedMatch && quotedMatch[1]) return quotedMatch[1]
+      const plainMatch = text.match(/filename=([^;]+)/i)
+      if (plainMatch && plainMatch[1]) return plainMatch[1].trim()
+      return ""
+    }
+
+    async function downloadReportCard() {
+      const id = selectedStudentId()
+      if (!id) throw new Error("Select a student first")
+
+      const params = new URLSearchParams()
+      const className = normalizeText(document.getElementById("r_className").value)
+      const schoolYear = normalizeText(document.getElementById("r_schoolYear").value)
+      const quarter = normalizeText(document.getElementById("r_quarter").value)
+      if (className) params.set("className", className)
+      if (schoolYear) params.set("schoolYear", schoolYear)
+      if (quarter) params.set("quarter", quarter)
+
+      const endpoint = `/api/admin/students/${encodeURIComponent(id)}/report-card.pdf${params.size ? `?${params.toString()}` : ""}`
+      const response = await fetch(resolveApiUrl(endpoint), { credentials: "include" })
+
+      if (!response.ok) {
+        let message = `HTTP ${response.status}`
+        try {
+          const payload = await response.json()
+          if (payload && payload.error) message = payload.error
+        } catch (error) {
+          void error
+        }
+        const apiError = new Error(message)
+        apiError.status = response.status
+        throw apiError
+      }
+
+      const blob = await response.blob()
+      const downloadUrl = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      const disposition = response.headers.get("content-disposition") || ""
+      const suggestedName = parseFilenameFromDisposition(disposition)
+      link.href = downloadUrl
+      link.download = suggestedName || "student-report-card.pdf"
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(downloadUrl)
+      setStatus("PDF report card downloaded.")
+    }
+
+    async function deleteReport(recordId) {
+      const id = selectedStudentId()
+      const result = await api(`/api/admin/students/${encodeURIComponent(id)}/reports/${encodeURIComponent(recordId)}`, {
+        method: "DELETE",
+      })
+      state.currentStudent = result.student
+      fillStudentForm(state.currentStudent)
+      setStatus("Parent report deleted.")
+    }
+
+    function renderReportRows(rows) {
+      const tbody = document.getElementById("reportRows")
+      tbody.innerHTML = ""
+      rows.forEach((row) => {
+        const tr = document.createElement("tr")
+        tr.innerHTML = `
+          <td>${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
+          <td>${row.className || ""}</td>
+          <td>${row.quarter || ""}</td>
+          <td>${row.homeworkCompletionRate ?? ""}</td>
+          <td>${row.homeworkOnTimeRate ?? ""}</td>
+          <td>${row.behaviorScore ?? ""}</td>
+          <td>${row.participationScore ?? ""}</td>
+          <td>${row.inClassScore ?? ""}</td>
+          <td>
+            <button type="button" data-edit="${row.id}">Edit</button>
+            <button type="button" data-del="${row.id}">Delete</button>
+          </td>
+        `
+        tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
+          document.getElementById("r_id").value = row.id
+          document.getElementById("r_className").value = row.className || ""
+          document.getElementById("r_schoolYear").value = row.schoolYear || ""
+          document.getElementById("r_quarter").value = row.quarter || "q1"
+          document.getElementById("r_homeworkCompletionRate").value = row.homeworkCompletionRate ?? ""
+          document.getElementById("r_homeworkOnTimeRate").value = row.homeworkOnTimeRate ?? ""
+          document.getElementById("r_behaviorScore").value = row.behaviorScore ?? ""
+          document.getElementById("r_participationScore").value = row.participationScore ?? ""
+          document.getElementById("r_inClassScore").value = row.inClassScore ?? ""
+          document.getElementById("r_comments").value = row.comments || ""
+        })
+        tr.querySelector(`[data-del="${row.id}"]`).addEventListener("click", () => deleteReport(row.id).catch(handleError))
+        tbody.appendChild(tr)
+      })
+    }
+
+    async function lookupFamilyPhone() {
+      const phone = normalizeText(document.getElementById("familyPhone").value)
+      if (!phone) throw new Error("Enter family emergency phone")
+      const result = await api(`/api/admin/family?phone=${encodeURIComponent(phone)}`)
+      if (!result.items || !result.items.length) {
+        setStatus("No related students found for that emergency phone.")
+        return
+      }
+      const summary = result.items
+        .map((row) => `${row.studentId || "(no studentId)"} - ${row.fullName || "(no name)"}`)
+        .join("\n")
+      setStatus(`Family matches (${result.total}):\n${summary}`)
+    }
+
+    function handleError(error) {
+      if (error && error.status === 401) {
+        logout(false)
+        setStatus("Session expired. Please login again.", true)
+        return
+      }
+      setStatus(error.message || String(error), true)
+    }
+
+    async function bootAfterLogin() {
+      await loadFilters()
+      await loadStudents()
+      clearStudentForm()
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", (event) => {
+      event.preventDefault()
+      login().catch(handleError)
+    })
+    document.getElementById("logoutBtn").addEventListener("click", () => logout().catch(handleError))
+    document.getElementById("searchBtn").addEventListener("click", () => loadStudents().catch(handleError))
+    document.getElementById("refreshBtn").addEventListener("click", async () => {
+      await loadFilters()
+      await loadStudents()
+      setStatus("Data refreshed.")
+    })
+    document.getElementById("familyBtn").addEventListener("click", () => lookupFamilyPhone().catch(handleError))
+
+    document.getElementById("newBtn").addEventListener("click", () => {
+      clearStudentForm()
+      setStatus("New student form ready.")
+    })
+    document.getElementById("saveBtn").addEventListener("click", () => saveStudent().catch(handleError))
+    document.getElementById("deleteBtn").addEventListener("click", () => deleteCurrentStudent().catch(handleError))
+
+    document.getElementById("importBtn").addEventListener("click", () => importSpreadsheet().catch(handleError))
+    document.getElementById("importTemplateBtn").addEventListener("click", () => downloadImportTemplate().catch(handleError))
+
+    document.getElementById("attendanceSaveBtn").addEventListener("click", () => saveAttendance().catch(handleError))
+    document.getElementById("gradeSaveBtn").addEventListener("click", () => saveGrade().catch(handleError))
+    document.getElementById("reportSaveBtn").addEventListener("click", () => saveReport().catch(handleError))
+    document.getElementById("reportGenerateBtn").addEventListener("click", () => generateReport().catch(handleError))
+    document.getElementById("reportCardBtn").addEventListener("click", () => downloadReportCard().catch(handleError))
+    document.getElementById("reportClearBtn").addEventListener("click", () => {
+      document.getElementById("r_id").value = ""
+      document.getElementById("r_className").value = ""
+      document.getElementById("r_schoolYear").value = ""
+      document.getElementById("r_quarter").value = "q1"
+      document.getElementById("r_homeworkCompletionRate").value = ""
+      document.getElementById("r_homeworkOnTimeRate").value = ""
+      document.getElementById("r_behaviorScore").value = ""
+      document.getElementById("r_participationScore").value = ""
+      document.getElementById("r_inClassScore").value = ""
+      document.getElementById("r_comments").value = ""
+      setStatus("Report form cleared.")
+    })
+
+    ;(async () => {
+      if (isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN) {
+        showLogin()
+        setStatus(staticPreviewHelpMessage(), true)
+        return
+      }
+      try {
+        const me = await api("/api/admin/auth/me")
+        state.authUser = me.user || null
+        showApp()
+        await bootAfterLogin()
+        setStatus(`Authenticated as ${state.authUser?.username || "admin"}.`)
+      } catch (error) {
+        showLogin()
+        void error
+      }
+    })()
+  </script>
+</body>
+</html>

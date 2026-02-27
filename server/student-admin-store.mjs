@@ -1,5 +1,7 @@
 // server/student-admin-store.mjs
 
+import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
+
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
@@ -97,6 +99,105 @@ function percentage(numerator, denominator) {
   return Number(((numerator / denominator) * 100).toFixed(2))
 }
 
+function startOfDay(value = new Date()) {
+  const date = new Date(value)
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+function endOfDay(value = new Date()) {
+  const date = startOfDay(value)
+  date.setDate(date.getDate() + 1)
+  date.setMilliseconds(-1)
+  return date
+}
+
+function startOfWeek(value = new Date()) {
+  const date = startOfDay(value)
+  const day = date.getDay()
+  const diffToMonday = (day + 6) % 7
+  date.setDate(date.getDate() - diffToMonday)
+  return date
+}
+
+function endOfWeek(value = new Date()) {
+  const date = startOfWeek(value)
+  date.setDate(date.getDate() + 7)
+  date.setMilliseconds(-1)
+  return date
+}
+
+function startOfYear(value = new Date()) {
+  return new Date(value.getFullYear(), 0, 1)
+}
+
+function parseTardyMinutes(comments) {
+  const text = normalizeLower(comments)
+  if (!text) return 0
+  const minuteMatch = text.match(/(\d{1,3})\s*\+?\s*(?:m|min|mins|minute|minutes)\b/)
+  if (minuteMatch && minuteMatch[1]) return Number.parseInt(minuteMatch[1], 10) || 0
+  const numberMatch = text.match(/\b(\d{1,3})\b/)
+  if (numberMatch && numberMatch[1]) return Number.parseInt(numberMatch[1], 10) || 0
+  return 0
+}
+
+function isCompletedGradeRecord(record) {
+  if (record?.homeworkCompleted === true) return true
+  if (record?.submittedAt) return true
+  return false
+}
+
+function isOutstandingGradeRecord(record, asOfDate = new Date()) {
+  if (isCompletedGradeRecord(record)) return false
+  if (!record?.dueAt) return true
+  const dueAt = new Date(record.dueAt)
+  if (Number.isNaN(dueAt.valueOf())) return true
+  return dueAt <= asOfDate
+}
+
+function isLateCompletedGradeRecord(record) {
+  if (!isCompletedGradeRecord(record)) return false
+  if (record?.homeworkOnTime === false) return true
+  if (record?.homeworkOnTime === true) return false
+  if (record?.dueAt && record?.submittedAt) {
+    const dueAt = new Date(record.dueAt)
+    const submittedAt = new Date(record.submittedAt)
+    if (!Number.isNaN(dueAt.valueOf()) && !Number.isNaN(submittedAt.valueOf())) {
+      return submittedAt > dueAt
+    }
+  }
+  return false
+}
+
+function isOnTimeCompletedGradeRecord(record) {
+  if (!isCompletedGradeRecord(record)) return false
+  if (record?.homeworkOnTime === true) return true
+  if (record?.homeworkOnTime === false) return false
+  if (record?.dueAt && record?.submittedAt) {
+    const dueAt = new Date(record.dueAt)
+    const submittedAt = new Date(record.submittedAt)
+    if (!Number.isNaN(dueAt.valueOf()) && !Number.isNaN(submittedAt.valueOf())) {
+      return submittedAt <= dueAt
+    }
+  }
+  return Boolean(record?.submittedAt && !record?.dueAt)
+}
+
+function compareKnownLevelOrder(left, right) {
+  const leftCanonical = canonicalizeLevel(left)
+  const rightCanonical = canonicalizeLevel(right)
+  const leftIndex = LEVEL_DEFINITIONS.findIndex(
+    (entry) => normalizeLower(entry.canonical) === normalizeLower(leftCanonical)
+  )
+  const rightIndex = LEVEL_DEFINITIONS.findIndex(
+    (entry) => normalizeLower(entry.canonical) === normalizeLower(rightCanonical)
+  )
+  if (leftIndex >= 0 && rightIndex >= 0) return leftIndex - rightIndex
+  if (leftIndex >= 0) return -1
+  if (rightIndex >= 0) return 1
+  return leftCanonical.localeCompare(rightCanonical)
+}
+
 function assertWithStatus(condition, status, message) {
   if (condition) return
   const error = new Error(message)
@@ -110,6 +211,220 @@ function buildExternalKey(studentId) {
 
 function normalizePhoneDigits(value) {
   return normalizeText(value).replace(/\D+/g, "")
+}
+
+const LEVEL_DEFINITIONS = [
+  {
+    canonical: "Eggs & Chicks",
+    aliases: ["EggChic", "Eggs and Chicks", "Eggs Chicks"],
+  },
+  {
+    canonical: "Pre-A1 Starters",
+    aliases: ["Starters", "Pre A1 Starters"],
+  },
+  {
+    canonical: "A1 Movers",
+    aliases: ["Movers"],
+  },
+  {
+    canonical: "A2 Flyers",
+    aliases: ["Flyers"],
+  },
+  {
+    canonical: "A2 KET",
+    aliases: ["KET"],
+  },
+  {
+    canonical: "B1 PET",
+    aliases: ["PET"],
+  },
+  {
+    canonical: "B2+ IELTS",
+    aliases: ["IELTS", "B2 IELTS"],
+  },
+  {
+    canonical: "Private",
+    aliases: ["Private Class", "1:1 Private"],
+  },
+  {
+    canonical: "C1+ TAYK",
+    aliases: ["TAYK", "C1 TAYK"],
+  },
+]
+
+function normalizeLevelKey(value) {
+  return normalizeLower(value).replace(/[^a-z0-9]/g, "")
+}
+
+const LEVEL_ALIAS_MAP = (() => {
+  const map = new Map()
+  LEVEL_DEFINITIONS.forEach((entry) => {
+    const variants = [entry.canonical, ...(entry.aliases || [])]
+    variants.forEach((variant) => {
+      const key = normalizeLevelKey(variant)
+      if (key) map.set(key, entry.canonical)
+    })
+  })
+  return map
+})()
+
+function canonicalizeLevel(value) {
+  const text = normalizeText(value)
+  if (!text) return ""
+  const key = normalizeLevelKey(text)
+  return LEVEL_ALIAS_MAP.get(key) || text
+}
+
+function resolveLevelVariants(value) {
+  const text = normalizeText(value)
+  if (!text) return []
+  const canonical = canonicalizeLevel(text)
+  const definition = LEVEL_DEFINITIONS.find(
+    (entry) => normalizeLower(entry.canonical) === normalizeLower(canonical)
+  )
+  if (!definition) return [text]
+  return Array.from(new Set([definition.canonical, ...(definition.aliases || [])]))
+}
+
+const FILTER_CACHE_TTL_SECONDS = Math.max(
+  30,
+  Number.parseInt(String(process.env.STUDENT_ADMIN_FILTER_CACHE_TTL_SECONDS || "300"), 10) || 300
+)
+const FILTER_CACHE_KEY =
+  normalizeText(process.env.STUDENT_ADMIN_FILTER_CACHE_KEY) || "sis:admin:filters:v1"
+const FILTER_CACHE_URL = normalizeText(process.env.REDIS_CACHE_URL) || normalizeText(process.env.REDIS_URL)
+
+let filterCacheRedisClient = null
+let filterCacheRedisConnectPromise = null
+let filterCacheRedisDisabled = false
+let memoryFilterCacheEntry = null
+
+const FILTER_CACHE_STATE = {
+  backend: FILTER_CACHE_URL ? "redis" : "memory",
+  configuredRedisUrl: Boolean(FILTER_CACHE_URL),
+  hits: 0,
+  misses: 0,
+  writes: 0,
+  invalidations: 0,
+  lastHitAt: null,
+  lastMissAt: null,
+  lastWriteAt: null,
+  lastInvalidateAt: null,
+  lastError: null,
+}
+
+function nowIso() {
+  return new Date().toISOString()
+}
+
+function normalizeFilterList(values) {
+  if (!Array.isArray(values)) return []
+  return values
+    .map((entry) => normalizeText(entry))
+    .filter(Boolean)
+}
+
+function normalizeFilterPayload(payload = {}) {
+  return {
+    levels: normalizeFilterList(payload.levels),
+    schools: normalizeFilterList(payload.schools),
+  }
+}
+
+async function getFilterCacheRedisClient() {
+  if (!FILTER_CACHE_URL || filterCacheRedisDisabled) return null
+  if (filterCacheRedisClient) return filterCacheRedisClient
+  if (filterCacheRedisConnectPromise) return filterCacheRedisConnectPromise
+
+  filterCacheRedisConnectPromise = (async () => {
+    try {
+      const { createClient } = await import("redis")
+      const client = createClient({ url: FILTER_CACHE_URL })
+      client.on("error", (error) => {
+        FILTER_CACHE_STATE.lastError = String(error?.message || error)
+      })
+      await client.connect()
+      filterCacheRedisClient = client
+      FILTER_CACHE_STATE.backend = "redis"
+      return client
+    } catch (error) {
+      filterCacheRedisDisabled = true
+      FILTER_CACHE_STATE.backend = "memory"
+      FILTER_CACHE_STATE.lastError = String(error?.message || error)
+      console.warn(`student-admin filter cache falling back to memory: ${error.message}`)
+      return null
+    } finally {
+      filterCacheRedisConnectPromise = null
+    }
+  })()
+
+  return filterCacheRedisConnectPromise
+}
+
+async function readCachedLevelAndSchoolFilters() {
+  const now = Date.now()
+  if (memoryFilterCacheEntry && memoryFilterCacheEntry.expiresAtMs > now) {
+    FILTER_CACHE_STATE.hits += 1
+    FILTER_CACHE_STATE.lastHitAt = nowIso()
+    return normalizeFilterPayload(memoryFilterCacheEntry.value)
+  }
+
+  const client = await getFilterCacheRedisClient()
+  if (client) {
+    try {
+      const raw = await client.get(FILTER_CACHE_KEY)
+      if (raw) {
+        const parsed = normalizeFilterPayload(JSON.parse(raw))
+        memoryFilterCacheEntry = {
+          value: parsed,
+          expiresAtMs: now + FILTER_CACHE_TTL_SECONDS * 1000,
+        }
+        FILTER_CACHE_STATE.hits += 1
+        FILTER_CACHE_STATE.lastHitAt = nowIso()
+        return normalizeFilterPayload(parsed)
+      }
+    } catch (error) {
+      FILTER_CACHE_STATE.lastError = String(error?.message || error)
+    }
+  }
+
+  FILTER_CACHE_STATE.misses += 1
+  FILTER_CACHE_STATE.lastMissAt = nowIso()
+  return null
+}
+
+async function writeCachedLevelAndSchoolFilters(payload = {}) {
+  const normalized = normalizeFilterPayload(payload)
+  memoryFilterCacheEntry = {
+    value: normalized,
+    expiresAtMs: Date.now() + FILTER_CACHE_TTL_SECONDS * 1000,
+  }
+  FILTER_CACHE_STATE.writes += 1
+  FILTER_CACHE_STATE.lastWriteAt = nowIso()
+
+  const client = await getFilterCacheRedisClient()
+  if (!client) return
+
+  try {
+    await client.set(FILTER_CACHE_KEY, JSON.stringify(normalized), { EX: FILTER_CACHE_TTL_SECONDS })
+  } catch (error) {
+    FILTER_CACHE_STATE.lastError = String(error?.message || error)
+  }
+}
+
+async function invalidateLevelAndSchoolFiltersCache() {
+  memoryFilterCacheEntry = null
+  FILTER_CACHE_STATE.invalidations += 1
+  FILTER_CACHE_STATE.lastInvalidateAt = nowIso()
+
+  const client = await getFilterCacheRedisClient()
+  if (!client) return
+
+  try {
+    await client.del(FILTER_CACHE_KEY)
+  } catch (error) {
+    FILTER_CACHE_STATE.lastError = String(error?.message || error)
+  }
 }
 
 function normalizeProfilePayload(payload = {}) {
@@ -133,7 +448,7 @@ function normalizeProfilePayload(payload = {}) {
     languagesAtHome: normalizeTextArray(payload.languagesAtHome),
     otherLanguage: normalizeNullableText(payload.otherLanguage),
     schoolName: normalizeNullableText(payload.schoolName),
-    currentGrade: normalizeNullableText(payload.currentGrade),
+    currentGrade: normalizeNullableText(canonicalizeLevel(payload.currentGrade)),
     motherName: normalizeNullableText(payload.motherName),
     motherEmail: normalizeNullableEmail(payload.motherEmail),
     motherPhone: normalizeNullableText(payload.motherPhone),
@@ -219,18 +534,7 @@ async function getPrismaClient() {
   }
   if (prismaClientPromise) return prismaClientPromise
 
-  prismaClientPromise = (async () => {
-    const pkg = await import("@prisma/client")
-    const PrismaClient = pkg?.PrismaClient
-    if (typeof PrismaClient !== "function") {
-      const error = new Error("Unable to initialize Prisma client")
-      error.statusCode = 500
-      throw error
-    }
-    const prisma = new PrismaClient()
-    await prisma.$connect()
-    return prisma
-  })()
+  prismaClientPromise = getSharedPrismaClient()
 
   try {
     return await prismaClientPromise
@@ -265,7 +569,9 @@ function mapImportRowToStudentPayload(row) {
     studentEmail: normalizeText(getImportValue(row, ["studentEmail", "student email", "email"])),
     dobText: normalizeText(getImportValue(row, ["dob", "date of birth", "birth date"])),
     schoolName: normalizeText(getImportValue(row, ["schoolName", "school name", "school"])),
-    currentGrade: normalizeText(getImportValue(row, ["currentGrade", "current grade", "level", "grade", "class"])),
+    currentGrade: canonicalizeLevel(
+      normalizeText(getImportValue(row, ["currentGrade", "current grade", "level", "grade", "class"]))
+    ),
     streetAddress: normalizeText(getImportValue(row, ["streetAddress", "street address", "address"])),
     wardDistrict: normalizeText(getImportValue(row, ["wardDistrict", "ward/district", "district"])),
     city: normalizeText(getImportValue(row, ["city"])),
@@ -294,18 +600,28 @@ export async function listStudents({ query = "", level = "", school = "", take =
   const levelFilter = normalizeText(level)
   const schoolFilter = normalizeText(school)
   const limit = Math.max(1, Math.min(Number.parseInt(String(take), 10) || 250, 1000))
+  const levelVariants = resolveLevelVariants(levelFilter)
 
   const where = {
     AND: [
       levelFilter
         ? {
             profile: {
-              is: {
-                currentGrade: {
-                  equals: levelFilter,
-                  mode: "insensitive",
-                },
-              },
+              is: levelVariants.length
+                ? {
+                    OR: levelVariants.map((entry) => ({
+                      currentGrade: {
+                        equals: entry,
+                        mode: "insensitive",
+                      },
+                    })),
+                  }
+                : {
+                    currentGrade: {
+                      equals: levelFilter,
+                      mode: "insensitive",
+                    },
+                  },
             },
           }
         : {},
@@ -404,10 +720,11 @@ export async function getStudentById(studentRefId) {
   return mapStudent(student)
 }
 
-export async function saveStudent(payload = {}, studentRefId = "") {
+export async function saveStudent(payload = {}, studentRefId = "", options = {}) {
   const prisma = await getPrismaClient()
   const studentId = normalizeText(payload.studentId)
   assertWithStatus(Boolean(studentId), 400, "studentId is required")
+  const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
 
   const studentEmail = normalizeNullableEmail(payload.email)
   const profilePayload = normalizeProfilePayload(payload.profile || {})
@@ -502,6 +819,10 @@ export async function saveStudent(payload = {}, studentRefId = "") {
     }
   })
 
+  if (!skipFilterCacheInvalidation) {
+    await invalidateLevelAndSchoolFiltersCache()
+  }
+
   return {
     action: result.action,
     student: await getStudentById(result.studentId),
@@ -522,6 +843,8 @@ export async function deleteStudent(studentRefId) {
     await tx.studentProfile.deleteMany({ where: { studentRefId: id } })
     await tx.student.delete({ where: { id } })
   })
+
+  await invalidateLevelAndSchoolFiltersCache()
 
   return { deleted: true, studentId: id }
 }
@@ -546,7 +869,7 @@ export async function importStudentsFromRows(rows = []) {
       assertWithStatus(!seenStudentIds.has(duplicateKey), 400, `Row ${i + 1}: duplicate studentId`)
       seenStudentIds.add(duplicateKey)
 
-      const saved = await saveStudent(mapped)
+      const saved = await saveStudent(mapped, "", { skipFilterCacheInvalidation: true })
       if (saved.action === "created") created += 1
       if (saved.action === "updated") updated += 1
     } catch (error) {
@@ -555,6 +878,10 @@ export async function importStudentsFromRows(rows = []) {
         message: String(error?.message || error),
       })
     }
+  }
+
+  if (created > 0 || updated > 0) {
+    await invalidateLevelAndSchoolFiltersCache()
   }
 
   return {
@@ -567,6 +894,9 @@ export async function importStudentsFromRows(rows = []) {
 }
 
 export async function listLevelAndSchoolFilters() {
+  const cached = await readCachedLevelAndSchoolFilters()
+  if (cached) return cached
+
   const prisma = await getPrismaClient()
 
   const [levels, schools] = await Promise.all([
@@ -584,13 +914,410 @@ export async function listLevelAndSchoolFilters() {
     }),
   ])
 
-  return {
+  const payload = {
     levels: levels
-      .map((entry) => normalizeText(entry.currentGrade))
+      .map((entry) => canonicalizeLevel(entry.currentGrade))
       .filter(Boolean),
     schools: schools
       .map((entry) => normalizeText(entry.schoolName))
       .filter(Boolean),
+  }
+
+  payload.levels = Array.from(new Set(payload.levels)).sort((a, b) => a.localeCompare(b))
+
+  await writeCachedLevelAndSchoolFilters(payload)
+  return payload
+}
+
+export async function listExerciseTitles({ query = "", take = 200 } = {}) {
+  const prisma = await getPrismaClient()
+  const search = normalizeText(query)
+  const limit = Math.max(1, Math.min(Number.parseInt(String(take), 10) || 200, 1000))
+  const where = search
+    ? {
+        title: {
+          contains: search,
+          mode: "insensitive",
+        },
+      }
+    : {}
+
+  const rows = await prisma.exercise.findMany({
+    where,
+    select: { title: true },
+    orderBy: [{ updatedAt: "desc" }, { title: "asc" }],
+    take: limit,
+  })
+
+  const titles = Array.from(
+    new Set(
+      rows
+        .map((entry) => normalizeText(entry.title))
+        .filter(Boolean)
+    )
+  )
+
+  return {
+    total: titles.length,
+    items: titles,
+  }
+}
+
+export async function getAdminDashboardSummary() {
+  const prisma = await getPrismaClient()
+  const now = new Date()
+  const todayStart = startOfDay(now)
+  const todayEnd = endOfDay(now)
+  const weekStart = startOfWeek(now)
+  const weekEnd = endOfWeek(now)
+  const yearStart = startOfYear(now)
+
+  const [
+    enrolledProfiles,
+    todayAttendance,
+    weekAttendance,
+    allGradeRecords,
+  ] = await Promise.all([
+    prisma.studentProfile.findMany({
+      select: {
+        studentRefId: true,
+        fullName: true,
+        currentGrade: true,
+        studentEmail: true,
+        motherEmail: true,
+        fatherEmail: true,
+        student: {
+          select: {
+            studentId: true,
+            email: true,
+          },
+        },
+      },
+    }),
+    prisma.studentAttendance.findMany({
+      where: {
+        attendanceDate: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+      select: {
+        studentRefId: true,
+        status: true,
+        comments: true,
+        level: true,
+      },
+    }),
+    prisma.studentAttendance.findMany({
+      where: {
+        attendanceDate: {
+          gte: weekStart,
+          lte: weekEnd,
+        },
+      },
+      select: {
+        studentRefId: true,
+        status: true,
+        comments: true,
+      },
+    }),
+    prisma.studentGradeRecord.findMany({
+      select: {
+        studentRefId: true,
+        level: true,
+        dueAt: true,
+        submittedAt: true,
+        homeworkCompleted: true,
+        homeworkOnTime: true,
+        assignmentName: true,
+      },
+    }),
+  ])
+
+  const profileByStudentRefId = new Map()
+  const enrolledByLevel = new Map()
+  enrolledProfiles.forEach((profile) => {
+    const level = canonicalizeLevel(profile.currentGrade || "") || "Unassigned"
+    const current = enrolledByLevel.get(level) || 0
+    enrolledByLevel.set(level, current + 1)
+    profileByStudentRefId.set(profile.studentRefId, profile)
+  })
+
+  let todayAttendanceCount = 0
+  let todayAbsences = 0
+  let tardy10PlusCount = 0
+  let tardy30PlusCount = 0
+  const attendanceByLevel = new Map()
+
+  todayAttendance.forEach((row) => {
+    const status = normalizeLower(row.status)
+    const profile = profileByStudentRefId.get(row.studentRefId)
+    const level = canonicalizeLevel(profile?.currentGrade || row.level || "") || "Unassigned"
+    if (status === "absent") {
+      todayAbsences += 1
+      return
+    }
+    todayAttendanceCount += 1
+    const presentByLevel = attendanceByLevel.get(level) || 0
+    attendanceByLevel.set(level, presentByLevel + 1)
+
+    if (status === "late") {
+      const tardyMinutes = parseTardyMinutes(row.comments)
+      if (tardyMinutes >= 10) tardy10PlusCount += 1
+      if (tardyMinutes >= 30) tardy30PlusCount += 1
+    }
+  })
+
+  const totalTodayTracked = todayAttendanceCount + todayAbsences
+
+  const onTimeCompletions = allGradeRecords.filter((row) => isOnTimeCompletedGradeRecord(row)).length
+  const lateCompletions = allGradeRecords.filter((row) => isLateCompletedGradeRecord(row)).length
+  const outstanding = allGradeRecords.filter((row) => isOutstandingGradeRecord(row, now)).length
+  const outstandingYtd = allGradeRecords.filter((row) => {
+    if (!row.dueAt) return false
+    const dueAt = new Date(row.dueAt)
+    if (Number.isNaN(dueAt.valueOf())) return false
+    if (dueAt < yearStart || dueAt > now) return false
+    return isOutstandingGradeRecord(row, now)
+  }).length
+
+  const outstandingThisWeekByStudent = new Map()
+  allGradeRecords.forEach((row) => {
+    if (!row.dueAt) return
+    const dueAt = new Date(row.dueAt)
+    if (Number.isNaN(dueAt.valueOf())) return
+    if (dueAt < weekStart || dueAt > weekEnd) return
+    if (!isOutstandingGradeRecord(row, now)) return
+    const current = outstandingThisWeekByStudent.get(row.studentRefId) || 0
+    outstandingThisWeekByStudent.set(row.studentRefId, current + 1)
+  })
+
+  const riskByStudent = new Map()
+  weekAttendance.forEach((row) => {
+    const key = row.studentRefId
+    if (!key) return
+    const current = riskByStudent.get(key) || {
+      studentRefId: key,
+      studentId: "",
+      fullName: "",
+      level: "",
+      absences: 0,
+      late30Plus: 0,
+      outstandingWeek: 0,
+    }
+    const status = normalizeLower(row.status)
+    if (status === "absent") current.absences += 1
+    if (status === "late") {
+      const minutes = parseTardyMinutes(row.comments)
+      if (minutes >= 30) current.late30Plus += 1
+    }
+    riskByStudent.set(key, current)
+  })
+
+  outstandingThisWeekByStudent.forEach((count, key) => {
+    const current = riskByStudent.get(key) || {
+      studentRefId: key,
+      studentId: "",
+      fullName: "",
+      level: "",
+      absences: 0,
+      late30Plus: 0,
+      outstandingWeek: 0,
+    }
+    current.outstandingWeek = count
+    riskByStudent.set(key, current)
+  })
+
+  riskByStudent.forEach((entry, key) => {
+    const profile = profileByStudentRefId.get(key)
+    entry.studentId = normalizeText(profile?.student?.studentId || profile?.studentRefId || key)
+    entry.fullName = normalizeText(profile?.fullName) || "(no name)"
+    entry.level = canonicalizeLevel(profile?.currentGrade || "") || "Unassigned"
+  })
+
+  const atRiskStudents = Array.from(riskByStudent.values())
+    .filter((entry) => entry.absences >= 2 || entry.late30Plus >= 1 || entry.outstandingWeek >= 2)
+    .sort((left, right) => {
+      const leftScore = left.absences * 3 + left.outstandingWeek * 2 + left.late30Plus * 2
+      const rightScore = right.absences * 3 + right.outstandingWeek * 2 + right.late30Plus * 2
+      if (leftScore !== rightScore) return rightScore - leftScore
+      return normalizeText(left.fullName).localeCompare(normalizeText(right.fullName))
+    })
+    .slice(0, 30)
+
+  const levels = Array.from(new Set([...enrolledByLevel.keys(), ...attendanceByLevel.keys()])).sort(
+    compareKnownLevelOrder
+  )
+
+  const levelCompletionMap = new Map()
+  const ensureLevelCompletion = (levelName) => {
+    const level = canonicalizeLevel(levelName || "") || "Unassigned"
+    if (!levelCompletionMap.has(level)) {
+      levelCompletionMap.set(level, {
+        level,
+        enrolledStudents: 0,
+        totalAssignments: 0,
+        completedAssignments: 0,
+        outstandingAssignments: 0,
+        completedStudents: 0,
+        uncompletedStudents: [],
+        _studentsById: new Map(),
+      })
+    }
+    return levelCompletionMap.get(level)
+  }
+
+  const toEmailList = (profile) =>
+    Array.from(
+      new Set(
+        [
+          normalizeLower(profile?.student?.email),
+          normalizeLower(profile?.studentEmail),
+          normalizeLower(profile?.motherEmail),
+          normalizeLower(profile?.fatherEmail),
+        ].filter(Boolean)
+      )
+    )
+
+  enrolledProfiles.forEach((profile) => {
+    const level = canonicalizeLevel(profile.currentGrade || "") || "Unassigned"
+    const bucket = ensureLevelCompletion(level)
+    bucket.enrolledStudents += 1
+    bucket._studentsById.set(profile.studentRefId, {
+      studentRefId: profile.studentRefId,
+      studentId: normalizeText(profile?.student?.studentId || profile.studentRefId),
+      fullName: normalizeText(profile.fullName) || "(no name)",
+      emails: toEmailList(profile),
+      outstandingCount: 0,
+      completedCount: 0,
+      totalAssignments: 0,
+      assignmentNames: [],
+      nextDueAt: null,
+    })
+  })
+
+  allGradeRecords.forEach((record) => {
+    const profile = profileByStudentRefId.get(record.studentRefId)
+    const level = canonicalizeLevel(profile?.currentGrade || record.level || "") || "Unassigned"
+    const bucket = ensureLevelCompletion(level)
+    bucket.totalAssignments += 1
+
+    let student = bucket._studentsById.get(record.studentRefId)
+    if (!student) {
+      student = {
+        studentRefId: record.studentRefId,
+        studentId: normalizeText(profile?.student?.studentId || record.studentRefId),
+        fullName: normalizeText(profile?.fullName) || "(no name)",
+        emails: toEmailList(profile),
+        outstandingCount: 0,
+        completedCount: 0,
+        totalAssignments: 0,
+        assignmentNames: [],
+        nextDueAt: null,
+      }
+      bucket._studentsById.set(record.studentRefId, student)
+      bucket.enrolledStudents += 1
+    }
+
+    student.totalAssignments += 1
+    if (isCompletedGradeRecord(record)) {
+      bucket.completedAssignments += 1
+      student.completedCount += 1
+    }
+    if (isOutstandingGradeRecord(record, now)) {
+      bucket.outstandingAssignments += 1
+      student.outstandingCount += 1
+      const assignmentName = normalizeText(record.assignmentName)
+      if (assignmentName && !student.assignmentNames.includes(assignmentName)) {
+        student.assignmentNames.push(assignmentName)
+      }
+      if (record.dueAt) {
+        const dueAt = new Date(record.dueAt)
+        if (!Number.isNaN(dueAt.valueOf())) {
+          if (!student.nextDueAt || dueAt < student.nextDueAt) student.nextDueAt = dueAt
+        }
+      }
+    }
+  })
+
+  const levelCompletion = Array.from(levelCompletionMap.values())
+    .map((bucket) => {
+      const students = Array.from(bucket._studentsById.values())
+      const uncompletedStudents = students
+        .filter((entry) => entry.outstandingCount > 0)
+        .sort((left, right) => {
+          if (left.outstandingCount !== right.outstandingCount) return right.outstandingCount - left.outstandingCount
+          return normalizeText(left.fullName).localeCompare(normalizeText(right.fullName))
+        })
+        .map((entry) => ({
+          studentRefId: entry.studentRefId,
+          studentId: entry.studentId,
+          fullName: entry.fullName,
+          emails: entry.emails,
+          outstandingCount: entry.outstandingCount,
+          assignmentNames: entry.assignmentNames,
+          nextDueAt: entry.nextDueAt ? entry.nextDueAt.toISOString().slice(0, 10) : "",
+        }))
+
+      const completedStudents = students.filter((entry) => entry.totalAssignments > 0 && entry.outstandingCount === 0).length
+
+      return {
+        level: bucket.level,
+        enrolledStudents: bucket.enrolledStudents,
+        totalAssignments: bucket.totalAssignments,
+        completedAssignments: bucket.completedAssignments,
+        outstandingAssignments: bucket.outstandingAssignments,
+        completedStudents,
+        uncompletedStudents,
+      }
+    })
+    .sort((left, right) => compareKnownLevelOrder(left.level, right.level))
+
+  return {
+    generatedAt: now.toISOString(),
+    today: {
+      date: todayStart.toISOString().slice(0, 10),
+      totalStudents: enrolledProfiles.length,
+      attendance: todayAttendanceCount,
+      absences: todayAbsences,
+      tardy10PlusPercent: percentage(tardy10PlusCount, totalTodayTracked) || 0,
+      tardy30PlusPercent: percentage(tardy30PlusCount, totalTodayTracked) || 0,
+    },
+    classEnrollmentAttendance: levels.map((level) => ({
+      level,
+      enrolled: enrolledByLevel.get(level) || 0,
+      attendanceToday: attendanceByLevel.get(level) || 0,
+    })),
+    assignments: {
+      total: allGradeRecords.length,
+      completedOnTime: onTimeCompletions,
+      completedLate: lateCompletions,
+      outstanding,
+      outstandingYtd,
+    },
+    atRiskWeek: {
+      total: atRiskStudents.length,
+      students: atRiskStudents,
+    },
+    levelCompletion,
+  }
+}
+
+export function getStudentAdminFilterCacheStatus() {
+  return {
+    backend: FILTER_CACHE_STATE.backend,
+    configuredRedisUrl: FILTER_CACHE_STATE.configuredRedisUrl,
+    key: FILTER_CACHE_KEY,
+    ttlSeconds: FILTER_CACHE_TTL_SECONDS,
+    hits: FILTER_CACHE_STATE.hits,
+    misses: FILTER_CACHE_STATE.misses,
+    writes: FILTER_CACHE_STATE.writes,
+    invalidations: FILTER_CACHE_STATE.invalidations,
+    lastHitAt: FILTER_CACHE_STATE.lastHitAt,
+    lastMissAt: FILTER_CACHE_STATE.lastMissAt,
+    lastWriteAt: FILTER_CACHE_STATE.lastWriteAt,
+    lastInvalidateAt: FILTER_CACHE_STATE.lastInvalidateAt,
+    lastError: FILTER_CACHE_STATE.lastError,
   }
 }
 

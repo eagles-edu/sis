@@ -1,7 +1,7 @@
 node_modules/
 .env
 .env.*
-!.env.example
+!.env.*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -9,5 +9,12 @@ pnpm-debug.log*
 coverage/
 .DS_Store
 .vscode/
-*.bak
+*.bak*
+*.BAK*
 *.tmp
+docs/
+docs/**
+.env.BAK-20260225-215936
+.env.BAK-20260225-220027
+.env.BAK-20260226-020406
+.sync.ffs_db

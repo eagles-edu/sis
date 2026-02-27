@@ -1,0 +1,213 @@
+- generic [ref=e5]:
+  - generic [ref=e7]:
+    - button "Menu" [ref=e9] [cursor=pointer]
+    - generic [ref=e10]:
+      - generic [ref=e11]: Search student
+      - searchbox "Search student" [ref=e12]
+    - generic [ref=e13]:
+      - generic [ref=e14]: Level
+      - combobox "Level" [ref=e15]:
+        - option "All levels" [selected]
+        - option "EggChic"
+        - option "Starters"
+        - option "Movers"
+        - option "Flyers"
+        - option "KET"
+        - option "PET"
+        - option "IELTS"
+        - option "Private"
+        - option "TAYK"
+        - option "G10"
+        - option "G4"
+        - option "G5"
+        - option "G6"
+        - option "G7"
+        - option "G8"
+        - option "G9"
+    - generic [ref=e16]:
+      - generic [ref=e17]: Family phone lookup
+      - textbox "Family phone lookup" [ref=e18]:
+        - /placeholder: parent emergency phone
+    - button "Search" [ref=e20] [cursor=pointer]
+    - button "Find Family" [ref=e22] [cursor=pointer]
+    - button "Refresh" [ref=e24] [cursor=pointer]
+    - button "Logout" [ref=e26] [cursor=pointer]
+    - generic [ref=e27]:
+      - generic [ref=e28]: SIS Hub Connection
+      - generic [ref=e29]:
+        - generic [ref=e30]: Connected
+        - button "Ping Hub" [ref=e31] [cursor=pointer]
+      - paragraph [ref=e32]: endpoint=/healthz | latency=6ms | checked=12:19:47 PM | detail=healthz ok
+  - generic [ref=e35]:
+    - heading "Overview" [level=2] [ref=e36]
+    - paragraph [ref=e37]: Dashboard sections are stacked for quick scanning. Use detail buttons by level to send reminders to uncompleted students.
+    - paragraph [ref=e38]: No student selected.
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - heading "Systems Health" [level=3] [ref=e41]
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e46]: Hub API
+            - generic [ref=e47]: healthz ok
+          - generic [ref=e48]:
+            - generic [ref=e51]: Admin Runtime
+            - generic [ref=e52]: page=/admin/students | api=/api/admin
+          - generic [ref=e53]:
+            - generic [ref=e56]: Session Store
+            - generic [ref=e57]: driver=redis | ttl=28800s
+          - generic [ref=e58]:
+            - generic [ref=e61]: Filter Cache
+            - generic [ref=e62]: backend=redis | hit/miss=22/7
+          - generic [ref=e63]:
+            - generic [ref=e66]: Self-Heal
+            - generic [ref=e67]: result=in-sync | syncs=11
+          - generic [ref=e68]:
+            - generic [ref=e71]: SMTP Verify
+            - generic [ref=e72]: last verify 2026-02-26T20:21:21.585Z
+          - generic [ref=e73]:
+            - generic [ref=e76]: Recent Pipeline
+            - generic [ref=e77]: exercise=n/a | intake=n/a | send=n/a
+        - paragraph [ref=e78]: OK 6 | Warning 1 | Error 0 | Pending 0
+      - generic [ref=e79]:
+        - heading "Today Snapshot" [level=3] [ref=e80]
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - generic [ref=e83]: Today Attendance
+            - generic [ref=e84]: "0"
+          - generic [ref=e85]:
+            - generic [ref=e86]: Today Absences
+            - generic [ref=e87]: "0"
+          - generic [ref=e88]:
+            - generic [ref=e89]: Tardy 10+ / 30+
+            - generic [ref=e90]: 0.0% / 0.0%
+          - generic [ref=e91]:
+            - generic [ref=e92]: At-Risk This Week
+            - generic [ref=e93]: "0"
+          - generic [ref=e94]:
+            - generic [ref=e95]: Assignments Outstanding
+            - generic [ref=e96]: "0"
+          - generic [ref=e97]:
+            - generic [ref=e98]: Outstanding YTD
+            - generic [ref=e99]: "0"
+      - generic [ref=e100]:
+        - heading "Assignment vs Completion (Line)" [level=3] [ref=e101]
+        - generic [ref=e102]:
+          - img [ref=e133]:
+            - generic [ref=e135]: "0"
+            - generic [ref=e136]: "0"
+            - generic [ref=e137]: "1"
+            - generic [ref=e138]: "1"
+            - generic [ref=e139]: "1"
+            - generic [ref=e154]: G10
+            - generic [ref=e155]: G4
+            - generic [ref=e156]: G5
+            - generic [ref=e157]: G6
+            - generic [ref=e158]: G7
+            - generic [ref=e159]: G8
+            - generic [ref=e160]: G9
+          - generic [ref=e104]:
+            - generic [ref=e105]: Assigned
+            - generic [ref=e107]: Completed
+      - generic [ref=e109]:
+        - heading "Students vs Completions (Bar by Level)" [level=3] [ref=e110]
+        - generic [ref=e111]:
+          - img [ref=e161]:
+            - generic [ref=e163]: "0"
+            - generic [ref=e164]: "0"
+            - generic [ref=e165]: "1"
+            - generic [ref=e166]: "1"
+            - generic [ref=e167]: "1"
+            - generic [ref=e182]: "1"
+            - generic [ref=e183]: "1"
+            - generic [ref=e184]: "1"
+            - generic [ref=e185]: "1"
+            - generic [ref=e186]: "1"
+            - generic [ref=e187]: "1"
+            - generic [ref=e188]: "1"
+            - generic [ref=e189]: "1"
+            - generic [ref=e190]: "1"
+            - generic [ref=e191]: "1"
+            - generic [ref=e192]: "1"
+            - generic [ref=e193]: "1"
+            - generic [ref=e194]: "1"
+            - generic [ref=e195]: "1"
+            - generic [ref=e196]: G10
+            - generic [ref=e197]: G4
+            - generic [ref=e198]: G5
+            - generic [ref=e199]: G6
+            - generic [ref=e200]: G7
+            - generic [ref=e201]: G8
+            - generic [ref=e202]: G9
+          - generic [ref=e203]:
+            - button "G10 Detail" [ref=e204] [cursor=pointer]
+            - button "G4 Detail" [ref=e205] [cursor=pointer]
+            - button "G5 Detail" [ref=e206] [cursor=pointer]
+            - button "G6 Detail" [ref=e207] [cursor=pointer]
+            - button "G7 Detail" [ref=e208] [cursor=pointer]
+            - button "G8 Detail" [ref=e209] [cursor=pointer]
+            - button "G9 Detail" [ref=e210] [cursor=pointer]
+          - paragraph [ref=e113]: Detail buttons open uncompleted student lists for reminders.
+      - generic [ref=e114]:
+        - heading "Enrolled vs Attendance (Today)" [level=3] [ref=e115]
+        - table [ref=e116]:
+          - rowgroup [ref=e117]:
+            - row "Class Level Enrolled Attendance Today" [ref=e118]:
+              - columnheader "Class Level" [ref=e119]
+              - columnheader "Enrolled" [ref=e120]
+              - columnheader "Attendance Today" [ref=e121]
+          - rowgroup [ref=e211]:
+            - row "G10 1 0" [ref=e212]:
+              - cell "G10" [ref=e213]
+              - cell "1" [ref=e214]
+              - cell "0" [ref=e215]
+            - row "G4 1 0" [ref=e216]:
+              - cell "G4" [ref=e217]
+              - cell "1" [ref=e218]
+              - cell "0" [ref=e219]
+            - row "G5 1 0" [ref=e220]:
+              - cell "G5" [ref=e221]
+              - cell "1" [ref=e222]
+              - cell "0" [ref=e223]
+            - row "G6 1 0" [ref=e224]:
+              - cell "G6" [ref=e225]
+              - cell "1" [ref=e226]
+              - cell "0" [ref=e227]
+            - row "G7 1 0" [ref=e228]:
+              - cell "G7" [ref=e229]
+              - cell "1" [ref=e230]
+              - cell "0" [ref=e231]
+            - row "G8 1 0" [ref=e232]:
+              - cell "G8" [ref=e233]
+              - cell "1" [ref=e234]
+              - cell "0" [ref=e235]
+            - row "G9 1 0" [ref=e236]:
+              - cell "G9" [ref=e237]
+              - cell "1" [ref=e238]
+              - cell "0" [ref=e239]
+      - generic [ref=e122]:
+        - heading "Assignment Completion Snapshot" [level=3] [ref=e123]
+        - table [ref=e124]:
+          - rowgroup [ref=e125]:
+            - row "Metric Count" [ref=e126]:
+              - columnheader "Metric" [ref=e127]
+              - columnheader "Count" [ref=e128]
+          - rowgroup [ref=e240]:
+            - row "Total assignments 7" [ref=e241]:
+              - cell "Total assignments" [ref=e242]
+              - cell "7" [ref=e243]
+            - row "Completion on-time 7" [ref=e244]:
+              - cell "Completion on-time" [ref=e245]
+              - cell "7" [ref=e246]
+            - row "Completion late 0" [ref=e247]:
+              - cell "Completion late" [ref=e248]
+              - cell "0" [ref=e249]
+            - row "Outstanding now 0" [ref=e250]:
+              - cell "Outstanding now" [ref=e251]
+              - cell "0" [ref=e252]
+            - row "Outstanding YTD 0" [ref=e253]:
+              - cell "Outstanding YTD" [ref=e254]
+              - cell "0" [ref=e255]
+      - generic [ref=e129]:
+        - heading "At-Risk Students (Week)" [level=3] [ref=e130]
+        - generic [ref=e131]: No at-risk students flagged.
+  - generic [ref=e132]: Authenticated as admin.
