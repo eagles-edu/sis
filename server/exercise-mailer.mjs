@@ -138,18 +138,13 @@ function normalizeString(value) {
 }
 
 function resolveRuntimeSelfHealConfig() {
-  const enabled = resolveBoolean(process.env.SIS_RUNTIME_SELF_HEAL_ENABLED, true)
+  // Opt-in only: avoid implicit cross-runtime coupling unless explicitly configured.
+  const enabled = resolveBoolean(process.env.SIS_RUNTIME_SELF_HEAL_ENABLED, false)
   const runtimeRoot = path.resolve(
     normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT) || process.cwd()
   )
 
-  let sourceRoot = normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT)
-  if (!sourceRoot) {
-    const cwd = process.cwd()
-    if (path.basename(cwd).toLowerCase() === "megs") {
-      sourceRoot = path.resolve(cwd, "..", "sis")
-    }
-  }
+  const sourceRoot = normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT)
 
   if (!enabled) {
     return { enabled: false, reason: "disabled-by-env", sourceRoot, runtimeRoot }
@@ -167,17 +162,6 @@ function resolveRuntimeSelfHealConfig() {
     return {
       enabled: false,
       reason: "missing-source-html",
-      sourceRoot: resolvedSourceRoot,
-      runtimeRoot,
-      sourceHtmlPath,
-      runtimeHtmlPath,
-    }
-  }
-
-  if (path.resolve(sourceHtmlPath) === path.resolve(runtimeHtmlPath)) {
-    return {
-      enabled: false,
-      reason: "same-source-runtime",
       sourceRoot: resolvedSourceRoot,
       runtimeRoot,
       sourceHtmlPath,

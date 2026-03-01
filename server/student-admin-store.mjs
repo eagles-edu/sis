@@ -243,12 +243,12 @@ const LEVEL_DEFINITIONS = [
     aliases: ["IELTS", "B2 IELTS"],
   },
   {
-    canonical: "Private",
-    aliases: ["Private Class", "1:1 Private"],
-  },
-  {
     canonical: "C1+ TAYK",
     aliases: ["TAYK", "C1 TAYK"],
+  },
+  {
+    canonical: "Private",
+    aliases: ["Private Class", "1:1 Private"],
   },
 ]
 
@@ -971,6 +971,8 @@ export async function getAdminDashboardSummary() {
   const weekStart = startOfWeek(now)
   const weekEnd = endOfWeek(now)
   const yearStart = startOfYear(now)
+  const weekDayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const msPerDay = 24 * 60 * 60 * 1000
 
   const [
     enrolledProfiles,
@@ -1036,12 +1038,16 @@ export async function getAdminDashboardSummary() {
 
   const profileByStudentRefId = new Map()
   const enrolledByLevel = new Map()
+  let totalEnrollment = 0
   enrolledProfiles.forEach((profile) => {
-    const level = canonicalizeLevel(profile.currentGrade || "") || "Unassigned"
+    const canonicalLevel = canonicalizeLevel(profile.currentGrade || "")
+    if (canonicalLevel) totalEnrollment += 1
+    const level = canonicalLevel || "Unassigned"
     const current = enrolledByLevel.get(level) || 0
     enrolledByLevel.set(level, current + 1)
     profileByStudentRefId.set(profile.studentRefId, profile)
   })
+  const unenrolledYtd = Math.max(0, enrolledProfiles.length - totalEnrollment)
 
   let todayAttendanceCount = 0
   let todayAbsences = 0
@@ -1080,6 +1086,53 @@ export async function getAdminDashboardSummary() {
     if (dueAt < yearStart || dueAt > now) return false
     return isOutstandingGradeRecord(row, now)
   }).length
+
+  const weeklyBuckets = Array.from({ length: 7 }, (_, index) => {
+    const dayStart = new Date(weekStart)
+    dayStart.setDate(dayStart.getDate() + index)
+    return {
+      index,
+      label: weekDayLabels[index],
+      date: dayStart.toISOString().slice(0, 10),
+      students: new Map(),
+    }
+  })
+
+  allGradeRecords.forEach((row) => {
+    if (!row.dueAt) return
+    const dueAt = new Date(row.dueAt)
+    if (Number.isNaN(dueAt.valueOf())) return
+    if (dueAt < weekStart || dueAt > weekEnd) return
+    const dayStart = startOfDay(dueAt)
+    const dayIndex = Math.floor((dayStart.valueOf() - weekStart.valueOf()) / msPerDay)
+    if (dayIndex < 0 || dayIndex >= weeklyBuckets.length) return
+
+    const bucket = weeklyBuckets[dayIndex]
+    const studentRefId = normalizeText(row.studentRefId)
+    if (!studentRefId) return
+    const current = bucket.students.get(studentRefId) || {
+      totalAssignments: 0,
+      completedAssignments: 0,
+    }
+    current.totalAssignments += 1
+    if (isCompletedGradeRecord(row)) current.completedAssignments += 1
+    bucket.students.set(studentRefId, current)
+  })
+
+  const weeklyAssignmentCompletion = weeklyBuckets.map((bucket) => {
+    const entries = Array.from(bucket.students.values())
+    const studentsWithAssignments = entries.filter((entry) => entry.totalAssignments > 0).length
+    const studentsCompletedAll = entries.filter(
+      (entry) => entry.totalAssignments > 0 && entry.completedAssignments >= entry.totalAssignments
+    ).length
+    return {
+      index: bucket.index,
+      day: bucket.label,
+      date: bucket.date,
+      studentsWithAssignments,
+      studentsCompletedAll,
+    }
+  })
 
   const outstandingThisWeekByStudent = new Map()
   allGradeRecords.forEach((row) => {
@@ -1278,11 +1331,15 @@ export async function getAdminDashboardSummary() {
     today: {
       date: todayStart.toISOString().slice(0, 10),
       totalStudents: enrolledProfiles.length,
+      totalEnrollment,
+      attendancePercentOfEnrollment: percentage(todayAttendanceCount, totalEnrollment) || 0,
+      unenrolledYtd,
       attendance: todayAttendanceCount,
       absences: todayAbsences,
       tardy10PlusPercent: percentage(tardy10PlusCount, totalTodayTracked) || 0,
       tardy30PlusPercent: percentage(tardy30PlusCount, totalTodayTracked) || 0,
     },
+    weeklyAssignmentCompletion,
     classEnrollmentAttendance: levels.map((level) => ({
       level,
       enrolled: enrolledByLevel.get(level) || 0,

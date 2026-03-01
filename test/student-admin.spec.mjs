@@ -193,6 +193,15 @@ test("GET /admin/students/attendance returns section page HTML with slug config"
   assert.match(html, /"attendance"/i)
 })
 
+test("GET /admin/students/parent-tracking returns section page HTML with slug config", async () => {
+  const res = await fetchLocal(port, "/admin/students/parent-tracking")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
+  assert.match(html, /"parent-tracking"/i)
+})
+
 test("GET /admin/students/unknown-section returns 404", async () => {
   const res = await fetchLocal(port, "/admin/students/unknown-section")
   assert.equal(res.status, 404)
@@ -236,6 +245,41 @@ test("GET /api/admin/auth/me returns authenticated user and refreshes cookie", a
   assert.equal(body.authenticated, true)
   assert.equal(body.user?.username, "admin")
   assert.equal(body.user?.role, "admin")
+})
+
+test("POST /api/admin/exports/xlsx returns workbook for admin", async () => {
+  const payload = {
+    filename: "attendance-export.xlsx",
+    sheetName: "Attendance",
+    columns: [
+      { key: "studentId", label: "Student ID" },
+      { key: "status", label: "Status" },
+    ],
+    rows: [
+      { studentId: "SIS-001", status: "Present" },
+      { studentId: "SIS-002", status: "Absent" },
+    ],
+  }
+  const res = await fetchLocal(port, "/api/admin/exports/xlsx", {
+    method: "POST",
+    headers: {
+      Cookie: adminSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /spreadsheetml/i)
+  assert.match(res.headers.get("content-disposition") || "", /attendance-export\.xlsx/i)
+
+  const bytes = Buffer.from(await res.arrayBuffer())
+  const workbook = XLSX.read(bytes, { type: "buffer" })
+  assert.equal(workbook.SheetNames.length, 1)
+  assert.equal(workbook.SheetNames[0], "Attendance")
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets.Attendance, { defval: "" })
+  assert.equal(rows.length, 2)
+  assert.equal(rows[0]["Student ID"], "SIS-001")
+  assert.equal(rows[1].Status, "Absent")
 })
 
 test("POST /api/admin/login returns teacher session cookie", async () => {
@@ -282,6 +326,25 @@ test("teacher role cannot mutate admin-protected resources", async () => {
   assert.match(body.error, /Forbidden/i)
 })
 
+test("teacher role cannot export xlsx", async () => {
+  const res = await fetchLocal(port, "/api/admin/exports/xlsx", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      filename: "teacher-export.xlsx",
+      sheetName: "Denied",
+      columns: [{ key: "name", label: "Name" }],
+      rows: [{ name: "Denied" }],
+    }),
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
 test("teacher role can read and reaches store-disabled response", async () => {
   const res = await fetchLocal(port, "/api/admin/students", {
     headers: { Cookie: teacherSessionCookie },
@@ -289,6 +352,83 @@ test("teacher role can read and reaches store-disabled response", async () => {
   assert.equal(res.status, 503)
   const body = await res.json()
   assert.match(body.error, /store is disabled/i)
+})
+
+test("teacher can queue parent-report notifications for admin review", async () => {
+  const res = await fetchLocal(port, "/api/admin/notifications/email", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      deliveryMode: "weekend-batch",
+      queueType: "parent-report",
+      assignmentTitle: "Teacher review report",
+      level: "Pre-A1 Starters",
+      message: "Queued by teacher for admin review",
+      recipients: ["parent-review@example.com"],
+    }),
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.equal(body.queued, true)
+  assert.equal(body.deliveryMode, "weekend-batch")
+})
+
+test("teacher cannot send immediate notifications", async () => {
+  const res = await fetchLocal(port, "/api/admin/notifications/email", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      assignmentTitle: "Immediate send",
+      recipients: ["parent-review@example.com"],
+      message: "should be forbidden for teacher",
+    }),
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
+test("teacher can access parent-report save path and reaches store-disabled response", async () => {
+  const res = await fetchLocal(port, "/api/admin/students/abc/reports", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      className: "Pre-A1 Starters",
+      schoolYear: "2026-2027",
+      quarter: "q1",
+      comments: "Teacher draft parent report",
+    }),
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
+})
+
+test("teacher cannot mutate incoming exercise-result queue", async () => {
+  const res = await fetchLocal(port, "/api/admin/exercise-results/incoming", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      action: "archive",
+      incomingResultId: "incoming-01",
+    }),
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
 })
 
 test("GET /api/admin/permissions exposes role policies", async () => {
@@ -323,6 +463,45 @@ test("teacher cannot update role policies", async () => {
   assert.equal(res.status, 403)
   const body = await res.json()
   assert.match(body.error, /Forbidden/i)
+})
+
+test("POST /api/admin/notifications/email queues weekend batch delivery", async () => {
+  const res = await fetchLocal(port, "/api/admin/notifications/email", {
+    method: "POST",
+    headers: {
+      Cookie: adminSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      deliveryMode: "weekend-batch",
+      assignmentTitle: "Parent progress report",
+      level: "Pre-A1 Starters",
+      message: "Queued weekend report",
+      recipients: ["parent-one@example.com", "student-one@example.com"],
+    }),
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.equal(body.queued, true)
+  assert.equal(body.deliveryMode, "weekend-batch")
+  assert.equal(typeof body.scheduledFor, "string")
+  assert.ok(body.scheduledFor.length > 0)
+  assert.ok(Number.isInteger(body.queueSize))
+  assert.ok(body.queueSize >= 1)
+})
+
+test("GET /api/admin/notifications/batch-status returns queued parent report items", async () => {
+  const res = await fetchLocal(port, "/api/admin/notifications/batch-status?queueType=parent-report&take=10", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.equal(body.queueType, "parent-report")
+  assert.ok(Array.isArray(body.items))
+  assert.ok(Number.isInteger(body.total))
+  assert.ok(body.total >= 1)
 })
 
 test("POST /api/admin/auth/logout clears session cookie", async () => {
@@ -402,6 +581,29 @@ test("GET /api/admin/dashboard requires auth", async () => {
   assert.match(body.error, /Unauthorized/i)
 })
 
+test("GET /api/admin/exercise-results/incoming requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/exercise-results/incoming")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("POST /api/admin/exports/xlsx requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/exports/xlsx", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      filename: "unauth-export.xlsx",
+      sheetName: "Denied",
+      columns: [{ key: "name", label: "Name" }],
+      rows: [{ name: "Denied" }],
+    }),
+  })
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
 test("GET /api/admin/students returns 503 when admin store disabled", async () => {
   const res = await fetchLocal(port, "/api/admin/students", {
     headers: { Cookie: adminSessionCookie },
@@ -418,6 +620,15 @@ test("GET /api/admin/dashboard returns 503 when admin store disabled", async () 
   assert.equal(res.status, 503)
   const body = await res.json()
   assert.match(body.error, /store is disabled/i)
+})
+
+test("GET /api/admin/exercise-results/incoming returns 503 when exercise store disabled", async () => {
+  const res = await fetchLocal(port, "/api/admin/exercise-results/incoming", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /Exercise store is disabled/i)
 })
 
 test("POST /api/admin/students/import returns 503 when admin store disabled", async () => {

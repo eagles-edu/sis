@@ -13,6 +13,7 @@ model Student {
   studentId         String?             @unique
   email             String?
   submissions       ExerciseSubmission[]
+  incomingExerciseResults IncomingExerciseResult[]
   profile           StudentProfile?
   intakeSubmissions StudentIntakeSubmission[]
   attendanceRecords StudentAttendance[]
@@ -54,6 +55,35 @@ model ExerciseSubmission {
   @@index([studentRefId, completedAt])
   @@index([exerciseRefId, completedAt])
   @@index([submittedStudentId, completedAt])
+}
+
+model IncomingExerciseResult {
+  id                 String   @id @default(cuid())
+  status             String
+  submittedStudentId String
+  submittedEmail     String?
+  pageTitle          String
+  completedAt        DateTime
+  totalQuestions     Int
+  correctCount       Int
+  pendingCount       Int
+  incorrectCount     Int
+  scorePercent       Float
+  answersJson        Json
+  recipientsJson     Json?
+  payloadJson        Json?
+  notes              String?
+  reviewedByUsername String?
+  matchedStudentRefId String?
+  matchedStudent     Student? @relation(fields: [matchedStudentRefId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  resolvedAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([submittedStudentId, createdAt])
+  @@index([submittedEmail, createdAt])
+  @@index([matchedStudentRefId, createdAt])
 }
 
 enum IntakeControlType {
@@ -264,4 +294,30 @@ model AdminUser {
   updatedAt    DateTime      @updatedAt
 
   @@index([role])
+}
+
+model AdminNotificationQueue {
+  id               String   @id @default(cuid())
+  queueType        String
+  status           String
+  deliveryMode     String
+  recipients       String[]
+  assignmentTitle  String
+  exerciseTitle    String?
+  level            String?
+  dueAt            String?
+  message          String?
+  senderName       String?
+  queuedByUsername String?
+  reviewedByUsername String?
+  scheduledFor     DateTime?
+  sentAt           DateTime?
+  attempts         Int      @default(0)
+  lastError        String?
+  payloadJson      Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([queueType, status, createdAt])
+  @@index([status, scheduledFor, createdAt])
 }

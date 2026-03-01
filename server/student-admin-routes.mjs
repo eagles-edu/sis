@@ -5,6 +5,16 @@ import fs from "node:fs"
 import path from "node:path"
 import * as XLSX from "xlsx"
 import {
+  deleteIncomingExerciseResultById,
+  getIncomingExerciseResultById,
+  INCOMING_EXERCISE_RESULT_STATUS_ARCHIVED,
+  INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
+  INCOMING_EXERCISE_RESULT_STATUS_TEMPORARY,
+  listIncomingExerciseResults,
+  resolveIncomingExerciseResultToStudent,
+  setIncomingExerciseResultStatus,
+} from "./exercise-store.mjs"
+import {
   deleteAttendanceRecord,
   deleteGradeRecord,
   deleteParentClassReport,
@@ -37,15 +47,22 @@ import {
   generateStudentReportCardPdf,
 } from "./student-report-card-pdf.mjs"
 import { createStudentAdminSessionStore } from "./student-admin-session-store.mjs"
+import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin/students")
 const ADMIN_PAGE_DEFAULT_SLUG = "overview"
 const ADMIN_PAGE_SECTIONS = [
   "overview",
+  "student-admin",
   "profile",
   "attendance",
+  "attendance-admin",
   "assignments",
+  "assignments-data",
+  "parent-tracking",
+  "performance-data",
   "grades",
+  "grades-data",
   "reports",
   "family",
   "users",
@@ -61,7 +78,10 @@ const ADMIN_STUDENTS_PREFIX = `${ADMIN_API_PREFIX}/students`
 const ADMIN_PERMISSIONS_PATH = `${ADMIN_API_PREFIX}/permissions`
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
+const ADMIN_EXPORT_XLSX_PATH = `${ADMIN_API_PREFIX}/exports/xlsx`
 const ADMIN_NOTIFY_EMAIL_PATH = `${ADMIN_API_PREFIX}/notifications/email`
+const ADMIN_NOTIFY_BATCH_STATUS_PATH = `${ADMIN_API_PREFIX}/notifications/batch-status`
+const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-results/incoming`
 const ADMIN_USER_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_USERS_PREFIX)}/([^/]+)$`)
 const ADMIN_REPORT_CARD_PATH_RE = new RegExp(
   `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/report-card\\.pdf$`
@@ -177,7 +197,7 @@ function createDefaultRolePermissions() {
       canManageUsers: false,
       canManagePermissions: false,
       startPage: "overview",
-      allowedPages: ["overview", "profile", "attendance", "assignments", "grades", "reports", "family"],
+      allowedPages: ["overview", "profile", "attendance", "assignments", "parent-tracking", "grades", "reports", "family"],
     },
     student: {
       role: "student",
@@ -234,6 +254,9 @@ function normalizeRolePermissionsPayload(payload = {}) {
   if (!normalized.admin.canRead) normalized.admin.canRead = true
   if (!normalized.admin.canWrite) normalized.admin.canWrite = true
   normalized.admin.allowedPages = uniquePageList(normalized.admin.allowedPages, DEFAULT_ROLE_PERMISSIONS.admin.allowedPages)
+  DEFAULT_ROLE_PERMISSIONS.admin.allowedPages.forEach((pageSlug) => {
+    if (!normalized.admin.allowedPages.includes(pageSlug)) normalized.admin.allowedPages.push(pageSlug)
+  })
   if (!normalized.admin.allowedPages.includes(normalized.admin.startPage)) {
     normalized.admin.startPage = normalized.admin.allowedPages[0] || ADMIN_PAGE_DEFAULT_SLUG
   }
@@ -337,7 +360,7 @@ function sendHtml(response, statusCode, html) {
 }
 
 function injectAdminRuntimeConfig(html, pageSlug) {
-  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};</script>`
+  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -360,7 +383,11 @@ export function getStudentAdminRuntimeStatus() {
     permissionsPath: ADMIN_PERMISSIONS_PATH,
     dashboardPath: ADMIN_DASHBOARD_PATH,
     exerciseTitlesPath: ADMIN_EXERCISE_TITLES_PATH,
+    exportXlsxPath: ADMIN_EXPORT_XLSX_PATH,
     notifyEmailPath: ADMIN_NOTIFY_EMAIL_PATH,
+    notifyBatchStatusPath: ADMIN_NOTIFY_BATCH_STATUS_PATH,
+    incomingExerciseResultsPath: ADMIN_INCOMING_EXERCISE_RESULTS_PATH,
+    notifyBatchQueue: getEmailBatchQueueRuntimeStatus(),
     pageDefaultSlug: ADMIN_PAGE_DEFAULT_SLUG,
     pageSections: [...ADMIN_PAGE_SECTIONS],
     permissionRoles: [...ADMIN_PERMISSION_ROLES],
@@ -390,6 +417,92 @@ function sendXlsx(response, filename, payloadBuffer) {
     "Cache-Control": "no-store",
   })
   response.end(payloadBuffer)
+}
+
+function sanitizeDownloadFilename(value, fallback = "export.xlsx") {
+  const text = normalizeText(value)
+  const normalized = text
+    .replace(/[/\\?%*:|"<>]/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  if (!normalized) return fallback
+  if (normalized.toLowerCase().endsWith(".xlsx")) return normalized
+  return `${normalized}.xlsx`
+}
+
+function normalizeWorksheetName(value, fallback = "Export") {
+  const text = normalizeText(value)
+    .replace(/[:\\/?*\[\]]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+  const picked = text || fallback
+  return picked.slice(0, 31) || fallback
+}
+
+function normalizeExportCellValue(value) {
+  if (value === undefined || value === null) return ""
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value
+  try {
+    return JSON.stringify(value)
+  } catch (error) {
+    void error
+    return String(value)
+  }
+}
+
+function buildXlsxFromPayload(payload = {}) {
+  const columnsRaw = Array.isArray(payload?.columns) ? payload.columns : []
+  const rowsRaw = Array.isArray(payload?.rows) ? payload.rows : []
+  if (!columnsRaw.length) {
+    const error = new Error("columns are required for XLSX export")
+    error.statusCode = 400
+    throw error
+  }
+  if (!rowsRaw.length) {
+    const error = new Error("rows are required for XLSX export")
+    error.statusCode = 400
+    throw error
+  }
+  if (columnsRaw.length > 80 || rowsRaw.length > 20000) {
+    const error = new Error("XLSX export exceeds allowed size")
+    error.statusCode = 400
+    throw error
+  }
+
+  const columns = columnsRaw.map((column) => {
+    const key = normalizeText(column?.key)
+    const label = normalizeText(column?.label) || key
+    if (!key) {
+      const error = new Error("Each XLSX export column requires a key")
+      error.statusCode = 400
+      throw error
+    }
+    return {
+      key,
+      label: label.slice(0, 120),
+    }
+  })
+
+  const worksheetRows = rowsRaw.map((row) => {
+    const source = row && typeof row === "object" ? row : {}
+    const normalizedRow = {}
+    columns.forEach((column) => {
+      normalizedRow[column.label] = normalizeExportCellValue(source[column.key])
+    })
+    return normalizedRow
+  })
+
+  const workbook = XLSX.utils.book_new()
+  const worksheet = XLSX.utils.json_to_sheet(worksheetRows, {
+    header: columns.map((column) => column.label),
+  })
+  XLSX.utils.book_append_sheet(workbook, worksheet, normalizeWorksheetName(payload?.sheetName, "Export"))
+  const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" })
+  return {
+    filename: sanitizeDownloadFilename(payload?.filename, "export.xlsx"),
+    buffer,
+  }
 }
 
 function parseDelimitedRows(text, delimiter) {
@@ -720,7 +833,14 @@ async function requireAuthenticatedSession(request, response) {
   return session
 }
 
-function enforceRoleAccess(session, method) {
+function canTeacherWriteParentTrackingPath(pathname, method) {
+  if (method !== "POST") return false
+  if (pathname === ADMIN_NOTIFY_EMAIL_PATH) return true
+  if (ADMIN_REPORTS_PATH_RE.test(pathname)) return true
+  return false
+}
+
+function enforceRoleAccess(session, method, pathname) {
   const policy = getRolePolicy(session?.role)
   if (!policy.canRead) {
     const error = new Error("Forbidden")
@@ -728,6 +848,10 @@ function enforceRoleAccess(session, method) {
     throw error
   }
   if (method !== "GET" && !policy.canWrite) {
+    const isTeacher = normalizeRoleName(session?.role) === "teacher"
+    if (isTeacher && canTeacherWriteParentTrackingPath(pathname, method)) {
+      return policy
+    }
     const error = new Error("Forbidden")
     error.statusCode = 403
     throw error
@@ -932,7 +1056,108 @@ function smtpConfigFromEnv() {
   return { host, port, secure, user, pass, from }
 }
 
-async function sendAnnouncementEmail(payload = {}) {
+const WEEKEND_BATCH_WINDOWS = Object.freeze([
+  { day: 6, hour: 12, minute: 0, label: "Sat 12:00" },
+  { day: 6, hour: 15, minute: 30, label: "Sat 15:30" },
+  { day: 6, hour: 18, minute: 0, label: "Sat 18:00" },
+  { day: 6, hour: 20, minute: 15, label: "Sat 20:15" },
+  { day: 0, hour: 12, minute: 0, label: "Sun 12:00" },
+  { day: 0, hour: 15, minute: 30, label: "Sun 15:30" },
+  { day: 0, hour: 18, minute: 0, label: "Sun 18:00" },
+  { day: 0, hour: 20, minute: 15, label: "Sun 20:15" },
+])
+const NOTIFICATION_QUEUE_TYPE_PARENT_REPORT = "parent-report"
+const NOTIFICATION_QUEUE_TYPE_ANNOUNCEMENT = "announcement"
+const NOTIFICATION_QUEUE_STATUS_QUEUED = "queued"
+const NOTIFICATION_QUEUE_STATUS_HOLD = "hold"
+const NOTIFICATION_QUEUE_STATUS_SENT = "sent"
+const EMAIL_QUEUE_BACKEND_MODE = (() => {
+  const mode = normalizeLower(process.env.STUDENT_ADMIN_NOTIFY_QUEUE_BACKEND || "auto")
+  if (mode === "database" || mode === "db" || mode === "postgres" || mode === "postgresql") return "database"
+  if (mode === "memory" || mode === "in-memory") return "memory"
+  return normalizeText(process.env.DATABASE_URL) ? "database" : "memory"
+})()
+const EMAIL_BATCH_QUEUE_LIMIT = Math.max(
+  10,
+  Number.parseInt(String(process.env.STUDENT_ADMIN_NOTIFY_BATCH_QUEUE_LIMIT || "4000"), 10) || 4000
+)
+const EMAIL_BATCH_QUEUE = []
+let EMAIL_BATCH_LAST_RUN_AT = ""
+let EMAIL_BATCH_LAST_RESULT = "idle"
+let EMAIL_BATCH_LAST_ERROR = ""
+let EMAIL_BATCH_LAST_KNOWN_SIZE = 0
+let EMAIL_QUEUE_DB_DISABLED = EMAIL_QUEUE_BACKEND_MODE !== "database"
+let EMAIL_QUEUE_DB_WARNED = false
+
+function nowIso() {
+  return new Date().toISOString()
+}
+
+function createQueueId(prefix = "notify") {
+  const head = normalizeLower(prefix).replace(/[^a-z0-9]/g, "") || "notify"
+  return `${head}-${Date.now().toString(36)}-${crypto.randomBytes(4).toString("hex")}`
+}
+
+function normalizeQueueType(value) {
+  const queueType = normalizeLower(value)
+  if (queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT) return NOTIFICATION_QUEUE_TYPE_PARENT_REPORT
+  return NOTIFICATION_QUEUE_TYPE_ANNOUNCEMENT
+}
+
+function normalizeQueueStatus(value) {
+  const status = normalizeLower(value)
+  if (status === NOTIFICATION_QUEUE_STATUS_HOLD) return NOTIFICATION_QUEUE_STATUS_HOLD
+  if (status === NOTIFICATION_QUEUE_STATUS_SENT) return NOTIFICATION_QUEUE_STATUS_SENT
+  return NOTIFICATION_QUEUE_STATUS_QUEUED
+}
+
+function weekendBatchScheduleLabel() {
+  return WEEKEND_BATCH_WINDOWS.map((entry) => entry.label).join(", ")
+}
+
+function parseIsoDateTime(value) {
+  const text = normalizeText(value)
+  if (!text) return null
+  const parsed = new Date(text)
+  if (Number.isNaN(parsed.valueOf())) return null
+  return parsed
+}
+
+function nextWeekendBatchDispatchAt(value = new Date()) {
+  const now = value instanceof Date ? new Date(value.getTime()) : new Date(value)
+  if (Number.isNaN(now.valueOf())) return null
+
+  for (let offset = 0; offset < 14; offset += 1) {
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 0, 0, 0, 0)
+    const dayOfWeek = dayStart.getDay()
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) continue
+
+    for (let i = 0; i < WEEKEND_BATCH_WINDOWS.length; i += 1) {
+      const slot = WEEKEND_BATCH_WINDOWS[i]
+      if (slot.day !== dayOfWeek) continue
+      const candidate = new Date(
+        dayStart.getFullYear(),
+        dayStart.getMonth(),
+        dayStart.getDate(),
+        slot.hour,
+        slot.minute,
+        0,
+        0
+      )
+      if (candidate > now) return candidate
+    }
+  }
+
+  return null
+}
+
+function normalizeDeliveryMode(value) {
+  const mode = normalizeLower(value)
+  if (mode === "weekend-batch" || mode === "batch") return "weekend-batch"
+  return "immediate"
+}
+
+function normalizeAnnouncementPayload(payload = {}) {
   const recipients = normalizeRecipientList(payload.recipients)
   if (!recipients.length) {
     const error = new Error("At least one valid recipient email is required")
@@ -940,6 +1165,204 @@ async function sendAnnouncementEmail(payload = {}) {
     throw error
   }
 
+  return {
+    recipients,
+    assignmentTitle: normalizeText(payload.assignmentTitle) || "Assignment update",
+    exerciseTitle: normalizeText(payload.exerciseTitle),
+    dueAt: normalizeText(payload.dueAt),
+    level: normalizeText(payload.level),
+    message: normalizeText(payload.message),
+    senderName: normalizeText(payload.senderName) || "Eagles Student Admin",
+  }
+}
+
+function mapQueueRecord(record = {}) {
+  return {
+    id: normalizeText(record.id),
+    queueType: normalizeQueueType(record.queueType),
+    status: normalizeQueueStatus(record.status),
+    deliveryMode: normalizeDeliveryMode(record.deliveryMode),
+    recipients: normalizeRecipientList(record.recipients),
+    assignmentTitle: normalizeText(record.assignmentTitle) || "Assignment update",
+    exerciseTitle: normalizeText(record.exerciseTitle),
+    dueAt: normalizeText(record.dueAt),
+    level: normalizeText(record.level),
+    message: normalizeText(record.message),
+    senderName: normalizeText(record.senderName) || "Eagles Student Admin",
+    queuedByUsername: normalizeText(record.queuedByUsername),
+    reviewedByUsername: normalizeText(record.reviewedByUsername),
+    queuedAt: normalizeText(record.queuedAt || record.createdAt),
+    scheduledFor: normalizeText(record.scheduledFor),
+    sentAt: normalizeText(record.sentAt),
+    attempts: Number.parseInt(String(record.attempts || 0), 10) || 0,
+    lastError: normalizeText(record.lastError),
+    payloadJson: record.payloadJson || null,
+  }
+}
+
+function queueStatusFilter(statuses = []) {
+  const normalized = Array.from(
+    new Set((Array.isArray(statuses) ? statuses : []).map((entry) => normalizeQueueStatus(entry)))
+  )
+  return normalized
+}
+
+async function getNotificationQueuePrismaClient() {
+  if (EMAIL_QUEUE_DB_DISABLED) return null
+  try {
+    const prisma = await getSharedPrismaClient()
+    if (!prisma || !prisma.adminNotificationQueue) {
+      EMAIL_QUEUE_DB_DISABLED = true
+      if (!EMAIL_QUEUE_DB_WARNED) {
+        EMAIL_QUEUE_DB_WARNED = true
+        console.warn("admin notification queue falling back to memory: prisma model unavailable")
+      }
+      return null
+    }
+    return prisma
+  } catch (error) {
+    EMAIL_QUEUE_DB_DISABLED = true
+    if (!EMAIL_QUEUE_DB_WARNED) {
+      EMAIL_QUEUE_DB_WARNED = true
+      console.warn(`admin notification queue falling back to memory: ${error.message}`)
+    }
+    return null
+  }
+}
+
+function isQueueTableMissingError(error) {
+  const code = normalizeUpper(error?.code)
+  if (code === "P2021") return true
+  const message = normalizeLower(error?.message || error)
+  return message.includes("adminnotificationqueue")
+}
+
+function normalizeUpper(value) {
+  return normalizeText(value).toUpperCase()
+}
+
+function markQueueDatabaseFallback(error) {
+  EMAIL_QUEUE_DB_DISABLED = true
+  EMAIL_BATCH_LAST_ERROR = normalizeText(error?.message || error)
+  if (!EMAIL_QUEUE_DB_WARNED) {
+    EMAIL_QUEUE_DB_WARNED = true
+    console.warn(`admin notification queue falling back to memory: ${EMAIL_BATCH_LAST_ERROR}`)
+  }
+}
+
+async function runQueueDbOperation(handler, fallbackHandler) {
+  const prisma = await getNotificationQueuePrismaClient()
+  if (!prisma) return fallbackHandler()
+  try {
+    return await handler(prisma)
+  } catch (error) {
+    if (isQueueTableMissingError(error)) {
+      markQueueDatabaseFallback(error)
+      return fallbackHandler()
+    }
+    throw error
+  }
+}
+
+function buildQueuedAnnouncementEntry(payload = {}, options = {}) {
+  const normalizedPayload = normalizeAnnouncementPayload(payload)
+  const now = new Date()
+  const scheduledAt = nextWeekendBatchDispatchAt(now)
+  if (!scheduledAt) {
+    const error = new Error("Unable to compute next weekend batch time")
+    error.statusCode = 503
+    throw error
+  }
+  return {
+    id: createQueueId("notify"),
+    queueType: normalizeQueueType(payload.queueType),
+    status: NOTIFICATION_QUEUE_STATUS_QUEUED,
+    deliveryMode: normalizeDeliveryMode(payload.deliveryMode),
+    recipients: normalizedPayload.recipients,
+    assignmentTitle: normalizedPayload.assignmentTitle,
+    exerciseTitle: normalizedPayload.exerciseTitle,
+    level: normalizedPayload.level,
+    dueAt: normalizedPayload.dueAt,
+    message: normalizedPayload.message,
+    senderName: normalizedPayload.senderName,
+    queuedByUsername: normalizeText(options.queuedByUsername || payload.queuedByUsername),
+    reviewedByUsername: "",
+    queuedAt: now.toISOString(),
+    scheduledFor: scheduledAt.toISOString(),
+    sentAt: "",
+    attempts: 0,
+    lastError: "",
+    payloadJson: payload && typeof payload === "object" ? payload : {},
+  }
+}
+
+function memoryQueueFilteredItems({ queueType = "", includeSent = false, statuses = [] } = {}) {
+  const normalizedQueueType = normalizeQueueType(queueType)
+  const statusFilter = queueStatusFilter(statuses)
+  return EMAIL_BATCH_QUEUE.filter((entry) => {
+    if (queueType && normalizeQueueType(entry.queueType) !== normalizedQueueType) return false
+    const status = normalizeQueueStatus(entry.status)
+    if (statusFilter.length) return statusFilter.includes(status)
+    if (!includeSent && status === NOTIFICATION_QUEUE_STATUS_SENT) return false
+    return true
+  })
+}
+
+async function countQueuedAnnouncements({ queueType = "", includeSent = false, statuses = [] } = {}) {
+  return runQueueDbOperation(
+    async (prisma) => {
+      const where = {}
+      if (queueType) where.queueType = normalizeQueueType(queueType)
+      const statusFilter = queueStatusFilter(statuses)
+      if (statusFilter.length) where.status = { in: statusFilter }
+      else if (!includeSent) where.status = { not: NOTIFICATION_QUEUE_STATUS_SENT }
+      return prisma.adminNotificationQueue.count({ where })
+    },
+    async () => memoryQueueFilteredItems({ queueType, includeSent, statuses }).length
+  )
+}
+
+async function listQueuedAnnouncements({ queueType = "", take = 10, includeSent = false, statuses = [] } = {}) {
+  const limit = Math.max(1, Math.min(Number.parseInt(String(take || 10), 10) || 10, 1000))
+  const total = await countQueuedAnnouncements({ queueType, includeSent, statuses })
+  const items = await runQueueDbOperation(
+    async (prisma) => {
+      const where = {}
+      if (queueType) where.queueType = normalizeQueueType(queueType)
+      const statusFilter = queueStatusFilter(statuses)
+      if (statusFilter.length) where.status = { in: statusFilter }
+      else if (!includeSent) where.status = { not: NOTIFICATION_QUEUE_STATUS_SENT }
+      const rows = await prisma.adminNotificationQueue.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      })
+      return rows.map((row) =>
+        mapQueueRecord({
+          ...row,
+          queuedAt: row.createdAt?.toISOString?.() || "",
+          scheduledFor: row.scheduledFor?.toISOString?.() || "",
+          sentAt: row.sentAt?.toISOString?.() || "",
+        })
+      )
+    },
+    async () =>
+      memoryQueueFilteredItems({ queueType, includeSent, statuses })
+        .slice()
+        .sort((left, right) => normalizeText(right.queuedAt).localeCompare(normalizeText(left.queuedAt)))
+        .slice(0, limit)
+        .map((entry) => mapQueueRecord(entry))
+  )
+
+  EMAIL_BATCH_LAST_KNOWN_SIZE = total
+  return {
+    total,
+    items,
+    hasMore: total > items.length,
+  }
+}
+
+function buildAnnouncementEmailContent(payload = {}) {
   const assignmentTitle = normalizeText(payload.assignmentTitle) || "Assignment update"
   const exerciseTitle = normalizeText(payload.exerciseTitle)
   const dueAt = normalizeText(payload.dueAt)
@@ -966,6 +1389,17 @@ async function sendAnnouncementEmail(payload = {}) {
     .map((line) => line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))
     .join("<br>")
 
+  return {
+    subject,
+    lines,
+    htmlLines,
+  }
+}
+
+async function sendAnnouncementEmail(payload = {}) {
+  const normalizedPayload = normalizeAnnouncementPayload(payload)
+  const emailContent = buildAnnouncementEmailContent(normalizedPayload)
+
   const nodemailer = await getNodemailer()
   const smtp = smtpConfigFromEnv()
   const transporter = nodemailer.createTransport({
@@ -981,16 +1415,262 @@ async function sendAnnouncementEmail(payload = {}) {
   await transporter.sendMail({
     from: smtp.from,
     to: smtp.from,
-    bcc: recipients,
-    subject,
-    text: lines.join("\n"),
-    html: `<p>${htmlLines}</p>`,
+    bcc: normalizedPayload.recipients,
+    subject: emailContent.subject,
+    text: emailContent.lines.join("\n"),
+    html: `<p>${emailContent.htmlLines}</p>`,
   })
 
   return {
     ok: true,
-    sent: recipients.length,
-    subject,
+    sent: normalizedPayload.recipients.length,
+    subject: emailContent.subject,
+    deliveryMode: "immediate",
+  }
+}
+
+async function queueAnnouncementEmail(payload = {}, options = {}) {
+  const totalUnsent = await countQueuedAnnouncements()
+  if (totalUnsent >= EMAIL_BATCH_QUEUE_LIMIT) {
+    const error = new Error("Weekend email batch queue is full")
+    error.statusCode = 503
+    throw error
+  }
+
+  const entry = buildQueuedAnnouncementEntry(payload, options)
+  const saved = await runQueueDbOperation(
+    async (prisma) => {
+      const created = await prisma.adminNotificationQueue.create({
+        data: {
+          id: entry.id,
+          queueType: entry.queueType,
+          status: entry.status,
+          deliveryMode: entry.deliveryMode,
+          recipients: entry.recipients,
+          assignmentTitle: entry.assignmentTitle,
+          exerciseTitle: entry.exerciseTitle || null,
+          level: entry.level || null,
+          dueAt: entry.dueAt || null,
+          message: entry.message || null,
+          senderName: entry.senderName || null,
+          queuedByUsername: entry.queuedByUsername || null,
+          reviewedByUsername: null,
+          scheduledFor: parseIsoDateTime(entry.scheduledFor),
+          sentAt: null,
+          attempts: 0,
+          lastError: null,
+          payloadJson: entry.payloadJson || null,
+        },
+      })
+      return mapQueueRecord({
+        ...created,
+        queuedAt: created.createdAt?.toISOString?.() || entry.queuedAt,
+        scheduledFor: created.scheduledFor?.toISOString?.() || entry.scheduledFor,
+      })
+    },
+    async () => {
+      EMAIL_BATCH_QUEUE.push(entry)
+      return mapQueueRecord(entry)
+    }
+  )
+  EMAIL_BATCH_LAST_KNOWN_SIZE = totalUnsent + 1
+
+  return {
+    ok: true,
+    queued: true,
+    deliveryMode: "weekend-batch",
+    queueId: saved.id,
+    queuedAt: saved.queuedAt,
+    scheduledFor: saved.scheduledFor,
+    queueSize: EMAIL_BATCH_LAST_KNOWN_SIZE,
+    schedule: weekendBatchScheduleLabel(),
+  }
+}
+
+async function getEmailBatchQueueStatus(queueType = "") {
+  const listed = await listQueuedAnnouncements({
+    queueType,
+    take: 500,
+    includeSent: false,
+  })
+  const nextScheduledFor = listed.items.reduce((earliest, entry) => {
+    const candidate = parseIsoDateTime(entry.scheduledFor)
+    if (!candidate) return earliest
+    if (!earliest || candidate < earliest) return candidate
+    return earliest
+  }, null)
+
+  return {
+    queueSize: listed.total,
+    nextScheduledFor: nextScheduledFor ? nextScheduledFor.toISOString() : "",
+    schedule: weekendBatchScheduleLabel(),
+    backend: EMAIL_QUEUE_DB_DISABLED ? "memory" : EMAIL_QUEUE_BACKEND_MODE,
+    lastRunAt: EMAIL_BATCH_LAST_RUN_AT,
+    lastResult: EMAIL_BATCH_LAST_RESULT,
+    lastError: EMAIL_BATCH_LAST_ERROR,
+    processing: false,
+  }
+}
+
+function getEmailBatchQueueRuntimeStatus() {
+  return {
+    queueSize: EMAIL_BATCH_LAST_KNOWN_SIZE,
+    nextScheduledFor: "",
+    schedule: weekendBatchScheduleLabel(),
+    backend: EMAIL_QUEUE_DB_DISABLED ? "memory" : EMAIL_QUEUE_BACKEND_MODE,
+    lastRunAt: EMAIL_BATCH_LAST_RUN_AT,
+    lastResult: EMAIL_BATCH_LAST_RESULT,
+    lastError: EMAIL_BATCH_LAST_ERROR,
+    processing: false,
+  }
+}
+
+async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
+  const id = normalizeText(queueId)
+  if (!id) {
+    const error = new Error("queueId is required")
+    error.statusCode = 400
+    throw error
+  }
+  const normalized = {
+    status: updates.status !== undefined ? normalizeQueueStatus(updates.status) : undefined,
+    assignmentTitle:
+      updates.assignmentTitle !== undefined
+        ? normalizeText(updates.assignmentTitle) || "Assignment update"
+        : undefined,
+    exerciseTitle: updates.exerciseTitle !== undefined ? normalizeText(updates.exerciseTitle) : undefined,
+    level: updates.level !== undefined ? normalizeText(updates.level) : undefined,
+    dueAt: updates.dueAt !== undefined ? normalizeText(updates.dueAt) : undefined,
+    message: updates.message !== undefined ? normalizeText(updates.message) : undefined,
+    recipients: updates.recipients !== undefined ? normalizeRecipientList(updates.recipients) : undefined,
+    reviewedByUsername:
+      updates.reviewedByUsername !== undefined
+        ? normalizeText(updates.reviewedByUsername)
+        : normalizeText(options.reviewedByUsername),
+    scheduledFor: updates.scheduledFor !== undefined ? parseIsoDateTime(updates.scheduledFor) : undefined,
+    lastError: updates.lastError !== undefined ? normalizeText(updates.lastError) : undefined,
+    sentAt: updates.sentAt !== undefined ? parseIsoDateTime(updates.sentAt) : undefined,
+    attempts:
+      updates.attempts !== undefined ? Number.parseInt(String(updates.attempts), 10) || 0 : undefined,
+  }
+
+  return runQueueDbOperation(
+    async (prisma) => {
+      const patch = {}
+      if (normalized.status !== undefined) patch.status = normalized.status
+      if (normalized.assignmentTitle !== undefined) patch.assignmentTitle = normalized.assignmentTitle
+      if (normalized.exerciseTitle !== undefined) patch.exerciseTitle = normalized.exerciseTitle || null
+      if (normalized.level !== undefined) patch.level = normalized.level || null
+      if (normalized.dueAt !== undefined) patch.dueAt = normalized.dueAt || null
+      if (normalized.message !== undefined) patch.message = normalized.message || null
+      if (normalized.recipients !== undefined) patch.recipients = normalized.recipients
+      if (normalized.reviewedByUsername !== undefined) patch.reviewedByUsername = normalized.reviewedByUsername || null
+      if (normalized.scheduledFor !== undefined) patch.scheduledFor = normalized.scheduledFor
+      if (normalized.lastError !== undefined) patch.lastError = normalized.lastError || null
+      if (normalized.sentAt !== undefined) patch.sentAt = normalized.sentAt
+      if (normalized.attempts !== undefined) patch.attempts = normalized.attempts
+      const updated = await prisma.adminNotificationQueue.update({
+        where: { id },
+        data: patch,
+      })
+      return mapQueueRecord({
+        ...updated,
+        queuedAt: updated.createdAt?.toISOString?.() || "",
+        scheduledFor: updated.scheduledFor?.toISOString?.() || "",
+        sentAt: updated.sentAt?.toISOString?.() || "",
+      })
+    },
+    async () => {
+      const index = EMAIL_BATCH_QUEUE.findIndex((entry) => normalizeText(entry.id) === id)
+      if (index < 0) {
+        const error = new Error("Queue item not found")
+        error.statusCode = 404
+        throw error
+      }
+      const current = mapQueueRecord(EMAIL_BATCH_QUEUE[index])
+      const updated = {
+        ...current,
+        ...(normalized.status !== undefined ? { status: normalized.status } : {}),
+        ...(normalized.assignmentTitle !== undefined ? { assignmentTitle: normalized.assignmentTitle } : {}),
+        ...(normalized.exerciseTitle !== undefined ? { exerciseTitle: normalized.exerciseTitle } : {}),
+        ...(normalized.level !== undefined ? { level: normalized.level } : {}),
+        ...(normalized.dueAt !== undefined ? { dueAt: normalized.dueAt } : {}),
+        ...(normalized.message !== undefined ? { message: normalized.message } : {}),
+        ...(normalized.recipients !== undefined ? { recipients: normalized.recipients } : {}),
+        ...(normalized.reviewedByUsername !== undefined ? { reviewedByUsername: normalized.reviewedByUsername } : {}),
+        ...(normalized.scheduledFor !== undefined
+          ? { scheduledFor: normalized.scheduledFor ? normalized.scheduledFor.toISOString() : "" }
+          : {}),
+        ...(normalized.lastError !== undefined ? { lastError: normalized.lastError } : {}),
+        ...(normalized.sentAt !== undefined
+          ? { sentAt: normalized.sentAt ? normalized.sentAt.toISOString() : "" }
+          : {}),
+        ...(normalized.attempts !== undefined ? { attempts: normalized.attempts } : {}),
+      }
+      EMAIL_BATCH_QUEUE[index] = updated
+      return mapQueueRecord(updated)
+    }
+  )
+}
+
+async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername = "" } = {}) {
+  const source = await listQueuedAnnouncements({
+    queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
+    includeSent: false,
+    statuses: [NOTIFICATION_QUEUE_STATUS_QUEUED],
+    take: 1000,
+  })
+
+  let sent = 0
+  let failed = 0
+
+  for (let i = 0; i < source.items.length; i += 1) {
+    const item = source.items[i]
+    try {
+      await sendAnnouncementEmail({
+        recipients: item.recipients,
+        assignmentTitle: item.assignmentTitle,
+        exerciseTitle: item.exerciseTitle,
+        dueAt: item.dueAt,
+        level: item.level,
+        message: item.message,
+        senderName: item.senderName,
+      })
+      await updateQueuedAnnouncement(
+        item.id,
+        {
+          status: NOTIFICATION_QUEUE_STATUS_SENT,
+          sentAt: nowIso(),
+          lastError: "",
+          attempts: (Number.parseInt(String(item.attempts || 0), 10) || 0) + 1,
+        },
+        { reviewedByUsername }
+      )
+      sent += 1
+    } catch (error) {
+      await updateQueuedAnnouncement(
+        item.id,
+        {
+          status: NOTIFICATION_QUEUE_STATUS_QUEUED,
+          lastError: normalizeText(error?.message || error),
+          attempts: (Number.parseInt(String(item.attempts || 0), 10) || 0) + 1,
+        },
+        { reviewedByUsername }
+      )
+      failed += 1
+    }
+  }
+
+  EMAIL_BATCH_LAST_RUN_AT = nowIso()
+  EMAIL_BATCH_LAST_RESULT = `manual-send sent=${sent} failed=${failed}`
+  EMAIL_BATCH_LAST_ERROR = failed ? "Some queued parent reports failed to send." : ""
+
+  return {
+    ok: true,
+    queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
+    processed: source.items.length,
+    sent,
+    failed,
   }
 }
 
@@ -1018,7 +1698,7 @@ async function handleApiRequest(request, response, pathname, url) {
   }
 
   const session = await requireAuthenticatedSession(request, response)
-  const rolePolicy = enforceRoleAccess(session, method)
+  const rolePolicy = enforceRoleAccess(session, method, pathname)
 
   if (pathname === ADMIN_PERMISSIONS_PATH) {
     if (method === "GET") {
@@ -1035,6 +1715,18 @@ async function handleApiRequest(request, response, pathname, url) {
   if (method === "GET" && pathname === ADMIN_DASHBOARD_PATH) {
     assertStoreEnabled()
     const data = await getAdminDashboardSummary()
+    if (canManageUsers(rolePolicy)) {
+      const parentQueue = await listQueuedAnnouncements({
+        queueType: NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
+        includeSent: false,
+        take: 10,
+      })
+      data.parentReportQueue = {
+        total: parentQueue.total,
+        hasMore: parentQueue.hasMore,
+        items: parentQueue.items,
+      }
+    }
     sendJson(response, 200, data)
     return true
   }
@@ -1049,10 +1741,275 @@ async function handleApiRequest(request, response, pathname, url) {
     return true
   }
 
+  if (method === "GET" && pathname === ADMIN_INCOMING_EXERCISE_RESULTS_PATH) {
+    const statusesParam = normalizeText(url.searchParams.get("statuses"))
+    const statuses = statusesParam
+      ? statusesParam
+          .split(",")
+          .map((entry) => normalizeText(entry))
+          .filter(Boolean)
+      : []
+
+    const listed = await listIncomingExerciseResults({
+      statuses,
+      take: url.searchParams.get("take") || "50",
+      showAll: resolveBoolean(url.searchParams.get("showAll"), false),
+      query: url.searchParams.get("q") || "",
+    })
+
+    sendJson(response, 200, {
+      ok: true,
+      ...listed,
+    })
+    return true
+  }
+
+  if (method === "POST" && pathname === ADMIN_INCOMING_EXERCISE_RESULTS_PATH) {
+    assertCanManageUsers(rolePolicy)
+    const payload = await parseBody(request)
+    const action = normalizeLower(payload?.action)
+    const incomingResultId = normalizeText(payload?.incomingResultId)
+    const reviewedByUsername = normalizeText(session?.username)
+    const notes =
+      Object.prototype.hasOwnProperty.call(payload || {}, "notes")
+        ? normalizeText(payload?.notes)
+        : undefined
+    const reviewPatch =
+      notes === undefined
+        ? { reviewedByUsername }
+        : { reviewedByUsername, notes }
+
+    if (action === "save-temp" || action === "temporary" || action === "temp") {
+      const item = await setIncomingExerciseResultStatus(
+        incomingResultId,
+        INCOMING_EXERCISE_RESULT_STATUS_TEMPORARY,
+        reviewPatch
+      )
+      sendJson(response, 200, { ok: true, action: "save-temp", item })
+      return true
+    }
+
+    if (action === "archive") {
+      const item = await setIncomingExerciseResultStatus(
+        incomingResultId,
+        INCOMING_EXERCISE_RESULT_STATUS_ARCHIVED,
+        reviewPatch
+      )
+      sendJson(response, 200, { ok: true, action: "archive", item })
+      return true
+    }
+
+    if (action === "requeue") {
+      const item = await setIncomingExerciseResultStatus(
+        incomingResultId,
+        INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
+        reviewPatch
+      )
+      sendJson(response, 200, { ok: true, action: "requeue", item })
+      return true
+    }
+
+    if (action === "delete") {
+      const result = await deleteIncomingExerciseResultById(incomingResultId)
+      sendJson(response, 200, { ok: true, action: "delete", ...result })
+      return true
+    }
+
+    if (action === "match" || action === "resolve") {
+      const studentRefId = normalizeText(payload?.studentRefId)
+      if (!studentRefId) {
+        const error = new Error("studentRefId is required")
+        error.statusCode = 400
+        throw error
+      }
+      const resolved = await resolveIncomingExerciseResultToStudent(incomingResultId, studentRefId, {
+        ...reviewPatch,
+      })
+      sendJson(response, 200, { ok: true, action: "match", ...resolved })
+      return true
+    }
+
+    if (action === "create-account") {
+      const incoming = await getIncomingExerciseResultById(incomingResultId)
+      const fallbackStudentId = normalizeText(incoming?.submittedStudentId)
+      const requestedStudentId = normalizeText(payload?.studentId || fallbackStudentId)
+      const studentId = requestedStudentId && requestedStudentId !== "(not provided)" ? requestedStudentId : ""
+      if (!studentId) {
+        const error = new Error("studentId is required to create account")
+        error.statusCode = 400
+        throw error
+      }
+
+      const studentEmail = normalizeText(payload?.email || incoming?.submittedEmail)
+      const fullName = normalizeText(payload?.fullName)
+      const saved = await saveStudent({
+        studentId,
+        email: studentEmail,
+        profile: {
+          sourceFormId: "incoming-exercise-result",
+          sourceUrl: "exercise-submission",
+          fullName,
+          studentEmail: studentEmail,
+        },
+      })
+
+      const targetStudentRefId = normalizeText(saved?.student?.id)
+      if (!targetStudentRefId) {
+        const error = new Error("Unable to create or update student account")
+        error.statusCode = 500
+        throw error
+      }
+
+      const resolved = await resolveIncomingExerciseResultToStudent(incomingResultId, targetStudentRefId, {
+        ...reviewPatch,
+      })
+
+      sendJson(response, 200, {
+        ok: true,
+        action: "create-account",
+        student: saved.student,
+        ...resolved,
+      })
+      return true
+    }
+
+    {
+      const error = new Error("Unsupported incoming exercise-result action")
+      error.statusCode = 400
+      throw error
+    }
+  }
+
+  if (method === "GET" && pathname === ADMIN_NOTIFY_BATCH_STATUS_PATH) {
+    const queueType = normalizeQueueType(url.searchParams.get("queueType") || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT)
+    const take = Math.max(1, Math.min(Number.parseInt(String(url.searchParams.get("take") || "10"), 10) || 10, 1000))
+    const showAll = resolveBoolean(url.searchParams.get("showAll"), false)
+    const statusesParam = normalizeText(url.searchParams.get("statuses"))
+    const statuses = statusesParam
+      ? statusesParam
+          .split(",")
+          .map((entry) => normalizeText(entry))
+          .filter(Boolean)
+      : []
+    const listed = await listQueuedAnnouncements({
+      queueType,
+      includeSent: showAll,
+      statuses,
+      take,
+    })
+    const status = await getEmailBatchQueueStatus(queueType)
+    sendJson(response, 200, {
+      ok: true,
+      queueType,
+      showAll,
+      total: listed.total,
+      hasMore: listed.hasMore,
+      items: listed.items,
+      ...status,
+    })
+    return true
+  }
+
+  if (method === "POST" && pathname === ADMIN_NOTIFY_BATCH_STATUS_PATH) {
+    assertCanManageUsers(rolePolicy)
+    const payload = await parseBody(request)
+    const action = normalizeLower(payload?.action)
+    const queueId = normalizeText(payload?.queueId)
+    const queueType = normalizeQueueType(payload?.queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT)
+
+    if (action === "sendall" || action === "send-all") {
+      const result = await sendAllQueuedAnnouncements({
+        queueType,
+        reviewedByUsername: normalizeText(session?.username),
+      })
+      sendJson(response, 200, result)
+      return true
+    }
+
+    if (action === "hold") {
+      const updated = await updateQueuedAnnouncement(
+        queueId,
+        {
+          status: NOTIFICATION_QUEUE_STATUS_HOLD,
+        },
+        { reviewedByUsername: normalizeText(session?.username) }
+      )
+      sendJson(response, 200, { ok: true, action: "hold", item: updated })
+      return true
+    }
+
+    if (action === "requeue") {
+      const scheduledAt = nextWeekendBatchDispatchAt(new Date())
+      const updated = await updateQueuedAnnouncement(
+        queueId,
+        {
+          status: NOTIFICATION_QUEUE_STATUS_QUEUED,
+          scheduledFor: scheduledAt ? scheduledAt.toISOString() : "",
+          sentAt: "",
+          lastError: "",
+        },
+        { reviewedByUsername: normalizeText(session?.username) }
+      )
+      sendJson(response, 200, { ok: true, action: "requeue", item: updated })
+      return true
+    }
+
+    if (action === "edit") {
+      const recipientInput = Array.isArray(payload?.recipients)
+        ? payload.recipients
+        : normalizeText(payload?.recipients)
+            .split(",")
+            .map((entry) => normalizeText(entry))
+            .filter(Boolean)
+      const updated = await updateQueuedAnnouncement(
+        queueId,
+        {
+          assignmentTitle: payload?.assignmentTitle,
+          exerciseTitle: payload?.exerciseTitle,
+          dueAt: payload?.dueAt,
+          level: payload?.level,
+          message: payload?.message,
+          recipients: recipientInput,
+          status: payload?.status || NOTIFICATION_QUEUE_STATUS_QUEUED,
+        },
+        { reviewedByUsername: normalizeText(session?.username) }
+      )
+      sendJson(response, 200, { ok: true, action: "edit", item: updated })
+      return true
+    }
+
+    {
+      const error = new Error("Unsupported batch action")
+      error.statusCode = 400
+      throw error
+    }
+  }
+
   if (method === "POST" && pathname === ADMIN_NOTIFY_EMAIL_PATH) {
     const payload = await parseBody(request)
-    const result = await sendAnnouncementEmail(payload)
+    const deliveryMode = normalizeDeliveryMode(payload?.deliveryMode)
+    const queueType = normalizeQueueType(payload?.queueType || NOTIFICATION_QUEUE_TYPE_ANNOUNCEMENT)
+    if (!rolePolicy.canWrite) {
+      const teacherQueueAllowed =
+        deliveryMode === "weekend-batch" && queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT
+      if (!teacherQueueAllowed) {
+        const error = new Error("Forbidden")
+        error.statusCode = 403
+        throw error
+      }
+    }
+    const result =
+      deliveryMode === "weekend-batch"
+        ? await queueAnnouncementEmail(payload, { queuedByUsername: normalizeText(session?.username) })
+        : await sendAnnouncementEmail(payload)
     sendJson(response, 200, result)
+    return true
+  }
+
+  if (method === "POST" && pathname === ADMIN_EXPORT_XLSX_PATH) {
+    const payload = await parseBody(request)
+    const exportBundle = buildXlsxFromPayload(payload)
+    sendXlsx(response, exportBundle.filename, exportBundle.buffer)
     return true
   }
 

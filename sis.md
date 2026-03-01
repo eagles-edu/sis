@@ -7,6 +7,128 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-02-28)
+
+- Exercise submission matching now follows a strict account-first rule:
+  - if payload `studentId`/`email` matches an existing student account, the submission is recorded directly to `ExerciseSubmission`.
+  - if no account match is found, submission is queued in new Prisma model `IncomingExerciseResult` for manual admin disposition (no anonymous `Student` auto-upsert).
+- Added incoming exercise-result admin queue APIs:
+  - `GET /api/admin/exercise-results/incoming` (filter/list queue items)
+  - `POST /api/admin/exercise-results/incoming` actions:
+    - `save-temp`
+    - `archive`
+    - `requeue`
+    - `match` (resolve to existing student)
+    - `create-account` (create/update student account, then resolve)
+    - `delete`
+- Added queue resolution workflow contract:
+  - resolving an incoming queue item creates an `ExerciseSubmission` row linked to selected student and marks queue item `resolved`.
+- Parent-report notification queue is now durable by default via PostgreSQL (`AdminNotificationQueue` in Prisma), with in-memory fallback only when DB queue storage is unavailable.
+- Queue API was extended for admin review workflows:
+  - `GET /api/admin/notifications/batch-status` now supports queue filtering and list pagination controls (`queueType`, `statuses`, `take`, `showAll`).
+  - `POST /api/admin/notifications/batch-status` now supports admin actions: `hold`, `edit`, `requeue`, `sendAll`.
+- Parent-report sending is now admin-controlled:
+  - default action is queue-only
+  - queued reports are sent only when admin executes `Send All`
+  - queue scheduling fields still use server local-time windows (Sat/Sun `12:00`, `15:30`, `18:00`, `20:15`) for default `scheduledFor` values
+- Teacher role behavior was expanded for parent-tracking workflows:
+  - teachers can fill and save parent tracking report forms
+  - teachers can queue parent-report notifications for admin review (`weekend-batch` only)
+  - immediate send remains admin-only
+- Admin dashboard/UI now includes queued parent-report review controls:
+  - collapsed queue section on Overview with top `10` rows by default and `Show All`
+  - row click opens review modal with previous/next navigation
+  - modal actions: `Hold`, `Edit`, `Requeue`, `Send All`
+- Admin UI bootstrap now tolerates older runtimes that do not expose `GET /api/admin/notifications/batch-status` (404 is treated as optional queue feature-unavailable, not a login blocker).
+- Admin UI no longer auto-fetches `/api/admin/notifications/batch-status` during login bootstrap; queue fetch runs on explicit queue interactions (for example `Show All`, queue refresh, queue actions), reducing startup 404 noise in static-preview/older-runtime paths.
+- Admin UI terminology was updated from `Parent` to `Performance` for queue-review labels while keeping existing route slugs/API identifiers (`parent-tracking`, `parent-report`) unchanged for compatibility.
+- Tracking menu now uses plain button labels with `Performance` restored:
+  - `Attendance` (admin+teacher input page)
+  - admin-only data submenu entries: `Attendance data`, `Assignments data`, `Grades data`, `Performance data`
+  - `Assignments`
+  - `Grades`
+  - `Performance`
+  - `All Reports`
+- Tracking input pages and admin data pages are now fully separated (no combined "twin" pages):
+  - `Attendance` (input) -> `Attendance data` (admin only)
+  - `Assignments` (input) -> `Assignments data` (admin only)
+  - `Grades` (input) -> `Grades data` (admin only)
+  - `Performance reports` (input, `parent-tracking`) -> `Performance data` (admin only)
+  - `All Reports` remains standalone as `[input-output]`
+- Data-page `Edit` actions now route back to the corresponding input page to keep edit workflows intact with the separated IA.
+- Admin data pages now support the requested operational controls:
+  - view + sort (toolbar + column-click sort)
+  - edit + delete + archive/restore
+  - data-table search filters
+  - print workflow (`Print PDF`, browser print dialog)
+  - XLSX export workflow (`Export XLSX`)
+- Admin data-page search filters now include class-level and student targeting controls on all data pages:
+  - `Class Level` dropdown defaults to `Any` and is populated from known SIS levels
+  - `Student Name` is a free-text input backed by a level-aware class-member datalist
+  - `Student ID` is a free-text input with datalist memory from prior valid entries
+  - Student ID validation enforces `lowercase letters (max 10) + 3 digits` (for example `steve001`)
+- Added admin XLSX export endpoint:
+  - `POST /api/admin/exports/xlsx` (admin success, teacher forbidden, unauthenticated rejected)
+- Static-preview/live-reload compatibility fix:
+  - removed literal inline `</body></html>` sequence from print template writer to avoid `Unexpected end of input` breakage in live-reload injectors.
+- Column-click sorting is now supported on sortable data-table headers (keyboard accessible with `Enter`/`Space`) in addition to sort toolbars.
+- UI regression coverage now includes table-sort controls plus search/archive controls and column-click sorting verification in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs).
+- Current test run: `npm test` => `93` pass, `0` fail.
+
+## Update (2026-02-27)
+
+- Canonical SIS class order is now aligned end-to-end as:
+  - `Eggs & Chicks`
+  - `Pre-A1 Starters`
+  - `A1 Movers`
+  - `A2 Flyers`
+  - `A2 KET`
+  - `B1 PET`
+  - `B2+ IELTS`
+  - `C1+ TAYK`
+  - `Private`
+- Overview line chart is now a global Mon-Sun weekly student trend (not class-level):
+  - `studentsWithAssignments`
+  - `studentsCompletedAll`
+- Dashboard API now returns `weeklyAssignmentCompletion` in `GET /api/admin/dashboard`.
+- Dashboard `today` summary now includes:
+  - `totalEnrollment`
+  - `attendancePercentOfEnrollment`
+  - `unenrolledYtd`
+- Overview `Systems Health` now hosts the SIS Hub connection widget (`Connected` badge, `Ping Hub`, endpoint/latency detail).
+- Overview header helper sentence was removed, and SIS Hub connection is now styled as a two-slot health card aligned with other system-health boxes.
+- Overview chart panels now use tighter internal spacing (reduced chart-shell padding/margin and chart min-heights) to reduce blank space.
+- Students list level badges now use fixed-width chip styling so level name widths are normalized in the table.
+- Students list panel is assigned to a dedicated admin child page (`Student Admin`) while the top search panel remains visible across pages.
+- Attendance IA now separates concerns:
+  - `Attendance` main page: starts blank until class level selection, then shows today attendance radio form with default `Absent`.
+  - `Attendance Admin` child submenu: per-student attendance stats by selected class level.
+- Global class-level tile style controls are now under `Settings` (`title`, `background`, `image`) and apply to all class-level tile modules (Attendance and Assignments).
+- Attendance level tile images now render without an overlay mask; blank `Title` input is now allowed and renders no title text on the tile.
+- Assignments page now uses class-level tiles and an itemized assignment builder:
+  - tile click prefills `level`, `date assigned` (today), and `due date` (next Sunday, editable).
+  - each assignment item is added from exercise dropdown + URL and saved as one item in the assignment record.
+  - assignment status auto-switches to `Completed` when all items are marked done.
+- Assignment record rows now render exercise names as clickable links to the saved URL.
+- Tracking now includes a teacher/admin-facing `Parents` page (`parent-tracking`) with:
+  - left-column class-level tiles wired to right-column student report form
+  - student dropdown filtered by selected class level
+  - class date/day + teacher dropdown + class level binding
+  - lesson summary memory by `class level + date` for rapid reuse across students
+  - auto-filled behavior/participation/academic/homework completion/timeliness from current grade records
+  - overdue uncompleted assignment list with dynamic assignment-detail links/panel
+  - recipient auto-derivation from student profile (`student`, `mother`, `father`, `signature/proctor` emails)
+- Email notifications now support weekend batching:
+  - `POST /api/admin/notifications/email` with `deliveryMode=weekend-batch` queues messages
+  - batch windows run on Saturday/Sunday at `12:00`, `15:30`, `18:00`, and `20:15` (server local time)
+  - queue status is exposed at `GET /api/admin/notifications/batch-status`
+- UI coverage includes a regression test for assignment tile prefill, itemized links, and completion recording in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs).
+- UI coverage includes a new test for Mon-Sun line-chart labels in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs).
+- UI coverage includes a regression test that verifies search/list panels are hidden on non-admin pages and visible on the `Student Admin` page.
+- UI coverage includes a regression test that verifies settings-based global level tile style propagates to attendance and assignment tiles in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs).
+- UI coverage includes a regression test for parent-tracking autofill + summary reuse + weekend batch queue payload in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs).
+- Current test run: `npm test` => `83` pass, `0` fail.
+
 ## Simple App/Network Diagram
 
 ```text
@@ -62,6 +184,9 @@ Notes:
   - `GET /api/admin/dashboard`
   - `GET /api/admin/exercise-titles`
   - `POST /api/admin/notifications/email`
+  - `GET /api/admin/notifications/batch-status`
+  - `GET /api/admin/exercise-results/incoming`
+  - `POST /api/admin/exercise-results/incoming`
   - `GET /api/admin/students/import-template.xlsx`
   - `GET /api/admin/filters`
   - `GET /api/admin/students`
@@ -232,14 +357,15 @@ Result: `61` tests total, `61` pass, `0` fail.
    - Practical command for this UI path:
      - `tools/sis-runtime-resync.sh --sync-on-mismatch --scope html --no-restart`
 
-21. Low (addressed): service-level self-heal now runs automatically without manual sync commands.
+21. Low (addressed): service-level self-heal is now explicit and decoupled from runtime targeting heuristics.
    - [server/exercise-mailer.mjs](server/exercise-mailer.mjs) now runs a background drift check for `web-asset/admin/student-admin.html`.
-   - Default auto-detect behavior: when runtime cwd is `.../megs`, source is inferred as sibling `.../sis`.
-   - On mismatch, runtime HTML is overwritten automatically from source and status is exposed via `/healthz` under `runtimeSelfHeal`.
+   - There is no implicit `megs -> sis` source inference anymore.
+   - Self-heal only activates when explicitly enabled and configured; otherwise it stays disabled in `/healthz` (`runtimeSelfHeal.lastResult = "disabled-by-env"`).
+   - When enabled and mismatched, runtime HTML is overwritten from source and status is exposed via `/healthz` under `runtimeSelfHeal`.
    - Controls:
-     - `SIS_RUNTIME_SELF_HEAL_ENABLED` (`true` by default)
-     - `SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT`
-     - `SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT`
+     - `SIS_RUNTIME_SELF_HEAL_ENABLED` (`false` by default)
+     - `SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT` (required when enabled)
+     - `SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT` (optional; defaults to process cwd)
      - `SIS_RUNTIME_SELF_HEAL_INTERVAL_MS` (minimum `1000`, default `15000`)
 
 22. Low (addressed): overview dashboard now includes at-a-glance LED system status cards.
@@ -250,6 +376,23 @@ Result: `61` tests total, `61` pass, `0` fail.
    - Overview now uses distinct functional cards in a 2-column desktop layout (collapsing to 1 column on smaller viewports).
    - Replaced horizontal per-row bars with a single concise vertical SVG bar chart (`Students` vs `Completions`) plus wrapped Detail action buttons.
    - Mobile navigation menu now closes on outside click and clears open state on desktop resize; hamburger toggle behavior remains active.
+
+24. Low (addressed): level labels and chart readability are now system-linked and accessibility-focused.
+   - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) no longer generates synthetic `G1/G2/.../G10` labels.
+   - Known curriculum levels now render with readable short names (`Starters`, `Movers`, `Flyers`, `KET`, `PET`, `IELTS`, `TAYK`) while grade-like values remain literal (for example `Grade 10`).
+   - Level names are now sourced and synchronized from runtime system data (`/api/admin/filters`, students, dashboard summaries), reducing cross-panel mislabeling across overview/search/profile/tracking flows.
+   - Level brand colors are now applied across SIS diagnostics for at-a-glance identification:
+     - detail buttons in overview
+     - per-level bars in overview completion chart
+     - level detail panel border accents
+     - level chips in overview/students/assignment-template tables
+   - Overview charts now use larger axis/value typography, stronger contrast tokens, and expanded chart geometry to improve axis legibility.
+   - Added/updated UI regression coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) to assert natural level ordering and full system labels in detail buttons.
+
+### Latest Test Run (2026-02-27)
+
+- Command: `npm test`
+- Result: `75` tests, `75` pass, `0` fail.
 
 ## Coverage Snapshot
 
