@@ -594,15 +594,66 @@ function mapImportRowToStudentPayload(row) {
   }
 }
 
-export async function listStudents({ query = "", level = "", school = "", take = 250 } = {}) {
-  const prisma = await getPrismaClient()
-  const searchQuery = normalizeText(query)
-  const levelFilter = normalizeText(level)
-  const schoolFilter = normalizeText(school)
-  const limit = Math.max(1, Math.min(Number.parseInt(String(take), 10) || 250, 1000))
-  const levelVariants = resolveLevelVariants(levelFilter)
+function normalizeSearchComparable(value) {
+  const folded = normalizeText(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+  return folded.replace(/[^a-z0-9]+/g, " ").trim()
+}
 
-  const where = {
+function studentSearchComparableHaystack(student = {}) {
+  const profile = student?.profile || {}
+  return [
+    student?.studentId,
+    student?.email,
+    profile?.studentEmail,
+    profile?.fullName,
+    profile?.englishName,
+    profile?.motherName,
+    profile?.fatherName,
+    profile?.schoolName,
+    profile?.currentGrade,
+  ]
+    .map((entry) => normalizeSearchComparable(entry))
+    .filter(Boolean)
+    .join(" ")
+}
+
+function studentMatchesSearchComparable(student = {}, searchComparable = "") {
+  const needle = normalizeSearchComparable(searchComparable)
+  if (!needle) return true
+  return studentSearchComparableHaystack(student).includes(needle)
+}
+
+const STUDENT_LIST_QUERY_INCLUDE = {
+  profile: true,
+  _count: {
+    select: {
+      submissions: true,
+      intakeSubmissions: true,
+      attendanceRecords: true,
+      gradeRecords: true,
+      parentReports: true,
+    },
+  },
+}
+
+const STUDENT_LIST_QUERY_ORDER_BY = [
+  {
+    profile: {
+      fullName: "asc",
+    },
+  },
+  { studentId: "asc" },
+]
+
+const STUDENT_SEARCH_FALLBACK_SCAN_BATCH = 250
+
+function listStudentsBaseWhere({ levelFilter = "", schoolFilter = "", levelVariants = [] } = {}) {
+  return {
     AND: [
       levelFilter
         ? {
@@ -637,45 +688,113 @@ export async function listStudents({ query = "", level = "", school = "", take =
             },
           }
         : {},
-      searchQuery
-        ? {
-            OR: [
-              { studentId: { contains: searchQuery, mode: "insensitive" } },
-              { email: { contains: searchQuery, mode: "insensitive" } },
-              { profile: { is: { fullName: { contains: searchQuery, mode: "insensitive" } } } },
-              { profile: { is: { englishName: { contains: searchQuery, mode: "insensitive" } } } },
-              { profile: { is: { motherName: { contains: searchQuery, mode: "insensitive" } } } },
-              { profile: { is: { fatherName: { contains: searchQuery, mode: "insensitive" } } } },
-            ],
-          }
-        : {},
     ],
   }
+}
 
-  const students = await prisma.student.findMany({
-    where,
-    include: {
-      profile: true,
-      _count: {
-        select: {
-          submissions: true,
-          intakeSubmissions: true,
-          attendanceRecords: true,
-          gradeRecords: true,
-          parentReports: true,
-        },
-      },
-    },
-    orderBy: [
-      {
-        profile: {
-          fullName: "asc",
-        },
-      },
-      { studentId: "asc" },
+function listStudentsSearchClause(searchQuery = "") {
+  const queryText = normalizeText(searchQuery)
+  if (!queryText) return null
+  return {
+    OR: [
+      { studentId: { contains: queryText, mode: "insensitive" } },
+      { email: { contains: queryText, mode: "insensitive" } },
+      { profile: { is: { fullName: { contains: queryText, mode: "insensitive" } } } },
+      { profile: { is: { englishName: { contains: queryText, mode: "insensitive" } } } },
+      { profile: { is: { motherName: { contains: queryText, mode: "insensitive" } } } },
+      { profile: { is: { fatherName: { contains: queryText, mode: "insensitive" } } } },
     ],
+  }
+}
+
+async function findAccentInsensitiveStudentIds({ prisma, baseWhere = {}, searchComparable = "", limit = 250 } = {}) {
+  const needle = normalizeSearchComparable(searchComparable)
+  if (!needle || !Number.isFinite(limit) || limit <= 0) return []
+
+  const matchedIds = []
+  const matchedSet = new Set()
+  let skip = 0
+
+  while (matchedIds.length < limit) {
+    const rows = await prisma.student.findMany({
+      where: baseWhere,
+      select: {
+        id: true,
+        studentId: true,
+        email: true,
+        profile: {
+          select: {
+            studentEmail: true,
+            fullName: true,
+            englishName: true,
+            motherName: true,
+            fatherName: true,
+            schoolName: true,
+            currentGrade: true,
+          },
+        },
+      },
+      orderBy: STUDENT_LIST_QUERY_ORDER_BY,
+      skip,
+      take: STUDENT_SEARCH_FALLBACK_SCAN_BATCH,
+    })
+    if (!rows.length) break
+
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index]
+      const rowId = normalizeText(row?.id)
+      if (!rowId || matchedSet.has(rowId)) continue
+      if (!studentMatchesSearchComparable(row, needle)) continue
+      matchedIds.push(rowId)
+      matchedSet.add(rowId)
+      if (matchedIds.length >= limit) break
+    }
+
+    skip += rows.length
+    if (rows.length < STUDENT_SEARCH_FALLBACK_SCAN_BATCH) break
+  }
+
+  return matchedIds
+}
+
+export async function listStudents({ query = "", level = "", school = "", take = 250 } = {}) {
+  const prisma = await getPrismaClient()
+  const searchQuery = normalizeText(query)
+  const levelFilter = normalizeText(level)
+  const schoolFilter = normalizeText(school)
+  const limit = Math.max(1, Math.min(Number.parseInt(String(take), 10) || 250, 1000))
+  const levelVariants = resolveLevelVariants(levelFilter)
+  const baseWhere = listStudentsBaseWhere({ levelFilter, schoolFilter, levelVariants })
+  const searchClause = listStudentsSearchClause(searchQuery)
+  const where = searchClause ? { AND: [...(baseWhere.AND || []), searchClause] } : baseWhere
+
+  let students = await prisma.student.findMany({
+    where,
+    include: STUDENT_LIST_QUERY_INCLUDE,
+    orderBy: STUDENT_LIST_QUERY_ORDER_BY,
     take: limit,
   })
+
+  if (searchQuery && students.length === 0) {
+    const matchedIds = await findAccentInsensitiveStudentIds({
+      prisma,
+      baseWhere,
+      searchComparable: searchQuery,
+      limit,
+    })
+    if (matchedIds.length) {
+      students = await prisma.student.findMany({
+        where: {
+          id: {
+            in: matchedIds,
+          },
+        },
+        include: STUDENT_LIST_QUERY_INCLUDE,
+        orderBy: STUDENT_LIST_QUERY_ORDER_BY,
+        take: limit,
+      })
+    }
+  }
 
   return {
     total: students.length,

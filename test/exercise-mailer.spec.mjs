@@ -110,6 +110,37 @@ test("POST /api/exercise-submission succeeds (204) and dispatches notifications"
   assert.doesNotMatch(learnerMail.text, /Question 1:/)
 })
 
+test("POST /api/exercise-submission suppresses duplicate notifications for same submission", async () => {
+  const beforeHistory = transport.calls.history.length
+  const payload = {
+    email: "once@example.com",
+    studentId: "once001",
+    pageTitle: "Notify Once",
+    completedAt: "2026-03-01T07:42:57.670Z",
+    recipients: ["recipient-once@example.com"],
+    answers: [{ id: 1, answers: ["ok"] }],
+  }
+
+  const first = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  const second = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+
+  assert.equal(first.status, 204)
+  assert.equal(second.status, 204)
+
+  const newHistory = transport.calls.history.slice(beforeHistory)
+  assert.equal(newHistory.length, 2, "duplicate submission sends one teacher and one learner email")
+  assert.equal(newHistory[0].to[0], "recipient-once@example.com")
+  assert.equal(newHistory[1].to[0], "once@example.com")
+})
+
 test("POST /api/exercise-submission decodes obfuscated recipients", async () => {
   const beforeHistory = transport.calls.history.length
   const payload = {
@@ -236,6 +267,43 @@ test("GET /healthz includes CORS headers for allowed loopback preview origin", a
 
   await new Promise((done) => tmp.close(done))
   process.env.EXERCISE_MAILER_ORIGIN = "*"
+})
+
+test("CORS allows sibling eagles.edu.vn origin when one eagles domain is configured", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const transport = makeMockTransport()
+  process.env.EXERCISE_MAILER_ORIGIN = "https://ielts.eagles.edu.vn"
+
+  const tmp = await startExerciseMailer({ transporter: transport, port: 0, host: "127.0.0.1" })
+  await new Promise((r) => tmp.once("listening", r))
+  const tmpPort = tmp.address().port
+
+  try {
+    const allowed = await fetch(`http://127.0.0.1:${tmpPort}/api/exercise-submission`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://eagles.edu.vn",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
+      },
+    })
+    assert.equal(allowed.status, 204)
+    assert.equal(allowed.headers.get("access-control-allow-origin"), "https://eagles.edu.vn")
+
+    const denied = await fetch(`http://127.0.0.1:${tmpPort}/api/exercise-submission`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://example.com",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
+      },
+    })
+    assert.equal(denied.status, 204)
+    assert.equal(denied.headers.get("access-control-allow-origin"), "null")
+  } finally {
+    await new Promise((done) => tmp.close(done))
+    process.env.EXERCISE_MAILER_ORIGIN = "*"
+  }
 })
 
 test("runtime self-heal stays disabled unless explicitly enabled", async () => {

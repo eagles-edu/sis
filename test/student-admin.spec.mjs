@@ -37,6 +37,7 @@ let server
 let port
 let adminSessionCookie = ""
 let teacherSessionCookie = ""
+let assignmentAnnouncementPreviewPath = ""
 
 test("parseSpreadsheetRowsFromUploadPayload parses xlsx payload", () => {
   const workbook = XLSX.utils.book_new()
@@ -431,6 +432,45 @@ test("teacher cannot mutate incoming exercise-result queue", async () => {
   assert.match(body.error, /Forbidden/i)
 })
 
+test("teacher cannot access runtime service-control endpoint", async () => {
+  const res = await fetchLocal(port, "/api/admin/runtime/service-control", {
+    headers: { Cookie: teacherSessionCookie },
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
+test("teacher can access runtime health endpoint", async () => {
+  const res = await fetchLocal(port, "/api/admin/runtime/health", {
+    headers: { Cookie: teacherSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.status, "ok")
+  assert.ok(body.studentAdminRuntime && typeof body.studentAdminRuntime === "object")
+  assert.equal(body.studentAdminRuntime.apiPrefix, "/api/admin")
+  assert.ok(body.runtimeSelfHeal && typeof body.runtimeSelfHeal === "object")
+})
+
+test("teacher cannot create volatile assignment announcement preview", async () => {
+  const res = await fetchLocal(port, "/api/admin/assignment-announcements/volatile", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      assignmentTitle: "Teacher Preview",
+      level: "Pre-A1 Starters",
+      items: [{ title: "Exercise 1", url: "https://example.com/ex-1" }],
+    }),
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
 test("GET /api/admin/permissions exposes role policies", async () => {
   const res = await fetchLocal(port, "/api/admin/permissions", {
     headers: { Cookie: adminSessionCookie },
@@ -502,6 +542,46 @@ test("GET /api/admin/notifications/batch-status returns queued parent report ite
   assert.ok(Array.isArray(body.items))
   assert.ok(Number.isInteger(body.total))
   assert.ok(body.total >= 1)
+})
+
+test("admin can create volatile assignment announcement preview and retrieve page", async () => {
+  const res = await fetchLocal(port, "/api/admin/assignment-announcements/volatile", {
+    method: "POST",
+    headers: {
+      Cookie: adminSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      assignmentTitle: "Starter Week 1 Homework",
+      level: "Pre-A1 Starters",
+      assignedAt: "2026-03-01",
+      dueAt: "2026-03-07",
+      message: "This is a preview announcement",
+      items: [
+        { title: "1.1.1 Common Nouns", url: "https://ex.example.com/common-nouns" },
+        { title: "1.1.2 Proper Nouns", url: "https://ex.example.com/proper-nouns" },
+      ],
+    }),
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.match(body.url || "", /\/assignment-announcements\/volatile\//i)
+  assert.match(body.path || "", /^\/assignment-announcements\/volatile\/[a-f0-9]{24}$/i)
+  assert.equal(body.assignmentTitle, "Starter Week 1 Homework")
+  assert.equal(body.level, "Pre-A1 Starters")
+  assert.ok(Number.isInteger(body.ttlMinutes))
+  assert.ok(body.ttlMinutes >= 1)
+  assignmentAnnouncementPreviewPath = body.path
+
+  const previewRes = await fetchLocal(port, assignmentAnnouncementPreviewPath)
+  assert.equal(previewRes.status, 200)
+  assert.match(previewRes.headers.get("content-type") || "", /text\/html/i)
+  const html = await previewRes.text()
+  assert.match(html, /Starter Week 1 Homework/i)
+  assert.match(html, /Pre-A1 Starters/i)
+  assert.match(html, /https:\/\/ex\.example\.com\/common-nouns/i)
+  assert.match(html, /This is a preview announcement/i)
 })
 
 test("POST /api/admin/auth/logout clears session cookie", async () => {
@@ -586,6 +666,42 @@ test("GET /api/admin/exercise-results/incoming requires auth", async () => {
   assert.equal(res.status, 401)
   const body = await res.json()
   assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/admin/runtime/service-control requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/runtime/service-control")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/admin/runtime/health requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/runtime/health")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("POST /api/admin/assignment-announcements/volatile requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/assignment-announcements/volatile", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      assignmentTitle: "Unauthorized preview",
+      level: "Pre-A1 Starters",
+      items: [{ title: "Exercise", url: "https://example.com" }],
+    }),
+  })
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("volatile preview page is public and does not require auth", async () => {
+  assert.ok(assignmentAnnouncementPreviewPath, "preview path is available from previous admin create call")
+  const res = await fetchLocal(port, assignmentAnnouncementPreviewPath)
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
 })
 
 test("POST /api/admin/exports/xlsx requires auth", async () => {

@@ -10,9 +10,12 @@ import {
 function makePersistPrisma({ matchedStudent = null } = {}) {
   const state = {
     studentFindFirstCalls: [],
+    incomingFindFirstCalls: [],
     queueCreateCalls: [],
+    incomingUpdateCalls: [],
     exerciseUpsertCalls: [],
     submissionCreateCalls: [],
+    queueRows: [],
   }
 
   const tx = {
@@ -39,9 +42,32 @@ function makePersistPrisma({ matchedStudent = null } = {}) {
       },
     },
     incomingExerciseResult: {
+      async findFirst(args) {
+        state.incomingFindFirstCalls.push(args)
+        return state.queueRows.length ? state.queueRows[state.queueRows.length - 1] : null
+      },
       async create(args) {
         state.queueCreateCalls.push(args)
-        return { id: "incoming-1", ...args.data }
+        const row = {
+          id: `incoming-${state.queueRows.length + 1}`,
+          ...args.data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+        state.queueRows.push(row)
+        return row
+      },
+      async update(args) {
+        state.incomingUpdateCalls.push(args)
+        const index = state.queueRows.findIndex((row) => row.id === args?.where?.id)
+        if (index < 0) throw new Error("Incoming row not found in mock state")
+        const updated = {
+          ...state.queueRows[index],
+          ...args.data,
+          updatedAt: new Date(),
+        }
+        state.queueRows[index] = updated
+        return updated
       },
     },
     async $transaction(callback) {
@@ -76,6 +102,47 @@ test("persistExerciseSubmission queues unmatched payload for manual disposition"
     prisma.state.queueCreateCalls[0].data.status,
     INCOMING_EXERCISE_RESULT_STATUS_QUEUED
   )
+})
+
+test("persistExerciseSubmission de-duplicates nearby queue records and prefers richer status payload", async () => {
+  const prisma = makePersistPrisma({ matchedStudent: null })
+
+  const firstPayload = {
+    studentId: "dup-01",
+    email: "dup@example.com",
+    pageTitle: "Common Nouns",
+    completedAt: "2026-03-01T07:34:04.862Z",
+    recipients: ["teacher@example.com"],
+    answers: [{ id: 1, answers: ["book"] }],
+  }
+
+  const firstResult = await persistExerciseSubmission(firstPayload, { prisma })
+  assert.equal(firstResult.shouldNotify, true)
+  assert.equal(prisma.state.queueCreateCalls.length, 1)
+  assert.equal(prisma.state.incomingUpdateCalls.length, 0)
+
+  const secondPayload = {
+    ...firstPayload,
+    completedAt: "2026-03-01T07:34:05.100Z",
+    answers: [{ id: 1, answers: ["book"], status: "correct", needsReview: false }],
+  }
+
+  const secondResult = await persistExerciseSubmission(secondPayload, { prisma })
+
+  assert.equal(secondResult.saved, true)
+  assert.equal(secondResult.matched, false)
+  assert.equal(secondResult.queued, true)
+  assert.equal(secondResult.deduplicated, true)
+  assert.equal(secondResult.updatedExisting, true)
+  assert.equal(secondResult.shouldNotify, false)
+  assert.equal(secondResult.incomingResultId, "incoming-1")
+  assert.equal(prisma.state.queueCreateCalls.length, 1)
+  assert.equal(prisma.state.incomingUpdateCalls.length, 1)
+
+  const stored = prisma.state.queueRows[0]
+  assert.equal(stored.correctCount, 1)
+  assert.equal(stored.scorePercent, 100)
+  assert.equal(stored.answersJson[0].status, "correct")
 })
 
 test("persistExerciseSubmission records directly when student account is matched", async () => {

@@ -13,6 +13,8 @@ const INCOMING_EXERCISE_RESULT_STATUSES = new Set([
   INCOMING_EXERCISE_RESULT_STATUS_ARCHIVED,
   INCOMING_EXERCISE_RESULT_STATUS_RESOLVED,
 ])
+const INCOMING_DUPLICATE_COMPLETED_AT_WINDOW_MS = 1500
+const INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS = 5 * 60 * 1000
 
 function resolveBoolean(value, fallback) {
   if (value === undefined || value === null || value === "") return fallback
@@ -131,6 +133,72 @@ function summarizeAnswers(answers) {
     incorrectCount,
     scorePercent,
   }
+}
+
+function countAnswerStatusSignals(answers) {
+  const list = Array.isArray(answers) ? answers : []
+  let count = 0
+  for (let i = 0; i < list.length; i += 1) {
+    const entry = list[i]
+    if (normalizeLower(entry?.status)) {
+      count += 1
+      continue
+    }
+    if (entry?.needsReview === true) count += 1
+  }
+  return count
+}
+
+function countAnsweredQuestions(answers) {
+  const list = Array.isArray(answers) ? answers : []
+  let count = 0
+  for (let i = 0; i < list.length; i += 1) {
+    const values = Array.isArray(list[i]?.answers) ? list[i].answers : []
+    if (values.some((value) => normalizeString(value) !== "")) count += 1
+  }
+  return count
+}
+
+function buildSubmissionQuality(summary, answers, completedAtValue) {
+  const scorePercent = Number(summary?.scorePercent || 0)
+  const correctCount = Number.parseInt(String(summary?.correctCount || 0), 10) || 0
+  const pendingCount = Number.parseInt(String(summary?.pendingCount || 0), 10) || 0
+  const statusSignals = countAnswerStatusSignals(answers)
+  const answeredQuestions = countAnsweredQuestions(answers)
+  const completedAtMs =
+    completedAtValue instanceof Date
+      ? completedAtValue.valueOf()
+      : Number.isFinite(Date.parse(String(completedAtValue || "")))
+        ? Date.parse(String(completedAtValue))
+        : 0
+
+  return {
+    statusSignals,
+    answeredQuestions,
+    correctCount,
+    pendingCount,
+    scorePercent,
+    completedAtMs,
+  }
+}
+
+function isSubmissionQualityBetter(candidate, baseline) {
+  if (candidate.statusSignals !== baseline.statusSignals) {
+    return candidate.statusSignals > baseline.statusSignals
+  }
+  if (candidate.correctCount !== baseline.correctCount) {
+    return candidate.correctCount > baseline.correctCount
+  }
+  if (candidate.pendingCount !== baseline.pendingCount) {
+    return candidate.pendingCount > baseline.pendingCount
+  }
+  if (candidate.answeredQuestions !== baseline.answeredQuestions) {
+    return candidate.answeredQuestions > baseline.answeredQuestions
+  }
+  if (candidate.scorePercent !== baseline.scorePercent) {
+    return candidate.scorePercent > baseline.scorePercent
+  }
+  return candidate.completedAtMs > baseline.completedAtMs
 }
 
 function normalizeRecipients(value) {
@@ -376,6 +444,67 @@ function buildIncomingQueueRecordData(submission, summary, options = {}) {
   }
 }
 
+function buildIncomingSummary(item) {
+  return {
+    totalQuestions: Number.parseInt(String(item?.totalQuestions || 0), 10) || 0,
+    correctCount: Number.parseInt(String(item?.correctCount || 0), 10) || 0,
+    pendingCount: Number.parseInt(String(item?.pendingCount || 0), 10) || 0,
+    incorrectCount: Number.parseInt(String(item?.incorrectCount || 0), 10) || 0,
+    scorePercent: Number(item?.scorePercent || 0),
+  }
+}
+
+function buildIncomingDuplicateUpdateData(submission, summary, options = {}) {
+  return {
+    submittedStudentId: submission.submittedStudentIdDisplay,
+    submittedEmail: submission.submittedEmail || null,
+    pageTitle: submission.pageTitle,
+    completedAt: submission.completedAt,
+    totalQuestions: summary.totalQuestions,
+    correctCount: summary.correctCount,
+    pendingCount: summary.pendingCount,
+    incorrectCount: summary.incorrectCount,
+    scorePercent: summary.scorePercent,
+    answersJson: submission.answersJson,
+    recipientsJson: submission.recipientsJson,
+    payloadJson:
+      options.payloadJson && typeof options.payloadJson === "object" ? options.payloadJson : null,
+  }
+}
+
+function buildCompletedAtRange(completedAt) {
+  const ms = completedAt instanceof Date ? completedAt.valueOf() : Number.NaN
+  if (!Number.isFinite(ms)) return null
+  return {
+    gte: new Date(ms - INCOMING_DUPLICATE_COMPLETED_AT_WINDOW_MS),
+    lte: new Date(ms + INCOMING_DUPLICATE_COMPLETED_AT_WINDOW_MS),
+  }
+}
+
+async function findIncomingDuplicate(prisma, submission) {
+  const completedAtRange = buildCompletedAtRange(submission?.completedAt)
+  if (!completedAtRange) return null
+
+  return prisma.incomingExerciseResult.findFirst({
+    where: {
+      status: {
+        in: [
+          INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
+          INCOMING_EXERCISE_RESULT_STATUS_TEMPORARY,
+        ],
+      },
+      submittedStudentId: submission.submittedStudentIdDisplay,
+      submittedEmail: submission.submittedEmail || null,
+      pageTitle: submission.pageTitle,
+      completedAt: completedAtRange,
+      createdAt: {
+        gte: new Date(Date.now() - INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS),
+      },
+    },
+    orderBy: [{ createdAt: "desc" }],
+  })
+}
+
 function mapIncomingExerciseResult(item) {
   if (!item) return null
 
@@ -413,6 +542,39 @@ export async function persistExerciseSubmission(payload, options = {}) {
   const matchedStudent = await findMatchedStudent(prisma, submission)
 
   if (!matchedStudent) {
+    const existingIncoming = await findIncomingDuplicate(prisma, submission)
+    if (existingIncoming) {
+      const incomingQuality = buildSubmissionQuality(summary, submission.answersJson, submission.completedAt)
+      const existingSummary = buildIncomingSummary(existingIncoming)
+      const existingQuality = buildSubmissionQuality(
+        existingSummary,
+        existingIncoming.answersJson,
+        existingIncoming.completedAt
+      )
+
+      const shouldReplaceExisting = isSubmissionQualityBetter(incomingQuality, existingQuality)
+
+      if (shouldReplaceExisting) {
+        await prisma.incomingExerciseResult.update({
+          where: { id: existingIncoming.id },
+          data: buildIncomingDuplicateUpdateData(submission, summary, {
+            payloadJson: payload,
+          }),
+        })
+      }
+
+      return {
+        saved: true,
+        matched: false,
+        queued: true,
+        deduplicated: true,
+        updatedExisting: shouldReplaceExisting,
+        shouldNotify: false,
+        incomingResultId: existingIncoming.id,
+        summary: shouldReplaceExisting ? summary : existingSummary,
+      }
+    }
+
     const incoming = await prisma.incomingExerciseResult.create({
       data: buildIncomingQueueRecordData(submission, summary, {
         payloadJson: payload,
@@ -423,6 +585,9 @@ export async function persistExerciseSubmission(payload, options = {}) {
       saved: true,
       matched: false,
       queued: true,
+      deduplicated: false,
+      updatedExisting: false,
+      shouldNotify: true,
       incomingResultId: incoming.id,
       summary,
     }
@@ -439,6 +604,9 @@ export async function persistExerciseSubmission(payload, options = {}) {
     saved: true,
     matched: true,
     queued: false,
+    deduplicated: false,
+    updatedExisting: false,
+    shouldNotify: true,
     studentRefId: matchedStudent.id,
     submissionId: created.id,
     summary,

@@ -9,6 +9,7 @@ import { persistStudentIntakeSubmission } from "./student-intake-store.mjs"
 import {
   getStudentAdminRuntimeStatus,
   handleStudentAdminRequest,
+  setStudentAdminRuntimeHealthProvider,
 } from "./student-admin-routes.mjs"
 
 const require = createRequire(import.meta.url)
@@ -73,6 +74,29 @@ function isLoopbackOrigin(origin) {
   }
 }
 
+function isEaglesEduVnOrigin(origin) {
+  const text = String(origin || "").trim()
+  if (!text) return false
+  try {
+    const parsed = new URL(text)
+    const protocol = String(parsed.protocol || "").trim().toLowerCase()
+    if (protocol !== "http:" && protocol !== "https:") return false
+    const hostname = String(parsed.hostname || "").trim().toLowerCase()
+    return /^([a-z0-9-]+\.)*eagles\.edu\.vn$/.test(hostname)
+  } catch (error) {
+    void error
+    return false
+  }
+}
+
+function configuredOriginIncludesEaglesDomain(origins = []) {
+  if (!Array.isArray(origins) || !origins.length) return false
+  for (let i = 0; i < origins.length; i += 1) {
+    if (isEaglesEduVnOrigin(origins[i])) return true
+  }
+  return false
+}
+
 // Toggle verbose logs
 const MAILER_DEBUG = isDebugEnabled()
 
@@ -114,6 +138,9 @@ const SELF_HEAL_STATUS = {
   lastResult: "disabled",
   lastError: "",
 }
+const SUBMISSION_LOCKS = new Map()
+const RECENT_SUBMISSION_NOTIFICATIONS = new Map()
+const SUBMISSION_NOTIFICATION_DEDUP_WINDOW_MS = 30 * 1000
 
 /* =========================
     Helpers
@@ -135,6 +162,65 @@ function resolveBoolean(value, fallback) {
 function normalizeString(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
+}
+
+function buildSubmissionActorKey(payload) {
+  const studentId = normalizeString(payload?.studentId || "(not provided)").toLowerCase()
+  const email = normalizeString(payload?.email).toLowerCase() || "-"
+  const pageTitle = normalizeString(payload?.pageTitle || "Untitled exercise").toLowerCase()
+  return `${studentId}|${email}|${pageTitle}`
+}
+
+function buildSubmissionNotificationKey(payload) {
+  const actorKey = buildSubmissionActorKey(payload)
+  const completedAtMs = Date.parse(normalizeString(payload?.completedAt))
+  const completedAtBucket = Number.isFinite(completedAtMs)
+    ? Math.round(completedAtMs / 1000)
+    : "unknown-time"
+  return `${actorKey}|${completedAtBucket}`
+}
+
+function pruneExpiredSubmissionNotificationKeys(now = Date.now()) {
+  const entries = Array.from(RECENT_SUBMISSION_NOTIFICATIONS.entries())
+  for (let i = 0; i < entries.length; i += 1) {
+    const [key, expiresAt] = entries[i]
+    if (!Number.isFinite(expiresAt) || expiresAt <= now) {
+      RECENT_SUBMISSION_NOTIFICATIONS.delete(key)
+    }
+  }
+}
+
+function hasRecentSubmissionNotification(notificationKey, now = Date.now()) {
+  pruneExpiredSubmissionNotificationKeys(now)
+  const key = normalizeString(notificationKey)
+  if (!key) return false
+  const expiresAt = RECENT_SUBMISSION_NOTIFICATIONS.get(key)
+  return Number.isFinite(expiresAt) && expiresAt > now
+}
+
+function markSubmissionNotificationSent(notificationKey, now = Date.now()) {
+  const key = normalizeString(notificationKey)
+  if (!key) return
+  pruneExpiredSubmissionNotificationKeys(now)
+  RECENT_SUBMISSION_NOTIFICATIONS.set(key, now + SUBMISSION_NOTIFICATION_DEDUP_WINDOW_MS)
+}
+
+async function withSubmissionLock(lockKey, task) {
+  const key = normalizeString(lockKey) || "submission-lock"
+  const prior = SUBMISSION_LOCKS.get(key) || Promise.resolve()
+  let releaseCurrent
+  const current = new Promise((resolve) => {
+    releaseCurrent = resolve
+  })
+  SUBMISSION_LOCKS.set(key, current)
+
+  await prior
+  try {
+    return await task()
+  } finally {
+    releaseCurrent()
+    if (SUBMISSION_LOCKS.get(key) === current) SUBMISSION_LOCKS.delete(key)
+  }
 }
 
 function resolveRuntimeSelfHealConfig() {
@@ -277,6 +363,29 @@ function getRuntimeSelfHealStatus() {
     syncCount: SELF_HEAL_STATUS.syncCount,
     lastResult: SELF_HEAL_STATUS.lastResult,
     lastError: SELF_HEAL_STATUS.lastError,
+  }
+}
+
+function buildRuntimeHealthPayload() {
+  const studentAdminRuntime = getStudentAdminRuntimeStatus()
+  return {
+    status: "ok",
+    startedAt: STATUS.startedAt,
+    uptimeSeconds: Math.floor((Date.now() - Date.parse(STATUS.startedAt)) / 1000),
+    lastVerifyOk: STATUS.lastVerifyOk,
+    lastVerifyAt: STATUS.lastVerifyAt,
+    lastStoreOk: STATUS.lastStoreOk,
+    lastStoreAt: STATUS.lastStoreAt,
+    lastIntakeStoreOk: STATUS.lastIntakeStoreOk,
+    lastIntakeStoreAt: STATUS.lastIntakeStoreAt,
+    lastSendOk: STATUS.lastSendOk,
+    lastSendAt: STATUS.lastSendAt,
+    lastError: STATUS.lastError,
+    node: process.version,
+    endpoint: DEFAULT_PATH,
+    intakeEndpoint: DEFAULT_INTAKE_PATH,
+    studentAdminRuntime,
+    runtimeSelfHeal: getRuntimeSelfHealStatus(),
   }
 }
 
@@ -595,11 +704,17 @@ function validateIntakePayload(payload) {
 function allowCors(request, response) {
   const reqOrigin = String(request.headers.origin || "").trim()
   const origins = getOriginList()
+  const allowEaglesSubdomains = configuredOriginIncludesEaglesDomain(origins)
   let allowOrigin = "null"
 
   if (origins.includes("*")) {
     allowOrigin = "*"
-  } else if (reqOrigin && (origins.includes(reqOrigin) || isLoopbackOrigin(reqOrigin))) {
+  } else if (
+    reqOrigin &&
+    (origins.includes(reqOrigin) ||
+      isLoopbackOrigin(reqOrigin) ||
+      (allowEaglesSubdomains && isEaglesEduVnOrigin(reqOrigin)))
+  ) {
     allowOrigin = reqOrigin // echo back allowed origin
   }
 
@@ -683,26 +798,7 @@ async function handleRequest(request, response, transporter) {
 
   // Health endpoint (no CORS needed, but harmless if included)
   if (method === "GET" && url.pathname === "/healthz") {
-    const studentAdminRuntime = getStudentAdminRuntimeStatus()
-    const body = {
-      status: "ok",
-      startedAt: STATUS.startedAt,
-      uptimeSeconds: Math.floor((Date.now() - Date.parse(STATUS.startedAt)) / 1000),
-      lastVerifyOk: STATUS.lastVerifyOk,
-      lastVerifyAt: STATUS.lastVerifyAt,
-      lastStoreOk: STATUS.lastStoreOk,
-      lastStoreAt: STATUS.lastStoreAt,
-      lastIntakeStoreOk: STATUS.lastIntakeStoreOk,
-      lastIntakeStoreAt: STATUS.lastIntakeStoreAt,
-      lastSendOk: STATUS.lastSendOk,
-      lastSendAt: STATUS.lastSendAt,
-      lastError: STATUS.lastError,
-      node: process.version,
-      endpoint: DEFAULT_PATH,
-      intakeEndpoint: DEFAULT_INTAKE_PATH,
-      studentAdminRuntime,
-      runtimeSelfHeal: getRuntimeSelfHealStatus(),
-    }
+    const body = buildRuntimeHealthPayload()
     allowCors(request, response)
     response.writeHead(200, { "Content-Type": "application/json" })
     response.end(JSON.stringify(body))
@@ -756,72 +852,107 @@ async function handleRequest(request, response, transporter) {
     }
 
     const validated = validatePayload(payload)
+    const submissionActorKey = buildSubmissionActorKey(validated)
 
-    try {
-      const storeResult = await persistExerciseSubmission(validated)
-      if (storeResult?.saved) {
-        STATUS.lastStoreOk = true
+    await withSubmissionLock(submissionActorKey, async () => {
+      let storeResult = null
+      let shouldNotify = true
+
+      try {
+        storeResult = await persistExerciseSubmission(validated)
+        if (storeResult?.saved) {
+          STATUS.lastStoreOk = true
+          STATUS.lastStoreAt = new Date().toISOString()
+          if (storeResult?.shouldNotify === false) shouldNotify = false
+          if (MAILER_DEBUG) {
+            console.log("Saved exercise submission:", {
+              submissionId: storeResult.submissionId,
+              incomingResultId: storeResult.incomingResultId,
+              deduplicated: Boolean(storeResult.deduplicated),
+              scorePercent: storeResult?.summary?.scorePercent,
+            })
+          }
+        }
+      } catch (storeError) {
+        STATUS.lastStoreOk = false
         STATUS.lastStoreAt = new Date().toISOString()
+        STATUS.lastError = String(storeError?.message || storeError)
+        if (isExerciseStoreRequired()) throw storeError
+        console.warn("⚠️ Submission persisted to email only (database write failed):", STATUS.lastError)
+      }
+
+      if (!shouldNotify) {
+        STATUS.lastSendOk = true
+        STATUS.lastSendAt = new Date().toISOString()
         if (MAILER_DEBUG) {
-          console.log("Saved exercise submission:", {
-            submissionId: storeResult.submissionId,
-            scorePercent: storeResult?.summary?.scorePercent,
+          console.log("Suppressed duplicate exercise notification:", {
+            incomingResultId: storeResult?.incomingResultId || "",
+            deduplicated: Boolean(storeResult?.deduplicated),
           })
         }
+        return
       }
-    } catch (storeError) {
-      STATUS.lastStoreOk = false
-      STATUS.lastStoreAt = new Date().toISOString()
-      STATUS.lastError = String(storeError?.message || storeError)
-      if (isExerciseStoreRequired()) throw storeError
-      console.warn("⚠️ Submission persisted to email only (database write failed):", STATUS.lastError)
-    }
 
-    const emailData = createEmail(validated)
-    const teacherTo = emailData.teacherEmail.to.length
-      ? emailData.teacherEmail.to
-      : DEFAULT_RECIPIENTS
+      const notificationKey = buildSubmissionNotificationKey(validated)
+      if (hasRecentSubmissionNotification(notificationKey)) {
+        STATUS.lastSendOk = true
+        STATUS.lastSendAt = new Date().toISOString()
+        if (MAILER_DEBUG) {
+          console.log("Suppressed duplicate exercise notification:", {
+            reason: "already-notified",
+            notificationKey,
+          })
+        }
+        return
+      }
 
-    if (!teacherTo.length) {
-      throw new Error("No recipients configured")
-    }
-    const from = process.env.SMTP_FROM || process.env.SMTP_USER || "no-reply@eaglesvn.online"
+      const emailData = createEmail(validated)
+      const teacherTo = emailData.teacherEmail.to.length
+        ? emailData.teacherEmail.to
+        : DEFAULT_RECIPIENTS
 
-    if (MAILER_DEBUG) {
-      console.log("Sending message →", {
-        from,
-        to: teacherTo,
-        subject: emailData.teacherEmail.subject,
-      })
-    }
+      if (!teacherTo.length) {
+        throw new Error("No recipients configured")
+      }
+      const from = process.env.SMTP_FROM || process.env.SMTP_USER || "no-reply@eaglesvn.online"
 
-    await transporter.sendMail({
-      from,
-      to: teacherTo,
-      subject: emailData.teacherEmail.subject,
-      text: emailData.teacherEmail.text,
-      html: emailData.teacherEmail.html,
-      replyTo: validated.email || undefined,
-    })
+      if (MAILER_DEBUG) {
+        console.log("Sending message →", {
+          from,
+          to: teacherTo,
+          subject: emailData.teacherEmail.subject,
+        })
+      }
 
-    if (emailData.learnerEmail) {
       await transporter.sendMail({
         from,
-        to: emailData.learnerEmail.to,
-        subject: emailData.learnerEmail.subject,
-        text: emailData.learnerEmail.text,
-        html: emailData.learnerEmail.html,
-      })
-    }
-
-    STATUS.lastSendOk = true
-    STATUS.lastSendAt = new Date().toISOString()
-    if (MAILER_DEBUG)
-      console.log("✉️  Mail sent:", {
         to: teacherTo,
         subject: emailData.teacherEmail.subject,
-        learnerNotified: Boolean(emailData.learnerEmail),
+        text: emailData.teacherEmail.text,
+        html: emailData.teacherEmail.html,
+        replyTo: validated.email || undefined,
       })
+
+      if (emailData.learnerEmail) {
+        await transporter.sendMail({
+          from,
+          to: emailData.learnerEmail.to,
+          subject: emailData.learnerEmail.subject,
+          text: emailData.learnerEmail.text,
+          html: emailData.learnerEmail.html,
+        })
+      }
+
+      markSubmissionNotificationSent(notificationKey)
+      STATUS.lastSendOk = true
+      STATUS.lastSendAt = new Date().toISOString()
+      if (MAILER_DEBUG)
+        console.log("✉️  Mail sent:", {
+          to: teacherTo,
+          subject: emailData.teacherEmail.subject,
+          learnerNotified: Boolean(emailData.learnerEmail),
+        })
+    })
 
     // CORS + 204 success
     allowCors(request, response)
@@ -857,6 +988,7 @@ export function startExerciseMailer(options = {}) {
   const host =
     options.host === undefined || options.host === null ? DEFAULT_HOST : String(options.host)
   const selfHealLoop = startRuntimeSelfHealLoop()
+  setStudentAdminRuntimeHealthProvider(() => buildRuntimeHealthPayload())
 
   const server = http.createServer((request, response) => {
     handleRequest(request, response, transporter).catch((error) => {

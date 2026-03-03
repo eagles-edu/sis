@@ -47,13 +47,14 @@ function nextSundayIsoDate(value = new Date()) {
   return localIsoDate(date)
 }
 
-async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin/students") {
+async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin/students", options = {}) {
   const dom = new JSDOM(ADMIN_HTML, {
     runScripts: "dangerously",
     resources: "usable",
     pretendToBeVisual: true,
     url,
     beforeParse(window) {
+      if (typeof options.beforeParse === "function") options.beforeParse(window)
       window.fetch = (resource, init = {}) => fetchHandler(resource, init)
     },
   })
@@ -459,6 +460,468 @@ test("tracking data submenus are visible for admin and hidden for teacher", asyn
   teacherDom.window.close()
 })
 
+test("student search fallback keeps accent-insensitive matches discoverable", async () => {
+  const studentListQueries = []
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const parsedUrl = new URL(String(resource), "http://127.0.0.1")
+    const pathname = parsedUrl.pathname
+    const method = normalizeText(init.method || "GET").toUpperCase()
+
+    if (pathname === "/api/admin/auth/me") return jsonResponse(401, { error: "Unauthorized" })
+    if (pathname === "/api/admin/auth/login") {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "attendance-admin",
+            "assignments",
+            "assignments-data",
+            "parent-tracking",
+            "performance-data",
+            "grades",
+            "grades-data",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (pathname === "/api/admin/permissions") {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "attendance-admin",
+              "assignments",
+              "assignments-data",
+              "parent-tracking",
+              "performance-data",
+              "grades",
+              "grades-data",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters") return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+    if (pathname === "/api/admin/students" && method === "GET") {
+      studentListQueries.push(parsedUrl.search)
+      const queryText = normalizeText(parsedUrl.searchParams.get("q"))
+      if (queryText) return jsonResponse(200, { items: [] })
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "stu-vi-01",
+            studentId: "vi001",
+            profile: { fullName: "Nguy\u1ec5n \u00c1nh", englishName: "", currentGrade: "Pre-A1 Starters" },
+            counts: { attendanceRecords: 0 },
+          },
+        ],
+      })
+    }
+    if (pathname === "/api/admin/dashboard") {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [],
+        levelCompletion: [],
+      })
+    }
+    if (pathname === "/api/admin/runtime/service-control") {
+      return jsonResponse(404, { error: "Not found" })
+    }
+    if (pathname === "/api/admin/exercise-results/incoming") {
+      return jsonResponse(200, { ok: true, total: 0, hasMore: false, statuses: [], items: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles") return jsonResponse(200, { items: [] })
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom, { username: "admin" })
+
+  await waitFor(() => {
+    const studentRows = dom.window.document.querySelectorAll("#studentRows tr")
+    assert.equal(studentRows.length, 1)
+  })
+
+  const document = dom.window.document
+  const searchEl = document.getElementById("searchQ")
+  const callsBeforeSearch = studentListQueries.length
+  searchEl.value = "nguyen anh"
+  document.getElementById("searchBtn").click()
+
+  await waitFor(() => {
+    assert.ok(studentListQueries.slice(callsBeforeSearch).some((query) => query.includes("q=nguyen%20anh")))
+  })
+
+  await waitFor(() => {
+    const studentRows = document.querySelectorAll("#studentRows tr")
+    assert.equal(studentRows.length, 1)
+    assert.match(studentRows[0].textContent || "", /Nguy\u1ec5n \u00c1nh/i)
+  })
+
+  await waitFor(() => {
+    assert.ok(studentListQueries.length >= callsBeforeSearch + 2)
+  })
+  await waitFor(() => {
+    assert.ok(
+      studentListQueries
+        .slice(callsBeforeSearch)
+        .some((query) => query.includes("take=1000") && !normalizeText(new URLSearchParams(query).get("q")))
+    )
+  })
+
+  dom.window.close()
+})
+
+test("student search keeps direct query result and avoids fallback refetch", async () => {
+  const studentListQueries = []
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const parsedUrl = new URL(String(resource), "http://127.0.0.1")
+    const pathname = parsedUrl.pathname
+    const method = normalizeText(init.method || "GET").toUpperCase()
+
+    if (pathname === "/api/admin/auth/me") return jsonResponse(401, { error: "Unauthorized" })
+    if (pathname === "/api/admin/auth/login") {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "attendance-admin",
+            "assignments",
+            "assignments-data",
+            "parent-tracking",
+            "performance-data",
+            "grades",
+            "grades-data",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (pathname === "/api/admin/permissions") {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "attendance-admin",
+              "assignments",
+              "assignments-data",
+              "parent-tracking",
+              "performance-data",
+              "grades",
+              "grades-data",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters") return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+    if (pathname === "/api/admin/students" && method === "GET") {
+      studentListQueries.push(parsedUrl.search)
+      const queryText = normalizeText(parsedUrl.searchParams.get("q"))
+      if (queryText === "nguyen anh") {
+        return jsonResponse(200, {
+          items: [
+            {
+              id: "stu-vi-02",
+              studentId: "vi002",
+              profile: { fullName: "Nguy\u1ec5n \u00c1nh", englishName: "", currentGrade: "Pre-A1 Starters" },
+              counts: { attendanceRecords: 0 },
+            },
+          ],
+        })
+      }
+      return jsonResponse(200, { items: [] })
+    }
+    if (pathname === "/api/admin/dashboard") {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [],
+        levelCompletion: [],
+      })
+    }
+    if (pathname === "/api/admin/runtime/service-control") {
+      return jsonResponse(404, { error: "Not found" })
+    }
+    if (pathname === "/api/admin/exercise-results/incoming") {
+      return jsonResponse(200, { ok: true, total: 0, hasMore: false, statuses: [], items: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles") return jsonResponse(200, { items: [] })
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom, { username: "admin" })
+
+  await waitFor(() => {
+    const document = dom.window.document
+    assert.equal(document.querySelectorAll("#studentRows tr").length, 0)
+  })
+
+  const document = dom.window.document
+  const searchEl = document.getElementById("searchQ")
+  const callsBeforeSearch = studentListQueries.length
+  searchEl.value = "nguyen anh"
+  document.getElementById("searchBtn").click()
+
+  await waitFor(() => {
+    const studentRows = document.querySelectorAll("#studentRows tr")
+    assert.equal(studentRows.length, 1)
+    assert.match(studentRows[0].textContent || "", /Nguy\u1ec5n \u00c1nh/i)
+  })
+
+  assert.ok(studentListQueries.slice(callsBeforeSearch).some((query) => query.includes("q=nguyen%20anh")))
+  assert.equal(
+    studentListQueries
+      .slice(callsBeforeSearch)
+      .some(
+        (query) =>
+          query.includes("take=1000")
+          && query.includes("level=")
+          && query.includes("school=")
+          && !normalizeText(new URLSearchParams(query).get("q"))
+      ),
+    false
+  )
+
+  dom.window.close()
+})
+
+test("top search level scope narrows assignment student dropdown and supports datalist selection", async () => {
+  const studentRequests = []
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const parsedUrl = new URL(String(resource), "http://127.0.0.1")
+    const pathname = parsedUrl.pathname
+    const method = normalizeText(init.method || "GET").toUpperCase()
+
+    if (pathname === "/api/admin/auth/me") return jsonResponse(401, { error: "Unauthorized" })
+    if (pathname === "/api/admin/auth/login") {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "attendance-admin",
+            "assignments",
+            "assignments-data",
+            "parent-tracking",
+            "performance-data",
+            "grades",
+            "grades-data",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (pathname === "/api/admin/permissions") {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "attendance-admin",
+              "assignments",
+              "assignments-data",
+              "parent-tracking",
+              "performance-data",
+              "grades",
+              "grades-data",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters") {
+      return jsonResponse(200, {
+        levels: ["Pre-A1 Starters", "A1 Movers"],
+        schools: [],
+      })
+    }
+    if (pathname === "/api/admin/students" && method === "GET") {
+      const q = normalizeText(parsedUrl.searchParams.get("q"))
+      const level = normalizeText(parsedUrl.searchParams.get("level"))
+      const school = normalizeText(parsedUrl.searchParams.get("school"))
+      const take = normalizeText(parsedUrl.searchParams.get("take"))
+      studentRequests.push({ q, level, school, take })
+      const all = [
+        {
+          id: "stu-01",
+          studentId: "SIS-001",
+          profile: { fullName: "Starter Student", currentGrade: "Pre-A1 Starters" },
+          counts: { attendanceRecords: 0 },
+        },
+        {
+          id: "stu-02",
+          studentId: "SIS-002",
+          profile: { fullName: "Mover Student", currentGrade: "A1 Movers" },
+          counts: { attendanceRecords: 0 },
+        },
+      ]
+      if (take === "1000") return jsonResponse(200, { items: all })
+      if (level === "A1 Movers") return jsonResponse(200, { items: [all[1]] })
+      if (q === "SIS-002") return jsonResponse(200, { items: [all[1]] })
+      return jsonResponse(200, { items: all })
+    }
+    if (pathname === "/api/admin/dashboard") {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [],
+        levelCompletion: [],
+      })
+    }
+    if (pathname === "/api/admin/runtime/service-control") return jsonResponse(404, { error: "Not found" })
+    if (pathname === "/api/admin/exercise-results/incoming") {
+      return jsonResponse(200, { ok: true, total: 0, hasMore: false, statuses: [], items: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles") return jsonResponse(200, { items: [] })
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom, { username: "admin" })
+
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  const document = dom.window.document
+  const levelEl = document.getElementById("filterLevel")
+  levelEl.value = "A1 Movers"
+  levelEl.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.ok(studentRequests.some((entry) => entry.level === "A1 Movers"))
+  })
+
+  await waitFor(() => {
+    const options = Array.from(document.querySelectorAll("#searchStudentOptions option"))
+    assert.equal(options.length, 1)
+    assert.match(options[0].value, /Mover Student/i)
+  })
+
+  openPage(dom, "assignments")
+  await waitFor(() => {
+    const studentOptions = Array.from(document.querySelectorAll("#assignStudent option"))
+    const optionText = studentOptions.map((option) => normalizeText(option.textContent || ""))
+    assert.equal(optionText.some((text) => /Mover Student/i.test(text)), true)
+    assert.equal(optionText.some((text) => /Starter Student/i.test(text)), false)
+  })
+
+  const datalistValue = normalizeText(document.querySelector("#searchStudentOptions option")?.value)
+  assert.ok(datalistValue)
+  const beforeScopedSearch = studentRequests.length
+  document.getElementById("searchQ").value = datalistValue
+  document.getElementById("searchBtn").click()
+
+  await waitFor(() => {
+    const scopedCalls = studentRequests.slice(beforeScopedSearch)
+    assert.ok(scopedCalls.some((entry) => entry.q === "SIS-002"))
+  })
+
+  await new Promise((resolve) => setTimeout(resolve, 80))
+  document.getElementById("logoutBtn").click()
+  await waitFor(() => {
+    assert.equal(document.getElementById("authPanel").classList.contains("hidden"), false)
+  })
+
+  dom.window.close()
+})
+
 test("student admin child page owns students panel while search stays visible", async () => {
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
@@ -707,6 +1170,208 @@ test("static preview path over http allows login without apiOrigin", async () =>
     assert.equal(document.getElementById("authPanel").classList.contains("hidden"), true)
     assert.equal(document.getElementById("app").classList.contains("hidden"), false)
   })
+
+  dom.window.close()
+})
+
+test("hosted sis-admin path probes auth endpoint instead of healthz", async () => {
+  let healthzCalls = 0
+  let authMeCalls = 0
+  let authMeInit = null
+
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+
+      if (url.includes("/healthz")) {
+        healthzCalls += 1
+        return jsonResponse(403, { error: "Forbidden" })
+      }
+
+      if (url.includes("/api/sis-admin/auth/me")) {
+        authMeCalls += 1
+        authMeInit = init
+        return jsonResponse(401, { error: "Unauthorized" })
+      }
+
+      return jsonResponse(200, {})
+    },
+    "https://admin.eagles.edu.vn/sis-admin/student-admin.html"
+  )
+
+  await waitFor(() => {
+    assert.ok(authMeCalls >= 1)
+    assert.ok(authMeInit)
+    assert.equal(authMeInit.credentials, "include")
+  })
+  assert.equal(healthzCalls, 0)
+
+  await waitFor(() => {
+    assert.match(dom.window.document.getElementById("hubStatusMeta").textContent, /auth endpoint/i)
+  })
+
+  dom.window.close()
+})
+
+test("hosted sis-admin path hydrates runtime diagnostics from admin runtime health endpoint", async () => {
+  const calls = []
+  const adminRolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [
+      "overview",
+      "profile",
+      "attendance",
+      "attendance-admin",
+      "assignments",
+      "assignments-data",
+      "parent-tracking",
+      "performance-data",
+      "grades",
+      "grades-data",
+      "reports",
+      "family",
+      "student-admin",
+      "users",
+      "permissions",
+      "settings",
+    ],
+  }
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      const method = init.method || "GET"
+      calls.push(`${method} ${url}`)
+
+      if (url.includes("/healthz")) {
+        return jsonResponse(403, { error: "Forbidden" })
+      }
+
+      if (url.includes("/api/sis-admin/auth/me")) {
+        return jsonResponse(200, {
+          authenticated: true,
+          user: { username: "admin", role: "admin" },
+          rolePolicy: adminRolePolicy,
+        })
+      }
+
+      if (url.includes("/api/sis-admin/runtime/health")) {
+        return jsonResponse(200, {
+          status: "ok",
+          lastVerifyOk: true,
+          lastVerifyAt: "2026-03-01T13:00:00.000Z",
+          lastStoreOk: true,
+          lastIntakeStoreOk: true,
+          lastSendOk: true,
+          studentAdminRuntime: {
+            pagePath: "/admin/students",
+            apiPrefix: "/api/sis-admin",
+            sessionDriver: "redis",
+            sessionTtlSeconds: 28800,
+            filterCache: {
+              backend: "redis",
+              hits: 11,
+              misses: 2,
+              lastError: "",
+            },
+          },
+          runtimeSelfHeal: {
+            enabled: true,
+            lastResult: "in-sync",
+            syncCount: 4,
+          },
+        })
+      }
+
+      if (url.includes("/api/sis-admin/permissions")) {
+        return jsonResponse(200, {
+          role: "admin",
+          roles: { admin: adminRolePolicy },
+        })
+      }
+
+      if (url.includes("/api/sis-admin/users")) {
+        return jsonResponse(200, { items: [] })
+      }
+
+      if (url.includes("/api/sis-admin/filters")) {
+        return jsonResponse(200, { levels: [], schools: [] })
+      }
+
+      if (url.includes("/api/sis-admin/students")) {
+        return jsonResponse(200, { items: [] })
+      }
+
+      if (url.includes("/api/sis-admin/dashboard")) {
+        return jsonResponse(200, {
+          today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+          assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+          weeklyAssignmentCompletion: [],
+          atRiskWeek: { total: 0, students: [] },
+          classEnrollmentAttendance: [],
+          levelCompletion: [],
+        })
+      }
+
+      if (url.includes("/api/sis-admin/runtime/service-control")) {
+        return jsonResponse(200, {
+          ok: true,
+          enabled: true,
+          available: true,
+          service: "exercise-mailer.service",
+          status: "active",
+          detail: "active",
+          checkedAt: "2026-03-01T13:00:00.000Z",
+        })
+      }
+
+      if (url.includes("/api/sis-admin/exercise-results/incoming")) {
+        return jsonResponse(200, {
+          total: 0,
+          hasMore: false,
+          statuses: [],
+          items: [],
+        })
+      }
+
+      if (url.includes("/api/sis-admin/exercise-titles")) {
+        return jsonResponse(200, { items: [] })
+      }
+
+      if (url.includes("/api/sis-admin/notifications/batch-status")) {
+        return jsonResponse(200, { ok: true, queueType: "parent-report", total: 0, hasMore: false, items: [] })
+      }
+
+      return jsonResponse(200, {})
+    },
+    "https://admin.eagles.edu.vn/sis-admin/student-admin.html"
+  )
+
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  await waitFor(() => {
+    const adminRuntime = dom.window.document.querySelector('[data-system-key="adminRuntime"]')
+    const sessionStore = dom.window.document.querySelector('[data-system-key="sessionStore"]')
+    const filterCache = dom.window.document.querySelector('[data-system-key="filterCache"]')
+    const selfHeal = dom.window.document.querySelector('[data-system-key="selfHeal"]')
+    assert.ok(adminRuntime?.classList.contains("ok"))
+    assert.ok(sessionStore?.classList.contains("ok"))
+    assert.ok(filterCache?.classList.contains("ok"))
+    assert.ok(selfHeal?.classList.contains("ok"))
+    assert.match(adminRuntime?.textContent || "", /page=\/admin\/students/i)
+    assert.match(sessionStore?.textContent || "", /driver=redis/i)
+    assert.match(filterCache?.textContent || "", /backend=redis/i)
+    assert.match(selfHeal?.textContent || "", /result=in-sync/i)
+  })
+
+  assert.ok(calls.some((entry) => entry.includes("/api/sis-admin/runtime/health")))
 
   dom.window.close()
 })
@@ -1423,6 +2088,350 @@ test("overview queued parent reports list opens modal and supports hold/edit/req
   dom.window.close()
 })
 
+test("overview anonymous exercise submissions panel renders and supports show-all toggle", async () => {
+  const incomingCalls = []
+  const incomingActionCalls = []
+  const serviceControlCalls = []
+  const API_BASE = "http://127.0.0.1"
+  const knownStudents = [
+    {
+      id: "stu-target-01",
+      studentId: "target001",
+      email: "target001@example.com",
+      profile: { fullName: "Target Student", currentGrade: "A1 Movers" },
+      attendanceRecords: [],
+      gradeRecords: [],
+      parentReports: [],
+    },
+  ]
+  let createdStudent = null
+  const incomingItems = [
+    {
+      id: "incoming-01",
+      status: "queued",
+      submittedStudentId: "anon001",
+      submittedEmail: "anon001@example.com",
+      pageTitle: "Starter Homework Quiz",
+      totalQuestions: 20,
+      correctCount: 16,
+      scorePercent: 80,
+      reviewedByUsername: "",
+      createdAt: "2026-09-14T10:00:00.000Z",
+    },
+    {
+      id: "incoming-02",
+      status: "queued",
+      submittedStudentId: "anon002",
+      submittedEmail: "anon002@example.com",
+      pageTitle: "Common Nouns Checkpoint",
+      totalQuestions: 20,
+      correctCount: 19,
+      scorePercent: 95,
+      reviewedByUsername: "",
+      createdAt: "2026-09-13T10:00:00.000Z",
+    },
+    {
+      id: "incoming-03",
+      status: "resolved",
+      submittedStudentId: "anon003",
+      submittedEmail: "anon003@example.com",
+      pageTitle: "Resolved Listening Quiz",
+      totalQuestions: 10,
+      correctCount: 7,
+      scorePercent: 70,
+      reviewedByUsername: "admin",
+      createdAt: "2026-09-13T09:00:00.000Z",
+    },
+  ]
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+    const parsedUrl = new URL(url, API_BASE)
+    const pathname = parsedUrl.pathname
+
+    if (pathname === "/api/admin/auth/me") return jsonResponse(401, { error: "Unauthorized" })
+    if (pathname === "/api/admin/auth/login") {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "profile",
+            "attendance",
+            "attendance-admin",
+            "assignments",
+            "parent-tracking",
+            "grades",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (pathname === "/api/admin/permissions") {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "profile",
+              "attendance",
+              "attendance-admin",
+              "assignments",
+              "parent-tracking",
+              "grades",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters") return jsonResponse(200, { levels: [], schools: [] })
+    if (pathname === "/api/admin/students" && method === "GET") {
+      const q = normalizeText(parsedUrl.searchParams.get("q"))
+      if (q) {
+        const matched = knownStudents.find((entry) => normalizeText(entry.studentId) === q)
+          || (createdStudent && normalizeText(createdStudent.studentId) === q ? createdStudent : null)
+        return jsonResponse(200, { items: matched ? [matched] : [] })
+      }
+      const items = createdStudent ? [createdStudent] : []
+      return jsonResponse(200, { items })
+    }
+    if (method === "GET" && pathname.startsWith("/api/admin/students/")) {
+      const refId = decodeURIComponent(pathname.split("/").pop() || "")
+      const student =
+        knownStudents.find((entry) => entry.id === refId) ||
+        (createdStudent && createdStudent.id === refId ? createdStudent : null)
+      if (!student) return jsonResponse(404, { error: "Not found" })
+      return jsonResponse(200, student)
+    }
+    if (pathname === "/api/admin/exercise-titles") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/dashboard") {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [],
+        levelCompletion: [],
+        parentReportQueue: { total: 0, hasMore: false, items: [] },
+      })
+    }
+    if (method === "GET" && pathname === "/api/admin/exercise-results/incoming") {
+      incomingCalls.push(url)
+      const showAll = parsedUrl.searchParams.get("showAll") === "1"
+      const activeItems = incomingItems.filter((entry) => entry.status === "queued" || entry.status === "temporary")
+      const items = showAll ? incomingItems : activeItems.slice(0, 1)
+      return jsonResponse(200, {
+        ok: true,
+        total: showAll ? incomingItems.length : activeItems.length,
+        hasMore: !showAll && activeItems.length > 1,
+        statuses: showAll ? [] : ["queued", "temporary"],
+        items,
+      })
+    }
+    if (method === "POST" && pathname === "/api/admin/exercise-results/incoming") {
+      const payload = init.body ? JSON.parse(init.body) : {}
+      incomingActionCalls.push(payload)
+      const index = incomingItems.findIndex((entry) => entry.id === payload.incomingResultId)
+      if (index < 0) return jsonResponse(404, { error: "Incoming result not found" })
+
+      if (payload.action === "match") {
+        incomingItems[index] = {
+          ...incomingItems[index],
+          status: "resolved",
+          reviewedByUsername: "admin",
+        }
+        return jsonResponse(200, {
+          ok: true,
+          action: "match",
+          studentRefId: payload.studentRefId,
+          item: incomingItems[index],
+        })
+      }
+
+      if (payload.action === "create-account") {
+        createdStudent = {
+          id: "stu-created-01",
+          studentId: payload.studentId,
+          email: payload.email,
+          profile: { fullName: payload.fullName || "New Student", currentGrade: "" },
+          attendanceRecords: [],
+          gradeRecords: [],
+          parentReports: [],
+        }
+        incomingItems[index] = {
+          ...incomingItems[index],
+          status: "resolved",
+          reviewedByUsername: "admin",
+        }
+        return jsonResponse(200, {
+          ok: true,
+          action: "create-account",
+          student: createdStudent,
+          studentRefId: createdStudent.id,
+          item: incomingItems[index],
+        })
+      }
+
+      if (payload.action === "archive") {
+        incomingItems[index] = {
+          ...incomingItems[index],
+          status: "archived",
+          reviewedByUsername: "admin",
+        }
+        return jsonResponse(200, { ok: true, action: "archive", item: incomingItems[index] })
+      }
+
+      return jsonResponse(400, { error: "Unexpected incoming queue action" })
+    }
+    if (method === "GET" && pathname === "/api/admin/runtime/service-control") {
+      serviceControlCalls.push("status")
+      return jsonResponse(200, {
+        ok: true,
+        enabled: true,
+        available: true,
+        service: "exercise-mailer.service",
+        status: "active",
+        detail: "service=exercise-mailer.service is active",
+        checkedAt: "10:00:00 AM",
+      })
+    }
+    if (method === "POST" && pathname === "/api/admin/runtime/service-control") {
+      const payload = init.body ? JSON.parse(init.body) : {}
+      serviceControlCalls.push(payload.action || "restart")
+      return jsonResponse(200, {
+        ok: true,
+        action: "restart",
+        enabled: true,
+        available: true,
+        service: "exercise-mailer.service",
+        status: "active",
+        detail: "Restarted exercise-mailer.service; status=active.",
+        checkedAt: "10:01:00 AM",
+      })
+    }
+
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  const document = dom.window.document
+  const promptResponses = ["target001", "newuser001", "New Student"]
+  dom.window.prompt = () => promptResponses.shift() || null
+
+  await waitFor(() => {
+    const section = document.getElementById("overviewIncomingExerciseSection")
+    assert.ok(section)
+    assert.equal(section.classList.contains("hidden"), false)
+    assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /Starter Homework Quiz/i)
+    assert.match(document.getElementById("overviewIncomingExerciseSummary").textContent || "", /statuses=queued,temporary/i)
+    assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /Add to Specific Student/i)
+    assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /Create New User/i)
+    const serviceCard = document.getElementById("exerciseMailerServiceCard")
+    assert.ok(serviceCard)
+    assert.equal(serviceCard.classList.contains("hidden"), false)
+    assert.match(document.getElementById("exerciseMailerServiceMeta").textContent || "", /status=ACTIVE/i)
+  })
+
+  const addToStudentBtn = document.querySelector(
+    '#overviewIncomingExerciseRows tr:first-child button[data-incoming-disposition-action="match"]'
+  )
+  assert.ok(addToStudentBtn, "add-to-specific-student action button is rendered for queued item")
+  addToStudentBtn.click()
+  await waitFor(() => {
+    assert.ok(
+      incomingActionCalls.some(
+        (entry) =>
+          entry.action === "match"
+          && entry.incomingResultId === "incoming-01"
+          && entry.studentRefId === "stu-target-01"
+      )
+    )
+    assert.match(document.getElementById("status").textContent || "", /Added this quiz score to target001/i)
+    assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /Common Nouns Checkpoint/i)
+  })
+
+  const createUserBtn = document.querySelector(
+    '#overviewIncomingExerciseRows tr:first-child button[data-incoming-disposition-action="create-account"]'
+  )
+  assert.ok(createUserBtn, "create-new-user action button is rendered for queued item")
+  createUserBtn.click()
+  await waitFor(() => {
+    assert.ok(
+      incomingActionCalls.some(
+        (entry) =>
+          entry.action === "create-account"
+          && entry.incomingResultId === "incoming-02"
+          && entry.studentId === "newuser001"
+      )
+    )
+    assert.match(document.getElementById("status").textContent || "", /auto-added quiz score/i)
+    assert.equal(
+      document.querySelector('.page-section[data-page="profile"]')?.classList.contains("active"),
+      true
+    )
+    assert.equal(document.getElementById("f_studentId").value, "newuser001")
+  })
+
+  openPage(dom, "overview")
+  document.getElementById("overviewIncomingExerciseExpandBtn").click()
+  await waitFor(() => {
+    assert.ok(incomingCalls.some((url) => url.includes("showAll=1")))
+    assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /Resolved Listening Quiz/i)
+    assert.equal(document.getElementById("overviewIncomingExerciseExpandBtn").textContent, "Show Active Only")
+  })
+
+  const rows = Array.from(document.querySelectorAll("#overviewIncomingExerciseRows tr"))
+  const rowForIncoming01 = rows.find((row) => normalizeText(row.textContent).includes("anon001"))
+  assert.ok(rowForIncoming01, "incoming-01 row is present in show-all mode")
+  const archiveBtn = rowForIncoming01.querySelector('button[data-incoming-disposition-action="archive"]')
+  assert.ok(archiveBtn, "archive action button is rendered for resolved item")
+  archiveBtn.click()
+  await waitFor(() => {
+    assert.ok(
+      incomingActionCalls.some(
+        (entry) => entry.action === "archive" && entry.incomingResultId === "incoming-01"
+      )
+    )
+    assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /archived/i)
+  })
+
+  document.getElementById("exerciseMailerRestartBtn").click()
+  await waitFor(() => {
+    assert.ok(serviceControlCalls.includes("restart"))
+    assert.match(document.getElementById("status").textContent || "", /Restart command completed/i)
+  })
+
+  dom.window.close()
+})
+
 test("settings global level-tile style propagates to attendance and assignments tiles", async () => {
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
@@ -1533,6 +2542,100 @@ test("settings global level-tile style propagates to attendance and assignments 
   await waitFor(() => {
     assert.equal(document.getElementById("authPanel").classList.contains("hidden"), false)
   })
+  dom.window.close()
+})
+
+test("legacy alias level-tile config still applies to assignments input tiles", async () => {
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      void init
+
+      if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+      if (url.includes("/api/admin/auth/login")) {
+        return jsonResponse(200, {
+          user: { username: "admin", role: "admin" },
+          rolePolicy: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: ["overview", "profile", "attendance", "assignments", "grades", "reports", "family", "users", "permissions", "settings"],
+          },
+        })
+      }
+      if (url.includes("/api/admin/permissions")) {
+        return jsonResponse(200, {
+          roles: {
+            admin: {
+              role: "admin",
+              canRead: true,
+              canWrite: true,
+              canManageUsers: true,
+              canManagePermissions: true,
+              startPage: "overview",
+              allowedPages: ["overview", "profile", "attendance", "assignments", "grades", "reports", "family", "users", "permissions", "settings"],
+            },
+          },
+        })
+      }
+      if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+      if (url.includes("/api/admin/students")) {
+        return jsonResponse(200, {
+          items: [
+            {
+              id: "stu-01",
+              studentId: "SIS-001",
+              profile: { fullName: "Starter Student", currentGrade: "Pre-A1 Starters" },
+              counts: { attendanceRecords: 0 },
+            },
+          ],
+        })
+      }
+      if (url.includes("/api/admin/dashboard")) {
+        return jsonResponse(200, {
+          today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+          assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+          weeklyAssignmentCompletion: [],
+          atRiskWeek: { total: 0, students: [] },
+          classEnrollmentAttendance: [],
+          levelCompletion: [],
+        })
+      }
+      if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+      return jsonResponse(200, {})
+    },
+    "http://127.0.0.1/admin/students",
+    {
+      beforeParse(window) {
+        window.localStorage.setItem(
+          "sis.admin.levelTiles.v1",
+          JSON.stringify({
+            starters: {
+              title: "Starter Tile Legacy",
+              bgColor: "#224466",
+              imageDataUrl: "",
+            },
+          })
+        )
+      },
+    }
+  )
+
+  submitLogin(dom, { username: "admin" })
+
+  await waitFor(() => {
+    const document = dom.window.document
+    assert.equal(document.getElementById("authPanel").classList.contains("hidden"), true)
+    const assignmentTile = document.querySelector('#assignmentLevelTiles .attendance-level-tile[data-level="Pre-A1 Starters"]')
+    assert.ok(assignmentTile)
+    assert.match(assignmentTile.textContent || "", /Starter Tile Legacy/i)
+    assert.match(assignmentTile.getAttribute("style") || "", /rgb\(34,\s*68,\s*102\)/i)
+  })
+
   dom.window.close()
 })
 
@@ -1991,9 +3094,12 @@ test("overview canonical classes follow SIS level order", async () => {
 })
 
 test("overview level visuals apply brand colors on buttons, bars, and detail border", async () => {
+  const previewCreatePayloads = []
+  let smallScreen = false
+
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
-    void init
+    const method = init.method || "GET"
 
     if (url.includes("/api/admin/auth/me")) {
       return jsonResponse(401, { error: "Unauthorized" })
@@ -2103,7 +3209,60 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
       return jsonResponse(200, { items: [] })
     }
 
+    if (method === "POST" && url.includes("/api/admin/assignment-announcements/volatile")) {
+      const payload = init.body ? JSON.parse(init.body) : {}
+      previewCreatePayloads.push(payload)
+      return jsonResponse(200, {
+        ok: true,
+        url: `https://preview.example.com/volatile/${previewCreatePayloads.length}`,
+        ttlMinutes: 480,
+        expiresAt: "2026-03-01T08:00:00.000Z",
+      })
+    }
+
     return jsonResponse(200, {})
+  }, "http://127.0.0.1/admin/students", {
+    beforeParse(window) {
+      const today = localIsoDate()
+      window.matchMedia = (query) => ({
+        matches: smallScreen && /\(max-width:\s*820px\)/i.test(String(query || "")),
+        media: String(query || ""),
+        onchange: null,
+        addListener() {},
+        removeListener() {},
+        addEventListener() {},
+        removeEventListener() {},
+        dispatchEvent() { return false },
+      })
+      window.localStorage.setItem(
+        "sis.admin.assignmentTemplates",
+        JSON.stringify([
+          {
+            id: "starter-current-week",
+            assignmentTitle: "Starter Week Current",
+            level: "Pre-A1 Starters",
+            assignedAt: today,
+            dueAt: nextSundayIsoDate(today),
+            items: [
+              { title: "Common Nouns", url: "https://exercise.example.com/common-nouns" },
+              { title: "Proper Nouns", url: "https://exercise.example.com/proper-nouns" },
+            ],
+            updatedAt: "2026-03-01T01:15:00.000Z",
+          },
+          {
+            id: "starter-old-week",
+            assignmentTitle: "Starter Week Old",
+            level: "Pre-A1 Starters",
+            assignedAt: "2025-12-01",
+            dueAt: "2025-12-07",
+            items: [
+              { title: "Old Exercise", url: "https://exercise.example.com/old" },
+            ],
+            updatedAt: "2025-12-01T03:00:00.000Z",
+          },
+        ])
+      )
+    },
   })
 
   submitLogin(dom)
@@ -2114,8 +3273,12 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
     assert.equal(document.getElementById("app").classList.contains("hidden"), false)
   })
 
+  const document = dom.window.document
+  let scrollCalls = 0
+  const panel = document.getElementById("levelDetailPanel")
+  panel.scrollIntoView = () => { scrollCalls += 1 }
+
   await waitFor(() => {
-    const document = dom.window.document
     const startersBtn = Array.from(document.querySelectorAll("#overviewBarDetailActions button")).find((button) =>
       /Pre-A1 Starters/i.test(button.textContent || "")
     )
@@ -2137,18 +3300,26 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
   })
 
   await waitFor(() => {
-    const document = dom.window.document
     const panel = document.getElementById("levelDetailPanel")
     assert.equal(panel.classList.contains("hidden"), false)
     assert.equal(panel.style.getPropertyValue("--level-panel-accent"), "#FCAB15")
-    assert.match(document.getElementById("levelDetailTitle").textContent, /Pre-A1 Starters/i)
+    assert.match(document.getElementById("levelDetailTitle").textContent, /Homework progress - Pre-A1 Starters/i)
     const studentCells = document.querySelectorAll("#levelDetailRows tr td")
     assert.ok(studentCells.length >= 5)
     assert.match(document.getElementById("levelDetailRows")?.textContent || "", /Starter Student/i)
+    assert.equal(document.getElementById("levelReminderAssignment").value, "Starter Week Current")
+    assert.equal(
+      document.getElementById("levelReminderLink").value,
+      "https://preview.example.com/volatile/1"
+    )
+    assert.equal(scrollCalls, 0)
+    assert.equal(previewCreatePayloads.length, 1)
+    assert.equal(previewCreatePayloads[0].assignmentTitle, "Starter Week Current")
+    assert.equal(previewCreatePayloads[0].level, "Pre-A1 Starters")
   })
 
+  smallScreen = true
   await waitFor(() => {
-    const document = dom.window.document
     const moversBtn = Array.from(document.querySelectorAll("#overviewBarDetailActions button")).find((button) =>
       /A1 Movers/i.test(button.textContent || "")
     )
@@ -2157,10 +3328,10 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
   })
 
   await waitFor(() => {
-    const document = dom.window.document
-    assert.match(document.getElementById("levelDetailTitle").textContent || "", /A1 Movers/i)
+    assert.match(document.getElementById("levelDetailTitle").textContent || "", /Homework progress - A1 Movers/i)
     const rowText = document.querySelector("#levelDetailRows tr td")?.textContent || ""
     assert.match(rowText, /No uncompleted students/i)
+    assert.ok(scrollCalls >= 1)
   })
 
   dom.window.close()
@@ -2409,6 +3580,364 @@ test("clear buttons reset local admin form fields", async () => {
   dom.window.close()
 })
 
+test("profile settings layout editor supports tab/type/sequence updates and custom field create-delete", async () => {
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+    void method
+
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "assignments",
+            "parent-tracking",
+            "grades",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "assignments",
+              "parent-tracking",
+              "grades",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters", "A1 Movers"], schools: ["Main Campus"] })
+    if (url.includes("/api/admin/students")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    if (url.includes("/api/admin/exercise-results/incoming")) return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    if (url.includes("/api/admin/runtime/service-control")) {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  dom.window.confirm = () => true
+  submitLogin(dom)
+
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  openPage(dom, "settings")
+  await waitFor(() => {
+    const row = dom.window.document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="email-form-sig"]')
+    assert.ok(row)
+  })
+
+  const document = dom.window.document
+  const signatureRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="email-form-sig"]')
+  assert.ok(signatureRow)
+  signatureRow.querySelector('[data-layout-key="tabId"]').value = "profile"
+  signatureRow.querySelector('[data-layout-key="inputType"]').value = "textarea"
+  signatureRow.querySelector('[data-layout-key="sequence"]').value = "15"
+  document.getElementById("profileFieldLayoutApplyBtn").click()
+
+  await waitFor(() => {
+    assert.match(document.getElementById("profileFieldLayoutStatus").textContent || "", /applied/i)
+    const signatureField = document.getElementById("f_signatureEmail")
+    assert.ok(signatureField)
+    assert.equal(signatureField.tagName, "TEXTAREA")
+    assert.equal(
+      signatureField.closest("[data-profile-tab-panel]")?.getAttribute("data-profile-tab-panel"),
+      "profile"
+    )
+    const profilePanel = document.querySelector('[data-profile-tab-panel="profile"]')
+    const fieldIds = Array.from(profilePanel.querySelectorAll('[id^="f_"]')).map((el) => el.id)
+    assert.ok(fieldIds.indexOf("f_signatureEmail") >= 0)
+    assert.ok(fieldIds.indexOf("f_signatureEmail") < fieldIds.indexOf("f_fullName"))
+  })
+
+  document.getElementById("profileFieldCreateKey").value = "custom-health-note"
+  document.getElementById("profileFieldCreateLabelVi").value = "Ghi chú custom"
+  document.getElementById("profileFieldCreateType").value = "text"
+  document.getElementById("profileFieldCreateTab").value = "covid"
+  document.getElementById("profileFieldCreateWidth").value = "6"
+  document.getElementById("profileFieldCreateSectionVi").value = "COVID"
+  document.getElementById("profileFieldCreatePlaceholderVi").value = "nhap ghi chu"
+  document.getElementById("profileFieldCreateSequence").value = "515"
+  document.getElementById("profileFieldCreateBtn").click()
+
+  await waitFor(() => {
+    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-health-note"]')
+    assert.ok(customRow)
+    assert.match(document.getElementById("profileFieldLayoutStatus").textContent || "", /Created field/i)
+  })
+
+  openPage(dom, "profile")
+  document.querySelector('[data-profile-tab="covid"]')?.click()
+  await waitFor(() => {
+    const customField = document.getElementById("f_customHealthNote")
+    assert.ok(customField)
+    assert.equal(
+      customField.closest("[data-profile-tab-panel]")?.getAttribute("data-profile-tab-panel"),
+      "covid"
+    )
+  })
+
+  openPage(dom, "settings")
+  await waitFor(() => {
+    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-health-note"]')
+    assert.ok(customRow)
+    const deleteBtn = customRow.querySelector('[data-profile-layout-action="delete"]')
+    assert.ok(deleteBtn)
+    deleteBtn.click()
+  })
+
+  await waitFor(() => {
+    assert.equal(
+      document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-health-note"]'),
+      null
+    )
+  })
+
+  openPage(dom, "profile")
+  document.querySelector('[data-profile-tab="covid"]')?.click()
+  await waitFor(() => {
+    assert.equal(document.getElementById("f_customHealthNote"), null)
+  })
+
+  dom.window.close()
+})
+
+test("profile payload mapping preserves mapped fields and custom form payload keys", async () => {
+  let studentDetail = {
+    id: "stu-01",
+    studentId: "1001",
+    email: "seed@example.com",
+    profile: {
+      fullName: "Seed Student",
+      currentGrade: "Pre-A1 Starters",
+      studentEmail: "seed@example.com",
+      normalizedFormPayload: {
+        legacyField: "keep-me",
+      },
+      rawFormPayload: {
+        legacyField: "keep-me",
+      },
+    },
+    attendanceRecords: [],
+    gradeRecords: [],
+    parentReports: [],
+  }
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "assignments",
+            "parent-tracking",
+            "grades",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "assignments",
+              "parent-tracking",
+              "grades",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main Campus"] })
+    if (method === "GET" && url.includes("/api/admin/students/stu-01")) return jsonResponse(200, studentDetail)
+    if (method === "GET" && url.includes("/api/admin/students")) {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "stu-01",
+            studentId: studentDetail.studentId,
+            profile: {
+              fullName: studentDetail.profile.fullName,
+              currentGrade: studentDetail.profile.currentGrade,
+            },
+          },
+        ],
+      })
+    }
+    if (url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    if (url.includes("/api/admin/exercise-results/incoming")) return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    if (url.includes("/api/admin/runtime/service-control")) {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  const document = dom.window.document
+  await waitFor(() => {
+    const firstRow = document.querySelector("#studentRows tr")
+    assert.ok(firstRow)
+    firstRow.click()
+  })
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("f_fullName")?.value, "Seed Student")
+  })
+
+  openPage(dom, "settings")
+  await waitFor(() => {
+    assert.ok(document.getElementById("profileFieldCreateBtn"))
+  })
+
+  document.getElementById("profileFieldCreateKey").value = "custom-alias"
+  document.getElementById("profileFieldCreateLabelVi").value = "Bi danh"
+  document.getElementById("profileFieldCreateType").value = "text"
+  document.getElementById("profileFieldCreateTab").value = "profile"
+  document.getElementById("profileFieldCreateSectionVi").value = "Thong tin"
+  document.getElementById("profileFieldCreateSequence").value = "17"
+  document.getElementById("profileFieldCreateBtn").click()
+
+  await waitFor(() => {
+    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-alias"]')
+    assert.ok(customRow)
+  })
+
+  openPage(dom, "profile")
+  await waitFor(() => {
+    assert.equal(document.querySelector('.page-section[data-page="profile"]')?.classList.contains("active"), true)
+    assert.ok(document.getElementById("f_customAlias"))
+    assert.equal(document.getElementById("f_studentId")?.value, "1001")
+    assert.equal(document.getElementById("saveBtn")?.disabled, false)
+  })
+
+  document.getElementById("f_fullName").value = "Updated Student"
+  document.getElementById("f_studentId").value = "1001"
+  document.getElementById("f_studentEmail").value = "updated-student@example.com"
+  document.getElementById("f_customAlias").value = "Alias Value"
+  assert.equal(typeof dom.window.collectStudentPayload, "function")
+  const payload = dom.window.collectStudentPayload()
+  assert.equal(payload.studentId, "1001")
+  assert.equal(payload.email, "seed@example.com")
+  assert.equal(payload.profile.fullName, "Updated Student")
+  assert.equal(payload.profile.studentEmail, "updated-student@example.com")
+  assert.equal(payload.profile.sourceFormId, "admin-manual")
+  assert.equal(payload.profile.sourceUrl, "admin/students")
+  assert.equal(payload.profile.normalizedFormPayload["custom-alias"], "Alias Value")
+  assert.equal(payload.profile.rawFormPayload["custom-alias"], "Alias Value")
+  assert.equal(payload.profile.normalizedFormPayload.legacyField, "keep-me")
+  assert.equal(payload.profile.rawFormPayload.legacyField, "keep-me")
+
+  dom.window.close()
+})
+
 test("table sort controls and column-click headers reorder grade/performance data", async () => {
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
@@ -2478,7 +4007,24 @@ test("table sort controls and column-click headers reorder grade/performance dat
         id: "stu-01",
         studentId: "SIS-001",
         profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
-        attendanceRecords: [],
+        attendanceRecords: [
+          {
+            id: "att-01",
+            attendanceDate: "2026-02-04",
+            className: "Class A",
+            quarter: "q1",
+            status: "present",
+            comments: "seed-alpha present",
+          },
+          {
+            id: "att-02",
+            attendanceDate: "2026-02-05",
+            className: "Class B",
+            quarter: "q1",
+            status: "absent",
+            comments: "seed-beta absent",
+          },
+        ],
         gradeRecords: [
           {
             id: "grade-01",
@@ -2560,6 +4106,29 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
 
   const document = dom.window.document
+  const seededAssignmentTemplates = [
+    {
+      id: "seed-assignment-01",
+      assignmentTitle: "Seed Assignment Alpha",
+      level: "Pre-A1 Starters",
+      assignedAt: localIsoDate(),
+      dueAt: nextSundayIsoDate(localIsoDate()),
+      items: [{ title: "Alpha Item", url: "https://seed.example.com/alpha" }],
+      updatedAt: "2026-02-11T10:00:00.000Z",
+    },
+    {
+      id: "seed-assignment-02",
+      assignmentTitle: "Seed Assignment Beta",
+      level: "Pre-A1 Starters",
+      assignedAt: "2026-02-01",
+      dueAt: "2026-02-07",
+      items: [{ title: "Beta Item", url: "https://seed.example.com/beta" }],
+      updatedAt: "2026-02-01T10:00:00.000Z",
+    },
+  ]
+  dom.window.localStorage.setItem("sis.admin.assignmentTemplates", JSON.stringify(seededAssignmentTemplates))
+  document.getElementById("assignmentReloadTemplatesBtn").click()
+
   await waitFor(() => {
     assert.ok(document.querySelector("#studentRows tr"))
   })
@@ -2573,10 +4142,15 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(document.getElementById("gradeSortField"))
   assert.ok(document.getElementById("reportSortField"))
   assert.ok(document.getElementById("attendanceDataSearch"))
+  assert.ok(document.getElementById("attendanceDataSearchBtn"))
   assert.ok(document.getElementById("assignmentDataSearch"))
+  assert.ok(document.getElementById("assignmentDataSearchBtn"))
   assert.ok(document.getElementById("performanceDataSearch"))
+  assert.ok(document.getElementById("performanceDataSearchBtn"))
   assert.ok(document.getElementById("gradeDataSearch"))
+  assert.ok(document.getElementById("gradeDataSearchBtn"))
   assert.ok(document.getElementById("reportDataSearch"))
+  assert.ok(document.getElementById("reportDataSearchBtn"))
   assert.ok(document.getElementById("attendanceDataLevel"))
   assert.ok(document.getElementById("assignmentDataLevel"))
   assert.ok(document.getElementById("performanceDataLevel"))
@@ -2600,6 +4174,46 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(document.getElementById("assignmentSaveTemplateBtn"))
   assert.ok(document.getElementById("gradeSaveBtn"))
   assert.ok(document.getElementById("reportSaveBtn"))
+
+  openPage(dom, "attendance-admin")
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#attendanceRows tr")
+    assert.equal(rows.length, 2)
+  })
+  const attendanceSearch = document.getElementById("attendanceDataSearch")
+  attendanceSearch.value = "seed-beta"
+  document.getElementById("attendanceDataSearchBtn").click()
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#attendanceRows tr")
+    assert.equal(rows.length, 1)
+    assert.match(rows[0].textContent || "", /seed-beta/i)
+  })
+  attendanceSearch.value = ""
+  document.getElementById("attendanceDataSearchBtn").click()
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#attendanceRows tr")
+    assert.equal(rows.length, 2)
+  })
+
+  openPage(dom, "assignments-data")
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#assignmentTemplateRows tr")
+    assert.equal(rows.length, 2)
+  })
+  const assignmentSearch = document.getElementById("assignmentDataSearch")
+  assignmentSearch.value = "Beta"
+  document.getElementById("assignmentDataSearchBtn").click()
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#assignmentTemplateRows tr")
+    assert.equal(rows.length, 1)
+    assert.match(rows[0].textContent || "", /Seed Assignment Beta/i)
+  })
+  assignmentSearch.value = ""
+  document.getElementById("assignmentDataSearchBtn").click()
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#assignmentTemplateRows tr")
+    assert.equal(rows.length, 2)
+  })
 
   await waitFor(() => {
     assert.ok(document.querySelectorAll("#gradeDataLevel option").length > 1)
@@ -2667,7 +4281,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
 
   const gradeSearch = document.getElementById("gradeDataSearch")
   gradeSearch.value = "Quiz"
-  gradeSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  document.getElementById("gradeDataSearchBtn").click()
   await waitFor(() => {
     const rows = document.querySelectorAll("#gradeRows tr")
     assert.equal(rows.length, 1)
@@ -2691,7 +4305,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
 
   gradeSearch.value = ""
-  gradeSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  document.getElementById("gradeDataSearchBtn").click()
   document.getElementById("gradeArchiveToggleBtn").click()
   await waitFor(() => {
     const rows = document.querySelectorAll("#gradeRows tr")
@@ -2722,6 +4336,35 @@ test("table sort controls and column-click headers reorder grade/performance dat
   await waitFor(() => {
     const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(4)")?.textContent || "").trim()
     assert.equal(firstHw, "60")
+  })
+
+  const performanceSearch = document.getElementById("performanceDataSearch")
+  performanceSearch.value = "2026-02-10"
+  document.getElementById("performanceDataSearchBtn").click()
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#pt_reportRows tr")
+    assert.equal(rows.length, 1)
+    assert.match(rows[0].textContent || "", /2026-02-10/i)
+  })
+
+  openPage(dom, "reports")
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#reportRows tr")
+    assert.equal(rows.length, 2)
+  })
+  const reportSearch = document.getElementById("reportDataSearch")
+  reportSearch.value = "Needs support"
+  document.getElementById("reportDataSearchBtn").click()
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#reportRows tr")
+    assert.equal(rows.length, 1)
+    assert.match(rows[0].textContent || "", /2026-02-02/i)
+  })
+  reportSearch.value = ""
+  document.getElementById("reportDataSearchBtn").click()
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#reportRows tr")
+    assert.equal(rows.length, 2)
   })
 
   dom.window.close()

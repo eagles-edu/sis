@@ -1,6 +1,7 @@
 // server/student-admin-routes.mjs
 
 import crypto from "node:crypto"
+import { spawn } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import * as XLSX from "xlsx"
@@ -82,6 +83,14 @@ const ADMIN_EXPORT_XLSX_PATH = `${ADMIN_API_PREFIX}/exports/xlsx`
 const ADMIN_NOTIFY_EMAIL_PATH = `${ADMIN_API_PREFIX}/notifications/email`
 const ADMIN_NOTIFY_BATCH_STATUS_PATH = `${ADMIN_API_PREFIX}/notifications/batch-status`
 const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-results/incoming`
+const ADMIN_RUNTIME_HEALTH_PATH = `${ADMIN_API_PREFIX}/runtime/health`
+const ADMIN_SERVICE_CONTROL_PATH = `${ADMIN_API_PREFIX}/runtime/service-control`
+const ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH =
+  `${ADMIN_API_PREFIX}/assignment-announcements/volatile`
+const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
+  process.env.STUDENT_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
+  "/assignment-announcements/volatile"
+)
 const ADMIN_USER_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_USERS_PREFIX)}/([^/]+)$`)
 const ADMIN_REPORT_CARD_PATH_RE = new RegExp(
   `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/report-card\\.pdf$`
@@ -105,6 +114,9 @@ const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
 const ADMIN_PAGE_SECTION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PAGE_PATH)}/([a-z0-9-]+)$`)
+const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE = new RegExp(
+  `^${escapeRegex(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)}/([a-f0-9]{24})$`
+)
 
 const SESSION_TTL_SECONDS = Math.max(
   60,
@@ -118,10 +130,22 @@ const SESSION_COOKIE_SECURE = resolveBoolean(
   process.env.STUDENT_ADMIN_SESSION_COOKIE_SECURE,
   normalizeText(process.env.NODE_ENV).toLowerCase() !== "test"
 )
+const SERVICE_CONTROL_ENABLED = resolveBoolean(process.env.STUDENT_ADMIN_SERVICE_CONTROL_ENABLED, true)
+const EXERCISE_MAILER_SERVICE_NAME =
+  normalizeText(process.env.EXERCISE_MAILER_SYSTEMD_SERVICE) || "exercise-mailer.service"
+const SERVICE_CONTROL_STATUS_TIMEOUT_MS = 5000
+const SERVICE_CONTROL_RESTART_TIMEOUT_MS = 12000
+const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES = Math.max(
+  1,
+  Number.parseInt(String(process.env.STUDENT_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES || "480"), 10) || 480
+)
+const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MS = ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES * 60 * 1000
+const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE = new Map()
 let ROLE_PERMISSIONS = null
 const SESSION_STORE = createStudentAdminSessionStore({
   ttlSeconds: SESSION_TTL_SECONDS,
 })
+let runtimeHealthProvider = null
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -130,6 +154,10 @@ function normalizeText(value) {
 
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
+}
+
+function normalizeUpper(value) {
+  return normalizeText(value).toUpperCase()
 }
 
 function normalizePathPrefix(value, fallback) {
@@ -142,6 +170,15 @@ function normalizePathPrefix(value, fallback) {
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function escapeHtml(value) {
+  return normalizeText(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
 }
 
 function isPathWithinPrefix(pathname, prefix) {
@@ -360,7 +397,7 @@ function sendHtml(response, statusCode, html) {
 }
 
 function injectAdminRuntimeConfig(html, pageSlug) {
-  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};</script>`
+  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -387,6 +424,11 @@ export function getStudentAdminRuntimeStatus() {
     notifyEmailPath: ADMIN_NOTIFY_EMAIL_PATH,
     notifyBatchStatusPath: ADMIN_NOTIFY_BATCH_STATUS_PATH,
     incomingExerciseResultsPath: ADMIN_INCOMING_EXERCISE_RESULTS_PATH,
+    runtimeHealthPath: ADMIN_RUNTIME_HEALTH_PATH,
+    serviceControlPath: ADMIN_SERVICE_CONTROL_PATH,
+    assignmentAnnouncementPreviewCreatePath: ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH,
+    assignmentAnnouncementPreviewPath: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
+    assignmentAnnouncementPreviewTtlMinutes: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES,
     notifyBatchQueue: getEmailBatchQueueRuntimeStatus(),
     pageDefaultSlug: ADMIN_PAGE_DEFAULT_SLUG,
     pageSections: [...ADMIN_PAGE_SECTIONS],
@@ -396,6 +438,40 @@ export function getStudentAdminRuntimeStatus() {
     sessionTtlSeconds: SESSION_TTL_SECONDS,
     sessionCookieName: SESSION_COOKIE_NAME,
     filterCache: getStudentAdminFilterCacheStatus(),
+  }
+}
+
+export function setStudentAdminRuntimeHealthProvider(provider) {
+  runtimeHealthProvider = typeof provider === "function" ? provider : null
+}
+
+async function resolveAdminRuntimeHealthPayload() {
+  if (typeof runtimeHealthProvider === "function") {
+    const payload = await Promise.resolve(runtimeHealthProvider())
+    if (payload && typeof payload === "object") return payload
+  }
+
+  return {
+    status: "ok",
+    startedAt: "",
+    uptimeSeconds: 0,
+    lastVerifyOk: null,
+    lastVerifyAt: "",
+    lastStoreOk: null,
+    lastStoreAt: "",
+    lastIntakeStoreOk: null,
+    lastIntakeStoreAt: "",
+    lastSendOk: null,
+    lastSendAt: "",
+    lastError: "",
+    node: process.version,
+    studentAdminRuntime: getStudentAdminRuntimeStatus(),
+    runtimeSelfHeal: {
+      enabled: false,
+      lastResult: "unavailable",
+      syncCount: 0,
+      lastError: "runtime health provider unavailable",
+    },
   }
 }
 
@@ -898,6 +974,381 @@ function parseBody(request) {
   })
 }
 
+function truncateCommandOutput(value, maxLength = 500) {
+  const text = normalizeText(value)
+  if (!text) return ""
+  if (text.length <= maxLength) return text
+  return `${text.slice(0, maxLength)}...`
+}
+
+function firstOutputLine(...parts) {
+  for (let i = 0; i < parts.length; i += 1) {
+    const text = normalizeText(parts[i])
+    if (!text) continue
+    const firstLine = text.split(/\r?\n/, 1)[0]
+    if (firstLine) return firstLine
+  }
+  return ""
+}
+
+function runCommand(command, args = [], timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    let settled = false
+    let timedOut = false
+    let stdout = ""
+    let stderr = ""
+    const child = spawn(command, args, {
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+
+    const finalize = (result) => {
+      if (settled) return
+      settled = true
+      resolve(result)
+    }
+
+    const timer = setTimeout(() => {
+      timedOut = true
+      child.kill("SIGKILL")
+    }, Math.max(1000, timeoutMs))
+
+    child.stdout?.on("data", (chunk) => {
+      stdout += String(chunk || "")
+      if (stdout.length > 4000) stdout = stdout.slice(0, 4000)
+    })
+
+    child.stderr?.on("data", (chunk) => {
+      stderr += String(chunk || "")
+      if (stderr.length > 4000) stderr = stderr.slice(0, 4000)
+    })
+
+    child.on("error", (error) => {
+      clearTimeout(timer)
+      finalize({
+        ok: false,
+        exitCode: null,
+        signal: "",
+        timedOut: false,
+        stdout: truncateCommandOutput(stdout),
+        stderr: truncateCommandOutput(error?.message || stderr),
+        errorCode: normalizeText(error?.code),
+      })
+    })
+
+    child.on("close", (code, signal) => {
+      clearTimeout(timer)
+      finalize({
+        ok: code === 0 && !timedOut,
+        exitCode: Number.isInteger(code) ? code : null,
+        signal: normalizeText(signal),
+        timedOut,
+        stdout: truncateCommandOutput(stdout),
+        stderr: truncateCommandOutput(stderr),
+        errorCode: "",
+      })
+    })
+  })
+}
+
+function normalizeHttpUrl(value) {
+  const text = normalizeText(value)
+  if (!text) return ""
+  try {
+    const parsed = new URL(text)
+    const protocol = normalizeLower(parsed.protocol)
+    if (protocol !== "http:" && protocol !== "https:") return ""
+    return parsed.toString()
+  } catch (error) {
+    void error
+    return ""
+  }
+}
+
+function normalizeAssignmentAnnouncementPreviewItems(value) {
+  const source = Array.isArray(value) ? value : []
+  const normalized = source
+    .map((entry) => {
+      const item = entry && typeof entry === "object" ? entry : {}
+      return {
+        title: normalizeText(item.title || item.exerciseTitle || item.name || item.label),
+        url: normalizeHttpUrl(item.url || item.link || item.href || item.exerciseUrl),
+      }
+    })
+    .filter((entry) => entry.title || entry.url)
+
+  return Array.from(
+    new Map(
+      normalized.map((entry) => {
+        const key = `${normalizeLower(entry.title)}|${normalizeLower(entry.url)}`
+        return [key, entry]
+      })
+    ).values()
+  )
+}
+
+function normalizeAssignmentAnnouncementPreviewPayload(payload = {}) {
+  const source = payload && typeof payload === "object" ? payload : {}
+  return {
+    assignmentTitle: normalizeText(source.assignmentTitle || source.exerciseTitle) || "Assignment update",
+    level: normalizeText(source.level),
+    assignedAt: normalizeText(source.assignedAt || source.dateAssigned),
+    dueAt: normalizeText(source.dueAt || source.dueDate),
+    message: normalizeText(source.message),
+    items: normalizeAssignmentAnnouncementPreviewItems(source.items),
+  }
+}
+
+function cleanupAssignmentAnnouncementPreviews(nowMs = Date.now()) {
+  ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE.forEach((entry, token) => {
+    if (!entry || !Number.isFinite(entry.expiresAtMs) || entry.expiresAtMs <= nowMs) {
+      ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE.delete(token)
+    }
+  })
+}
+
+function createAssignmentAnnouncementPreview(payload = {}) {
+  cleanupAssignmentAnnouncementPreviews()
+  const nowMs = Date.now()
+  const normalized = normalizeAssignmentAnnouncementPreviewPayload(payload)
+  const token = crypto.randomBytes(12).toString("hex")
+  const entry = {
+    token,
+    createdAt: new Date(nowMs).toISOString(),
+    expiresAtMs: nowMs + ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MS,
+    ttlMinutes: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES,
+    ...normalized,
+  }
+  ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE.set(token, entry)
+  return entry
+}
+
+function readAssignmentAnnouncementPreview(token) {
+  cleanupAssignmentAnnouncementPreviews()
+  const key = normalizeLower(token)
+  if (!/^[a-f0-9]{24}$/.test(key)) return null
+  const entry = ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE.get(key)
+  if (!entry) return null
+  if (!Number.isFinite(entry.expiresAtMs) || entry.expiresAtMs <= Date.now()) {
+    ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE.delete(key)
+    return null
+  }
+  return entry
+}
+
+function resolveRequestOrigin(request) {
+  const forwardedProtoRaw = normalizeText(request.headers["x-forwarded-proto"])
+  const forwardedHostRaw = normalizeText(request.headers["x-forwarded-host"])
+  const forwardedProto = normalizeLower(forwardedProtoRaw.split(",")[0])
+  const forwardedHost = normalizeText(forwardedHostRaw.split(",")[0])
+  const secureBySocket = Boolean(request.socket && request.socket.encrypted)
+  const protocol = forwardedProto === "https" || secureBySocket ? "https" : "http"
+  const host = forwardedHost || normalizeText(request.headers.host) || "localhost"
+  return `${protocol}://${host}`
+}
+
+function buildAssignmentAnnouncementPreviewUrl(request, token) {
+  return `${resolveRequestOrigin(request)}${ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH}/${encodeURIComponent(token)}`
+}
+
+function previewDisplayDate(value) {
+  const text = normalizeText(value)
+  if (!text) return "-"
+  const parsed = new Date(text)
+  if (Number.isNaN(parsed.valueOf())) return text
+  return parsed.toISOString().replace("T", " ").replace(".000Z", "Z")
+}
+
+function sendAssignmentAnnouncementPreviewExpired(response) {
+  sendHtml(
+    response,
+    410,
+    "<!doctype html><html><head><meta charset=\"utf-8\"><title>Preview expired</title></head><body><h1>Preview expired</h1><p>This volatile assignment preview is no longer available.</p></body></html>"
+  )
+}
+
+function sendAssignmentAnnouncementPreview(response, entry) {
+  const items = Array.isArray(entry.items) ? entry.items : []
+  const itemsHtml = items.length
+    ? items
+        .map((item) => {
+          const title = escapeHtml(item.title || "Exercise")
+          const href = normalizeHttpUrl(item.url)
+          if (href) {
+            return `<li><strong>${title}</strong><br><a class=\"live-link\" href=\"${escapeHtml(href)}\" target=\"_blank\" rel=\"noopener noreferrer\">${escapeHtml(href)}</a></li>`
+          }
+          return `<li><strong>${title}</strong></li>`
+        })
+        .join("")
+    : "<li>No exercise links available.</li>"
+  const messageHtml = escapeHtml(entry.message)
+  const expiresAtIso = new Date(Number(entry.expiresAtMs) || Date.now()).toISOString()
+
+  const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignment announcement preview</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2a3a; line-height: 1.45; }
+    .card { border: 1px solid #cad4e3; border-radius: 10px; padding: 16px; max-width: 900px; }
+    h1 { margin: 0 0 8px; }
+    .meta { color: #5f6d87; font-size: 13px; margin-bottom: 12px; }
+    #ttlNotice { font-weight: 700; color: #124685; margin: 8px 0 12px; }
+    #ttlNotice.expired { color: #b3262d; }
+    ol { padding-left: 18px; }
+    .message { white-space: pre-wrap; border-top: 1px dashed #cad4e3; margin-top: 14px; padding-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>${escapeHtml(entry.assignmentTitle)}</h1>
+    <div class="meta">Level: ${escapeHtml(entry.level || "-")} | Assigned: ${escapeHtml(previewDisplayDate(entry.assignedAt))} | Due: ${escapeHtml(previewDisplayDate(entry.dueAt))}</div>
+    <div class="meta">Created: ${escapeHtml(previewDisplayDate(entry.createdAt))} | Expires: ${escapeHtml(previewDisplayDate(expiresAtIso))}</div>
+    <div id="ttlNotice">Expires in ${escapeHtml(String(entry.ttlMinutes || ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES))} minute(s).</div>
+    <h2>Assignment items</h2>
+    <ol>${itemsHtml}</ol>
+    ${messageHtml ? `<h2>Announcement</h2><div class="message">${messageHtml}</div>` : ""}
+  </div>
+  <script>
+    (() => {
+      const expiresAtMs = ${Number(entry.expiresAtMs) || 0}
+      const ttlNotice = document.getElementById("ttlNotice")
+      const links = Array.from(document.querySelectorAll(".live-link"))
+      const update = () => {
+        if (!ttlNotice) return
+        const remainingMs = expiresAtMs - Date.now()
+        if (remainingMs <= 0) {
+          ttlNotice.textContent = "This volatile preview has expired."
+          ttlNotice.className = "expired"
+          links.forEach((link) => {
+            link.removeAttribute("href")
+            link.textContent = "expired"
+          })
+          return
+        }
+        const mins = Math.max(1, Math.ceil(remainingMs / 60000))
+        ttlNotice.textContent = "Expires in " + mins + " minute(s)."
+      }
+      update()
+      window.setInterval(update, 30000)
+    })()
+  </script>
+</body>
+</html>`
+
+  sendHtml(response, 200, html)
+}
+
+async function getExerciseMailerServiceControlStatus() {
+  if (!SERVICE_CONTROL_ENABLED) {
+    return {
+      ok: false,
+      enabled: false,
+      available: false,
+      service: EXERCISE_MAILER_SERVICE_NAME,
+      status: "disabled",
+      detail: "Service control disabled by env.",
+      checkedAt: new Date().toISOString(),
+    }
+  }
+
+  const statusResult = await runCommand(
+    "systemctl",
+    ["is-active", EXERCISE_MAILER_SERVICE_NAME],
+    SERVICE_CONTROL_STATUS_TIMEOUT_MS
+  )
+  const checkedAt = new Date().toISOString()
+  let serviceStatus = normalizeLower(firstOutputLine(statusResult.stdout, statusResult.stderr))
+  let detail = firstOutputLine(statusResult.stdout, statusResult.stderr)
+
+  if (statusResult.errorCode === "ENOENT") {
+    serviceStatus = "unsupported"
+    detail = "systemctl is unavailable on this runtime."
+  } else if (statusResult.timedOut) {
+    serviceStatus = "unknown"
+    detail = "systemctl status check timed out."
+  } else if (!serviceStatus) {
+    serviceStatus = statusResult.ok ? "active" : "unknown"
+  }
+
+  if (!detail) {
+    detail = statusResult.ok
+      ? `service=${EXERCISE_MAILER_SERVICE_NAME} is active`
+      : `service=${EXERCISE_MAILER_SERVICE_NAME} status unavailable`
+  }
+
+  const normalizedStatus =
+    serviceStatus === "active" ||
+    serviceStatus === "inactive" ||
+    serviceStatus === "failed" ||
+    serviceStatus === "activating" ||
+    serviceStatus === "deactivating" ||
+    serviceStatus === "unknown" ||
+    serviceStatus === "unsupported"
+      ? serviceStatus
+      : "unknown"
+
+  return {
+    ok: statusResult.ok,
+    enabled: true,
+    available: normalizedStatus !== "unsupported",
+    service: EXERCISE_MAILER_SERVICE_NAME,
+    status: normalizedStatus,
+    detail,
+    checkedAt,
+    command: {
+      exitCode: statusResult.exitCode,
+      timedOut: statusResult.timedOut,
+      stdout: statusResult.stdout,
+      stderr: statusResult.stderr,
+      errorCode: statusResult.errorCode,
+    },
+  }
+}
+
+async function restartExerciseMailerServiceControl() {
+  if (!SERVICE_CONTROL_ENABLED) {
+    const status = await getExerciseMailerServiceControlStatus()
+    return {
+      ok: false,
+      action: "restart",
+      ...status,
+      detail: "Service control disabled by env.",
+    }
+  }
+
+  const restartResult = await runCommand(
+    "sudo",
+    ["-n", "systemctl", "restart", EXERCISE_MAILER_SERVICE_NAME],
+    SERVICE_CONTROL_RESTART_TIMEOUT_MS
+  )
+
+  const status = await getExerciseMailerServiceControlStatus()
+  const restartLine = firstOutputLine(restartResult.stderr, restartResult.stdout)
+  const restartOk = restartResult.ok && status.status === "active"
+
+  const detail = restartOk
+    ? `Restarted ${EXERCISE_MAILER_SERVICE_NAME}; status=${status.status}.`
+    : restartLine ||
+      status.detail ||
+      `Failed to restart ${EXERCISE_MAILER_SERVICE_NAME}.`
+
+  return {
+    ok: restartOk,
+    action: "restart",
+    ...status,
+    detail,
+    restart: {
+      exitCode: restartResult.exitCode,
+      timedOut: restartResult.timedOut,
+      stdout: restartResult.stdout,
+      stderr: restartResult.stderr,
+      errorCode: restartResult.errorCode,
+    },
+  }
+}
+
 function withError(response, request, error) {
   const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500
   const message = normalizeText(error?.message) || "Request failed"
@@ -1235,10 +1686,6 @@ function isQueueTableMissingError(error) {
   if (code === "P2021") return true
   const message = normalizeLower(error?.message || error)
   return message.includes("adminnotificationqueue")
-}
-
-function normalizeUpper(value) {
-  return normalizeText(value).toUpperCase()
 }
 
 function markQueueDatabaseFallback(error) {
@@ -1710,6 +2157,52 @@ async function handleApiRequest(request, response, pathname, url) {
       await handlePermissionsPut(request, response, rolePolicy)
       return true
     }
+  }
+
+  if (method === "GET" && pathname === ADMIN_RUNTIME_HEALTH_PATH) {
+    const payload = await resolveAdminRuntimeHealthPayload()
+    sendJson(response, 200, payload)
+    return true
+  }
+
+  if (pathname === ADMIN_SERVICE_CONTROL_PATH) {
+    assertCanManageUsers(rolePolicy)
+
+    if (method === "GET") {
+      const status = await getExerciseMailerServiceControlStatus()
+      sendJson(response, 200, status)
+      return true
+    }
+
+    if (method === "POST") {
+      const payload = await parseBody(request)
+      const action = normalizeLower(payload?.action || "restart")
+      if (action !== "restart" && action !== "restart-exercise-mailer") {
+        const error = new Error("Unsupported service-control action")
+        error.statusCode = 400
+        throw error
+      }
+      const result = await restartExerciseMailerServiceControl()
+      sendJson(response, 200, result)
+      return true
+    }
+  }
+
+  if (method === "POST" && pathname === ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH) {
+    const payload = await parseBody(request)
+    const preview = createAssignmentAnnouncementPreview(payload)
+    sendJson(response, 200, {
+      ok: true,
+      token: preview.token,
+      url: buildAssignmentAnnouncementPreviewUrl(request, preview.token),
+      path: `${ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH}/${preview.token}`,
+      expiresAt: new Date(preview.expiresAtMs).toISOString(),
+      ttlMinutes: preview.ttlMinutes,
+      assignmentTitle: preview.assignmentTitle,
+      level: preview.level,
+      dueAt: preview.dueAt,
+    })
+    return true
   }
 
   if (method === "GET" && pathname === ADMIN_DASHBOARD_PATH) {
@@ -2244,6 +2737,17 @@ export async function handleStudentAdminRequest(request, response) {
   const host = normalizeText(request.headers.host) || "localhost"
   const url = new URL(request.url || "/", `http://${host}`)
   const pathname = url.pathname
+
+  const previewMatch = pathname.match(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE)
+  if (method === "GET" && previewMatch) {
+    const preview = readAssignmentAnnouncementPreview(previewMatch[1])
+    if (!preview) {
+      sendAssignmentAnnouncementPreviewExpired(response)
+      return true
+    }
+    sendAssignmentAnnouncementPreview(response, preview)
+    return true
+  }
 
   const pageSlug = resolveAdminPageSlug(pathname)
   if (method === "GET" && pageSlug) {
