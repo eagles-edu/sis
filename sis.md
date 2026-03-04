@@ -9,6 +9,19 @@
 
 ## Update (2026-03-05)
 
+- Dependency security remediation (audit-focused):
+  - removed unused vulnerable dev tooling from [package.json](package.json): `critical`, `lighthouse`.
+  - upgraded direct runtime/security-sensitive deps:
+    - `nodemailer` -> `^7.0.13`
+    - `prisma`, `@prisma/client`, `@prisma/adapter-pg` -> `^7.4.2`
+  - added targeted dependency overrides in [package.json](package.json):
+    - `hono: 4.12.5`
+    - `lodash: 4.17.23`
+  - baseline `npm audit --json` before edits: `18` vulnerabilities (`1` critical, `6` high, `11` moderate).
+  - current `npm audit --json` after remediation: `1` vulnerability (`1` high, `0` critical, `0` moderate), limited to direct dependency `xlsx@0.18.5` (no fix published on npm).
+  - validation after dependency changes:
+    - `npm run db:generate` succeeded (`Prisma Client v7.4.2` generated).
+    - `npm test` => `129` pass, `0` fail.
 - Added final DB hardening for student identity:
   - [prisma/schema.prisma](prisma/schema.prisma) now defines `Student.eaglesId` as non-null (`String @unique`).
   - added migration [prisma/migrations/20260305024500_eaglesid_not_null/migration.sql](prisma/migrations/20260305024500_eaglesid_not_null/migration.sql) to:
@@ -39,17 +52,17 @@
   - [server/student-admin-store.mjs](server/student-admin-store.mjs) `saveStudent` now rejects duplicate `eaglesId` on create (`409`) instead of updating an existing record.
   - import flow now pre-validates duplicate `eaglesId` and duplicate `studentNumber` within the upload batch and marks those rows as failures before save attempts.
 - Removed remaining public/admin `studentId` fallback handling from student-admin save/import flows:
-  - [server/student-admin-store.mjs](server/student-admin-store.mjs) now requires `payload.eaglesId` in `saveStudent`, import row mapping resolves only `eaglesId`/`eagles-id`, and identity auto-fill now natively writes `eaglesId`.
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs) now requires `payload.eaglesId` in `saveStudent`, import row mapping resolves only canonical camelCase `eaglesId`, and identity auto-fill now natively writes `eaglesId`.
   - [server/student-admin-routes.mjs](server/student-admin-routes.mjs) incoming queue `create-account` action now resolves requested id from `payload.eaglesId` (plus submitted fallback), not `payload.studentId`.
 - Updated profile form top-level identifier mapping in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
-  - canonical field key `eagles-id` now maps to `topLevelKey: eaglesId` and control id `f_eaglesId`.
+  - canonical field key `eaglesId` maps to `topLevelKey: eaglesId` and control id `f_eaglesId`.
   - profile payload collection now emits `{ eaglesId, studentNumber, email, profile }`.
   - profile save validation now enforces `eaglesId is required`.
   - incoming queue create-account prompt/action now uses `eaglesId`.
 - Tightened workbook tooling:
-  - [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs) removed legacy `studentId` import alias for `eagles-id`.
+  - [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs) removed legacy `studentId` import alias and now emits canonical camelCase `eaglesId`.
   - regenerated template + import files and verified strict header parity against `docs/students/formfields (2026).xlsx`.
-  - latest validation: `current_matches_amalgamated.import-ready.xlsx` header order matches schema (`63/63`) with `0` missing `eagles-id` and `0` missing `student-number`.
+  - latest validation: `current_matches_amalgamated.import-ready.xlsx` header order matches schema (`63/63`) with `0` missing `eaglesId` and `0` missing `studentNumber`.
 - Updated regression tests:
   - [test/student-admin-import-autofill.spec.mjs](test/student-admin-import-autofill.spec.mjs) now validates `eaglesId` autofill behavior.
   - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs) now enforces allowed top-level key `eaglesId`.
@@ -57,6 +70,10 @@
   - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) updated for `f_eaglesId` and `payload.eaglesId`.
 - Current test status:
   - `npm test` => `129` pass, `0` fail.
+- Final camelCase hardening (2026-03-05):
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) now canonicalizes profile field keys with `toProfileFieldIdSuffix(...)` in both field-definition normalization and settings custom-field creation, eliminating kebab-case key generation.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) now asserts custom key creation/storage uses camelCase (`customHealthNote`, `customAlias`) and explicitly rejects kebab-case key slots.
+  - `npm test` revalidated after these assertions: `129` pass, `0` fail.
 
 ## Update (2026-03-04)
 

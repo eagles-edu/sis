@@ -3797,12 +3797,12 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
 
   openPage(dom, "settings")
   await waitFor(() => {
-    const row = dom.window.document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="email-form-sig"]')
+    const row = dom.window.document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="emailFormSig"]')
     assert.ok(row)
   })
 
   const document = dom.window.document
-  const signatureRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="email-form-sig"]')
+  const signatureRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="emailFormSig"]')
   assert.ok(signatureRow)
   signatureRow.querySelector('[data-layout-key="tabId"]').value = "profile"
   signatureRow.querySelector('[data-layout-key="inputType"]').value = "textarea"
@@ -3823,7 +3823,7 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
     assert.ok(fieldIds.indexOf("f_signatureEmail") >= 0)
   })
 
-  document.getElementById("profileFieldCreateKey").value = "custom-health-note"
+  document.getElementById("profileFieldCreateKey").value = "customHealthNote"
   document.getElementById("profileFieldCreateLabelVi").value = "Ghi chú custom"
   document.getElementById("profileFieldCreateType").value = "text"
   document.getElementById("profileFieldCreateTab").value = "covid"
@@ -3834,8 +3834,12 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
   document.getElementById("profileFieldCreateBtn").click()
 
   await waitFor(() => {
-    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-health-note"]')
+    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="customHealthNote"]')
     assert.ok(customRow)
+    assert.equal(
+      document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-health-note"]'),
+      null
+    )
     assert.match(document.getElementById("profileFieldLayoutStatus").textContent || "", /Created field/i)
   })
 
@@ -3852,7 +3856,7 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
 
   openPage(dom, "settings")
   await waitFor(() => {
-    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-health-note"]')
+    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="customHealthNote"]')
     assert.ok(customRow)
     const deleteBtn = customRow.querySelector('[data-profile-layout-action="delete"]')
     assert.ok(deleteBtn)
@@ -3861,7 +3865,7 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
 
   await waitFor(() => {
     assert.equal(
-      document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-health-note"]'),
+      document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="customHealthNote"]'),
       null
     )
   })
@@ -4018,7 +4022,7 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
     assert.ok(document.getElementById("profileFieldCreateBtn"))
   })
 
-  document.getElementById("profileFieldCreateKey").value = "custom-alias"
+  document.getElementById("profileFieldCreateKey").value = "customAlias"
   document.getElementById("profileFieldCreateLabelVi").value = "Bi danh"
   document.getElementById("profileFieldCreateType").value = "text"
   document.getElementById("profileFieldCreateTab").value = "profile"
@@ -4027,8 +4031,12 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
   document.getElementById("profileFieldCreateBtn").click()
 
   await waitFor(() => {
-    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-alias"]')
+    const customRow = document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="customAlias"]')
     assert.ok(customRow)
+    assert.equal(
+      document.querySelector('#profileFieldLayoutRows tr[data-profile-field-key="custom-alias"]'),
+      null
+    )
   })
 
   openPage(dom, "profile")
@@ -4056,8 +4064,10 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
   assert.equal(payload.profile.studentEmail, "updated-student@example.com")
   assert.equal(payload.profile.sourceFormId, "admin-manual")
   assert.equal(payload.profile.sourceUrl, "admin/students")
-  assert.equal(payload.profile.normalizedFormPayload["custom-alias"], "Alias Value")
-  assert.equal(payload.profile.rawFormPayload["custom-alias"], "Alias Value")
+  assert.equal(payload.profile.normalizedFormPayload.customAlias, "Alias Value")
+  assert.equal(payload.profile.rawFormPayload.customAlias, "Alias Value")
+  assert.equal(Object.prototype.hasOwnProperty.call(payload.profile.normalizedFormPayload, "custom-alias"), false)
+  assert.equal(Object.prototype.hasOwnProperty.call(payload.profile.rawFormPayload, "custom-alias"), false)
   assert.equal(payload.profile.normalizedFormPayload.legacyField, "keep-me")
   assert.equal(payload.profile.rawFormPayload.legacyField, "keep-me")
 

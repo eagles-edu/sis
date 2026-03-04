@@ -2738,7 +2738,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <h4>Student Profile Field Layout</h4>
                   <p class="small">Manage field type, tab location, sequence (left-to-right then wrap downward), and visibility.</p>
                   <div class="row">
-                    <div class="col-3"><label>New field key</label><input id="profileFieldCreateKey" type="text" placeholder="custom-field-key"></div>
+                    <div class="col-3"><label>New field key</label><input id="profileFieldCreateKey" type="text" placeholder="customFieldKey"></div>
                     <div class="col-3"><label>Label (VN)</label><input id="profileFieldCreateLabelVi" type="text" placeholder="Tên trường"></div>
                     <div class="col-2">
                       <label>Type</label>
@@ -3031,71 +3031,71 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       "covidShotHistory",
       "feverMedicineAllowed",
     ])
-    const PROFILE_LOCKED_FIELD_KEYS = new Set(["eagles-id"])
+    const PROFILE_LOCKED_FIELD_KEYS = new Set(["eaglesId"])
     const PROFILE_FORM_FIELD_ROWS = [
-      ["student-photo","photoUrl","Tải ảnh học sinh lên","Upload student photo","profile","Thông tin của người học","file","Tải ảnh học sinh lên","","photoUrl","",12],
-      ["full-name-student","fullName","Họ tên của người học","Full name of the learner","profile","Thông tin của người học","text","Họ tên","","fullName","",8],
-      ["english-name","englishName","Tên tiếng Anh","English name","profile","Thông tin của người học","text","Tên tiếng anh nếu bạn có","","englishName","",4],
+      ["studentPhoto","photoUrl","Tải ảnh học sinh lên","Upload student photo","profile","Thông tin của người học","file","Tải ảnh học sinh lên","","photoUrl","",12],
+      ["fullNameStudent","fullName","Họ tên của người học","Full name of the learner","profile","Thông tin của người học","text","Họ tên","","fullName","",8],
+      ["englishName","englishName","Tên tiếng Anh","English name","profile","Thông tin của người học","text","Tên tiếng anh nếu bạn có","","englishName","",4],
       ["gender","genderSelections","Giới tính","Sex","profile","Thông tin của người học","checkbox","","nam | nữ","genderSelections","",6],
-      ["member-since","memberSince","Member since","Member since","profile","Thông tin của người học","text","","","memberSince","",3],
-      ["student-number","studentNumber","Student number","Student number","profile","Thông tin của người học","number","","","","studentNumber",3],
-      ["eagles-id","eaglesId","Eagles ID","Eagles ID","profile","Thông tin của người học","text","","","","eaglesId",3],
+      ["memberSince","memberSince","Member since","Member since","profile","Thông tin của người học","text","","","memberSince","",3],
+      ["studentNumber","studentNumber","Student number","Student number","profile","Thông tin của người học","number","","","","studentNumber",3],
+      ["eaglesId","eaglesId","Eagles ID","Eagles ID","profile","Thông tin của người học","text","","","","eaglesId",3],
       ["password","password","Password","Password","profile","Thông tin của người học","text","","","","",3],
-      ["parents-id","parentsId","ChaMe ID","Parents id","profile","Thông tin của người học","text","ChaMe ID","","parentsId","",4],
-      ["student-phone","studentPhone","Số điện thoại của học sinh","Student phone number","profile","Thông tin của người học","text","","","studentPhone","",4],
-      ["student-email","studentEmail","Email của học sinh","Student email","profile","Thông tin của người học","text","ten@vidu.com","","studentEmail","",4],
-      ["class-level","currentGrade","Cấp lớp","Class level","profile","Thông tin của người học","level-select","Chọn cấp lớp","","currentGrade","",4],
-      ["exercise-points","exercisePoints","Eagle Points","Eagle Points","profile","Thông tin của người học","number","","","exercisePoints","",3],
+      ["parentsId","parentsId","ChaMe ID","Parents id","profile","Thông tin của người học","text","ChaMe ID","","parentsId","",4],
+      ["studentPhone","studentPhone","Số điện thoại của học sinh","Student phone number","profile","Thông tin của người học","text","","","studentPhone","",4],
+      ["studentEmail","studentEmail","Email của học sinh","Student email","profile","Thông tin của người học","text","ten@vidu.com","","studentEmail","",4],
+      ["classLevel","currentGrade","Cấp lớp","Class level","profile","Thông tin của người học","level-select","Chọn cấp lớp","","currentGrade","",4],
+      ["exercisePoints","exercisePoints","Eagle Points","Eagle Points","profile","Thông tin của người học","number","","","exercisePoints","",3],
       ["hobbies","hobbies","Sở thích, thú vui và nhạc cụ","Hobbies, interests and musical instruments","profile","Thông tin của người học","textarea","","","hobbies","",12],
       ["dob","dobText","Ngày sinh","Date of birth","profile","Thông tin của người học","text","ví dụ: 2011-03-17","","dobText","",4],
-      ["birth-order","birthOrder","Thứ tự sinh","Birth order","profile","Thông tin của người học","number","","","birthOrder","",4],
-      ["number-of-siblings-male","siblingBrothers","Người học có bao nhiêu anh em?","How many brothers does the learner have?","profile","Thông tin của người học","number","Số anh em","","siblingBrothers","",4],
-      ["number-of-siblings-female","siblingSisters","Người học có bao nhiêu chị em?","How many sisters does the learner have?","profile","Thông tin của người học","number","Số chị em","","siblingSisters","",4],
+      ["birthOrder","birthOrder","Thứ tự sinh","Birth order","profile","Thông tin của người học","number","","","birthOrder","",4],
+      ["numberOfSiblingsMale","siblingBrothers","Người học có bao nhiêu anh em?","How many brothers does the learner have?","profile","Thông tin của người học","number","Số anh em","","siblingBrothers","",4],
+      ["numberOfSiblingsFemale","siblingSisters","Người học có bao nhiêu chị em?","How many sisters does the learner have?","profile","Thông tin của người học","number","Số chị em","","siblingSisters","",4],
       ["ethnicity","ethnicity","Dân tộc","Nation","profile","Thông tin của người học","select","","Người Việt Nam | Viet Hoa (Chinese-Vietnamese) | Người dân tộc (Hmông, Tày, Khmer, v.v.) | Người Thái | Người Campuchia | Người Lào | Người Hàn Quốc | Người Nhật | Người Trung Quốc","ethnicity","",4],
-      ["languages-home","languagesAtHome","Các ngôn ngữ được nói ở nhà","Languages spoken at home","profile","Thông tin của người học","select","Chọn ngôn ngữ tại nhà","Tiếng Việt | Tiếng Anh | Tiếng Phổ thông Trung Quốc | Tiếng Quảng Đông | Tiếng dân tộc (H'mông, Tày, Khmer, v.v.) | Tiếng Thái | Tiếng Campuchia | Tiếng Lào | Tiếng Hàn Quốc | Tiếng Nhật | Tiếng Khác...","languagesAtHome","",12],
-      ["describe-other-language","otherLanguage","Vui lòng cho biết ngôn ngữ khác","Please indicate other languages","profile","Thông tin của người học","text","ngôn ngữ khác","","otherLanguage","",4],
-      ["student-school","schoolName","Đang học ở trường","Studying at school","profile","Thông tin của người học","text","","","schoolName","",4],
-      ["student-current-grade","currentSchoolGrade","Hiện tại đang học lớp","Currently taking class","profile","Thông tin của người học","text","Số lớp của học sinh","","currentSchoolGrade","",4],
-      ["full-name_mother","motherName","Họ tên của mẹ hoặc học sinh trưởng thành","Full name of mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","Họ tên của mẹ hoặc học sinh trưởng thành","","motherName","",4],
-      ["email-ma","motherEmail","Email của mẹ hoặc học sinh trưởng thành","Email from mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","ten@vidu.com","","motherEmail","",4],
-      ["ma-is-homework-proctor","maIsHomeworkProctor","Người mẹ hoặc học sinh trưởng thành sẽ có trách nhiệm đảm bảo rằng bài tập về nhà được hoàn thành đúng hạn và chính xác và các bài học được ôn tập 2-3 lần mỗi tuần.","It will be the responsibility of the mother or adult student to ensure that homework is completed on time and accurately and that lessons are reviewed 2-3 times per week.","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","checkbox","","có | không","","",6],
-      ["mothers-phone","motherPhone","Số điện thoại của mẹ hoặc học sinh trưởng thành","Phone number of parent or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","","","motherPhone","",4],
-      ["emergency-contact-mother","motherEmergencyContact","Khi khẩn cấp, sẽ gọi mẹ trước *","In an emergency, I will call my mother first *","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","checkbox","","Có | Không","motherEmergencyContact","",6],
-      ["zalo-im-id-mother","motherMessenger","Số Zalo hoặc cách khác để nhắn tin nhanh cho mẹ hoặc học sinh trưởng thành","Zalo number or another way to quickly text your mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","Số Zalo hoặc cách khác để nhắn tin nhanh","","motherMessenger","",4],
-      ["full-name_father","fatherName","Họ tên của ba","Dad's full name","profile","Liên hệ của ba","text","","","fatherName","",4],
-      ["email-ba","fatherEmail","Email của ba","Dad's email","profile","Liên hệ của ba","text","ten@vidu.com","","fatherEmail","",4],
-      ["ba-is-homework-proctor","baIsHomeworkProctor","Ba sẽ có trách nhiệm đảm bảo hoàn thành bài tập về nhà và việc học ở n","Dad will be responsible for ensuring homework and schoolwork is completed","profile","Liên hệ của ba","radio","","có | không","","",6],
-      ["fathers-phone","fatherPhone","Số điện thoại của ba","Dad's phone number","profile","Liên hệ của ba","text","","","fatherPhone","",4],
-      ["emergency-contact-father","fatherEmergencyContact","Khi khẩn cấp, sẽ gọi ba trước","In an emergency, I will call you first","profile","Liên hệ của ba","radio","","có | không","fatherEmergencyContact","",6],
-      ["zalo-im-id-ba","fatherMessenger","Số Zalo hoặc cách khác để nhắn tin nhanh cho ba","Zalo number or another way to quickly text dad","profile","Liên hệ của ba","text","Số Zalo hoặc cách khác để nhắn tin nhanh","","fatherMessenger","",4],
-      ["street-address","streetAddress","Số nhà và tên đường","House number and street name","profile","Địa chỉ","text","","","streetAddress","",4],
-      ["new-address","newAddress","Địa chỉ mới","New style address replacement of 2026","profile","Địa chỉ","text","","","newAddress","",4],
-      ["ward-district","wardDistrict","Phường và Quận","Ward and District","profile","Địa chỉ","text","","","wardDistrict","",4],
+      ["languagesHome","languagesAtHome","Các ngôn ngữ được nói ở nhà","Languages spoken at home","profile","Thông tin của người học","select","Chọn ngôn ngữ tại nhà","Tiếng Việt | Tiếng Anh | Tiếng Phổ thông Trung Quốc | Tiếng Quảng Đông | Tiếng dân tộc (H'mông, Tày, Khmer, v.v.) | Tiếng Thái | Tiếng Campuchia | Tiếng Lào | Tiếng Hàn Quốc | Tiếng Nhật | Tiếng Khác...","languagesAtHome","",12],
+      ["describeOtherLanguage","otherLanguage","Vui lòng cho biết ngôn ngữ khác","Please indicate other languages","profile","Thông tin của người học","text","ngôn ngữ khác","","otherLanguage","",4],
+      ["studentSchool","schoolName","Đang học ở trường","Studying at school","profile","Thông tin của người học","text","","","schoolName","",4],
+      ["studentCurrentGrade","currentSchoolGrade","Hiện tại đang học lớp","Currently taking class","profile","Thông tin của người học","text","Số lớp của học sinh","","currentSchoolGrade","",4],
+      ["fullNameMother","motherName","Họ tên của mẹ hoặc học sinh trưởng thành","Full name of mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","Họ tên của mẹ hoặc học sinh trưởng thành","","motherName","",4],
+      ["emailMa","motherEmail","Email của mẹ hoặc học sinh trưởng thành","Email from mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","ten@vidu.com","","motherEmail","",4],
+      ["maIsHomeworkProctor","maIsHomeworkProctor","Người mẹ hoặc học sinh trưởng thành sẽ có trách nhiệm đảm bảo rằng bài tập về nhà được hoàn thành đúng hạn và chính xác và các bài học được ôn tập 2-3 lần mỗi tuần.","It will be the responsibility of the mother or adult student to ensure that homework is completed on time and accurately and that lessons are reviewed 2-3 times per week.","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","checkbox","","có | không","","",6],
+      ["mothersPhone","motherPhone","Số điện thoại của mẹ hoặc học sinh trưởng thành","Phone number of parent or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","","","motherPhone","",4],
+      ["emergencyContactMother","motherEmergencyContact","Khi khẩn cấp, sẽ gọi mẹ trước *","In an emergency, I will call my mother first *","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","checkbox","","Có | Không","motherEmergencyContact","",6],
+      ["zaloImIdMother","motherMessenger","Số Zalo hoặc cách khác để nhắn tin nhanh cho mẹ hoặc học sinh trưởng thành","Zalo number or another way to quickly text your mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","Số Zalo hoặc cách khác để nhắn tin nhanh","","motherMessenger","",4],
+      ["fullNameFather","fatherName","Họ tên của ba","Dad's full name","profile","Liên hệ của ba","text","","","fatherName","",4],
+      ["emailBa","fatherEmail","Email của ba","Dad's email","profile","Liên hệ của ba","text","ten@vidu.com","","fatherEmail","",4],
+      ["baIsHomeworkProctor","baIsHomeworkProctor","Ba sẽ có trách nhiệm đảm bảo hoàn thành bài tập về nhà và việc học ở n","Dad will be responsible for ensuring homework and schoolwork is completed","profile","Liên hệ của ba","radio","","có | không","","",6],
+      ["fathersPhone","fatherPhone","Số điện thoại của ba","Dad's phone number","profile","Liên hệ của ba","text","","","fatherPhone","",4],
+      ["emergencyContactFather","fatherEmergencyContact","Khi khẩn cấp, sẽ gọi ba trước","In an emergency, I will call you first","profile","Liên hệ của ba","radio","","có | không","fatherEmergencyContact","",6],
+      ["zaloImIdBa","fatherMessenger","Số Zalo hoặc cách khác để nhắn tin nhanh cho ba","Zalo number or another way to quickly text dad","profile","Liên hệ của ba","text","Số Zalo hoặc cách khác để nhắn tin nhanh","","fatherMessenger","",4],
+      ["streetAddress","streetAddress","Số nhà và tên đường","House number and street name","profile","Địa chỉ","text","","","streetAddress","",4],
+      ["newAddress","newAddress","Địa chỉ mới","New style address replacement of 2026","profile","Địa chỉ","text","","","newAddress","",4],
+      ["wardDistrict","wardDistrict","Phường và Quận","Ward and District","profile","Địa chỉ","text","","","wardDistrict","",4],
       ["city","city","Thành phố","City","profile","Địa chỉ","text","","","city","",4],
-      ["post-code","postCode","Mã bưu điện","Post code","profile","Địa chỉ","text","Mã bưu điện","","postCode","",4],
-      ["wear-glasses","hasGlasses","Người học có dùng kính cận không?","Does the learner use glasses?","medical","Thị giác","radio","","có | không","hasGlasses","",6],
-      ["last-eye-exam","hadEyeExam","Người học đã bao giờ đi khám mắt chưa?","Has the learner ever had an eye examination?","medical","Thị giác","radio","","có | không","hadEyeExam","",6],
-      ["date-last-eye-exam","lastEyeExamDateText","Ngày khám mắt gần đây nhất","Date of most recent eye exam","medical","Thuốc uống","text","ví dụ: 2011-03-17","","lastEyeExamDateText","",4],
-      ["prescription-medicine","prescriptionMedicine","Người học có uống thuốc theo đơn không?","Does the learner take medication as prescribed?","medical","Thuốc uống","radio","","có | không","prescriptionMedicine","",6],
-      ["explain-list-rx-meds","prescriptionDetails","Vui lòng nêu tên thuốc theo toa và lý do dùng","Please state the name of the prescription medication and reason for taking it","medical","Những khó khăn khi học","textarea","Thông tin này được bảo mật","","prescriptionDetails","",12],
-      ["learning-disorders","learningDisorders","Học sinh có bất kỳ rối loạn hoặc triệu chứng nào sau đây không?","Does the student have any of the following disorders or symptoms?","medical","Những khó khăn khi học","checkbox","","Rối loạn lời nói | Nhược thị (hội chứng mắt lười) | Rối loạn tăng động giảm chú ý | Hội chứng Asperger / phổ tự kỷ | Rối loạn học tập (vui lòng giải thích bên dưới) | Chứng khó đọc | Rối loạn hành vi (vui lòng giải thích bên dưới) | Không có | Khác (vui lòng giải thích bên dưới)","learningDisorders","",12],
-      ["explain-ld-bd","learningDisorderDetails","Giải thích tất cả rối loạn học tập, rối loạn hành vi, hoặc những thách thức khác đối với việc học","Explains any learning disorders, behavioral disorders, or other challenges to learning","medical","Dị ứng","textarea","Thông tin này được bảo mật","","learningDisorderDetails","",12],
-      ["drug-allergies-list","drugAllergies","Liệt kê tất cả các trường hợp dị ứng với các loại thuốc:","List all allergies to drugs:","medical","Dị ứng","textarea","vui lòng nhập \"không,\" nếu không có dị ứng","","drugAllergies","",12],
-      ["food-environmental-allergies-list","foodEnvironmentalAllergies","Liệt kê các dị ứng do thực phẩm và môi trường","List food and environmental allergies","medical","Tiêm chủng","textarea","vui lòng nhập \"không,\" nếu không có","","foodEnvironmentalAllergies","",12],
-      ["childhood-vaccines-utd","vaccinesChildhoodUpToDate","Tất cả các loại vắc xin bắt buộc dành cho trẻ nhỏ có phải là loại mới nhất không?","Are all required childhood vaccines up to date?","medical","Tiêm chủng","radio","","Có | Không","vaccinesChildhoodUpToDate","",6],
-      ["childhood-vaccine-record","childhoodVaccineRecord","Tải lên bản sao hồ sơ vắc xin khi còn nhỏ","Upload a copy of your childhood vaccine records","medical","Tiêm chủng","file","","","","",12],
-      ["covid-19-positive-or-had-it","hadCovidPositive","Người học đã từng có COVID-19 chưa hoặc kết quả dương tính với COVID-19?","Has the learner ever had COVID-19 or tested positive for COVID-19?","covid","COVID","radio","","có | không","hadCovidPositive","",6],
-      ["date-negative-after-infections","covidNegativeDateText","Bắt buộc: Nếu bạn đã xét nghiệm dương tính với COVID, thì vui lòng cung cấp ngày bạn xét nghiệm âm tính với COVID bên dưới. **Nếu bạn trả lời","Required: If you tested positive for COVID, please provide the date you tested negative for COVID below. **If you reply","covid","COVID","text","ví dụ: 2011-03-17 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh","","covidNegativeDateText","",4],
-      ["had-covid-shot-already","covidShotAlready","Người học đã được chủng ngừa COVID-19 chưa?","Has the learner been vaccinated against COVID-19?","covid","COVID","radio","","có | không","covidShotAlready","",6],
-      ["covid-19-vaccine-utd","covidVaccinesUpToDate","Vắc xin COVID-19 có được cập nhật không?","Are COVID-19 vaccines up to date?","covid","COVID","radio","","có | không","covidVaccinesUpToDate","",6],
-      ["most-recent-covid-shot","mostRecentCovidShotDate","Ngày tiêm phòng COVID gần đây nhất của học sinh","Student's most recent COVID vaccination date","covid","COVID","text","ví dụ: 2023-03-17","","mostRecentCovidShotDate","",4],
+      ["postCode","postCode","Mã bưu điện","Post code","profile","Địa chỉ","text","Mã bưu điện","","postCode","",4],
+      ["wearGlasses","hasGlasses","Người học có dùng kính cận không?","Does the learner use glasses?","medical","Thị giác","radio","","có | không","hasGlasses","",6],
+      ["lastEyeExam","hadEyeExam","Người học đã bao giờ đi khám mắt chưa?","Has the learner ever had an eye examination?","medical","Thị giác","radio","","có | không","hadEyeExam","",6],
+      ["dateLastEyeExam","lastEyeExamDateText","Ngày khám mắt gần đây nhất","Date of most recent eye exam","medical","Thuốc uống","text","ví dụ: 2011-03-17","","lastEyeExamDateText","",4],
+      ["prescriptionMedicine","prescriptionMedicine","Người học có uống thuốc theo đơn không?","Does the learner take medication as prescribed?","medical","Thuốc uống","radio","","có | không","prescriptionMedicine","",6],
+      ["explainListRxMeds","prescriptionDetails","Vui lòng nêu tên thuốc theo toa và lý do dùng","Please state the name of the prescription medication and reason for taking it","medical","Những khó khăn khi học","textarea","Thông tin này được bảo mật","","prescriptionDetails","",12],
+      ["learningDisorders","learningDisorders","Học sinh có bất kỳ rối loạn hoặc triệu chứng nào sau đây không?","Does the student have any of the following disorders or symptoms?","medical","Những khó khăn khi học","checkbox","","Rối loạn lời nói | Nhược thị (hội chứng mắt lười) | Rối loạn tăng động giảm chú ý | Hội chứng Asperger / phổ tự kỷ | Rối loạn học tập (vui lòng giải thích bên dưới) | Chứng khó đọc | Rối loạn hành vi (vui lòng giải thích bên dưới) | Không có | Khác (vui lòng giải thích bên dưới)","learningDisorders","",12],
+      ["explainLdBd","learningDisorderDetails","Giải thích tất cả rối loạn học tập, rối loạn hành vi, hoặc những thách thức khác đối với việc học","Explains any learning disorders, behavioral disorders, or other challenges to learning","medical","Dị ứng","textarea","Thông tin này được bảo mật","","learningDisorderDetails","",12],
+      ["drugAllergiesList","drugAllergies","Liệt kê tất cả các trường hợp dị ứng với các loại thuốc:","List all allergies to drugs:","medical","Dị ứng","textarea","vui lòng nhập \"không,\" nếu không có dị ứng","","drugAllergies","",12],
+      ["foodEnvironmentalAllergiesList","foodEnvironmentalAllergies","Liệt kê các dị ứng do thực phẩm và môi trường","List food and environmental allergies","medical","Tiêm chủng","textarea","vui lòng nhập \"không,\" nếu không có","","foodEnvironmentalAllergies","",12],
+      ["childhoodVaccinesUtd","vaccinesChildhoodUpToDate","Tất cả các loại vắc xin bắt buộc dành cho trẻ nhỏ có phải là loại mới nhất không?","Are all required childhood vaccines up to date?","medical","Tiêm chủng","radio","","Có | Không","vaccinesChildhoodUpToDate","",6],
+      ["childhoodVaccineRecord","childhoodVaccineRecord","Tải lên bản sao hồ sơ vắc xin khi còn nhỏ","Upload a copy of your childhood vaccine records","medical","Tiêm chủng","file","","","","",12],
+      ["covid19PositiveOrHadIt","hadCovidPositive","Người học đã từng có COVID-19 chưa hoặc kết quả dương tính với COVID-19?","Has the learner ever had COVID-19 or tested positive for COVID-19?","covid","COVID","radio","","có | không","hadCovidPositive","",6],
+      ["dateNegativeAfterInfections","covidNegativeDateText","Bắt buộc: Nếu bạn đã xét nghiệm dương tính với COVID, thì vui lòng cung cấp ngày bạn xét nghiệm âm tính với COVID bên dưới. **Nếu bạn trả lời","Required: If you tested positive for COVID, please provide the date you tested negative for COVID below. **If you reply","covid","COVID","text","ví dụ: 2011-03-17 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh","","covidNegativeDateText","",4],
+      ["hadCovidShotAlready","covidShotAlready","Người học đã được chủng ngừa COVID-19 chưa?","Has the learner been vaccinated against COVID-19?","covid","COVID","radio","","có | không","covidShotAlready","",6],
+      ["covid19VaccineUtd","covidVaccinesUpToDate","Vắc xin COVID-19 có được cập nhật không?","Are COVID-19 vaccines up to date?","covid","COVID","radio","","có | không","covidVaccinesUpToDate","",6],
+      ["mostRecentCovidShot","mostRecentCovidShotDate","Ngày tiêm phòng COVID gần đây nhất của học sinh","Student's most recent COVID vaccination date","covid","COVID","text","ví dụ: 2023-03-17","","mostRecentCovidShotDate","",4],
       ["comments","extraComments","Bình luận","Comment","covid","COVID","textarea","","","extraComments","",12],
-      ["check-each-covid-injection-student-has-had","covidShotHistory","Vui lòng cho biết các loại chủng ngừa COVID-19 mà người học đã được nhận:","Please indicate which COVID-19 vaccinations the learner has received:","covid","COVID","checkbox","","Chưa | Tiêm chủng COVID lần đầu tiên | Tiêm chủng COVID thứ hai | Tiêm chủng COVID thứ ba | Tiêm chủng COVID thứ tư | Tiêm chủng COVID thứ năm | Tiêm chủng COVID thứ sáu","covidShotHistory","",12],
-      ["covid-vaccine-records","covidVaccineRecords","Hồ sơ tiêm phòng COVID","COVID vaccination records","covid","COVID","file","","","","",12],
-      ["fever-medicine","feverMedicineAllowed","Trẻ có thể dùng một liều thuốc uống bằng một trong các loại thuốc sau đây khi cần thiết để hạ sốt.","Children can take an oral dose of one of the following medications as needed to reduce fever.","medical","Chăm sóc trong giờ học (nếu người học là trẻ em)","checkbox","","Axit salicylic trẻ em | Ibuprofen trẻ em | Paracetamol trẻ em | Không cho | Tôi 18 tuổi trở lên","feverMedicineAllowed","",12],
-      ["dau-trang-duoc","whiteOilAllowed","Trẻ có thể dùng dầu trắng nếu muốn","Children can use white oil if they want","medical","Chăm sóc trong giờ học (nếu người học là trẻ em)","radio","","Cho | Không cho | Tôi 18 tuổi trở lên","whiteOilAllowed","",6],
+      ["checkEachCovidInjectionStudentHasHad","covidShotHistory","Vui lòng cho biết các loại chủng ngừa COVID-19 mà người học đã được nhận:","Please indicate which COVID-19 vaccinations the learner has received:","covid","COVID","checkbox","","Chưa | Tiêm chủng COVID lần đầu tiên | Tiêm chủng COVID thứ hai | Tiêm chủng COVID thứ ba | Tiêm chủng COVID thứ tư | Tiêm chủng COVID thứ năm | Tiêm chủng COVID thứ sáu","covidShotHistory","",12],
+      ["covidVaccineRecords","covidVaccineRecords","Hồ sơ tiêm phòng COVID","COVID vaccination records","covid","COVID","file","","","","",12],
+      ["feverMedicine","feverMedicineAllowed","Trẻ có thể dùng một liều thuốc uống bằng một trong các loại thuốc sau đây khi cần thiết để hạ sốt.","Children can take an oral dose of one of the following medications as needed to reduce fever.","medical","Chăm sóc trong giờ học (nếu người học là trẻ em)","checkbox","","Axit salicylic trẻ em | Ibuprofen trẻ em | Paracetamol trẻ em | Không cho | Tôi 18 tuổi trở lên","feverMedicineAllowed","",12],
+      ["dauTrangDuoc","whiteOilAllowed","Trẻ có thể dùng dầu trắng nếu muốn","Children can use white oil if they want","medical","Chăm sóc trong giờ học (nếu người học là trẻ em)","radio","","Cho | Không cho | Tôi 18 tuổi trở lên","whiteOilAllowed","",6],
       ["signature","signatureFullName","Tôi xác nhận rằng tất cả thông tin tôi đã cung cấp; là sự thật được chứng minh; theo hiểu biết tốt nhất của tôi; chịu sự trừng phạt của pháp luật; tại nước Cộng hòa xã hội chủ nghĩa Việt Nam.","I confirm that all information I have provided; is a proven fact; to the best of my knowledge; subject to legal punishment; in the Socialist Republic of Vietnam.","submission","Chăm sóc trong giờ học (nếu người học là trẻ em)","text","họ tên của người điền đơn","","signatureFullName","",8],
-      ["email-form-sig","signatureEmail","email của bạn","your email","submission","Chăm sóc trong giờ học (nếu người học là trẻ em)","email","ten@vidu.com","","signatureEmail","",4],
+      ["emailFormSig","signatureEmail","email của bạn","your email","submission","Chăm sóc trong giờ học (nếu người học là trẻ em)","email","ten@vidu.com","","signatureEmail","",4],
     ]
 
     function profileTabLabel(tabId = "") {
@@ -3106,8 +3106,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function normalizeProfileInputType(inputType = "text", fieldKey = "") {
       let normalized = normalizeLower(inputType)
       if (!PROFILE_INPUT_TYPES.includes(normalized)) normalized = "text"
-      if (normalizeLower(fieldKey) === "class-level") return "level-select"
-      if (normalizeLower(fieldKey) === "eagles-id" && normalized === "number") return "text"
+      if (normalizeLower(fieldKey) === "classlevel") return "level-select"
+      if (normalizeLower(fieldKey) === "eaglesid" && normalized === "number") return "text"
       if (normalizeLower(fieldKey) === "password" && normalized === "text") return "password"
       return normalized
     }
@@ -3140,7 +3140,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function normalizeProfileFieldDefinition(field = {}, fallbackSequence = 10) {
-      const key = normalizeText(field.key)
+      const key = toProfileFieldIdSuffix(field.key || field.idSuffix)
       const idSuffix = toProfileFieldIdSuffix(field.idSuffix || key)
       const tabIdRaw = normalizeLower(field.tabId)
       const tabId = PROFILE_FORM_TABS.some((tab) => tab.id === tabIdRaw) ? tabIdRaw : "profile"
@@ -11140,7 +11140,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function createProfileFieldFromSettings() {
       const keyRaw = normalizeText(document.getElementById("profileFieldCreateKey")?.value)
       if (!keyRaw) throw new Error("New field key is required.")
-      const key = normalizeLower(keyRaw).replace(/[^a-z0-9_-]+/g, "-")
+      const key = toProfileFieldIdSuffix(keyRaw)
       if (!key) throw new Error("New field key is invalid.")
       if (profileFieldByKey(key)) throw new Error(`Field key "${key}" already exists.`)
 

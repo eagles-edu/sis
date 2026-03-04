@@ -619,61 +619,49 @@ function getImportValue(row, aliases) {
 }
 
 function mapImportRowToStudentPayload(row) {
-  const eaglesId = normalizeText(
-    getImportValue(row, [
-      "eaglesId",
-      "eagles-id",
-    ])
-  )
-  const studentNumber = normalizePositiveInteger(
-    getImportValue(row, [
-      "studentNumber",
-      "student-number",
-    ])
-  )
+  const eaglesId = normalizeText(getImportValue(row, ["eaglesId"]))
+  const studentNumber = normalizePositiveInteger(getImportValue(row, ["studentNumber"]))
 
   const profile = {
     sourceFormId: "spreadsheet-import",
     sourceUrl: "local-import",
-    fullName: normalizeText(getImportValue(row, ["fullName", "full-name-student"])),
-    englishName: normalizeText(getImportValue(row, ["englishName", "english-name"])),
-    memberSince: normalizeText(getImportValue(row, ["memberSince", "member-since"])),
-    exercisePoints: normalizePositiveInteger(
-      getImportValue(row, ["exercisePoints", "exercise-points"])
-    ),
-    parentsId: normalizeText(getImportValue(row, ["parentsId", "parents-id"])),
-    photoUrl: normalizeText(getImportValue(row, ["photoUrl", "student-photo"])),
-    studentPhone: normalizeText(getImportValue(row, ["studentPhone", "student-phone"])),
-    studentEmail: normalizeText(getImportValue(row, ["studentEmail", "student-email"])),
+    fullName: normalizeText(getImportValue(row, ["fullName", "fullNameStudent"])),
+    englishName: normalizeText(getImportValue(row, ["englishName"])),
+    memberSince: normalizeText(getImportValue(row, ["memberSince"])),
+    exercisePoints: normalizePositiveInteger(getImportValue(row, ["exercisePoints"])),
+    parentsId: normalizeText(getImportValue(row, ["parentsId"])),
+    photoUrl: normalizeText(getImportValue(row, ["photoUrl", "studentPhoto", "unnamed1"])),
+    studentPhone: normalizeText(getImportValue(row, ["studentPhone"])),
+    studentEmail: normalizeText(getImportValue(row, ["studentEmail"])),
     dobText: normalizeText(getImportValue(row, ["dobText", "dob"])),
-    schoolName: normalizeText(getImportValue(row, ["schoolName", "student-school"])),
+    schoolName: normalizeText(getImportValue(row, ["schoolName", "studentSchool"])),
     currentGrade: canonicalizeLevel(
-      normalizeText(getImportValue(row, ["currentGrade", "class-level"]))
+      normalizeText(getImportValue(row, ["currentGrade", "classLevel"]))
     ),
     currentSchoolGrade: normalizeText(
-      getImportValue(row, ["currentSchoolGrade", "student-current-grade"])
+      getImportValue(row, ["currentSchoolGrade", "studentCurrentGrade"])
     ),
-    streetAddress: normalizeText(getImportValue(row, ["streetAddress", "street-address"])),
-    newAddress: normalizeText(getImportValue(row, ["newAddress", "new-address"])),
-    wardDistrict: normalizeText(getImportValue(row, ["wardDistrict", "ward-district"])),
+    streetAddress: normalizeText(getImportValue(row, ["streetAddress"])),
+    newAddress: normalizeText(getImportValue(row, ["newAddress"])),
+    wardDistrict: normalizeText(getImportValue(row, ["wardDistrict"])),
     city: normalizeText(getImportValue(row, ["city"])),
-    postCode: normalizeText(getImportValue(row, ["postCode", "post-code"])),
-    motherName: normalizeText(getImportValue(row, ["motherName", "full-name_mother"])),
-    motherPhone: normalizeText(getImportValue(row, ["motherPhone", "mothers-phone"])),
+    postCode: normalizeText(getImportValue(row, ["postCode"])),
+    motherName: normalizeText(getImportValue(row, ["motherName", "fullNameMother"])),
+    motherPhone: normalizeText(getImportValue(row, ["motherPhone", "mothersPhone"])),
     motherEmergencyContact: normalizeText(
-      getImportValue(row, ["motherEmergencyContact", "emergency-contact-mother"])
+      getImportValue(row, ["motherEmergencyContact", "emergencyContactMother"])
     ),
-    fatherName: normalizeText(getImportValue(row, ["fatherName", "full-name_father"])),
-    fatherPhone: normalizeText(getImportValue(row, ["fatherPhone", "fathers-phone"])),
+    fatherName: normalizeText(getImportValue(row, ["fatherName", "fullNameFather"])),
+    fatherPhone: normalizeText(getImportValue(row, ["fatherPhone", "fathersPhone"])),
     fatherEmergencyContact: normalizeText(
-      getImportValue(row, ["fatherEmergencyContact", "emergency-contact-father"])
+      getImportValue(row, ["fatherEmergencyContact", "emergencyContactFather"])
     ),
   }
 
   return {
     eaglesId,
     studentNumber,
-    email: normalizeText(getImportValue(row, ["email", "studentEmail", "student-email"])),
+    email: normalizeText(getImportValue(row, ["email", "studentEmail"])),
     profile,
   }
 }

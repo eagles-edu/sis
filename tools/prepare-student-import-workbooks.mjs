@@ -78,11 +78,8 @@ function buildHeaderAliasMap(schemaHeaders) {
     })
   }
 
-  pushAlias("student-photo", "Unnamed: 1", "photo-url", "photoUrl")
-  pushAlias("eagles-id", "eaglesId")
-  pushAlias("student-number", "studentNumber")
-  pushAlias("languages-home", "which languages are spoken at home")
-  pushAlias("post-code", "postCode")
+  pushAlias("studentPhoto", "photoUrl", "unnamed1")
+  pushAlias("languagesHome", "whichLanguagesAreSpokenAtHome")
 
   return map
 }
@@ -129,56 +126,56 @@ function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
   const rowsMovedLegacyIdFromStudentNumber = []
 
   dataRows.forEach((row, index) => {
-    const eaglesId = normalizeText(row["eagles-id"])
-    const studentNumberText = normalizeText(row["student-number"])
+    const eaglesId = normalizeText(row["eaglesId"])
+    const studentNumberText = normalizeText(row["studentNumber"])
 
     if (!eaglesId) rowsMissingEaglesIdBefore.push(index + 2)
     if (!studentNumberText) rowsMissingStudentNumberBefore.push(index + 2)
 
     if (!eaglesId && studentNumberText && !normalizePositiveInteger(studentNumberText)) {
-      row["eagles-id"] = studentNumberText
-      row["student-number"] = ""
+      row["eaglesId"] = studentNumberText
+      row["studentNumber"] = ""
       rowsMovedLegacyIdFromStudentNumber.push(index + 2)
     }
   })
 
   const usedNumbers = new Set(
     dataRows
-      .map((row) => normalizePositiveInteger(row["student-number"]))
+      .map((row) => normalizePositiveInteger(row["studentNumber"]))
       .filter((value) => Number.isInteger(value) && value > 0)
   )
   let nextStudentNumber = Math.max(floor - 1, ...(usedNumbers.size ? [...usedNumbers] : [0]))
 
   const rowsWithAutoFilledStudentNumber = []
   dataRows.forEach((row, index) => {
-    const current = normalizeText(row["student-number"])
+    const current = normalizeText(row["studentNumber"])
     if (current) return
     do {
       nextStudentNumber += 1
     } while (usedNumbers.has(nextStudentNumber))
     usedNumbers.add(nextStudentNumber)
-    row["student-number"] = String(nextStudentNumber)
+    row["studentNumber"] = String(nextStudentNumber)
     rowsWithAutoFilledStudentNumber.push(index + 2)
   })
 
   const usedEaglesIdKeys = new Set(
     dataRows
-      .map((row) => normalizeHeader(row["eagles-id"]))
+      .map((row) => normalizeHeader(row["eaglesId"]))
       .filter(Boolean)
   )
   const rowsWithAutoFilledEaglesId = []
 
   dataRows.forEach((row, index) => {
-    const existing = normalizeText(row["eagles-id"])
+    const existing = normalizeText(row["eaglesId"])
     if (existing) return
 
-    const studentNumber = normalizePositiveInteger(row["student-number"])
+    const studentNumber = normalizePositiveInteger(row["studentNumber"])
     const fallback = studentNumber
       ? buildEaglesIdFromNumber(studentNumber)
       : `SIS-IMPORT-${String(index + 1).padStart(6, "0")}`
     const generated = ensureUniqueEaglesId(fallback, usedEaglesIdKeys)
 
-    row["eagles-id"] = generated
+    row["eaglesId"] = generated
     usedEaglesIdKeys.add(normalizeHeader(generated))
     rowsWithAutoFilledEaglesId.push(index + 2)
   })
@@ -186,8 +183,8 @@ function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
   const rowsMissingEaglesIdAfter = []
   const rowsMissingStudentNumberAfter = []
   dataRows.forEach((row, index) => {
-    if (!normalizeText(row["eagles-id"])) rowsMissingEaglesIdAfter.push(index + 2)
-    if (!normalizeText(row["student-number"])) rowsMissingStudentNumberAfter.push(index + 2)
+    if (!normalizeText(row["eaglesId"])) rowsMissingEaglesIdAfter.push(index + 2)
+    if (!normalizeText(row["studentNumber"])) rowsMissingStudentNumberAfter.push(index + 2)
   })
 
   return {
@@ -221,42 +218,42 @@ function writeBlankTemplate(filePath, schemaHeaders) {
 function writeFilledExampleTemplate(filePath, schemaHeaders) {
   const baseRows = [
     {
-      "full-name-student": "Nguyen Anh Minh",
-      "english-name": "Minh Nguyen",
-      "student-number": "226",
-      "eagles-id": "minh001",
-      "student-phone": "0900000226",
-      "student-email": "student226@example.com",
-      "class-level": "Eggs & Chicks",
-      "student-school": "Eagles Primary",
-      "student-current-grade": "Grade 4",
-      "full-name_mother": "Le Thi Lan",
-      "mothers-phone": "0901226226",
-      "full-name_father": "Nguyen Van Hai",
-      "fathers-phone": "0901333226",
-      "street-address": "123 Tran Hung Dao",
-      "ward-district": "Ward 1, District 1",
+      "fullNameStudent": "Nguyen Anh Minh",
+      "englishName": "Minh Nguyen",
+      "studentNumber": "226",
+      "eaglesId": "minh001",
+      "studentPhone": "0900000226",
+      "studentEmail": "student226@example.com",
+      "classLevel": "Eggs & Chicks",
+      "studentSchool": "Eagles Primary",
+      "studentCurrentGrade": "Grade 4",
+      "fullNameMother": "Le Thi Lan",
+      "mothersPhone": "0901226226",
+      "fullNameFather": "Nguyen Van Hai",
+      "fathersPhone": "0901333226",
+      "streetAddress": "123 Tran Hung Dao",
+      "wardDistrict": "Ward 1, District 1",
       city: "HCMC",
-      "post-code": "700000",
+      "postCode": "700000",
     },
     {
-      "full-name-student": "Tran Gia Bao",
-      "english-name": "Bao Tran",
-      "student-number": "227",
-      "eagles-id": "bao001",
-      "student-phone": "0900000227",
-      "student-email": "student227@example.com",
-      "class-level": "Pre-A1 Starters",
-      "student-school": "Eagles Primary",
-      "student-current-grade": "Grade 5",
-      "full-name_mother": "Pham Thi Hoa",
-      "mothers-phone": "0901226227",
-      "full-name_father": "Tran Quoc Dat",
-      "fathers-phone": "0901333227",
-      "street-address": "45 Nguyen Hue",
-      "ward-district": "Ben Nghe, District 1",
+      "fullNameStudent": "Tran Gia Bao",
+      "englishName": "Bao Tran",
+      "studentNumber": "227",
+      "eaglesId": "bao001",
+      "studentPhone": "0900000227",
+      "studentEmail": "student227@example.com",
+      "classLevel": "Pre-A1 Starters",
+      "studentSchool": "Eagles Primary",
+      "studentCurrentGrade": "Grade 5",
+      "fullNameMother": "Pham Thi Hoa",
+      "mothersPhone": "0901226227",
+      "fullNameFather": "Tran Quoc Dat",
+      "fathersPhone": "0901333227",
+      "streetAddress": "45 Nguyen Hue",
+      "wardDistrict": "Ben Nghe, District 1",
       city: "HCMC",
-      "post-code": "700000",
+      "postCode": "700000",
     },
   ]
 

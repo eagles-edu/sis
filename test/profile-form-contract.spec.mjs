@@ -26,6 +26,10 @@ const BANNED_IMPORT_ALIAS_SNIPPETS = [
   "\"father emergency phone\"",
   "\"zip code\"",
   "\"zipcode\"",
+  "\"eagles-id\"",
+  "\"student-number\"",
+  "\"full-name-student\"",
+  "\"class-level\"",
 ]
 
 function readProfileFormRows() {
@@ -111,6 +115,12 @@ test("profile form keys mirror workbook keys exactly in order and uniqueness", (
 
   assert.equal(JSON.stringify(formKeys), JSON.stringify(workbookKeys))
   assert.deepEqual(findDuplicates(formKeys), [])
+  formKeys.forEach((key) => {
+    assert.match(key, /^[a-z][A-Za-z0-9]*$/, `form key must be camelCase: ${key}`)
+  })
+  workbookKeys.forEach((key) => {
+    assert.match(key, /^[a-z][A-Za-z0-9]*$/, `workbook key must be camelCase: ${key}`)
+  })
 })
 
 test("profile form labels, sections, tabs, and list options are symmetrical", () => {
