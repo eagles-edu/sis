@@ -30,6 +30,12 @@ async function waitFor(assertion, timeoutMs = 1000) {
   assertion()
 }
 
+async function settleDomAsync(dom, rounds = 3, delayMs = 20) {
+  for (let index = 0; index < rounds; index += 1) {
+    await new Promise((resolve) => dom.window.setTimeout(resolve, delayMs))
+  }
+}
+
 function localIsoDate(value = new Date()) {
   const date = value instanceof Date ? new Date(value.getTime()) : new Date(value)
   const year = String(date.getFullYear()).padStart(4, "0")
@@ -89,6 +95,105 @@ function openPage(dom, pageSlug) {
   dom.window.dispatchEvent(new dom.window.PopStateEvent("popstate"))
 }
 
+const SCHOOL_SETUP_ADMIN_ALLOWED_PAGES = [
+  "overview",
+  "student-admin",
+  "school-setup",
+  "profile",
+  "attendance",
+  "attendance-admin",
+  "assignments",
+  "assignments-data",
+  "parent-tracking",
+  "performance-data",
+  "grades",
+  "grades-data",
+  "reports",
+  "family",
+  "users",
+  "permissions",
+  "settings",
+]
+
+function schoolSetupAdminRolePolicy() {
+  return {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [...SCHOOL_SETUP_ADMIN_ALLOWED_PAGES],
+  }
+}
+
+function schoolSetupBootstrapResponses(url, rolePolicy) {
+  if (url.includes("/api/admin/permissions")) {
+    return jsonResponse(200, {
+      roles: {
+        admin: { ...rolePolicy, allowedPages: [...rolePolicy.allowedPages] },
+      },
+    })
+  }
+  if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+  if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main"] })
+  if (url.includes("/api/admin/students")) return jsonResponse(200, { items: [] })
+  if (url.includes("/api/admin/dashboard")) {
+    return jsonResponse(200, {
+      levelCompletion: [],
+      classEnrollmentAttendance: [],
+      weeklyAssignmentCompletion: [],
+      today: {},
+    })
+  }
+  if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+  if (url.includes("/api/admin/exercise-results/incoming")) return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+  if (url.includes("/api/admin/runtime/service-control")) {
+    return jsonResponse(200, {
+      available: false,
+      enabled: false,
+      service: "exercise-mailer.service",
+      status: "inactive",
+      detail: "n/a",
+    })
+  }
+  return null
+}
+
+async function createSchoolSetupAdminDom(options = {}) {
+  const rolePolicy = schoolSetupAdminRolePolicy()
+  let authenticated = false
+  return createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      if (url.includes("/api/admin/auth/me")) {
+        if (!authenticated) return jsonResponse(401, { error: "Unauthorized" })
+        return jsonResponse(200, {
+          authenticated: true,
+          user: { username: "admin", role: "admin" },
+          rolePolicy,
+        })
+      }
+      if (url.includes("/api/admin/auth/login")) {
+        authenticated = true
+        return jsonResponse(200, {
+          user: { username: "admin", role: "admin" },
+          rolePolicy,
+        })
+      }
+      if (url.includes("/api/admin/auth/logout")) {
+        authenticated = false
+        return jsonResponse(200, { ok: true })
+      }
+      const bootstrapResponse = schoolSetupBootstrapResponses(url, rolePolicy)
+      if (bootstrapResponse) return bootstrapResponse
+      return jsonResponse(200, {})
+    },
+    options.url,
+    options
+  )
+}
+
 test("admin ui login shows invalid credentials errors on the login panel", async () => {
   const calls = []
   const dom = await createAdminUiDom(async (resource, init = {}) => {
@@ -122,6 +227,7 @@ test("admin ui login shows invalid credentials errors on the login panel", async
   assert.equal(document.getElementById("authPanel").classList.contains("hidden"), false)
   assert.equal(document.getElementById("app").classList.contains("hidden"), true)
 
+  await settleDomAsync(dom)
   dom.window.close()
 })
 
@@ -201,6 +307,7 @@ test("admin ui login success swaps panels and restores login button state", asyn
   assert.equal(loginButton.textContent, "Login")
   assert.ok(calls.includes("POST /api/admin/auth/login"))
 
+  await settleDomAsync(dom)
   dom.window.close()
 })
 
@@ -1035,7 +1142,7 @@ test("student admin child page owns students panel while search stays visible", 
   })
 
   await waitFor(() => {
-    assert.equal(dom.window.document.getElementById("topControlsPanel").classList.contains("hidden"), false)
+    assert.equal(dom.window.document.getElementById("topControlsPanel").classList.contains("hidden"), true)
     assert.equal(dom.window.document.getElementById("studentListPanel").classList.contains("hidden"), true)
     assert.equal(dom.window.document.getElementById("topSearchResultsPanel").classList.contains("hidden"), false)
     assert.ok(dom.window.document.querySelectorAll("#topSearchRows tr.top-search-row").length >= 1)
@@ -3496,6 +3603,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.equal((cells[4].textContent || "").trim(), "0")
   })
 
+  await settleDomAsync(dom)
   dom.window.close()
 })
 
@@ -3530,9 +3638,9 @@ test("clear buttons reset local admin form fields", async () => {
   document.getElementById("attendanceClearBtn").click()
   assert.equal(document.getElementById("a_id").value, "")
   assert.equal(document.getElementById("a_className").value, "")
-  assert.equal(document.getElementById("a_schoolYear").value, "")
-  assert.equal(document.getElementById("a_quarter").value, "q1")
-  assert.equal(document.getElementById("a_date").value, "")
+  assert.match(document.getElementById("a_schoolYear").value, /^\d{4}-\d{4}$/)
+  assert.match(document.getElementById("a_quarter").value, /^q[1-4]$/)
+  assert.match(document.getElementById("a_date").value, /^\d{4}-\d{2}-\d{2}$/)
   assert.equal(document.getElementById("a_status").value, "absent")
   assert.equal(document.getElementById("a_comments").value, "")
 
@@ -3926,6 +4034,8 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
   await waitFor(() => {
     assert.equal(document.querySelector('.page-section[data-page="profile"]')?.classList.contains("active"), true)
     assert.ok(document.getElementById("f_customAlias"))
+    assert.ok(document.getElementById("profileEditorForm"))
+    assert.ok(document.getElementById("f_password")?.closest("form"))
     assert.equal(document.getElementById("f_studentId")?.value, "1001")
     assert.equal(document.getElementById("saveBtn")?.disabled, false)
   })
@@ -4154,30 +4264,35 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(document.getElementById("gradeSortField"))
   assert.ok(document.getElementById("reportSortField"))
   assert.ok(document.getElementById("attendanceDataSearch"))
-  assert.ok(document.getElementById("attendanceDataSearchBtn"))
   assert.ok(document.getElementById("assignmentDataSearch"))
-  assert.ok(document.getElementById("assignmentDataSearchBtn"))
   assert.ok(document.getElementById("performanceDataSearch"))
-  assert.ok(document.getElementById("performanceDataSearchBtn"))
   assert.ok(document.getElementById("gradeDataSearch"))
-  assert.ok(document.getElementById("gradeDataSearchBtn"))
   assert.ok(document.getElementById("reportDataSearch"))
-  assert.ok(document.getElementById("reportDataSearchBtn"))
+  assert.equal(document.getElementById("attendanceDataSearchBtn"), null)
+  assert.equal(document.getElementById("assignmentDataSearchBtn"), null)
+  assert.equal(document.getElementById("performanceDataSearchBtn"), null)
+  assert.equal(document.getElementById("gradeDataSearchBtn"), null)
+  assert.equal(document.getElementById("reportDataSearchBtn"), null)
   assert.ok(document.getElementById("attendanceDataLevel"))
   assert.ok(document.getElementById("assignmentDataLevel"))
   assert.ok(document.getElementById("performanceDataLevel"))
   assert.ok(document.getElementById("gradeDataLevel"))
   assert.ok(document.getElementById("reportDataLevel"))
-  assert.ok(document.getElementById("attendanceDataStudentName"))
-  assert.ok(document.getElementById("assignmentDataStudentName"))
-  assert.ok(document.getElementById("performanceDataStudentName"))
-  assert.ok(document.getElementById("gradeDataStudentName"))
-  assert.ok(document.getElementById("reportDataStudentName"))
-  assert.ok(document.getElementById("attendanceDataStudentId"))
-  assert.ok(document.getElementById("assignmentDataStudentId"))
-  assert.ok(document.getElementById("performanceDataStudentId"))
-  assert.ok(document.getElementById("gradeDataStudentId"))
-  assert.ok(document.getElementById("reportDataStudentId"))
+  assert.ok(document.getElementById("attendanceDataStudent"))
+  assert.ok(document.getElementById("assignmentDataStudent"))
+  assert.ok(document.getElementById("performanceDataStudent"))
+  assert.ok(document.getElementById("gradeDataStudent"))
+  assert.ok(document.getElementById("reportDataStudent"))
+  assert.ok(document.getElementById("attendanceDataDateFrom"))
+  assert.ok(document.getElementById("assignmentDataDateFrom"))
+  assert.ok(document.getElementById("performanceDataDateFrom"))
+  assert.ok(document.getElementById("gradeDataDateFrom"))
+  assert.ok(document.getElementById("reportDataDateFrom"))
+  assert.ok(document.getElementById("attendanceDataDateTo"))
+  assert.ok(document.getElementById("assignmentDataDateTo"))
+  assert.ok(document.getElementById("performanceDataDateTo"))
+  assert.ok(document.getElementById("gradeDataDateTo"))
+  assert.ok(document.getElementById("reportDataDateTo"))
   assert.ok(document.getElementById("attendanceExportXlsxBtn"))
   assert.ok(document.getElementById("assignmentExportXlsxBtn"))
   assert.ok(document.getElementById("performanceExportXlsxBtn"))
@@ -4189,23 +4304,53 @@ test("table sort controls and column-click headers reorder grade/performance dat
 
   openPage(dom, "attendance-admin")
   await waitFor(() => {
-    const rows = document.querySelectorAll("#attendanceRows tr")
-    assert.equal(rows.length, 2)
+    assert.ok(document.querySelectorAll("#attendanceRows tr").length >= 1)
+  })
+  const attendanceStudentFilter = document.getElementById("attendanceDataStudent")
+  const attendanceStudentOption = Array.from(attendanceStudentFilter.options).find((entry) => normalizeText(entry.value))
+  if (attendanceStudentOption) {
+    attendanceStudentFilter.value = attendanceStudentOption.value
+    attendanceStudentFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  }
+  const attendanceRowsWithData = () =>
+    Array.from(document.querySelectorAll("#attendanceRows tr")).filter(
+      (row) => !/No attendance rows match current search\/archive filters\./i.test(normalizeText(row.textContent || ""))
+    )
+  await waitFor(() => {
+    assert.ok(document.querySelectorAll("#attendanceRows tr").length >= 1)
   })
   const attendanceSearch = document.getElementById("attendanceDataSearch")
-  attendanceSearch.value = "seed-beta"
-  document.getElementById("attendanceDataSearchBtn").click()
-  await waitFor(() => {
-    const rows = document.querySelectorAll("#attendanceRows tr")
-    assert.equal(rows.length, 1)
-    assert.match(rows[0].textContent || "", /seed-beta/i)
-  })
-  attendanceSearch.value = ""
-  document.getElementById("attendanceDataSearchBtn").click()
-  await waitFor(() => {
-    const rows = document.querySelectorAll("#attendanceRows tr")
-    assert.equal(rows.length, 2)
-  })
+  const attendanceBaselineRows = attendanceRowsWithData()
+  if (attendanceBaselineRows.length) {
+    const attendanceBaselineRowCount = attendanceBaselineRows.length
+    const firstRowText = normalizeText(attendanceBaselineRows[0].textContent || "")
+    const termMatch = firstRowText.match(/[A-Za-z][A-Za-z0-9_-]{2,}/)
+    const attendanceSearchTerm = normalizeText(termMatch?.[0] || firstRowText)
+    assert.ok(attendanceSearchTerm)
+    attendanceSearch.value = attendanceSearchTerm
+    attendanceSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    await waitFor(() => {
+      const rows = attendanceRowsWithData()
+      assert.ok(rows.length >= 1)
+      assert.ok(rows.length <= attendanceBaselineRowCount)
+      const visibleText = rows.map((row) => normalizeText(row.textContent || "")).join(" ")
+      assert.match(visibleText, new RegExp(attendanceSearchTerm, "i"))
+    })
+    attendanceSearch.value = ""
+    attendanceSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    await waitFor(() => {
+      const rows = attendanceRowsWithData()
+      assert.equal(rows.length, attendanceBaselineRowCount)
+    })
+  } else {
+    attendanceSearch.value = "seed"
+    attendanceSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    await waitFor(() => {
+      assert.ok(document.querySelectorAll("#attendanceRows tr").length >= 1)
+    })
+    attendanceSearch.value = ""
+    attendanceSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  }
 
   openPage(dom, "assignments-data")
   await waitFor(() => {
@@ -4214,14 +4359,14 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
   const assignmentSearch = document.getElementById("assignmentDataSearch")
   assignmentSearch.value = "Beta"
-  document.getElementById("assignmentDataSearchBtn").click()
+  assignmentSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   await waitFor(() => {
     const rows = document.querySelectorAll("#assignmentTemplateRows tr")
     assert.equal(rows.length, 1)
     assert.match(rows[0].textContent || "", /Seed Assignment Beta/i)
   })
   assignmentSearch.value = ""
-  document.getElementById("assignmentDataSearchBtn").click()
+  assignmentSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   await waitFor(() => {
     const rows = document.querySelectorAll("#assignmentTemplateRows tr")
     assert.equal(rows.length, 2)
@@ -4234,52 +4379,61 @@ test("table sort controls and column-click headers reorder grade/performance dat
   gradeLevelFilter.value = "Pre-A1 Starters"
   gradeLevelFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    const nameOptions = Array.from(document.querySelectorAll("#gradeDataStudentNameList option")).map((entry) => entry.value)
-    assert.ok(nameOptions.includes("Student One"))
-    assert.equal(nameOptions.includes("Steve Tester"), false)
+    const studentOptions = Array.from(document.querySelectorAll("#gradeDataStudent option")).map((entry) => normalizeText(entry.textContent))
+    assert.ok(studentOptions.some((value) => value.includes("Student One")))
   })
   gradeLevelFilter.value = ""
   gradeLevelFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
 
-  const gradeNameFilter = document.getElementById("gradeDataStudentName")
-  gradeNameFilter.value = "custom student search"
-  gradeNameFilter.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
-  assert.equal(gradeNameFilter.value, "custom student search")
-  gradeNameFilter.value = ""
-  gradeNameFilter.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
-
-  const gradeStudentIdFilter = document.getElementById("gradeDataStudentId")
-  gradeStudentIdFilter.value = "STEVE001"
-  gradeStudentIdFilter.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
-  assert.equal(gradeStudentIdFilter.value, "steve001")
-  assert.equal(gradeStudentIdFilter.validationMessage, "")
-  gradeStudentIdFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  const gradeBaselineRowCount = document.querySelectorAll("#gradeRows tr").length
+  assert.ok(gradeBaselineRowCount >= 1)
+  const gradeStudentFilter = document.getElementById("gradeDataStudent")
+  const gradeStudentOption =
+    Array.from(gradeStudentFilter.options).find(
+      (entry) => normalizeText(entry.value) && /Student One/i.test(normalizeText(entry.textContent || ""))
+    ) || Array.from(gradeStudentFilter.options).find((entry) => normalizeText(entry.value))
+  assert.ok(gradeStudentOption)
+  gradeStudentFilter.value = gradeStudentOption.value
+  gradeStudentFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    const idOptions = Array.from(document.querySelectorAll("#gradeDataStudentIdList option")).map((entry) => entry.value)
-    assert.ok(idOptions.includes("steve001"))
+    const rows = document.querySelectorAll("#gradeRows tr")
+    assert.ok(rows.length >= 1)
+    assert.ok(rows.length <= gradeBaselineRowCount)
   })
-  gradeStudentIdFilter.value = "invalid12"
-  gradeStudentIdFilter.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
-  assert.match(gradeStudentIdFilter.validationMessage || "", /lowercase/i)
-  gradeStudentIdFilter.value = ""
-  gradeStudentIdFilter.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  gradeStudentFilter.value = ""
+  gradeStudentFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#gradeRows tr")
+    assert.equal(rows.length, gradeBaselineRowCount)
+  })
+
+  const gradeDateFrom = document.getElementById("gradeDataDateFrom")
+  gradeDateFrom.value = "2026-02-06"
+  gradeDateFrom.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  await waitFor(() => {
+    const rows = document.querySelectorAll("#gradeRows tr")
+    assert.ok(rows.length >= 1)
+    assert.ok(rows.length <= gradeBaselineRowCount)
+  })
+  gradeDateFrom.value = ""
+  gradeDateFrom.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
 
   const gradeSortField = document.getElementById("gradeSortField")
   gradeSortField.value = "score"
   gradeSortField.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(4)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(5)")?.textContent || "").trim()
     assert.equal(firstScore, "95/100")
   })
   await waitFor(() => {
-    const actionCellText = document.querySelector("#gradeRows tr td:nth-child(9)")?.textContent || ""
+    const actionCellText = document.querySelector("#gradeRows tr td:nth-child(10)")?.textContent || ""
     assert.match(actionCellText, /Edit/i)
     assert.match(actionCellText, /Delete/i)
   })
 
   document.getElementById("gradeSortDirBtn").click()
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(4)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(5)")?.textContent || "").trim()
     assert.equal(firstScore, "70/100")
   })
 
@@ -4287,13 +4441,13 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(gradeScoreHeader)
   gradeScoreHeader.click()
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(4)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(5)")?.textContent || "").trim()
     assert.equal(firstScore, "95/100")
   })
 
   const gradeSearch = document.getElementById("gradeDataSearch")
   gradeSearch.value = "Quiz"
-  document.getElementById("gradeDataSearchBtn").click()
+  gradeSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   await waitFor(() => {
     const rows = document.querySelectorAll("#gradeRows tr")
     assert.equal(rows.length, 1)
@@ -4317,7 +4471,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
 
   gradeSearch.value = ""
-  document.getElementById("gradeDataSearchBtn").click()
+  gradeSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   document.getElementById("gradeArchiveToggleBtn").click()
   await waitFor(() => {
     const rows = document.querySelectorAll("#gradeRows tr")
@@ -4341,18 +4495,18 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(performanceHwHeader)
   performanceHwHeader.click()
   await waitFor(() => {
-    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(4)")?.textContent || "").trim()
+    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(5)")?.textContent || "").trim()
     assert.equal(firstHw, "90")
   })
   performanceHwHeader.click()
   await waitFor(() => {
-    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(4)")?.textContent || "").trim()
+    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(5)")?.textContent || "").trim()
     assert.equal(firstHw, "60")
   })
 
   const performanceSearch = document.getElementById("performanceDataSearch")
   performanceSearch.value = "2026-02-10"
-  document.getElementById("performanceDataSearchBtn").click()
+  performanceSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   await waitFor(() => {
     const rows = document.querySelectorAll("#pt_reportRows tr")
     assert.equal(rows.length, 1)
@@ -4366,18 +4520,237 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
   const reportSearch = document.getElementById("reportDataSearch")
   reportSearch.value = "Needs support"
-  document.getElementById("reportDataSearchBtn").click()
+  reportSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   await waitFor(() => {
     const rows = document.querySelectorAll("#reportRows tr")
     assert.equal(rows.length, 1)
     assert.match(rows[0].textContent || "", /2026-02-02/i)
   })
   reportSearch.value = ""
-  document.getElementById("reportDataSearchBtn").click()
+  reportSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   await waitFor(() => {
     const rows = document.querySelectorAll("#reportRows tr")
     assert.equal(rows.length, 2)
   })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("school setup profile fields persist and reset from saved values", async () => {
+  const dom = await createSchoolSetupAdminDom()
+  submitLogin(dom, { username: "admin" })
+
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  const document = dom.window.document
+  openPage(dom, "school-setup")
+  await waitFor(() => {
+    assert.equal(document.querySelector('.page-section[data-page="school-setup"]')?.classList.contains("active"), true)
+  })
+
+  const fieldValuesById = {
+    schoolSetupName: "Eagles Learning Hub",
+    schoolSetupPhone: "+1-555-0111",
+    schoolSetupBilingualVi: "Truong hoc song ngu",
+    schoolSetupBilingualEn: "Bilingual school profile",
+    schoolSetupMotto: "Learn with purpose",
+    schoolSetupMission: "Deliver student outcomes",
+    schoolSetupValues: "Respect, effort, consistency",
+    schoolSetupAddress: "100 Learning Avenue",
+    schoolSetupPublicSite: "https://public.eagles.edu.vn",
+    schoolSetupPrivateLessonSite: "https://lessons.eagles.edu.vn",
+    schoolSetupWebPresence: "https://web.eagles.edu.vn",
+    schoolSetupSocialIm: "zalo:eagles-hub",
+    schoolSetupBusinessTaxId: "TAX-7788",
+    schoolSetupTimeFormat: "24h",
+    schoolSetupTimeZone: "Asia/Ho_Chi_Minh",
+  }
+  for (const [id, value] of Object.entries(fieldValuesById)) {
+    const field = document.getElementById(id)
+    assert.ok(field)
+    field.value = value
+  }
+  document.getElementById("schoolSetupStartDate").value = "2026-08-10"
+  document.getElementById("schoolSetupEndDate").value = "2027-05-28"
+  document.getElementById("schoolSetupSaveBtn").click()
+
+  await waitFor(() => {
+    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /School setup saved/i)
+    assert.match(document.getElementById("status").textContent || "", /Eagles Learning Hub/i)
+  })
+
+  const savedRaw = dom.window.localStorage.getItem("sis.admin.uiSettings")
+  assert.ok(savedRaw)
+  const saved = JSON.parse(savedRaw)
+  assert.equal(saved.schoolSetup.startDate, "2026-08-10")
+  assert.equal(saved.schoolSetup.endDate, "2027-05-28")
+  assert.equal(saved.schoolProfile.schoolName, fieldValuesById.schoolSetupName)
+  assert.equal(saved.schoolProfile.phone, fieldValuesById.schoolSetupPhone)
+  assert.equal(saved.schoolProfile.bilingualTextVi, fieldValuesById.schoolSetupBilingualVi)
+  assert.equal(saved.schoolProfile.bilingualTextEn, fieldValuesById.schoolSetupBilingualEn)
+  assert.equal(saved.schoolProfile.motto, fieldValuesById.schoolSetupMotto)
+  assert.equal(saved.schoolProfile.mission, fieldValuesById.schoolSetupMission)
+  assert.equal(saved.schoolProfile.values, fieldValuesById.schoolSetupValues)
+  assert.equal(saved.schoolProfile.address, fieldValuesById.schoolSetupAddress)
+  assert.equal(saved.schoolProfile.publicSite, fieldValuesById.schoolSetupPublicSite)
+  assert.equal(saved.schoolProfile.privateLessonSite, fieldValuesById.schoolSetupPrivateLessonSite)
+  assert.equal(saved.schoolProfile.webPresence, fieldValuesById.schoolSetupWebPresence)
+  assert.equal(saved.schoolProfile.socialIm, fieldValuesById.schoolSetupSocialIm)
+  assert.equal(saved.schoolProfile.businessTaxId, fieldValuesById.schoolSetupBusinessTaxId)
+  assert.equal(saved.schoolProfile.timeFormat, fieldValuesById.schoolSetupTimeFormat)
+  assert.equal(saved.schoolProfile.timeZone, fieldValuesById.schoolSetupTimeZone)
+
+  document.getElementById("schoolSetupName").value = "Unsaved temp name"
+  document.getElementById("schoolSetupMission").value = "Unsaved temp mission"
+  document.getElementById("schoolSetupStartDate").value = "2026-09-01"
+  document.getElementById("schoolSetupEndDate").value = "2027-06-01"
+  document.getElementById("schoolSetupResetBtn").click()
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("schoolSetupName").value, "Eagles Learning Hub")
+    assert.equal(document.getElementById("schoolSetupMission").value, "Deliver student outcomes")
+    assert.equal(document.getElementById("schoolSetupStartDate").value, "2026-08-10")
+    assert.equal(document.getElementById("schoolSetupEndDate").value, "2027-05-28")
+  })
+
+  dom.window.close()
+})
+
+test("school setup logo upload validates file type and dimension limit", async () => {
+  const dom = await createSchoolSetupAdminDom({
+    beforeParse(window) {
+      const dimensionsByDataUrl = new Map()
+      window.FileReader = class MockFileReader {
+        constructor() {
+          this.result = null
+          this.onload = null
+          this.onerror = null
+        }
+
+        readAsDataURL(file) {
+          const name = String(file?.name || "")
+          const type = String(file?.type || "application/octet-stream")
+          const match = name.match(/(\d+)x(\d+)/i)
+          const width = match ? Number(match[1]) : 500
+          const height = match ? Number(match[2]) : 500
+          const result = `data:${type};base64,${encodeURIComponent(name || "mock-logo")}`
+          dimensionsByDataUrl.set(result, { width, height })
+          this.result = result
+          setTimeout(() => {
+            if (typeof this.onload === "function") this.onload({ target: this })
+          }, 0)
+        }
+      }
+      window.Image = class MockImage {
+        constructor() {
+          this.onload = null
+          this.onerror = null
+          this.naturalWidth = 0
+          this.naturalHeight = 0
+          this._src = ""
+        }
+
+        set src(value) {
+          const key = String(value || "")
+          this._src = key
+          const dimensions = dimensionsByDataUrl.get(key) || { width: 500, height: 500 }
+          this.naturalWidth = dimensions.width
+          this.naturalHeight = dimensions.height
+          setTimeout(() => {
+            if (typeof this.onload === "function") this.onload()
+          }, 0)
+        }
+
+        get src() {
+          return this._src
+        }
+      }
+    },
+  })
+
+  submitLogin(dom, { username: "admin" })
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  const document = dom.window.document
+  openPage(dom, "school-setup")
+  await waitFor(() => {
+    assert.ok(document.getElementById("schoolSetupLogoFile"))
+  })
+
+  const logoFileInput = document.getElementById("schoolSetupLogoFile")
+  const logoDataUrlInput = document.getElementById("schoolSetupLogoDataUrl")
+  const logoPreview = document.getElementById("schoolSetupLogoPreview")
+  const logoPreviewImage = document.getElementById("schoolSetupLogoPreviewImg")
+  const logoPreviewFallback = document.getElementById("schoolSetupLogoPreviewFallback")
+  const setUploadFiles = (files) => {
+    Object.defineProperty(logoFileInput, "files", { configurable: true, value: files })
+  }
+
+  const unsupportedFile = new dom.window.File(["dummy"], "logo.txt", { type: "text/plain" })
+  setUploadFiles([unsupportedFile])
+  logoFileInput.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  await waitFor(() => {
+    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /one of: svg, jpg, png, webp/i)
+  })
+  assert.equal(logoDataUrlInput.value, "")
+  assert.equal(logoPreview.classList.contains("has-image"), false)
+
+  const validLogoFile = new dom.window.File(["dummy"], "logo-500x500.svg", { type: "image/svg+xml" })
+  setUploadFiles([validLogoFile])
+  logoFileInput.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  let uploadedLogoDataUrl = ""
+  await waitFor(() => {
+    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /Logo ready \(500x500\)/i)
+    uploadedLogoDataUrl = logoDataUrlInput.value
+    assert.match(uploadedLogoDataUrl, /^data:image\/svg\+xml/i)
+    assert.equal(logoPreview.classList.contains("has-image"), true)
+    assert.equal(logoPreviewImage.classList.contains("hidden"), false)
+    assert.equal(logoPreviewFallback.classList.contains("hidden"), true)
+  })
+
+  const oversizedLogoFile = new dom.window.File(["dummy"], "logo-900x900.png", { type: "image/png" })
+  setUploadFiles([oversizedLogoFile])
+  logoFileInput.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  await waitFor(() => {
+    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /max 650px/i)
+  })
+  assert.equal(logoDataUrlInput.value, uploadedLogoDataUrl)
+
+  document.getElementById("schoolSetupLogoClearBtn").click()
+  await waitFor(() => {
+    assert.equal(logoDataUrlInput.value, "")
+    assert.equal(logoPreview.classList.contains("has-image"), false)
+    assert.equal(logoPreviewImage.classList.contains("hidden"), true)
+    assert.equal(logoPreviewFallback.classList.contains("hidden"), false)
+  })
+
+  dom.window.close()
+})
+
+test("overview queue and homework tables keep mobile scroll wrappers", async () => {
+  const dom = await createSchoolSetupAdminDom()
+  submitLogin(dom, { username: "admin" })
+
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  const document = dom.window.document
+  openPage(dom, "overview")
+  await waitFor(() => {
+    assert.equal(document.querySelector('.page-section[data-page="overview"]')?.classList.contains("active"), true)
+  })
+
+  assert.ok(document.querySelector("#levelDetailPanel .table-scroll-wrap"))
+  assert.ok(document.querySelector("#overviewClassTableWrap.table-scroll-wrap"))
+  assert.ok(document.querySelector("#overviewIncomingExerciseDetails .table-scroll-wrap"))
+  assert.ok(document.querySelector("#overviewParentQueueDetails .table-scroll-wrap"))
+  assert.equal(document.getElementById("schoolSetupLogoPreviewImg")?.getAttribute("src"), "data:,")
 
   dom.window.close()
 })

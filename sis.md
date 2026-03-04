@@ -7,6 +7,35 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-04)
+
+- Introduced a dedicated **Dashboard** landing button and reworked the Students navigation so it now jumps straight to profile, removed the floating Students submenu, and hid the global top-search controls whenever viewing dashboard, attendance, assignments, grades, or performance data pages so their local filters take precedence.
+- Stripped “Unassigned” level tiles from the overview charts/tiles by filtering out blank or `unassigned` completions, and clarified the level detail panel binding with the existing assigned level data.
+- Added inline summaries for Attendance data, Assignments data, Grades data, Performance data, and All Reports, then taught each admin-data table to show the active filters (level, student, search term) as soon as the dropdowns change so selecting a student immediately surfaces their info in the page’s purpose interface.
+- Fixed admin data-page loading behavior in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - `Attendance data`, `Performance data`, `Grades data`, and `All Reports` now auto-hydrate records from scoped student detail fetches when those pages are opened (instead of relying on the currently selected profile only).
+  - hydrated rows are cached by student id (`studentDetailCacheById`) and reused across page switches to avoid redundant API calls.
+  - each of the four data tables now includes a sortable `Student` result column and search text now includes student name/id/level so free-text filtering behaves as expected for all/level/individual lookups.
+- Added dedicated UI coverage for School Setup profile/logo flows in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - validates that school profile fields + school-year dates persist to `sis.admin.uiSettings` and reset back from saved values.
+  - validates logo upload constraints (`svg/jpg/png/webp`, max `650px`) plus preview/clear behavior.
+- Improved small-screen dashboard behavior in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - wrapped `Homework progress`, `Anonymous Exercise Submissions`, and `Queued Performance Reports` tables in horizontal scroll containers so Overview no longer overflows viewport width on phones.
+  - wrapped `Enrolled vs Attendance (Today)` in the same scroll container model, and tightened queue/details table min-width behavior for narrow screens.
+  - stacked queue/detail action buttons to one column at narrow widths and allowed queue summary headers/status text to wrap.
+- Resolved browser console password-field warning in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - wrapped dynamic `Profile` editor controls in a real `<form id="profileEditorForm">` so dynamically-rendered `f_password` input is form-contained.
+  - set `autocomplete="new-password"` on rendered profile password controls.
+- Addressed editor diagnostics in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added default `src="data:,"` to the school-logo preview `<img>` element.
+  - removed explicit `width` on profile-tab buttons and enforced `box-sizing: border-box` for safer box-model behavior.
+- Stabilized flaky async JSDOM cleanup in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - added `settleDomAsync` and used it before closing DOM in high-activity tests to prevent post-close `document.getElementById` unhandled rejections.
+  - extended mobile-wrapper assertions to include `#overviewClassTableWrap`.
+- SVG sizing still depends on browser intrinsic image dimensions (`naturalWidth`/`naturalHeight`), so malformed or dimensionless SVG edge-cases remain a follow-up hardening item.
+- Targeted run: `node --test --test-name-pattern="school setup" test/student-admin-ui.spec.mjs` ⇒ pass.
+- Current full run: `npm test` ⇒ `116` pass, `0` fail.
+
 ## Update (2026-03-03)
 
 - Replaced the single-page student profile form in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) with a tabbed profile renderer:
@@ -564,10 +593,38 @@ Result: `61` tests total, `61` pass, `0` fail.
 - Added route coverage in [test/student-admin.spec.mjs](test/student-admin.spec.mjs) for service-control auth/forbidden behavior.
 - Updated UI regression in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) to assert incoming disposition actions and service restart control wiring.
 
-### Latest Test Run (2026-03-01)
+### Latest UI/Admin Update (2026-03-04)
 
-- Command: `npm test`
-- Result: `103` tests, `103` pass, `0` fail.
+1. Admin data search UX switched to progressive drill-down with instant refresh.
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) Attendance/Assignments data/Performance data/Grades data/All Reports toolbars to:
+  - remove dedicated Search buttons,
+  - use `Class Level -> Student` dropdown drill-down,
+  - add date-range delimiters (`Date from`, `Date to`),
+  - keep free-text search as live filter.
+- Table filter state now tracks `level`, `studentRefId`, `dateFrom`, and `dateTo`.
+- Filtering logic now applies date ranges per table date field and supports assignment rows with either targeted student IDs or level-based fallbacks.
+- Print output now includes active filter summary so printed exports carry the on-screen filter context.
+
+1. Added admin-only School Setup page for school-year/quarter timing.
+
+- New admin page slug: `school-setup` (navigation + role-policy normalization + admin panel visibility).
+- School setup stores first/last school day in UI settings and auto-generates 4 near-equal quarters.
+- Quarter generation now adjusts quarter-end boundaries away from weekends when possible.
+- Attendance defaults and parent-tracking quarter derivation now resolve quarter/school-year from saved school setup first, then fall back to legacy month buckets.
+- Expanded school setup profile payload in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - square logo uploader with format validation (`svg/jpg/png/webp`) and max-side dimension check (`<= 650px`);
+  - school name + bilingual VN/EN text blocks + motto/mission/values + address + phone;
+  - seven extra textarea fields for public/private sites, web/social channels, business tax id, time format, and time zone.
+
+### Latest Test Run (2026-03-04)
+
+- Command: `timeout 40s npm test`
+- Result: timed out (`exit 124`) after reporting known failing suites:
+  - `test/exercise-mailer.spec.mjs` (failed)
+  - `test/student-admin-prefix.spec.mjs` (failed)
+  - `test/exercise-store.spec.mjs` and `test/student-admin-session-store.spec.mjs` passed before timeout.
+- Additional smoke validation: extracted inline admin script and ran `node --check /tmp/student-admin-inline.js` (pass).
 
 ## Coverage Snapshot
 
