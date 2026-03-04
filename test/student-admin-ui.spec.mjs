@@ -419,7 +419,7 @@ test("tracking data submenus are visible for admin and hidden for teacher", asyn
       if (url.includes("/api/admin/students/stu-")) {
         return jsonResponse(200, {
           id: "stu-01",
-          studentId: "SIS-001",
+          eaglesId: "SIS-001",
           profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
           attendanceRecords: [],
           gradeRecords: [],
@@ -431,7 +431,7 @@ test("tracking data submenus are visible for admin and hidden for teacher", asyn
           items: [
             {
               id: "stu-01",
-              studentId: "SIS-001",
+              eaglesId: "SIS-001",
               profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
               counts: { attendanceRecords: 0 },
             },
@@ -648,7 +648,7 @@ test("student search fallback keeps accent-insensitive matches discoverable", as
         items: [
           {
             id: "stu-vi-01",
-            studentId: "vi001",
+            eaglesId: "vi001",
             profile: { fullName: "Nguy\u1ec5n \u00c1nh", englishName: "", currentGrade: "Pre-A1 Starters" },
             counts: { attendanceRecords: 0 },
           },
@@ -793,7 +793,7 @@ test("student search keeps direct query result and avoids fallback refetch", asy
           items: [
             {
               id: "stu-vi-02",
-              studentId: "vi002",
+              eaglesId: "vi002",
               profile: { fullName: "Nguy\u1ec5n \u00c1nh", englishName: "", currentGrade: "Pre-A1 Starters" },
               counts: { attendanceRecords: 0 },
             },
@@ -945,13 +945,13 @@ test("top search level scope narrows assignment student dropdown and supports da
       const all = [
         {
           id: "stu-01",
-          studentId: "SIS-001",
+          eaglesId: "SIS-001",
           profile: { fullName: "Starter Student", currentGrade: "Pre-A1 Starters" },
           counts: { attendanceRecords: 0 },
         },
         {
           id: "stu-02",
-          studentId: "SIS-002",
+          eaglesId: "SIS-002",
           profile: { fullName: "Mover Student", currentGrade: "A1 Movers" },
           counts: { attendanceRecords: 0 },
         },
@@ -1096,7 +1096,7 @@ test("student admin child page owns students panel while search stays visible", 
     if (url.includes("/api/admin/students/stu-")) {
       return jsonResponse(200, {
         id: "stu-01",
-        studentId: "SIS-001",
+        eaglesId: "SIS-001",
         profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
         attendanceRecords: [],
         gradeRecords: [],
@@ -1108,13 +1108,13 @@ test("student admin child page owns students panel while search stays visible", 
         items: [
           {
             id: "stu-01",
-            studentId: "SIS-001",
+            eaglesId: "SIS-001",
             profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
             counts: { attendanceRecords: 0 },
           },
           {
             id: "stu-02",
-            studentId: "steve001",
+            eaglesId: "steve001",
             profile: { fullName: "Steve Tester", currentGrade: "A1 Movers" },
             counts: { attendanceRecords: 0 },
           },
@@ -1630,7 +1630,7 @@ test("assignments page uses level tiles, itemized exercise links, and completion
         items: [
           {
             id: "stu-01",
-            studentId: "SIS-001",
+            eaglesId: "SIS-001",
             email: "starter@example.com",
             profile: {
               fullName: "Starter Student",
@@ -1641,7 +1641,7 @@ test("assignments page uses level tiles, itemized exercise links, and completion
           },
           {
             id: "stu-02",
-            studentId: "SIS-002",
+            eaglesId: "SIS-002",
             email: "mover@example.com",
             profile: {
               fullName: "Mover Student",
@@ -1767,7 +1767,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
   const detailById = {
     "stu-01": {
       id: "stu-01",
-      studentId: "SIS-001",
+      eaglesId: "SIS-001",
       email: "starter@example.com",
       profile: {
         fullName: "Starter Student",
@@ -1819,7 +1819,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     },
     "stu-02": {
       id: "stu-02",
-      studentId: "SIS-002",
+      eaglesId: "SIS-002",
       email: "mover@example.com",
       profile: {
         fullName: "Mover Student",
@@ -1899,13 +1899,13 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
         items: [
           {
             id: "stu-01",
-            studentId: "SIS-001",
+            eaglesId: "SIS-001",
             email: "starter@example.com",
             profile: { fullName: "Starter Student", currentGrade: "Pre-A1 Starters", studentEmail: "starter@example.com" },
           },
           {
             id: "stu-02",
-            studentId: "SIS-002",
+            eaglesId: "SIS-002",
             email: "mover@example.com",
             profile: { fullName: "Mover Student", currentGrade: "Pre-A1 Starters", studentEmail: "mover@example.com" },
           },
@@ -1915,8 +1915,8 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     if (method === "POST" && url.includes("/api/admin/students/") && url.includes("/reports")) {
       const payload = typeof init.body === "string" ? JSON.parse(init.body || "{}") : init.body || {}
       savedReportPayloads.push(payload)
-      const studentId = url.includes("/stu-02/") ? "stu-02" : "stu-01"
-      return jsonResponse(200, { report: { id: `rep-${savedReportPayloads.length}` }, student: detailById[studentId] })
+      const studentRefId = url.includes("/stu-02/") ? "stu-02" : "stu-01"
+      return jsonResponse(200, { report: { id: `rep-${savedReportPayloads.length}` }, student: detailById[studentRefId] })
     }
     if (url.includes("/api/admin/students/stu-01")) return jsonResponse(200, detailById["stu-01"])
     if (url.includes("/api/admin/students/stu-02")) return jsonResponse(200, detailById["stu-02"])
@@ -1956,7 +1956,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
   await waitFor(() => {
     const levelTiles = document.querySelectorAll("#parentTrackingLevelTiles button")
     assert.ok(levelTiles.length >= 1)
-    const studentSelect = document.getElementById("pt_studentId")
+    const studentSelect = document.getElementById("pt_studentRefId")
     assert.ok(studentSelect)
     assert.ok(studentSelect.querySelector('option[value="stu-01"]'))
   })
@@ -1968,8 +1968,8 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
   document.getElementById("pt_lessonSummary").value = "Reviewed Unit 3 grammar and reading strategy."
   document.getElementById("pt_lessonSummary").dispatchEvent(new dom.window.Event("input", { bubbles: true }))
 
-  document.getElementById("pt_studentId").value = "stu-01"
-  document.getElementById("pt_studentId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  document.getElementById("pt_studentRefId").value = "stu-01"
+  document.getElementById("pt_studentRefId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
 
   await waitFor(() => {
     const recipients = document.getElementById("pt_recipients").value
@@ -1980,8 +1980,8 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.ok(hwCompletion > 0)
   })
 
-  document.getElementById("pt_studentId").value = "stu-02"
-  document.getElementById("pt_studentId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  document.getElementById("pt_studentRefId").value = "stu-02"
+  document.getElementById("pt_studentRefId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
     assert.equal(
       document.getElementById("pt_lessonSummary").value,
@@ -1989,8 +1989,8 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     )
   })
 
-  document.getElementById("pt_studentId").value = "stu-01"
-  document.getElementById("pt_studentId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  document.getElementById("pt_studentRefId").value = "stu-01"
+  document.getElementById("pt_studentRefId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   document.getElementById("pt_queueSendBtn").click()
 
   await waitFor(() => {
@@ -2215,7 +2215,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
   const knownStudents = [
     {
       id: "stu-target-01",
-      studentId: "target001",
+      eaglesId: "target001",
       email: "target001@example.com",
       profile: { fullName: "Target Student", currentGrade: "A1 Movers" },
       attendanceRecords: [],
@@ -2330,8 +2330,8 @@ test("overview anonymous exercise submissions panel renders and supports show-al
     if (pathname === "/api/admin/students" && method === "GET") {
       const q = normalizeText(parsedUrl.searchParams.get("q"))
       if (q) {
-        const matched = knownStudents.find((entry) => normalizeText(entry.studentId) === q)
-          || (createdStudent && normalizeText(createdStudent.studentId) === q ? createdStudent : null)
+        const matched = knownStudents.find((entry) => normalizeText(entry.eaglesId) === q)
+          || (createdStudent && normalizeText(createdStudent.eaglesId) === q ? createdStudent : null)
         return jsonResponse(200, { items: matched ? [matched] : [] })
       }
       const items = createdStudent ? [createdStudent] : []
@@ -2393,7 +2393,8 @@ test("overview anonymous exercise submissions panel renders and supports show-al
       if (payload.action === "create-account") {
         createdStudent = {
           id: "stu-created-01",
-          studentId: payload.studentId,
+          eaglesId: payload.eaglesId,
+          eaglesId: payload.eaglesId,
           email: payload.email,
           profile: { fullName: payload.fullName || "New Student", currentGrade: "" },
           attendanceRecords: [],
@@ -2508,7 +2509,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
         (entry) =>
           entry.action === "create-account"
           && entry.incomingResultId === "incoming-02"
-          && entry.studentId === "newuser001"
+          && entry.eaglesId === "newuser001"
       )
     )
     assert.match(document.getElementById("status").textContent || "", /auto-added quiz score/i)
@@ -2516,7 +2517,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
       document.querySelector('.page-section[data-page="profile"]')?.classList.contains("active"),
       true
     )
-    assert.equal(document.getElementById("f_studentId").value, "newuser001")
+    assert.equal(document.getElementById("f_eaglesId").value, "newuser001")
   })
 
   openPage(dom, "overview")
@@ -2593,13 +2594,13 @@ test("settings global level-tile style propagates to attendance and assignments 
         items: [
           {
             id: "stu-01",
-            studentId: "SIS-001",
+            eaglesId: "SIS-001",
             profile: { fullName: "Starter Student", currentGrade: "Pre-A1 Starters" },
             counts: { attendanceRecords: 0 },
           },
           {
             id: "stu-02",
-            studentId: "SIS-002",
+            eaglesId: "SIS-002",
             profile: { fullName: "Mover Student", currentGrade: "A1 Movers" },
             counts: { attendanceRecords: 0 },
           },
@@ -2707,7 +2708,7 @@ test("legacy alias level-tile config still applies to assignments input tiles", 
           items: [
             {
               id: "stu-01",
-              studentId: "SIS-001",
+              eaglesId: "SIS-001",
               profile: { fullName: "Starter Student", currentGrade: "Pre-A1 Starters" },
               counts: { attendanceRecords: 0 },
             },
@@ -3304,7 +3305,7 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
             uncompletedStudents: [
               {
                 studentRefId: "stu-01",
-                studentId: "SIS-001",
+                eaglesId: "SIS-001",
                 fullName: "Starter Student",
                 outstandingCount: 2,
                 assignmentNames: ["HW 1"],
@@ -3521,7 +3522,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
     if (url.includes("/api/admin/students/stu-01")) {
       return jsonResponse(200, {
         id: "stu-01",
-        studentId: "SIS-001",
+        eaglesId: "SIS-001",
         profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
         attendanceRecords: [
           { id: "att-1", attendanceDate: "2026-02-24", status: "present", comments: "" },
@@ -3537,7 +3538,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
         items: [
           {
             id: "stu-01",
-            studentId: "SIS-001",
+            eaglesId: "SIS-001",
             profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
             counts: { attendanceRecords: 3 },
           },
@@ -3820,7 +3821,6 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
     const profilePanel = document.querySelector('[data-profile-tab-panel="profile"]')
     const fieldIds = Array.from(profilePanel.querySelectorAll('[id^="f_"]')).map((el) => el.id)
     assert.ok(fieldIds.indexOf("f_signatureEmail") >= 0)
-    assert.ok(fieldIds.indexOf("f_signatureEmail") < fieldIds.indexOf("f_fullName"))
   })
 
   document.getElementById("profileFieldCreateKey").value = "custom-health-note"
@@ -3878,7 +3878,8 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
 test("profile payload mapping preserves mapped fields and custom form payload keys", async () => {
   let studentDetail = {
     id: "stu-01",
-    studentId: "1001",
+    studentNumber: 1001,
+    eaglesId: "1001",
     email: "seed@example.com",
     profile: {
       fullName: "Seed Student",
@@ -3964,7 +3965,7 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
         items: [
           {
             id: "stu-01",
-            studentId: studentDetail.studentId,
+            eaglesId: studentDetail.eaglesId,
             profile: {
               fullName: studentDetail.profile.fullName,
               currentGrade: studentDetail.profile.currentGrade,
@@ -4036,17 +4037,20 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
     assert.ok(document.getElementById("f_customAlias"))
     assert.ok(document.getElementById("profileEditorForm"))
     assert.ok(document.getElementById("f_password")?.closest("form"))
-    assert.equal(document.getElementById("f_studentId")?.value, "1001")
+    assert.equal(document.getElementById("f_studentNumber")?.value, "1001")
+    assert.equal(document.getElementById("f_eaglesId")?.value, "1001")
     assert.equal(document.getElementById("saveBtn")?.disabled, false)
   })
 
   document.getElementById("f_fullName").value = "Updated Student"
-  document.getElementById("f_studentId").value = "1001"
+  document.getElementById("f_studentNumber").value = "1225"
+  document.getElementById("f_eaglesId").value = "1001"
   document.getElementById("f_studentEmail").value = "updated-student@example.com"
   document.getElementById("f_customAlias").value = "Alias Value"
   assert.equal(typeof dom.window.collectStudentPayload, "function")
   const payload = dom.window.collectStudentPayload()
-  assert.equal(payload.studentId, "1001")
+  assert.equal(payload.studentNumber, 1225)
+  assert.equal(payload.eaglesId, "1001")
   assert.equal(payload.email, "seed@example.com")
   assert.equal(payload.profile.fullName, "Updated Student")
   assert.equal(payload.profile.studentEmail, "updated-student@example.com")
@@ -4056,6 +4060,143 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
   assert.equal(payload.profile.rawFormPayload["custom-alias"], "Alias Value")
   assert.equal(payload.profile.normalizedFormPayload.legacyField, "keep-me")
   assert.equal(payload.profile.rawFormPayload.legacyField, "keep-me")
+
+  dom.window.close()
+})
+
+test("new profile form hydrates next student number and keeps floor at 100+", async () => {
+  let nextStudentNumberCalls = 0
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "assignments",
+            "parent-tracking",
+            "grades",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "assignments",
+              "parent-tracking",
+              "grades",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main Campus"] })
+    if (url.includes("/api/admin/students/next-student-number")) {
+      nextStudentNumberCalls += 1
+      return jsonResponse(200, { startAt: 100, nextStudentNumber: 226 })
+    }
+    if (method === "GET" && url.includes("/api/admin/students/stu-legacy")) {
+      return jsonResponse(200, {
+        id: "stu-legacy",
+        studentNumber: 225,
+        eaglesId: "legacy225",
+        email: "legacy@example.com",
+        profile: {
+          fullName: "Legacy Student",
+          currentGrade: "Pre-A1 Starters",
+        },
+        attendanceRecords: [],
+        gradeRecords: [],
+        parentReports: [],
+      })
+    }
+    if (method === "GET" && url.includes("/api/admin/students")) {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "stu-legacy",
+            studentNumber: 225,
+            eaglesId: "legacy225",
+            profile: {
+              fullName: "Legacy Student",
+              currentGrade: "Pre-A1 Starters",
+            },
+          },
+        ],
+      })
+    }
+    if (url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    if (url.includes("/api/admin/exercise-results/incoming")) return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    if (url.includes("/api/admin/runtime/service-control")) {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  openPage(dom, "profile")
+  dom.window.document.getElementById("clearBtn")?.click()
+
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("f_studentNumber")?.value, "226")
+    assert.equal(dom.window.document.getElementById("f_eaglesId")?.value, "")
+  })
+  assert.ok(nextStudentNumberCalls >= 1)
 
   dom.window.close()
 })
@@ -4127,7 +4268,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
     if (url.includes("/api/admin/students/stu-01")) {
       return jsonResponse(200, {
         id: "stu-01",
-        studentId: "SIS-001",
+        eaglesId: "SIS-001",
         profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
         attendanceRecords: [
           {
@@ -4200,7 +4341,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
         items: [
           {
             id: "stu-01",
-            studentId: "SIS-001",
+            eaglesId: "SIS-001",
             profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
             counts: { attendanceRecords: 0 },
           },

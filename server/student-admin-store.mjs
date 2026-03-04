@@ -42,6 +42,12 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function normalizePositiveInteger(value) {
+  const parsed = normalizeInteger(value)
+  if (!Number.isFinite(parsed) || parsed < 1) return null
+  return parsed
+}
+
 function normalizeFloat(value) {
   if (value === undefined || value === null || value === "") return null
   const parsed = Number.parseFloat(String(value))
@@ -205,9 +211,32 @@ function assertWithStatus(condition, status, message) {
   throw error
 }
 
-function buildExternalKey(studentId) {
-  return `sid:${normalizeLower(studentId)}`
+function buildExternalKey(eaglesId) {
+  return `sid:${normalizeLower(eaglesId)}`
 }
+
+function buildEaglesIdFromNumber(studentNumber) {
+  const normalized = normalizePositiveInteger(studentNumber)
+  if (!normalized) return ""
+  return `SIS-${String(normalized).padStart(6, "0")}`
+}
+
+function buildUniqueEaglesIdCandidate(baseEaglesId, reservedEaglesIdKeys) {
+  const base = normalizeText(baseEaglesId)
+  if (!base) return ""
+  let candidate = base
+  let suffix = 2
+  while (reservedEaglesIdKeys.has(normalizeLower(candidate))) {
+    candidate = `${base}-${suffix}`
+    suffix += 1
+  }
+  return candidate
+}
+
+const STUDENT_NUMBER_START = Math.max(
+  100,
+  normalizePositiveInteger(process.env.STUDENT_NUMBER_START) || 100
+)
 
 function normalizePhoneDigits(value) {
   return normalizeText(value).replace(/\D+/g, "")
@@ -435,6 +464,9 @@ function normalizeProfilePayload(payload = {}) {
     sourceUrl: normalizeNullableText(payload.sourceUrl),
     fullName: normalizeNullableText(payload.fullName),
     englishName: normalizeNullableText(payload.englishName),
+    memberSince: normalizeNullableText(payload.memberSince),
+    exercisePoints: normalizeInteger(payload.exercisePoints),
+    parentsId: normalizeNullableText(payload.parentsId),
     photoUrl: normalizeNullableText(payload.photoUrl),
     genderSelections: normalizeTextArray(payload.genderSelections),
     studentPhone: normalizeNullableText(payload.studentPhone),
@@ -449,6 +481,7 @@ function normalizeProfilePayload(payload = {}) {
     otherLanguage: normalizeNullableText(payload.otherLanguage),
     schoolName: normalizeNullableText(payload.schoolName),
     currentGrade: normalizeNullableText(canonicalizeLevel(payload.currentGrade)),
+    currentSchoolGrade: normalizeNullableText(payload.currentSchoolGrade),
     motherName: normalizeNullableText(payload.motherName),
     motherEmail: normalizeNullableEmail(payload.motherEmail),
     motherPhone: normalizeNullableText(payload.motherPhone),
@@ -460,8 +493,10 @@ function normalizeProfilePayload(payload = {}) {
     fatherEmergencyContact: normalizeNullableText(payload.fatherEmergencyContact),
     fatherMessenger: normalizeNullableText(payload.fatherMessenger),
     streetAddress: normalizeNullableText(payload.streetAddress),
+    newAddress: normalizeNullableText(payload.newAddress),
     wardDistrict: normalizeNullableText(payload.wardDistrict),
     city: normalizeNullableText(payload.city),
+    postCode: normalizeNullableText(payload.postCode),
     hasGlasses: normalizeNullableText(payload.hasGlasses),
     hadEyeExam: normalizeNullableText(payload.hadEyeExam),
     lastEyeExamDateText: normalizeNullableText(payload.lastEyeExamDateText),
@@ -494,10 +529,12 @@ function normalizeProfilePayload(payload = {}) {
 
 function mapStudent(student) {
   if (!student) return null
+  const eaglesId = student.eaglesId
   return {
     id: student.id,
     externalKey: student.externalKey,
-    studentId: student.studentId,
+    studentNumber: student.studentNumber,
+    eaglesId,
     email: student.email,
     createdAt: student.createdAt,
     updatedAt: student.updatedAt,
@@ -544,6 +581,33 @@ async function getPrismaClient() {
   }
 }
 
+function normalizeStudentNumberFloor(value = STUDENT_NUMBER_START) {
+  return Math.max(100, normalizePositiveInteger(value) || STUDENT_NUMBER_START)
+}
+
+function maxStudentNumberFromRows(rows = [], floor = STUDENT_NUMBER_START) {
+  const minimum = normalizeStudentNumberFloor(floor)
+  return rows.reduce((highest, row) => {
+    const candidate = normalizePositiveInteger(row?.studentNumber) || 0
+    return candidate > highest ? candidate : highest
+  }, minimum - 1)
+}
+
+async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_START) {
+  const minimum = normalizeStudentNumberFloor(floor)
+  const rows = await client.student.findMany({
+    select: {
+      studentNumber: true,
+    },
+  })
+  const highest = maxStudentNumberFromRows(rows, minimum)
+  return Math.max(minimum, highest + 1)
+}
+
+function requestedStudentNumberFromPayload(payload = {}) {
+  return normalizePositiveInteger(payload?.studentNumber)
+}
+
 function getImportValue(row, aliases) {
   const aliasSet = new Set(aliases.map((entry) => normalizeLower(entry)))
   const entries = Object.entries(row || {})
@@ -555,42 +619,146 @@ function getImportValue(row, aliases) {
 }
 
 function mapImportRowToStudentPayload(row) {
-  const studentId = normalizeText(
-    getImportValue(row, ["studentId", "student id", "student_id", "id"])
+  const eaglesId = normalizeText(
+    getImportValue(row, [
+      "eaglesId",
+      "eagles-id",
+    ])
+  )
+  const studentNumber = normalizePositiveInteger(
+    getImportValue(row, [
+      "studentNumber",
+      "student-number",
+    ])
   )
 
   const profile = {
     sourceFormId: "spreadsheet-import",
     sourceUrl: "local-import",
-    fullName: normalizeText(getImportValue(row, ["fullName", "full name", "name", "student name"])),
-    englishName: normalizeText(getImportValue(row, ["englishName", "english name"])),
-    photoUrl: normalizeText(getImportValue(row, ["photoUrl", "photo url", "image", "image url"])),
-    studentPhone: normalizeText(getImportValue(row, ["studentPhone", "student phone", "child phone", "phone"])),
-    studentEmail: normalizeText(getImportValue(row, ["studentEmail", "student email", "email"])),
-    dobText: normalizeText(getImportValue(row, ["dob", "date of birth", "birth date"])),
-    schoolName: normalizeText(getImportValue(row, ["schoolName", "school name", "school"])),
+    fullName: normalizeText(getImportValue(row, ["fullName", "full-name-student"])),
+    englishName: normalizeText(getImportValue(row, ["englishName", "english-name"])),
+    memberSince: normalizeText(getImportValue(row, ["memberSince", "member-since"])),
+    exercisePoints: normalizePositiveInteger(
+      getImportValue(row, ["exercisePoints", "exercise-points"])
+    ),
+    parentsId: normalizeText(getImportValue(row, ["parentsId", "parents-id"])),
+    photoUrl: normalizeText(getImportValue(row, ["photoUrl", "student-photo"])),
+    studentPhone: normalizeText(getImportValue(row, ["studentPhone", "student-phone"])),
+    studentEmail: normalizeText(getImportValue(row, ["studentEmail", "student-email"])),
+    dobText: normalizeText(getImportValue(row, ["dobText", "dob"])),
+    schoolName: normalizeText(getImportValue(row, ["schoolName", "student-school"])),
     currentGrade: canonicalizeLevel(
-      normalizeText(getImportValue(row, ["currentGrade", "current grade", "level", "grade", "class"]))
+      normalizeText(getImportValue(row, ["currentGrade", "class-level"]))
     ),
-    streetAddress: normalizeText(getImportValue(row, ["streetAddress", "street address", "address"])),
-    wardDistrict: normalizeText(getImportValue(row, ["wardDistrict", "ward/district", "district"])),
+    currentSchoolGrade: normalizeText(
+      getImportValue(row, ["currentSchoolGrade", "student-current-grade"])
+    ),
+    streetAddress: normalizeText(getImportValue(row, ["streetAddress", "street-address"])),
+    newAddress: normalizeText(getImportValue(row, ["newAddress", "new-address"])),
+    wardDistrict: normalizeText(getImportValue(row, ["wardDistrict", "ward-district"])),
     city: normalizeText(getImportValue(row, ["city"])),
-    motherName: normalizeText(getImportValue(row, ["motherName", "mother name", "mom name"])),
-    motherPhone: normalizeText(getImportValue(row, ["motherPhone", "mother phone", "mom phone"])),
+    postCode: normalizeText(getImportValue(row, ["postCode", "post-code"])),
+    motherName: normalizeText(getImportValue(row, ["motherName", "full-name_mother"])),
+    motherPhone: normalizeText(getImportValue(row, ["motherPhone", "mothers-phone"])),
     motherEmergencyContact: normalizeText(
-      getImportValue(row, ["motherEmergencyContact", "mother emergency contact", "mother emergency phone"])
+      getImportValue(row, ["motherEmergencyContact", "emergency-contact-mother"])
     ),
-    fatherName: normalizeText(getImportValue(row, ["fatherName", "father name", "dad name"])),
-    fatherPhone: normalizeText(getImportValue(row, ["fatherPhone", "father phone", "dad phone"])),
+    fatherName: normalizeText(getImportValue(row, ["fatherName", "full-name_father"])),
+    fatherPhone: normalizeText(getImportValue(row, ["fatherPhone", "fathers-phone"])),
     fatherEmergencyContact: normalizeText(
-      getImportValue(row, ["fatherEmergencyContact", "father emergency contact", "father emergency phone"])
+      getImportValue(row, ["fatherEmergencyContact", "emergency-contact-father"])
     ),
   }
 
   return {
-    studentId,
-    email: normalizeText(getImportValue(row, ["email", "student email", "studentEmail"])),
+    eaglesId,
+    studentNumber,
+    email: normalizeText(getImportValue(row, ["email", "studentEmail", "student-email"])),
     profile,
+  }
+}
+
+export function applyImportIdentityDefaults(
+  mappedRows = [],
+  {
+    existingRows = [],
+    studentNumberStart = STUDENT_NUMBER_START,
+  } = {}
+) {
+  const minimumStudentNumber = normalizeStudentNumberFloor(studentNumberStart)
+  const existingEaglesIdKeys = new Set()
+  const reservedEaglesIdKeys = new Set()
+  const reservedStudentNumbers = new Set()
+
+  ;(Array.isArray(existingRows) ? existingRows : []).forEach((row) => {
+    const idKey = normalizeLower(row?.eaglesId)
+    if (idKey) {
+      existingEaglesIdKeys.add(idKey)
+      reservedEaglesIdKeys.add(idKey)
+    }
+    const number = normalizePositiveInteger(row?.studentNumber)
+    if (number) reservedStudentNumbers.add(number)
+  })
+
+  const rows = (Array.isArray(mappedRows) ? mappedRows : []).map((row) => ({ ...(row || {}) }))
+  rows.forEach((row) => {
+    const idKey = normalizeLower(row?.eaglesId)
+    if (idKey) reservedEaglesIdKeys.add(idKey)
+    const number = normalizePositiveInteger(row?.studentNumber)
+    if (number) reservedStudentNumbers.add(number)
+  })
+
+  let nextStudentNumber = minimumStudentNumber
+  reservedStudentNumbers.forEach((number) => {
+    if (number >= nextStudentNumber) nextStudentNumber = number + 1
+  })
+
+  let autoFilledEaglesIds = 0
+  let autoFilledStudentNumbers = 0
+
+  const nextRows = rows.map((row, index) => {
+    const nextRow = { ...row }
+    const explicitEaglesId = normalizeText(nextRow.eaglesId)
+    const explicitEaglesIdKey = normalizeLower(explicitEaglesId)
+    const explicitEaglesIdExists = explicitEaglesIdKey
+      ? existingEaglesIdKeys.has(explicitEaglesIdKey)
+      : false
+
+    let studentNumber = normalizePositiveInteger(nextRow.studentNumber)
+    if (!studentNumber && (!explicitEaglesId || !explicitEaglesIdExists)) {
+      while (reservedStudentNumbers.has(nextStudentNumber)) nextStudentNumber += 1
+      studentNumber = nextStudentNumber
+      reservedStudentNumbers.add(studentNumber)
+      nextStudentNumber += 1
+      nextRow.studentNumber = studentNumber
+      autoFilledStudentNumbers += 1
+    }
+
+    if (!explicitEaglesId) {
+      if (!studentNumber) {
+        while (reservedStudentNumbers.has(nextStudentNumber)) nextStudentNumber += 1
+        studentNumber = nextStudentNumber
+        reservedStudentNumbers.add(studentNumber)
+        nextStudentNumber += 1
+        nextRow.studentNumber = studentNumber
+        autoFilledStudentNumbers += 1
+      }
+
+      const baseEaglesId =
+        buildEaglesIdFromNumber(studentNumber) || `SIS-IMPORT-${String(index + 1).padStart(6, "0")}`
+      const generatedEaglesId = buildUniqueEaglesIdCandidate(baseEaglesId, reservedEaglesIdKeys)
+      nextRow.eaglesId = generatedEaglesId
+      reservedEaglesIdKeys.add(normalizeLower(generatedEaglesId))
+      autoFilledEaglesIds += 1
+    }
+
+    return nextRow
+  })
+
+  return {
+    rows: nextRows,
+    autoFilledEaglesIds,
+    autoFilledStudentNumbers,
   }
 }
 
@@ -607,7 +775,7 @@ function normalizeSearchComparable(value) {
 function studentSearchComparableHaystack(student = {}) {
   const profile = student?.profile || {}
   return [
-    student?.studentId,
+    student?.eaglesId,
     student?.email,
     profile?.studentEmail,
     profile?.fullName,
@@ -647,7 +815,7 @@ const STUDENT_LIST_QUERY_ORDER_BY = [
       fullName: "asc",
     },
   },
-  { studentId: "asc" },
+  { eaglesId: "asc" },
 ]
 
 const STUDENT_SEARCH_FALLBACK_SCAN_BATCH = 250
@@ -697,7 +865,7 @@ function listStudentsSearchClause(searchQuery = "") {
   if (!queryText) return null
   return {
     OR: [
-      { studentId: { contains: queryText, mode: "insensitive" } },
+      { eaglesId: { contains: queryText, mode: "insensitive" } },
       { email: { contains: queryText, mode: "insensitive" } },
       { profile: { is: { fullName: { contains: queryText, mode: "insensitive" } } } },
       { profile: { is: { englishName: { contains: queryText, mode: "insensitive" } } } },
@@ -720,7 +888,7 @@ async function findAccentInsensitiveStudentIds({ prisma, baseWhere = {}, searchC
       where: baseWhere,
       select: {
         id: true,
-        studentId: true,
+        eaglesId: true,
         email: true,
         profile: {
           select: {
@@ -805,7 +973,7 @@ export async function listStudents({ query = "", level = "", school = "", take =
 export async function getStudentById(studentRefId) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
-  assertWithStatus(Boolean(id), 400, "Student id is required")
+  assertWithStatus(Boolean(id), 400, "studentRefId is required")
 
   const student = await prisma.student.findUnique({
     where: { id },
@@ -839,38 +1007,74 @@ export async function getStudentById(studentRefId) {
   return mapStudent(student)
 }
 
+export async function getNextStudentNumber({ floor = STUDENT_NUMBER_START } = {}) {
+  const prisma = await getPrismaClient()
+  const startAt = normalizeStudentNumberFloor(floor)
+  const nextStudentNumber = await resolveNextStudentNumberForClient(prisma, startAt)
+  return {
+    startAt,
+    nextStudentNumber,
+  }
+}
+
 export async function saveStudent(payload = {}, studentRefId = "", options = {}) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(payload.studentId)
-  assertWithStatus(Boolean(studentId), 400, "studentId is required")
+  const eaglesId = normalizeText(payload.eaglesId)
+  assertWithStatus(Boolean(eaglesId), 400, "eaglesId is required")
   const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
 
   const studentEmail = normalizeNullableEmail(payload.email)
   const profilePayload = normalizeProfilePayload(payload.profile || {})
   const profileEmail = profilePayload.studentEmail || null
   const persistedEmail = profileEmail || studentEmail
+  const requestedStudentNumber = requestedStudentNumberFromPayload(payload)
   const requestedId = normalizeText(studentRefId)
 
   const result = await prisma.$transaction(async (tx) => {
+    const assertStudentNumberIsUnique = async (studentNumber, excludedStudentId = "") => {
+      const normalizedNumber = normalizePositiveInteger(studentNumber)
+      if (!normalizedNumber) return
+      const duplicate = await tx.student.findFirst({
+        where: {
+          studentNumber: normalizedNumber,
+          ...(excludedStudentId
+            ? {
+                id: {
+                  not: excludedStudentId,
+                },
+              }
+            : {}),
+        },
+      })
+      assertWithStatus(!duplicate, 409, "studentNumber already exists")
+    }
+
     if (requestedId) {
       const existing = await tx.student.findUnique({ where: { id: requestedId } })
       assertWithStatus(Boolean(existing), 404, "Student not found")
 
       const duplicate = await tx.student.findFirst({
         where: {
-          studentId,
+          eaglesId: eaglesId,
           id: {
             not: requestedId,
           },
         },
       })
-      assertWithStatus(!duplicate, 409, "studentId already exists")
+      assertWithStatus(!duplicate, 409, "eaglesId already exists")
+
+      const studentNumber =
+        requestedStudentNumber
+        || normalizePositiveInteger(existing.studentNumber)
+        || (await resolveNextStudentNumberForClient(tx))
+      await assertStudentNumberIsUnique(studentNumber, requestedId)
 
       const student = await tx.student.update({
         where: { id: requestedId },
         data: {
-          studentId,
-          externalKey: buildExternalKey(studentId),
+          studentNumber,
+          eaglesId: eaglesId,
+          externalKey: buildExternalKey(eaglesId),
           email: persistedEmail,
         },
       })
@@ -886,41 +1090,21 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
 
       return {
         action: "updated",
-        studentId: student.id,
+        studentRefId: student.id,
       }
     }
 
-    const existingByStudentId = await tx.student.findUnique({ where: { studentId } })
+    const existingByEaglesId = await tx.student.findUnique({ where: { eaglesId: eaglesId } })
+    assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")
 
-    if (existingByStudentId) {
-      const student = await tx.student.update({
-        where: { id: existingByStudentId.id },
-        data: {
-          externalKey: buildExternalKey(studentId),
-          studentId,
-          email: persistedEmail,
-        },
-      })
-
-      await tx.studentProfile.upsert({
-        where: { studentRefId: student.id },
-        update: profilePayload,
-        create: {
-          studentRefId: student.id,
-          ...profilePayload,
-        },
-      })
-
-      return {
-        action: "updated",
-        studentId: student.id,
-      }
-    }
+    const studentNumber = requestedStudentNumber || (await resolveNextStudentNumberForClient(tx))
+    await assertStudentNumberIsUnique(studentNumber)
 
     const student = await tx.student.create({
       data: {
-        externalKey: buildExternalKey(studentId),
-        studentId,
+        studentNumber,
+        externalKey: buildExternalKey(eaglesId),
+        eaglesId: eaglesId,
         email: persistedEmail,
       },
     })
@@ -934,7 +1118,7 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
 
     return {
       action: "created",
-      studentId: student.id,
+      studentRefId: student.id,
     }
   })
 
@@ -944,14 +1128,14 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
 
   return {
     action: result.action,
-    student: await getStudentById(result.studentId),
+    student: await getStudentById(result.studentRefId),
   }
 }
 
 export async function deleteStudent(studentRefId) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
-  assertWithStatus(Boolean(id), 400, "Student id is required")
+  assertWithStatus(Boolean(id), 400, "studentRefId is required")
 
   await prisma.$transaction(async (tx) => {
     await tx.parentClassReport.deleteMany({ where: { studentRefId: id } })
@@ -965,28 +1149,93 @@ export async function deleteStudent(studentRefId) {
 
   await invalidateLevelAndSchoolFiltersCache()
 
-  return { deleted: true, studentId: id }
+  return { deleted: true, studentRefId: id }
 }
 
 export async function importStudentsFromRows(rows = []) {
   assertWithStatus(Array.isArray(rows), 400, "rows must be an array")
   assertWithStatus(rows.length > 0, 400, "rows cannot be empty")
 
-  const seenStudentIds = new Set()
+  const prisma = await getPrismaClient()
+  const existingRows = await prisma.student.findMany({
+    select: {
+      eaglesId: true,
+      studentNumber: true,
+    },
+  })
+
+  const mappedRows = rows.map((row) => mapImportRowToStudentPayload(row))
+  const {
+    rows: preparedRows,
+    autoFilledEaglesIds,
+    autoFilledStudentNumbers,
+  } = applyImportIdentityDefaults(mappedRows, {
+    existingRows,
+    studentNumberStart: STUDENT_NUMBER_START,
+  })
+
+  const seenEaglesIds = new Map()
+  const seenStudentNumbers = new Map()
+  const duplicateImportRowErrors = new Map()
   const errors = []
   let created = 0
   let updated = 0
 
-  for (let i = 0; i < rows.length; i += 1) {
-    const row = rows[i]
-    try {
-      const mapped = mapImportRowToStudentPayload(row)
-      const studentId = normalizeText(mapped.studentId)
-      assertWithStatus(Boolean(studentId), 400, `Row ${i + 1}: studentId is required`)
+  for (let i = 0; i < preparedRows.length; i += 1) {
+    const rowNumber = i + 1
+    const row = preparedRows[i] || {}
+    const eaglesId = normalizeText(row.eaglesId)
+    if (!eaglesId) {
+      duplicateImportRowErrors.set(rowNumber, "eaglesId is required")
+      continue
+    }
 
-      const duplicateKey = normalizeLower(studentId)
-      assertWithStatus(!seenStudentIds.has(duplicateKey), 400, `Row ${i + 1}: duplicate studentId`)
-      seenStudentIds.add(duplicateKey)
+    const eaglesIdKey = normalizeLower(eaglesId)
+    const duplicateEaglesRow = seenEaglesIds.get(eaglesIdKey)
+    if (duplicateEaglesRow) {
+      if (!duplicateImportRowErrors.has(duplicateEaglesRow)) {
+        duplicateImportRowErrors.set(duplicateEaglesRow, `duplicate eaglesId (also in row ${rowNumber})`)
+      }
+      duplicateImportRowErrors.set(rowNumber, `duplicate eaglesId (also in row ${duplicateEaglesRow})`)
+    } else {
+      seenEaglesIds.set(eaglesIdKey, rowNumber)
+    }
+
+    const studentNumber = normalizePositiveInteger(row.studentNumber)
+    if (!studentNumber) continue
+
+    const duplicateStudentNumberRow = seenStudentNumbers.get(studentNumber)
+    if (duplicateStudentNumberRow) {
+      if (!duplicateImportRowErrors.has(duplicateStudentNumberRow)) {
+        duplicateImportRowErrors.set(
+          duplicateStudentNumberRow,
+          `duplicate studentNumber (also in row ${rowNumber})`
+        )
+      }
+      duplicateImportRowErrors.set(
+        rowNumber,
+        `duplicate studentNumber (also in row ${duplicateStudentNumberRow})`
+      )
+      continue
+    }
+    seenStudentNumbers.set(studentNumber, rowNumber)
+  }
+
+  for (let i = 0; i < preparedRows.length; i += 1) {
+    const rowNumber = i + 1
+    if (duplicateImportRowErrors.has(rowNumber)) {
+      errors.push({
+        rowNumber,
+        message: duplicateImportRowErrors.get(rowNumber),
+      })
+      continue
+    }
+
+    const row = preparedRows[i]
+    try {
+      const mapped = row
+      const eaglesId = normalizeText(mapped.eaglesId)
+      assertWithStatus(Boolean(eaglesId), 400, `Row ${i + 1}: eaglesId is required`)
 
       const saved = await saveStudent(mapped, "", { skipFilterCacheInvalidation: true })
       if (saved.action === "created") created += 1
@@ -1004,10 +1253,12 @@ export async function importStudentsFromRows(rows = []) {
   }
 
   return {
-    processed: rows.length,
+    processed: preparedRows.length,
     created,
     updated,
     failed: errors.length,
+    autoFilledEaglesIds,
+    autoFilledStudentNumbers,
     errors,
   }
 }
@@ -1109,7 +1360,7 @@ export async function getAdminDashboardSummary() {
         fatherEmail: true,
         student: {
           select: {
-            studentId: true,
+            eaglesId: true,
             email: true,
           },
         },
@@ -1270,7 +1521,7 @@ export async function getAdminDashboardSummary() {
     if (!key) return
     const current = riskByStudent.get(key) || {
       studentRefId: key,
-      studentId: "",
+      eaglesId: "",
       fullName: "",
       level: "",
       absences: 0,
@@ -1289,7 +1540,7 @@ export async function getAdminDashboardSummary() {
   outstandingThisWeekByStudent.forEach((count, key) => {
     const current = riskByStudent.get(key) || {
       studentRefId: key,
-      studentId: "",
+      eaglesId: "",
       fullName: "",
       level: "",
       absences: 0,
@@ -1302,7 +1553,7 @@ export async function getAdminDashboardSummary() {
 
   riskByStudent.forEach((entry, key) => {
     const profile = profileByStudentRefId.get(key)
-    entry.studentId = normalizeText(profile?.student?.studentId || profile?.studentRefId || key)
+    entry.eaglesId = normalizeText(profile?.student?.eaglesId || profile?.studentRefId || key)
     entry.fullName = normalizeText(profile?.fullName) || "(no name)"
     entry.level = canonicalizeLevel(profile?.currentGrade || "") || "Unassigned"
   })
@@ -1357,7 +1608,7 @@ export async function getAdminDashboardSummary() {
     bucket.enrolledStudents += 1
     bucket._studentsById.set(profile.studentRefId, {
       studentRefId: profile.studentRefId,
-      studentId: normalizeText(profile?.student?.studentId || profile.studentRefId),
+      eaglesId: normalizeText(profile?.student?.eaglesId || profile.studentRefId),
       fullName: normalizeText(profile.fullName) || "(no name)",
       emails: toEmailList(profile),
       outstandingCount: 0,
@@ -1378,7 +1629,7 @@ export async function getAdminDashboardSummary() {
     if (!student) {
       student = {
         studentRefId: record.studentRefId,
-        studentId: normalizeText(profile?.student?.studentId || record.studentRefId),
+        eaglesId: normalizeText(profile?.student?.eaglesId || record.studentRefId),
         fullName: normalizeText(profile?.fullName) || "(no name)",
         emails: toEmailList(profile),
         outstandingCount: 0,
@@ -1423,7 +1674,7 @@ export async function getAdminDashboardSummary() {
         })
         .map((entry) => ({
           studentRefId: entry.studentRefId,
-          studentId: entry.studentId,
+          eaglesId: entry.eaglesId,
           fullName: entry.fullName,
           emails: entry.emails,
           outstandingCount: entry.outstandingCount,
@@ -1505,7 +1756,7 @@ export async function findFamilyByEmergencyPhone(phoneNumber) {
   const rows = await prisma.$queryRaw`
     SELECT
       s."id" AS "studentRefId",
-      s."studentId" AS "studentId",
+      s."eaglesId" AS "eaglesId",
       sp."fullName" AS "fullName",
       sp."motherName" AS "motherName",
       sp."fatherName" AS "fatherName",
@@ -1535,8 +1786,8 @@ export async function findFamilyByEmergencyPhone(phoneNumber) {
 
 export async function saveAttendanceRecord(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(studentRefId)
-  assertWithStatus(Boolean(studentId), 400, "Student id is required")
+  const studentRef = normalizeText(studentRefId)
+  assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
   const className = normalizeText(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
@@ -1563,7 +1814,7 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
   if (recordId) {
     const existing = await prisma.studentAttendance.findUnique({ where: { id: recordId } })
     assertWithStatus(Boolean(existing), 404, "Attendance record not found")
-    assertWithStatus(existing.studentRefId === studentId, 403, "Attendance record does not belong to student")
+    assertWithStatus(existing.studentRefId === studentRef, 403, "Attendance record does not belong to student")
 
     return prisma.studentAttendance.update({
       where: { id: recordId },
@@ -1573,7 +1824,7 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
 
   return prisma.studentAttendance.create({
     data: {
-      studentRefId: studentId,
+      studentRefId: studentRef,
       ...data,
     },
   })
@@ -1581,14 +1832,14 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
 
 export async function deleteAttendanceRecord(studentRefId, attendanceId) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(studentRefId)
+  const studentRef = normalizeText(studentRefId)
   const id = normalizeText(attendanceId)
-  assertWithStatus(Boolean(studentId), 400, "Student id is required")
+  assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
   assertWithStatus(Boolean(id), 400, "Attendance id is required")
 
   const existing = await prisma.studentAttendance.findUnique({ where: { id } })
   assertWithStatus(Boolean(existing), 404, "Attendance record not found")
-  assertWithStatus(existing.studentRefId === studentId, 403, "Attendance record does not belong to student")
+  assertWithStatus(existing.studentRefId === studentRef, 403, "Attendance record does not belong to student")
 
   await prisma.studentAttendance.delete({ where: { id } })
   return { deleted: true, id }
@@ -1596,8 +1847,8 @@ export async function deleteAttendanceRecord(studentRefId, attendanceId) {
 
 export async function saveGradeRecord(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(studentRefId)
-  assertWithStatus(Boolean(studentId), 400, "Student id is required")
+  const studentRef = normalizeText(studentRefId)
+  assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
   const className = normalizeText(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
@@ -1632,7 +1883,7 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
   if (recordId) {
     const existing = await prisma.studentGradeRecord.findUnique({ where: { id: recordId } })
     assertWithStatus(Boolean(existing), 404, "Grade record not found")
-    assertWithStatus(existing.studentRefId === studentId, 403, "Grade record does not belong to student")
+    assertWithStatus(existing.studentRefId === studentRef, 403, "Grade record does not belong to student")
 
     return prisma.studentGradeRecord.update({
       where: { id: recordId },
@@ -1642,7 +1893,7 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
 
   return prisma.studentGradeRecord.create({
     data: {
-      studentRefId: studentId,
+      studentRefId: studentRef,
       ...data,
     },
   })
@@ -1650,14 +1901,14 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
 
 export async function deleteGradeRecord(studentRefId, gradeRecordId) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(studentRefId)
+  const studentRef = normalizeText(studentRefId)
   const id = normalizeText(gradeRecordId)
-  assertWithStatus(Boolean(studentId), 400, "Student id is required")
+  assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
   assertWithStatus(Boolean(id), 400, "Grade id is required")
 
   const existing = await prisma.studentGradeRecord.findUnique({ where: { id } })
   assertWithStatus(Boolean(existing), 404, "Grade record not found")
-  assertWithStatus(existing.studentRefId === studentId, 403, "Grade record does not belong to student")
+  assertWithStatus(existing.studentRefId === studentRef, 403, "Grade record does not belong to student")
 
   await prisma.studentGradeRecord.delete({ where: { id } })
   return { deleted: true, id }
@@ -1665,8 +1916,8 @@ export async function deleteGradeRecord(studentRefId, gradeRecordId) {
 
 export async function saveParentClassReport(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(studentRefId)
-  assertWithStatus(Boolean(studentId), 400, "Student id is required")
+  const studentRef = normalizeText(studentRefId)
+  assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
   const className = normalizeText(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
@@ -1695,7 +1946,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
   if (reportId) {
     const existing = await prisma.parentClassReport.findUnique({ where: { id: reportId } })
     assertWithStatus(Boolean(existing), 404, "Parent report not found")
-    assertWithStatus(existing.studentRefId === studentId, 403, "Parent report does not belong to student")
+    assertWithStatus(existing.studentRefId === studentRef, 403, "Parent report does not belong to student")
 
     return prisma.parentClassReport.update({
       where: { id: reportId },
@@ -1706,7 +1957,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
   return prisma.parentClassReport.upsert({
     where: {
       studentRefId_className_schoolYear_quarter: {
-        studentRefId: studentId,
+        studentRefId: studentRef,
         className,
         schoolYear,
         quarter,
@@ -1714,7 +1965,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     },
     update: reportData,
     create: {
-      studentRefId: studentId,
+      studentRefId: studentRef,
       ...reportData,
     },
   })
@@ -1722,14 +1973,14 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
 
 export async function deleteParentClassReport(studentRefId, reportId) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(studentRefId)
+  const studentRef = normalizeText(studentRefId)
   const id = normalizeText(reportId)
-  assertWithStatus(Boolean(studentId), 400, "Student id is required")
+  assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
   assertWithStatus(Boolean(id), 400, "Report id is required")
 
   const existing = await prisma.parentClassReport.findUnique({ where: { id } })
   assertWithStatus(Boolean(existing), 404, "Parent report not found")
-  assertWithStatus(existing.studentRefId === studentId, 403, "Parent report does not belong to student")
+  assertWithStatus(existing.studentRefId === studentRef, 403, "Parent report does not belong to student")
 
   await prisma.parentClassReport.delete({ where: { id } })
   return { deleted: true, id }
@@ -1737,8 +1988,8 @@ export async function deleteParentClassReport(studentRefId, reportId) {
 
 export async function generateParentClassReportFromGrades(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
-  const studentId = normalizeText(studentRefId)
-  assertWithStatus(Boolean(studentId), 400, "Student id is required")
+  const studentRef = normalizeText(studentRefId)
+  assertWithStatus(Boolean(studentRef), 400, "studentRefId is required")
 
   const className = normalizeText(payload.className)
   const schoolYear = normalizeText(payload.schoolYear)
@@ -1750,7 +2001,7 @@ export async function generateParentClassReportFromGrades(studentRefId, payload 
 
   const grades = await prisma.studentGradeRecord.findMany({
     where: {
-      studentRefId: studentId,
+      studentRefId: studentRef,
       className,
       schoolYear,
       quarter,
@@ -1783,5 +2034,5 @@ export async function generateParentClassReportFromGrades(studentRefId, payload 
     generatedAt: new Date(),
   }
 
-  return saveParentClassReport(studentId, reportPayload)
+  return saveParentClassReport(studentRef, reportPayload)
 }

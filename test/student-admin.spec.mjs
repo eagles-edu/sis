@@ -42,7 +42,7 @@ let assignmentAnnouncementPreviewPath = ""
 test("parseSpreadsheetRowsFromUploadPayload parses xlsx payload", () => {
   const workbook = XLSX.utils.book_new()
   const sheet = XLSX.utils.aoa_to_sheet([
-    ["studentId", "fullName", "motherEmergencyContact"],
+    ["eaglesId", "fullName", "motherEmergencyContact"],
     ["S001", "Jane Student", "0900111222"],
     ["S002", "John Student", "0900333444"],
   ])
@@ -56,13 +56,13 @@ test("parseSpreadsheetRowsFromUploadPayload parses xlsx payload", () => {
   })
 
   assert.equal(rows.length, 2)
-  assert.equal(rows[0].studentId, "S001")
+  assert.equal(rows[0].eaglesId, "S001")
   assert.equal(rows[1].fullName, "John Student")
 })
 
 test("generateStudentReportCardPdf returns a PDF buffer", async () => {
   const student = {
-    studentId: "S001",
+    eaglesId: "S001",
     profile: {
       fullName: "Jane Student",
       englishName: "Jane",
@@ -253,12 +253,12 @@ test("POST /api/admin/exports/xlsx returns workbook for admin", async () => {
     filename: "attendance-export.xlsx",
     sheetName: "Attendance",
     columns: [
-      { key: "studentId", label: "Student ID" },
+      { key: "eaglesId", label: "Eagles ID" },
       { key: "status", label: "Status" },
     ],
     rows: [
-      { studentId: "SIS-001", status: "Present" },
-      { studentId: "SIS-002", status: "Absent" },
+      { eaglesId: "SIS-001", status: "Present" },
+      { eaglesId: "SIS-002", status: "Absent" },
     ],
   }
   const res = await fetchLocal(port, "/api/admin/exports/xlsx", {
@@ -279,7 +279,7 @@ test("POST /api/admin/exports/xlsx returns workbook for admin", async () => {
   assert.equal(workbook.SheetNames[0], "Attendance")
   const rows = XLSX.utils.sheet_to_json(workbook.Sheets.Attendance, { defval: "" })
   assert.equal(rows.length, 2)
-  assert.equal(rows[0]["Student ID"], "SIS-001")
+  assert.equal(rows[0]["Eagles ID"], "SIS-001")
   assert.equal(rows[1].Status, "Absent")
 })
 
@@ -318,7 +318,7 @@ test("teacher role cannot mutate admin-protected resources", async () => {
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      studentId: "T-ONLY",
+      eaglesId: "T-ONLY",
       profile: { fullName: "Teacher Denied Case" },
     }),
   })
@@ -626,6 +626,13 @@ test("GET /api/admin/students requires auth", async () => {
   assert.match(body.error, /Unauthorized/i)
 })
 
+test("GET /api/admin/students/next-student-number requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/students/next-student-number")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
 test("GET /api/admin/auth/me requires auth", async () => {
   const res = await fetchLocal(port, "/api/admin/auth/me")
   assert.equal(res.status, 401)
@@ -729,6 +736,15 @@ test("GET /api/admin/students returns 503 when admin store disabled", async () =
   assert.match(body.error, /store is disabled/i)
 })
 
+test("GET /api/admin/students/next-student-number returns 503 when admin store disabled", async () => {
+  const res = await fetchLocal(port, "/api/admin/students/next-student-number", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
+})
+
 test("GET /api/admin/dashboard returns 503 when admin store disabled", async () => {
   const res = await fetchLocal(port, "/api/admin/dashboard", {
     headers: { Cookie: adminSessionCookie },
@@ -750,7 +766,7 @@ test("GET /api/admin/exercise-results/incoming returns 503 when exercise store d
 test("POST /api/admin/students/import returns 503 when admin store disabled", async () => {
   const workbook = XLSX.utils.book_new()
   const sheet = XLSX.utils.aoa_to_sheet([
-    ["studentId", "fullName"],
+    ["eaglesId", "fullName"],
     ["S003", "Imported Student"],
   ])
   XLSX.utils.book_append_sheet(workbook, sheet, "Students")

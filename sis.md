@@ -7,6 +7,57 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-05)
+
+- Added final DB hardening for student identity:
+  - [prisma/schema.prisma](prisma/schema.prisma) now defines `Student.eaglesId` as non-null (`String @unique`).
+  - added migration [prisma/migrations/20260305024500_eaglesid_not_null/migration.sql](prisma/migrations/20260305024500_eaglesid_not_null/migration.sql) to:
+    - normalize blank `eaglesId` values to `NULL`,
+    - backfill missing `eaglesId` values from `studentNumber` as `SIS-######` (with deterministic `-<id>` suffix when base id is already taken),
+    - enforce `ALTER COLUMN "eaglesId" SET NOT NULL`.
+  - local apply result: `npm run db:migrate:deploy` successfully applied `20260305024500_eaglesid_not_null`.
+- Validation:
+  - `npm run db:generate` succeeded.
+  - `npm test` => `129` pass, `0` fail.
+- Completed strict internal identity rename from `Student.studentId` to `Student.eaglesId`:
+  - [prisma/schema.prisma](prisma/schema.prisma) now defines `Student.eaglesId` (no `studentId` field).
+  - added migration `20260305005500_rename_studentid_to_eaglesid` and deployed it with `npm run db:migrate:deploy`.
+  - completed admin/runtime/UI sweep in [server/student-admin-store.mjs](server/student-admin-store.mjs), [server/student-admin-routes.mjs](server/student-admin-routes.mjs), [server/student-report-card-pdf.mjs](server/student-report-card-pdf.mjs), [server/exercise-store.mjs](server/exercise-store.mjs), and [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html).
+- Enforced stricter student-number DB integrity:
+  - [prisma/schema.prisma](prisma/schema.prisma) now sets `Student.studentNumber` to non-null (`Int @unique`).
+  - added migration `20260305012000_student_number_not_null`:
+    - backfills any null `studentNumber` values with deterministic sequential numbers starting at `max(100, current max + 1)`.
+    - then applies `ALTER COLUMN "studentNumber" SET NOT NULL`.
+  - deployed with `npm run db:migrate:deploy` (success).
+- Removed remaining admin UI `studentId` naming drift:
+  - parent-tracking selector/id and code paths now use `studentRefId` (`pt_studentRefId`), avoiding confusion with `eaglesId`/`studentNumber`.
+  - fixed parent-tracking report-save endpoint path to use internal student ref id (`/api/admin/students/:studentRefId/reports`).
+- Updated coverage for strict naming:
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs) now validates `topLevelKey: eaglesId` directly against Prisma schema.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs), [test/student-admin.spec.mjs](test/student-admin.spec.mjs), and [test/student-admin-import-autofill.spec.mjs](test/student-admin-import-autofill.spec.mjs) now use `eaglesId`-first fixtures/contracts and no `autoFilledStudentIds` alias assumptions.
+- Enforced strict duplicate rejection for student identity keys:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs) `saveStudent` now rejects duplicate `eaglesId` on create (`409`) instead of updating an existing record.
+  - import flow now pre-validates duplicate `eaglesId` and duplicate `studentNumber` within the upload batch and marks those rows as failures before save attempts.
+- Removed remaining public/admin `studentId` fallback handling from student-admin save/import flows:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs) now requires `payload.eaglesId` in `saveStudent`, import row mapping resolves only `eaglesId`/`eagles-id`, and identity auto-fill now natively writes `eaglesId`.
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs) incoming queue `create-account` action now resolves requested id from `payload.eaglesId` (plus submitted fallback), not `payload.studentId`.
+- Updated profile form top-level identifier mapping in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - canonical field key `eagles-id` now maps to `topLevelKey: eaglesId` and control id `f_eaglesId`.
+  - profile payload collection now emits `{ eaglesId, studentNumber, email, profile }`.
+  - profile save validation now enforces `eaglesId is required`.
+  - incoming queue create-account prompt/action now uses `eaglesId`.
+- Tightened workbook tooling:
+  - [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs) removed legacy `studentId` import alias for `eagles-id`.
+  - regenerated template + import files and verified strict header parity against `docs/students/formfields (2026).xlsx`.
+  - latest validation: `current_matches_amalgamated.import-ready.xlsx` header order matches schema (`63/63`) with `0` missing `eagles-id` and `0` missing `student-number`.
+- Updated regression tests:
+  - [test/student-admin-import-autofill.spec.mjs](test/student-admin-import-autofill.spec.mjs) now validates `eaglesId` autofill behavior.
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs) now enforces allowed top-level key `eaglesId`.
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs) now includes a guard asserting `Student.eaglesId` is non-null at schema contract level.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) updated for `f_eaglesId` and `payload.eaglesId`.
+- Current test status:
+  - `npm test` => `129` pass, `0` fail.
+
 ## Update (2026-03-04)
 
 - Introduced a dedicated **Dashboard** landing button and reworked the Students navigation so it now jumps straight to profile, removed the floating Students submenu, and hid the global top-search controls whenever viewing dashboard, attendance, assignments, grades, or performance data pages so their local filters take precedence.
@@ -32,9 +83,46 @@
 - Stabilized flaky async JSDOM cleanup in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
   - added `settleDomAsync` and used it before closing DOM in high-activity tests to prevent post-close `document.getElementById` unhandled rejections.
   - extended mobile-wrapper assertions to include `#overviewClassTableWrap`.
+- Refactored student numbering + profile field persistence from the 2026 workbook contract:
+  - added DB-backed `Student.studentNumber` (unique) plus profile fields `memberSince`, `exercisePoints`, `parentsId`, `newAddress`, `currentSchoolGrade`, and `postCode` in [prisma/schema.prisma](prisma/schema.prisma) and migration `20260304214000_add_student_number_and_profile_fields`.
+  - standardized import header mapping in [server/student-admin-store.mjs](server/student-admin-store.mjs) to canonical keys only (camelCase + workbook keys), removing fuzzy legacy aliases.
+  - added store + API support for next student number resolution (`GET /api/admin/students/next-student-number`) with a floor of `100`, so once the highest number is `225`, the next auto-suggested number is `226`.
+  - updated profile editor wiring in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) so `student-number` is a first-class top-level field and new forms hydrate only `studentNumber` (not `studentId`) from the next-number endpoint.
+  - removed legacy `studentId -> studentNumber` fallback paths in both UI and store logic; next-number resolution now uses `studentNumber` only.
+  - aligned `PROFILE_FORM_FIELD_ROWS` with `formfields (2026).xlsx` keys exactly (63/63, same order), including canonical keys `student-photo`, `parents-id`, `class-level`, `languages-home`, and `post-code`.
+  - corrected form-to-schema mapping gaps so workbook rows now persist `memberSince`, `exercisePoints`, and `newAddress` into `StudentProfile`.
+  - normalized profile metadata symmetry by requiring bilingual labels + section labels for all configured fields in the default layout.
+- Added regression coverage:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs): `new profile form hydrates next student number and keeps floor at 100+`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs): auth and store-disabled checks for `GET /api/admin/students/next-student-number`.
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs): workbook key/order parity, list-option integrity, camelCase naming rules, form/schema mapping completeness, strict removal of legacy student-number fallbacks, and no-fuzzy import alias enforcement.
+- Production-prep DB/import operations:
+  - applied pending migration `20260304214000_add_student_number_and_profile_fields` locally via `npm run db:migrate:deploy`; follow-up deploy shows `No pending migrations to apply`.
+  - added one-time backfill utility [tools/backfill-student-number-once.mjs](tools/backfill-student-number-once.mjs) and executed it against local DB (current result: `assignedCount=0` because local `Student` table is empty).
+  - verified runtime resolver still honors floor behavior: `getNextStudentNumber()` returns `{ startAt: 100, nextStudentNumber: 100 }` on empty DB.
+  - added workbook prep utility [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs):
+    - regenerated served template [schemas/student-import-template.xlsx](schemas/student-import-template.xlsx) with canonical camelCase headers.
+    - generated filled example template [docs/students/student-import-template.filled-example.xlsx](docs/students/student-import-template.filled-example.xlsx).
+    - audited and canonicalized `docs/students/current_matches_amalgamated.xlsx` to [docs/students/current_matches_amalgamated.canonical-ready.xlsx](docs/students/current_matches_amalgamated.canonical-ready.xlsx) with audit report [docs/students/current_matches_amalgamated.canonical-audit.json](docs/students/current_matches_amalgamated.canonical-audit.json).
+    - built import-ready workbook [docs/students/current_matches_amalgamated.import-ready.xlsx](docs/students/current_matches_amalgamated.import-ready.xlsx) with deterministic identity/number autofill (`studentNumber` floor `100`, `eaglesId = SIS-<6 digits>`).
+    - latest audit result: canonicalized source still lacks optional headers `parentsId`, `photoUrl`, `postCode`, but import-ready workbook has `0` missing required ids (`eaglesId`/`studentNumber`).
+- Follow-up validation and UI hardening (2026-03-04):
+  - re-ran `node tools/backfill-student-number-once.mjs --dry-run`, apply mode, and `npm run db:migrate:deploy`; result remains `assignedCount=0` and no pending migrations.
+  - verified student-domain cleanup status via DB counts (`students`, `profiles`, `attendance`, `grades`, `parentReports`, `submissions`, `intakeSubmissions`, `incomingExerciseResults`, `adminNotificationQueue`) all at `0`.
+  - regenerated import artifacts via [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs); latest audit timestamp `2026-03-04T17:12:05.937Z`.
+  - refined Profile/Medical/COVID/Submission tabs in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) into compact true horizontal tablists with desktop equal-width segments, mobile swipe support, and keyboard navigation (`ArrowLeft/ArrowRight/Home/End`).
+  - hardened runtime spreadsheet import identity handling in [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - added `applyImportIdentityDefaults` to auto-fill blank `eaglesId` and missing `studentNumber` for new import rows before save.
+    - generated ids follow `SIS-<6 digits>` from assigned number with collision suffixing (`-2`, `-3`, ...).
+    - existing students with explicit `eaglesId` continue update-safe behavior (missing number keeps existing DB number).
+  - normalized import-facing naming to `eaglesId`:
+    - [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs) now emits `eaglesId` canonical header in blank/filled/import-ready workbooks.
+    - import mapping in [server/student-admin-store.mjs](server/student-admin-store.mjs) now resolves `eaglesId` first (with legacy `studentId` aliases accepted for compatibility).
+    - import UI status now reports `autoFilledEaglesIds` (with fallback support for prior `autoFilledStudentIds`) in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html).
+  - added regression coverage in [test/student-admin-import-autofill.spec.mjs](test/student-admin-import-autofill.spec.mjs).
 - SVG sizing still depends on browser intrinsic image dimensions (`naturalWidth`/`naturalHeight`), so malformed or dimensionless SVG edge-cases remain a follow-up hardening item.
 - Targeted run: `node --test --test-name-pattern="school setup" test/student-admin-ui.spec.mjs` ⇒ pass.
-- Current full run: `npm test` ⇒ `116` pass, `0` fail.
+- Current full run: `npm test` ⇒ `127` pass, `0` fail.
 
 ## Update (2026-03-03)
 

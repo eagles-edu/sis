@@ -305,10 +305,10 @@
     }
     .profile-tabs-shell {
       display: grid;
-      gap: 10px;
+      gap: 8px;
       border: 1px solid #9ab0d0;
       border-radius: 10px;
-      padding: 10px;
+      padding: 8px;
       background: linear-gradient(180deg, #f4f8ff 0%, #eef4ff 100%);
     }
     .profile-mode-shell {
@@ -339,30 +339,53 @@
       color: #143463;
     }
     .profile-info-tabs {
-      padding: 8px;
+      padding: 6px;
       background: #edf3ff;
     }
     .profile-tab-nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: 4px;
       align-items: center;
-      border: 1px solid #b5c4da;
-      border-radius: 10px;
-      padding: 8px;
-      background: #e9f0ff;
+      border: 1px solid #abc0de;
+      border-radius: 999px;
+      padding: 4px;
+      background: #e8f0fd;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      scroll-padding-inline: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .profile-tab-nav::-webkit-scrollbar {
+      display: none;
     }
     .profile-tab-nav button {
       box-sizing: border-box;
-      min-width: 170px;
-      min-height: 40px;
-      padding-inline: 14px;
-      font-size: 14px;
+      width: 100%;
+      min-height: 34px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
       font-weight: 700;
-      border-color: #8ea4c7;
+      border-color: #a8bbd7;
       color: #143157;
+      background: #f7faff;
+      box-shadow: none;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      scroll-snap-align: start;
+    }
+    .profile-tab-nav button:hover {
+      border-color: #7e98be;
       background: #fff;
-      box-shadow: inset 0 -1px 0 #d8e4f7;
+    }
+    .profile-tab-nav button:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 1px;
     }
     .profile-tab-nav button.active {
       background: var(--brand);
@@ -560,6 +583,21 @@
       color: #2f4f7f;
     }
     @media (max-width: 820px) {
+      .profile-tabs-shell {
+        padding: 6px;
+      }
+      .profile-info-tabs {
+        padding: 4px;
+      }
+      .profile-tab-nav {
+        grid-auto-columns: max-content;
+      }
+      .profile-tab-nav button {
+        width: auto;
+        min-height: 38px;
+        padding: 7px 12px;
+        font-size: 14px;
+      }
       .profile-info-grid {
         grid-template-columns: 1fr;
       }
@@ -1723,7 +1761,7 @@
               </div>
               <div class="col-3">
                 <label for="searchQ">Search student</label>
-                <input id="searchQ" type="search" list="searchStudentOptions" placeholder="name, student id, parent name">
+                <input id="searchQ" type="search" list="searchStudentOptions" placeholder="name, eagles id, parent name">
                 <datalist id="searchStudentOptions"></datalist>
               </div>
               <div class="col-2">
@@ -1762,7 +1800,7 @@
                   <table>
                     <thead>
                       <tr>
-                        <th scope="col">Student ID</th>
+                        <th scope="col">Eagles ID</th>
                         <th scope="col">Name</th>
                         <th scope="col">Level</th>
                         <th scope="col">Action</th>
@@ -1785,7 +1823,7 @@
                 <table>
                   <thead>
                     <tr>
-                      <th scope="col">Student ID</th>
+                      <th scope="col">Eagles ID</th>
                       <th scope="col">Name</th>
                       <th scope="col">Level</th>
                       <th scope="col" class="school-col">School</th>
@@ -1809,7 +1847,7 @@
                   <button id="importBtn" type="button">Import File</button>
                 </div>
               </div>
-              <p class="small">`studentId` column is required and must be unique.</p>
+              <p class="small">Use `eaglesId` + `studentNumber`; missing values are auto-filled during import.</p>
             </div>
 
             <div class="section-stack">
@@ -1944,7 +1982,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           <thead>
                             <tr>
                               <th scope="col">Received</th>
-                              <th scope="col">Student ID</th>
+                              <th scope="col">Eagles ID</th>
                               <th scope="col">Email</th>
                               <th scope="col">Exercise</th>
                               <th scope="col">Score</th>
@@ -2014,7 +2052,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </div>
                     </div>
                     <div class="profile-tabs-shell profile-info-tabs">
-                      <div class="profile-tab-nav" id="profileInfoTabNav" role="tablist" aria-label="Student profile info tabs"></div>
+                      <div class="profile-tab-nav" id="profileInfoTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile info tabs"></div>
                       <div id="profileInfoPanels"></div>
                     </div>
                   </section>
@@ -2028,7 +2066,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </div>
                       </div>
                       <div class="profile-tabs-shell">
-                        <div class="profile-tab-nav" id="profileTabNav" role="tablist" aria-label="Student profile form tabs"></div>
+                        <div class="profile-tab-nav" id="profileTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile form tabs"></div>
                         <div id="profileTabPanels"></div>
                       </div>
                       <div class="actions actions-4">
@@ -2281,7 +2319,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <section class="attendance-student-panel">
                     <h3 id="parentTrackingPanelTitle">Student Class Report</h3>
                     <div class="row">
-                      <div class="col-3"><label>Student Name</label><select id="pt_studentId"><option value="">Select student</option></select></div>
+                      <div class="col-3"><label>Student Name</label><select id="pt_studentRefId"><option value="">Select student</option></select></div>
                       <div class="col-2"><label>Class Date</label><input id="pt_classDate" type="date"></div>
                       <div class="col-2"><label>Class Day</label><input id="pt_classDay" type="text" readonly></div>
                       <div class="col-2"><label>Teacher</label><select id="pt_teacherName"><option value="">Select teacher</option></select></div>
@@ -2720,10 +2758,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <div class="col-2">
                       <label>Tab</label>
                       <select id="profileFieldCreateTab">
-                        <option value="profile">Student profile</option>
-                        <option value="medical">Medical tab</option>
-                        <option value="covid">COVID tab</option>
-                        <option value="submission">Submission tab</option>
+                        <option value="profile">Profile</option>
+                        <option value="medical">Medical</option>
+                        <option value="covid">COVID</option>
+                        <option value="submission">Submission</option>
                       </select>
                     </div>
                     <div class="col-2"><label>Width (1-12)</label><input id="profileFieldCreateWidth" type="number" min="1" max="12" value="4"></div>
@@ -2963,7 +3001,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         grades: [],
         reports: [],
       },
-      studentIdSearchHistory: [],
+      eaglesIdSearchHistory: [],
       topSearchOptionMap: {},
       topStudentScope: {
         query: "",
@@ -2976,14 +3014,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const authStatusEl = document.getElementById("authStatus")
     const loginBtnEl = document.getElementById("loginBtn")
     const DEFAULT_LEVEL_REMINDER_TEMPLATE = normalizeText(document.getElementById("levelReminderTemplate")?.value)
+    const STUDENT_NUMBER_START = 100
 
     const PROFILE_FORM_STORAGE_KEY = "sis.admin.profileFormLayout.v1"
     const PROFILE_INPUT_TYPES = ["text", "email", "number", "textarea", "select", "checkbox", "radio", "url", "password", "file", "level-select"]
     const PROFILE_FORM_TABS = [
-      { id: "profile", label: "Student profile", sequence: 10 },
-      { id: "medical", label: "Medical tab", sequence: 20 },
-      { id: "covid", label: "COVID tab", sequence: 30 },
-      { id: "submission", label: "Submission tab", sequence: 40 },
+      { id: "profile", label: "Profile", sequence: 10 },
+      { id: "medical", label: "Medical", sequence: 20 },
+      { id: "covid", label: "COVID", sequence: 30 },
+      { id: "submission", label: "Submission", sequence: 40 },
     ]
     const PROFILE_ARRAY_PROFILE_KEYS = new Set([
       "genderSelections",
@@ -2994,66 +3033,69 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     ])
     const PROFILE_LOCKED_FIELD_KEYS = new Set(["eagles-id"])
     const PROFILE_FORM_FIELD_ROWS = [
-      ["exercise-points", "exercisePoints", "Eagle Points", "", "profile", "", "number", "", "", "", "", 3],
-      ["member-since", "memberSince", "Member since", "", "profile", "", "text", "", "", "", "", 3],
-      ["student-number", "studentNumber", "Student number", "", "profile", "", "number", "", "", "", "", 3],
-      ["eagles-id", "studentId", "Eagles ID", "", "profile", "", "number", "", "", "", "studentId", 3],
-      ["password", "password", "Password", "", "profile", "", "text", "", "", "", "", 3],
-      ["photo-url", "photoUrl", "Ảnh hồ sơ (URL)", "Profile photo URL", "profile", "Thông tin của người học", "url", "https://... hoặc data:image/...", "", "photoUrl", "", 12],
-      ["full-name-student", "fullName", "Họ tên của người học", "Full name of the learner", "profile", "Thông tin của người học", "text", "Họ tên", "", "fullName", "", 8],
-      ["english-name", "englishName", "Tên tiếng Anh", "English name", "profile", "Thông tin của người học", "text", "Tên tiếng anh nếu bạn có", "", "englishName", "", 4],
-      ["gender", "genderSelections", "Giới tính", "Sex", "profile", "Thông tin của người học", "checkbox", "", "nam | nữ", "genderSelections", "", 6],
-      ["student-phone", "studentPhone", "Số điện thoại của học sinh", "Student phone number", "profile", "Thông tin của người học", "text", "", "", "studentPhone", "", 4],
-      ["student-email", "studentEmail", "Email của học sinh", "Student email", "profile", "Thông tin của người học", "text", "ten@vidu.com", "", "studentEmail", "", 4],
-      ["hobbies", "hobbies", "Sở thích, thú vui và nhạc cụ", "Hobbies, interests and musical instruments", "profile", "Thông tin của người học", "textarea", "", "", "hobbies", "", 12],
-      ["dob", "dobText", "Ngày sinh", "Date of birth", "profile", "Thông tin của người học", "text", "ví dụ: 2011-03-17", "", "dobText", "", 4],
-      ["birth-order", "birthOrder", "Thứ tự sinh", "Birth order", "profile", "Thông tin của người học", "number", "", "", "birthOrder", "", 4],
-      ["number-of-siblings-male", "siblingBrothers", "Người học có bao nhiêu anh em?", "How many brothers does the learner have?", "profile", "Thông tin của người học", "number", "Số anh em", "", "siblingBrothers", "", 4],
-      ["number-of-siblings-female", "siblingSisters", "Người học có bao nhiêu chị em?", "How many sisters does the learner have?", "profile", "Thông tin của người học", "number", "Số chị em", "", "siblingSisters", "", 4],
-      ["ethnicity", "ethnicity", "Dân tộc", "Nation", "profile", "Thông tin của người học", "select", "", "Người Việt Nam | Viet Hoa (Chinese-Vietnamese) | Người dân tộc (Hmông, Tày, Khmer, v.v.) | Người Thái | Người Campuchia | Người Lào | Người Hàn Quốc | Người Nhật | Người Trung Quốc", "ethnicity", "", 4],
-      ["which languages are spoken at home", "languagesAtHome", "Các ngôn ngữ được nói ở nhà", "Languages spoken at home", "profile", "Thông tin của người học", "select", "Chọn ngôn ngữ tại nhà", "Tiếng Việt | Tiếng Anh | Tiếng Phổ thông Trung Quốc | Tiếng Quảng Đông | Tiếng dân tộc (H'mông, Tày, Khmer, v.v.) | Tiếng Thái | Tiếng Campuchia | Tiếng Lào | Tiếng Hàn Quốc | Tiếng Nhật | Tiếng Khác...", "languagesAtHome", "", 12],
-      ["describe-other-language", "otherLanguage", "Vui lòng cho biết ngôn ngữ khác", "Please indicate other languages", "profile", "Thông tin của người học", "text", "ngôn ngữ khác", "", "otherLanguage", "", 4],
-      ["student-school", "schoolName", "Đang học ở trường", "Studying at school", "profile", "Thông tin của người học", "text", "", "", "schoolName", "", 4],
-      ["student-current-grade", "currentGrade", "Hiện tại đang học lớp", "Currently taking class", "profile", "Thông tin của người học", "text", "Số lớp của học sinh", "", "currentGrade", "", 4],
-      ["full-name_mother", "motherName", "Họ tên của mẹ hoặc học sinh trưởng thành", "Full name of mother or adult student", "profile", "Liên hệ của mẹ hoặc học sinh trưởng thành", "text", "Họ tên của mẹ hoặc học sinh trưởng thành", "", "motherName", "", 4],
-      ["email-ma", "motherEmail", "Email của mẹ hoặc học sinh trưởng thành", "Email from mother or adult student", "profile", "Liên hệ của mẹ hoặc học sinh trưởng thành", "text", "ten@vidu.com", "", "motherEmail", "", 4],
-      ["ma-is-homework-proctor", "maIsHomeworkProctor", "Người mẹ hoặc học sinh trưởng thành sẽ có trách nhiệm đảm bảo rằng bài tập về nhà được hoàn thành đúng hạn và chính xác và các bài học được ôn tập 2-3 lần mỗi tuần.", "It will be the responsibility of the mother or adult student to ensure that homework is completed on time and accurately and that lessons are reviewed 2-3 times per week.", "profile", "Liên hệ của mẹ hoặc học sinh trưởng thành", "checkbox", "", "có | không", "", "", 6],
-      ["mothers-phone", "motherPhone", "Số điện thoại của mẹ hoặc học sinh trưởng thành", "Phone number of parent or adult student", "profile", "Liên hệ của mẹ hoặc học sinh trưởng thành", "text", "", "", "motherPhone", "", 4],
-      ["emergency-contact-mother", "motherEmergencyContact", "Khi khẩn cấp, sẽ gọi mẹ trước *", "In an emergency, I will call my mother first *", "profile", "Liên hệ của mẹ hoặc học sinh trưởng thành", "checkbox", "", "Có | Không", "motherEmergencyContact", "", 6],
-      ["zalo-im-id-mother", "motherMessenger", "Số Zalo hoặc cách khác để nhắn tin nhanh cho mẹ hoặc học sinh trưởng thành", "Zalo number or another way to quickly text your mother or adult student", "profile", "Liên hệ của mẹ hoặc học sinh trưởng thành", "text", "Số Zalo hoặc cách khác để nhắn tin nhanh", "", "motherMessenger", "", 4],
-      ["full-name_father", "fatherName", "Họ tên của ba", "Dad's full name", "profile", "Liên hệ của ba", "text", "", "", "fatherName", "", 4],
-      ["email-ba", "fatherEmail", "Email của ba", "Dad's email", "profile", "Liên hệ của ba", "text", "ten@vidu.com", "", "fatherEmail", "", 4],
-      ["ba-is-homework-proctor", "baIsHomeworkProctor", "Ba sẽ có trách nhiệm đảm bảo hoàn thành bài tập về nhà và việc học ở n", "Dad will be responsible for ensuring homework and schoolwork is completed", "profile", "Liên hệ của ba", "radio", "", "có | không", "", "", 6],
-      ["fathers-phone", "fatherPhone", "Số điện thoại của ba", "Dad's phone number", "profile", "Liên hệ của ba", "text", "", "", "fatherPhone", "", 4],
-      ["emergency-contact-father", "fatherEmergencyContact", "Khi khẩn cấp, sẽ gọi ba trước", "In an emergency, I will call you first", "profile", "Liên hệ của ba", "radio", "", "có | không", "fatherEmergencyContact", "", 6],
-      ["zalo-im-id-ba", "fatherMessenger", "Số Zalo hoặc cách khác để nhắn tin nhanh cho ba", "Zalo number or another way to quickly text dad", "profile", "Liên hệ của ba", "text", "Số Zalo hoặc cách khác để nhắn tin nhanh", "", "fatherMessenger", "", 4],
-      ["street-address", "streetAddress", "Số nhà và tên đường", "House number and street name", "profile", "Địa chỉ", "text", "", "", "streetAddress", "", 4],
-      ["new-address", "newAddress", "Địa chỉ mới", "New style address replacement of 2026", "profile", "Địa chỉ", "text", "", "", "", "", 4],
-      ["ward-district", "wardDistrict", "Phường và Quận", "Ward and District", "profile", "Địa chỉ", "text", "", "", "wardDistrict", "", 4],
-      ["city", "city", "Thành phố", "City", "profile", "Địa chỉ", "text", "", "", "city", "", 4],
-      ["wear-glasses", "hasGlasses", "Người học có dùng kính cận không?", "Does the learner use glasses?", "medical", "Thị giác", "radio", "", "có | không", "hasGlasses", "", 6],
-      ["last-eye-exam", "hadEyeExam", "Người học đã bao giờ đi khám mắt chưa?", "Has the learner ever had an eye examination?", "medical", "Thị giác", "radio", "", "có | không", "hadEyeExam", "", 6],
-      ["date-last-eye-exam", "lastEyeExamDateText", "Ngày khám mắt gần đây nhất", "Date of most recent eye exam", "medical", "Thuốc uống", "text", "ví dụ: 2011-03-17", "", "lastEyeExamDateText", "", 4],
-      ["prescription-medicine", "prescriptionMedicine", "Người học có uống thuốc theo đơn không?", "Does the learner take medication as prescribed?", "medical", "Thuốc uống", "radio", "", "có | không", "prescriptionMedicine", "", 6],
-      ["explain-list-rx-meds", "prescriptionDetails", "Vui lòng nêu tên thuốc theo toa và lý do dùng", "Please state the name of the prescription medication and reason for taking it", "medical", "Những khó khăn khi học", "textarea", "Thông tin này được bảo mật", "", "prescriptionDetails", "", 12],
-      ["learning-disorders", "learningDisorders", "Học sinh có bất kỳ rối loạn hoặc triệu chứng nào sau đây không?", "Does the student have any of the following disorders or symptoms?", "medical", "Những khó khăn khi học", "checkbox", "", "Rối loạn lời nói | Nhược thị (hội chứng mắt lười) | Rối loạn tăng động giảm chú ý | Hội chứng Asperger / phổ tự kỷ | Rối loạn học tập (vui lòng giải thích bên dưới) | Chứng khó đọc | Rối loạn hành vi (vui lòng giải thích bên dưới) | Không có | Khác (vui lòng giải thích bên dưới)", "learningDisorders", "", 12],
-      ["explain-ld-bd", "learningDisorderDetails", "Giải thích tất cả rối loạn học tập, rối loạn hành vi, hoặc những thách thức khác đối với việc học", "Explains any learning disorders, behavioral disorders, or other challenges to learning", "medical", "Dị ứng", "textarea", "Thông tin này được bảo mật", "", "learningDisorderDetails", "", 12],
-      ["drug-allergies-list", "drugAllergies", "Liệt kê tất cả các trường hợp dị ứng với các loại thuốc:", "List all allergies to drugs:", "medical", "Dị ứng", "textarea", "vui lòng nhập \"không,\" nếu không có dị ứng", "", "drugAllergies", "", 12],
-      ["food-environmental-allergies-list", "foodEnvironmentalAllergies", "Liệt kê các dị ứng do thực phẩm và môi trường", "List food and environmental allergies", "medical", "Tiêm chủng", "textarea", "vui lòng nhập \"không,\" nếu không có", "", "foodEnvironmentalAllergies", "", 12],
-      ["childhood-vaccines-utd", "vaccinesChildhoodUpToDate", "Tất cả các loại vắc xin bắt buộc dành cho trẻ nhỏ có phải là loại mới nhất không?", "Are all required childhood vaccines up to date?", "medical", "Tiêm chủng", "radio", "", "Có | Không", "vaccinesChildhoodUpToDate", "", 6],
-      ["childhood-vaccine-record", "childhoodVaccineRecord", "Tải lên bản sao hồ sơ vắc xin khi còn nhỏ", "Upload a copy of your childhood vaccine records", "medical", "Tiêm chủng", "file", "", "", "", "", 12],
-      ["covid-19-positive-or-had-it", "hadCovidPositive", "Người học đã từng có COVID-19 chưa hoặc kết quả dương tính với COVID-19?", "Has the learner ever had COVID-19 or tested positive for COVID-19?", "covid", "COVID", "radio", "", "có | không", "hadCovidPositive", "", 6],
-      ["date-negative-after-infections", "covidNegativeDateText", "Bắt buộc: Nếu bạn đã xét nghiệm dương tính với COVID, thì vui lòng cung cấp ngày bạn xét nghiệm âm tính với COVID bên dưới. **Nếu bạn trả lời", "Required: If you tested positive for COVID, please provide the date you tested negative for COVID below. **If you reply", "covid", "COVID", "text", "ví dụ: 2011-03-17 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh", "", "covidNegativeDateText", "", 4],
-      ["had-covid-shot-already", "covidShotAlready", "Người học đã được chủng ngừa COVID-19 chưa?", "Has the learner been vaccinated against COVID-19?", "covid", "COVID", "radio", "", "có | không", "covidShotAlready", "", 6],
-      ["covid-19-vaccine-utd", "covidVaccinesUpToDate", "Vắc xin COVID-19 có được cập nhật không?", "Are COVID-19 vaccines up to date?", "covid", "COVID", "radio", "", "có | không", "covidVaccinesUpToDate", "", 6],
-      ["most-recent-covid-shot", "mostRecentCovidShotDate", "Ngày tiêm phòng COVID gần đây nhất của học sinh", "Student's most recent COVID vaccination date", "covid", "COVID", "text", "ví dụ: 2023-03-17", "", "mostRecentCovidShotDate", "", 4],
-      ["comments", "extraComments", "Bình luận", "Comment", "covid", "COVID", "textarea", "", "", "extraComments", "", 12],
-      ["check-each-covid-injection-student-has-had", "covidShotHistory", "Vui lòng cho biết các loại chủng ngừa COVID-19 mà người học đã được nhận:", "Please indicate which COVID-19 vaccinations the learner has received:", "covid", "COVID", "checkbox", "", "Chưa | Tiêm chủng COVID lần đầu tiên | Tiêm chủng COVID thứ hai | Tiêm chủng COVID thứ ba | Tiêm chủng COVID thứ tư | Tiêm chủng COVID thứ năm | Tiêm chủng COVID thứ sáu", "covidShotHistory", "", 12],
-      ["covid-vaccine-records", "covidVaccineRecords", "Hồ sơ tiêm phòng COVID", "COVID vaccination records", "covid", "COVID", "file", "", "", "", "", 12],
-      ["fever-medicine", "feverMedicineAllowed", "Trẻ có thể dùng một liều thuốc uống bằng một trong các loại thuốc sau đây khi cần thiết để hạ sốt.", "Children can take an oral dose of one of the following medications as needed to reduce fever.", "medical", "Chăm sóc trong giờ học (nếu người học là trẻ em)", "checkbox", "", "Axit salicylic trẻ em | Ibuprofen trẻ em | Paracetamol trẻ em | Không cho | Tôi 18 tuổi trở lên", "feverMedicineAllowed", "", 12],
-      ["dau-trang-duoc", "whiteOilAllowed", "Trẻ có thể dùng dầu trắng nếu muốn", "Children can use white oil if they want", "medical", "Chăm sóc trong giờ học (nếu người học là trẻ em)", "radio", "", "Cho | Không cho | Tôi 18 tuổi trở lên", "whiteOilAllowed", "", 6],
-      ["signature", "signatureFullName", "Tôi xác nhận rằng tất cả thông tin tôi đã cung cấp; là sự thật được chứng minh; theo hiểu biết tốt nhất của tôi; chịu sự trừng phạt của pháp luật; tại nước Cộng hòa xã hội chủ nghĩa Việt Nam.", "I confirm that all information I have provided; is a proven fact; to the best of my knowledge; subject to legal punishment; in the Socialist Republic of Vietnam.", "submission", "Chăm sóc trong giờ học (nếu người học là trẻ em)", "text", "họ tên của người điền đơn", "", "signatureFullName", "", 8],
-      ["email-form-sig", "signatureEmail", "email của bạn", "your email", "submission", "", "email", "ten@vidu.com", "", "signatureEmail", "", 4],
+      ["student-photo","photoUrl","Tải ảnh học sinh lên","Upload student photo","profile","Thông tin của người học","file","Tải ảnh học sinh lên","","photoUrl","",12],
+      ["full-name-student","fullName","Họ tên của người học","Full name of the learner","profile","Thông tin của người học","text","Họ tên","","fullName","",8],
+      ["english-name","englishName","Tên tiếng Anh","English name","profile","Thông tin của người học","text","Tên tiếng anh nếu bạn có","","englishName","",4],
+      ["gender","genderSelections","Giới tính","Sex","profile","Thông tin của người học","checkbox","","nam | nữ","genderSelections","",6],
+      ["member-since","memberSince","Member since","Member since","profile","Thông tin của người học","text","","","memberSince","",3],
+      ["student-number","studentNumber","Student number","Student number","profile","Thông tin của người học","number","","","","studentNumber",3],
+      ["eagles-id","eaglesId","Eagles ID","Eagles ID","profile","Thông tin của người học","text","","","","eaglesId",3],
+      ["password","password","Password","Password","profile","Thông tin của người học","text","","","","",3],
+      ["parents-id","parentsId","ChaMe ID","Parents id","profile","Thông tin của người học","text","ChaMe ID","","parentsId","",4],
+      ["student-phone","studentPhone","Số điện thoại của học sinh","Student phone number","profile","Thông tin của người học","text","","","studentPhone","",4],
+      ["student-email","studentEmail","Email của học sinh","Student email","profile","Thông tin của người học","text","ten@vidu.com","","studentEmail","",4],
+      ["class-level","currentGrade","Cấp lớp","Class level","profile","Thông tin của người học","level-select","Chọn cấp lớp","","currentGrade","",4],
+      ["exercise-points","exercisePoints","Eagle Points","Eagle Points","profile","Thông tin của người học","number","","","exercisePoints","",3],
+      ["hobbies","hobbies","Sở thích, thú vui và nhạc cụ","Hobbies, interests and musical instruments","profile","Thông tin của người học","textarea","","","hobbies","",12],
+      ["dob","dobText","Ngày sinh","Date of birth","profile","Thông tin của người học","text","ví dụ: 2011-03-17","","dobText","",4],
+      ["birth-order","birthOrder","Thứ tự sinh","Birth order","profile","Thông tin của người học","number","","","birthOrder","",4],
+      ["number-of-siblings-male","siblingBrothers","Người học có bao nhiêu anh em?","How many brothers does the learner have?","profile","Thông tin của người học","number","Số anh em","","siblingBrothers","",4],
+      ["number-of-siblings-female","siblingSisters","Người học có bao nhiêu chị em?","How many sisters does the learner have?","profile","Thông tin của người học","number","Số chị em","","siblingSisters","",4],
+      ["ethnicity","ethnicity","Dân tộc","Nation","profile","Thông tin của người học","select","","Người Việt Nam | Viet Hoa (Chinese-Vietnamese) | Người dân tộc (Hmông, Tày, Khmer, v.v.) | Người Thái | Người Campuchia | Người Lào | Người Hàn Quốc | Người Nhật | Người Trung Quốc","ethnicity","",4],
+      ["languages-home","languagesAtHome","Các ngôn ngữ được nói ở nhà","Languages spoken at home","profile","Thông tin của người học","select","Chọn ngôn ngữ tại nhà","Tiếng Việt | Tiếng Anh | Tiếng Phổ thông Trung Quốc | Tiếng Quảng Đông | Tiếng dân tộc (H'mông, Tày, Khmer, v.v.) | Tiếng Thái | Tiếng Campuchia | Tiếng Lào | Tiếng Hàn Quốc | Tiếng Nhật | Tiếng Khác...","languagesAtHome","",12],
+      ["describe-other-language","otherLanguage","Vui lòng cho biết ngôn ngữ khác","Please indicate other languages","profile","Thông tin của người học","text","ngôn ngữ khác","","otherLanguage","",4],
+      ["student-school","schoolName","Đang học ở trường","Studying at school","profile","Thông tin của người học","text","","","schoolName","",4],
+      ["student-current-grade","currentSchoolGrade","Hiện tại đang học lớp","Currently taking class","profile","Thông tin của người học","text","Số lớp của học sinh","","currentSchoolGrade","",4],
+      ["full-name_mother","motherName","Họ tên của mẹ hoặc học sinh trưởng thành","Full name of mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","Họ tên của mẹ hoặc học sinh trưởng thành","","motherName","",4],
+      ["email-ma","motherEmail","Email của mẹ hoặc học sinh trưởng thành","Email from mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","ten@vidu.com","","motherEmail","",4],
+      ["ma-is-homework-proctor","maIsHomeworkProctor","Người mẹ hoặc học sinh trưởng thành sẽ có trách nhiệm đảm bảo rằng bài tập về nhà được hoàn thành đúng hạn và chính xác và các bài học được ôn tập 2-3 lần mỗi tuần.","It will be the responsibility of the mother or adult student to ensure that homework is completed on time and accurately and that lessons are reviewed 2-3 times per week.","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","checkbox","","có | không","","",6],
+      ["mothers-phone","motherPhone","Số điện thoại của mẹ hoặc học sinh trưởng thành","Phone number of parent or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","","","motherPhone","",4],
+      ["emergency-contact-mother","motherEmergencyContact","Khi khẩn cấp, sẽ gọi mẹ trước *","In an emergency, I will call my mother first *","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","checkbox","","Có | Không","motherEmergencyContact","",6],
+      ["zalo-im-id-mother","motherMessenger","Số Zalo hoặc cách khác để nhắn tin nhanh cho mẹ hoặc học sinh trưởng thành","Zalo number or another way to quickly text your mother or adult student","profile","Liên hệ của mẹ hoặc học sinh trưởng thành","text","Số Zalo hoặc cách khác để nhắn tin nhanh","","motherMessenger","",4],
+      ["full-name_father","fatherName","Họ tên của ba","Dad's full name","profile","Liên hệ của ba","text","","","fatherName","",4],
+      ["email-ba","fatherEmail","Email của ba","Dad's email","profile","Liên hệ của ba","text","ten@vidu.com","","fatherEmail","",4],
+      ["ba-is-homework-proctor","baIsHomeworkProctor","Ba sẽ có trách nhiệm đảm bảo hoàn thành bài tập về nhà và việc học ở n","Dad will be responsible for ensuring homework and schoolwork is completed","profile","Liên hệ của ba","radio","","có | không","","",6],
+      ["fathers-phone","fatherPhone","Số điện thoại của ba","Dad's phone number","profile","Liên hệ của ba","text","","","fatherPhone","",4],
+      ["emergency-contact-father","fatherEmergencyContact","Khi khẩn cấp, sẽ gọi ba trước","In an emergency, I will call you first","profile","Liên hệ của ba","radio","","có | không","fatherEmergencyContact","",6],
+      ["zalo-im-id-ba","fatherMessenger","Số Zalo hoặc cách khác để nhắn tin nhanh cho ba","Zalo number or another way to quickly text dad","profile","Liên hệ của ba","text","Số Zalo hoặc cách khác để nhắn tin nhanh","","fatherMessenger","",4],
+      ["street-address","streetAddress","Số nhà và tên đường","House number and street name","profile","Địa chỉ","text","","","streetAddress","",4],
+      ["new-address","newAddress","Địa chỉ mới","New style address replacement of 2026","profile","Địa chỉ","text","","","newAddress","",4],
+      ["ward-district","wardDistrict","Phường và Quận","Ward and District","profile","Địa chỉ","text","","","wardDistrict","",4],
+      ["city","city","Thành phố","City","profile","Địa chỉ","text","","","city","",4],
+      ["post-code","postCode","Mã bưu điện","Post code","profile","Địa chỉ","text","Mã bưu điện","","postCode","",4],
+      ["wear-glasses","hasGlasses","Người học có dùng kính cận không?","Does the learner use glasses?","medical","Thị giác","radio","","có | không","hasGlasses","",6],
+      ["last-eye-exam","hadEyeExam","Người học đã bao giờ đi khám mắt chưa?","Has the learner ever had an eye examination?","medical","Thị giác","radio","","có | không","hadEyeExam","",6],
+      ["date-last-eye-exam","lastEyeExamDateText","Ngày khám mắt gần đây nhất","Date of most recent eye exam","medical","Thuốc uống","text","ví dụ: 2011-03-17","","lastEyeExamDateText","",4],
+      ["prescription-medicine","prescriptionMedicine","Người học có uống thuốc theo đơn không?","Does the learner take medication as prescribed?","medical","Thuốc uống","radio","","có | không","prescriptionMedicine","",6],
+      ["explain-list-rx-meds","prescriptionDetails","Vui lòng nêu tên thuốc theo toa và lý do dùng","Please state the name of the prescription medication and reason for taking it","medical","Những khó khăn khi học","textarea","Thông tin này được bảo mật","","prescriptionDetails","",12],
+      ["learning-disorders","learningDisorders","Học sinh có bất kỳ rối loạn hoặc triệu chứng nào sau đây không?","Does the student have any of the following disorders or symptoms?","medical","Những khó khăn khi học","checkbox","","Rối loạn lời nói | Nhược thị (hội chứng mắt lười) | Rối loạn tăng động giảm chú ý | Hội chứng Asperger / phổ tự kỷ | Rối loạn học tập (vui lòng giải thích bên dưới) | Chứng khó đọc | Rối loạn hành vi (vui lòng giải thích bên dưới) | Không có | Khác (vui lòng giải thích bên dưới)","learningDisorders","",12],
+      ["explain-ld-bd","learningDisorderDetails","Giải thích tất cả rối loạn học tập, rối loạn hành vi, hoặc những thách thức khác đối với việc học","Explains any learning disorders, behavioral disorders, or other challenges to learning","medical","Dị ứng","textarea","Thông tin này được bảo mật","","learningDisorderDetails","",12],
+      ["drug-allergies-list","drugAllergies","Liệt kê tất cả các trường hợp dị ứng với các loại thuốc:","List all allergies to drugs:","medical","Dị ứng","textarea","vui lòng nhập \"không,\" nếu không có dị ứng","","drugAllergies","",12],
+      ["food-environmental-allergies-list","foodEnvironmentalAllergies","Liệt kê các dị ứng do thực phẩm và môi trường","List food and environmental allergies","medical","Tiêm chủng","textarea","vui lòng nhập \"không,\" nếu không có","","foodEnvironmentalAllergies","",12],
+      ["childhood-vaccines-utd","vaccinesChildhoodUpToDate","Tất cả các loại vắc xin bắt buộc dành cho trẻ nhỏ có phải là loại mới nhất không?","Are all required childhood vaccines up to date?","medical","Tiêm chủng","radio","","Có | Không","vaccinesChildhoodUpToDate","",6],
+      ["childhood-vaccine-record","childhoodVaccineRecord","Tải lên bản sao hồ sơ vắc xin khi còn nhỏ","Upload a copy of your childhood vaccine records","medical","Tiêm chủng","file","","","","",12],
+      ["covid-19-positive-or-had-it","hadCovidPositive","Người học đã từng có COVID-19 chưa hoặc kết quả dương tính với COVID-19?","Has the learner ever had COVID-19 or tested positive for COVID-19?","covid","COVID","radio","","có | không","hadCovidPositive","",6],
+      ["date-negative-after-infections","covidNegativeDateText","Bắt buộc: Nếu bạn đã xét nghiệm dương tính với COVID, thì vui lòng cung cấp ngày bạn xét nghiệm âm tính với COVID bên dưới. **Nếu bạn trả lời","Required: If you tested positive for COVID, please provide the date you tested negative for COVID below. **If you reply","covid","COVID","text","ví dụ: 2011-03-17 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh","","covidNegativeDateText","",4],
+      ["had-covid-shot-already","covidShotAlready","Người học đã được chủng ngừa COVID-19 chưa?","Has the learner been vaccinated against COVID-19?","covid","COVID","radio","","có | không","covidShotAlready","",6],
+      ["covid-19-vaccine-utd","covidVaccinesUpToDate","Vắc xin COVID-19 có được cập nhật không?","Are COVID-19 vaccines up to date?","covid","COVID","radio","","có | không","covidVaccinesUpToDate","",6],
+      ["most-recent-covid-shot","mostRecentCovidShotDate","Ngày tiêm phòng COVID gần đây nhất của học sinh","Student's most recent COVID vaccination date","covid","COVID","text","ví dụ: 2023-03-17","","mostRecentCovidShotDate","",4],
+      ["comments","extraComments","Bình luận","Comment","covid","COVID","textarea","","","extraComments","",12],
+      ["check-each-covid-injection-student-has-had","covidShotHistory","Vui lòng cho biết các loại chủng ngừa COVID-19 mà người học đã được nhận:","Please indicate which COVID-19 vaccinations the learner has received:","covid","COVID","checkbox","","Chưa | Tiêm chủng COVID lần đầu tiên | Tiêm chủng COVID thứ hai | Tiêm chủng COVID thứ ba | Tiêm chủng COVID thứ tư | Tiêm chủng COVID thứ năm | Tiêm chủng COVID thứ sáu","covidShotHistory","",12],
+      ["covid-vaccine-records","covidVaccineRecords","Hồ sơ tiêm phòng COVID","COVID vaccination records","covid","COVID","file","","","","",12],
+      ["fever-medicine","feverMedicineAllowed","Trẻ có thể dùng một liều thuốc uống bằng một trong các loại thuốc sau đây khi cần thiết để hạ sốt.","Children can take an oral dose of one of the following medications as needed to reduce fever.","medical","Chăm sóc trong giờ học (nếu người học là trẻ em)","checkbox","","Axit salicylic trẻ em | Ibuprofen trẻ em | Paracetamol trẻ em | Không cho | Tôi 18 tuổi trở lên","feverMedicineAllowed","",12],
+      ["dau-trang-duoc","whiteOilAllowed","Trẻ có thể dùng dầu trắng nếu muốn","Children can use white oil if they want","medical","Chăm sóc trong giờ học (nếu người học là trẻ em)","radio","","Cho | Không cho | Tôi 18 tuổi trở lên","whiteOilAllowed","",6],
+      ["signature","signatureFullName","Tôi xác nhận rằng tất cả thông tin tôi đã cung cấp; là sự thật được chứng minh; theo hiểu biết tốt nhất của tôi; chịu sự trừng phạt của pháp luật; tại nước Cộng hòa xã hội chủ nghĩa Việt Nam.","I confirm that all information I have provided; is a proven fact; to the best of my knowledge; subject to legal punishment; in the Socialist Republic of Vietnam.","submission","Chăm sóc trong giờ học (nếu người học là trẻ em)","text","họ tên của người điền đơn","","signatureFullName","",8],
+      ["email-form-sig","signatureEmail","email của bạn","your email","submission","Chăm sóc trong giờ học (nếu người học là trẻ em)","email","ten@vidu.com","","signatureEmail","",4],
     ]
 
     function profileTabLabel(tabId = "") {
@@ -3064,7 +3106,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function normalizeProfileInputType(inputType = "text", fieldKey = "") {
       let normalized = normalizeLower(inputType)
       if (!PROFILE_INPUT_TYPES.includes(normalized)) normalized = "text"
-      if (normalizeLower(fieldKey) === "student-current-grade") return "level-select"
+      if (normalizeLower(fieldKey) === "class-level") return "level-select"
       if (normalizeLower(fieldKey) === "eagles-id" && normalized === "number") return "text"
       if (normalizeLower(fieldKey) === "password" && normalized === "text") return "password"
       return normalized
@@ -3944,7 +3986,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const PARENT_TRACKING_TEACHER_STORAGE_KEY = "sis.admin.parentTracking.teacherNames"
     const PARENT_TRACKING_SUMMARY_STORAGE_KEY = "sis.admin.parentTracking.lessonSummaryByLevelDate"
     const TABLE_ARCHIVE_STORAGE_KEY = "sis.admin.tableArchiveIndex.v1"
-    const STUDENT_ID_SEARCH_STORAGE_KEY = "sis.admin.studentIdSearchHistory.v1"
+    const STUDENT_ID_SEARCH_STORAGE_KEY = "sis.admin.eaglesIdSearchHistory.v1"
     const STUDENT_ID_SEARCH_PATTERN = /^(?:[a-z]{1,10}\d{3}|\d{1,12})$/
     const DATA_TABLE_KEYS = ["attendance", "assignments", "performance", "grades", "reports"]
     const TABLE_KEY_TO_PAGE_SLUG = {
@@ -4143,9 +4185,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
     }
 
-    function persistStudentIdSearchHistory(values = state.studentIdSearchHistory) {
+    function persistStudentIdSearchHistory(values = state.eaglesIdSearchHistory) {
       const normalized = normalizeStudentIdSearchHistory(values).slice(0, 80)
-      state.studentIdSearchHistory = normalized
+      state.eaglesIdSearchHistory = normalized
       try {
         window.localStorage.setItem(STUDENT_ID_SEARCH_STORAGE_KEY, JSON.stringify(normalized))
       } catch (error) {
@@ -4157,7 +4199,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function rememberStudentIdSearchValue(value = "") {
       const normalized = normalizeStudentIdSearchValue(value)
       if (!isValidStudentIdSearchValue(normalized)) return false
-      const next = [normalized, ...(state.studentIdSearchHistory || []).filter((entry) => entry !== normalized)]
+      const next = [normalized, ...(state.eaglesIdSearchHistory || []).filter((entry) => entry !== normalized)]
       persistStudentIdSearchHistory(next)
       return true
     }
@@ -4226,7 +4268,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const dueAt = normalizeText(source.dueAt || source.dueDate)
       const exerciseTitle = normalizeText(source.exerciseTitle)
       const level = normalizeLevelName(source.level)
-      const studentId = normalizeText(source.studentId)
+      const eaglesId = normalizeText(source.eaglesId)
       const message = normalizeText(source.message)
       const baseItems = normalizeAssignmentItems(source.items)
       const normalizedItems = baseItems.length
@@ -4251,7 +4293,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         assignedAt,
         dueAt,
         level,
-        studentId,
+        eaglesId,
         message,
         items: normalizedItems,
         completed,
@@ -4559,11 +4601,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         if (sortField === "assignedAt") compareValue = compareTableIsoDate(left?.assignedAt, right?.assignedAt)
         else if (sortField === "assignmentTitle") compareValue = compareTableText(left?.assignmentTitle || left?.exerciseTitle, right?.assignmentTitle || right?.exerciseTitle)
         else if (sortField === "level") compareValue = compareLevelLabels(left?.level || "", right?.level || "")
-        else if (sortField === "student") compareValue = compareTableText(left?.studentId, right?.studentId)
+        else if (sortField === "student") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "completion") compareValue = compareTableNumber(assignmentCompletionPercent(left), assignmentCompletionPercent(right))
         else compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt)
         if (compareValue === 0) compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt)
-        if (compareValue === 0) compareValue = compareTableText(left?.studentId, right?.studentId)
+        if (compareValue === 0) compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         if (compareValue === 0) compareValue = compareTableText(left?.assignmentTitle || left?.exerciseTitle, right?.assignmentTitle || right?.exerciseTitle)
         return applySortDirection(compareValue, sortDir)
       })
@@ -4794,8 +4836,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return student
     }
 
-    async function ensureStudentDetailCached(studentId = "") {
-      const id = normalizeText(studentId)
+    async function ensureStudentDetailCached(studentRefId = "") {
+      const id = normalizeText(studentRefId)
       if (!id) return null
       const cached = state.studentDetailCacheById?.[id]
       if (cached && typeof cached === "object") return cached
@@ -4839,7 +4881,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
-        studentId: normalizeText(student?.studentId),
+        eaglesId: normalizeText(student?.eaglesId),
         studentName: normalizeText(student?.profile?.fullName),
         classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
         profile: student?.profile || {},
@@ -4850,7 +4892,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
-        studentId: normalizeText(student?.studentId),
+        eaglesId: normalizeText(student?.eaglesId),
         studentName: normalizeText(student?.profile?.fullName),
         classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
         profile: student?.profile || {},
@@ -4861,7 +4903,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
-        studentId: normalizeText(student?.studentId),
+        eaglesId: normalizeText(student?.eaglesId),
         studentName: normalizeText(student?.profile?.fullName),
         classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
         profile: student?.profile || {},
@@ -4933,7 +4975,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (!selectedRefId) return null
       const match = source.find((student) => {
         const internalId = normalizeLower(student?.id)
-        const publicStudentId = normalizeLower(student?.studentId)
+        const publicStudentId = normalizeLower(student?.eaglesId)
         return internalId === selectedRefId || publicStudentId === selectedRefId
       })
       if (match) return match
@@ -4957,7 +4999,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const selectedStudent = tableFilterSelectedStudent(tableKey)
       if (selectedStudent) {
         const labelName = normalizeText(selectedStudent?.profile?.fullName || selectedStudent?.fullName || "")
-        const labelId = normalizeText(selectedStudent?.studentId || selectedStudent?.id || "")
+        const labelId = normalizeText(selectedStudent?.eaglesId || selectedStudent?.id || "")
         const resolvedName = labelName || "(no name)"
         const resolvedId = labelId || "(no id)"
         summaryParts.push(`Student: ${resolvedName} (${resolvedId})`)
@@ -4990,8 +5032,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         ).values()
       )
       deduped.sort((left, right) =>
-        normalizeText(left?.profile?.fullName || left?.studentId || "").localeCompare(
-          normalizeText(right?.profile?.fullName || right?.studentId || ""),
+        normalizeText(left?.profile?.fullName || left?.eaglesId || "").localeCompare(
+          normalizeText(right?.profile?.fullName || right?.eaglesId || ""),
           undefined,
           { sensitivity: "base" }
         )
@@ -5001,15 +5043,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function topSearchStudentOptionLabel(student = {}) {
       const fullName = normalizeText(student?.profile?.fullName) || "(no name)"
-      const studentId = normalizeText(student?.studentId) || "(no id)"
+      const eaglesId = normalizeText(student?.eaglesId) || "(no id)"
       const level = fullLevelLabel(student?.profile?.currentGrade || "") || "No level"
-      return `${fullName} (${studentId}) - ${level}`
+      return `${fullName} (${eaglesId}) - ${level}`
     }
 
     function topSearchStudentOptionSummary(student = {}) {
-      const studentId = normalizeText(student?.studentId) || "no id"
+      const eaglesId = normalizeText(student?.eaglesId) || "no id"
       const level = shortLevelLabel(student?.profile?.currentGrade || "") || "no level"
-      return `${studentId} | ${level}`
+      return `${eaglesId} | ${level}`
     }
 
     function rememberTopSearchOption(map, key, value) {
@@ -5034,13 +5076,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         listEl.appendChild(option)
         const mapped = {
           id: normalizeText(student?.id),
-          studentId: normalizeText(student?.studentId),
+          eaglesId: normalizeText(student?.eaglesId),
           fullName: normalizeText(student?.profile?.fullName),
           level: resolveSystemLevelName(student?.profile?.currentGrade || ""),
           school: normalizeText(student?.profile?.schoolName),
         }
         rememberTopSearchOption(map, value, mapped)
-        rememberTopSearchOption(map, mapped.studentId, mapped)
+        rememberTopSearchOption(map, mapped.eaglesId, mapped)
         rememberTopSearchOption(map, mapped.fullName, mapped)
       })
       state.topSearchOptionMap = map
@@ -5057,14 +5099,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       const source = allKnownStudentsForTopSearchOptions()
       const match = source.find((student) => {
-        if (normalizeLower(student?.studentId) === key) return true
+        if (normalizeLower(student?.eaglesId) === key) return true
         if (normalizeLower(student?.profile?.fullName) === key) return true
         return normalizeLower(topSearchStudentOptionLabel(student)) === key
       })
       if (!match) return null
       return {
         id: normalizeText(match?.id),
-        studentId: normalizeText(match?.studentId),
+        eaglesId: normalizeText(match?.eaglesId),
         fullName: normalizeText(match?.profile?.fullName),
         level: resolveSystemLevelName(match?.profile?.currentGrade || ""),
         school: normalizeText(match?.profile?.schoolName),
@@ -5073,7 +5115,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function normalizeTopSearchQuery(rawValue = "") {
       const selected = resolveTopSearchStudentSelection(rawValue)
-      if (selected?.studentId) return selected.studentId
+      if (selected?.eaglesId) return selected.eaglesId
       if (selected?.fullName) return selected.fullName
       return normalizeText(rawValue)
     }
@@ -5123,9 +5165,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         ].filter(Boolean),
         studentRefIds: [
           normalizeText(row?.studentRefId),
-          normalizeText(row?.studentId),
+          normalizeText(row?.eaglesId),
           normalizeText(row?.studentCode),
-          normalizeText(rowProfile?.studentId),
+          normalizeText(rowProfile?.eaglesId),
           normalizeText(rowProfile?.studentRefId),
         ]
           .map((entry) => normalizeLower(entry))
@@ -5170,9 +5212,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         let matched = context.studentRefIds.some((entry) => entry === studentRefFilter)
         if (!matched && tableKey === "assignments") {
           const selectedStudent = tableFilterSelectedStudent(tableKey)
-          const targeted = normalizeLower(normalizeText(row?.studentId || row?.studentRefId))
+          const targeted = normalizeLower(normalizeText(row?.eaglesId || row?.studentRefId))
           if (targeted) {
-            const selectedPublicId = normalizeLower(selectedStudent?.studentId)
+            const selectedPublicId = normalizeLower(selectedStudent?.eaglesId)
             matched = targeted === studentRefFilter || (selectedPublicId && targeted === selectedPublicId)
           } else if (selectedStudent) {
             const selectedLevel = resolveSystemLevelName(selectedStudent?.profile?.currentGrade || "")
@@ -5244,7 +5286,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function attendanceRowSearchText(row = {}) {
       return [
         normalizeText(row?.studentName),
-        normalizeText(row?.studentId),
+        normalizeText(row?.eaglesId),
         normalizeText(row?.classLevel),
         normalizeText(row?.attendanceDate),
         normalizeText(row?.className),
@@ -5258,7 +5300,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return [
         normalizeText(row?.assignmentTitle || row?.exerciseTitle),
         normalizeText(row?.level),
-        normalizeText(row?.studentId),
+        normalizeText(row?.eaglesId),
         normalizeText(row?.assignedAt),
         normalizeText(row?.dueAt),
         assignmentItemsSummaryText(row),
@@ -5268,7 +5310,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function gradeRowSearchText(row = {}) {
       return [
         normalizeText(row?.studentName),
-        normalizeText(row?.studentId),
+        normalizeText(row?.eaglesId),
         normalizeText(row?.classLevel),
         normalizeText(row?.dueAt),
         normalizeText(row?.className),
@@ -5282,7 +5324,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function reportRowSearchText(row = {}) {
       return [
         normalizeText(row?.studentName),
-        normalizeText(row?.studentId),
+        normalizeText(row?.eaglesId),
         normalizeText(row?.classLevel),
         normalizeText(row?.generatedAt),
         normalizeText(row?.className),
@@ -5357,7 +5399,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function mapTableExportRow(tableKey = "", row = {}) {
       if (tableKey === "attendance") {
         return {
-          student: normalizeText(row?.studentName || row?.studentId),
+          student: normalizeText(row?.studentName || row?.eaglesId),
           date: normalizeText(row?.attendanceDate).slice(0, 10),
           className: normalizeText(row?.className),
           quarter: normalizeText(row?.quarter),
@@ -5371,13 +5413,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const assignmentStudent = tableFilterStudentSource("assignments").find((student) => {
           const optionValue = tableFilterStudentOptionValue(student)
           if (!optionValue) return false
-          if (normalizeLower(optionValue) === normalizeLower(row?.studentId)) return true
-          return normalizeLower(student?.studentId) === normalizeLower(row?.studentId)
+          if (normalizeLower(optionValue) === normalizeLower(row?.eaglesId)) return true
+          return normalizeLower(student?.eaglesId) === normalizeLower(row?.eaglesId)
         })
         const studentLabel = normalizeText(
           assignmentStudent?.profile?.fullName ||
-          assignmentStudent?.studentId ||
-          row?.studentId ||
+          assignmentStudent?.eaglesId ||
+          row?.eaglesId ||
           ""
         )
         return {
@@ -5392,7 +5434,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       if (tableKey === "grades") {
         return {
-          student: normalizeText(row?.studentName || row?.studentId),
+          student: normalizeText(row?.studentName || row?.eaglesId),
           dueAt: normalizeText(row?.dueAt).slice(0, 10),
           className: normalizeText(row?.className),
           assignmentName: normalizeText(row?.assignmentName),
@@ -5405,7 +5447,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         }
       }
       return {
-        student: normalizeText(row?.studentName || row?.studentId),
+        student: normalizeText(row?.studentName || row?.eaglesId),
         generatedAt: normalizeText(row?.generatedAt).slice(0, 10),
         className: normalizeText(row?.className),
         quarter: normalizeText(row?.quarter),
@@ -5425,7 +5467,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function tableExportFilename(tableKey = "") {
       const safeTable = normalizeLower(tableKey).replace(/[^a-z0-9]+/g, "-") || "data"
-      const studentPart = normalizeText(state.currentStudent?.studentId || state.currentStudent?.profile?.fullName || "student")
+      const studentPart = normalizeText(state.currentStudent?.eaglesId || state.currentStudent?.profile?.fullName || "student")
         .replace(/[^a-zA-Z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "")
       const datePart = localIsoDate() || "export"
@@ -5824,7 +5866,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function tableFilterStudentOptionValue(student = {}) {
       const internalId = normalizeText(student?.id)
       if (internalId) return internalId
-      return normalizeText(student?.studentId)
+      return normalizeText(student?.eaglesId)
     }
 
     function populateTableFilterStudentOptions(tableKey = "") {
@@ -5841,8 +5883,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
             .filter(([value]) => Boolean(value))
         ).values()
       ).sort((left, right) => {
-        const leftName = normalizeText(left?.profile?.fullName || left?.studentId || left?.id || "")
-        const rightName = normalizeText(right?.profile?.fullName || right?.studentId || right?.id || "")
+        const leftName = normalizeText(left?.profile?.fullName || left?.eaglesId || left?.id || "")
+        const rightName = normalizeText(right?.profile?.fullName || right?.eaglesId || right?.id || "")
         return leftName.localeCompare(rightName, undefined, { sensitivity: "base" })
       })
 
@@ -5852,10 +5894,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const option = document.createElement("option")
         option.value = tableFilterStudentOptionValue(student)
         const name = normalizeText(student?.profile?.fullName) || "(no name)"
-        const studentId = normalizeText(student?.studentId)
-        option.textContent = studentId ? `${name} (${studentId})` : name
+        const eaglesId = normalizeText(student?.eaglesId)
+        option.textContent = eaglesId ? `${name} (${eaglesId})` : name
         const optionLower = normalizeLower(option.value)
-        const publicIdLower = normalizeLower(student?.studentId)
+        const publicIdLower = normalizeLower(student?.eaglesId)
         if (selectedRef && (option.value === selectedRef || optionLower === selectedRefLower || publicIdLower === selectedRefLower)) {
           option.selected = true
           if (option.value && option.value !== selectedRef) setTableFilterValue(tableKey, "studentRefId", option.value)
@@ -5896,14 +5938,37 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       DATA_TABLE_KEYS.forEach((tableKey) => refreshTableSearchFilterControls(tableKey))
     }
 
+    function parsePositiveInteger(value) {
+      const text = normalizeText(value)
+      if (!text) return null
+      const parsed = Number.parseInt(text, 10)
+      if (!Number.isFinite(parsed) || parsed < 1) return null
+      return parsed
+    }
+
     function nextStudentNumericId() {
-      const ids = [...(state.students || []), ...(state.dashboardStudents || [])]
-        .map((entry) => normalizeText(entry?.studentId))
-        .filter((entry) => /^\d+$/.test(entry))
-        .map((entry) => Number.parseInt(entry, 10))
+      const source = [...(state.students || []), ...(state.dashboardStudents || [])]
+      const ids = source
+        .map((entry) => parsePositiveInteger(entry?.studentNumber))
         .filter((entry) => Number.isFinite(entry) && entry > 0)
-      if (!ids.length) return "1"
-      return String(Math.max(...ids) + 1)
+      const max = ids.length ? Math.max(...ids) : STUDENT_NUMBER_START - 1
+      return String(Math.max(STUDENT_NUMBER_START, max + 1))
+    }
+
+    async function hydrateNextStudentNumberFromApi() {
+      if (state.currentStudent?.id) return
+      let response = null
+      try {
+        response = await api("/api/admin/students/next-student-number")
+      } catch (error) {
+        if (error && (error.status === 404 || error.status === 503)) return
+        throw error
+      }
+
+      const nextNumber = parsePositiveInteger(response?.nextStudentNumber)
+      if (!nextNumber) return
+
+      setFormValue("studentNumber", String(nextNumber))
     }
 
     const DEFAULT_ADMIN_API_PREFIX = "/api/admin"
@@ -6277,7 +6342,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     state.profileFormConfig = loadProfileFormConfigFromStorage()
     state.assignmentTemplates = loadAssignmentTemplatesFromStorage()
     state.tableArchiveIndex = loadTableArchiveIndexFromStorage()
-    state.studentIdSearchHistory = loadStudentIdSearchHistoryFromStorage()
+    state.eaglesIdSearchHistory = loadStudentIdSearchHistoryFromStorage()
     state.attendanceLanding.tileConfigByLevel = loadAttendanceLevelTileConfigFromStorage()
     state.parentTracking.teacherNames = loadParentTrackingTeacherNamesFromStorage()
     state.parentTracking.lessonSummaryByLevelDate = loadParentTrackingLessonSummaryFromStorage()
@@ -7153,7 +7218,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       const profile = state.currentStudent.profile || {}
       const pieces = [
-        normalizeText(state.currentStudent.studentId) || "(no student id)",
+        normalizeText(state.currentStudent.eaglesId) || "(no eagles id)",
         normalizeText(profile.fullName) || "(no name)",
         shortLevelLabel(profile.currentGrade) || "(no level)",
         normalizeText(profile.schoolName) || "(no school)",
@@ -7718,7 +7783,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const option = document.createElement("option")
         option.value = normalizeText(student.id)
         const name = normalizeText(student?.profile?.fullName) || "(no name)"
-        const sid = normalizeText(student?.studentId) || "(no id)"
+        const sid = normalizeText(student?.eaglesId) || "(no id)"
         option.textContent = `${name} (${sid})`
         if (option.value === selectedStudentId) option.selected = true
         select.appendChild(option)
@@ -7853,7 +7918,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         assignedAt: normalizeText(document.getElementById("assignAssignedAt").value),
         dueAt: normalizeText(document.getElementById("assignDueAt").value),
         level,
-        studentId: normalizeText(document.getElementById("assignStudent").value),
+        eaglesId: normalizeText(document.getElementById("assignStudent").value),
         message: normalizeText(document.getElementById("assignMessage").value),
         items,
       }
@@ -7894,7 +7959,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       document.getElementById("assignMessage").value = normalizeText(normalized.message)
       setAssignmentDraft(normalized.items, normalized.id)
       refreshAssignmentStudentOptions()
-      document.getElementById("assignStudent").value = normalizeText(normalized.studentId)
+      document.getElementById("assignStudent").value = normalizeText(normalized.eaglesId)
       renderAssignmentLevelTiles()
       renderAssignmentDraftItems()
       setAssignmentStatus("Assignment loaded into form.")
@@ -7958,7 +8023,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       )
       const studentByPublicId = new Map(
         assignmentStudents
-          .map((student) => [normalizeLower(student?.studentId), student])
+          .map((student) => [normalizeLower(student?.eaglesId), student])
           .filter(([key]) => Boolean(key))
       )
       const sortedTemplates = sortedAssignmentTemplates(state.assignmentTemplates)
@@ -7967,11 +8032,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       updateTableFilterSummary("assignments")
       filteredTemplates.forEach((template) => {
         const archived = isTableRecordArchived("assignments", template.id)
-        const templateStudentKey = normalizeLower(template?.studentId)
+        const templateStudentKey = normalizeLower(template?.eaglesId)
         const matchedStudent = studentByOptionValue.get(templateStudentKey) || studentByPublicId.get(templateStudentKey)
         const studentLabel = matchedStudent
-          ? `${normalizeText(matchedStudent?.profile?.fullName) || "(no name)"} (${normalizeText(matchedStudent?.studentId) || "no id"})`
-          : normalizeText(template?.studentId) || "All students in level"
+          ? `${normalizeText(matchedStudent?.profile?.fullName) || "(no name)"} (${normalizeText(matchedStudent?.eaglesId) || "no id"})`
+          : normalizeText(template?.eaglesId) || "All students in level"
         const tr = document.createElement("tr")
         tr.innerHTML = `
           <td>${escapeHtml(template.assignmentTitle || template.exerciseTitle || "")}</td>
@@ -8036,7 +8101,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         assignedAt,
         dueAt,
         level: form.level,
-        studentId: form.studentId,
+        eaglesId: form.eaglesId,
         message: form.message,
         items: form.items,
         completed: completion.completed,
@@ -8071,7 +8136,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         .map((row) => {
           const level = shortLevelLabel(row.level || "")
           const name = normalizeText(row.fullName) || "(no name)"
-          const sid = normalizeText(row.studentId) || "(no id)"
+          const sid = normalizeText(row.eaglesId) || "(no id)"
           return `${name} (${sid}) [${level}] - absences:${row.absences || 0}, late30+:${row.late30Plus || 0}, outstanding:${row.outstandingWeek || 0}`
         })
         .join("\n")
@@ -8547,7 +8612,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           const assignments = Array.isArray(student.assignmentNames) ? student.assignmentNames.join(", ") : ""
           tr.innerHTML = `
             <td><input type="checkbox" class="checkbox-inline" data-remind-student="${student.studentRefId}" ${index < 5 ? "checked" : ""}></td>
-            <td>${student.fullName || "(no name)"} (${student.studentId || ""})</td>
+            <td>${student.fullName || "(no name)"} (${student.eaglesId || ""})</td>
             <td>${student.outstandingCount || 0}</td>
             <td>${assignments || "-"}</td>
             <td>${Array.isArray(student.emails) ? student.emails.join(", ") : ""}</td>
@@ -8783,21 +8848,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return text
     }
 
-    async function resolveIncomingTargetStudentByStudentId(studentIdInput) {
-      const requested = normalizeText(studentIdInput)
-      if (!requested) throw new Error("Student ID is required.")
+    async function resolveIncomingTargetStudentByEaglesId(eaglesIdInput) {
+      const requested = normalizeText(eaglesIdInput)
+      if (!requested) throw new Error("Eagles ID is required.")
       const requestedKey = normalizeLower(requested)
 
       const fromPool = (pool) => {
         const list = Array.isArray(pool) ? pool : []
-        return list.find((entry) => normalizeLower(entry?.studentId) === requestedKey) || null
+        return list.find((entry) => normalizeLower(entry?.eaglesId) === requestedKey) || null
       }
 
       const localMatch = fromPool(state.students) || fromPool(state.dashboardStudents)
       if (localMatch?.id) {
         return {
           id: normalizeText(localMatch.id),
-          studentId: normalizeText(localMatch.studentId),
+          eaglesId: normalizeText(localMatch.eaglesId),
         }
       }
 
@@ -8807,48 +8872,48 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (fetchedMatch?.id) {
         return {
           id: normalizeText(fetchedMatch.id),
-          studentId: normalizeText(fetchedMatch.studentId),
+          eaglesId: normalizeText(fetchedMatch.eaglesId),
         }
       }
 
-      throw new Error(`Student ID "${requested}" was not found.`)
+      throw new Error(`Eagles ID "${requested}" was not found.`)
     }
 
     async function addIncomingExerciseToSpecificStudent(item = {}) {
       const defaultStudentId =
-        normalizeText(state.currentStudent?.studentId) ||
+        normalizeText(state.currentStudent?.eaglesId) ||
         normalizeIncomingSubmittedStudentId(item.submittedStudentId) ||
         ""
       const enteredStudentId = window.prompt(
-        "Add to specific student: enter Student ID",
+        "Add to specific student: enter Eagles ID",
         defaultStudentId
       )
       if (enteredStudentId == null) return
-      const targetStudent = await resolveIncomingTargetStudentByStudentId(enteredStudentId)
+      const targetStudent = await resolveIncomingTargetStudentByEaglesId(enteredStudentId)
       await applyIncomingExerciseDisposition(item.id, "match", {
         studentRefId: targetStudent.id,
       }, {
-        doneMessage: `Added this quiz score to ${targetStudent.studentId}.`,
+        doneMessage: `Added this quiz score to ${targetStudent.eaglesId}.`,
       })
     }
 
     async function createIncomingExerciseStudentAccount(item = {}) {
-      const suggestedStudentId = normalizeIncomingSubmittedStudentId(item.submittedStudentId)
-      const enteredStudentId = window.prompt(
-        "Create new user: Student ID",
-        suggestedStudentId
+      const suggestedEaglesId = normalizeIncomingSubmittedStudentId(item.submittedStudentId)
+      const enteredEaglesId = window.prompt(
+        "Create new user: Eagles ID",
+        suggestedEaglesId
       )
-      if (enteredStudentId == null) return
-      const studentId = normalizeText(enteredStudentId)
-      if (!studentId) throw new Error("studentId is required to create account.")
+      if (enteredEaglesId == null) return
+      const eaglesId = normalizeText(enteredEaglesId)
+      if (!eaglesId) throw new Error("eaglesId is required to create account.")
 
       const fullName = window.prompt("Student full name (optional):", "") || ""
       const result = await applyIncomingExerciseDisposition(item.id, "create-account", {
-        studentId,
+        eaglesId,
         email: normalizeText(item.submittedEmail),
         fullName: normalizeText(fullName),
       }, {
-        doneMessage: `Created user ${studentId}, auto-added quiz score, and opened Profile.`,
+        doneMessage: `Created user ${eaglesId}, auto-added quiz score, and opened Profile.`,
       })
 
       const createdStudentRefId = normalizeText(result?.student?.id || result?.studentRefId)
@@ -9395,8 +9460,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const dueAt = form.dueAt || nextSundayIsoDate(form.assignedAt || localIsoDate())
       let recipients = []
 
-      if (form.studentId) {
-        const selectedStudent = source.find((entry) => normalizeText(entry.id) === form.studentId)
+      if (form.eaglesId) {
+        const selectedStudent = source.find((entry) => normalizeText(entry.id) === form.eaglesId)
         recipients = assignmentRecipientsForStudent(selectedStudent)
       } else if (targetLevel) {
         source.forEach((student) => {
@@ -9640,8 +9705,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         })
         .slice()
       rows.sort((left, right) =>
-        normalizeText(left?.profile?.fullName || left?.studentId || "").localeCompare(
-          normalizeText(right?.profile?.fullName || right?.studentId || "")
+        normalizeText(left?.profile?.fullName || left?.eaglesId || "").localeCompare(
+          normalizeText(right?.profile?.fullName || right?.eaglesId || "")
         )
       )
       return rows
@@ -9656,17 +9721,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (bodyEl) bodyEl.textContent = "Select an assignment link to inspect details."
     }
 
-    function parentTrackingDeepLinkPath(studentId, assignmentId = "") {
-      const studentRefId = normalizeText(studentId)
-      if (!studentRefId) return buildPagePath("parent-tracking")
+    function parentTrackingDeepLinkPath(studentRefId, assignmentId = "") {
+      const normalizedStudentRefId = normalizeText(studentRefId)
+      if (!normalizedStudentRefId) return buildPagePath("parent-tracking")
       const params = new URLSearchParams()
-      params.set("ptStudent", studentRefId)
+      params.set("ptStudent", normalizedStudentRefId)
       if (normalizeText(assignmentId)) params.set("ptAssignment", normalizeText(assignmentId))
       return `${buildPagePath("parent-tracking")}?${params.toString()}`
     }
 
-    function parentTrackingDeepLinkAbsolute(studentId, assignmentId = "") {
-      const path = parentTrackingDeepLinkPath(studentId, assignmentId)
+    function parentTrackingDeepLinkAbsolute(studentRefId, assignmentId = "") {
+      const path = parentTrackingDeepLinkPath(studentRefId, assignmentId)
       try {
         return new URL(path, window.location.origin).toString()
       } catch (error) {
@@ -9823,7 +9888,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const submittedAt = normalizeText(record.submittedAt).slice(0, 10)
       const completionState = isGradeRecordCompleted(record) ? "Completed" : "Uncompleted"
       const onTimeState = isGradeRecordOnTime(record) ? "On Time" : "Late / Pending"
-      const studentName = normalizeText(student?.profile?.fullName || student?.studentId || "")
+      const studentName = normalizeText(student?.profile?.fullName || student?.eaglesId || "")
       const deepLink = parentTrackingDeepLinkAbsolute(student?.id, record?.id)
 
       titleEl.textContent = `Assignment Details: ${assignmentName}`
@@ -9848,24 +9913,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       panel.classList.remove("hidden")
     }
 
-    async function openParentTrackingAssignmentLink(studentId, assignmentId = "", options = {}) {
+    async function openParentTrackingAssignmentLink(studentRefId, assignmentId = "", options = {}) {
       const { syncUrl = false } = options
-      const targetStudentId = normalizeText(studentId)
-      if (!targetStudentId) return
+      const targetStudentRefId = normalizeText(studentRefId)
+      if (!targetStudentRefId) return
 
-      const sourceStudent = parentTrackingStudentSource().find((entry) => normalizeText(entry?.id) === targetStudentId)
+      const sourceStudent = parentTrackingStudentSource().find((entry) => normalizeText(entry?.id) === targetStudentRefId)
       if (sourceStudent?.profile?.currentGrade) {
         state.parentTracking.selectedLevel = resolveSystemLevelName(sourceStudent.profile.currentGrade)
       }
 
       setActivePage("parent-tracking", { syncUrl })
-      await refreshParentTracking({ preferredStudentId: targetStudentId, preferredAssignmentId: assignmentId })
+      await refreshParentTracking({ preferredStudentId: targetStudentRefId, preferredAssignmentId: assignmentId })
     }
 
     function renderParentTrackingOutstandingRows(records = [], student = null) {
       const rowsEl = document.getElementById("pt_outstandingRows")
       if (!rowsEl) return
-      const studentId = normalizeText(student?.id)
+      const studentRefId = normalizeText(student?.id)
 
       state.parentTracking.outstandingByRecordId = Object.fromEntries(
         (Array.isArray(records) ? records : [])
@@ -9884,7 +9949,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const dueAt = normalizeText(record?.dueAt).slice(0, 10)
         const assignmentName = normalizeText(record?.assignmentName) || "(untitled assignment)"
         const rowId = normalizeText(record?.id)
-        const deepLink = parentTrackingDeepLinkPath(studentId, rowId)
+        const deepLink = parentTrackingDeepLinkPath(studentRefId, rowId)
         const tr = document.createElement("tr")
         tr.innerHTML = `
           <td>${escapeHtml(dueAt || "-")}</td>
@@ -9898,7 +9963,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const link = tr.querySelector(`[data-pt-open-assignment="${rowId}"]`)
         link?.addEventListener("click", (event) => {
           event.preventDefault()
-          openParentTrackingAssignmentLink(studentId, rowId).catch(handleError)
+          openParentTrackingAssignmentLink(studentRefId, rowId).catch(handleError)
         })
 
         const viewButton = tr.querySelector(`[data-pt-view-assignment="${rowId}"]`)
@@ -9909,8 +9974,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       })
     }
 
-    async function loadParentTrackingStudentDetail(studentId, { force = false } = {}) {
-      const targetId = normalizeText(studentId)
+    async function loadParentTrackingStudentDetail(studentRefId, { force = false } = {}) {
+      const targetId = normalizeText(studentRefId)
       if (!targetId) return null
       if (!force && state.parentTracking.studentDetailsByStudentId[targetId]) {
         return state.parentTracking.studentDetailsByStudentId[targetId]
@@ -9977,7 +10042,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function refreshParentTrackingStudentOptions({ preserveStudentSelection = true, preferredStudentId = "" } = {}) {
-      const selectEl = document.getElementById("pt_studentId")
+      const selectEl = document.getElementById("pt_studentRefId")
       if (!selectEl) return []
       const students = parentTrackingSelectedStudents()
       const preferredId = normalizeText(preferredStudentId)
@@ -9987,7 +10052,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       students.forEach((student) => {
         const option = document.createElement("option")
         option.value = student.id
-        option.textContent = `${student.profile?.fullName || "(no name)"}${student.studentId ? ` (${student.studentId})` : ""}`
+        option.textContent = `${student.profile?.fullName || "(no name)"}${student.eaglesId ? ` (${student.eaglesId})` : ""}`
         if (normalizeText(student.id) === targetId) option.selected = true
         selectEl.appendChild(option)
       })
@@ -10047,7 +10112,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("performance", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.studentId ? `(${escapeHtml(row.studentId)})` : ""}</td>
+          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
           <td>${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.quarter || ""}</td>
@@ -10096,9 +10161,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     async function deleteParentTrackingReport(recordId) {
-      const selectedStudentId = normalizeText(document.getElementById("pt_studentId")?.value)
-      if (!selectedStudentId) throw new Error("Select a student first.")
-      const result = await api(`/api/admin/students/${encodeURIComponent(selectedStudentId)}/reports/${encodeURIComponent(recordId)}`, {
+      const selectedStudentRefId = normalizeText(document.getElementById("pt_studentRefId")?.value)
+      if (!selectedStudentRefId) throw new Error("Select a student first.")
+      const result = await api(`/api/admin/students/${encodeURIComponent(selectedStudentRefId)}/reports/${encodeURIComponent(recordId)}`, {
         method: "DELETE",
       })
       if (result?.student?.id) {
@@ -10121,18 +10186,18 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     async function syncParentTrackingForSelection({ preferredAssignmentId = "" } = {}) {
       ensureParentTrackingFormDefaults({ forceSummaryFromMemory: false })
-      const previousStudentId = normalizeText(state.parentTracking.selectedStudentId)
-      const selectedStudentId = normalizeText(document.getElementById("pt_studentId")?.value)
-      if (selectedStudentId !== previousStudentId) parentTrackingFieldSetValue("pt_reportId", "")
-      state.parentTracking.selectedStudentId = selectedStudentId
-      if (!selectedStudentId) {
+      const previousStudentRefId = normalizeText(state.parentTracking.selectedStudentId)
+      const selectedStudentRefId = normalizeText(document.getElementById("pt_studentRefId")?.value)
+      if (selectedStudentRefId !== previousStudentRefId) parentTrackingFieldSetValue("pt_reportId", "")
+      state.parentTracking.selectedStudentId = selectedStudentRefId
+      if (!selectedStudentRefId) {
         clearParentTrackingComputedFields()
         renderParentTrackingReportRows([])
         setParentTrackingStatus("Select a student to auto-fill report metrics.")
         return null
       }
 
-      const detail = await loadParentTrackingStudentDetail(selectedStudentId)
+      const detail = await loadParentTrackingStudentDetail(selectedStudentRefId)
       if (!detail) {
         clearParentTrackingComputedFields()
         renderParentTrackingReportRows([])
@@ -10155,7 +10220,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       renderParentTrackingOutstandingRows(metrics.outstanding, detail)
       renderParentTrackingReportRows(parentTrackingReportRowsForStudent(detail, selectedLevel))
       setParentTrackingStatus(
-        `${detail?.profile?.fullName || detail?.studentId || "Student"} | records=${metrics.records.length} | outstanding=${metrics.outstanding.length}`
+        `${detail?.profile?.fullName || detail?.eaglesId || "Student"} | records=${metrics.records.length} | outstanding=${metrics.outstanding.length}`
       )
 
       if (normalizeText(preferredAssignmentId)) {
@@ -10182,15 +10247,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     async function resolveParentTrackingContext({ includeStudentRefresh = true } = {}) {
       const selectedLevel = selectedParentTrackingLevel()
-      const selectedStudentId = normalizeText(document.getElementById("pt_studentId")?.value)
+      const selectedStudentRefId = normalizeText(document.getElementById("pt_studentRefId")?.value)
       if (!selectedLevel) throw new Error("Select a class level first.")
-      if (!selectedStudentId) throw new Error("Select a student first.")
+      if (!selectedStudentRefId) throw new Error("Select a student first.")
 
       const syncResult = includeStudentRefresh ? await syncParentTrackingForSelection({}) : null
       const student =
         syncResult?.student ||
-        state.parentTracking.studentDetailsByStudentId[selectedStudentId] ||
-        (await loadParentTrackingStudentDetail(selectedStudentId))
+        state.parentTracking.studentDetailsByStudentId[selectedStudentRefId] ||
+        (await loadParentTrackingStudentDetail(selectedStudentRefId))
       if (!student) throw new Error("Unable to load student detail.")
 
       const classDate = normalizeText(document.getElementById("pt_classDate")?.value) || localIsoDate()
@@ -10228,7 +10293,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       return {
         student,
-        studentId: selectedStudentId,
+        studentRefId: selectedStudentRefId,
         selectedLevel,
         className,
         classDate,
@@ -10250,7 +10315,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       const context = await resolveParentTrackingContext({ includeStudentRefresh: true })
 
-      const result = await api(`/api/admin/students/${encodeURIComponent(context.studentId)}/reports`, {
+      const result = await api(`/api/admin/students/${encodeURIComponent(context.studentRefId)}/reports`, {
         method: "POST",
         body: {
           id: normalizeText(document.getElementById("pt_reportId")?.value),
@@ -10281,7 +10346,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (result?.report?.id) document.getElementById("pt_reportId").value = result.report.id
       if (!silent) {
         setParentTrackingStatus("Performance class report saved.")
-        setStatus(`Performance report saved for ${context.student.profile?.fullName || context.student.studentId}.`)
+        setStatus(`Performance report saved for ${context.student.profile?.fullName || context.student.eaglesId}.`)
       }
       return context
     }
@@ -10302,7 +10367,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         ? context.metrics.outstanding.map((row, index) => {
             const due = normalizeText(row?.dueAt).slice(0, 10) || "-"
             const assignment = normalizeText(row?.assignmentName) || "(untitled assignment)"
-            const link = parentTrackingDeepLinkAbsolute(context.studentId, normalizeText(row?.id))
+            const link = parentTrackingDeepLinkAbsolute(context.studentRefId, normalizeText(row?.id))
             return `${index + 1}. ${assignment} | due ${due} | details ${link}`
           })
         : ["None"]
@@ -10316,7 +10381,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       ]
 
       const message = [
-        `Student: ${context.student.profile?.fullName || context.student.studentId}`,
+        `Student: ${context.student.profile?.fullName || context.student.eaglesId}`,
         `Class level: ${context.className}`,
         `Class day/date: ${context.classDay || "-"} / ${context.classDate}`,
         `Teacher: ${context.teacherName || "-"}`,
@@ -10339,7 +10404,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         body: {
           deliveryMode: "weekend-batch",
           queueType: "parent-report",
-          assignmentTitle: `${context.student.profile?.fullName || context.student.studentId} class report`,
+          assignmentTitle: `${context.student.profile?.fullName || context.student.eaglesId} class report`,
           exerciseTitle: context.className,
           dueAt: context.classDate,
           level: context.selectedLevel,
@@ -10364,7 +10429,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function clearParentTrackingForm() {
       parentTrackingFieldSetValue("pt_reportId", "")
-      parentTrackingFieldSetValue("pt_studentId", "")
+      parentTrackingFieldSetValue("pt_studentRefId", "")
       parentTrackingFieldSetValue("pt_classDate", localIsoDate())
       parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(localIsoDate()))
       parentTrackingFieldSetValue("pt_lessonSummary", "")
@@ -10376,10 +10441,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     async function applyParentTrackingDeepLinkFromLocation() {
       const params = new URLSearchParams(window.location.search || "")
-      const studentId = normalizeText(params.get("ptStudent"))
+      const studentRefId = normalizeText(params.get("ptStudent"))
       const assignmentId = normalizeText(params.get("ptAssignment"))
-      if (!studentId) return
-      await openParentTrackingAssignmentLink(studentId, assignmentId, { syncUrl: false })
+      if (!studentRefId) return
+      await openParentTrackingAssignmentLink(studentRefId, assignmentId, { syncUrl: false })
     }
 
     function saveUiSettings() {
@@ -10407,7 +10472,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function studentSearchText(student = {}) {
       const profile = student?.profile || {}
       return [
-        student?.studentId,
+        student?.eaglesId,
         student?.email,
         profile?.studentEmail,
         profile?.fullName,
@@ -10422,8 +10487,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         .join(" ")
     }
 
-    function openStudentFromTopSearchResults(studentId = "") {
-      const id = normalizeText(studentId)
+    function openStudentFromTopSearchResults(studentRefId = "") {
+      const id = normalizeText(studentRefId)
       if (!id) return
       loadStudentDetail(id)
         .then(() => {
@@ -10451,7 +10516,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tr.className = "top-search-row"
         if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
         tr.innerHTML = `
-          <td>${student.studentId || ""}</td>
+          <td>${student.eaglesId || ""}</td>
           <td>${student.profile?.fullName || ""}</td>
           <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
           <td><button type="button" class="btn-edit top-search-open-btn">Open Profile</button></td>
@@ -10486,7 +10551,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const tr = document.createElement("tr")
         if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
         tr.innerHTML = `
-          <td>${student.studentId || ""}</td>
+          <td>${student.eaglesId || ""}</td>
           <td>${student.profile?.fullName || ""}</td>
           <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
           <td class="school-col-cell">${student.profile?.schoolName || ""}</td>
@@ -10538,7 +10603,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const rawFormPayload =
         profile.rawFormPayload && typeof profile.rawFormPayload === "object" ? profile.rawFormPayload : {}
 
-      if (field.topLevelKey === "studentId") return normalizeText(student.studentId)
+      if (field.topLevelKey === "eaglesId") return normalizeText(student.eaglesId)
+      if (field.topLevelKey === "studentNumber") {
+        const direct = parsePositiveInteger(student.studentNumber)
+        if (direct) return String(direct)
+        return ""
+      }
       if (field.topLevelKey === "email") return normalizeText(student.email)
 
       if (field.profileKey) {
@@ -10589,6 +10659,43 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (!el) return
       el.style.color = isError ? "#bd2f2f" : "#5f6d87"
       el.textContent = normalizeText(message)
+    }
+
+    function bindProfileTabKeyboardNav(navEl, activeTabId, onSelectTab) {
+      if (!navEl) return
+      navEl.onkeydown = (event) => {
+        const key = normalizeText(event?.key)
+        if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(key)) return
+
+        const buttons = Array.from(
+          navEl.querySelectorAll("button[data-profile-tab], button[data-profile-info-tab]")
+        )
+        if (!buttons.length) return
+
+        const ids = buttons.map((button) => normalizeText(button.dataset.profileTab || button.dataset.profileInfoTab))
+        const focusedButton = event?.target && typeof event.target.closest === "function"
+          ? event.target.closest("button")
+          : null
+        const focusedId = normalizeText(
+          focusedButton?.dataset?.profileTab
+          || focusedButton?.dataset?.profileInfoTab
+          || activeTabId
+          || ids[0]
+        )
+        const focusedIndex = ids.includes(focusedId) ? ids.indexOf(focusedId) : 0
+
+        let nextIndex = focusedIndex
+        if (key === "ArrowRight") nextIndex = (focusedIndex + 1) % ids.length
+        else if (key === "ArrowLeft") nextIndex = (focusedIndex - 1 + ids.length) % ids.length
+        else if (key === "Home") nextIndex = 0
+        else if (key === "End") nextIndex = ids.length - 1
+
+        event.preventDefault()
+        const nextButton = buttons[nextIndex]
+        const nextId = ids[nextIndex]
+        if (nextButton && typeof nextButton.focus === "function") nextButton.focus()
+        if (nextId && typeof onSelectTab === "function") onSelectTab(nextId)
+      }
     }
 
     function setFormValue(field, value) {
@@ -10776,10 +10883,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (!tabs.some((tab) => tab.id === state.profileActiveTab)) state.profileActiveTab = tabs[0].id
 
       tabs.forEach((tab) => {
+        const isActive = state.profileActiveTab === tab.id
+        const tabButtonId = `profileFormTab_${tab.id}`
+        const tabPanelId = `profileFormPanel_${tab.id}`
         const button = document.createElement("button")
         button.type = "button"
-        button.className = state.profileActiveTab === tab.id ? "active" : ""
+        button.id = tabButtonId
+        button.className = isActive ? "active" : ""
         button.setAttribute("role", "tab")
+        button.setAttribute("aria-selected", isActive ? "true" : "false")
+        button.setAttribute("aria-controls", tabPanelId)
+        button.tabIndex = isActive ? 0 : -1
         button.dataset.profileTab = tab.id
         button.textContent = tab.label
         button.addEventListener("click", () => {
@@ -10788,12 +10902,20 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         })
         navEl.appendChild(button)
       })
+      bindProfileTabKeyboardNav(navEl, state.profileActiveTab, (nextTabId) => {
+        state.profileActiveTab = nextTabId
+        renderProfileFormLayout()
+      })
 
       tabs.forEach((tab) => {
+        const isActive = state.profileActiveTab === tab.id
         const panel = document.createElement("section")
-        panel.className = `profile-tab-panel${state.profileActiveTab === tab.id ? " active" : ""}`
+        panel.id = `profileFormPanel_${tab.id}`
+        panel.className = `profile-tab-panel${isActive ? " active" : ""}`
         panel.dataset.profileTabPanel = tab.id
         panel.setAttribute("role", "tabpanel")
+        panel.setAttribute("aria-labelledby", `profileFormTab_${tab.id}`)
+        panel.hidden = !isActive
 
         const sectionMap = new Map()
         ;(fieldsByTab.get(tab.id) || []).forEach((field) => {
@@ -10854,10 +10976,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (!tabs.some((tab) => tab.id === state.profileActiveTab)) state.profileActiveTab = tabs[0].id
 
       tabs.forEach((tab) => {
+        const isActive = state.profileActiveTab === tab.id
+        const tabButtonId = `profileInfoTab_${tab.id}`
+        const tabPanelId = `profileInfoPanel_${tab.id}`
         const button = document.createElement("button")
         button.type = "button"
-        button.className = state.profileActiveTab === tab.id ? "active" : ""
+        button.id = tabButtonId
+        button.className = isActive ? "active" : ""
         button.setAttribute("role", "tab")
+        button.setAttribute("aria-selected", isActive ? "true" : "false")
+        button.setAttribute("aria-controls", tabPanelId)
+        button.tabIndex = isActive ? 0 : -1
         button.dataset.profileInfoTab = tab.id
         button.textContent = tab.label
         button.addEventListener("click", () => {
@@ -10866,12 +10995,20 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         })
         navEl.appendChild(button)
       })
+      bindProfileTabKeyboardNav(navEl, state.profileActiveTab, (nextTabId) => {
+        state.profileActiveTab = nextTabId
+        renderProfileInfoLayout(student)
+      })
 
       tabs.forEach((tab) => {
+        const isActive = state.profileActiveTab === tab.id
         const panel = document.createElement("section")
-        panel.className = `profile-info-panel${state.profileActiveTab === tab.id ? " active" : ""}`
+        panel.id = `profileInfoPanel_${tab.id}`
+        panel.className = `profile-info-panel${isActive ? " active" : ""}`
         panel.dataset.profileInfoPanel = tab.id
         panel.setAttribute("role", "tabpanel")
+        panel.setAttribute("aria-labelledby", `profileInfoTab_${tab.id}`)
+        panel.hidden = !isActive
 
         const sectionMap = new Map()
         ;(fieldsByTab.get(tab.id) || []).forEach((field) => {
@@ -10915,7 +11052,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         panelsEl.appendChild(panel)
       })
 
-      const label = student?.profile?.fullName || student?.studentId
+      const label = student?.profile?.fullName || student?.eaglesId
       setProfileTabStatus(label ? `Info view for ${label}.` : "No student selected. Use New Form to create a profile.")
     }
 
@@ -11080,7 +11217,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       state.visibleTableRows.grades = []
       state.visibleTableRows.reports = []
       profileFieldIdList(true).forEach((field) => setFormValue(field, ""))
-      setFormValue("studentId", nextStudentNumericId())
+      const nextNumericId = nextStudentNumericId()
+      setFormValue("studentNumber", nextNumericId)
+      hydrateNextStudentNumberFromApi().catch((error) => {
+        if (error && error.status === 401) return
+        handleError(error)
+      })
       applyLevelThemeToSections("")
       document.getElementById("a_id").value = ""
       document.getElementById("g_id").value = ""
@@ -11138,7 +11280,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         sourceUrl: "admin/students",
       }
 
-      let studentId = normalizeText(state.currentStudent?.studentId || "")
+      let eaglesId = normalizeText(state.currentStudent?.eaglesId || "")
+      let studentNumber = parsePositiveInteger(state.currentStudent?.studentNumber)
       let email = normalizeText(state.currentStudent?.email || "")
 
       sortedProfileFields(false).forEach((field) => {
@@ -11154,7 +11297,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           }
         }
 
-        if (field.topLevelKey === "studentId") studentId = scalarFromProfileFormFieldValue(fieldValue)
+        if (field.topLevelKey === "eaglesId") eaglesId = scalarFromProfileFormFieldValue(fieldValue)
+        if (field.topLevelKey === "studentNumber") studentNumber = parsePositiveInteger(fieldValue)
         if (field.topLevelKey === "email") email = scalarFromProfileFormFieldValue(fieldValue)
       })
 
@@ -11166,7 +11310,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       profile.rawFormPayload = rawFormPayload
 
       return {
-        studentId: normalizeText(studentId),
+        studentNumber: studentNumber || null,
+        eaglesId: normalizeText(eaglesId),
         email: normalizeText(email),
         profile,
       }
@@ -11277,8 +11422,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       setStatus("Search and filter form cleared.")
     }
 
-    async function loadStudentDetail(studentId) {
-      const student = await api(`/api/admin/students/${encodeURIComponent(studentId)}`)
+    async function loadStudentDetail(studentRefId) {
+      const student = await api(`/api/admin/students/${encodeURIComponent(studentRefId)}`)
       state.currentStudent = student
       cacheStudentDetail(student)
       if (student?.id) state.parentTracking.studentDetailsByStudentId[student.id] = student
@@ -11289,7 +11434,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     async function saveStudent() {
       const payload = collectStudentPayload()
-      if (!payload.studentId) throw new Error("studentId is required")
+      if (!payload.eaglesId) throw new Error("eaglesId is required")
 
       if (state.currentStudent && state.currentStudent.id) {
         const result = await api(`/api/admin/students/${encodeURIComponent(state.currentStudent.id)}`, {
@@ -11433,7 +11578,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       await loadFilters()
       await loadStudents()
-      setStatus(`Import completed: processed=${result.processed}, created=${result.created}, updated=${result.updated}, failed=${result.failed}`)
+      const autoIdCount = Number(result?.autoFilledEaglesIds || 0)
+      const autoNumberCount = Number(result?.autoFilledStudentNumbers || 0)
+      const autoFillSummary =
+        autoIdCount || autoNumberCount
+          ? `, autoFilledEaglesIds=${autoIdCount}, autoFilledStudentNumbers=${autoNumberCount}`
+          : ""
+      setStatus(
+        `Import completed: processed=${result.processed}, created=${result.created}, updated=${result.updated}, failed=${result.failed}${autoFillSummary}`
+      )
     }
 
     async function downloadImportTemplate() {
@@ -11779,7 +11932,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tr.innerHTML = `
           <td>
             <div class="attendance-row-name">${escapeHtml(student?.profile?.fullName || "(no name)")}</div>
-            <div class="attendance-row-id">${escapeHtml(student?.studentId || "")}</div>
+            <div class="attendance-row-id">${escapeHtml(student?.eaglesId || "")}</div>
           </td>
           <td>
             <div class="attendance-radio-group">
@@ -11851,7 +12004,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tr.innerHTML = `
           <td>
             <div class="attendance-row-name">${escapeHtml(student?.profile?.fullName || "(no name)")}</div>
-            <div class="attendance-row-id">${escapeHtml(student?.studentId || "")}</div>
+            <div class="attendance-row-id">${escapeHtml(student?.eaglesId || "")}</div>
           </td>
           <td class="attendance-cell-num">${stats.present}</td>
           <td class="attendance-cell-num">${stats.absent}</td>
@@ -12128,7 +12281,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("attendance", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.studentId ? `(${escapeHtml(row.studentId)})` : ""}</td>
+          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
           <td>${row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.quarter || ""}</td>
@@ -12239,7 +12392,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("grades", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.studentId ? `(${escapeHtml(row.studentId)})` : ""}</td>
+          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
           <td>${row.dueAt ? String(row.dueAt).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.assignmentName || ""}</td>
@@ -12417,7 +12570,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("reports", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.studentId ? `(${escapeHtml(row.studentId)})` : ""}</td>
+          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
           <td>${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.quarter || ""}</td>
@@ -12470,7 +12623,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         return
       }
       const summary = result.items
-        .map((row) => `${row.studentId || "(no studentId)"} - ${row.fullName || "(no name)"}`)
+        .map((row) => `${row.eaglesId || "(no eaglesId)"} - ${row.fullName || "(no name)"}`)
         .join("\n")
       if (familyResultEl) familyResultEl.textContent = summary
       setStatus(`Family matches (${result.total}):\n${summary}`)
@@ -12937,7 +13090,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       applyParentTrackingLessonSummaryFromMemory({ force: true })
       syncParentTrackingForSelection({}).catch(handleError)
     })
-    document.getElementById("pt_studentId").addEventListener("change", () => {
+    document.getElementById("pt_studentRefId").addEventListener("change", () => {
       syncParentTrackingForSelection({}).catch(handleError)
     })
     document.getElementById("pt_teacherName").addEventListener("change", () => {

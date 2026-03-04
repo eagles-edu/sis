@@ -317,14 +317,14 @@ async function findMatchedStudent(prisma, submission) {
   if (submittedStudentId) {
     const matchedById = await prisma.student.findFirst({
       where: {
-        studentId: {
+        eaglesId: {
           equals: submittedStudentId,
           mode: "insensitive",
         },
       },
       select: {
         id: true,
-        studentId: true,
+        eaglesId: true,
         email: true,
       },
     })
@@ -378,7 +378,7 @@ async function findMatchedStudent(prisma, submission) {
       },
       select: {
         id: true,
-        studentId: true,
+        eaglesId: true,
         email: true,
       },
     })
@@ -526,7 +526,7 @@ function mapIncomingExerciseResult(item) {
     notes: normalizeString(item.notes),
     reviewedByUsername: normalizeString(item.reviewedByUsername),
     matchedStudentRefId: normalizeString(item.matchedStudentRefId),
-    matchedStudentId: normalizeString(item?.matchedStudent?.studentId),
+    matchedEaglesId: normalizeString(item?.matchedStudent?.eaglesId),
     resolvedAt: item.resolvedAt ? new Date(item.resolvedAt).toISOString() : "",
     createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : "",
     updatedAt: item.updatedAt ? new Date(item.updatedAt).toISOString() : "",
@@ -636,7 +636,7 @@ export async function listIncomingExerciseResults(params = {}, options = {}) {
       matchedStudent: {
         select: {
           id: true,
-          studentId: true,
+          eaglesId: true,
         },
       },
     },
@@ -664,7 +664,7 @@ export async function getIncomingExerciseResultById(incomingResultId, options = 
       matchedStudent: {
         select: {
           id: true,
-          studentId: true,
+          eaglesId: true,
         },
       },
     },
@@ -720,7 +720,7 @@ export async function setIncomingExerciseResultStatus(
       matchedStudent: {
         select: {
           id: true,
-          studentId: true,
+          eaglesId: true,
         },
       },
     },
@@ -790,7 +790,7 @@ export async function resolveIncomingExerciseResultToStudent(
       where: { id: resolvedStudentRefId },
       select: {
         id: true,
-        studentId: true,
+        eaglesId: true,
       },
     })
 
@@ -819,7 +819,7 @@ export async function resolveIncomingExerciseResultToStudent(
         matchedStudent: {
           select: {
             id: true,
-            studentId: true,
+            eaglesId: true,
           },
         },
       },
@@ -835,7 +835,7 @@ export async function resolveIncomingExerciseResultToStudent(
   return {
     resolved: true,
     studentRefId: result.student.id,
-    studentId: normalizeString(result.student.studentId),
+    eaglesId: normalizeString(result.student.eaglesId),
     submissionId: result.createdSubmission.id,
     item: mapIncomingExerciseResult(result.updatedIncoming),
   }

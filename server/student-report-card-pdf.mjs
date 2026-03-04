@@ -182,7 +182,7 @@ function toDisplay(value) {
 }
 
 export function buildReportCardFilename(student, filters = {}) {
-  const studentPart = sanitizeFilePart(student?.studentId || student?.profile?.fullName, "student")
+  const studentPart = sanitizeFilePart(student?.eaglesId || student?.profile?.fullName, "student")
   const classPart = sanitizeFilePart(filters.className, "all-classes")
   const yearPart = sanitizeFilePart(filters.schoolYear, "all-years")
   const quarterPart = sanitizeFilePart(filters.quarter, "all-quarters")
@@ -230,7 +230,7 @@ export async function generateStudentReportCardPdf(student, filters = {}) {
   }
 
   drawSectionTitle(doc, "Student Information")
-  printKeyValue(doc, "Student ID", toDisplay(student.studentId))
+  printKeyValue(doc, "Eagles ID", toDisplay(student.eaglesId))
   printKeyValue(doc, "Full Name", toDisplay(profile.fullName))
   printKeyValue(doc, "English Name", toDisplay(profile.englishName))
   printKeyValue(doc, "Date of Birth", toDisplay(profile.dobText))

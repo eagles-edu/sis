@@ -10,7 +10,8 @@ datasource db {
 model Student {
   id                String              @id @default(cuid())
   externalKey       String              @unique
-  studentId         String?             @unique
+  studentNumber     Int                 @unique
+  eaglesId          String              @unique
   email             String?
   submissions       ExerciseSubmission[]
   incomingExerciseResults IncomingExerciseResult[]
@@ -144,6 +145,9 @@ model StudentProfile {
   sourceUrl                  String?
   fullName                   String?
   englishName                String?
+  memberSince                String?
+  exercisePoints             Int?
+  parentsId                  String?
   photoUrl                   String?
   genderSelections           String[]
   studentPhone               String?
@@ -158,6 +162,7 @@ model StudentProfile {
   otherLanguage              String?
   schoolName                 String?
   currentGrade               String?
+  currentSchoolGrade         String?
   motherName                 String?
   motherEmail                String?
   motherPhone                String?
@@ -169,8 +174,10 @@ model StudentProfile {
   fatherEmergencyContact     String?
   fatherMessenger            String?
   streetAddress              String?
+  newAddress                 String?
   wardDistrict               String?
   city                       String?
+  postCode                   String?
   hasGlasses                 String?
   hadEyeExam                 String?
   lastEyeExamDateText        String?

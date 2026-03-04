@@ -23,6 +23,7 @@ import {
   findFamilyByEmergencyPhone,
   generateParentClassReportFromGrades,
   getAdminDashboardSummary,
+  getNextStudentNumber,
   getStudentAdminFilterCacheStatus,
   getStudentById,
   importStudentsFromRows,
@@ -76,6 +77,7 @@ const ADMIN_API_PREFIX = normalizePathPrefix(process.env.STUDENT_ADMIN_API_PREFI
 const ADMIN_AUTH_PREFIX = `${ADMIN_API_PREFIX}/auth`
 const ADMIN_USERS_PREFIX = `${ADMIN_API_PREFIX}/users`
 const ADMIN_STUDENTS_PREFIX = `${ADMIN_API_PREFIX}/students`
+const ADMIN_NEXT_STUDENT_NUMBER_PATH = `${ADMIN_STUDENTS_PREFIX}/next-student-number`
 const ADMIN_PERMISSIONS_PATH = `${ADMIN_API_PREFIX}/permissions`
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
@@ -2324,11 +2326,11 @@ async function handleApiRequest(request, response, pathname, url) {
 
     if (action === "create-account") {
       const incoming = await getIncomingExerciseResultById(incomingResultId)
-      const fallbackStudentId = normalizeText(incoming?.submittedStudentId)
-      const requestedStudentId = normalizeText(payload?.studentId || fallbackStudentId)
-      const studentId = requestedStudentId && requestedStudentId !== "(not provided)" ? requestedStudentId : ""
-      if (!studentId) {
-        const error = new Error("studentId is required to create account")
+      const fallbackEaglesId = normalizeText(incoming?.submittedStudentId)
+      const requestedEaglesId = normalizeText(payload?.eaglesId || fallbackEaglesId)
+      const eaglesId = requestedEaglesId && requestedEaglesId !== "(not provided)" ? requestedEaglesId : ""
+      if (!eaglesId) {
+        const error = new Error("eaglesId is required to create account")
         error.statusCode = 400
         throw error
       }
@@ -2336,7 +2338,7 @@ async function handleApiRequest(request, response, pathname, url) {
       const studentEmail = normalizeText(payload?.email || incoming?.submittedEmail)
       const fullName = normalizeText(payload?.fullName)
       const saved = await saveStudent({
-        studentId,
+        eaglesId,
         email: studentEmail,
         profile: {
           sourceFormId: "incoming-exercise-result",
@@ -2520,6 +2522,13 @@ async function handleApiRequest(request, response, pathname, url) {
   if (method === "GET" && pathname === `${ADMIN_API_PREFIX}/filters`) {
     assertStoreEnabled()
     const data = await listLevelAndSchoolFilters()
+    sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_NEXT_STUDENT_NUMBER_PATH) {
+    assertStoreEnabled()
+    const data = await getNextStudentNumber()
     sendJson(response, 200, data)
     return true
   }
