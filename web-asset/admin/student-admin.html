@@ -726,6 +726,26 @@
       border: 1px solid var(--border);
       border-radius: 8px;
     }
+    .top-search-results-box {
+      max-height: 220px;
+    }
+    .top-search-results-title {
+      margin: 2px 0 6px;
+      font-weight: 600;
+    }
+    #topSearchCount {
+      margin-top: 6px;
+    }
+    #topSearchRows tr.top-search-row {
+      cursor: pointer;
+    }
+    #topSearchRows tr.top-search-row:hover {
+      background: #edf4ff;
+    }
+    .top-search-open-btn {
+      inline-size: auto;
+      min-width: 96px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -1620,6 +1640,25 @@
               </div>
               <div class="col-12">
                 <p class="small" id="topSearchScopeHint">Top search scope is inactive. Student-centric pages are using all students.</p>
+              </div>
+              <div class="col-12" id="topSearchResultsPanel">
+                <p class="small top-search-results-title">Live student results (click row or Open Profile)</p>
+                <div class="list-box top-search-results-box">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Student ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Level</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="topSearchRows">
+                      <tr><td colspan="4">No student results yet. Use Search or filters above.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="small" id="topSearchCount">0 results</p>
               </div>
             </div>
           </div>
@@ -5882,9 +5921,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const gridMain = document.querySelector(".grid-main")
       const topControlsPanel = document.getElementById("topControlsPanel")
       const studentListPanel = document.getElementById("studentListPanel")
+      const topSearchResultsPanel = document.getElementById("topSearchResultsPanel")
       const showStudentListPanel = slug === "student-admin"
       if (topControlsPanel) topControlsPanel.classList.remove("hidden")
       if (studentListPanel) studentListPanel.classList.toggle("hidden", !showStudentListPanel)
+      if (topSearchResultsPanel) topSearchResultsPanel.classList.toggle("hidden", showStudentListPanel)
       if (gridMain) gridMain.classList.toggle("overview-full", !showStudentListPanel)
       if (slug === "attendance" || slug === "attendance-admin") {
         ensureAttendanceLandingFormDefaults()
@@ -9348,6 +9389,56 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         .join(" ")
     }
 
+    function openStudentFromTopSearchResults(studentId = "") {
+      const id = normalizeText(studentId)
+      if (!id) return
+      loadStudentDetail(id)
+        .then(() => {
+          setActivePage("profile")
+          setStatus("Student loaded into Profile.")
+        })
+        .catch(handleError)
+    }
+
+    function renderTopSearchResults(students = []) {
+      const tbody = document.getElementById("topSearchRows")
+      const countEl = document.getElementById("topSearchCount")
+      if (!tbody || !countEl) return
+      const rows = Array.isArray(students) ? students : []
+      tbody.innerHTML = ""
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="4">No students match current top search scope.</td></tr>'
+        countEl.textContent = "0 results"
+        return
+      }
+
+      const maxRows = 12
+      rows.slice(0, maxRows).forEach((student) => {
+        const tr = document.createElement("tr")
+        tr.className = "top-search-row"
+        if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
+        tr.innerHTML = `
+          <td>${student.studentId || ""}</td>
+          <td>${student.profile?.fullName || ""}</td>
+          <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
+          <td><button type="button" class="btn-edit top-search-open-btn">Open Profile</button></td>
+        `
+        const open = (event) => {
+          if (event) event.stopPropagation()
+          openStudentFromTopSearchResults(student.id)
+        }
+        tr.addEventListener("click", open)
+        tr.querySelector(".top-search-open-btn")?.addEventListener("click", open)
+        tbody.appendChild(tr)
+      })
+
+      if (rows.length > maxRows) {
+        countEl.textContent = `${rows.length} results (showing first ${maxRows})`
+      } else {
+        countEl.textContent = `${rows.length} results`
+      }
+    }
+
     function renderStudents() {
       const tbody = document.getElementById("studentRows")
       tbody.innerHTML = ""
@@ -9372,6 +9463,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       })
 
       document.getElementById("studentCount").textContent = `${visibleStudents.length} students`
+      renderTopSearchResults(visibleStudents)
       applyUiSettings()
       refreshAssignmentStudentOptions()
       refreshAllTableSearchFilterControls()

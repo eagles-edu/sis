@@ -41,6 +41,7 @@
   - top scope (`query`, `level`, `school`) is now persisted per search run and reused by student-centric pages
   - assignment/attendance/performance and tracking-data student sources now use scoped top results when a top filter is active, enabling quick one-student, level-only, or all-student drill-down
   - added top-panel scope status hint (`#topSearchScopeHint`) to show active scope and current-page scoped student count
+  - added top-panel live search result rows (`#topSearchRows`) outside `Student Admin`; each row can be clicked to load the linked student directly into `Profile`
 - Extended backend student search behavior in [server/student-admin-store.mjs](server/student-admin-store.mjs):
   - `listStudents` now keeps fast DB `contains` search first, then runs accent-insensitive server-side matching when strict query returns zero rows
   - fallback scan respects level/school filters, normalizes Vietnamese diacritics, and returns ordered student rows from the API directly
@@ -64,6 +65,7 @@
   - `student search keeps direct query result and avoids fallback refetch`
 - Added top-scope coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
   - `top search level scope narrows assignment student dropdown and supports datalist selection`
+  - `student admin child page owns students panel while search stays visible` now also verifies top-panel quick results stay available outside `Student Admin` and row click opens `Profile`
 - Current test run: `npm test` => `113` pass, `0` fail.
 - Coverage gap / next action:
   - add one browser-level hosted smoke check to verify top search scope + assignment drill-down behavior on production-sized student rosters.

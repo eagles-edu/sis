@@ -1037,12 +1037,24 @@ test("student admin child page owns students panel while search stays visible", 
   await waitFor(() => {
     assert.equal(dom.window.document.getElementById("topControlsPanel").classList.contains("hidden"), false)
     assert.equal(dom.window.document.getElementById("studentListPanel").classList.contains("hidden"), true)
+    assert.equal(dom.window.document.getElementById("topSearchResultsPanel").classList.contains("hidden"), false)
+    assert.ok(dom.window.document.querySelectorAll("#topSearchRows tr.top-search-row").length >= 1)
+  })
+
+  const quickOpenRow = dom.window.document.querySelector("#topSearchRows tr.top-search-row")
+  assert.ok(quickOpenRow)
+  quickOpenRow.click()
+  await waitFor(() => {
+    const profilePage = dom.window.document.querySelector('.page-section[data-page="profile"]')
+    assert.equal(profilePage?.classList.contains("active"), true)
+    assert.match(dom.window.document.getElementById("status").textContent || "", /Student loaded into Profile/i)
   })
 
   dom.window.document.querySelector('[data-page-link="student-admin"]').click()
   await waitFor(() => {
     assert.equal(dom.window.document.getElementById("topControlsPanel").classList.contains("hidden"), false)
     assert.equal(dom.window.document.getElementById("studentListPanel").classList.contains("hidden"), false)
+    assert.equal(dom.window.document.getElementById("topSearchResultsPanel").classList.contains("hidden"), true)
   })
 
   dom.window.document.getElementById("logoutBtn").click()
