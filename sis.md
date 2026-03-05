@@ -22,6 +22,11 @@
   - validation after dependency changes:
     - `npm run db:generate` succeeded (`Prisma Client v7.4.2` generated).
     - `npm test` => `129` pass, `0` fail.
+  - added production-focused audit command in [package.json](package.json):
+    - `npm run audit:prod` -> `npm audit --omit=dev --audit-level=high`.
+  - follow-up host audit after `npm audit fix` on `2026-03-05`:
+    - remaining highs are `@hono/node-server@1.19.9` (via `prisma` CLI dev dependency `@prisma/dev`) and direct runtime dependency `xlsx@0.18.5` (no upstream fix published).
+    - production mitigation remains: install/runtime deploy with `npm ci --omit=dev` to exclude the Prisma CLI dev chain from shipped artifacts.
 - Added final DB hardening for student identity:
   - [prisma/schema.prisma](prisma/schema.prisma) now defines `Student.eaglesId` as non-null (`String @unique`).
   - added migration [prisma/migrations/20260305024500_eaglesid_not_null/migration.sql](prisma/migrations/20260305024500_eaglesid_not_null/migration.sql) to:
@@ -789,3 +794,28 @@ sudo systemctl restart exercise-mailer.service && \
 sleep 2 && \
 curl -fsS http://127.0.0.1:8787/healthz && echo
 ```
+
+Canonical systemd/unit env policy:
+
+- service runs from deployed root only: `/home/admin.eagles.edu.vn/sis`.
+- service unit must use:
+  - `WorkingDirectory=/home/admin.eagles.edu.vn/sis`
+  - `ExecStart=/home/eagles/.nvm/versions/node/v20.19.4/bin/node /home/admin.eagles.edu.vn/sis/server/exercise-mailer.mjs`
+  - `EnvironmentFile=/home/admin.eagles.edu.vn/sis/.env`
+  - `Restart=always` and `RestartSec=3`
+- self-heal drop-in must use deployed root for both source/runtime:
+  - `SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT=/home/admin.eagles.edu.vn/sis`
+  - `SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT=/home/admin.eagles.edu.vn/sis`
+- runtime env file policy:
+  - path: `/home/admin.eagles.edu.vn/sis/.env`
+  - owner/mode: `eagles:eagles`, `0600`
+  - keep runtime keys only (`DATABASE_URL`, `SMTP_*`, `REDIS_*`, `EXERCISE_MAILER_*`, `STUDENT_ADMIN_*` required by service).
+
+Verification command:
+
+```bash
+sudo systemctl show exercise-mailer.service -p WorkingDirectory -p ExecStart -p EnvironmentFiles --no-pager && \
+curl -fsS http://127.0.0.1:8787/healthz
+```
+
+Reference: [docs/ffs.md](docs/ffs.md) `Systemd Runtime Policy (Canonical)`.
