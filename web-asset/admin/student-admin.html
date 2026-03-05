@@ -566,21 +566,21 @@
       padding: 12px;
     }
     .page-section[data-page="profile"] > h2 {
-      font-size: 21px;
       color: #122f58;
+      font-size: 21px;
       margin-bottom: 8px;
     }
     .page-section[data-page="profile"] .page-note {
-      font-size: 13px;
       color: #364f74;
+      font-size: 13px;
     }
     .page-section[data-page="profile"] .actions button {
-      min-height: 42px;
       font-size: 14px;
+      min-height: 42px;
     }
     #profileTabStatus {
-      font-size: 13px;
       color: #2f4f7f;
+      font-size: 13px;
     }
     @media (max-width: 820px) {
       .profile-tabs-shell {
@@ -593,11 +593,12 @@
         grid-auto-columns: max-content;
       }
       .profile-tab-nav button {
-        width: auto;
+        box-sizing: border-box;
+        font-size: 14px;
         min-height: 38px;
         padding: 7px 12px;
-        font-size: 14px;
-      }
+        width: auto;
+  }
       .profile-info-grid {
         grid-template-columns: 1fr;
       }
@@ -1668,6 +1669,13 @@
         border-radius: 7px;
       }
     }
+
+    /* modern CSS reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
   </style>
 </head>
 <body>

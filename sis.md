@@ -61,19 +61,20 @@
   - incoming queue create-account prompt/action now uses `eaglesId`.
 - Tightened workbook tooling:
   - [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs) removed legacy `studentId` import alias and now emits canonical camelCase `eaglesId`.
-  - regenerated template + import files and verified strict header parity against `docs/students/formfields (2026).xlsx`.
+  - regenerated template + import files and verified strict header parity against canonical `docs/students/eaglesclub-students-import-ready.xlsx`.
   - latest validation: `current_matches_amalgamated.import-ready.xlsx` header order matches schema (`63/63`) with `0` missing `eaglesId` and `0` missing `studentNumber`.
 - Updated regression tests:
   - [test/student-admin-import-autofill.spec.mjs](test/student-admin-import-autofill.spec.mjs) now validates `eaglesId` autofill behavior.
   - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs) now enforces allowed top-level key `eaglesId`.
   - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs) now includes a guard asserting `Student.eaglesId` is non-null at schema contract level.
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs) now includes a strict workbook guard for canonical `docs/students/eaglesclub-students-import-ready.xlsx`, requiring exact header parity with `PROFILE_FORM_FIELD_ROWS` and direct DB-contract validation through Prisma mappings.
   - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) updated for `f_eaglesId` and `payload.eaglesId`.
 - Current test status:
-  - `npm test` => `129` pass, `0` fail.
+  - `npm test` => `130` pass, `0` fail.
 - Final camelCase hardening (2026-03-05):
   - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) now canonicalizes profile field keys with `toProfileFieldIdSuffix(...)` in both field-definition normalization and settings custom-field creation, eliminating kebab-case key generation.
   - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) now asserts custom key creation/storage uses camelCase (`customHealthNote`, `customAlias`) and explicitly rejects kebab-case key slots.
-  - `npm test` revalidated after these assertions: `129` pass, `0` fail.
+  - `npm test` revalidated after these assertions: `130` pass, `0` fail.
 
 ## Update (2026-03-04)
 
@@ -106,7 +107,7 @@
   - added store + API support for next student number resolution (`GET /api/admin/students/next-student-number`) with a floor of `100`, so once the highest number is `225`, the next auto-suggested number is `226`.
   - updated profile editor wiring in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) so `student-number` is a first-class top-level field and new forms hydrate only `studentNumber` (not `studentId`) from the next-number endpoint.
   - removed legacy `studentId -> studentNumber` fallback paths in both UI and store logic; next-number resolution now uses `studentNumber` only.
-  - aligned `PROFILE_FORM_FIELD_ROWS` with `formfields (2026).xlsx` keys exactly (63/63, same order), including canonical keys `student-photo`, `parents-id`, `class-level`, `languages-home`, and `post-code`.
+  - aligned `PROFILE_FORM_FIELD_ROWS` with canonical workbook keys exactly (63/63, same order), including `studentPhoto`, `parentsId`, `classLevel`, `languagesHome`, and `postCode`.
   - corrected form-to-schema mapping gaps so workbook rows now persist `memberSince`, `exercisePoints`, and `newAddress` into `StudentProfile`.
   - normalized profile metadata symmetry by requiring bilingual labels + section labels for all configured fields in the default layout.
 - Added regression coverage:

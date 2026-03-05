@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import xlsx from "xlsx"
 
-const FORMFIELDS_SCHEMA_FILE = "docs/students/formfields (2026).xlsx"
+const FORMFIELDS_SCHEMA_FILE = "docs/students/eaglesclub-students-import-ready.xlsx"
 const SOURCE_UPLOAD_FILE = "docs/students/current_matches_amalgamated.xlsx"
 const ORDERED_OUTPUT_FILE = "docs/students/current_matches_amalgamated.canonical-ready.xlsx"
 const IMPORT_READY_OUTPUT_FILE = "docs/students/current_matches_amalgamated.import-ready.xlsx"

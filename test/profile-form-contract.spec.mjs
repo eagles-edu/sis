@@ -7,6 +7,7 @@ import xlsx from "xlsx"
 const PROFILE_TAB_IDS = new Set(["profile", "medical", "covid", "submission"])
 const LIST_INPUT_TYPES = new Set(["select", "radio", "checkbox"])
 const ALLOWED_TOP_LEVEL_KEYS = new Set(["eaglesId", "studentNumber", "email"])
+const CANONICAL_WORKBOOK_FILE = "docs/students/eaglesclub-students-import-ready.xlsx"
 const FORM_UNMAPPED_PROFILE_KEYS = new Set([
   "sourceFormId",
   "sourceUrl",
@@ -76,14 +77,19 @@ function readProfileFormRows() {
   return { html, fields }
 }
 
-function readWorkbookKeys() {
-  const workbook = xlsx.readFile("docs/students/formfields (2026).xlsx")
+function readWorkbookKeysFrom(filePath) {
+  const workbook = xlsx.readFile(filePath)
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const rows = xlsx.utils.sheet_to_json(sheet, { header: 1, blankrows: false, raw: false })
   return (rows[0] || [])
     .map((entry) => String(entry || "").trim())
     .filter(Boolean)
     .filter((entry) => entry.toLowerCase() !== "database/field name")
+}
+
+function readWorkbookKeys() {
+  assert.equal(fs.existsSync(CANONICAL_WORKBOOK_FILE), true, `canonical workbook must exist: ${CANONICAL_WORKBOOK_FILE}`)
+  return readWorkbookKeysFrom(CANONICAL_WORKBOOK_FILE)
 }
 
 function readPrismaModelFieldNames(modelName) {
@@ -123,6 +129,17 @@ test("profile form keys mirror workbook keys exactly in order and uniqueness", (
   })
 })
 
+test("canonical workbook keys mirror form keys exactly", () => {
+  const canonicalWorkbookKeys = readWorkbookKeys()
+  const { fields } = readProfileFormRows()
+  const formKeys = fields.map((field) => field.key)
+
+  assert.equal(JSON.stringify(canonicalWorkbookKeys), JSON.stringify(formKeys))
+  canonicalWorkbookKeys.forEach((key) => {
+    assert.match(key, /^[a-z][A-Za-z0-9]*$/, `canonical workbook key must be camelCase: ${key}`)
+  })
+})
+
 test("profile form labels, sections, tabs, and list options are symmetrical", () => {
   const { fields } = readProfileFormRows()
 
@@ -148,6 +165,7 @@ test("profile form labels, sections, tabs, and list options are symmetrical", ()
 
 test("profile form mappings align with Prisma schema and canonical naming", () => {
   const { fields } = readProfileFormRows()
+  const canonicalWorkbookKeys = readWorkbookKeys()
   const studentFields = readPrismaModelFieldNames("Student")
   const studentProfileFields = readPrismaModelFieldNames("StudentProfile")
 
@@ -165,6 +183,15 @@ test("profile form mappings align with Prisma schema and canonical naming", () =
 
   const mappedProfileKeys = fields.map((field) => field.profileKey).filter(Boolean)
   const mappedTopLevelKeys = fields.map((field) => field.topLevelKey).filter(Boolean)
+  const hasNormalizedFormPayloadColumn = studentProfileDataFields.includes("normalizedFormPayload")
+  assert.equal(hasNormalizedFormPayloadColumn, true, "StudentProfile.normalizedFormPayload must exist")
+
+  canonicalWorkbookKeys.forEach((key) => {
+    const field = fields.find((entry) => entry.key === key)
+    assert.ok(field, `canonical workbook key must exist in form config: ${key}`)
+    const hasDbMapping = Boolean(field.profileKey || field.topLevelKey || hasNormalizedFormPayloadColumn)
+    assert.ok(hasDbMapping, `canonical workbook key must map to DB field(s): ${key}`)
+  })
 
   fields.forEach((field) => {
     assert.match(field.idSuffix, /^[a-z][A-Za-z0-9]*$/, `${field.key}: idSuffix must be camelCase`)
