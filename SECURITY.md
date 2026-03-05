@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-### STILL UNDER DEVELOPMENT 
+### STILL UNDER DEVELOPMENT
 
 Use this section to tell people about which versions of your project are
 currently being supported with security updates.
@@ -22,4 +22,4 @@ Tell them where to go, how often they can expect to get an update on a
 reported vulnerability, what to expect if the vulnerability is accepted or
 declined, etc.
 
- ### STILL UNDER DEVELOPMENT 
+### And STILL UNDER DEVELOPMENT

@@ -763,3 +763,29 @@ Result: `61` tests total, `61` pass, `0` fail.
 - Runtime path drift between `/home/eagles/dockerz/sis` and `/home/eagles/dockerz/megs` remains the primary operational risk if resync is skipped.
 - Prisma adapter dependencies must remain installed in runtime (`pg`, `@prisma/adapter-pg`) when using Prisma v7 client engine mode.
 - Main remaining code risk is insufficient integration depth for DB-backed admin workflows.
+
+## Deployment
+
+Steps for “fully deployed” are
+
+runtime refresh on target SIS:
+
+1. cd /home/admin.eagles.edu.vn/sis
+2. npm ci --omit=dev
+3. npm run db:generate
+4. npm run db:migrate:deploy
+5. Restart SIS service
+6. `curl http://127.0.0.1:8787/healthz` # Smoke check
+
+
+copy-paste command block for steps 1-6.
+
+```bash
+cd /home/admin.eagles.edu.vn/sis && \
+npm ci --omit=dev && \
+npm run db:generate && \
+npm run db:migrate:deploy && \
+sudo systemctl restart exercise-mailer.service && \
+sleep 2 && \
+curl -fsS http://127.0.0.1:8787/healthz && echo
+```
