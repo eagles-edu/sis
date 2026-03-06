@@ -238,6 +238,22 @@ const STUDENT_NUMBER_START = Math.max(
   normalizePositiveInteger(process.env.STUDENT_NUMBER_START) || 100
 )
 
+function resolveBooleanFlag(value, fallback = false) {
+  if (value === undefined || value === null || value === "") return fallback
+  if (typeof value === "boolean") return value
+  if (typeof value === "number") return value !== 0
+  const normalized = normalizeLower(value)
+  if (!normalized) return fallback
+  if (["true", "1", "yes", "on"].includes(normalized)) return true
+  if (["false", "0", "no", "off"].includes(normalized)) return false
+  return fallback
+}
+
+const IMPORT_STRICT_IDENTITY_REQUIRED = resolveBooleanFlag(
+  process.env.STUDENT_IMPORT_REQUIRE_EXPLICIT_IDENTITY,
+  true
+)
+
 function normalizePhoneDigits(value) {
   return normalizeText(value).replace(/\D+/g, "")
 }
@@ -750,6 +766,106 @@ export function applyImportIdentityDefaults(
   }
 }
 
+export function validateImportRowsForIdentity(
+  mappedRows = [],
+  {
+    existingRows = [],
+    studentNumberStart = STUDENT_NUMBER_START,
+    requireExplicitIdentity = IMPORT_STRICT_IDENTITY_REQUIRED,
+  } = {}
+) {
+  const mapped = (Array.isArray(mappedRows) ? mappedRows : []).map((row) => ({ ...(row || {}) }))
+  const strictMode = requireExplicitIdentity !== false
+  const prepared = strictMode
+    ? {
+        rows: mapped,
+        autoFilledEaglesIds: 0,
+        autoFilledStudentNumbers: 0,
+      }
+    : applyImportIdentityDefaults(mapped, { existingRows, studentNumberStart })
+
+  const seenEaglesIds = new Map()
+  const seenStudentNumbers = new Map()
+  const existingEaglesIds = new Set()
+  const existingStudentNumbers = new Set()
+  const rowErrors = new Map()
+
+  const setRowError = (rowNumber, message) => {
+    if (!Number.isInteger(rowNumber) || rowNumber < 1) return
+    if (!normalizeText(message)) return
+    if (!rowErrors.has(rowNumber)) rowErrors.set(rowNumber, message)
+  }
+
+  ;(Array.isArray(existingRows) ? existingRows : []).forEach((row) => {
+    const eaglesIdKey = normalizeLower(row?.eaglesId)
+    if (eaglesIdKey) existingEaglesIds.add(eaglesIdKey)
+    const studentNumber = normalizePositiveInteger(row?.studentNumber)
+    if (studentNumber) existingStudentNumbers.add(studentNumber)
+  })
+
+  for (let i = 0; i < prepared.rows.length; i += 1) {
+    const rowNumber = i + 1
+    const row = prepared.rows[i] || {}
+    const eaglesId = normalizeText(row.eaglesId)
+    const studentNumber = normalizePositiveInteger(row.studentNumber)
+
+    if (!eaglesId) {
+      const strictMessage = "eaglesId is required (strict import mode requires explicit identity values)"
+      setRowError(rowNumber, strictMode ? strictMessage : "eaglesId is required")
+    } else {
+      const eaglesIdKey = normalizeLower(eaglesId)
+      const duplicateEaglesRow = seenEaglesIds.get(eaglesIdKey)
+      if (duplicateEaglesRow) {
+        const duplicateMessage = `duplicate eaglesId (also in row ${rowNumber})`
+        if (!rowErrors.has(duplicateEaglesRow)) setRowError(duplicateEaglesRow, duplicateMessage)
+        setRowError(rowNumber, `duplicate eaglesId (also in row ${duplicateEaglesRow})`)
+      } else {
+        seenEaglesIds.set(eaglesIdKey, rowNumber)
+      }
+
+      if (existingEaglesIds.has(eaglesIdKey)) {
+        setRowError(rowNumber, "eaglesId already exists in database")
+      }
+    }
+
+    if (!studentNumber) {
+      if (strictMode) {
+        const strictMessage =
+          "studentNumber is required (strict import mode requires explicit identity values)"
+        setRowError(rowNumber, strictMessage)
+      }
+      continue
+    }
+
+    const duplicateStudentNumberRow = seenStudentNumbers.get(studentNumber)
+    if (duplicateStudentNumberRow) {
+      const duplicateMessage = `duplicate studentNumber (also in row ${rowNumber})`
+      if (!rowErrors.has(duplicateStudentNumberRow)) {
+        setRowError(duplicateStudentNumberRow, duplicateMessage)
+      }
+      setRowError(rowNumber, `duplicate studentNumber (also in row ${duplicateStudentNumberRow})`)
+      continue
+    }
+    seenStudentNumbers.set(studentNumber, rowNumber)
+
+    if (existingStudentNumbers.has(studentNumber)) {
+      setRowError(rowNumber, "studentNumber already exists in database")
+    }
+  }
+
+  const errors = Array.from(rowErrors.entries())
+    .sort((left, right) => left[0] - right[0])
+    .map(([rowNumber, message]) => ({ rowNumber, message }))
+
+  return {
+    rows: prepared.rows,
+    autoFilledEaglesIds: prepared.autoFilledEaglesIds,
+    autoFilledStudentNumbers: prepared.autoFilledStudentNumbers,
+    requireExplicitIdentity: strictMode,
+    errors,
+  }
+}
+
 function normalizeSearchComparable(value) {
   const folded = normalizeText(value)
     .normalize("NFD")
@@ -1005,11 +1121,27 @@ export async function getNextStudentNumber({ floor = STUDENT_NUMBER_START } = {}
   }
 }
 
-export async function saveStudent(payload = {}, studentRefId = "", options = {}) {
-  const prisma = await getPrismaClient()
+async function assertStudentNumberIsUniqueForClient(client, studentNumber, excludedStudentId = "") {
+  const normalizedNumber = normalizePositiveInteger(studentNumber)
+  if (!normalizedNumber) return
+  const duplicate = await client.student.findFirst({
+    where: {
+      studentNumber: normalizedNumber,
+      ...(excludedStudentId
+        ? {
+            id: {
+              not: excludedStudentId,
+            },
+          }
+        : {}),
+    },
+  })
+  assertWithStatus(!duplicate, 409, "studentNumber already exists")
+}
+
+async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   const eaglesId = normalizeText(payload.eaglesId)
   assertWithStatus(Boolean(eaglesId), 400, "eaglesId is required")
-  const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
 
   const studentEmail = normalizeNullableEmail(payload.email)
   const profilePayload = normalizeProfilePayload(payload.profile || {})
@@ -1018,97 +1150,83 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
   const requestedStudentNumber = requestedStudentNumberFromPayload(payload)
   const requestedId = normalizeText(studentRefId)
 
-  const result = await prisma.$transaction(async (tx) => {
-    const assertStudentNumberIsUnique = async (studentNumber, excludedStudentId = "") => {
-      const normalizedNumber = normalizePositiveInteger(studentNumber)
-      if (!normalizedNumber) return
-      const duplicate = await tx.student.findFirst({
-        where: {
-          studentNumber: normalizedNumber,
-          ...(excludedStudentId
-            ? {
-                id: {
-                  not: excludedStudentId,
-                },
-              }
-            : {}),
+  if (requestedId) {
+    const existing = await client.student.findUnique({ where: { id: requestedId } })
+    assertWithStatus(Boolean(existing), 404, "Student not found")
+
+    const duplicate = await client.student.findFirst({
+      where: {
+        eaglesId: eaglesId,
+        id: {
+          not: requestedId,
         },
-      })
-      assertWithStatus(!duplicate, 409, "studentNumber already exists")
-    }
+      },
+    })
+    assertWithStatus(!duplicate, 409, "eaglesId already exists")
 
-    if (requestedId) {
-      const existing = await tx.student.findUnique({ where: { id: requestedId } })
-      assertWithStatus(Boolean(existing), 404, "Student not found")
+    const studentNumber =
+      requestedStudentNumber
+      || normalizePositiveInteger(existing.studentNumber)
+      || (await resolveNextStudentNumberForClient(client))
+    await assertStudentNumberIsUniqueForClient(client, studentNumber, requestedId)
 
-      const duplicate = await tx.student.findFirst({
-        where: {
-          eaglesId: eaglesId,
-          id: {
-            not: requestedId,
-          },
-        },
-      })
-      assertWithStatus(!duplicate, 409, "eaglesId already exists")
-
-      const studentNumber =
-        requestedStudentNumber
-        || normalizePositiveInteger(existing.studentNumber)
-        || (await resolveNextStudentNumberForClient(tx))
-      await assertStudentNumberIsUnique(studentNumber, requestedId)
-
-      const student = await tx.student.update({
-        where: { id: requestedId },
-        data: {
-          studentNumber,
-          eaglesId: eaglesId,
-          externalKey: buildExternalKey(eaglesId),
-          email: persistedEmail,
-        },
-      })
-
-      await tx.studentProfile.upsert({
-        where: { studentRefId: student.id },
-        update: profilePayload,
-        create: {
-          studentRefId: student.id,
-          ...profilePayload,
-        },
-      })
-
-      return {
-        action: "updated",
-        studentRefId: student.id,
-      }
-    }
-
-    const existingByEaglesId = await tx.student.findUnique({ where: { eaglesId: eaglesId } })
-    assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")
-
-    const studentNumber = requestedStudentNumber || (await resolveNextStudentNumberForClient(tx))
-    await assertStudentNumberIsUnique(studentNumber)
-
-    const student = await tx.student.create({
+    const student = await client.student.update({
+      where: { id: requestedId },
       data: {
         studentNumber,
-        externalKey: buildExternalKey(eaglesId),
         eaglesId: eaglesId,
+        externalKey: buildExternalKey(eaglesId),
         email: persistedEmail,
       },
     })
 
-    await tx.studentProfile.create({
-      data: {
+    await client.studentProfile.upsert({
+      where: { studentRefId: student.id },
+      update: profilePayload,
+      create: {
         studentRefId: student.id,
         ...profilePayload,
       },
     })
 
     return {
-      action: "created",
+      action: "updated",
       studentRefId: student.id,
     }
+  }
+
+  const existingByEaglesId = await client.student.findUnique({ where: { eaglesId: eaglesId } })
+  assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")
+
+  const studentNumber = requestedStudentNumber || (await resolveNextStudentNumberForClient(client))
+  await assertStudentNumberIsUniqueForClient(client, studentNumber)
+
+  const student = await client.student.create({
+    data: {
+      studentNumber,
+      externalKey: buildExternalKey(eaglesId),
+      eaglesId: eaglesId,
+      email: persistedEmail,
+    },
   })
+
+  await client.studentProfile.create({
+    data: {
+      studentRefId: student.id,
+      ...profilePayload,
+    },
+  })
+
+  return {
+    action: "created",
+    studentRefId: student.id,
+  }
+}
+
+export async function saveStudent(payload = {}, studentRefId = "", options = {}) {
+  const prisma = await getPrismaClient()
+  const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
+  const result = await prisma.$transaction((tx) => saveStudentWithClient(tx, payload, studentRefId))
 
   if (!skipFilterCacheInvalidation) {
     await invalidateLevelAndSchoolFiltersCache()
@@ -1153,87 +1271,56 @@ export async function importStudentsFromRows(rows = []) {
   })
 
   const mappedRows = rows.map((row) => mapImportRowToStudentPayload(row))
-  const {
-    rows: preparedRows,
-    autoFilledEaglesIds,
-    autoFilledStudentNumbers,
-  } = applyImportIdentityDefaults(mappedRows, {
+  const validation = validateImportRowsForIdentity(mappedRows, {
     existingRows,
     studentNumberStart: STUDENT_NUMBER_START,
   })
-
-  const seenEaglesIds = new Map()
-  const seenStudentNumbers = new Map()
-  const duplicateImportRowErrors = new Map()
-  const errors = []
-  let created = 0
-  let updated = 0
-
-  for (let i = 0; i < preparedRows.length; i += 1) {
-    const rowNumber = i + 1
-    const row = preparedRows[i] || {}
-    const eaglesId = normalizeText(row.eaglesId)
-    if (!eaglesId) {
-      duplicateImportRowErrors.set(rowNumber, "eaglesId is required")
-      continue
+  const preparedRows = validation.rows
+  const autoFilledEaglesIds = validation.autoFilledEaglesIds
+  const autoFilledStudentNumbers = validation.autoFilledStudentNumbers
+  const strictIdentity = validation.requireExplicitIdentity
+  const preflightErrors = Array.isArray(validation.errors) ? validation.errors : []
+  if (preflightErrors.length) {
+    return {
+      processed: preparedRows.length,
+      created: 0,
+      updated: 0,
+      failed: preflightErrors.length,
+      autoFilledEaglesIds,
+      autoFilledStudentNumbers,
+      strictIdentity,
+      committed: false,
+      errors: preflightErrors,
     }
-
-    const eaglesIdKey = normalizeLower(eaglesId)
-    const duplicateEaglesRow = seenEaglesIds.get(eaglesIdKey)
-    if (duplicateEaglesRow) {
-      if (!duplicateImportRowErrors.has(duplicateEaglesRow)) {
-        duplicateImportRowErrors.set(duplicateEaglesRow, `duplicate eaglesId (also in row ${rowNumber})`)
-      }
-      duplicateImportRowErrors.set(rowNumber, `duplicate eaglesId (also in row ${duplicateEaglesRow})`)
-    } else {
-      seenEaglesIds.set(eaglesIdKey, rowNumber)
-    }
-
-    const studentNumber = normalizePositiveInteger(row.studentNumber)
-    if (!studentNumber) continue
-
-    const duplicateStudentNumberRow = seenStudentNumbers.get(studentNumber)
-    if (duplicateStudentNumberRow) {
-      if (!duplicateImportRowErrors.has(duplicateStudentNumberRow)) {
-        duplicateImportRowErrors.set(
-          duplicateStudentNumberRow,
-          `duplicate studentNumber (also in row ${rowNumber})`
-        )
-      }
-      duplicateImportRowErrors.set(
-        rowNumber,
-        `duplicate studentNumber (also in row ${duplicateStudentNumberRow})`
-      )
-      continue
-    }
-    seenStudentNumbers.set(studentNumber, rowNumber)
   }
 
-  for (let i = 0; i < preparedRows.length; i += 1) {
-    const rowNumber = i + 1
-    if (duplicateImportRowErrors.has(rowNumber)) {
-      errors.push({
-        rowNumber,
-        message: duplicateImportRowErrors.get(rowNumber),
-      })
-      continue
-    }
+  let created = 0
+  let updated = 0
+  const errors = []
 
-    const row = preparedRows[i]
-    try {
-      const mapped = row
-      const eaglesId = normalizeText(mapped.eaglesId)
-      assertWithStatus(Boolean(eaglesId), 400, `Row ${i + 1}: eaglesId is required`)
-
-      const saved = await saveStudent(mapped, "", { skipFilterCacheInvalidation: true })
-      if (saved.action === "created") created += 1
-      if (saved.action === "updated") updated += 1
-    } catch (error) {
-      errors.push({
-        rowNumber: i + 1,
-        message: String(error?.message || error),
-      })
-    }
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (let i = 0; i < preparedRows.length; i += 1) {
+        try {
+          const saved = await saveStudentWithClient(tx, preparedRows[i], "")
+          if (saved.action === "created") created += 1
+          if (saved.action === "updated") updated += 1
+        } catch (error) {
+          const wrapped = new Error(`Row ${i + 1}: ${String(error?.message || error)}`)
+          wrapped.statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 400
+          throw wrapped
+        }
+      }
+    })
+  } catch (error) {
+    const text = normalizeText(error?.message || error) || "Import failed"
+    const rowMatch = text.match(/^Row\s+(\d+):\s*(.+)$/i)
+    errors.push({
+      rowNumber: rowMatch ? Number.parseInt(rowMatch[1], 10) : 1,
+      message: rowMatch ? rowMatch[2] : text,
+    })
+    created = 0
+    updated = 0
   }
 
   if (created > 0 || updated > 0) {
@@ -1247,6 +1334,8 @@ export async function importStudentsFromRows(rows = []) {
     failed: errors.length,
     autoFilledEaglesIds,
     autoFilledStudentNumbers,
+    strictIdentity,
+    committed: errors.length === 0,
     errors,
   }
 }

@@ -17,6 +17,12 @@
   --font-header:
     system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 
+  --radius-base: 3.667px;
+  --radius-1: var(--radius-base);
+  --radius-2: calc(var(--radius-base) * 2);
+  --radius-3: calc(var(--radius-base) * 3);
+  --radius-pill: 999px;
+
   /* Brand core */
   --primary-color: #B50010; /* locked */
   --secondary-color: #f9faff; /* white */
@@ -108,7 +114,7 @@
     .panel {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       padding: 12px;
     }
     #authPanel {
@@ -159,7 +165,7 @@
     }
     input, select, textarea, button {
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       padding: 8px;
       font-size: 13px;
       background: #fff;
@@ -307,7 +313,7 @@
       display: grid;
       gap: 8px;
       border: 1px solid #9ab0d0;
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       padding: 8px;
       background: linear-gradient(180deg, #f4f8ff 0%, #eef4ff 100%);
     }
@@ -349,7 +355,7 @@
       gap: 4px;
       align-items: center;
       border: 1px solid #abc0de;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       padding: 4px;
       background: #e8f0fd;
       overflow-x: auto;
@@ -365,7 +371,7 @@
       box-sizing: border-box;
       width: 100%;
       min-height: 34px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       padding: 6px 10px;
       font-size: 13px;
       font-weight: 700;
@@ -395,7 +401,7 @@
     }
     .profile-tab-panel {
       border: 1px solid #90a6c8;
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       padding: 14px;
       background: #f7faff;
       display: none;
@@ -405,7 +411,7 @@
     }
     .profile-info-panel {
       border: 1px solid #90a6c8;
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       padding: 10px;
       background: #f7faff;
       display: none;
@@ -415,7 +421,7 @@
     }
     .profile-info-group {
       border: 1px solid #c5d2e6;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       padding: 8px;
       margin: 0 0 8px;
       background: #fff;
@@ -436,7 +442,7 @@
     }
     .profile-info-item {
       border: 1px solid #d4ddeb;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: #fafcff;
       padding: 7px 8px;
       min-height: 58px;
@@ -462,7 +468,7 @@
     }
     .profile-field-group {
       border: 1px solid #b5c4da;
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       padding: 10px;
       margin: 0 0 10px;
       background: #fff;
@@ -477,7 +483,7 @@
       color: #163a72;
       background: #e8efff;
       border: 1px solid #bfd0ea;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       padding: 8px 10px;
       line-height: 1.3;
     }
@@ -520,7 +526,7 @@
       align-items: center;
       gap: 6px;
       border: 1px solid #b5c4da;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       padding: 8px 10px;
       background: #f7fbff;
       min-height: 40px;
@@ -621,7 +627,7 @@
     .profile-layout-editor {
       margin-top: 12px;
       border: 1px solid #d5deec;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       padding: 10px;
       background: #f9fbff;
       display: grid;
@@ -644,7 +650,7 @@
       max-height: 280px;
       overflow: auto;
       border: 1px solid #d7dfea;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: #fff;
     }
     .grid-main {
@@ -658,12 +664,157 @@
     .app-shell {
       display: grid;
       gap: 12px;
-      grid-template-columns: 240px minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       align-items: start;
     }
     .app-sidebar {
-      position: sticky;
-      top: 12px;
+      position: fixed;
+      inset-block: 0;
+      inset-inline-start: 0;
+      width: min(86vw, 320px);
+      margin: 0;
+      z-index: 82;
+      overflow-y: auto;
+      border-radius: 0 var(--radius-3) var(--radius-3) 0;
+      box-shadow: 0 22px 48px rgba(12, 21, 40, 0.32);
+      transform: translateX(calc(-100% - 14px));
+      transition: transform 180ms ease;
+      will-change: transform;
+      overscroll-behavior: contain;
+    }
+    body.menu-open .app-sidebar {
+      transform: translateX(0);
+    }
+    body.menu-open {
+      overflow: hidden;
+    }
+    .menu-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 22, 39, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+      z-index: 81;
+    }
+    body.menu-open .menu-backdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .floating-menu-btn {
+      position: fixed;
+      inset-block-start: 12px;
+      inset-inline-start: 12px;
+      z-index: 90;
+      inline-size: 44px;
+      block-size: 44px;
+      padding: 0;
+      border-radius: var(--radius-pill);
+      border: 1px solid #8d0010;
+      background: var(--primary-color);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(14, 24, 42, 0.32);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .floating-menu-btn:hover {
+      background: #92000d;
+      border-color: #76000a;
+    }
+    .floating-menu-btn:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+    .floating-menu-icon,
+    .floating-menu-icon::before,
+    .floating-menu-icon::after {
+      content: "";
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 2px;
+      background: #fff;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+    .floating-menu-icon {
+      position: relative;
+    }
+    .floating-menu-icon::before {
+      position: absolute;
+      top: -6px;
+      left: 0;
+    }
+    .floating-menu-icon::after {
+      position: absolute;
+      top: 6px;
+      left: 0;
+    }
+    body.menu-open .floating-menu-icon {
+      background: transparent;
+    }
+    body.menu-open .floating-menu-icon::before {
+      transform: translateY(6px) rotate(45deg);
+    }
+    body.menu-open .floating-menu-icon::after {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+    body.menu-collapsed .app-shell {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.menu-collapsed .app-sidebar {
+      transform: translateX(calc(-100% - 14px));
+    }
+    .app-page-header {
+      padding: 10px 12px 10px 64px;
+      background: linear-gradient(180deg, #f4f8ff 0%, #eef3fb 100%);
+      border-color: #98adca;
+    }
+    .app-brand-strip {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+    .app-brand-logo-wrap {
+      align-items: center;
+      background: #fff;
+      border: 1px solid #90a4c3;
+      border-radius: var(--radius-3);
+      box-sizing: border-box;
+      cursor: pointer;
+      display: inline-flex;
+      flex: 0 0 auto;
+      height: 44px;
+      justify-content: center;
+      overflow: hidden;
+      width: 44px;
+}
+    .app-brand-logo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .app-brand-logo-fallback {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #123866;
+      text-transform: uppercase;
+    }
+    .app-school-name {
+      margin: 0;
+      font-size: clamp(13px, 1.7vw, 18px);
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #102f5f;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      text-transform: uppercase;
     }
     .menu-groups {
       display: grid;
@@ -671,7 +822,7 @@
     }
     .menu-group {
       border: 1px solid var(--menu-border);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       overflow: hidden;
       background: var(--menu-bg);
     }
@@ -683,6 +834,13 @@
       background: var(--menu-header-bg);
       color: var(--ink);
       font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 36px;
     }
     .menu-group-links {
       display: none;
@@ -694,7 +852,7 @@
     }
     .menu-link {
       border: 1px solid var(--menu-border);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       padding: 8px 10px;
       text-decoration: none;
       color: var(--ink);
@@ -709,6 +867,35 @@
       border-width: 2px;
       display: inline-flex;
       justify-content: space-between;
+      align-items: center;
+      min-height: 36px;
+    }
+    .sidebar-logo-wrap {
+      width: 100%;
+      min-height: 78px;
+      border-radius: var(--radius-3);
+      border: 1px solid #90a4c3;
+      box-sizing: border-box;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 0 0 8px;
+      padding: 6px;
+    }
+    .sidebar-logo-wrap img {
+      max-width: 100%;
+      max-height: 72px;
+      object-fit: contain;
+      display: block;
+    }
+    .sidebar-logo-fallback {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #123866;
+      text-transform: uppercase;
     }
     .menu-group[data-menu-group="tracking"] > .menu-group-links > .menu-link {
       font-weight: 600;
@@ -746,7 +933,7 @@
     }
     .permission-role-card {
       border: 1px solid #d8dee9;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: #fbfcff;
       padding: 10px;
       margin-bottom: 10px;
@@ -776,17 +963,34 @@
       max-height: 70vh;
       overflow: auto;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
     }
     .top-search-results-box {
       max-height: 220px;
+    }
+    .top-search-results-box.expanded {
+      max-height: none;
     }
     .top-search-results-title {
       margin: 2px 0 6px;
       font-weight: 600;
     }
-    #topSearchCount {
+    .top-search-meta {
       margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    #topSearchCount {
+      margin: 0;
+    }
+    #topSearchExpandBtn {
+      inline-size: auto;
+      min-width: 132px;
+      padding: 6px 10px;
+      font-size: 11px;
     }
     #topSearchRows tr.top-search-row {
       cursor: pointer;
@@ -798,6 +1002,27 @@
       inline-size: auto;
       min-width: 96px;
     }
+    #topSearchResultsPanel th[data-top-search-sort] {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 18px;
+    }
+    #topSearchResultsPanel th[data-top-search-sort]:focus {
+      outline: 2px solid #7fa6e2;
+      outline-offset: -2px;
+    }
+    #topSearchResultsPanel th.sort-active-asc::after,
+    #topSearchResultsPanel th.sort-active-desc::after {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: #124685;
+    }
+    #topSearchResultsPanel th.sort-active-asc::after { content: "▲"; }
+    #topSearchResultsPanel th.sort-active-desc::after { content: "▼"; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -808,7 +1033,7 @@
       overflow-x: auto;
       overflow-y: hidden;
       border: 1px solid #dde5f2;
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: #fff;
       -webkit-overflow-scrolling: touch;
     }
@@ -897,7 +1122,7 @@
     }
     .overview-group {
       border: 1px solid var(--border-strong);
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       background: var(--surface-card);
       padding: 10px;
       display: grid;
@@ -934,7 +1159,7 @@
     }
     .system-health-item {
       border: 1px solid var(--border-strong);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: var(--surface-card-muted);
       padding: 8px;
       display: grid;
@@ -993,7 +1218,7 @@
     }
     .stat-card {
       border: 1px solid var(--border-strong);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       padding: 8px;
       background: var(--surface-contrast);
     }
@@ -1013,14 +1238,14 @@
       max-height: 180px;
       overflow: auto;
       border: 1px solid var(--border-strong);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: var(--surface-card);
       padding: 8px;
       white-space: pre-wrap;
     }
     .chart-shell {
       border: 1px solid var(--border-strong);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: var(--surface-card);
       padding: 6px;
       margin-top: 6px;
@@ -1030,7 +1255,7 @@
       min-height: 240px;
       display: block;
       background: linear-gradient(180deg, #ffffff, var(--surface-contrast));
-      border-radius: 6px;
+      border-radius: var(--radius-2);
     }
     .chart-legend {
       display: flex;
@@ -1081,39 +1306,39 @@
     }
     .panelbg-eggs-chicks {
       background-color: #e0162b;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-starters {
       background-color: #FCAB15;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-mov {
       background-color: #913198;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-fly {
       background-color: #b5d570;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-key {
       background-color: #038e9f;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-pet {
       background-color: #cd1637;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-ielts {
       background-color: #b10128;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-tayk {
       background-color: #980001;
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .panelbg-private {
       background-color: var(--tertiary-color);
-      border-radius: 3px;
+      border-radius: var(--radius-1);
     }
     .bar-detail-actions button.panelbg-starters,
     .bar-detail-actions button.panelbg-fly {
@@ -1122,7 +1347,7 @@
     .level-detail-panel {
       margin-top: 0;
       border: 1px solid var(--level-panel-border, var(--border-strong));
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: var(--surface-contrast);
       box-shadow: inset 0 0 0 1px var(--level-panel-shadow, transparent);
       padding: 8px;
@@ -1149,7 +1374,7 @@
       gap: 6px;
       min-height: 24px;
       padding: 3px 10px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       border: 2px solid var(--chip-border, var(--border-strong));
       background: var(--chip-bg, #f2f6ff);
       color: var(--chip-text, var(--ink));
@@ -1165,13 +1390,7 @@
       padding: 4px 8px;
     }
     .level-chip::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--chip-dot, var(--tertiary-color));
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
-      flex: 0 0 auto;
+      display: none;
     }
     .checkbox-inline {
       inline-size: auto;
@@ -1184,6 +1403,13 @@
       background: var(--menu-header-bg);
       border-color: var(--menu-border);
       color: var(--ink);
+      inline-size: auto;
+      min-inline-size: 92px;
+    }
+    .app-header-menu-toggle {
+      justify-self: end;
+      max-inline-size: 160px;
+      display: none;
     }
     .hub-status-wrap {
       display: grid;
@@ -1195,7 +1421,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       padding: 5px 10px;
       font-size: 11px;
       font-weight: 700;
@@ -1242,7 +1468,7 @@
     .attendance-level-panel,
     .attendance-student-panel {
       border: 1px solid var(--border-strong);
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       background: var(--surface-card);
       padding: 10px;
       display: grid;
@@ -1257,7 +1483,7 @@
     .attendance-level-tile {
       appearance: none;
       border: 1px solid var(--border-strong);
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       min-height: 92px;
       aspect-ratio: 1 / 1;
       padding: 6px;
@@ -1286,7 +1512,7 @@
     .attendance-level-tile-title {
       inline-size: 100%;
       box-sizing: border-box;
-      border-radius: 6px;
+      border-radius: var(--radius-2);
       padding: 3px 5px;
       background: rgba(18, 28, 45, 0.64);
       color: #f3f8ff;
@@ -1313,7 +1539,7 @@
       aspect-ratio: 1 / 1;
       inline-size: min(220px, 100%);
       border: 1px dashed var(--border-strong);
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       background: #f6f9ff;
       display: grid;
       place-items: center;
@@ -1365,7 +1591,7 @@
       align-items: center;
       gap: 6px;
       border: 1.5px solid var(--border-strong);
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       padding: 5px 10px;
       background: #fff;
       color: #0f1d33;
@@ -1404,7 +1630,7 @@
     }
     .assignment-item-builder {
       border: 1px solid var(--border-strong);
-      border-radius: 8px;
+      border-radius: var(--radius-2);
       background: var(--surface-card-muted);
       padding: 8px;
       display: grid;
@@ -1431,7 +1657,7 @@
     .assignment-completion-pill {
       display: inline-flex;
       align-items: center;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       border: 1px solid var(--border-strong);
       padding: 3px 8px;
       font-size: 11px;
@@ -1456,6 +1682,154 @@
     }
     .assignment-record-item.done {
       color: #2a6e45;
+    }
+    .parent-tracking-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .parent-tracking-grid > .attendance-level-panel,
+    .parent-tracking-grid > .attendance-student-panel {
+      grid-column: 1 / -1;
+    }
+    .parent-tracking-form {
+      gap: 10px;
+    }
+    .progress-report-meta {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+    .progress-report-layout {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(clamp(260px, 42vw, 540px), 1fr));
+      align-items: start;
+    }
+    .progress-report-span-2 {
+      grid-column: 1 / -1;
+    }
+    .progress-report-column {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+    .progress-report-card {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-2);
+      background: var(--surface-card-muted);
+      padding: 8px;
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+    .progress-report-card h4 {
+      margin: 0;
+      font-size: 12px;
+      color: var(--ink);
+      letter-spacing: 0.01em;
+    }
+    .progress-report-card p {
+      margin: 0;
+      line-height: 1.45;
+    }
+    .progress-report-vision-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .progress-report-vision-option {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-pill);
+      background: #fff;
+      padding: 4px 8px;
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--ink);
+    }
+    .progress-report-vision-option input {
+      inline-size: auto;
+      margin: 0;
+    }
+    .progress-report-table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-2);
+      background: #fff;
+    }
+    .progress-report-table {
+      width: 100%;
+      min-width: 620px;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .progress-report-table th,
+    .progress-report-table td {
+      border: 1px solid var(--border);
+      padding: 5px 6px;
+      vertical-align: top;
+      line-height: 1.35;
+    }
+    .progress-report-table thead th {
+      background: #eaf1ff;
+      color: #0f2d5f;
+      font-weight: 700;
+    }
+    .progress-report-table .score-cell {
+      width: 4.5ch;
+      min-width: 4.5ch;
+      max-width: 4.5ch;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .progress-report-table .score-cell input {
+      box-sizing: border-box;
+      width: 4ch;
+      min-width: 4ch;
+      max-width: 4ch;
+      padding: 2px 1px;
+      line-height: 1.2;
+      text-align: center;
+    }
+    .progress-report-rubric-table .score-cell input[type="number"] {
+      appearance: textfield;
+    }
+    .progress-report-rubric-table .score-cell input[type="number"]::-webkit-outer-spin-button,
+    .progress-report-rubric-table .score-cell input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .progress-report-table .recommendation-cell {
+      width: 36%;
+    }
+    .progress-report-rubric-table {
+      table-layout: fixed;
+      min-width: 0;
+    }
+    .progress-report-rubric-table th:first-child,
+    .progress-report-rubric-table td:first-child {
+      width: 30%;
+      max-width: 30%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .progress-report-rubric-table .recommendation-cell {
+      width: auto;
+    }
+    .progress-report-table .recommendation-cell textarea {
+      min-height: 48px;
+      resize: vertical;
+    }
+    .progress-shorthand-row {
+      align-items: end;
+    }
+    .progress-shorthand-row button {
+      min-height: 36px;
+    }
+    #pt_actionHelperStatus {
+      margin-top: 2px;
     }
     .parent-tracking-grid #pt_outstandingRows td {
       vertical-align: top;
@@ -1549,7 +1923,7 @@
       max-height: 92vh;
       overflow: auto;
       background: #fff;
-      border-radius: 10px;
+      border-radius: var(--radius-3);
       border: 1px solid var(--border-strong);
       box-shadow: 0 22px 50px rgba(8, 18, 40, 0.22);
       padding: 12px;
@@ -1596,14 +1970,10 @@
         grid-template-columns: 1fr;
       }
       .app-sidebar {
-        position: static;
-        display: none;
+        width: min(92vw, 320px);
       }
-      body.menu-open .app-sidebar {
-        display: block;
-      }
-      .menu-toggle-wrap {
-        display: block;
+      .progress-report-layout {
+        grid-template-columns: 1fr;
       }
       .permission-page-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1633,6 +2003,71 @@
       .col-2, .col-3, .col-4, .col-6, .col-8 { grid-column: span 12; }
     }
     @media (max-width: 820px) {
+      .app-page-header {
+        padding: 8px 10px 8px 60px;
+      }
+      .app-brand-strip {
+        gap: 8px;
+      }
+      .app-brand-logo-wrap {
+        width: 38px;
+        height: 38px;
+      }
+      .app-school-name {
+        font-size: clamp(11px, 3.8vw, 14px);
+      }
+      .menu-toggle-btn {
+        min-inline-size: clamp(74px, 24vw, 102px);
+        padding-inline: 8px;
+      }
+      .floating-menu-btn {
+        inline-size: 40px;
+        block-size: 40px;
+      }
+      .progress-report-table {
+        min-width: 560px;
+      }
+      .progress-report-rubric-table {
+        min-width: 0;
+      }
+      .progress-report-rubric-table thead {
+        display: none;
+      }
+      .progress-report-rubric-table tbody {
+        display: block;
+      }
+      .progress-report-rubric-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px 10px;
+        border-bottom: 1px solid var(--border);
+        padding: 8px 6px;
+      }
+      .progress-report-rubric-table td {
+        border: 0;
+        padding: 0;
+        display: block;
+      }
+      .progress-report-rubric-table td:first-child {
+        grid-column: 1;
+        width: auto;
+        max-width: none;
+      }
+      .progress-report-rubric-table td.score-cell {
+        grid-column: 2;
+        justify-self: end;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+      }
+      .progress-report-rubric-table td.recommendation-cell {
+        grid-column: 1 / -1;
+        margin-top: 2px;
+      }
+      .progress-report-rubric-table td.recommendation-cell textarea {
+        width: 100%;
+        min-height: 72px;
+      }
       .overview-layout {
         grid-template-columns: 1fr;
       }
@@ -1666,7 +2101,7 @@
         grid-template-columns: 1fr;
       }
       .table-scroll-wrap {
-        border-radius: 7px;
+        border-radius: var(--radius-2);
       }
     }
 
@@ -1705,15 +2140,30 @@
     </div>
 
     <div id="app" class="hidden">
+      <button
+        id="floatingMenuBtn"
+        type="button"
+        class="floating-menu-btn"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="appSidebarNav"
+      >
+        <span class="floating-menu-icon" aria-hidden="true"></span>
+      </button>
+      <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
       <div class="app-shell">
-        <aside class="panel app-sidebar">
+        <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
           <h2>Navigation</h2>
+          <div class="sidebar-logo-wrap" id="sidebarLogoWrap">
+            <img id="sidebarLogoImg" src="data:," alt="School logo" class="hidden">
+            <span id="sidebarLogoFallback" class="sidebar-logo-fallback">SIS</span>
+          </div>
           <p class="small">Expandable section menus keep related tools grouped on separate pages.</p>
           <nav class="menu-groups" id="navMenu">
-            <a href="#" class="menu-link menu-link-top" data-page-link="overview">Dashboard</a>
-            <a href="#" class="menu-link menu-link-top" data-page-link="profile">Students</a>
+            <a href="#" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+            <a href="#" class="menu-link menu-link-top" data-page-link="profile">STUDENTS</a>
             <div class="menu-group" data-menu-group="tracking">
-              <button type="button" class="menu-group-btn" data-menu-toggle="tracking">Tracking</button>
+              <button type="button" class="menu-group-btn" data-menu-toggle="tracking">TRACKING</button>
               <div class="menu-group-links">
                 <a href="#" class="menu-link" data-page-link="attendance">Attendance</a>
                 <div id="attendanceAdminSubmenu" class="menu-sub-links hidden" data-admin-submenu-group="tracking-data">
@@ -1743,13 +2193,13 @@
               </div>
             </div>
             <div class="menu-group" data-menu-group="support">
-              <button type="button" class="menu-group-btn" data-menu-toggle="support">Support</button>
+              <button type="button" class="menu-group-btn" data-menu-toggle="support">SUPPORT</button>
               <div class="menu-group-links">
                 <a href="#" class="menu-link" data-page-link="family">Family Lookup</a>
               </div>
             </div>
               <div class="menu-group" data-menu-group="admin">
-                <button type="button" class="menu-group-btn" data-menu-toggle="admin">Administration</button>
+                <button type="button" class="menu-group-btn" data-menu-toggle="admin">ADMINISTRATION</button>
                 <div class="menu-group-links">
                   <a href="#" class="menu-link" data-page-link="student-admin">Student Admin</a>
                   <a href="#" class="menu-link" data-page-link="school-setup">School Setup</a>
@@ -1762,11 +2212,18 @@
         </aside>
 
         <div class="section-stack">
+          <div class="panel app-page-header" id="appPageHeader">
+            <div class="app-brand-strip">
+              <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+                <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
+                <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
+              </div>
+              <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
+              <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">Hide Menu</button>
+            </div>
+          </div>
           <div class="panel" id="topControlsPanel">
             <div class="row">
-              <div class="col-2 menu-toggle-wrap">
-                <button id="menuToggleBtn" type="button" class="menu-toggle-btn">Menu</button>
-              </div>
               <div class="col-3">
                 <label for="searchQ">Search student</label>
                 <input id="searchQ" type="search" list="searchStudentOptions" placeholder="name, eagles id, parent name">
@@ -1808,9 +2265,9 @@
                   <table>
                     <thead>
                       <tr>
-                        <th scope="col">Eagles ID</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Level</th>
+                        <th scope="col" data-top-search-sort="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th>
+                        <th scope="col" data-top-search-sort="name" tabindex="0" aria-sort="none">Name</th>
+                        <th scope="col" data-top-search-sort="level" tabindex="0" aria-sort="none">Level</th>
                         <th scope="col">Action</th>
                       </tr>
                     </thead>
@@ -1819,7 +2276,10 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="small" id="topSearchCount">0 results</p>
+                <div class="top-search-meta">
+                  <p class="small" id="topSearchCount">0 results</p>
+                  <button id="topSearchExpandBtn" type="button" class="hidden">Show All</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1855,7 +2315,7 @@
                   <button id="importBtn" type="button">Import File</button>
                 </div>
               </div>
-              <p class="small">Use `eaglesId` + `studentNumber`; missing values are auto-filled during import.</p>
+              <p class="small">Use `eaglesId` + `studentNumber`; missing or duplicate identity values will fail import preflight.</p>
             </div>
 
             <div class="section-stack">
@@ -2324,33 +2784,148 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <div id="parentTrackingLevelTiles" class="attendance-level-grid"></div>
                     <p class="small" id="parentTrackingLevelHint">Select a class level to load students.</p>
                   </section>
-                  <section class="attendance-student-panel">
-                    <h3 id="parentTrackingPanelTitle">Student Class Report</h3>
-                    <div class="row">
+                  <section class="attendance-student-panel parent-tracking-form">
+                    <h3 id="parentTrackingPanelTitle">Student Progress Report</h3>
+                    <div class="progress-report-meta">
                       <div class="col-3"><label>Student Name</label><select id="pt_studentRefId"><option value="">Select student</option></select></div>
                       <div class="col-2"><label>Class Date</label><input id="pt_classDate" type="date"></div>
                       <div class="col-2"><label>Class Day</label><input id="pt_classDay" type="text" readonly></div>
                       <div class="col-2"><label>Teacher</label><select id="pt_teacherName"><option value="">Select teacher</option></select></div>
                       <div class="col-3"><label>Class Level</label><input id="pt_classLevel" type="text" readonly></div>
-
-                      <div class="col-12"><label>Lesson Summary</label><textarea id="pt_lessonSummary" placeholder="What was covered in class today?"></textarea></div>
-
-                      <div class="col-2"><label>Behavior</label><input id="pt_behaviorScore" type="number" step="0.01"></div>
-                      <div class="col-2"><label>Participation</label><input id="pt_participationScore" type="number" step="0.01"></div>
-                      <div class="col-2"><label>Academic</label><input id="pt_academicScore" type="number" step="0.01"></div>
-                      <div class="col-3"><label>Homework Timeliness %</label><input id="pt_homeworkOnTimeRate" type="number" step="0.01"></div>
-                      <div class="col-3"><label>Assignment Completion %</label><input id="pt_homeworkCompletionRate" type="number" step="0.01"></div>
-
-                      <div class="col-12">
-                        <label>Outstanding Assignments (due + uncompleted)</label>
-                        <table>
-                          <thead><tr><th scope="col">Due</th><th scope="col">Assignment</th><th scope="col">Status</th><th scope="col">Link</th></tr></thead>
-                          <tbody id="pt_outstandingRows"><tr><td colspan="4">Select a student to load assignment status.</td></tr></tbody>
-                        </table>
+                    </div>
+                    <div class="progress-report-card">
+                      <label>Bai tap ve nha this week (auto link)</label>
+                      <input id="pt_homeworkAnnouncement" type="text" readonly placeholder="Auto-generated from assignments when available">
+                    </div>
+                    <div class="progress-report-layout">
+                      <div class="progress-report-card">
+                        <h4>Class Focus</h4>
+                        <label>Lesson Summary</label>
+                        <textarea id="pt_lessonSummary" placeholder="What was covered in class today?"></textarea>
+                          <label>Vision / board visibility status</label>
+                          <div class="progress-report-vision-row">
+                            <label class="progress-report-vision-option"><input type="radio" name="pt_visionStatus" value="no-issues" checked>No current issues</label>
+                            <label class="progress-report-vision-option"><input type="radio" name="pt_visionStatus" value="needs-check">Needs eye check</label>
+                            <label class="progress-report-vision-option"><input type="radio" name="pt_visionStatus" value="monitor">Monitor in class</label>
+                          </div>
                       </div>
-
-                      <div class="col-12"><label>Email Targets (auto from profile)</label><input id="pt_recipients" type="text" readonly placeholder="student + parent/homework proctor emails"></div>
-                      <div class="col-12"><label>Comment</label><textarea id="pt_comments" placeholder="Additional teacher comments"></textarea></div>
+                      <div class="progress-report-card">
+                        <h4>Performance Snapshot (Auto from records)</h4>
+                        <div class="row">
+                          <div class="col-2"><label>Behavior</label><input id="pt_behaviorScore" type="number" step="0.01"></div>
+                          <div class="col-2"><label>Skills</label><input id="pt_participationScore" type="number" step="0.01"></div>
+                          <div class="col-2"><label>Academic</label><input id="pt_academicScore" type="number" step="0.01"></div>
+                          <div class="col-3"><label>Homework Timeliness %</label><input id="pt_homeworkOnTimeRate" type="number" step="0.01"></div>
+                          <div class="col-3"><label>Assignment Completion %</label><input id="pt_homeworkCompletionRate" type="number" step="0.01"></div>
+                        </div>
+                        <p class="small">
+                          Behavior = mean of Behavior scores; Skills = mean of Skills scores; Academic = mean of exercise/quiz/exam scores (current quarter); Homework Timeliness % = on-time/tracked assignments (current quarter); Assignment Completion % = completed/tracked assignments (current quarter).
+                        </p>
+                      </div>
+                      <div class="progress-report-card progress-report-span-2">
+                        <h4>Corrective Action Shorthand</h4>
+                        <div class="row progress-shorthand-row">
+                          <div class="col-4">
+                            <label for="pt_actionShorthand">Quick template</label>
+                            <select id="pt_actionShorthand">
+                              <option value="">Select reusable action...</option>
+                              <option value="Observed: phone distraction during study block. Parent action (VI): bo me thu dien thoai trong 30 phut hoc tap tai nha moi ngay. School action: seat front row + timed check-ins. Review: 7 days.">Phone distraction correction</option>
+                              <option value="Observed: incomplete homework routine. Parent action (VI): co dinh gio hoc + checklist hoan thanh truoc 20:30 moi toi. School action: homework log review each class. Review: 7 days.">Homework routine reset</option>
+                              <option value="Observed: low accountability after mistakes. Parent action (VI): yeu cau con tu viet cam ket sua loi sau moi su viec. School action: consequence reflection form in class. Review: 14 days.">Accountability + consequence</option>
+                              <option value="Observed: weak persistence when tasks are difficult. Parent action (VI): chia nho bai tap thanh 3 buoc, khong bo giua chung. School action: chunked task support + success tracking. Review: 14 days.">Persistence training</option>
+                              <option value="Observed: weak social awareness/teamwork. Parent action (VI): luyen quy tac doi-thoai luan phien tai nha. School action: structured pair-role tasks in class. Review: 14 days.">Social awareness + teamwork</option>
+                              <option value="Observed: truthfulness inconsistency about homework. Parent action (VI): xac nhan bai lam bang anh chup/cuoi ngay. School action: random notebook verification. Review: 7 days.">Truthfulness check</option>
+                            </select>
+                          </div>
+                          <div class="col-4">
+                            <label for="pt_actionAddition">Free-text addition</label>
+                            <input id="pt_actionAddition" type="text" placeholder="Add specific details before insert">
+                          </div>
+                          <div class="col-2">
+                            <label>&nbsp;</label>
+                            <button id="pt_actionInsertBtn" type="button" class="btn-edit">Insert to Focused Field</button>
+                          </div>
+                          <div class="col-2">
+                            <label>&nbsp;</label>
+                            <button id="pt_actionClearBtn" type="button">Clear Inputs</button>
+                          </div>
+                        </div>
+                        <p class="small" id="pt_actionHelperStatus">Focus any corrective-action textarea in Skills/Conduct, then insert shorthand. Free text remains fully editable.</p>
+                      </div>
+                      <div class="progress-report-card">
+                        <h4>Basic Student Skills</h4>
+                        <div class="progress-report-table-wrap">
+                          <table class="progress-report-table progress-report-rubric-table">
+                            <thead>
+                              <tr>
+                                <th scope="col">Skill</th>
+                                <th scope="col" class="score-cell">x/10</th>
+                                <th scope="col" class="recommendation-cell">Recommendations / Corrective action required</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr><td>Leverages computer/phone daily to read international news (for Flyers and above only).</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_internationalNews" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_internationalNews" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Leverages computer/phone to read for enjoyment in English.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_readingEnglishEnjoyment" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_readingEnglishEnjoyment" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Leverages computer/phone to look up, translate, and hear new vocabulary.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_vocabularyLookup" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_vocabularyLookup" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Writes notes independently.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_noteTaking" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_noteTaking" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Asks questions in real-time whenever needed.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_questions" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_questions" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Consistently studies class notes outside of class.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_studyOutsideClass" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_studyOutsideClass" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Reviews notes before attending class.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_reviewBeforeClass" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_reviewBeforeClass" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Demonstrates age-appropriate memory recall by remembering to study lessons, complete homework, and ask questions well.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_memoryRecall" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_memoryRecall" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Knows and uses Eagles Club Notebook extensive grammar references, word lists, and speaking practice drills.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_notebookUsage" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_notebookUsage" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Uses English phonics, vowel sound spelling patterns, and syllabication well.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_phonics" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_phonics" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Reads, listens to, and watches English content regularly.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_englishContentExposure" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_englishContentExposure" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Demonstrates logical thinking abilities.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_logic" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_logic" placeholder="Action note"></textarea></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="progress-report-card">
+                        <h4>Conduct During Class</h4>
+                        <div class="progress-report-table-wrap">
+                          <table class="progress-report-table progress-report-rubric-table">
+                            <thead>
+                              <tr>
+                                <th scope="col">Conduct metric</th>
+                                <th scope="col" class="score-cell">x/10</th>
+                                <th scope="col" class="recommendation-cell">Recommendations / Corrective action required</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr><td>Does not talk to others during lessons; listens while others speak.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_listening" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_listening" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Has age-appropriate control of emotions.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_emotion" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_emotion" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Always cheerfully follows in-class teacher instructions; cooperative.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_cooperation" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_cooperation" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Displays age-appropriate maturity.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_maturity" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_maturity" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Can easily concentrate, follow along, and stay on task during class.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_focus" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_focus" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Respects classroom, desks, computers, and TV in room; keeps area clean.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_respect" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_respect" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Always brings Eagles Club notebook and 2 pencils with an eraser attached every class.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_materials" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_materials" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Learns from mistakes and successes.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_learnsFromMistakes" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_learnsFromMistakes" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Shows effort to remember lessons well.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_remembersLessons" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_remembersLessons" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Asks for help when translation/explanation is needed.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_help" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_help" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Covers mouth and/or nose when yawning, coughing, or sneezing.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_coversMouthNose" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_coversMouthNose" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Regularly washes hands and understands self-protection from transmission.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_handwashing" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_handwashing" placeholder="Action note"></textarea></td></tr>
+                              <tr><td>Never sticks fingers in eyes, nose, or mouth; always uses tissue/handkerchief instead.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_conduct_noFingerContact" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_noFingerContact" placeholder="Action note"></textarea></td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="progress-report-card progress-report-span-2">
+                        <h4>Homework Completion</h4>
+                        <p class="small">Auto list of overdue and incomplete assignments for the selected class date.</p>
+                        <div class="progress-report-table-wrap">
+                          <table class="progress-report-table">
+                            <thead><tr><th scope="col">Due</th><th scope="col">Assignment detail / link</th><th scope="col">Status</th><th scope="col">Link</th></tr></thead>
+                            <tbody id="pt_outstandingRows"><tr><td colspan="4">Select a student to load assignment status.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="progress-report-card progress-report-span-2">
+                        <label>Email Targets (auto from profile)</label>
+                        <input id="pt_recipients" type="text" readonly placeholder="student + parent/homework proctor emails">
+                        <label>Parent-facing Comment (Vietnamese)</label>
+                        <textarea id="pt_comments" placeholder="Tom tat bang tieng Viet: hanh vi da quan sat, hanh dong phu huynh can lam tai nha, ngay kiem tra lai."></textarea>
+                        <p class="small">TODO: Auto-render VI parent summary from rubric rows + score bands (currently manual VI entry).</p>
+                      </div>
                     </div>
                     <div class="actions actions-3">
                       <button id="pt_saveBtn" type="button" class="btn-edit">Save Performance Report</button>
@@ -2934,6 +3509,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       parentTracking: {
         selectedLevel: "",
         selectedStudentId: "",
+        activeRecommendationFieldName: "",
         teacherNames: [],
         lessonSummaryByLevelDate: {},
         studentDetailsByStudentId: {},
@@ -3015,6 +3591,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         query: "",
         level: "",
         school: "",
+      },
+      topSearch: {
+        expanded: false,
+        sortField: "name",
+        sortDir: "asc",
+        collapsedRows: 12,
+        rows: [],
       },
     }
 
@@ -3993,6 +4576,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const ASSIGNMENT_TEMPLATE_STORAGE_KEY = "sis.admin.assignmentTemplates"
     const PARENT_TRACKING_TEACHER_STORAGE_KEY = "sis.admin.parentTracking.teacherNames"
     const PARENT_TRACKING_SUMMARY_STORAGE_KEY = "sis.admin.parentTracking.lessonSummaryByLevelDate"
+    const DESKTOP_MENU_COLLAPSED_STORAGE_KEY = "sis.admin.menuCollapsed.desktop"
     const TABLE_ARCHIVE_STORAGE_KEY = "sis.admin.tableArchiveIndex.v1"
     const STUDENT_ID_SEARCH_STORAGE_KEY = "sis.admin.eaglesIdSearchHistory.v1"
     const STUDENT_ID_SEARCH_PATTERN = /^(?:[a-z]{1,10}\d{3}|\d{1,12})$/
@@ -5006,11 +5590,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       summaryParts.push(levelValue ? `Level: ${fullLevelLabel(levelValue)}` : "Level: All")
       const selectedStudent = tableFilterSelectedStudent(tableKey)
       if (selectedStudent) {
-        const labelName = normalizeText(selectedStudent?.profile?.fullName || selectedStudent?.fullName || "")
+        const labelName = studentDisplayName(selectedStudent, { preferEnglish: true })
         const labelId = normalizeText(selectedStudent?.eaglesId || selectedStudent?.id || "")
+        const labelNumber = studentDisplayNumber(selectedStudent)
         const resolvedName = labelName || "(no name)"
         const resolvedId = labelId || "(no id)"
-        summaryParts.push(`Student: ${resolvedName} (${resolvedId})`)
+        const numberToken = labelNumber ? ` <${labelNumber}>` : ""
+        summaryParts.push(`Student: (${resolvedName}) ${resolvedId}${numberToken}`)
       }
       const dateFrom = tableFilterValue(tableKey, "dateFrom")
       const dateTo = tableFilterValue(tableKey, "dateTo")
@@ -5040,8 +5626,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         ).values()
       )
       deduped.sort((left, right) =>
-        normalizeText(left?.profile?.fullName || left?.eaglesId || "").localeCompare(
-          normalizeText(right?.profile?.fullName || right?.eaglesId || ""),
+        studentDisplayName(left, { preferEnglish: true }).localeCompare(
+          studentDisplayName(right, { preferEnglish: true }),
           undefined,
           { sensitivity: "base" }
         )
@@ -5050,16 +5636,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function topSearchStudentOptionLabel(student = {}) {
-      const fullName = normalizeText(student?.profile?.fullName) || "(no name)"
-      const eaglesId = normalizeText(student?.eaglesId) || "(no id)"
-      const level = fullLevelLabel(student?.profile?.currentGrade || "") || "No level"
-      return `${fullName} (${eaglesId}) - ${level}`
+      return studentIdentityLabel(student, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
     }
 
     function topSearchStudentOptionSummary(student = {}) {
       const eaglesId = normalizeText(student?.eaglesId) || "no id"
+      const studentNumber = studentDisplayNumber(student)
       const level = shortLevelLabel(student?.profile?.currentGrade || "") || "no level"
-      return `${eaglesId} | ${level}`
+      return `${eaglesId}${studentNumber ? ` <${studentNumber}>` : ""} | ${level}`
     }
 
     function rememberTopSearchOption(map, key, value) {
@@ -5085,13 +5669,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const mapped = {
           id: normalizeText(student?.id),
           eaglesId: normalizeText(student?.eaglesId),
-          fullName: normalizeText(student?.profile?.fullName),
+          fullName: studentDisplayName(student),
+          englishName: normalizeText(student?.profile?.englishName),
+          studentNumber: studentDisplayNumber(student),
           level: resolveSystemLevelName(student?.profile?.currentGrade || ""),
           school: normalizeText(student?.profile?.schoolName),
         }
         rememberTopSearchOption(map, value, mapped)
         rememberTopSearchOption(map, mapped.eaglesId, mapped)
         rememberTopSearchOption(map, mapped.fullName, mapped)
+        rememberTopSearchOption(map, mapped.englishName, mapped)
       })
       state.topSearchOptionMap = map
     }
@@ -5108,14 +5695,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const source = allKnownStudentsForTopSearchOptions()
       const match = source.find((student) => {
         if (normalizeLower(student?.eaglesId) === key) return true
-        if (normalizeLower(student?.profile?.fullName) === key) return true
+        if (normalizeLower(studentDisplayName(student)) === key) return true
+        if (normalizeLower(student?.profile?.englishName) === key) return true
         return normalizeLower(topSearchStudentOptionLabel(student)) === key
       })
       if (!match) return null
       return {
         id: normalizeText(match?.id),
         eaglesId: normalizeText(match?.eaglesId),
-        fullName: normalizeText(match?.profile?.fullName),
+        fullName: studentDisplayName(match),
+        englishName: normalizeText(match?.profile?.englishName),
+        studentNumber: studentDisplayNumber(match),
         level: resolveSystemLevelName(match?.profile?.currentGrade || ""),
         school: normalizeText(match?.profile?.schoolName),
       }
@@ -5891,8 +6481,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
             .filter(([value]) => Boolean(value))
         ).values()
       ).sort((left, right) => {
-        const leftName = normalizeText(left?.profile?.fullName || left?.eaglesId || left?.id || "")
-        const rightName = normalizeText(right?.profile?.fullName || right?.eaglesId || right?.id || "")
+        const leftName = studentDisplayName(left, { preferEnglish: true }) || normalizeText(left?.eaglesId || left?.id || "")
+        const rightName = studentDisplayName(right, { preferEnglish: true }) || normalizeText(right?.eaglesId || right?.id || "")
         return leftName.localeCompare(rightName, undefined, { sensitivity: "base" })
       })
 
@@ -5901,9 +6491,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       students.forEach((student) => {
         const option = document.createElement("option")
         option.value = tableFilterStudentOptionValue(student)
-        const name = normalizeText(student?.profile?.fullName) || "(no name)"
-        const eaglesId = normalizeText(student?.eaglesId)
-        option.textContent = eaglesId ? `${name} (${eaglesId})` : name
+        option.textContent = studentIdentityLabel(student, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
         const optionLower = normalizeLower(option.value)
         const publicIdLower = normalizeLower(student?.eaglesId)
         if (selectedRef && (option.value === selectedRef || optionLower === selectedRefLower || publicIdLower === selectedRefLower)) {
@@ -6254,6 +6842,47 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function schoolProfileState() {
       return normalizeSchoolProfile(state.uiSettings?.schoolProfile || DEFAULT_UI_SETTINGS.schoolProfile)
+    }
+
+    function schoolBrandFallbackToken(name = "") {
+      const parts = normalizeText(name)
+        .split(/\s+/)
+        .filter(Boolean)
+      if (!parts.length) return "SIS"
+      return parts
+        .slice(0, 2)
+        .map((part) => normalizeText(part).charAt(0).toUpperCase())
+        .join("") || "SIS"
+    }
+
+    function renderSchoolBranding() {
+      const profile = schoolProfileState()
+      const schoolName = profile.schoolName || "The Eagles Club"
+      const logoDataUrl = normalizeText(profile.logoDataUrl)
+      const fallbackToken = schoolBrandFallbackToken(schoolName)
+      const schoolNameEl = document.getElementById("appSchoolName")
+      if (schoolNameEl) {
+        schoolNameEl.textContent = schoolName
+        schoolNameEl.title = schoolName
+      }
+
+      ;[
+        { imgId: "appBrandLogo", fallbackId: "appBrandLogoFallback" },
+        { imgId: "sidebarLogoImg", fallbackId: "sidebarLogoFallback" },
+      ].forEach(({ imgId, fallbackId }) => {
+        const imageEl = document.getElementById(imgId)
+        const fallbackEl = document.getElementById(fallbackId)
+        const hasLogo = Boolean(logoDataUrl)
+        if (imageEl instanceof HTMLImageElement) {
+          imageEl.classList.toggle("hidden", !hasLogo)
+          imageEl.src = hasLogo ? logoDataUrl : "data:,"
+        }
+        if (fallbackEl) {
+          fallbackEl.classList.toggle("hidden", hasLogo)
+          fallbackEl.textContent = fallbackToken
+          fallbackEl.title = schoolName
+        }
+      })
     }
 
     function normalizeUiSettings(source) {
@@ -6633,6 +7262,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           `Multi-school: ${multiSchool ? "enabled" : "disabled"} | school year: ${setup.schoolYear} ` +
           `(${setup.startDate} to ${setup.endDate}) | school: ${schoolName} | profile fields: ${profileFieldCount}`
       }
+      renderSchoolBranding()
       renderSchoolSetupPanel()
     }
 
@@ -6966,6 +7596,38 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       })
     }
 
+    function desktopMenuCollapsedPreference() {
+      try {
+        return window.localStorage.getItem(DESKTOP_MENU_COLLAPSED_STORAGE_KEY) === "1"
+      } catch (error) {
+        void error
+        return false
+      }
+    }
+
+    function persistDesktopMenuCollapsedPreference(collapsed = false) {
+      try {
+        window.localStorage.setItem(DESKTOP_MENU_COLLAPSED_STORAGE_KEY, collapsed ? "1" : "0")
+      } catch (error) {
+        void error
+      }
+    }
+
+    function applyDesktopMenuCollapsedPreference() {
+      document.body.classList.remove("menu-collapsed")
+    }
+
+    function updateMenuToggleButtonLabel() {
+      const menuToggleBtnEl = document.getElementById("menuToggleBtn")
+      const floatingMenuBtnEl = document.getElementById("floatingMenuBtn")
+      const menuOpen = document.body.classList.contains("menu-open")
+      if (menuToggleBtnEl) menuToggleBtnEl.textContent = menuOpen ? "Close Menu" : "Menu"
+      if (floatingMenuBtnEl) {
+        floatingMenuBtnEl.setAttribute("aria-expanded", menuOpen ? "true" : "false")
+        floatingMenuBtnEl.setAttribute("aria-label", menuOpen ? "Close navigation menu" : "Open navigation menu")
+      }
+    }
+
     function setActivePage(pageSlug, options = {}) {
       const { syncUrl = true, historyMode = "push" } = options
       let slug = normalizePageSlug(pageSlug)
@@ -7014,9 +7676,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         loadAdminDataRowsForTable(adminDataTableKey).catch(handleError)
       }
       updateTopSearchScopeHint()
-      if (window.matchMedia && window.matchMedia("(max-width: 1100px)").matches) {
+      if (document.body.classList.contains("menu-open")) {
         document.body.classList.remove("menu-open")
       }
+      updateMenuToggleButtonLabel()
       if (syncUrl) syncPageHistory(slug, historyMode)
     }
 
@@ -7227,10 +7890,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const profile = state.currentStudent.profile || {}
       const pieces = [
         normalizeText(state.currentStudent.eaglesId) || "(no eagles id)",
-        normalizeText(profile.fullName) || "(no name)",
+        studentDisplayName(state.currentStudent, { preferEnglish: true }),
+        studentDisplayNumber(state.currentStudent) ? `<${studentDisplayNumber(state.currentStudent)}>` : "",
         shortLevelLabel(profile.currentGrade) || "(no level)",
         normalizeText(profile.schoolName) || "(no school)",
-      ]
+      ].filter(Boolean)
       summaryEl.textContent = `Selected: ${pieces.join(" | ")}`
     }
 
@@ -7784,15 +8448,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           const studentLevel = resolveSystemLevelName(student?.profile?.currentGrade || "")
           return levelNamesMatch(studentLevel, selectedLevel)
         })
-        .sort((left, right) => normalizeText(left?.profile?.fullName).localeCompare(normalizeText(right?.profile?.fullName)))
+        .sort((left, right) => studentDisplayName(left, { preferEnglish: true }).localeCompare(studentDisplayName(right, { preferEnglish: true })))
 
       select.innerHTML = '<option value="">All students in selected level</option>'
       filtered.forEach((student) => {
         const option = document.createElement("option")
         option.value = normalizeText(student.id)
-        const name = normalizeText(student?.profile?.fullName) || "(no name)"
-        const sid = normalizeText(student?.eaglesId) || "(no id)"
-        option.textContent = `${name} (${sid})`
+        option.textContent = studentIdentityLabel(student, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
         if (option.value === selectedStudentId) option.selected = true
         select.appendChild(option)
       })
@@ -8043,7 +8705,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const templateStudentKey = normalizeLower(template?.eaglesId)
         const matchedStudent = studentByOptionValue.get(templateStudentKey) || studentByPublicId.get(templateStudentKey)
         const studentLabel = matchedStudent
-          ? `${normalizeText(matchedStudent?.profile?.fullName) || "(no name)"} (${normalizeText(matchedStudent?.eaglesId) || "no id"})`
+          ? studentIdentityLabel(matchedStudent, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
           : normalizeText(template?.eaglesId) || "All students in level"
         const tr = document.createElement("tr")
         tr.innerHTML = `
@@ -9603,6 +10265,76 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         normalizeText(message) || "Weekend batch windows: Sat/Sun at 12:00, 15:30, 18:00, 20:15."
     }
 
+    function parentTrackingRecommendationTextareas() {
+      return Array.from(document.querySelectorAll('textarea[name^="pt_rec_"]'))
+    }
+
+    function parentTrackingRecommendationFieldByName(fieldName = "") {
+      const normalizedFieldName = normalizeText(fieldName)
+      if (!normalizedFieldName) return null
+      return (
+        parentTrackingRecommendationTextareas().find((entry) => normalizeText(entry?.name) === normalizedFieldName) || null
+      )
+    }
+
+    function setParentTrackingActionHelperStatus(message = "", isError = false) {
+      const helperEl = document.getElementById("pt_actionHelperStatus")
+      if (!helperEl) return
+      helperEl.style.color = isError ? "#b3262d" : "var(--ink-muted)"
+      helperEl.textContent =
+        normalizeText(message) ||
+        "Focus any corrective-action textarea in Skills/Conduct, then insert shorthand. Free text remains fully editable."
+    }
+
+    function rememberParentTrackingRecommendationFocus(fieldName = "") {
+      const normalizedFieldName = normalizeText(fieldName)
+      if (!normalizedFieldName) return
+      state.parentTracking.activeRecommendationFieldName = normalizedFieldName
+      setParentTrackingActionHelperStatus(`Focused action field: ${normalizedFieldName}`)
+    }
+
+    function focusedParentTrackingRecommendationField() {
+      const activeElement = document.activeElement
+      if (activeElement instanceof HTMLTextAreaElement && normalizeText(activeElement.name).startsWith("pt_rec_")) {
+        rememberParentTrackingRecommendationFocus(activeElement.name)
+        return activeElement
+      }
+      return parentTrackingRecommendationFieldByName(state.parentTracking.activeRecommendationFieldName)
+    }
+
+    function clearParentTrackingActionShortcutInputs({ preserveStatus = false } = {}) {
+      const shorthandEl = document.getElementById("pt_actionShorthand")
+      const additionEl = document.getElementById("pt_actionAddition")
+      if (shorthandEl) shorthandEl.value = ""
+      if (additionEl) additionEl.value = ""
+      if (!preserveStatus) setParentTrackingActionHelperStatus("")
+    }
+
+    function insertParentTrackingActionShortcut() {
+      const targetTextarea = focusedParentTrackingRecommendationField()
+      if (!targetTextarea) {
+        setParentTrackingActionHelperStatus("Select a corrective-action textarea first.", true)
+        return
+      }
+      const shorthand = normalizeText(document.getElementById("pt_actionShorthand")?.value)
+      const addition = normalizeText(document.getElementById("pt_actionAddition")?.value)
+      if (!shorthand && !addition) {
+        setParentTrackingActionHelperStatus("Choose a shorthand template and/or free-text addition first.", true)
+        return
+      }
+
+      const nextLine = [shorthand, addition].filter(Boolean).join(" ")
+      const current = normalizeText(targetTextarea.value)
+      targetTextarea.value = current ? `${current}\n${nextLine}` : nextLine
+      targetTextarea.dispatchEvent(new Event("input", { bubbles: true }))
+
+      const additionEl = document.getElementById("pt_actionAddition")
+      if (additionEl) additionEl.value = ""
+      rememberParentTrackingRecommendationFocus(targetTextarea.name)
+      setParentTrackingActionHelperStatus(`Inserted shorthand into: ${normalizeText(targetTextarea.name)}`)
+      targetTextarea.focus()
+    }
+
     function parentTrackingStudentSource() {
       return studentSourceForPage("parent-tracking")
     }
@@ -9713,8 +10445,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         })
         .slice()
       rows.sort((left, right) =>
-        normalizeText(left?.profile?.fullName || left?.eaglesId || "").localeCompare(
-          normalizeText(right?.profile?.fullName || right?.eaglesId || "")
+        studentDisplayName(left, { preferEnglish: true }).localeCompare(
+          studentDisplayName(right, { preferEnglish: true })
         )
       )
       return rows
@@ -9809,6 +10541,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return (score / maxScore) * 100
     }
 
+    function gradeRecordAcademicScore(record) {
+      const score = Number.parseFloat(String(record?.score))
+      if (Number.isFinite(score)) return score
+      return gradeRecordAcademicPercent(record)
+    }
+
     function levelMatchesGradeRecord(record, selectedLevel) {
       const targetLevel = resolveSystemLevelName(selectedLevel || "")
       if (!targetLevel) return true
@@ -9821,24 +10559,73 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return false
     }
 
+    function quarterKey(value = "") {
+      const normalized = normalizeLower(value)
+      if (["q1", "q2", "q3", "q4"].includes(normalized)) return normalized
+      return ""
+    }
+
+    function quarterKeyForGradeRecord(record = {}, fallbackDate = "") {
+      const explicitQuarter = quarterKey(record?.quarter)
+      if (explicitQuarter) return explicitQuarter
+      const dateCandidates = [
+        record?.dueAt,
+        record?.submittedAt,
+        record?.assignedAt,
+        record?.attendanceDate,
+        record?.classDate,
+        record?.createdAt,
+        fallbackDate,
+      ]
+      for (let index = 0; index < dateCandidates.length; index += 1) {
+        const parsed = parseDateTime(dateCandidates[index]) || parseIsoDateLocal(normalizeText(dateCandidates[index]))
+        if (!parsed) continue
+        const isoDate = localIsoDate(parsed)
+        const derivedQuarter = quarterKey(quarterFromIsoDate(isoDate))
+        if (derivedQuarter) return derivedQuarter
+      }
+      return ""
+    }
+
+    function gradeRecordMatchesQuarter(record = {}, targetQuarter = "", fallbackDate = "") {
+      const normalizedQuarter = quarterKey(targetQuarter)
+      if (!normalizedQuarter) return true
+      return quarterKeyForGradeRecord(record, fallbackDate) === normalizedQuarter
+    }
+
+    function isTrackedHomeworkRecord(record = {}) {
+      return (
+        typeof record?.homeworkCompleted === "boolean" ||
+        typeof record?.homeworkOnTime === "boolean" ||
+        Boolean(parseDateTime(record?.dueAt)) ||
+        Boolean(parseDateTime(record?.submittedAt))
+      )
+    }
+
     function parentTrackingRecipientsForStudent(student) {
       return assignmentRecipientsForStudent(student)
     }
 
     function parentTrackingMetricsForStudent(student, selectedLevel, classDate) {
       const gradeRows = Array.isArray(student?.gradeRecords) ? student.gradeRecords : []
-      const records = gradeRows.filter((entry) => levelMatchesGradeRecord(entry, selectedLevel))
+      const currentQuarter = quarterKey(quarterFromIsoDate(classDate))
+      const records = gradeRows.filter(
+        (entry) =>
+          levelMatchesGradeRecord(entry, selectedLevel) &&
+          gradeRecordMatchesQuarter(entry, currentQuarter, classDate)
+      )
       const asOf = parseIsoDateLocal(classDate) || new Date()
       const asOfEnd = new Date(asOf.getFullYear(), asOf.getMonth(), asOf.getDate(), 23, 59, 59, 999)
+      const trackedHomeworkRecords = records.filter((entry) => isTrackedHomeworkRecord(entry))
 
-      const completedCount = records.filter((entry) => isGradeRecordCompleted(entry)).length
-      const onTimeCount = records.filter((entry) => isGradeRecordOnTime(entry)).length
-      const academicValues = records.map((entry) => gradeRecordAcademicPercent(entry)).filter((entry) => entry !== null)
+      const completedCount = trackedHomeworkRecords.filter((entry) => isGradeRecordCompleted(entry)).length
+      const onTimeCount = trackedHomeworkRecords.filter((entry) => isGradeRecordOnTime(entry)).length
+      const academicValues = records.map((entry) => gradeRecordAcademicScore(entry)).filter((entry) => entry !== null)
       const behaviorScore = toAverage(records.map((entry) => entry?.behaviorScore))
-      const participationScore = toAverage(records.map((entry) => entry?.participationScore))
+      const skillsScore = toAverage(records.map((entry) => entry?.participationScore))
       const fallbackAcademic = toAverage(records.map((entry) => entry?.inClassScore))
       const academicScore = toAverage(academicValues) ?? fallbackAcademic
-      const outstanding = records
+      const outstanding = trackedHomeworkRecords
         .filter((entry) => isGradeRecordOutstanding(entry, asOfEnd))
         .slice()
         .sort((left, right) => {
@@ -9850,10 +10637,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       return {
         behaviorScore: roundTo2(behaviorScore),
-        participationScore: roundTo2(participationScore),
+        skillsScore: roundTo2(skillsScore),
+        participationScore: roundTo2(skillsScore),
         academicScore: roundTo2(academicScore),
-        homeworkOnTimeRate: roundTo2(percentValue(onTimeCount, records.length)) || 0,
-        homeworkCompletionRate: roundTo2(percentValue(completedCount, records.length)) || 0,
+        homeworkOnTimeRate: roundTo2(percentValue(onTimeCount, trackedHomeworkRecords.length)) || 0,
+        homeworkCompletionRate: roundTo2(percentValue(completedCount, trackedHomeworkRecords.length)) || 0,
         records,
         outstanding,
       }
@@ -9872,6 +10660,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       parentTrackingFieldSetValue("pt_homeworkOnTimeRate", "")
       parentTrackingFieldSetValue("pt_homeworkCompletionRate", "")
       parentTrackingFieldSetValue("pt_recipients", "")
+      parentTrackingFieldSetValue("pt_homeworkAnnouncement", "")
       const rowsEl = document.getElementById("pt_outstandingRows")
       if (rowsEl) rowsEl.innerHTML = '<tr><td colspan="4">Select a student to load assignment status.</td></tr>'
       clearParentTrackingDetailPanel()
@@ -9879,10 +10668,30 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function renderParentTrackingMetrics(metrics = {}) {
       parentTrackingFieldSetValue("pt_behaviorScore", metrics.behaviorScore ?? "")
-      parentTrackingFieldSetValue("pt_participationScore", metrics.participationScore ?? "")
+      parentTrackingFieldSetValue("pt_participationScore", metrics.skillsScore ?? metrics.participationScore ?? "")
       parentTrackingFieldSetValue("pt_academicScore", metrics.academicScore ?? "")
       parentTrackingFieldSetValue("pt_homeworkOnTimeRate", metrics.homeworkOnTimeRate ?? 0)
       parentTrackingFieldSetValue("pt_homeworkCompletionRate", metrics.homeworkCompletionRate ?? 0)
+    }
+
+    function renderParentTrackingHomeworkAnnouncement(student = null, metrics = {}) {
+      const targetEl = document.getElementById("pt_homeworkAnnouncement")
+      if (!targetEl) return
+      const studentRefId = normalizeText(student?.id)
+      if (!studentRefId) {
+        targetEl.value = ""
+        return
+      }
+      const outstanding = Array.isArray(metrics?.outstanding) ? metrics.outstanding : []
+      if (!outstanding.length) {
+        targetEl.value = "No overdue homework items for selected class date."
+        return
+      }
+      const firstRow = outstanding[0]
+      const assignment = normalizeText(firstRow?.assignmentName) || "Homework item"
+      const due = normalizeText(firstRow?.dueAt).slice(0, 10)
+      const deepLink = parentTrackingDeepLinkAbsolute(studentRefId, normalizeText(firstRow?.id))
+      targetEl.value = `${assignment}${due ? ` | due ${due}` : ""}${deepLink ? ` | ${deepLink}` : ""}`
     }
 
     function showParentTrackingAssignmentDetail(record = {}, student = null) {
@@ -9896,7 +10705,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const submittedAt = normalizeText(record.submittedAt).slice(0, 10)
       const completionState = isGradeRecordCompleted(record) ? "Completed" : "Uncompleted"
       const onTimeState = isGradeRecordOnTime(record) ? "On Time" : "Late / Pending"
-      const studentName = normalizeText(student?.profile?.fullName || student?.eaglesId || "")
+      const studentName = studentIdentityLabel(student, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
       const deepLink = parentTrackingDeepLinkAbsolute(student?.id, record?.id)
 
       titleEl.textContent = `Assignment Details: ${assignmentName}`
@@ -9911,7 +10720,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         `Timeliness: ${onTimeState}`,
         `Score: ${record.score ?? "-"}/${record.maxScore ?? "-"}`,
         `Behavior: ${record.behaviorScore ?? "-"}`,
-        `Participation: ${record.participationScore ?? "-"}`,
+        `Skills: ${record.participationScore ?? "-"}`,
         `Academic/In Class: ${record.inClassScore ?? "-"}`,
         `Comments: ${normalizeText(record.comments) || "-"}`,
         `Dynamic Link: ${deepLink}`,
@@ -10060,7 +10869,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       students.forEach((student) => {
         const option = document.createElement("option")
         option.value = student.id
-        option.textContent = `${student.profile?.fullName || "(no name)"}${student.eaglesId ? ` (${student.eaglesId})` : ""}`
+        option.textContent = studentIdentityLabel(student, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
         if (normalizeText(student.id) === targetId) option.selected = true
         selectEl.appendChild(option)
       })
@@ -10226,6 +11035,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const recipients = parentTrackingRecipientsForStudent(detail)
       parentTrackingFieldSetValue("pt_recipients", recipients.join(", "))
       renderParentTrackingOutstandingRows(metrics.outstanding, detail)
+      renderParentTrackingHomeworkAnnouncement(detail, metrics)
       renderParentTrackingReportRows(parentTrackingReportRowsForStudent(detail, selectedLevel))
       setParentTrackingStatus(
         `${detail?.profile?.fullName || detail?.eaglesId || "Student"} | records=${metrics.records.length} | outstanding=${metrics.outstanding.length}`
@@ -10382,7 +11192,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       const metricLines = [
         `Behavior: ${normalizeText(document.getElementById("pt_behaviorScore")?.value) || "-"}`,
-        `Participation: ${normalizeText(document.getElementById("pt_participationScore")?.value) || "-"}`,
+        `Skills: ${normalizeText(document.getElementById("pt_participationScore")?.value) || "-"}`,
         `Academic: ${normalizeText(document.getElementById("pt_academicScore")?.value) || "-"}`,
         `Homework Timeliness %: ${normalizeText(document.getElementById("pt_homeworkOnTimeRate")?.value) || "0"}`,
         `Assignment Completion %: ${normalizeText(document.getElementById("pt_homeworkCompletionRate")?.value) || "0"}`,
@@ -10442,6 +11252,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(localIsoDate()))
       parentTrackingFieldSetValue("pt_lessonSummary", "")
       parentTrackingFieldSetValue("pt_comments", "")
+      state.parentTracking.activeRecommendationFieldName = ""
+      clearParentTrackingActionShortcutInputs({ preserveStatus: true })
+      setParentTrackingActionHelperStatus("")
       clearParentTrackingComputedFields()
       applyParentTrackingLessonSummaryFromMemory({ force: true })
       setParentTrackingStatus("Performance tracking form cleared.")
@@ -10481,6 +11294,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const profile = student?.profile || {}
       return [
         student?.eaglesId,
+        student?.studentNumber,
         student?.email,
         profile?.studentEmail,
         profile?.fullName,
@@ -10495,6 +11309,31 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         .join(" ")
     }
 
+    function studentDisplayName(student = {}, { preferEnglish = false } = {}) {
+      const profile = student?.profile || {}
+      const fullName = normalizeText(profile?.fullName || student?.fullName)
+      const englishName = normalizeText(profile?.englishName || student?.englishName)
+      if (preferEnglish) return englishName || fullName || "(no name)"
+      return fullName || englishName || "(no name)"
+    }
+
+    function studentDisplayNumber(student = {}) {
+      const direct = parsePositiveInteger(student?.studentNumber)
+      if (direct) return String(direct)
+      const fromProfile = parsePositiveInteger(student?.profile?.studentNumber)
+      if (fromProfile) return String(fromProfile)
+      return ""
+    }
+
+    function studentIdentityLabel(student = {}, { preferEnglish = false, wrapName = false, includeStudentNumber = false } = {}) {
+      const name = studentDisplayName(student, { preferEnglish })
+      const eaglesId = normalizeText(student?.eaglesId) || "(no id)"
+      const studentNumber = studentDisplayNumber(student)
+      const nameToken = wrapName ? `(${name})` : name
+      const studentNumberToken = includeStudentNumber && studentNumber ? ` <${studentNumber}>` : ""
+      return `${nameToken} ${eaglesId}${studentNumberToken}`.trim()
+    }
+
     function openStudentFromTopSearchResults(studentRefId = "") {
       const id = normalizeText(studentRefId)
       if (!id) return
@@ -10506,26 +11345,127 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         .catch(handleError)
     }
 
+    function normalizedTopSearchSortField(field = "") {
+      const normalized = normalizeText(field)
+      if (normalized === "eaglesId" || normalized === "name" || normalized === "level") return normalized
+      return "name"
+    }
+
+    function normalizedTopSearchSortDir(value = "") {
+      return normalizeLower(value) === "desc" ? "desc" : "asc"
+    }
+
+    function topSearchRowsSorted(rows = []) {
+      const source = Array.isArray(rows) ? rows : []
+      const field = normalizedTopSearchSortField(state.topSearch?.sortField)
+      const direction = normalizedTopSearchSortDir(state.topSearch?.sortDir)
+      const sorted = [...source].sort((left, right) => {
+        const leftName = studentDisplayName(left, { preferEnglish: true })
+        const rightName = studentDisplayName(right, { preferEnglish: true })
+        const leftId = normalizeText(left?.eaglesId || "")
+        const rightId = normalizeText(right?.eaglesId || "")
+        const leftLevel = normalizeText(left?.profile?.currentGrade || "")
+        const rightLevel = normalizeText(right?.profile?.currentGrade || "")
+        let comparison = 0
+
+        if (field === "eaglesId") {
+          comparison = compareTableText(leftId, rightId)
+          if (comparison === 0) comparison = compareTableText(leftName, rightName)
+          if (comparison === 0) comparison = compareLevelLabels(leftLevel, rightLevel)
+        } else if (field === "level") {
+          comparison = compareLevelLabels(leftLevel, rightLevel)
+          if (comparison === 0) comparison = compareTableText(leftName, rightName)
+          if (comparison === 0) comparison = compareTableText(leftId, rightId)
+        } else {
+          comparison = compareTableText(leftName, rightName)
+          if (comparison === 0) comparison = compareTableText(leftId, rightId)
+          if (comparison === 0) comparison = compareLevelLabels(leftLevel, rightLevel)
+        }
+
+        return direction === "desc" ? -comparison : comparison
+      })
+      return sorted
+    }
+
+    function updateTopSearchSortIndicators() {
+      const activeField = normalizedTopSearchSortField(state.topSearch?.sortField)
+      const ascending = normalizedTopSearchSortDir(state.topSearch?.sortDir) === "asc"
+      document.querySelectorAll("#topSearchResultsPanel th[data-top-search-sort]").forEach((thEl) => {
+        const field = normalizedTopSearchSortField(thEl.getAttribute("data-top-search-sort"))
+        const active = field === activeField
+        thEl.classList.toggle("sort-active-asc", active && ascending)
+        thEl.classList.toggle("sort-active-desc", active && !ascending)
+        thEl.setAttribute("aria-sort", active ? (ascending ? "ascending" : "descending") : "none")
+      })
+    }
+
+    function setTopSearchSort(field, { toggleIfSame = true } = {}) {
+      const nextField = normalizedTopSearchSortField(field)
+      const currentField = normalizedTopSearchSortField(state.topSearch?.sortField)
+      const currentDir = normalizedTopSearchSortDir(state.topSearch?.sortDir)
+      const sameField = nextField === currentField
+      state.topSearch.sortField = nextField
+      state.topSearch.sortDir = sameField && toggleIfSame ? (currentDir === "asc" ? "desc" : "asc") : "asc"
+      renderTopSearchResults(state.topSearch?.rows || [])
+    }
+
+    function toggleTopSearchExpanded() {
+      state.topSearch.expanded = !Boolean(state.topSearch?.expanded)
+      renderTopSearchResults(state.topSearch?.rows || [])
+    }
+
+    function bindTopSearchControls() {
+      document.querySelectorAll("#topSearchResultsPanel th[data-top-search-sort]").forEach((thEl) => {
+        if (thEl.dataset.topSearchSortBound === "1") return
+        thEl.dataset.topSearchSortBound = "1"
+        const onSort = () => setTopSearchSort(thEl.getAttribute("data-top-search-sort"), { toggleIfSame: true })
+        thEl.addEventListener("click", onSort)
+        thEl.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return
+          event.preventDefault()
+          onSort()
+        })
+      })
+      const expandBtn = document.getElementById("topSearchExpandBtn")
+      if (expandBtn && expandBtn.dataset.bound !== "1") {
+        expandBtn.dataset.bound = "1"
+        expandBtn.addEventListener("click", () => toggleTopSearchExpanded())
+      }
+      updateTopSearchSortIndicators()
+    }
+
     function renderTopSearchResults(students = []) {
       const tbody = document.getElementById("topSearchRows")
       const countEl = document.getElementById("topSearchCount")
+      const expandBtn = document.getElementById("topSearchExpandBtn")
+      const boxEl = document.querySelector("#topSearchResultsPanel .top-search-results-box")
       if (!tbody || !countEl) return
       const rows = Array.isArray(students) ? students : []
+      state.topSearch.rows = rows
       tbody.innerHTML = ""
+      if (expandBtn) expandBtn.classList.add("hidden")
+      if (boxEl) boxEl.classList.remove("expanded")
       if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="4">No students match current top search scope.</td></tr>'
         countEl.textContent = "0 results"
+        state.topSearch.expanded = false
+        updateTopSearchSortIndicators()
         return
       }
 
-      const maxRows = 12
-      rows.slice(0, maxRows).forEach((student) => {
+      const collapsedRows = Math.max(1, Number.parseInt(String(state.topSearch?.collapsedRows || 12), 10) || 12)
+      const sortedRows = topSearchRowsSorted(rows)
+      if (rows.length <= collapsedRows) state.topSearch.expanded = false
+      const showAll = Boolean(state.topSearch?.expanded)
+      const visibleRows = showAll ? sortedRows : sortedRows.slice(0, collapsedRows)
+
+      visibleRows.forEach((student) => {
         const tr = document.createElement("tr")
         tr.className = "top-search-row"
         if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
         tr.innerHTML = `
           <td>${student.eaglesId || ""}</td>
-          <td>${student.profile?.fullName || ""}</td>
+          <td>${studentDisplayName(student, { preferEnglish: true })}</td>
           <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
           <td><button type="button" class="btn-edit top-search-open-btn">Open Profile</button></td>
         `
@@ -10538,11 +11478,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.appendChild(tr)
       })
 
-      if (rows.length > maxRows) {
-        countEl.textContent = `${rows.length} results (showing first ${maxRows})`
-      } else {
-        countEl.textContent = `${rows.length} results`
+      if (rows.length > collapsedRows && expandBtn) {
+        expandBtn.classList.remove("hidden")
+        expandBtn.textContent = showAll ? "Show Less" : `Show All (${rows.length})`
       }
+      if (showAll && boxEl) boxEl.classList.add("expanded")
+      countEl.textContent = showAll || rows.length <= collapsedRows ? `${rows.length} results` : `${rows.length} results (showing ${visibleRows.length})`
+      updateTopSearchSortIndicators()
     }
 
     function renderStudents() {
@@ -10560,7 +11502,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
         tr.innerHTML = `
           <td>${student.eaglesId || ""}</td>
-          <td>${student.profile?.fullName || ""}</td>
+          <td>${studentDisplayName(student)}</td>
           <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
           <td class="school-col-cell">${student.profile?.schoolName || ""}</td>
         `
@@ -10569,6 +11511,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       })
 
       document.getElementById("studentCount").textContent = `${visibleStudents.length} students`
+      state.topSearch.rows = visibleStudents
       renderTopSearchResults(visibleStudents)
       applyUiSettings()
       refreshAssignmentStudentOptions()
@@ -11696,7 +12639,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return attendanceStudentSource()
         .filter((student) => levelNamesMatch(student?.profile?.currentGrade || "", selectedLevel))
         .sort((left, right) =>
-          normalizeText(left?.profile?.fullName || "").localeCompare(normalizeText(right?.profile?.fullName || ""))
+          studentDisplayName(left, { preferEnglish: true }).localeCompare(studentDisplayName(right, { preferEnglish: true }))
         )
     }
 
@@ -11939,7 +12882,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const tr = document.createElement("tr")
         tr.innerHTML = `
           <td>
-            <div class="attendance-row-name">${escapeHtml(student?.profile?.fullName || "(no name)")}</div>
+            <div class="attendance-row-name">${escapeHtml(studentDisplayName(student, { preferEnglish: true }))}</div>
             <div class="attendance-row-id">${escapeHtml(student?.eaglesId || "")}</div>
           </td>
           <td>
@@ -12011,7 +12954,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const tr = document.createElement("tr")
         tr.innerHTML = `
           <td>
-            <div class="attendance-row-name">${escapeHtml(student?.profile?.fullName || "(no name)")}</div>
+            <div class="attendance-row-name">${escapeHtml(studentDisplayName(student, { preferEnglish: true }))}</div>
             <div class="attendance-row-id">${escapeHtml(student?.eaglesId || "")}</div>
           </td>
           <td class="attendance-cell-num">${stats.present}</td>
@@ -12731,25 +13674,37 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     })
 
     const menuToggleBtnEl = document.getElementById("menuToggleBtn")
-    menuToggleBtnEl?.addEventListener("click", () => {
+    const floatingMenuBtnEl = document.getElementById("floatingMenuBtn")
+    const menuBackdropEl = document.getElementById("menuBackdrop")
+    applyDesktopMenuCollapsedPreference()
+    document.body.classList.remove("menu-open")
+    updateMenuToggleButtonLabel()
+    const toggleNavigationMenu = () => {
       document.body.classList.toggle("menu-open")
+      updateMenuToggleButtonLabel()
+    }
+    menuToggleBtnEl?.addEventListener("click", toggleNavigationMenu)
+    floatingMenuBtnEl?.addEventListener("click", toggleNavigationMenu)
+    menuBackdropEl?.addEventListener("click", () => {
+      document.body.classList.remove("menu-open")
+      updateMenuToggleButtonLabel()
     })
 
     document.addEventListener("click", (event) => {
-      if (window.innerWidth > 1100) return
       if (!document.body.classList.contains("menu-open")) return
       const sidebarEl = document.querySelector(".app-sidebar")
       const target = event.target
       if (!(target instanceof Element)) return
       if (sidebarEl?.contains(target)) return
       if (menuToggleBtnEl?.contains(target)) return
+      if (floatingMenuBtnEl?.contains(target)) return
       document.body.classList.remove("menu-open")
+      updateMenuToggleButtonLabel()
     })
 
     window.addEventListener("resize", () => {
-      if (window.innerWidth > 1100) {
-        document.body.classList.remove("menu-open")
-      }
+      applyDesktopMenuCollapsedPreference()
+      updateMenuToggleButtonLabel()
     })
 
     window.addEventListener("popstate", () => {
@@ -13107,6 +14062,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     document.getElementById("pt_lessonSummary").addEventListener("input", () => {
       rememberParentTrackingLessonSummary()
     })
+    document.querySelector('.page-section[data-page="parent-tracking"]')?.addEventListener("focusin", (event) => {
+      const target = event?.target
+      if (!(target instanceof HTMLTextAreaElement)) return
+      if (!normalizeText(target.name).startsWith("pt_rec_")) return
+      rememberParentTrackingRecommendationFocus(target.name)
+    })
+    document.getElementById("pt_actionInsertBtn")?.addEventListener("click", () => insertParentTrackingActionShortcut())
+    document.getElementById("pt_actionClearBtn")?.addEventListener("click", () => clearParentTrackingActionShortcutInputs())
     document.getElementById("pt_saveBtn").addEventListener("click", () => saveParentTrackingReport().catch(handleError))
     document.getElementById("pt_queueSendBtn").addEventListener("click", () => queueParentTrackingEmail().catch(handleError))
     document.getElementById("pt_clearBtn").addEventListener("click", () => {
@@ -13357,6 +14320,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     state.rolePermissions = normalizeRolePermissionsMap(defaultRolePermissionsConfig())
     state.authRolePolicy = getCurrentRolePolicy()
     bindColumnSortHeaderEvents()
+    bindTopSearchControls()
     updateTableSortButtonLabels()
     updateTableHeaderSortIndicators()
     renderPermissionsEditor()

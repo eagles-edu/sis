@@ -7,8 +7,94 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-06 - progress report layout + collapsible left menu)
+
+- Replaced the `parent-tracking` input panel in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) with a workbook-shaped progress report form:
+  - widened the form to span both large-viewport columns.
+  - added a two-column report body that stacks on small viewports.
+  - preserved all existing `pt_*` contract ids used by save/queue/report flows.
+  - added `pt_homeworkAnnouncement` as an auto-filled read-only assignment summary line.
+- Added desktop + mobile left-menu collapsing in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - menu toggle moved to the persistent page header.
+  - desktop mode toggles `menu-collapsed` and persists state in `localStorage`.
+  - mobile mode keeps existing `menu-open` overlay behavior.
+- Added regression coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - `desktop menu toggle collapses and restores left navigation`.
+- Current test status:
+  - `node --test test/student-admin-ui.spec.mjs` => `34` pass, `0` fail.
+  - `npm test` => `137` pass, `0` fail.
+- Coverage gaps and prioritized next actions:
+  - progress-rubric table rows are currently UI-only and not persisted.
+  - TODO: auto-render parent-facing Vietnamese summary from rubric rows + score bands (currently manual VI entry in `pt_comments`).
+  - next priority: introduce dedicated `StudentAssignments` persistence + migration and wire rubric/homework rows into API/UI payload contracts.
+
+## Update (2026-03-06 - operations hardening)
+
+- Added backup-first import runbook script [tools/import-students-safe.sh](tools/import-students-safe.sh):
+  - enforces strict preflight validation before write.
+  - write path requires explicit `--yes`.
+  - backup is executed before import write.
+- Added smart DB backup wrapper [tools/db-backup-smart.sh](tools/db-backup-smart.sh):
+  - prefers native `pg_dump`/`pg_restore` workflow via existing Node backup utility.
+  - falls back to dockerized `pg_dump`/`pg_restore` using running `sis-postgres` when host binaries are unavailable.
+- Added full-system snapshot backup script [tools/sis-full-backup-snapshot.sh](tools/sis-full-backup-snapshot.sh):
+  - snapshots runtime files and DB dump into a timestamped folder.
+  - writes snapshot manifest + restore notes.
+- Added full-system restore script [tools/sis-full-restore-snapshot.sh](tools/sis-full-restore-snapshot.sh):
+  - restores snapshot app files and DB dump with explicit `--yes` confirmation.
+  - supports docker fallback restore when host `pg_restore` is unavailable.
+- Added deploy wrappers earlier in this session:
+  - [tools/deploy-ui-safe.sh](tools/deploy-ui-safe.sh)
+  - [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh)
+  - [tools/deploy-db-fields-safe.sh](tools/deploy-db-fields-safe.sh)
+- Rewrote [README.md](README.md) into full GitHub-style operations documentation with:
+  - role runbooks (teacher/admin tracking operations),
+  - feature matrix and admin handbook,
+  - CI/CD and maintenance policy,
+  - safe edit/deploy workflows,
+  - backup and disaster-recovery runbooks.
+- Verification executed:
+  - syntax checks for new/updated shell scripts (`bash -n`) passed.
+  - `tools/deploy-db-fields-safe.sh --check-only` passed.
+  - `tools/db-backup-smart.sh` succeeded via docker fallback.
+  - `tools/sis-full-backup-snapshot.sh --no-archive` succeeded.
+  - `tools/import-students-safe.sh --check-only` correctly halted on duplicate `eaglesId` preflight errors with no write.
+
+## Update (2026-03-06)
+
+- Refined admin navigation and top branding in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added a compact page brand strip with school name at top of app pages, clamped for small screens.
+  - added sidebar logo placement between `Navigation` title and the expandable-menu helper text.
+  - normalized top-level menu visual hierarchy so `DASHBOARD`, `STUDENTS`, `TRACKING`, `SUPPORT`, and `ADMINISTRATION` share uppercase sizing.
+- Improved top live student result UX in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added sortable headers for `Eagles ID`, `Name`, and `Level`.
+  - retained compact default panel height and added `Show All` / `Show Less` toggle for full result expansion.
+  - removed dot-prefix decoration from level chip labels.
+- Standardized UI corner rounding in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - introduced proportional radius tokens anchored at `3.667px` (`--radius-base`, `--radius-1`, `--radius-2`, `--radius-3`, `--radius-pill`).
+  - remapped hardcoded `border-radius` values (`3/6/7/8/10/999`) to the shared token scale for visual consistency.
+- Improved student identity labels for missing-name cases in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added shared display helpers so student labels fall back to `englishName` when `fullName` is blank.
+  - top search/selector labels now include `studentNumber` with format like `(Anna 2) anna002 <222>` instead of `(no name)`.
+- Added regression coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - `top search option uses englishName and studentNumber when fullName is missing`.
+- Added regression coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - `top search results support show-all expansion and sortable headers`.
+- Current test status:
+  - `npm test` => `135` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `33` pass, `0` fail.
+
 ## Update (2026-03-05)
 
+- Import integrity hardening (anti-corruption guardrails):
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs) now validates import identity rows before write using `validateImportRowsForIdentity(...)`.
+  - strict import identity mode is now enabled by default via `STUDENT_IMPORT_REQUIRE_EXPLICIT_IDENTITY` (default `true`), requiring explicit `eaglesId` and `studentNumber` values per row.
+  - import preflight now rejects duplicate identity keys in the upload and identity collisions with existing database rows before any write occurs.
+  - import persistence now runs inside a single transaction (all-or-nothing) and returns `committed: false` when an import fails.
+  - compatibility mode remains available by setting `STUDENT_IMPORT_REQUIRE_EXPLICIT_IDENTITY=false`, preserving prior autofill behavior.
+- Added import-validation unit coverage in [test/student-admin-import-validation.spec.mjs](test/student-admin-import-validation.spec.mjs) for strict rejection paths and compatibility-mode autofill behavior.
+- Current test status:
+  - `npm test` => `133` pass, `0` fail.
 - Dependency security remediation (audit-focused):
   - removed unused vulnerable dev tooling from [package.json](package.json): `critical`, `lighthouse`.
   - upgraded direct runtime/security-sensitive deps:

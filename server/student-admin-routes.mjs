@@ -655,6 +655,123 @@ function detectSpreadsheetFormat(fileName, explicitFormat) {
   return "csv"
 }
 
+const STUDENT_IMPORT_ROW_SIGNAL_KEYS = [
+  "studentNumber",
+  "eaglesId",
+  "fullNameStudent",
+  "fullName",
+  "englishName",
+  "password",
+  "parentsId",
+  "classLevel",
+  "studentPhone",
+  "studentEmail",
+]
+
+function hasOwnPropertySafe(target, key) {
+  return Object.prototype.hasOwnProperty.call(target || {}, key)
+}
+
+function isLikelyStudentImportRow(row = {}) {
+  const signalKeysPresent = STUDENT_IMPORT_ROW_SIGNAL_KEYS.some((key) => hasOwnPropertySafe(row, key))
+  if (signalKeysPresent) {
+    return STUDENT_IMPORT_ROW_SIGNAL_KEYS.some((key) => normalizeText(row?.[key]))
+  }
+  return Object.values(row || {}).some((value) => normalizeText(value))
+}
+
+function normalizeWorkbookRows(rows = []) {
+  if (!Array.isArray(rows)) return []
+  return rows
+    .map((row) => (row && typeof row === "object" ? row : {}))
+    .filter((row) => isLikelyStudentImportRow(row))
+}
+
+function countRowsWithFieldValue(rows = [], fieldName = "") {
+  const key = normalizeText(fieldName)
+  if (!key || !Array.isArray(rows)) return 0
+  return rows.reduce((count, row) => {
+    const value = normalizeText(row?.[key])
+    return value ? count + 1 : count
+  }, 0)
+}
+
+function countRowsWithIdentityPair(rows = []) {
+  if (!Array.isArray(rows)) return 0
+  return rows.reduce((count, row) => {
+    const studentNumber = normalizeText(row?.studentNumber)
+    const eaglesId = normalizeText(row?.eaglesId)
+    return studentNumber && eaglesId ? count + 1 : count
+  }, 0)
+}
+
+function resolvePreferredWorkbookSheetName(workbook, preferredSheetName = "") {
+  const sheetNames = Array.isArray(workbook?.SheetNames) ? workbook.SheetNames : []
+  if (!sheetNames.length) return ""
+
+  const preferred = normalizeText(preferredSheetName)
+  if (!preferred) return ""
+
+  const exactMatch = sheetNames.find((entry) => normalizeText(entry) === preferred)
+  if (exactMatch) return exactMatch
+
+  const loweredPreferred = normalizeLower(preferred)
+  return (
+    sheetNames.find((entry) => normalizeLower(entry) === loweredPreferred)
+    || ""
+  )
+}
+
+function chooseWorkbookDataSheet(workbook, preferredSheetName = "") {
+  const sheetNames = Array.isArray(workbook?.SheetNames) ? workbook.SheetNames : []
+  if (!sheetNames.length) return { sheetName: "", rows: [] }
+
+  const preferred = resolvePreferredWorkbookSheetName(workbook, preferredSheetName)
+  if (preferred) {
+    const sheet = workbook.Sheets[preferred]
+    const rows = normalizeWorkbookRows(XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false }))
+    return { sheetName: preferred, rows }
+  }
+
+  const candidates = sheetNames
+    .map((sheetName, index) => {
+      const sheet = workbook.Sheets[sheetName]
+      const rows = normalizeWorkbookRows(XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false }))
+      const rowCount = Array.isArray(rows) ? rows.length : 0
+      const identityPairCount = countRowsWithIdentityPair(rows)
+      const studentNumberCount = countRowsWithFieldValue(rows, "studentNumber")
+      const eaglesIdCount = countRowsWithFieldValue(rows, "eaglesId")
+
+      // Prioritize sheets that look most like import data rather than templates/examples.
+      const score = identityPairCount * 1000 + studentNumberCount * 20 + eaglesIdCount * 5 + rowCount
+      return {
+        index,
+        sheetName,
+        rows,
+        rowCount,
+        score,
+        identityPairCount,
+        studentNumberCount,
+        eaglesIdCount,
+      }
+    })
+    .filter((entry) => entry.rowCount > 0)
+
+  if (!candidates.length) return { sheetName: sheetNames[0], rows: [] }
+
+  candidates.sort((left, right) => {
+    if (right.score !== left.score) return right.score - left.score
+    if (right.identityPairCount !== left.identityPairCount) return right.identityPairCount - left.identityPairCount
+    if (right.studentNumberCount !== left.studentNumberCount) return right.studentNumberCount - left.studentNumberCount
+    if (right.eaglesIdCount !== left.eaglesIdCount) return right.eaglesIdCount - left.eaglesIdCount
+    if (right.rowCount !== left.rowCount) return right.rowCount - left.rowCount
+    return left.index - right.index
+  })
+
+  const best = candidates[0]
+  return { sheetName: best.sheetName, rows: best.rows }
+}
+
 export function parseSpreadsheetRowsFromUploadPayload(payload = {}) {
   if (Array.isArray(payload.rows)) return payload.rows
 
@@ -682,8 +799,9 @@ export function parseSpreadsheetRowsFromUploadPayload(payload = {}) {
       error.statusCode = 400
       throw error
     }
-    const sheet = workbook.Sheets[firstSheetName]
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false })
+
+    const selected = chooseWorkbookDataSheet(workbook, payload.sheetName)
+    const rows = Array.isArray(selected.rows) ? selected.rows : []
     if (!Array.isArray(rows) || !rows.length) {
       const error = new Error("Spreadsheet has no data rows")
       error.statusCode = 400
@@ -734,6 +852,22 @@ function verifyPassword(plainText, hashValue, candidate) {
   return timingSafeEqualText(candidate, plainText)
 }
 
+const DEFAULT_TEACHER_USERNAMES = [
+  "carole01",
+  "mei001",
+  "wren01",
+  "thea001",
+  "hanah001",
+  "lily001",
+]
+
+function parseAccountUsernameList(value) {
+  return normalizeText(value)
+    .split(/[\s,;]+/g)
+    .map((entry) => normalizeText(entry))
+    .filter(Boolean)
+}
+
 function buildConfiguredAccounts() {
   const accounts = []
 
@@ -749,15 +883,21 @@ function buildConfiguredAccounts() {
     })
   }
 
-  const teacherUser = normalizeText(process.env.STUDENT_TEACHER_USER)
   const teacherPass = normalizeText(process.env.STUDENT_TEACHER_PASS)
   const teacherHash = normalizeText(process.env.STUDENT_TEACHER_PASSWORD_HASH)
-  if (teacherUser && (teacherPass || teacherHash)) {
-    accounts.push({
-      username: teacherUser,
-      role: "teacher",
-      password: teacherPass,
-      passwordHash: teacherHash,
+  const teacherCredentialsProvided = Boolean(teacherPass || teacherHash)
+  if (teacherCredentialsProvided) {
+    const teacherUsernames = new Set()
+    parseAccountUsernameList(process.env.STUDENT_TEACHER_USER).forEach((entry) => teacherUsernames.add(entry))
+    parseAccountUsernameList(process.env.STUDENT_TEACHER_USERS).forEach((entry) => teacherUsernames.add(entry))
+    DEFAULT_TEACHER_USERNAMES.forEach((entry) => teacherUsernames.add(entry))
+    teacherUsernames.forEach((username) => {
+      accounts.push({
+        username,
+        role: "teacher",
+        password: teacherPass,
+        passwordHash: teacherHash,
+      })
     })
   }
 

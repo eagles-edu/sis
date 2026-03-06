@@ -60,6 +60,36 @@ test("parseSpreadsheetRowsFromUploadPayload parses xlsx payload", () => {
   assert.equal(rows[1].fullName, "John Student")
 })
 
+test("parseSpreadsheetRowsFromUploadPayload selects the most data-complete sheet by identity", () => {
+  const workbook = XLSX.utils.book_new()
+  const templateLike = XLSX.utils.aoa_to_sheet([
+    ["studentNumber", "eaglesId", "fullName"],
+    ["200", "", "Template Row 1"],
+    ["201", "", "Template Row 2"],
+    ["202", "", "Template Row 3"],
+  ])
+  const importReady = XLSX.utils.aoa_to_sheet([
+    ["studentNumber", "eaglesId", "fullName", "city"],
+    ["300", "S300", "Import Row 1"],
+    ["301", "S301", "Import Row 2"],
+    ["", "", "", "HCMC"],
+  ])
+  XLSX.utils.book_append_sheet(workbook, templateLike, "Students_Template")
+  XLSX.utils.book_append_sheet(workbook, importReady, "Students_ImportReady")
+  const xlsxBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
+
+  const rows = parseSpreadsheetRowsFromUploadPayload({
+    fileName: "students.xlsx",
+    format: "xlsx",
+    fileDataBase64: xlsxBuffer.toString("base64"),
+  })
+
+  assert.equal(rows.length, 2)
+  assert.equal(rows[0].studentNumber, "300")
+  assert.equal(rows[0].eaglesId, "S300")
+  assert.equal(rows[1].eaglesId, "S301")
+})
+
 test("generateStudentReportCardPdf returns a PDF buffer", async () => {
   const student = {
     eaglesId: "S001",
@@ -297,6 +327,19 @@ test("POST /api/admin/login returns teacher session cookie", async () => {
   const body = await res.json()
   assert.equal(body.authenticated, true)
   assert.equal(body.user?.username, "teacher")
+  assert.equal(body.user?.role, "teacher")
+})
+
+test("POST /api/admin/login accepts configured teacher aliases", async () => {
+  const res = await fetchLocal(port, "/api/admin/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "carole01", password: "teacher-pass-123" }),
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.authenticated, true)
+  assert.equal(body.user?.username, "carole01")
   assert.equal(body.user?.role, "teacher")
 })
 
