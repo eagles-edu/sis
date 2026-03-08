@@ -30,7 +30,7 @@ function normalizeTextArray(value) {
   const text = normalizeText(value)
   if (!text) return []
   return text
-    .split(/[;,]/g)
+    .split(/[;,|]/g)
     .map((entry) => normalizeText(entry))
     .filter(Boolean)
 }
@@ -543,14 +543,109 @@ function normalizeProfilePayload(payload = {}) {
   }
 }
 
+const PARENT_REPORT_RUBRIC_MARKER_RE = /\[\[SIS-RUBRIC-V1:([A-Za-z0-9_-]+)\]\]\s*$/
+
+function normalizeParentReportScoreMap(value = {}, requiredPrefix = "") {
+  if (!value || typeof value !== "object") return {}
+  return Object.entries(value).reduce((acc, [key, rawValue]) => {
+    const normalizedKey = normalizeText(key)
+    if (!normalizedKey.startsWith(requiredPrefix)) return acc
+    const parsed = Number.parseFloat(String(rawValue))
+    if (!Number.isFinite(parsed)) return acc
+    const clamped = Math.max(0, Math.min(10, Math.round(parsed)))
+    acc[normalizedKey] = String(clamped)
+    return acc
+  }, {})
+}
+
+function normalizeParentReportRecommendationMap(value = {}) {
+  if (!value || typeof value !== "object") return {}
+  return Object.entries(value).reduce((acc, [key, rawValue]) => {
+    const normalizedKey = normalizeText(key)
+    if (!normalizedKey.startsWith("pt_rec_")) return acc
+    const normalizedValue = normalizeText(rawValue)
+    if (!normalizedValue) return acc
+    acc[normalizedKey] = normalizedValue
+    return acc
+  }, {})
+}
+
+export function normalizeParentReportRubricPayload(value = {}) {
+  if (!value || typeof value !== "object") return null
+  const skillScores = normalizeParentReportScoreMap(value.skillScores, "pt_skill_")
+  const conductScores = normalizeParentReportScoreMap(value.conductScores, "pt_conduct_")
+  const recommendations = normalizeParentReportRecommendationMap(value.recommendations)
+  if (!Object.keys(skillScores).length && !Object.keys(conductScores).length && !Object.keys(recommendations).length) {
+    return null
+  }
+  return {
+    skillScores,
+    conductScores,
+    recommendations,
+  }
+}
+
+export function encodeParentReportCommentBundle(comment = "", rubricPayload = null) {
+  const normalizedComment = normalizeNullableText(comment)
+  const normalizedRubricPayload = normalizeParentReportRubricPayload(rubricPayload)
+  if (!normalizedRubricPayload) return normalizedComment
+  const encodedPayload = Buffer.from(JSON.stringify(normalizedRubricPayload), "utf8").toString("base64url")
+  if (!encodedPayload) return normalizedComment
+  const marker = `[[SIS-RUBRIC-V1:${encodedPayload}]]`
+  return normalizedComment ? `${normalizedComment}\n${marker}` : marker
+}
+
+export function decodeParentReportCommentBundle(value = "") {
+  const rawText = normalizeText(value)
+  if (!rawText) return { comment: null, rubricPayload: null }
+  const markerMatch = rawText.match(PARENT_REPORT_RUBRIC_MARKER_RE)
+  if (!markerMatch?.[1]) return { comment: normalizeNullableText(rawText), rubricPayload: null }
+
+  let rubricPayload = null
+  try {
+    const decodedJson = Buffer.from(markerMatch[1], "base64url").toString("utf8")
+    const parsedPayload = JSON.parse(decodedJson)
+    rubricPayload = normalizeParentReportRubricPayload(parsedPayload)
+  } catch {
+    rubricPayload = null
+  }
+
+  const commentOnlyText = normalizeNullableText(rawText.replace(PARENT_REPORT_RUBRIC_MARKER_RE, "").trimEnd())
+  return {
+    comment: commentOnlyText,
+    rubricPayload,
+  }
+}
+
+function mapParentClassReport(report) {
+  if (!report) return report
+  const decoded = decodeParentReportCommentBundle(report.comments)
+  return {
+    ...report,
+    comments: decoded.comment,
+    rubricPayload: decoded.rubricPayload,
+  }
+}
+
+function assertStudentIdentityIntegrity(student = {}, context = "student") {
+  const eaglesId = normalizeText(student?.eaglesId)
+  const studentNumber = normalizePositiveInteger(student?.studentNumber)
+  assertWithStatus(Boolean(eaglesId), 500, `Data integrity error: eaglesId is required (${context})`)
+  assertWithStatus(Boolean(studentNumber), 500, `Data integrity error: studentNumber is required (${context})`)
+  return {
+    eaglesId,
+    studentNumber,
+  }
+}
+
 function mapStudent(student) {
   if (!student) return null
-  const eaglesId = student.eaglesId
+  const identity = assertStudentIdentityIntegrity(student, `student ${normalizeText(student?.id)}`)
   return {
     id: student.id,
     externalKey: student.externalKey,
-    studentNumber: student.studentNumber,
-    eaglesId,
+    studentNumber: identity.studentNumber,
+    eaglesId: identity.eaglesId,
     email: student.email,
     createdAt: student.createdAt,
     updatedAt: student.updatedAt,
@@ -564,7 +659,9 @@ function mapStudent(student) {
     },
     attendanceRecords: Array.isArray(student.attendanceRecords) ? student.attendanceRecords : undefined,
     gradeRecords: Array.isArray(student.gradeRecords) ? student.gradeRecords : undefined,
-    parentReports: Array.isArray(student.parentReports) ? student.parentReports : undefined,
+    parentReports: Array.isArray(student.parentReports)
+      ? student.parentReports.map((entry) => mapParentClassReport(entry))
+      : undefined,
   }
 }
 
@@ -634,22 +731,35 @@ function getImportValue(row, aliases) {
   return ""
 }
 
-function mapImportRowToStudentPayload(row) {
+export function mapImportRowToStudentPayload(row) {
   const eaglesId = normalizeText(getImportValue(row, ["eaglesId"]))
   const studentNumber = normalizePositiveInteger(getImportValue(row, ["studentNumber"]))
+  const fullName = normalizeText(getImportValue(row, ["fullName", "fullNameStudent"]))
+  const englishName = normalizeText(getImportValue(row, ["englishName"]))
+  const genderSelections = normalizeTextArray(
+    getImportValue(row, ["gender", "genderSelections", "sex"])
+  )
 
   const profile = {
     sourceFormId: "spreadsheet-import",
     sourceUrl: "local-import",
-    fullName: normalizeText(getImportValue(row, ["fullName", "fullNameStudent"])),
-    englishName: normalizeText(getImportValue(row, ["englishName"])),
+    fullName,
+    englishName,
     memberSince: normalizeText(getImportValue(row, ["memberSince"])),
     exercisePoints: normalizePositiveInteger(getImportValue(row, ["exercisePoints"])),
     parentsId: normalizeText(getImportValue(row, ["parentsId"])),
     photoUrl: normalizeText(getImportValue(row, ["photoUrl", "studentPhoto", "unnamed1"])),
+    genderSelections,
     studentPhone: normalizeText(getImportValue(row, ["studentPhone"])),
     studentEmail: normalizeText(getImportValue(row, ["studentEmail"])),
+    hobbies: normalizeText(getImportValue(row, ["hobbies"])),
     dobText: normalizeText(getImportValue(row, ["dobText", "dob"])),
+    birthOrder: normalizePositiveInteger(getImportValue(row, ["birthOrder"])),
+    siblingBrothers: normalizePositiveInteger(getImportValue(row, ["siblingBrothers", "numberOfSiblingsMale"])),
+    siblingSisters: normalizePositiveInteger(getImportValue(row, ["siblingSisters", "numberOfSiblingsFemale"])),
+    ethnicity: normalizeText(getImportValue(row, ["ethnicity"])),
+    languagesAtHome: normalizeTextArray(getImportValue(row, ["languagesAtHome", "languagesHome"])),
+    otherLanguage: normalizeText(getImportValue(row, ["otherLanguage", "describeOtherLanguage"])),
     schoolName: normalizeText(getImportValue(row, ["schoolName", "studentSchool"])),
     currentGrade: canonicalizeLevel(
       normalizeText(getImportValue(row, ["currentGrade", "classLevel"]))
@@ -663,15 +773,50 @@ function mapImportRowToStudentPayload(row) {
     city: normalizeText(getImportValue(row, ["city"])),
     postCode: normalizeText(getImportValue(row, ["postCode"])),
     motherName: normalizeText(getImportValue(row, ["motherName", "fullNameMother"])),
+    motherEmail: normalizeText(getImportValue(row, ["motherEmail", "emailMa"])),
     motherPhone: normalizeText(getImportValue(row, ["motherPhone", "mothersPhone"])),
     motherEmergencyContact: normalizeText(
       getImportValue(row, ["motherEmergencyContact", "emergencyContactMother"])
     ),
+    motherMessenger: normalizeText(getImportValue(row, ["motherMessenger", "zaloImIdMother"])),
     fatherName: normalizeText(getImportValue(row, ["fatherName", "fullNameFather"])),
+    fatherEmail: normalizeText(getImportValue(row, ["fatherEmail", "emailBa"])),
     fatherPhone: normalizeText(getImportValue(row, ["fatherPhone", "fathersPhone"])),
     fatherEmergencyContact: normalizeText(
       getImportValue(row, ["fatherEmergencyContact", "emergencyContactFather"])
     ),
+    fatherMessenger: normalizeText(getImportValue(row, ["fatherMessenger", "zaloImIdBa"])),
+    hasGlasses: normalizeText(getImportValue(row, ["hasGlasses", "wearGlasses"])),
+    hadEyeExam: normalizeText(getImportValue(row, ["hadEyeExam", "lastEyeExam"])),
+    lastEyeExamDateText: normalizeText(getImportValue(row, ["lastEyeExamDateText", "dateLastEyeExam"])),
+    prescriptionMedicine: normalizeText(getImportValue(row, ["prescriptionMedicine"])),
+    prescriptionDetails: normalizeText(getImportValue(row, ["prescriptionDetails", "explainListRxMeds"])),
+    learningDisorders: normalizeTextArray(getImportValue(row, ["learningDisorders"])),
+    learningDisorderDetails: normalizeText(getImportValue(row, ["learningDisorderDetails", "explainLdBd"])),
+    drugAllergies: normalizeText(getImportValue(row, ["drugAllergies", "drugAllergiesList"])),
+    foodEnvironmentalAllergies: normalizeText(
+      getImportValue(row, ["foodEnvironmentalAllergies", "foodEnvironmentalAllergiesList"])
+    ),
+    vaccinesChildhoodUpToDate: normalizeText(
+      getImportValue(row, ["vaccinesChildhoodUpToDate", "childhoodVaccinesUtd"])
+    ),
+    hadCovidPositive: normalizeText(getImportValue(row, ["hadCovidPositive", "covid19PositiveOrHadIt"])),
+    covidNegativeDateText: normalizeText(
+      getImportValue(row, ["covidNegativeDateText", "dateNegativeAfterInfections"])
+    ),
+    covidShotAlready: normalizeText(getImportValue(row, ["covidShotAlready", "hadCovidShotAlready"])),
+    covidVaccinesUpToDate: normalizeText(getImportValue(row, ["covidVaccinesUpToDate", "covid19VaccineUtd"])),
+    mostRecentCovidShotDate: normalizeText(
+      getImportValue(row, ["mostRecentCovidShotDate", "mostRecentCovidShot"])
+    ),
+    covidShotHistory: normalizeTextArray(
+      getImportValue(row, ["covidShotHistory", "checkEachCovidInjectionStudentHasHad"])
+    ),
+    feverMedicineAllowed: normalizeTextArray(getImportValue(row, ["feverMedicineAllowed", "feverMedicine"])),
+    whiteOilAllowed: normalizeText(getImportValue(row, ["whiteOilAllowed", "dauTrangDuoc"])),
+    signatureFullName: normalizeText(getImportValue(row, ["signatureFullName", "signature"])),
+    signatureEmail: normalizeText(getImportValue(row, ["signatureEmail", "emailFormSig"])),
+    extraComments: normalizeText(getImportValue(row, ["extraComments", "comments"])),
   }
 
   return {
@@ -828,14 +973,7 @@ export function validateImportRowsForIdentity(
       }
     }
 
-    if (!studentNumber) {
-      if (strictMode) {
-        const strictMessage =
-          "studentNumber is required (strict import mode requires explicit identity values)"
-        setRowError(rowNumber, strictMessage)
-      }
-      continue
-    }
+    if (!studentNumber) continue
 
     const duplicateStudentNumberRow = seenStudentNumbers.get(studentNumber)
     if (duplicateStudentNumberRow) {
@@ -1153,6 +1291,15 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   if (requestedId) {
     const existing = await client.student.findUnique({ where: { id: requestedId } })
     assertWithStatus(Boolean(existing), 404, "Student not found")
+    assertWithStatus(
+      normalizeLower(eaglesId) === normalizeLower(existing.eaglesId),
+      409,
+      "eaglesId is immutable and cannot be changed"
+    )
+    const existingStudentNumber = normalizePositiveInteger(existing.studentNumber)
+    if (requestedStudentNumber && existingStudentNumber && requestedStudentNumber !== existingStudentNumber) {
+      assertWithStatus(false, 409, "studentNumber is immutable and cannot be changed")
+    }
 
     const duplicate = await client.student.findFirst({
       where: {
@@ -1165,9 +1312,9 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
     assertWithStatus(!duplicate, 409, "eaglesId already exists")
 
     const studentNumber =
-      requestedStudentNumber
-      || normalizePositiveInteger(existing.studentNumber)
-      || (await resolveNextStudentNumberForClient(client))
+      existingStudentNumber ||
+      requestedStudentNumber ||
+      (await resolveNextStudentNumberForClient(client, STUDENT_NUMBER_START))
     await assertStudentNumberIsUniqueForClient(client, studentNumber, requestedId)
 
     const student = await client.student.update({
@@ -1198,7 +1345,7 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   const existingByEaglesId = await client.student.findUnique({ where: { eaglesId: eaglesId } })
   assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")
 
-  const studentNumber = requestedStudentNumber || (await resolveNextStudentNumberForClient(client))
+  const studentNumber = requestedStudentNumber || (await resolveNextStudentNumberForClient(client, STUDENT_NUMBER_START))
   await assertStudentNumberIsUniqueForClient(client, studentNumber)
 
   const student = await client.student.create({
@@ -1410,6 +1557,95 @@ export async function listExerciseTitles({ query = "", take = 200 } = {}) {
   }
 }
 
+export function summarizeTodayAttendanceForDashboard({
+  rows = [],
+  profileByStudentRefId = new Map(),
+  totalEnrollment = 0,
+  asOfDate = new Date(),
+} = {}) {
+  const attendanceRows = Array.isArray(rows) ? rows : []
+  const profileLookup = profileByStudentRefId instanceof Map ? profileByStudentRefId : new Map()
+  const enrollmentTotal = Math.max(0, Number.parseInt(String(totalEnrollment), 10) || 0)
+  const statusByStudentRefId = new Map()
+  const attendanceByLevelStudents = new Map()
+
+  attendanceRows.forEach((row) => {
+    const studentRefId = normalizeText(row?.studentRefId)
+    if (!studentRefId) return
+
+    const profile = profileLookup.get(studentRefId)
+    const canonicalLevel = canonicalizeLevel(profile?.currentGrade || row?.level || "")
+    if (!canonicalLevel) return
+
+    const status = normalizeLower(row?.status)
+    const current = statusByStudentRefId.get(studentRefId) || {
+      level: canonicalLevel,
+      attended: false,
+      absent: false,
+      late10Plus: false,
+      late30Plus: false,
+    }
+    current.level = canonicalLevel
+
+    if (status === "absent") {
+      if (!current.attended) current.absent = true
+      statusByStudentRefId.set(studentRefId, current)
+      return
+    }
+
+    current.attended = true
+    current.absent = false
+    if (status === "late") {
+      const tardyMinutes = parseTardyMinutes(row?.comments)
+      if (tardyMinutes >= 10) current.late10Plus = true
+      if (tardyMinutes >= 30) current.late30Plus = true
+    }
+    statusByStudentRefId.set(studentRefId, current)
+
+    if (!attendanceByLevelStudents.has(canonicalLevel)) {
+      attendanceByLevelStudents.set(canonicalLevel, new Set())
+    }
+    attendanceByLevelStudents.get(canonicalLevel).add(studentRefId)
+  })
+
+  let todayAttendanceCount = 0
+  let todayAbsences = 0
+  let tardy10PlusCount = 0
+  let tardy30PlusCount = 0
+  const attendanceByLevel = new Map()
+
+  attendanceByLevelStudents.forEach((studentIds, level) => {
+    attendanceByLevel.set(level, studentIds.size)
+  })
+
+  statusByStudentRefId.forEach((entry) => {
+    if (entry.attended) {
+      todayAttendanceCount += 1
+      if (entry.late10Plus) tardy10PlusCount += 1
+      if (entry.late30Plus) tardy30PlusCount += 1
+      return
+    }
+    if (entry.absent) todayAbsences += 1
+  })
+
+  const reportDate = new Date(asOfDate)
+  const dayOfWeek = Number.isNaN(reportDate.valueOf()) ? -1 : reportDate.getDay()
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+  if (isWeekend) {
+    // Weekend dashboard should always reconcile to enrolled headcount.
+    todayAbsences = Math.max(0, enrollmentTotal - todayAttendanceCount)
+  }
+
+  return {
+    todayAttendanceCount,
+    todayAbsences,
+    tardy10PlusCount,
+    tardy30PlusCount,
+    totalTodayTracked: todayAttendanceCount + todayAbsences,
+    attendanceByLevel,
+  }
+}
+
 export async function getAdminDashboardSummary() {
   const prisma = await getPrismaClient()
   const now = new Date()
@@ -1426,6 +1662,7 @@ export async function getAdminDashboardSummary() {
     todayAttendance,
     weekAttendance,
     allGradeRecords,
+    parentReportTotal,
   ] = await Promise.all([
     prisma.studentProfile.findMany({
       select: {
@@ -1438,6 +1675,7 @@ export async function getAdminDashboardSummary() {
         student: {
           select: {
             eaglesId: true,
+            studentNumber: true,
             email: true,
           },
         },
@@ -1481,6 +1719,7 @@ export async function getAdminDashboardSummary() {
         assignmentName: true,
       },
     }),
+    prisma.parentClassReport.count(),
   ])
 
   const profileByStudentRefId = new Map()
@@ -1496,32 +1735,20 @@ export async function getAdminDashboardSummary() {
   })
   const unenrolledYtd = Math.max(0, enrolledProfiles.length - totalEnrollment)
 
-  let todayAttendanceCount = 0
-  let todayAbsences = 0
-  let tardy10PlusCount = 0
-  let tardy30PlusCount = 0
-  const attendanceByLevel = new Map()
-
-  todayAttendance.forEach((row) => {
-    const status = normalizeLower(row.status)
-    const profile = profileByStudentRefId.get(row.studentRefId)
-    const level = canonicalizeLevel(profile?.currentGrade || row.level || "") || "Unassigned"
-    if (status === "absent") {
-      todayAbsences += 1
-      return
-    }
-    todayAttendanceCount += 1
-    const presentByLevel = attendanceByLevel.get(level) || 0
-    attendanceByLevel.set(level, presentByLevel + 1)
-
-    if (status === "late") {
-      const tardyMinutes = parseTardyMinutes(row.comments)
-      if (tardyMinutes >= 10) tardy10PlusCount += 1
-      if (tardyMinutes >= 30) tardy30PlusCount += 1
-    }
+  const todayAttendanceSummary = summarizeTodayAttendanceForDashboard({
+    rows: todayAttendance,
+    profileByStudentRefId,
+    totalEnrollment,
+    asOfDate: now,
   })
-
-  const totalTodayTracked = todayAttendanceCount + todayAbsences
+  const {
+    todayAttendanceCount,
+    todayAbsences,
+    tardy10PlusCount,
+    tardy30PlusCount,
+    totalTodayTracked,
+    attendanceByLevel,
+  } = todayAttendanceSummary
 
   const onTimeCompletions = allGradeRecords.filter((row) => isOnTimeCompletedGradeRecord(row)).length
   const lateCompletions = allGradeRecords.filter((row) => isLateCompletedGradeRecord(row)).length
@@ -1599,6 +1826,7 @@ export async function getAdminDashboardSummary() {
     const current = riskByStudent.get(key) || {
       studentRefId: key,
       eaglesId: "",
+      studentNumber: null,
       fullName: "",
       level: "",
       absences: 0,
@@ -1618,6 +1846,7 @@ export async function getAdminDashboardSummary() {
     const current = riskByStudent.get(key) || {
       studentRefId: key,
       eaglesId: "",
+      studentNumber: null,
       fullName: "",
       level: "",
       absences: 0,
@@ -1630,8 +1859,10 @@ export async function getAdminDashboardSummary() {
 
   riskByStudent.forEach((entry, key) => {
     const profile = profileByStudentRefId.get(key)
-    entry.eaglesId = normalizeText(profile?.student?.eaglesId || profile?.studentRefId || key)
-    entry.fullName = normalizeText(profile?.fullName) || "(no name)"
+    const identity = assertStudentIdentityIntegrity(profile?.student, `dashboard risk studentRefId=${key}`)
+    entry.eaglesId = identity.eaglesId
+    entry.studentNumber = identity.studentNumber
+    entry.fullName = normalizeText(profile?.fullName)
     entry.level = canonicalizeLevel(profile?.currentGrade || "") || "Unassigned"
   })
 
@@ -1682,11 +1913,16 @@ export async function getAdminDashboardSummary() {
   enrolledProfiles.forEach((profile) => {
     const level = canonicalizeLevel(profile.currentGrade || "") || "Unassigned"
     const bucket = ensureLevelCompletion(level)
+    const identity = assertStudentIdentityIntegrity(
+      profile?.student,
+      `dashboard levelCompletion enrolled studentRefId=${normalizeText(profile?.studentRefId)}`
+    )
     bucket.enrolledStudents += 1
     bucket._studentsById.set(profile.studentRefId, {
       studentRefId: profile.studentRefId,
-      eaglesId: normalizeText(profile?.student?.eaglesId || profile.studentRefId),
-      fullName: normalizeText(profile.fullName) || "(no name)",
+      eaglesId: identity.eaglesId,
+      studentNumber: identity.studentNumber,
+      fullName: normalizeText(profile.fullName),
       emails: toEmailList(profile),
       outstandingCount: 0,
       completedCount: 0,
@@ -1704,10 +1940,15 @@ export async function getAdminDashboardSummary() {
 
     let student = bucket._studentsById.get(record.studentRefId)
     if (!student) {
+      const identity = assertStudentIdentityIntegrity(
+        profile?.student,
+        `dashboard levelCompletion record studentRefId=${normalizeText(record?.studentRefId)}`
+      )
       student = {
         studentRefId: record.studentRefId,
-        eaglesId: normalizeText(profile?.student?.eaglesId || record.studentRefId),
-        fullName: normalizeText(profile?.fullName) || "(no name)",
+        eaglesId: identity.eaglesId,
+        studentNumber: identity.studentNumber,
+        fullName: normalizeText(profile?.fullName),
         emails: toEmailList(profile),
         outstandingCount: 0,
         completedCount: 0,
@@ -1752,6 +1993,7 @@ export async function getAdminDashboardSummary() {
         .map((entry) => ({
           studentRefId: entry.studentRefId,
           eaglesId: entry.eaglesId,
+          studentNumber: entry.studentNumber,
           fullName: entry.fullName,
           emails: entry.emails,
           outstandingCount: entry.outstandingCount,
@@ -1804,6 +2046,9 @@ export async function getAdminDashboardSummary() {
       students: atRiskStudents,
     },
     levelCompletion,
+    parentReports: {
+      total: parentReportTotal,
+    },
   }
 }
 
@@ -2004,6 +2249,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
   assertWithStatus(Boolean(schoolYear), 400, "schoolYear is required")
   assertWithStatus(Boolean(quarter), 400, "quarter is required")
 
+  const normalizedRubricPayload = normalizeParentReportRubricPayload(payload.rubricPayload)
   const reportData = {
     className,
     level: normalizeNullableText(payload.level),
@@ -2014,7 +2260,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     behaviorScore: normalizeFloat(payload.behaviorScore),
     participationScore: normalizeFloat(payload.participationScore),
     inClassScore: normalizeFloat(payload.inClassScore),
-    comments: normalizeNullableText(payload.comments),
+    comments: encodeParentReportCommentBundle(payload.comments, normalizedRubricPayload),
     generatedAt: normalizeDate(payload.generatedAt) || new Date(),
   }
 
@@ -2025,13 +2271,14 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     assertWithStatus(Boolean(existing), 404, "Parent report not found")
     assertWithStatus(existing.studentRefId === studentRef, 403, "Parent report does not belong to student")
 
-    return prisma.parentClassReport.update({
+    const updatedReport = await prisma.parentClassReport.update({
       where: { id: reportId },
       data: reportData,
     })
+    return mapParentClassReport(updatedReport)
   }
 
-  return prisma.parentClassReport.upsert({
+  const upsertedReport = await prisma.parentClassReport.upsert({
     where: {
       studentRefId_className_schoolYear_quarter: {
         studentRefId: studentRef,
@@ -2046,6 +2293,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
       ...reportData,
     },
   })
+  return mapParentClassReport(upsertedReport)
 }
 
 export async function deleteParentClassReport(studentRefId, reportId) {

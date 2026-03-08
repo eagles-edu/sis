@@ -1054,6 +1054,7 @@
       gap: 8px;
       margin-top: 8px;
     }
+    .actions-1 { grid-template-columns: minmax(0, 1fr); }
     .actions-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .actions-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .actions-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -1778,17 +1779,18 @@
       font-weight: 700;
     }
     .progress-report-table .score-cell {
-      width: 4.5ch;
-      min-width: 4.5ch;
-      max-width: 4.5ch;
+      width: 5.8ch;
+      min-width: 5.8ch;
+      max-width: 5.8ch;
       white-space: nowrap;
       text-align: center;
     }
-    .progress-report-table .score-cell input {
+    .progress-report-table .score-cell input,
+    .progress-report-table .score-cell select {
       box-sizing: border-box;
-      width: 4ch;
-      min-width: 4ch;
-      max-width: 4ch;
+      width: 5.2ch;
+      min-width: 5.2ch;
+      max-width: 5.2ch;
       padding: 2px 1px;
       line-height: 1.2;
       text-align: center;
@@ -1853,7 +1855,7 @@
       font-size: 12px;
       font-weight: 700;
     }
-    #overviewParentQueueDetails summary,
+    #performanceQueueDetails summary,
     #overviewIncomingExerciseDetails summary {
       display: flex;
       align-items: center;
@@ -1864,7 +1866,7 @@
       font-weight: 700;
       color: var(--ink);
     }
-    #overviewParentQueueDetails summary::-webkit-details-marker,
+    #performanceQueueDetails summary::-webkit-details-marker,
     #overviewIncomingExerciseDetails summary::-webkit-details-marker {
       display: none;
     }
@@ -1899,12 +1901,12 @@
     #overviewIncomingExerciseDetails .table-scroll-wrap table {
       min-width: 980px;
     }
-    #overviewParentQueueDetails .table-scroll-wrap table {
+    #performanceQueueDetails .table-scroll-wrap table {
       min-width: 760px;
     }
     #overviewClassRows td,
     #overviewIncomingExerciseRows td,
-    #overviewParentQueueRows td {
+    #performanceQueueRows td {
       overflow-wrap: anywhere;
     }
     .queue-modal {
@@ -1964,6 +1966,29 @@
       white-space: pre-wrap;
       font-size: 12px;
       color: var(--ink-muted);
+    }
+    .parent-tracking-save-notice {
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: var(--radius-2);
+      border: 1px solid #7bc48f;
+      background: #e8f6ed;
+      color: #0f5c2b;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .parent-tracking-save-notice.error {
+      border-color: #d99494;
+      background: #fbecec;
+      color: #8f2026;
+    }
+    .parent-tracking-save-notice .small {
+      color: inherit;
+      font-size: 11px;
+      font-weight: 500;
     }
     @media (max-width: 1100px) {
       .app-shell {
@@ -2077,12 +2102,12 @@
       .overview-layout > .level-detail-panel {
         grid-column: auto;
       }
-      #overviewParentQueueDetails summary,
+      #performanceQueueDetails summary,
       #overviewIncomingExerciseDetails summary {
         align-items: flex-start;
         flex-wrap: wrap;
       }
-      #overviewParentQueueSummary,
+      #performanceQueueSummary,
       #overviewIncomingExerciseSummary {
         width: 100%;
       }
@@ -2092,12 +2117,12 @@
       #overviewIncomingExerciseDetails .table-scroll-wrap table {
         min-width: 820px;
       }
-      #overviewParentQueueDetails .table-scroll-wrap table {
+      #performanceQueueDetails .table-scroll-wrap table {
         min-width: 680px;
       }
       #levelDetailPanel .actions,
       #overviewIncomingExerciseSection .actions,
-      #overviewParentQueueSection .actions {
+      #performanceQueueSection .actions {
         grid-template-columns: 1fr;
       }
       .table-scroll-wrap {
@@ -2266,13 +2291,14 @@
                     <thead>
                       <tr>
                         <th scope="col" data-top-search-sort="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th>
-                        <th scope="col" data-top-search-sort="name" tabindex="0" aria-sort="none">Name</th>
+                        <th scope="col" data-top-search-sort="fullName" tabindex="0" aria-sort="none">Full Name</th>
+                        <th scope="col">English Name</th>
                         <th scope="col" data-top-search-sort="level" tabindex="0" aria-sort="none">Level</th>
                         <th scope="col">Action</th>
                       </tr>
                     </thead>
                     <tbody id="topSearchRows">
-                      <tr><td colspan="4">No student results yet. Use Search or filters above.</td></tr>
+                      <tr><td colspan="5">No student results yet. Use Search or filters above.</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -2292,7 +2318,8 @@
                   <thead>
                     <tr>
                       <th scope="col">Eagles ID</th>
-                      <th scope="col">Name</th>
+                      <th scope="col">Full Name</th>
+                      <th scope="col">English Name</th>
                       <th scope="col">Level</th>
                       <th scope="col" class="school-col">School</th>
                     </tr>
@@ -2404,9 +2431,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </div>
                     <div class="table-scroll-wrap">
                       <table>
-                        <thead><tr><th scope="col">Select</th><th scope="col">Student</th><th scope="col">Outstanding</th><th scope="col">Assignments</th><th scope="col">Email Targets</th></tr></thead>
+                        <thead><tr><th scope="col">Select</th><th scope="col">Full Name</th><th scope="col">Eagles ID</th><th scope="col">Outstanding</th><th scope="col">Assignments</th><th scope="col">Email Targets</th></tr></thead>
                         <tbody id="levelDetailRows">
-                          <tr><td colspan="5">Pick a level from the detail buttons above.</td></tr>
+                          <tr><td colspan="6">Pick a level from the detail buttons above.</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -2469,36 +2496,6 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <button id="overviewIncomingExerciseRefreshBtn" type="button">Reload Queue</button>
                       </div>
                       <p class="small" id="overviewIncomingExerciseActionStatus">Disposition actions are available per queue row.</p>
-                    </details>
-                  </section>
-                  <section class="overview-group full hidden" id="overviewParentQueueSection">
-                    <h3>Queued Performance Reports</h3>
-                    <details id="overviewParentQueueDetails">
-                      <summary>
-                        <span>Queue Review</span>
-                        <span class="small" id="overviewParentQueueSummary">No queued performance reports.</span>
-                      </summary>
-                      <div class="table-scroll-wrap">
-                        <table>
-                          <thead>
-                            <tr>
-                              <th scope="col">Queued</th>
-                              <th scope="col">Student/Title</th>
-                              <th scope="col">Status</th>
-                              <th scope="col">Scheduled</th>
-                              <th scope="col">By</th>
-                            </tr>
-                          </thead>
-                          <tbody id="overviewParentQueueRows">
-                            <tr><td colspan="5">No queued performance reports.</td></tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div class="actions actions-3">
-                        <button id="overviewParentQueueExpandBtn" type="button" class="btn-refresh">Show All</button>
-                        <button id="overviewParentQueueRefreshBtn" type="button">Reload Queue</button>
-                        <button id="overviewParentQueueSendAllBtn" type="button" class="primary">Send All</button>
-                      </div>
                     </details>
                   </section>
                 </div>
@@ -2607,7 +2604,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="attendanceSortField">Sort Attendance Data By</label>
                     <select id="attendanceSortField">
-                      <option value="studentName">Student</option>
+                      <option value="fullName">Full Name</option>
                       <option value="attendanceDate">Date</option>
                       <option value="className">Class</option>
                       <option value="quarter">Quarter</option>
@@ -2659,7 +2656,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
                 <p class="small admin-table-summary" id="attendanceDataSummary">Showing attendance records for all students.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="attendance" data-sort-field="studentName" tabindex="0" aria-sort="none">Student</th><th scope="col" data-table-sort="attendance" data-sort-field="attendanceDate" tabindex="0" aria-sort="none">Date</th><th scope="col" data-table-sort="attendance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-table-sort="attendance" data-sort-field="quarter" tabindex="0" aria-sort="none">Quarter</th><th scope="col" data-table-sort="attendance" data-sort-field="status" tabindex="0" aria-sort="none">Status</th><th scope="col">Comments</th><th scope="col">Action</th></tr></thead>
+                  <thead><tr><th scope="col" data-table-sort="attendance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="attendance" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="attendance" data-sort-field="attendanceDate" tabindex="0" aria-sort="none">Date</th><th scope="col" data-table-sort="attendance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-table-sort="attendance" data-sort-field="quarter" tabindex="0" aria-sort="none">Quarter</th><th scope="col" data-table-sort="attendance" data-sort-field="status" tabindex="0" aria-sort="none">Status</th><th scope="col">Comments</th><th scope="col">Action</th></tr></thead>
                   <tbody id="attendanceRows"></tbody>
                 </table>
               </div>
@@ -2812,11 +2809,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <div class="progress-report-card">
                         <h4>Performance Snapshot (Auto from records)</h4>
                         <div class="row">
-                          <div class="col-2"><label>Behavior</label><input id="pt_behaviorScore" type="number" step="0.01"></div>
-                          <div class="col-2"><label>Skills</label><input id="pt_participationScore" type="number" step="0.01"></div>
-                          <div class="col-2"><label>Academic</label><input id="pt_academicScore" type="number" step="0.01"></div>
-                          <div class="col-3"><label>Homework Timeliness %</label><input id="pt_homeworkOnTimeRate" type="number" step="0.01"></div>
-                          <div class="col-3"><label>Assignment Completion %</label><input id="pt_homeworkCompletionRate" type="number" step="0.01"></div>
+                          <div class="col-2"><label>Behavior (0-10)</label><input id="pt_behaviorScore" type="text" readonly aria-readonly="true" placeholder="Auto from rubric"></div>
+                          <div class="col-2"><label>Skills (0-10)</label><input id="pt_participationScore" type="text" readonly aria-readonly="true" placeholder="Auto from rubric"></div>
+                          <div class="col-2"><label>Academic (0-10)</label><input id="pt_academicScore" type="text" readonly aria-readonly="true" placeholder="Auto from records"></div>
+                          <div class="col-3"><label>Homework Timeliness %</label><input id="pt_homeworkOnTimeRate" type="number" step="0.01" readonly aria-readonly="true"></div>
+                          <div class="col-3"><label>Assignment Completion %</label><input id="pt_homeworkCompletionRate" type="number" step="0.01" readonly aria-readonly="true"></div>
                         </div>
                         <p class="small">
                           Behavior = mean of Behavior scores; Skills = mean of Skills scores; Academic = mean of exercise/quiz/exam scores (current quarter); Homework Timeliness % = on-time/tracked assignments (current quarter); Assignment Completion % = completed/tracked assignments (current quarter).
@@ -2933,6 +2930,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="pt_clearBtn" type="button">Clear Form</button>
                     </div>
                     <input id="pt_reportId" type="hidden">
+                    <div id="pt_saveNotice" class="parent-tracking-save-notice hidden" role="status" aria-live="polite"></div>
                     <p class="small page-note">Open <strong>Performance data</strong> for view, sort, manage, and edit data.</p>
                     <p class="small" id="pt_status">Weekend batch windows: Sat/Sun at 12:00, 15:30, 18:00, 20:15.</p>
                     <div class="assignment-item-builder hidden" id="pt_assignmentDetailPanel">
@@ -2949,7 +2947,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="performanceSortField">Sort Performance Data By</label>
                     <select id="performanceSortField">
-                      <option value="studentName">Student</option>
+                      <option value="fullName">Full Name</option>
+                      <option value="eaglesId">Eagles ID</option>
                       <option value="generatedAt">Generated Date</option>
                       <option value="className">Class</option>
                       <option value="homeworkCompletionRate">HW %</option>
@@ -3002,9 +3001,64 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
                 <p class="small admin-table-summary" id="performanceDataSummary">Showing performance records.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="performance" data-sort-field="studentName" tabindex="0" aria-sort="none">Student</th><th scope="col" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-table-sort="performance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col">Quarter</th><th scope="col" data-table-sort="performance" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-table-sort="performance" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-table-sort="performance" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
-                  <tbody id="pt_reportRows"><tr><td colspan="10">Select a student to load performance data.</td></tr></tbody>
+                  <thead><tr><th scope="col" data-table-sort="performance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="performance" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-table-sort="performance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col">Quarter</th><th scope="col" data-table-sort="performance" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-table-sort="performance" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-table-sort="performance" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
+                  <tbody id="pt_reportRows"><tr><td colspan="12">Select a student to load performance data.</td></tr></tbody>
                 </table>
+                <section class="hidden" id="performanceStagedSection">
+                  <h3>Staged Performance Reports</h3>
+                  <p class="small" id="performanceStagedSummary">No staged performance reports.</p>
+                  <div class="table-scroll-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Generated</th>
+                          <th scope="col">Full Name</th>
+                          <th scope="col">Eagles ID</th>
+                          <th scope="col">Class</th>
+                          <th scope="col">Quarter</th>
+                          <th scope="col">Queue State</th>
+                          <th scope="col">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="performanceStagedRows">
+                        <tr><td colspan="7">No staged performance reports.</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="actions actions-1">
+                    <button id="performanceStagedRefreshBtn" type="button" class="btn-refresh">Reload Staged</button>
+                  </div>
+                </section>
+                <section class="hidden" id="performanceQueueSection">
+                  <h3>Queued Performance Reports</h3>
+                  <details id="performanceQueueDetails">
+                    <summary>
+                      <span>Queue Review</span>
+                      <span class="small" id="performanceQueueSummary">No queued performance reports.</span>
+                    </summary>
+                    <div class="table-scroll-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Queued</th>
+                            <th scope="col">Student/Title</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Scheduled</th>
+                            <th scope="col">By</th>
+                          </tr>
+                        </thead>
+                        <tbody id="performanceQueueRows">
+                          <tr><td colspan="5">No queued performance reports.</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="actions actions-3">
+                      <button id="performanceQueueExpandBtn" type="button" class="btn-refresh">Show All</button>
+                      <button id="performanceQueueRefreshBtn" type="button">Reload Queue</button>
+                      <button id="performanceQueueSendAllBtn" type="button" class="primary">Send All</button>
+                    </div>
+                  </details>
+                </section>
               </div>
 
               <div class="panel page-section" data-page="grades">
@@ -3040,7 +3094,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="gradeSortField">Sort Grades Data By</label>
                     <select id="gradeSortField">
-                      <option value="studentName">Student</option>
+                      <option value="fullName">Full Name</option>
+                      <option value="eaglesId">Eagles ID</option>
                       <option value="dueAt">Due Date</option>
                       <option value="assignmentName">Assignment</option>
                       <option value="score">Score</option>
@@ -3092,7 +3147,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
                 <p class="small admin-table-summary" id="gradeDataSummary">Showing grade entries.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="grades" data-sort-field="studentName" tabindex="0" aria-sort="none">Student</th><th scope="col" data-table-sort="grades" data-sort-field="dueAt" tabindex="0" aria-sort="none">Due</th><th scope="col" data-table-sort="grades" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-table-sort="grades" data-sort-field="assignmentName" tabindex="0" aria-sort="none">Assignment</th><th scope="col" data-table-sort="grades" data-sort-field="score" tabindex="0" aria-sort="none">Score</th><th scope="col">HW</th><th scope="col">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
+                  <thead><tr><th scope="col" data-table-sort="grades" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="grades" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="grades" data-sort-field="dueAt" tabindex="0" aria-sort="none">Due</th><th scope="col" data-table-sort="grades" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-table-sort="grades" data-sort-field="assignmentName" tabindex="0" aria-sort="none">Assignment</th><th scope="col" data-table-sort="grades" data-sort-field="score" tabindex="0" aria-sort="none">Score</th><th scope="col">HW</th><th scope="col">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
                   <tbody id="gradeRows"></tbody>
                 </table>
               </div>
@@ -3124,7 +3179,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="reportSortField">Sort Performance Data By</label>
                     <select id="reportSortField">
-                      <option value="studentName">Student</option>
+                      <option value="fullName">Full Name</option>
+                      <option value="eaglesId">Eagles ID</option>
                       <option value="generatedAt">Generated Date</option>
                       <option value="className">Class</option>
                       <option value="homeworkCompletionRate">HW %</option>
@@ -3177,7 +3233,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
                 <p class="small admin-table-summary" id="reportDataSummary">Showing latest performance reports.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="reports" data-sort-field="studentName" tabindex="0" aria-sort="none">Student</th><th scope="col" data-table-sort="reports" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-table-sort="reports" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col">Quarter</th><th scope="col" data-table-sort="reports" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-table-sort="reports" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-table-sort="reports" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
+                  <thead><tr><th scope="col" data-table-sort="reports" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="reports" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="reports" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-table-sort="reports" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col">Quarter</th><th scope="col" data-table-sort="reports" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-table-sort="reports" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-table-sort="reports" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
                   <tbody id="reportRows"></tbody>
                 </table>
                 <p class="small">Planned analytics: system statistics, school statistics, academic statistics.</p>
@@ -3509,6 +3565,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       parentTracking: {
         selectedLevel: "",
         selectedStudentId: "",
+        manualMetricsTouched: false,
         activeRecommendationFieldName: "",
         teacherNames: [],
         lessonSummaryByLevelDate: {},
@@ -3529,6 +3586,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         hasMore: false,
         showAll: false,
         modalIndex: -1,
+        savedReportCountHint: 0,
+        sourceRows: [],
+        stagedRows: [],
+        pendingStageQueueById: {},
       },
       studentDetailCacheById: {},
       adminDataLoading: {
@@ -3594,7 +3655,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       },
       topSearch: {
         expanded: false,
-        sortField: "name",
+        sortField: "fullName",
         sortDir: "asc",
         collapsedRows: 12,
         rows: [],
@@ -3627,7 +3688,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       ["studentPhoto","photoUrl","Tải ảnh học sinh lên","Upload student photo","profile","Thông tin của người học","file","Tải ảnh học sinh lên","","photoUrl","",12],
       ["fullNameStudent","fullName","Họ tên của người học","Full name of the learner","profile","Thông tin của người học","text","Họ tên","","fullName","",8],
       ["englishName","englishName","Tên tiếng Anh","English name","profile","Thông tin của người học","text","Tên tiếng anh nếu bạn có","","englishName","",4],
-      ["gender","genderSelections","Giới tính","Sex","profile","Thông tin của người học","checkbox","","nam | nữ","genderSelections","",6],
+      ["gender","genderSelections","Giới tính","Gender","profile","Thông tin của người học","checkbox","","nam | nữ","genderSelections","",6],
       ["memberSince","memberSince","Member since","Member since","profile","Thông tin của người học","text","","","memberSince","",3],
       ["studentNumber","studentNumber","Student number","Student number","profile","Thông tin của người học","number","","","","studentNumber",3],
       ["eaglesId","eaglesId","Eagles ID","Eagles ID","profile","Thông tin của người học","text","","","","eaglesId",3],
@@ -5171,14 +5232,18 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const sortField = normalizeText(state.tableSort?.attendance?.field) || "attendanceDate"
       const sortDir = normalizeLower(state.tableSort?.attendance?.dir) === "asc" ? "asc" : "desc"
       return list.sort((left, right) => {
+        const leftFullName = normalizeText(left?.fullName)
+        const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "studentName") compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "className") compareValue = compareTableText(left?.className, right?.className)
         else if (sortField === "quarter") compareValue = compareTableText(left?.quarter, right?.quarter)
         else if (sortField === "status") compareValue = compareTableText(left?.status, right?.status)
         else compareValue = compareTableIsoDate(left?.attendanceDate, right?.attendanceDate)
         if (compareValue === 0) compareValue = compareTableIsoDate(left?.attendanceDate, right?.attendanceDate)
-        if (compareValue === 0) compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (compareValue === 0) compareValue = compareTableText(leftFullName, rightFullName)
+        if (compareValue === 0) compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         if (compareValue === 0) compareValue = compareTableText(left?.id, right?.id)
         return applySortDirection(compareValue, sortDir)
       })
@@ -5208,14 +5273,18 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const sortField = normalizeText(state.tableSort?.grades?.field) || "dueAt"
       const sortDir = normalizeLower(state.tableSort?.grades?.dir) === "asc" ? "asc" : "desc"
       return list.sort((left, right) => {
+        const leftFullName = normalizeText(left?.fullName)
+        const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "studentName") compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "assignmentName") compareValue = compareTableText(left?.assignmentName, right?.assignmentName)
         else if (sortField === "score") compareValue = compareTableNumber(gradeSortScoreValue(left), gradeSortScoreValue(right))
         else if (sortField === "className") compareValue = compareTableText(left?.className, right?.className)
         else compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt)
         if (compareValue === 0) compareValue = compareTableIsoDate(left?.dueAt, right?.dueAt)
-        if (compareValue === 0) compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (compareValue === 0) compareValue = compareTableText(leftFullName, rightFullName)
+        if (compareValue === 0) compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         if (compareValue === 0) compareValue = compareTableText(left?.assignmentName, right?.assignmentName)
         return applySortDirection(compareValue, sortDir)
       })
@@ -5226,15 +5295,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const sortField = normalizeText(state.tableSort?.reports?.field) || "generatedAt"
       const sortDir = normalizeLower(state.tableSort?.reports?.dir) === "asc" ? "asc" : "desc"
       return list.sort((left, right) => {
+        const leftFullName = normalizeText(left?.fullName)
+        const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "studentName") compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "className") compareValue = compareTableText(left?.className, right?.className)
         else if (sortField === "homeworkCompletionRate") compareValue = compareTableNumber(left?.homeworkCompletionRate, right?.homeworkCompletionRate)
         else if (sortField === "homeworkOnTimeRate") compareValue = compareTableNumber(left?.homeworkOnTimeRate, right?.homeworkOnTimeRate)
         else if (sortField === "behaviorScore") compareValue = compareTableNumber(left?.behaviorScore, right?.behaviorScore)
         else compareValue = compareTableIsoDate(left?.generatedAt, right?.generatedAt)
         if (compareValue === 0) compareValue = compareTableIsoDate(left?.generatedAt, right?.generatedAt)
-        if (compareValue === 0) compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (compareValue === 0) compareValue = compareTableText(leftFullName, rightFullName)
+        if (compareValue === 0) compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         if (compareValue === 0) compareValue = compareTableText(left?.id, right?.id)
         return applySortDirection(compareValue, sortDir)
       })
@@ -5245,15 +5318,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const sortField = normalizeText(state.tableSort?.performance?.field) || "generatedAt"
       const sortDir = normalizeLower(state.tableSort?.performance?.dir) === "asc" ? "asc" : "desc"
       return list.sort((left, right) => {
+        const leftFullName = normalizeText(left?.fullName)
+        const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "studentName") compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "className") compareValue = compareTableText(left?.className, right?.className)
         else if (sortField === "homeworkCompletionRate") compareValue = compareTableNumber(left?.homeworkCompletionRate, right?.homeworkCompletionRate)
         else if (sortField === "homeworkOnTimeRate") compareValue = compareTableNumber(left?.homeworkOnTimeRate, right?.homeworkOnTimeRate)
         else if (sortField === "behaviorScore") compareValue = compareTableNumber(left?.behaviorScore, right?.behaviorScore)
         else compareValue = compareTableIsoDate(left?.generatedAt, right?.generatedAt)
         if (compareValue === 0) compareValue = compareTableIsoDate(left?.generatedAt, right?.generatedAt)
-        if (compareValue === 0) compareValue = compareTableText(left?.studentName, right?.studentName)
+        if (compareValue === 0) compareValue = compareTableText(leftFullName, rightFullName)
+        if (compareValue === 0) compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         if (compareValue === 0) compareValue = compareTableText(left?.id, right?.id)
         return applySortDirection(compareValue, sortDir)
       })
@@ -5469,34 +5546,80 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return deduped.filter((student) => studentRecordCountForTable(student, tableKey) > 0)
     }
 
+    function canonicalStudentFullNameFromProfile(profile = {}) {
+      return normalizeText(profile?.fullName)
+    }
+
+    function canonicalStudentEnglishNameFromProfile(profile = {}) {
+      return normalizeText(profile?.englishName)
+    }
+
+    function canonicalStudentFullNameFromRow(row = {}) {
+      return normalizeText(row?.fullName)
+    }
+
+    function canonicalStudentEnglishNameFromRow(row = {}) {
+      return normalizeText(row?.englishName)
+    }
+
+    function hasStudentNumberKey(student = {}) {
+      if (Object.prototype.hasOwnProperty.call(student || {}, "studentNumber")) return true
+      const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
+      return Object.prototype.hasOwnProperty.call(profile, "studentNumber")
+    }
+
     function attendanceRecordWithStudent(record = {}, student = {}) {
+      const eaglesId = normalizeText(student?.eaglesId)
+      if (!eaglesId) return null
+      const studentNumber = parsePositiveInteger(student?.studentNumber)
+      if (hasStudentNumberKey(student) && !studentNumber) return null
+      const fullName = canonicalStudentFullNameFromProfile(student?.profile)
+      const englishName = canonicalStudentEnglishNameFromProfile(student?.profile)
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
-        eaglesId: normalizeText(student?.eaglesId),
-        studentName: normalizeText(student?.profile?.fullName),
+        eaglesId,
+        studentNumber: studentNumber || null,
+        fullName,
+        englishName,
         classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
         profile: student?.profile || {},
       }
     }
 
     function gradeRecordWithStudent(record = {}, student = {}) {
+      const eaglesId = normalizeText(student?.eaglesId)
+      if (!eaglesId) return null
+      const studentNumber = parsePositiveInteger(student?.studentNumber)
+      if (hasStudentNumberKey(student) && !studentNumber) return null
+      const fullName = canonicalStudentFullNameFromProfile(student?.profile)
+      const englishName = canonicalStudentEnglishNameFromProfile(student?.profile)
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
-        eaglesId: normalizeText(student?.eaglesId),
-        studentName: normalizeText(student?.profile?.fullName),
+        eaglesId,
+        studentNumber: studentNumber || null,
+        fullName,
+        englishName,
         classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
         profile: student?.profile || {},
       }
     }
 
     function reportRecordWithStudent(record = {}, student = {}) {
+      const eaglesId = normalizeText(student?.eaglesId)
+      if (!eaglesId) return null
+      const studentNumber = parsePositiveInteger(student?.studentNumber)
+      if (hasStudentNumberKey(student) && !studentNumber) return null
+      const fullName = canonicalStudentFullNameFromProfile(student?.profile)
+      const englishName = canonicalStudentEnglishNameFromProfile(student?.profile)
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
-        eaglesId: normalizeText(student?.eaglesId),
-        studentName: normalizeText(student?.profile?.fullName),
+        eaglesId,
+        studentNumber: studentNumber || null,
+        fullName,
+        englishName,
         classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
         profile: student?.profile || {},
       }
@@ -5509,21 +5632,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           (Array.isArray(student?.attendanceRecords) ? student.attendanceRecords : []).map((row) =>
             attendanceRecordWithStudent(row, student)
           )
-        )
+        ).filter(Boolean)
       }
       if (tableKey === "grades") {
         return source.flatMap((student) =>
           (Array.isArray(student?.gradeRecords) ? student.gradeRecords : []).map((row) =>
             gradeRecordWithStudent(row, student)
           )
-        )
+        ).filter(Boolean)
       }
       if (tableKey === "performance" || tableKey === "reports") {
         return source.flatMap((student) =>
           (Array.isArray(student?.parentReports) ? student.parentReports : []).map((row) =>
             reportRecordWithStudent(row, student)
           )
-        )
+        ).filter(Boolean)
       }
       return []
     }
@@ -5590,13 +5713,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       summaryParts.push(levelValue ? `Level: ${fullLevelLabel(levelValue)}` : "Level: All")
       const selectedStudent = tableFilterSelectedStudent(tableKey)
       if (selectedStudent) {
-        const labelName = studentDisplayName(selectedStudent, { preferEnglish: true })
-        const labelId = normalizeText(selectedStudent?.eaglesId || selectedStudent?.id || "")
+        const labelId = normalizeText(selectedStudent?.eaglesId)
         const labelNumber = studentDisplayNumber(selectedStudent)
-        const resolvedName = labelName || "(no name)"
-        const resolvedId = labelId || "(no id)"
-        const numberToken = labelNumber ? ` <${labelNumber}>` : ""
-        summaryParts.push(`Student: (${resolvedName}) ${resolvedId}${numberToken}`)
+        const labelFullName = studentFullName(selectedStudent)
+        const labelEnglishName = studentEnglishName(selectedStudent)
+        const numberToken = labelNumber ? ` | Student Number: ${labelNumber}` : ""
+        summaryParts.push(
+          `Student: Eagles ID: ${labelId}${numberToken} | Full Name: ${labelFullName} | English Name: ${labelEnglishName}`
+        )
       }
       const dateFrom = tableFilterValue(tableKey, "dateFrom")
       const dateTo = tableFilterValue(tableKey, "dateTo")
@@ -5636,11 +5760,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function topSearchStudentOptionLabel(student = {}) {
-      return studentIdentityLabel(student, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
+      return normalizeText(student?.eaglesId)
     }
 
     function topSearchStudentOptionSummary(student = {}) {
-      const eaglesId = normalizeText(student?.eaglesId) || "no id"
+      const eaglesId = normalizeText(student?.eaglesId)
       const studentNumber = studentDisplayNumber(student)
       const level = shortLevelLabel(student?.profile?.currentGrade || "") || "no level"
       return `${eaglesId}${studentNumber ? ` <${studentNumber}>` : ""} | ${level}`
@@ -5669,8 +5793,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const mapped = {
           id: normalizeText(student?.id),
           eaglesId: normalizeText(student?.eaglesId),
-          fullName: studentDisplayName(student),
-          englishName: normalizeText(student?.profile?.englishName),
+          fullName: studentFullName(student),
+          englishName: studentEnglishName(student),
           studentNumber: studentDisplayNumber(student),
           level: resolveSystemLevelName(student?.profile?.currentGrade || ""),
           school: normalizeText(student?.profile?.schoolName),
@@ -5695,16 +5819,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const source = allKnownStudentsForTopSearchOptions()
       const match = source.find((student) => {
         if (normalizeLower(student?.eaglesId) === key) return true
-        if (normalizeLower(studentDisplayName(student)) === key) return true
-        if (normalizeLower(student?.profile?.englishName) === key) return true
+        if (normalizeLower(studentFullName(student)) === key) return true
+        if (normalizeLower(studentEnglishName(student)) === key) return true
         return normalizeLower(topSearchStudentOptionLabel(student)) === key
       })
       if (!match) return null
       return {
         id: normalizeText(match?.id),
         eaglesId: normalizeText(match?.eaglesId),
-        fullName: studentDisplayName(match),
-        englishName: normalizeText(match?.profile?.englishName),
+        fullName: studentFullName(match),
+        englishName: studentEnglishName(match),
         studentNumber: studentDisplayNumber(match),
         level: resolveSystemLevelName(match?.profile?.currentGrade || ""),
         school: normalizeText(match?.profile?.schoolName),
@@ -5714,7 +5838,6 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function normalizeTopSearchQuery(rawValue = "") {
       const selected = resolveTopSearchStudentSelection(rawValue)
       if (selected?.eaglesId) return selected.eaglesId
-      if (selected?.fullName) return selected.fullName
       return normalizeText(rawValue)
     }
 
@@ -5810,7 +5933,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         let matched = context.studentRefIds.some((entry) => entry === studentRefFilter)
         if (!matched && tableKey === "assignments") {
           const selectedStudent = tableFilterSelectedStudent(tableKey)
-          const targeted = normalizeLower(normalizeText(row?.eaglesId || row?.studentRefId))
+          const targeted = normalizeLower(normalizeText(row?.eaglesId))
           if (targeted) {
             const selectedPublicId = normalizeLower(selectedStudent?.eaglesId)
             matched = targeted === studentRefFilter || (selectedPublicId && targeted === selectedPublicId)
@@ -5883,7 +6006,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function attendanceRowSearchText(row = {}) {
       return [
-        normalizeText(row?.studentName),
+        normalizeText(row?.fullName),
+        normalizeText(row?.englishName),
+        normalizeText(row?.studentNumber),
         normalizeText(row?.eaglesId),
         normalizeText(row?.classLevel),
         normalizeText(row?.attendanceDate),
@@ -5907,7 +6032,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function gradeRowSearchText(row = {}) {
       return [
-        normalizeText(row?.studentName),
+        normalizeText(row?.fullName),
+        normalizeText(row?.englishName),
+        normalizeText(row?.studentNumber),
         normalizeText(row?.eaglesId),
         normalizeText(row?.classLevel),
         normalizeText(row?.dueAt),
@@ -5921,7 +6048,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function reportRowSearchText(row = {}) {
       return [
-        normalizeText(row?.studentName),
+        normalizeText(row?.fullName),
+        normalizeText(row?.englishName),
+        normalizeText(row?.studentNumber),
         normalizeText(row?.eaglesId),
         normalizeText(row?.classLevel),
         normalizeText(row?.generatedAt),
@@ -5944,10 +6073,27 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
     }
 
+    function requiredEaglesId(value = "", contextLabel = "") {
+      const eaglesId = normalizeText(value)
+      if (eaglesId) return eaglesId
+      const context = normalizeText(contextLabel)
+      throw new Error(`eaglesId is required${context ? ` (${context})` : ""}`)
+    }
+
+    function requiredStudentNumber(value = "", contextLabel = "") {
+      const studentNumber = parsePositiveInteger(value)
+      if (studentNumber) return studentNumber
+      const context = normalizeText(contextLabel)
+      throw new Error(`studentNumber is required${context ? ` (${context})` : ""}`)
+    }
+
     function tableExportColumns(tableKey = "") {
       if (tableKey === "attendance") {
         return [
-          { key: "student", label: "Student" },
+          { key: "eaglesId", label: "Eagles ID" },
+          { key: "studentNumber", label: "Student Number" },
+          { key: "fullName", label: "Full Name" },
+          { key: "englishName", label: "English Name" },
           { key: "date", label: "Date" },
           { key: "className", label: "Class" },
           { key: "quarter", label: "Quarter" },
@@ -5959,7 +6105,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         return [
           { key: "assignment", label: "Assignment" },
           { key: "level", label: "Level" },
-          { key: "student", label: "Student" },
+          { key: "eaglesId", label: "Eagles ID" },
+          { key: "studentNumber", label: "Student Number" },
+          { key: "fullName", label: "Full Name" },
+          { key: "englishName", label: "English Name" },
           { key: "assignedAt", label: "Assigned" },
           { key: "dueAt", label: "Due" },
           { key: "completion", label: "Completion" },
@@ -5968,7 +6117,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       if (tableKey === "grades") {
         return [
-          { key: "student", label: "Student" },
+          { key: "eaglesId", label: "Eagles ID" },
+          { key: "studentNumber", label: "Student Number" },
+          { key: "fullName", label: "Full Name" },
+          { key: "englishName", label: "English Name" },
           { key: "dueAt", label: "Due" },
           { key: "className", label: "Class" },
           { key: "assignmentName", label: "Assignment" },
@@ -5981,7 +6133,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         ]
       }
       return [
-        { key: "student", label: "Student" },
+        { key: "eaglesId", label: "Eagles ID" },
+        { key: "studentNumber", label: "Student Number" },
+        { key: "fullName", label: "Full Name" },
+        { key: "englishName", label: "English Name" },
         { key: "generatedAt", label: "Generated" },
         { key: "className", label: "Class" },
         { key: "quarter", label: "Quarter" },
@@ -5996,8 +6151,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function mapTableExportRow(tableKey = "", row = {}) {
       if (tableKey === "attendance") {
+        const eaglesId = requiredEaglesId(row?.eaglesId, "attendance export row")
+        const studentNumber = requiredStudentNumber(row?.studentNumber, "attendance export row")
         return {
-          student: normalizeText(row?.studentName || row?.eaglesId),
+          eaglesId,
+          studentNumber,
+          fullName: canonicalStudentFullNameFromRow(row),
+          englishName: canonicalStudentEnglishNameFromRow(row),
           date: normalizeText(row?.attendanceDate).slice(0, 10),
           className: normalizeText(row?.className),
           quarter: normalizeText(row?.quarter),
@@ -6008,22 +6168,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (tableKey === "assignments") {
         const completion = assignmentCompletionFromItems(row?.items)
         const completionText = completion.total ? `${completion.done}/${completion.total}` : "0/0"
+        const rowEaglesId = requiredEaglesId(row?.eaglesId, "assignment export row")
         const assignmentStudent = tableFilterStudentSource("assignments").find((student) => {
           const optionValue = tableFilterStudentOptionValue(student)
           if (!optionValue) return false
-          if (normalizeLower(optionValue) === normalizeLower(row?.eaglesId)) return true
-          return normalizeLower(student?.eaglesId) === normalizeLower(row?.eaglesId)
+          if (normalizeLower(optionValue) === normalizeLower(rowEaglesId)) return true
+          return normalizeLower(student?.eaglesId) === normalizeLower(rowEaglesId)
         })
-        const studentLabel = normalizeText(
-          assignmentStudent?.profile?.fullName ||
-          assignmentStudent?.eaglesId ||
-          row?.eaglesId ||
-          ""
-        )
+        const fullName = canonicalStudentFullNameFromProfile(assignmentStudent?.profile)
+        const englishName = canonicalStudentEnglishNameFromProfile(assignmentStudent?.profile)
+        const eaglesId = rowEaglesId
+        const studentNumber = requiredStudentNumber(assignmentStudent?.studentNumber, "assignment export row")
         return {
           assignment: normalizeText(row?.assignmentTitle || row?.exerciseTitle),
           level: fullLevelLabel(row?.level || ""),
-          student: normalizeText(studentLabel),
+          eaglesId,
+          studentNumber,
+          fullName,
+          englishName,
           assignedAt: normalizeText(row?.assignedAt),
           dueAt: normalizeText(row?.dueAt),
           completion: completionText,
@@ -6031,8 +6193,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         }
       }
       if (tableKey === "grades") {
+        const eaglesId = requiredEaglesId(row?.eaglesId, "grade export row")
+        const studentNumber = requiredStudentNumber(row?.studentNumber, "grade export row")
         return {
-          student: normalizeText(row?.studentName || row?.eaglesId),
+          eaglesId,
+          studentNumber,
+          fullName: canonicalStudentFullNameFromRow(row),
+          englishName: canonicalStudentEnglishNameFromRow(row),
           dueAt: normalizeText(row?.dueAt).slice(0, 10),
           className: normalizeText(row?.className),
           assignmentName: normalizeText(row?.assignmentName),
@@ -6044,8 +6211,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           comments: normalizeText(row?.comments),
         }
       }
+      const eaglesId = requiredEaglesId(row?.eaglesId, "report export row")
+      const studentNumber = requiredStudentNumber(row?.studentNumber, "report export row")
       return {
-        student: normalizeText(row?.studentName || row?.eaglesId),
+        eaglesId,
+        studentNumber,
+        fullName: canonicalStudentFullNameFromRow(row),
+        englishName: canonicalStudentEnglishNameFromRow(row),
         generatedAt: normalizeText(row?.generatedAt).slice(0, 10),
         className: normalizeText(row?.className),
         quarter: normalizeText(row?.quarter),
@@ -6065,7 +6237,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function tableExportFilename(tableKey = "") {
       const safeTable = normalizeLower(tableKey).replace(/[^a-z0-9]+/g, "-") || "data"
-      const studentPart = normalizeText(state.currentStudent?.eaglesId || state.currentStudent?.profile?.fullName || "student")
+      const studentPart = normalizeText(state.currentStudent?.eaglesId || "student")
         .replace(/[^a-zA-Z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "")
       const datePart = localIsoDate() || "export"
@@ -6481,9 +6653,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
             .filter(([value]) => Boolean(value))
         ).values()
       ).sort((left, right) => {
-        const leftName = studentDisplayName(left, { preferEnglish: true }) || normalizeText(left?.eaglesId || left?.id || "")
-        const rightName = studentDisplayName(right, { preferEnglish: true }) || normalizeText(right?.eaglesId || right?.id || "")
-        return leftName.localeCompare(rightName, undefined, { sensitivity: "base" })
+        const leftFullName = studentFullName(left)
+        const rightFullName = studentFullName(right)
+        const byName = leftFullName.localeCompare(rightFullName, undefined, { sensitivity: "base" })
+        if (byName !== 0) return byName
+        return normalizeText(left?.eaglesId).localeCompare(normalizeText(right?.eaglesId), undefined, { sensitivity: "base" })
       })
 
       selectEl.innerHTML = '<option value="">All students</option>'
@@ -7671,6 +7845,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         refreshAssignmentStudentOptions()
         renderAssignmentLevelTiles()
       }
+      if (slug === "performance-data") {
+        loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(handleError)
+      }
       const adminDataTableKey = adminDataTableKeyForPage(slug)
       if (adminDataTableKey) {
         loadAdminDataRowsForTable(adminDataTableKey).catch(handleError)
@@ -7889,7 +8066,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       const profile = state.currentStudent.profile || {}
       const pieces = [
-        normalizeText(state.currentStudent.eaglesId) || "(no eagles id)",
+        normalizeText(state.currentStudent.eaglesId),
         studentDisplayName(state.currentStudent, { preferEnglish: true }),
         studentDisplayNumber(state.currentStudent) ? `<${studentDisplayNumber(state.currentStudent)}>` : "",
         shortLevelLabel(profile.currentGrade) || "(no level)",
@@ -8007,6 +8184,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         hasMore: false,
         showAll: false,
         modalIndex: -1,
+        savedReportCountHint: 0,
+        sourceRows: [],
+        stagedRows: [],
+        pendingStageQueueById: {},
       }
       state.incomingExerciseQueue = {
         items: [],
@@ -8805,9 +8986,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return items
         .map((row) => {
           const level = shortLevelLabel(row.level || "")
-          const name = normalizeText(row.fullName) || "(no name)"
-          const sid = normalizeText(row.eaglesId) || "(no id)"
-          return `${name} (${sid}) [${level}] - absences:${row.absences || 0}, late30+:${row.late30Plus || 0}, outstanding:${row.outstandingWeek || 0}`
+          const name = normalizeText(row.fullName)
+          const sid = normalizeText(row.eaglesId)
+          const studentToken = [name, sid].filter(Boolean).join(" | ")
+          return `${studentToken} [${level}] - absences:${row.absences || 0}, late30+:${row.late30Plus || 0}, outstanding:${row.outstandingWeek || 0}`
         })
         .join("\n")
     }
@@ -9274,7 +9456,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const students = Array.isArray(fallback.uncompletedStudents) ? fallback.uncompletedStudents : []
         if (!students.length) {
           const tr = document.createElement("tr")
-          tr.innerHTML = '<td colspan="5">No uncompleted students for this level.</td>'
+          tr.innerHTML = '<td colspan="6">No uncompleted students for this level.</td>'
           tbody.appendChild(tr)
         }
         students.forEach((student, index) => {
@@ -9282,7 +9464,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           const assignments = Array.isArray(student.assignmentNames) ? student.assignmentNames.join(", ") : ""
           tr.innerHTML = `
             <td><input type="checkbox" class="checkbox-inline" data-remind-student="${student.studentRefId}" ${index < 5 ? "checked" : ""}></td>
-            <td>${student.fullName || "(no name)"} (${student.eaglesId || ""})</td>
+            <td>${student.fullName || ""}</td>
+            <td>${student.eaglesId || ""}</td>
             <td>${student.outstandingCount || 0}</td>
             <td>${assignments || "-"}</td>
             <td>${Array.isArray(student.emails) ? student.emails.join(", ") : ""}</td>
@@ -9473,7 +9656,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const riskEl = document.getElementById("overviewRiskStudents")
       if (riskEl) riskEl.textContent = buildDashboardRiskLines(atRisk)
       renderOverviewIncomingExerciseSection(summary?.incomingExerciseResults || null)
-      renderOverviewParentQueueSection(summary?.parentReportQueue || null)
+      renderPerformanceQueueSection(summary?.parentReportQueue || null)
+      state.parentReportQueue.savedReportCountHint = Math.max(0, Number(summary?.parentReports?.total || 0) || 0)
+      renderPerformanceStagedSection()
     }
 
     function canReviewIncomingExerciseQueue() {
@@ -9816,6 +10001,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function normalizeQueueItemForUi(item = {}) {
+      const payloadJson = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : null
       return {
         id: normalizeText(item.id),
         queueType: normalizeText(item.queueType),
@@ -9835,7 +10021,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         sentAt: normalizeText(item.sentAt),
         attempts: Number.parseInt(String(item.attempts || 0), 10) || 0,
         lastError: normalizeText(item.lastError),
+        payloadJson,
+        linkedReportId: normalizeText(payloadJson?.reportId),
+        linkedStudentRefId: normalizeText(payloadJson?.studentRefId),
       }
+    }
+
+    function queueItemForReportId(reportId = "") {
+      const id = normalizeText(reportId)
+      if (!id) return null
+      const items = Array.isArray(state.parentReportQueue?.items) ? state.parentReportQueue.items : []
+      return items.find((item) => normalizeText(item?.linkedReportId) === id) || null
     }
 
     function setParentQueueModalStatus(message, isError = false) {
@@ -9908,12 +10104,47 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       setParentQueueModalStatus("")
     }
 
-    function renderOverviewParentQueueSection(queueBlock = null) {
-      const sectionEl = document.getElementById("overviewParentQueueSection")
-      const detailsEl = document.getElementById("overviewParentQueueDetails")
-      const summaryEl = document.getElementById("overviewParentQueueSummary")
-      const rowsEl = document.getElementById("overviewParentQueueRows")
-      const expandBtn = document.getElementById("overviewParentQueueExpandBtn")
+    function normalizeStagedPerformanceRow(row = {}) {
+      return {
+        id: normalizeText(row.id),
+        studentRefId: normalizeText(row.studentRefId),
+        studentNumber: parsePositiveInteger(row.studentNumber),
+        fullName: normalizeText(row.fullName),
+        englishName: normalizeText(row.englishName),
+        eaglesId: normalizeText(row.eaglesId),
+        generatedAt: normalizeText(row.generatedAt),
+        className: normalizeText(row.className),
+        level: normalizeText(row.level || row.classLevel),
+        schoolYear: normalizeText(row.schoolYear),
+        quarter: normalizeText(row.quarter),
+        behaviorScore: row.behaviorScore,
+        participationScore: row.participationScore,
+        inClassScore: row.inClassScore,
+        homeworkOnTimeRate: row.homeworkOnTimeRate,
+        homeworkCompletionRate: row.homeworkCompletionRate,
+        comments: normalizeText(row.comments),
+      }
+    }
+
+    function stagedRowsFromPerformanceRecords(rows = []) {
+      const source = Array.isArray(rows) ? rows : []
+      const seen = new Set()
+      const normalizedRows = []
+      source.forEach((row) => {
+        const normalized = normalizeStagedPerformanceRow(row)
+        if (!normalized.id || seen.has(normalized.id)) return
+        seen.add(normalized.id)
+        normalizedRows.push(normalized)
+      })
+      return normalizedRows
+    }
+
+    function renderPerformanceQueueSection(queueBlock = null) {
+      const sectionEl = document.getElementById("performanceQueueSection")
+      const detailsEl = document.getElementById("performanceQueueDetails")
+      const summaryEl = document.getElementById("performanceQueueSummary")
+      const rowsEl = document.getElementById("performanceQueueRows")
+      const expandBtn = document.getElementById("performanceQueueExpandBtn")
       if (!sectionEl || !summaryEl || !rowsEl || !expandBtn) return
 
       const adminCanReview = canReviewParentQueue()
@@ -9959,8 +10190,74 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       })
     }
 
+    function renderPerformanceStagedSection(rows = null) {
+      const sectionEl = document.getElementById("performanceStagedSection")
+      const summaryEl = document.getElementById("performanceStagedSummary")
+      const rowsEl = document.getElementById("performanceStagedRows")
+      if (!sectionEl || !summaryEl || !rowsEl) return
+
+      const adminCanReview = canReviewParentQueue()
+      sectionEl.classList.toggle("hidden", !adminCanReview)
+      if (!adminCanReview) return
+
+      if (Array.isArray(rows)) state.parentReportQueue.sourceRows = stagedRowsFromPerformanceRecords(rows)
+      const sourceRows = Array.isArray(state.parentReportQueue.sourceRows) ? state.parentReportQueue.sourceRows : []
+      const queuedByReportId = new Set(
+        (Array.isArray(state.parentReportQueue.items) ? state.parentReportQueue.items : [])
+          .map((item) => normalizeText(item?.linkedReportId))
+          .filter(Boolean)
+      )
+      const stagedRows = sourceRows.filter((row) => row.id && !queuedByReportId.has(row.id))
+      state.parentReportQueue.stagedRows = stagedRows
+      const savedCountHint = Math.max(0, Number(state.parentReportQueue.savedReportCountHint || 0) || 0)
+      const loadedSavedCount = sourceRows.length
+      const queuedCount = Math.max(0, Number(state.parentReportQueue.total || 0) || 0)
+      if (!loadedSavedCount && savedCountHint > 0) {
+        summaryEl.textContent = `saved reports=${savedCountHint} | staged list pending data load | queued=${queuedCount}`
+      } else {
+        summaryEl.textContent = `saved=${loadedSavedCount} | staged=${stagedRows.length} | queued=${queuedCount}`
+      }
+
+      rowsEl.innerHTML = ""
+      if (!stagedRows.length) {
+        if (!loadedSavedCount && savedCountHint > 0) {
+          const noun = savedCountHint === 1 ? "report is" : "reports are"
+          rowsEl.innerHTML = `<tr><td colspan="7">${savedCountHint} saved performance ${noun} staged and not queued yet. Open Performance data and click Reload Staged.</td></tr>`
+        } else {
+          rowsEl.innerHTML = '<tr><td colspan="7">No staged performance reports.</td></tr>'
+        }
+        return
+      }
+
+      stagedRows.forEach((row) => {
+        const pending = Boolean(state.parentReportQueue.pendingStageQueueById?.[row.id])
+        const tr = document.createElement("tr")
+        tr.innerHTML = `
+          <td>${escapeHtml(row.generatedAt ? row.generatedAt.slice(0, 10) : "-")}</td>
+          <td>${escapeHtml(row.fullName || "")}</td>
+          <td>${escapeHtml(row.eaglesId || "")}</td>
+          <td>${escapeHtml(row.className || "-")}</td>
+          <td>${escapeHtml(row.quarter || "-")}</td>
+          <td>Staged</td>
+          <td><button type="button" class="btn-edit" data-stage-report-id="${escapeHtml(row.id)}"${pending ? " disabled" : ""}>${pending ? "Queueing..." : "Approve -> Queue"}</button></td>
+        `
+        tr.querySelector(`[data-stage-report-id="${row.id}"]`)?.addEventListener("click", () => {
+          queueStagedPerformanceReport(row.id).catch(handleError)
+        })
+        rowsEl.appendChild(tr)
+      })
+    }
+
     async function loadParentReportQueue({ showAll = state.parentReportQueue.showAll } = {}) {
-      if (!canReviewParentQueue()) return
+      if (!canReviewParentQueue()) {
+        renderPerformanceQueueSection({
+          total: 0,
+          hasMore: false,
+          items: [],
+        })
+        renderPerformanceStagedSection()
+        return
+      }
       const nextShowAll = Boolean(showAll)
       state.parentReportQueue.showAll = nextShowAll
       const take = nextShowAll ? 500 : 10
@@ -9977,11 +10274,91 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         : []
       state.parentReportQueue.total = Number(result?.total || state.parentReportQueue.items.length) || 0
       state.parentReportQueue.hasMore = Boolean(result?.hasMore)
-      renderOverviewParentQueueSection({
+      renderPerformanceQueueSection({
         total: state.parentReportQueue.total,
         hasMore: state.parentReportQueue.hasMore,
         items: state.parentReportQueue.items,
       })
+      renderPerformanceStagedSection()
+    }
+
+    async function queueStagedPerformanceReport(reportId = "") {
+      if (!canReviewParentQueue()) throw new Error("Only admin can approve staged performance reports.")
+      const id = normalizeText(reportId)
+      if (!id) throw new Error("Select a staged performance report first.")
+      const stagedRow = (Array.isArray(state.parentReportQueue.stagedRows) ? state.parentReportQueue.stagedRows : []).find(
+        (row) => normalizeText(row?.id) === id
+      )
+      if (!stagedRow) throw new Error("Staged performance report not found. Reload staged reports and try again.")
+      const studentRefId = normalizeText(stagedRow.studentRefId)
+      if (!studentRefId) throw new Error("Staged report has no student reference.")
+      if (state.parentReportQueue.pendingStageQueueById[id]) return
+
+      state.parentReportQueue.pendingStageQueueById[id] = true
+      renderPerformanceStagedSection()
+      try {
+        const detail = await ensureStudentDetailCached(studentRefId)
+        const recipients = parentTrackingRecipientsForStudent(detail)
+        const fullName = studentFullName(detail)
+        const studentEaglesId = requiredEaglesId(detail?.eaglesId, "staged performance report")
+        const studentNumber = requiredStudentNumber(detail?.studentNumber, "staged performance report")
+        const className =
+          normalizeText(stagedRow.className) ||
+          fullLevelLabel(resolveSystemLevelName(stagedRow.level || detail?.profile?.currentGrade || ""))
+        const level = resolveSystemLevelName(stagedRow.level || detail?.profile?.currentGrade || "")
+        const generatedDate = normalizeText(stagedRow.generatedAt).slice(0, 10) || localIsoDate()
+        const metricLines = [
+          `Behavior: ${normalizeText(stagedRow.behaviorScore) || "-"}`,
+          `Skills: ${normalizeText(stagedRow.participationScore) || "-"}`,
+          `Academic: ${normalizeText(stagedRow.inClassScore) || "-"}`,
+          `Homework Timeliness %: ${normalizeText(stagedRow.homeworkOnTimeRate) || "0"}`,
+          `Assignment Completion %: ${normalizeText(stagedRow.homeworkCompletionRate) || "0"}`,
+        ]
+        const messageLines = [
+          `Full Name: ${fullName}`,
+          `Eagles ID: ${studentEaglesId}`,
+          `Student Number: ${studentNumber}`,
+          `Class level: ${className || "-"}`,
+          `Generated: ${generatedDate}`,
+          "",
+          "Performance snapshot:",
+          metricLines.join("\n"),
+          "",
+          normalizeText(stagedRow.comments) ? `Comment: ${normalizeText(stagedRow.comments)}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n")
+
+        await api(ADMIN_NOTIFY_EMAIL_PATH, {
+          method: "POST",
+          body: {
+            deliveryMode: "weekend-batch",
+            queueType: "parent-report",
+            assignmentTitle: `${fullName || "student"} class report`,
+            exerciseTitle: className,
+            dueAt: generatedDate,
+            level,
+            message: messageLines,
+            recipients,
+            reportId: id,
+            studentRefId,
+            className: normalizeText(stagedRow.className),
+            schoolYear: normalizeText(stagedRow.schoolYear),
+            quarter: normalizeText(stagedRow.quarter),
+          },
+        })
+        await loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
+        await loadDashboardSummary()
+        const recipientCount = recipients.length
+        setStatus(
+          recipientCount > 0
+            ? `Staged performance report approved and queued (${recipientCount} recipients).`
+            : "Staged performance report approved and queued with 0 recipients. Add emails in Queue Review."
+        )
+      } finally {
+        delete state.parentReportQueue.pendingStageQueueById[id]
+        renderPerformanceStagedSection()
+      }
     }
 
     async function holdParentQueueModalItem() {
@@ -10103,7 +10480,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     async function loadDashboardStudents() {
       const data = await api("/api/admin/students?take=1000")
-      state.dashboardStudents = Array.isArray(data?.items) ? data.items : []
+      const source = Array.isArray(data?.items) ? data.items : []
+      state.dashboardStudents = source.filter((student) => {
+        if (!normalizeText(student?.eaglesId)) return false
+        if (hasStudentNumberKey(student) && !parsePositiveInteger(student?.studentNumber)) return false
+        return true
+      })
       syncSystemLevelNames(
         state.dashboardStudents.map((student) => normalizeLevelName(student?.profile?.currentGrade || ""))
       )
@@ -10265,8 +10647,223 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         normalizeText(message) || "Weekend batch windows: Sat/Sun at 12:00, 15:30, 18:00, 20:15."
     }
 
+    function setParentTrackingSaveNotice(message = "", isError = false, detail = "") {
+      const noticeEl = document.getElementById("pt_saveNotice")
+      if (!noticeEl) return
+      const text = normalizeText(message)
+      if (!text) {
+        noticeEl.classList.add("hidden")
+        noticeEl.classList.remove("error")
+        noticeEl.innerHTML = ""
+        return
+      }
+      const detailText = normalizeText(detail)
+      const detailHtml = detailText ? `<span class="small">${escapeHtml(detailText)}</span>` : ""
+      noticeEl.classList.remove("hidden")
+      noticeEl.classList.toggle("error", Boolean(isError))
+      noticeEl.innerHTML = `${escapeHtml(text)}${detailHtml}`
+    }
+
+    function normalizeParentTrackingScoreValue(value) {
+      const text = normalizeText(value)
+      if (!text) return ""
+      const numeric = Number.parseFloat(text)
+      if (!Number.isFinite(numeric)) return ""
+      const rounded = Math.round(numeric)
+      const clamped = Math.max(0, Math.min(10, rounded))
+      return String(clamped)
+    }
+
+    function markParentTrackingManualMetricsTouched() {
+      state.parentTracking.manualMetricsTouched = true
+    }
+
+    function resetParentTrackingManualMetricsTouched() {
+      state.parentTracking.manualMetricsTouched = false
+    }
+
+    function initializeParentTrackingScoreOptions(selectEl, { includeNotApplicable = true } = {}) {
+      if (!(selectEl instanceof HTMLSelectElement)) return
+      if (selectEl.options.length > 0) return
+      const emptyOption = document.createElement("option")
+      emptyOption.value = ""
+      emptyOption.textContent = "Select score"
+      selectEl.appendChild(emptyOption)
+      for (let score = 0; score <= 10; score += 1) {
+        const option = document.createElement("option")
+        option.value = String(score)
+        option.textContent = includeNotApplicable && score === 0 ? "0 - Not Applicable" : String(score)
+        selectEl.appendChild(option)
+      }
+    }
+
+    function initializeParentTrackingRubricScoreSelects() {
+      const rubricInputs = Array.from(
+        document.querySelectorAll(
+          '.progress-report-rubric-table input[type="number"][name^="pt_skill_"], .progress-report-rubric-table input[type="number"][name^="pt_conduct_"]'
+        )
+      )
+      rubricInputs.forEach((inputEl) => {
+        const selectEl = document.createElement("select")
+        selectEl.name = normalizeText(inputEl.name)
+        selectEl.className = inputEl.className
+        initializeParentTrackingScoreOptions(selectEl, { includeNotApplicable: true })
+        const normalizedValue = normalizeParentTrackingScoreValue(inputEl.value)
+        selectEl.value = normalizedValue
+        inputEl.replaceWith(selectEl)
+      })
+    }
+
+    function initializeParentTrackingScoreSelects() {
+      const selectIds = ["pt_behaviorScore", "pt_participationScore", "pt_academicScore"]
+      selectIds.forEach((id) => {
+        const selectEl = document.getElementById(id)
+        initializeParentTrackingScoreOptions(selectEl, { includeNotApplicable: true })
+      })
+      initializeParentTrackingRubricScoreSelects()
+    }
+
     function parentTrackingRecommendationTextareas() {
       return Array.from(document.querySelectorAll('textarea[name^="pt_rec_"]'))
+    }
+
+    function normalizeParentTrackingRubricScore(value) {
+      const numeric = Number.parseFloat(String(value))
+      if (!Number.isFinite(numeric)) return null
+      const clamped = Math.max(0, Math.min(10, numeric))
+      return clamped
+    }
+
+    function parentTrackingRubricScoreValues(selector = "") {
+      const targetSelector = normalizeText(selector)
+      if (!targetSelector) return []
+      return Array.from(document.querySelectorAll(targetSelector))
+        .map((entry) => normalizeParentTrackingRubricScore(entry?.value))
+        .filter((entry) => entry !== null)
+    }
+
+    function parentTrackingRubricAverage(selector = "") {
+      return toAverage(parentTrackingRubricScoreValues(selector))
+    }
+
+    function parentTrackingSummaryFallbackFromRubric() {
+      return {
+        behaviorScore: normalizeParentTrackingScoreValue(
+          parentTrackingRubricAverage('[name^="pt_conduct_"]')
+        ),
+        participationScore: normalizeParentTrackingScoreValue(
+          parentTrackingRubricAverage('[name^="pt_skill_"]')
+        ),
+      }
+    }
+
+    function applyParentTrackingRubricSummaryScores() {
+      const rubricSummary = parentTrackingSummaryFallbackFromRubric()
+      parentTrackingFieldSetValue("pt_behaviorScore", rubricSummary.behaviorScore)
+      parentTrackingFieldSetValue("pt_participationScore", rubricSummary.participationScore)
+    }
+
+    function parentTrackingRubricScoreFields() {
+      return Array.from(document.querySelectorAll('[name^="pt_skill_"], [name^="pt_conduct_"]'))
+    }
+
+    function parentTrackingRubricFieldByName(fieldName = "") {
+      const normalizedFieldName = normalizeText(fieldName)
+      if (!normalizedFieldName) return null
+      return (
+        Array.from(
+          document.querySelectorAll('[name^="pt_skill_"], [name^="pt_conduct_"], textarea[name^="pt_rec_"]')
+        ).find((entry) => normalizeText(entry?.name) === normalizedFieldName) || null
+      )
+    }
+
+    function collectParentTrackingRubricPayload() {
+      const skillScores = {}
+      const conductScores = {}
+      const recommendations = {}
+
+      parentTrackingRubricScoreFields().forEach((fieldEl) => {
+        const fieldName = normalizeText(fieldEl?.name)
+        if (!fieldName) return
+        const scoreValue = normalizeParentTrackingScoreValue(fieldEl?.value)
+        if (!scoreValue) return
+        if (fieldName.startsWith("pt_skill_")) {
+          skillScores[fieldName] = scoreValue
+          return
+        }
+        if (fieldName.startsWith("pt_conduct_")) {
+          conductScores[fieldName] = scoreValue
+        }
+      })
+
+      parentTrackingRecommendationTextareas().forEach((textareaEl) => {
+        const fieldName = normalizeText(textareaEl?.name)
+        const recommendation = normalizeText(textareaEl?.value)
+        if (!fieldName || !recommendation) return
+        recommendations[fieldName] = recommendation
+      })
+
+      if (!Object.keys(skillScores).length && !Object.keys(conductScores).length && !Object.keys(recommendations).length) {
+        return null
+      }
+      return {
+        skillScores,
+        conductScores,
+        recommendations,
+      }
+    }
+
+    function clearParentTrackingRubricInputs() {
+      parentTrackingRubricScoreFields().forEach((fieldEl) => {
+        fieldEl.value = ""
+      })
+      parentTrackingRecommendationTextareas().forEach((textareaEl) => {
+        textareaEl.value = ""
+      })
+    }
+
+    function applyParentTrackingRubricPayload(payload = null) {
+      clearParentTrackingRubricInputs()
+      const source = payload && typeof payload === "object" ? payload : null
+      if (!source) {
+        applyParentTrackingRubricSummaryScores()
+        return
+      }
+
+      ;["skillScores", "conductScores"].forEach((bucketName) => {
+        const sourceBucket = source?.[bucketName]
+        if (!sourceBucket || typeof sourceBucket !== "object") return
+        Object.entries(sourceBucket).forEach(([fieldName, rawValue]) => {
+          const fieldEl = parentTrackingRubricFieldByName(fieldName)
+          if (!(fieldEl instanceof HTMLInputElement || fieldEl instanceof HTMLSelectElement)) return
+          const normalizedScore = normalizeParentTrackingScoreValue(rawValue)
+          if (!normalizedScore) return
+          fieldEl.value = normalizedScore
+        })
+      })
+
+      const sourceRecommendations = source?.recommendations
+      if (sourceRecommendations && typeof sourceRecommendations === "object") {
+        Object.entries(sourceRecommendations).forEach(([fieldName, rawValue]) => {
+          const fieldEl = parentTrackingRubricFieldByName(fieldName)
+          if (!(fieldEl instanceof HTMLTextAreaElement)) return
+          const normalizedRecommendation = normalizeText(rawValue)
+          if (!normalizedRecommendation) return
+          fieldEl.value = normalizedRecommendation
+        })
+      }
+
+      applyParentTrackingRubricSummaryScores()
+    }
+
+    function parentTrackingCommentFallbackFromRecommendations(maxLines = 3) {
+      const limit = Math.max(1, Number.parseInt(String(maxLines), 10) || 3)
+      const lines = parentTrackingRecommendationTextareas()
+        .map((entry) => normalizeText(entry?.value).replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+        .slice(0, limit)
+      if (!lines.length) return ""
+      return `Corrective actions: ${lines.join(" | ")}`
     }
 
     function parentTrackingRecommendationFieldByName(fieldName = "") {
@@ -10667,9 +11264,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function renderParentTrackingMetrics(metrics = {}) {
-      parentTrackingFieldSetValue("pt_behaviorScore", metrics.behaviorScore ?? "")
-      parentTrackingFieldSetValue("pt_participationScore", metrics.skillsScore ?? metrics.participationScore ?? "")
-      parentTrackingFieldSetValue("pt_academicScore", metrics.academicScore ?? "")
+      applyParentTrackingRubricSummaryScores()
+      parentTrackingFieldSetValue("pt_academicScore", normalizeParentTrackingScoreValue(metrics.academicScore))
       parentTrackingFieldSetValue("pt_homeworkOnTimeRate", metrics.homeworkOnTimeRate ?? 0)
       parentTrackingFieldSetValue("pt_homeworkCompletionRate", metrics.homeworkCompletionRate ?? 0)
     }
@@ -10840,6 +11436,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           if (levelNamesMatch(state.parentTracking.selectedLevel, canonicalLevel)) return
           state.parentTracking.selectedLevel = canonicalLevel
           state.parentTracking.selectedStudentId = ""
+          resetParentTrackingManualMetricsTouched()
           ensureParentTrackingFormDefaults({ forceSummaryFromMemory: true })
           refreshParentTracking({ preserveStudentSelection: false }).catch(handleError)
         })
@@ -10919,8 +11516,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const filteredRows = filterRowsForTable("performance", sortedRows, reportRowSearchText)
       state.visibleTableRows.performance = filteredRows
       updateTableFilterSummary("performance")
+      renderPerformanceStagedSection(filteredRows)
       if (!filteredRows.length) {
-        rowsEl.innerHTML = '<tr><td colspan="10">No performance records for current filters.</td></tr>'
+        rowsEl.innerHTML = '<tr><td colspan="12">No performance records for current filters.</td></tr>'
         return
       }
 
@@ -10929,7 +11527,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("performance", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
+          <td>${escapeHtml(row.eaglesId || "")}</td>
+          <td>${escapeHtml(row.fullName || "")}</td>
+          <td>${escapeHtml(row.englishName || "")}</td>
           <td>${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.quarter || ""}</td>
@@ -10952,13 +11552,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
             parentTrackingFieldSetValue("pt_classDate", generatedDate)
             parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(generatedDate))
           }
-          parentTrackingFieldSetValue("pt_behaviorScore", row.behaviorScore ?? "")
-          parentTrackingFieldSetValue("pt_participationScore", row.participationScore ?? "")
-          parentTrackingFieldSetValue("pt_academicScore", row.inClassScore ?? "")
-          parentTrackingFieldSetValue("pt_homeworkOnTimeRate", row.homeworkOnTimeRate ?? "")
-          parentTrackingFieldSetValue("pt_homeworkCompletionRate", row.homeworkCompletionRate ?? "")
           parentTrackingFieldSetValue("pt_comments", row.comments || "")
+          applyParentTrackingRubricPayload(row.rubricPayload || null)
+          resetParentTrackingManualMetricsTouched()
           setActivePage("parent-tracking")
+          syncParentTrackingForSelection({}).catch(handleError)
           setParentTrackingStatus("Performance record loaded for edit.")
         })
 
@@ -11005,9 +11603,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       ensureParentTrackingFormDefaults({ forceSummaryFromMemory: false })
       const previousStudentRefId = normalizeText(state.parentTracking.selectedStudentId)
       const selectedStudentRefId = normalizeText(document.getElementById("pt_studentRefId")?.value)
-      if (selectedStudentRefId !== previousStudentRefId) parentTrackingFieldSetValue("pt_reportId", "")
+      if (selectedStudentRefId !== previousStudentRefId) {
+        parentTrackingFieldSetValue("pt_reportId", "")
+        clearParentTrackingRubricInputs()
+        applyParentTrackingRubricSummaryScores()
+        resetParentTrackingManualMetricsTouched()
+      }
       state.parentTracking.selectedStudentId = selectedStudentRefId
       if (!selectedStudentRefId) {
+        resetParentTrackingManualMetricsTouched()
+        clearParentTrackingRubricInputs()
         clearParentTrackingComputedFields()
         renderParentTrackingReportRows([])
         setParentTrackingStatus("Select a student to auto-fill report metrics.")
@@ -11016,6 +11621,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       const detail = await loadParentTrackingStudentDetail(selectedStudentRefId)
       if (!detail) {
+        resetParentTrackingManualMetricsTouched()
+        clearParentTrackingRubricInputs()
         clearParentTrackingComputedFields()
         renderParentTrackingReportRows([])
         setParentTrackingStatus("Unable to load selected student details.", true)
@@ -11038,7 +11645,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       renderParentTrackingHomeworkAnnouncement(detail, metrics)
       renderParentTrackingReportRows(parentTrackingReportRowsForStudent(detail, selectedLevel))
       setParentTrackingStatus(
-        `${detail?.profile?.fullName || detail?.eaglesId || "Student"} | records=${metrics.records.length} | outstanding=${metrics.outstanding.length}`
+        `fullName=${normalizeText(detail?.profile?.fullName)} | eaglesId=${normalizeText(detail?.eaglesId)} | records=${metrics.records.length} | outstanding=${metrics.outstanding.length}`
       )
 
       if (normalizeText(preferredAssignmentId)) {
@@ -11131,21 +11738,40 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (!canWriteData() && currentRoleName() !== "teacher") {
         throw new Error("Performance tracking updates are read-only for this role.")
       }
-      const context = await resolveParentTrackingContext({ includeStudentRefresh: true })
+      const rawForm = {
+        reportId: normalizeText(document.getElementById("pt_reportId")?.value),
+        homeworkCompletionRate: normalizeText(document.getElementById("pt_homeworkCompletionRate")?.value),
+        homeworkOnTimeRate: normalizeText(document.getElementById("pt_homeworkOnTimeRate")?.value),
+        comment: normalizeText(document.getElementById("pt_comments")?.value),
+      }
+      const context = await resolveParentTrackingContext({ includeStudentRefresh: false })
+      const rubricSummary = parentTrackingSummaryFallbackFromRubric()
+      const rubricPayload = collectParentTrackingRubricPayload()
+      const savedForm = {
+        ...rawForm,
+        behaviorScore: rubricSummary.behaviorScore,
+        participationScore: rubricSummary.participationScore,
+        inClassScore: normalizeParentTrackingScoreValue(context.metrics?.academicScore),
+        homeworkCompletionRate: normalizeText(context.metrics?.homeworkCompletionRate ?? rawForm.homeworkCompletionRate),
+        homeworkOnTimeRate: normalizeText(context.metrics?.homeworkOnTimeRate ?? rawForm.homeworkOnTimeRate),
+        comment: rawForm.comment || parentTrackingCommentFallbackFromRecommendations(),
+        rubricPayload,
+      }
 
       const result = await api(`/api/admin/students/${encodeURIComponent(context.studentRefId)}/reports`, {
         method: "POST",
         body: {
-          id: normalizeText(document.getElementById("pt_reportId")?.value),
+          id: savedForm.reportId,
           className: context.className,
           schoolYear: context.schoolYear,
           quarter: context.quarter,
-          homeworkCompletionRate: normalizeText(document.getElementById("pt_homeworkCompletionRate")?.value),
-          homeworkOnTimeRate: normalizeText(document.getElementById("pt_homeworkOnTimeRate")?.value),
-          behaviorScore: normalizeText(document.getElementById("pt_behaviorScore")?.value),
-          participationScore: normalizeText(document.getElementById("pt_participationScore")?.value),
-          inClassScore: normalizeText(document.getElementById("pt_academicScore")?.value),
-          comments: context.reportNotes,
+          homeworkCompletionRate: savedForm.homeworkCompletionRate,
+          homeworkOnTimeRate: savedForm.homeworkOnTimeRate,
+          behaviorScore: savedForm.behaviorScore,
+          participationScore: savedForm.participationScore,
+          inClassScore: savedForm.inClassScore,
+          comments: savedForm.comment,
+          rubricPayload: savedForm.rubricPayload,
           level: context.selectedLevel,
         },
       })
@@ -11163,10 +11789,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       if (result?.report?.id) document.getElementById("pt_reportId").value = result.report.id
       if (!silent) {
-        setParentTrackingStatus("Performance class report saved.")
-        setStatus(`Performance report saved for ${context.student.profile?.fullName || context.student.eaglesId}.`)
+        const fullName = normalizeText(context.student.profile?.fullName)
+        const eaglesId = normalizeText(context.student.eaglesId)
+        setParentTrackingStatus("Performance class report saved. Use Queue Send to add it to Queue Review.")
+        setStatus(`Performance report saved. fullName=${fullName} | eaglesId=${eaglesId}. Use Queue Send to add it to Queue Review.`)
+        setParentTrackingSaveNotice(
+          "Saved Performance Report",
+          false,
+          `Saved. fullName=${fullName} | eaglesId=${eaglesId}. This draft does not appear in Queue Review until you click Save for Admin Review.`
+        )
       }
-      return context
+      return {
+        ...context,
+        savedForm,
+        reportId: normalizeText(result?.report?.id || document.getElementById("pt_reportId")?.value || savedForm.reportId),
+      }
     }
 
     async function queueParentTrackingEmail() {
@@ -11176,10 +11813,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const context = await saveParentTrackingReport({ silent: true })
       rememberParentTrackingTeacherName()
       rememberParentTrackingLessonSummary()
-
-      if (!context.recipients.length) {
-        throw new Error("No recipient email found on student/parent profile.")
-      }
+      const recipientCount = context.recipients.length
 
       const outstandingLines = context.metrics.outstanding.length
         ? context.metrics.outstanding.map((row, index) => {
@@ -11191,15 +11825,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         : ["None"]
 
       const metricLines = [
-        `Behavior: ${normalizeText(document.getElementById("pt_behaviorScore")?.value) || "-"}`,
-        `Skills: ${normalizeText(document.getElementById("pt_participationScore")?.value) || "-"}`,
-        `Academic: ${normalizeText(document.getElementById("pt_academicScore")?.value) || "-"}`,
-        `Homework Timeliness %: ${normalizeText(document.getElementById("pt_homeworkOnTimeRate")?.value) || "0"}`,
-        `Assignment Completion %: ${normalizeText(document.getElementById("pt_homeworkCompletionRate")?.value) || "0"}`,
+        `Behavior: ${normalizeText(context.savedForm?.behaviorScore) || "-"}`,
+        `Skills: ${normalizeText(context.savedForm?.participationScore) || "-"}`,
+        `Academic: ${normalizeText(context.savedForm?.inClassScore) || "-"}`,
+        `Homework Timeliness %: ${normalizeText(context.savedForm?.homeworkOnTimeRate) || "0"}`,
+        `Assignment Completion %: ${normalizeText(context.savedForm?.homeworkCompletionRate) || "0"}`,
       ]
 
       const message = [
-        `Student: ${context.student.profile?.fullName || context.student.eaglesId}`,
+        `Full Name: ${normalizeText(context.student.profile?.fullName)}`,
+        `Eagles ID: ${normalizeText(context.student.eaglesId)}`,
         `Class level: ${context.className}`,
         `Class day/date: ${context.classDay || "-"} / ${context.classDate}`,
         `Teacher: ${context.teacherName || "-"}`,
@@ -11212,7 +11847,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         "Outstanding assignments:",
         outstandingLines.join("\n"),
         "",
-        context.comment ? `Comment: ${context.comment}` : "",
+        normalizeText(context.savedForm?.comment) ? `Comment: ${normalizeText(context.savedForm?.comment)}` : "",
       ]
         .filter(Boolean)
         .join("\n")
@@ -11222,30 +11857,51 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         body: {
           deliveryMode: "weekend-batch",
           queueType: "parent-report",
-          assignmentTitle: `${context.student.profile?.fullName || context.student.eaglesId} class report`,
+          assignmentTitle: `${normalizeText(context.student.profile?.fullName) || "student"} class report`,
           exerciseTitle: context.className,
           dueAt: context.classDate,
           level: context.selectedLevel,
           message,
           recipients: context.recipients,
+          reportId: normalizeText(context.reportId),
+          studentRefId: normalizeText(context.studentRefId),
+          className: normalizeText(context.className),
+          schoolYear: normalizeText(context.schoolYear),
+          quarter: normalizeText(context.quarter),
         },
       })
 
       const scheduledFor = normalizeText(result?.scheduledFor)
       const teacherMode = currentRoleName() === "teacher"
       setParentTrackingStatus(
-        scheduledFor
-          ? `Queued for weekend batch: ${scheduledFor} (${context.recipients.length} recipients).`
-          : `Queued for weekend batch (${context.recipients.length} recipients).`
+        recipientCount > 0
+          ? scheduledFor
+            ? `Queued for weekend batch: ${scheduledFor} (${recipientCount} recipients).`
+            : `Queued for weekend batch (${recipientCount} recipients).`
+          : "Queued for admin review with 0 recipients. Add emails in Queue Review before Send All."
       )
       setStatus(
         teacherMode
-          ? `Performance report saved for admin review (${context.recipients.length} recipients).`
-          : `Performance tracking email queued (${context.recipients.length} recipients).`
+          ? recipientCount > 0
+            ? `Performance report saved for admin review (${recipientCount} recipients).`
+            : "Performance report saved for admin review. No recipient emails found yet."
+          : recipientCount > 0
+            ? `Performance tracking email queued (${recipientCount} recipients).`
+            : "Performance tracking report queued with no recipients. Add emails in Queue Review."
       )
+      setParentTrackingSaveNotice(
+        recipientCount > 0 ? "Saved for Admin Review" : "Saved for Admin Review (Recipients Needed)",
+        false,
+        recipientCount > 0
+          ? `Queued successfully. Queue Review now includes this report (${recipientCount} recipients).`
+          : "Queued successfully with 0 recipients. Open Queue Review and add recipient emails before Send All."
+      )
+      await loadDashboardSummary()
+      await loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
     }
 
     function clearParentTrackingForm() {
+      resetParentTrackingManualMetricsTouched()
       parentTrackingFieldSetValue("pt_reportId", "")
       parentTrackingFieldSetValue("pt_studentRefId", "")
       parentTrackingFieldSetValue("pt_classDate", localIsoDate())
@@ -11255,9 +11911,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       state.parentTracking.activeRecommendationFieldName = ""
       clearParentTrackingActionShortcutInputs({ preserveStatus: true })
       setParentTrackingActionHelperStatus("")
+      clearParentTrackingRubricInputs()
       clearParentTrackingComputedFields()
       applyParentTrackingLessonSummaryFromMemory({ force: true })
       setParentTrackingStatus("Performance tracking form cleared.")
+      setParentTrackingSaveNotice("")
     }
 
     async function applyParentTrackingDeepLinkFromLocation() {
@@ -11309,12 +11967,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         .join(" ")
     }
 
+    function studentFullName(student = {}) {
+      return normalizeText(student?.profile?.fullName || student?.fullName)
+    }
+
+    function studentEnglishName(student = {}) {
+      return normalizeText(student?.profile?.englishName || student?.englishName)
+    }
+
     function studentDisplayName(student = {}, { preferEnglish = false } = {}) {
-      const profile = student?.profile || {}
-      const fullName = normalizeText(profile?.fullName || student?.fullName)
-      const englishName = normalizeText(profile?.englishName || student?.englishName)
-      if (preferEnglish) return englishName || fullName || "(no name)"
-      return fullName || englishName || "(no name)"
+      const fullName = studentFullName(student)
+      const englishName = studentEnglishName(student)
+      if (preferEnglish) return englishName
+      return fullName
     }
 
     function studentDisplayNumber(student = {}) {
@@ -11327,9 +11992,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function studentIdentityLabel(student = {}, { preferEnglish = false, wrapName = false, includeStudentNumber = false } = {}) {
       const name = studentDisplayName(student, { preferEnglish })
-      const eaglesId = normalizeText(student?.eaglesId) || "(no id)"
+      const eaglesId = normalizeText(student?.eaglesId)
       const studentNumber = studentDisplayNumber(student)
-      const nameToken = wrapName ? `(${name})` : name
+      const nameToken = name ? (wrapName ? `(${name})` : name) : ""
       const studentNumberToken = includeStudentNumber && studentNumber ? ` <${studentNumber}>` : ""
       return `${nameToken} ${eaglesId}${studentNumberToken}`.trim()
     }
@@ -11347,8 +12012,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function normalizedTopSearchSortField(field = "") {
       const normalized = normalizeText(field)
-      if (normalized === "eaglesId" || normalized === "name" || normalized === "level") return normalized
-      return "name"
+      if (normalized === "eaglesId" || normalized === "fullName" || normalized === "level") return normalized
+      return "fullName"
     }
 
     function normalizedTopSearchSortDir(value = "") {
@@ -11360,8 +12025,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const field = normalizedTopSearchSortField(state.topSearch?.sortField)
       const direction = normalizedTopSearchSortDir(state.topSearch?.sortDir)
       const sorted = [...source].sort((left, right) => {
-        const leftName = studentDisplayName(left, { preferEnglish: true })
-        const rightName = studentDisplayName(right, { preferEnglish: true })
+        const leftFullName = studentFullName(left)
+        const rightFullName = studentFullName(right)
         const leftId = normalizeText(left?.eaglesId || "")
         const rightId = normalizeText(right?.eaglesId || "")
         const leftLevel = normalizeText(left?.profile?.currentGrade || "")
@@ -11370,14 +12035,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
         if (field === "eaglesId") {
           comparison = compareTableText(leftId, rightId)
-          if (comparison === 0) comparison = compareTableText(leftName, rightName)
+          if (comparison === 0) comparison = compareTableText(leftFullName, rightFullName)
           if (comparison === 0) comparison = compareLevelLabels(leftLevel, rightLevel)
         } else if (field === "level") {
           comparison = compareLevelLabels(leftLevel, rightLevel)
-          if (comparison === 0) comparison = compareTableText(leftName, rightName)
+          if (comparison === 0) comparison = compareTableText(leftFullName, rightFullName)
           if (comparison === 0) comparison = compareTableText(leftId, rightId)
         } else {
-          comparison = compareTableText(leftName, rightName)
+          comparison = compareTableText(leftFullName, rightFullName)
           if (comparison === 0) comparison = compareTableText(leftId, rightId)
           if (comparison === 0) comparison = compareLevelLabels(leftLevel, rightLevel)
         }
@@ -11446,7 +12111,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (expandBtn) expandBtn.classList.add("hidden")
       if (boxEl) boxEl.classList.remove("expanded")
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="4">No students match current top search scope.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="5">No students match current top search scope.</td></tr>'
         countEl.textContent = "0 results"
         state.topSearch.expanded = false
         updateTopSearchSortIndicators()
@@ -11463,9 +12128,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const tr = document.createElement("tr")
         tr.className = "top-search-row"
         if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
+        const fullName = studentFullName(student)
+        const englishName = studentEnglishName(student)
         tr.innerHTML = `
           <td>${student.eaglesId || ""}</td>
-          <td>${studentDisplayName(student, { preferEnglish: true })}</td>
+          <td>${escapeHtml(fullName)}</td>
+          <td>${escapeHtml(englishName)}</td>
           <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
           <td><button type="button" class="btn-edit top-search-open-btn">Open Profile</button></td>
         `
@@ -11502,7 +12170,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         if (state.currentStudent && state.currentStudent.id === student.id) tr.classList.add("active")
         tr.innerHTML = `
           <td>${student.eaglesId || ""}</td>
-          <td>${studentDisplayName(student)}</td>
+          <td>${escapeHtml(studentFullName(student))}</td>
+          <td>${escapeHtml(studentEnglishName(student))}</td>
           <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
           <td class="school-col-cell">${student.profile?.schoolName || ""}</td>
         `
@@ -11689,6 +12358,18 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return "value" in el ? normalizeText(el.value) : ""
     }
 
+    function profileFieldAutocompleteValue(field = {}, inputType = "text") {
+      const explicitValue = normalizeText(field?.autocomplete)
+      if (explicitValue) return explicitValue
+
+      const normalizedType = normalizeLower(inputType || "text")
+      if (normalizedType === "email") return "email"
+      if (normalizedType === "password") return "new-password"
+      if (normalizedType === "url") return "url"
+
+      return "off"
+    }
+
     function renderProfileFieldControl(field = {}) {
       const wrapper = document.createElement("div")
       wrapper.className = `profile-field col-${Math.max(1, Math.min(12, Number(field.width || 4)))}`
@@ -11699,6 +12380,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       const controlId = `f_${field.idSuffix}`
       const inputType = normalizeLower(field.inputType || "text")
+      const autocompleteValue = profileFieldAutocompleteValue(field, inputType)
 
       if (inputType === "checkbox" || inputType === "radio") {
         const choiceWrap = document.createElement("div")
@@ -11715,6 +12397,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           input.id = optionId
           input.name = controlId
           input.value = normalizeText(option)
+          input.autocomplete = "off"
           const optionLabel = document.createElement("label")
           optionLabel.setAttribute("for", optionId)
           optionLabel.textContent = normalizeText(option)
@@ -11730,6 +12413,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (inputType === "textarea") {
         const textarea = document.createElement("textarea")
         textarea.id = controlId
+        textarea.autocomplete = autocompleteValue
         if (field.placeholderVi) textarea.placeholder = field.placeholderVi
         wrapper.appendChild(labelEl)
         wrapper.appendChild(textarea)
@@ -11740,6 +12424,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const select = document.createElement("select")
         select.id = controlId
         select.dataset.profileInputType = inputType
+        select.autocomplete = autocompleteValue
         if (inputType === "level-select") {
           const option = document.createElement("option")
           option.value = ""
@@ -11769,11 +12454,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const storedInput = document.createElement("input")
         storedInput.id = controlId
         storedInput.type = "text"
+        storedInput.autocomplete = autocompleteValue
         storedInput.placeholder = field.placeholderVi || "Stored file reference"
 
         const fileInput = document.createElement("input")
         fileInput.id = `${controlId}_file`
         fileInput.type = "file"
+        fileInput.autocomplete = "off"
         fileInput.addEventListener("change", () => {
           const names = Array.from(fileInput.files || []).map((file) => normalizeText(file?.name)).filter(Boolean)
           storedInput.value = names.join(", ")
@@ -11794,12 +12481,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const input = document.createElement("input")
       input.id = controlId
       if (inputType === "level-select") input.type = "text"
-      else if (inputType === "password") {
-        input.type = "password"
-        input.autocomplete = "new-password"
-      }
+      else if (inputType === "password") input.type = "password"
       else if (["email", "number", "url"].includes(inputType)) input.type = inputType
       else input.type = "text"
+      input.autocomplete = autocompleteValue
       if (field.placeholderVi) input.placeholder = field.placeholderVi
       wrapper.appendChild(labelEl)
       wrapper.appendChild(input)
@@ -12003,7 +12688,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         panelsEl.appendChild(panel)
       })
 
-      const label = student?.profile?.fullName || student?.eaglesId
+      const label = normalizeText(student?.profile?.fullName)
       setProfileTabStatus(label ? `Info view for ${label}.` : "No student selected. Use New Form to create a profile.")
     }
 
@@ -12326,12 +13011,38 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const fallback = await api(`/api/admin/students?q=&level=${level}&school=${school}&take=1000`)
         students = Array.isArray(fallback?.items) ? fallback.items : []
       }
+      let missingEaglesId = 0
+      let missingStudentNumber = 0
+      const studentsWithIdentity = students.filter((student) => {
+        const hasEaglesId = Boolean(normalizeText(student?.eaglesId))
+        if (!hasEaglesId) {
+          missingEaglesId += 1
+          return false
+        }
+        const hasNumberKey = hasStudentNumberKey(student)
+        const hasStudentNumber = Boolean(parsePositiveInteger(student?.studentNumber))
+        if (hasNumberKey && !hasStudentNumber) {
+          missingStudentNumber += 1
+          return false
+        }
+        return true
+      })
+      const droppedCount = students.length - studentsWithIdentity.length
+      if (droppedCount > 0) {
+        const problems = []
+        if (missingEaglesId > 0) problems.push(`missing eaglesId=${missingEaglesId}`)
+        if (missingStudentNumber > 0) problems.push(`missing studentNumber=${missingStudentNumber}`)
+        setStatus(
+          `Data integrity error: ${droppedCount} student row(s) excluded (${problems.join(", ") || "identity invalid"}).`,
+          true
+        )
+      }
       state.topStudentScope = {
         query: qRaw,
         level: levelRaw,
         school: schoolRaw,
       }
-      state.students = students
+      state.students = studentsWithIdentity
       syncSystemLevelNames(
         state.students.map((student) => normalizeLevelName(student?.profile?.currentGrade || ""))
       )
@@ -12375,6 +13086,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     async function loadStudentDetail(studentRefId) {
       const student = await api(`/api/admin/students/${encodeURIComponent(studentRefId)}`)
+      if (!normalizeText(student?.eaglesId)) throw new Error("Data integrity error: eaglesId is required for student records.")
+      if (hasStudentNumberKey(student) && !parsePositiveInteger(student?.studentNumber)) {
+        throw new Error("Data integrity error: studentNumber is required for student records.")
+      }
       state.currentStudent = student
       cacheStudentDetail(student)
       if (student?.id) state.parentTracking.studentDetailsByStudentId[student.id] = student
@@ -13232,7 +13947,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("attendance", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
+          <td>${escapeHtml(row.eaglesId || "")}</td>
+          <td>${escapeHtml(row.fullName || "")}</td>
+          <td>${escapeHtml(row.englishName || "")}</td>
           <td>${row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.quarter || ""}</td>
@@ -13264,7 +13981,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.appendChild(tr)
       })
       if (!filteredRows.length) {
-        tbody.innerHTML = '<tr><td colspan="7">No attendance rows match current search/archive filters.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="9">No attendance rows match current search/archive filters.</td></tr>'
       }
     }
 
@@ -13343,7 +14060,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("grades", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
+          <td>${escapeHtml(row.eaglesId || "")}</td>
+          <td>${escapeHtml(row.fullName || "")}</td>
+          <td>${escapeHtml(row.englishName || "")}</td>
           <td>${row.dueAt ? String(row.dueAt).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.assignmentName || ""}</td>
@@ -13386,7 +14105,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.appendChild(tr)
       })
       if (!filteredRows.length) {
-        tbody.innerHTML = '<tr><td colspan="10">No grade rows match current search/archive filters.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="12">No grade rows match current search/archive filters.</td></tr>'
       }
     }
 
@@ -13521,7 +14240,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("reports", row.id)
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.studentName || "")} ${row.eaglesId ? `(${escapeHtml(row.eaglesId)})` : ""}</td>
+          <td>${escapeHtml(row.eaglesId || "")}</td>
+          <td>${escapeHtml(row.fullName || "")}</td>
+          <td>${escapeHtml(row.englishName || "")}</td>
           <td>${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
           <td>${row.className || ""}</td>
           <td>${row.quarter || ""}</td>
@@ -13558,7 +14279,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.appendChild(tr)
       })
       if (!filteredRows.length) {
-        tbody.innerHTML = '<tr><td colspan="10">No report rows match current search/archive filters.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="12">No report rows match current search/archive filters.</td></tr>'
       }
     }
 
@@ -13574,7 +14295,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         return
       }
       const summary = result.items
-        .map((row) => `${row.eaglesId || "(no eaglesId)"} - ${row.fullName || "(no name)"}`)
+        .map((row) => `${normalizeText(row.eaglesId)} - ${normalizeText(row.fullName)}`)
         .join("\n")
       if (familyResultEl) familyResultEl.textContent = summary
       setStatus(`Family matches (${result.total}):\n${summary}`)
@@ -13614,6 +14335,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     async function bootAfterLogin() {
+      initializeParentTrackingScoreSelects()
       await loadRolePermissions()
       showUserPanel()
       applyUiSettings()
@@ -14050,10 +14772,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     document.getElementById("pt_classDate").addEventListener("change", () => {
       const classDate = normalizeText(document.getElementById("pt_classDate").value)
       parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(classDate))
+      resetParentTrackingManualMetricsTouched()
       applyParentTrackingLessonSummaryFromMemory({ force: true })
       syncParentTrackingForSelection({}).catch(handleError)
     })
     document.getElementById("pt_studentRefId").addEventListener("change", () => {
+      resetParentTrackingManualMetricsTouched()
       syncParentTrackingForSelection({}).catch(handleError)
     })
     document.getElementById("pt_teacherName").addEventListener("change", () => {
@@ -14062,11 +14786,26 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     document.getElementById("pt_lessonSummary").addEventListener("input", () => {
       rememberParentTrackingLessonSummary()
     })
-    document.querySelector('.page-section[data-page="parent-tracking"]')?.addEventListener("focusin", (event) => {
+    const parentTrackingSectionEl = document.querySelector('.page-section[data-page="parent-tracking"]')
+    parentTrackingSectionEl?.addEventListener("focusin", (event) => {
       const target = event?.target
       if (!(target instanceof HTMLTextAreaElement)) return
       if (!normalizeText(target.name).startsWith("pt_rec_")) return
       rememberParentTrackingRecommendationFocus(target.name)
+    })
+    parentTrackingSectionEl?.addEventListener("change", (event) => {
+      const target = event?.target
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return
+      const fieldName = normalizeText(target.name)
+      if (!fieldName.startsWith("pt_skill_") && !fieldName.startsWith("pt_conduct_")) return
+      applyParentTrackingRubricSummaryScores()
+    })
+    parentTrackingSectionEl?.addEventListener("input", (event) => {
+      const target = event?.target
+      if (!(target instanceof HTMLInputElement)) return
+      const fieldName = normalizeText(target.name)
+      if (!fieldName.startsWith("pt_skill_") && !fieldName.startsWith("pt_conduct_")) return
+      applyParentTrackingRubricSummaryScores()
     })
     document.getElementById("pt_actionInsertBtn")?.addEventListener("click", () => insertParentTrackingActionShortcut())
     document.getElementById("pt_actionClearBtn")?.addEventListener("click", () => clearParentTrackingActionShortcutInputs())
@@ -14076,7 +14815,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       clearParentTrackingForm()
       refreshParentTracking({ preserveStudentSelection: true }).catch(handleError)
     })
-    document.getElementById("overviewParentQueueExpandBtn").addEventListener("click", () => {
+    document.getElementById("performanceQueueExpandBtn")?.addEventListener("click", () => {
       const nextShowAll = !state.parentReportQueue.showAll
       loadParentReportQueue({ showAll: nextShowAll }).catch(handleError)
     })
@@ -14087,11 +14826,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     document.getElementById("overviewIncomingExerciseRefreshBtn").addEventListener("click", () => {
       loadIncomingExerciseResults({ showAll: state.incomingExerciseQueue.showAll }).catch(handleError)
     })
-    document.getElementById("overviewParentQueueRefreshBtn").addEventListener("click", () => {
+    document.getElementById("performanceQueueRefreshBtn")?.addEventListener("click", () => {
       loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(handleError)
     })
-    document.getElementById("overviewParentQueueSendAllBtn").addEventListener("click", () => {
+    document.getElementById("performanceQueueSendAllBtn")?.addEventListener("click", () => {
       sendAllQueuedParentReports().catch(handleError)
+    })
+    document.getElementById("performanceStagedRefreshBtn")?.addEventListener("click", () => {
+      loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
+        .then(() => {
+          renderPerformanceStagedSection(state.visibleTableRows?.performance || [])
+          setStatus("Staged performance reports reloaded.")
+        })
+        .catch(handleError)
     })
     document.getElementById("parentQueueCloseBtn").addEventListener("click", () => closeParentQueueModal())
     document.getElementById("parentQueuePrevBtn").addEventListener("click", () => {

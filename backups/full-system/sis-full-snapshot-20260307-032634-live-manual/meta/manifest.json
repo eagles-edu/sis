@@ -1,0 +1,24 @@
+{
+  "snapshotName": "sis-full-snapshot-20260307-032634-live-manual",
+  "createdAt": "2026-03-06T20:26:36Z",
+  "sourceRoot": "/home/eagles/dockerz/sis",
+  "runtimeRoot": "/home/admin.eagles.edu.vn/sis",
+  "snapshotDir": "/home/eagles/dockerz/sis/backups/full-system/sis-full-snapshot-20260307-032634-live-manual",
+  "database": "postgresql://****@127.0.0.1:5432/sis?schema=public",
+  "host": "cloud",
+  "nodeVersion": "v20.19.4",
+  "npmVersion": "10.8.2",
+  "git": {
+    "branch": "preproduction",
+    "commit": "1efeced"
+  },
+  "includes": {
+    "appDir": "app/",
+    "dbDir": "db/",
+    "includeNodeModules": false
+  },
+  "restore": {
+    "script": "/home/eagles/dockerz/sis/tools/sis-full-restore-snapshot.sh",
+    "command": "tools/sis-full-restore-snapshot.sh --snapshot-dir <snapshot_dir> --yes"
+  }
+}

@@ -1,125 +1,146 @@
-# DB Backup Failsafe Runbook
+# SIS Backup and Restore Workflows
 
-This project now includes automated PostgreSQL backup and guarded restore tooling.
+This runbook codifies backup/restore details for live SIS operations.
 
-## Scripts
+## Scope
 
-- `npm run db:backup`
-  - Runs `pg_dump` in custom format.
-  - Writes checksum (`.sha256`) and metadata (`.json`).
-  - Verifies archive with `pg_restore --list`.
-  - Updates `latest.json` pointer.
-  - Applies retention cleanup.
+- Source workspace: `/home/eagles/dockerz/sis`
+- Live runtime: `/home/admin.eagles.edu.vn/sis`
+- Service: `exercise-mailer.service`
+- Default port: `8787`
 
-- `npm run db:backup:dry`
-  - Prints the exact planned actions, no writes.
+## Decision Matrix
 
-- `npm run db:backup:no-prune`
-  - Creates/updates backup artifacts but skips retention deletes.
+| Situation | Recommended workflow |
+| --- | --- |
+| Routine safety point before change | Full snapshot backup (`tools/sis-full-backup-snapshot.sh`) |
+| Roll back app files + DB together | Full snapshot restore (`tools/sis-full-restore-snapshot.sh`) |
+| Roll back DB only | DB-only restore (`node tools/db-restore-failsafe.mjs`) |
+| Roll back runtime files only | Snapshot restore with `--skip-db` |
 
-- `npm run db:restore -- --file latest --yes --clean`
-  - Restores a backup archive into the configured `DATABASE_URL`.
-  - Requires `--yes` for real restore.
-  - `--clean` enables `pg_restore --clean --if-exists`.
+## Safety Checklist (Always)
 
-- `npm run db:restore:verify -- --file latest`
-  - Verifies archive structure and checksum only.
+1. Confirm maintenance window and notify impacted users.
+2. Take a fresh backup before any restore action.
+3. Confirm exact snapshot or dump path and timestamp.
+4. Confirm service health before changes.
+5. Record commands/output in incident or change notes.
 
-## Required Environment
-
-- `DATABASE_URL` (required for backup/restore unless passed by flag)
-
-Optional:
-
-- `DB_BACKUP_DIR` (default: `backups/postgres`)
-- `DB_BACKUP_RETENTION_DAYS` (default: `30`)
-- `DB_BACKUP_KEEP_MIN` (default: `14`)
-- `DB_BACKUP_STALE_LOCK_MINUTES` (default: `180`)
-
-Required binaries on the host:
-
-- `pg_dump`
-- `pg_restore`
-
-On Ubuntu/Debian:
+## Workflow 1: Create Restorable Full Snapshot
 
 ```bash
-sudo apt-get update && sudo apt-get install -y postgresql-client
+cd /home/eagles/dockerz/sis
+tools/sis-full-backup-snapshot.sh --label before-change
 ```
 
-## Backup Output Layout
+Expected artifacts:
 
-Inside `DB_BACKUP_DIR`:
+- `backups/full-system/sis-full-snapshot-<timestamp>-before-change/`
+- `backups/full-system/sis-full-snapshot-<timestamp>-before-change.tar.gz`
+- `meta/manifest.json`
+- `meta/RESTORE.md`
 
-- `postgres-YYYYMMDD-HHMMSSZ.dump` - custom archive
-- `postgres-YYYYMMDD-HHMMSSZ.sha256` - SHA-256 checksum sidecar
-- `postgres-YYYYMMDD-HHMMSSZ.json` - metadata sidecar
-- `manifest.jsonl` - append-only backup history
-- `latest.json` - pointer to newest successful backup
-- `.backup.lock` - active lock file while backup is running
+## Workflow 2: Full Restore (Files + DB)
 
-## Scheduling
-
-Cron example (every 2 hours):
+1. Validate snapshot path:
 
 ```bash
-0 */2 * * * cd /home/eagles/dockerz/megs && /usr/bin/npm run db:backup >> /var/log/megs-db-backup.log 2>&1
+ls -lah /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder>
 ```
 
-Systemd timer is preferred for production:
-
-```ini
-# /etc/systemd/system/megs-db-backup.service
-[Unit]
-Description=MEGS PostgreSQL backup
-
-[Service]
-Type=oneshot
-WorkingDirectory=/home/eagles/dockerz/megs
-ExecStart=/usr/bin/npm run db:backup
-```
-
-```ini
-# /etc/systemd/system/megs-db-backup.timer
-[Unit]
-Description=Run MEGS PostgreSQL backup every 2 hours
-
-[Timer]
-OnCalendar=hourly
-Persistent=true
-RandomizedDelaySec=300
-
-[Install]
-WantedBy=timers.target
-```
-
-## Fail-safe Behavior
-
-- Lock file prevents concurrent backup runs.
-- Stale lock replacement is bounded by `DB_BACKUP_STALE_LOCK_MINUTES`.
-- Temporary dump file is cleaned up on failure.
-- Backup considered successful only after:
-  - `pg_dump` completes
-  - optional `pg_restore --list` verification completes
-  - checksum and metadata are written
-- Retention never removes the newest `DB_BACKUP_KEEP_MIN` backups.
-
-## Restore Guardrails
-
-- Real restore requires explicit `--yes`.
-- `--verify-only` validates archive and checksum without modifying DB.
-- Use `--dry-run` to inspect restore command first.
-
-Example restore flow:
+2. Restore:
 
 ```bash
-npm run db:restore:verify -- --file latest
-npm run db:restore -- --file latest --yes --clean
+cd /home/eagles/dockerz/sis
+tools/sis-full-restore-snapshot.sh \
+  --snapshot-dir /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder> \
+  --yes
 ```
 
-## Operational Recommendation
+What the restore script does:
 
-Keep one additional off-host copy:
+- Creates runtime pre-restore backup: `/home/admin.eagles.edu.vn/sis.BEFORE-RESTORE-<timestamp>/`
+- Restores runtime files from snapshot `app/`
+- Restores DB from snapshot `db/`
+- Restarts `exercise-mailer.service`
+- Verifies:
+  - `GET /healthz` -> `200`
+  - `GET /api/admin/auth/me` (no cookie) -> `401`
 
-- Rsync/S3/Backblaze target from `DB_BACKUP_DIR`
-- Encrypt at rest if backups leave the database host
+## Workflow 3: DB-Only Backup and Restore
+
+Create backup:
+
+```bash
+cd /home/eagles/dockerz/sis
+tools/db-backup-smart.sh --runtime-env /home/admin.eagles.edu.vn/sis/.env
+```
+
+Verify backup archive first:
+
+```bash
+cd /home/eagles/dockerz/sis
+DATABASE_URL="$(grep '^DATABASE_URL=' /home/admin.eagles.edu.vn/sis/.env | head -n1 | cut -d= -f2-)" \
+  node tools/db-restore-failsafe.mjs --file latest --verify-only
+```
+
+Restore DB:
+
+```bash
+cd /home/eagles/dockerz/sis
+DATABASE_URL="$(grep '^DATABASE_URL=' /home/admin.eagles.edu.vn/sis/.env | head -n1 | cut -d= -f2-)" \
+  node tools/db-restore-failsafe.mjs --file latest --yes --clean --single-transaction
+```
+
+Restart + checks:
+
+```bash
+sudo -n systemctl restart exercise-mailer.service
+curl -sS -o /tmp/sis-health.out -w '%{http_code}\n' http://127.0.0.1:8787/healthz
+curl -sS -o /tmp/sis-auth-me.out -w '%{http_code}\n' http://127.0.0.1:8787/api/admin/auth/me
+```
+
+## Workflow 4: Partial Restore from Full Snapshot
+
+Files only (keep current DB):
+
+```bash
+cd /home/eagles/dockerz/sis
+tools/sis-full-restore-snapshot.sh \
+  --snapshot-dir /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder> \
+  --skip-db \
+  --yes
+```
+
+DB only (keep current runtime files):
+
+```bash
+cd /home/eagles/dockerz/sis
+tools/sis-full-restore-snapshot.sh \
+  --snapshot-dir /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder> \
+  --skip-files \
+  --yes
+```
+
+## Post-Restore Verification Checklist
+
+1. `systemctl is-active exercise-mailer.service` is `active`.
+2. `GET /healthz` returns `200`.
+3. `GET /api/admin/auth/me` without cookie returns `401`.
+4. Login with one admin and one teacher account succeeds.
+5. Open `/admin/students` and confirm key pages load.
+6. Validate the records/queues relevant to the incident.
+
+## Rollback of Failed Restore Attempt
+
+If restore changed files and introduced regressions, use the runtime backup emitted by the restore script:
+
+- `/home/admin.eagles.edu.vn/sis.BEFORE-RESTORE-<timestamp>/`
+
+Re-sync that folder back to runtime and restart the service.
+
+## Guardrails
+
+- `--yes` is mandatory for real restore actions.
+- Keep backup labels meaningful (for example `before-user-credential-change`).
+- Prefer full snapshot restore for disaster recovery; use DB-only restore for data correction workflows.

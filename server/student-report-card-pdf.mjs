@@ -13,6 +13,13 @@ function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+function normalizePositiveInteger(value) {
+  if (value === undefined || value === null || value === "") return null
+  const parsed = Number.parseInt(String(value), 10)
+  if (!Number.isFinite(parsed) || parsed < 1) return null
+  return parsed
+}
+
 function sameText(value, expected) {
   const left = normalizeLower(value)
   const right = normalizeLower(expected)
@@ -181,8 +188,24 @@ function toDisplay(value) {
   return String(value)
 }
 
+function assertStudentIdentity(student, context = "student") {
+  const eaglesId = normalizeText(student?.eaglesId)
+  if (!eaglesId) {
+    throw new Error(`Data integrity error: eaglesId is required (${context})`)
+  }
+  const studentNumber = normalizePositiveInteger(student?.studentNumber)
+  if (!studentNumber) {
+    throw new Error(`Data integrity error: studentNumber is required (${context})`)
+  }
+  return {
+    eaglesId,
+    studentNumber,
+  }
+}
+
 export function buildReportCardFilename(student, filters = {}) {
-  const studentPart = sanitizeFilePart(student?.eaglesId || student?.profile?.fullName, "student")
+  const identity = assertStudentIdentity(student, "report-card filename")
+  const studentPart = sanitizeFilePart(`${identity.eaglesId}-${identity.studentNumber}`, "student")
   const classPart = sanitizeFilePart(filters.className, "all-classes")
   const yearPart = sanitizeFilePart(filters.schoolYear, "all-years")
   const quarterPart = sanitizeFilePart(filters.quarter, "all-quarters")
@@ -190,6 +213,7 @@ export function buildReportCardFilename(student, filters = {}) {
 }
 
 export async function generateStudentReportCardPdf(student, filters = {}) {
+  const identity = assertStudentIdentity(student, "report-card PDF")
   const profile = student?.profile || {}
   const selected = selectRecords(student, filters)
   const attendanceSummary = summarizeAttendance(selected.attendanceRecords)
@@ -230,7 +254,8 @@ export async function generateStudentReportCardPdf(student, filters = {}) {
   }
 
   drawSectionTitle(doc, "Student Information")
-  printKeyValue(doc, "Eagles ID", toDisplay(student.eaglesId))
+  printKeyValue(doc, "Eagles ID", toDisplay(identity.eaglesId))
+  printKeyValue(doc, "Student Number", toDisplay(identity.studentNumber))
   printKeyValue(doc, "Full Name", toDisplay(profile.fullName))
   printKeyValue(doc, "English Name", toDisplay(profile.englishName))
   printKeyValue(doc, "Date of Birth", toDisplay(profile.dobText))

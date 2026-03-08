@@ -1,0 +1,6 @@
+{
+  "createdAt": "2026-03-06T20:26:35Z",
+  "backupFile": "db-backup-20260307-032635.dump",
+  "backupPath": "/home/eagles/dockerz/sis/backups/full-system/sis-full-snapshot-20260307-032634-live-manual/db/db-backup-20260307-032635.dump",
+  "checksumFile": "/home/eagles/dockerz/sis/backups/full-system/sis-full-snapshot-20260307-032634-live-manual/db/db-backup-20260307-032635.sha256"
+}

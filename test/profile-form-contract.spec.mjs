@@ -7,7 +7,10 @@ import xlsx from "xlsx"
 const PROFILE_TAB_IDS = new Set(["profile", "medical", "covid", "submission"])
 const LIST_INPUT_TYPES = new Set(["select", "radio", "checkbox"])
 const ALLOWED_TOP_LEVEL_KEYS = new Set(["eaglesId", "studentNumber", "email"])
-const CANONICAL_WORKBOOK_FILE = "docs/students/eaglesclub-students-import-ready.xlsx"
+const CANONICAL_WORKBOOK_FILES = [
+  "docs/students/eaglesclub-students-import-ready.xlsx",
+  "docs/students/eaglesclub-students-import-ready-single.xlsx",
+]
 const FORM_UNMAPPED_PROFILE_KEYS = new Set([
   "sourceFormId",
   "sourceUrl",
@@ -87,9 +90,14 @@ function readWorkbookKeysFrom(filePath) {
     .filter((entry) => entry.toLowerCase() !== "database/field name")
 }
 
+function resolveCanonicalWorkbookFile() {
+  const found = CANONICAL_WORKBOOK_FILES.find((filePath) => fs.existsSync(filePath))
+  assert.ok(found, `canonical workbook must exist: ${CANONICAL_WORKBOOK_FILES.join(" or ")}`)
+  return found
+}
+
 function readWorkbookKeys() {
-  assert.equal(fs.existsSync(CANONICAL_WORKBOOK_FILE), true, `canonical workbook must exist: ${CANONICAL_WORKBOOK_FILE}`)
-  return readWorkbookKeysFrom(CANONICAL_WORKBOOK_FILE)
+  return readWorkbookKeysFrom(resolveCanonicalWorkbookFile())
 }
 
 function readPrismaModelFieldNames(modelName) {
@@ -244,6 +252,16 @@ test("legacy student-number fallback paths are removed", () => {
   assert.equal(storeSource.includes("payload?.profile?.studentNumber"), false)
 })
 
+test("student name wiring stays discrete (no cross-field fallback or legacy sort alias)", () => {
+  const { html } = readProfileFormRows()
+
+  assert.equal(html.includes('sortField === "studentName"'), false)
+  assert.equal(html.includes("if (preferEnglish) return englishName || fullName || \"\""), false)
+  assert.equal(html.includes("return fullName || englishName || \"\""), false)
+  assert.equal(html.includes("if (selected?.fullName) return selected.fullName"), false)
+  assert.match(html, /function topSearchStudentOptionLabel\(student = \{\}\)\s*\{\s*return normalizeText\(student\?\.eaglesId\)/)
+})
+
 test("import mapping excludes legacy fuzzy alias keys", () => {
   const storeSource = fs.readFileSync("server/student-admin-store.mjs", "utf8")
   BANNED_IMPORT_ALIAS_SNIPPETS.forEach((snippet) => {
@@ -256,4 +274,14 @@ test("student identity duplicates are rejected for create/import", () => {
   assert.equal(storeSource.includes('assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")'), true)
   assert.equal(storeSource.includes("if (existingByEaglesId) {"), false)
   assert.equal(storeSource.includes("duplicate studentNumber"), true)
+})
+
+test("student identity is immutable on update", () => {
+  const { html } = readProfileFormRows()
+  const storeSource = fs.readFileSync("server/student-admin-store.mjs", "utf8")
+  assert.equal(html.includes('if (!parsePositiveInteger(payload.studentNumber)) throw new Error("studentNumber is required")'), false)
+  assert.equal(storeSource.includes('assertWithStatus(Boolean(requestedStudentNumber), 400, "studentNumber is required")'), false)
+  assert.equal(storeSource.includes("await resolveNextStudentNumberForClient(client, STUDENT_NUMBER_START)"), true)
+  assert.equal(storeSource.includes('"eaglesId is immutable and cannot be changed"'), true)
+  assert.equal(storeSource.includes('"studentNumber is immutable and cannot be changed"'), true)
 })

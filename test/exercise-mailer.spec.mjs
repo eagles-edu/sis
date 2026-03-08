@@ -445,6 +445,62 @@ test("runtime self-heal syncs admin html on mismatch when enabled", async () => 
   }
 })
 
+test("development runtime is blocked when current directory matches configured live root", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevLiveRoot = process.env.SIS_LIVE_ROOT
+  const prevAllowDevOnLiveRoot = process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+
+  process.env.NODE_ENV = "development"
+  process.env.SIS_LIVE_ROOT = process.cwd()
+  delete process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+
+  try {
+    assert.throws(
+      () => startExerciseMailer({ transporter: makeMockTransport(), port: 0, host: "127.0.0.1" }),
+      /Refusing to start development runtime inside live root/i
+    )
+  } finally {
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
+
+    if (prevLiveRoot === undefined) delete process.env.SIS_LIVE_ROOT
+    else process.env.SIS_LIVE_ROOT = prevLiveRoot
+
+    if (prevAllowDevOnLiveRoot === undefined) delete process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+    else process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT = prevAllowDevOnLiveRoot
+  }
+})
+
+test("development runtime override allows start inside configured live root", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevLiveRoot = process.env.SIS_LIVE_ROOT
+  const prevAllowDevOnLiveRoot = process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+
+  process.env.NODE_ENV = "development"
+  process.env.SIS_LIVE_ROOT = process.cwd()
+  process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT = "true"
+
+  let tmp = null
+  try {
+    tmp = await startExerciseMailer({ transporter: makeMockTransport(), port: 0, host: "127.0.0.1" })
+    await new Promise((resolve) => tmp.once("listening", resolve))
+    assert.ok(tmp.address().port > 0)
+  } finally {
+    if (tmp) await new Promise((done) => tmp.close(done))
+
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
+
+    if (prevLiveRoot === undefined) delete process.env.SIS_LIVE_ROOT
+    else process.env.SIS_LIVE_ROOT = prevLiveRoot
+
+    if (prevAllowDevOnLiveRoot === undefined) delete process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+    else process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT = prevAllowDevOnLiveRoot
+  }
+})
+
 test("shutdown", async () => {
   await new Promise((res) => server.close(res))
 })

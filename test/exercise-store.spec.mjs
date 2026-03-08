@@ -15,6 +15,7 @@ function makePersistPrisma({ matchedStudent = null } = {}) {
     incomingUpdateCalls: [],
     exerciseUpsertCalls: [],
     submissionCreateCalls: [],
+    gradeRecordCreateCalls: [],
     queueRows: [],
   }
 
@@ -29,6 +30,12 @@ function makePersistPrisma({ matchedStudent = null } = {}) {
       async create(args) {
         state.submissionCreateCalls.push(args)
         return { id: "submission-1" }
+      },
+    },
+    studentGradeRecord: {
+      async create(args) {
+        state.gradeRecordCreateCalls.push(args)
+        return { id: "grade-1" }
       },
     },
   }
@@ -98,6 +105,7 @@ test("persistExerciseSubmission queues unmatched payload for manual disposition"
   assert.equal(result.incomingResultId, "incoming-1")
   assert.equal(prisma.state.queueCreateCalls.length, 1)
   assert.equal(prisma.state.submissionCreateCalls.length, 0)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 0)
   assert.equal(
     prisma.state.queueCreateCalls[0].data.status,
     INCOMING_EXERCISE_RESULT_STATUS_QUEUED
@@ -170,13 +178,16 @@ test("persistExerciseSubmission records directly when student account is matched
   assert.equal(result.queued, false)
   assert.equal(result.studentRefId, "student-1")
   assert.equal(result.submissionId, "submission-1")
+  assert.equal(result.gradeRecordId, "grade-1")
   assert.equal(prisma.state.queueCreateCalls.length, 0)
   assert.equal(prisma.state.submissionCreateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
 })
 
 function makeResolvePrisma() {
   const state = {
     submissionCreateCalls: [],
+    gradeRecordCreateCalls: [],
     incomingUpdateCalls: [],
   }
 
@@ -254,6 +265,12 @@ function makeResolvePrisma() {
         return { id: "submission-200" }
       },
     },
+    studentGradeRecord: {
+      async create(args) {
+        state.gradeRecordCreateCalls.push(args)
+        return { id: "grade-200" }
+      },
+    },
   }
 
   return {
@@ -276,8 +293,10 @@ test("resolveIncomingExerciseResultToStudent creates submission and resolves que
   assert.equal(result.resolved, true)
   assert.equal(result.studentRefId, "student-200")
   assert.equal(result.submissionId, "submission-200")
+  assert.equal(result.gradeRecordId, "grade-200")
   assert.equal(result.item.status, "resolved")
   assert.equal(result.item.matchedStudentRefId, "student-200")
   assert.equal(prisma.state.submissionCreateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
   assert.equal(prisma.state.incomingUpdateCalls.length, 1)
 })

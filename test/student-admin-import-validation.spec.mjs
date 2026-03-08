@@ -6,12 +6,12 @@ import { validateImportRowsForIdentity } from "../server/student-admin-store.mjs
 test("validateImportRowsForIdentity strict mode rejects blank, duplicate, and existing identity keys", () => {
   const result = validateImportRowsForIdentity(
     [
-      { eaglesId: "", studentNumber: "" },
-      { eaglesId: "ABC001", studentNumber: 101 },
-      { eaglesId: "abc001", studentNumber: 102 },
-      { eaglesId: "NEW004", studentNumber: 101 },
-      { eaglesId: "EXISTING01", studentNumber: 888 },
-      { eaglesId: "UNIQUE01", studentNumber: 999 },
+      { eaglesId: "", studentNumber: "", profile: { fullName: "Row One" } },
+      { eaglesId: "ABC001", studentNumber: 101, profile: { fullName: "Row Two" } },
+      { eaglesId: "abc001", studentNumber: 102, profile: { fullName: "Row Three" } },
+      { eaglesId: "NEW004", studentNumber: 101, profile: { fullName: "Row Four" } },
+      { eaglesId: "EXISTING01", studentNumber: 888, profile: { fullName: "Row Five" } },
+      { eaglesId: "UNIQUE01", studentNumber: 999, profile: { fullName: "Row Six" } },
     ],
     {
       existingRows: [{ eaglesId: "existing01", studentNumber: 999 }],
@@ -34,8 +34,8 @@ test("validateImportRowsForIdentity strict mode rejects blank, duplicate, and ex
 
 test("validateImportRowsForIdentity strict mode accepts explicit non-conflicting identity keys", () => {
   const inputRows = [
-    { eaglesId: "RAY001", studentNumber: 220 },
-    { eaglesId: "RAY002", studentNumber: 221 },
+    { eaglesId: "RAY001", studentNumber: 220, profile: { fullName: "Ray One" } },
+    { eaglesId: "RAY002", studentNumber: 221, profile: { fullName: "Ray Two" } },
   ]
 
   const result = validateImportRowsForIdentity(inputRows, {
@@ -50,11 +50,27 @@ test("validateImportRowsForIdentity strict mode accepts explicit non-conflicting
   assert.equal(result.autoFilledStudentNumbers, 0)
 })
 
+test("validateImportRowsForIdentity strict mode allows blank studentNumber when eaglesId is explicit", () => {
+  const result = validateImportRowsForIdentity(
+    [
+      { eaglesId: "RAY101", studentNumber: "", profile: { fullName: "Ray Missing Number" } },
+      { eaglesId: "RAY102", studentNumber: 221, profile: { fullName: "Ray With Number" } },
+    ],
+    {
+      existingRows: [{ eaglesId: "LEGACY001", studentNumber: 100 }],
+      requireExplicitIdentity: true,
+    }
+  )
+
+  assert.equal(result.requireExplicitIdentity, true)
+  assert.equal(result.errors.length, 0)
+})
+
 test("validateImportRowsForIdentity compatibility mode retains autofill behavior", () => {
   const result = validateImportRowsForIdentity(
     [
-      { eaglesId: "", studentNumber: "" },
-      { eaglesId: "", studentNumber: 230 },
+      { eaglesId: "", studentNumber: "", profile: { fullName: "Compat One" } },
+      { eaglesId: "", studentNumber: 230, profile: { fullName: "Compat Two" } },
     ],
     {
       existingRows: [{ eaglesId: "SIS-000229", studentNumber: 229 }],
@@ -71,4 +87,19 @@ test("validateImportRowsForIdentity compatibility mode retains autofill behavior
   assert.equal(result.rows[0].eaglesId, "SIS-000231")
   assert.equal(result.rows[1].studentNumber, 230)
   assert.equal(result.rows[1].eaglesId, "SIS-000230")
+})
+
+test("validateImportRowsForIdentity does not require fullName when identity keys are valid", () => {
+  const result = validateImportRowsForIdentity(
+    [
+      { eaglesId: "FULL001", studentNumber: 310, profile: { fullName: "" } },
+      { eaglesId: "FULL002", studentNumber: 311 },
+    ],
+    {
+      existingRows: [],
+      requireExplicitIdentity: true,
+    }
+  )
+
+  assert.equal(result.errors.length, 0)
 })

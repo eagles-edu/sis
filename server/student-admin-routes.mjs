@@ -852,20 +852,39 @@ function verifyPassword(plainText, hashValue, candidate) {
   return timingSafeEqualText(candidate, plainText)
 }
 
-const DEFAULT_TEACHER_USERNAMES = [
-  "carole01",
-  "mei001",
-  "wren01",
-  "thea001",
-  "hanah001",
-  "lily001",
-]
-
 function parseAccountUsernameList(value) {
   return normalizeText(value)
     .split(/[\s,;]+/g)
     .map((entry) => normalizeText(entry))
     .filter(Boolean)
+}
+
+function parseConfiguredAccountsJson(value, { defaultRole = "teacher", envName = "accounts" } = {}) {
+  const jsonText = normalizeText(value)
+  if (!jsonText) return []
+
+  try {
+    const parsed = JSON.parse(jsonText)
+    if (!Array.isArray(parsed)) return []
+    const accounts = []
+    parsed.forEach((entry) => {
+      const username = normalizeText(entry?.username)
+      const role = normalizeLower(entry?.role) || defaultRole
+      const password = normalizeText(entry?.password)
+      const passwordHash = normalizeText(entry?.passwordHash)
+      if (!username || (!password && !passwordHash)) return
+      accounts.push({
+        username,
+        role: normalizeRoleName(role),
+        password,
+        passwordHash,
+      })
+    })
+    return accounts
+  } catch (error) {
+    console.warn(`${envName} parse failed: ${error.message}`)
+    return []
+  }
 }
 
 function buildConfiguredAccounts() {
@@ -883,6 +902,14 @@ function buildConfiguredAccounts() {
     })
   }
 
+  const teacherAccounts = parseConfiguredAccountsJson(process.env.STUDENT_TEACHER_ACCOUNTS_JSON, {
+    defaultRole: "teacher",
+    envName: "STUDENT_TEACHER_ACCOUNTS_JSON",
+  })
+  if (teacherAccounts.length > 0) {
+    accounts.push(...teacherAccounts)
+  }
+
   const teacherPass = normalizeText(process.env.STUDENT_TEACHER_PASS)
   const teacherHash = normalizeText(process.env.STUDENT_TEACHER_PASSWORD_HASH)
   const teacherCredentialsProvided = Boolean(teacherPass || teacherHash)
@@ -890,7 +917,7 @@ function buildConfiguredAccounts() {
     const teacherUsernames = new Set()
     parseAccountUsernameList(process.env.STUDENT_TEACHER_USER).forEach((entry) => teacherUsernames.add(entry))
     parseAccountUsernameList(process.env.STUDENT_TEACHER_USERS).forEach((entry) => teacherUsernames.add(entry))
-    DEFAULT_TEACHER_USERNAMES.forEach((entry) => teacherUsernames.add(entry))
+    if (teacherUsernames.size === 0) teacherUsernames.add("teacher")
     teacherUsernames.forEach((username) => {
       accounts.push({
         username,
@@ -925,23 +952,12 @@ function buildConfiguredAccounts() {
     })
   }
 
-  const jsonText = normalizeText(process.env.STUDENT_ADMIN_ACCOUNTS_JSON)
-  if (jsonText) {
-    try {
-      const parsed = JSON.parse(jsonText)
-      if (Array.isArray(parsed)) {
-        parsed.forEach((entry) => {
-          const username = normalizeText(entry?.username)
-          const role = normalizeLower(entry?.role) || "teacher"
-          const password = normalizeText(entry?.password)
-          const passwordHash = normalizeText(entry?.passwordHash)
-          if (!username || (!password && !passwordHash)) return
-          accounts.push({ username, role: normalizeRoleName(role), password, passwordHash })
-        })
-      }
-    } catch (error) {
-      console.warn(`STUDENT_ADMIN_ACCOUNTS_JSON parse failed: ${error.message}`)
-    }
+  const jsonAccounts = parseConfiguredAccountsJson(process.env.STUDENT_ADMIN_ACCOUNTS_JSON, {
+    defaultRole: "teacher",
+    envName: "STUDENT_ADMIN_ACCOUNTS_JSON",
+  })
+  if (jsonAccounts.length > 0) {
+    accounts.push(...jsonAccounts)
   }
 
   return accounts
@@ -1750,9 +1766,10 @@ function normalizeDeliveryMode(value) {
   return "immediate"
 }
 
-function normalizeAnnouncementPayload(payload = {}) {
+function normalizeAnnouncementPayload(payload = {}, options = {}) {
+  const allowEmptyRecipients = Boolean(options.allowEmptyRecipients)
   const recipients = normalizeRecipientList(payload.recipients)
-  if (!recipients.length) {
+  if (!recipients.length && !allowEmptyRecipients) {
     const error = new Error("At least one valid recipient email is required")
     error.statusCode = 400
     throw error
@@ -1854,7 +1871,10 @@ async function runQueueDbOperation(handler, fallbackHandler) {
 }
 
 function buildQueuedAnnouncementEntry(payload = {}, options = {}) {
-  const normalizedPayload = normalizeAnnouncementPayload(payload)
+  const queueType = normalizeQueueType(payload.queueType)
+  const normalizedPayload = normalizeAnnouncementPayload(payload, {
+    allowEmptyRecipients: queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
+  })
   const now = new Date()
   const scheduledAt = nextWeekendBatchDispatchAt(now)
   if (!scheduledAt) {
@@ -1864,7 +1884,7 @@ function buildQueuedAnnouncementEntry(payload = {}, options = {}) {
   }
   return {
     id: createQueueId("notify"),
-    queueType: normalizeQueueType(payload.queueType),
+    queueType,
     status: NOTIFICATION_QUEUE_STATUS_QUEUED,
     deliveryMode: normalizeDeliveryMode(payload.deliveryMode),
     recipients: normalizedPayload.recipients,

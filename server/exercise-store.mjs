@@ -101,6 +101,23 @@ function parseCompletedAt(value) {
   return new Date()
 }
 
+function schoolYearFromDate(value = new Date()) {
+  const date = value instanceof Date ? value : parseCompletedAt(value)
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  if (month >= 8) return `${year}-${year + 1}`
+  return `${year - 1}-${year}`
+}
+
+function quarterFromDate(value = new Date()) {
+  const date = value instanceof Date ? value : parseCompletedAt(value)
+  const month = date.getMonth() + 1
+  if (month >= 8 && month <= 10) return "q1"
+  if (month >= 11 || month <= 1) return "q2"
+  if (month >= 2 && month <= 4) return "q3"
+  return "q4"
+}
+
 function summarizeAnswers(answers) {
   const list = Array.isArray(answers) ? answers : []
   let correctCount = 0
@@ -326,6 +343,11 @@ async function findMatchedStudent(prisma, submission) {
         id: true,
         eaglesId: true,
         email: true,
+        profile: {
+          select: {
+            currentGrade: true,
+          },
+        },
       },
     })
 
@@ -380,6 +402,11 @@ async function findMatchedStudent(prisma, submission) {
         id: true,
         eaglesId: true,
         email: true,
+        profile: {
+          select: {
+            currentGrade: true,
+          },
+        },
       },
     })
 
@@ -418,6 +445,34 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
     scorePercent: summary.scorePercent,
     answersJson: submission.answersJson,
     recipientsJson: submission.recipientsJson,
+  }
+}
+
+function buildExerciseGradeRecordData(student, submission, summary) {
+  const className = normalizeString(submission.pageTitle) || "Exercise Submission"
+  const completedAt = submission.completedAt instanceof Date ? submission.completedAt : parseCompletedAt(submission.completedAt)
+  const totalQuestions = Number.parseInt(String(summary.totalQuestions || 0), 10) || 0
+  const correctCount = Number.parseInt(String(summary.correctCount || 0), 10) || 0
+  const scorePercent = Number(summary.scorePercent || 0)
+  const gradeLevel = normalizeString(student?.profile?.currentGrade)
+  const comments = totalQuestions > 0
+    ? `Auto-imported exercise score (${correctCount}/${totalQuestions} correct).`
+    : "Auto-imported exercise score."
+
+  return {
+    studentRefId: student.id,
+    className,
+    level: gradeLevel || null,
+    schoolYear: schoolYearFromDate(completedAt),
+    quarter: quarterFromDate(completedAt),
+    assignmentName: className,
+    dueAt: completedAt,
+    submittedAt: completedAt,
+    score: scorePercent,
+    maxScore: 100,
+    homeworkCompleted: true,
+    homeworkOnTime: true,
+    comments,
   }
 }
 
@@ -595,9 +650,16 @@ export async function persistExerciseSubmission(payload, options = {}) {
 
   const created = await prisma.$transaction(async (tx) => {
     const exercise = await ensureExerciseRecord(tx, submission.pageTitle)
-    return tx.exerciseSubmission.create({
+    const createdSubmission = await tx.exerciseSubmission.create({
       data: buildExerciseSubmissionRecordData(matchedStudent.id, exercise.id, submission, summary),
     })
+    const createdGradeRecord = await tx.studentGradeRecord.create({
+      data: buildExerciseGradeRecordData(matchedStudent, submission, summary),
+    })
+    return {
+      createdSubmission,
+      createdGradeRecord,
+    }
   })
 
   return {
@@ -608,7 +670,8 @@ export async function persistExerciseSubmission(payload, options = {}) {
     updatedExisting: false,
     shouldNotify: true,
     studentRefId: matchedStudent.id,
-    submissionId: created.id,
+    submissionId: created.createdSubmission.id,
+    gradeRecordId: created.createdGradeRecord.id,
     summary,
   }
 }
@@ -791,6 +854,11 @@ export async function resolveIncomingExerciseResultToStudent(
       select: {
         id: true,
         eaglesId: true,
+        profile: {
+          select: {
+            currentGrade: true,
+          },
+        },
       },
     })
 
@@ -802,6 +870,9 @@ export async function resolveIncomingExerciseResultToStudent(
 
     const createdSubmission = await tx.exerciseSubmission.create({
       data: buildExerciseSubmissionRecordData(student.id, exercise.id, submission, summary),
+    })
+    const createdGradeRecord = await tx.studentGradeRecord.create({
+      data: buildExerciseGradeRecordData(student, submission, summary),
     })
 
     const updatedIncoming = await tx.incomingExerciseResult.update({
@@ -827,6 +898,7 @@ export async function resolveIncomingExerciseResultToStudent(
 
     return {
       createdSubmission,
+      createdGradeRecord,
       updatedIncoming,
       student,
     }
@@ -837,6 +909,7 @@ export async function resolveIncomingExerciseResultToStudent(
     studentRefId: result.student.id,
     eaglesId: normalizeString(result.student.eaglesId),
     submissionId: result.createdSubmission.id,
+    gradeRecordId: result.createdGradeRecord.id,
     item: mapIncomingExerciseResult(result.updatedIncoming),
   }
 }

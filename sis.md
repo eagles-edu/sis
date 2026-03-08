@@ -7,6 +7,388 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-08 - studentNumber auto-allocation for create/import/queue-create)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - removed hard save-path rejection for missing `studentNumber` on create.
+  - create path now auto-allocates the next available `studentNumber` when omitted.
+  - update path keeps identity immutability and now backfills `studentNumber` only when legacy rows are missing it.
+  - import identity validation in strict mode no longer rejects rows solely for blank `studentNumber` when `eaglesId` is explicit/valid.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - removed front-end hard block that required `studentNumber` before submitting Profile create/save.
+- Updated tests:
+  - [test/student-admin-import-validation.spec.mjs](test/student-admin-import-validation.spec.mjs):
+    - added strict-mode coverage for explicit `eaglesId` with blank `studentNumber`.
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs):
+    - updated contract guard: no hard `studentNumber is required` save assertion; added auto-allocation source guard.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - fixed XLSX export regression fixture/stub so attendance admin navigation and export payload assertions remain stable.
+- Verification:
+  - `npm test` => `160` pass, `0` fail.
+
+## Update (2026-03-08 - strict discrete-field wiring pass + live sync)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - removed legacy sort alias checks (`studentName`) from attendance/grade/report/performance table sort paths; canonical sort key is `fullName`.
+  - removed cross-field name fallback in display helpers:
+    - `studentDisplayName(preferEnglish=true)` now returns only `englishName`.
+    - default display now returns only `fullName`.
+  - top-search option value now uses canonical `eaglesId` (no composite name/id value parsing).
+  - top-search query normalization no longer rewrites to `fullName`; it resolves to `eaglesId` when selected, else raw query.
+  - table filter summary now prints identity/name fields as explicitly labeled discrete values (`Eagles ID`, `Student Number`, `Full Name`, `English Name`).
+- Updated tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - adjusted datalist/selector expectations to canonical `eaglesId` values.
+    - renamed and updated top-search option contract test for canonical `eaglesId` value behavior.
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs):
+    - added guard test to prevent reintroducing name-field fallback and legacy `studentName` sort alias wiring.
+- Verification:
+  - `node --test test/profile-form-contract.spec.mjs test/student-admin-ui.spec.mjs` => `47` pass, `0` fail.
+  - `npm test` => `159` pass, `0` fail.
+- Live sync:
+  - public path sync: `ffs-sis-public-root --batch` (updated `/home/admin.eagles.edu.vn/public_html/sis-admin/student-admin.html`).
+  - runtime HTML sync + restart: `tools/deploy-ui-safe.sh --force-sync` (sync completed; initial immediate curl check raced service startup).
+  - post-sync runtime verification:
+    - service active (`exercise-mailer.service`),
+    - `GET http://127.0.0.1:8787/healthz` => `200`,
+    - `GET http://127.0.0.1:8787/api/admin/auth/me` => `401` (expected unauthenticated).
+  - file hash parity confirmed across source/runtime/public:
+    - `/home/eagles/dockerz/sis/web-asset/admin/student-admin.html`
+    - `/home/admin.eagles.edu.vn/sis/web-asset/admin/student-admin.html`
+    - `/home/admin.eagles.edu.vn/public_html/sis-admin/student-admin.html`
+
+## Update (2026-03-08 - weekend dashboard attendance reconciliation)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - added `summarizeTodayAttendanceForDashboard(...)` to normalize per-student daily attendance before dashboard aggregation.
+  - de-duplicates same-day attendance rows per student and prevents double counting.
+  - on Saturday/Sunday, reconciles `today.absences` to enrolled headcount:
+    - `today.absences = max(0, totalEnrollment - today.attendance)`.
+    - this enforces `today.attendance + today.absences == totalEnrollment` on weekends.
+- Added [test/student-admin-dashboard-summary.spec.mjs](test/student-admin-dashboard-summary.spec.mjs):
+  - weekend reconciliation coverage (`17 attendance + 109 absences = 126 enrolled`).
+  - weekday non-reconciliation coverage (tracked-row absences remain unchanged).
+  - duplicate-status precedence coverage (attended overrides absent for same student/day).
+- Verification:
+  - `node --test test/student-admin-dashboard-summary.spec.mjs` => `3` pass, `0` fail.
+  - `npm test` => `158` pass, `0` fail.
+
+## Update (2026-03-08 - enforce required studentNumber with eaglesId across read/export paths)
+
+- Updated [server/student-report-card-pdf.mjs](server/student-report-card-pdf.mjs):
+  - added hard identity guard (`eaglesId` + positive `studentNumber`) for report-card filename generation and PDF build paths.
+  - report-card student info now prints `Student Number` explicitly with `Eagles ID`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - removed row-level `studentName` alias wiring from attendance/grade/performance hydration to keep canonical field usage.
+  - tightened assignment XLSX export identity handling:
+    - `eaglesId` must come from row identity key,
+    - `studentNumber` must resolve from canonical matched student record.
+  - staged performance approval queue path now requires both `eaglesId` and `studentNumber` from canonical student detail before queueing.
+  - export name fields now read directly from row fields (`fullName`, `englishName`) with no profile fallback mix-in.
+- Updated tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - identity filtering coverage now excludes rows missing either `eaglesId` or `studentNumber`.
+    - staged performance queue fixture now includes `studentNumber` to satisfy strict queue guard.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - report-card PDF fixture now includes `studentNumber`.
+- Verification:
+  - `npm test` => `155` pass, `0` fail.
+
+## Update (2026-03-08 - enforce required eaglesId + strict field separation for display/sort/export)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - top search + student list now use explicit `Full Name`/`English Name` display fields with no ID/name mixing in one column.
+  - attendance/performance/grades/reports tables now split identity into distinct columns (`Eagles ID`, `Full Name`, `English Name`) and removed combined cells like `Name (ID)`.
+  - table sorting switched from generic `name/studentName` display tokens to canonical `fullName`/`eaglesId` keys.
+  - XLSX/print export columns now emit explicit canonical fields (`eaglesId`, `fullName`, `englishName`) and no mixed fallback values.
+  - UI load path now excludes rows missing `eaglesId` and flags a data-integrity error message.
+  - student detail load now hard-fails when `eaglesId` is blank.
+  - export mapping now throws when any exported row lacks `eaglesId`.
+  - removed placeholder substitutions for identity/name fields (`"(no id)"`, `"(no name)"`) so blank values remain blank in 1:1 field rendering.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - adjusted top-search/table selector expectations for the new column model.
+  - added regression coverage that rows missing `eaglesId` are excluded from UI lists/options.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `37` pass, `0` fail.
+  - `npm test` => `155` pass, `0` fail.
+
+## Update (2026-03-08 - profile wiring alignment audit: search/save/sort/display/submit + import map parity)
+
+- Performed alignment audit across:
+  - profile save/submit wiring (`collectStudentPayload` -> `/api/admin/students`),
+  - profile display wiring (`resolveProfileFieldValueForStudent`),
+  - student search/sort display paths (`studentSearchText`, `studentDisplayName`, top-search sorting),
+  - import wiring (`mapImportRowToStudentPayload`).
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - import mapper now covers full profile-form canonical keys for persisted DB fields (contact, medical, COVID, signature/comment domains), not only a partial subset.
+  - `normalizeTextArray` now accepts `|` delimiters (in addition to `,` and `;`) for checkbox-style workbook cells.
+  - save path now enforces `studentNumber` required (`400`) alongside `eaglesId` and keeps identity immutability checks (`eaglesId`/`studentNumber`) on updates.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - `saveStudent()` now blocks submit when `studentNumber` is missing before API call.
+- Updated [test/student-admin-import-row-map.spec.mjs](test/student-admin-import-row-map.spec.mjs):
+  - added dynamic coverage that parses canonical profile form rows and verifies workbook profile keys map to persisted profile payload keys.
+  - added `|`-delimiter coverage for `genderSelections`.
+- Updated [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs):
+  - added assertion that `studentNumber` is required in save contract.
+- Schema status:
+  - no `sex` column exists in Prisma schema/migrations.
+  - canonical field remains `StudentProfile.genderSelections`; import accepts workbook `gender` and compatibility alias `sex`.
+
+## Update (2026-03-08 - rollback fullName-required, keep identity strict)
+
+- Corrected [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - removed accidental `profile.fullName` required enforcement from save path.
+  - removed import preflight `fullName is required` gate.
+  - `eaglesId` + `studentNumber` remain the only required identity keys and update immutability checks remain enforced.
+- Updated tests:
+  - [test/student-admin-import-validation.spec.mjs](test/student-admin-import-validation.spec.mjs):
+    - verifies identity validation does not require `fullName` when identity keys are valid.
+  - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs):
+    - immutable identity contract assertion now checks only immutable key behavior.
+- DB/schema clarification:
+  - no DB `sex` field exists in Prisma schema or migrations.
+  - canonical profile field is `genderSelections`; import accepts workbook `gender` and compatibility alias `sex`.
+
+## Update (2026-03-08 - enforce fullName required + immutable identity keys)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - `saveStudentWithClient(...)` now enforces `profile.fullName` as required (`400` when missing/blank).
+  - update path now enforces immutable identity:
+    - changing `eaglesId` returns `409` (`eaglesId is immutable and cannot be changed`),
+    - changing `studentNumber` returns `409` (`studentNumber is immutable and cannot be changed`).
+  - import preflight (`validateImportRowsForIdentity`) now also requires `profile.fullName` per row.
+- Updated [test/student-admin-import-validation.spec.mjs](test/student-admin-import-validation.spec.mjs):
+  - existing identity validation fixtures now include `profile.fullName`.
+  - added coverage for `fullName is required` import-row rejection.
+- Updated [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs):
+  - added contract assertions for required `profile.fullName` and immutable identity error strings.
+- Verification:
+  - `node --test test/student-admin-import-validation.spec.mjs` => pass.
+  - `node --test test/profile-form-contract.spec.mjs` => pass.
+  - `npm test` => pass.
+
+## Update (2026-03-08 - strict name-field separation, no fullName backfill)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - removed import-time backfill of `profile.fullName` from `englishName`.
+  - import now keeps `profile.fullName` strictly mapped from workbook `fullName/fullNameStudent` only.
+  - `englishName` remains mapped separately to `profile.englishName`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - admin data table/export canonical student name resolver is now strict:
+    - uses `profile.fullName` only,
+    - falls back only to `eaglesId`,
+    - no fallback from `englishName` and no `row.studentName` mixing.
+- Updated [test/student-admin-import-row-map.spec.mjs](test/student-admin-import-row-map.spec.mjs):
+  - replaced fallback test with strict assertion that `fullName` remains empty when only `englishName` is provided.
+- Verification:
+  - `node --test test/student-admin-import-row-map.spec.mjs` => `4` pass, `0` fail.
+  - `node --test test/profile-form-contract.spec.mjs` => `8` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `36` pass, `0` fail.
+
+## Update (2026-03-08 - gender import mapping + student-name normalization)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - import row mapping now persists workbook `gender` values into `profile.genderSelections`.
+  - import row mapping also accepts `sex` as a compatibility alias for `genderSelections`.
+  - import row mapping now backfills `profile.fullName` from `englishName` when `fullName/fullNameStudent` is blank to prevent blank-name profile rows from import sheets that only provide `englishName`.
+  - exported `mapImportRowToStudentPayload(...)` for direct regression coverage.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - profile field label changed from `Sex` to `Gender` for schema/workbook consistency.
+  - attendance/grade/performance table row hydration and XLSX export mapping now use a shared canonical student-name resolver (`profile.fullName -> profile.englishName -> fallback`) to prevent mixed ad-hoc name sourcing.
+- Updated [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs):
+  - canonical workbook resolver now supports either:
+    - `docs/students/eaglesclub-students-import-ready.xlsx`, or
+    - `docs/students/eaglesclub-students-import-ready-single.xlsx`.
+- Added [test/student-admin-import-row-map.spec.mjs](test/student-admin-import-row-map.spec.mjs):
+  - verifies `gender` -> `genderSelections`.
+  - verifies compatibility alias `sex`.
+  - verifies full-name fallback from `englishName`.
+  - verifies explicit `fullName` precedence.
+- Verification:
+  - `node --test test/student-admin-import-row-map.spec.mjs` => `4` pass, `0` fail.
+  - `node --test test/profile-form-contract.spec.mjs` => `8` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `36` pass, `0` fail.
+  - `npm test` => `151` pass, `0` fail.
+
+## Update (2026-03-07 - performance admin queue/stage panel separation)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - completed queue panel move from Overview to Performance Admin (`performance-data`).
+  - split flow into two distinct panels:
+    - `Staged Performance Reports` (saved reports not yet queued),
+    - `Queued Performance Reports` (Queue Review + send actions).
+  - added staged approval action (`Approve -> Queue`) that queues a selected staged report directly from Performance Admin.
+  - queue payloads now include linkage identifiers (`reportId`, `studentRefId`, class/term context) for staged/queued reconciliation.
+  - fixed null DOM listener crash by retargeting old `overviewParentQueue*` bindings to `performanceQueue*`.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - queue/staged assertions now target Performance Admin panel IDs.
+  - mobile wrapper check retargeted to `#performanceQueueDetails`.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `36` pass, `0` fail.
+  - `npm test` => `147` pass, `0` fail.
+
+## Update (2026-03-07 - parent-tracking rubric row persistence)
+
+- Implemented row-level rubric persistence for parent performance reports without DB migration:
+  - backend now stores rubric payload (`pt_skill_*`, `pt_conduct_*`, `pt_rec_*`) in an encoded marker appended to report comments.
+  - backend decodes this marker on read so API responses expose:
+    - `comments` as plain teacher/parent comment text,
+    - `rubricPayload` as structured rubric data.
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - added normalization + encode/decode helpers:
+    - `normalizeParentReportRubricPayload(...)`
+    - `encodeParentReportCommentBundle(...)`
+    - `decodeParentReportCommentBundle(...)`
+  - `saveParentClassReport(...)` now persists `payload.rubricPayload`.
+  - student mapping now returns decoded `parentReports[*].rubricPayload`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - save path now sends `rubricPayload` with report POST.
+  - edit path hydrates rubric score/recommendation controls from saved `rubricPayload`.
+  - student switch/clear now resets rubric fields to avoid cross-student carryover.
+- Added regression coverage:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs) for normalize/encode/decode behavior.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) now asserts saved report payload includes rubric maps.
+- Verification:
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => `3` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `35` pass, `0` fail.
+  - `npm test` => `146` pass, `0` fail.
+
+## Update (2026-03-07 - parent-tracking snapshot/rubric model alignment)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - `Performance Snapshot (Auto from records)` score fields are now read-only auto fields.
+  - Behavior and Skills snapshot values are now always derived from current rubric entries:
+    - `Behavior` = mean of `pt_conduct_*`.
+    - `Skills` = mean of `pt_skill_*`.
+  - Academic/homework snapshot values remain auto-derived from current-quarter records.
+  - rubric score cells (`pt_skill_*`, `pt_conduct_*`) now render as dropdowns (`Select score`, `0..10`, where `0 = Not Applicable`).
+  - removed summary-field manual-edit gating from snapshot render path so auto values are always applied.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - parent-tracking test now asserts read-only snapshot inputs + rubric dropdown options.
+  - save payload expectations now validate rubric-derived Behavior/Skills and record-derived Academic.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `35` pass, `0` fail.
+  - `npm test` => `143` pass, `0` fail.
+
+## Update (2026-03-07 - parent-tracking empty-field fallback hardening)
+
+- Live diagnosis:
+  - existing saved reports showed `behaviorScore`, `participationScore`, and `inClassScore` as null while teachers reported rubric values were entered.
+  - root cause: save payload only used summary dropdown/comment fields (`pt_behaviorScore`, `pt_participationScore`, `pt_academicScore`, `pt_comments`), not rubric input/recommendation textareas.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - save flow now derives fallback summary scores from rubric averages when summary dropdowns are left blank:
+    - `Behavior` fallback = mean of `pt_conduct_*` rubric scores.
+    - `Skills` fallback = mean of `pt_skill_*` rubric scores.
+  - save flow now derives fallback comment from filled corrective-action recommendations (`pt_rec_*`) when `pt_comments` is blank.
+  - keeps explicit summary/comment values unchanged when they are provided.
+- Added regression coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - parent-tracking save now asserts rubric-only entry still persists non-empty `behaviorScore`, `participationScore`, and `comments`.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `35` pass, `0` fail.
+  - `npm test` => `143` pass, `0` fail.
+- Live deployment:
+  - synced updated HTML to:
+    - `/home/admin.eagles.edu.vn/sis/web-asset/admin/student-admin.html`
+    - `/home/admin.eagles.edu.vn/public_html/sis-admin/student-admin.html`
+  - source/runtime/public SHA256 hashes match.
+
+## Update (2026-03-07 - incoming exercise resolve now writes grade records)
+
+- Confirmed root cause for live queue resolution drift:
+  - `Add to Specific Student` / `create-account` on incoming exercise results wrote only `ExerciseSubmission`, so grade/dashboard metrics depending on `StudentGradeRecord` did not update.
+- Updated [server/exercise-store.mjs](server/exercise-store.mjs):
+  - matched direct submissions now create both `ExerciseSubmission` and `StudentGradeRecord` in one transaction.
+  - incoming queue resolve now also writes a `StudentGradeRecord` before marking the queue item resolved.
+  - added deterministic school-year and quarter derivation from submission completion date (same quarter mapping used by UI defaults).
+  - grade record payload now includes auto-import comments and completion flags (`homeworkCompleted=true`, `homeworkOnTime=true`) so homework/performance aggregates include these rows.
+- Updated [test/exercise-store.spec.mjs](test/exercise-store.spec.mjs):
+  - matched and resolve paths now assert grade-record creation and returned `gradeRecordId`.
+- Verification:
+  - `node --test test/exercise-store.spec.mjs` => `4` pass, `0` fail.
+  - `npm test` => `143` pass, `0` fail.
+
+## Update (2026-03-07 - live performance report save race fix)
+
+- Fixed performance-report save behavior in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - save flow now snapshots score/comment field values immediately on click, preventing async refresh races from overwriting teacher-entered values.
+  - report save now writes `comments` from teacher input (`pt_comments`) instead of synthetic summary text.
+  - queue flow reuses the same saved snapshot values for queued-message metrics/comments.
+  - added manual-edit guard (`manualMetricsTouched`) so background metric sync does not clobber user-entered score/comment/homework values.
+- Added regression coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - parent-tracking save/queue path now asserts persisted payload retains manually entered `behaviorScore`, `participationScore`, `inClassScore`, and `comments`.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `35` pass, `0` fail.
+  - `npm test` => `143` pass, `0` fail.
+- Live deployment:
+  - synced updated HTML to runtime + public paths:
+    - `/home/admin.eagles.edu.vn/sis/web-asset/admin/student-admin.html`
+    - `/home/admin.eagles.edu.vn/public_html/sis-admin/student-admin.html`
+  - source/runtime/public SHA256 hashes match.
+
+## Update (2026-03-07 - dev/live separation hardening + ffs sync enforcement)
+
+- Hardened runtime separation in [server/exercise-mailer.mjs](server/exercise-mailer.mjs):
+  - env loading now supports explicit `SIS_ENV_FILE` and environment-specific defaults (`.env.dev` for development, `.env` for production).
+  - development default port now resolves to `8788` when `EXERCISE_MAILER_PORT` is unset.
+  - added startup guard that blocks `NODE_ENV=development` inside live root unless `SIS_ALLOW_DEV_ON_LIVE_ROOT=true`.
+- Updated dev command in [package.json](package.json):
+  - `npm run dev` now sets `NODE_ENV=development SIS_ENV_FILE=.env.dev EXERCISE_MAILER_PORT=${EXERCISE_MAILER_PORT:-8788}`.
+- Added dev env template:
+  - [/.env.dev.example](.env.dev.example)
+- Added regression coverage in [test/exercise-mailer.spec.mjs](test/exercise-mailer.spec.mjs):
+  - blocks development runtime when cwd is configured live root.
+  - allows development runtime only with explicit override flag.
+- Updated sync wrapper behavior (system paths):
+  - `/usr/local/bin/ffs-sis-root` now applies separation defaults after successful sync and prints dev/live key values.
+  - `/usr/local/bin/ffs-sis-public-root` now prints dev/live port values after sync for quick validation.
+- Current test status:
+  - `node --test test/exercise-mailer.spec.mjs` => `17` pass, `0` fail.
+  - `npm test` => `143` pass, `0` fail.
+
+## Update (2026-03-07 - parent-report queue review visibility hardening)
+
+- Fixed parent-report queueing behavior so `weekend-batch` + `queueType=parent-report` can be queued for admin review even when recipients are currently empty.
+  - backend change in [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - `normalizeAnnouncementPayload(...)` now supports optional empty-recipient mode.
+    - queue-entry creation enables empty-recipient mode only for `parent-report` queue type.
+- Clarified parent-tracking UI messaging in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - save action now explicitly says report is saved and requires `Queue Send` to appear in Queue Review.
+  - queue action no longer blocks on missing recipients and now surfaces explicit “queued with 0 recipients” status text.
+- Added regression coverage in [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - `POST /api/admin/notifications/email allows parent-report queue without recipients`.
+- Current test status:
+  - `node --test test/student-admin.spec.mjs` => `61` pass, `0` fail.
+- Operational diagnosis from production logs/db:
+  - saved class reports existed (`parentClassReport` rows) but notification queue rows were `0`.
+  - user session had `POST /api/sis-admin/students/:id/reports` but no `POST /api/sis-admin/notifications/email` calls.
+
+## Update (2026-03-07 - codified backup/restore workflows)
+
+- Added dedicated ops runbook: [docs/db-backup-failsafe.md](docs/db-backup-failsafe.md)
+  - includes decision matrix for full restore vs DB-only vs files-only.
+  - codifies safety checklist, exact commands, validation checklist, and rollback path.
+  - aligns with existing scripts:
+    - `tools/sis-full-backup-snapshot.sh`
+    - `tools/sis-full-restore-snapshot.sh`
+    - `tools/db-backup-smart.sh`
+    - `tools/db-restore-failsafe.mjs`
+- Linked the runbook from [README.md](README.md) under `Practical Admin Runbooks`.
+- Current test status:
+  - `npm test` => `139` pass, `0` fail.
+
+## Update (2026-03-07 - unique teacher passwords)
+
+- Updated configured account resolution in [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added `STUDENT_TEACHER_ACCOUNTS_JSON` for explicit per-teacher credentials (`username` + `password` or `passwordHash` per teacher).
+  - removed hardcoded fallback alias auto-seeding with shared credentials.
+  - kept legacy shared teacher env compatibility (`STUDENT_TEACHER_PASS` + optional `STUDENT_TEACHER_USER(S)`), defaulting only to `teacher` if usernames are not provided.
+- Added regression assertions in [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - alias login succeeds with its unique password.
+  - alias login fails with a different teacher password.
+- Current test status:
+  - `node --test test/student-admin.spec.mjs` => `60` pass, `0` fail.
+  - `npm test` => `139` pass, `0` fail.
+
 ## Update (2026-03-06 - progress report layout + collapsible left menu)
 
 - Replaced the `parent-tracking` input panel in [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) with a workbook-shaped progress report form:

@@ -13,8 +13,14 @@ process.env.STUDENT_INTAKE_STORE_ENABLED = "false"
 process.env.STUDENT_ADMIN_STORE_ENABLED = "false"
 process.env.STUDENT_ADMIN_USER = "admin"
 process.env.STUDENT_ADMIN_PASS = "admin-pass-123"
-process.env.STUDENT_TEACHER_USER = "teacher"
-process.env.STUDENT_TEACHER_PASS = "teacher-pass-123"
+delete process.env.STUDENT_TEACHER_USER
+delete process.env.STUDENT_TEACHER_USERS
+delete process.env.STUDENT_TEACHER_PASS
+delete process.env.STUDENT_TEACHER_PASSWORD_HASH
+process.env.STUDENT_TEACHER_ACCOUNTS_JSON = JSON.stringify([
+  { username: "teacher", role: "teacher", password: "teacher-pass-123" },
+  { username: "carole01", role: "teacher", password: "carole-pass-123" },
+])
 process.env.STUDENT_ADMIN_TOKEN_SECRET = "test-student-admin-token-secret"
 process.env.MAILER_DEBUG = "false"
 
@@ -93,6 +99,7 @@ test("parseSpreadsheetRowsFromUploadPayload selects the most data-complete sheet
 test("generateStudentReportCardPdf returns a PDF buffer", async () => {
   const student = {
     eaglesId: "S001",
+    studentNumber: 1001,
     profile: {
       fullName: "Jane Student",
       englishName: "Jane",
@@ -334,13 +341,24 @@ test("POST /api/admin/login accepts configured teacher aliases", async () => {
   const res = await fetchLocal(port, "/api/admin/login", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ username: "carole01", password: "teacher-pass-123" }),
+    body: JSON.stringify({ username: "carole01", password: "carole-pass-123" }),
   })
   assert.equal(res.status, 200)
   const body = await res.json()
   assert.equal(body.authenticated, true)
   assert.equal(body.user?.username, "carole01")
   assert.equal(body.user?.role, "teacher")
+})
+
+test("POST /api/admin/login rejects alias with a different teacher password", async () => {
+  const res = await fetchLocal(port, "/api/admin/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "carole01", password: "teacher-pass-123" }),
+  })
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /invalid username or password/i)
 })
 
 test("GET /api/admin/auth/me works for teacher session", async () => {
@@ -572,6 +590,42 @@ test("POST /api/admin/notifications/email queues weekend batch delivery", async 
   assert.ok(body.scheduledFor.length > 0)
   assert.ok(Number.isInteger(body.queueSize))
   assert.ok(body.queueSize >= 1)
+})
+
+test("POST /api/admin/notifications/email allows parent-report queue without recipients", async () => {
+  const res = await fetchLocal(port, "/api/admin/notifications/email", {
+    method: "POST",
+    headers: {
+      Cookie: adminSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      deliveryMode: "weekend-batch",
+      queueType: "parent-report",
+      assignmentTitle: "Parent progress report (missing recipients)",
+      level: "Pre-A1 Starters",
+      message: "Queue for admin review before recipient assignment.",
+      recipients: [],
+    }),
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.equal(body.queued, true)
+  assert.equal(body.deliveryMode, "weekend-batch")
+  assert.ok(Number.isInteger(body.queueSize))
+  assert.ok(body.queueSize >= 1)
+
+  const queueRes = await fetchLocal(port, "/api/admin/notifications/batch-status?queueType=parent-report&take=20", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(queueRes.status, 200)
+  const queueBody = await queueRes.json()
+  assert.ok(
+    queueBody.items.some(
+      (entry) => entry.assignmentTitle === "Parent progress report (missing recipients)" && Array.isArray(entry.recipients)
+    )
+  )
 })
 
 test("GET /api/admin/notifications/batch-status returns queued parent report items", async () => {

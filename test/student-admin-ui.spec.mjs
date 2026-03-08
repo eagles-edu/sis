@@ -998,15 +998,15 @@ test("top search level scope narrows assignment student dropdown and supports da
   await waitFor(() => {
     const options = Array.from(document.querySelectorAll("#searchStudentOptions option"))
     assert.equal(options.length, 1)
-    assert.match(options[0].value, /Mover Student/i)
+    assert.match(options[0].value, /^SIS-002$/i)
   })
 
   openPage(dom, "assignments")
   await waitFor(() => {
     const studentOptions = Array.from(document.querySelectorAll("#assignStudent option"))
     const optionText = studentOptions.map((option) => normalizeText(option.textContent || ""))
-    assert.equal(optionText.some((text) => /Mover Student/i.test(text)), true)
-    assert.equal(optionText.some((text) => /Starter Student/i.test(text)), false)
+    assert.equal(optionText.some((text) => /\bSIS-002\b/i.test(text)), true)
+    assert.equal(optionText.some((text) => /\bSIS-001\b/i.test(text)), false)
   })
 
   const datalistValue = normalizeText(document.querySelector("#searchStudentOptions option")?.value)
@@ -1029,7 +1029,7 @@ test("top search level scope narrows assignment student dropdown and supports da
   dom.window.close()
 })
 
-test("top search option uses englishName and studentNumber when fullName is missing", async () => {
+test("top search option value stays canonical eaglesId when fullName is missing", async () => {
   const studentRequests = []
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const parsedUrl = new URL(String(resource), "http://127.0.0.1")
@@ -1143,7 +1143,7 @@ test("top search option uses englishName and studentNumber when fullName is miss
   await waitFor(() => {
     const options = Array.from(dom.window.document.querySelectorAll("#searchStudentOptions option"))
     assert.equal(options.length, 1)
-    assert.match(normalizeText(options[0].value), /^\(Anna 2\)\s+anna002\s+<222>$/i)
+    assert.match(normalizeText(options[0].value), /^anna002$/i)
   })
 
   const optionValue = normalizeText(dom.window.document.querySelector("#searchStudentOptions option")?.value)
@@ -1154,6 +1154,144 @@ test("top search option uses englishName and studentNumber when fullName is miss
   await waitFor(() => {
     const scopedCalls = studentRequests.slice(callsBeforeSearch)
     assert.ok(scopedCalls.some((entry) => entry.includes("q=anna002")))
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("student rows missing identity keys are excluded from lists", async () => {
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const parsedUrl = new URL(String(resource), "http://127.0.0.1")
+    const pathname = parsedUrl.pathname
+    const method = normalizeText(init.method || "GET").toUpperCase()
+
+    if (pathname === "/api/admin/auth/me") return jsonResponse(401, { error: "Unauthorized" })
+    if (pathname === "/api/admin/auth/login") {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "attendance-admin",
+            "assignments",
+            "assignments-data",
+            "parent-tracking",
+            "performance-data",
+            "grades",
+            "grades-data",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (pathname === "/api/admin/permissions") {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "attendance-admin",
+              "assignments",
+              "assignments-data",
+              "parent-tracking",
+              "performance-data",
+              "grades",
+              "grades-data",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters") return jsonResponse(200, { levels: ["A1 Movers"], schools: [] })
+    if (pathname === "/api/admin/students" && method === "GET") {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "invalid-1",
+            eaglesId: "",
+            studentNumber: 100,
+            profile: { fullName: "Broken Identity", englishName: "Broken", currentGrade: "A1 Movers" },
+            counts: { attendanceRecords: 0 },
+          },
+          {
+            id: "invalid-2",
+            eaglesId: "SIS-000",
+            studentNumber: null,
+            profile: { fullName: "Missing Number", englishName: "Missing Number", currentGrade: "A1 Movers" },
+            counts: { attendanceRecords: 0 },
+          },
+          {
+            id: "valid-1",
+            eaglesId: "SIS-001",
+            studentNumber: 101,
+            profile: { fullName: "Valid Student", englishName: "Valid", currentGrade: "A1 Movers" },
+            counts: { attendanceRecords: 0 },
+          },
+        ],
+      })
+    }
+    if (pathname === "/api/admin/dashboard") {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [],
+        levelCompletion: [],
+      })
+    }
+    if (pathname === "/api/admin/runtime/service-control") return jsonResponse(404, { error: "Not found" })
+    if (pathname === "/api/admin/exercise-results/incoming") {
+      return jsonResponse(200, { ok: true, total: 0, hasMore: false, statuses: [], items: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles") return jsonResponse(200, { items: [] })
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom, { username: "admin" })
+
+  await waitFor(() => {
+    const rows = dom.window.document.querySelectorAll("#studentRows tr")
+    assert.equal(rows.length, 1)
+    assert.equal(normalizeText(rows[0].querySelector("td:nth-child(1)")?.textContent), "SIS-001")
+  })
+
+  await waitFor(() => {
+    const options = Array.from(dom.window.document.querySelectorAll("#searchStudentOptions option"))
+    assert.ok(options.length >= 1)
+    const values = options.map((entry) => normalizeText(entry.value))
+    assert.equal(values.some((value) => /SIS-001/i.test(value)), true)
+    assert.equal(values.some((value) => /Broken Identity/i.test(value)), false)
+    assert.equal(values.some((value) => /Missing Number/i.test(value)), false)
   })
 
   await settleDomAsync(dom)
@@ -1457,7 +1595,7 @@ test("top search results support show-all expansion and sortable headers", async
     assert.equal(idHeader.getAttribute("aria-sort"), "descending")
   })
 
-  const nameHeader = document.querySelector('th[data-top-search-sort="name"]')
+  const nameHeader = document.querySelector('th[data-top-search-sort="fullName"]')
   assert.ok(nameHeader)
   nameHeader.click()
   await waitFor(() => {
@@ -1469,7 +1607,7 @@ test("top search results support show-all expansion and sortable headers", async
   assert.ok(levelHeader)
   levelHeader.click()
   await waitFor(() => {
-    const firstLevelText = normalizeText(document.querySelector("#topSearchRows tr td:nth-child(3)")?.textContent)
+    const firstLevelText = normalizeText(document.querySelector("#topSearchRows tr td:nth-child(4)")?.textContent)
     assert.match(firstLevelText, /EggChic|Starters/i)
     assert.equal(levelHeader.getAttribute("aria-sort"), "ascending")
   })
@@ -2315,6 +2453,16 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     const studentSelect = document.getElementById("pt_studentRefId")
     assert.ok(studentSelect)
     assert.ok(studentSelect.querySelector('option[value="stu-01"]'))
+    const behaviorField = document.getElementById("pt_behaviorScore")
+    assert.equal(behaviorField?.tagName, "INPUT")
+    assert.equal(behaviorField?.readOnly, true)
+    const rubricScoreSelect = document.querySelector('select[name="pt_skill_questions"]')
+    assert.equal(rubricScoreSelect?.tagName, "SELECT")
+    const scoreValues = Array.from(rubricScoreSelect?.options || []).map((entry) => entry.value)
+    assert.ok(scoreValues.includes("0"))
+    assert.ok(scoreValues.includes("10"))
+    const notApplicableOption = Array.from(rubricScoreSelect?.options || []).find((entry) => entry.value === "0")
+    assert.match(notApplicableOption?.textContent || "", /not applicable/i)
   })
 
   const skillsCard = Array.from(document.querySelectorAll(".progress-report-card h4")).find((entry) =>
@@ -2378,6 +2526,38 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
 
   document.getElementById("pt_studentRefId").value = "stu-01"
   document.getElementById("pt_studentRefId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  const skillRubricA = document.querySelector('select[name="pt_skill_questions"]')
+  const skillRubricB = document.querySelector('select[name="pt_skill_logic"]')
+  const conductRubricA = document.querySelector('select[name="pt_conduct_focus"]')
+  const conductRubricB = document.querySelector('select[name="pt_conduct_maturity"]')
+  assert.ok(skillRubricA)
+  assert.ok(skillRubricB)
+  assert.ok(conductRubricA)
+  assert.ok(conductRubricB)
+
+  skillRubricA.value = "3"
+  skillRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  skillRubricB.value = "3"
+  skillRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  conductRubricA.value = "2"
+  conductRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  conductRubricB.value = "2"
+  conductRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("pt_behaviorScore").value, "2")
+    assert.equal(document.getElementById("pt_participationScore").value, "3")
+    assert.equal(document.getElementById("pt_academicScore").value, "8")
+  })
+
+  document.getElementById("pt_comments").value = "Parent should review vocabulary notebook daily."
+  document.getElementById("pt_comments").dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  document.getElementById("pt_saveBtn").click()
+  await waitFor(() => {
+    const saveNoticeText = normalizeText(document.getElementById("pt_saveNotice").textContent || "")
+    assert.match(saveNoticeText, /saved performance report/i)
+    assert.match(saveNoticeText, /save for admin review/i)
+  })
   document.getElementById("pt_queueSendBtn").click()
 
   await waitFor(() => {
@@ -2388,6 +2568,19 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.ok(queuedEmailPayloads[0].recipients.includes("starter@example.com"))
     assert.ok(queuedEmailPayloads[0].recipients.includes("mom@example.com"))
     assert.match(queuedEmailPayloads[0].message || "", /Homework Past Due/i)
+    assert.match(queuedEmailPayloads[0].message || "", /Parent should review vocabulary notebook daily/i)
+  })
+
+  await waitFor(() => {
+    const latestPayload = savedReportPayloads[savedReportPayloads.length - 1] || {}
+    assert.equal(latestPayload.behaviorScore, "2")
+    assert.equal(latestPayload.participationScore, "3")
+    assert.equal(latestPayload.inClassScore, "8")
+    assert.equal(latestPayload.comments, "Parent should review vocabulary notebook daily.")
+    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_questions, "3")
+    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_logic, "3")
+    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_focus, "2")
+    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_maturity, "2")
   })
 
   await waitFor(() => {
@@ -2395,10 +2588,140 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.match(statusText, /Queued for weekend batch/i)
   })
 
+  skillRubricA.value = "7"
+  skillRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  skillRubricB.value = "9"
+  skillRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  conductRubricA.value = "4"
+  conductRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  conductRubricB.value = "6"
+  conductRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+
+  document.getElementById("pt_comments").value = ""
+  document.getElementById("pt_comments").dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  recField.value = "Rubric fallback comment token."
+  recField.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  document.getElementById("pt_saveBtn").click()
+
+  await waitFor(() => {
+    const latestPayload = savedReportPayloads[savedReportPayloads.length - 1] || {}
+    assert.equal(latestPayload.behaviorScore, "5")
+    assert.equal(latestPayload.participationScore, "8")
+    assert.match(latestPayload.comments || "", /Rubric fallback comment token/i)
+    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_questions, "7")
+    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_logic, "9")
+    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_focus, "4")
+    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_maturity, "6")
+    assert.match(
+      latestPayload.rubricPayload?.recommendations?.pt_rec_listening || "",
+      /Rubric fallback comment token/i
+    )
+  })
+
   dom.window.close()
 })
 
-test("overview queued parent reports list opens modal and supports hold/edit/requeue/send-all actions", async () => {
+test("overview queue summary shows saved-report hint when queue is empty", async () => {
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "profile",
+            "attendance",
+            "attendance-admin",
+            "assignments",
+            "parent-tracking",
+            "grades",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "profile",
+              "attendance",
+              "attendance-admin",
+              "assignments",
+              "parent-tracking",
+              "grades",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+    if (url.includes("/api/admin/students?")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/notifications/batch-status")) {
+      return jsonResponse(200, { ok: true, queueType: "parent-report", total: 0, hasMore: false, items: [] })
+    }
+    if (url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [],
+        levelCompletion: [],
+        parentReports: { total: 2 },
+        parentReportQueue: { total: 0, hasMore: false, items: [] },
+      })
+    }
+
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  const document = dom.window.document
+  await waitFor(() => {
+    const summary = normalizeText(document.getElementById("performanceStagedSummary")?.textContent || "")
+    const rowsText = normalizeText(document.getElementById("performanceStagedRows")?.textContent || "")
+    assert.match(summary, /saved reports=2/i)
+    assert.match(rowsText, /not queued yet/i)
+  })
+
+  dom.window.close()
+})
+
+test("performance queued parent reports list opens modal and supports hold/edit/requeue/send-all actions", async () => {
   const batchActions = []
   let queueItems = [
     {
@@ -2551,10 +2874,10 @@ test("overview queued parent reports list opens modal and supports hold/edit/req
 
   const document = dom.window.document
   await waitFor(() => {
-    const section = document.getElementById("overviewParentQueueSection")
+    const section = document.getElementById("performanceQueueSection")
     assert.ok(section)
     assert.equal(section.classList.contains("hidden"), false)
-    assert.match(document.getElementById("overviewParentQueueRows").textContent || "", /Starter Student class report/i)
+    assert.match(document.getElementById("performanceQueueRows").textContent || "", /Starter Student class report/i)
   })
 
   document.querySelector('[data-queue-open="queue-01"]').click()
@@ -2590,6 +2913,208 @@ test("overview queued parent reports list opens modal and supports hold/edit/req
   await waitFor(() => {
     assert.match(document.getElementById("status").textContent || "", /Queued (parent|performance) reports processed/i)
   })
+
+  dom.window.close()
+})
+
+test("performance staged reports panel queues a staged report via approve action", async () => {
+  const queuedEmailPayloads = []
+  let queueItems = []
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "profile",
+            "attendance",
+            "attendance-admin",
+            "assignments",
+            "assignments-data",
+            "parent-tracking",
+            "performance-data",
+            "grades",
+            "grades-data",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "profile",
+              "attendance",
+              "attendance-admin",
+              "assignments",
+              "assignments-data",
+              "parent-tracking",
+              "performance-data",
+              "grades",
+              "grades-data",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+    if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+    if (method === "GET" && url.includes("/api/admin/students?")) {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "stu-01",
+            eaglesId: "starter001",
+            studentNumber: 301,
+            profile: { fullName: "Starter Student", currentGrade: "Pre-A1 Starters" },
+            counts: { parentReports: 1, attendanceRecords: 0, gradeRecords: 0 },
+          },
+        ],
+      })
+    }
+    if (method === "GET" && url.includes("/api/admin/students/stu-01")) {
+      return jsonResponse(200, {
+        id: "stu-01",
+        eaglesId: "starter001",
+        studentNumber: 301,
+        profile: {
+          fullName: "Starter Student",
+          currentGrade: "Pre-A1 Starters",
+          motherEmail: "mom@example.com",
+          studentEmail: "starter@example.com",
+        },
+        parentReports: [
+          {
+            id: "rep-01",
+            className: "Pre-A1 Starters",
+            schoolYear: "2026-2027",
+            quarter: "q1",
+            generatedAt: "2026-09-15T11:00:00.000Z",
+            behaviorScore: 7,
+            participationScore: 8,
+            inClassScore: 9,
+            homeworkOnTimeRate: 88,
+            homeworkCompletionRate: 92,
+            comments: "Great effort this week.",
+          },
+        ],
+        attendanceRecords: [],
+        gradeRecords: [],
+      })
+    }
+    if (method === "GET" && url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [],
+        levelCompletion: [],
+        parentReports: { total: 1 },
+        parentReportQueue: { total: queueItems.length, hasMore: false, items: queueItems },
+      })
+    }
+    if (method === "GET" && url.includes("/api/admin/notifications/batch-status")) {
+      return jsonResponse(200, {
+        ok: true,
+        queueType: "parent-report",
+        total: queueItems.length,
+        hasMore: false,
+        items: queueItems,
+      })
+    }
+    if (method === "POST" && url.includes("/api/admin/notifications/email")) {
+      const payload = typeof init.body === "string" ? JSON.parse(init.body || "{}") : init.body || {}
+      queuedEmailPayloads.push(payload)
+      queueItems = [
+        {
+          id: "queue-approval-01",
+          queueType: "parent-report",
+          status: "queued",
+          assignmentTitle: payload.assignmentTitle,
+          exerciseTitle: payload.exerciseTitle,
+          level: payload.level,
+          dueAt: payload.dueAt,
+          message: payload.message,
+          recipients: payload.recipients || [],
+          queuedByUsername: "admin",
+          queuedAt: "2026-09-15T12:00:00.000Z",
+          scheduledFor: "2026-09-15T18:00:00.000Z",
+          attempts: 0,
+          lastError: "",
+          payloadJson: payload,
+        },
+      ]
+      return jsonResponse(200, {
+        ok: true,
+        queued: true,
+        queueType: "parent-report",
+        queueSize: queueItems.length,
+        scheduledFor: "2026-09-15T18:00:00.000Z",
+      })
+    }
+
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => {
+    assert.equal(dom.window.document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  openPage(dom, "performance-data")
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.ok(document.querySelector('[data-stage-report-id="rep-01"]'))
+  }, 2500)
+
+  document.querySelector('[data-stage-report-id="rep-01"]').click()
+  await waitFor(() => {
+    assert.equal(queuedEmailPayloads.length, 1)
+    assert.equal(queuedEmailPayloads[0].reportId, "rep-01")
+    assert.equal(queuedEmailPayloads[0].studentRefId, "stu-01")
+    assert.ok(Array.isArray(queuedEmailPayloads[0].recipients))
+    assert.ok(queuedEmailPayloads[0].recipients.includes("starter@example.com"))
+  }, 2500)
+
+  await waitFor(() => {
+    const stagedRowsText = normalizeText(document.getElementById("performanceStagedRows")?.textContent || "")
+    assert.match(stagedRowsText, /no staged performance reports/i)
+    const queueRowsText = normalizeText(document.getElementById("performanceQueueRows")?.textContent || "")
+    assert.match(queueRowsText, /starter student class report/i)
+  }, 2500)
 
   dom.window.close()
 })
@@ -3910,6 +4435,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
       return jsonResponse(200, {
         id: "stu-01",
         eaglesId: "SIS-001",
+        studentNumber: 1001,
         profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
         attendanceRecords: [
           { id: "att-1", attendanceDate: "2026-02-24", status: "present", comments: "" },
@@ -4110,9 +4636,13 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
             "student-admin",
             "profile",
             "attendance",
+            "attendance-admin",
             "assignments",
+            "assignments-data",
             "parent-tracking",
+            "performance-data",
             "grades",
+            "grades-data",
             "reports",
             "family",
             "users",
@@ -4137,9 +4667,13 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
               "student-admin",
               "profile",
               "attendance",
+              "attendance-admin",
               "assignments",
+              "assignments-data",
               "parent-tracking",
+              "performance-data",
               "grades",
+              "grades-data",
               "reports",
               "family",
               "users",
@@ -4599,6 +5133,8 @@ test("new profile form hydrates next student number and keeps floor at 100+", as
 })
 
 test("table sort controls and column-click headers reorder grade/performance data", async () => {
+  const xlsxExportPayloads = []
+  const xlsxExportUrls = []
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
     const method = init.method || "GET"
@@ -4666,6 +5202,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
       return jsonResponse(200, {
         id: "stu-01",
         eaglesId: "SIS-001",
+        studentNumber: 1001,
         profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
         attendanceRecords: [
           {
@@ -4739,8 +5276,9 @@ test("table sort controls and column-click headers reorder grade/performance dat
           {
             id: "stu-01",
             eaglesId: "SIS-001",
+            studentNumber: 1001,
             profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
-            counts: { attendanceRecords: 0 },
+            counts: { attendanceRecords: 2, gradeRecords: 2, parentReports: 2 },
           },
         ],
       })
@@ -4756,6 +5294,28 @@ test("table sort controls and column-click headers reorder grade/performance dat
       })
     }
     if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+    if (url.includes("/exports/xlsx") && normalizeText(method).toUpperCase() === "POST") {
+      const parsed = JSON.parse(normalizeText(init?.body || "{}") || "{}")
+      xlsxExportUrls.push(url)
+      xlsxExportPayloads.push(parsed)
+      return {
+        status: 200,
+        ok: true,
+        headers: {
+          get(name) {
+            if (normalizeText(name).toLowerCase() === "content-disposition") {
+              return 'attachment; filename="attendance-export.xlsx"'
+            }
+            return ""
+          },
+        },
+        async blob() {
+          return new Blob(["xlsx-bytes"], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          })
+        },
+      }
+    }
     return jsonResponse(200, {})
   })
 
@@ -4766,6 +5326,17 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
 
   const document = dom.window.document
+  const anchorDownloads = []
+  const originalAnchorClick = dom.window.HTMLAnchorElement.prototype.click
+  dom.window.URL.createObjectURL = () => "blob:mock-export"
+  dom.window.URL.revokeObjectURL = () => {}
+  dom.window.HTMLAnchorElement.prototype.click = function click() {
+    if (normalizeText(this.download)) {
+      anchorDownloads.push(normalizeText(this.download))
+      return
+    }
+    return originalAnchorClick.call(this)
+  }
   const seededAssignmentTemplates = [
     {
       id: "seed-assignment-01",
@@ -4842,6 +5413,9 @@ test("table sort controls and column-click headers reorder grade/performance dat
 
   openPage(dom, "attendance-admin")
   await waitFor(() => {
+    assert.equal(document.querySelector(".page-section.active")?.getAttribute("data-page"), "attendance-admin")
+  })
+  await waitFor(() => {
     assert.ok(document.querySelectorAll("#attendanceRows tr").length >= 1)
   })
   const attendanceStudentFilter = document.getElementById("attendanceDataStudent")
@@ -4857,8 +5431,21 @@ test("table sort controls and column-click headers reorder grade/performance dat
   await waitFor(() => {
     assert.ok(document.querySelectorAll("#attendanceRows tr").length >= 1)
   })
+  await waitFor(() => {
+    assert.equal(attendanceRowsWithData().length >= 1, true)
+  }, 5000)
   const attendanceSearch = document.getElementById("attendanceDataSearch")
   const attendanceBaselineRows = attendanceRowsWithData()
+  if (attendanceBaselineRows.length) {
+    await waitFor(() => {
+      const firstId = normalizeText(attendanceBaselineRows[0].querySelector("td:nth-child(1)")?.textContent)
+      const firstFullName = normalizeText(attendanceBaselineRows[0].querySelector("td:nth-child(2)")?.textContent)
+      const firstEnglishName = normalizeText(attendanceBaselineRows[0].querySelector("td:nth-child(3)")?.textContent)
+      assert.equal(firstId, "SIS-001")
+      assert.equal(firstFullName, "Student One")
+      assert.equal(firstEnglishName, "")
+    })
+  }
   if (attendanceBaselineRows.length) {
     const attendanceBaselineRowCount = attendanceBaselineRows.length
     const firstRowText = normalizeText(attendanceBaselineRows[0].textContent || "")
@@ -4890,6 +5477,48 @@ test("table sort controls and column-click headers reorder grade/performance dat
     attendanceSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   }
 
+  document.getElementById("attendanceExportXlsxBtn").click()
+  await waitFor(() => {
+    assert.equal(xlsxExportPayloads.length, 1)
+  })
+  assert.equal(xlsxExportUrls.length, 1)
+  assert.match(xlsxExportUrls[0], /\/exports\/xlsx/i)
+  const attendanceExportPayload = xlsxExportPayloads[0]
+  assert.equal(normalizeText(attendanceExportPayload.sheetName), "Attendance")
+  assert.ok(normalizeText(attendanceExportPayload.filename).toLowerCase().includes("attendance"))
+  assert.deepEqual(
+    (attendanceExportPayload.columns || []).map((entry) => [entry.key, entry.label]),
+    [
+      ["eaglesId", "Eagles ID"],
+      ["studentNumber", "Student Number"],
+      ["fullName", "Full Name"],
+      ["englishName", "English Name"],
+      ["date", "Date"],
+      ["className", "Class"],
+      ["quarter", "Quarter"],
+      ["status", "Status"],
+      ["comments", "Comments"],
+    ]
+  )
+  const attendanceExportRows = Array.isArray(attendanceExportPayload.rows) ? attendanceExportPayload.rows : []
+  assert.equal(attendanceExportRows.length >= 1, true)
+  const attendanceAllowedKeys = new Set(
+    attendanceExportPayload.columns.map((entry) => normalizeText(entry?.key)).filter(Boolean)
+  )
+  attendanceExportRows.forEach((row) => {
+    assert.equal(normalizeText(row.eaglesId), "SIS-001")
+    assert.equal(Number(row.studentNumber), 1001)
+    assert.equal(normalizeText(row.fullName), "Student One")
+    assert.equal(normalizeText(row.englishName), "")
+    assert.ok(normalizeText(row.date))
+    assert.deepEqual(Object.keys(row).sort(), [...attendanceAllowedKeys].sort())
+    assert.equal(normalizeText(row.fullName).includes("SIS-001"), false)
+  })
+  await waitFor(() => {
+    assert.equal(anchorDownloads.length >= 1, true)
+  })
+  assert.equal(anchorDownloads.some((value) => /attendance-export\.xlsx/i.test(value)), true)
+
   openPage(dom, "assignments-data")
   await waitFor(() => {
     const rows = document.querySelectorAll("#assignmentTemplateRows tr")
@@ -4918,7 +5547,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   gradeLevelFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
     const studentOptions = Array.from(document.querySelectorAll("#gradeDataStudent option")).map((entry) => normalizeText(entry.textContent))
-    assert.ok(studentOptions.some((value) => value.includes("Student One")))
+    assert.ok(studentOptions.some((value) => value.includes("SIS-001")))
   })
   gradeLevelFilter.value = ""
   gradeLevelFilter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
@@ -4928,7 +5557,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   const gradeStudentFilter = document.getElementById("gradeDataStudent")
   const gradeStudentOption =
     Array.from(gradeStudentFilter.options).find(
-      (entry) => normalizeText(entry.value) && /Student One/i.test(normalizeText(entry.textContent || ""))
+      (entry) => normalizeText(entry.value) && /SIS-001/i.test(normalizeText(entry.textContent || ""))
     ) || Array.from(gradeStudentFilter.options).find((entry) => normalizeText(entry.value))
   assert.ok(gradeStudentOption)
   gradeStudentFilter.value = gradeStudentOption.value
@@ -4960,18 +5589,18 @@ test("table sort controls and column-click headers reorder grade/performance dat
   gradeSortField.value = "score"
   gradeSortField.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(5)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(7)")?.textContent || "").trim()
     assert.equal(firstScore, "95/100")
   })
   await waitFor(() => {
-    const actionCellText = document.querySelector("#gradeRows tr td:nth-child(10)")?.textContent || ""
+    const actionCellText = document.querySelector("#gradeRows tr td:nth-child(12)")?.textContent || ""
     assert.match(actionCellText, /Edit/i)
     assert.match(actionCellText, /Delete/i)
   })
 
   document.getElementById("gradeSortDirBtn").click()
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(5)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(7)")?.textContent || "").trim()
     assert.equal(firstScore, "70/100")
   })
 
@@ -4979,7 +5608,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(gradeScoreHeader)
   gradeScoreHeader.click()
   await waitFor(() => {
-    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(5)")?.textContent || "").trim()
+    const firstScore = (document.querySelector("#gradeRows tr td:nth-child(7)")?.textContent || "").trim()
     assert.equal(firstScore, "95/100")
   })
 
@@ -5033,12 +5662,12 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(performanceHwHeader)
   performanceHwHeader.click()
   await waitFor(() => {
-    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(5)")?.textContent || "").trim()
+    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(7)")?.textContent || "").trim()
     assert.equal(firstHw, "90")
   })
   performanceHwHeader.click()
   await waitFor(() => {
-    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(5)")?.textContent || "").trim()
+    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(7)")?.textContent || "").trim()
     assert.equal(firstHw, "60")
   })
 
@@ -5287,7 +5916,7 @@ test("overview queue and homework tables keep mobile scroll wrappers", async () 
   assert.ok(document.querySelector("#levelDetailPanel .table-scroll-wrap"))
   assert.ok(document.querySelector("#overviewClassTableWrap.table-scroll-wrap"))
   assert.ok(document.querySelector("#overviewIncomingExerciseDetails .table-scroll-wrap"))
-  assert.ok(document.querySelector("#overviewParentQueueDetails .table-scroll-wrap"))
+  assert.ok(document.querySelector("#performanceQueueDetails .table-scroll-wrap"))
   assert.equal(document.getElementById("schoolSetupLogoPreviewImg")?.getAttribute("src"), "data:,")
 
   dom.window.close()

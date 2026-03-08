@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "node server/exercise-mailer.mjs",
-    "dev": "NODE_ENV=development node server/exercise-mailer.mjs",
+    "dev": "NODE_ENV=development SIS_ENV_FILE=.env.dev EXERCISE_MAILER_PORT=${EXERCISE_MAILER_PORT:-8788} node server/exercise-mailer.mjs",
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",

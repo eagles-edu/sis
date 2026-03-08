@@ -18,14 +18,49 @@ const isDebugEnabled = () =>
     .trim()
     .toLowerCase() === "true"
 
-try {
-  require("dotenv/config")
-} catch (error) {
-  if (error && error.code !== "MODULE_NOT_FOUND") throw error
-  if (isDebugEnabled()) {
-    console.warn("ℹ️  Optional dependency 'dotenv' not found; continuing without loading .env file")
-  }
+function normalizeEnvText(value) {
+  if (value === undefined || value === null) return ""
+  return String(value).trim()
 }
+
+function resolveDefaultEnvFilePath() {
+  const explicitPath = normalizeEnvText(process.env.SIS_ENV_FILE)
+  if (explicitPath) return path.resolve(process.cwd(), explicitPath)
+  const nodeEnv = normalizeEnvText(process.env.NODE_ENV).toLowerCase()
+  if (nodeEnv === "development") return path.resolve(process.cwd(), ".env.dev")
+  if (nodeEnv === "test") return path.resolve(process.cwd(), ".env.test")
+  return path.resolve(process.cwd(), ".env")
+}
+
+function loadEnvironmentFile() {
+  let dotenv = null
+  try {
+    const mod = require("dotenv")
+    dotenv = mod?.default || mod
+  } catch (error) {
+    if (error && error.code !== "MODULE_NOT_FOUND") throw error
+    if (isDebugEnabled()) {
+      console.warn("ℹ️  Optional dependency 'dotenv' not found; continuing without loading env file")
+    }
+    return ""
+  }
+
+  const envFilePath = resolveDefaultEnvFilePath()
+  if (!fs.existsSync(envFilePath)) {
+    if (isDebugEnabled()) {
+      console.warn(`ℹ️  Env file not found at ${envFilePath}; continuing with process environment`)
+    }
+    return ""
+  }
+
+  const result = dotenv.config({ path: envFilePath })
+  if (result?.error && result.error.code !== "ENOENT") {
+    throw result.error
+  }
+  return envFilePath
+}
+
+loadEnvironmentFile()
 
 let nodemailer = null
 
@@ -45,7 +80,15 @@ try {
   Configuration & Defaults
    ========================= */
 
-const DEFAULT_PORT = Number(process.env.EXERCISE_MAILER_PORT || 8787)
+const DEFAULT_PORT = (() => {
+  const configuredPort = normalizeEnvText(process.env.EXERCISE_MAILER_PORT)
+  if (configuredPort) {
+    const parsed = Number(configuredPort)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  const nodeEnv = normalizeEnvText(process.env.NODE_ENV).toLowerCase()
+  return nodeEnv === "development" ? 8788 : 8787
+})()
 const DEFAULT_PATH = process.env.EXERCISE_MAILER_PATH || "/api/exercise-submission"
 const DEFAULT_INTAKE_PATH =
   process.env.EXERCISE_MAILER_INTAKE_PATH || "/api/student-intake-submission"
@@ -162,6 +205,38 @@ function resolveBoolean(value, fallback) {
 function normalizeString(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
+}
+
+function isPathWithinRoot(candidatePath, rootPath) {
+  const candidate = path.resolve(candidatePath)
+  const root = path.resolve(rootPath)
+  const relative = path.relative(root, candidate)
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative))
+}
+
+function resolveLiveRuntimeRoots() {
+  const configuredRoots = [
+    normalizeString(process.env.SIS_LIVE_ROOT) || "/home/admin.eagles.edu.vn/sis",
+    normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT),
+    normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT),
+  ].filter(Boolean)
+  return Array.from(new Set(configuredRoots.map((entry) => path.resolve(entry))))
+}
+
+function assertRuntimeEnvironmentSeparation() {
+  const nodeEnv = normalizeString(process.env.NODE_ENV).toLowerCase()
+  if (nodeEnv !== "development") return
+  if (resolveBoolean(process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT, false)) return
+  const cwd = path.resolve(process.cwd())
+  const liveRoots = resolveLiveRuntimeRoots()
+  for (let i = 0; i < liveRoots.length; i += 1) {
+    if (isPathWithinRoot(cwd, liveRoots[i])) {
+      throw new Error(
+        `Refusing to start development runtime inside live root (${liveRoots[i]}). ` +
+          "Use SIS_ALLOW_DEV_ON_LIVE_ROOT=true to override."
+      )
+    }
+  }
 }
 
 function buildSubmissionActorKey(payload) {
@@ -982,6 +1057,7 @@ async function handleRequest(request, response, transporter) {
    ========================= */
 
 export function startExerciseMailer(options = {}) {
+  assertRuntimeEnvironmentSeparation()
   const transporter = options.transporter || createTransport()
   const port =
     options.port === undefined || options.port === null ? DEFAULT_PORT : Number(options.port)

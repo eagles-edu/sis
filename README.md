@@ -54,7 +54,20 @@ cd /home/eagles/dockerz/sis
 npm install
 npm test
 EXERCISE_MAILER_HOST=127.0.0.1 EXERCISE_MAILER_PORT=8787 npm start
+cp -n .env.dev.example .env.dev
+npm run dev
 ```
+
+## Dev/Live Separation
+
+- `npm run dev` now uses `SIS_ENV_FILE=.env.dev` and defaults to port `8788`.
+- Production remains on `/home/admin.eagles.edu.vn/sis/.env` with port `8787`.
+- Runtime guard in `server/exercise-mailer.mjs` blocks `NODE_ENV=development` inside live root unless `SIS_ALLOW_DEV_ON_LIVE_ROOT=true`.
+- `ffs-sis-root --batch` now applies sync-time separation defaults:
+  - ensures `/home/eagles/dockerz/sis/.env.dev` has dev-safe values.
+  - ensures live non-secret runtime keys stay pinned (`EXERCISE_MAILER_HOST`, `EXERCISE_MAILER_PORT`, `STUDENT_ADMIN_STORE_ENABLED`).
+  - prints current dev/live port values after sync.
+- `ffs-sis-public-root --batch` prints dev/live port values after sync for quick verification.
 
 ## Feature List
 
@@ -109,6 +122,19 @@ Admins own full tracking oversight and correction loops.
 - Legacy alias: `POST /api/admin/login`
 - Session is cookie-based and must round-trip as `Cookie`.
 - Session validation/refresh occurs per request flow.
+- Recommended teacher credential model: configure one account per teacher with `STUDENT_TEACHER_ACCOUNTS_JSON`.
+- Legacy shared teacher credentials (`STUDENT_TEACHER_PASS` with `STUDENT_TEACHER_USER` / `STUDENT_TEACHER_USERS`) remain supported for compatibility, but unique passwords per teacher are preferred.
+
+```json
+[
+  { "username": "carole01", "role": "teacher", "password": "..." },
+  { "username": "mei001", "role": "teacher", "password": "..." },
+  { "username": "wren01", "role": "teacher", "password": "..." },
+  { "username": "thea001", "role": "teacher", "password": "..." },
+  { "username": "hannah001", "role": "teacher", "password": "..." },
+  { "username": "lily001", "role": "teacher", "password": "..." }
+]
+```
 
 ### 2) Student Identity Contract
 
@@ -236,6 +262,10 @@ tools/deploy-db-fields-safe.sh --check-only
 4. Verify DB row counts and queue states where relevant.
 
 ## Practical Admin Runbooks
+
+Detailed backup/restore workflow reference:
+
+- [Backup and Restore Workflows](docs/db-backup-failsafe.md)
 
 ### Runbook: Strict student import (backup-first)
 
