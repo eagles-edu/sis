@@ -57,7 +57,7 @@
     "@redocly/cli": "^2.20.4",
     "@types/node": "^20.19.35",
     "dependency-cruiser": "^17.3.8",
-    "eslint": "^9.33.0",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^16.4.0",
     "html-validate": "^10.0.0",
