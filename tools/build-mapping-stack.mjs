@@ -54,7 +54,7 @@ function runWithInputOrThrow(command, commandArgs, input) {
 }
 
 function rewriteDependencySvgLinks(svg) {
-  return svg.replace(/(xlink:href|href)="(server|tools)\//g, '$1="../../../$2/')
+  return svg.replace(/(xlink:href|href)="(server|tools)\//g, '$1="./$2/')
 }
 
 function writeArtifact(filename, content) {

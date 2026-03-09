@@ -54,10 +54,10 @@ Portal capabilities:
 - Mermaid workflow rendering directly from `docs/mapping/mermaid/*.mmd`
 - Searchable dependency table sourced from `dependency-graph.json`
 - Embedded dependency SVG with node click-through to source
-- OpenAPI docs via `Open in New Tab` (embed intentionally disabled for stability)
+- Embedded OpenAPI docs with direct source links
 - Separated quick links for all maps, downloadable config/data docs, and live router endpoints
 
-3. Open grouped links (replace host/port with your active SIS runtime; examples use `http://127.0.0.1:33999`):
+3. Open grouped links (example base URL: `http://127.0.0.1:33999`):
 
 Direct graphical live-router view in portal:
 
@@ -109,12 +109,9 @@ Node-click navigation in the dependency graph resolves through generated links u
 - `docs/mapping/out/server` (symlink for node-click source links)
 - `docs/mapping/out/tools` (symlink for node-click source links)
 - `docs/mapping/out/sis-admin.openapi.html`
-- `docs/mapping/out/workflow-viewer.html`
 
 ## Coverage Note
 
 `docs/mapping/openapi/sis-admin.openapi.yaml` should track the full router surface in
 `server/student-admin-routes.mjs`. Use `docs/mapping/admin-route-trace.md` as the endpoint audit
 baseline when updating API mapping docs.
-OpenAPI currently documents API/public preview routes; admin HTML page routes (`/admin/students*`)
-are intentionally tracked in `admin-route-trace.md` and `live-router-map.mmd` instead of OpenAPI.

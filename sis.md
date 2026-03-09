@@ -7,6 +7,39 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-10 - full GitHub workflow YAML hardening pass)
+
+- Updated [.github/workflows/codacy.yml](.github/workflows/codacy.yml):
+  - added `concurrency` to cancel stale duplicate runs per ref.
+  - added fork-safe PR guard (`if`) to avoid running secret-dependent scans on fork PRs.
+  - pinned runtime to `ubuntu-22.04` and added `timeout-minutes: 20`.
+  - upgraded `actions/checkout` to `v5`.
+  - upgraded `github/codeql-action/upload-sarif` to `v4`.
+  - added YAML doc start (`---`) for consistency.
+- Updated [.github/workflows/codeql.yml](.github/workflows/codeql.yml):
+  - kept advanced CodeQL as `workflow_dispatch` only to avoid default-setup SARIF conflicts.
+  - added `concurrency` and `timeout-minutes: 90`.
+  - pinned runner to `ubuntu-22.04` for deterministic behavior.
+  - upgraded `actions/checkout` to `v5`.
+  - added YAML doc start (`---`) for consistency.
+- Updated [.github/workflows/summary.yml](.github/workflows/summary.yml):
+  - added `concurrency` (issue-number keyed) and `timeout-minutes: 5`.
+  - removed unnecessary checkout step and dropped unneeded `contents` permission.
+  - kept required `models: read` for `actions/ai-inference@v1`.
+  - guarded comment step so it only runs when model output is non-empty.
+- Updated [.github/workflows/super-linter.yml](.github/workflows/super-linter.yml):
+  - upgraded linter action to `super-linter/super-linter@v8.5.0`.
+  - added `concurrency`, explicit workflow `permissions`, and `timeout-minutes: 20`.
+  - upgraded `actions/checkout` to `v5`.
+  - added YAML doc start (`---`) for consistency.
+- Verification:
+  - `npx --yes js-yaml .github/workflows/*.yml` parse check passed for all workflow files.
+  - `gh run list --repo eagles-edu/sis --limit 20` showed latest workflow runs on `preproduction` were green before this local tweak pass.
+- Coverage gap:
+  - workflows were validated for syntax only in local workspace; full behavior validation needs remote GitHub Actions execution after push.
+- Prioritized next action:
+  - push this branch and re-check run outcomes with `gh run list --repo eagles-edu/sis --branch preproduction`.
+
 ## Update (2026-03-09 - dashboard current-assignment chart/button fallback wired to Assignments Admin templates)
 
 - Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):

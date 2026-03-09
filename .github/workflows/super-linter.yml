@@ -1,3 +1,4 @@
+---
 # This workflow executes several linters on changed files based on languages used in your code base whenever
 # you push a code or open a pull request.
 #
@@ -11,18 +12,28 @@ on:
     branches: [ "preproduction" ]
   pull_request:
     branches: [ "preproduction" ]
+
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  statuses: write
+
 jobs:
   run-lint:
     runs-on: ubuntu-22.04
+    timeout-minutes: 20
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: super-linter/super-linter@v8.5.0
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "preproduction"

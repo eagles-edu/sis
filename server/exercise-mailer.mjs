@@ -93,6 +93,29 @@ const DEFAULT_PATH = process.env.EXERCISE_MAILER_PATH || "/api/exercise-submissi
 const DEFAULT_INTAKE_PATH =
   process.env.EXERCISE_MAILER_INTAKE_PATH || "/api/student-intake-submission"
 const DEFAULT_HOST = process.env.EXERCISE_MAILER_HOST || "0.0.0.0"
+const DOCS_URL_PREFIX = "/docs"
+const DOCS_PUBLIC_ROOT = path.resolve(process.cwd(), "docs")
+const STATIC_MIME_TYPES = Object.freeze({
+  ".css": "text/css; charset=utf-8",
+  ".dsl": "text/plain; charset=utf-8",
+  ".gif": "image/gif",
+  ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".mmd": "text/plain; charset=utf-8",
+  ".pdf": "application/pdf",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".txt": "text/plain; charset=utf-8",
+  ".webp": "image/webp",
+  ".yaml": "application/yaml; charset=utf-8",
+  ".yml": "application/yaml; charset=utf-8",
+})
 
 // Multiple origins supported: comma separated string, exact match with scheme+host[:port]
 function getOriginList() {
@@ -212,6 +235,105 @@ function isPathWithinRoot(candidatePath, rootPath) {
   const root = path.resolve(rootPath)
   const relative = path.relative(root, candidate)
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative))
+}
+
+function resolveStaticContentType(filePath) {
+  const ext = String(path.extname(filePath || "") || "").toLowerCase()
+  return STATIC_MIME_TYPES[ext] || "application/octet-stream"
+}
+
+function resolveDocsFilePath(pathname) {
+  const normalizedPathname = normalizeString(pathname)
+  if (!normalizedPathname.startsWith(DOCS_URL_PREFIX)) return ""
+
+  let relativePath = normalizedPathname.slice(DOCS_URL_PREFIX.length)
+  if (relativePath.startsWith("/")) relativePath = relativePath.slice(1)
+
+  let decodedPath = ""
+  try {
+    decodedPath = decodeURIComponent(relativePath)
+  } catch (error) {
+    void error
+    return ""
+  }
+
+  const targetPath = path.resolve(DOCS_PUBLIC_ROOT, decodedPath)
+  if (!isPathWithinRoot(targetPath, DOCS_PUBLIC_ROOT)) return ""
+  return targetPath
+}
+
+function trySendStaticFile(request, response, filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return false
+
+  let targetPath = filePath
+  let stat = null
+  try {
+    stat = fs.statSync(targetPath)
+  } catch (error) {
+    void error
+    return false
+  }
+
+  if (stat.isDirectory()) {
+    targetPath = path.join(targetPath, "index.html")
+    if (!fs.existsSync(targetPath)) return false
+    try {
+      stat = fs.statSync(targetPath)
+    } catch (error) {
+      void error
+      return false
+    }
+  }
+
+  if (!stat.isFile()) return false
+
+  response.writeHead(200, {
+    "Cache-Control": "no-store",
+    "Content-Length": String(stat.size),
+    "Content-Type": resolveStaticContentType(targetPath),
+  })
+
+  if (normalizeString(request.method).toUpperCase() === "HEAD") {
+    response.end()
+    return true
+  }
+
+  const stream = fs.createReadStream(targetPath)
+  stream.on("error", () => {
+    if (!response.headersSent) {
+      response.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" })
+    }
+    response.end("Unable to read file")
+  })
+  stream.pipe(response)
+  return true
+}
+
+function handleDocsStaticRequest(request, response, pathname) {
+  const method = normalizeString(request.method).toUpperCase()
+  if (method !== "GET" && method !== "HEAD") return false
+
+  const normalizedPathname = normalizeString(pathname)
+  if (normalizedPathname === DOCS_URL_PREFIX) {
+    response.writeHead(302, { Location: `${DOCS_URL_PREFIX}/` })
+    response.end()
+    return true
+  }
+
+  if (!normalizedPathname.startsWith(`${DOCS_URL_PREFIX}/`)) return false
+
+  const filePath = resolveDocsFilePath(normalizedPathname)
+  if (!filePath) {
+    response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" })
+    response.end("Invalid docs path")
+    return true
+  }
+
+  if (trySendStaticFile(request, response, filePath)) return true
+
+  response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" })
+  response.end("Not Found")
+  return true
 }
 
 function resolveLiveRuntimeRoots() {
@@ -870,6 +992,9 @@ async function handleRequest(request, response, transporter) {
 
   const adminHandled = await handleStudentAdminRequest(request, response)
   if (adminHandled) return
+
+  const docsHandled = handleDocsStaticRequest(request, response, url.pathname)
+  if (docsHandled) return
 
   // Health endpoint (no CORS needed, but harmless if included)
   if (method === "GET" && url.pathname === "/healthz") {

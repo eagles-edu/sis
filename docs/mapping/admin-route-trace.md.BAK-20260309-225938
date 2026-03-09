@@ -24,9 +24,9 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | Method | Path | Auth Required | Role Gate | Handler |
 | --- | --- | --- | --- | --- |
 | POST | `/api/admin/auth/login` | No | None | `handleLogin` |
-| POST | `/api/admin/login` | No | None | `handleLogin` (legacy alias path) |
+| POST | `/api/admin/login` (legacy) | No | None | `handleLogin` |
 | POST | `/api/admin/auth/logout` | No | None | `handleLogout` |
-| GET | `/api/admin/auth/me` | Yes | None | `handleMe` |
+| GET | `/api/admin/auth/me` | No (self-check endpoint) | None | `handleMe` |
 
 ## Core Admin Routes
 
@@ -52,7 +52,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/admin/students` | Yes | any readable role | Yes | `listStudents` |
 | POST | `/api/admin/students` | Yes | write role | Yes | `saveStudent` (create) |
 | POST | `/api/admin/students/import` | Yes | write role | Yes | `importStudentsFromRows` |
-| GET | `/api/admin/family` | Yes | any readable role | Yes | `findFamilyByEmergencyPhone` (`phone` query parameter) |
+| GET | `/api/admin/family?phone=...` | Yes | any readable role | Yes | `findFamilyByEmergencyPhone` |
 | GET | `/api/admin/users` | Yes | `canManageUsers` | Yes | `listAdminUsers` |
 | POST | `/api/admin/users` | Yes | `canManageUsers` | Yes | `createAdminUser` |
 | PUT | `/api/admin/users/{userId}` | Yes | `canManageUsers` | Yes | `updateAdminUserById` |

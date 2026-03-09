@@ -1113,8 +1113,10 @@ function parseBody(request) {
     request.on("data", (chunk) => {
       raw += chunk
       if (raw.length > 8e6) {
+        const error = new Error("Payload too large")
+        error.statusCode = 413
         request.destroy()
-        reject(new Error("Payload too large"))
+        reject(error)
       }
     })
     request.on("end", () => {
@@ -1125,7 +1127,9 @@ function parseBody(request) {
       try {
         resolve(JSON.parse(raw))
       } catch (error) {
-        reject(error)
+        const parseError = new Error("Invalid JSON payload")
+        parseError.statusCode = 400
+        reject(parseError)
       }
     })
     request.on("error", reject)
