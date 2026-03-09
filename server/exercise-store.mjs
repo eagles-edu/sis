@@ -579,12 +579,7 @@ async function findMatchedSubmissionDuplicate(prisma, studentRefId, exerciseRefI
     where: {
       studentRefId,
       exerciseRefId,
-      submittedStudentId: submission.submittedStudentIdDisplay,
-      submittedEmail: submission.submittedEmail || null,
       completedAt: completedAtRange,
-      createdAt: {
-        gte: new Date(Date.now() - INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS),
-      },
     },
     orderBy: [{ createdAt: "desc" }],
   })
@@ -604,9 +599,6 @@ async function findMatchedGradeDuplicate(prisma, studentRefId, pageTitle, comple
       comments: {
         startsWith: AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX,
         mode: "insensitive",
-      },
-      createdAt: {
-        gte: new Date(Date.now() - INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS),
       },
     },
     orderBy: [{ createdAt: "desc" }],

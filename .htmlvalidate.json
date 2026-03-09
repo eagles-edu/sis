@@ -1,5 +1,25 @@
 {
-  "extends": [
-    "html-validate:recommended"
-  ]
+  "$schema": "https://html-validate.org/schemas/config.json",
+  "root": true,
+  "elements": ["html5"],
+  "extends": ["html-validate:recommended", "html-validate:prettier"],
+  "rules": {
+    "doctype-style": ["warn", { "style": "lowercase" }],
+    "void-style": ["warn", { "style": "omit" }],
+    "no-self-closing": "warn",
+    "close-order": "off",
+    "prefer-button": "off",
+    "wcag/h32": "warn",
+    "script-element": "off",
+    "element-required-content": "off",
+    "empty-title": "off",
+    "empty-heading": "off",
+    "no-conditional-comment": "warn",
+    "id-pattern": "off",
+    "attr-quotes": "error",
+    "no-trailing-whitespace": "warn",
+    "no-inline-style": "off",
+    "id-style": "off",
+    "class-style": "off"
+  }
 }

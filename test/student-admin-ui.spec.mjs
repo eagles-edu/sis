@@ -3469,7 +3469,6 @@ test("overview anonymous exercise submissions panel renders and supports show-al
         createdStudent = {
           id: "stu-created-01",
           eaglesId: payload.eaglesId,
-          eaglesId: payload.eaglesId,
           email: payload.email,
           profile: { fullName: payload.fullName || "New Student", currentGrade: "" },
           attendanceRecords: [],

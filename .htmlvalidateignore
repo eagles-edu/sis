@@ -1,2 +1,12 @@
-docs/mapping/out/sis-admin.openapi.html
-docs/mapping/out/sis-admin.openapi.html.bak
+node_modules/
+dist/
+build/
+output/
+reports/
+backups/
+docs/logs/
+docs/mapping/out/
+.github/
+.codacy/
+.codex/
+tmp/

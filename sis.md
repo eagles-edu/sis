@@ -7,6 +7,55 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-10 - canonical matched dedupe + MEGS-derived lint stack wiring)
+
+- Updated [server/exercise-store.mjs](server/exercise-store.mjs):
+  - hardened matched submission dedupe to canonical fingerprint matching:
+    - `studentRefId + exerciseRefId + completedAt (near-time window)`.
+  - removed unstable matched-path filters that allowed duplicate `0/100` rows to slip through:
+    - removed `submittedStudentId` and `submittedEmail` match requirements,
+    - removed `createdAt` lookback requirement for matched `ExerciseSubmission` dedupe,
+    - removed `createdAt` lookback requirement for matched auto-import `StudentGradeRecord` dedupe.
+  - kept existing quality arbitration and duplicate-notification suppression behavior unchanged.
+- Updated [test/exercise-store.spec.mjs](test/exercise-store.spec.mjs):
+  - improved Prisma mock `findFirst` behavior to actually evaluate `where` filters (date ranges + field predicates).
+  - added regression case proving matched dedupe still works when legacy stored rows have:
+    - mismatched/missing submitted identity fields,
+    - stale `createdAt` timestamps.
+  - verified richer incoming payload updates existing `0` score row to `100` without inserting a second row.
+- Updated lint stack and CI:
+  - replaced Super-Linter action flow in [.github/workflows/super-linter.yml](.github/workflows/super-linter.yml) with Node-based lint steps:
+    - `html-validate`,
+    - `eslint`,
+    - `stylelint`.
+  - updated [.htmlvalidate.json](.htmlvalidate.json) and [.htmlvalidateignore](.htmlvalidateignore) with MEGS-derived policy adapted for SIS legacy HTML IDs/classes.
+  - added [eslint.config.mjs](eslint.config.mjs) with stage-in gate policy (`no-unused-vars` and `no-useless-escape` temporarily off; safety rules remain enforced).
+  - added [stylelint.config.mjs](stylelint.config.mjs) for inline HTML CSS via `postcss-html` using safety-focused rules.
+  - updated [package.json](package.json) scripts:
+    - `lint`,
+    - `lint:html`,
+    - `lint:js`,
+    - `lint:css`.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - fixed duplicate object key (`eaglesId`) to keep ESLint `no-dupe-keys` enforced.
+- Cleanup audit:
+  - executed one-time cleanup script sequence and logged JSON output in [docs/job-logs.txt](docs/job-logs.txt):
+    - dry-run -> apply -> dry-run.
+  - current DB state already clean:
+    - `duplicateGroups=0`,
+    - `deleteCountPlanned=0`,
+    - `deleteCountApplied=0`.
+- Verification:
+  - `node --test test/exercise-store.spec.mjs` => `6` pass, `0` fail.
+  - `npm test` => `174` pass, `0` fail.
+  - `npx html-validate web-asset/admin/student-admin.html` => `0` errors, `1` warning (`doctype-style`).
+  - `npx eslint --config eslint.config.mjs server test tools --max-warnings=0` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/admin/student-admin.html` => pass.
+- Coverage gap:
+  - lint workflow behavior is validated locally only; remote GitHub Actions execution has not been observed yet after this wiring change.
+- Prioritized next action:
+  - push and validate the next `Lint Code Base` workflow run on `preproduction`.
+
 ## Update (2026-03-10 - tracking data filter-summary readability with pipe format)
 
 - Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):

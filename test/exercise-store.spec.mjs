@@ -7,6 +7,32 @@ import {
   resolveIncomingExerciseResultToStudent,
 } from "../server/exercise-store.mjs"
 
+function toDateMs(value) {
+  const parsed = new Date(value)
+  const ms = parsed.valueOf()
+  return Number.isFinite(ms) ? ms : Number.NaN
+}
+
+function matchesDateRange(value, range) {
+  if (!range || typeof range !== "object") return true
+  const valueMs = toDateMs(value)
+  if (!Number.isFinite(valueMs)) return false
+  if (range.gte !== undefined && valueMs < toDateMs(range.gte)) return false
+  if (range.gt !== undefined && valueMs <= toDateMs(range.gt)) return false
+  if (range.lte !== undefined && valueMs > toDateMs(range.lte)) return false
+  if (range.lt !== undefined && valueMs >= toDateMs(range.lt)) return false
+  return true
+}
+
+function selectNewestByCreatedAt(rows = []) {
+  return [...rows].sort((left, right) => {
+    const leftCreatedAt = Number.isFinite(toDateMs(left?.createdAt)) ? toDateMs(left.createdAt) : 0
+    const rightCreatedAt = Number.isFinite(toDateMs(right?.createdAt)) ? toDateMs(right.createdAt) : 0
+    if (leftCreatedAt !== rightCreatedAt) return rightCreatedAt - leftCreatedAt
+    return String(right?.id || "").localeCompare(String(left?.id || ""))
+  })[0] || null
+}
+
 function makePersistPrisma({
   matchedStudent = null,
   matchedSubmissionRows = [],
@@ -39,9 +65,17 @@ function makePersistPrisma({
     exerciseSubmission: {
       async findFirst(args) {
         state.submissionFindFirstCalls.push(args)
-        return state.matchedSubmissionRows.length
-          ? state.matchedSubmissionRows[state.matchedSubmissionRows.length - 1]
-          : null
+        const where = args?.where || {}
+        const matches = state.matchedSubmissionRows.filter((row) => {
+          if (where.studentRefId !== undefined && row?.studentRefId !== where.studentRefId) return false
+          if (where.exerciseRefId !== undefined && row?.exerciseRefId !== where.exerciseRefId) return false
+          if (where.submittedStudentId !== undefined && row?.submittedStudentId !== where.submittedStudentId) return false
+          if (where.submittedEmail !== undefined && row?.submittedEmail !== where.submittedEmail) return false
+          if (where.completedAt && !matchesDateRange(row?.completedAt, where.completedAt)) return false
+          if (where.createdAt && !matchesDateRange(row?.createdAt, where.createdAt)) return false
+          return true
+        })
+        return selectNewestByCreatedAt(matches)
       },
       async create(args) {
         state.submissionCreateCalls.push(args)
@@ -62,9 +96,19 @@ function makePersistPrisma({
     studentGradeRecord: {
       async findFirst(args) {
         state.gradeRecordFindFirstCalls.push(args)
-        return state.matchedGradeRows.length
-          ? state.matchedGradeRows[state.matchedGradeRows.length - 1]
-          : null
+        const where = args?.where || {}
+        const startsWith = String(where?.comments?.startsWith || "").toLowerCase()
+        const matches = state.matchedGradeRows.filter((row) => {
+          if (where.studentRefId !== undefined && row?.studentRefId !== where.studentRefId) return false
+          if (where.className !== undefined && row?.className !== where.className) return false
+          if (where.assignmentName !== undefined && row?.assignmentName !== where.assignmentName) return false
+          if (where.dueAt && !matchesDateRange(row?.dueAt, where.dueAt)) return false
+          if (where.submittedAt && !matchesDateRange(row?.submittedAt, where.submittedAt)) return false
+          if (startsWith && !String(row?.comments || "").toLowerCase().startsWith(startsWith)) return false
+          if (where.createdAt && !matchesDateRange(row?.createdAt, where.createdAt)) return false
+          return true
+        })
+        return selectNewestByCreatedAt(matches)
       },
       async create(args) {
         state.gradeRecordCreateCalls.push(args)
@@ -301,6 +345,90 @@ test("persistExerciseSubmission de-duplicates matched records and updates existi
   assert.equal(prisma.state.gradeRecordUpdateCalls.length, 1)
   assert.equal(prisma.state.matchedSubmissionRows[0].scorePercent, 100)
   assert.equal(prisma.state.matchedGradeRows[0].score, 100)
+})
+
+test("persistExerciseSubmission de-duplicates matched records using canonical fingerprint despite submitted identity mismatch and stale createdAt", async () => {
+  const staleCreatedAt = new Date(Date.now() - 90 * 60 * 1000)
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      eaglesId: "S001",
+      email: "student@example.com",
+      profile: {
+        currentGrade: "Movers",
+      },
+    },
+    matchedSubmissionRows: [
+      {
+        id: "submission-stale",
+        studentRefId: "student-1",
+        exerciseRefId: "exercise-1",
+        submittedStudentId: "(not provided)",
+        submittedEmail: null,
+        completedAt: new Date("2026-03-01T07:34:04.862Z"),
+        totalQuestions: 1,
+        correctCount: 0,
+        pendingCount: 0,
+        incorrectCount: 1,
+        scorePercent: 0,
+        answersJson: [{ id: "1", answers: ["book"] }],
+        recipientsJson: ["teacher@example.com"],
+        createdAt: staleCreatedAt,
+      },
+    ],
+    matchedGradeRows: [
+      {
+        id: "grade-stale",
+        studentRefId: "student-1",
+        className: "Movers Unit 3",
+        assignmentName: "Movers Unit 3",
+        dueAt: new Date("2026-03-01T07:34:04.862Z"),
+        submittedAt: new Date("2026-03-01T07:34:04.862Z"),
+        score: 0,
+        maxScore: 100,
+        homeworkCompleted: true,
+        homeworkOnTime: true,
+        comments: "Auto-imported exercise score.",
+        createdAt: staleCreatedAt,
+      },
+    ],
+  })
+
+  const result = await persistExerciseSubmission(
+    {
+      studentId: "S001",
+      email: "student@example.com",
+      pageTitle: "Movers Unit 3",
+      completedAt: "2026-03-01T07:34:05.100Z",
+      answers: [{ id: 1, answers: ["B"], status: "correct" }],
+      recipients: ["teacher@example.com"],
+    },
+    { prisma }
+  )
+
+  assert.equal(result.saved, true)
+  assert.equal(result.matched, true)
+  assert.equal(result.queued, false)
+  assert.equal(result.deduplicated, true)
+  assert.equal(result.updatedExisting, true)
+  assert.equal(result.shouldNotify, false)
+  assert.equal(result.submissionId, "submission-stale")
+  assert.equal(result.gradeRecordId, "grade-stale")
+  assert.equal(result.summary?.scorePercent, 100)
+  assert.equal(prisma.state.submissionCreateCalls.length, 0)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 0)
+  assert.equal(prisma.state.submissionUpdateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordUpdateCalls.length, 1)
+  assert.equal(prisma.state.matchedSubmissionRows[0].scorePercent, 100)
+  assert.equal(prisma.state.matchedGradeRows[0].score, 100)
+
+  const submissionWhere = prisma.state.submissionFindFirstCalls[0]?.where || {}
+  assert.equal("submittedStudentId" in submissionWhere, false)
+  assert.equal("submittedEmail" in submissionWhere, false)
+  assert.equal("createdAt" in submissionWhere, false)
+
+  const gradeWhere = prisma.state.gradeRecordFindFirstCalls[0]?.where || {}
+  assert.equal("createdAt" in gradeWhere, false)
 })
 
 function makeResolvePrisma() {
