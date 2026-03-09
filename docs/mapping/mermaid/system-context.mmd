@@ -1,0 +1,25 @@
+flowchart LR
+  subgraph Clients
+    Admin["Admin Browser<br/>/admin/students"]
+    Teacher["Teacher Browser<br/>/admin/students"]
+  end
+
+  Proxy["Reverse Proxy (optional)<br/>Nginx"]
+  API["SIS Hub Service<br/>server/exercise-mailer.mjs"]
+  Router["Admin Router<br/>server/student-admin-routes.mjs"]
+  Store["Admin Store<br/>server/student-admin-store.mjs"]
+  Exercise["Exercise Store<br/>server/exercise-store.mjs"]
+  DB[("PostgreSQL<br/>Prisma")]
+  Cache[("Redis<br/>(session + filter cache)")]
+  Mail["SMTP Provider"]
+
+  Admin --> Proxy
+  Teacher --> Proxy
+  Proxy --> API
+  API --> Router
+  Router --> Store
+  Router --> Exercise
+  Store --> DB
+  Exercise --> DB
+  Router --> Cache
+  Router --> Mail

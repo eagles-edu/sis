@@ -47,6 +47,24 @@ Production runtime root:
 - `test/` node test suite
 - `tools/` operational scripts (deploy, backup, restore)
 
+## Architecture Mapping Stack
+
+Runnable mapping assets are in `docs/mapping/`.
+
+- Mermaid diagrams: `docs/mapping/mermaid/*.mmd`
+- Structurizr DSL: `docs/mapping/structurizr/workspace.dsl`
+- OpenAPI baseline: `docs/mapping/openapi/sis-admin.openapi.yaml`
+- Generated outputs: `docs/mapping/out/`
+
+Commands:
+
+```bash
+npm run map:deps
+npm run map:openapi:lint
+npm run map:openapi:build
+npm run map:all
+```
+
 ## Quick Start
 
 ```bash

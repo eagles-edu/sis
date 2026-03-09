@@ -1419,8 +1419,33 @@ Result: `61` tests total, `61` pass, `0` fail.
   - refactor target for canonical assignment schedule ownership,
   - recommended mapping toolchain (Structurizr DSL, Mermaid, dependency-cruiser, OpenAPI).
 
+1. Implemented runnable mapping stack and artifact pipeline.
+
+- Added stack assets:
+  - Mermaid diagrams: `docs/mapping/mermaid/*.mmd`
+  - Structurizr DSL workspace: `docs/mapping/structurizr/workspace.dsl`
+  - dependency-cruiser config: `.dependency-cruiser.cjs`
+  - OpenAPI baseline: `docs/mapping/openapi/sis-admin.openapi.yaml`
+  - Redocly config: `redocly.yaml`
+  - build script: `tools/build-mapping-stack.mjs`
+- Added npm commands:
+  - `npm run map:deps`
+  - `npm run map:openapi:lint`
+  - `npm run map:openapi:build`
+  - `npm run map:all`
+- Added generated output targets under `docs/mapping/out/`:
+  - `dependency-graph.mmd`
+  - `dependency-graph.json`
+  - `sis-admin.openapi.html`
+
 ### Latest Test Run (2026-03-09)
 
+- Command: `npm run map:all`
+- Result: pass (dependency graph artifacts + OpenAPI lint + Redoc HTML build)
+- Command: `npm run map:openapi:lint && npm run map:openapi:build`
+- Result: pass
+- Command: `npm run map:deps`
+- Result: pass
 - Command: `node --test test/student-admin-ui.spec.mjs`
 - Result: pass (`41` passed, `0` failed)
 - Command: `npm test`

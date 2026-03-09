@@ -1,0 +1,534 @@
+SIS ADMIN SYSTEM WIRING MAP (ASCII)
+Generated: 2026-03-09
+Workspace: /home/eagles/dockerz/sis
+
+======================================================================
+1) TOP-LEVEL EXECUTION FLOW
+======================================================================
+
+[BROWSER: /admin/students/<slug>]
+            |
+            v
++---------------------------------------------+
+| student-admin-routes.mjs                    |
+| handleStudentAdminRequest()                 |
+| - inject runtime vars into student-admin UI |
+| - serve shared HTML for page slug           |
++---------------------------------------------+
+            |
+            v
++---------------------------------------------+
+| web-asset/admin/student-admin.html          |
+| - page router + renderers + API client      |
+| - per-page handlers (overview/attendance/..)|
++---------------------------------------------+
+            |
+            v
++---------------------------------------------+
+| /api/admin/*                                |
+| handleApiRequest()                          |
+| -> requireAuthenticatedSession()            |
+| -> enforceRoleAccess()                      |
+| -> endpoint branch                          |
+| -> store/module subroutine                  |
++---------------------------------------------+
+            |
+            v
+   +----------------------+      +---------------------+
+   | PostgreSQL (Prisma)  |      | Redis (optional)    |
+   | student/admin data   |      | sessions + filters  |
+   +----------------------+      +---------------------+
+
+[Browser]
+  |
+  | GET /admin/students[/<page-slug>]
+  v
+[server/student-admin-routes.mjs :: handleStudentAdminRequest]
+  - injects runtime config into web-asset/admin/student-admin.html
+  - serves same HTML for all admin page slugs
+  |
+  | Browser executes embedded script
+  v
+[web-asset/admin/student-admin.html]
+  - state + page renderer + API client + per-page handlers
+  - API calls use cookie-session auth
+
+API call flow:
+  UI api(path, options)
+    -> /api/admin/*
+    -> handleStudentAdminRequest(...)
+    -> handleApiRequest(...)
+      -> requireAuthenticatedSession(...)
+      -> enforceRoleAccess(...)
+      -> endpoint branch
+      -> store/module subroutine
+      -> JSON/PDF/XLSX response
+
+Storage layers used:
+  - PostgreSQL via Prisma: student/admin/grade/attendance/report/dashboard data
+  - Redis: session store + filter cache runtime stats
+  - Browser localStorage: assignment templates, column visibility, zoom, UI prefs
+
+======================================================================
+2) ROUTE PREFIXES + CORE FILES
+======================================================================
+
+Frontend entry:
+  web-asset/admin/student-admin.html
+
+Backend API/router:
+  server/student-admin-routes.mjs
+
+Main backend stores/modules called by router:
+  server/student-admin-store.mjs
+  server/exercise-store.mjs
+  server/student-admin-user-store.mjs
+  server/student-report-card-pdf.mjs
+  server/student-admin-session-store.mjs
+
+Key prefixes:
+  ADMIN_PAGE_PATH            = /admin/students
+  ADMIN_API_PREFIX           = /api/admin
+  ADMIN_AUTH_PREFIX          = /api/admin/auth
+  ADMIN_STUDENTS_PREFIX      = /api/admin/students
+
+======================================================================
+3) PAGE-TO-FUNCTION-TO-BACKEND MAP
+======================================================================
+
+PAGE: overview (slug: overview)
+----------------------------------------------------------------------
+Frontend functions:
+  - loadDashboardSummary()
+  - renderDashboardSummary(summary)
+  - renderOverviewLineChart(...)
+  - renderOverviewBarChart(...)
+  - openLevelDetailPanel(...)
+  - sendLevelReminders(mode)
+
+Backend endpoints called:
+  - GET  /api/admin/dashboard
+  - POST /api/admin/notifications/email   (reminders)
+  - POST /api/admin/assignment-announcements/volatile (link preview)
+  - GET  /api/admin/notifications/batch-status (queue widgets)
+  - GET  /api/admin/exercise-results/incoming (incoming panel)
+
+Backend subroutines:
+  - getAdminDashboardSummary()                          [student-admin-store.mjs]
+  - listQueuedAnnouncements(...)                        [student-admin-routes helper + store]
+  - queueAnnouncementEmail(...) / sendAnnouncementEmail(...)
+  - listIncomingExerciseResults(...)                    [exercise-store.mjs]
+
+Overview info-production conditional paths:
+  A) Dashboard provides levelCompletion rows:
+     - use backend rows as source of truth for chart/buttons/snapshot
+
+  B) Dashboard levelCompletion empty, templates exist (frontend localStorage):
+     - buildTemplateLevelCompletionRows():
+       * selects not-overdue template per level (due today/future)
+       * maps level -> enrolled students from dashboard students
+       * computes completed vs pending and uncompleted student list
+
+  C) Dashboard levelCompletion empty, no template rows:
+     - buildEnrollmentOnlyLevelCompletionRows():
+       * derives per-level enrolled counts from classEnrollmentAttendance
+         (fallback: student source by level)
+       * chart still renders Enrolled vs Completed(0)
+       * buttons still render, pending list empty
+
+  D) Line chart with no weekly assignment activity:
+     - renders zero baseline from Monday to current day (no vanish)
+
+Input/Output sketch:
+  IN  GET /dashboard -> { today, weeklyAssignmentCompletion, classEnrollmentAttendance, levelCompletion, ... }
+  OUT UI cards/charts/buttons/detail-table/reminder payload
+
+
+PAGE: student-admin (slug: student-admin)
+----------------------------------------------------------------------
+Frontend functions:
+  - loadStudents()
+  - renderStudents()
+  - loadStudent(studentRefId)
+  - saveStudent()
+  - deleteStudent()
+
+Backend endpoints:
+  - GET    /api/admin/students?q=&level=&school=&take=
+  - GET    /api/admin/students/:studentRefId
+  - POST   /api/admin/students
+  - PUT    /api/admin/students/:studentRefId
+  - DELETE /api/admin/students/:studentRefId
+  - GET    /api/admin/students/next-student-number
+
+Backend subroutines:
+  - listStudents(...)
+  - getStudentById(...)
+  - saveStudent(...)
+  - deleteStudent(...)
+  - getNextStudentNumber()
+
+IO notes:
+  - list endpoint feeds main student table + global student source
+  - detail endpoint hydrates profile/attendance/grades/report forms
+
+
+PAGE: profile (slug: profile)
+----------------------------------------------------------------------
+Frontend functions:
+  - shares student CRUD with student-admin page
+  - profile form renderer/mapping is frontend-side
+
+Backend endpoints:
+  - same as student-admin CRUD
+
+Backend subroutines:
+  - saveStudent(...)
+  - getStudentById(...)
+
+Conditional path:
+  - create/update path selected by presence of current student id
+
+
+PAGE: attendance (slug: attendance)
+----------------------------------------------------------------------
+Frontend functions:
+  - refreshAttendanceLanding(...)
+  - saveAttendanceByLevel()/saveAttendanceRecord()
+  - render level tiles + status radios
+
+Backend endpoints:
+  - POST   /api/admin/students/:studentRefId/attendance
+  - DELETE /api/admin/students/:studentRefId/attendance/:recordId
+  - GET    /api/admin/students/:studentRefId (for refreshed rows)
+
+Backend subroutines:
+  - saveAttendanceRecord(...)
+  - deleteAttendanceRecord(...)
+  - getStudentById(...)
+
+IO notes:
+  - writes attendance rows per student/day/status/comments
+  - reads back updated student payload
+
+
+PAGE: attendance-admin (slug: attendance-admin)
+----------------------------------------------------------------------
+Frontend functions:
+  - uses selected class level
+  - displays per-student attendance stats + risk signals
+
+Backend endpoints:
+  - primarily reads from loaded student details and dashboard summary
+  - write paths same as attendance page for edits/deletes
+
+Info paths:
+  - attendance risk list comes from dashboard attendanceRiskWeek.students
+  - class stats derive from student attendance records
+
+
+PAGE: assignments (slug: assignments)
+----------------------------------------------------------------------
+Frontend functions:
+  - saveAssignmentTemplate()          (localStorage only)
+  - deleteAssignmentTemplate()        (localStorage only)
+  - sendAssignmentAnnouncement()
+  - createVolatileAssignmentAnnouncementPreview(...)
+
+Backend endpoints:
+  - POST /api/admin/notifications/email
+  - POST /api/admin/assignment-announcements/volatile
+  - GET  /assignment-announcements/volatile/:token (public preview page)
+
+Backend subroutines:
+  - sendAnnouncementEmail(...) / queueAnnouncementEmail(...)
+  - createAssignmentAnnouncementPreview(...)
+  - readAssignmentAnnouncementPreview(...)
+
+Conditional paths:
+  - template save/delete updates localStorage + dashboard rerender
+  - send path targets either selected student or whole selected level
+
+
+PAGE: assignments-data (slug: assignments-data)
+----------------------------------------------------------------------
+Frontend functions:
+  - renderAssignmentTemplates()
+  - table sort/filter/archive/column visibility
+
+Backend endpoints:
+  - none required for template rows (localStorage source)
+  - optional exports through /api/admin/exports/xlsx
+
+IO notes:
+  - assignment rows are local template records, not DB grade rows
+
+
+PAGE: grades (slug: grades)
+----------------------------------------------------------------------
+Frontend functions:
+  - saveGradeRecord()
+  - deleteGradeRecord()
+
+Backend endpoints:
+  - POST   /api/admin/students/:studentRefId/grades
+  - DELETE /api/admin/students/:studentRefId/grades/:recordId
+  - GET    /api/admin/students/:studentRefId
+
+Backend subroutines:
+  - saveGradeRecord(...)
+  - deleteGradeRecord(...)
+  - getStudentById(...)
+
+
+PAGE: grades-data (slug: grades-data)
+----------------------------------------------------------------------
+Frontend functions:
+  - renderGradeRows()
+  - sort/filter/archive/export/print
+
+Backend endpoints:
+  - source data from current loaded students/details
+  - export via POST /api/admin/exports/xlsx
+
+Backend subroutine:
+  - buildXlsxFromPayload(...) on export route
+
+
+PAGE: parent-tracking (slug: parent-tracking)
+----------------------------------------------------------------------
+Frontend functions:
+  - saveParentReport()
+  - generateParentReportFromGrades()
+  - send/queue parent-report notifications
+
+Backend endpoints:
+  - POST   /api/admin/students/:studentRefId/reports
+  - POST   /api/admin/students/:studentRefId/reports/generate
+  - DELETE /api/admin/students/:studentRefId/reports/:reportId
+  - POST   /api/admin/notifications/email
+
+Backend subroutines:
+  - saveParentClassReport(...)
+  - generateParentClassReportFromGrades(...)
+  - deleteParentClassReport(...)
+  - queueAnnouncementEmail(...) / sendAnnouncementEmail(...)
+
+Conditional path:
+  - teacher role can queue weekend-batch parent reports
+  - teacher cannot send immediate notifications
+
+
+PAGE: performance-data (slug: performance-data)
+----------------------------------------------------------------------
+Frontend functions:
+  - queue review modal operations
+  - hold/edit/requeue/sendAll on queued parent reports
+
+Backend endpoints:
+  - GET  /api/admin/notifications/batch-status
+  - POST /api/admin/notifications/batch-status
+
+Backend subroutines:
+  - listQueuedAnnouncements(...)
+  - updateQueuedAnnouncement(...)
+  - sendAllQueuedAnnouncements(...)
+
+
+PAGE: reports (slug: reports)
+----------------------------------------------------------------------
+Frontend functions:
+  - report table rendering and filtering
+  - download report card PDF
+
+Backend endpoints:
+  - GET /api/admin/students/:studentRefId/report-card.pdf
+
+Backend subroutines:
+  - generateStudentReportCardPdf(...)
+  - buildReportCardFilename(...)
+
+
+PAGE: family (slug: family)
+----------------------------------------------------------------------
+Frontend function:
+  - lookup by emergency phone
+
+Backend endpoint:
+  - GET /api/admin/family?phone=
+
+Backend subroutine:
+  - findFamilyByEmergencyPhone(...)
+
+
+PAGE: users (slug: users)
+----------------------------------------------------------------------
+Frontend functions:
+  - loadUsers(), create/update/delete users
+
+Backend endpoints:
+  - GET    /api/admin/users
+  - POST   /api/admin/users
+  - PUT    /api/admin/users/:id
+  - DELETE /api/admin/users/:id
+
+Backend subroutines:
+  - listAdminUsers(...)
+  - createAdminUser(...)
+  - updateAdminUserById(...)
+  - deleteAdminUserById(...)
+
+
+PAGE: permissions (slug: permissions)
+----------------------------------------------------------------------
+Frontend functions:
+  - loadRolePermissions(), saveRolePermissions()
+
+Backend endpoints:
+  - GET /api/admin/permissions
+  - PUT /api/admin/permissions
+
+Backend subroutines:
+  - read/write role policy config in route layer
+
+
+PAGE: settings (slug: settings)
+----------------------------------------------------------------------
+Frontend functions:
+  - mostly client-side settings (zoom, tiles, column prefs)
+  - diagnostics widgets call runtime endpoints
+
+Backend endpoints:
+  - GET  /api/admin/runtime/health
+  - GET  /api/admin/runtime/service-control
+  - POST /api/admin/runtime/service-control (restart)
+
+Backend subroutines:
+  - resolveAdminRuntimeHealthPayload()
+  - getExerciseMailerServiceControlStatus()
+  - restartExerciseMailerServiceControl()
+
+
+======================================================================
+4) AUTH + ROLE GATE CONDITIONS
+======================================================================
+
+Public:
+  - GET /admin/students[/slug]          (HTML)
+  - GET /assignment-announcements/volatile/:token
+
+Auth-required:
+  - all /api/admin/* except login route
+
+Role gates (enforceRoleAccess + assertCanManageUsers):
+  - admin: read/write/manage users/permissions/service controls
+  - teacher: read-only API generally, with explicit exception for
+             queueing weekend-batch parent-report notifications
+
+Session mechanism:
+  - cookie session store (redis preferred, memory fallback)
+  - auth routes: POST /api/admin/auth/login, POST /api/admin/auth/logout, GET /api/admin/auth/me
+
+
+======================================================================
+5) OVERVIEW CHART DATA PATHS (CURRENT IMPLEMENTATION)
+======================================================================
+
+Bar chart source priority:
+  1) summary.levelCompletion (backend)
+  2) template-derived rows from assignment templates (frontend localStorage)
+  3) enrollment-only rows (summary.classEnrollmentAttendance, fallback student source)
+
+Bar semantics with no active assignments:
+  - enrolledStudents > 0
+  - completedStudents = 0
+  - totalAssignments = 0
+  - outstandingAssignments = 0
+  - buttons still render by level
+
+Line chart with no active assignments:
+  - renders 0% baseline from Monday through current day
+  - does not hide chart area
+
+
+======================================================================
+6) CANDIDATE REFACTOR PLAN (WHY + HOW)
+======================================================================
+
+Problem observed:
+  - Overview combines backend data + local template fallback + enrollment fallback,
+    which mixes persistence domains and can feel ad-hoc.
+
+Recommended refactor target:
+  - move assignment schedule/templates from localStorage to backend canonical table/API
+  - make dashboard endpoint the single source for:
+      { levelCompletion, enrollmentOnlyLevels, currentAssignmentMeta }
+
+Suggested staged approach:
+  - Stage 1: add backend assignment-template store + CRUD endpoints
+  - Stage 2: dashboard summary computes fallback rows server-side
+  - Stage 3: frontend removes local derivation logic and only renders API payload
+  - Stage 4: add integration tests for all overview branches
+
+
+======================================================================
+7) RECOMMENDED MAPPING TOOLCHAIN
+======================================================================
+
+For this SIS stack (Node + single-page admin HTML + Prisma), a practical combo:
+
+  1) Structurizr DSL (C4 model) [best for architecture ownership]
+     - Keep Context/Container/Component views in versioned DSL.
+     - Good for "page -> API -> store" and data-store boundaries.
+
+  2) Mermaid (in docs/README) [best for quick flow diagrams]
+     - Use sequence + flowchart diagrams close to code/docs.
+     - Great for PR-level updates and low friction edits.
+
+  3) dependency-cruiser [best for JS module wiring guardrails]
+     - Auto-generates dependency graphs from code imports.
+     - Add rules to prevent route/store coupling regressions.
+
+  4) OpenAPI + Redoc (or Scalar) [best for backend IO contracts]
+     - Formalize /api/admin endpoints and payload shapes.
+     - Prevent drift between frontend assumptions and backend outputs.
+
+Suggested adoption order:
+  - Start Mermaid immediately (fastest value)
+  - Add Structurizr for canonical system maps
+  - Add dependency-cruiser to CI for wiring drift detection
+  - Add OpenAPI spec for endpoint IO governance
+
+
+======================================================================
+8) IMPLEMENTED STACK (2026-03-09)
+======================================================================
+
+Implemented locations:
+  - Mermaid sources:
+      docs/mapping/mermaid/system-context.mmd
+      docs/mapping/mermaid/overview-assignment-flow.mmd
+      docs/mapping/mermaid/page-backend-map.mmd
+  - Structurizr DSL:
+      docs/mapping/structurizr/workspace.dsl
+  - dependency-cruiser config:
+      .dependency-cruiser.cjs
+  - OpenAPI baseline:
+      docs/mapping/openapi/sis-admin.openapi.yaml
+  - Redocly config:
+      redocly.yaml
+  - Build script:
+      tools/build-mapping-stack.mjs
+
+NPM commands:
+  - npm run map:deps
+      Generates:
+        docs/mapping/out/dependency-graph.mmd
+        docs/mapping/out/dependency-graph.json
+  - npm run map:openapi:lint
+      Validates OpenAPI contract
+  - npm run map:openapi:build
+      Generates:
+        docs/mapping/out/sis-admin.openapi.html
+  - npm run map:all
+      Runs dependency graph generation + OpenAPI lint + OpenAPI HTML build

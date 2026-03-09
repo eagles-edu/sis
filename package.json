@@ -31,7 +31,11 @@
     "test": "node --test test/*.spec.mjs",
     "test:redis": "timeout 120s env STUDENT_ADMIN_SESSION_DRIVER=redis STUDENT_ADMIN_SESSION_REDIS_CONNECT_TIMEOUT_MS=1200 REDIS_SESSION_URL=${REDIS_SESSION_URL:-redis://127.0.0.1:6379/0} node --test test/*.spec.mjs",
     "test:session-store": "node --test test/student-admin-session-store.spec.mjs",
-    "test:watch": "node --test --watch test/*.spec.mjs"
+    "test:watch": "node --test --watch test/*.spec.mjs",
+    "map:deps": "node tools/build-mapping-stack.mjs --deps-only",
+    "map:openapi:lint": "redocly lint --config redocly.yaml docs/mapping/openapi/sis-admin.openapi.yaml",
+    "map:openapi:build": "redocly build-docs --config redocly.yaml docs/mapping/openapi/sis-admin.openapi.yaml --output docs/mapping/out/sis-admin.openapi.html",
+    "map:all": "node tools/build-mapping-stack.mjs"
   },
   "keywords": [
     "sis",
@@ -46,7 +50,9 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
+    "@redocly/cli": "^2.20.4",
     "@types/node": "^20.19.35",
+    "dependency-cruiser": "^17.3.8",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^16.4.0",

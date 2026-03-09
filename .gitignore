@@ -34,6 +34,12 @@ tmp/
 # Local scratch content
 docs/
 docs/**
+!docs/
+!docs/sis-admin-wiring-map.ascii.txt
+!docs/mapping/
+!docs/mapping/**
+docs/mapping/out/*
+!docs/mapping/out/.gitkeep
 .sync.ffs_db
 .playwright-cli/
 nginx
