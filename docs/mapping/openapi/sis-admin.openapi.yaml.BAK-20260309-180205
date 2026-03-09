@@ -1,0 +1,489 @@
+openapi: 3.0.3
+info:
+  title: SIS Admin API (Mapping Baseline)
+  version: 1.0.0
+  license:
+    name: ISC
+    url: https://opensource.org/license/isc-license-txt
+  description: |
+    Baseline API contract map for SIS admin workflows.
+    Source router: server/student-admin-routes.mjs
+
+servers:
+  - url: http://127.0.0.1:8787
+    description: Local SIS runtime
+
+tags:
+  - name: auth
+    description: Session login/logout and identity checks.
+  - name: dashboard
+    description: Overview summary and current class-level metrics.
+  - name: students
+    description: Student list/detail and tracking writes.
+  - name: notifications
+    description: Reminder and queued email workflows.
+  - name: assignments
+    description: Assignment announcement preview generation.
+
+security:
+  - cookieAuth: []
+
+paths:
+  /api/admin/auth/login:
+    post:
+      tags: [auth]
+      summary: Login with admin or teacher credentials
+      operationId: postAdminAuthLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/auth/me:
+    get:
+      tags: [auth]
+      summary: Return current authenticated session user
+      operationId: getAdminAuthMe
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthMeResponse'
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/dashboard:
+    get:
+      tags: [dashboard]
+      summary: Return overview dashboard metrics and completion rows
+      operationId: getAdminDashboard
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Forbidden for role
+
+  /api/admin/students:
+    get:
+      tags: [students]
+      summary: List students
+      operationId: getAdminStudents
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: level
+          schema:
+            type: string
+        - in: query
+          name: school
+          schema:
+            type: string
+        - in: query
+          name: take
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Student rows
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StudentListItem'
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/students/{studentRefId}:
+    get:
+      tags: [students]
+      summary: Get one student detail by reference id
+      operationId: getAdminStudentById
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Student detail payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentDetail'
+        '404':
+          description: Not found
+
+  /api/admin/students/{studentRefId}/attendance:
+    post:
+      tags: [students]
+      summary: Save attendance record for one student
+      operationId: postAdminStudentAttendance
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceSaveRequest'
+      responses:
+        '200':
+          description: Attendance saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '403':
+          description: Teacher cannot mutate in restricted contexts
+
+  /api/admin/notifications/email:
+    post:
+      tags: [notifications]
+      summary: Queue/send reminder and announcement emails
+      operationId: postAdminNotificationEmail
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+      responses:
+        '200':
+          description: Notification accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  queued:
+                    type: boolean
+        '400':
+          description: Invalid payload
+        '403':
+          description: Forbidden
+
+  /api/admin/assignment-announcements/volatile:
+    post:
+      tags: [assignments]
+      summary: Create temporary assignment announcement preview link
+      operationId: postAdminAssignmentVolatilePreview
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolatilePreviewRequest'
+      responses:
+        '200':
+          description: Preview created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolatilePreviewResponse'
+        '403':
+          description: Forbidden
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: student_admin_sid
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RolePolicy:
+      type: object
+      properties:
+        role:
+          type: string
+        canRead:
+          type: boolean
+        canWrite:
+          type: boolean
+        canManageUsers:
+          type: boolean
+        canManagePermissions:
+          type: boolean
+        startPage:
+          type: string
+        allowedPages:
+          type: array
+          items:
+            type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+            role:
+              type: string
+        rolePolicy:
+          $ref: '#/components/schemas/RolePolicy'
+
+    AuthMeResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+            role:
+              type: string
+        rolePolicy:
+          $ref: '#/components/schemas/RolePolicy'
+
+    DashboardToday:
+      type: object
+      properties:
+        attendance:
+          type: integer
+        absences:
+          type: integer
+        tardy10PlusPercent:
+          type: number
+        tardy30PlusPercent:
+          type: number
+
+    DashboardAssignments:
+      type: object
+      properties:
+        total:
+          type: integer
+        completedOnTime:
+          type: integer
+        completedLate:
+          type: integer
+        outstanding:
+          type: integer
+        outstandingYtd:
+          type: integer
+
+    LevelCompletionRow:
+      type: object
+      properties:
+        level:
+          type: string
+        enrolledStudents:
+          type: integer
+        completedStudents:
+          type: integer
+        assignmentName:
+          type: string
+        dueAt:
+          type: string
+          format: date
+
+    DashboardSummary:
+      type: object
+      properties:
+        today:
+          $ref: '#/components/schemas/DashboardToday'
+        assignments:
+          $ref: '#/components/schemas/DashboardAssignments'
+        weeklyAssignmentCompletion:
+          type: array
+          items:
+            type: object
+        atRiskWeek:
+          type: object
+        attendanceRiskWeek:
+          type: object
+        classEnrollmentAttendance:
+          type: array
+          items:
+            type: object
+        levelCompletion:
+          type: array
+          items:
+            $ref: '#/components/schemas/LevelCompletionRow'
+
+    StudentListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        eaglesId:
+          type: string
+        studentNumber:
+          type: integer
+        profile:
+          type: object
+          properties:
+            fullName:
+              type: string
+            englishName:
+              type: string
+            currentGrade:
+              type: string
+
+    StudentDetail:
+      type: object
+      properties:
+        student:
+          type: object
+        profile:
+          type: object
+        attendance:
+          type: array
+          items:
+            type: object
+        grades:
+          type: array
+          items:
+            type: object
+
+    AttendanceSaveRequest:
+      type: object
+      required: [date, status]
+      properties:
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [present, absent, tardy10, tardy30]
+        note:
+          type: string
+
+    NotificationRequest:
+      type: object
+      properties:
+        queueType:
+          type: string
+        deliveryMode:
+          type: string
+        recipients:
+          type: array
+          items:
+            type: string
+            format: email
+        subject:
+          type: string
+        body:
+          type: string
+
+    VolatilePreviewRequest:
+      type: object
+      required: [assignmentTitle, level]
+      properties:
+        assignmentTitle:
+          type: string
+        level:
+          type: string
+        assignedAt:
+          type: string
+          format: date
+        dueAt:
+          type: string
+          format: date
+        message:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              url:
+                type: string
+                format: uri
+
+    VolatilePreviewResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        url:
+          type: string
+          format: uri
+        path:
+          type: string
+        ttlMinutes:
+          type: integer
+        expiresAt:
+          type: string
+          format: date-time

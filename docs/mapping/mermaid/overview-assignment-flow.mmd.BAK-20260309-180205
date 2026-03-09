@@ -1,17 +1,16 @@
 sequenceDiagram
     autonumber
     participant U as Admin UI (overview page)
-    participant D as /api/admin/dashboard
-    participant V as /api/admin/assignment-announcements/volatile
+    participant R as /api/admin/dashboard
     participant S as getAdminDashboardSummary()
     participant DB as PostgreSQL
 
-    U->>D: GET dashboard summary
-    D->>S: build summary payload
+    U->>R: GET dashboard summary
+    R->>S: build summary payload
     S->>DB: fetch enrollment + grade/attendance rows
     DB-->>S: records
-    S-->>D: { levelCompletion, classEnrollmentAttendance, ... }
-    D-->>U: JSON summary
+    S-->>R: { levelCompletion, classEnrollmentAttendance, ... }
+    R-->>U: JSON summary
 
     alt summary.levelCompletion has rows
         U->>U: render bars/buttons from backend rows
@@ -23,7 +22,7 @@ sequenceDiagram
 
     U->>U: render detail panel when level button clicked
     alt assignment metadata present but link missing
-        U->>V: POST /api/admin/assignment-announcements/volatile
-        V-->>U: preview URL
+        U->>R: POST /api/admin/assignment-announcements/volatile
+        R-->>U: preview URL
         U->>U: autofill reminder form (title + due + link)
     end

@@ -1,0 +1,114 @@
+flowchart TB
+  Browser[Admin Browser / Client]
+  Router["student-admin-routes.mjs<br/>handleApiRequest()"]
+
+  Browser -->|HTTP Requests| Router
+
+  subgraph Public[Public + Page Routes]
+    P1[GET /assignment-announcements/volatile/{token}]
+    P2[GET /admin/students]
+    P3[GET /admin/students/{pageSlug}]
+  end
+
+  subgraph Auth[Auth Routes]
+    A1[POST /api/admin/auth/login]
+    A2[POST /api/admin/login (legacy)]
+    A3[POST /api/admin/auth/logout]
+    A4[GET /api/admin/auth/me]
+  end
+
+  subgraph Runtime[Runtime + Control]
+    R1[GET /api/admin/runtime/health]
+    R2[GET /api/admin/runtime/service-control]
+    R3[POST /api/admin/runtime/service-control]
+  end
+
+  subgraph Dashboard[Overview + Notifications]
+    D1[GET /api/admin/dashboard]
+    D2[GET /api/admin/permissions]
+    D3[PUT /api/admin/permissions]
+    D4[GET /api/admin/notifications/batch-status]
+    D5[POST /api/admin/notifications/batch-status]
+    D6[POST /api/admin/notifications/email]
+  end
+
+  subgraph Exercise[Exercise Intake + Queue]
+    E1[GET /api/admin/exercise-titles]
+    E2[GET /api/admin/exercise-results/incoming]
+    E3[POST /api/admin/exercise-results/incoming]
+    E4[POST /api/admin/assignment-announcements/volatile]
+  end
+
+  subgraph StudentRoot[Student Root + Bulk]
+    S1[GET /api/admin/students]
+    S2[POST /api/admin/students]
+    S3[POST /api/admin/students/import]
+    S4[GET /api/admin/students/import-template.xlsx]
+    S5[GET /api/admin/students/next-student-number]
+    S6[GET /api/admin/filters]
+    S7[GET /api/admin/family?phone=...]
+    S8[POST /api/admin/exports/xlsx]
+  end
+
+  subgraph Users[Admin Users CRUD]
+    U1[GET /api/admin/users]
+    U2[POST /api/admin/users]
+    U3[PUT /api/admin/users/{userId}]
+    U4[DELETE /api/admin/users/{userId}]
+  end
+
+  subgraph StudentById[Student by ID + Records]
+    B1[GET /api/admin/students/{studentRefId}]
+    B2[PUT /api/admin/students/{studentRefId}]
+    B3[DELETE /api/admin/students/{studentRefId}]
+    B4[GET /api/admin/students/{studentRefId}/report-card.pdf]
+    B5[POST /api/admin/students/{studentRefId}/attendance]
+    B6[DELETE /api/admin/students/{studentRefId}/attendance/{recordId}]
+    B7[POST /api/admin/students/{studentRefId}/grades]
+    B8[DELETE /api/admin/students/{studentRefId}/grades/{recordId}]
+    B9[POST /api/admin/students/{studentRefId}/reports]
+    B10[POST /api/admin/students/{studentRefId}/reports/generate]
+    B11[DELETE /api/admin/students/{studentRefId}/reports/{reportId}]
+  end
+
+  Router --> Public
+  Router --> Auth
+  Router --> Runtime
+  Router --> Dashboard
+  Router --> Exercise
+  Router --> StudentRoot
+  Router --> Users
+  Router --> StudentById
+
+  RoleAny[[Role Gate: readable roles]]
+  RoleWrite[[Role Gate: write role]]
+  RoleManage[[Role Gate: canManageUsers]]
+
+  Dashboard -.-> RoleAny
+  Runtime -.-> RoleAny
+  StudentRoot -.-> RoleAny
+  StudentById -.-> RoleAny
+
+  D3 -.-> RoleManage
+  R2 -.-> RoleManage
+  R3 -.-> RoleManage
+  U1 -.-> RoleManage
+  U2 -.-> RoleManage
+  U3 -.-> RoleManage
+  U4 -.-> RoleManage
+  E3 -.-> RoleManage
+  D5 -.-> RoleManage
+
+  S2 -.-> RoleWrite
+  S3 -.-> RoleWrite
+  S8 -.-> RoleWrite
+  E4 -.-> RoleWrite
+  B2 -.-> RoleWrite
+  B3 -.-> RoleWrite
+  B5 -.-> RoleWrite
+  B6 -.-> RoleWrite
+  B7 -.-> RoleWrite
+  B8 -.-> RoleWrite
+  B9 -.-> RoleWrite
+  B10 -.-> RoleWrite
+  B11 -.-> RoleWrite

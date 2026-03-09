@@ -108,8 +108,6 @@ paths:
                 properties:
                   ok:
                     type: boolean
-        '400':
-          description: Invalid logout request
 
   /api/admin/auth/me:
     get:
@@ -144,8 +142,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
     put:
       tags: [permissions]
       summary: Update role-policy matrix
@@ -178,8 +174,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
 
   /api/admin/runtime/service-control:
     get:
@@ -262,8 +256,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
 
   /api/admin/exercise-results/incoming:
     get:
@@ -295,8 +287,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
     post:
       tags: [incoming]
       summary: Triage incoming exercise submission queue item
@@ -347,8 +337,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
 
   /api/admin/students/next-student-number:
     get:
@@ -362,8 +350,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
 
   /api/admin/students:
     get:
@@ -443,8 +429,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
 
   /api/admin/students/import-template.xlsx:
     get:
@@ -459,10 +443,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        '401':
-          description: Missing or invalid session
-        '404':
-          description: Template file not found
 
   /api/admin/students/{studentRefId}:
     get:
@@ -562,10 +542,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        '401':
-          description: Missing or invalid session
-        '404':
-          description: Student not found
 
   /api/admin/students/{studentRefId}/attendance:
     post:
@@ -622,8 +598,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '404':
-          description: Student or attendance record not found
 
   /api/admin/students/{studentRefId}/grades:
     post:
@@ -649,8 +623,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '400':
-          description: Invalid grade payload
 
   /api/admin/students/{studentRefId}/grades/{recordId}:
     delete:
@@ -675,8 +647,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '404':
-          description: Student or grade record not found
 
   /api/admin/students/{studentRefId}/reports:
     post:
@@ -702,8 +672,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '400':
-          description: Invalid report payload
 
   /api/admin/students/{studentRefId}/reports/generate:
     post:
@@ -729,8 +697,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '400':
-          description: Invalid report generation payload
 
   /api/admin/students/{studentRefId}/reports/{reportId}:
     delete:
@@ -755,8 +721,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '404':
-          description: Student or report not found
 
   /api/admin/family:
     get:
@@ -775,8 +739,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
 
   /api/admin/users:
     get:
@@ -927,8 +889,6 @@ paths:
             application/json:
               schema:
                 type: object
-        '401':
-          description: Missing or invalid session
     post:
       tags: [notifications]
       summary: Apply batch queue action (send-all/hold/requeue/edit)
@@ -976,8 +936,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        '401':
-          description: Missing or invalid session
 
   /api/admin/assignment-announcements/volatile:
     post:

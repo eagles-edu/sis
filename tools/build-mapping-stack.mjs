@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, lstatSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -63,6 +63,17 @@ function writeArtifact(filename, content) {
   console.log(`[map] wrote ${path.relative(repoRoot, target)}`)
 }
 
+function sanitizeOpenApiHtmlOutput(relativePath) {
+  const target = path.join(repoRoot, relativePath)
+  if (!existsSync(target)) return
+  const original = readFileSync(target, "utf8")
+  const sanitized = original.replace(/([\s>+~,])\.\.([_a-zA-Z][-\w]*)/g, "$1.$2")
+  if (sanitized !== original) {
+    writeFileSync(target, sanitized, "utf8")
+    console.log(`[map] sanitized ${path.relative(repoRoot, target)}`)
+  }
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -72,9 +83,8 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;")
 }
 
-function buildMappingPortalHtml({ generatedAtIso }) {
-  const generatedAt = escapeHtml(generatedAtIso)
-  const workflows = [
+function getWorkflowDefinitions() {
+  return [
     {
       id: "system-context",
       label: "System Context",
@@ -93,13 +103,24 @@ function buildMappingPortalHtml({ generatedAtIso }) {
       path: "../mermaid/overview-assignment-flow.mmd",
       summary: "Dashboard summary flow plus volatile assignment announcement preview.",
     },
+    {
+      id: "live-router-map",
+      label: "Live Router Map",
+      path: "../mermaid/live-router-map.mmd",
+      summary: "Graphical route inventory grouped by domain and role gate.",
+    },
   ]
+}
 
-  return `<!doctype html>
+function buildMappingPortalHtml({ generatedAtIso }) {
+  const generatedAt = escapeHtml(generatedAtIso)
+  const workflows = getWorkflowDefinitions()
+
+  return `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIS Mapping Portal</title>
     <style>
       :root {
@@ -293,6 +314,7 @@ function buildMappingPortalHtml({ generatedAtIso }) {
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 8px 10px;
+        box-sizing: border-box;
         text-align: left;
         background: #f4f9f8;
         color: var(--ink);
@@ -430,6 +452,22 @@ function buildMappingPortalHtml({ generatedAtIso }) {
         list-style: none;
       }
 
+      .resource-groups {
+        display: grid;
+        gap: 14px;
+      }
+
+      .resource-group {
+        display: grid;
+        gap: 8px;
+      }
+
+      .resource-group-title {
+        margin: 0;
+        font-size: 0.94rem;
+        color: var(--ink-soft);
+      }
+
       .resource-list a {
         display: block;
         border: 1px solid var(--line);
@@ -445,12 +483,15 @@ function buildMappingPortalHtml({ generatedAtIso }) {
         font-size: 0.84rem;
       }
 
-      iframe {
-        width: 100%;
-        height: 560px;
+      .openapi-note {
+        margin: 10px 0 0;
         border: 1px solid var(--line);
         border-radius: 10px;
-        background: #fff;
+        box-sizing: border-box;
+        background: #fbfefd;
+        padding: 10px 12px;
+        font-size: 0.86rem;
+        color: var(--ink-soft);
       }
 
       .footer-note {
@@ -508,6 +549,7 @@ function buildMappingPortalHtml({ generatedAtIso }) {
           </p>
           <div class="actions">
             <a class="btn btn-main" href="./dependency-graph.svg" target="_blank" rel="noreferrer">Open Dependency Graph</a>
+            <a class="btn btn-main" href="./workflow-viewer.html?workflow=live-router-map" target="_blank" rel="noreferrer">Open Live Router Graph</a>
             <a class="btn btn-alt" href="./sis-admin.openapi.html" target="_blank" rel="noreferrer">Open API Docs</a>
             <a class="btn btn-subtle" href="../structurizr/workspace.dsl" target="_blank" rel="noreferrer">Open Structurizr DSL</a>
             <a class="btn btn-subtle" href="../README.md" target="_blank" rel="noreferrer">Open Mapping README</a>
@@ -550,31 +592,62 @@ function buildMappingPortalHtml({ generatedAtIso }) {
             <div class="controls">
               <label for="workflow-select" class="mono">diagram</label>
               <select id="workflow-select" class="control"></select>
+              <a id="workflow-open-new-tab" class="btn btn-subtle" href="./workflow-viewer.html" target="_blank" rel="noreferrer">Open in New Tab</a>
             </div>
           </div>
           <ul class="workflow-list" id="workflow-list"></ul>
           <p class="workflow-summary" id="workflow-summary"></p>
           <div id="workflow-diagram" class="diagram"></div>
           <p class="caption">
-            Source: <a id="workflow-source-link" href="#" target="_blank" rel="noreferrer" class="mono"></a>
+            Source: <a id="workflow-source-link" href="#" target="_blank" rel="noreferrer" class="mono">workflow source</a>
           </p>
           <p class="status" id="workflow-status"></p>
         </article>
 
         <article class="panel section">
           <div class="section-header">
-            <h2>Artifacts and Workbench</h2>
+            <h2>Maps, Downloads, and Live Router</h2>
           </div>
-          <ul class="resource-list">
-            <li><a href="./dependency-graph.svg" target="_blank" rel="noreferrer"><strong>Dependency Graph (SVG)</strong><br /><span>Interactive graph with node click-through to source files.</span></a></li>
-            <li><a href="./dependency-graph.mmd" target="_blank" rel="noreferrer"><strong>Dependency Graph (Mermaid Source)</strong><br /><span>Text source generated from dependency-cruiser.</span></a></li>
-            <li><a href="./dependency-graph.json" target="_blank" rel="noreferrer"><strong>Dependency Graph (JSON)</strong><br /><span>Machine-readable modules and edges.</span></a></li>
-            <li><a href="./sis-admin.openapi.html" target="_blank" rel="noreferrer"><strong>SIS Admin OpenAPI</strong><br /><span>Rendered API reference using Redocly.</span></a></li>
-            <li><a href="../openapi/sis-admin.openapi.yaml" target="_blank" rel="noreferrer"><strong>OpenAPI Source YAML</strong><br /><span>Authoritative API contract input.</span></a></li>
-            <li><a href="../structurizr/workspace.dsl" target="_blank" rel="noreferrer"><strong>Structurizr Workspace</strong><br /><span>C4 model source for architecture ownership.</span></a></li>
-            <li><a href="./server/" target="_blank" rel="noreferrer"><strong>Server Source Folder</strong><br /><span>Symlink root for dependency node click targets.</span></a></li>
-            <li><a href="./tools/" target="_blank" rel="noreferrer"><strong>Tools Source Folder</strong><br /><span>Symlink root for tooling dependency nodes.</span></a></li>
-          </ul>
+          <div class="resource-groups">
+            <section class="resource-group" aria-labelledby="all-maps-title">
+              <h3 class="resource-group-title" id="all-maps-title">All Maps</h3>
+              <ul class="resource-list">
+                <li><a href="/docs/mapping/out/" target="_blank" rel="noreferrer"><strong>Mapping Portal Root</strong><br><span>/docs/mapping/out/</span></a></li>
+                <li><a href="/docs/mapping/out/dependency-graph.svg" target="_blank" rel="noreferrer"><strong>Dependency Graph (SVG)</strong><br><span>/docs/mapping/out/dependency-graph.svg</span></a></li>
+                <li><a href="/docs/mapping/out/dependency-graph.mmd" target="_blank" rel="noreferrer"><strong>Dependency Graph (Mermaid Source)</strong><br><span>/docs/mapping/out/dependency-graph.mmd</span></a></li>
+                <li><a href="/docs/mapping/out/dependency-graph.json" target="_blank" rel="noreferrer"><strong>Dependency Graph (JSON)</strong><br><span>/docs/mapping/out/dependency-graph.json</span></a></li>
+                <li><a href="/docs/mapping/out/sis-admin.openapi.html" target="_blank" rel="noreferrer"><strong>SIS Admin OpenAPI (HTML)</strong><br><span>/docs/mapping/out/sis-admin.openapi.html</span></a></li>
+                <li><a href="/docs/mapping/openapi/sis-admin.openapi.yaml" target="_blank" rel="noreferrer"><strong>SIS Admin OpenAPI (YAML)</strong><br><span>/docs/mapping/openapi/sis-admin.openapi.yaml</span></a></li>
+                <li><a href="/docs/mapping/structurizr/workspace.dsl" target="_blank" rel="noreferrer"><strong>Structurizr Workspace (DSL)</strong><br><span>/docs/mapping/structurizr/workspace.dsl</span></a></li>
+                <li><a href="/docs/mapping/mermaid/system-context.mmd" target="_blank" rel="noreferrer"><strong>Mermaid: System Context</strong><br><span>/docs/mapping/mermaid/system-context.mmd</span></a></li>
+                <li><a href="/docs/mapping/mermaid/page-backend-map.mmd" target="_blank" rel="noreferrer"><strong>Mermaid: Page to Backend Map</strong><br><span>/docs/mapping/mermaid/page-backend-map.mmd</span></a></li>
+                <li><a href="/docs/mapping/mermaid/overview-assignment-flow.mmd" target="_blank" rel="noreferrer"><strong>Mermaid: Overview Assignment Flow</strong><br><span>/docs/mapping/mermaid/overview-assignment-flow.mmd</span></a></li>
+                <li><a href="/docs/mapping/mermaid/live-router-map.mmd" target="_blank" rel="noreferrer"><strong>Mermaid: Live Router Map</strong><br><span>/docs/mapping/mermaid/live-router-map.mmd</span></a></li>
+              </ul>
+            </section>
+
+            <section class="resource-group" aria-labelledby="download-docs-title">
+              <h3 class="resource-group-title" id="download-docs-title">Download Config/Data Docs</h3>
+              <ul class="resource-list">
+                <li><a href="/docs/mapping/out/dependency-graph.json" download><strong>Download Dependency Graph JSON</strong><br><span>/docs/mapping/out/dependency-graph.json</span></a></li>
+                <li><a href="/docs/mapping/out/dependency-graph.mmd" download><strong>Download Dependency Graph Mermaid</strong><br><span>/docs/mapping/out/dependency-graph.mmd</span></a></li>
+                <li><a href="/docs/mapping/openapi/sis-admin.openapi.yaml" download><strong>Download OpenAPI YAML</strong><br><span>/docs/mapping/openapi/sis-admin.openapi.yaml</span></a></li>
+                <li><a href="/docs/mapping/structurizr/workspace.dsl" download><strong>Download Structurizr DSL</strong><br><span>/docs/mapping/structurizr/workspace.dsl</span></a></li>
+                <li><a href="/docs/mapping/admin-route-trace.md" download><strong>Download Router Trace Matrix</strong><br><span>/docs/mapping/admin-route-trace.md</span></a></li>
+              </ul>
+            </section>
+
+            <section class="resource-group" aria-labelledby="live-router-title">
+              <h3 class="resource-group-title" id="live-router-title">Live Router</h3>
+              <ul class="resource-list">
+                <li><a href="/docs/mapping/admin-route-trace.md" target="_blank" rel="noreferrer"><strong>Router Trace Matrix</strong><br><span>/docs/mapping/admin-route-trace.md</span></a></li>
+                <li><a href="/docs/mapping/mermaid/live-router-map.mmd" target="_blank" rel="noreferrer"><strong>Live Router Graph Source (Mermaid)</strong><br><span>/docs/mapping/mermaid/live-router-map.mmd</span></a></li>
+                <li><a href="/docs/mapping/out/server/student-admin-routes.mjs" target="_blank" rel="noreferrer"><strong>Router Source: student-admin-routes.mjs</strong><br><span>/docs/mapping/out/server/student-admin-routes.mjs</span></a></li>
+                <li><a href="/api/admin/auth/me" target="_blank" rel="noreferrer"><strong>Live Endpoint: GET /api/admin/auth/me</strong><br><span>/api/admin/auth/me</span></a></li>
+                <li><a href="/api/admin/runtime/health" target="_blank" rel="noreferrer"><strong>Live Endpoint: GET /api/admin/runtime/health</strong><br><span>/api/admin/runtime/health</span></a></li>
+              </ul>
+            </section>
+          </div>
         </article>
       </section>
 
@@ -582,12 +655,12 @@ function buildMappingPortalHtml({ generatedAtIso }) {
         <div class="section-header">
           <h2>Dependency Graph Viewer</h2>
           <div class="controls">
-            <input id="module-search" class="control mono" type="search" placeholder="search module name..." />
+            <input id="module-search" class="control mono" type="search" placeholder="search module name...">
             <a class="btn btn-subtle" href="./dependency-graph.svg" target="_blank" rel="noreferrer">Open Fullscreen</a>
           </div>
         </div>
         <div class="dependency-canvas">
-          <object data="./dependency-graph.svg" type="image/svg+xml" aria-label="dependency graph"></object>
+          <object data="./dependency-graph.svg" type="image/svg+xml" title="dependency graph"></object>
         </div>
         <div class="table-wrap">
           <table>
@@ -610,19 +683,30 @@ function buildMappingPortalHtml({ generatedAtIso }) {
 
       <section class="panel section section-spaced">
         <div class="section-header">
-          <h2>OpenAPI Reference Embed</h2>
+          <h2>OpenAPI Reference</h2>
           <a class="btn btn-subtle" href="./sis-admin.openapi.html" target="_blank" rel="noreferrer">Open in New Tab</a>
         </div>
-        <iframe src="./sis-admin.openapi.html" title="SIS Admin OpenAPI"></iframe>
+        <p class="openapi-note">
+          Embedded OpenAPI rendering is disabled to avoid React/Redoc runtime crashes in the portal.
+          Use <strong>Open in New Tab</strong> to view API docs.
+        </p>
       </section>
     </main>
 
     <script>
       const WORKFLOWS = ${JSON.stringify(workflows)};
+
+      function getInitialWorkflowId() {
+        const fallback = WORKFLOWS.length ? WORKFLOWS[0].id : "";
+        const params = new URLSearchParams(window.location.search);
+        const requested = params.get("workflow");
+        return WORKFLOWS.some((item) => item.id === requested) ? requested : fallback;
+      }
+
       const state = {
         modules: [],
         query: "",
-        selectedWorkflowId: WORKFLOWS.length ? WORKFLOWS[0].id : "",
+        selectedWorkflowId: getInitialWorkflowId(),
       };
 
       const elements = {
@@ -631,6 +715,7 @@ function buildMappingPortalHtml({ generatedAtIso }) {
         workflowSummary: document.getElementById("workflow-summary"),
         workflowDiagram: document.getElementById("workflow-diagram"),
         workflowSourceLink: document.getElementById("workflow-source-link"),
+        workflowOpenNewTab: document.getElementById("workflow-open-new-tab"),
         workflowStatus: document.getElementById("workflow-status"),
         moduleSearch: document.getElementById("module-search"),
         moduleTableBody: document.getElementById("module-table-body"),
@@ -659,6 +744,10 @@ function buildMappingPortalHtml({ generatedAtIso }) {
 
       function toSourceHref(pathValue) {
         return "./" + encodePath(pathValue);
+      }
+
+      function toWorkflowViewerHref(workflowId) {
+        return "./workflow-viewer.html?workflow=" + encodeURIComponent(workflowId);
       }
 
       function setWorkflowStatus(message, warn = false) {
@@ -700,7 +789,7 @@ function buildMappingPortalHtml({ generatedAtIso }) {
           const button = document.createElement("button");
           button.type = "button";
           button.dataset.workflowId = workflow.id;
-          button.innerHTML = "<strong>" + escapeHtml(workflow.label) + "</strong><br /><span>" + escapeHtml(workflow.summary) + "</span>";
+          button.innerHTML = "<strong>" + escapeHtml(workflow.label) + "</strong><br><span>" + escapeHtml(workflow.summary) + "</span>";
           button.addEventListener("click", () => {
             state.selectedWorkflowId = workflow.id;
             elements.workflowSelect.value = workflow.id;
@@ -721,13 +810,21 @@ function buildMappingPortalHtml({ generatedAtIso }) {
         });
       }
 
+      function syncWorkflowQueryParam(workflowId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("workflow", workflowId);
+        window.history.replaceState(null, "", url.toString());
+      }
+
       async function renderSelectedWorkflow() {
         const workflow = WORKFLOWS.find((item) => item.id === state.selectedWorkflowId);
         if (!workflow) return;
 
+        syncWorkflowQueryParam(workflow.id);
         elements.workflowSummary.textContent = workflow.summary;
         elements.workflowSourceLink.textContent = workflow.path;
         elements.workflowSourceLink.href = workflow.path;
+        elements.workflowOpenNewTab.href = toWorkflowViewerHref(workflow.id);
         setWorkflowStatus("Loading workflow source...");
 
         try {
@@ -911,6 +1008,370 @@ function buildMappingPortalHtml({ generatedAtIso }) {
 `
 }
 
+function buildWorkflowViewerHtml({ generatedAtIso }) {
+  const generatedAt = escapeHtml(generatedAtIso)
+  const workflows = getWorkflowDefinitions()
+
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SIS Workflow Viewer</title>
+    <style>
+      :root {
+        --paper: #f4f7f5;
+        --ink: #0e2b2d;
+        --ink-soft: #375154;
+        --accent: #0f8f7a;
+        --line: #c0d4d1;
+        --panel: #ffffff;
+        --warn: #a85d0a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top right, #d4efe8 0, transparent 42%),
+          linear-gradient(130deg, #f0f5f3, #f9fbfa);
+        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      }
+
+      .shell {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 12px;
+        box-shadow: 0 8px 22px rgba(30, 60, 54, 0.08);
+        padding: 12px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .control {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      .btn {
+        display: inline-block;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.88rem;
+        border-radius: 9px;
+        padding: 8px 12px;
+        border: 1px solid transparent;
+        background: #eef4f3;
+        color: var(--ink);
+        border-color: var(--line);
+      }
+
+      button.btn {
+        cursor: pointer;
+      }
+
+      .btn-main {
+        background: var(--accent);
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .meta {
+        margin: 8px 0 10px;
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+      }
+
+      .diagram {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        min-height: calc(100vh - 220px);
+        overflow: auto;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .diagram svg {
+        max-width: none;
+        height: auto;
+      }
+
+      .diagram.raw {
+        font-family: "JetBrains Mono", "Consolas", monospace;
+        white-space: pre;
+        font-size: 0.82rem;
+      }
+
+      .zoom-value {
+        font-size: 0.82rem;
+        color: var(--ink-soft);
+        min-width: 56px;
+        text-align: right;
+      }
+
+      .status {
+        margin: 8px 0 0;
+        font-size: 0.84rem;
+        color: #1b7f3b;
+      }
+
+      .status.warn {
+        color: var(--warn);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel">
+        <div class="header">
+          <h1>SIS Workflow Viewer</h1>
+          <div class="controls">
+            <label for="workflow-select">Diagram</label>
+            <select id="workflow-select" class="control"></select>
+            <a class="btn" href="./">Back to Portal</a>
+            <a id="source-link" class="btn btn-main" href="#" target="_blank" rel="noreferrer">Open Source</a>
+            <button id="zoom-out" class="btn" type="button">Zoom -</button>
+            <button id="zoom-in" class="btn" type="button">Zoom +</button>
+            <button id="zoom-fit" class="btn" type="button">Fit Width</button>
+            <button id="zoom-reset" class="btn" type="button">Reset View</button>
+            <span id="zoom-value" class="zoom-value">100%</span>
+          </div>
+        </div>
+        <p class="meta">Generated: ${generatedAt}</p>
+        <div id="diagram" class="diagram"></div>
+        <p id="status" class="status"></p>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.6.0/dist/panzoom.min.js"></script>
+    <script>
+      const WORKFLOWS = ${JSON.stringify(workflows)};
+
+      function getInitialWorkflowId() {
+        const fallback = WORKFLOWS.length ? WORKFLOWS[0].id : "";
+        const params = new URLSearchParams(window.location.search);
+        const requested = params.get("workflow");
+        return WORKFLOWS.some((item) => item.id === requested) ? requested : fallback;
+      }
+
+      const elements = {
+        workflowSelect: document.getElementById("workflow-select"),
+        diagram: document.getElementById("diagram"),
+        status: document.getElementById("status"),
+        sourceLink: document.getElementById("source-link"),
+        zoomOut: document.getElementById("zoom-out"),
+        zoomIn: document.getElementById("zoom-in"),
+        zoomFit: document.getElementById("zoom-fit"),
+        zoomReset: document.getElementById("zoom-reset"),
+        zoomValue: document.getElementById("zoom-value"),
+      };
+
+      const state = {
+        selectedWorkflowId: getInitialWorkflowId(),
+        panzoom: null,
+        wheelHandler: null,
+      };
+
+      function setStatus(message, warn = false) {
+        elements.status.textContent = message;
+        elements.status.classList.toggle("warn", warn);
+      }
+
+      function syncWorkflowQueryParam(workflowId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("workflow", workflowId);
+        window.history.replaceState(null, "", url.toString());
+      }
+
+      async function fetchText(url) {
+        const response = await fetch(url, { cache: "no-cache" });
+        if (!response.ok) throw new Error("Could not fetch " + url + " (" + response.status + ")");
+        return response.text();
+      }
+
+      let mermaidPromise;
+      async function getMermaid() {
+        if (!mermaidPromise) {
+          mermaidPromise = import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs")
+            .then((mod) => {
+              const api = mod.default || mod;
+              api.initialize({ startOnLoad: false, theme: "default", securityLevel: "strict", flowchart: { htmlLabels: true } });
+              return api;
+            })
+            .catch(() => null);
+        }
+        return mermaidPromise;
+      }
+
+      function updateZoomValue() {
+        if (!state.panzoom) {
+          elements.zoomValue.textContent = "100%";
+          return;
+        }
+        elements.zoomValue.textContent = Math.round(state.panzoom.getScale() * 100) + "%";
+      }
+
+      function unbindPanzoom() {
+        if (state.wheelHandler) {
+          elements.diagram.removeEventListener("wheel", state.wheelHandler);
+          state.wheelHandler = null;
+        }
+        if (state.panzoom && typeof state.panzoom.destroy === "function") {
+          state.panzoom.destroy();
+        }
+        state.panzoom = null;
+        updateZoomValue();
+      }
+
+      function fitDiagramToWidth() {
+        const svg = elements.diagram.querySelector("svg");
+        if (!svg || !state.panzoom) return;
+
+        state.panzoom.reset({ animate: false });
+        const viewBoxWidth = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal.width : 0;
+        const measuredWidth = viewBoxWidth || svg.getBoundingClientRect().width || 1;
+        const targetWidth = Math.max(elements.diagram.clientWidth - 24, 120);
+        const scale = Math.max(0.15, Math.min(12, targetWidth / measuredWidth));
+        state.panzoom.zoom(scale, { animate: false, force: true });
+        state.panzoom.pan(8, 8, { animate: false, force: true });
+        updateZoomValue();
+      }
+
+      function bindPanzoomToRenderedSvg() {
+        unbindPanzoom();
+        const svg = elements.diagram.querySelector("svg");
+        if (!svg || typeof window.Panzoom !== "function") return;
+
+        svg.style.transformOrigin = "0 0";
+        state.panzoom = window.Panzoom(svg, {
+          maxScale: 12,
+          minScale: 0.15,
+          step: 0.25,
+          contain: "outside",
+        });
+
+        state.wheelHandler = (event) => {
+          if (!state.panzoom) return;
+          event.preventDefault();
+          state.panzoom.zoomWithWheel(event);
+          updateZoomValue();
+        };
+        elements.diagram.addEventListener("wheel", state.wheelHandler, { passive: false });
+        fitDiagramToWidth();
+      }
+
+      function renderWorkflowOptions() {
+        elements.workflowSelect.innerHTML = "";
+        WORKFLOWS.forEach((workflow) => {
+          const option = document.createElement("option");
+          option.value = workflow.id;
+          option.textContent = workflow.label;
+          elements.workflowSelect.appendChild(option);
+        });
+        elements.workflowSelect.value = state.selectedWorkflowId;
+      }
+
+      async function renderSelectedWorkflow() {
+        const workflow = WORKFLOWS.find((item) => item.id === state.selectedWorkflowId);
+        if (!workflow) return;
+
+        syncWorkflowQueryParam(workflow.id);
+        elements.sourceLink.href = workflow.path;
+        setStatus("Loading diagram...");
+
+        try {
+          const source = await fetchText(workflow.path);
+          const mermaid = await getMermaid();
+          if (mermaid) {
+            const renderId = "viewer-" + workflow.id + "-" + Date.now();
+            const rendered = await mermaid.render(renderId, source);
+            elements.diagram.classList.remove("raw");
+            elements.diagram.innerHTML = rendered.svg;
+            bindPanzoomToRenderedSvg();
+            setStatus("Rendered with Mermaid. Use wheel or zoom controls.");
+          } else {
+            unbindPanzoom();
+            elements.diagram.classList.add("raw");
+            elements.diagram.textContent = source;
+            setStatus("Mermaid runtime unavailable, showing raw source.", true);
+          }
+        } catch (error) {
+          unbindPanzoom();
+          elements.diagram.classList.add("raw");
+          elements.diagram.textContent = "Unable to load diagram: " + error.message;
+          setStatus("Failed to load diagram.", true);
+        }
+      }
+
+      function bindEvents() {
+        elements.workflowSelect.addEventListener("change", (event) => {
+          state.selectedWorkflowId = event.target.value;
+          renderSelectedWorkflow();
+        });
+
+        elements.zoomIn.addEventListener("click", () => {
+          if (!state.panzoom) return;
+          state.panzoom.zoomIn();
+          updateZoomValue();
+        });
+
+        elements.zoomOut.addEventListener("click", () => {
+          if (!state.panzoom) return;
+          state.panzoom.zoomOut();
+          updateZoomValue();
+        });
+
+        elements.zoomFit.addEventListener("click", () => {
+          fitDiagramToWidth();
+        });
+
+        elements.zoomReset.addEventListener("click", () => {
+          if (!state.panzoom) return;
+          state.panzoom.reset({ animate: true });
+          updateZoomValue();
+        });
+      }
+
+      async function init() {
+        renderWorkflowOptions();
+        bindEvents();
+        await renderSelectedWorkflow();
+      }
+
+      init();
+    </script>
+  </body>
+</html>
+`
+}
+
 function ensureOutLink(name) {
   const linkPath = path.join(outDir, name)
   const targetPath = path.join(repoRoot, name)
@@ -932,9 +1393,12 @@ function ensureOutLink(name) {
 function writeMappingPortalArtifacts() {
   ensureOutLink("server")
   ensureOutLink("tools")
-  const portalHtml = buildMappingPortalHtml({ generatedAtIso: new Date().toISOString() })
+  const generatedAtIso = new Date().toISOString()
+  const portalHtml = buildMappingPortalHtml({ generatedAtIso })
+  const workflowViewerHtml = buildWorkflowViewerHtml({ generatedAtIso })
   writeArtifact("index.html", portalHtml)
   writeArtifact("mapping-portal.html", portalHtml)
+  writeArtifact("workflow-viewer.html", workflowViewerHtml)
 }
 
 if (!openapiOnly) {
@@ -970,6 +1434,7 @@ if (!depsOnly) {
     ],
     false
   )
+  sanitizeOpenApiHtmlOutput("docs/mapping/out/sis-admin.openapi.html")
 }
 
 console.log("[map] generating mapping portal...")

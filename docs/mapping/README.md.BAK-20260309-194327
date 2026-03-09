@@ -59,10 +59,6 @@ Portal capabilities:
 
 3. Open grouped links (example base URL: `http://127.0.0.1:33999`):
 
-Direct graphical live-router view in portal:
-
-- `http://127.0.0.1:33999/docs/mapping/out/?workflow=live-router-map`
-
 All maps:
 
 - `http://127.0.0.1:33999/docs/mapping/out/dependency-graph.svg`
@@ -74,7 +70,6 @@ All maps:
 - `http://127.0.0.1:33999/docs/mapping/mermaid/system-context.mmd`
 - `http://127.0.0.1:33999/docs/mapping/mermaid/page-backend-map.mmd`
 - `http://127.0.0.1:33999/docs/mapping/mermaid/overview-assignment-flow.mmd`
-- `http://127.0.0.1:33999/docs/mapping/mermaid/live-router-map.mmd`
 
 Download config/data docs:
 
@@ -87,7 +82,6 @@ Download config/data docs:
 Live router:
 
 - `http://127.0.0.1:33999/docs/mapping/admin-route-trace.md`
-- `http://127.0.0.1:33999/docs/mapping/mermaid/live-router-map.mmd`
 - `http://127.0.0.1:33999/docs/mapping/out/server/student-admin-routes.mjs`
 - `http://127.0.0.1:33999/api/admin/auth/me`
 - `http://127.0.0.1:33999/api/admin/runtime/health`
