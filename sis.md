@@ -7,6 +7,201 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-09 - dashboard current-assignment chart/button fallback wired to Assignments Admin templates)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added a derived `dashboardLevelCompletionRows` state path and switched overview level-detail actions to read from it.
+  - when `/api/admin/dashboard` returns empty `levelCompletion`, the overview now derives current assignment rows from local Assignments Admin templates:
+    - includes only templates with valid future `dueAt` (not-yet-due),
+    - selects nearest due template per level,
+    - computes targeted students from enrolled students in that level (or a single targeted student when template `eaglesId` is set),
+    - exposes pending student lists so level detail buttons remain actionable.
+  - kept backend dashboard rows authoritative when backend `levelCompletion` is non-empty.
+  - aligned line-chart fallback inputs with derived snapshot metrics by passing `currentTargetedStudents/currentCompletedStudents/currentPendingStudents`.
+  - on assignment template save/delete, overview summary re-renders immediately so bars/buttons stay in sync without page reload.
+  - logout now clears derived dashboard completion state.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - added regression coverage for empty backend `levelCompletion` + active local assignment template:
+    - bar chart renders,
+    - level detail button appears,
+    - snapshot metrics show targeted/pending counts from template-targeted students,
+    - detail panel lists pending students.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `39` pass, `0` fail.
+  - `node --test test/student-admin-dashboard-summary.spec.mjs` => `11` pass, `0` fail.
+  - `npm test` => `170` pass, `0` fail.
+- Coverage gap:
+  - no integration path yet for cross-browser persistence behavior of assignment-template fallback when multiple admin clients with different local storage sets are used.
+- Prioritized next action:
+  - persist assignment templates server-side (or expose canonical assignment schedule API) so dashboard current-assignment fallback is shared across sessions/devices.
+
+## Update (2026-03-09 - dashboard current-assignment tracking excludes standalone auto-import rows)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - added assignment-tracking filter to exclude standalone auto-imported exercise grade rows from dashboard assignment analytics.
+  - exclusion is scoped to rows matching a standalone-import fingerprint:
+    - `className == assignmentName`,
+    - `dueAt == submittedAt`,
+    - completed + on-time flags,
+    - and either auto-import comment prefix or score/maxScore import footprint.
+    - this prevents unassigned external practice from becoming fake “current assignments.”
+  - assignment dashboard aggregates now use filtered records for:
+    - current not-yet-due level completion,
+    - weekly assignment completion line chart inputs,
+    - assignment totals/on-time/late/outstanding counters,
+    - outstanding-week risk signals.
+- Updated [test/student-admin-dashboard-summary.spec.mjs](test/student-admin-dashboard-summary.spec.mjs):
+  - added regression test that standalone auto-imported future-dated rows are ignored for current assignment selection.
+  - added guard test that imported exercise rows are still included when they carry an explicit assignment due date (so assigned MEGS work can count).
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - clarified overview bar-chart helper copy to state that only standalone auto-import rows (`due = submitted`) are excluded.
+  - corrected dashboard fallback payload: when dashboard API is unavailable, `levelCompletion` is now empty (no fake current-assignment pending bars from enrollment-only fallback data).
+  - aligned snapshot metrics (`Active levels`, `Targeted`, `Completed`, `Pending`, `Completion %`, due-soon counts) to derive from `levelCompletion` only, so bar chart/buttons/cards cannot drift from each other.
+- Verification:
+  - `node --test test/student-admin-dashboard-summary.spec.mjs` => `11` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `38` pass, `0` fail.
+  - `node --test test/student-admin-dashboard-summary.spec.mjs test/student-admin-ui.spec.mjs` => `49` pass, `0` fail.
+  - `npm test` => `169` pass, `0` fail.
+- Coverage gap:
+  - no DB-backed integration fixture yet validates mixed-grade datasets where manual assignment rows and auto-import rows coexist in `/api/admin/dashboard`.
+- Prioritized next action:
+  - add one dashboard integration test with mixed sources to lock end-to-end selector behavior.
+
+## Update (2026-03-09 - tracking lists: class-level fix + `#` studentNumber + column visibility controls)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - fixed `Grades data` class-column normalization to prefer canonical class level (derived from `level/classLevel/currentGrade`) so assignment labels no longer appear in class column.
+  - added first `#` (`studentNumber`) column across tracking data lists:
+    - Assignments data
+    - Performance data
+    - Grades data
+    - Reports data
+  - added column visibility checkbox bars to those same tracking data lists, with `Full Name` and `English Name` hidden by default for performance/grades/reports (attendance behavior parity).
+  - generalized column-visibility persistence logic from attendance-only to per-table storage keys while preserving attendance key compatibility.
+  - normalized row renderers to apply per-table visibility classes (`data-<table>-col`) after each render.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - adjusted table index assertions for new leading `#` columns.
+  - added assertions for new tracking column-control containers and default hidden-name states in grades/performance/reports tables.
+  - updated attendance first-header expectation to `#`.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `38` pass, `0` fail.
+  - `npm test` => `167` pass, `0` fail.
+  - `npx html-validate web-asset/admin/student-admin.html --rule 'aria-label-misuse:error'` => pass.
+- Coverage gap:
+  - no dedicated UI regression yet verifies assignments-data `#` value mapping for “all students in level” templates (blank `#` expected).
+- Prioritized next action:
+  - add a focused UI test for assignments-data `#` cell behavior in both targeted-student and all-students templates.
+
+## Update (2026-03-09 - normalize tracking admin list row actions to Attendance style)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - normalized tracking admin list row actions to match Attendance data list pattern (single-row-height `Options` trigger + dropdown menu).
+  - updated all tracking data list renderers to use the same action cell structure:
+    - `renderAssignmentTemplates` (Assignments data),
+    - `renderParentTrackingReportRows` (Performance data),
+    - `renderGradeRows` (Grades data),
+    - `renderReportRows` (Reports data).
+  - kept existing action behavior and selectors (`data-*` hooks for edit/archive/delete) while moving controls into `.row-options-menu`.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `38` pass, `0` fail.
+  - `npm test` => `167` pass, `0` fail.
+- Coverage gap:
+  - no dedicated UI spec currently asserts that each tracking data table row renders exactly one `Options` trigger (coverage is behavioral via existing table interaction tests).
+- Prioritized next action:
+  - add a focused UI regression test that verifies options-menu presence/structure in assignments/performance/grades/reports data tables.
+
+## Update (2026-03-08 - system health color tuning for Filter Cache + Recent Pipeline)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - `Filter Cache` health state logic now avoids red/error when backend is `redis` and only a transient/stale `lastError` text is present.
+    - redis + `lastError` now renders `warn` (yellow), not `error` (red).
+    - memory/unknown backends keep error behavior when `lastError` exists.
+  - `Recent Pipeline` health state now renders `pending` (neutral) when all three flags are `n/a`:
+    - `exercise=n/a | intake=n/a | send=n/a` no longer defaults to warning/yellow.
+    - remains `ok` when all true, `error` when any false, and `warn` only for mixed decided/undecided states.
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - filter-cache `lastError` is now cleared on successful redis connect/read/write/invalidate operations so stale error text does not linger after recovery.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - diagnostics regression now asserts:
+    - redis filter cache with transient `lastError` is non-red (`warn`).
+    - pipeline card is `ok` when runtime flags are all true.
+  - added new test:
+    - `Recent Pipeline` is `pending` when all runtime pipeline flags are absent (`n/a`).
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `38` pass, `0` fail.
+  - `npm test` => `167` pass, `0` fail.
+- Coverage gap:
+  - no dedicated backend unit test currently validates filter-cache `lastError` clear-on-success transitions (covered indirectly via UI diagnostics behavior).
+- Prioritized next action:
+  - add a small backend unit for filter-cache state transitions (`error` -> successful redis op -> `lastError=null`) to prevent regression without requiring UI-level assertions.
+
+## Update (2026-03-08 - overview current not-yet-due assignment completion + reminder targeting)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - added `selectCurrentNotYetDueAssignmentsByLevel(...)` to pick the nearest not-yet-due assignment per level and normalize completion per student.
+  - dashboard `levelCompletion` now represents current active not-yet-due assignments only (per level), with `assignmentName`, `dueAt`, `daysUntilDue`, and reminder-target `uncompletedStudents`.
+  - added current-assignment metrics to `assignments` summary payload:
+    - `currentActiveLevels`
+    - `currentTargetedStudents`
+    - `currentCompletedStudents`
+    - `currentPendingStudents`
+    - `currentCompletionPercent`
+    - `currentDueSoonLevels`
+    - `currentDueSoonPendingStudents`
+  - kept assignment-overdue (`atRiskWeek`) and attendance-risk (`attendanceRiskWeek`) payloads available separately.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - overview cards and labels now focus on current not-yet-due assignment completion/pending reminder counts.
+  - assignment snapshot table now reports current active assignment metrics (targeted/completed/pending, due-soon counts, completion %).
+  - bar-chart detail buttons now open reminder lists for not-completed-yet students and include due/pending tooltip context.
+  - overview pending-student list now renders from `levelCompletion.uncompletedStudents` (current not-yet-due scope) instead of overdue-risk lines.
+  - reminder panel title/status copy updated for current assignment flow.
+  - reminder auto-fill now uses dashboard assignment name/due date first, then augments with template/preview link when available.
+  - overview line chart removed simulated completion and now plots actual completion progression with fallback to current summary percent.
+- Updated tests:
+  - [test/student-admin-dashboard-summary.spec.mjs](test/student-admin-dashboard-summary.spec.mjs):
+    - added coverage for `selectCurrentNotYetDueAssignmentsByLevel(...)` selection and filtering behavior.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - updated expectations for overview no-data copy and reminder panel copy aligned to current not-yet-due assignment workflow.
+- Verification:
+  - `node --test test/student-admin-dashboard-summary.spec.mjs` => `9` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `37` pass, `0` fail.
+  - `npm test` => `166` pass, `0` fail.
+- Coverage gap:
+  - no DB-backed integration test yet verifies `/api/admin/dashboard` end-to-end selection of “current not-yet-due assignment” across multiple assignment candidates per level.
+- Prioritized next action:
+  - add one admin-route integration test fixture for dashboard payload selection order (nearest due date + coverage tie-break), including due-soon counts and reminder target list.
+
+## Update (2026-03-08 - attendance records action-column compaction)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - replaced wide inline action buttons with a single per-row `Options` trigger (`.row-options-trigger`) to reduce row clutter.
+  - attendance records now show `Edit / Archive / Delete` in a compact dropdown (`.row-options-dropdown`) opened from the `Options` control.
+  - refined `Options` to a clear link-style affordance with pseudo-class feedback (`:hover`, `:active`, `:focus-visible`) and a caret pseudo-element.
+  - added explicit `box-sizing: border-box` in the `Options` trigger rule to satisfy box-model lint policy when sizing + padding/border are used together.
+  - attendance records list now includes a small sortable first column for `Student #` (`studentNumber`).
+  - added attendance column visibility toggles above the list; `Full Name` and `English Name` default to hidden.
+  - kept a single global text-size control in the header (right side) and removed duplicated per-page controls; size level persists globally until changed/reset.
+  - changed global text-size control container to `role="toolbar"` and moved `aria-label` usage onto valid interactive controls to satisfy HTML ARIA validation.
+  - attendance summary/metrics now keep tardy students counted as present while exposing separate tardy totals/percentages at class and per-student levels.
+  - dashboard at-risk list now uses assignment-overdue signal only (`outstandingWeek > 0`); attendance-only signals (`absences`, `late30Plus`) no longer independently classify students as at-risk.
+- Updated SOP doc:
+  - [AGENTS.md](AGENTS.md): added `Frontend A11y and Box Model SOP` requiring explicit `box-sizing: border-box` in mixed sizing/border/padding rules and restricting `aria-label` usage to valid elements/roles.
+- Updated tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - expanded attendance-admin regression coverage for new `Student #` first column, default hidden name columns, and global text-size persistence from the single header control.
+    - updated per-student attendance stats assertions to include `Present %` and `Tardy %` columns.
+    - added assertions that class-level attendance summary keeps tardy inside present counts and exposes separate `totalTardy` percentages on both attendance input and attendance admin pages.
+  - [test/student-admin-dashboard-summary.spec.mjs](test/student-admin-dashboard-summary.spec.mjs):
+    - added coverage that at-risk selection includes only students with overdue outstanding assignments and excludes attendance-only signals.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs` => `37` pass, `0` fail.
+  - `npm test` => `160` pass, `0` fail.
+  - `npx html-validate web-asset/admin/student-admin.html --rule 'aria-label-misuse:error'` => exit `0` (no violations).
+- Coverage gap:
+  - no screenshot/pixel diff assertions for button wrapping across viewport widths.
+- Prioritized next action:
+  - run full `npm test` before release/deploy batch to confirm no broader regressions.
+
 ## Update (2026-03-08 - studentNumber auto-allocation for create/import/queue-create)
 
 - Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
@@ -1195,6 +1390,53 @@ Result: `61` tests total, `61` pass, `0` fail.
   - square logo uploader with format validation (`svg/jpg/png/webp`) and max-side dimension check (`<= 650px`);
   - school name + bilingual VN/EN text blocks + motto/mission/values + address + phone;
   - seven extra textarea fields for public/private sites, web/social channels, business tax id, time format, and time zone.
+
+### Latest UI/Admin Update (2026-03-09)
+
+1. Overview assignment charts no longer disappear when there is no active assignment workload.
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - line chart now renders a Monday-to-today zero baseline when no current assignment activity exists;
+  - bar chart source now falls back in order:
+    1) `summary.levelCompletion` (backend),
+    2) template-derived rows (local assignment templates),
+    3) enrollment-only rows (show enrolled vs completed `0`).
+- This preserves chart/button visibility and avoids empty-state disappearance for operations dashboards.
+
+1. Overview level detail reminder form now auto-fills assignment + announcement link from backend current-assignment rows.
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - `openLevelDetailPanel()` + `autoPopulateHomeworkProgressForLevel()` now generate a volatile assignment announcement preview link when a level has dashboard-provided current assignment metadata but no local template.
+  - Assignment title and due date continue to auto-fill from current level data.
+- Added regression in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - `overview level detail autofills assignment and announcement link from current dashboard assignment`.
+
+1. Added explicit system wiring map document for maintainability and refactor planning.
+
+- New doc: [docs/sis-admin-wiring-map.ascii.txt](docs/sis-admin-wiring-map.ascii.txt)
+  - page-by-page frontend function -> backend route/subroutine mapping,
+  - IO + conditional flow branches (especially overview chart derivations),
+  - refactor target for canonical assignment schedule ownership,
+  - recommended mapping toolchain (Structurizr DSL, Mermaid, dependency-cruiser, OpenAPI).
+
+### Latest Test Run (2026-03-09)
+
+- Command: `node --test test/student-admin-ui.spec.mjs`
+- Result: pass (`41` passed, `0` failed)
+- Command: `npm test`
+- Result: pass (`172` passed, `0` failed)
+
+### Residual Coverage Gaps (Post-2026-03-09)
+
+1. No backend integration test yet proving dashboard `levelCompletion` emits canonical announcement-link metadata (currently UI synthesizes volatile links when needed).
+2. No end-to-end browser test for reminder-send flow after auto-filled volatile links across restart cycles.
+3. Assignment template persistence is still localStorage-based; API-backed canonicalization remains a refactor item.
+
+### Prioritized Next Actions (Post-2026-03-09)
+
+1. Add backend-owned assignment-template CRUD + dashboard-enriched `currentAssignmentMeta` to reduce frontend fallback branching.
+2. Add integration tests for overview branches (backend rows / template fallback / enrollment-only fallback) at API layer.
+3. Add Playwright smoke test for: click level button -> autofilled assignment/link -> send reminder preview/queue.
 
 ### Latest Test Run (2026-03-04)
 

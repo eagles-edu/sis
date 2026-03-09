@@ -38,6 +38,15 @@ Run this checklist at the start of every session:
 4. Never assume auth model details: inspect route code first.
 5. Keep all edits ASCII unless target files already require Unicode.
 
+## Frontend A11y and Box Model SOP
+
+1. When a CSS rule uses `width`/`height` (or min/max variants) together with `padding` and/or `border`, include `box-sizing: border-box;` in that same rule block.
+2. Use `aria-label` only on valid elements:
+   - interactive elements (for example `button`, `a[href]`, form controls),
+   - landmarks/labelable elements,
+   - or elements with explicit ARIA widget roles (for example `role="toolbar"`).
+3. For non-interactive containers, prefer visible text labels and apply ARIA naming to the actual clickable controls, or add an appropriate role before using `aria-label`.
+
 ## Authentication Contract (Critical)
 
 Admin API auth is cookie-session based, not bearer-token based.

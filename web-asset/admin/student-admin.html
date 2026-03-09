@@ -96,6 +96,7 @@
   --btn-refresh-bg: #e7f5ec;
   --btn-refresh-border: #6cad85;
   --btn-refresh-text: #1f6b3a;
+  --sis-global-text-zoom: 1;
     }
     * { box-sizing: border-box; }
     body {
@@ -103,6 +104,16 @@
       font-family: var(--font-base);
       background: linear-gradient(45deg, var(--background-color) 0%, #8a94a8 100%);
       color: var(--ink);
+    }
+    .app-sidebar,
+    #authPanel,
+    #appPageHeader,
+    #topControlsPanel,
+    #studentListPanel,
+    .page-section,
+    #status,
+    #parentQueueModal .queue-modal-card {
+      zoom: var(--sis-global-text-zoom, 1);
     }
     .wrap {
       max-width: 1440px;
@@ -776,6 +787,13 @@
       align-items: center;
       gap: 10px;
     }
+    .app-header-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
     .app-brand-logo-wrap {
       align-items: center;
       background: #fff;
@@ -815,6 +833,26 @@
       text-overflow: ellipsis;
       max-width: 100%;
       text-transform: uppercase;
+    }
+    .text-zoom-controls {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .text-zoom-controls button {
+      inline-size: auto;
+      min-width: 44px;
+      padding: 6px 8px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .text-zoom-controls .zoom-label {
+      font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+      font-size: 11px;
+      color: #244165;
     }
     .menu-groups {
       display: grid;
@@ -1084,6 +1122,57 @@
       inline-size: auto;
       min-width: 140px;
     }
+    .table-column-controls,
+    .attendance-column-controls {
+      margin: 6px 0 10px;
+      padding: 8px;
+      border: 1px solid #d8e2f1;
+      border-radius: var(--radius-2);
+      background: #f8fbff;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+    }
+    .table-column-controls .small,
+    .attendance-column-controls .small {
+      margin: 0;
+      color: #39557c;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 11px;
+    }
+    .table-column-controls label,
+    .attendance-column-controls label {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #203656;
+      cursor: pointer;
+    }
+    .table-column-controls input[type="checkbox"],
+    .attendance-column-controls input[type="checkbox"] {
+      width: auto;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      inline-size: auto;
+      accent-color: var(--tertiary-color);
+    }
+    .table-col-student-number,
+    .attendance-col-student-number {
+      width: 78px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .attendance-col-hidden {
+      display: none !important;
+    }
     th[data-table-sort][data-sort-field] {
       cursor: pointer;
       user-select: none;
@@ -1105,6 +1194,102 @@
     }
     th.sort-active-asc::after { content: "▲"; }
     th.sort-active-desc::after { content: "▼"; }
+    .table-row-options-cell {
+      width: 1%;
+      white-space: nowrap;
+      padding: 0;
+      position: relative;
+      vertical-align: middle;
+    }
+    .row-options-menu {
+      display: block;
+      height: 100%;
+      position: relative;
+  }
+    .row-options-trigger {
+      align-items: center;
+      background: var(--btn-edit-text);
+      border-inline-start: 1px solid #e1e8f4;
+      border-radius: var(--radius-2);
+      box-sizing: border-box;
+      color: var(--secondary-color);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 700;
+      height: 100%; 
+      justify-content: center;
+      letter-spacing: 0.01em;
+      list-style: none;
+      margin:  0 0 3px 0 ;
+      min-height: 40px;
+      min-width: 84px;
+      padding: 6px 10px;
+      position: relative;
+      text-decoration: none;
+      text-decoration-color: #2d5ea6;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 2px;
+      transition: color 140ms ease, background-color 140ms ease, text-decoration-color 140ms ease;
+      user-select: none;
+  }
+    .row-options-trigger::-webkit-details-marker {
+      display: none;
+    }
+    .row-options-trigger::after {
+      content: "▾";
+      margin-inline-start: 5px;
+      font-size: 10px;
+      transform: translateY(1px);
+      opacity: 0.82;
+      transition: transform 140ms ease, opacity 140ms ease;
+    }
+    .row-options-trigger:hover {
+      color: var(--link-hover);
+      background: #eef4ff;
+      border: 1px solid var(--tertiary-color);
+      text-decoration-color: currentColor;
+    }
+    .row-options-trigger:active {
+      color: var(--link-active);
+      background: #e3ecff;
+      text-decoration-color: currentColor;
+    }
+    .row-options-trigger:focus-visible {
+      outline: 2px solid #7ea4df;
+      outline-offset: -1px;
+      border-radius: var(--radius-2);
+    }
+    .row-options-menu[open] > .row-options-trigger {
+      background: #e8f1ff;
+      color: var(--link-hover);
+      text-decoration-color: currentColor;
+    }
+    .row-options-menu[open] > .row-options-trigger::after {
+      transform: rotate(180deg);
+      opacity: 1;
+    }
+    .row-options-dropdown {
+      background: transparent;
+      /*border: 1px solid #b7c7de;*/
+      border-radius: var(--radius-2);
+      /*box-shadow: 0 10px 22px rgba(18, 39, 74, 0.2);*/
+      display: grid;
+      gap: 4px;
+      inset-block-start: calc(100% - 4px);
+      inset-inline-end: 6px;
+      min-width: 116px;
+      padding: 6px;
+      position: absolute;
+      z-index: 12;
+  }
+    .row-options-dropdown button {
+      inline-size: 100%;
+      min-width: 0;
+      white-space: nowrap;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
     .section-label {
       margin: 8px 0 4px;
       font-size: 12px;
@@ -2032,7 +2217,12 @@
         padding: 8px 10px 8px 60px;
       }
       .app-brand-strip {
+        grid-template-columns: auto minmax(0, 1fr);
         gap: 8px;
+        row-gap: 6px;
+      }
+      .app-header-actions {
+        grid-column: 1 / -1;
       }
       .app-brand-logo-wrap {
         width: 38px;
@@ -2044,6 +2234,9 @@
       .menu-toggle-btn {
         min-inline-size: clamp(74px, 24vw, 102px);
         padding-inline: 8px;
+      }
+      .text-zoom-controls {
+        justify-content: flex-start;
       }
       .floating-menu-btn {
         inline-size: 40px;
@@ -2244,7 +2437,16 @@
                 <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
               </div>
               <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
-              <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">Hide Menu</button>
+              <div class="app-header-actions">
+                <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">Hide Menu</button>
+                <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
+                  <span class="small">Global Text</span>
+                  <button id="globalTextZoomDownBtn" type="button" data-text-zoom-action="decrease" aria-label="Decrease global text size">A-</button>
+                  <button id="globalTextZoomUpBtn" type="button" data-text-zoom-action="increase" aria-label="Increase global text size">A+</button>
+                  <button id="globalTextZoomResetBtn" type="button" data-text-zoom-action="reset" aria-label="Reset global text size">Reset</button>
+                  <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="panel" id="topControlsPanel">
@@ -2392,34 +2594,35 @@
                       <div class="stat-card"><div class="stat-label">Today Attendance</div><div class="stat-value" id="ovTodayAttendance">0</div></div>
                       <div class="stat-card"><div class="stat-label">Today Absences</div><div class="stat-value" id="ovTodayAbsences">0</div></div>
                       <div class="stat-card"><div class="stat-label">Tardy 10+ / 30+</div><div class="stat-value" id="ovTardyRates">0% / 0%</div></div>
-                      <div class="stat-card"><div class="stat-label">At-Risk This Week</div><div class="stat-value" id="ovAtRiskCount">0</div></div>
-                      <div class="stat-card"><div class="stat-label">Assignments Outstanding</div><div class="stat-value" id="ovOutstanding">0</div></div>
-                      <div class="stat-card"><div class="stat-label">Outstanding YTD</div><div class="stat-value" id="ovOutstandingYtd">0</div></div>
+                      <div class="stat-card"><div class="stat-label">Pending Reminders</div><div class="stat-value" id="ovAtRiskCount">0</div></div>
+                      <div class="stat-card"><div class="stat-label">Current Completed</div><div class="stat-value" id="ovOutstanding">0</div></div>
+                      <div class="stat-card"><div class="stat-label">Current Completion %</div><div class="stat-value" id="ovOutstandingYtd">0%</div></div>
                     </div>
                   </section>
                   <section class="overview-group">
-                    <h3>Assignment vs Completion (Line)</h3>
+                    <h3>Current Assignment Completion (Line)</h3>
                     <div class="chart-shell">
                       <svg id="overviewLineChart" class="chart-svg" viewBox="0 0 900 320" role="img">
-                        <title>Weekly cumulative assignment completion percent (Mon to today)</title>
+                        <title>Current assignment completion percent (Mon to today)</title>
                       </svg>
                       <div class="chart-legend">
-                        <span><span class="legend-dot completed"></span>Cumulative completion % (Mon to today)</span>
+                        <span><span class="legend-dot completed"></span>Cumulative completion % for active not-yet-due assignments</span>
                       </div>
                     </div>
                   </section>
                   <section class="overview-group">
-                    <h3>Students vs Completions (Bar by Level)</h3>
+                    <h3>Current Assignment Completion (Bar by Level)</h3>
                     <div class="chart-shell bar-chart-shell">
                       <svg id="overviewBarChart" class="chart-svg" viewBox="0 0 780 360" role="img">
-                        <title>Students versus completions by level</title>
+                        <title>Students versus current assignment completions by level</title>
                       </svg>
                       <div class="bar-detail-actions" id="overviewBarDetailActions"></div>
-                      <p class="small">Detail buttons open uncompleted student lists for reminders.</p>
+                      <p class="small">Tracks class assignment records with due dates; standalone auto-imported exercise rows (due = submitted) are excluded so unassigned practice does not create fake pending assignments.</p>
+                      <p class="small">Detail buttons open not-completed-yet student lists for reminders before due date.</p>
                     </div>
                   </section>
                   <section class="overview-group level-detail-panel" id="levelDetailPanel">
-                    <h3 id="levelDetailTitle">Homework progress</h3>
+                    <h3 id="levelDetailTitle">Current assignment progress</h3>
                     <div class="row">
                       <div class="col-4"><label>Assignment title</label><input id="levelReminderAssignment" type="text" placeholder="Homework title"></div>
                       <div class="col-4"><label>Assignment link</label><input id="levelReminderLink" type="url" placeholder="https://..."></div>
@@ -2443,7 +2646,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="levelReminderClearBtn" type="button">Clear Form</button>
                       <button id="levelDetailCloseBtn" type="button">Close Detail</button>
                     </div>
-                    <p class="small" id="levelDetailStatus">Choose a level to prepare reminders.</p>
+                    <p class="small" id="levelDetailStatus">Choose a level to prepare reminders for not-completed-yet students.</p>
                   </section>
                   <section class="overview-group">
                     <h3>Enrolled vs Attendance (Today)</h3>
@@ -2455,15 +2658,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </div>
                   </section>
                   <section class="overview-group">
-                    <h3>Assignment Completion Snapshot</h3>
+                    <h3>Current Assignment Snapshot</h3>
                     <table>
                       <thead><tr><th scope="col">Metric</th><th scope="col">Count</th></tr></thead>
                       <tbody id="overviewAssignmentRows"></tbody>
                     </table>
                   </section>
                   <section class="overview-group full">
-                    <h3>At-Risk Students (Week)</h3>
-                    <div class="mini-list" id="overviewRiskStudents">No at-risk students flagged.</div>
+                    <h3>Pending Students (Current Not-Yet-Due)</h3>
+                    <div class="mini-list" id="overviewRiskStudents">No pending students for current not-yet-due assignments.</div>
                   </section>
                   <section class="overview-group full hidden" id="overviewIncomingExerciseSection">
                     <h3>Anonymous Exercise Submissions</h3>
@@ -2593,8 +2796,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <section class="attendance-student-panel">
                     <h3 id="attendanceAdminSelectedLevelLabel">Per-Student Attendance Stats</h3>
                     <p class="small" id="attendanceAdminSummary">Select a class level to view stats.</p>
+                    <p class="small" id="attendanceAdminRiskSummary">Select a class level to view attendance risk signals.</p>
+                    <div class="mini-list" id="attendanceAdminRiskStudents">Select a class level to view attendance risk signals.</div>
                     <table>
-                      <thead><tr><th scope="col">Student</th><th scope="col">Present</th><th scope="col">Absent</th><th scope="col">Tardy10</th><th scope="col">Tardy30</th></tr></thead>
+                      <thead><tr><th scope="col">Student</th><th scope="col">Present</th><th scope="col">Absent</th><th scope="col">Tardy10</th><th scope="col">Tardy30</th><th scope="col">Present %</th><th scope="col">Tardy %</th></tr></thead>
                       <tbody id="attendanceAdminRows"></tbody>
                     </table>
                   </section>
@@ -2604,6 +2809,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="attendanceSortField">Sort Attendance Data By</label>
                     <select id="attendanceSortField">
+                      <option value="studentNumber">#</option>
+                      <option value="eaglesId">Eagles ID</option>
                       <option value="fullName">Full Name</option>
                       <option value="attendanceDate">Date</option>
                       <option value="className">Class</option>
@@ -2654,9 +2861,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <button id="attendancePrintPdfBtn" type="button">Print PDF</button>
                   </div>
                 </div>
+                <div class="attendance-column-controls" id="attendanceColumnControls">
+                  <p class="small">Columns</p>
+                  <label><input type="checkbox" data-attendance-col-toggle="studentNumber" checked>#</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="fullName">Full Name</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="englishName">English Name</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="attendanceDate" checked>Date</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="className" checked>Class</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="quarter" checked>Quarter</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="status" checked>Status</label>
+                  <label><input type="checkbox" data-attendance-col-toggle="comments" checked>Comments</label>
+                </div>
                 <p class="small admin-table-summary" id="attendanceDataSummary">Showing attendance records for all students.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="attendance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="attendance" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="attendance" data-sort-field="attendanceDate" tabindex="0" aria-sort="none">Date</th><th scope="col" data-table-sort="attendance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-table-sort="attendance" data-sort-field="quarter" tabindex="0" aria-sort="none">Quarter</th><th scope="col" data-table-sort="attendance" data-sort-field="status" tabindex="0" aria-sort="none">Status</th><th scope="col">Comments</th><th scope="col">Action</th></tr></thead>
+                  <thead><tr><th scope="col" class="table-col-student-number" data-attendance-col="studentNumber" data-table-sort="attendance" data-sort-field="studentNumber" tabindex="0" aria-sort="none">#</th><th scope="col" data-attendance-col="eaglesId" data-table-sort="attendance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-attendance-col="fullName" data-table-sort="attendance" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col" data-attendance-col="englishName">English Name</th><th scope="col" data-attendance-col="attendanceDate" data-table-sort="attendance" data-sort-field="attendanceDate" tabindex="0" aria-sort="none">Date</th><th scope="col" data-attendance-col="className" data-table-sort="attendance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-attendance-col="quarter" data-table-sort="attendance" data-sort-field="quarter" tabindex="0" aria-sort="none">Quarter</th><th scope="col" data-attendance-col="status" data-table-sort="attendance" data-sort-field="status" tabindex="0" aria-sort="none">Status</th><th scope="col" data-attendance-col="comments">Comments</th><th scope="col">Action</th></tr></thead>
                   <tbody id="attendanceRows"></tbody>
                 </table>
               </div>
@@ -2765,9 +2984,20 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <button id="assignmentPrintPdfBtn" type="button">Print PDF</button>
                   </div>
                 </div>
+                <div class="table-column-controls" id="assignmentColumnControls">
+                  <p class="small">Columns</p>
+                  <label><input type="checkbox" data-assignments-col-toggle="studentNumber" checked>#</label>
+                  <label><input type="checkbox" data-assignments-col-toggle="assignmentTitle" checked>Assignment</label>
+                  <label><input type="checkbox" data-assignments-col-toggle="level" checked>Level</label>
+                  <label><input type="checkbox" data-assignments-col-toggle="student" checked>Student</label>
+                  <label><input type="checkbox" data-assignments-col-toggle="assignedAt" checked>Assigned</label>
+                  <label><input type="checkbox" data-assignments-col-toggle="dueAt" checked>Due</label>
+                  <label><input type="checkbox" data-assignments-col-toggle="items" checked>Items</label>
+                  <label><input type="checkbox" data-assignments-col-toggle="completion" checked>Status</label>
+                </div>
                 <p class="small admin-table-summary" id="assignmentDataSummary">Showing assignment submissions.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="assignments" data-sort-field="assignmentTitle" tabindex="0" aria-sort="none">Assignment</th><th scope="col" data-table-sort="assignments" data-sort-field="level" tabindex="0" aria-sort="none">Level</th><th scope="col" data-table-sort="assignments" data-sort-field="student" tabindex="0" aria-sort="none">Student</th><th scope="col" data-table-sort="assignments" data-sort-field="assignedAt" tabindex="0" aria-sort="none">Assigned</th><th scope="col" data-table-sort="assignments" data-sort-field="dueAt" tabindex="0" aria-sort="none">Due</th><th scope="col">Items</th><th scope="col" data-table-sort="assignments" data-sort-field="completion" tabindex="0" aria-sort="none">Status</th><th scope="col">Action</th></tr></thead>
+                  <thead><tr><th scope="col" class="table-col-student-number" data-assignments-col="studentNumber">#</th><th scope="col" data-assignments-col="assignmentTitle" data-table-sort="assignments" data-sort-field="assignmentTitle" tabindex="0" aria-sort="none">Assignment</th><th scope="col" data-assignments-col="level" data-table-sort="assignments" data-sort-field="level" tabindex="0" aria-sort="none">Level</th><th scope="col" data-assignments-col="student" data-table-sort="assignments" data-sort-field="student" tabindex="0" aria-sort="none">Student</th><th scope="col" data-assignments-col="assignedAt" data-table-sort="assignments" data-sort-field="assignedAt" tabindex="0" aria-sort="none">Assigned</th><th scope="col" data-assignments-col="dueAt" data-table-sort="assignments" data-sort-field="dueAt" tabindex="0" aria-sort="none">Due</th><th scope="col" data-assignments-col="items">Items</th><th scope="col" data-assignments-col="completion" data-table-sort="assignments" data-sort-field="completion" tabindex="0" aria-sort="none">Status</th><th scope="col">Action</th></tr></thead>
                   <tbody id="assignmentTemplateRows"></tbody>
                 </table>
               </div>
@@ -2947,6 +3177,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="performanceSortField">Sort Performance Data By</label>
                     <select id="performanceSortField">
+                      <option value="studentNumber">#</option>
                       <option value="fullName">Full Name</option>
                       <option value="eaglesId">Eagles ID</option>
                       <option value="generatedAt">Generated Date</option>
@@ -2999,10 +3230,25 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <button id="performancePrintPdfBtn" type="button">Print PDF</button>
                   </div>
                 </div>
+                <div class="table-column-controls" id="performanceColumnControls">
+                  <p class="small">Columns</p>
+                  <label><input type="checkbox" data-performance-col-toggle="studentNumber" checked>#</label>
+                  <label><input type="checkbox" data-performance-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input type="checkbox" data-performance-col-toggle="fullName">Full Name</label>
+                  <label><input type="checkbox" data-performance-col-toggle="englishName">English Name</label>
+                  <label><input type="checkbox" data-performance-col-toggle="generatedAt" checked>Generated</label>
+                  <label><input type="checkbox" data-performance-col-toggle="className" checked>Class</label>
+                  <label><input type="checkbox" data-performance-col-toggle="quarter" checked>Quarter</label>
+                  <label><input type="checkbox" data-performance-col-toggle="homeworkCompletionRate" checked>HW %</label>
+                  <label><input type="checkbox" data-performance-col-toggle="homeworkOnTimeRate" checked>On-Time %</label>
+                  <label><input type="checkbox" data-performance-col-toggle="behaviorScore" checked>Behavior</label>
+                  <label><input type="checkbox" data-performance-col-toggle="participationScore" checked>Participation</label>
+                  <label><input type="checkbox" data-performance-col-toggle="inClassScore" checked>In Class</label>
+                </div>
                 <p class="small admin-table-summary" id="performanceDataSummary">Showing performance records.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="performance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="performance" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-table-sort="performance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col">Quarter</th><th scope="col" data-table-sort="performance" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-table-sort="performance" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-table-sort="performance" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
-                  <tbody id="pt_reportRows"><tr><td colspan="12">Select a student to load performance data.</td></tr></tbody>
+                  <thead><tr><th scope="col" class="table-col-student-number" data-performance-col="studentNumber" data-table-sort="performance" data-sort-field="studentNumber" tabindex="0" aria-sort="none">#</th><th scope="col" data-performance-col="eaglesId" data-table-sort="performance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-performance-col="fullName" data-table-sort="performance" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col" data-performance-col="englishName">English Name</th><th scope="col" data-performance-col="generatedAt" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-performance-col="className" data-table-sort="performance" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-performance-col="quarter">Quarter</th><th scope="col" data-performance-col="homeworkCompletionRate" data-table-sort="performance" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-performance-col="homeworkOnTimeRate" data-table-sort="performance" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-performance-col="behaviorScore" data-table-sort="performance" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col" data-performance-col="participationScore">Participation</th><th scope="col" data-performance-col="inClassScore">In Class</th><th scope="col">Action</th></tr></thead>
+                  <tbody id="pt_reportRows"><tr><td colspan="13">Select a student to load performance data.</td></tr></tbody>
                 </table>
                 <section class="hidden" id="performanceStagedSection">
                   <h3>Staged Performance Reports</h3>
@@ -3094,6 +3340,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="gradeSortField">Sort Grades Data By</label>
                     <select id="gradeSortField">
+                      <option value="studentNumber">#</option>
                       <option value="fullName">Full Name</option>
                       <option value="eaglesId">Eagles ID</option>
                       <option value="dueAt">Due Date</option>
@@ -3145,9 +3392,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <button id="gradePrintPdfBtn" type="button">Print PDF</button>
                   </div>
                 </div>
+                <div class="table-column-controls" id="gradeColumnControls">
+                  <p class="small">Columns</p>
+                  <label><input type="checkbox" data-grades-col-toggle="studentNumber" checked>#</label>
+                  <label><input type="checkbox" data-grades-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input type="checkbox" data-grades-col-toggle="fullName">Full Name</label>
+                  <label><input type="checkbox" data-grades-col-toggle="englishName">English Name</label>
+                  <label><input type="checkbox" data-grades-col-toggle="dueAt" checked>Due</label>
+                  <label><input type="checkbox" data-grades-col-toggle="className" checked>Class</label>
+                  <label><input type="checkbox" data-grades-col-toggle="assignmentName" checked>Assignment</label>
+                  <label><input type="checkbox" data-grades-col-toggle="score" checked>Score</label>
+                  <label><input type="checkbox" data-grades-col-toggle="homeworkCompleted" checked>HW</label>
+                  <label><input type="checkbox" data-grades-col-toggle="behaviorScore" checked>Behavior</label>
+                  <label><input type="checkbox" data-grades-col-toggle="participationScore" checked>Participation</label>
+                  <label><input type="checkbox" data-grades-col-toggle="inClassScore" checked>In Class</label>
+                </div>
                 <p class="small admin-table-summary" id="gradeDataSummary">Showing grade entries.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="grades" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="grades" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="grades" data-sort-field="dueAt" tabindex="0" aria-sort="none">Due</th><th scope="col" data-table-sort="grades" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-table-sort="grades" data-sort-field="assignmentName" tabindex="0" aria-sort="none">Assignment</th><th scope="col" data-table-sort="grades" data-sort-field="score" tabindex="0" aria-sort="none">Score</th><th scope="col">HW</th><th scope="col">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
+                  <thead><tr><th scope="col" class="table-col-student-number" data-grades-col="studentNumber" data-table-sort="grades" data-sort-field="studentNumber" tabindex="0" aria-sort="none">#</th><th scope="col" data-grades-col="eaglesId" data-table-sort="grades" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-grades-col="fullName" data-table-sort="grades" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col" data-grades-col="englishName">English Name</th><th scope="col" data-grades-col="dueAt" data-table-sort="grades" data-sort-field="dueAt" tabindex="0" aria-sort="none">Due</th><th scope="col" data-grades-col="className" data-table-sort="grades" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-grades-col="assignmentName" data-table-sort="grades" data-sort-field="assignmentName" tabindex="0" aria-sort="none">Assignment</th><th scope="col" data-grades-col="score" data-table-sort="grades" data-sort-field="score" tabindex="0" aria-sort="none">Score</th><th scope="col" data-grades-col="homeworkCompleted">HW</th><th scope="col" data-grades-col="behaviorScore">Behavior</th><th scope="col" data-grades-col="participationScore">Participation</th><th scope="col" data-grades-col="inClassScore">In Class</th><th scope="col">Action</th></tr></thead>
                   <tbody id="gradeRows"></tbody>
                 </table>
               </div>
@@ -3179,6 +3441,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="reportSortField">Sort Performance Data By</label>
                     <select id="reportSortField">
+                      <option value="studentNumber">#</option>
                       <option value="fullName">Full Name</option>
                       <option value="eaglesId">Eagles ID</option>
                       <option value="generatedAt">Generated Date</option>
@@ -3231,9 +3494,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <button id="reportPrintPdfBtn" type="button">Print PDF</button>
                   </div>
                 </div>
+                <div class="table-column-controls" id="reportColumnControls">
+                  <p class="small">Columns</p>
+                  <label><input type="checkbox" data-reports-col-toggle="studentNumber" checked>#</label>
+                  <label><input type="checkbox" data-reports-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input type="checkbox" data-reports-col-toggle="fullName">Full Name</label>
+                  <label><input type="checkbox" data-reports-col-toggle="englishName">English Name</label>
+                  <label><input type="checkbox" data-reports-col-toggle="generatedAt" checked>Generated</label>
+                  <label><input type="checkbox" data-reports-col-toggle="className" checked>Class</label>
+                  <label><input type="checkbox" data-reports-col-toggle="quarter" checked>Quarter</label>
+                  <label><input type="checkbox" data-reports-col-toggle="homeworkCompletionRate" checked>HW %</label>
+                  <label><input type="checkbox" data-reports-col-toggle="homeworkOnTimeRate" checked>On-Time %</label>
+                  <label><input type="checkbox" data-reports-col-toggle="behaviorScore" checked>Behavior</label>
+                  <label><input type="checkbox" data-reports-col-toggle="participationScore" checked>Participation</label>
+                  <label><input type="checkbox" data-reports-col-toggle="inClassScore" checked>In Class</label>
+                </div>
                 <p class="small admin-table-summary" id="reportDataSummary">Showing latest performance reports.</p>
                 <table>
-                  <thead><tr><th scope="col" data-table-sort="reports" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-table-sort="reports" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col">English Name</th><th scope="col" data-table-sort="reports" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-table-sort="reports" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col">Quarter</th><th scope="col" data-table-sort="reports" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-table-sort="reports" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-table-sort="reports" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col">Participation</th><th scope="col">In Class</th><th scope="col">Action</th></tr></thead>
+                  <thead><tr><th scope="col" class="table-col-student-number" data-reports-col="studentNumber" data-table-sort="reports" data-sort-field="studentNumber" tabindex="0" aria-sort="none">#</th><th scope="col" data-reports-col="eaglesId" data-table-sort="reports" data-sort-field="eaglesId" tabindex="0" aria-sort="none">Eagles ID</th><th scope="col" data-reports-col="fullName" data-table-sort="reports" data-sort-field="fullName" tabindex="0" aria-sort="none">Full Name</th><th scope="col" data-reports-col="englishName">English Name</th><th scope="col" data-reports-col="generatedAt" data-table-sort="reports" data-sort-field="generatedAt" tabindex="0" aria-sort="none">Generated</th><th scope="col" data-reports-col="className" data-table-sort="reports" data-sort-field="className" tabindex="0" aria-sort="none">Class</th><th scope="col" data-reports-col="quarter">Quarter</th><th scope="col" data-reports-col="homeworkCompletionRate" data-table-sort="reports" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">HW %</th><th scope="col" data-reports-col="homeworkOnTimeRate" data-table-sort="reports" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">On-Time %</th><th scope="col" data-reports-col="behaviorScore" data-table-sort="reports" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">Behavior</th><th scope="col" data-reports-col="participationScore">Participation</th><th scope="col" data-reports-col="inClassScore">In Class</th><th scope="col">Action</th></tr></thead>
                   <tbody id="reportRows"></tbody>
                 </table>
                 <p class="small">Planned analytics: system statistics, school statistics, academic statistics.</p>
@@ -3518,6 +3796,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       students: [],
       dashboardStudents: [],
       dashboardSummary: null,
+      dashboardLevelCompletionRows: [],
       systemLevels: [],
       activeLevelDetail: null,
       runtimeHealth: null,
@@ -3540,6 +3819,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         busy: false,
       },
       hubPollTimer: null,
+      globalTextZoomPercent: 100,
       currentStudent: null,
       profileFormConfig: null,
       profileActiveTab: "profile",
@@ -3604,6 +3884,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         grades: [],
         reports: [],
       },
+      tableColumnVisibility: null,
+      attendanceColumnVisibility: null,
       tableSort: {
         attendance: { field: "attendanceDate", dir: "desc" },
         assignments: { field: "dueAt", dir: "desc" },
@@ -4072,10 +4354,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       const filterBackend = normalizeLower(filterCache.backend)
       let filterState = "pending"
-      if (normalizeText(filterCache.lastError)) filterState = "error"
-      else if (filterBackend === "redis") filterState = "ok"
-      else if (filterBackend === "memory") filterState = "warn"
-      else if (filterBackend) filterState = "warn"
+      const hasFilterError = Boolean(normalizeText(filterCache.lastError))
+      if (filterBackend === "redis") {
+        // Keep redis cache visible as non-fatal even if an old transient error string exists.
+        filterState = hasFilterError ? "warn" : "ok"
+      } else if (filterBackend === "memory") {
+        filterState = hasFilterError ? "error" : "warn"
+      } else if (filterBackend) {
+        filterState = hasFilterError ? "error" : "warn"
+      } else if (hasFilterError) {
+        filterState = "error"
+      }
       checks.push({
         key: "filterCache",
         label: "Filter Cache",
@@ -4115,9 +4404,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       const pipelineFlags = [runtimeHealth.lastStoreOk, runtimeHealth.lastIntakeStoreOk, runtimeHealth.lastSendOk]
       const decidedFlags = pipelineFlags.filter((flag) => flag === true || flag === false)
-      let pipelineState = "warn"
-      if (decidedFlags.length && decidedFlags.includes(false)) pipelineState = "error"
+      let pipelineState = "pending"
+      if (decidedFlags.includes(false)) pipelineState = "error"
       else if (decidedFlags.length && decidedFlags.every((flag) => flag === true)) pipelineState = "ok"
+      else if (decidedFlags.length) pipelineState = "warn"
       const describeFlag = (value) => (value === true ? "ok" : value === false ? "error" : "n/a")
       checks.push({
         key: "pipeline",
@@ -4640,6 +4930,88 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const DESKTOP_MENU_COLLAPSED_STORAGE_KEY = "sis.admin.menuCollapsed.desktop"
     const TABLE_ARCHIVE_STORAGE_KEY = "sis.admin.tableArchiveIndex.v1"
     const STUDENT_ID_SEARCH_STORAGE_KEY = "sis.admin.eaglesIdSearchHistory.v1"
+    const ATTENDANCE_COLUMN_VISIBILITY_STORAGE_KEY = "sis.admin.attendance.columnVisibility.v1"
+    const ASSIGNMENT_COLUMN_VISIBILITY_STORAGE_KEY = "sis.admin.assignments.columnVisibility.v1"
+    const PERFORMANCE_COLUMN_VISIBILITY_STORAGE_KEY = "sis.admin.performance.columnVisibility.v1"
+    const GRADE_COLUMN_VISIBILITY_STORAGE_KEY = "sis.admin.grades.columnVisibility.v1"
+    const REPORT_COLUMN_VISIBILITY_STORAGE_KEY = "sis.admin.reports.columnVisibility.v1"
+    const GLOBAL_TEXT_ZOOM_STORAGE_KEY = "sis.admin.globalTextZoomPercent.v1"
+    const TEXT_ZOOM_MIN = 80
+    const TEXT_ZOOM_MAX = 140
+    const TEXT_ZOOM_STEP = 5
+    const TEXT_ZOOM_DEFAULT = 100
+    const TABLE_COLUMN_VISIBILITY_STORAGE_KEYS = Object.freeze({
+      attendance: ATTENDANCE_COLUMN_VISIBILITY_STORAGE_KEY,
+      assignments: ASSIGNMENT_COLUMN_VISIBILITY_STORAGE_KEY,
+      performance: PERFORMANCE_COLUMN_VISIBILITY_STORAGE_KEY,
+      grades: GRADE_COLUMN_VISIBILITY_STORAGE_KEY,
+      reports: REPORT_COLUMN_VISIBILITY_STORAGE_KEY,
+    })
+    const TABLE_COLUMN_DEFAULT_VISIBILITY = Object.freeze({
+      attendance: Object.freeze({
+        studentNumber: true,
+        eaglesId: true,
+        fullName: false,
+        englishName: false,
+        attendanceDate: true,
+        className: true,
+        quarter: true,
+        status: true,
+        comments: true,
+      }),
+      assignments: Object.freeze({
+        studentNumber: true,
+        assignmentTitle: true,
+        level: true,
+        student: true,
+        assignedAt: true,
+        dueAt: true,
+        items: true,
+        completion: true,
+      }),
+      performance: Object.freeze({
+        studentNumber: true,
+        eaglesId: true,
+        fullName: false,
+        englishName: false,
+        generatedAt: true,
+        className: true,
+        quarter: true,
+        homeworkCompletionRate: true,
+        homeworkOnTimeRate: true,
+        behaviorScore: true,
+        participationScore: true,
+        inClassScore: true,
+      }),
+      grades: Object.freeze({
+        studentNumber: true,
+        eaglesId: true,
+        fullName: false,
+        englishName: false,
+        dueAt: true,
+        className: true,
+        assignmentName: true,
+        score: true,
+        homeworkCompleted: true,
+        behaviorScore: true,
+        participationScore: true,
+        inClassScore: true,
+      }),
+      reports: Object.freeze({
+        studentNumber: true,
+        eaglesId: true,
+        fullName: false,
+        englishName: false,
+        generatedAt: true,
+        className: true,
+        quarter: true,
+        homeworkCompletionRate: true,
+        homeworkOnTimeRate: true,
+        behaviorScore: true,
+        participationScore: true,
+        inClassScore: true,
+      }),
+    })
     const STUDENT_ID_SEARCH_PATTERN = /^(?:[a-z]{1,10}\d{3}|\d{1,12})$/
     const DATA_TABLE_KEYS = ["attendance", "assignments", "performance", "grades", "reports"]
     const TABLE_KEY_TO_PAGE_SLUG = {
@@ -4802,6 +5174,209 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         void error
       }
       return normalized
+    }
+
+    function tableColumnVisibilityDefaults(tableKey = "") {
+      const defaults = TABLE_COLUMN_DEFAULT_VISIBILITY[normalizeText(tableKey)] || {}
+      return defaults && typeof defaults === "object" ? defaults : {}
+    }
+
+    function normalizeTableColumnVisibility(tableKey = "", source = null) {
+      const defaults = tableColumnVisibilityDefaults(tableKey)
+      const input = source && typeof source === "object" ? source : {}
+      const normalized = { ...defaults }
+      Object.keys(defaults).forEach((columnKey) => {
+        if (!Object.prototype.hasOwnProperty.call(input, columnKey)) return
+        normalized[columnKey] = Boolean(input[columnKey])
+      })
+      return normalized
+    }
+
+    function loadTableColumnVisibilityFromStorage(tableKey = "") {
+      const storageKey = TABLE_COLUMN_VISIBILITY_STORAGE_KEYS[normalizeText(tableKey)]
+      if (!storageKey) return normalizeTableColumnVisibility(tableKey)
+      let stored = ""
+      try {
+        stored = window.localStorage.getItem(storageKey) || ""
+      } catch (error) {
+        void error
+      }
+      if (!stored) return normalizeTableColumnVisibility(tableKey)
+      try {
+        return normalizeTableColumnVisibility(tableKey, JSON.parse(stored))
+      } catch (error) {
+        void error
+        return normalizeTableColumnVisibility(tableKey)
+      }
+    }
+
+    function loadAllTableColumnVisibilityFromStorage() {
+      const visibility = {}
+      Object.keys(TABLE_COLUMN_DEFAULT_VISIBILITY).forEach((tableKey) => {
+        visibility[tableKey] = loadTableColumnVisibilityFromStorage(tableKey)
+      })
+      return visibility
+    }
+
+    function persistTableColumnVisibility(tableKey = "", visibility = null) {
+      const key = normalizeText(tableKey)
+      if (!TABLE_COLUMN_VISIBILITY_STORAGE_KEYS[key]) return {}
+      if (!state.tableColumnVisibility || typeof state.tableColumnVisibility !== "object") {
+        state.tableColumnVisibility = loadAllTableColumnVisibilityFromStorage()
+      }
+      const normalized = normalizeTableColumnVisibility(key, visibility || state.tableColumnVisibility[key])
+      state.tableColumnVisibility[key] = normalized
+      if (key === "attendance") state.attendanceColumnVisibility = normalized
+      try {
+        window.localStorage.setItem(TABLE_COLUMN_VISIBILITY_STORAGE_KEYS[key], JSON.stringify(normalized))
+      } catch (error) {
+        void error
+      }
+      return normalized
+    }
+
+    function tableColumnVisibilityState(tableKey = "") {
+      const key = normalizeText(tableKey)
+      if (!key) return {}
+      if (!state.tableColumnVisibility || typeof state.tableColumnVisibility !== "object") {
+        state.tableColumnVisibility = loadAllTableColumnVisibilityFromStorage()
+      }
+      const current = state.tableColumnVisibility[key]
+      const normalized = normalizeTableColumnVisibility(key, current)
+      state.tableColumnVisibility[key] = normalized
+      if (key === "attendance") state.attendanceColumnVisibility = normalized
+      return normalized
+    }
+
+    function isTableColumnVisible(tableKey = "", columnKey = "") {
+      const key = normalizeText(columnKey)
+      if (!key) return true
+      const visibility = tableColumnVisibilityState(tableKey)
+      if (!Object.prototype.hasOwnProperty.call(visibility, key)) return true
+      return visibility[key] === true
+    }
+
+    function applyTableColumnVisibility(tableKey = "") {
+      const key = normalizeText(tableKey)
+      if (!key) return
+      const visibility = tableColumnVisibilityState(key)
+      Object.entries(visibility).forEach(([columnKey, visible]) => {
+        document.querySelectorAll(`[data-${key}-col="${columnKey}"]`).forEach((cellEl) => {
+          cellEl.classList.toggle("attendance-col-hidden", !visible)
+        })
+        const toggleEl = document.querySelector(`[data-${key}-col-toggle="${columnKey}"]`)
+        if (toggleEl instanceof HTMLInputElement) toggleEl.checked = visible
+      })
+    }
+
+    function applyAllTableColumnVisibility() {
+      Object.keys(TABLE_COLUMN_DEFAULT_VISIBILITY).forEach((tableKey) => applyTableColumnVisibility(tableKey))
+    }
+
+    function bindTableColumnVisibilityControls(tableKey = "") {
+      const key = normalizeText(tableKey)
+      if (!key) return
+      document.querySelectorAll(`[data-${key}-col-toggle]`).forEach((inputEl) => {
+        if (!(inputEl instanceof HTMLInputElement)) return
+        if (inputEl.dataset.bound === "1") return
+        inputEl.dataset.bound = "1"
+        inputEl.addEventListener("change", () => {
+          const columnKey = normalizeText(inputEl.getAttribute(`data-${key}-col-toggle`))
+          if (!columnKey) return
+          const next = { ...tableColumnVisibilityState(key) }
+          if (!Object.prototype.hasOwnProperty.call(next, columnKey)) return
+          next[columnKey] = inputEl.checked
+          persistTableColumnVisibility(key, next)
+          applyTableColumnVisibility(key)
+        })
+      })
+    }
+
+    function bindAllTableColumnVisibilityControls() {
+      Object.keys(TABLE_COLUMN_DEFAULT_VISIBILITY).forEach((tableKey) => bindTableColumnVisibilityControls(tableKey))
+    }
+
+    function normalizeAttendanceColumnVisibility(source = null) {
+      return normalizeTableColumnVisibility("attendance", source)
+    }
+
+    function loadAttendanceColumnVisibilityFromStorage() {
+      return loadTableColumnVisibilityFromStorage("attendance")
+    }
+
+    function persistAttendanceColumnVisibility(visibility = state.attendanceColumnVisibility) {
+      return persistTableColumnVisibility("attendance", visibility)
+    }
+
+    function isAttendanceColumnVisible(columnKey = "") {
+      return isTableColumnVisible("attendance", columnKey)
+    }
+
+    function applyAttendanceColumnVisibility() {
+      applyTableColumnVisibility("attendance")
+    }
+
+    function bindAttendanceColumnVisibilityControls() {
+      bindTableColumnVisibilityControls("attendance")
+    }
+
+    function normalizeTextZoomPercent(value = TEXT_ZOOM_DEFAULT) {
+      const parsed = Number.parseInt(String(value), 10)
+      if (!Number.isFinite(parsed)) return TEXT_ZOOM_DEFAULT
+      const clamped = Math.max(TEXT_ZOOM_MIN, Math.min(TEXT_ZOOM_MAX, parsed))
+      const offset = clamped - TEXT_ZOOM_MIN
+      return TEXT_ZOOM_MIN + Math.round(offset / TEXT_ZOOM_STEP) * TEXT_ZOOM_STEP
+    }
+
+    function loadGlobalTextZoomFromStorage() {
+      let stored = ""
+      try {
+        stored = normalizeText(window.localStorage.getItem(GLOBAL_TEXT_ZOOM_STORAGE_KEY))
+      } catch (error) {
+        void error
+      }
+      return normalizeTextZoomPercent(stored || TEXT_ZOOM_DEFAULT)
+    }
+
+    function persistGlobalTextZoomToStorage(value = state.globalTextZoomPercent) {
+      const normalized = normalizeTextZoomPercent(value)
+      state.globalTextZoomPercent = normalized
+      try {
+        window.localStorage.setItem(GLOBAL_TEXT_ZOOM_STORAGE_KEY, String(normalized))
+      } catch (error) {
+        void error
+      }
+      return normalized
+    }
+
+    function applyGlobalTextZoom() {
+      const percent = normalizeTextZoomPercent(state.globalTextZoomPercent)
+      state.globalTextZoomPercent = percent
+      document.documentElement.style.setProperty("--sis-global-text-zoom", String(percent / 100))
+      const label = `${percent}%`
+      document.querySelectorAll("[data-text-zoom-label]").forEach((labelEl) => {
+        labelEl.textContent = label
+      })
+      document.querySelectorAll('[data-text-zoom-action="decrease"]').forEach((buttonEl) => {
+        if (!(buttonEl instanceof HTMLButtonElement)) return
+        buttonEl.disabled = percent <= TEXT_ZOOM_MIN
+      })
+      document.querySelectorAll('[data-text-zoom-action="increase"]').forEach((buttonEl) => {
+        if (!(buttonEl instanceof HTMLButtonElement)) return
+        buttonEl.disabled = percent >= TEXT_ZOOM_MAX
+      })
+    }
+
+    function updateGlobalTextZoom(action = "") {
+      const mode = normalizeLower(action)
+      let next = normalizeTextZoomPercent(state.globalTextZoomPercent)
+      if (mode === "decrease") next -= TEXT_ZOOM_STEP
+      else if (mode === "increase") next += TEXT_ZOOM_STEP
+      else next = TEXT_ZOOM_DEFAULT
+      next = normalizeTextZoomPercent(next)
+      persistGlobalTextZoomToStorage(next)
+      applyGlobalTextZoom()
+      setStatus(`Global text size: ${next}%`)
     }
 
     function normalizeStudentIdSearchValue(value = "") {
@@ -5235,7 +5810,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const leftFullName = normalizeText(left?.fullName)
         const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        if (sortField === "studentNumber") compareValue = compareTableNumber(left?.studentNumber, right?.studentNumber)
+        else if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
         else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "className") compareValue = compareTableText(left?.className, right?.className)
         else if (sortField === "quarter") compareValue = compareTableText(left?.quarter, right?.quarter)
@@ -5276,7 +5852,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const leftFullName = normalizeText(left?.fullName)
         const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        if (sortField === "studentNumber") compareValue = compareTableNumber(left?.studentNumber, right?.studentNumber)
+        else if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
         else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "assignmentName") compareValue = compareTableText(left?.assignmentName, right?.assignmentName)
         else if (sortField === "score") compareValue = compareTableNumber(gradeSortScoreValue(left), gradeSortScoreValue(right))
@@ -5298,7 +5875,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const leftFullName = normalizeText(left?.fullName)
         const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        if (sortField === "studentNumber") compareValue = compareTableNumber(left?.studentNumber, right?.studentNumber)
+        else if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
         else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "className") compareValue = compareTableText(left?.className, right?.className)
         else if (sortField === "homeworkCompletionRate") compareValue = compareTableNumber(left?.homeworkCompletionRate, right?.homeworkCompletionRate)
@@ -5321,7 +5899,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const leftFullName = normalizeText(left?.fullName)
         const rightFullName = normalizeText(right?.fullName)
         let compareValue = 0
-        if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
+        if (sortField === "studentNumber") compareValue = compareTableNumber(left?.studentNumber, right?.studentNumber)
+        else if (sortField === "fullName") compareValue = compareTableText(leftFullName, rightFullName)
         else if (sortField === "eaglesId") compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
         else if (sortField === "className") compareValue = compareTableText(left?.className, right?.className)
         else if (sortField === "homeworkCompletionRate") compareValue = compareTableNumber(left?.homeworkCompletionRate, right?.homeworkCompletionRate)
@@ -5594,6 +6173,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (hasStudentNumberKey(student) && !studentNumber) return null
       const fullName = canonicalStudentFullNameFromProfile(student?.profile)
       const englishName = canonicalStudentEnglishNameFromProfile(student?.profile)
+      const resolvedClassLevel = resolveSystemLevelName(record?.level || record?.classLevel || student?.profile?.currentGrade || "")
+      const normalizedClassName = normalizeText(record?.className)
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
@@ -5601,7 +6182,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         studentNumber: studentNumber || null,
         fullName,
         englishName,
-        classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
+        className: resolvedClassLevel ? fullLevelLabel(resolvedClassLevel) : normalizedClassName,
+        classLevel: resolvedClassLevel,
         profile: student?.profile || {},
       }
     }
@@ -5613,6 +6195,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (hasStudentNumberKey(student) && !studentNumber) return null
       const fullName = canonicalStudentFullNameFromProfile(student?.profile)
       const englishName = canonicalStudentEnglishNameFromProfile(student?.profile)
+      const resolvedClassLevel = resolveSystemLevelName(record?.level || record?.classLevel || student?.profile?.currentGrade || "")
+      const normalizedClassName = normalizeText(record?.className)
       return {
         ...record,
         studentRefId: normalizeText(student?.id),
@@ -5620,7 +6204,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         studentNumber: studentNumber || null,
         fullName,
         englishName,
-        classLevel: resolveSystemLevelName(record?.classLevel || student?.profile?.currentGrade || ""),
+        className: resolvedClassLevel ? fullLevelLabel(resolvedClassLevel) : normalizedClassName,
+        classLevel: resolvedClassLevel,
         profile: student?.profile || {},
       }
     }
@@ -6569,7 +7154,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const dashboardStudentLevels = (Array.isArray(state.dashboardStudents) ? state.dashboardStudents : []).map((student) =>
         normalizeLevelName(student?.profile?.currentGrade || "")
       )
-      const completionLevels = (Array.isArray(state.dashboardSummary?.levelCompletion) ? state.dashboardSummary.levelCompletion : []).map((entry) =>
+      const completionLevels = (
+        Array.isArray(state.dashboardLevelCompletionRows) && state.dashboardLevelCompletionRows.length
+          ? state.dashboardLevelCompletionRows
+          : Array.isArray(state.dashboardSummary?.levelCompletion)
+            ? state.dashboardSummary.levelCompletion
+            : []
+      ).map((entry) =>
         normalizeLevelName(entry?.level || "")
       )
       const classLevels = (Array.isArray(state.dashboardSummary?.classEnrollmentAttendance) ? state.dashboardSummary.classEnrollmentAttendance : []).map((entry) =>
@@ -7153,7 +7744,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     state.profileFormConfig = loadProfileFormConfigFromStorage()
     state.assignmentTemplates = loadAssignmentTemplatesFromStorage()
     state.tableArchiveIndex = loadTableArchiveIndexFromStorage()
+    state.tableColumnVisibility = loadAllTableColumnVisibilityFromStorage()
+    state.attendanceColumnVisibility = state.tableColumnVisibility.attendance
     state.eaglesIdSearchHistory = loadStudentIdSearchHistoryFromStorage()
+    state.globalTextZoomPercent = loadGlobalTextZoomFromStorage()
     state.attendanceLanding.tileConfigByLevel = loadAttendanceLevelTileConfigFromStorage()
     state.parentTracking.teacherNames = loadParentTrackingTeacherNamesFromStorage()
     state.parentTracking.lessonSummaryByLevelDate = loadParentTrackingLessonSummaryFromStorage()
@@ -8203,6 +8797,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       showUserPanel()
       state.currentStudent = null
       state.students = []
+      state.dashboardSummary = null
+      state.dashboardLevelCompletionRows = []
       state.topSearchOptionMap = {}
       state.topStudentScope = { query: "", level: "", school: "" }
       closeParentQueueModal()
@@ -8885,22 +9481,31 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         const archived = isTableRecordArchived("assignments", template.id)
         const templateStudentKey = normalizeLower(template?.eaglesId)
         const matchedStudent = studentByOptionValue.get(templateStudentKey) || studentByPublicId.get(templateStudentKey)
+        const studentNumberText = matchedStudent && studentDisplayNumber(matchedStudent)
+          ? escapeHtml(String(studentDisplayNumber(matchedStudent)))
+          : ""
         const studentLabel = matchedStudent
           ? studentIdentityLabel(matchedStudent, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
           : normalizeText(template?.eaglesId) || "All students in level"
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(template.assignmentTitle || template.exerciseTitle || "")}</td>
-          <td>${levelBadgeHtml(template.level || "", { full: true })}</td>
-          <td>${escapeHtml(studentLabel)}</td>
-          <td>${escapeHtml(template.assignedAt || "-")}</td>
-          <td>${escapeHtml(template.dueAt || "-")}</td>
-          <td>${assignmentRecordItemsHtml(template)}</td>
-          <td>${assignmentCompletionPillHtml(template)}</td>
-          <td>
-            <button type="button" class="btn-edit" data-template-edit="${template.id}">Edit</button>
-            <button type="button" class="btn-refresh" data-template-archive="${template.id}">${archived ? "Restore" : "Archive"}</button>
-            <button type="button" class="btn-delete" data-template-del="${template.id}">Delete</button>
+          <td class="table-col-student-number" data-assignments-col="studentNumber">${studentNumberText}</td>
+          <td data-assignments-col="assignmentTitle">${escapeHtml(template.assignmentTitle || template.exerciseTitle || "")}</td>
+          <td data-assignments-col="level">${levelBadgeHtml(template.level || "", { full: true })}</td>
+          <td data-assignments-col="student">${escapeHtml(studentLabel)}</td>
+          <td data-assignments-col="assignedAt">${escapeHtml(template.assignedAt || "-")}</td>
+          <td data-assignments-col="dueAt">${escapeHtml(template.dueAt || "-")}</td>
+          <td data-assignments-col="items">${assignmentRecordItemsHtml(template)}</td>
+          <td data-assignments-col="completion">${assignmentCompletionPillHtml(template)}</td>
+          <td class="table-row-options-cell">
+            <details class="row-options-menu">
+              <summary class="row-options-trigger">Options</summary>
+              <div class="row-options-dropdown">
+                <button type="button" class="btn-edit" data-template-edit="${template.id}">Edit</button>
+                <button type="button" class="btn-refresh" data-template-archive="${template.id}">${archived ? "Restore" : "Archive"}</button>
+                <button type="button" class="btn-delete" data-template-del="${template.id}">Delete</button>
+              </div>
+            </details>
           </td>
         `
         tr.querySelector(`[data-template-edit="${template.id}"]`)?.addEventListener("click", () => {
@@ -8921,8 +9526,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       })
 
       if (!filteredTemplates.length) {
-        tbody.innerHTML = '<tr><td colspan="8">No assignment rows match current search/archive filters.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="9">No assignment rows match current search/archive filters.</td></tr>'
       }
+      applyTableColumnVisibility("assignments")
 
       if (!sortedTemplates.length) {
         setAssignmentStatus("No assignments loaded.")
@@ -8964,6 +9570,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       persistAssignmentTemplates(nextTemplates)
       fillAssignmentForm(template)
       renderAssignmentTemplates()
+      if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary)
       setAssignmentStatus(`Assignment saved: ${template.assignmentTitle}`)
     }
 
@@ -8978,18 +9585,41 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       } else {
         renderAssignmentTemplates()
       }
+      if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary)
       setAssignmentStatus("Assignment deleted.")
     }
 
-    function buildDashboardRiskLines(items = []) {
-      if (!Array.isArray(items) || !items.length) return "No at-risk students flagged."
+    function buildDashboardRiskLines(levelRows = []) {
+      const rows = Array.isArray(levelRows) ? levelRows : []
+      const pendingLines = []
+      rows.forEach((row) => {
+        const level = shortLevelLabel(row?.level || "")
+        const assignmentName = normalizeText(row?.assignmentName)
+        const dueAt = normalizeText(row?.dueAt)
+        const students = Array.isArray(row?.uncompletedStudents) ? row.uncompletedStudents : []
+        students.forEach((student) => {
+          const name = normalizeText(student?.fullName)
+          const sid = normalizeText(student?.eaglesId)
+          const studentToken = [name, sid].filter(Boolean).join(" | ")
+          const assignmentToken = assignmentName || "Assignment"
+          pendingLines.push(
+            `${studentToken} [${level}] - pending:${assignmentToken}${dueAt ? ` | due:${dueAt}` : ""}`
+          )
+        })
+      })
+      if (!pendingLines.length) return "No pending students for current not-yet-due assignments."
+      return pendingLines.join("\n")
+    }
+
+    function buildAttendanceRiskLines(items = []) {
+      if (!Array.isArray(items) || !items.length) return "No attendance risk students flagged for this week."
       return items
         .map((row) => {
           const level = shortLevelLabel(row.level || "")
           const name = normalizeText(row.fullName)
           const sid = normalizeText(row.eaglesId)
           const studentToken = [name, sid].filter(Boolean).join(" | ")
-          return `${studentToken} [${level}] - absences:${row.absences || 0}, late30+:${row.late30Plus || 0}, outstanding:${row.outstandingWeek || 0}`
+          return `${studentToken} [${level}] - absences:${row.absences || 0}, late30+:${row.late30Plus || 0}`
         })
         .join("\n")
     }
@@ -9168,12 +9798,23 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           completedLate: 0,
           outstanding: 0,
           outstandingYtd: 0,
+          currentActiveLevels: 0,
+          currentTargetedStudents: 0,
+          currentCompletedStudents: 0,
+          currentPendingStudents: 0,
+          currentCompletionPercent: 0,
+          currentDueSoonLevels: 0,
+          currentDueSoonPendingStudents: 0,
         },
         atRiskWeek: {
           total: 0,
           students: [],
         },
-        levelCompletion: levels,
+        attendanceRiskWeek: {
+          total: 0,
+          students: [],
+        },
+        levelCompletion: [],
       }
     }
 
@@ -9182,7 +9823,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return Boolean(normalized) && normalized !== "unassigned"
     }
 
-    function renderOverviewLineChart(weeklyRows = []) {
+    function renderOverviewLineChart(weeklyRows = [], assignmentSummary = {}) {
       const svg = document.getElementById("overviewLineChart")
       if (!svg) return
       const rows = normalizeWeeklyAssignmentCompletion(weeklyRows)
@@ -9203,6 +9844,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       // Use local weekday index to avoid timezone drift into tomorrow.
       const todayIndex = (new Date().getDay() + 6) % 7
       const cappedTodayIndex = Math.max(0, Math.min(rows.length - 1, todayIndex))
+      const fallbackCompletionPercent = Math.max(
+        0,
+        Math.min(100, Number(assignmentSummary?.currentCompletionPercent || 0) || 0)
+      )
+      const fallbackTargetedStudents = Math.max(
+        0,
+        Number.parseInt(String(assignmentSummary?.currentTargetedStudents || 0), 10) || 0
+      )
 
       const assignmentStartIndex = rows.findIndex((row) => {
         const assigned = Math.max(
@@ -9212,30 +9861,57 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         return assigned > 0
       })
 
-      if (assignmentStartIndex < 0 || assignmentStartIndex > cappedTodayIndex) {
-        svg.innerHTML =
-          '<text x="18" y="44" font-size="16" font-weight="700" fill="var(--chart-text)">No homework assigned this week.</text>'
-        return
+      let visibleRows = []
+      if (assignmentStartIndex >= 0 && assignmentStartIndex <= cappedTodayIndex) {
+        let rollingPercent = 0
+        visibleRows = rows
+          .map((row, index) => {
+            if (index < assignmentStartIndex || index > cappedTodayIndex) return null
+            if (index === assignmentStartIndex) {
+              return { index, day: row.day, completionPercent: 0 }
+            }
+            const assigned = Math.max(
+              Number(row.weeklyAssignedStudents || 0),
+              Number(row.studentsWithAssignments || 0)
+            )
+            const completed = Math.max(
+              Number(row.cumulativeCompletedStudents || 0),
+              Number(row.studentsCompletedAll || 0)
+            )
+            const reportedPercent = Number(row.completionPercent || 0)
+            const computedPercent = assigned > 0 ? (completed / assigned) * 100 : reportedPercent
+            rollingPercent = Math.max(
+              rollingPercent,
+              Math.max(0, Math.min(100, Number.isFinite(computedPercent) ? computedPercent : 0))
+            )
+            return {
+              index,
+              day: row.day,
+              completionPercent: Number(rollingPercent.toFixed(1)),
+            }
+          })
+          .filter(Boolean)
+      } else if (fallbackTargetedStudents > 0) {
+        const fallbackRows = [{ index: 0, day: "Mon", completionPercent: 0 }]
+        if (cappedTodayIndex > 0) {
+          fallbackRows.push({
+            index: cappedTodayIndex,
+            day: rows[cappedTodayIndex]?.day || "Today",
+            completionPercent: Number(fallbackCompletionPercent.toFixed(1)),
+          })
+        }
+        visibleRows = fallbackRows
       }
 
-      const SIMULATED_TODAY_COMPLETION_PERCENT = 80
-      let todayPercent = cappedTodayIndex > assignmentStartIndex
-        ? SIMULATED_TODAY_COMPLETION_PERCENT
-        : 0
-      todayPercent = Math.max(0, Math.min(100, todayPercent))
-
-      const span = Math.max(1, cappedTodayIndex - assignmentStartIndex)
-      const visibleRows = rows
-        .map((row, index) => {
-          if (index < assignmentStartIndex || index > cappedTodayIndex) return null
-          if (index === assignmentStartIndex) {
+      if (!visibleRows.length) {
+        visibleRows = rows
+          .map((row, index) => {
+            if (index > cappedTodayIndex) return null
             return { index, day: row.day, completionPercent: 0 }
-          }
-          const progress = (index - assignmentStartIndex) / span
-          const percent = Number((todayPercent * progress).toFixed(1))
-          return { index, day: row.day, completionPercent: percent }
-        })
-        .filter(Boolean)
+          })
+          .filter(Boolean)
+        if (!visibleRows.length) visibleRows = [{ index: 0, day: "Mon", completionPercent: 0 }]
+      }
 
       const completionPoints = visibleRows.map((row) => `${xAt(row.index)},${yAt(row.completionPercent)}`).join(" ")
 
@@ -9325,6 +10001,164 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         .sort((left, right) => assignmentTemplateSortStamp(right) - assignmentTemplateSortStamp(left))[0] || null
     }
 
+    function daysUntilLocalDateFloor(targetDateValue, asOfDate = new Date()) {
+      const dueAt = parseLocalDateOrDateTime(targetDateValue)
+      const asOf = asOfDate instanceof Date ? asOfDate : new Date(asOfDate)
+      if (!(dueAt instanceof Date) || Number.isNaN(dueAt.valueOf())) return null
+      if (Number.isNaN(asOf.valueOf())) return null
+      const dueDay = new Date(dueAt.getFullYear(), dueAt.getMonth(), dueAt.getDate())
+      const asOfDay = new Date(asOf.getFullYear(), asOf.getMonth(), asOf.getDate())
+      const msPerDay = 24 * 60 * 60 * 1000
+      return Math.floor((dueDay.valueOf() - asOfDay.valueOf()) / msPerDay)
+    }
+
+    function buildTemplateLevelCompletionRows(asOfDate = new Date()) {
+      const templates = Array.isArray(state.assignmentTemplates) ? state.assignmentTemplates : []
+      if (!templates.length) return []
+
+      const asOf = asOfDate instanceof Date ? asOfDate : new Date(asOfDate)
+      if (Number.isNaN(asOf.valueOf())) return []
+
+      const students = assignmentStudentSource().filter((student) => normalizeText(student?.eaglesId))
+      const studentsByLevel = new Map()
+      students.forEach((student) => {
+        const level = resolveSystemLevelName(student?.profile?.currentGrade || "")
+        if (!level) return
+        if (!studentsByLevel.has(level)) studentsByLevel.set(level, [])
+        studentsByLevel.get(level).push(student)
+      })
+
+      const selectedTemplateByLevel = new Map()
+      templates.forEach((template) => {
+        const level = resolveSystemLevelName(template?.level || "")
+        if (!level) return
+        const dueAt = parseLocalDateOrDateTime(template?.dueAt)
+        if (!(dueAt instanceof Date) || Number.isNaN(dueAt.valueOf())) return
+        const daysUntilDue = daysUntilLocalDateFloor(dueAt, asOf)
+        if (!Number.isFinite(daysUntilDue) || daysUntilDue < 0) return
+
+        const current = selectedTemplateByLevel.get(level)
+        if (!current) {
+          selectedTemplateByLevel.set(level, { template, dueAt, daysUntilDue })
+          return
+        }
+
+        const dueDelta = dueAt.valueOf() - current.dueAt.valueOf()
+        if (dueDelta < 0) {
+          selectedTemplateByLevel.set(level, { template, dueAt, daysUntilDue })
+          return
+        }
+        if (dueDelta > 0) return
+
+        if (assignmentTemplateSortStamp(template) > assignmentTemplateSortStamp(current.template)) {
+          selectedTemplateByLevel.set(level, { template, dueAt, daysUntilDue })
+        }
+      })
+
+      const rows = []
+      selectedTemplateByLevel.forEach(({ template, daysUntilDue }, level) => {
+        const levelStudents = Array.isArray(studentsByLevel.get(level)) ? studentsByLevel.get(level) : []
+        const targetEaglesId = normalizeLower(template?.eaglesId)
+        const targetedStudents = targetEaglesId
+          ? levelStudents.filter((student) => normalizeLower(student?.eaglesId) === targetEaglesId)
+          : levelStudents
+        if (!targetedStudents.length) return
+
+        const assignmentName = normalizeText(template?.assignmentTitle || template?.exerciseTitle)
+        const dueAt = normalizeText(template?.dueAt)
+        const singleStudentMarkedCompleted = targetedStudents.length === 1 && Boolean(template?.completed)
+        const completedStudents = singleStudentMarkedCompleted ? 1 : 0
+        const completedStudentRefId = singleStudentMarkedCompleted
+          ? normalizeText(targetedStudents[0]?.id || targetedStudents[0]?.studentRefId)
+          : ""
+
+        const uncompletedStudents = targetedStudents
+          .filter((student) => {
+            if (!completedStudentRefId) return true
+            const studentRefId = normalizeText(student?.id || student?.studentRefId)
+            return studentRefId !== completedStudentRefId
+          })
+          .map((student) => ({
+            studentRefId: normalizeText(student?.id || student?.studentRefId),
+            eaglesId: normalizeText(student?.eaglesId),
+            studentNumber: studentDisplayNumber(student) || null,
+            fullName: normalizeText(student?.profile?.fullName || student?.profile?.englishName || student?.eaglesId),
+            emails: assignmentRecipientsForStudent(student),
+            outstandingCount: 1,
+            assignmentNames: assignmentName ? [assignmentName] : [],
+            nextDueAt: dueAt,
+          }))
+          .sort((left, right) => normalizeText(left?.fullName).localeCompare(normalizeText(right?.fullName)))
+
+        const targetedCount = targetedStudents.length
+        rows.push({
+          level,
+          enrolledStudents: levelStudents.length,
+          totalAssignments: targetedCount,
+          completedAssignments: completedStudents,
+          outstandingAssignments: Math.max(0, targetedCount - completedStudents),
+          completedStudents,
+          completionPercent: targetedCount > 0 ? (completedStudents / targetedCount) * 100 : 0,
+          assignmentName,
+          dueAt,
+          daysUntilDue,
+          uncompletedStudents,
+        })
+      })
+
+      return sortLevelRows(rows)
+    }
+
+    function buildEnrollmentOnlyLevelCompletionRows(summary = {}) {
+      const enrolledByLevel = new Map()
+      ;(Array.isArray(summary?.classEnrollmentAttendance) ? summary.classEnrollmentAttendance : [])
+        .filter(isAssignedLevelRow)
+        .forEach((row) => {
+          const level = resolveSystemLevelName(row?.level || "")
+          if (!level) return
+          const enrolled = Math.max(0, Number.parseInt(String(row?.enrolled || 0), 10) || 0)
+          const current = enrolledByLevel.get(level) || 0
+          enrolledByLevel.set(level, Math.max(current, enrolled))
+        })
+
+      if (!enrolledByLevel.size) {
+        assignmentStudentSource().forEach((student) => {
+          const level = resolveSystemLevelName(student?.profile?.currentGrade || "")
+          if (!level) return
+          const current = enrolledByLevel.get(level) || 0
+          enrolledByLevel.set(level, current + 1)
+        })
+      }
+
+      const rows = Array.from(enrolledByLevel.entries())
+        .filter(([, enrolled]) => Number(enrolled) > 0)
+        .map(([level, enrolledStudents]) => ({
+          level,
+          enrolledStudents,
+          totalAssignments: 0,
+          completedAssignments: 0,
+          outstandingAssignments: 0,
+          completedStudents: 0,
+          completionPercent: 0,
+          assignmentName: "",
+          dueAt: "",
+          daysUntilDue: null,
+          uncompletedStudents: [],
+        }))
+
+      return sortLevelRows(rows)
+    }
+
+    function effectiveDashboardLevelCompletionRows(summary = {}) {
+      const dashboardRows = sortLevelRows(
+        (Array.isArray(summary?.levelCompletion) ? summary.levelCompletion : []).filter(isAssignedLevelRow)
+      )
+      if (dashboardRows.length) return dashboardRows
+      const templateRows = buildTemplateLevelCompletionRows(new Date())
+      if (templateRows.length) return templateRows
+      return buildEnrollmentOnlyLevelCompletionRows(summary)
+    }
+
     function buildAnnouncementPreviewPayloadFromTemplate(template = {}, levelName = "") {
       const level = resolveSystemLevelName(levelName || template?.level || "")
       const items = normalizeAssignmentItems(template?.items)
@@ -9355,6 +10189,37 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         message: messageFromTemplate || generatedMessage,
         items,
       }
+    }
+
+    function buildAnnouncementPreviewPayloadFromLevelDetail(levelDetail = {}) {
+      const level = resolveSystemLevelName(levelDetail?.level || "")
+      if (!level) return null
+
+      const assignmentTitle = normalizeText(levelDetail?.assignmentName || levelDetail?.assignment)
+      const assignedAt = localIsoDate()
+      const dueAt = normalizeText(levelDetail?.dueAt || levelDetail?.nextDueAt) || nextSundayIsoDate(assignedAt)
+      const explicitDueAt = normalizeText(levelDetail?.dueAt || levelDetail?.nextDueAt)
+      const message = explicitDueAt
+        ? `Date assigned: ${assignedAt}\nDue date: ${explicitDueAt}`
+        : `Date assigned: ${assignedAt}`
+
+      return {
+        assignmentTitle: assignmentTitle || `${fullLevelLabel(level)} Assignment`,
+        level,
+        assignedAt,
+        dueAt,
+        message,
+        items: [],
+      }
+    }
+
+    function levelDetailAnnouncementLink(levelDetail = {}) {
+      return normalizeText(
+        levelDetail?.announcementLink
+        || levelDetail?.assignmentLink
+        || levelDetail?.link
+        || levelDetail?.url
+      )
     }
 
     async function createVolatileAssignmentAnnouncementPreview(payload = {}) {
@@ -9397,10 +10262,45 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const level = resolveSystemLevelName(levelDetail?.level || "")
       if (!level) return
 
+      const assignmentInput = document.getElementById("levelReminderAssignment")
+      const linkInput = document.getElementById("levelReminderLink")
+      const dueInput = document.getElementById("levelReminderDueAt")
+      const detailAssignmentName = normalizeText(levelDetail?.assignmentName)
+      const detailDueAt = normalizeText(levelDetail?.dueAt)
+      const detailLink = levelDetailAnnouncementLink(levelDetail)
+
+      if (assignmentInput && detailAssignmentName) assignmentInput.value = detailAssignmentName
+      if (dueInput && detailDueAt) dueInput.value = detailDueAt
+      if (linkInput && detailLink) linkInput.value = detailLink
+
       const template = currentWeekAssignmentTemplateForLevel(level)
       if (!template) {
+        if (linkInput && !normalizeText(linkInput.value) && (detailAssignmentName || detailDueAt)) {
+          const fallbackPreviewPayload = buildAnnouncementPreviewPayloadFromLevelDetail(levelDetail)
+          const fallbackPreview = fallbackPreviewPayload
+            ? await createVolatileAssignmentAnnouncementPreview(fallbackPreviewPayload)
+            : null
+          const fallbackPreviewUrl = normalizeText(fallbackPreview?.url)
+          if (fallbackPreviewUrl) {
+            linkInput.value = fallbackPreviewUrl
+            const ttlMins =
+              Number.parseInt(String(fallbackPreview?.ttlMinutes || ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES), 10)
+              || ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES
+            setLevelDetailStatus(
+              `Auto-filled from dashboard current assignment for ${fullLevelLabel(level)}. Volatile preview link expires in ${ttlMins} mins.`
+            )
+            return
+          }
+        }
+
+        if (detailAssignmentName || detailDueAt || detailLink) {
+          setLevelDetailStatus(
+            `Auto-filled from dashboard current assignment for ${fullLevelLabel(level)}. Add reminder link if needed.`
+          )
+          return
+        }
         setLevelDetailStatus(
-          `No current-week assignment found for ${fullLevelLabel(level)}. Enter reminder details manually.`
+          `No current not-yet-due assignment found for ${fullLevelLabel(level)}. Enter reminder details manually.`
         )
         return
       }
@@ -9408,23 +10308,20 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const payload = buildAnnouncementPreviewPayloadFromTemplate(template, level)
       const preview = await createVolatileAssignmentAnnouncementPreview(payload)
       const firstLiveItemLink = normalizeText(payload.items.find((item) => normalizeText(item.url))?.url)
-      const assignmentInput = document.getElementById("levelReminderAssignment")
-      const linkInput = document.getElementById("levelReminderLink")
-      const dueInput = document.getElementById("levelReminderDueAt")
-
-      if (assignmentInput) assignmentInput.value = normalizeText(payload.assignmentTitle)
-      if (dueInput) dueInput.value = normalizeText(payload.dueAt)
-      if (linkInput) linkInput.value = normalizeText(preview?.url || firstLiveItemLink)
+      if (assignmentInput && !detailAssignmentName) assignmentInput.value = normalizeText(payload.assignmentTitle)
+      if (dueInput && !detailDueAt) dueInput.value = normalizeText(payload.dueAt)
+      const templateLink = normalizeText(preview?.url || firstLiveItemLink)
+      if (linkInput && templateLink) linkInput.value = templateLink
 
       if (normalizeText(preview?.url)) {
         const ttlMins =
           Number.parseInt(String(preview?.ttlMinutes || ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES), 10)
           || ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES
-        setLevelDetailStatus(`Auto-filled from current week assignment. Volatile preview link expires in ${ttlMins} mins.`)
+        setLevelDetailStatus(`Auto-filled from current assignment. Volatile preview link expires in ${ttlMins} mins.`)
         return
       }
 
-      setLevelDetailStatus("Auto-filled from current week assignment.")
+      setLevelDetailStatus("Auto-filled from current assignment.")
     }
 
     function closeLevelDetailPanel() {
@@ -9432,12 +10329,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       applyLevelThemeToDetailPanel("")
       const panel = document.getElementById("levelDetailPanel")
       const title = document.getElementById("levelDetailTitle")
-      if (title) title.textContent = "Homework progress"
+      if (title) title.textContent = "Current assignment progress"
       if (panel) panel.classList.add("hidden")
     }
 
     function openLevelDetailPanel(levelNameOrRow) {
-      const rows = Array.isArray(state.dashboardSummary?.levelCompletion) ? state.dashboardSummary.levelCompletion : []
+      const rows = Array.isArray(state.dashboardLevelCompletionRows) ? state.dashboardLevelCompletionRows : []
       const directRow = levelNameOrRow && typeof levelNameOrRow === "object" ? levelNameOrRow : null
       const levelName = normalizeText(directRow?.level || levelNameOrRow)
       const detail = directRow || rows.find((entry) => levelNamesMatch(entry?.level, levelName))
@@ -9450,13 +10347,18 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const panel = document.getElementById("levelDetailPanel")
       const title = document.getElementById("levelDetailTitle")
       const tbody = document.getElementById("levelDetailRows")
-      if (title) title.textContent = `Homework progress - ${fullLevelLabel(fallback.level)}`
+      const detailDueAt = normalizeText(fallback?.dueAt)
+      if (title) {
+        title.textContent = detailDueAt
+          ? `Current assignment progress - ${fullLevelLabel(fallback.level)} (due ${detailDueAt})`
+          : `Current assignment progress - ${fullLevelLabel(fallback.level)}`
+      }
       if (tbody) {
         tbody.innerHTML = ""
         const students = Array.isArray(fallback.uncompletedStudents) ? fallback.uncompletedStudents : []
         if (!students.length) {
           const tr = document.createElement("tr")
-          tr.innerHTML = '<td colspan="6">No uncompleted students for this level.</td>'
+          tr.innerHTML = '<td colspan="6">No not-completed-yet students for this level.</td>'
           tbody.appendChild(tr)
         }
         students.forEach((student, index) => {
@@ -9478,9 +10380,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         panel.scrollIntoView({ behavior: "smooth", block: "start" })
       }
       if (detail) {
-        setLevelDetailStatus("Loading current-week assignment...")
+        setLevelDetailStatus("Loading current assignment...")
         autoPopulateHomeworkProgressForLevel(fallback).catch((error) => {
-          setLevelDetailStatus("Unable to auto-fill current-week assignment.", true)
+          setLevelDetailStatus("Unable to auto-fill current assignment.", true)
           handleError(error)
         })
       } else {
@@ -9569,6 +10471,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         detailBtn.style.setProperty("--level-theme-border", theme.borderColor)
         detailBtn.style.setProperty("--level-theme-text", theme.textColor)
         detailBtn.textContent = fullLevelLabel(row.level || "")
+        const dueAt = normalizeText(row?.dueAt)
+        const pending = Math.max(0, Number.parseInt(String(row?.outstandingAssignments || 0), 10) || 0)
+        detailBtn.title = dueAt
+          ? `Open reminders (${pending} pending, due ${dueAt})`
+          : `Open reminders (${pending} pending)`
         detailBtn.addEventListener("click", () => openLevelDetailPanel(row))
         actionsEl.appendChild(detailBtn)
       })
@@ -9589,10 +10496,43 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const classRows = sortLevelRows(
         (Array.isArray(summary.classEnrollmentAttendance) ? summary.classEnrollmentAttendance : []).filter(isAssignedLevelRow)
       )
-      const atRisk = Array.isArray(summary?.atRiskWeek?.students) ? summary.atRiskWeek.students : []
-      const levelCompletion = sortLevelRows(
-        (Array.isArray(summary.levelCompletion) ? summary.levelCompletion : []).filter(isAssignedLevelRow)
-      )
+      const levelCompletion = effectiveDashboardLevelCompletionRows(summary)
+      state.dashboardLevelCompletionRows = levelCompletion
+      const currentActiveLevels = levelCompletion.length
+      const currentTargetedStudents = levelCompletion.reduce((sum, row) => {
+        const targeted = Number.parseInt(String(row?.totalAssignments ?? row?.enrolledStudents ?? 0), 10) || 0
+        return sum + Math.max(0, targeted)
+      }, 0)
+      const currentCompletedStudents = levelCompletion.reduce((sum, row) => {
+        const completed = Number.parseInt(String(row?.completedAssignments ?? row?.completedStudents ?? 0), 10) || 0
+        return sum + Math.max(0, completed)
+      }, 0)
+      const currentPendingStudents = levelCompletion.reduce((sum, row) => {
+        const explicitPending = Number.parseInt(String(row?.outstandingAssignments), 10)
+        if (Number.isFinite(explicitPending)) return sum + Math.max(0, explicitPending)
+        const targeted = Number.parseInt(String(row?.totalAssignments ?? row?.enrolledStudents ?? 0), 10) || 0
+        const completed = Number.parseInt(String(row?.completedAssignments ?? row?.completedStudents ?? 0), 10) || 0
+        return sum + Math.max(0, targeted - completed)
+      }, 0)
+      const currentCompletionPercent = currentTargetedStudents > 0
+        ? (currentCompletedStudents / currentTargetedStudents) * 100
+        : 0
+      const currentDueSoonLevels = levelCompletion.reduce((sum, row) => {
+        const daysUntilDue = Number.parseInt(String(row?.daysUntilDue), 10)
+        if (!Number.isFinite(daysUntilDue)) return sum
+        if (daysUntilDue < 0 || daysUntilDue > 2) return sum
+        return sum + 1
+      }, 0)
+      const currentDueSoonPendingStudents = levelCompletion.reduce((sum, row) => {
+        const daysUntilDue = Number.parseInt(String(row?.daysUntilDue), 10)
+        if (!Number.isFinite(daysUntilDue)) return sum
+        if (daysUntilDue < 0 || daysUntilDue > 2) return sum
+        const explicitPending = Number.parseInt(String(row?.outstandingAssignments), 10)
+        if (Number.isFinite(explicitPending)) return sum + Math.max(0, explicitPending)
+        const targeted = Number.parseInt(String(row?.totalAssignments ?? row?.enrolledStudents ?? 0), 10) || 0
+        const completed = Number.parseInt(String(row?.completedAssignments ?? row?.completedStudents ?? 0), 10) || 0
+        return sum + Math.max(0, targeted - completed)
+      }, 0)
       const totalEnrollment = Math.max(0, Number(today.totalEnrollment ?? today.totalStudents ?? 0) || 0)
       const attendanceCount = Math.max(0, Number(today.attendance || 0) || 0)
       const attendancePercentOfEnrollment = Number.isFinite(Number(today.attendancePercentOfEnrollment))
@@ -9616,9 +10556,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         "ovTardyRates",
         `${formatPercent(today.tardy10PlusPercent || 0)} / ${formatPercent(today.tardy30PlusPercent || 0)}`
       )
-      setValue("ovAtRiskCount", String(summary?.atRiskWeek?.total || 0))
-      setValue("ovOutstanding", String(assignments.outstanding || 0))
-      setValue("ovOutstandingYtd", String(assignments.outstandingYtd || 0))
+      setValue("ovAtRiskCount", String(currentPendingStudents))
+      setValue("ovOutstanding", String(currentCompletedStudents))
+      setValue("ovOutstandingYtd", formatPercent(currentCompletionPercent))
 
       const classBody = document.getElementById("overviewClassRows")
       if (classBody) {
@@ -9638,23 +10578,32 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (assignmentBody) {
         assignmentBody.innerHTML = ""
         ;[
-          ["Total assignments", assignments.total || 0],
-          ["Completion on-time", assignments.completedOnTime || 0],
-          ["Completion late", assignments.completedLate || 0],
-          ["Outstanding now", assignments.outstanding || 0],
-          ["Outstanding YTD", assignments.outstandingYtd || 0],
-        ].forEach(([label, count]) => {
+          ["Active class levels", currentActiveLevels],
+          ["Targeted students", currentTargetedStudents],
+          ["Completed now", currentCompletedStudents],
+          ["Pending reminders", currentPendingStudents],
+          ["Due soon levels (<=2 days)", currentDueSoonLevels],
+          ["Due soon pending students", currentDueSoonPendingStudents],
+          ["Current completion %", formatPercent(currentCompletionPercent)],
+        ].forEach(([label, value]) => {
           const tr = document.createElement("tr")
-          tr.innerHTML = `<td>${label}</td><td>${count}</td>`
+          tr.innerHTML = `<td>${label}</td><td>${value}</td>`
           assignmentBody.appendChild(tr)
         })
       }
 
-      renderOverviewLineChart(weeklyAssignmentCompletion)
+      renderOverviewLineChart(weeklyAssignmentCompletion, {
+        ...assignments,
+        currentTargetedStudents,
+        currentCompletedStudents,
+        currentPendingStudents,
+        currentCompletionPercent,
+      })
       renderOverviewBarChart(levelCompletion)
 
       const riskEl = document.getElementById("overviewRiskStudents")
-      if (riskEl) riskEl.textContent = buildDashboardRiskLines(atRisk)
+      if (riskEl) riskEl.textContent = buildDashboardRiskLines(levelCompletion)
+      renderAttendanceAdminRiskSignals()
       renderOverviewIncomingExerciseSection(summary?.incomingExerciseResults || null)
       renderPerformanceQueueSection(summary?.parentReportQueue || null)
       state.parentReportQueue.savedReportCountHint = Math.max(0, Number(summary?.parentReports?.total || 0) || 0)
@@ -10458,10 +11407,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       try {
         const summary = await api(ADMIN_DASHBOARD_PATH)
         state.dashboardSummary = summary || {}
+        const effectiveCompletionRows = effectiveDashboardLevelCompletionRows(state.dashboardSummary)
+        state.dashboardLevelCompletionRows = effectiveCompletionRows
         syncSystemLevelNames([
-          ...((Array.isArray(state.dashboardSummary?.levelCompletion) ? state.dashboardSummary.levelCompletion : []).map((entry) =>
+          ...effectiveCompletionRows.map((entry) =>
             normalizeLevelName(entry?.level || "")
-          )),
+          ),
           ...((Array.isArray(state.dashboardSummary?.classEnrollmentAttendance) ? state.dashboardSummary.classEnrollmentAttendance : []).map((entry) =>
             normalizeLevelName(entry?.level || "")
           )),
@@ -10469,6 +11420,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       } catch (error) {
         if (error && error.status === 404) {
           state.dashboardSummary = buildFallbackDashboardSummary()
+          state.dashboardLevelCompletionRows = effectiveDashboardLevelCompletionRows(state.dashboardSummary)
           renderDashboardSummary(state.dashboardSummary)
           setStatus("Dashboard API not available on current runtime. Showing fallback summary.")
           return
@@ -11518,30 +12470,40 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       updateTableFilterSummary("performance")
       renderPerformanceStagedSection(filteredRows)
       if (!filteredRows.length) {
-        rowsEl.innerHTML = '<tr><td colspan="12">No performance records for current filters.</td></tr>'
+        rowsEl.innerHTML = '<tr><td colspan="13">No performance records for current filters.</td></tr>'
+        applyTableColumnVisibility("performance")
         return
       }
 
       rowsEl.innerHTML = ""
       filteredRows.forEach((row) => {
         const archived = isTableRecordArchived("performance", row.id)
+        const studentNumberText = row?.studentNumber === null || row?.studentNumber === undefined
+          ? ""
+          : escapeHtml(String(row.studentNumber))
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.eaglesId || "")}</td>
-          <td>${escapeHtml(row.fullName || "")}</td>
-          <td>${escapeHtml(row.englishName || "")}</td>
-          <td>${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
-          <td>${row.className || ""}</td>
-          <td>${row.quarter || ""}</td>
-          <td>${row.homeworkCompletionRate ?? ""}</td>
-          <td>${row.homeworkOnTimeRate ?? ""}</td>
-          <td>${row.behaviorScore ?? ""}</td>
-          <td>${row.participationScore ?? ""}</td>
-          <td>${row.inClassScore ?? ""}</td>
-          <td>
-            <button type="button" class="btn-edit" data-pt-report-edit="${row.id}">Edit</button>
-            <button type="button" class="btn-refresh" data-pt-report-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
-            <button type="button" class="btn-delete" data-pt-report-del="${row.id}">Delete</button>
+          <td class="table-col-student-number" data-performance-col="studentNumber">${studentNumberText}</td>
+          <td data-performance-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
+          <td data-performance-col="fullName">${escapeHtml(row.fullName || "")}</td>
+          <td data-performance-col="englishName">${escapeHtml(row.englishName || "")}</td>
+          <td data-performance-col="generatedAt">${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
+          <td data-performance-col="className">${row.className || ""}</td>
+          <td data-performance-col="quarter">${row.quarter || ""}</td>
+          <td data-performance-col="homeworkCompletionRate">${row.homeworkCompletionRate ?? ""}</td>
+          <td data-performance-col="homeworkOnTimeRate">${row.homeworkOnTimeRate ?? ""}</td>
+          <td data-performance-col="behaviorScore">${row.behaviorScore ?? ""}</td>
+          <td data-performance-col="participationScore">${row.participationScore ?? ""}</td>
+          <td data-performance-col="inClassScore">${row.inClassScore ?? ""}</td>
+          <td class="table-row-options-cell">
+            <details class="row-options-menu">
+              <summary class="row-options-trigger">Options</summary>
+              <div class="row-options-dropdown">
+                <button type="button" class="btn-edit" data-pt-report-edit="${row.id}">Edit</button>
+                <button type="button" class="btn-refresh" data-pt-report-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
+                <button type="button" class="btn-delete" data-pt-report-del="${row.id}">Delete</button>
+              </div>
+            </details>
           </td>
         `
 
@@ -11573,6 +12535,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
         rowsEl.appendChild(tr)
       })
+      applyTableColumnVisibility("performance")
     }
 
     async function deleteParentTrackingReport(recordId) {
@@ -13397,7 +14360,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function attendanceStatsFromRecords(records = []) {
-      return (Array.isArray(records) ? records : []).reduce(
+      const totals = (Array.isArray(records) ? records : []).reduce(
         (totals, row) => {
           const status = normalizeLower(row?.status)
           if (status === "absent") {
@@ -13416,6 +14379,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         },
         { present: 0, absent: 0, tardy10: 0, tardy30: 0 }
       )
+      const totalTardy = totals.tardy10 + totals.tardy30
+      const totalTracked = totals.present + totals.absent
+      return {
+        ...totals,
+        totalTardy,
+        totalTracked,
+        presentPercent: totalTracked > 0 ? (totals.present / totalTracked) * 100 : 0,
+        tardyPercent: totalTracked > 0 ? (totalTardy / totalTracked) * 100 : 0,
+      }
     }
 
     function ensureAttendanceLandingFormDefaults() {
@@ -13541,9 +14513,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         { present: 0, absent: 0, tardy10: 0, tardy30: 0 }
       )
       const readOnlySuffix = canWriteData() ? "" : " | read-only for current role"
+      const totalTracked = totals.present + totals.absent
+      const totalTardy = totals.tardy10 + totals.tardy30
+      const presentPercentText = formatPercent(totalTracked > 0 ? (totals.present / totalTracked) * 100 : 0)
+      const tardyPercentText = formatPercent(totalTracked > 0 ? (totalTardy / totalTracked) * 100 : 0)
       summaryEl.classList.toggle("attendance-state-readonly", !canWriteData())
       summaryEl.textContent =
-        `${fullLevelLabel(selectedLevel)} | students=${students.length} | present=${totals.present} | absent=${totals.absent} | tardy10=${totals.tardy10} | tardy30=${totals.tardy30}${readOnlySuffix}`
+        `${fullLevelLabel(selectedLevel)} | students=${students.length} | present=${totals.present} (${presentPercentText}) | absent=${totals.absent} | tardy10=${totals.tardy10} | tardy30=${totals.tardy30} | totalTardy=${totalTardy} (${tardyPercentText})${readOnlySuffix}`
     }
 
     async function hydrateAttendanceLandingDetails(students = []) {
@@ -13633,6 +14609,30 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       renderAttendanceLandingSummary(students)
     }
 
+    function renderAttendanceAdminRiskSignals() {
+      if (!hasLiveDom()) return
+      const summaryEl = document.getElementById("attendanceAdminRiskSummary")
+      const rowsEl = document.getElementById("attendanceAdminRiskStudents")
+      if (!summaryEl && !rowsEl) return
+
+      const selectedLevel = resolveSystemLevelName(state.attendanceLanding?.selectedLevel || "")
+      if (!selectedLevel) {
+        if (summaryEl) summaryEl.textContent = "Select a class level to view attendance risk signals."
+        if (rowsEl) rowsEl.textContent = "Select a class level to view attendance risk signals."
+        return
+      }
+
+      const allRiskRows = Array.isArray(state.dashboardSummary?.attendanceRiskWeek?.students)
+        ? state.dashboardSummary.attendanceRiskWeek.students
+        : []
+      const levelRiskRows = allRiskRows.filter((row) => levelNamesMatch(row?.level || "", selectedLevel))
+      if (summaryEl) {
+        summaryEl.textContent =
+          `${fullLevelLabel(selectedLevel)} | attendanceRisk=${levelRiskRows.length} (week)`
+      }
+      if (rowsEl) rowsEl.textContent = buildAttendanceRiskLines(levelRiskRows)
+    }
+
     function renderAttendanceAdminRows(students = selectedAttendanceLevelStudents()) {
       if (!hasLiveDom()) return
       const rowsEl = document.getElementById("attendanceAdminRows")
@@ -13647,13 +14647,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           : "Per-Student Attendance Stats"
       }
       if (!selectedLevel) {
-        rowsEl.innerHTML = '<tr><td colspan="5">Select a class level.</td></tr>'
+        rowsEl.innerHTML = '<tr><td colspan="7">Select a class level.</td></tr>'
         if (summaryEl) summaryEl.textContent = "Select a class level to view stats."
+        renderAttendanceAdminRiskSignals()
         return
       }
       if (!students.length) {
-        rowsEl.innerHTML = '<tr><td colspan="5">No students in this class level.</td></tr>'
+        rowsEl.innerHTML = '<tr><td colspan="7">No students in this class level.</td></tr>'
         if (summaryEl) summaryEl.textContent = `${fullLevelLabel(selectedLevel)} | students=0`
+        renderAttendanceAdminRiskSignals()
         return
       }
 
@@ -13676,14 +14678,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           <td class="attendance-cell-num">${stats.absent}</td>
           <td class="attendance-cell-num">${stats.tardy10}</td>
           <td class="attendance-cell-num">${stats.tardy30}</td>
+          <td class="attendance-cell-num">${formatPercent(stats.presentPercent)}</td>
+          <td class="attendance-cell-num">${formatPercent(stats.tardyPercent)}</td>
         `
         rowsEl.appendChild(tr)
       })
 
       if (summaryEl) {
+        const totalTracked = totals.present + totals.absent
+        const totalTardy = totals.tardy10 + totals.tardy30
+        const presentPercentText = formatPercent(totalTracked > 0 ? (totals.present / totalTracked) * 100 : 0)
+        const tardyPercentText = formatPercent(totalTracked > 0 ? (totalTardy / totalTracked) * 100 : 0)
         summaryEl.textContent =
-          `${fullLevelLabel(selectedLevel)} | students=${students.length} | present=${totals.present} | absent=${totals.absent} | tardy10=${totals.tardy10} | tardy30=${totals.tardy30}`
+          `${fullLevelLabel(selectedLevel)} | students=${students.length} | present=${totals.present} (${presentPercentText}) | absent=${totals.absent} | tardy10=${totals.tardy10} | tardy30=${totals.tardy30} | totalTardy=${totalTardy} (${tardyPercentText})`
       }
+      renderAttendanceAdminRiskSignals()
     }
 
     async function refreshAttendanceLandingRows({ hydrate = false } = {}) {
@@ -13945,20 +14954,29 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       updateTableFilterSummary("attendance")
       filteredRows.forEach((row) => {
         const archived = isTableRecordArchived("attendance", row.id)
+        const studentNumberText = row?.studentNumber === null || row?.studentNumber === undefined
+          ? ""
+          : escapeHtml(String(row.studentNumber))
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.eaglesId || "")}</td>
-          <td>${escapeHtml(row.fullName || "")}</td>
-          <td>${escapeHtml(row.englishName || "")}</td>
-          <td>${row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : ""}</td>
-          <td>${row.className || ""}</td>
-          <td>${row.quarter || ""}</td>
-          <td>${row.status || ""}</td>
-          <td>${row.comments || ""}</td>
-          <td>
-            <button type="button" class="btn-edit" data-edit="${row.id}">Edit</button>
-            <button type="button" class="btn-refresh" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
-            <button type="button" class="btn-delete" data-del="${row.id}">Delete</button>
+          <td class="attendance-col-student-number" data-attendance-col="studentNumber">${studentNumberText}</td>
+          <td data-attendance-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
+          <td data-attendance-col="fullName">${escapeHtml(row.fullName || "")}</td>
+          <td data-attendance-col="englishName">${escapeHtml(row.englishName || "")}</td>
+          <td data-attendance-col="attendanceDate">${row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : ""}</td>
+          <td data-attendance-col="className">${row.className || ""}</td>
+          <td data-attendance-col="quarter">${row.quarter || ""}</td>
+          <td data-attendance-col="status">${row.status || ""}</td>
+          <td data-attendance-col="comments">${row.comments || ""}</td>
+          <td class="table-row-options-cell">
+            <details class="row-options-menu">
+              <summary class="row-options-trigger">Options</summary>
+              <div class="row-options-dropdown">
+                <button type="button" class="btn-edit" data-edit="${row.id}">Edit</button>
+                <button type="button" class="btn-refresh" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
+                <button type="button" class="btn-delete" data-del="${row.id}">Delete</button>
+              </div>
+            </details>
           </td>
         `
         tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
@@ -13981,8 +14999,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.appendChild(tr)
       })
       if (!filteredRows.length) {
-        tbody.innerHTML = '<tr><td colspan="9">No attendance rows match current search/archive filters.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="10">No attendance rows match current search/archive filters.</td></tr>'
       }
+      applyAttendanceColumnVisibility()
     }
 
     function gradePayload() {
@@ -14058,23 +15077,32 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       updateTableFilterSummary("grades")
       filteredRows.forEach((row) => {
         const archived = isTableRecordArchived("grades", row.id)
+        const studentNumberText = row?.studentNumber === null || row?.studentNumber === undefined
+          ? ""
+          : escapeHtml(String(row.studentNumber))
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.eaglesId || "")}</td>
-          <td>${escapeHtml(row.fullName || "")}</td>
-          <td>${escapeHtml(row.englishName || "")}</td>
-          <td>${row.dueAt ? String(row.dueAt).slice(0, 10) : ""}</td>
-          <td>${row.className || ""}</td>
-          <td>${row.assignmentName || ""}</td>
-          <td>${row.score ?? ""}/${row.maxScore ?? ""}</td>
-          <td>${row.homeworkCompleted === true ? "Yes" : row.homeworkCompleted === false ? "No" : ""}</td>
-          <td>${row.behaviorScore ?? ""}</td>
-          <td>${row.participationScore ?? ""}</td>
-          <td>${row.inClassScore ?? ""}</td>
-          <td>
-            <button type="button" class="btn-edit" data-edit="${row.id}">Edit</button>
-            <button type="button" class="btn-refresh" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
-            <button type="button" class="btn-delete" data-del="${row.id}">Delete</button>
+          <td class="table-col-student-number" data-grades-col="studentNumber">${studentNumberText}</td>
+          <td data-grades-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
+          <td data-grades-col="fullName">${escapeHtml(row.fullName || "")}</td>
+          <td data-grades-col="englishName">${escapeHtml(row.englishName || "")}</td>
+          <td data-grades-col="dueAt">${row.dueAt ? String(row.dueAt).slice(0, 10) : ""}</td>
+          <td data-grades-col="className">${row.className || ""}</td>
+          <td data-grades-col="assignmentName">${row.assignmentName || ""}</td>
+          <td data-grades-col="score">${row.score ?? ""}/${row.maxScore ?? ""}</td>
+          <td data-grades-col="homeworkCompleted">${row.homeworkCompleted === true ? "Yes" : row.homeworkCompleted === false ? "No" : ""}</td>
+          <td data-grades-col="behaviorScore">${row.behaviorScore ?? ""}</td>
+          <td data-grades-col="participationScore">${row.participationScore ?? ""}</td>
+          <td data-grades-col="inClassScore">${row.inClassScore ?? ""}</td>
+          <td class="table-row-options-cell">
+            <details class="row-options-menu">
+              <summary class="row-options-trigger">Options</summary>
+              <div class="row-options-dropdown">
+                <button type="button" class="btn-edit" data-edit="${row.id}">Edit</button>
+                <button type="button" class="btn-refresh" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
+                <button type="button" class="btn-delete" data-del="${row.id}">Delete</button>
+              </div>
+            </details>
           </td>
         `
         tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
@@ -14105,8 +15133,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.appendChild(tr)
       })
       if (!filteredRows.length) {
-        tbody.innerHTML = '<tr><td colspan="12">No grade rows match current search/archive filters.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="13">No grade rows match current search/archive filters.</td></tr>'
       }
+      applyTableColumnVisibility("grades")
     }
 
     function reportPayload() {
@@ -14238,23 +15267,32 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       updateTableFilterSummary("reports")
       filteredRows.forEach((row) => {
         const archived = isTableRecordArchived("reports", row.id)
+        const studentNumberText = row?.studentNumber === null || row?.studentNumber === undefined
+          ? ""
+          : escapeHtml(String(row.studentNumber))
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${escapeHtml(row.eaglesId || "")}</td>
-          <td>${escapeHtml(row.fullName || "")}</td>
-          <td>${escapeHtml(row.englishName || "")}</td>
-          <td>${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
-          <td>${row.className || ""}</td>
-          <td>${row.quarter || ""}</td>
-          <td>${row.homeworkCompletionRate ?? ""}</td>
-          <td>${row.homeworkOnTimeRate ?? ""}</td>
-          <td>${row.behaviorScore ?? ""}</td>
-          <td>${row.participationScore ?? ""}</td>
-          <td>${row.inClassScore ?? ""}</td>
-          <td>
-            <button type="button" class="btn-edit" data-edit="${row.id}">Edit</button>
-            <button type="button" class="btn-refresh" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
-            <button type="button" class="btn-delete" data-del="${row.id}">Delete</button>
+          <td class="table-col-student-number" data-reports-col="studentNumber">${studentNumberText}</td>
+          <td data-reports-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
+          <td data-reports-col="fullName">${escapeHtml(row.fullName || "")}</td>
+          <td data-reports-col="englishName">${escapeHtml(row.englishName || "")}</td>
+          <td data-reports-col="generatedAt">${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
+          <td data-reports-col="className">${row.className || ""}</td>
+          <td data-reports-col="quarter">${row.quarter || ""}</td>
+          <td data-reports-col="homeworkCompletionRate">${row.homeworkCompletionRate ?? ""}</td>
+          <td data-reports-col="homeworkOnTimeRate">${row.homeworkOnTimeRate ?? ""}</td>
+          <td data-reports-col="behaviorScore">${row.behaviorScore ?? ""}</td>
+          <td data-reports-col="participationScore">${row.participationScore ?? ""}</td>
+          <td data-reports-col="inClassScore">${row.inClassScore ?? ""}</td>
+          <td class="table-row-options-cell">
+            <details class="row-options-menu">
+              <summary class="row-options-trigger">Options</summary>
+              <div class="row-options-dropdown">
+                <button type="button" class="btn-edit" data-edit="${row.id}">Edit</button>
+                <button type="button" class="btn-refresh" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
+                <button type="button" class="btn-delete" data-del="${row.id}">Delete</button>
+              </div>
+            </details>
           </td>
         `
         tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
@@ -14279,8 +15317,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.appendChild(tr)
       })
       if (!filteredRows.length) {
-        tbody.innerHTML = '<tr><td colspan="12">No report rows match current search/archive filters.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="13">No report rows match current search/archive filters.</td></tr>'
       }
+      applyTableColumnVisibility("reports")
     }
 
     async function lookupFamilyPhone() {
@@ -14492,6 +15531,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       dateFromEl?.addEventListener("change", applyDateRange)
       dateToEl?.addEventListener("change", applyDateRange)
+    })
+    bindAllTableColumnVisibilityControls()
+    document.addEventListener("click", (event) => {
+      const target = event?.target
+      if (!(target instanceof Element)) return
+      const buttonEl = target.closest("button[data-text-zoom-action]")
+      if (!(buttonEl instanceof HTMLButtonElement)) return
+      const action = normalizeLower(buttonEl.getAttribute("data-text-zoom-action"))
+      if (!["decrease", "increase", "reset"].includes(action)) return
+      updateGlobalTextZoom(action)
     })
     document.getElementById("hubPingBtn")?.addEventListener("click", () => {
       probeHubConnection({ notify: true }).catch(handleError)
@@ -15068,8 +16117,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     state.authRolePolicy = getCurrentRolePolicy()
     bindColumnSortHeaderEvents()
     bindTopSearchControls()
+    applyGlobalTextZoom()
     updateTableSortButtonLabels()
     updateTableHeaderSortIndicators()
+    applyAllTableColumnVisibility()
     renderPermissionsEditor()
     updateNavigationAccess()
     updateTrackingDataSubmenuVisibility()

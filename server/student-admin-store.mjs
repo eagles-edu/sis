@@ -189,6 +189,174 @@ function isOnTimeCompletedGradeRecord(record) {
   return Boolean(record?.submittedAt && !record?.dueAt)
 }
 
+const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"
+
+function datesShareExactTimestamp(left, right) {
+  const leftDate = parseDateOrNull(left)
+  const rightDate = parseDateOrNull(right)
+  if (!(leftDate instanceof Date) || !(rightDate instanceof Date)) return false
+  return leftDate.valueOf() === rightDate.valueOf()
+}
+
+function isAutoImportedExerciseGradeRecord(record = {}) {
+  const assignmentName = normalizeLower(record?.assignmentName)
+  const className = normalizeLower(record?.className)
+  const comments = normalizeLower(record?.comments)
+  const assignmentMatchesClass = Boolean(assignmentName && className && assignmentName === className)
+  const sameDueAndSubmittedAt = datesShareExactTimestamp(record?.dueAt, record?.submittedAt)
+  const markedComplete = record?.homeworkCompleted === true
+  const markedOnTime = record?.homeworkOnTime === true
+  const hasExerciseScore = Number.isFinite(Number(record?.score)) && Number(record?.maxScore) > 0
+  const hasImportComment = comments.startsWith(AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX)
+  const isStandaloneCompletedImport = assignmentMatchesClass && sameDueAndSubmittedAt && markedComplete && markedOnTime
+  return Boolean(isStandaloneCompletedImport && (hasImportComment || hasExerciseScore))
+}
+
+function isAssignmentTrackingGradeRecord(record = {}) {
+  if (!record || typeof record !== "object") return false
+  return !isAutoImportedExerciseGradeRecord(record)
+}
+
+function normalizeOutstandingWeekCount(value) {
+  const parsed = Number.parseInt(String(value), 10)
+  if (!Number.isFinite(parsed)) return 0
+  return Math.max(0, parsed)
+}
+
+function normalizeAttendanceRiskScore({ absences = 0, late30Plus = 0 } = {}) {
+  const normalizedAbsences = Math.max(0, Number.parseInt(String(absences), 10) || 0)
+  const normalizedLate30Plus = Math.max(0, Number.parseInt(String(late30Plus), 10) || 0)
+  return normalizedAbsences * 3 + normalizedLate30Plus * 2
+}
+
+export function selectAtRiskStudentsFromSignals(entries = []) {
+  const rows = Array.isArray(entries) ? entries.slice() : []
+  return rows
+    .filter((entry) => normalizeOutstandingWeekCount(entry?.outstandingWeek) > 0)
+    .sort((left, right) => {
+      const leftOutstanding = normalizeOutstandingWeekCount(left?.outstandingWeek)
+      const rightOutstanding = normalizeOutstandingWeekCount(right?.outstandingWeek)
+      if (leftOutstanding !== rightOutstanding) return rightOutstanding - leftOutstanding
+      return normalizeText(left?.fullName).localeCompare(normalizeText(right?.fullName))
+    })
+}
+
+export function selectAttendanceRiskStudentsFromSignals(entries = []) {
+  const rows = Array.isArray(entries) ? entries.slice() : []
+  return rows
+    .filter((entry) => {
+      const absences = Math.max(0, Number.parseInt(String(entry?.absences), 10) || 0)
+      const late30Plus = Math.max(0, Number.parseInt(String(entry?.late30Plus), 10) || 0)
+      return absences >= 2 || late30Plus >= 1
+    })
+    .sort((left, right) => {
+      const leftScore = normalizeAttendanceRiskScore(left)
+      const rightScore = normalizeAttendanceRiskScore(right)
+      if (leftScore !== rightScore) return rightScore - leftScore
+      return normalizeText(left?.fullName).localeCompare(normalizeText(right?.fullName))
+    })
+}
+
+function parseDateOrNull(value) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.valueOf())) return null
+  return date
+}
+
+function toIsoDateText(value) {
+  const date = value instanceof Date ? value : parseDateOrNull(value)
+  if (!(date instanceof Date)) return ""
+  if (Number.isNaN(date.valueOf())) return ""
+  return date.toISOString().slice(0, 10)
+}
+
+function compareByDueAtThenCoverageThenName(left = {}, right = {}) {
+  const leftDueAt = parseDateOrNull(left.dueAt)
+  const rightDueAt = parseDateOrNull(right.dueAt)
+  const leftDueValue = leftDueAt ? leftDueAt.valueOf() : Number.MAX_SAFE_INTEGER
+  const rightDueValue = rightDueAt ? rightDueAt.valueOf() : Number.MAX_SAFE_INTEGER
+  if (leftDueValue !== rightDueValue) return leftDueValue - rightDueValue
+  const leftCoverage = Number.parseInt(String(left.students?.length || 0), 10) || 0
+  const rightCoverage = Number.parseInt(String(right.students?.length || 0), 10) || 0
+  if (leftCoverage !== rightCoverage) return rightCoverage - leftCoverage
+  return normalizeText(left.assignmentName).localeCompare(normalizeText(right.assignmentName))
+}
+
+function daysUntilDateFloor(targetDate, now = new Date()) {
+  const dueAt = parseDateOrNull(targetDate)
+  if (!(dueAt instanceof Date)) return null
+  const today = startOfDay(now)
+  const dueDay = startOfDay(dueAt)
+  const msPerDay = 24 * 60 * 60 * 1000
+  return Math.round((dueDay.valueOf() - today.valueOf()) / msPerDay)
+}
+
+export function selectCurrentNotYetDueAssignmentsByLevel(entries = [], now = new Date()) {
+  const rows = Array.isArray(entries) ? entries : []
+  const asOf = parseDateOrNull(now) || new Date()
+  const groupsByLevel = new Map()
+
+  rows.forEach((entry) => {
+    if (!isAssignmentTrackingGradeRecord(entry)) return
+    const studentRefId = normalizeText(entry?.studentRefId)
+    if (!studentRefId) return
+    const dueAt = parseDateOrNull(entry?.dueAt)
+    if (!dueAt) return
+    if (dueAt.valueOf() <= asOf.valueOf()) return
+
+    const level = canonicalizeLevel(entry?.level || "") || "Unassigned"
+    const assignmentName = normalizeText(entry?.assignmentName) || "Assignment"
+    const dueDate = toIsoDateText(dueAt)
+    const assignmentKey = `${normalizeLower(assignmentName)}|${dueDate}`
+    if (!groupsByLevel.has(level)) groupsByLevel.set(level, new Map())
+    const levelGroups = groupsByLevel.get(level)
+    if (!levelGroups.has(assignmentKey)) {
+      levelGroups.set(assignmentKey, {
+        level,
+        assignmentName,
+        dueAt: dueDate,
+        students: [],
+      })
+    }
+    const group = levelGroups.get(assignmentKey)
+    let studentEntry = group.students.find((item) => normalizeText(item.studentRefId) === studentRefId)
+    if (!studentEntry) {
+      studentEntry = {
+        studentRefId,
+        completed: false,
+        submittedAt: "",
+      }
+      group.students.push(studentEntry)
+    }
+    if (isCompletedGradeRecord(entry)) studentEntry.completed = true
+    const submittedAt = parseDateOrNull(entry?.submittedAt)
+    if (submittedAt) {
+      const submittedAtText = toIsoDateText(submittedAt)
+      if (!studentEntry.submittedAt || submittedAtText < studentEntry.submittedAt) {
+        studentEntry.submittedAt = submittedAtText
+      }
+    }
+  })
+
+  return Array.from(groupsByLevel.entries())
+    .map(([level, levelGroups]) => {
+      const selected = Array.from(levelGroups.values()).sort(compareByDueAtThenCoverageThenName)[0]
+      const students = Array.isArray(selected?.students) ? selected.students : []
+      return {
+        level,
+        assignmentName: normalizeText(selected?.assignmentName),
+        dueAt: normalizeText(selected?.dueAt),
+        students: students
+          .slice()
+          .sort((left, right) =>
+            normalizeText(left?.studentRefId).localeCompare(normalizeText(right?.studentRefId))
+          ),
+      }
+    })
+    .sort((left, right) => compareKnownLevelOrder(left.level, right.level))
+}
+
 function compareKnownLevelOrder(left, right) {
   const leftCanonical = canonicalizeLevel(left)
   const rightCanonical = canonicalizeLevel(right)
@@ -391,6 +559,7 @@ async function getFilterCacheRedisClient() {
       await client.connect()
       filterCacheRedisClient = client
       FILTER_CACHE_STATE.backend = "redis"
+      FILTER_CACHE_STATE.lastError = null
       return client
     } catch (error) {
       filterCacheRedisDisabled = true
@@ -418,6 +587,7 @@ async function readCachedLevelAndSchoolFilters() {
   if (client) {
     try {
       const raw = await client.get(FILTER_CACHE_KEY)
+      FILTER_CACHE_STATE.lastError = null
       if (raw) {
         const parsed = normalizeFilterPayload(JSON.parse(raw))
         memoryFilterCacheEntry = {
@@ -452,6 +622,7 @@ async function writeCachedLevelAndSchoolFilters(payload = {}) {
 
   try {
     await client.set(FILTER_CACHE_KEY, JSON.stringify(normalized), { EX: FILTER_CACHE_TTL_SECONDS })
+    FILTER_CACHE_STATE.lastError = null
   } catch (error) {
     FILTER_CACHE_STATE.lastError = String(error?.message || error)
   }
@@ -467,6 +638,7 @@ async function invalidateLevelAndSchoolFiltersCache() {
 
   try {
     await client.del(FILTER_CACHE_KEY)
+    FILTER_CACHE_STATE.lastError = null
   } catch (error) {
     FILTER_CACHE_STATE.lastError = String(error?.message || error)
   }
@@ -1711,12 +1883,16 @@ export async function getAdminDashboardSummary() {
     prisma.studentGradeRecord.findMany({
       select: {
         studentRefId: true,
+        className: true,
         level: true,
         dueAt: true,
         submittedAt: true,
         homeworkCompleted: true,
         homeworkOnTime: true,
         assignmentName: true,
+        score: true,
+        maxScore: true,
+        comments: true,
       },
     }),
     prisma.parentClassReport.count(),
@@ -1750,10 +1926,12 @@ export async function getAdminDashboardSummary() {
     attendanceByLevel,
   } = todayAttendanceSummary
 
-  const onTimeCompletions = allGradeRecords.filter((row) => isOnTimeCompletedGradeRecord(row)).length
-  const lateCompletions = allGradeRecords.filter((row) => isLateCompletedGradeRecord(row)).length
-  const outstanding = allGradeRecords.filter((row) => isOutstandingGradeRecord(row, now)).length
-  const outstandingYtd = allGradeRecords.filter((row) => {
+  const assignmentTrackingGradeRecords = allGradeRecords.filter((row) => isAssignmentTrackingGradeRecord(row))
+
+  const onTimeCompletions = assignmentTrackingGradeRecords.filter((row) => isOnTimeCompletedGradeRecord(row)).length
+  const lateCompletions = assignmentTrackingGradeRecords.filter((row) => isLateCompletedGradeRecord(row)).length
+  const outstanding = assignmentTrackingGradeRecords.filter((row) => isOutstandingGradeRecord(row, now)).length
+  const outstandingYtd = assignmentTrackingGradeRecords.filter((row) => {
     if (!row.dueAt) return false
     const dueAt = new Date(row.dueAt)
     if (Number.isNaN(dueAt.valueOf())) return false
@@ -1772,7 +1950,7 @@ export async function getAdminDashboardSummary() {
     }
   })
 
-  allGradeRecords.forEach((row) => {
+  assignmentTrackingGradeRecords.forEach((row) => {
     if (!row.dueAt) return
     const dueAt = new Date(row.dueAt)
     if (Number.isNaN(dueAt.valueOf())) return
@@ -1809,7 +1987,7 @@ export async function getAdminDashboardSummary() {
   })
 
   const outstandingThisWeekByStudent = new Map()
-  allGradeRecords.forEach((row) => {
+  assignmentTrackingGradeRecords.forEach((row) => {
     if (!row.dueAt) return
     const dueAt = new Date(row.dueAt)
     if (Number.isNaN(dueAt.valueOf())) return
@@ -1866,38 +2044,15 @@ export async function getAdminDashboardSummary() {
     entry.level = canonicalizeLevel(profile?.currentGrade || "") || "Unassigned"
   })
 
-  const atRiskStudents = Array.from(riskByStudent.values())
-    .filter((entry) => entry.absences >= 2 || entry.late30Plus >= 1 || entry.outstandingWeek >= 2)
-    .sort((left, right) => {
-      const leftScore = left.absences * 3 + left.outstandingWeek * 2 + left.late30Plus * 2
-      const rightScore = right.absences * 3 + right.outstandingWeek * 2 + right.late30Plus * 2
-      if (leftScore !== rightScore) return rightScore - leftScore
-      return normalizeText(left.fullName).localeCompare(normalizeText(right.fullName))
-    })
-    .slice(0, 30)
+  const riskSignals = Array.from(riskByStudent.values())
+  const atRiskStudents = selectAtRiskStudentsFromSignals(riskSignals).slice(0, 30)
+  const attendanceRiskStudents = selectAttendanceRiskStudentsFromSignals(riskSignals).slice(0, 30)
 
   const levels = Array.from(new Set([...enrolledByLevel.keys(), ...attendanceByLevel.keys()])).sort(
     compareKnownLevelOrder
   )
 
-  const levelCompletionMap = new Map()
-  const ensureLevelCompletion = (levelName) => {
-    const level = canonicalizeLevel(levelName || "") || "Unassigned"
-    if (!levelCompletionMap.has(level)) {
-      levelCompletionMap.set(level, {
-        level,
-        enrolledStudents: 0,
-        totalAssignments: 0,
-        completedAssignments: 0,
-        outstandingAssignments: 0,
-        completedStudents: 0,
-        uncompletedStudents: [],
-        _studentsById: new Map(),
-      })
-    }
-    return levelCompletionMap.get(level)
-  }
-
+  const levelEnrollmentMap = new Map()
   const toEmailList = (profile) =>
     Array.from(
       new Set(
@@ -1912,108 +2067,131 @@ export async function getAdminDashboardSummary() {
 
   enrolledProfiles.forEach((profile) => {
     const level = canonicalizeLevel(profile.currentGrade || "") || "Unassigned"
-    const bucket = ensureLevelCompletion(level)
+    if (!levelEnrollmentMap.has(level)) {
+      levelEnrollmentMap.set(level, {
+        level,
+        students: [],
+      })
+    }
+    const bucket = levelEnrollmentMap.get(level)
     const identity = assertStudentIdentityIntegrity(
       profile?.student,
       `dashboard levelCompletion enrolled studentRefId=${normalizeText(profile?.studentRefId)}`
     )
-    bucket.enrolledStudents += 1
-    bucket._studentsById.set(profile.studentRefId, {
+    bucket.students.push({
       studentRefId: profile.studentRefId,
       eaglesId: identity.eaglesId,
       studentNumber: identity.studentNumber,
       fullName: normalizeText(profile.fullName),
       emails: toEmailList(profile),
-      outstandingCount: 0,
-      completedCount: 0,
-      totalAssignments: 0,
-      assignmentNames: [],
-      nextDueAt: null,
     })
   })
 
-  allGradeRecords.forEach((record) => {
+  const assignmentSignalRows = assignmentTrackingGradeRecords.map((record) => {
     const profile = profileByStudentRefId.get(record.studentRefId)
-    const level = canonicalizeLevel(profile?.currentGrade || record.level || "") || "Unassigned"
-    const bucket = ensureLevelCompletion(level)
-    bucket.totalAssignments += 1
-
-    let student = bucket._studentsById.get(record.studentRefId)
-    if (!student) {
-      const identity = assertStudentIdentityIntegrity(
-        profile?.student,
-        `dashboard levelCompletion record studentRefId=${normalizeText(record?.studentRefId)}`
-      )
-      student = {
-        studentRefId: record.studentRefId,
-        eaglesId: identity.eaglesId,
-        studentNumber: identity.studentNumber,
-        fullName: normalizeText(profile?.fullName),
-        emails: toEmailList(profile),
-        outstandingCount: 0,
-        completedCount: 0,
-        totalAssignments: 0,
-        assignmentNames: [],
-        nextDueAt: null,
-      }
-      bucket._studentsById.set(record.studentRefId, student)
-      bucket.enrolledStudents += 1
-    }
-
-    student.totalAssignments += 1
-    if (isCompletedGradeRecord(record)) {
-      bucket.completedAssignments += 1
-      student.completedCount += 1
-    }
-    if (isOutstandingGradeRecord(record, now)) {
-      bucket.outstandingAssignments += 1
-      student.outstandingCount += 1
-      const assignmentName = normalizeText(record.assignmentName)
-      if (assignmentName && !student.assignmentNames.includes(assignmentName)) {
-        student.assignmentNames.push(assignmentName)
-      }
-      if (record.dueAt) {
-        const dueAt = new Date(record.dueAt)
-        if (!Number.isNaN(dueAt.valueOf())) {
-          if (!student.nextDueAt || dueAt < student.nextDueAt) student.nextDueAt = dueAt
-        }
-      }
+    return {
+      studentRefId: normalizeText(record.studentRefId),
+      level: canonicalizeLevel(profile?.currentGrade || record.level || "") || "Unassigned",
+      className: normalizeText(record.className),
+      assignmentName: normalizeText(record.assignmentName),
+      dueAt: record.dueAt,
+      submittedAt: record.submittedAt,
+      homeworkCompleted: record.homeworkCompleted,
+      homeworkOnTime: record.homeworkOnTime,
+      score: record.score,
+      maxScore: record.maxScore,
+      comments: normalizeText(record.comments),
     }
   })
 
-  const levelCompletion = Array.from(levelCompletionMap.values())
-    .map((bucket) => {
-      const students = Array.from(bucket._studentsById.values())
-      const uncompletedStudents = students
-        .filter((entry) => entry.outstandingCount > 0)
-        .sort((left, right) => {
-          if (left.outstandingCount !== right.outstandingCount) return right.outstandingCount - left.outstandingCount
-          return normalizeText(left.fullName).localeCompare(normalizeText(right.fullName))
-        })
-        .map((entry) => ({
-          studentRefId: entry.studentRefId,
-          eaglesId: entry.eaglesId,
-          studentNumber: entry.studentNumber,
-          fullName: entry.fullName,
-          emails: entry.emails,
-          outstandingCount: entry.outstandingCount,
-          assignmentNames: entry.assignmentNames,
-          nextDueAt: entry.nextDueAt ? entry.nextDueAt.toISOString().slice(0, 10) : "",
-        }))
+  const currentAssignmentSignals = selectCurrentNotYetDueAssignmentsByLevel(assignmentSignalRows, now)
+  const currentAssignmentByLevel = new Map(
+    currentAssignmentSignals.map((entry) => [canonicalizeLevel(entry?.level || "") || "Unassigned", entry])
+  )
 
-      const completedStudents = students.filter((entry) => entry.totalAssignments > 0 && entry.outstandingCount === 0).length
+  const levelCompletion = Array.from(levelEnrollmentMap.values())
+    .map((bucket) => {
+      const currentAssignment = currentAssignmentByLevel.get(bucket.level)
+      if (!currentAssignment) return null
+
+      const assignmentName = normalizeText(currentAssignment.assignmentName)
+      const dueAt = normalizeText(currentAssignment.dueAt)
+      const completionByStudentRefId = new Map(
+        (Array.isArray(currentAssignment.students) ? currentAssignment.students : []).map((entry) => [
+          normalizeText(entry?.studentRefId),
+          Boolean(entry?.completed),
+        ])
+      )
+
+      let completedStudents = 0
+      const uncompletedStudents = []
+      bucket.students.forEach((student) => {
+        if (completionByStudentRefId.get(student.studentRefId) === true) {
+          completedStudents += 1
+          return
+        }
+        uncompletedStudents.push({
+          studentRefId: student.studentRefId,
+          eaglesId: student.eaglesId,
+          studentNumber: student.studentNumber,
+          fullName: student.fullName,
+          emails: student.emails,
+          outstandingCount: 1,
+          assignmentNames: assignmentName ? [assignmentName] : [],
+          nextDueAt: dueAt,
+        })
+      })
+
+      uncompletedStudents.sort((left, right) =>
+        normalizeText(left?.fullName).localeCompare(normalizeText(right?.fullName))
+      )
+
+      const enrolledStudents = bucket.students.length
+      const pendingStudents = Math.max(0, enrolledStudents - completedStudents)
+      const completionPercent = percentage(completedStudents, enrolledStudents) || 0
+      const daysUntilDue = daysUntilDateFloor(dueAt, now)
 
       return {
         level: bucket.level,
-        enrolledStudents: bucket.enrolledStudents,
-        totalAssignments: bucket.totalAssignments,
-        completedAssignments: bucket.completedAssignments,
-        outstandingAssignments: bucket.outstandingAssignments,
+        enrolledStudents,
+        totalAssignments: enrolledStudents,
+        completedAssignments: completedStudents,
+        outstandingAssignments: pendingStudents,
         completedStudents,
+        completionPercent,
+        assignmentName,
+        dueAt,
+        daysUntilDue,
         uncompletedStudents,
       }
     })
+    .filter(Boolean)
     .sort((left, right) => compareKnownLevelOrder(left.level, right.level))
+
+  const currentTargetedStudents = levelCompletion.reduce(
+    (sum, row) => sum + (Number.parseInt(String(row?.totalAssignments || 0), 10) || 0),
+    0
+  )
+  const currentCompletedStudents = levelCompletion.reduce(
+    (sum, row) => sum + (Number.parseInt(String(row?.completedAssignments || 0), 10) || 0),
+    0
+  )
+  const currentPendingStudents = levelCompletion.reduce(
+    (sum, row) => sum + (Number.parseInt(String(row?.outstandingAssignments || 0), 10) || 0),
+    0
+  )
+  const currentDueSoonLevels = levelCompletion.reduce((sum, row) => {
+    const daysUntilDue = Number.parseInt(String(row?.daysUntilDue), 10)
+    if (!Number.isFinite(daysUntilDue)) return sum
+    if (daysUntilDue < 0 || daysUntilDue > 2) return sum
+    return sum + 1
+  }, 0)
+  const currentDueSoonPendingStudents = levelCompletion.reduce((sum, row) => {
+    const daysUntilDue = Number.parseInt(String(row?.daysUntilDue), 10)
+    if (!Number.isFinite(daysUntilDue)) return sum
+    if (daysUntilDue < 0 || daysUntilDue > 2) return sum
+    return sum + (Number.parseInt(String(row?.outstandingAssignments || 0), 10) || 0)
+  }, 0)
 
   return {
     generatedAt: now.toISOString(),
@@ -2035,15 +2213,26 @@ export async function getAdminDashboardSummary() {
       attendanceToday: attendanceByLevel.get(level) || 0,
     })),
     assignments: {
-      total: allGradeRecords.length,
+      total: assignmentTrackingGradeRecords.length,
       completedOnTime: onTimeCompletions,
       completedLate: lateCompletions,
       outstanding,
       outstandingYtd,
+      currentActiveLevels: levelCompletion.length,
+      currentTargetedStudents,
+      currentCompletedStudents,
+      currentPendingStudents,
+      currentCompletionPercent: percentage(currentCompletedStudents, currentTargetedStudents) || 0,
+      currentDueSoonLevels,
+      currentDueSoonPendingStudents,
     },
     atRiskWeek: {
       total: atRiskStudents.length,
       students: atRiskStudents,
+    },
+    attendanceRiskWeek: {
+      total: attendanceRiskStudents.length,
+      students: attendanceRiskStudents,
     },
     levelCompletion,
     parentReports: {
