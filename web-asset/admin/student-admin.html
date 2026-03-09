@@ -1106,7 +1106,7 @@
     .admin-table-summary {
       margin: 6px 0 12px;
       font-size: 12px;
-      color: var(--ink-muted);
+      color: var(--ink);
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
@@ -2143,8 +2143,8 @@
       gap: 8px;
     }
     .small {
-      font-size: 11px;
-      color: var(--ink-muted);
+      font-size: 13px;
+      color: var(--primary-color);
     }
     #status {
       min-height: 28px;
@@ -6300,12 +6300,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (selectedStudent) {
         const labelId = normalizeText(selectedStudent?.eaglesId)
         const labelNumber = studentDisplayNumber(selectedStudent)
-        const labelFullName = studentFullName(selectedStudent)
-        const labelEnglishName = studentEnglishName(selectedStudent)
-        const numberToken = labelNumber ? ` | Student Number: ${labelNumber}` : ""
-        summaryParts.push(
-          `Student: Eagles ID: ${labelId}${numberToken} | Full Name: ${labelFullName} | English Name: ${labelEnglishName}`
-        )
+        const labelFullName = normalizeText(studentFullName(selectedStudent)) || "(not set)"
+        const labelEnglishName = normalizeText(studentEnglishName(selectedStudent)) || "(not set)"
+        summaryParts.push(`Student: ${labelId || "(not set)"}`)
+        if (labelNumber) summaryParts.push(`Student Number: ${labelNumber}`)
+        summaryParts.push(`Full Name: ${labelFullName}`)
+        summaryParts.push(`English Name: ${labelEnglishName}`)
       }
       const dateFrom = tableFilterValue(tableKey, "dateFrom")
       const dateTo = tableFilterValue(tableKey, "dateTo")

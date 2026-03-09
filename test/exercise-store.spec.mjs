@@ -7,16 +7,26 @@ import {
   resolveIncomingExerciseResultToStudent,
 } from "../server/exercise-store.mjs"
 
-function makePersistPrisma({ matchedStudent = null } = {}) {
+function makePersistPrisma({
+  matchedStudent = null,
+  matchedSubmissionRows = [],
+  matchedGradeRows = [],
+} = {}) {
   const state = {
     studentFindFirstCalls: [],
     incomingFindFirstCalls: [],
     queueCreateCalls: [],
     incomingUpdateCalls: [],
     exerciseUpsertCalls: [],
+    submissionFindFirstCalls: [],
     submissionCreateCalls: [],
+    submissionUpdateCalls: [],
+    gradeRecordFindFirstCalls: [],
     gradeRecordCreateCalls: [],
+    gradeRecordUpdateCalls: [],
     queueRows: [],
+    matchedSubmissionRows: Array.isArray(matchedSubmissionRows) ? [...matchedSubmissionRows] : [],
+    matchedGradeRows: Array.isArray(matchedGradeRows) ? [...matchedGradeRows] : [],
   }
 
   const tx = {
@@ -27,15 +37,49 @@ function makePersistPrisma({ matchedStudent = null } = {}) {
       },
     },
     exerciseSubmission: {
+      async findFirst(args) {
+        state.submissionFindFirstCalls.push(args)
+        return state.matchedSubmissionRows.length
+          ? state.matchedSubmissionRows[state.matchedSubmissionRows.length - 1]
+          : null
+      },
       async create(args) {
         state.submissionCreateCalls.push(args)
-        return { id: "submission-1" }
+        return { id: "submission-1", ...args.data }
+      },
+      async update(args) {
+        state.submissionUpdateCalls.push(args)
+        const index = state.matchedSubmissionRows.findIndex((row) => row.id === args?.where?.id)
+        if (index < 0) throw new Error("Matched submission row not found in mock state")
+        const updated = {
+          ...state.matchedSubmissionRows[index],
+          ...args.data,
+        }
+        state.matchedSubmissionRows[index] = updated
+        return updated
       },
     },
     studentGradeRecord: {
+      async findFirst(args) {
+        state.gradeRecordFindFirstCalls.push(args)
+        return state.matchedGradeRows.length
+          ? state.matchedGradeRows[state.matchedGradeRows.length - 1]
+          : null
+      },
       async create(args) {
         state.gradeRecordCreateCalls.push(args)
-        return { id: "grade-1" }
+        return { id: "grade-1", ...args.data }
+      },
+      async update(args) {
+        state.gradeRecordUpdateCalls.push(args)
+        const index = state.matchedGradeRows.findIndex((row) => row.id === args?.where?.id)
+        if (index < 0) throw new Error("Matched grade row not found in mock state")
+        const updated = {
+          ...state.matchedGradeRows[index],
+          ...args.data,
+        }
+        state.matchedGradeRows[index] = updated
+        return updated
       },
     },
   }
@@ -182,6 +226,81 @@ test("persistExerciseSubmission records directly when student account is matched
   assert.equal(prisma.state.queueCreateCalls.length, 0)
   assert.equal(prisma.state.submissionCreateCalls.length, 1)
   assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
+})
+
+test("persistExerciseSubmission de-duplicates matched records and updates existing grade when incoming payload is richer", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      eaglesId: "S001",
+      email: "student@example.com",
+      profile: {
+        currentGrade: "Movers",
+      },
+    },
+    matchedSubmissionRows: [
+      {
+        id: "submission-existing",
+        studentRefId: "student-1",
+        exerciseRefId: "exercise-1",
+        submittedStudentId: "S001",
+        submittedEmail: "student@example.com",
+        completedAt: new Date("2026-03-01T07:34:04.862Z"),
+        totalQuestions: 1,
+        correctCount: 0,
+        pendingCount: 0,
+        incorrectCount: 1,
+        scorePercent: 0,
+        answersJson: [{ id: "1", answers: ["book"] }],
+        recipientsJson: ["teacher@example.com"],
+        createdAt: new Date("2026-03-01T07:34:04.900Z"),
+      },
+    ],
+    matchedGradeRows: [
+      {
+        id: "grade-existing",
+        studentRefId: "student-1",
+        className: "Movers Unit 3",
+        assignmentName: "Movers Unit 3",
+        dueAt: new Date("2026-03-01T07:34:04.862Z"),
+        submittedAt: new Date("2026-03-01T07:34:04.862Z"),
+        score: 0,
+        maxScore: 100,
+        homeworkCompleted: true,
+        homeworkOnTime: true,
+        comments: "Auto-imported exercise score.",
+        createdAt: new Date("2026-03-01T07:34:04.901Z"),
+      },
+    ],
+  })
+
+  const result = await persistExerciseSubmission(
+    {
+      studentId: "S001",
+      email: "student@example.com",
+      pageTitle: "Movers Unit 3",
+      completedAt: "2026-03-01T07:34:05.100Z",
+      answers: [{ id: 1, answers: ["B"], status: "correct" }],
+      recipients: ["teacher@example.com"],
+    },
+    { prisma }
+  )
+
+  assert.equal(result.saved, true)
+  assert.equal(result.matched, true)
+  assert.equal(result.queued, false)
+  assert.equal(result.deduplicated, true)
+  assert.equal(result.updatedExisting, true)
+  assert.equal(result.shouldNotify, false)
+  assert.equal(result.submissionId, "submission-existing")
+  assert.equal(result.gradeRecordId, "grade-existing")
+  assert.equal(result.summary?.scorePercent, 100)
+  assert.equal(prisma.state.submissionCreateCalls.length, 0)
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 0)
+  assert.equal(prisma.state.submissionUpdateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordUpdateCalls.length, 1)
+  assert.equal(prisma.state.matchedSubmissionRows[0].scorePercent, 100)
+  assert.equal(prisma.state.matchedGradeRows[0].score, 100)
 })
 
 function makeResolvePrisma() {

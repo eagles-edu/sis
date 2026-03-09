@@ -15,6 +15,7 @@ const INCOMING_EXERCISE_RESULT_STATUSES = new Set([
 ])
 const INCOMING_DUPLICATE_COMPLETED_AT_WINDOW_MS = 1500
 const INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS = 5 * 60 * 1000
+const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "Auto-imported exercise score"
 
 function resolveBoolean(value, fallback) {
   if (value === undefined || value === null || value === "") return fallback
@@ -456,8 +457,8 @@ function buildExerciseGradeRecordData(student, submission, summary) {
   const scorePercent = Number(summary.scorePercent || 0)
   const gradeLevel = normalizeString(student?.profile?.currentGrade)
   const comments = totalQuestions > 0
-    ? `Auto-imported exercise score (${correctCount}/${totalQuestions} correct).`
-    : "Auto-imported exercise score."
+    ? `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX} (${correctCount}/${totalQuestions} correct).`
+    : `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX}.`
 
   return {
     studentRefId: student.id,
@@ -500,6 +501,16 @@ function buildIncomingQueueRecordData(submission, summary, options = {}) {
 }
 
 function buildIncomingSummary(item) {
+  return {
+    totalQuestions: Number.parseInt(String(item?.totalQuestions || 0), 10) || 0,
+    correctCount: Number.parseInt(String(item?.correctCount || 0), 10) || 0,
+    pendingCount: Number.parseInt(String(item?.pendingCount || 0), 10) || 0,
+    incorrectCount: Number.parseInt(String(item?.incorrectCount || 0), 10) || 0,
+    scorePercent: Number(item?.scorePercent || 0),
+  }
+}
+
+function buildExerciseSubmissionSummary(item) {
   return {
     totalQuestions: Number.parseInt(String(item?.totalQuestions || 0), 10) || 0,
     correctCount: Number.parseInt(String(item?.correctCount || 0), 10) || 0,
@@ -552,6 +563,48 @@ async function findIncomingDuplicate(prisma, submission) {
       submittedEmail: submission.submittedEmail || null,
       pageTitle: submission.pageTitle,
       completedAt: completedAtRange,
+      createdAt: {
+        gte: new Date(Date.now() - INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS),
+      },
+    },
+    orderBy: [{ createdAt: "desc" }],
+  })
+}
+
+async function findMatchedSubmissionDuplicate(prisma, studentRefId, exerciseRefId, submission) {
+  const completedAtRange = buildCompletedAtRange(submission?.completedAt)
+  if (!completedAtRange) return null
+
+  return prisma.exerciseSubmission.findFirst({
+    where: {
+      studentRefId,
+      exerciseRefId,
+      submittedStudentId: submission.submittedStudentIdDisplay,
+      submittedEmail: submission.submittedEmail || null,
+      completedAt: completedAtRange,
+      createdAt: {
+        gte: new Date(Date.now() - INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS),
+      },
+    },
+    orderBy: [{ createdAt: "desc" }],
+  })
+}
+
+async function findMatchedGradeDuplicate(prisma, studentRefId, pageTitle, completedAt) {
+  const completedAtRange = buildCompletedAtRange(completedAt)
+  if (!completedAtRange) return null
+
+  return prisma.studentGradeRecord.findFirst({
+    where: {
+      studentRefId,
+      className: pageTitle,
+      assignmentName: pageTitle,
+      dueAt: completedAtRange,
+      submittedAt: completedAtRange,
+      comments: {
+        startsWith: AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX,
+        mode: "insensitive",
+      },
       createdAt: {
         gte: new Date(Date.now() - INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS),
       },
@@ -648,17 +701,73 @@ export async function persistExerciseSubmission(payload, options = {}) {
     }
   }
 
-  const created = await prisma.$transaction(async (tx) => {
+  const persisted = await prisma.$transaction(async (tx) => {
     const exercise = await ensureExerciseRecord(tx, submission.pageTitle)
-    const createdSubmission = await tx.exerciseSubmission.create({
+    const existingSubmission = await findMatchedSubmissionDuplicate(
+      tx,
+      matchedStudent.id,
+      exercise.id,
+      submission
+    )
+    const incomingQuality = buildSubmissionQuality(summary, submission.answersJson, submission.completedAt)
+
+    if (existingSubmission) {
+      const existingSummary = buildExerciseSubmissionSummary(existingSubmission)
+      const existingQuality = buildSubmissionQuality(
+        existingSummary,
+        existingSubmission.answersJson,
+        existingSubmission.completedAt
+      )
+      const shouldReplaceExisting = isSubmissionQualityBetter(incomingQuality, existingQuality)
+
+      const submissionRecord = shouldReplaceExisting
+        ? await tx.exerciseSubmission.update({
+            where: { id: existingSubmission.id },
+            data: buildExerciseSubmissionRecordData(matchedStudent.id, exercise.id, submission, summary),
+          })
+        : existingSubmission
+
+      const existingGradeRecord = await findMatchedGradeDuplicate(
+        tx,
+        matchedStudent.id,
+        submission.pageTitle,
+        submission.completedAt
+      )
+
+      const gradeRecord = existingGradeRecord
+        ? shouldReplaceExisting
+          ? await tx.studentGradeRecord.update({
+              where: { id: existingGradeRecord.id },
+              data: buildExerciseGradeRecordData(matchedStudent, submission, summary),
+            })
+          : existingGradeRecord
+        : await tx.studentGradeRecord.create({
+            data: buildExerciseGradeRecordData(matchedStudent, submission, summary),
+          })
+
+      return {
+        submissionRecord,
+        gradeRecord,
+        deduplicated: true,
+        updatedExisting: shouldReplaceExisting,
+        shouldNotify: false,
+        summary: shouldReplaceExisting ? summary : existingSummary,
+      }
+    }
+
+    const submissionRecord = await tx.exerciseSubmission.create({
       data: buildExerciseSubmissionRecordData(matchedStudent.id, exercise.id, submission, summary),
     })
-    const createdGradeRecord = await tx.studentGradeRecord.create({
+    const gradeRecord = await tx.studentGradeRecord.create({
       data: buildExerciseGradeRecordData(matchedStudent, submission, summary),
     })
     return {
-      createdSubmission,
-      createdGradeRecord,
+      submissionRecord,
+      gradeRecord,
+      deduplicated: false,
+      updatedExisting: false,
+      shouldNotify: true,
+      summary,
     }
   })
 
@@ -666,13 +775,13 @@ export async function persistExerciseSubmission(payload, options = {}) {
     saved: true,
     matched: true,
     queued: false,
-    deduplicated: false,
-    updatedExisting: false,
-    shouldNotify: true,
+    deduplicated: persisted.deduplicated,
+    updatedExisting: persisted.updatedExisting,
+    shouldNotify: persisted.shouldNotify,
     studentRefId: matchedStudent.id,
-    submissionId: created.createdSubmission.id,
-    gradeRecordId: created.createdGradeRecord.id,
-    summary,
+    submissionId: persisted.submissionRecord.id,
+    gradeRecordId: persisted.gradeRecord.id,
+    summary: persisted.summary,
   }
 }
 

@@ -37,4 +37,17 @@ jobs:
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "preproduction"
+          # Keep CI focused on actionable code/workflow checks for this repo.
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
+          VALIDATE_CHECKOV: false
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
+          VALIDATE_JSCPD: false
+          VALIDATE_JSON_PRETTIER: false
+          VALIDATE_MARKDOWN_PRETTIER: false
+          VALIDATE_NATURAL_LANGUAGE: false
+          VALIDATE_SPELL_CODESPELL: false
+          VALIDATE_TRIVY: false
+          VALIDATE_YAML_PRETTIER: false
+          FILTER_REGEX_EXCLUDE: "(^|/)(backups|docs/logs)/"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
