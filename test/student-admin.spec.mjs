@@ -25,6 +25,9 @@ process.env.STUDENT_TEACHER_ACCOUNTS_JSON = JSON.stringify([
   { username: "teacher", role: "teacher", password: "teacher-pass-123" },
   { username: "carole01", role: "teacher", password: "carole-pass-123" },
 ])
+process.env.STUDENT_PARENT_PORTAL_ACCOUNTS_JSON = JSON.stringify([
+  { parentsId: "cmvi001", password: "family-pass-123", status: "active" },
+])
 process.env.STUDENT_ADMIN_TOKEN_SECRET = "test-student-admin-token-secret"
 process.env.MAILER_DEBUG = "false"
 process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = TEST_ADMIN_UI_SETTINGS_FILE
@@ -53,6 +56,7 @@ let server
 let port
 let adminSessionCookie = ""
 let teacherSessionCookie = ""
+let parentSessionCookie = ""
 let assignmentAnnouncementPreviewPath = ""
 let persistedUiSettingsPath = ""
 
@@ -275,6 +279,26 @@ test("GET /admin/students/parent-tracking returns section page HTML with slug co
   const html = await res.text()
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"parent-tracking"/i)
+})
+
+test("GET /admin/students/queue-hub returns section page HTML with slug config", async () => {
+  const res = await fetchLocal(port, "/admin/students/queue-hub")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
+  assert.match(html, /"queue-hub"/i)
+  assert.match(html, /__SIS_ADMIN_QUEUE_HUB_PATH/i)
+})
+
+test("GET /parent/portal returns parent portal HTML with runtime config", async () => {
+  const res = await fetchLocal(port, "/parent/portal")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /Parent Portal/i)
+  assert.match(html, /__SIS_PARENT_API_PREFIX/i)
+  assert.match(html, /__SIS_PARENT_AUTH_PREFIX/i)
 })
 
 test("GET /admin/students/unknown-section returns 404", async () => {
@@ -551,6 +575,22 @@ test("teacher can access runtime health endpoint", async () => {
   assert.ok(body.runtimeSelfHeal && typeof body.runtimeSelfHeal === "object")
 })
 
+test("teacher cannot access queue hub or profile submissions endpoints", async () => {
+  const queueHubRes = await fetchLocal(port, "/api/admin/queue-hub", {
+    headers: { Cookie: teacherSessionCookie },
+  })
+  assert.equal(queueHubRes.status, 403)
+  const queueHubBody = await queueHubRes.json()
+  assert.match(queueHubBody.error, /Forbidden/i)
+
+  const profileSubmissionsRes = await fetchLocal(port, "/api/admin/profile-submissions", {
+    headers: { Cookie: teacherSessionCookie },
+  })
+  assert.equal(profileSubmissionsRes.status, 403)
+  const profileSubmissionsBody = await profileSubmissionsRes.json()
+  assert.match(profileSubmissionsBody.error, /Forbidden/i)
+})
+
 test("teacher cannot create volatile assignment announcement preview", async () => {
   const res = await fetchLocal(port, "/api/admin/assignment-announcements/volatile", {
     method: "POST",
@@ -582,6 +622,26 @@ test("GET /api/admin/permissions exposes role policies", async () => {
   assert.ok(body.roles?.teacher)
   assert.ok(body.roles?.student)
   assert.ok(body.roles?.parent)
+})
+
+test("GET /api/admin/profile-submissions returns queue payload for admin", async () => {
+  const res = await fetchLocal(port, "/api/admin/profile-submissions", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.ok(Array.isArray(body.items))
+  assert.ok(Number.isInteger(body.total))
+})
+
+test("GET /api/admin/queue-hub returns store-disabled response when admin store is disabled", async () => {
+  const res = await fetchLocal(port, "/api/admin/queue-hub", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
 })
 
 test("admin can persist and reload school setup ui settings", async () => {
@@ -778,6 +838,124 @@ test("admin can create volatile assignment announcement preview and retrieve pag
   assert.match(html, /This is a preview announcement/i)
 })
 
+test("POST /api/parent/auth/login rejects invalid credentials", async () => {
+  const res = await fetchLocal(port, "/api/parent/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ parentsId: "cmvi001", password: "wrong-password" }),
+  })
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Invalid parentsId or password/i)
+})
+
+test("POST /api/parent/auth/login returns parent session cookie", async () => {
+  const res = await fetchLocal(port, "/api/parent/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ parentsId: "cmvi001", password: "family-pass-123" }),
+  })
+  assert.equal(res.status, 200)
+  const setCookie = res.headers.get("set-cookie") || ""
+  assert.match(setCookie, /parent_portal_sid=/i)
+  parentSessionCookie = setCookie.split(";")[0]
+  assert.ok(parentSessionCookie.length > 20)
+  const body = await res.json()
+  assert.equal(body.authenticated, true)
+  assert.equal(body.user?.parentsId, "cmvi001")
+  assert.equal(body.user?.role, "parent")
+})
+
+test("GET /api/parent/auth/me returns authenticated parent user", async () => {
+  const res = await fetchLocal(port, "/api/parent/auth/me", {
+    headers: { Cookie: parentSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.authenticated, true)
+  assert.equal(body.user?.parentsId, "cmvi001")
+  assert.equal(body.user?.role, "parent")
+})
+
+test("GET /api/parent/children returns linked-children list payload", async () => {
+  const res = await fetchLocal(port, "/api/parent/children", {
+    headers: { Cookie: parentSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.ok(Array.isArray(body.items))
+})
+
+test("GET /api/parent/dashboard returns dashboard payload", async () => {
+  const res = await fetchLocal(port, "/api/parent/dashboard", {
+    headers: { Cookie: parentSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.ok(Array.isArray(body.children))
+})
+
+test("parent profile endpoints reject unlinked child references", async () => {
+  const getProfileRes = await fetchLocal(port, "/api/parent/children/vi001/profile", {
+    headers: { Cookie: parentSessionCookie },
+  })
+  assert.equal(getProfileRes.status, 403)
+  const getProfileBody = await getProfileRes.json()
+  assert.match(getProfileBody.error, /not linked/i)
+
+  const saveDraftRes = await fetchLocal(port, "/api/parent/children/vi001/profile-draft", {
+    method: "PUT",
+    headers: {
+      Cookie: parentSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      patch: {
+        fullName: "Updated Name",
+      },
+    }),
+  })
+  assert.equal(saveDraftRes.status, 403)
+  const saveDraftBody = await saveDraftRes.json()
+  assert.match(saveDraftBody.error, /not linked/i)
+
+  const submitRes = await fetchLocal(port, "/api/parent/children/vi001/profile-submit", {
+    method: "POST",
+    headers: {
+      Cookie: parentSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({}),
+  })
+  assert.equal(submitRes.status, 403)
+  const submitBody = await submitRes.json()
+  assert.match(submitBody.error, /not linked/i)
+})
+
+test("POST /api/parent/auth/logout clears parent session cookie", async () => {
+  const res = await fetchLocal(port, "/api/parent/auth/logout", {
+    method: "POST",
+    headers: { Cookie: parentSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const setCookie = res.headers.get("set-cookie") || ""
+  assert.match(setCookie, /Max-Age=0/i)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.equal(body.authenticated, false)
+})
+
+test("GET /api/parent/auth/me requires auth after parent logout", async () => {
+  const res = await fetchLocal(port, "/api/parent/auth/me", {
+    headers: { Cookie: parentSessionCookie },
+  })
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
 test("POST /api/admin/auth/logout clears session cookie", async () => {
   const res = await fetchLocal(port, "/api/admin/auth/logout", {
     method: "POST",
@@ -864,6 +1042,27 @@ test("GET /api/admin/users requires auth", async () => {
 
 test("GET /api/admin/dashboard requires auth", async () => {
   const res = await fetchLocal(port, "/api/admin/dashboard")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/admin/queue-hub requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/queue-hub")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/admin/profile-submissions requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/profile-submissions")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/parent/children requires auth", async () => {
+  const res = await fetchLocal(port, "/api/parent/children")
   assert.equal(res.status, 401)
   const body = await res.json()
   assert.match(body.error, /Unauthorized/i)

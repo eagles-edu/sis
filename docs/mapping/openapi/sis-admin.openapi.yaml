@@ -22,6 +22,8 @@ tags:
     description: Runtime diagnostics and controlled service actions.
   - name: dashboard
     description: Overview summary and current class-level metrics.
+  - name: queue
+    description: Admin queue-hub aggregate and parent profile submission review workflows.
   - name: incoming
     description: Incoming exercise-result queue review workflows.
   - name: students
@@ -239,6 +241,116 @@ paths:
           description: Missing or invalid session
         '403':
           description: Forbidden for role
+
+  /api/admin/queue-hub:
+    get:
+      tags: [queue]
+      summary: Return queue hub aggregate payload (admin-only)
+      operationId: getAdminQueueHub
+      responses:
+        '200':
+          description: Queue hub payload with panel order and panel data blocks
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Forbidden
+
+  /api/admin/profile-submissions:
+    get:
+      tags: [queue]
+      summary: List parent profile submissions for admin review
+      operationId: getAdminProfileSubmissions
+      parameters:
+        - in: query
+          name: statuses
+          schema:
+            type: string
+        - in: query
+          name: take
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Parent profile submission queue payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Forbidden
+
+  /api/admin/profile-submissions/{submissionId}:
+    parameters:
+      - in: path
+        name: submissionId
+        required: true
+        schema:
+          type: string
+    put:
+      tags: [queue]
+      summary: Save admin-edited patch payload for one parent profile submission
+      operationId: putAdminProfileSubmissionDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                patch:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Updated submission payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Forbidden
+        '404':
+          description: Submission not found
+    post:
+      tags: [queue]
+      summary: Approve or reject one parent profile submission
+      operationId: postAdminProfileSubmissionAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                rejectionReason:
+                  type: string
+      responses:
+        '200':
+          description: Submission action result payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Forbidden
+        '404':
+          description: Submission not found
+        '409':
+          description: Submission lock-conflict
 
   /api/admin/exercise-titles:
     get:

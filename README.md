@@ -92,12 +92,14 @@ npm run dev
 - Cookie-session admin authentication (`/api/admin/auth/login`)
 - Role-aware permissions (`admin` full, `teacher` read-focused)
 - Persistent school setup + branding settings (`GET/PUT /api/admin/settings/ui`)
+- Admin Queue Hub aggregate (`GET /api/admin/queue-hub`) with persisted panel ordering (`uiSettings.queueHub.panelOrder`)
 - Student CRUD + profile persistence
 - Strict student import identity validation (`eaglesId + studentNumber`)
 - Import template download endpoint
 - Attendance tracking workflows
 - Grade/performance tracking workflows
 - Parent report queueing and review actions
+- Parent portal session APIs (`/api/parent/auth/*`, `/api/parent/children`, `/api/parent/dashboard`) and public portal route (`/parent/portal`)
 - Exercise incoming queue review/match/create-account flows
 - Runtime health + service control endpoints
 - XLSX export endpoint
@@ -188,6 +190,23 @@ Admins own full tracking oversight and correction loops.
 
 - Runtime health endpoint for diagnostics.
 - Service control endpoint for controlled restart actions.
+
+### 8) Parent Portal Contract
+
+- Public portal page: `GET /parent/portal`
+- Parent auth/session endpoints:
+  - `POST /api/parent/auth/login`
+  - `POST /api/parent/auth/logout`
+  - `GET /api/parent/auth/me`
+- Parent data endpoints:
+  - `GET /api/parent/children`
+  - `GET /api/parent/dashboard`
+  - `GET /api/parent/children/{eaglesId}/profile`
+  - `PUT /api/parent/children/{eaglesId}/profile-draft`
+  - `POST /api/parent/children/{eaglesId}/profile-submit`
+- Parent account source:
+  - preferred: DB `ParentPortalAccount`
+  - fallback env: `STUDENT_PARENT_PORTAL_ACCOUNTS_JSON`
 
 ### 7) Data Safety Expectations
 

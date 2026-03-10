@@ -1328,6 +1328,58 @@
     .overview-group.full {
       grid-column: 1 / -1;
     }
+    .queue-hub-panels {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .queue-hub-panel {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-3);
+      background: var(--surface-card);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      cursor: grab;
+    }
+    .queue-hub-panel.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+    .queue-hub-panel.drop-target {
+      border-color: #79a9e6;
+      background: #edf5ff;
+    }
+    .queue-hub-panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .queue-hub-panel-header h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+    .queue-hub-meta {
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+    .queue-hub-empty {
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-2);
+      background: var(--surface-card-muted);
+      color: var(--ink-muted);
+      font-size: 12px;
+      padding: 10px;
+    }
+    .queue-hub-panel .table-scroll-wrap table {
+      min-width: 620px;
+    }
+    .queue-hub-order-dirty {
+      border-color: #ebb967;
+      background: #fff9eb;
+    }
     .stats-grid {
       display: grid;
       gap: 8px;
@@ -2379,6 +2431,7 @@
           <p class="small">Expandable section menus keep related tools grouped on separate pages.</p>
           <nav class="menu-groups" id="navMenu">
             <a href="#" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+            <a href="#" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
             <a href="#" class="menu-link menu-link-top" data-page-link="profile">STUDENTS</a>
             <div class="menu-group" data-menu-group="tracking">
               <button type="button" class="menu-group-btn" data-menu-toggle="tracking">TRACKING</button>
@@ -2701,6 +2754,20 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <p class="small" id="overviewIncomingExerciseActionStatus">Disposition actions are available per queue row.</p>
                     </details>
                   </section>
+                </div>
+              </div>
+
+              <div class="panel page-section" data-page="queue-hub">
+                <h2>Queue Hub</h2>
+                <p class="small page-note">Admin single-contact queue dashboard. Drag panels to reorder, then save panel order.</p>
+                <div class="actions actions-3">
+                  <button id="queueHubRefreshBtn" type="button" class="btn-refresh">Reload Queue Hub</button>
+                  <button id="queueHubSaveOrderBtn" type="button">Save Panel Order</button>
+                  <button id="queueHubResetOrderBtn" type="button">Reset Panel Order</button>
+                </div>
+                <p class="small" id="queueHubStatus">Queue hub data not loaded yet.</p>
+                <div id="queueHubPanels" class="queue-hub-panels">
+                  <div class="queue-hub-empty">Queue hub data not loaded yet.</div>
                 </div>
               </div>
 
@@ -3871,6 +3938,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         stagedRows: [],
         pendingStageQueueById: {},
       },
+      queueHub: {
+        loaded: false,
+        generatedAt: "",
+        panelOrder: [
+          "queued-performance-reports",
+          "unmatched-exercise-submissions",
+          "current-assignments-pending",
+          "overdue-homework",
+          "attendance-risk",
+          "pending-profile-submissions",
+        ],
+        panelsById: {},
+        draggingPanelId: "",
+        hasUnsavedOrder: false,
+      },
       studentDetailCacheById: {},
       adminDataLoading: {
         attendance: false,
@@ -4922,7 +5004,18 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       multiSchool: false,
       schoolSetup: defaultSchoolSetupRange(),
       schoolProfile: defaultSchoolProfile(),
+      queueHub: {
+        panelOrder: [
+          "queued-performance-reports",
+          "unmatched-exercise-submissions",
+          "current-assignments-pending",
+          "overdue-homework",
+          "attendance-risk",
+          "pending-profile-submissions",
+        ],
+      },
     }
+    const QUEUE_HUB_PANEL_IDS = Object.freeze([...DEFAULT_UI_SETTINGS.queueHub.panelOrder])
 
     const ASSIGNMENT_TEMPLATE_STORAGE_KEY = "sis.admin.assignmentTemplates"
     const PARENT_TRACKING_TEACHER_STORAGE_KEY = "sis.admin.parentTracking.teacherNames"
@@ -7609,6 +7702,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return normalizeSchoolProfile(state.uiSettings?.schoolProfile || DEFAULT_UI_SETTINGS.schoolProfile)
     }
 
+    function normalizeQueueHubPanelOrder(values = []) {
+      const source = Array.isArray(values) ? values : []
+      const selected = source
+        .map((entry) => normalizeText(entry))
+        .filter((entry) => QUEUE_HUB_PANEL_IDS.includes(entry))
+      const merged = [...new Set(selected)]
+      QUEUE_HUB_PANEL_IDS.forEach((panelId) => {
+        if (!merged.includes(panelId)) merged.push(panelId)
+      })
+      return merged
+    }
+
+    function normalizeQueueHubSettings(source = {}) {
+      return {
+        panelOrder: normalizeQueueHubPanelOrder(source?.panelOrder || DEFAULT_UI_SETTINGS.queueHub.panelOrder),
+      }
+    }
+
     function schoolBrandFallbackToken(name = "") {
       const parts = normalizeText(name)
         .split(/\s+/)
@@ -7655,6 +7766,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         multiSchool: Boolean(source?.multiSchool),
         schoolSetup: normalizeSchoolSetup(source?.schoolSetup || DEFAULT_UI_SETTINGS.schoolSetup),
         schoolProfile: normalizeSchoolProfile(source?.schoolProfile || DEFAULT_UI_SETTINGS.schoolProfile),
+        queueHub: normalizeQueueHubSettings(source?.queueHub || DEFAULT_UI_SETTINGS.queueHub),
       }
     }
 
@@ -8065,6 +8177,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       renderSchoolBranding()
       renderSchoolSetupPanel()
+      state.queueHub.panelOrder = normalizeQueueHubPanelOrder(state.uiSettings?.queueHub?.panelOrder || state.queueHub.panelOrder)
+      if (state.queueHub.loaded) renderQueueHubPanels()
     }
 
     const apiPrefixConfig = resolveApiPrefixConfig()
@@ -8076,6 +8190,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const ADMIN_PERMISSIONS_PATH = normalizeText(window.__SIS_ADMIN_PERMISSIONS_PATH) || "/api/admin/permissions"
     const ADMIN_UI_SETTINGS_PATH = normalizeText(window.__SIS_ADMIN_UI_SETTINGS_PATH) || "/api/admin/settings/ui"
     const ADMIN_DASHBOARD_PATH = normalizeText(window.__SIS_ADMIN_DASHBOARD_PATH) || "/api/admin/dashboard"
+    const ADMIN_QUEUE_HUB_PATH = normalizeText(window.__SIS_ADMIN_QUEUE_HUB_PATH) || "/api/admin/queue-hub"
     const ADMIN_EXERCISE_TITLES_PATH = normalizeText(window.__SIS_ADMIN_EXERCISE_TITLES_PATH) || "/api/admin/exercise-titles"
     const ADMIN_NOTIFY_EMAIL_PATH = normalizeText(window.__SIS_ADMIN_NOTIFY_EMAIL_PATH) || "/api/admin/notifications/email"
     const ADMIN_NOTIFY_BATCH_STATUS_PATH =
@@ -8100,7 +8215,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const initialHubProbeMode = defaultHubProbeMode()
     setHubProbeMode(initialHubProbeMode, initialHubProbeMode === "auth" ? "non-loopback-default" : "")
     const PAGE_GROUPS = {
-      students: ["overview", "profile"],
+      students: ["overview", "queue-hub", "profile"],
       tracking: [
         "attendance",
         "attendance-admin",
@@ -8117,6 +8232,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
     const PAGES_WITH_HIDDEN_TOP_SEARCH = new Set([
       "overview",
+      "queue-hub",
       "attendance",
       "attendance-admin",
       "assignments",
@@ -8191,7 +8307,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const fallback = fallbackPolicy || defaultRolePermissionsConfig()[role] || defaultRolePermissionsConfig().teacher
       const allowedPages = uniquePageList(policy?.allowedPages, fallback.allowedPages)
       if (role === "admin") {
-        ;["student-admin", "school-setup", "users", "permissions", "settings"].forEach((slug) => {
+        ;["queue-hub", "student-admin", "school-setup", "users", "permissions", "settings"].forEach((slug) => {
           if (!VALID_PAGE_SECTION_SET.has(slug)) return
           if (!allowedPages.includes(slug)) allowedPages.push(slug)
         })
@@ -8468,6 +8584,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (slug === "parent-tracking") {
         ensureParentTrackingFormDefaults({ forceSummaryFromMemory: false })
         refreshParentTracking({ preserveStudentSelection: true }).catch(handleError)
+      }
+      if (slug === "queue-hub") {
+        loadQueueHub({ notify: false }).catch(handleError)
       }
       if (slug === "assignments" || slug === "assignments-data") {
         refreshAssignmentStudentOptions()
@@ -8823,6 +8942,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         hasMore: false,
         showAll: false,
         statuses: [],
+      }
+      state.queueHub = {
+        loaded: false,
+        generatedAt: "",
+        panelOrder: normalizeQueueHubPanelOrder(DEFAULT_UI_SETTINGS.queueHub.panelOrder),
+        panelsById: {},
+        draggingPanelId: "",
+        hasUnsavedOrder: false,
       }
       state.activePage = INITIAL_PAGE_SLUG
       clearUserForm()
@@ -10977,6 +11104,377 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         statuses: state.incomingExerciseQueue.statuses,
         items: state.incomingExerciseQueue.items,
       })
+    }
+
+    function setQueueHubStatus(message = "", isError = false) {
+      const statusEl = document.getElementById("queueHubStatus")
+      if (!statusEl) return
+      statusEl.style.color = isError ? "#b3262d" : "#5f6d87"
+      statusEl.textContent = normalizeText(message) || "Queue hub data not loaded yet."
+    }
+
+    function queueHubPanelTitle(panelId = "") {
+      const id = normalizeText(panelId)
+      switch (id) {
+        case "queued-performance-reports":
+          return "Queued Performance Reports"
+        case "unmatched-exercise-submissions":
+          return "Exercise Submissions (Unmatched eaglesId)"
+        case "current-assignments-pending":
+          return "Current Assignments Not Yet Completed"
+        case "overdue-homework":
+          return "Past Overdue Homework"
+        case "attendance-risk":
+          return "At-Risk Attendance"
+        case "pending-profile-submissions":
+          return "Pending Profile Submissions"
+        default:
+          return id || "Queue Panel"
+      }
+    }
+
+    function normalizeQueueHubPanelForUi(panel = {}) {
+      const id = normalizeText(panel?.id)
+      return {
+        id,
+        title: normalizeText(panel?.title) || queueHubPanelTitle(id),
+        total: Math.max(0, Number.parseInt(String(panel?.total || 0), 10) || 0),
+        items: Array.isArray(panel?.items) ? panel.items : [],
+      }
+    }
+
+    function queueHubTableSpec(panelId = "") {
+      switch (panelId) {
+        case "queued-performance-reports":
+          return {
+            columns: ["Queued At", "Assignment", "Status", "Level", "Queued By"],
+            row: (item) => [
+              formatDateTime(item?.queuedAt),
+              normalizeText(item?.assignmentTitle || item?.exerciseTitle),
+              normalizeText(item?.status),
+              normalizeText(item?.level),
+              normalizeText(item?.queuedByUsername),
+            ],
+            emptyText: "No queued performance reports.",
+          }
+        case "unmatched-exercise-submissions":
+          return {
+            columns: ["Received", "Eagles ID", "Email", "Exercise", "Score", "Status"],
+            row: (item) => {
+              const totalQuestions = Math.max(0, Number.parseInt(String(item?.totalQuestions || 0), 10) || 0)
+              const correctCount = Math.max(0, Number.parseInt(String(item?.correctCount || 0), 10) || 0)
+              const scorePercent = Number(item?.scorePercent || 0)
+              const scoreLabel = totalQuestions > 0
+                ? `${correctCount}/${totalQuestions} (${Number.isFinite(scorePercent) ? scorePercent.toFixed(1) : "0.0"}%)`
+                : `${Number.isFinite(scorePercent) ? scorePercent.toFixed(1) : "0.0"}%`
+              return [
+                formatDateTime(item?.createdAt),
+                normalizeText(item?.submittedStudentId || "(not provided)"),
+                normalizeText(item?.submittedEmail),
+                normalizeText(item?.pageTitle),
+                scoreLabel,
+                normalizeText(item?.status),
+              ]
+            },
+            emptyText: "No unmatched exercise submissions.",
+          }
+        case "current-assignments-pending":
+          return {
+            columns: ["Level", "Targeted", "Completed", "Pending", "Due At"],
+            row: (item) => {
+              const targeted = Number.parseInt(
+                String(item?.currentTargetedStudents ?? item?.targetedStudents ?? item?.enrolled ?? 0),
+                10
+              ) || 0
+              const completed = Number.parseInt(
+                String(item?.currentCompletedStudents ?? item?.completedStudents ?? 0),
+                10
+              ) || 0
+              const pending = Number.parseInt(
+                String(
+                  item?.currentPendingStudents
+                  ?? item?.pendingStudents
+                  ?? (Array.isArray(item?.uncompletedStudents) ? item.uncompletedStudents.length : 0)
+                ),
+                10
+              ) || 0
+              return [
+                fullLevelLabel(resolveSystemLevelName(item?.level || "")),
+                String(targeted),
+                String(completed),
+                String(pending),
+                formatDateTime(item?.dueAt || item?.nextDueAt || ""),
+              ]
+            },
+            emptyText: "No current not-yet-completed assignment rows.",
+          }
+        case "overdue-homework":
+          return {
+            columns: ["Student", "Eagles ID", "Class", "Assignment", "Due At"],
+            row: (item) => [
+              normalizeText(item?.fullName),
+              normalizeText(item?.eaglesId || item?.studentRefId),
+              normalizeText(item?.className),
+              normalizeText(item?.assignmentName),
+              formatDateTime(item?.dueAt),
+            ],
+            emptyText: "No overdue homework rows.",
+          }
+        case "attendance-risk":
+          return {
+            columns: ["Student", "Eagles ID", "Absences", "Late 30+", "Risk Score"],
+            row: (item) => {
+              const absences = Math.max(0, Number.parseInt(String(item?.absences || 0), 10) || 0)
+              const late30 = Math.max(0, Number.parseInt(String(item?.late30Plus || 0), 10) || 0)
+              const riskScore = absences * 3 + late30 * 2
+              return [
+                normalizeText(item?.fullName),
+                normalizeText(item?.eaglesId || item?.studentRefId),
+                String(absences),
+                String(late30),
+                String(riskScore),
+              ]
+            },
+            emptyText: "No attendance risk rows.",
+          }
+        case "pending-profile-submissions":
+          return {
+            columns: ["Submitted At", "Submission", "Student Ref", "Status", "Failure Point"],
+            row: (item) => [
+              formatDateTime(item?.submittedAt || item?.updatedAt),
+              normalizeText(item?.id),
+              normalizeText(item?.studentRefId),
+              normalizeText(item?.status),
+              normalizeText(item?.failurePoint),
+            ],
+            emptyText: "No pending profile submissions.",
+          }
+        default:
+          return {
+            columns: ["Details"],
+            row: (item) => [normalizeText(JSON.stringify(item))],
+            emptyText: "No records.",
+          }
+      }
+    }
+
+    function queueHubPanelTableHtml(panel = {}) {
+      const spec = queueHubTableSpec(panel?.id)
+      const items = Array.isArray(panel?.items) ? panel.items : []
+      if (!items.length) {
+        return `<div class="queue-hub-empty">${escapeHtml(spec.emptyText)}</div>`
+      }
+      const visibleItems = items.slice(0, 25)
+      const headerHtml = spec.columns.map((label) => `<th scope="col">${escapeHtml(label)}</th>`).join("")
+      const bodyHtml = visibleItems
+        .map((item) => {
+          const cells = spec.row(item).map((value) => `<td>${escapeHtml(normalizeText(value))}</td>`).join("")
+          return `<tr>${cells}</tr>`
+        })
+        .join("")
+      const truncatedHint = items.length > visibleItems.length
+        ? `<p class="small">Showing first ${visibleItems.length} of ${items.length} rows.</p>`
+        : ""
+      return `
+        <div class="table-scroll-wrap">
+          <table>
+            <thead><tr>${headerHtml}</tr></thead>
+            <tbody>${bodyHtml}</tbody>
+          </table>
+        </div>
+        ${truncatedHint}
+      `
+    }
+
+    function queueHubPanelMapFromPayload(panels = []) {
+      const map = {}
+      const source = Array.isArray(panels) ? panels : []
+      source.forEach((entry) => {
+        const panel = normalizeQueueHubPanelForUi(entry)
+        if (!panel.id) return
+        map[panel.id] = panel
+      })
+      QUEUE_HUB_PANEL_IDS.forEach((panelId) => {
+        if (!map[panelId]) {
+          map[panelId] = {
+            id: panelId,
+            title: queueHubPanelTitle(panelId),
+            total: 0,
+            items: [],
+          }
+        }
+      })
+      return map
+    }
+
+    function queueHubOrderedPanels() {
+      const panelOrder = normalizeQueueHubPanelOrder(state.queueHub.panelOrder)
+      const panelsById = state.queueHub.panelsById && typeof state.queueHub.panelsById === "object"
+        ? state.queueHub.panelsById
+        : {}
+      return panelOrder.map((panelId) => panelsById[panelId] || {
+        id: panelId,
+        title: queueHubPanelTitle(panelId),
+        total: 0,
+        items: [],
+      })
+    }
+
+    function markQueueHubOrderDirty(order = []) {
+      const normalizedOrder = normalizeQueueHubPanelOrder(order)
+      state.queueHub.panelOrder = normalizedOrder
+      state.queueHub.hasUnsavedOrder = true
+      persistUiSettings({
+        ...state.uiSettings,
+        queueHub: {
+          ...(state.uiSettings?.queueHub || {}),
+          panelOrder: normalizedOrder,
+        },
+      })
+    }
+
+    function moveQueueHubPanelBefore(panelId = "", beforePanelId = "") {
+      const sourcePanelId = normalizeText(panelId)
+      const targetPanelId = normalizeText(beforePanelId)
+      const order = normalizeQueueHubPanelOrder(state.queueHub.panelOrder)
+      const fromIndex = order.indexOf(sourcePanelId)
+      const toIndex = order.indexOf(targetPanelId)
+      if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return
+      order.splice(fromIndex, 1)
+      order.splice(toIndex, 0, sourcePanelId)
+      markQueueHubOrderDirty(order)
+      renderQueueHubPanels()
+      setQueueHubStatus("Queue Hub order changed. Click Save Panel Order to persist.")
+    }
+
+    function renderQueueHubPanels() {
+      const panelRoot = document.getElementById("queueHubPanels")
+      const saveBtn = document.getElementById("queueHubSaveOrderBtn")
+      if (!panelRoot) return
+      const canReview = canManageUsers()
+      panelRoot.innerHTML = ""
+      if (!canReview) {
+        panelRoot.innerHTML = '<div class="queue-hub-empty">Queue Hub is available for admin users only.</div>'
+        if (saveBtn) saveBtn.disabled = true
+        return
+      }
+
+      if (saveBtn) saveBtn.disabled = !state.queueHub.hasUnsavedOrder
+      const panels = queueHubOrderedPanels()
+      if (!panels.length) {
+        panelRoot.innerHTML = '<div class="queue-hub-empty">No queue hub panels available.</div>'
+        return
+      }
+
+      panels.forEach((panel) => {
+        const panelEl = document.createElement("article")
+        panelEl.className = `queue-hub-panel${state.queueHub.hasUnsavedOrder ? " queue-hub-order-dirty" : ""}`
+        panelEl.draggable = true
+        panelEl.dataset.queueHubPanelId = panel.id
+        panelEl.innerHTML = `
+          <div class="queue-hub-panel-header">
+            <h3>${escapeHtml(panel.title)}</h3>
+            <span class="queue-hub-meta">total=${panel.total}</span>
+          </div>
+          ${queueHubPanelTableHtml(panel)}
+        `
+        panelEl.addEventListener("dragstart", (event) => {
+          state.queueHub.draggingPanelId = panel.id
+          panelEl.classList.add("dragging")
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move"
+            event.dataTransfer.setData("text/plain", panel.id)
+          }
+        })
+        panelEl.addEventListener("dragend", () => {
+          state.queueHub.draggingPanelId = ""
+          panelEl.classList.remove("dragging")
+          panelRoot.querySelectorAll(".queue-hub-panel.drop-target").forEach((entry) => entry.classList.remove("drop-target"))
+        })
+        panelEl.addEventListener("dragover", (event) => {
+          event.preventDefault()
+          panelEl.classList.add("drop-target")
+        })
+        panelEl.addEventListener("dragleave", () => panelEl.classList.remove("drop-target"))
+        panelEl.addEventListener("drop", (event) => {
+          event.preventDefault()
+          panelEl.classList.remove("drop-target")
+          const draggedPanelId = normalizeText(state.queueHub.draggingPanelId || event.dataTransfer?.getData("text/plain"))
+          if (!draggedPanelId) return
+          moveQueueHubPanelBefore(draggedPanelId, panel.id)
+        })
+        panelRoot.appendChild(panelEl)
+      })
+    }
+
+    async function loadQueueHub({ notify = false } = {}) {
+      if (!canManageUsers()) {
+        state.queueHub.loaded = true
+        state.queueHub.panelsById = {}
+        state.queueHub.hasUnsavedOrder = false
+        renderQueueHubPanels()
+        setQueueHubStatus("Queue Hub is hidden for this role.")
+        return
+      }
+
+      let payload = null
+      try {
+        payload = await api(ADMIN_QUEUE_HUB_PATH)
+      } catch (error) {
+        if (error && error.status === 404) {
+          state.queueHub.loaded = true
+          state.queueHub.panelsById = {}
+          state.queueHub.generatedAt = ""
+          renderQueueHubPanels()
+          setQueueHubStatus("Queue Hub API is not available on this runtime.", true)
+          if (notify) setStatus("Queue Hub API is not available on this runtime.", true)
+          return
+        }
+        throw error
+      }
+
+      state.queueHub.loaded = true
+      state.queueHub.generatedAt = normalizeText(payload?.generatedAt)
+      state.queueHub.panelsById = queueHubPanelMapFromPayload(payload?.panels)
+      if (!state.queueHub.hasUnsavedOrder) {
+        const panelOrder = normalizeQueueHubPanelOrder(payload?.panelOrder || state.uiSettings?.queueHub?.panelOrder || [])
+        state.queueHub.panelOrder = panelOrder
+        persistUiSettings({
+          ...state.uiSettings,
+          queueHub: {
+            ...(state.uiSettings?.queueHub || {}),
+            panelOrder,
+          },
+        })
+      }
+      renderQueueHubPanels()
+      const statusMessage = `Queue Hub loaded (${state.queueHub.generatedAt ? formatDateTime(state.queueHub.generatedAt) : "now"}).`
+      setQueueHubStatus(statusMessage)
+      if (notify) setStatus(statusMessage)
+    }
+
+    async function saveQueueHubPanelOrder() {
+      if (!canManageUsers()) throw new Error("Only admin can save queue hub panel order.")
+      const panelOrder = normalizeQueueHubPanelOrder(state.queueHub.panelOrder)
+      persistUiSettings({
+        ...state.uiSettings,
+        queueHub: {
+          ...(state.uiSettings?.queueHub || {}),
+          panelOrder,
+        },
+      })
+      await persistUiSettingsToServer(state.uiSettings, { notifyOnFailure: true })
+      state.queueHub.hasUnsavedOrder = false
+      renderQueueHubPanels()
+      setQueueHubStatus("Queue Hub panel order saved.")
+      setStatus("Queue Hub panel order saved.")
+    }
+
+    function resetQueueHubPanelOrder() {
+      const panelOrder = normalizeQueueHubPanelOrder(DEFAULT_UI_SETTINGS.queueHub.panelOrder)
+      markQueueHubOrderDirty(panelOrder)
+      renderQueueHubPanels()
+      setQueueHubStatus("Queue Hub panel order reset to default. Click Save Panel Order to persist.")
     }
 
     function canReviewParentQueue() {
@@ -15441,6 +15939,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         await loadStudents()
         await loadDashboardStudents()
         await loadDashboardSummary()
+        await loadQueueHub({ notify: false })
         await loadServiceControlStatus({ notify: false })
         await loadIncomingExerciseResults({ showAll: state.incomingExerciseQueue.showAll })
         await loadExerciseTitles()
@@ -15605,6 +16104,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         await loadStudents()
         await loadDashboardStudents()
         await loadDashboardSummary()
+        await loadQueueHub({ notify: false })
         await loadServiceControlStatus({ notify: false })
         await loadIncomingExerciseResults({ showAll: state.incomingExerciseQueue.showAll })
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
@@ -15920,6 +16420,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     })
     document.getElementById("performanceQueueRefreshBtn")?.addEventListener("click", () => {
       loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(handleError)
+    })
+    document.getElementById("queueHubRefreshBtn")?.addEventListener("click", () => {
+      loadQueueHub({ notify: true }).catch(handleError)
+    })
+    document.getElementById("queueHubSaveOrderBtn")?.addEventListener("click", () => {
+      saveQueueHubPanelOrder().catch(handleError)
+    })
+    document.getElementById("queueHubResetOrderBtn")?.addEventListener("click", () => {
+      try {
+        resetQueueHubPanelOrder()
+      } catch (error) {
+        handleError(error)
+      }
     })
     document.getElementById("performanceQueueSendAllBtn")?.addEventListener("click", () => {
       sendAllQueuedParentReports().catch(handleError)

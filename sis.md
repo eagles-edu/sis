@@ -7,6 +7,45 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-11 - queue-hub admin page wiring + parent portal route/session coverage)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added admin Queue Hub page section (`data-page="queue-hub"`) and top-level navigation link.
+  - added Queue Hub data load path wired to `GET /api/admin/queue-hub`.
+  - added drag-and-drop panel reordering with persisted order key:
+    - `uiSettings.queueHub.panelOrder`
+  - added queue-hub panel-order controls:
+    - reload,
+    - save order,
+    - reset to default.
+  - updated UI settings normalization/defaults to include `queueHub.panelOrder` so local/server hydration keeps ordering stable.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added route coverage for:
+    - `GET /admin/students/queue-hub` HTML slug/runtime injection,
+    - `GET /parent/portal` HTML/runtime injection,
+    - teacher forbidden on `GET /api/admin/queue-hub` and `GET /api/admin/profile-submissions`,
+    - admin success on `GET /api/admin/profile-submissions`,
+    - admin store-disabled behavior on `GET /api/admin/queue-hub`,
+    - parent session flow (`/api/parent/auth/login`, `/me`, `/logout`),
+    - parent data reads (`/api/parent/children`, `/api/parent/dashboard`),
+    - unlinked-child rejection on parent profile endpoints,
+    - unauthenticated guards for new admin/parent endpoints.
+- Updated [docs/mapping/openapi/sis-admin.openapi.yaml](docs/mapping/openapi/sis-admin.openapi.yaml):
+  - documented new admin queue endpoints:
+    - `GET /api/admin/queue-hub`
+    - `GET /api/admin/profile-submissions`
+    - `PUT /api/admin/profile-submissions/{submissionId}`
+    - `POST /api/admin/profile-submissions/{submissionId}`
+- Updated [README.md](README.md):
+  - documented Queue Hub feature/persistence and parent portal API surface.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `125` pass, `0` fail.
+  - `npm test` => `202` pass, `0` fail.
+- Coverage gap:
+  - parent portal tests currently run in store-disabled mode and validate session/contract behavior, but not DB-backed linked-child/profile-approval merges.
+- Prioritized next action:
+  - add one DB-enabled integration fixture for parent-child link + draft submit + admin approve merge path (including lock-conflict assertion).
+
 ## Update (2026-03-10 - UTF-8 hardening for student import parsing, EN/VI safe path)
 
 - Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):

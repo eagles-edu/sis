@@ -52,9 +52,11 @@ import { createStudentAdminSessionStore } from "./student-admin-session-store.mj
 import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin/students")
+const PARENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_PARENT_PORTAL_PAGE_PATH, "/parent/portal")
 const ADMIN_PAGE_DEFAULT_SLUG = "overview"
 const ADMIN_PAGE_SECTIONS = [
   "overview",
+  "queue-hub",
   "student-admin",
   "profile",
   "attendance",
@@ -81,15 +83,21 @@ const ADMIN_NEXT_STUDENT_NUMBER_PATH = `${ADMIN_STUDENTS_PREFIX}/next-student-nu
 const ADMIN_PERMISSIONS_PATH = `${ADMIN_API_PREFIX}/permissions`
 const ADMIN_UI_SETTINGS_PATH = `${ADMIN_API_PREFIX}/settings/ui`
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
+const ADMIN_QUEUE_HUB_PATH = `${ADMIN_API_PREFIX}/queue-hub`
 const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
 const ADMIN_EXPORT_XLSX_PATH = `${ADMIN_API_PREFIX}/exports/xlsx`
 const ADMIN_NOTIFY_EMAIL_PATH = `${ADMIN_API_PREFIX}/notifications/email`
 const ADMIN_NOTIFY_BATCH_STATUS_PATH = `${ADMIN_API_PREFIX}/notifications/batch-status`
 const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-results/incoming`
+const ADMIN_PROFILE_SUBMISSIONS_PATH = `${ADMIN_API_PREFIX}/profile-submissions`
 const ADMIN_RUNTIME_HEALTH_PATH = `${ADMIN_API_PREFIX}/runtime/health`
 const ADMIN_SERVICE_CONTROL_PATH = `${ADMIN_API_PREFIX}/runtime/service-control`
 const ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH =
   `${ADMIN_API_PREFIX}/assignment-announcements/volatile`
+const PARENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_PARENT_API_PREFIX, "/api/parent")
+const PARENT_AUTH_PREFIX = `${PARENT_API_PREFIX}/auth`
+const PARENT_CHILDREN_PATH = `${PARENT_API_PREFIX}/children`
+const PARENT_DASHBOARD_PATH = `${PARENT_API_PREFIX}/dashboard`
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
   process.env.STUDENT_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
   "/assignment-announcements/volatile"
@@ -114,7 +122,9 @@ const ADMIN_REPORTS_GENERATE_PATH_RE = new RegExp(
 const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
   `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/reports/([^/]+)$`
 )
+const ADMIN_PROFILE_SUBMISSION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PROFILE_SUBMISSIONS_PATH)}/([^/]+)$`)
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
+const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
 const ADMIN_UI_SETTINGS_FILE_PATH = path.resolve(
   process.cwd(),
@@ -128,6 +138,9 @@ const ADMIN_PAGE_SECTION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PAGE_PATH)}/
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE = new RegExp(
   `^${escapeRegex(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)}/([a-f0-9]{24})$`
 )
+const PARENT_CHILD_PROFILE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile$`)
+const PARENT_CHILD_PROFILE_DRAFT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-draft$`)
+const PARENT_CHILD_PROFILE_SUBMIT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-submit$`)
 
 const SESSION_TTL_SECONDS = Math.max(
   60,
@@ -140,6 +153,20 @@ const SESSION_COOKIE_SAME_SITE =
 const SESSION_COOKIE_SECURE = resolveBoolean(
   process.env.STUDENT_ADMIN_SESSION_COOKIE_SECURE,
   normalizeText(process.env.NODE_ENV).toLowerCase() !== "test"
+)
+const PARENT_SESSION_TTL_SECONDS = Math.max(
+  60,
+  Number.parseInt(String(process.env.STUDENT_PARENT_SESSION_TTL_SECONDS || "28800"), 10) || 28800
+)
+const PARENT_SESSION_COOKIE_NAME = normalizeText(process.env.STUDENT_PARENT_SESSION_COOKIE_NAME) || "parent_portal_sid"
+const PARENT_SESSION_COOKIE_PATH = normalizeText(process.env.STUDENT_PARENT_SESSION_COOKIE_PATH) || "/"
+const PARENT_SESSION_COOKIE_SAME_SITE =
+  normalizeText(process.env.STUDENT_PARENT_SESSION_COOKIE_SAMESITE)
+  || normalizeText(process.env.STUDENT_ADMIN_SESSION_COOKIE_SAMESITE)
+  || "Strict"
+const PARENT_SESSION_COOKIE_SECURE = resolveBoolean(
+  process.env.STUDENT_PARENT_SESSION_COOKIE_SECURE,
+  resolveBoolean(process.env.STUDENT_ADMIN_SESSION_COOKIE_SECURE, normalizeText(process.env.NODE_ENV).toLowerCase() !== "test")
 )
 const SERVICE_CONTROL_ENABLED = resolveBoolean(process.env.STUDENT_ADMIN_SERVICE_CONTROL_ENABLED, true)
 const EXERCISE_MAILER_SERVICE_NAME =
@@ -156,6 +183,115 @@ let ROLE_PERMISSIONS = null
 const SESSION_STORE = createStudentAdminSessionStore({
   ttlSeconds: SESSION_TTL_SECONDS,
 })
+const PARENT_SESSION_STORE = createStudentAdminSessionStore({
+  ttlSeconds: PARENT_SESSION_TTL_SECONDS,
+})
+const PARENT_PROFILE_QUEUE_STATUS_DRAFT = "draft"
+const PARENT_PROFILE_QUEUE_STATUS_SUBMITTED = "submitted"
+const PARENT_PROFILE_QUEUE_STATUS_APPROVED = "approved"
+const PARENT_PROFILE_QUEUE_STATUS_REJECTED = "rejected"
+const PARENT_PROFILE_QUEUE_ALLOWED_STATUSES = new Set([
+  PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+  PARENT_PROFILE_QUEUE_STATUS_SUBMITTED,
+  PARENT_PROFILE_QUEUE_STATUS_APPROVED,
+  PARENT_PROFILE_QUEUE_STATUS_REJECTED,
+])
+const PARENT_PROFILE_IMMUTABLE_FIELDS = new Set(["eaglesId", "studentNumber"])
+const PARENT_PROFILE_ARRAY_FIELDS = new Set([
+  "genderSelections",
+  "languagesAtHome",
+  "learningDisorders",
+  "covidShotHistory",
+  "feverMedicineAllowed",
+])
+const PARENT_PROFILE_INTEGER_FIELDS = new Set([
+  "exercisePoints",
+  "birthOrder",
+  "siblingBrothers",
+  "siblingSisters",
+])
+const PARENT_PROFILE_BOOLEAN_FIELDS = new Set([
+  "requiredValidationOk",
+])
+const PARENT_PROFILE_EDITABLE_FIELDS = new Set([
+  "sourceFormId",
+  "sourceUrl",
+  "fullName",
+  "englishName",
+  "memberSince",
+  "exercisePoints",
+  "parentsId",
+  "photoUrl",
+  "genderSelections",
+  "studentPhone",
+  "studentEmail",
+  "hobbies",
+  "dobText",
+  "birthOrder",
+  "siblingBrothers",
+  "siblingSisters",
+  "ethnicity",
+  "languagesAtHome",
+  "otherLanguage",
+  "schoolName",
+  "currentGrade",
+  "currentSchoolGrade",
+  "motherName",
+  "motherEmail",
+  "motherPhone",
+  "motherEmergencyContact",
+  "motherMessenger",
+  "fatherName",
+  "fatherEmail",
+  "fatherPhone",
+  "fatherEmergencyContact",
+  "fatherMessenger",
+  "streetAddress",
+  "newAddress",
+  "wardDistrict",
+  "city",
+  "postCode",
+  "hasGlasses",
+  "hadEyeExam",
+  "lastEyeExamDateText",
+  "prescriptionMedicine",
+  "prescriptionDetails",
+  "learningDisorders",
+  "learningDisorderDetails",
+  "drugAllergies",
+  "foodEnvironmentalAllergies",
+  "vaccinesChildhoodUpToDate",
+  "hadCovidPositive",
+  "covidNegativeDateText",
+  "covidShotAlready",
+  "covidVaccinesUpToDate",
+  "covidShotHistory",
+  "mostRecentCovidShotDate",
+  "feverMedicineAllowed",
+  "whiteOilAllowed",
+  "signatureFullName",
+  "signatureEmail",
+  "extraComments",
+  "requiredValidationOk",
+  "rawFormPayload",
+  "normalizedFormPayload",
+])
+const QUEUE_HUB_PANEL_IDS = [
+  "queued-performance-reports",
+  "unmatched-exercise-submissions",
+  "current-assignments-pending",
+  "overdue-homework",
+  "attendance-risk",
+  "pending-profile-submissions",
+]
+const PARENT_PORTAL_MEMORY = {
+  accounts: new Map(),
+  links: [],
+  submissions: [],
+  fieldLocks: [],
+}
+let PARENT_PORTAL_DB_DISABLED = false
+let PARENT_PORTAL_DB_WARNED = false
 let runtimeHealthProvider = null
 
 function normalizeText(value) {
@@ -419,7 +555,15 @@ function sendHtml(response, statusCode, html) {
 }
 
 function injectAdminRuntimeConfig(html, pageSlug) {
-  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
+  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${html}`
+}
+
+function injectParentRuntimeConfig(html) {
+  const runtimeConfig = `<script>window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -442,16 +586,23 @@ export function getStudentAdminRuntimeStatus() {
     permissionsPath: ADMIN_PERMISSIONS_PATH,
     uiSettingsPath: ADMIN_UI_SETTINGS_PATH,
     dashboardPath: ADMIN_DASHBOARD_PATH,
+    queueHubPath: ADMIN_QUEUE_HUB_PATH,
     exerciseTitlesPath: ADMIN_EXERCISE_TITLES_PATH,
     exportXlsxPath: ADMIN_EXPORT_XLSX_PATH,
     notifyEmailPath: ADMIN_NOTIFY_EMAIL_PATH,
     notifyBatchStatusPath: ADMIN_NOTIFY_BATCH_STATUS_PATH,
     incomingExerciseResultsPath: ADMIN_INCOMING_EXERCISE_RESULTS_PATH,
+    profileSubmissionsPath: ADMIN_PROFILE_SUBMISSIONS_PATH,
     runtimeHealthPath: ADMIN_RUNTIME_HEALTH_PATH,
     serviceControlPath: ADMIN_SERVICE_CONTROL_PATH,
     assignmentAnnouncementPreviewCreatePath: ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH,
     assignmentAnnouncementPreviewPath: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
     assignmentAnnouncementPreviewTtlMinutes: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES,
+    parentPortalPagePath: PARENT_PORTAL_PAGE_PATH,
+    parentApiPrefix: PARENT_API_PREFIX,
+    parentDashboardPath: PARENT_DASHBOARD_PATH,
+    parentChildrenPath: PARENT_CHILDREN_PATH,
+    parentAuthPrefix: PARENT_AUTH_PREFIX,
     notifyBatchQueue: getEmailBatchQueueRuntimeStatus(),
     pageDefaultSlug: ADMIN_PAGE_DEFAULT_SLUG,
     pageSections: [...ADMIN_PAGE_SECTIONS],
@@ -1116,6 +1267,52 @@ async function requireAuthenticatedSession(request, response) {
   }
 
   response.setHeader("Set-Cookie", makeSessionCookieValue(sessionId, SESSION_TTL_SECONDS))
+  return session
+}
+
+function makeParentSessionCookieValue(sessionId, maxAgeSeconds) {
+  const parts = [
+    `${PARENT_SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}`,
+    `Path=${PARENT_SESSION_COOKIE_PATH}`,
+    "HttpOnly",
+    `SameSite=${normalizeSameSite(PARENT_SESSION_COOKIE_SAME_SITE)}`,
+  ]
+
+  if (PARENT_SESSION_COOKIE_SECURE) parts.push("Secure")
+  if (Number.isInteger(maxAgeSeconds)) {
+    parts.push(`Max-Age=${Math.max(0, maxAgeSeconds)}`)
+    parts.push(`Expires=${new Date(Date.now() + Math.max(0, maxAgeSeconds) * 1000).toUTCString()}`)
+  }
+
+  return parts.join("; ")
+}
+
+function clearParentSessionCookie(response) {
+  response.setHeader("Set-Cookie", makeParentSessionCookieValue("", 0))
+}
+
+function readParentSessionIdFromRequest(request) {
+  const cookies = parseCookies(request.headers.cookie)
+  return normalizeText(cookies[PARENT_SESSION_COOKIE_NAME] || "")
+}
+
+async function requireAuthenticatedParentSession(request, response) {
+  const sessionId = readParentSessionIdFromRequest(request)
+  if (!sessionId) {
+    const error = new Error("Unauthorized")
+    error.statusCode = 401
+    throw error
+  }
+
+  const session = await PARENT_SESSION_STORE.touchSession(sessionId)
+  if (!session) {
+    clearParentSessionCookie(response)
+    const error = new Error("Unauthorized")
+    error.statusCode = 401
+    throw error
+  }
+
+  response.setHeader("Set-Cookie", makeParentSessionCookieValue(sessionId, PARENT_SESSION_TTL_SECONDS))
   return session
 }
 
@@ -2443,6 +2640,874 @@ async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername =
   }
 }
 
+function buildEaglesRefId(studentRefId = "") {
+  const normalized = normalizeText(studentRefId)
+  if (!normalized) return ""
+  const digest = crypto.createHash("sha1").update(normalized).digest("hex")
+  return `erf-${digest.slice(0, 16)}`
+}
+
+function normalizeQueueHubPanelOrder(input = []) {
+  const source = Array.isArray(input) ? input : []
+  const selected = source
+    .map((entry) => normalizeText(entry))
+    .filter((entry) => QUEUE_HUB_PANEL_IDS.includes(entry))
+  const merged = [...new Set(selected)]
+  QUEUE_HUB_PANEL_IDS.forEach((id) => {
+    if (!merged.includes(id)) merged.push(id)
+  })
+  return merged
+}
+
+function isParentPortalTableMissingError(error) {
+  const code = normalizeUpper(error?.code)
+  if (code === "P2021") return true
+  const message = normalizeLower(error?.message || error)
+  return (
+    message.includes("parentportalaccount")
+    || message.includes("parentportalstudentlink")
+    || message.includes("parentprofilesubmissionqueue")
+    || message.includes("parentprofilefieldlock")
+  )
+}
+
+function markParentPortalDbFallback(error) {
+  PARENT_PORTAL_DB_DISABLED = true
+  if (!PARENT_PORTAL_DB_WARNED) {
+    PARENT_PORTAL_DB_WARNED = true
+    console.warn(`parent portal persistence falling back to memory: ${normalizeText(error?.message || error)}`)
+  }
+}
+
+async function getParentPortalPrismaClient() {
+  if (PARENT_PORTAL_DB_DISABLED) return null
+  try {
+    const prisma = await getSharedPrismaClient()
+    if (
+      !prisma
+      || !prisma.parentPortalAccount
+      || !prisma.parentPortalStudentLink
+      || !prisma.parentProfileSubmissionQueue
+      || !prisma.parentProfileFieldLock
+    ) {
+      markParentPortalDbFallback(new Error("Prisma parent portal models unavailable"))
+      return null
+    }
+    return prisma
+  } catch (error) {
+    markParentPortalDbFallback(error)
+    return null
+  }
+}
+
+async function runParentPortalDbOperation(handler, fallbackHandler) {
+  const prisma = await getParentPortalPrismaClient()
+  if (!prisma) return fallbackHandler()
+  try {
+    return await handler(prisma)
+  } catch (error) {
+    if (isParentPortalTableMissingError(error)) {
+      markParentPortalDbFallback(error)
+      return fallbackHandler()
+    }
+    throw error
+  }
+}
+
+function parseParentPortalAccountsJson(value) {
+  const raw = normalizeText(value)
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .map((entry) => ({
+        parentsId: normalizeText(entry?.parentsId || entry?.username),
+        password: normalizeText(entry?.password),
+        passwordHash: normalizeText(entry?.passwordHash),
+        status: normalizeLower(entry?.status) || "active",
+      }))
+      .filter((entry) => entry.parentsId && (entry.password || entry.passwordHash))
+  } catch (error) {
+    console.warn(`STUDENT_PARENT_PORTAL_ACCOUNTS_JSON parse failed: ${error.message}`)
+    return []
+  }
+}
+
+function configuredParentPortalAccounts() {
+  const accounts = parseParentPortalAccountsJson(process.env.STUDENT_PARENT_PORTAL_ACCOUNTS_JSON)
+  const fallbackParentsId = normalizeText(process.env.STUDENT_PARENT_USER)
+  const fallbackPassword = normalizeText(process.env.STUDENT_PARENT_PASS)
+  const fallbackPasswordHash = normalizeText(process.env.STUDENT_PARENT_PASSWORD_HASH)
+  if (fallbackParentsId && (fallbackPassword || fallbackPasswordHash)) {
+    accounts.push({
+      parentsId: fallbackParentsId,
+      password: fallbackPassword,
+      passwordHash: fallbackPasswordHash,
+      status: "active",
+    })
+  }
+  return accounts
+}
+
+async function verifyParentPortalCredentials(parentsId, password) {
+  const requestedParentsId = normalizeText(parentsId)
+  const inputPassword = normalizeText(password)
+  if (!requestedParentsId || !inputPassword) return null
+
+  const dbResult = await runParentPortalDbOperation(
+    async (prisma) => {
+      const account = await prisma.parentPortalAccount.findUnique({
+        where: { parentsId: requestedParentsId },
+      })
+      if (!account) return null
+      if (normalizeLower(account.status) !== "active") return null
+      if (!verifyPassword("", account.passwordHash, inputPassword)) return null
+      return {
+        accountId: account.id,
+        parentsId: account.parentsId,
+        source: "database",
+      }
+    },
+    async () => {
+      const accounts = configuredParentPortalAccounts()
+      for (let i = 0; i < accounts.length; i += 1) {
+        const account = accounts[i]
+        if (!timingSafeEqualText(requestedParentsId, account.parentsId)) continue
+        if (normalizeLower(account.status) !== "active") return null
+        if (!verifyPassword(account.password, account.passwordHash, inputPassword)) return null
+        return {
+          accountId: `env:${account.parentsId}`,
+          parentsId: account.parentsId,
+          source: "env",
+        }
+      }
+      return null
+    }
+  )
+
+  return dbResult
+}
+
+function mapStudentToParentChildSummary(student = {}) {
+  const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
+  const studentRefId = normalizeText(student?.id)
+  return {
+    eaglesId: normalizeText(student?.eaglesId),
+    eaglesRefId: buildEaglesRefId(studentRefId),
+    studentRefId,
+    studentNumber: Number.parseInt(String(student?.studentNumber || ""), 10) || null,
+    fullName: normalizeText(profile?.fullName || profile?.englishName),
+    englishName: normalizeText(profile?.englishName),
+    currentGrade: normalizeText(profile?.currentGrade),
+    parentsId: normalizeText(profile?.parentsId),
+    profile,
+  }
+}
+
+async function listParentLinkedStudents({ parentsId = "", parentAccountId = "" } = {}) {
+  const normalizedParentsId = normalizeText(parentsId)
+  if (!normalizedParentsId) return []
+
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const linkedRows = parentAccountId
+        ? await prisma.parentPortalStudentLink.findMany({
+            where: { parentAccountId: normalizeText(parentAccountId) },
+            select: {
+              student: {
+                select: {
+                  id: true,
+                  eaglesId: true,
+                  studentNumber: true,
+                  profile: true,
+                },
+              },
+            },
+          })
+        : []
+      const linkedStudents = linkedRows
+        .map((row) => row?.student)
+        .filter(Boolean)
+      if (linkedStudents.length) {
+        return linkedStudents.map((student) => mapStudentToParentChildSummary(student))
+      }
+
+      const rows = await prisma.studentProfile.findMany({
+        where: { parentsId: normalizedParentsId },
+        select: {
+          studentRefId: true,
+          fullName: true,
+          englishName: true,
+          currentGrade: true,
+          parentsId: true,
+          student: {
+            select: {
+              id: true,
+              eaglesId: true,
+              studentNumber: true,
+              profile: true,
+            },
+          },
+        },
+      })
+
+      const mapped = rows
+        .map((row) => row?.student)
+        .filter(Boolean)
+        .map((student) => mapStudentToParentChildSummary(student))
+      return mapped.sort((left, right) => normalizeText(left.fullName).localeCompare(normalizeText(right.fullName)))
+    },
+    async () => []
+  )
+}
+
+function normalizeParentProfilePatch(rawPatch) {
+  const source = rawPatch && typeof rawPatch === "object" && !Array.isArray(rawPatch) ? rawPatch : {}
+  const normalizedPatch = {}
+
+  Object.entries(source).forEach(([key, rawValue]) => {
+    const fieldKey = normalizeText(key)
+    if (!fieldKey || !PARENT_PROFILE_EDITABLE_FIELDS.has(fieldKey)) return
+    if (PARENT_PROFILE_IMMUTABLE_FIELDS.has(fieldKey)) return
+
+    const isWrapped = rawValue && typeof rawValue === "object" && !Array.isArray(rawValue) && Object.prototype.hasOwnProperty.call(rawValue, "touched")
+    const touched = isWrapped ? resolveBoolean(rawValue.touched, false) : true
+    if (!touched) return
+
+    const candidateValue = isWrapped ? rawValue.value : rawValue
+    if (PARENT_PROFILE_ARRAY_FIELDS.has(fieldKey)) {
+      const arr = Array.isArray(candidateValue)
+        ? candidateValue.map((entry) => normalizeText(entry)).filter(Boolean)
+        : normalizeText(candidateValue)
+            .split(",")
+            .map((entry) => normalizeText(entry))
+            .filter(Boolean)
+      normalizedPatch[fieldKey] = arr
+      return
+    }
+    if (PARENT_PROFILE_INTEGER_FIELDS.has(fieldKey)) {
+      normalizedPatch[fieldKey] = normalizePositiveInteger(candidateValue)
+      return
+    }
+    if (PARENT_PROFILE_BOOLEAN_FIELDS.has(fieldKey)) {
+      normalizedPatch[fieldKey] = resolveBoolean(candidateValue, false)
+      return
+    }
+    if (fieldKey === "rawFormPayload" || fieldKey === "normalizedFormPayload") {
+      normalizedPatch[fieldKey] = candidateValue && typeof candidateValue === "object" ? candidateValue : {}
+      return
+    }
+    normalizedPatch[fieldKey] = normalizeText(candidateValue)
+  })
+
+  return normalizedPatch
+}
+
+function buildProfileDiffSnapshot(currentProfile = {}, patch = {}) {
+  const profile = currentProfile && typeof currentProfile === "object" ? currentProfile : {}
+  const changedFields = []
+  Object.entries(patch).forEach(([key, value]) => {
+    const previous = profile?.[key]
+    const left = JSON.stringify(previous ?? null)
+    const right = JSON.stringify(value ?? null)
+    if (left === right) return
+    changedFields.push({
+      fieldKey: key,
+      from: previous ?? null,
+      to: value ?? null,
+    })
+  })
+  return {
+    changedCount: changedFields.length,
+    changedFields,
+  }
+}
+
+async function listParentProfileFieldLocks(studentRefId) {
+  const id = normalizeText(studentRefId)
+  if (!id) return []
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const rows = await prisma.parentProfileFieldLock.findMany({
+        where: {
+          studentRefId: id,
+          locked: true,
+        },
+      })
+      return rows.map((row) => normalizeText(row.fieldKey)).filter(Boolean)
+    },
+    async () =>
+      PARENT_PORTAL_MEMORY.fieldLocks
+        .filter((row) => normalizeText(row.studentRefId) === id && resolveBoolean(row.locked, false))
+        .map((row) => normalizeText(row.fieldKey))
+  )
+}
+
+function mapParentProfileSubmissionRecord(record = {}) {
+  return {
+    id: normalizeText(record.id),
+    parentAccountId: normalizeText(record.parentAccountId),
+    studentRefId: normalizeText(record.studentRefId),
+    status: PARENT_PROFILE_QUEUE_ALLOWED_STATUSES.has(normalizeText(record.status))
+      ? normalizeText(record.status)
+      : PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+    draftPayloadJson: record.draftPayloadJson && typeof record.draftPayloadJson === "object" ? record.draftPayloadJson : {},
+    adminEditedPayloadJson:
+      record.adminEditedPayloadJson && typeof record.adminEditedPayloadJson === "object" ? record.adminEditedPayloadJson : null,
+    diffPayloadJson: record.diffPayloadJson && typeof record.diffPayloadJson === "object" ? record.diffPayloadJson : {},
+    failurePoint: normalizeText(record.failurePoint),
+    rejectionReason: normalizeText(record.rejectionReason),
+    comment: normalizeText(record.comment),
+    submittedAt: normalizeText(record.submittedAt),
+    reviewedAt: normalizeText(record.reviewedAt),
+    reviewedByUsername: normalizeText(record.reviewedByUsername),
+    createdAt: normalizeText(record.createdAt),
+    updatedAt: normalizeText(record.updatedAt),
+  }
+}
+
+async function saveParentProfileDraftSubmission({
+  parentAccountId = "",
+  studentRefId = "",
+  draftPayloadJson = {},
+  diffPayloadJson = {},
+  comment = "",
+}) {
+  const normalizedParentAccountId = normalizeText(parentAccountId)
+  const normalizedStudentRefId = normalizeText(studentRefId)
+  const normalizedComment = normalizeText(comment)
+
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const latestDraft = await prisma.parentProfileSubmissionQueue.findFirst({
+        where: {
+          parentAccountId: normalizedParentAccountId,
+          studentRefId: normalizedStudentRefId,
+          status: PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+        },
+        orderBy: { updatedAt: "desc" },
+      })
+      const now = new Date()
+      if (latestDraft) {
+        const updated = await prisma.parentProfileSubmissionQueue.update({
+          where: { id: latestDraft.id },
+          data: {
+            draftPayloadJson,
+            diffPayloadJson,
+            comment: normalizedComment || null,
+            failurePoint: null,
+            rejectionReason: null,
+          },
+        })
+        return mapParentProfileSubmissionRecord({
+          ...updated,
+          submittedAt: updated.submittedAt?.toISOString?.() || "",
+          reviewedAt: updated.reviewedAt?.toISOString?.() || "",
+          createdAt: updated.createdAt?.toISOString?.() || now.toISOString(),
+          updatedAt: updated.updatedAt?.toISOString?.() || now.toISOString(),
+        })
+      }
+      const created = await prisma.parentProfileSubmissionQueue.create({
+        data: {
+          parentAccountId: normalizedParentAccountId,
+          studentRefId: normalizedStudentRefId,
+          status: PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+          draftPayloadJson,
+          diffPayloadJson,
+          comment: normalizedComment || null,
+        },
+      })
+      return mapParentProfileSubmissionRecord({
+        ...created,
+        submittedAt: "",
+        reviewedAt: "",
+        createdAt: created.createdAt?.toISOString?.() || now.toISOString(),
+        updatedAt: created.updatedAt?.toISOString?.() || now.toISOString(),
+      })
+    },
+    async () => {
+      const nowIsoText = nowIso()
+      const existingIndex = PARENT_PORTAL_MEMORY.submissions.findIndex(
+        (row) =>
+          normalizeText(row.parentAccountId) === normalizedParentAccountId
+          && normalizeText(row.studentRefId) === normalizedStudentRefId
+          && normalizeText(row.status) === PARENT_PROFILE_QUEUE_STATUS_DRAFT
+      )
+      if (existingIndex >= 0) {
+        const updated = {
+          ...PARENT_PORTAL_MEMORY.submissions[existingIndex],
+          draftPayloadJson,
+          diffPayloadJson,
+          comment: normalizedComment,
+          failurePoint: "",
+          rejectionReason: "",
+          updatedAt: nowIsoText,
+        }
+        PARENT_PORTAL_MEMORY.submissions[existingIndex] = updated
+        return mapParentProfileSubmissionRecord(updated)
+      }
+      const created = {
+        id: createQueueId("ppq"),
+        parentAccountId: normalizedParentAccountId,
+        studentRefId: normalizedStudentRefId,
+        status: PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+        draftPayloadJson,
+        adminEditedPayloadJson: null,
+        diffPayloadJson,
+        failurePoint: "",
+        rejectionReason: "",
+        comment: normalizedComment,
+        submittedAt: "",
+        reviewedAt: "",
+        reviewedByUsername: "",
+        createdAt: nowIsoText,
+        updatedAt: nowIsoText,
+      }
+      PARENT_PORTAL_MEMORY.submissions.push(created)
+      return mapParentProfileSubmissionRecord(created)
+    }
+  )
+}
+
+async function setParentProfileSubmissionSubmitted({ parentAccountId = "", studentRefId = "", comment = "" }) {
+  const normalizedParentAccountId = normalizeText(parentAccountId)
+  const normalizedStudentRefId = normalizeText(studentRefId)
+  const normalizedComment = normalizeText(comment)
+
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const latestDraft = await prisma.parentProfileSubmissionQueue.findFirst({
+        where: {
+          parentAccountId: normalizedParentAccountId,
+          studentRefId: normalizedStudentRefId,
+          status: PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+        },
+        orderBy: { updatedAt: "desc" },
+      })
+      if (!latestDraft) return null
+      const submittedAt = new Date()
+      const updated = await prisma.parentProfileSubmissionQueue.update({
+        where: { id: latestDraft.id },
+        data: {
+          status: PARENT_PROFILE_QUEUE_STATUS_SUBMITTED,
+          submittedAt,
+          comment: normalizedComment || latestDraft.comment || null,
+          failurePoint: null,
+          rejectionReason: null,
+        },
+      })
+      return mapParentProfileSubmissionRecord({
+        ...updated,
+        submittedAt: updated.submittedAt?.toISOString?.() || "",
+        reviewedAt: updated.reviewedAt?.toISOString?.() || "",
+        createdAt: updated.createdAt?.toISOString?.() || "",
+        updatedAt: updated.updatedAt?.toISOString?.() || "",
+      })
+    },
+    async () => {
+      const index = PARENT_PORTAL_MEMORY.submissions.findIndex(
+        (row) =>
+          normalizeText(row.parentAccountId) === normalizedParentAccountId
+          && normalizeText(row.studentRefId) === normalizedStudentRefId
+          && normalizeText(row.status) === PARENT_PROFILE_QUEUE_STATUS_DRAFT
+      )
+      if (index < 0) return null
+      const nowIsoText = nowIso()
+      const updated = {
+        ...PARENT_PORTAL_MEMORY.submissions[index],
+        status: PARENT_PROFILE_QUEUE_STATUS_SUBMITTED,
+        submittedAt: nowIsoText,
+        comment: normalizedComment || normalizeText(PARENT_PORTAL_MEMORY.submissions[index].comment),
+        failurePoint: "",
+        rejectionReason: "",
+        updatedAt: nowIsoText,
+      }
+      PARENT_PORTAL_MEMORY.submissions[index] = updated
+      return mapParentProfileSubmissionRecord(updated)
+    }
+  )
+}
+
+async function listParentProfileSubmissions({
+  statuses = [],
+  parentAccountId = "",
+  take = 50,
+} = {}) {
+  const normalizedStatuses = Array.from(
+    new Set((Array.isArray(statuses) ? statuses : []).map((entry) => normalizeText(entry)).filter(Boolean))
+  ).filter((entry) => PARENT_PROFILE_QUEUE_ALLOWED_STATUSES.has(entry))
+  const limit = Math.max(1, Math.min(Number.parseInt(String(take || 50), 10) || 50, 500))
+  const normalizedParentAccountId = normalizeText(parentAccountId)
+
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const where = {}
+      if (normalizedStatuses.length) where.status = { in: normalizedStatuses }
+      if (normalizedParentAccountId) where.parentAccountId = normalizedParentAccountId
+      const rows = await prisma.parentProfileSubmissionQueue.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      })
+      return rows.map((row) =>
+        mapParentProfileSubmissionRecord({
+          ...row,
+          submittedAt: row.submittedAt?.toISOString?.() || "",
+          reviewedAt: row.reviewedAt?.toISOString?.() || "",
+          createdAt: row.createdAt?.toISOString?.() || "",
+          updatedAt: row.updatedAt?.toISOString?.() || "",
+        })
+      )
+    },
+    async () => {
+      const rows = PARENT_PORTAL_MEMORY.submissions
+        .filter((row) => {
+          const status = normalizeText(row.status)
+          if (normalizedStatuses.length && !normalizedStatuses.includes(status)) return false
+          if (normalizedParentAccountId && normalizeText(row.parentAccountId) !== normalizedParentAccountId) return false
+          return true
+        })
+        .sort((left, right) => normalizeText(right.createdAt).localeCompare(normalizeText(left.createdAt)))
+        .slice(0, limit)
+      return rows.map((row) => mapParentProfileSubmissionRecord(row))
+    }
+  )
+}
+
+async function getParentProfileSubmissionById(submissionId) {
+  const id = normalizeText(submissionId)
+  if (!id) return null
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const row = await prisma.parentProfileSubmissionQueue.findUnique({ where: { id } })
+      if (!row) return null
+      return mapParentProfileSubmissionRecord({
+        ...row,
+        submittedAt: row.submittedAt?.toISOString?.() || "",
+        reviewedAt: row.reviewedAt?.toISOString?.() || "",
+        createdAt: row.createdAt?.toISOString?.() || "",
+        updatedAt: row.updatedAt?.toISOString?.() || "",
+      })
+    },
+    async () => {
+      const row = PARENT_PORTAL_MEMORY.submissions.find((entry) => normalizeText(entry.id) === id)
+      return row ? mapParentProfileSubmissionRecord(row) : null
+    }
+  )
+}
+
+async function updateParentProfileSubmissionById(submissionId, patch = {}) {
+  const id = normalizeText(submissionId)
+  if (!id) return null
+  const normalizedPatch = patch && typeof patch === "object" ? patch : {}
+  return runParentPortalDbOperation(
+    async (prisma) => {
+      const data = {}
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "status")) data.status = normalizeText(normalizedPatch.status)
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "draftPayloadJson")) {
+        data.draftPayloadJson = normalizedPatch.draftPayloadJson
+      }
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "adminEditedPayloadJson")) {
+        data.adminEditedPayloadJson = normalizedPatch.adminEditedPayloadJson
+      }
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "diffPayloadJson")) data.diffPayloadJson = normalizedPatch.diffPayloadJson
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "failurePoint")) data.failurePoint = normalizeText(normalizedPatch.failurePoint) || null
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "rejectionReason")) data.rejectionReason = normalizeText(normalizedPatch.rejectionReason) || null
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "reviewedByUsername")) data.reviewedByUsername = normalizeText(normalizedPatch.reviewedByUsername) || null
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "reviewedAt")) data.reviewedAt = parseIsoDateTime(normalizedPatch.reviewedAt) || null
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "submittedAt")) data.submittedAt = parseIsoDateTime(normalizedPatch.submittedAt) || null
+      if (Object.prototype.hasOwnProperty.call(normalizedPatch, "comment")) data.comment = normalizeText(normalizedPatch.comment) || null
+
+      const updated = await prisma.parentProfileSubmissionQueue.update({
+        where: { id },
+        data,
+      })
+      return mapParentProfileSubmissionRecord({
+        ...updated,
+        submittedAt: updated.submittedAt?.toISOString?.() || "",
+        reviewedAt: updated.reviewedAt?.toISOString?.() || "",
+        createdAt: updated.createdAt?.toISOString?.() || "",
+        updatedAt: updated.updatedAt?.toISOString?.() || "",
+      })
+    },
+    async () => {
+      const index = PARENT_PORTAL_MEMORY.submissions.findIndex((entry) => normalizeText(entry.id) === id)
+      if (index < 0) return null
+      const updated = {
+        ...PARENT_PORTAL_MEMORY.submissions[index],
+        ...normalizedPatch,
+        updatedAt: nowIso(),
+      }
+      PARENT_PORTAL_MEMORY.submissions[index] = updated
+      return mapParentProfileSubmissionRecord(updated)
+    }
+  )
+}
+
+async function findStudentByEaglesIdForParent(eaglesId) {
+  const requested = normalizeText(eaglesId)
+  if (!requested) return null
+  try {
+    const prisma = await getSharedPrismaClient()
+    if (!prisma || !prisma.student) return null
+    const student = await prisma.student.findUnique({
+      where: { eaglesId: requested },
+      select: {
+        id: true,
+        eaglesId: true,
+        studentNumber: true,
+        profile: true,
+      },
+    })
+    if (!student) return null
+    return mapStudentToParentChildSummary(student)
+  } catch (error) {
+    if (isParentPortalTableMissingError(error)) return null
+    throw error
+  }
+}
+
+function buildChildDashboardSnapshot({
+  child = {},
+  attendanceRows = [],
+  gradeRows = [],
+  reportRows = [],
+} = {}) {
+  const attendance = {
+    total: attendanceRows.length,
+    present: attendanceRows.filter((row) => normalizeLower(row?.status) === "present").length,
+    absent: attendanceRows.filter((row) => normalizeLower(row?.status) === "absent").length,
+    late: attendanceRows.filter((row) => normalizeLower(row?.status) === "late").length,
+    excused: attendanceRows.filter((row) => normalizeLower(row?.status) === "excused").length,
+  }
+  const now = new Date()
+  const assignments = {
+    total: gradeRows.length,
+    completed: gradeRows.filter((row) => row?.homeworkCompleted === true || Boolean(row?.submittedAt)).length,
+    overdue: gradeRows.filter((row) => {
+      if (row?.homeworkCompleted === true || row?.submittedAt) return false
+      const dueAt = parseIsoDateTime(row?.dueAt)
+      if (!dueAt) return false
+      return dueAt < now
+    }).length,
+    pending: gradeRows.filter((row) => row?.homeworkCompleted !== true && !row?.submittedAt).length,
+  }
+  const averageScore = (() => {
+    const values = gradeRows
+      .map((row) => {
+        const score = Number.parseFloat(String(row?.score))
+        const maxScore = Number.parseFloat(String(row?.maxScore))
+        if (!Number.isFinite(score) || !Number.isFinite(maxScore) || maxScore <= 0) return null
+        return (score / maxScore) * 100
+      })
+      .filter((entry) => Number.isFinite(entry))
+    if (!values.length) return null
+    const total = values.reduce((sum, entry) => sum + entry, 0)
+    return Number((total / values.length).toFixed(2))
+  })()
+  const performance = {
+    averageScorePercent: averageScore,
+    reportCount: reportRows.length,
+    latestReportAt: reportRows.length ? normalizeText(reportRows[0]?.generatedAt) : "",
+  }
+  return {
+    eaglesId: normalizeText(child?.eaglesId),
+    eaglesRefId: normalizeText(child?.eaglesRefId),
+    attendance,
+    assignments,
+    grades: {
+      total: gradeRows.length,
+      averageScorePercent: averageScore,
+    },
+    performance,
+  }
+}
+
+async function buildParentDashboardPayload(session = {}) {
+  const linkedChildren = await listParentLinkedStudents({
+    parentsId: normalizeText(session?.parentsId),
+    parentAccountId: normalizeText(session?.accountId),
+  })
+  const childIds = linkedChildren.map((entry) => normalizeText(entry.studentRefId)).filter(Boolean)
+  if (!childIds.length) {
+    return {
+      ok: true,
+      generatedAt: nowIso(),
+      children: [],
+    }
+  }
+
+  try {
+    const prisma = await getSharedPrismaClient()
+    const [attendanceRows, gradeRows, reportRows] = await Promise.all([
+      prisma.studentAttendance.findMany({
+        where: { studentRefId: { in: childIds } },
+        orderBy: { attendanceDate: "desc" },
+      }),
+      prisma.studentGradeRecord.findMany({
+        where: { studentRefId: { in: childIds } },
+        orderBy: { dueAt: "desc" },
+      }),
+      prisma.parentClassReport.findMany({
+        where: { studentRefId: { in: childIds } },
+        orderBy: { generatedAt: "desc" },
+      }),
+    ])
+
+    const groupedAttendance = new Map()
+    const groupedGrades = new Map()
+    const groupedReports = new Map()
+    attendanceRows.forEach((row) => {
+      const id = normalizeText(row?.studentRefId)
+      if (!groupedAttendance.has(id)) groupedAttendance.set(id, [])
+      groupedAttendance.get(id).push(row)
+    })
+    gradeRows.forEach((row) => {
+      const id = normalizeText(row?.studentRefId)
+      if (!groupedGrades.has(id)) groupedGrades.set(id, [])
+      groupedGrades.get(id).push(row)
+    })
+    reportRows.forEach((row) => {
+      const id = normalizeText(row?.studentRefId)
+      if (!groupedReports.has(id)) groupedReports.set(id, [])
+      groupedReports.get(id).push(row)
+    })
+
+    return {
+      ok: true,
+      generatedAt: nowIso(),
+      children: linkedChildren.map((child) =>
+        buildChildDashboardSnapshot({
+          child,
+          attendanceRows: groupedAttendance.get(child.studentRefId) || [],
+          gradeRows: groupedGrades.get(child.studentRefId) || [],
+          reportRows: groupedReports.get(child.studentRefId) || [],
+        })
+      ),
+    }
+  } catch (error) {
+    const wrapped = new Error("Unable to load parent dashboard")
+    wrapped.statusCode = 503
+    throw wrapped
+  }
+}
+
+async function buildQueueHubPayload() {
+  assertStoreEnabled()
+  const dashboard = await getAdminDashboardSummary()
+  const [parentQueue, incomingQueue, submissions] = await Promise.all([
+    listQueuedAnnouncements({
+      queueType: NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
+      includeSent: false,
+      take: 20,
+    }),
+    listIncomingExerciseResults({
+      statuses: [INCOMING_EXERCISE_RESULT_STATUS_QUEUED],
+      take: 20,
+      showAll: false,
+    }),
+    listParentProfileSubmissions({
+      statuses: [PARENT_PROFILE_QUEUE_STATUS_SUBMITTED],
+      take: 20,
+    }),
+  ])
+
+  let overdueItems = []
+  try {
+    const prisma = await getSharedPrismaClient()
+    overdueItems = await prisma.studentGradeRecord.findMany({
+      where: {
+        dueAt: { lt: new Date() },
+        OR: [
+          { homeworkCompleted: false },
+          { homeworkCompleted: null },
+          { submittedAt: null },
+        ],
+      },
+      orderBy: { dueAt: "asc" },
+      take: 50,
+      select: {
+        id: true,
+        studentRefId: true,
+        className: true,
+        assignmentName: true,
+        dueAt: true,
+        submittedAt: true,
+        student: {
+          select: {
+            eaglesId: true,
+            studentNumber: true,
+            profile: {
+              select: {
+                fullName: true,
+                englishName: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  } catch (error) {
+    void error
+    overdueItems = []
+  }
+
+  const panelOrder = normalizeQueueHubPanelOrder(readPersistedUiSettings()?.uiSettings?.queueHub?.panelOrder || [])
+  return {
+    ok: true,
+    generatedAt: nowIso(),
+    panelOrder,
+    panels: [
+      {
+        id: "queued-performance-reports",
+        title: "Queued Performance Reports",
+        total: parentQueue.total,
+        items: parentQueue.items,
+      },
+      {
+        id: "unmatched-exercise-submissions",
+        title: "Exercise Submissions (Unmatched eaglesId)",
+        total: incomingQueue.total,
+        items: incomingQueue.items.filter((item) => !normalizeText(item?.matchedStudentRefId)),
+      },
+      {
+        id: "current-assignments-pending",
+        title: "Current Assignments Not Yet Completed",
+        total: Number.parseInt(String(dashboard?.assignments?.currentPendingStudents || 0), 10) || 0,
+        items: Array.isArray(dashboard?.levelCompletion) ? dashboard.levelCompletion : [],
+      },
+      {
+        id: "overdue-homework",
+        title: "Overdue Homework",
+        total: overdueItems.length,
+        items: overdueItems.map((row) => ({
+          id: normalizeText(row?.id),
+          dueAt: row?.dueAt ? new Date(row.dueAt).toISOString() : "",
+          assignmentName: normalizeText(row?.assignmentName),
+          className: normalizeText(row?.className),
+          studentRefId: normalizeText(row?.studentRefId),
+          eaglesId: normalizeText(row?.student?.eaglesId),
+          studentNumber: Number.parseInt(String(row?.student?.studentNumber || ""), 10) || null,
+          fullName: normalizeText(row?.student?.profile?.fullName || row?.student?.profile?.englishName),
+        })),
+      },
+      {
+        id: "attendance-risk",
+        title: "At-Risk Attendance",
+        total: Number.parseInt(String(dashboard?.attendanceRiskWeek?.total || 0), 10) || 0,
+        items: Array.isArray(dashboard?.attendanceRiskWeek?.students) ? dashboard.attendanceRiskWeek.students : [],
+      },
+      {
+        id: "pending-profile-submissions",
+        title: "Pending Profile Submissions",
+        total: submissions.length,
+        items: submissions,
+      },
+    ],
+  }
+}
+
 async function handleApiRequest(request, response, pathname, url) {
   const { method } = request
   const legacyLoginPath = `${ADMIN_API_PREFIX}/login`
@@ -2566,6 +3631,13 @@ async function handleApiRequest(request, response, pathname, url) {
       }
     }
     sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_QUEUE_HUB_PATH) {
+    assertCanManageUsers(rolePolicy)
+    const payload = await buildQueueHubPayload()
+    sendJson(response, 200, payload)
     return true
   }
 
@@ -2818,6 +3890,165 @@ async function handleApiRequest(request, response, pathname, url) {
 
     {
       const error = new Error("Unsupported batch action")
+      error.statusCode = 400
+      throw error
+    }
+  }
+
+  if (method === "GET" && pathname === ADMIN_PROFILE_SUBMISSIONS_PATH) {
+    assertCanManageUsers(rolePolicy)
+    const statusesParam = normalizeText(url.searchParams.get("statuses"))
+    const statuses = statusesParam
+      ? statusesParam.split(",").map((entry) => normalizeText(entry)).filter(Boolean)
+      : [PARENT_PROFILE_QUEUE_STATUS_SUBMITTED]
+    const submissions = await listParentProfileSubmissions({
+      statuses,
+      take: url.searchParams.get("take") || "50",
+    })
+    sendJson(response, 200, {
+      ok: true,
+      total: submissions.length,
+      items: submissions,
+    })
+    return true
+  }
+
+  const profileSubmissionMatch = pathname.match(ADMIN_PROFILE_SUBMISSION_PATH_RE)
+  if (profileSubmissionMatch && method === "PUT") {
+    assertCanManageUsers(rolePolicy)
+    const submissionId = decodeURIComponent(profileSubmissionMatch[1])
+    const payload = await parseBody(request)
+    const adminPatch = normalizeParentProfilePatch(payload?.patch || payload?.draftPayloadJson || {})
+    const updated = await updateParentProfileSubmissionById(submissionId, {
+      adminEditedPayloadJson: adminPatch,
+      reviewedByUsername: normalizeText(session?.username),
+      reviewedAt: nowIso(),
+    })
+    if (!updated) {
+      const error = new Error("Profile submission not found")
+      error.statusCode = 404
+      throw error
+    }
+    sendJson(response, 200, {
+      ok: true,
+      item: updated,
+    })
+    return true
+  }
+
+  if (profileSubmissionMatch && method === "POST") {
+    assertCanManageUsers(rolePolicy)
+    const submissionId = decodeURIComponent(profileSubmissionMatch[1])
+    const payload = await parseBody(request)
+    const action = normalizeLower(payload?.action)
+    const submission = await getParentProfileSubmissionById(submissionId)
+    if (!submission) {
+      const error = new Error("Profile submission not found")
+      error.statusCode = 404
+      throw error
+    }
+
+    if (action === "reject") {
+      const rejectionReason = normalizeText(payload?.rejectionReason || payload?.reason)
+      const updated = await updateParentProfileSubmissionById(submissionId, {
+        status: PARENT_PROFILE_QUEUE_STATUS_REJECTED,
+        rejectionReason,
+        reviewedByUsername: normalizeText(session?.username),
+        reviewedAt: nowIso(),
+      })
+      sendJson(response, 200, { ok: true, action: "reject", item: updated })
+      return true
+    }
+
+    if (action === "approve") {
+      const patchSource =
+        submission.adminEditedPayloadJson && typeof submission.adminEditedPayloadJson === "object"
+          ? submission.adminEditedPayloadJson
+          : submission.draftPayloadJson
+      const mergedPatch = normalizeParentProfilePatch(patchSource)
+      const lockedFields = await listParentProfileFieldLocks(submission.studentRefId)
+      const blockedFields = Object.keys(mergedPatch).filter((fieldKey) => lockedFields.includes(fieldKey))
+      if (blockedFields.length) {
+        const updated = await updateParentProfileSubmissionById(submissionId, {
+          failurePoint: "lock-conflict",
+          rejectionReason: `Locked fields: ${blockedFields.join(", ")}`,
+          reviewedByUsername: normalizeText(session?.username),
+          reviewedAt: nowIso(),
+        })
+        const error = new Error("Submission includes locked fields")
+        error.statusCode = 409
+        sendJson(response, 409, { ok: false, error: error.message, item: updated })
+        return true
+      }
+
+      const writablePatch = {}
+      Object.entries(mergedPatch).forEach(([key, value]) => {
+        if (PARENT_PROFILE_IMMUTABLE_FIELDS.has(key)) return
+        if (lockedFields.includes(key)) return
+        if (!PARENT_PROFILE_EDITABLE_FIELDS.has(key)) return
+        writablePatch[key] = value
+      })
+
+      try {
+        const prisma = await getSharedPrismaClient()
+        if (!prisma || !prisma.studentProfile) {
+          const error = new Error("Student profile persistence unavailable")
+          error.statusCode = 503
+          throw error
+        }
+        const existing = await prisma.studentProfile.findUnique({
+          where: { studentRefId: submission.studentRefId },
+        })
+        const diffPayload = buildProfileDiffSnapshot(existing || {}, writablePatch)
+        const updateData = { ...writablePatch }
+        updateData.normalizedFormPayload = {
+          ...(existing?.normalizedFormPayload && typeof existing.normalizedFormPayload === "object"
+            ? existing.normalizedFormPayload
+            : {}),
+          ...writablePatch,
+        }
+        updateData.rawFormPayload = {
+          ...(existing?.rawFormPayload && typeof existing.rawFormPayload === "object" ? existing.rawFormPayload : {}),
+          ...writablePatch,
+        }
+        if (!existing) {
+          await prisma.studentProfile.create({
+            data: {
+              studentRefId: submission.studentRefId,
+              sourceFormId: "parent-portal",
+              sourceUrl: "parent-portal",
+              ...updateData,
+            },
+          })
+        } else {
+          await prisma.studentProfile.update({
+            where: { studentRefId: submission.studentRefId },
+            data: updateData,
+          })
+        }
+        const updated = await updateParentProfileSubmissionById(submissionId, {
+          status: PARENT_PROFILE_QUEUE_STATUS_APPROVED,
+          failurePoint: "",
+          rejectionReason: "",
+          diffPayloadJson: diffPayload,
+          reviewedByUsername: normalizeText(session?.username),
+          reviewedAt: nowIso(),
+        })
+        sendJson(response, 200, { ok: true, action: "approve", item: updated })
+        return true
+      } catch (error) {
+        await updateParentProfileSubmissionById(submissionId, {
+          failurePoint: "merge-write",
+          rejectionReason: normalizeText(error?.message || error),
+          reviewedByUsername: normalizeText(session?.username),
+          reviewedAt: nowIso(),
+        })
+        throw error
+      }
+    }
+
+    {
+      const error = new Error("Unsupported profile submission action")
       error.statusCode = 400
       throw error
     }
@@ -3084,6 +4315,213 @@ async function handleApiRequest(request, response, pathname, url) {
   return false
 }
 
+async function handleParentApiRequest(request, response, pathname, url) {
+  const { method } = request
+  const loginPath = `${PARENT_AUTH_PREFIX}/login`
+  const logoutPath = `${PARENT_AUTH_PREFIX}/logout`
+  const mePath = `${PARENT_AUTH_PREFIX}/me`
+
+  if (method === "POST" && pathname === loginPath) {
+    const payload = await parseBody(request)
+    const parentsId = normalizeText(payload?.parentsId || payload?.username)
+    const password = normalizeText(payload?.password)
+    const principal = await verifyParentPortalCredentials(parentsId, password)
+    if (!principal) {
+      const error = new Error("Invalid parentsId or password")
+      error.statusCode = 401
+      throw error
+    }
+
+    const session = await PARENT_SESSION_STORE.createSession({
+      username: principal.parentsId,
+      role: "parent",
+      parentsId: principal.parentsId,
+      accountId: principal.accountId,
+    })
+    if (!session?.id) {
+      const error = new Error("Unable to establish parent session")
+      error.statusCode = 500
+      throw error
+    }
+    response.setHeader("Set-Cookie", makeParentSessionCookieValue(session.id, PARENT_SESSION_TTL_SECONDS))
+    sendJson(response, 200, {
+      authenticated: true,
+      user: {
+        parentsId: principal.parentsId,
+        role: "parent",
+      },
+    })
+    return true
+  }
+
+  if (method === "POST" && pathname === logoutPath) {
+    const sessionId = readParentSessionIdFromRequest(request)
+    if (sessionId) await PARENT_SESSION_STORE.deleteSession(sessionId)
+    clearParentSessionCookie(response)
+    sendJson(response, 200, { ok: true, authenticated: false })
+    return true
+  }
+
+  if (method === "GET" && pathname === mePath) {
+    const session = await requireAuthenticatedParentSession(request, response)
+    sendJson(response, 200, {
+      authenticated: true,
+      user: {
+        parentsId: normalizeText(session?.parentsId || session?.username),
+        role: "parent",
+      },
+    })
+    return true
+  }
+
+  const session = await requireAuthenticatedParentSession(request, response)
+  const parentContext = {
+    parentsId: normalizeText(session?.parentsId || session?.username),
+    parentAccountId: normalizeText(session?.accountId),
+  }
+
+  if (method === "GET" && pathname === PARENT_CHILDREN_PATH) {
+    const children = await listParentLinkedStudents({
+      parentsId: parentContext.parentsId,
+      parentAccountId: parentContext.parentAccountId,
+    })
+    sendJson(response, 200, {
+      ok: true,
+      items: children.map((child) => ({
+        eaglesId: child.eaglesId,
+        eaglesRefId: child.eaglesRefId,
+        studentNumber: child.studentNumber,
+        fullName: child.fullName,
+        englishName: child.englishName,
+        currentGrade: child.currentGrade,
+      })),
+    })
+    return true
+  }
+
+  if (method === "GET" && pathname === PARENT_DASHBOARD_PATH) {
+    const payload = await buildParentDashboardPayload({
+      parentsId: parentContext.parentsId,
+      accountId: parentContext.parentAccountId,
+    })
+    sendJson(response, 200, payload)
+    return true
+  }
+
+  const profilePathMatch = pathname.match(PARENT_CHILD_PROFILE_PATH_RE)
+  if (profilePathMatch && method === "GET") {
+    const requestedEaglesId = normalizeText(decodeURIComponent(profilePathMatch[1]))
+    const children = await listParentLinkedStudents({
+      parentsId: parentContext.parentsId,
+      parentAccountId: parentContext.parentAccountId,
+    })
+    const child = children.find((entry) => normalizeLower(entry?.eaglesId) === normalizeLower(requestedEaglesId))
+    if (!child) {
+      const error = new Error("Child is not linked to this parent account")
+      error.statusCode = 403
+      throw error
+    }
+    const lockedFields = await listParentProfileFieldLocks(child.studentRefId)
+    sendJson(response, 200, {
+      ok: true,
+      child: {
+        eaglesId: child.eaglesId,
+        eaglesRefId: child.eaglesRefId,
+        studentNumber: child.studentNumber,
+        fullName: child.fullName,
+        englishName: child.englishName,
+        currentGrade: child.currentGrade,
+      },
+      immutableFields: Array.from(PARENT_PROFILE_IMMUTABLE_FIELDS),
+      lockedFields,
+      profile: child.profile || {},
+    })
+    return true
+  }
+
+  const draftPathMatch = pathname.match(PARENT_CHILD_PROFILE_DRAFT_PATH_RE)
+  if (draftPathMatch && method === "PUT") {
+    const requestedEaglesId = normalizeText(decodeURIComponent(draftPathMatch[1]))
+    const payload = await parseBody(request)
+    const children = await listParentLinkedStudents({
+      parentsId: parentContext.parentsId,
+      parentAccountId: parentContext.parentAccountId,
+    })
+    const child = children.find((entry) => normalizeLower(entry?.eaglesId) === normalizeLower(requestedEaglesId))
+    if (!child) {
+      const error = new Error("Child is not linked to this parent account")
+      error.statusCode = 403
+      throw error
+    }
+    const patch = normalizeParentProfilePatch(payload?.patch || {})
+    if (!Object.keys(patch).length) {
+      const error = new Error("No editable changes detected in patch payload")
+      error.statusCode = 400
+      throw error
+    }
+    const lockedFields = await listParentProfileFieldLocks(child.studentRefId)
+    const blockedFields = Object.keys(patch).filter((fieldKey) => lockedFields.includes(fieldKey))
+    if (blockedFields.length) {
+      const error = new Error(`Locked fields cannot be changed: ${blockedFields.join(", ")}`)
+      error.statusCode = 403
+      throw error
+    }
+
+    const diffPayload = buildProfileDiffSnapshot(child.profile || {}, patch)
+    const draft = await saveParentProfileDraftSubmission({
+      parentAccountId: parentContext.parentAccountId || `parents:${parentContext.parentsId}`,
+      studentRefId: child.studentRefId,
+      draftPayloadJson: patch,
+      diffPayloadJson: diffPayload,
+      comment: normalizeText(payload?.comment),
+    })
+    sendJson(response, 200, {
+      ok: true,
+      submissionId: draft.id,
+      status: PARENT_PROFILE_QUEUE_STATUS_DRAFT,
+      diff: diffPayload,
+    })
+    return true
+  }
+
+  const submitPathMatch = pathname.match(PARENT_CHILD_PROFILE_SUBMIT_PATH_RE)
+  if (submitPathMatch && method === "POST") {
+    const requestedEaglesId = normalizeText(decodeURIComponent(submitPathMatch[1]))
+    const payload = await parseBody(request)
+    const children = await listParentLinkedStudents({
+      parentsId: parentContext.parentsId,
+      parentAccountId: parentContext.parentAccountId,
+    })
+    const child = children.find((entry) => normalizeLower(entry?.eaglesId) === normalizeLower(requestedEaglesId))
+    if (!child) {
+      const error = new Error("Child is not linked to this parent account")
+      error.statusCode = 403
+      throw error
+    }
+    const submitted = await setParentProfileSubmissionSubmitted({
+      parentAccountId: parentContext.parentAccountId || `parents:${parentContext.parentsId}`,
+      studentRefId: child.studentRefId,
+      comment: normalizeText(payload?.comment),
+    })
+    if (!submitted) {
+      const error = new Error("No saved draft found to submit")
+      error.statusCode = 400
+      throw error
+    }
+    sendJson(response, 200, {
+      ok: true,
+      submissionId: submitted.id,
+      status: PARENT_PROFILE_QUEUE_STATUS_SUBMITTED,
+      notifications: {
+        email: "received",
+      },
+    })
+    return true
+  }
+
+  return false
+}
+
 export async function handleStudentAdminRequest(request, response) {
   const method = normalizeText(request.method).toUpperCase()
   const host = normalizeText(request.headers.host) || "localhost"
@@ -3106,6 +4544,35 @@ export async function handleStudentAdminRequest(request, response) {
     const html = injectAdminRuntimeConfig(fs.readFileSync(ADMIN_HTML_PATH, "utf8"), pageSlug)
     sendHtml(response, 200, html)
     return true
+  }
+
+  if (method === "GET" && pathname === PARENT_PORTAL_PAGE_PATH) {
+    if (!fs.existsSync(PARENT_PORTAL_HTML_PATH)) {
+      sendJson(response, 404, { error: "Parent portal page not found" })
+      return true
+    }
+    const html = injectParentRuntimeConfig(fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8"))
+    sendHtml(response, 200, html)
+    return true
+  }
+
+  if (isPathWithinPrefix(pathname, PARENT_API_PREFIX)) {
+    allowCors(request, response)
+
+    if (method === "OPTIONS") {
+      response.writeHead(204)
+      response.end()
+      return true
+    }
+
+    try {
+      const handled = await handleParentApiRequest(request, response, pathname, url)
+      if (!handled) sendJson(response, 404, { error: "Parent endpoint not found" })
+      return true
+    } catch (error) {
+      withError(response, request, error)
+      return true
+    }
   }
 
   if (!isPathWithinPrefix(pathname, ADMIN_API_PREFIX)) return false

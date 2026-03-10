@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Eagles Parent Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #f3efe6;
+      --bg-1: #f8f7f3;
+      --ink: #13233d;
+      --ink-soft: #4f5d75;
+      --brand: #b51f2e;
+      --brand-2: #1f4ea3;
+      --ok: #1f7a4f;
+      --warn: #a46000;
+      --err: #9e1d1d;
+      --card: #ffffff;
+      --line: #cfd7e3;
+      --line-strong: #8ba0c2;
+      --radius: 14px;
+      --shadow: 0 10px 28px rgba(19, 35, 61, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at -10% -10%, #ffd2ac 0%, transparent 56%),
+        radial-gradient(800px 420px at 120% -20%, #b7d5ff 0%, transparent 52%),
+        linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    }
+
+    .shell {
+      width: min(1120px, 95vw);
+      margin: 24px auto 40px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 0.2px;
+    }
+
+    .hero p {
+      margin: 4px 0 0;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--ink-soft);
+      background: #f8fbff;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .col-12 { grid-column: span 12; }
+    .col-8 { grid-column: span 8; }
+    .col-6 { grid-column: span 6; }
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+
+    @media (max-width: 960px) {
+      .col-8, .col-6, .col-4, .col-3 { grid-column: span 12; }
+      .hero { flex-direction: column; align-items: flex-start; }
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid #c9d2e0;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
+    input:disabled,
+    textarea:disabled {
+      background: #f4f6fa;
+      color: #667792;
+      border-color: #d6deea;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      border: 1px solid #8da0bf;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: #f6f8fc;
+      color: var(--ink);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(19, 35, 61, 0.12);
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, var(--brand), #8f1620);
+      border-color: #7f1520;
+      color: #fff;
+    }
+
+    button.alt {
+      background: linear-gradient(180deg, var(--brand-2), #143a81);
+      border-color: #13346f;
+      color: #fff;
+    }
+
+    .hint {
+      margin: 0;
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+
+    .status {
+      min-height: 20px;
+      margin: 0;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    .status.ok { color: var(--ok); }
+    .status.warn { color: var(--warn); }
+    .status.err { color: var(--err); }
+
+    .metrics {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fcfdff;
+      padding: 12px;
+    }
+
+    .metric .k {
+      font-size: 11px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .metric .v {
+      margin-top: 5px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .field-card {
+      border: 1px solid #d4ddea;
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+      animation: rise 220ms ease;
+    }
+
+    .field-card.locked {
+      border-color: #e3b3b3;
+      background: #fff7f7;
+    }
+
+    .field-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 10px;
+      letter-spacing: 0.25px;
+      text-transform: uppercase;
+      border: 1px solid #a7b5cc;
+      color: #375173;
+      background: #f4f8ff;
+    }
+
+    .pill.lock {
+      border-color: #d19090;
+      color: #8a2f2f;
+      background: #fff0f0;
+    }
+
+    .hidden { display: none !important; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="card hero">
+      <div>
+        <h1>Parent Portal</h1>
+        <p>View child performance, homework, attendance, and submit profile updates for review.</p>
+      </div>
+      <div class="badge" id="sessionBadge">Not signed in</div>
+    </section>
+
+    <section class="card" id="loginCard">
+      <h2 style="margin-top:0;">Sign In</h2>
+      <div class="grid">
+        <div class="col-4"><label for="parentsId">parentsId</label><input id="parentsId" type="text" autocomplete="username" placeholder="cm&lt;eaglesId&gt; or family id"></div>
+        <div class="col-4"><label for="parentPassword">Password</label><input id="parentPassword" type="password" autocomplete="current-password" placeholder="Shared parent/child password"></div>
+        <div class="col-4" style="display:flex;align-items:end;"><button id="loginBtn" class="primary" type="button">Login</button></div>
+      </div>
+      <p class="hint">One parentsId can map to multiple children.</p>
+      <p id="loginStatus" class="status"></p>
+    </section>
+
+    <section class="card hidden" id="portalCard">
+      <div class="actions" style="justify-content:space-between; margin-bottom: 12px;">
+        <div class="actions" style="flex:1;">
+          <div style="min-width:240px; flex:1;">
+            <label for="childSelect">Child</label>
+            <select id="childSelect"></select>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="reloadBtn" type="button">Reload</button>
+          <button id="logoutBtn" type="button" class="alt">Logout</button>
+        </div>
+      </div>
+
+      <div class="metrics" id="dashboardMetrics"></div>
+      <p id="portalStatus" class="status"></p>
+
+      <hr style="border:none;border-top:1px solid var(--line); margin: 16px 0;">
+
+      <h3 style="margin:0 0 10px;">Child Profile Draft</h3>
+      <div class="grid" style="margin-bottom:10px;">
+        <div class="col-3"><label>Eagles ID</label><input id="immutableEaglesId" type="text" disabled></div>
+        <div class="col-3"><label>Student Number</label><input id="immutableStudentNumber" type="text" disabled></div>
+        <div class="col-3"><label>Full Name</label><input id="immutableFullName" type="text" disabled></div>
+        <div class="col-3"><label>Current Grade</label><input id="immutableGrade" type="text" disabled></div>
+      </div>
+      <div id="profileFields" class="field-grid"></div>
+      <div class="actions" style="margin-top:12px;">
+        <button id="saveDraftBtn" type="button">Save Draft</button>
+        <button id="submitReviewBtn" type="button" class="primary">Submit For Admin Review</button>
+      </div>
+      <p class="hint">`eaglesId` and `studentNumber` are immutable. Locked fields are read-only.</p>
+    </section>
+  </div>
+
+  <script>
+    const PARENT_API_PREFIX = String(window.__SIS_PARENT_API_PREFIX || "/api/parent").trim()
+    const PARENT_AUTH_PREFIX = String(window.__SIS_PARENT_AUTH_PREFIX || `${PARENT_API_PREFIX}/auth`).trim()
+    const PARENT_CHILDREN_PATH = String(window.__SIS_PARENT_CHILDREN_PATH || `${PARENT_API_PREFIX}/children`).trim()
+    const PARENT_DASHBOARD_PATH = String(window.__SIS_PARENT_DASHBOARD_PATH || `${PARENT_API_PREFIX}/dashboard`).trim()
+
+    const state = {
+      me: null,
+      children: [],
+      dashboard: null,
+      selectedEaglesId: "",
+      profile: {},
+      lockedFields: new Set(),
+      immutableFields: new Set(["eaglesId", "studentNumber"]),
+      patch: {},
+      status: "",
+    }
+
+    function normalizeText(value) {
+      if (value === undefined || value === null) return ""
+      return String(value).trim()
+    }
+
+    function setStatus(message, type = "") {
+      const statusEl = document.getElementById("portalStatus")
+      const loginStatusEl = document.getElementById("loginStatus")
+      const active = !document.getElementById("portalCard").classList.contains("hidden") ? statusEl : loginStatusEl
+      if (!active) return
+      active.className = `status${type ? ` ${type}` : ""}`
+      active.textContent = normalizeText(message)
+    }
+
+    async function api(pathname, init = {}) {
+      const headers = {
+        "content-type": "application/json",
+        ...(init.headers || {}),
+      }
+      const response = await fetch(pathname, {
+        method: init.method || "GET",
+        credentials: "include",
+        headers,
+        body: Object.prototype.hasOwnProperty.call(init, "body") ? JSON.stringify(init.body || {}) : undefined,
+      })
+      const text = await response.text()
+      let json = {}
+      try {
+        json = text ? JSON.parse(text) : {}
+      } catch (error) {
+        void error
+      }
+      if (!response.ok) {
+        const message = normalizeText(json.error || response.statusText || "Request failed")
+        const err = new Error(message)
+        err.status = response.status
+        throw err
+      }
+      return json
+    }
+
+    function profileInputForField(key, value, locked) {
+      const fieldId = `pf_${key}`
+      const safeValue = value === null || value === undefined ? "" : value
+      if (Array.isArray(safeValue)) {
+        return `<textarea id="${fieldId}" data-field-key="${key}" ${locked ? "disabled" : ""}>${safeValue.join(", ")}</textarea>`
+      }
+      return `<input id="${fieldId}" data-field-key="${key}" type="text" value="${String(safeValue).replace(/"/g, "&quot;")}" ${locked ? "disabled" : ""}>`
+    }
+
+    function renderProfileFields() {
+      const root = document.getElementById("profileFields")
+      root.innerHTML = ""
+      const entries = Object.entries(state.profile || {}).sort((a, b) => a[0].localeCompare(b[0]))
+      if (!entries.length) {
+        root.innerHTML = '<p class="hint">No editable profile data found for this child.</p>'
+        return
+      }
+
+      entries.forEach(([key, value]) => {
+        if (state.immutableFields.has(key)) return
+        const locked = state.lockedFields.has(key)
+        const card = document.createElement("div")
+        card.className = `field-card${locked ? " locked" : ""}`
+        card.innerHTML = `
+          <div class="field-title">
+            <span>${key}</span>
+            <span class="pill${locked ? " lock" : ""}">${locked ? "locked" : "editable"}</span>
+          </div>
+          ${profileInputForField(key, value, locked)}
+        `
+        root.appendChild(card)
+      })
+
+      root.querySelectorAll("[data-field-key]").forEach((inputEl) => {
+        inputEl.addEventListener("input", () => {
+          const fieldKey = normalizeText(inputEl.getAttribute("data-field-key"))
+          if (!fieldKey || state.lockedFields.has(fieldKey) || state.immutableFields.has(fieldKey)) return
+          const raw = inputEl.value
+          const current = state.profile[fieldKey]
+          let normalized = raw
+          if (Array.isArray(current)) {
+            normalized = raw
+              .split(",")
+              .map((entry) => normalizeText(entry))
+              .filter(Boolean)
+          }
+          state.patch[fieldKey] = normalized
+        })
+      })
+    }
+
+    function renderDashboard() {
+      const root = document.getElementById("dashboardMetrics")
+      const child = state.dashboard?.children?.find((entry) => normalizeText(entry.eaglesId) === state.selectedEaglesId) || null
+      if (!child) {
+        root.innerHTML = '<div class="metric"><div class="k">Dashboard</div><div class="v">No data</div></div>'
+        return
+      }
+      const attendance = child.attendance || {}
+      const assignments = child.assignments || {}
+      const grades = child.grades || {}
+      const performance = child.performance || {}
+      root.innerHTML = `
+        <div class="metric"><div class="k">Attendance</div><div class="v">${attendance.present || 0}/${attendance.total || 0}</div></div>
+        <div class="metric"><div class="k">Absences</div><div class="v">${attendance.absent || 0}</div></div>
+        <div class="metric"><div class="k">Pending HW</div><div class="v">${assignments.pending || 0}</div></div>
+        <div class="metric"><div class="k">Overdue HW</div><div class="v">${assignments.overdue || 0}</div></div>
+        <div class="metric"><div class="k">Average Score</div><div class="v">${grades.averageScorePercent ?? "-"}</div></div>
+        <div class="metric"><div class="k">Reports</div><div class="v">${performance.reportCount || 0}</div></div>
+      `
+    }
+
+    async function loadChildProfile(eaglesId) {
+      state.patch = {}
+      const id = normalizeText(eaglesId)
+      if (!id) return
+      const payload = await api(`${PARENT_CHILDREN_PATH}/${encodeURIComponent(id)}/profile`)
+      const child = payload.child || {}
+      state.selectedEaglesId = normalizeText(child.eaglesId)
+      state.profile = payload.profile && typeof payload.profile === "object" ? payload.profile : {}
+      state.lockedFields = new Set(Array.isArray(payload.lockedFields) ? payload.lockedFields.map((entry) => normalizeText(entry)) : [])
+      state.immutableFields = new Set(Array.isArray(payload.immutableFields) ? payload.immutableFields.map((entry) => normalizeText(entry)) : ["eaglesId", "studentNumber"])
+
+      document.getElementById("immutableEaglesId").value = normalizeText(child.eaglesId)
+      document.getElementById("immutableStudentNumber").value = child.studentNumber === null || child.studentNumber === undefined ? "" : String(child.studentNumber)
+      document.getElementById("immutableFullName").value = normalizeText(child.fullName)
+      document.getElementById("immutableGrade").value = normalizeText(child.currentGrade)
+      renderProfileFields()
+      renderDashboard()
+    }
+
+    function renderChildrenSelect() {
+      const select = document.getElementById("childSelect")
+      select.innerHTML = ""
+      if (!state.children.length) {
+        select.innerHTML = '<option value="">No linked children</option>'
+        return
+      }
+      state.children.forEach((child) => {
+        const option = document.createElement("option")
+        option.value = normalizeText(child.eaglesId)
+        option.textContent = `${normalizeText(child.fullName || child.englishName || child.eaglesId)} | ${normalizeText(child.eaglesId)}`
+        if (option.value === state.selectedEaglesId) option.selected = true
+        select.appendChild(option)
+      })
+    }
+
+    async function hydratePortal() {
+      const me = await api(`${PARENT_AUTH_PREFIX}/me`)
+      state.me = me.user || null
+      document.getElementById("sessionBadge").textContent = state.me?.parentsId ? `Signed in: ${state.me.parentsId}` : "Not signed in"
+
+      const childrenPayload = await api(PARENT_CHILDREN_PATH)
+      state.children = Array.isArray(childrenPayload.items) ? childrenPayload.items : []
+
+      state.dashboard = await api(PARENT_DASHBOARD_PATH)
+
+      const selected = normalizeText(document.getElementById("childSelect").value)
+      const defaultEaglesId = selected || normalizeText(state.children[0]?.eaglesId)
+      state.selectedEaglesId = defaultEaglesId
+      renderChildrenSelect()
+      if (defaultEaglesId) await loadChildProfile(defaultEaglesId)
+      else {
+        state.profile = {}
+        state.patch = {}
+        renderDashboard()
+        renderProfileFields()
+      }
+    }
+
+    async function login() {
+      const parentsId = normalizeText(document.getElementById("parentsId").value)
+      const password = normalizeText(document.getElementById("parentPassword").value)
+      if (!parentsId || !password) {
+        setStatus("parentsId and password are required.", "err")
+        return
+      }
+      await api(`${PARENT_AUTH_PREFIX}/login`, {
+        method: "POST",
+        body: { parentsId, password },
+      })
+      document.getElementById("loginCard").classList.add("hidden")
+      document.getElementById("portalCard").classList.remove("hidden")
+      await hydratePortal()
+      setStatus("Signed in.", "ok")
+    }
+
+    async function logout() {
+      await api(`${PARENT_AUTH_PREFIX}/logout`, { method: "POST", body: {} })
+      document.getElementById("portalCard").classList.add("hidden")
+      document.getElementById("loginCard").classList.remove("hidden")
+      document.getElementById("sessionBadge").textContent = "Not signed in"
+      state.me = null
+      state.children = []
+      state.dashboard = null
+      state.profile = {}
+      state.patch = {}
+      setStatus("Signed out.", "ok")
+    }
+
+    async function saveDraft() {
+      if (!state.selectedEaglesId) {
+        setStatus("Select a child first.", "warn")
+        return
+      }
+      if (!Object.keys(state.patch).length) {
+        setStatus("No changes to save.", "warn")
+        return
+      }
+      const result = await api(`${PARENT_CHILDREN_PATH}/${encodeURIComponent(state.selectedEaglesId)}/profile-draft`, {
+        method: "PUT",
+        body: {
+          patch: state.patch,
+        },
+      })
+      state.patch = {}
+      setStatus(`Draft saved (submission ${normalizeText(result.submissionId)}).`, "ok")
+    }
+
+    async function submitForReview() {
+      if (!state.selectedEaglesId) {
+        setStatus("Select a child first.", "warn")
+        return
+      }
+      const result = await api(`${PARENT_CHILDREN_PATH}/${encodeURIComponent(state.selectedEaglesId)}/profile-submit`, {
+        method: "POST",
+        body: {},
+      })
+      setStatus(`Submitted for review (submission ${normalizeText(result.submissionId)}).`, "ok")
+    }
+
+    async function bootstrap() {
+      try {
+        await hydratePortal()
+        document.getElementById("loginCard").classList.add("hidden")
+        document.getElementById("portalCard").classList.remove("hidden")
+      } catch (error) {
+        void error
+      }
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", () => login().catch((error) => setStatus(error.message, "err")))
+    document.getElementById("logoutBtn").addEventListener("click", () => logout().catch((error) => setStatus(error.message, "err")))
+    document.getElementById("reloadBtn").addEventListener("click", () => hydratePortal().then(() => setStatus("Reloaded.", "ok")).catch((error) => setStatus(error.message, "err")))
+    document.getElementById("childSelect").addEventListener("change", (event) => {
+      const target = event.target
+      if (!(target instanceof HTMLSelectElement)) return
+      loadChildProfile(target.value).catch((error) => setStatus(error.message, "err"))
+    })
+    document.getElementById("saveDraftBtn").addEventListener("click", () => saveDraft().catch((error) => setStatus(error.message, "err")))
+    document.getElementById("submitReviewBtn").addEventListener("click", () => submitForReview().catch((error) => setStatus(error.message, "err")))
+
+    bootstrap().catch((error) => setStatus(error.message, "err"))
+  </script>
+</body>
+</html>

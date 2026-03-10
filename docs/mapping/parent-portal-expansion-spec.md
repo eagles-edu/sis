@@ -9,6 +9,7 @@ Owner: SIS Engineering
 Deliver a public parent portal and an admin queue hub without identity drift.
 
 Required outcomes:
+
 - Parent access is session-based by `parentsId`.
 - Parent account can map to multiple children.
 - Public child identity is `eaglesId`.
@@ -35,6 +36,7 @@ Required outcomes:
 
 Queue Hub panel IDs (default order):
 0. `queued-performance-reports`
+
 1. `unmatched-exercise-submissions`
 2. `current-assignments-pending`
 3. `overdue-homework`
@@ -42,12 +44,14 @@ Queue Hub panel IDs (default order):
 5. `pending-profile-submissions`
 
 Queue Hub page behavior:
+
 - Admin-only access.
 - Drag-and-drop reorder from front/top.
 - Order persistence key: `uiSettings.queueHub.panelOrder`.
 - Unknown/new panel IDs append to end during hydration.
 
 Panel data sources:
+
 - Queued performance reports: existing parent-report notification queue source.
 - Unmatched exercise submissions: existing incoming exercise-result queue source.
 - Current assignments pending: existing dashboard level-completion source.
@@ -58,6 +62,7 @@ Panel data sources:
 ## 4) Parent Portal Functional Scope
 
 Portal pages:
+
 - Parent login/session.
 - Dashboard snapshot (grades, performance, reports, attendance, current/past due homework, quarter/YTD).
 - Child selector (all linked children under same `parentsId`).
@@ -65,11 +70,13 @@ Portal pages:
 - Submission status history (draft/submitted/approved/rejected).
 
 Field editability policy:
+
 - Not editable: `eaglesId`, `studentNumber`.
 - Editable: all other profile fields unless explicitly locked.
 - Locks are shown in UI and revalidated on submit.
 
 Submission workflow:
+
 - Parent saves draft edits.
 - Parent submits for review.
 - Admin reviews diff, optionally edits draft, then approve/reject.
@@ -90,11 +97,13 @@ Submission workflow:
   - `id`, `studentRefId`, `fieldKey`, `locked`, `reason`, `lockedByUsername`, `createdAt`, `updatedAt`
 
 Optional later:
+
 - `ParentPortalNotificationPreference` for per-parent channel preferences.
 
 ## 6) API Surfaces to Implement
 
 Admin API additions:
+
 - `GET /api/admin/queue-hub`
 - `GET /api/admin/profile-submissions`
 - `PUT /api/admin/profile-submissions/{submissionId}/draft`
@@ -103,6 +112,7 @@ Admin API additions:
 - Existing UI settings endpoint persists queue panel order (`PUT /api/admin/settings/ui`).
 
 Parent API additions:
+
 - `POST /api/parent/auth/login`
 - `POST /api/parent/auth/logout`
 - `GET /api/parent/auth/me`
@@ -113,23 +123,27 @@ Parent API additions:
 - `POST /api/parent/children/{eaglesId}/profile-submit`
 
 Response naming rules:
+
 - Parent API payloads expose `eaglesId` and `eaglesRefId`.
 - Parent API payloads do not expose `studentId`.
 
 ## 7) Merge, Diff, and Failure Semantics
 
 Patch semantics:
+
 - Use touched-field payload shape (explicitly distinguish unchanged vs clear-empty).
 - Blank value with touched=true clears field.
 - Field omitted means unchanged.
 
 Approval merge rules:
+
 - Immutable guard: reject attempts to mutate `eaglesId` and `studentNumber`.
 - Lock guard: locked fields cannot be changed by parent submission.
 - Merge target: latest profile snapshot at approval time.
 - Conflict policy: admin-edited draft wins over parent draft for same touched field.
 
 Failure logging:
+
 - Record failure point enum values: `validation`, `lock-conflict`, `merge-write`, `notification`.
 - Reject only failing item; continue processing remaining queue items.
 
@@ -143,6 +157,7 @@ Failure logging:
 ## 9) Testing and Acceptance Criteria
 
 Minimum test coverage:
+
 - Parent auth/login/logout/me cookie flow.
 - Multi-child mapping for one `parentsId`.
 - Parent profile draft/submit happy path.
@@ -153,6 +168,7 @@ Minimum test coverage:
 - Notification events fire for received/approved/rejected.
 
 Definition of done:
+
 - Endpoints implemented and documented.
 - OpenAPI mapping files updated.
 - Route + UI tests passing.

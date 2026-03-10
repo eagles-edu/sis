@@ -22,11 +22,13 @@ A global rename of internal references would be high-risk and unnecessary for pa
 ## Consequences
 
 Positive:
+
 - Parent API naming stays aligned with product language (`eaglesId`).
 - Existing admin/store code avoids risky wide refactor.
 - Implementation can move faster with lower regression risk.
 
 Tradeoff:
+
 - Dual naming exists across system boundaries (`studentRefId` internal, `eaglesRefId` external), requiring explicit contract tests.
 
 ## Rejected Alternatives
