@@ -21,7 +21,7 @@ usage() {
   cat <<'USAGE'
 Usage: deploy-api-safe.sh [options]
 
-Deploys API runtime code scope only (server/, schemas/, admin HTML).
+Deploys API runtime code scope only (server/, schemas/, admin HTML, parent portal assets).
 This script does not run DB migrations and does not restore DB.
 
 Options:
@@ -89,6 +89,11 @@ for required_dir in server schemas web-asset/admin; do
   fi
 done
 
+if [[ ! -e "${SOURCE_ROOT}/web-asset/parent" ]]; then
+  echo "Missing source path: ${SOURCE_ROOT}/web-asset/parent" >&2
+  exit 1
+fi
+
 record_drift() {
   DRIFT_FOUND=1
   DRIFT_LINES+=("$1")
@@ -116,12 +121,23 @@ collect_html_drift() {
   fi
 }
 
+collect_parent_assets_drift() {
+  local source_dir="${SOURCE_ROOT}/web-asset/parent"
+  local runtime_dir="${RUNTIME_ROOT}/web-asset/parent"
+  if [[ ! -d "${runtime_dir}" ]]; then
+    record_drift "[parent-assets] missing runtime path: ${runtime_dir}"
+    return
+  fi
+  collect_dir_drift "${source_dir}" "${runtime_dir}" "parent-assets"
+}
+
 collect_drift() {
   DRIFT_FOUND=0
   DRIFT_LINES=()
   collect_dir_drift "${SOURCE_ROOT}/server" "${RUNTIME_ROOT}/server" "server"
   collect_dir_drift "${SOURCE_ROOT}/schemas" "${RUNTIME_ROOT}/schemas" "schemas"
   collect_html_drift
+  collect_parent_assets_drift
 }
 
 print_drift_report() {
@@ -143,15 +159,21 @@ perform_sync() {
   mkdir -p \
     "${RUNTIME_ROOT}/server.BAK-${timestamp}" \
     "${RUNTIME_ROOT}/schemas.BAK-${timestamp}" \
-    "${RUNTIME_ROOT}/web-asset/admin.BAK-${timestamp}"
+    "${RUNTIME_ROOT}/web-asset/admin.BAK-${timestamp}" \
+    "${RUNTIME_ROOT}/web-asset/parent.BAK-${timestamp}"
 
   rsync -a --delete "${RUNTIME_ROOT}/server/" "${RUNTIME_ROOT}/server.BAK-${timestamp}/"
   rsync -a --delete "${RUNTIME_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas.BAK-${timestamp}/"
   rsync -a --delete "${RUNTIME_ROOT}/web-asset/admin/" "${RUNTIME_ROOT}/web-asset/admin.BAK-${timestamp}/"
+  if [[ -d "${RUNTIME_ROOT}/web-asset/parent" ]]; then
+    rsync -a --delete "${RUNTIME_ROOT}/web-asset/parent/" "${RUNTIME_ROOT}/web-asset/parent.BAK-${timestamp}/"
+  fi
 
   rsync -a "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/server/" "${RUNTIME_ROOT}/server/"
   rsync -a "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas/"
   rsync -a "${SOURCE_ROOT}/web-asset/admin/student-admin.html" "${RUNTIME_ROOT}/web-asset/admin/student-admin.html"
+  mkdir -p "${RUNTIME_ROOT}/web-asset/parent"
+  rsync -a "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/parent/" "${RUNTIME_ROOT}/web-asset/parent/"
 }
 
 restart_if_requested() {
@@ -170,9 +192,29 @@ run_health_checks() {
     return
   fi
 
+  fetch_http_code_with_retry() {
+    local url="$1"
+    local output_file="$2"
+    local attempts="${3:-15}"
+    local wait_seconds="${4:-1}"
+    local code="000"
+    local attempt=1
+    while [[ "${attempt}" -le "${attempts}" ]]; do
+      code="$(curl -sS -o "${output_file}" -w '%{http_code}' "${url}" || true)"
+      if [[ "${code}" =~ ^[0-9]{3}$ && "${code}" != "000" ]]; then
+        echo "${code}"
+        return 0
+      fi
+      sleep "${wait_seconds}"
+      attempt=$((attempt + 1))
+    done
+    echo "${code}"
+    return 0
+  }
+
   echo "[check] local health and auth routes"
-  health_code="$(curl -sS -o /tmp/sis-health.out -w '%{http_code}' "http://127.0.0.1:${MAILER_PORT}/healthz")"
-  me_code="$(curl -sS -o /tmp/sis-auth-me.out -w '%{http_code}' "http://127.0.0.1:${MAILER_PORT}/api/admin/auth/me")"
+  health_code="$(fetch_http_code_with_retry "http://127.0.0.1:${MAILER_PORT}/healthz" /tmp/sis-health.out 15 1)"
+  me_code="$(fetch_http_code_with_retry "http://127.0.0.1:${MAILER_PORT}/api/admin/auth/me" /tmp/sis-auth-me.out 15 1)"
   echo "  /healthz => ${health_code}"
   echo "  /api/admin/auth/me => ${me_code}"
 

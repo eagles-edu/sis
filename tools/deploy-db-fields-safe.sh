@@ -133,6 +133,42 @@ redact_url() {
   echo "${raw}" | sed -E 's#(postgres(ql)?://)[^/@]+@#\1****@#'
 }
 
+is_pending_migrate_status_output() {
+  local output="$1"
+  if echo "${output}" | grep -qi "have not yet been applied"; then
+    return 0
+  fi
+  return 1
+}
+
+run_prisma_migrate_status() {
+  local phase="$1"
+  local allow_pending="${2:-0}"
+  local output=""
+  local status_code=0
+
+  set +e
+  output="$(
+    cd "${RUNTIME_ROOT}" && npx prisma migrate status 2>&1
+  )"
+  status_code=$?
+  set -e
+
+  echo "${output}"
+
+  if [[ "${status_code}" -eq 0 ]]; then
+    return 0
+  fi
+
+  if [[ "${allow_pending}" -eq 1 ]] && is_pending_migrate_status_output "${output}"; then
+    echo "[preflight] pending migrations detected; continuing workflow."
+    return 0
+  fi
+
+  echo "[error] prisma migrate status failed during ${phase} (exit=${status_code})" >&2
+  return "${status_code}"
+}
+
 echo "[deploy-db-fields-safe] source=${SOURCE_ROOT}"
 echo "[deploy-db-fields-safe] runtime=${RUNTIME_ROOT}"
 echo "[deploy-db-fields-safe] database=$(redact_url "${DATABASE_URL}")"
@@ -164,10 +200,7 @@ if [[ -n "${EXPECTED_DB_NAME}" && "${actual_db_name}" != "${EXPECTED_DB_NAME}" ]
 fi
 
 echo "[step] preflight: prisma migrate status (runtime root)"
-(
-  cd "${RUNTIME_ROOT}"
-  npx prisma migrate status
-)
+run_prisma_migrate_status "preflight" 1
 
 if [[ "${CHECK_ONLY}" -eq 1 ]]; then
   echo "[ok] check-only complete (no writes performed)"
@@ -196,9 +229,6 @@ echo "[step] migrate: npm run db:migrate:deploy (runtime root)"
 )
 
 echo "[step] verify: prisma migrate status (runtime root)"
-(
-  cd "${RUNTIME_ROOT}"
-  npx prisma migrate status
-)
+run_prisma_migrate_status "post-deploy verification" 0
 
 echo "[ok] live DB field migration workflow complete"
