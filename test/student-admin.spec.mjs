@@ -1,9 +1,13 @@
 // test/student-admin.spec.mjs
 import test from "node:test"
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import http from "node:http"
 import * as XLSX from "xlsx"
 import { parseSpreadsheetRowsFromUploadPayload } from "../server/student-admin-routes.mjs"
 import { generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
+
+const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
 
 process.env.NODE_ENV = "test"
 process.env.EXERCISE_MAILER_ORIGIN = "*"
@@ -23,6 +27,12 @@ process.env.STUDENT_TEACHER_ACCOUNTS_JSON = JSON.stringify([
 ])
 process.env.STUDENT_ADMIN_TOKEN_SECRET = "test-student-admin-token-secret"
 process.env.MAILER_DEBUG = "false"
+process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = TEST_ADMIN_UI_SETTINGS_FILE
+try {
+  fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
+} catch (error) {
+  void error
+}
 
 function makeMockTransport() {
   return {
@@ -44,6 +54,7 @@ let port
 let adminSessionCookie = ""
 let teacherSessionCookie = ""
 let assignmentAnnouncementPreviewPath = ""
+let persistedUiSettingsPath = ""
 
 test("parseSpreadsheetRowsFromUploadPayload parses xlsx payload", () => {
   const workbook = XLSX.utils.book_new()
@@ -94,6 +105,32 @@ test("parseSpreadsheetRowsFromUploadPayload selects the most data-complete sheet
   assert.equal(rows[0].studentNumber, "300")
   assert.equal(rows[0].eaglesId, "S300")
   assert.equal(rows[1].eaglesId, "S301")
+})
+
+test("parseSpreadsheetRowsFromUploadPayload parses UTF-8 CSV payload with Vietnamese text and BOM", () => {
+  const csvText = "\ufeffeaglesId,fullNameStudent,newAddress\nvi001,Trần Nguyễn Thiên Ân,Phường Tân Sơn Nhì"
+  const rows = parseSpreadsheetRowsFromUploadPayload({
+    fileName: "students.csv",
+    format: "csv",
+    fileDataBase64: Buffer.from(csvText, "utf8").toString("base64"),
+  })
+
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].eaglesId, "vi001")
+  assert.equal(rows[0].fullNameStudent, "Trần Nguyễn Thiên Ân")
+  assert.equal(rows[0].newAddress, "Phường Tân Sơn Nhì")
+})
+
+test("parseSpreadsheetRowsFromUploadPayload rejects non-UTF-8 CSV payload", () => {
+  const invalidUtf8Bytes = Buffer.from([0x65, 0x61, 0x67, 0x6c, 0x65, 0x73, 0x49, 0x64, 0x0a, 0xc3, 0x28])
+  assert.throws(
+    () => parseSpreadsheetRowsFromUploadPayload({
+      fileName: "students.csv",
+      format: "csv",
+      fileDataBase64: invalidUtf8Bytes.toString("base64"),
+    }),
+    /UTF-8 encoded/i
+  )
 })
 
 test("generateStudentReportCardPdf returns a PDF buffer", async () => {
@@ -547,6 +584,66 @@ test("GET /api/admin/permissions exposes role policies", async () => {
   assert.ok(body.roles?.parent)
 })
 
+test("admin can persist and reload school setup ui settings", async () => {
+  const getBefore = await fetchLocal(port, "/api/admin/settings/ui", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(getBefore.status, 200)
+  const beforeBody = await getBefore.json()
+  assert.equal(beforeBody.ok, true)
+  persistedUiSettingsPath = String(beforeBody.filePath || "")
+
+  const payload = {
+    uiSettings: {
+      multiSchool: true,
+      schoolSetup: {
+        startDate: "2026-08-10",
+        endDate: "2027-05-28",
+      },
+      schoolProfile: {
+        schoolName: "Eagles Live",
+        logoDataUrl: "data:image/png;base64,AAAA",
+        mission: "Persist settings across live upgrades",
+      },
+    },
+  }
+
+  const putRes = await fetchLocal(port, "/api/admin/settings/ui", {
+    method: "PUT",
+    headers: {
+      Cookie: adminSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+  assert.equal(putRes.status, 200)
+  const putBody = await putRes.json()
+  assert.equal(putBody.ok, true)
+  assert.equal(putBody.uiSettings.multiSchool, true)
+  assert.equal(putBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
+  assert.equal(putBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
+
+  const getAfter = await fetchLocal(port, "/api/admin/settings/ui", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(getAfter.status, 200)
+  const afterBody = await getAfter.json()
+  assert.equal(afterBody.ok, true)
+  assert.equal(afterBody.uiSettings.multiSchool, true)
+  assert.equal(afterBody.uiSettings.schoolSetup.startDate, "2026-08-10")
+  assert.equal(afterBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
+  assert.equal(afterBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
+})
+
+test("teacher cannot access persisted ui settings endpoint", async () => {
+  const res = await fetchLocal(port, "/api/admin/settings/ui", {
+    headers: { Cookie: teacherSessionCookie },
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
 test("teacher cannot update role policies", async () => {
   const res = await fetchLocal(port, "/api/admin/permissions", {
     method: "PUT",
@@ -737,6 +834,13 @@ test("GET /api/admin/auth/me requires auth", async () => {
   assert.match(body.error, /Unauthorized/i)
 })
 
+test("GET /api/admin/settings/ui requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/settings/ui")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
 test("GET /api/admin/students/abc/report-card.pdf requires auth", async () => {
   const res = await fetchLocal(port, "/api/admin/students/abc/report-card.pdf")
   assert.equal(res.status, 401)
@@ -887,6 +991,52 @@ test("POST /api/admin/students/import returns 503 when admin store disabled", as
   assert.match(body.error, /store is disabled/i)
 })
 
+test("POST /api/admin/students/import preserves UTF-8 JSON rows across chunk boundaries", async () => {
+  const payloadBuffer = Buffer.from(JSON.stringify({
+    rows: [
+      {
+        eaglesId: "vi001",
+        fullNameStudent: "Trần Nguyễn Thiên Ân",
+      },
+    ],
+  }), "utf8")
+  const splitAt = payloadBuffer.findIndex((byte) => byte >= 0x80)
+  assert.ok(splitAt > 0, "test payload must include at least one multi-byte UTF-8 byte")
+
+  const response = await new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: "127.0.0.1",
+        port,
+        path: "/api/admin/students/import",
+        method: "POST",
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          Cookie: adminSessionCookie,
+        },
+      },
+      (res) => {
+        const chunks = []
+        res.on("data", (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk), "utf8")))
+        res.on("end", () => {
+          resolve({
+            statusCode: res.statusCode || 0,
+            bodyText: Buffer.concat(chunks).toString("utf8"),
+          })
+        })
+      }
+    )
+    req.on("error", reject)
+    req.write(payloadBuffer.subarray(0, splitAt + 1))
+    req.write(payloadBuffer.subarray(splitAt + 1))
+    req.end()
+  })
+
+  assert.equal(response.statusCode, 503)
+  const body = JSON.parse(response.bodyText)
+  assert.match(body.error, /store is disabled/i)
+})
+
 test("GET /api/admin/users returns 503 when admin store disabled", async () => {
   const res = await fetchLocal(port, "/api/admin/users", {
     headers: { Cookie: adminSessionCookie },
@@ -969,4 +1119,11 @@ test("GET /api/admin/students/import-template.xlsx downloads template with auth"
 
 test("shutdown admin route server", async () => {
   await new Promise((resolve) => server.close(resolve))
+})
+
+test("cleanup persisted ui settings test file", () => {
+  fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
+  if (persistedUiSettingsPath) fs.rmSync(persistedUiSettingsPath, { force: true })
+  assert.equal(fs.existsSync(TEST_ADMIN_UI_SETTINGS_FILE), false)
+  if (persistedUiSettingsPath) assert.equal(fs.existsSync(persistedUiSettingsPath), false)
 })

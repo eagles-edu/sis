@@ -79,6 +79,7 @@ const ADMIN_USERS_PREFIX = `${ADMIN_API_PREFIX}/users`
 const ADMIN_STUDENTS_PREFIX = `${ADMIN_API_PREFIX}/students`
 const ADMIN_NEXT_STUDENT_NUMBER_PATH = `${ADMIN_STUDENTS_PREFIX}/next-student-number`
 const ADMIN_PERMISSIONS_PATH = `${ADMIN_API_PREFIX}/permissions`
+const ADMIN_UI_SETTINGS_PATH = `${ADMIN_API_PREFIX}/settings/ui`
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
 const ADMIN_EXPORT_XLSX_PATH = `${ADMIN_API_PREFIX}/exports/xlsx`
@@ -115,6 +116,14 @@ const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
 )
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
+const ADMIN_UI_SETTINGS_FILE_PATH = path.resolve(
+  process.cwd(),
+  normalizeText(process.env.STUDENT_ADMIN_UI_SETTINGS_FILE) || "runtime-data/admin-ui-settings.json"
+)
+const ADMIN_UI_SETTINGS_MAX_BYTES = Math.max(
+  1024,
+  Number.parseInt(String(process.env.STUDENT_ADMIN_UI_SETTINGS_MAX_BYTES || 1024 * 1024), 10) || 1024 * 1024
+)
 const ADMIN_PAGE_SECTION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PAGE_PATH)}/([a-z0-9-]+)$`)
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE = new RegExp(
   `^${escapeRegex(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)}/([a-f0-9]{24})$`
@@ -151,7 +160,9 @@ let runtimeHealthProvider = null
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
-  return String(value).trim()
+  const text = String(value)
+  const withoutBom = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
+  return withoutBom.trim()
 }
 
 function normalizeLower(value) {
@@ -345,6 +356,15 @@ function canManagePermissions(sessionOrPolicy) {
   return resolveBoolean(policy?.canManagePermissions, false)
 }
 
+function canManageSettings(sessionOrPolicy) {
+  const policy =
+    sessionOrPolicy && typeof sessionOrPolicy === "object" && Object.prototype.hasOwnProperty.call(sessionOrPolicy, "role")
+      ? getRolePolicy(sessionOrPolicy.role)
+      : sessionOrPolicy
+  const allowedPages = Array.isArray(policy?.allowedPages) ? policy.allowedPages.map((entry) => normalizeLower(entry)) : []
+  return resolveBoolean(policy?.canWrite, false) && allowedPages.includes("settings")
+}
+
 function getOriginList() {
   return (process.env.EXERCISE_MAILER_ORIGIN || process.env.EXERCISE_MAILER_ORIGINS || "*")
     .split(",")
@@ -399,7 +419,7 @@ function sendHtml(response, statusCode, html) {
 }
 
 function injectAdminRuntimeConfig(html, pageSlug) {
-  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
+  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -420,6 +440,7 @@ export function getStudentAdminRuntimeStatus() {
     pagePath: ADMIN_PAGE_PATH,
     apiPrefix: ADMIN_API_PREFIX,
     permissionsPath: ADMIN_PERMISSIONS_PATH,
+    uiSettingsPath: ADMIN_UI_SETTINGS_PATH,
     dashboardPath: ADMIN_DASHBOARD_PATH,
     exerciseTitlesPath: ADMIN_EXERCISE_TITLES_PATH,
     exportXlsxPath: ADMIN_EXPORT_XLSX_PATH,
@@ -629,6 +650,18 @@ function parseDelimitedRows(text, delimiter) {
   return rows
 }
 
+function decodeUtf8BufferStrict(buffer, contextLabel = "Payload") {
+  try {
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(buffer)
+    return decoded.charCodeAt(0) === 0xfeff ? decoded.slice(1) : decoded
+  } catch (error) {
+    void error
+    const decodeError = new Error(`${contextLabel} must be UTF-8 encoded`)
+    decodeError.statusCode = 400
+    throw decodeError
+  }
+}
+
 function matrixToRows(matrix) {
   if (!Array.isArray(matrix) || matrix.length < 1) return []
   const headers = matrix[0].map((cell) => normalizeText(cell))
@@ -643,6 +676,17 @@ function matrixToRows(matrix) {
     rows.push(row)
   }
   return rows
+}
+
+function normalizeRowObjectKeys(row = {}) {
+  if (!row || typeof row !== "object" || Array.isArray(row)) return {}
+  const normalized = {}
+  Object.entries(row).forEach(([key, value]) => {
+    const normalizedKey = normalizeText(key)
+    if (!normalizedKey) return
+    normalized[normalizedKey] = value
+  })
+  return normalized
 }
 
 function detectSpreadsheetFormat(fileName, explicitFormat) {
@@ -773,7 +817,15 @@ function chooseWorkbookDataSheet(workbook, preferredSheetName = "") {
 }
 
 export function parseSpreadsheetRowsFromUploadPayload(payload = {}) {
-  if (Array.isArray(payload.rows)) return payload.rows
+  if (Array.isArray(payload.rows)) {
+    const rows = normalizeWorkbookRows(payload.rows.map((row) => normalizeRowObjectKeys(row)))
+    if (!rows.length) {
+      const error = new Error("Spreadsheet has no data rows")
+      error.statusCode = 400
+      throw error
+    }
+    return rows
+  }
 
   const fileName = normalizeText(payload.fileName)
   const format = detectSpreadsheetFormat(fileName, payload.format)
@@ -810,7 +862,7 @@ export function parseSpreadsheetRowsFromUploadPayload(payload = {}) {
     return rows
   }
 
-  const text = fileBuffer.toString("utf8")
+  const text = decodeUtf8BufferStrict(fileBuffer, "Uploaded CSV/TSV data")
   const delimiter = format === "tsv" ? "\t" : ","
   const matrix = parseDelimitedRows(text, delimiter)
   const rows = matrixToRows(matrix)
@@ -1107,19 +1159,41 @@ function assertCanManagePermissions(policy) {
   throw error
 }
 
+function assertCanManageSettings(policy) {
+  if (canManageSettings(policy)) return
+  const error = new Error("Forbidden")
+  error.statusCode = 403
+  throw error
+}
+
 function parseBody(request) {
   return new Promise((resolve, reject) => {
-    let raw = ""
+    const chunks = []
+    let totalBytes = 0
     request.on("data", (chunk) => {
-      raw += chunk
-      if (raw.length > 8e6) {
+      const chunkBuffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk), "utf8")
+      totalBytes += chunkBuffer.length
+      if (totalBytes > 8e6) {
         const error = new Error("Payload too large")
         error.statusCode = 413
         request.destroy()
         reject(error)
+        return
       }
+      chunks.push(chunkBuffer)
     })
     request.on("end", () => {
+      if (!chunks.length) {
+        resolve({})
+        return
+      }
+      let raw = ""
+      try {
+        raw = decodeUtf8BufferStrict(Buffer.concat(chunks), "Request payload")
+      } catch (error) {
+        reject(error)
+        return
+      }
       if (!raw) {
         resolve({})
         return
@@ -1134,6 +1208,88 @@ function parseBody(request) {
     })
     request.on("error", reject)
   })
+}
+
+function normalizeUiSettingsPayload(payload = {}) {
+  const source = payload && typeof payload === "object" ? payload : {}
+  const candidate = Object.prototype.hasOwnProperty.call(source, "uiSettings") ? source.uiSettings : source
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return {}
+  try {
+    return JSON.parse(JSON.stringify(candidate))
+  } catch (error) {
+    void error
+    return {}
+  }
+}
+
+function readPersistedUiSettings() {
+  if (!fs.existsSync(ADMIN_UI_SETTINGS_FILE_PATH)) {
+    return {
+      uiSettings: null,
+      updatedAt: "",
+      updatedBy: "",
+      filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+    }
+  }
+
+  try {
+    const raw = fs.readFileSync(ADMIN_UI_SETTINGS_FILE_PATH, "utf8")
+    if (!normalizeText(raw)) {
+      return {
+        uiSettings: null,
+        updatedAt: "",
+        updatedBy: "",
+        filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+      }
+    }
+
+    const parsed = JSON.parse(raw)
+    const wrapped =
+      parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, "uiSettings")
+    const uiSettings = wrapped ? normalizeUiSettingsPayload({ uiSettings: parsed.uiSettings }) : normalizeUiSettingsPayload(parsed)
+    const normalizedUpdatedBy = normalizeText(parsed?.updatedBy)
+
+    return {
+      uiSettings,
+      updatedAt: normalizeText(parsed?.updatedAt),
+      updatedBy: normalizedUpdatedBy || "",
+      filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+    }
+  } catch (error) {
+    const wrapped = new Error("Unable to read persisted admin UI settings")
+    wrapped.statusCode = 500
+    throw wrapped
+  }
+}
+
+function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
+  const uiSettings = normalizeUiSettingsPayload(payload)
+  const updatedAt = nowIso()
+  const updatedBy = normalizeText(updatedByUsername) || null
+  const persisted = {
+    uiSettings,
+    updatedAt,
+    updatedBy,
+  }
+  const encoded = JSON.stringify(persisted, null, 2)
+  const encodedBytes = Buffer.byteLength(encoded, "utf8")
+  if (encodedBytes > ADMIN_UI_SETTINGS_MAX_BYTES) {
+    const error = new Error("uiSettings payload is too large")
+    error.statusCode = 413
+    throw error
+  }
+
+  fs.mkdirSync(path.dirname(ADMIN_UI_SETTINGS_FILE_PATH), { recursive: true })
+  const tmpPath = `${ADMIN_UI_SETTINGS_FILE_PATH}.tmp-${process.pid}-${Date.now()}`
+  fs.writeFileSync(tmpPath, encoded, "utf8")
+  fs.renameSync(tmpPath, ADMIN_UI_SETTINGS_FILE_PATH)
+
+  return {
+    uiSettings,
+    updatedAt,
+    updatedBy: updatedBy || "",
+    filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+  }
 }
 
 function truncateCommandOutput(value, maxLength = 500) {
@@ -2321,6 +2477,29 @@ async function handleApiRequest(request, response, pathname, url) {
 
     if (method === "PUT") {
       await handlePermissionsPut(request, response, rolePolicy)
+      return true
+    }
+  }
+
+  if (pathname === ADMIN_UI_SETTINGS_PATH) {
+    assertCanManageSettings(rolePolicy)
+
+    if (method === "GET") {
+      const result = readPersistedUiSettings()
+      sendJson(response, 200, {
+        ok: true,
+        ...result,
+      })
+      return true
+    }
+
+    if (method === "PUT") {
+      const payload = await parseBody(request)
+      const result = writePersistedUiSettings(payload, session?.username)
+      sendJson(response, 200, {
+        ok: true,
+        ...result,
+      })
       return true
     }
   }

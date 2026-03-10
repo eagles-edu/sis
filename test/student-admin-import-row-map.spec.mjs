@@ -58,6 +58,26 @@ test("mapImportRowToStudentPayload accepts legacy sex alias for genderSelections
   assert.deepEqual(mapped.profile.genderSelections, ["male", "non-binary"])
 })
 
+test("mapImportRowToStudentPayload maps nu/nam gender values to female/male", () => {
+  const mapped = mapImportRowToStudentPayload({
+    eaglesId: "student002a",
+    studentNumber: "102",
+    gender: "nu, nam",
+  })
+
+  assert.deepEqual(mapped.profile.genderSelections, ["female", "male"])
+})
+
+test("mapImportRowToStudentPayload maps nữ/nam gender values to female/male", () => {
+  const mapped = mapImportRowToStudentPayload({
+    eaglesId: "student002b",
+    studentNumber: "103",
+    gender: "nữ, nam",
+  })
+
+  assert.deepEqual(mapped.profile.genderSelections, ["female", "male"])
+})
+
 test("mapImportRowToStudentPayload keeps fullName empty when only englishName is provided", () => {
   const mapped = mapImportRowToStudentPayload({
     eaglesId: "student003",

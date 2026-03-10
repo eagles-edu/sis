@@ -35,6 +35,30 @@ function normalizeTextArray(value) {
     .filter(Boolean)
 }
 
+function canonicalizeGenderSelection(value) {
+  const raw = normalizeText(value)
+  const token = normalizeLower(raw)
+  if (!token) return ""
+  const femaleAliases = new Set(["female", "f", "girl", "woman", "women", "nu", "n\u1eef"])
+  const maleAliases = new Set(["male", "m", "boy", "man", "men", "nam"])
+  if (femaleAliases.has(token)) return "female"
+  if (maleAliases.has(token)) return "male"
+  return raw
+}
+
+function normalizeGenderSelections(value) {
+  const selections = normalizeTextArray(value).map((entry) => canonicalizeGenderSelection(entry))
+  const seen = new Set()
+  const deduped = []
+  selections.forEach((entry) => {
+    const key = normalizeLower(entry)
+    if (!key || seen.has(key)) return
+    seen.add(key)
+    deduped.push(entry)
+  })
+  return deduped
+}
+
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -908,7 +932,7 @@ export function mapImportRowToStudentPayload(row) {
   const studentNumber = normalizePositiveInteger(getImportValue(row, ["studentNumber"]))
   const fullName = normalizeText(getImportValue(row, ["fullName", "fullNameStudent"]))
   const englishName = normalizeText(getImportValue(row, ["englishName"]))
-  const genderSelections = normalizeTextArray(
+  const genderSelections = normalizeGenderSelections(
     getImportValue(row, ["gender", "genderSelections", "sex"])
   )
 
@@ -996,6 +1020,95 @@ export function mapImportRowToStudentPayload(row) {
     studentNumber,
     email: normalizeText(getImportValue(row, ["email", "studentEmail"])),
     profile,
+  }
+}
+
+function hasBackfillImportValue(value) {
+  if (Array.isArray(value)) return value.length > 0
+  if (typeof value === "number") return Number.isFinite(value)
+  if (typeof value === "boolean") return true
+  if (value && typeof value === "object") return Object.keys(value).length > 0
+  return Boolean(normalizeText(value))
+}
+
+export function mergeImportPayloadForBackfill(importPayload = {}, existingStudent = {}) {
+  const incoming = importPayload && typeof importPayload === "object" ? importPayload : {}
+  const existing = existingStudent && typeof existingStudent === "object" ? existingStudent : {}
+  const incomingProfile = incoming.profile && typeof incoming.profile === "object" ? incoming.profile : {}
+  const existingProfile = existing.profile && typeof existing.profile === "object" ? existing.profile : {}
+
+  const mergedProfile = { ...existingProfile }
+  Object.entries(incomingProfile).forEach(([key, value]) => {
+    if (!hasBackfillImportValue(value)) return
+    mergedProfile[key] = value
+  })
+  if (!hasBackfillImportValue(mergedProfile.sourceFormId)) mergedProfile.sourceFormId = "spreadsheet-import"
+  if (!hasBackfillImportValue(mergedProfile.sourceUrl)) mergedProfile.sourceUrl = "local-import"
+
+  const incomingEmail = normalizeText(incoming.email)
+  const existingEmail = normalizeText(existing.email)
+  const mergedEmail = incomingEmail || existingEmail
+
+  const incomingStudentNumber = normalizePositiveInteger(incoming.studentNumber)
+  const existingStudentNumber = normalizePositiveInteger(existing.studentNumber)
+
+  return {
+    ...incoming,
+    eaglesId: normalizeText(existing.eaglesId) || normalizeText(incoming.eaglesId),
+    studentNumber: incomingStudentNumber || existingStudentNumber || null,
+    email: mergedEmail,
+    profile: mergedProfile,
+  }
+}
+
+function valuesEqualForImportDiff(leftValue, rightValue) {
+  if (Array.isArray(leftValue) || Array.isArray(rightValue)) {
+    const left = Array.isArray(leftValue) ? leftValue.map((entry) => normalizeText(entry)).filter(Boolean) : []
+    const right = Array.isArray(rightValue) ? rightValue.map((entry) => normalizeText(entry)).filter(Boolean) : []
+    if (left.length !== right.length) return false
+    return left.every((entry, index) => entry === right[index])
+  }
+
+  if (Number.isFinite(leftValue) || Number.isFinite(rightValue)) {
+    const leftNumber = Number.isFinite(leftValue) ? Number(leftValue) : null
+    const rightNumber = Number.isFinite(rightValue) ? Number(rightValue) : null
+    return leftNumber === rightNumber
+  }
+
+  if (typeof leftValue === "boolean" || typeof rightValue === "boolean") {
+    return Boolean(leftValue) === Boolean(rightValue)
+  }
+
+  return normalizeText(leftValue) === normalizeText(rightValue)
+}
+
+function collectImportChangedFieldNames(beforeState = {}, afterState = {}) {
+  const changed = []
+  const scalarKeys = ["email", "studentNumber"]
+  scalarKeys.forEach((key) => {
+    if (!valuesEqualForImportDiff(beforeState?.[key], afterState?.[key])) changed.push(key)
+  })
+
+  const beforeProfile = beforeState?.profile && typeof beforeState.profile === "object" ? beforeState.profile : {}
+  const afterProfile = afterState?.profile && typeof afterState.profile === "object" ? afterState.profile : {}
+  const profileKeys = Array.from(new Set([...Object.keys(beforeProfile), ...Object.keys(afterProfile)])).sort(
+    (left, right) => left.localeCompare(right)
+  )
+  profileKeys.forEach((key) => {
+    if (!valuesEqualForImportDiff(beforeProfile[key], afterProfile[key])) changed.push(`profile.${key}`)
+  })
+
+  return changed
+}
+
+function summarizeImportRowFields(row = {}) {
+  const profile = row?.profile && typeof row.profile === "object" ? row.profile : {}
+  return {
+    eaglesId: normalizeText(row?.eaglesId) || null,
+    studentNumber: normalizePositiveInteger(row?.studentNumber),
+    fullName: normalizeText(profile.fullName) || null,
+    englishName: normalizeText(profile.englishName) || null,
+    email: normalizeNullableEmail(row?.email || profile.studentEmail),
   }
 }
 
@@ -1103,8 +1216,8 @@ export function validateImportRowsForIdentity(
 
   const seenEaglesIds = new Map()
   const seenStudentNumbers = new Map()
-  const existingEaglesIds = new Set()
   const existingStudentNumbers = new Set()
+  const existingIdentityByEaglesId = new Map()
   const rowErrors = new Map()
 
   const setRowError = (rowNumber, message) => {
@@ -1115,9 +1228,13 @@ export function validateImportRowsForIdentity(
 
   ;(Array.isArray(existingRows) ? existingRows : []).forEach((row) => {
     const eaglesIdKey = normalizeLower(row?.eaglesId)
-    if (eaglesIdKey) existingEaglesIds.add(eaglesIdKey)
     const studentNumber = normalizePositiveInteger(row?.studentNumber)
     if (studentNumber) existingStudentNumbers.add(studentNumber)
+    if (eaglesIdKey) {
+      existingIdentityByEaglesId.set(eaglesIdKey, {
+        studentNumber,
+      })
+    }
   })
 
   for (let i = 0; i < prepared.rows.length; i += 1) {
@@ -1125,6 +1242,7 @@ export function validateImportRowsForIdentity(
     const row = prepared.rows[i] || {}
     const eaglesId = normalizeText(row.eaglesId)
     const studentNumber = normalizePositiveInteger(row.studentNumber)
+    const existingIdentity = eaglesId ? existingIdentityByEaglesId.get(normalizeLower(eaglesId)) || null : null
 
     if (!eaglesId) {
       const strictMessage = "eaglesId is required (strict import mode requires explicit identity values)"
@@ -1138,10 +1256,6 @@ export function validateImportRowsForIdentity(
         setRowError(rowNumber, `duplicate eaglesId (also in row ${duplicateEaglesRow})`)
       } else {
         seenEaglesIds.set(eaglesIdKey, rowNumber)
-      }
-
-      if (existingEaglesIds.has(eaglesIdKey)) {
-        setRowError(rowNumber, "eaglesId already exists in database")
       }
     }
 
@@ -1158,8 +1272,18 @@ export function validateImportRowsForIdentity(
     }
     seenStudentNumbers.set(studentNumber, rowNumber)
 
+    const existingStudentNumber = normalizePositiveInteger(existingIdentity?.studentNumber)
+    if (existingIdentity && existingStudentNumber && studentNumber !== existingStudentNumber) {
+      setRowError(rowNumber, "studentNumber does not match existing eaglesId")
+      continue
+    }
+
     if (existingStudentNumbers.has(studentNumber)) {
-      setRowError(rowNumber, "studentNumber already exists in database")
+      if (!existingIdentity) {
+        setRowError(rowNumber, "studentNumber already exists in database")
+      } else if (!existingStudentNumber) {
+        setRowError(rowNumber, "studentNumber already exists in database")
+      }
     }
   }
 
@@ -1599,47 +1723,117 @@ export async function importStudentsFromRows(rows = []) {
   const autoFilledStudentNumbers = validation.autoFilledStudentNumbers
   const strictIdentity = validation.requireExplicitIdentity
   const preflightErrors = Array.isArray(validation.errors) ? validation.errors : []
-  if (preflightErrors.length) {
-    return {
-      processed: preparedRows.length,
-      created: 0,
-      updated: 0,
-      failed: preflightErrors.length,
-      autoFilledEaglesIds,
-      autoFilledStudentNumbers,
-      strictIdentity,
-      committed: false,
-      errors: preflightErrors,
-    }
-  }
+  const preflightErrorByRow = new Map()
+  preflightErrors.forEach((entry) => {
+    const rowNumber = Number.parseInt(String(entry?.rowNumber), 10)
+    if (!Number.isInteger(rowNumber) || rowNumber < 1) return
+    if (!preflightErrorByRow.has(rowNumber)) preflightErrorByRow.set(rowNumber, entry)
+  })
 
   let created = 0
   let updated = 0
   const errors = []
+  const rowResults = []
+  const rowLogs = []
 
-  try {
-    await prisma.$transaction(async (tx) => {
-      for (let i = 0; i < preparedRows.length; i += 1) {
-        try {
-          const saved = await saveStudentWithClient(tx, preparedRows[i], "")
-          if (saved.action === "created") created += 1
-          if (saved.action === "updated") updated += 1
-        } catch (error) {
-          const wrapped = new Error(`Row ${i + 1}: ${String(error?.message || error)}`)
-          wrapped.statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 400
-          throw wrapped
-        }
+  for (let i = 0; i < preparedRows.length; i += 1) {
+    const rowNumber = i + 1
+    const preparedRow = preparedRows[i] || {}
+    const rowFields = summarizeImportRowFields(preparedRow)
+    const preflightError = preflightErrorByRow.get(rowNumber)
+
+    if (preflightError) {
+      const message = normalizeText(preflightError.message) || "Row failed preflight validation"
+      const entry = {
+        rowNumber,
+        phase: "preflight",
+        message,
+        fields: rowFields,
       }
-    })
-  } catch (error) {
-    const text = normalizeText(error?.message || error) || "Import failed"
-    const rowMatch = text.match(/^Row\s+(\d+):\s*(.+)$/i)
-    errors.push({
-      rowNumber: rowMatch ? Number.parseInt(rowMatch[1], 10) : 1,
-      message: rowMatch ? rowMatch[2] : text,
-    })
-    created = 0
-    updated = 0
+      errors.push(entry)
+      rowResults.push({
+        rowNumber,
+        status: "rejected",
+        ...entry,
+      })
+      rowLogs.push({
+        rowNumber,
+        status: "rejected",
+        phase: "preflight",
+        fields: rowFields,
+        message,
+      })
+      continue
+    }
+
+    try {
+      const outcome = await prisma.$transaction(async (tx) => {
+        const existing = await tx.student.findFirst({
+          where: {
+            eaglesId: {
+              equals: normalizeText(preparedRow.eaglesId),
+              mode: "insensitive",
+            },
+          },
+          include: {
+            profile: true,
+          },
+        })
+
+        const payload = existing ? mergeImportPayloadForBackfill(preparedRow, existing) : preparedRow
+        const beforeState = existing
+          ? {
+              email: existing.email,
+              studentNumber: existing.studentNumber,
+              profile: existing.profile || {},
+            }
+          : null
+        const saved = await saveStudentWithClient(tx, payload, normalizeText(existing?.id))
+
+        return {
+          saved,
+          payload,
+          changedFields: existing ? collectImportChangedFieldNames(beforeState, payload) : [],
+        }
+      })
+
+      if (outcome.saved.action === "created") created += 1
+      if (outcome.saved.action === "updated") updated += 1
+
+      const successEntry = {
+        rowNumber,
+        status: outcome.saved.action,
+        studentRefId: outcome.saved.studentRefId,
+        fields: summarizeImportRowFields(outcome.payload),
+      }
+      if (outcome.saved.action === "updated") {
+        successEntry.changedCount = outcome.changedFields.length
+        successEntry.changedFields = outcome.changedFields
+      }
+      rowResults.push(successEntry)
+      rowLogs.push(successEntry)
+    } catch (error) {
+      const message = normalizeText(error?.message || error) || "Import failed"
+      const entry = {
+        rowNumber,
+        phase: "write",
+        message,
+        fields: rowFields,
+      }
+      errors.push(entry)
+      rowResults.push({
+        rowNumber,
+        status: "rejected",
+        ...entry,
+      })
+      rowLogs.push({
+        rowNumber,
+        status: "rejected",
+        phase: "write",
+        fields: rowFields,
+        message,
+      })
+    }
   }
 
   if (created > 0 || updated > 0) {
@@ -1655,7 +1849,11 @@ export async function importStudentsFromRows(rows = []) {
     autoFilledStudentNumbers,
     strictIdentity,
     committed: errors.length === 0,
+    partiallyCommitted: errors.length > 0 && (created > 0 || updated > 0),
     errors,
+    rowResults,
+    logFields: ["eaglesId", "studentNumber", "fullName", "englishName", "email"],
+    logs: rowLogs,
   }
 }
 

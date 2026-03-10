@@ -3,18 +3,21 @@ import assert from "node:assert/strict"
 
 import { validateImportRowsForIdentity } from "../server/student-admin-store.mjs"
 
-test("validateImportRowsForIdentity strict mode rejects blank, duplicate, and existing identity keys", () => {
+test("validateImportRowsForIdentity strict mode rejects blank, duplicate, and immutable identity conflicts", () => {
   const result = validateImportRowsForIdentity(
     [
       { eaglesId: "", studentNumber: "", profile: { fullName: "Row One" } },
       { eaglesId: "ABC001", studentNumber: 101, profile: { fullName: "Row Two" } },
       { eaglesId: "abc001", studentNumber: 102, profile: { fullName: "Row Three" } },
       { eaglesId: "NEW004", studentNumber: 101, profile: { fullName: "Row Four" } },
-      { eaglesId: "EXISTING01", studentNumber: 888, profile: { fullName: "Row Five" } },
+      { eaglesId: "EXISTING01", studentNumber: 777, profile: { fullName: "Row Five" } },
       { eaglesId: "UNIQUE01", studentNumber: 999, profile: { fullName: "Row Six" } },
     ],
     {
-      existingRows: [{ eaglesId: "existing01", studentNumber: 999 }],
+      existingRows: [
+        { eaglesId: "existing01", studentNumber: 888 },
+        { eaglesId: "existing99", studentNumber: 999 },
+      ],
       requireExplicitIdentity: true,
     }
   )
@@ -28,7 +31,7 @@ test("validateImportRowsForIdentity strict mode rejects blank, duplicate, and ex
   assert.match(result.errors[0].message, /eaglesId is required/i)
   assert.match(result.errors[1].message, /duplicate eaglesId/i)
   assert.match(result.errors[3].message, /duplicate studentNumber/i)
-  assert.match(result.errors[4].message, /already exists in database/i)
+  assert.match(result.errors[4].message, /does not match existing eaglesId/i)
   assert.match(result.errors[5].message, /already exists in database/i)
 })
 
@@ -48,6 +51,25 @@ test("validateImportRowsForIdentity strict mode accepts explicit non-conflicting
   assert.deepEqual(result.rows, inputRows)
   assert.equal(result.autoFilledEaglesIds, 0)
   assert.equal(result.autoFilledStudentNumbers, 0)
+})
+
+test("validateImportRowsForIdentity strict mode allows existing eaglesId rows for re-import backfill", () => {
+  const result = validateImportRowsForIdentity(
+    [
+      { eaglesId: "EXISTING01", studentNumber: 888, profile: { fullName: "Keep Number Match" } },
+      { eaglesId: "EXISTING02", studentNumber: "", profile: { fullName: "Blank Number Still Allowed" } },
+    ],
+    {
+      existingRows: [
+        { eaglesId: "existing01", studentNumber: 888 },
+        { eaglesId: "existing02", studentNumber: 889 },
+      ],
+      requireExplicitIdentity: true,
+    }
+  )
+
+  assert.equal(result.requireExplicitIdentity, true)
+  assert.equal(result.errors.length, 0)
 })
 
 test("validateImportRowsForIdentity strict mode allows blank studentNumber when eaglesId is explicit", () => {

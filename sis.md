@@ -7,6 +7,93 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-10 - UTF-8 hardening for student import parsing, EN/VI safe path)
+
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - import JSON body parsing now buffers bytes and decodes once as UTF-8 (avoids multi-byte split corruption at chunk boundaries).
+  - CSV/TSV upload decode now uses strict UTF-8 decode and rejects invalid byte sequences with `400`.
+  - import `rows` payload now normalizes row-object keys before signal filtering/mapping.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - CSV/TSV browser import now reads bytes and decodes with UTF-8 `TextDecoder` (BOM-safe), instead of implicit text decode.
+  - invalid non-UTF-8 CSV/TSV now fails fast in UI before submit.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added UTF-8 CSV test with Vietnamese text + BOM.
+  - added non-UTF-8 CSV rejection test.
+  - added integration test that posts chunk-split UTF-8 JSON to `/api/admin/students/import` to verify no corruption path.
+- Updated [README.md](README.md):
+  - documented UTF-8 requirement for CSV/TSV and JSON import payloads.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-import-row-map.spec.mjs` => `75` pass, `0` fail.
+  - `npm test` => `186` pass, `0` fail.
+
+## Update (2026-03-10 - live-persistent school setup/logo settings + admin UI settings API)
+
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added persistent admin UI settings endpoint:
+    - `GET /api/admin/settings/ui`
+    - `PUT /api/admin/settings/ui`
+  - endpoint is role-gated to settings-managing users and uses session-cookie auth contract.
+  - persisted settings are stored in runtime file:
+    - default path: `runtime-data/admin-ui-settings.json`
+    - override: `STUDENT_ADMIN_UI_SETTINGS_FILE`
+  - writes are atomic (`tmp` write + rename) with payload size guard (`STUDENT_ADMIN_UI_SETTINGS_MAX_BYTES`).
+  - runtime config injection now exposes `window.__SIS_ADMIN_UI_SETTINGS_PATH`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - school setup and branding/logo settings now hydrate from server after login (`hydrateUiSettingsFromServer`).
+  - school setup/settings saves now sync to server (`persistUiSettingsToServer`) while retaining local fallback.
+  - settings save/reset and school-setup save/reset handlers now run async to include server persistence path.
+  - result: school setup info and system logo image data survive live DB upgrade and runtime redeploy workflows.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added endpoint coverage for persisted UI settings:
+    - admin read/write success path,
+    - teacher forbidden path,
+    - unauthenticated path.
+  - added cleanup for persisted settings file path after test run.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `106` pass, `0` fail.
+  - `npm test` => `181` pass, `0` fail.
+- Coverage gap:
+  - no production-smoke test currently verifies persisted school setup/logo survives an actual `deploy-db-fields-safe.sh --yes` run against live runtime root.
+- Prioritized next action:
+  - add one deployment smoke script/assertion that snapshots, migrates, and validates `GET /api/admin/settings/ui` continuity across the migration cycle.
+
+## Update (2026-03-10 - student import re-import backfill + row-level continuation logs)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - changed import identity validation to allow existing `eaglesId` rows for re-import/backfill.
+  - added explicit immutable identity guard for re-import rows:
+    - reject when row `studentNumber` conflicts with persisted `studentNumber` for the same `eaglesId`.
+    - reject when row `studentNumber` belongs to a different student.
+  - changed `importStudentsFromRows` from all-or-nothing transaction to row-by-row processing:
+    - each row now commits independently,
+    - failed rows are rejected without stopping remaining rows.
+  - added backfill merge behavior for existing students:
+    - blank import values do not erase existing values,
+    - non-empty import values update existing values,
+    - new students still get created and missing `studentNumber` is generated.
+  - added detailed import response logs:
+    - per-row status (`created`, `updated`, `rejected`),
+    - failure phase (`preflight`/`write`),
+    - five-field row summary (`eaglesId`, `studentNumber`, `fullName`, `englishName`, `email`),
+    - changed-field list/count for updated rows.
+- Updated [test/student-admin-import-validation.spec.mjs](test/student-admin-import-validation.spec.mjs):
+  - aligned strict identity expectations with re-import backfill behavior.
+  - added coverage for existing `eaglesId` acceptance and `studentNumber` mismatch rejection.
+- Added [test/student-admin-import-backfill.spec.mjs](test/student-admin-import-backfill.spec.mjs):
+  - verifies backfill merge keeps existing values when import cells are blank.
+  - verifies non-empty import values overwrite existing values.
+- Updated [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs):
+  - adjusted identity contract assertion text for create vs conflicting import behavior.
+- Updated [README.md](README.md):
+  - documented re-import backfill and row-level continuation semantics under Student Import Rules.
+- Verification:
+  - `node --test test/student-admin-import-validation.spec.mjs test/student-admin-import-backfill.spec.mjs test/profile-form-contract.spec.mjs` => `18` pass, `0` fail.
+  - `npm test` => `177` pass, `0` fail.
+- Coverage gap:
+  - no DB-enabled integration test currently exercises partial-success import behavior end-to-end via `POST /api/admin/students/import`.
+- Prioritized next action:
+  - add one DB-backed import integration fixture with mixed rows (create + backfill update + rejected conflict) and assert per-row outcomes.
+
 ## Update (2026-03-10 - canonical matched dedupe + MEGS-derived lint stack wiring)
 
 - Updated [server/exercise-store.mjs](server/exercise-store.mjs):

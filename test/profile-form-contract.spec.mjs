@@ -269,11 +269,11 @@ test("import mapping excludes legacy fuzzy alias keys", () => {
   })
 })
 
-test("student identity duplicates are rejected for create/import", () => {
+test("student identity collisions are rejected for create and conflicting import rows", () => {
   const storeSource = fs.readFileSync("server/student-admin-store.mjs", "utf8")
   assert.equal(storeSource.includes('assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")'), true)
-  assert.equal(storeSource.includes("if (existingByEaglesId) {"), false)
-  assert.equal(storeSource.includes("duplicate studentNumber"), true)
+  assert.equal(storeSource.includes('"studentNumber does not match existing eaglesId"'), true)
+  assert.equal(storeSource.includes('"studentNumber already exists in database"'), true)
 })
 
 test("student identity is immutable on update", () => {

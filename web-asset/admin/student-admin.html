@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <!-- cspell:ignore KET TAYK eggchic YTD Ytd IELTS ielts healthz blinkmacsystemfont blkquot openxmlformats officedocument spreadsheetml -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Eagles Club Student Info System </title>
-  <link href="favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon">
+  <link href="web-asset/admin/favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon">
 
   <style>
     :root {
@@ -7686,6 +7686,38 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return normalized
     }
 
+    async function hydrateUiSettingsFromServer() {
+      if (!canManageSettings()) return null
+      try {
+        const result = await api(ADMIN_UI_SETTINGS_PATH)
+        const candidate = result && typeof result === "object" ? result.uiSettings : null
+        if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null
+        return persistUiSettings(candidate)
+      } catch (error) {
+        void error
+        return null
+      }
+    }
+
+    async function persistUiSettingsToServer(settings, { notifyOnFailure = false } = {}) {
+      if (!canManageSettings()) return null
+      const normalized = normalizeUiSettings(settings)
+      try {
+        return await api(ADMIN_UI_SETTINGS_PATH, {
+          method: "PUT",
+          body: {
+            uiSettings: normalized,
+          },
+        })
+      } catch (error) {
+        if (notifyOnFailure) {
+          const message = normalizeText(error?.message) || "Unable to sync settings to server."
+          setStatus(`Settings saved locally only: ${message}`, true)
+        }
+        return null
+      }
+    }
+
     const CLASS_LEVEL_TILE_STYLE_STORAGE_KEY = "sis.admin.levelTiles.v1"
     const LEGACY_ATTENDANCE_LEVEL_TILE_STORAGE_KEY = "sis.admin.attendance.levelTiles.v1"
     const ATTENDANCE_STATUS_CHOICES = ["absent", "present", "tardy10", "tardy30"]
@@ -7950,7 +7982,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return normalizeSchoolSetup({ startDate, endDate })
     }
 
-    function saveSchoolSetupFromInputs({ notify = true } = {}) {
+    async function saveSchoolSetupFromInputs({ notify = true } = {}) {
       if (!canManageSettings()) throw new Error("Only roles with settings permission can update school setup.")
       const setup = draftSchoolSetupFromInputs()
       const profile = draftSchoolProfileFromInputs({ fallbackProfile: schoolProfileState() })
@@ -7962,6 +7994,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         },
         schoolProfile: profile,
       })
+      await persistUiSettingsToServer(state.uiSettings, { notifyOnFailure: notify })
       applyUiSettings()
       renderSchoolSetupPanel({ setup, profile, message: "School setup saved." })
       if (notify) {
@@ -8041,6 +8074,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const ADMIN_PAGE_PATH = resolveAdminPagePath()
     const ADMIN_API_ORIGIN = resolveApiOrigin()
     const ADMIN_PERMISSIONS_PATH = normalizeText(window.__SIS_ADMIN_PERMISSIONS_PATH) || "/api/admin/permissions"
+    const ADMIN_UI_SETTINGS_PATH = normalizeText(window.__SIS_ADMIN_UI_SETTINGS_PATH) || "/api/admin/settings/ui"
     const ADMIN_DASHBOARD_PATH = normalizeText(window.__SIS_ADMIN_DASHBOARD_PATH) || "/api/admin/dashboard"
     const ADMIN_EXERCISE_TITLES_PATH = normalizeText(window.__SIS_ADMIN_EXERCISE_TITLES_PATH) || "/api/admin/exercise-titles"
     const ADMIN_NOTIFY_EMAIL_PATH = normalizeText(window.__SIS_ADMIN_NOTIFY_EMAIL_PATH) || "/api/admin/notifications/email"
@@ -12889,17 +12923,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       await openParentTrackingAssignmentLink(studentRefId, assignmentId, { syncUrl: false })
     }
 
-    function saveUiSettings() {
+    async function saveUiSettings() {
       if (!canManageSettings()) throw new Error("Only roles with settings permission can update settings.")
       const multiSchool = Boolean(document.getElementById("settingMultiSchool")?.checked)
       persistUiSettings({ ...state.uiSettings, multiSchool })
+      await persistUiSettingsToServer(state.uiSettings, { notifyOnFailure: true })
       persistProfileFormConfig(state.profileFormConfig)
       applyUiSettings()
       setProfileLayoutStatus("Settings saved.")
       setStatus("Settings saved.")
     }
 
-    function resetUiSettings() {
+    async function resetUiSettings() {
+      await hydrateUiSettingsFromServer()
       state.uiSettings = loadUiSettingsFromStorage()
       state.profileFormConfig = loadProfileFormConfigFromStorage()
       renderProfileFormLayout()
@@ -14157,6 +14193,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return btoa(binary)
     }
 
+    function decodeUtf8TextFromArrayBuffer(arrayBuffer, contextLabel = "Upload file") {
+      try {
+        const decoded = new TextDecoder("utf-8", { fatal: true }).decode(arrayBuffer)
+        return decoded.charCodeAt(0) === 0xfeff ? decoded.slice(1) : decoded
+      } catch (error) {
+        void error
+        throw new Error(`${contextLabel} must be UTF-8 encoded`)
+      }
+    }
+
     function detectImportFormat(fileName) {
       const lower = normalizeText(fileName).toLowerCase()
       if (lower.endsWith(".xlsx")) return "xlsx"
@@ -14185,7 +14231,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           },
         })
       } else {
-        const text = await file.text()
+        const arrayBuffer = await file.arrayBuffer()
+        const text = decodeUtf8TextFromArrayBuffer(arrayBuffer, `${format.toUpperCase()} import file`)
         const delimiter = format === "tsv" ? "\t" : ","
         const matrix = parseDelimited(text, delimiter)
         if (!matrix.length) throw new Error("Import file is empty")
@@ -15376,6 +15423,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     async function bootAfterLogin() {
       initializeParentTrackingScoreSelects()
       await loadRolePermissions()
+      await hydrateUiSettingsFromServer()
       showUserPanel()
       applyUiSettings()
       renderAssignmentTemplates()
@@ -15643,14 +15691,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     document.getElementById("importBtn").addEventListener("click", () => importSpreadsheet().catch(handleError))
     document.getElementById("importTemplateBtn").addEventListener("click", () => downloadImportTemplate().catch(handleError))
-    document.getElementById("settingsSaveBtn").addEventListener("click", () => {
-      try {
-        saveUiSettings()
-      } catch (error) {
-        handleError(error)
-      }
-    })
-    document.getElementById("settingsResetBtn").addEventListener("click", () => resetUiSettings())
+    document.getElementById("settingsSaveBtn").addEventListener("click", () => saveUiSettings().catch(handleError))
+    document.getElementById("settingsResetBtn").addEventListener("click", () => resetUiSettings().catch(handleError))
     const previewSchoolSetupFromInputs = () => {
       try {
         const draftSetup = draftSchoolSetupFromInputs()
@@ -15685,24 +15727,25 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
     })
     document.getElementById("schoolSetupSaveBtn")?.addEventListener("click", () => {
-      try {
-        saveSchoolSetupFromInputs({ notify: true })
-        syncAttendanceDateDerivedFields()
-        rerenderSortedTable("attendance")
-        rerenderSortedTable("performance")
-        rerenderSortedTable("grades")
-        rerenderSortedTable("reports")
-      } catch (error) {
-        handleError(error)
-      }
+      saveSchoolSetupFromInputs({ notify: true })
+        .then(() => {
+          syncAttendanceDateDerivedFields()
+          rerenderSortedTable("attendance")
+          rerenderSortedTable("performance")
+          rerenderSortedTable("grades")
+          rerenderSortedTable("reports")
+        })
+        .catch(handleError)
     })
     document.getElementById("schoolSetupResetBtn")?.addEventListener("click", () => {
-      state.uiSettings = loadUiSettingsFromStorage()
-      applyUiSettings()
-      const logoFileEl = document.getElementById("schoolSetupLogoFile")
-      if (logoFileEl) logoFileEl.value = ""
-      syncAttendanceDateDerivedFields()
-      setStatus("School setup reloaded from saved values.")
+      resetUiSettings()
+        .then(() => {
+          const logoFileEl = document.getElementById("schoolSetupLogoFile")
+          if (logoFileEl) logoFileEl.value = ""
+          syncAttendanceDateDerivedFields()
+          setStatus("School setup reloaded from saved values.")
+        })
+        .catch(handleError)
     })
     document.getElementById("profileFieldLayoutApplyBtn")?.addEventListener("click", () => {
       try {

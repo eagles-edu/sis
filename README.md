@@ -91,6 +91,7 @@ npm run dev
 
 - Cookie-session admin authentication (`/api/admin/auth/login`)
 - Role-aware permissions (`admin` full, `teacher` read-focused)
+- Persistent school setup + branding settings (`GET/PUT /api/admin/settings/ui`)
 - Student CRUD + profile persistence
 - Strict student import identity validation (`eaglesId + studentNumber`)
 - Import template download endpoint
@@ -164,8 +165,10 @@ Admins own full tracking oversight and correction loops.
 
 - Endpoint: `POST /api/admin/students/import`
 - Payload supports `rows` or spreadsheet `fileDataBase64`.
+- CSV/TSV and JSON import payloads are treated as UTF-8 end-to-end (invalid non-UTF-8 payloads are rejected).
 - Preflight identity validation runs before write.
-- Import writes inside a transaction and returns `committed` status.
+- Re-import supports backfill updates by `eaglesId` (with `studentNumber` mismatch rejection).
+- Import processes rows independently (row-level failures are logged; valid rows continue).
 
 ### 4) Tracking Data Domains
 
