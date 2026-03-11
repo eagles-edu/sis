@@ -2,7 +2,6 @@ flowchart LR
   subgraph Clients
     Admin["Admin Browser<br/>/admin/students"]
     Teacher["Teacher Browser<br/>/admin/students"]
-    Parent["Parent Browser<br/>/parent/portal"]
   end
 
   Proxy["Reverse Proxy (optional)<br/>Nginx"]
@@ -10,21 +9,17 @@ flowchart LR
   Router["Admin Router<br/>server/student-admin-routes.mjs"]
   Store["Admin Store<br/>server/student-admin-store.mjs"]
   Exercise["Exercise Store<br/>server/exercise-store.mjs"]
-  ParentState["Parent Portal Queue + Account State<br/>student-admin-routes.mjs (DB/memory fallback)"]
   DB[("PostgreSQL<br/>Prisma")]
   Cache[("Redis<br/>(session + filter cache)")]
   Mail["SMTP Provider"]
 
   Admin --> Proxy
   Teacher --> Proxy
-  Parent --> Proxy
   Proxy --> API
   API --> Router
   Router --> Store
   Router --> Exercise
-  Router --> ParentState
   Store --> DB
   Exercise --> DB
-  ParentState --> DB
   Router --> Cache
   Router --> Mail

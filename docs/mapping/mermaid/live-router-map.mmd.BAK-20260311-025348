@@ -1,32 +1,23 @@
 flowchart TB
-  AdminBrowser["Admin Browser / Client"]
-  ParentBrowser["Parent Browser / Client"]
-  Router["student-admin-routes.mjs<br/>handleStudentAdminRequest()"]
+  Browser["Admin Browser / Client"]
+  Router["student-admin-routes.mjs<br/>handleApiRequest()"]
 
-  AdminBrowser -->|HTTP Requests| Router
-  ParentBrowser -->|HTTP Requests| Router
+  Browser -->|HTTP Requests| Router
 
   subgraph Public[Public + Page Routes]
     P1["GET /assignment-announcements/volatile/{token}"]
     P2["GET /admin/students"]
     P3["GET /admin/students/{pageSlug}"]
-    P4["GET /parent/portal"]
   end
 
-  subgraph AdminAuth[Admin Auth Routes]
+  subgraph Auth[Auth Routes]
     A1["POST /api/admin/auth/login"]
     A2["POST /api/admin/login (legacy)"]
     A3["POST /api/admin/auth/logout"]
     A4["GET /api/admin/auth/me"]
   end
 
-  subgraph ParentAuth[Parent Auth Routes]
-    PA1["POST /api/parent/auth/login"]
-    PA2["POST /api/parent/auth/logout"]
-    PA3["GET /api/parent/auth/me"]
-  end
-
-  subgraph Runtime[Runtime + Service Control]
+  subgraph Runtime[Runtime + Control]
     R1["GET /api/admin/runtime/health"]
     R2["GET /api/admin/runtime/service-control"]
     R3["POST /api/admin/runtime/service-control"]
@@ -39,13 +30,6 @@ flowchart TB
     D4["GET /api/admin/notifications/batch-status"]
     D5["POST /api/admin/notifications/batch-status"]
     D6["POST /api/admin/notifications/email"]
-  end
-
-  subgraph QueueHub[Queue Hub + Profile Review]
-    Q1["GET /api/admin/queue-hub"]
-    Q2["GET /api/admin/profile-submissions"]
-    Q3["PUT /api/admin/profile-submissions/{submissionId}"]
-    Q4["POST /api/admin/profile-submissions/{submissionId}"]
   end
 
   subgraph Exercise[Exercise Intake + Queue]
@@ -64,11 +48,6 @@ flowchart TB
     S6["GET /api/admin/filters"]
     S7["GET /api/admin/family?phone=..."]
     S8["POST /api/admin/exports/xlsx"]
-  end
-
-  subgraph Settings[Settings + Config]
-    C1["GET /api/admin/settings/ui"]
-    C2["PUT /api/admin/settings/ui"]
   end
 
   subgraph Users[Admin Users CRUD]
@@ -92,38 +71,23 @@ flowchart TB
     B11["DELETE /api/admin/students/{studentRefId}/reports/{reportId}"]
   end
 
-  subgraph ParentData[Parent Dashboard + Profile Draft]
-    PD1["GET /api/parent/children"]
-    PD2["GET /api/parent/dashboard"]
-    PD3["GET /api/parent/children/{eaglesId}/profile"]
-    PD4["PUT /api/parent/children/{eaglesId}/profile-draft"]
-    PD5["POST /api/parent/children/{eaglesId}/profile-submit"]
-  end
-
   Router --> Public
-  Router --> AdminAuth
-  Router --> ParentAuth
+  Router --> Auth
   Router --> Runtime
   Router --> Dashboard
-  Router --> QueueHub
   Router --> Exercise
   Router --> StudentRoot
-  Router --> Settings
   Router --> Users
   Router --> StudentById
-  Router --> ParentData
 
   RoleAny[[Role Gate: readable roles]]
   RoleWrite[[Role Gate: write role]]
   RoleManage[[Role Gate: canManageUsers]]
-  RoleSettings[[Role Gate: canManageSettings]]
-  ParentSession[[Parent Session Required]]
 
   Dashboard -.-> RoleAny
   Runtime -.-> RoleAny
   StudentRoot -.-> RoleAny
   StudentById -.-> RoleAny
-  Exercise -.-> RoleAny
 
   D3 -.-> RoleManage
   R2 -.-> RoleManage
@@ -134,13 +98,6 @@ flowchart TB
   U4 -.-> RoleManage
   E3 -.-> RoleManage
   D5 -.-> RoleManage
-  Q1 -.-> RoleManage
-  Q2 -.-> RoleManage
-  Q3 -.-> RoleManage
-  Q4 -.-> RoleManage
-
-  C1 -.-> RoleSettings
-  C2 -.-> RoleSettings
 
   S2 -.-> RoleWrite
   S3 -.-> RoleWrite
@@ -155,10 +112,3 @@ flowchart TB
   B9 -.-> RoleWrite
   B10 -.-> RoleWrite
   B11 -.-> RoleWrite
-
-  PA3 -.-> ParentSession
-  PD1 -.-> ParentSession
-  PD2 -.-> ParentSession
-  PD3 -.-> ParentSession
-  PD4 -.-> ParentSession
-  PD5 -.-> ParentSession

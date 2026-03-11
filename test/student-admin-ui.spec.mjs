@@ -311,6 +311,92 @@ test("admin ui login success swaps panels and restores login button state", asyn
   dom.window.close()
 })
 
+test("admin ui preserves queue-hub deep link after login bootstrap", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [
+      "overview",
+      "queue-hub",
+      "student-admin",
+      "profile",
+      "attendance",
+      "attendance-admin",
+      "assignments",
+      "assignments-data",
+      "parent-tracking",
+      "performance-data",
+      "grades",
+      "grades-data",
+      "reports",
+      "family",
+      "users",
+      "permissions",
+      "settings",
+    ],
+  }
+
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      void init
+
+      if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+      if (url.includes("/api/admin/auth/login")) return jsonResponse(200, { user: { username: "admin", role: "admin" }, rolePolicy })
+      if (url.includes("/api/admin/permissions")) {
+        return jsonResponse(200, {
+          roles: {
+            admin: rolePolicy,
+          },
+        })
+      }
+      if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: [], schools: [] })
+      if (url.includes("/api/admin/students")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/admin/dashboard")) {
+        return jsonResponse(200, {
+          levelCompletion: [],
+          classEnrollmentAttendance: [],
+          weeklyAssignmentCompletion: [],
+          today: {},
+        })
+      }
+      if (url.includes("/api/admin/queue-hub")) return jsonResponse(200, { generatedAt: "", panelOrder: [], panels: [] })
+      if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+      if (url.includes("/api/admin/exercise-results/incoming")) {
+        return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+      }
+      if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/admin/runtime/service-control")) {
+        return jsonResponse(200, {
+          available: false,
+          enabled: false,
+          service: "exercise-mailer.service",
+          status: "inactive",
+          detail: "n/a",
+        })
+      }
+      return jsonResponse(200, {})
+    },
+    "http://127.0.0.1/admin/students/queue-hub"
+  )
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    assert.equal(dom.window.location.pathname, "/admin/students/queue-hub")
+    const active = dom.window.document.querySelector(".page-section.active")
+    assert.equal(active?.getAttribute("data-page"), "queue-hub")
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
 test("tracking data submenus are visible for admin and hidden for teacher", async () => {
   const buildDomForRole = async (roleName) =>
     createAdminUiDom(async (resource, init = {}) => {

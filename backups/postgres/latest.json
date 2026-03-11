@@ -1,6 +1,6 @@
 {
-  "createdAt": "2026-03-08T04:50:12Z",
-  "backupFile": "db-backup-20260308-115011.dump",
-  "backupPath": "/home/eagles/dockerz/sis/backups/postgres/db-backup-20260308-115011.dump",
-  "checksumFile": "/home/eagles/dockerz/sis/backups/postgres/db-backup-20260308-115011.sha256"
+  "createdAt": "2026-03-10T19:01:14Z",
+  "backupFile": "db-backup-20260311-020113.dump",
+  "backupPath": "/home/eagles/dockerz/sis/backups/postgres/db-backup-20260311-020113.dump",
+  "checksumFile": "/home/eagles/dockerz/sis/backups/postgres/db-backup-20260311-020113.sha256"
 }

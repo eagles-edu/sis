@@ -15950,7 +15950,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       renderAssignmentDraftItems()
       renderParentTrackingTeacherOptions()
       clearStudentForm()
-      setActivePage(roleStartPage(), {
+      const nextPage = isPageAllowedForCurrentRole(state.activePage)
+        ? normalizePageSlug(state.activePage)
+        : roleStartPage()
+      setActivePage(nextPage, {
         syncUrl: shouldSyncPagePathInHistory(),
         historyMode: "replace",
       })

@@ -1,0 +1,1269 @@
+openapi: 3.0.3
+info:
+  title: SIS Admin API (Mapping Baseline)
+  version: 1.0.0
+  license:
+    name: ISC
+    url: https://opensource.org/license/isc-license-txt
+  description: |
+    Baseline API contract map for SIS admin workflows.
+    Source router: server/student-admin-routes.mjs
+
+servers:
+  - url: http://127.0.0.1:8787
+    description: Local SIS runtime
+
+tags:
+  - name: auth
+    description: Session login/logout and identity checks.
+  - name: permissions
+    description: Role policy visibility and updates.
+  - name: runtime
+    description: Runtime diagnostics and controlled service actions.
+  - name: dashboard
+    description: Overview summary and current class-level metrics.
+  - name: incoming
+    description: Incoming exercise-result queue review workflows.
+  - name: students
+    description: Student list/detail and tracking writes.
+  - name: users
+    description: Admin/teacher user management endpoints.
+  - name: exports
+    description: Data export and import-template endpoints.
+  - name: family
+    description: Family lookup via emergency phone linkage.
+  - name: notifications
+    description: Reminder and queued email workflows.
+  - name: reports
+    description: Parent class report create/generate/delete workflow.
+  - name: assignments
+    description: Assignment announcement preview generation.
+
+security:
+  - cookieAuth: []
+
+paths:
+  /api/admin/auth/login:
+    post:
+      tags: [auth]
+      summary: Login with admin or teacher credentials
+      operationId: postAdminAuthLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/login:
+    post:
+      tags: [auth]
+      summary: Legacy login alias
+      operationId: postAdminLegacyLogin
+      deprecated: true
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /api/admin/auth/logout:
+    post:
+      tags: [auth]
+      summary: Clear session cookie
+      operationId: postAdminAuthLogout
+      security: []
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '400':
+          description: Invalid logout request
+
+  /api/admin/auth/me:
+    get:
+      tags: [auth]
+      summary: Return current authenticated session user
+      operationId: getAdminAuthMe
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthMeResponse'
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/permissions:
+    get:
+      tags: [permissions]
+      summary: Return role-policy matrix for current user
+      operationId: getAdminPermissions
+      responses:
+        '200':
+          description: Permission payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+    put:
+      tags: [permissions]
+      summary: Update role-policy matrix
+      operationId: putAdminPermissions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated permission payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+
+  /api/admin/runtime/health:
+    get:
+      tags: [runtime]
+      summary: Return runtime health diagnostics for admin UI
+      operationId: getAdminRuntimeHealth
+      responses:
+        '200':
+          description: Runtime health payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/runtime/service-control:
+    get:
+      tags: [runtime]
+      summary: Return service-control status for exercise-mailer runtime
+      operationId: getAdminRuntimeServiceControl
+      responses:
+        '200':
+          description: Service status payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+    post:
+      tags: [runtime]
+      summary: Trigger controlled runtime action (restart)
+      operationId: postAdminRuntimeServiceControl
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [restart, restart-exercise-mailer]
+      responses:
+        '200':
+          description: Service action result
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Unsupported action
+        '403':
+          description: Forbidden
+
+  /api/admin/dashboard:
+    get:
+      tags: [dashboard]
+      summary: Return overview dashboard metrics and completion rows
+      operationId: getAdminDashboard
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Forbidden for role
+
+  /api/admin/exercise-titles:
+    get:
+      tags: [dashboard]
+      summary: Return searchable exercise title list for assignment tools
+      operationId: getAdminExerciseTitles
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: take
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Exercise title payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/exercise-results/incoming:
+    get:
+      tags: [incoming]
+      summary: List incoming exercise submissions pending triage
+      operationId: getAdminIncomingExerciseResults
+      parameters:
+        - in: query
+          name: statuses
+          schema:
+            type: string
+        - in: query
+          name: showAll
+          schema:
+            type: boolean
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: take
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Incoming result queue payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+    post:
+      tags: [incoming]
+      summary: Triage incoming exercise submission queue item
+      operationId: postAdminIncomingExerciseResultsAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [save-temp, temporary, temp, archive, requeue, delete, match, resolve, create-account]
+                incomingResultId:
+                  type: string
+                studentRefId:
+                  type: string
+                notes:
+                  type: string
+                eaglesId:
+                  type: string
+                email:
+                  type: string
+                fullName:
+                  type: string
+      responses:
+        '200':
+          description: Action result payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Invalid action payload
+        '403':
+          description: Forbidden
+
+  /api/admin/filters:
+    get:
+      tags: [students]
+      summary: Return level and school filter options
+      operationId: getAdminStudentFilters
+      responses:
+        '200':
+          description: Filter option payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/students/next-student-number:
+    get:
+      tags: [students]
+      summary: Return next suggested student number
+      operationId: getAdminNextStudentNumber
+      responses:
+        '200':
+          description: Next student number payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/students:
+    get:
+      tags: [students]
+      summary: List students
+      operationId: getAdminStudents
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: level
+          schema:
+            type: string
+        - in: query
+          name: school
+          schema:
+            type: string
+        - in: query
+          name: take
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Student rows
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StudentListItem'
+        '401':
+          description: Missing or invalid session
+    post:
+      tags: [students]
+      summary: Create student
+      operationId: postAdminStudentCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Student create result
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+
+  /api/admin/students/import:
+    post:
+      tags: [students]
+      summary: Import student rows from parsed workbook payload
+      operationId: postAdminStudentsImport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Import summary payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/students/import-template.xlsx:
+    get:
+      tags: [exports]
+      summary: Download student import template workbook
+      operationId: getAdminStudentsImportTemplate
+      responses:
+        '200':
+          description: XLSX template bytes
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Missing or invalid session
+        '404':
+          description: Template file not found
+
+  /api/admin/students/{studentRefId}:
+    get:
+      tags: [students]
+      summary: Get one student detail by reference id
+      operationId: getAdminStudentById
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Student detail payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentDetail'
+        '404':
+          description: Not found
+    put:
+      tags: [students]
+      summary: Update student by reference id
+      operationId: putAdminStudentById
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Student update result
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+    delete:
+      tags: [students]
+      summary: Delete student by reference id
+      operationId: deleteAdminStudentById
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Student delete result
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+
+  /api/admin/students/{studentRefId}/report-card.pdf:
+    get:
+      tags: [reports]
+      summary: Generate and download student report card PDF
+      operationId: getAdminStudentReportCardPdf
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: className
+          schema:
+            type: string
+        - in: query
+          name: schoolYear
+          schema:
+            type: string
+        - in: query
+          name: quarter
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF bytes
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Missing or invalid session
+        '404':
+          description: Student not found
+
+  /api/admin/students/{studentRefId}/attendance:
+    post:
+      tags: [students]
+      summary: Save attendance record for one student
+      operationId: postAdminStudentAttendance
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceSaveRequest'
+      responses:
+        '200':
+          description: Attendance saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '403':
+          description: Teacher cannot mutate in restricted contexts
+
+  /api/admin/students/{studentRefId}/attendance/{recordId}:
+    delete:
+      tags: [students]
+      summary: Delete one attendance record
+      operationId: deleteAdminStudentAttendanceByRecordId
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Attendance delete result
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Student or attendance record not found
+
+  /api/admin/students/{studentRefId}/grades:
+    post:
+      tags: [students]
+      summary: Save one grade record
+      operationId: postAdminStudentGrades
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Grade save result
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Invalid grade payload
+
+  /api/admin/students/{studentRefId}/grades/{recordId}:
+    delete:
+      tags: [students]
+      summary: Delete one grade record
+      operationId: deleteAdminStudentGradeByRecordId
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Grade delete result
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Student or grade record not found
+
+  /api/admin/students/{studentRefId}/reports:
+    post:
+      tags: [reports]
+      summary: Save parent class report payload
+      operationId: postAdminStudentReports
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Report save result
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Invalid report payload
+
+  /api/admin/students/{studentRefId}/reports/generate:
+    post:
+      tags: [reports]
+      summary: Generate parent class report from grade data
+      operationId: postAdminStudentReportsGenerate
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Generated report result
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Invalid report generation payload
+
+  /api/admin/students/{studentRefId}/reports/{reportId}:
+    delete:
+      tags: [reports]
+      summary: Delete one parent class report
+      operationId: deleteAdminStudentReportsByReportId
+      parameters:
+        - in: path
+          name: studentRefId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: reportId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report delete result
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Student or report not found
+
+  /api/admin/family:
+    get:
+      tags: [family]
+      summary: Lookup family entries by emergency phone
+      operationId: getAdminFamily
+      parameters:
+        - in: query
+          name: phone
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Family lookup payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/users:
+    get:
+      tags: [users]
+      summary: List admin user accounts
+      operationId: getAdminUsers
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: role
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User list payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+    post:
+      tags: [users]
+      summary: Create admin user account
+      operationId: postAdminUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: User create result
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+
+  /api/admin/users/{userId}:
+    put:
+      tags: [users]
+      summary: Update admin user account
+      operationId: putAdminUsersById
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: User update result
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+    delete:
+      tags: [users]
+      summary: Delete admin user account
+      operationId: deleteAdminUsersById
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User delete result
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+
+  /api/admin/notifications/email:
+    post:
+      tags: [notifications]
+      summary: Queue/send reminder and announcement emails
+      operationId: postAdminNotificationEmail
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+      responses:
+        '200':
+          description: Notification accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  queued:
+                    type: boolean
+        '400':
+          description: Invalid payload
+        '403':
+          description: Forbidden
+
+  /api/admin/notifications/batch-status:
+    get:
+      tags: [notifications]
+      summary: List queued notification batch status and queue health
+      operationId: getAdminNotificationsBatchStatus
+      parameters:
+        - in: query
+          name: queueType
+          schema:
+            type: string
+        - in: query
+          name: statuses
+          schema:
+            type: string
+        - in: query
+          name: showAll
+          schema:
+            type: boolean
+        - in: query
+          name: take
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Queue status payload
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Missing or invalid session
+    post:
+      tags: [notifications]
+      summary: Apply batch queue action (send-all/hold/requeue/edit)
+      operationId: postAdminNotificationsBatchStatusAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [sendall, send-all, hold, requeue, edit]
+                queueId:
+                  type: string
+                queueType:
+                  type: string
+      responses:
+        '200':
+          description: Batch action result
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden
+
+  /api/admin/exports/xlsx:
+    post:
+      tags: [exports]
+      summary: Export workbook from selected payload/table rows
+      operationId: postAdminExportsXlsx
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: XLSX bytes
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Missing or invalid session
+
+  /api/admin/assignment-announcements/volatile:
+    post:
+      tags: [assignments]
+      summary: Create temporary assignment announcement preview link
+      operationId: postAdminAssignmentVolatilePreview
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolatilePreviewRequest'
+      responses:
+        '200':
+          description: Preview created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolatilePreviewResponse'
+        '403':
+          description: Forbidden
+
+  /assignment-announcements/volatile/{token}:
+    get:
+      tags: [assignments]
+      summary: Render temporary assignment announcement preview page
+      operationId: getAssignmentAnnouncementVolatilePreview
+      security: []
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: HTML preview page
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: Missing or expired token
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: student_admin_sid
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RolePolicy:
+      type: object
+      properties:
+        role:
+          type: string
+        canRead:
+          type: boolean
+        canWrite:
+          type: boolean
+        canManageUsers:
+          type: boolean
+        canManagePermissions:
+          type: boolean
+        startPage:
+          type: string
+        allowedPages:
+          type: array
+          items:
+            type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+            role:
+              type: string
+        rolePolicy:
+          $ref: '#/components/schemas/RolePolicy'
+
+    AuthMeResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          type: object
+          properties:
+            username:
+              type: string
+            role:
+              type: string
+        rolePolicy:
+          $ref: '#/components/schemas/RolePolicy'
+
+    DashboardToday:
+      type: object
+      properties:
+        attendance:
+          type: integer
+        absences:
+          type: integer
+        tardy10PlusPercent:
+          type: number
+        tardy30PlusPercent:
+          type: number
+
+    DashboardAssignments:
+      type: object
+      properties:
+        total:
+          type: integer
+        completedOnTime:
+          type: integer
+        completedLate:
+          type: integer
+        outstanding:
+          type: integer
+        outstandingYtd:
+          type: integer
+
+    LevelCompletionRow:
+      type: object
+      properties:
+        level:
+          type: string
+        enrolledStudents:
+          type: integer
+        completedStudents:
+          type: integer
+        assignmentName:
+          type: string
+        dueAt:
+          type: string
+          format: date
+
+    DashboardSummary:
+      type: object
+      properties:
+        today:
+          $ref: '#/components/schemas/DashboardToday'
+        assignments:
+          $ref: '#/components/schemas/DashboardAssignments'
+        weeklyAssignmentCompletion:
+          type: array
+          items:
+            type: object
+        atRiskWeek:
+          type: object
+        attendanceRiskWeek:
+          type: object
+        classEnrollmentAttendance:
+          type: array
+          items:
+            type: object
+        levelCompletion:
+          type: array
+          items:
+            $ref: '#/components/schemas/LevelCompletionRow'
+
+    StudentListItem:
+      type: object
+      properties:
+        id:
+          type: string
+        eaglesId:
+          type: string
+        studentNumber:
+          type: integer
+        profile:
+          type: object
+          properties:
+            fullName:
+              type: string
+            englishName:
+              type: string
+            currentGrade:
+              type: string
+
+    StudentDetail:
+      type: object
+      properties:
+        student:
+          type: object
+        profile:
+          type: object
+        attendance:
+          type: array
+          items:
+            type: object
+        grades:
+          type: array
+          items:
+            type: object
+
+    AttendanceSaveRequest:
+      type: object
+      required: [date, status]
+      properties:
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [present, absent, tardy10, tardy30]
+        note:
+          type: string
+
+    NotificationRequest:
+      type: object
+      properties:
+        queueType:
+          type: string
+        deliveryMode:
+          type: string
+        recipients:
+          type: array
+          items:
+            type: string
+            format: email
+        subject:
+          type: string
+        body:
+          type: string
+
+    VolatilePreviewRequest:
+      type: object
+      required: [assignmentTitle, level]
+      properties:
+        assignmentTitle:
+          type: string
+        level:
+          type: string
+        assignedAt:
+          type: string
+          format: date
+        dueAt:
+          type: string
+          format: date
+        message:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              url:
+                type: string
+                format: uri
+
+    VolatilePreviewResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        url:
+          type: string
+          format: uri
+        path:
+          type: string
+        ttlMinutes:
+          type: integer
+        expiresAt:
+          type: string
+          format: date-time

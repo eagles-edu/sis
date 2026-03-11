@@ -7,12 +7,10 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 - Login path(s): `POST /api/admin/auth/login` and legacy alias `POST /api/admin/login`.
 - Session check: `requireAuthenticatedSession`.
 - Role gate: `enforceRoleAccess`.
-- Parent session check: `requireAuthenticatedParentSession`.
 - Teacher write exceptions:
 - `POST /api/admin/notifications/email` only when `deliveryMode=weekend-batch` and `queueType=parent-report`.
 - `POST /api/admin/students/{studentRefId}/reports`.
 - Admin-only capability gate: `assertCanManageUsers` for service-control and user CRUD.
-- Settings capability gate: `assertCanManageSettings` for persisted admin UI settings.
 
 ## Public Routes
 
@@ -20,7 +18,6 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | --- | --- | --- |
 | GET | `/assignment-announcements/volatile/{token}` | Volatile assignment announcement preview page (`readAssignmentAnnouncementPreview`) |
 | GET | `/admin/students` and `/admin/students/{pageSlug}` | Admin HTML shell with runtime config injection |
-| GET | `/parent/portal` | Parent portal HTML shell with runtime config injection |
 
 ## Authentication Routes
 
@@ -37,20 +34,14 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | --- | --- | --- | --- | --- | --- |
 | GET | `/api/admin/permissions` | Yes | any readable role | No | `handlePermissionsGet` |
 | PUT | `/api/admin/permissions` | Yes | `canManagePermissions` | No | `handlePermissionsPut` |
-| GET | `/api/admin/settings/ui` | Yes | `canManageSettings` | No | `readPersistedUiSettings` |
-| PUT | `/api/admin/settings/ui` | Yes | `canManageSettings` | No | `writePersistedUiSettings` |
 | GET | `/api/admin/runtime/health` | Yes | any readable role | No | `resolveAdminRuntimeHealthPayload` |
 | GET | `/api/admin/runtime/service-control` | Yes | `canManageUsers` | No | `getExerciseMailerServiceControlStatus` |
 | POST | `/api/admin/runtime/service-control` | Yes | `canManageUsers` | No | `restartExerciseMailerServiceControl` |
 | POST | `/api/admin/assignment-announcements/volatile` | Yes | write role | No | `createAssignmentAnnouncementPreview` |
 | GET | `/api/admin/dashboard` | Yes | any readable role | Yes | `getAdminDashboardSummary` (+ queue snippet for managers) |
-| GET | `/api/admin/queue-hub` | Yes | `canManageUsers` | No | `buildQueueHubPayload` |
 | GET | `/api/admin/exercise-titles` | Yes | any readable role | Yes | `listExerciseTitles` |
 | GET | `/api/admin/exercise-results/incoming` | Yes | any readable role | No | `listIncomingExerciseResults` |
 | POST | `/api/admin/exercise-results/incoming` | Yes | `canManageUsers` | No | queue triage actions (`set...`, `resolve...`, `delete...`) |
-| GET | `/api/admin/profile-submissions` | Yes | `canManageUsers` | No | `listParentProfileSubmissions` |
-| PUT | `/api/admin/profile-submissions/{submissionId}` | Yes | `canManageUsers` | No | admin draft patch update (`updateParentProfileSubmissionById`) |
-| POST | `/api/admin/profile-submissions/{submissionId}` | Yes | `canManageUsers` | No | profile review actions (`approve`, `reject`) |
 | GET | `/api/admin/notifications/batch-status` | Yes | any readable role | No | `listQueuedAnnouncements` + `getEmailBatchQueueStatus` |
 | POST | `/api/admin/notifications/batch-status` | Yes | `canManageUsers` | No | batch actions (`send-all`, `hold`, `requeue`, `edit`) |
 | POST | `/api/admin/notifications/email` | Yes | write role (teacher restricted exception) | No | `queueAnnouncementEmail` or `sendAnnouncementEmail` |
@@ -77,19 +68,6 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/admin/students/{studentRefId}/reports` | Yes | write role (teacher exception allowed) | Yes | `saveParentClassReport` |
 | POST | `/api/admin/students/{studentRefId}/reports/generate` | Yes | write role | Yes | `generateParentClassReportFromGrades` |
 | DELETE | `/api/admin/students/{studentRefId}/reports/{reportId}` | Yes | write role | Yes | `deleteParentClassReport` |
-
-## Parent Portal API Routes
-
-| Method | Path | Auth Required | Role Gate | Handler |
-| --- | --- | --- | --- | --- |
-| POST | `/api/parent/auth/login` | No | None | parent credential verify + session issue |
-| POST | `/api/parent/auth/logout` | No | None | parent logout + cookie clear |
-| GET | `/api/parent/auth/me` | Yes (parent session) | parent session | parent session identity payload |
-| GET | `/api/parent/children` | Yes (parent session) | linked-child scope | `listParentLinkedStudents` |
-| GET | `/api/parent/dashboard` | Yes (parent session) | linked-child scope | `buildParentDashboardPayload` |
-| GET | `/api/parent/children/{eaglesId}/profile` | Yes (parent session) | linked-child scope | child profile + lock/immutable metadata |
-| PUT | `/api/parent/children/{eaglesId}/profile-draft` | Yes (parent session) | linked-child scope + lock enforcement | `saveParentProfileDraftSubmission` |
-| POST | `/api/parent/children/{eaglesId}/profile-submit` | Yes (parent session) | linked-child scope | `setParentProfileSubmissionSubmitted` |
 
 ## Incoming Exercise Queue Action Values (`POST /api/admin/exercise-results/incoming`)
 

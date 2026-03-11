@@ -4,6 +4,13 @@ flowchart TD
   O2 --> O3["getAdminDashboardSummary()"]
   O1 --> O4["POST /api/admin/assignment-announcements/volatile"]
 
+  Q["queue-hub page"] --> Q1["loadQueueHub()"]
+  Q1 --> Q2["GET /api/admin/queue-hub"]
+  Q2 --> Q3["buildQueueHubPayload()"]
+  Q --> Q4["profile submission review actions"]
+  Q4 --> Q5["GET /api/admin/profile-submissions"]
+  Q4 --> Q6["PUT|POST /api/admin/profile-submissions/{submissionId}"]
+
   A["attendance-admin page"] --> A1["refreshAttendanceLanding()"]
   A1 --> A2["POST /api/admin/students/{studentRefId}/attendance"]
   A2 --> A3["saveAttendanceRecord()"]
@@ -16,6 +23,21 @@ flowchart TD
   P1 --> P2["POST /api/admin/notifications/email"]
   P2 --> P3["queueAnnouncementEmail()"]
 
+  SS["school-setup page"] --> SS1["hydrate/save ui settings"]
+  SS1 --> SS2["GET|PUT /api/admin/settings/ui"]
+
   S["settings page"] --> S1["runtime diagnostics widgets"]
   S1 --> S2["GET /api/admin/runtime/health"]
   S1 --> S3["GET|POST /api/admin/runtime/service-control"]
+
+  PP["parent portal page"] --> PP1["bootstrap auth/session"]
+  PP1 --> PP2["GET /api/parent/auth/me"]
+  PP1 --> PP3["POST /api/parent/auth/login"]
+  PP1 --> PP4["POST /api/parent/auth/logout"]
+  PP --> PP5["child snapshots"]
+  PP5 --> PP6["GET /api/parent/children"]
+  PP5 --> PP7["GET /api/parent/dashboard"]
+  PP --> PP8["profile draft + submit"]
+  PP8 --> PP9["GET /api/parent/children/{eaglesId}/profile"]
+  PP8 --> PP10["PUT /api/parent/children/{eaglesId}/profile-draft"]
+  PP8 --> PP11["POST /api/parent/children/{eaglesId}/profile-submit"]

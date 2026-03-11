@@ -1,0 +1,21 @@
+flowchart TD
+  O["overview page"] --> O1["loadDashboardSummary()"]
+  O1 --> O2["GET /api/admin/dashboard"]
+  O2 --> O3["getAdminDashboardSummary()"]
+  O1 --> O4["POST /api/admin/assignment-announcements/volatile"]
+
+  A["attendance-admin page"] --> A1["refreshAttendanceLanding()"]
+  A1 --> A2["POST /api/admin/students/{studentRefId}/attendance"]
+  A2 --> A3["saveAttendanceRecord()"]
+
+  G["grades-data page"] --> G1["renderGradeRows()"]
+  G1 --> G2["student detail cache / exports"]
+  G2 --> G3["POST /api/admin/exports/xlsx"]
+
+  P["parent-tracking page"] --> P1["queue report/reminder actions"]
+  P1 --> P2["POST /api/admin/notifications/email"]
+  P2 --> P3["queueAnnouncementEmail()"]
+
+  S["settings page"] --> S1["runtime diagnostics widgets"]
+  S1 --> S2["GET /api/admin/runtime/health"]
+  S1 --> S3["GET|POST /api/admin/runtime/service-control"]

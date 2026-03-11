@@ -121,13 +121,14 @@
     input,
     select,
     textarea {
-      width: 100%;
-      padding: 10px 11px;
-      border: 1px solid #c9d2e0;
-      border-radius: 10px;
       background: #fff;
+      border: 1px solid #c9d2e0;
+      box-sizing: border-box;
+      border-radius: 10px;
       color: var(--ink);
-    }
+      padding: 10px 11px;
+      width: 100%;
+  }
 
     textarea {
       min-height: 86px;
@@ -285,11 +286,13 @@
 
     <section class="card" id="loginCard">
       <h2 style="margin-top:0;">Sign In</h2>
-      <div class="grid">
-        <div class="col-4"><label for="parentsId">parentsId</label><input id="parentsId" type="text" autocomplete="username" placeholder="cm&lt;eaglesId&gt; or family id"></div>
-        <div class="col-4"><label for="parentPassword">Password</label><input id="parentPassword" type="password" autocomplete="current-password" placeholder="Shared parent/child password"></div>
-        <div class="col-4" style="display:flex;align-items:end;"><button id="loginBtn" class="primary" type="button">Login</button></div>
-      </div>
+      <form id="loginForm" novalidate>
+        <div class="grid">
+          <div class="col-4"><label for="parentsId">parentsId</label><input id="parentsId" type="text" autocomplete="username" placeholder="cm&lt;eaglesId&gt; or family id"></div>
+          <div class="col-4"><label for="parentPassword">Password</label><input id="parentPassword" type="password" autocomplete="current-password" placeholder="Shared parent/child password"></div>
+          <div class="col-4" style="display:flex;align-items:end;"><button id="loginBtn" class="primary" type="submit">Login</button></div>
+        </div>
+      </form>
       <p class="hint">One parentsId can map to multiple children.</p>
       <p id="loginStatus" class="status"></p>
     </section>
@@ -410,14 +413,19 @@
         if (state.immutableFields.has(key)) return
         const locked = state.lockedFields.has(key)
         const card = document.createElement("div")
-        card.className = `field-card${locked ? " locked" : ""}`
-        card.innerHTML = `
-          <div class="field-title">
-            <span>${key}</span>
-            <span class="pill${locked ? " lock" : ""}">${locked ? "locked" : "editable"}</span>
-          </div>
-          ${profileInputForField(key, value, locked)}
-        `
+        card.className = "field-card"
+        if (locked) card.classList.add("locked")
+        const title = document.createElement("div")
+        title.className = "field-title"
+        const label = document.createElement("span")
+        label.textContent = key
+        const status = document.createElement("span")
+        status.className = locked ? "pill lock" : "pill"
+        status.textContent = locked ? "locked" : "editable"
+        title.appendChild(label)
+        title.appendChild(status)
+        card.appendChild(title)
+        card.insertAdjacentHTML("beforeend", profileInputForField(key, value, locked))
         root.appendChild(card)
       })
 
@@ -589,7 +597,10 @@
       }
     }
 
-    document.getElementById("loginBtn").addEventListener("click", () => login().catch((error) => setStatus(error.message, "err")))
+    document.getElementById("loginForm").addEventListener("submit", (event) => {
+      event.preventDefault()
+      login().catch((error) => setStatus(error.message, "err"))
+    })
     document.getElementById("logoutBtn").addEventListener("click", () => logout().catch((error) => setStatus(error.message, "err")))
     document.getElementById("reloadBtn").addEventListener("click", () => hydratePortal().then(() => setStatus("Reloaded.", "ok")).catch((error) => setStatus(error.message, "err")))
     document.getElementById("childSelect").addEventListener("change", (event) => {
