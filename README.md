@@ -84,13 +84,15 @@ npm run dev
 - `ffs-sis-root --batch` now applies sync-time separation defaults:
   - ensures `/home/eagles/dockerz/sis/.env.dev` has dev-safe values.
   - ensures live non-secret runtime keys stay pinned (`EXERCISE_MAILER_HOST`, `EXERCISE_MAILER_PORT`, `STUDENT_ADMIN_STORE_ENABLED`).
+  - ensures `EXERCISE_MAILER_ORIGIN` includes local static preview origin `http://127.0.0.1:5500`.
   - prints current dev/live port values after sync.
 - `ffs-sis-public-root --batch` prints dev/live port values after sync for quick verification.
+- `tools/deploy-api-safe.sh` and `tools/sis-runtime-resync.sh` apply the same runtime env pinning contract during sync.
 
 ## Feature List
 
 - Cookie-session admin authentication (`/api/admin/auth/login`)
-- Role-aware permissions (`admin` full, `teacher` read-focused)
+- Role-aware permissions (`admin` full, `teacher` data-entry write with admin-protected mutations restricted)
 - Persistent school setup + branding settings (`GET/PUT /api/admin/settings/ui`)
 - Admin Queue Hub aggregate (`GET /api/admin/queue-hub`) with persisted panel ordering (`uiSettings.queueHub.panelOrder`)
 - Student CRUD + profile persistence
@@ -207,6 +209,22 @@ Admins own full tracking oversight and correction loops.
 - Parent account source:
   - preferred: DB `ParentPortalAccount`
   - fallback env: `STUDENT_PARENT_PORTAL_ACCOUNTS_JSON`
+
+### 9) Student Portal Contract
+
+- Public portal page: `GET /student/portal`
+- Student auth/session endpoints:
+  - `POST /api/student/auth/login`
+  - `POST /api/student/auth/logout`
+  - `GET /api/student/auth/me`
+- Student data endpoints:
+  - `GET /api/student/dashboard`
+  - `GET /api/student/news-reports`
+  - `GET /api/student/news-reports/calendar`
+  - `POST /api/student/news-reports`
+- Student account source:
+  - preferred: DB `StudentPortalAccount`
+  - fallback env: `STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON`
 
 ### 7) Data Safety Expectations
 

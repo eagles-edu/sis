@@ -7,6 +7,999 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-14 - data-entry hardening, parent-report schema-drift fallback, student-news fallback, and parent profile-submit error coverage)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - fixed parent performance report save/update crash when runtime Prisma schema is older and lacks `participationPointsAward`:
+    - added legacy-schema retry path that strips unsupported field and retries `update`/`upsert`.
+    - mirrored compatibility handling in parent report approval updates.
+  - added student news report persistence fallback when Prisma `StudentNewsReport` model/table is unavailable:
+    - list path now falls back to local file-backed storage (`runtime-data/student-news-reports.json` by default).
+    - save path now falls back to local file-backed upsert when delegate/table is missing.
+  - added model-drift helpers and guards for missing columns/unknown arguments.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - teacher permission baseline now normalizes to writable (`canWrite: true`) to prevent runtime toggling regressions.
+  - hardened teacher mutation scope to data-entry routes only:
+    - allowed: attendance save, grades save, parent-report save/generate, queued parent-report notifications.
+    - blocked: student/user/runtime/admin-protected mutations and immediate notification sends.
+  - hardened settings authority check to management privileges (`canManageUsers` or `canManagePermissions`) instead of generic write+page.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - teacher default permission baseline now normalizes to writable in UI role-policy normalization.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added regressions proving teacher can reach store-backed data-entry write endpoints (`attendance`, `grades`, `reports`) instead of being blocked at role gate.
+  - expanded source-contract drift assertions for:
+    - student news fallback guards,
+    - parent-report legacy field fallback guards,
+    - teacher data-entry write allowlist enforcement.
+- Updated [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+  - added drift tests that lock in source-level compatibility guards for:
+    - legacy `participationPointsAward` schema mismatch,
+    - student news model/table fallback logic.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - added profile form submission error-path coverage:
+    - draft save API error surfaced on child page status.
+    - submit-for-review API error (`no draft`) surfaced on child page status.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs test/student-admin-store-parent-report.spec.mjs test/student-admin.spec.mjs` => `117` pass, `0` fail.
+  - `npm test` => `239` pass, `0` fail, `0` skip.
+- Residual risk:
+  - student-news fallback storage is local-file backed; in horizontally scaled runtime topologies, a shared DB model/table remains the preferred source of truth.
+
+## Update (2026-03-14 - student news calendar same-day UTC+7 window and event text-color stability)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - student news submission window now opens on the current UTC+7 day (`reportDate=todayDate`, no weekday-specific closures).
+  - calendar row generation now includes current day so runtime month view shows same-day open status.
+  - student news calendar query window now includes current-day report rows for same-day open submissions.
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - enforced event text colors with strong selectors:
+    - `MISSED NEWS REPORT` stays white.
+    - `News report window open` stays black.
+- Updated [test/student-news-timezone.spec.mjs](test/student-news-timezone.spec.mjs):
+  - added coverage that Friday remains open (no weekday closure override).
+  - updated row/window expectations to include same-day Saturday open with prior Friday non-open status.
+- Verification:
+  - `node --test test/student-news-timezone.spec.mjs` => `3` pass, `0` fail.
+  - `node --test test/student-admin.spec.mjs` => `101` pass, `0` fail.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `1` pass, `0` fail.
+  - live API smoke confirms:
+    - calendar `window.reportDate` is Saturday (`2026-03-14`) at UTC+7 runtime,
+    - Friday row is no longer open (`status: "missed"` when unsubmitted),
+    - Saturday row shows `status: "open"`.
+  - live browser probe confirms:
+    - open event text color `rgb(0, 0, 0)`,
+    - missed event text color `rgb(255, 255, 255)`.
+
+## Update (2026-03-14 - fixed live student portal route serving stale HTML + added portal-login regression coverage)
+
+- Updated [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh):
+  - expanded API deploy sync scope to include `web-asset/student/`, `web-asset/vendor/`, and `web-asset/images/` (in addition to existing `web-asset/parent/`).
+  - added drift detection, backups, and rsync sync steps for student/vendor/images assets.
+- Updated [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh):
+  - extended `--scope full` drift/sync behavior to include `web-asset/parent/`, `web-asset/student/`, `web-asset/vendor/`, and `web-asset/images/`.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - strengthened `/student/portal` HTML contract to require `<title>Student Portal</title>` and reject legacy `<title>Student News Portal</title>`.
+  - added regression test `portal login endpoints establish sessions for admin, parent, and student`.
+  - added runtime static-asset regression for `GET /web-asset/images/logo.svg`.
+- Live remediation:
+  - deployed via `./tools/deploy-api-safe.sh` to sync stale runtime student portal assets (`student/vendor/images`).
+  - verified `https://admin.eagles.edu.vn/student/portal` now serves `Student Portal` HTML instead of legacy news-page HTML.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => `101` pass, `0` fail.
+  - `./tools/deploy-api-safe.sh --check-only` => no mismatch after deploy.
+  - External smoke (`https://admin.eagles.edu.vn`, browser-like UA):
+    - student sample (`n=10`): login/me/dashboard/calendar all `200`.
+  - Browser validation against live host confirms:
+    - `https://admin.eagles.edu.vn/web-asset/vendor/fullcalendar/index.global.min.js` => `200 text/javascript`.
+    - `https://admin.eagles.edu.vn/web-asset/images/logo.svg` => `200 image/svg+xml`.
+    - student portal news page renders FullCalendar month-grid markup.
+- Residual risk:
+  - no browser automation assertion yet verifies full portal navigation flow against deployed live host; current checks are HTTP contract/smoke-level.
+
+## Update (2026-03-14 - aligned student auth contract to DB-first with env fallback)
+
+- Updated [prisma/schema.prisma](prisma/schema.prisma):
+  - added `StudentPortalAccount` model (`eaglesId` unique, `passwordHash`, `status`, optional `studentRefId`, audit timestamps).
+  - linked `Student.studentPortalAccount` relation for one-account-per-student mapping.
+- Added migration [prisma/migrations/20260314025500_add_student_portal_account_model/migration.sql](prisma/migrations/20260314025500_add_student_portal_account_model/migration.sql):
+  - creates `StudentPortalAccount` table with unique/index constraints and FK to `Student`.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - student login now follows the same contract pattern as parent login:
+    - DB-first credential lookup (`StudentPortalAccount`),
+    - env fallback (`STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON`) when DB path is unavailable or not deployed.
+  - added guarded student-portal DB fallback handling for missing Prisma model/table in mixed rollout states.
+  - student session now stores `accountId` and resolves `studentRefId` from session first when available.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added schema contract assertion for `StudentPortalAccount`.
+  - added route contract assertion that student login resolver keeps DB-first ordering before env fallback.
+- Updated [README.md](README.md):
+  - documented Student Portal contract and account source (`StudentPortalAccount` preferred, env fallback supported).
+- Runtime data alignment performed:
+  - applied migration `20260314025500_add_student_portal_account_model` to both `sis` and `sis_dev`.
+  - seeded `AdminUser` DB accounts from env sources on both DBs (`1 admin`, `6 teacher` each).
+  - seeded `StudentPortalAccount` from `.env.dev` into `sis_dev` (`126` linked active accounts).
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => `97` pass, `0` fail.
+  - `npm test` => `228` pass, `0` fail, `0` skip.
+  - DB-only login checks (temporary servers with env fallbacks blanked):
+    - admin/teacher (`.env.dev` / `sis_dev`): `7/7` success.
+    - admin/teacher (live env / `sis`): `7/7` success.
+    - student (`.env.dev` / `sis_dev`): `126/126` success.
+- Coverage gap:
+  - no DB-enabled integration test currently exercises `/api/student/auth/login` against a seeded `StudentPortalAccount` row; current tests validate contract shape and env fallback behavior.
+- Prioritized next action:
+  - add a DB-enabled integration test that seeds one `StudentPortalAccount` row and asserts student login success/failure directly through HTTP.
+
+## Update (2026-03-14 - fixed UTC+7 normalization across server and portal/admin date handling)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - normalized core day/week/year boundary helpers to fixed UTC+7 behavior (`startOfDay`, `endOfDay`, `startOfWeek`, `endOfWeek`, `startOfYear`).
+  - normalized date-key conversion and date-only parsing to fixed UTC+7 (`toLocalIsoDate`, `parseLocalDateOnly`, `addDays`).
+  - normalized academic-year start, weekend attendance-day detection, and weekly bucket date generation to fixed UTC+7 (removed host-local `getDay`/`setDate` dependencies).
+  - student news window/open-date calculation now remains stable across host timezone differences.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - normalized weekend batch dispatch scheduling and portal date-key helpers to fixed UTC+7 (`nextWeekendBatchDispatchAt`, `startOfPortalWeek`, `addPortalDays`, `toPortalDateKey`).
+- Updated [server/exercise-store.mjs](server/exercise-store.mjs):
+  - normalized school-year and quarter derivation to fixed UTC+7 so assignment/exercise period classification is host-timezone independent.
+- Updated [server/student-report-card-pdf.mjs](server/student-report-card-pdf.mjs):
+  - normalized rendered report date formatting to fixed UTC+7 for consistent generated-date values.
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - forced month/date/time display formatting to `Asia/Ho_Chi_Minh` timezone.
+  - date-only parsing now anchors to `+07:00` for stable rendering across client locales.
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - forced date/time display formatting to `Asia/Ho_Chi_Minh` timezone.
+  - date-only parsing now anchors to `+07:00`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - normalized remaining school-setup, week-boundary, day-diff, weekday-label, and parent-tracking deadline math to fixed UTC+7.
+  - removed residual host-local date math (`getDay`, `getMonth`, `getFullYear`, `setDate`, `setHours`) from admin date workflow paths.
+- Added [test/student-news-timezone.spec.mjs](test/student-news-timezone.spec.mjs):
+  - verifies UTC+7 day boundary output for student news windows and calendar row statuses around midnight boundaries.
+- Verification:
+  - `npx html-validate web-asset/admin/student-admin.html web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/admin/student-admin.html web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/student-admin-ui.spec.mjs` => `42` pass, `0` fail.
+  - `npm test` => `226` pass, `0` fail, `0` skip.
+
+## Update (2026-03-13 - student news calendar initial render fix on first open)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - fixed first-open news calendar rendering by forcing a post-reveal re-render/resize when switching into `Daily News Report`.
+  - resolves initial dot/collapsed month view that previously corrected only after navigating prev/next month.
+- Updated [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+  - added assertion that initial news-calendar render contains zero dot-style daygrid events (`.fc-daygrid-dot-event` / `.fc-daygrid-event-dot`).
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `1` pass, `0` fail.
+
+## Update (2026-03-13 - Workspace SMTP relay no-auth mode + news calendar text color rules)
+
+- Updated [server/exercise-mailer.mjs](server/exercise-mailer.mjs):
+  - added SMTP auth-mode resolution via `SMTP_AUTH_MODE`/`SMTP_AUTH` with support for `none` (relay/no-auth) and `auth` (username/password).
+  - transport config now omits `auth` when relay mode is selected and keeps current auth-required behavior for explicit auth mode.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - mirrored the same SMTP auth-mode behavior in assignment-announcement mail sending so admin-triggered email uses the same relay compatibility path.
+- Added [test/exercise-mailer-smtp-relay.spec.mjs](test/exercise-mailer-smtp-relay.spec.mjs):
+  - verifies service startup and `/healthz` behavior when `SMTP_AUTH_MODE=none` and SMTP credentials are intentionally empty.
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - forces `News report window open` event text to black.
+  - forces `MISSED NEWS REPORT` event text to white.
+- Updated [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+  - added assertions for missed/open news event text colors in the FullCalendar month view.
+
+## Update (2026-03-13 - larger calendar dates and weekday labels across parent/student portals)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - increased FullCalendar month day-number font size and weekday-header font size with responsive `clamp(...)` sizing.
+  - slightly increased small-screen day-cell minimum height to preserve readability after larger date/day text.
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - increased FullCalendar month day-number font size and weekday-header font size with responsive `clamp(...)` sizing.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+
+## Update (2026-03-13 - student news calendar readability and status fallback hardening)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - added explicit day-state tint classes (`completed`, `open`, `missed`) so the month view no longer reads as an all-white grid when event density is low.
+  - kept obtrusive missed-deadline alert styling and layered it over day-state tints.
+  - hardened status mapping so calendar rows render correctly from either modern `status` values or legacy/fallback fields (`color`, `canSubmit`, `submittedAt`).
+  - switched the news month calendar to `eventDisplay: "block"` to avoid dot-only rendering on narrow/mobile layouts.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `1` pass, `0` fail.
+
+## Update (2026-03-13 - student home now mirrors parent-home structure)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - added the parent-home structural elements to student home: `overviewPanel`, read-only identity chip, `snapshotBadge`, and `portalStatus`.
+  - aligned the student identity card to the parent-home contract with `Eagles ID`, student number, full name, and current grade.
+  - aligned the student metrics set to the parent-home card mix by restoring the absence metric and removing the student-only points tile from the home dashboard.
+  - moved refresh/logout into the top home toolbar so the quick-links panel remains a separate home element, matching the parent layout more closely.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added HTML contract checks for the new student-home shell elements.
+- Updated [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+  - added authenticated browser assertions for the mirrored home shell before switching into the news/calendar page.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs test/student-portal-calendar.playwright.spec.mjs` => pass.
+
+## Update (2026-03-13 - student calendar browser coverage + backend rubric enforcement)
+
+- Added authenticated browser coverage in [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+  - logs in through the real student portal form,
+  - opens the news page,
+  - asserts the FullCalendar month view renders,
+  - asserts overdue alert events render with the blinking alert class,
+  - asserts the alert day cell receives the red pulse class.
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - added explicit post-render syncing for `calendar-day-alert` so alert dates are reflected on rendered FullCalendar day cells, not only in event rows.
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - parent-report rubric normalization now strips the first three digital-reading/computer rubric fields for levels below `A2 Flyers` on the save path, closing the direct-API bypass.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - removed the extra `Grade 4/5/6` alias normalization branch from the client-side rubric gate and returned the check to SIS canonical class labels only.
+- Updated [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+  - added coverage that lower-level saves drop blocked digital-reading rubric keys,
+  - added coverage that `A2 Flyers` keeps those keys.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs test/portal-header-geometry.playwright.spec.mjs test/student-portal-calendar.playwright.spec.mjs` => `97` pass, `0` fail.
+  - `npm test` => pass.
+- Note:
+  - the Chrome DevTools `.well-known/appspecific/com.chrome.devtools.json` CSP warning does not originate from SIS runtime headers in this repo; no app-side CSP header is currently emitted here.
+
+## Update (2026-03-13 - performance report low-level digital-reading rubric auto-disabled)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - marked the first three digital-reading/computer skill rows with a minimum level of `A2 Flyers`.
+  - auto-disables and grays out those score/recommendation controls for `A1 Movers` and lower levels on the Performance input page.
+  - clears those row values when a lower-level student is selected so they do not contribute to rubric summary scores.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - extended the parent-tracking UI flow test to assert the first three digital-reading rubric rows are disabled and visually marked for a `Pre-A1 Starters` student while later skill rows remain editable.
+- Verification:
+  - `npx html-validate web-asset/admin/student-admin.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/admin/student-admin.html` => pass.
+  - `node --test test/student-admin-ui.spec.mjs` => `42` pass, `0` fail.
+  - `npm test` => `219` pass, `0` fail, `0` skip.
+- Coverage gap:
+  - the level rule is enforced in the admin UI only; direct API writes can still submit those rubric keys for lower-level classes.
+- Prioritized next action:
+  - mirror the same `Flyers and above` rubric-key filter in server-side parent-report normalization so stale clients cannot persist blocked rows.
+
+## Update (2026-03-13 - student portal FullCalendar month view with news/homework/review tracks)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - replaced the hand-built student news calendar grid with a local FullCalendar month view using a custom `Your View` button label.
+  - wired the calendar to render:
+    - daily news-report status events (`completed`, `open`, `missed`),
+    - week-long `notes review track` events,
+    - week-long `current homework` events,
+    - bright red blinking alert events for missed news-report days and overdue homework deadlines.
+  - added day-cell alert styling so missed-deadline dates are visually obtrusive at month-view scale.
+- Added vendored runtime asset:
+  - [web-asset/vendor/fullcalendar/index.global.min.js](web-asset/vendor/fullcalendar/index.global.min.js)
+  - [web-asset/vendor/fullcalendar/LICENSE.md](web-asset/vendor/fullcalendar/LICENSE.md)
+- Updated [server/exercise-mailer.mjs](server/exercise-mailer.mjs):
+  - added safe static serving for `/web-asset/*` paths so runtime-served portals can load local JS assets and existing shared portal images.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added `buildStudentPortalCalendarTracks(...)` and included compact `calendarTracks` data in the student dashboard payload for homework/review week spans.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added a unit test for calendar track week-span mapping.
+  - strengthened `/student/portal` HTML assertions for the FullCalendar bundle and custom `Your View` configuration.
+  - added runtime coverage for `GET /web-asset/vendor/fullcalendar/index.global.min.js`.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs test/portal-header-geometry.playwright.spec.mjs` => `96` pass, `0` fail.
+  - `npm test` => `219` pass, `0` fail, `0` skip.
+- Coverage gap:
+  - no authenticated Playwright assertion yet validates FullCalendar event rendering, alert-day styling, and blinking overdue states after student login.
+- Prioritized next action:
+  - add one authenticated Playwright student-portal test that logs in, opens the news page, and asserts:
+    - the `Your View` month calendar renders,
+    - overdue homework/news alerts carry the red alert class,
+    - review/homework week-span events appear in the month grid.
+
+## Update (2026-03-13 - student home panel styling aligned to parent home)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - wrapped the authenticated student home view in a parent-style outer dashboard card (`#studentHomeCard`).
+  - switched the student home internals to the same parent dashboard structure/tokens:
+    - `#studentHomeGrid` now uses `portal-col`,
+    - home sections now use `panel`,
+    - dashboard metrics now use `metrics`,
+    - summary copy now uses `hint`,
+    - quick actions now use `#quickLinksPanel` and `quick-link`.
+  - aligned student home breakpoints with parent home:
+    - single-column below `1000px`,
+    - identity left / metrics right at `min-width: 1000px`,
+    - metrics wrap to `3` columns from `1000px - 1280px`,
+    - quick links span full width with `2` columns at desktop.
+  - updated student home view toggling to hide/show the outer home card instead of only the inner grid.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - strengthened the `/student/portal` HTML contract to require the parent-style student home shell (`#studentHomeCard`, `portal-col`, `metrics`, `#quickLinksPanel`).
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs test/portal-header-geometry.playwright.spec.mjs` => `94` pass, `0` fail.
+- Coverage gap:
+  - no authenticated browser-level assertion yet verifies student home panel parity with parent home at desktop/tablet breakpoints.
+- Prioritized next action:
+  - add a Playwright student-portal dashboard test that logs in, then asserts `#identityPanel`, `#metricsPanel`, and `#quickLinksPanel` placement plus metrics column count at `1100px` and wide desktop.
+
+## Update (2026-03-13 - parent dashboard column swap + 1000-1280 metrics wrapping)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - changed desktop breakpoint to `min-width: 1000px` for parent dashboard column layout.
+  - swapped panel placement so `Thông tin định danh học sinh` (`#identityPanel`) renders in the left column and `Tổng quan nhanh` (`#metricsPanel`) renders in the right column.
+  - added range-specific metrics layout for `1000px - 1280px`:
+    - `.metrics` now uses `repeat(3, minmax(0, 1fr))`, yielding a 2-row x 3-column wrap for six summary cards.
+- Playwright runtime check:
+  - at `1100x900`, identity panel x-position `<` metrics panel x-position and metrics columns resolve to 3 tracks.
+  - at `1300x900`, panel positions remain left/right and metrics columns return to 6 tracks.
+- Verification:
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/parent-portal-ui.spec.mjs test/portal-header-geometry.playwright.spec.mjs` => `5` pass, `0` fail.
+- Coverage gap:
+  - no dedicated automated assertion yet for the `1000px-1280px` 3-column metrics wrap.
+- Prioritized next action:
+  - add a Playwright assertion in `test/portal-header-geometry.playwright.spec.mjs` for the parent `1100px` metrics grid track count.
+
+## Update (2026-03-13 - student endpoint/status message moved to page bottom)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - moved global status strip (`#globalStatus`) from top section to bottom of main content.
+  - endpoint/auth/runtime errors (for example, endpoint-not-found messages) now render at the bottom of the student page as requested.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `93` pass, `0` fail.
+- Coverage gap:
+  - no dedicated UI assertion yet for exact `#globalStatus` vertical placement in rendered viewport.
+- Prioritized next action:
+  - add a small Playwright assertion that `#globalStatus` is positioned below `#appPanel` on `/student/portal`.
+
+## Update (2026-03-13 - portal menu/background parity fixes for parent/student)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - restored original parent portal background layer approach (`body::before` radial/linear blend).
+  - aligned mobile drawer visuals closer to admin menu tokens (`menu bg`, border, link states).
+  - changed drawer from full-height to content-height (`top` anchored, `max-height` bounded, internal scroll).
+  - fixed blank-page overlay issue by excluding `#parentNavScrim` from generic button styling and keeping a persistent shaded scrim (`rgba(12,22,39,0.4)`).
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - restored original student portal background gradients.
+  - aligned mobile drawer visuals closer to admin menu tokens and rounded hamburger style.
+  - changed drawer from full-height to content-height (`top` anchored, `max-height` bounded, internal scroll).
+  - fixed blank-page overlay issue by excluding `#navOverlay` from generic button styling and keeping a persistent shaded scrim (`rgba(12,22,39,0.4)`).
+- Playwright validation (`390x844`) on local static preview:
+  - parent drawer height now `384px` (not infinite), scrim color `rgba(12,22,39,0.4)`, opacity `1` when open.
+  - student drawer height now `390px` (not infinite), scrim color `rgba(12,22,39,0.4)`, opacity `1` when open.
+- Verification:
+  - `npx html-validate web-asset/parent/parent-portal.html web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html web-asset/student/student-portal.html` => pass.
+  - `node --test test/parent-portal-ui.spec.mjs test/student-admin.spec.mjs test/portal-header-geometry.playwright.spec.mjs` => `98` pass, `0` fail.
+  - `npm test` => `217` pass, `0` fail, `0` skip.
+- Coverage gap:
+  - background restoration is currently validated manually (no pixel-diff/snapshot gate yet).
+- Prioritized next action:
+  - add a lightweight screenshot comparison for parent/student background layers to detect palette drift.
+
+## Update (2026-03-13 - Playwright dependency/runtime installed; geometry test no longer skipped)
+
+- Updated [package.json](package.json):
+  - added `playwright` to `devDependencies`.
+- Updated [package-lock.json](package-lock.json):
+  - lockfile refreshed for Playwright installation.
+- Runtime setup:
+  - installed Playwright browser runtime with `npx playwright install chromium`.
+- Verification:
+  - `node --test test/portal-header-geometry.playwright.spec.mjs` => `1` pass, `0` fail, `0` skip.
+  - `npm test` => `217` pass, `0` fail, `0` skip.
+- Coverage gap:
+  - local environment now runs geometry checks end-to-end.
+  - CI still requires explicit Playwright browser install step if not already provisioned.
+- Prioritized next action:
+  - ensure CI bootstrap runs `npx playwright install chromium` (or uses preinstalled Playwright cache) before `npm test`.
+
+## Update (2026-03-13 - parent/student header single-line parity + stricter geometry drift guard)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - removed header session badge so header matches requested admin-like single-line structure:
+    - logo + title left,
+    - text-size widget right.
+  - kept floating hamburger at top-right with admin-aligned offset and non-round radius.
+  - enforced non-wrapping header action row and non-wrapping text-size widget.
+  - kept small-screen compactness by hiding text-size labels (`Text Size`, `%`) below `560px` while preserving controls.
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - moved `#globalStatus` out of header into a separate `status-strip` card, so header remains single-line.
+  - aligned header behavior to parent/admin:
+    - logo + title left,
+    - text-size widget right,
+    - floating right hamburger with same geometry rules.
+  - enforced non-wrapping header action row and non-wrapping text-size widget.
+  - matched small-screen compact text-size behavior (hide label/% below `560px`).
+- Updated [test/portal-header-geometry.playwright.spec.mjs](test/portal-header-geometry.playwright.spec.mjs):
+  - added explicit compact-header height assertions:
+    - mobile header height `<= 92px`,
+    - desktop header height `<= 78px`,
+  - retained existing right-offset and left-alignment checks.
+- Playwright runtime geometry re-check (`http://127.0.0.1:46855/...`):
+  - parent mobile (`390x844`): header `h=62`, menu right offset `12`.
+  - student mobile (`390x844`): header `h=54`, menu right offset `12`.
+  - parent desktop (`1366x900`): header `h=66`, menu right offset `12`.
+  - student desktop (`1366x900`): header `h=60`, menu right offset `12`.
+- Verification:
+  - `npx html-validate web-asset/parent/parent-portal.html web-asset/student/student-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html web-asset/student/student-portal.html` => pass.
+  - `node --test test/portal-header-geometry.playwright.spec.mjs test/parent-portal-ui.spec.mjs test/student-admin.spec.mjs` => `97` pass, `0` fail, `1` skip.
+  - `npm test` => `216` pass, `0` fail, `1` skip.
+- Coverage gap:
+  - geometry drift assertions are skipped unless `playwright` package/browser runtime is installed.
+- Prioritized next action:
+  - add `playwright` runtime dependency and browser install in CI/dev bootstrap so geometry checks always execute.
+
+## Update (2026-03-13 - portal header/menu parity with admin baseline + viewport geometry validation)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - aligned header shell to admin style tokens (narrow strip, left-offset content, bordered logo frame).
+  - switched to fixed floating red hamburger button (`#menuBtn`) with non-round radius matching portal/base radius.
+  - aligned drawer menu behavior to admin slide-over pattern (fixed panel + scrim + `body.menu-open` lock).
+  - preserved existing dashboard/news form IDs and behavior; retained two-column desktop card wrapping.
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - aligned header shell to admin style tokens with the same floating hamburger/logo pattern.
+  - kept `#childPageCard` separate from dashboard home view and preserved existing view-switch logic.
+  - refined dashboard home card to a clearer two-column desktop cluster:
+    - metrics left (`#metricsPanel`),
+    - identity right (`#identityPanel`),
+    - quick links full-width (`#quickLinksPanel`).
+  - aligned drawer menu behavior to admin slide-over pattern and `body.menu-open` lock.
+- Playwright viewport geometry checks (`http://127.0.0.1:5500/...`):
+  - mobile (`390x844`):
+    - admin baseline menu button: `x=12 y=12`.
+    - student menu button: `x=12 y=12`, logo frame left offset aligned.
+    - parent menu button: `x=12 y=12`, logo frame left offset aligned.
+  - desktop (`1366x900`):
+    - student header card width aligned to page wrap (`x=16 w=1334`), top cards split into 2 columns.
+    - parent header card now compact (`h=64`), dashboard clusters split into 2 columns with full-width quick links.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/parent-portal-ui.spec.mjs test/student-admin.spec.mjs` => `97` pass, `0` fail.
+  - `npm test` => `216` pass, `0` fail.
+- Coverage gap:
+  - Playwright geometry checks are manual in-session diagnostics and are not yet CI assertions.
+- Prioritized next action:
+  - add a small Playwright UI test that asserts floating hamburger position and header/logo offsets for `/student/portal` and `/parent/portal` at mobile and desktop viewports.
+
+## Update (2026-03-13 - hamburger-only portal nav + shared logo + parent profile form moved to child page view)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - removed desktop persistent sidebar behavior; navigation is now hamburger-only at all breakpoints.
+  - replaced text menu button with a hamburger-shaped icon button (three bars).
+  - switched header mark to shared portal logo asset:
+    - `/web-asset/images/logo.svg`.
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - removed desktop persistent sidebar behavior; navigation is now hamburger-only at all breakpoints.
+  - replaced menu label button with a hamburger-shaped icon button.
+  - switched header mark to shared portal logo asset:
+    - `/web-asset/images/logo.svg`.
+  - moved `Biểu mẫu cập nhật hồ sơ` off the dashboard card into a separate child-page view (`#childPageCard`).
+  - added view switching controls:
+    - dashboard quick action button (`#openChildPageBtn`),
+    - child page back button (`#backToDashboardBtn`),
+    - side-nav view targets (`data-view-target="dashboard|child"`),
+    - child-page status badge (`#childPageBadge`).
+  - status routing now follows active view (`login`, `dashboard`, or `child page`).
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - added regression test ensuring profile form is accessed through child-page view toggle and not kept on dashboard card.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/parent-portal-ui.spec.mjs test/student-admin.spec.mjs` => `97` pass, `0` fail.
+  - `npm test` => `216` pass, `0` fail.
+- Coverage gap:
+  - no Playwright assertion yet verifies logo rendering and nav drawer behavior under narrow viewport touch interactions.
+- Prioritized next action:
+  - add one Playwright portal smoke test that checks hamburger open/close, view toggle, and logo visibility on `/parent/portal` and `/student/portal`.
+
+## Update (2026-03-13 - parent/student portal dashboard shell alignment + student dashboard API endpoint)
+
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added student dashboard API endpoint: `GET /api/student/dashboard`.
+  - added student runtime config export `window.__SIS_STUDENT_DASHBOARD_PATH` for `/student/portal`.
+  - runtime status now reports `studentDashboardPath`.
+  - student dashboard payload now returns student-specific dashboard metrics + points/news summary:
+    - attendance/assignments/grades/performance snapshot,
+    - points summary (`totalPoints`, scheduled/elective/report counts, adjustments),
+    - news-report submission count + latest submitted timestamp.
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - rebuilt as a mobile-first dashboard shell with:
+    - hamburger + slide-out navigation,
+    - desktop two-column behavior,
+    - overview metrics panel (`#dashboardMetrics`),
+    - quick links including direct jump to daily news report form.
+  - preserved existing auth/calendar/report IDs and flow while adding dashboard fetch (`/api/student/dashboard`).
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - added admin-like shell behavior:
+    - hamburger + side navigation on mobile,
+    - desktop pinned sidebar,
+    - two-column dashboard composition for overview/identity/quick-links vs profile editing.
+  - added direct links for:
+    - profile update section anchor,
+    - student portal/news report route (`/student/portal`).
+  - preserved existing parent profile form IDs and submission flow.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - strengthened `/student/portal` HTML contract assertions for dashboard runtime + metrics container.
+  - added unauthorized coverage for `GET /api/student/dashboard`.
+  - extended student disabled-store coverage to include dashboard endpoint response.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs test/parent-portal-ui.spec.mjs` => `96` pass, `0` fail.
+  - `npm test` => `215` pass, `0` fail.
+- Coverage gap:
+  - no browser-level visual regression test yet verifies side-nav/hamburger behavior at both mobile and desktop breakpoints for parent and student portals.
+- Prioritized next action:
+  - add a Playwright viewport matrix test (`mobile`, `tablet`, `desktop`) for `/parent/portal` and `/student/portal` to assert side-nav toggle, section anchors, and core metrics render.
+
+## Update (2026-03-13 - student portal calendar redesigned to compact mobile-first month grid)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - replaced the previous card-list calendar with a compact 7-column month-style grid (weekday headers + date cells).
+  - mobile-first sizing is now the default (small cells, short labels) with a larger desktop scale-up at `min-width: 760px`.
+  - added range title (`#calendarTitle`) and clearer day-state visuals using consistent color markers for `completed`, `missed`, and `open`.
+  - calendar rendering now builds week-aligned rows from date keys and keeps out-of-window days visibly muted.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - strengthened student portal HTML contract to require `id="calendarTitle"` and `calendar-weekday` markers.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `92` pass, `0` fail.
+- Coverage gap:
+  - no browser screenshot diff test currently validates calendar layout fit on narrow mobile widths.
+- Prioritized next action:
+  - add one Playwright mobile viewport snapshot check for `/student/portal` calendar readability.
+
+## Update (2026-03-13 - student portal static-preview dev/live separation default to dev port)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - adjusted local static-preview API origin inference for loopback hosts so non-runtime preview ports (for example `:46855`) now default to `http://127.0.0.1:8788`.
+  - runtime-served page (`/student/portal`) and explicit query override (`?apiOrigin=...`) behavior are unchanged.
+  - this prevents dev credential imports from being tested against live runtime (`:8787`) by accident.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - strengthened student portal HTML contract assertion to verify `inferLocalPreviewApiOrigin` includes dev fallback `:8788`.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html` => pass.
+  - `node` + `jsdom` smoke check on `http://127.0.0.1:46855/web-asset/student/student-portal.html` confirms first API call is `GET http://127.0.0.1:8788/api/student/auth/me`.
+- Coverage gap:
+  - no browser-authenticated end-to-end test currently verifies static-preview login against dev `:8788` with real cookies.
+- Prioritized next action:
+  - add one Playwright check that logs in from loopback static preview and asserts student calendar fetch succeeds on `:8788`.
+
+## Update (2026-03-13 - student portal static-preview CORS/login hardening + points-page a11y lint cleanup)
+
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - fixed CORS wildcard handling for credentialed cross-origin requests by echoing request origin when `EXERCISE_MAILER_ORIGIN="*"`.
+  - this unblocks student portal session requests from loopback preview origins (for example `http://127.0.0.1:46855`) that use `credentials: "include"`.
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - added static-preview API origin resolution/inference so local preview can call runtime API at `:8787` without manual rewiring.
+  - wrapped login controls in a real `<form id="loginForm">` and switched to submit handler to remove password-field form warning and support Enter-to-login.
+- Updated [web-asset/admin/student-points.html](web-asset/admin/student-points.html):
+  - fixed html-validate findings:
+    - explicit `type="text"` on username input,
+    - removed invalid `aria-label` usage on chart SVG (`aria-hidden="true"`),
+    - added missing `scope="col"` on table headers,
+    - added missing `.c2` grid class and responsive rule.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added CORS regression test verifying student auth preflight returns:
+    - `Access-Control-Allow-Origin` echoed loopback origin,
+    - `Access-Control-Allow-Credentials: true`,
+    - when wildcard origin config is active.
+  - strengthened student portal HTML contract assertion to require `id="loginForm"`.
+- Verification:
+  - `npx html-validate web-asset/student/student-portal.html web-asset/admin/student-points.html web-asset/admin/student-points.html.bak` => pass.
+  - `npm test` => `214` pass, `0` fail.
+- Coverage gap:
+  - no browser-automation test yet asserts end-to-end cross-origin student login from a real static preview origin.
+- Prioritized next action:
+  - add a small Playwright check opening `/web-asset/student/student-portal.html` from loopback static host and asserting `GET /api/student/auth/me` reaches runtime with credentialed CORS success.
+
+## Update (2026-03-12 - parent portal background moved to fixed body::before layer)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - moved parent portal gradient layers from `body` background to a fixed `body::before` pseudo-element.
+  - kept the same gradient palette and shape settings.
+  - set `body` background to transparent so the fixed layer remains stable during reload/hydration.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `3` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Coverage gap:
+  - no automated visual assertion currently checks first-paint/reload background stability in CI.
+- Prioritized next action:
+  - add a small Playwright visual regression check that reloads `/parent/portal` and compares first-paint vs settled-paint background frames.
+
+## Update (2026-03-12 - parent portal background reverted to original gradient)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - reverted the body background gradient to the original palette/layering:
+    - `--bg-0: #f3efe6`,
+    - `--bg-1: #f8f7f3`,
+    - warm radial `#ffd2ac`,
+    - cool radial `#b7d5ff`,
+    - base `linear-gradient(180deg, var(--bg-0), var(--bg-1))`.
+- Runtime sync:
+  - executed `tools/deploy-api-safe.sh` to propagate the reverted parent asset to runtime (`:8787`).
+- Verification:
+  - `curl http://127.0.0.1:8787/parent/portal` confirms:
+    - `--bg-0: #f3efe6`,
+    - `radial-gradient(1200px 500px at -10% -10%, #ffd2ac 0%, transparent 56%)`.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+
+## Update (2026-03-12 - Playwright-guided parent portal background retune: secondary + tertiary + white)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - retuned background gradient to recover the original soft glow feel while avoiding the concrete/flat look.
+  - background now layers:
+    - tertiary warm tint bloom (`--bg-tertiary-tint`) near top-left,
+    - secondary cool tint bloom (`--bg-secondary-tint`) near top-right,
+    - white highlight bloom at top-center,
+    - white-to-soft base linear blend.
+  - active color tokens:
+    - `--bg-secondary-tint: #cfe3ff`,
+    - `--bg-tertiary-tint: #ffe3c7`,
+    - `--bg-0: #f9fbff`,
+    - `--bg-1: #ffffff`.
+- Playwright visual validation:
+  - captured baseline and tuned screenshots:
+    - `/home/eagles/parent-bg-before.png`,
+    - `/home/eagles/parent-bg-after-v2.png`.
+  - verified warm highlight shift in top-left sample area using ImageMagick pixel checks.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `3` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npm test` => `206` pass, `0` fail.
+
+## Update (2026-03-12 - parent portal required-marker color + no-yellow subtle background gradient)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - removed warm yellow background tint and switched the parent portal base background to a subtle three-tone blend:
+    - primary tint (light red, brand-aligned),
+    - secondary tint (light blue, brand-aligned),
+    - tertiary tint (very light neutral-rose wash).
+  - added a dedicated required-marker style so required `*` renders in primary brand color.
+  - label rendering now appends a styled required marker span for labels that are required/trailing-asterisk while preserving existing label text order.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `3` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npm test` => `206` pass, `0` fail.
+- Coverage gap:
+  - visual/pixel-level background and marker color checks are not currently threshold-gated in CI.
+- Prioritized next action:
+  - add one Playwright visual assertion for required-marker color token usage and parent portal background palette drift.
+
+## Update (2026-03-11 - parent gender token mismatch fix: `male` no longer resolves to `nữ`)
+
+- Root cause:
+  - parent portal option matching used permissive substring logic for all choice fields.
+  - legacy gender tokens such as `M` could match both `male` and `female`; because radio options are iterated in order, final checked state could land on `female` (`nữ`).
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - added deterministic gender token normalization and matching for `genderSelections`:
+    - male aliases (`m`, `male`, `nam`, etc.) map only to `male`,
+    - female aliases (`f`, `female`, `nu`, etc.) map only to `female`.
+  - kept strict single-select radio behavior for `genderSelections`.
+  - wired gender option matching to use field-aware logic (gender-specialized, generic matching untouched for other fields).
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added `normalizeInteger` + `normalizePositiveInteger` helpers used by parent patch normalization (fixes undefined helper gap).
+  - added deterministic backend gender normalization in `normalizeParentProfilePatch` for `genderSelections` so legacy tokens (`M`, `Nam`, `Female`, etc.) are canonicalized consistently before draft/approve persistence.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - fixture now uses legacy token `genderSelections: ["M"]` and asserts UI selects `male`.
+  - asserts `female` is not selected in that scenario.
+  - retains blank-default assertion when gender is absent.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `3` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npx eslint --config eslint.config.mjs test/parent-portal-ui.spec.mjs server/student-admin-routes.mjs` => pass.
+  - `npm test` => `206` pass, `0` fail.
+
+## Update (2026-03-11 - parent portal gender control corrected to single-select radio + Kramer profile verification)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - changed `genderSelections` input control from `checkbox` to `radio` so parents can select at most one option.
+  - kept default unselected behavior when no stored value is present.
+  - normalized option values to canonical profile tokens for stable read/write mapping:
+    - `male`,
+    - `female`.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - asserts gender now renders as radio inputs (`name="pf_genderSelections"`), not checkbox inputs.
+  - asserts existing profile value `genderSelections: ["male"]` hydrates to selected `male`.
+  - asserts blank/default state (0 selected radios) when no gender value exists.
+- Data verification (local runtime DB):
+  - queried `StudentProfile` for `parentsId = "cmkramer001"` and confirmed persisted value:
+    - `genderSelections: ["male"]`.
+  - this aligns with parent portal read path (`profile.genderSelections`) and backend submit/approve persistence path (`normalizeParentProfilePatch` keeps `genderSelections` in array field normalization).
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `3` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npx eslint --config eslint.config.mjs test/parent-portal-ui.spec.mjs` => pass.
+  - `npm test` => `206` pass, `0` fail.
+- Coverage gap:
+  - no browser-authenticated live test yet logs in as a real parent account and round-trips a gender edit through draft + admin approve on DB-backed runtime.
+- Prioritized next action:
+  - add one DB-backed end-to-end fixture for parent draft + admin approve + reload verification for `genderSelections`.
+
+## Update (2026-03-11 - parent portal school/grade wiring correction for public-school class field)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - changed student-school labels to match requested text:
+    - `Hiện đang học tại trường nào *`
+    - `Hiện đang học lớp mấy *`
+  - switched the editable grade/class field key from `currentGrade` to `currentSchoolGrade`.
+  - reversed compatibility fallback to prefer `currentSchoolGrade` and only then read legacy `currentGrade`.
+  - added a fallback guard so legacy `currentGrade` is ignored when it matches immutable child `currentGrade` (Eagles level such as `egg-chicks`), preventing wrong-value bleed into the public-school class field.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - fixture now includes:
+    - immutable child `currentGrade: "egg-chicks"`,
+    - profile `currentSchoolGrade: "6A"`,
+    - legacy profile `currentGrade: "egg-chicks"`.
+  - asserts:
+    - the two updated labels are rendered,
+    - `pf_currentSchoolGrade` is rendered with value `6A`,
+    - `pf_currentGrade` input is not rendered.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `3` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npx eslint --config eslint.config.mjs test/parent-portal-ui.spec.mjs` => pass.
+  - `npm test` => `206` pass, `0` fail.
+- Coverage gap:
+  - visual diff remains manual/ad-hoc and is not threshold-gated in CI.
+- Prioritized next action:
+  - codify the existing parent-vs-reference screenshot compare flow into an automated Playwright+image-diff check with explicit failure thresholds.
+
+## Update (2026-03-11 - parent portal readonly metadata fields + browser visual diff run)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - added a dedicated readonly section (`Thông tin tài khoản (chỉ xem)`) to display:
+    - `memberSince`,
+    - `parentsId`,
+    - `updatedAt`.
+  - these fields are visible but locked (`disabled` + `readOnly`) and are excluded from parent draft patching.
+  - `memberSince` display is normalized to month/year (`MM/YYYY`) when an ISO-like date value is present.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - asserts readonly metadata section heading is present when metadata values exist.
+  - asserts metadata controls are rendered with readonly IDs and disabled state:
+    - `pf_meta_memberSince`,
+    - `pf_meta_parentsId`,
+    - `pf_meta_updatedAt`.
+  - keeps suppression assertions for internal-only keys such as `studentRefId` and `normalizedFormPayload`.
+- Browser visual diff run (manual, headless):
+  - local parent profile screenshot source:
+    - `http://127.0.0.1:8799/parent/portal` (mocked parent APIs).
+  - reference screenshot source:
+    - `https://eagles.edu.vn/cac-khoa-hoc/trang-chu-tu-cach-thanh-vien/tham-gia-hinh-thuc-thanh-vien`.
+  - screenshots:
+    - `/home/eagles/visual-parent-local-profileFields.png`,
+    - `/home/eagles/visual-reference-membership-form.png`.
+  - resized local screenshot to reference dimensions for metric computation:
+    - `/home/eagles/visual-parent-local-profileFields.resized.png`.
+  - ImageMagick compare outputs:
+    - RMSE: `11796.4 (0.180002)`,
+    - AE: `4.37765e+06` differing pixels out of `4,556,128` (`96.08%`),
+    - diff artifacts:
+      - `/home/eagles/visual-diff-rmse.png`,
+      - `/home/eagles/visual-diff-ae.png`.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `2` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Coverage gap:
+  - visual diff run is currently ad-hoc/manual and not yet wired into CI.
+- Prioritized next action:
+  - codify this screenshot + compare flow into a deterministic Playwright-based test script with threshold gates.
+
+## Update (2026-03-11 - parent portal strict reference-form GUI contract, no legacy alias/render leakage)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - removed legacy front-end alias-token and placeholder map logic from the parent profile rendering path.
+  - switched profile rendering to a strict canonical schema with fixed section order and fixed label order matching the Eagles membership form structure.
+  - now renders canonical controls explicitly by field definition:
+    - text/textarea,
+    - email,
+    - tel,
+    - number,
+    - date (with safe text fallback when stored value is non-ISO),
+    - select,
+    - radio,
+    - checkbox groups.
+  - hidden metadata/system fields are no longer surfaced in parent form UI:
+    - `id`,
+    - `studentRefId`,
+    - `memberSince`,
+    - `parentsId`,
+    - `requiredValidationOk`,
+    - `createdAt`,
+    - `updatedAt`,
+    - `sourceFormId`,
+    - `sourceUrl`,
+    - `rawFormPayload`,
+    - `normalizedFormPayload`.
+  - removed fallback "additional fields" rendering so unknown/internal keys are not mixed into the mirrored form.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - expanded regression assertions for:
+    - strict section order,
+    - strict label order in mirrored sections,
+    - control-type presence (`date`, `number`, `tel`, `email`, `checkbox`, `radio`),
+    - metadata/system key suppression in rendered DOM/text.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `2` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npx eslint --config eslint.config.mjs test/parent-portal-ui.spec.mjs` => pass.
+  - `npm test` => `205` pass, `0` fail.
+- Coverage gap:
+  - no authenticated browser E2E currently validates checkbox/radio/date interaction semantics against a real runtime payload.
+- Prioritized next action:
+  - add one Playwright parent-portal interaction fixture that toggles choice fields, saves draft, reloads, and verifies persisted canonical values.
+
+## Update (2026-03-11 - parent portal profile form mirrored to Eagles membership structure)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - replaced heuristic token-based grouping and alphabetic field sorting with explicit, ordered section/field mapping aligned to the Eagles reference membership form.
+  - applied stable section order:
+    - `Thông tin của người học`,
+    - `Liên hệ của mẹ hoặc học sinh trưởng thành`,
+    - `Liên hệ của ba`,
+    - `Địa chỉ`,
+    - `Thông tin sức khỏe của người học`,
+    - `Chăm sóc trong giờ học (nếu người học là trẻ em)`,
+    - `Xác nhận`.
+  - mapped known profile keys to reference labels 1:1 (with minor internal key variance support via alias token map).
+  - hid technical payload fields from parent-facing form rendering:
+    - `sourceFormId`,
+    - `sourceUrl`,
+    - `rawFormPayload`,
+    - `normalizedFormPayload`.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - added regression test asserting section order and label order remain reference-aligned even when incoming profile payload keys are shuffled.
+  - retained static-preview login origin test coverage.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `2` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npm test` => `205` pass, `0` fail.
+- Coverage gap:
+  - no browser-driven visual snapshot test currently diffs the parent portal layout directly against the public reference form.
+- Prioritized next action:
+  - add one Playwright visual regression fixture for ordered section/label rendering against a locked fixture profile payload.
+
+## Update (2026-03-11 - sync scripts codify static preview :5500 and production backend :8787 contract)
+
+- Updated [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh):
+  - added runtime env contract enforcement during sync:
+    - `EXERCISE_MAILER_HOST=127.0.0.1`
+    - `EXERCISE_MAILER_PORT=8787`
+    - `STUDENT_ADMIN_STORE_ENABLED=true`
+    - `EXERCISE_MAILER_ORIGIN` must include `http://127.0.0.1:5500`
+  - drift detection now includes env-contract mismatch checks, so `--sync-on-mismatch` syncs when code is unchanged but env contract drifts.
+  - help output documents the sync contract.
+- Updated [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh):
+  - added same runtime env contract enforcement during sync.
+  - added same env drift checks in mismatch detection.
+  - help output documents the sync contract.
+- Updated [README.md](README.md):
+  - documented that sync workflows now explicitly keep local static preview origin `http://127.0.0.1:5500` in runtime CORS origin config and pin production backend env keys.
+- Verification:
+  - `bash -n tools/sis-runtime-resync.sh` => pass.
+  - `bash -n tools/deploy-api-safe.sh` => pass.
+  - `tools/sis-runtime-resync.sh --help` => includes sync contract text.
+  - `tools/deploy-api-safe.sh --help` => includes sync contract text.
+- Coverage gap:
+  - no automated integration fixture currently executes these deploy scripts against a disposable runtime root with `.env` assertions.
+- Prioritized next action:
+  - add one shell-based smoke fixture (temporary runtime root + fake `.env`) to assert contract pinning and drift detection behavior for both scripts.
+
+## Update (2026-03-11 - parent portal login static-preview 405 mitigation)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - added parent-portal API URL resolution for static preview mode.
+  - local preview fallback now infers `http://127.0.0.1:8787` when opened from `http://127.0.0.1:<non-8787>/web-asset/parent/parent-portal.html`.
+  - added `?apiOrigin=...` and optional injected `window.__SIS_PARENT_API_ORIGIN` support for explicit API origin override.
+  - parent portal fetch calls now resolve through `resolveApiUrl(...)` before network dispatch.
+- Added [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - verifies static-preview login posts to `http://127.0.0.1:8787/api/parent/auth/login` (not relative preview origin path).
+  - verifies login/portal panel transition still succeeds after origin resolution.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `1` pass, `0` fail.
+  - `node --test test/student-admin.spec.mjs` => `84` pass, `0` fail.
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npm test` => `204` pass, `0` fail.
+- Coverage gap:
+  - no live reverse-proxy integration test currently asserts parent login behavior under non-default upstream route rules.
+- Prioritized next action:
+  - add one deploy-smoke check that exercises `POST /api/parent/auth/login` via the production ingress hostname and validates expected response code/header behavior.
+
+## Update (2026-03-11 - parent portal snapshot metric rules + Vietnamese form harmonization)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - centered snapshot metric cards (horizontal + vertical), reduced padding, and tightened visual density.
+  - implemented requested metric semantics/colors:
+    - attendance as `SYTD %` and always green,
+    - absences as `SYTD %` (`>5%` purple, `>10%` red),
+    - pending homework blue when `>0`,
+    - overdue homework red when `>0`,
+    - average score purple when `<=76%`, red when `<=70%`.
+  - removed per-field `Editable/Locked` style badges and `Profile key: ...` helper text.
+  - changed field-state UX to shading + concise text:
+    - locked row: soft red + `Đã khóa`,
+    - edited row: soft blue + `Đã chỉnh sửa (chưa lưu)`.
+  - made `signatureFullName` field visually de-emphasized (smaller/greyer).
+  - localized portal copy and form guidance to Vietnamese, with reference-form style placeholders and field-type mapping (email/tel/text).
+- Reference review:
+  - reviewed `https://eagles.edu.vn/cac-khoa-hoc/trang-chu-tu-cach-thanh-vien/tham-gia-hinh-thuc-thanh-vien` to align structure/prose tone, field naming style, and placeholder conventions.
+- Verification:
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `84` pass, `0` fail.
+- Coverage gap:
+  - no authenticated browser test yet validates live threshold-color rendering against real dashboard payloads.
+- Prioritized next action:
+  - add one Playwright fixture with deterministic dashboard payload assertions for each threshold branch.
+
+## Update (2026-03-11 - parent portal UX follow-up: remove per-field badges, use shading/text states)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - removed per-field badge elements for `Editable/Locked` and `Edited/Unchanged`.
+  - switched to state differentiation via web-consistent visual treatment:
+    - locked rows: soft red shading + read-only text state (`Locked field`) + disabled controls,
+    - edited rows: soft blue shading + text state (`Unsaved edit`),
+    - unchanged editable rows: plain state text (`Editable`).
+  - retained the global draft counter chip and sticky action bar.
+- Verification:
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `84` pass, `0` fail.
+- Coverage gap:
+  - no authenticated parent-portal browser test yet validates shaded row states during real edit interactions.
+- Prioritized next action:
+  - add one Playwright parent-portal test to assert row-state class transitions (`editable` -> `edited`) and locked-row read-only behavior.
+
+## Update (2026-03-11 - parent portal mobile-first UX refactor + contextual editable badges)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - moved parent portal layout to mobile-first structure with progressive desktop breakpoints.
+  - replaced isolated field-card styling with contextual grouped profile sections:
+    - `Identity and Contact`,
+    - `Home and Family`,
+    - `Academic and Learning`,
+    - `Health and Safety`,
+    - fallback `Additional Information`.
+  - added explicit per-field status badges:
+    - editability (`Editable` or `Locked`),
+    - draft state (`Edited` or `Unchanged`).
+  - added global draft status chip (`#draftCountBadge`) and sticky action bar for thumb-reach save/submit controls on mobile.
+  - kept `eaglesId` and `studentNumber` immutable/read-only in dedicated identity context.
+  - preserved existing parent API contracts and route-injected runtime config keys.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended `GET /parent/portal` shell assertions to verify:
+    - draft badge/action shell IDs exist (`draftCountBadge`, `draftActions`),
+    - Google font hosts are absent from portal HTML.
+- Verification:
+  - `npx html-validate web-asset/parent/parent-portal.html` => pass.
+  - `npx stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `126` pass, `0` fail.
+  - `npm test` => `203` pass, `0` fail.
+- Coverage gap:
+  - no authenticated parent-portal interaction test yet exercises inline draft edit badges and sticky action behavior end-to-end in browser automation.
+- Prioritized next action:
+  - add one Playwright parent-portal UI test fixture that logs in as parent, edits one editable field, asserts badge transitions (`Unchanged` -> `Edited`), and validates draft-save reset.
+
 ## Update (2026-03-11 - queue-hub admin page wiring + parent portal route/session coverage)
 
 - Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):

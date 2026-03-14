@@ -16,6 +16,7 @@ const INCOMING_EXERCISE_RESULT_STATUSES = new Set([
 const INCOMING_DUPLICATE_COMPLETED_AT_WINDOW_MS = 1500
 const INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS = 5 * 60 * 1000
 const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "Auto-imported exercise score"
+const FIXED_TIME_ZONE_OFFSET_MS = 7 * 60 * 60 * 1000
 
 function resolveBoolean(value, fallback) {
   if (value === undefined || value === null || value === "") return fallback
@@ -102,17 +103,23 @@ function parseCompletedAt(value) {
   return new Date()
 }
 
+function shiftToFixedTimeZone(value) {
+  return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
+}
+
 function schoolYearFromDate(value = new Date()) {
   const date = value instanceof Date ? value : parseCompletedAt(value)
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
+  const shifted = shiftToFixedTimeZone(date)
+  const year = shifted.getUTCFullYear()
+  const month = shifted.getUTCMonth() + 1
   if (month >= 8) return `${year}-${year + 1}`
   return `${year - 1}-${year}`
 }
 
 function quarterFromDate(value = new Date()) {
   const date = value instanceof Date ? value : parseCompletedAt(value)
-  const month = date.getMonth() + 1
+  const shifted = shiftToFixedTimeZone(date)
+  const month = shifted.getUTCMonth() + 1
   if (month >= 8 && month <= 10) return "q1"
   if (month >= 11 || month <= 1) return "q2"
   if (month >= 2 && month <= 4) return "q3"

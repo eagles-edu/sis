@@ -4,7 +4,10 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import http from "node:http"
 import * as XLSX from "xlsx"
-import { parseSpreadsheetRowsFromUploadPayload } from "../server/student-admin-routes.mjs"
+import {
+  buildStudentPortalCalendarTracks,
+  parseSpreadsheetRowsFromUploadPayload,
+} from "../server/student-admin-routes.mjs"
 import { generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
 
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
@@ -27,6 +30,9 @@ process.env.STUDENT_TEACHER_ACCOUNTS_JSON = JSON.stringify([
 ])
 process.env.STUDENT_PARENT_PORTAL_ACCOUNTS_JSON = JSON.stringify([
   { parentsId: "cmvi001", password: "family-pass-123", status: "active" },
+])
+process.env.STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON = JSON.stringify([
+  { eaglesId: "flyers01", password: "student-pass-123", studentRefId: "student-ref-flyers01", status: "active" },
 ])
 process.env.STUDENT_ADMIN_TOKEN_SECRET = "test-student-admin-token-secret"
 process.env.MAILER_DEBUG = "false"
@@ -57,6 +63,7 @@ let port
 let adminSessionCookie = ""
 let teacherSessionCookie = ""
 let parentSessionCookie = ""
+let studentSessionCookie = ""
 let assignmentAnnouncementPreviewPath = ""
 let persistedUiSettingsPath = ""
 
@@ -135,6 +142,114 @@ test("parseSpreadsheetRowsFromUploadPayload rejects non-UTF-8 CSV payload", () =
     }),
     /UTF-8 encoded/i
   )
+})
+
+test("buildStudentPortalCalendarTracks maps homework and review rows into week spans", () => {
+  const tracks = buildStudentPortalCalendarTracks({
+    now: "2026-03-13T09:00:00.000Z",
+    gradeRows: [
+      {
+        id: "grade-overdue",
+        assignmentName: "Essay Draft",
+        className: "Writing",
+        dueAt: "2026-03-11T09:00:00.000Z",
+        submittedAt: "",
+        homeworkCompleted: false,
+      },
+      {
+        id: "grade-complete",
+        assignmentName: "Reading Log",
+        className: "Reading",
+        dueAt: "2026-03-14T09:00:00.000Z",
+        submittedAt: "2026-03-10T09:00:00.000Z",
+        homeworkCompleted: true,
+      },
+    ],
+    reportRows: [
+      {
+        id: "review-1",
+        className: "Speaking",
+        quarter: "q2",
+        generatedAt: "2026-03-10T08:30:00.000Z",
+      },
+    ],
+  })
+
+  assert.equal(tracks.homework.length, 1)
+  assert.equal(tracks.homework[0].title, "Essay Draft")
+  assert.equal(tracks.homework[0].dueDate, "2026-03-11")
+  assert.equal(tracks.homework[0].startDate, "2026-03-08")
+  assert.equal(tracks.homework[0].endDate, "2026-03-15")
+  assert.equal(tracks.homework[0].overdue, true)
+
+  assert.equal(tracks.review.length, 1)
+  assert.equal(tracks.review[0].title, "Speaking")
+  assert.equal(tracks.review[0].quarter, "q2")
+  assert.equal(tracks.review[0].generatedDate, "2026-03-10")
+  assert.equal(tracks.review[0].startDate, "2026-03-08")
+  assert.equal(tracks.review[0].endDate, "2026-03-15")
+})
+
+test("StudentPortalAccount model exists in Prisma schema contract", () => {
+  const schema = fs.readFileSync(new URL("../prisma/schema.prisma", import.meta.url), "utf8")
+  assert.match(schema, /model\s+StudentPortalAccount\s*{/)
+  assert.match(schema, /eaglesId\s+String\s+@unique/)
+  assert.match(schema, /passwordHash\s+String/)
+})
+
+test("student portal login resolver keeps DB-first auth with env fallback", () => {
+  const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+  const verifyStart = routes.indexOf("async function verifyStudentPortalCredentials(")
+  assert.ok(verifyStart >= 0, "verifyStudentPortalCredentials is present")
+  const verifyChunk = routes.slice(verifyStart, verifyStart + 3600)
+
+  const dbLookupPos = verifyChunk.indexOf("prisma.studentPortalAccount.findUnique")
+  const envFallbackPos = verifyChunk.indexOf("configuredStudentPortalAccounts()")
+  assert.ok(dbLookupPos >= 0, "DB lookup is present")
+  assert.ok(envFallbackPos >= 0, "env fallback is present")
+  assert.ok(dbLookupPos < envFallbackPos, "DB lookup executes before env fallback")
+})
+
+test("student portal session resolver prefers DB eaglesId mapping over stale session/env studentRefId", () => {
+  const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+  const resolveStart = routes.indexOf("async function resolveStudentPortalSessionStudentRefId(")
+  assert.ok(resolveStart >= 0, "resolveStudentPortalSessionStudentRefId is present")
+  const resolveChunk = routes.slice(resolveStart, resolveStart + 2400)
+
+  const dbMappedPos = resolveChunk.indexOf("findStudentByEaglesIdForParent(eaglesId)")
+  const sessionFallbackPos = resolveChunk.indexOf("if (sessionStudentRefId) return sessionStudentRefId")
+  const dbGuardPos = resolveChunk.indexOf("if (isStudentAdminStoreEnabled())")
+  const emptyReturnPos = resolveChunk.indexOf('return ""')
+
+  assert.ok(dbGuardPos >= 0, "DB-backed guard is present")
+  assert.ok(dbMappedPos >= 0, "DB mapping by eaglesId is present")
+  assert.ok(emptyReturnPos >= 0, "resolver returns empty when DB mapping fails")
+  assert.ok(sessionFallbackPos < 0, "no early stale session studentRefId return")
+})
+
+test("student dashboard/news paths guard missing optional Prisma delegates", () => {
+  const store = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
+  const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+
+  assert.match(store, /function hasPrismaDelegateMethod\(/)
+  assert.match(store, /findManyOrEmpty\(prisma, "studentPointsAdjustment"/)
+  assert.match(store, /hasPrismaDelegateMethod\(prisma, "studentPointsAdjustment", "create"\)/)
+  assert.match(store, /hasPrismaDelegateMethod\(prisma, "studentNewsReport", "upsert"\)/)
+  assert.match(store, /listStudentNewsReportsFromFallbackStore\(/)
+  assert.match(store, /upsertStudentNewsReportInFallbackStore\(/)
+  assert.match(store, /isStudentNewsReportSchemaUnavailableError\(/)
+  assert.match(store, /loadApprovedParentReportRowsForPoints\(prisma, idFilter\)/)
+  assert.match(store, /isLegacyParentReportApprovedAtSchemaError/)
+  assert.match(store, /isLegacyParentReportParticipationPointsSchemaError/)
+  assert.match(store, /stripLegacyParentReportFields\(/)
+
+  assert.match(routes, /const newsAggregatePromise\s*=/)
+  assert.match(routes, /typeof prisma\.studentNewsReport\.aggregate === "function"/)
+  assert.match(routes, /Promise\.resolve\(\{\s*_count: \{ _all: 0 \}/)
+  assert.match(routes, /function canTeacherWriteDataEntryPath\(/)
+  assert.match(routes, /ADMIN_ATTENDANCE_PATH_RE\.test\(pathname\)/)
+  assert.match(routes, /ADMIN_GRADES_PATH_RE\.test\(pathname\)/)
+  assert.match(routes, /ADMIN_REPORTS_PATH_RE\.test\(pathname\)/)
 })
 
 test("generateStudentReportCardPdf returns a PDF buffer", async () => {
@@ -249,6 +364,32 @@ test("admin auth CORS allows loopback preview origins", async () => {
   }
 })
 
+test("student auth CORS echoes loopback origin and credentials when wildcard origin is configured", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const originalOrigin = process.env.EXERCISE_MAILER_ORIGIN
+  process.env.EXERCISE_MAILER_ORIGIN = "*"
+  const tmp = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
+  await new Promise((resolve) => tmp.once("listening", resolve))
+  const tmpPort = tmp.address().port
+
+  try {
+    const pre = await fetchLocal(tmpPort, "/api/student/auth/me", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "http://127.0.0.1:46855",
+        "Access-Control-Request-Method": "GET",
+        "Access-Control-Request-Headers": "Content-Type",
+      },
+    })
+    assert.equal(pre.status, 204)
+    assert.equal(pre.headers.get("access-control-allow-origin"), "http://127.0.0.1:46855")
+    assert.equal(pre.headers.get("access-control-allow-credentials"), "true")
+  } finally {
+    await new Promise((resolve) => tmp.close(resolve))
+    process.env.EXERCISE_MAILER_ORIGIN = originalOrigin || "*"
+  }
+})
+
 test("GET /admin/students returns HTML UI", async () => {
   const res = await fetchLocal(port, "/admin/students")
   assert.equal(res.status, 200)
@@ -299,11 +440,118 @@ test("GET /parent/portal returns parent portal HTML with runtime config", async 
   assert.match(html, /Parent Portal/i)
   assert.match(html, /__SIS_PARENT_API_PREFIX/i)
   assert.match(html, /__SIS_PARENT_AUTH_PREFIX/i)
+  assert.match(html, /id="portalDetailCard"/i)
+  assert.match(html, /\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js/i)
+  assert.match(html, /id="draftCountBadge"/i)
+  assert.match(html, /id="draftActions"/i)
+  assert.doesNotMatch(html, /fonts\\.googleapis\\.com/i)
+  assert.doesNotMatch(html, /fonts\\.gstatic\\.com/i)
+})
+
+test("GET /admin/students/points-management returns points page HTML with runtime config", async () => {
+  const res = await fetchLocal(port, "/admin/students/points-management")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /Points Management/i)
+  assert.match(html, /__SIS_ADMIN_POINTS_SUMMARY_PATH/i)
+  assert.match(html, /__SIS_ADMIN_POINTS_STUDENTS_PATH/i)
+  assert.match(html, /__SIS_ADMIN_POINTS_LEDGER_PATH/i)
+  assert.match(html, /__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH/i)
+})
+
+test("GET /student/portal returns student portal HTML with runtime config", async () => {
+  const res = await fetchLocal(port, "/student/portal")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /<title>\s*Student Portal\s*<\/title>/i)
+  assert.doesNotMatch(html, /<title>\s*Student News Portal\s*<\/title>/i)
+  assert.match(html, /Daily News Report/i)
+  assert.match(html, /id="loginForm"/i)
+  assert.match(html, /id="studentHomeCard"/i)
+  assert.match(html, /id="studentDetailPageCard"/i)
+  assert.match(html, /id="studentHomeGrid" class="portal-col"/i)
+  assert.match(html, /id="overviewPanel" class="toolbar"/i)
+  assert.match(html, /id="snapshotBadge" class="chip chip-neutral"/i)
+  assert.match(html, /id="dashboardMetrics" class="metrics"/i)
+  assert.match(html, /id="studentNumberValue" class="identity-value"/i)
+  assert.match(html, /id="quickLinksPanel" class="panel"/i)
+  assert.match(html, /id="portalStatus" class="status"/i)
+  assert.match(html, /\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js/i)
+  assert.match(html, /buttonText:\s*"Your View"/i)
+  assert.match(html, /II\.E\.i\./i)
+  assert.match(html, /__SIS_STUDENT_DASHBOARD_PATH/i)
+  assert.match(html, /__SIS_STUDENT_NEWS_REPORTS_PATH/i)
+  assert.match(html, /__SIS_STUDENT_NEWS_CALENDAR_PATH/i)
+  assert.match(html, /function inferLocalPreviewApiOrigin\(\)[\s\S]*:8788`;/i)
+  assert.match(html, /id="calendarTitle"/i)
+  assert.match(html, /id="calendarGrid" class="calendar-shell"/i)
+})
+
+test("GET /web-asset/vendor/fullcalendar/index.global.min.js returns runtime static asset", async () => {
+  const res = await fetchLocal(port, "/web-asset/vendor/fullcalendar/index.global.min.js")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /javascript/i)
+  const js = await res.text()
+  assert.match(js, /FullCalendar Standard Bundle v6\.1\.20/i)
+})
+
+test("GET /web-asset/images/logo.svg returns runtime image asset", async () => {
+  const res = await fetchLocal(port, "/web-asset/images/logo.svg")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /image\/svg\+xml/i)
+  const body = await res.text()
+  assert.match(body, /<svg/i)
 })
 
 test("GET /admin/students/unknown-section returns 404", async () => {
   const res = await fetchLocal(port, "/admin/students/unknown-section")
   assert.equal(res.status, 404)
+})
+
+test("portal login endpoints establish sessions for admin, parent, and student", async () => {
+  const adminLogin = await fetchLocal(port, "/api/admin/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "admin", password: "admin-pass-123" }),
+  })
+  assert.equal(adminLogin.status, 200)
+  const adminCookie = (adminLogin.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(adminCookie, /student_admin_sid=/i)
+
+  const adminMe = await fetchLocal(port, "/api/admin/auth/me", {
+    headers: { Cookie: adminCookie },
+  })
+  assert.equal(adminMe.status, 200)
+
+  const parentLogin = await fetchLocal(port, "/api/parent/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "cmvi001", password: "family-pass-123" }),
+  })
+  assert.equal(parentLogin.status, 200)
+  const parentCookie = (parentLogin.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(parentCookie, /parent_portal_sid=/i)
+
+  const parentMe = await fetchLocal(port, "/api/parent/auth/me", {
+    headers: { Cookie: parentCookie },
+  })
+  assert.equal(parentMe.status, 200)
+
+  const studentLogin = await fetchLocal(port, "/api/student/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ eaglesId: "flyers01", password: "student-pass-123" }),
+  })
+  assert.equal(studentLogin.status, 200)
+  const studentCookie = (studentLogin.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(studentCookie, /student_portal_sid=/i)
+
+  const studentMe = await fetchLocal(port, "/api/student/auth/me", {
+    headers: { Cookie: studentCookie },
+  })
+  assert.equal(studentMe.status, 200)
 })
 
 test("POST /api/admin/login rejects invalid credentials", async () => {
@@ -530,6 +778,49 @@ test("teacher can access parent-report save path and reaches store-disabled resp
       schoolYear: "2026-2027",
       quarter: "q1",
       comments: "Teacher draft parent report",
+    }),
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
+})
+
+test("teacher can access attendance save path and reaches store-disabled response", async () => {
+  const res = await fetchLocal(port, "/api/admin/students/abc/attendance", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      className: "A2 KET",
+      schoolYear: "2025-2026",
+      quarter: "q3",
+      attendanceDate: "2026-03-14T08:00:00.000Z",
+      status: "present",
+    }),
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
+})
+
+test("teacher can access grade save path and reaches store-disabled response", async () => {
+  const res = await fetchLocal(port, "/api/admin/students/abc/grades", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      className: "A2 KET",
+      schoolYear: "2025-2026",
+      quarter: "q3",
+      assignmentName: "News Summary",
+      dueAt: "2026-03-14T08:00:00.000Z",
+      submittedAt: "2026-03-14T08:10:00.000Z",
+      homeworkCompleted: true,
+      homeworkOnTime: true,
     }),
   })
   assert.equal(res.status, 503)
@@ -1125,6 +1416,113 @@ test("POST /api/admin/exports/xlsx requires auth", async () => {
   assert.equal(res.status, 401)
   const body = await res.json()
   assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/student/news-reports/calendar requires auth", async () => {
+  const res = await fetchLocal(port, "/api/student/news-reports/calendar")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/student/dashboard requires auth", async () => {
+  const res = await fetchLocal(port, "/api/student/dashboard")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("POST /api/student/auth/login returns student session cookie", async () => {
+  const res = await fetchLocal(port, "/api/student/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ eaglesId: "flyers01", password: "student-pass-123" }),
+  })
+  assert.equal(res.status, 200)
+  const setCookie = res.headers.get("set-cookie") || ""
+  assert.match(setCookie, /student_portal_sid=/i)
+  studentSessionCookie = setCookie.split(";")[0]
+  assert.ok(studentSessionCookie.length > 20)
+  const body = await res.json()
+  assert.equal(body.authenticated, true)
+  assert.equal(body.user?.eaglesId, "flyers01")
+})
+
+test("GET /api/student/auth/me returns authenticated student", async () => {
+  const res = await fetchLocal(port, "/api/student/auth/me", {
+    headers: { Cookie: studentSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.authenticated, true)
+  assert.equal(body.user?.role, "student")
+})
+
+test("student news endpoints return 503 when admin store disabled", async () => {
+  const dashboardRes = await fetchLocal(port, "/api/student/dashboard", {
+    headers: { Cookie: studentSessionCookie },
+  })
+  assert.ok([403, 503].includes(dashboardRes.status))
+  const dashboardBody = await dashboardRes.json()
+  assert.match(dashboardBody.error, /(store is disabled|not linked|Unable to load student dashboard)/i)
+
+  const calendarRes = await fetchLocal(port, "/api/student/news-reports/calendar", {
+    headers: { Cookie: studentSessionCookie },
+  })
+  assert.ok([403, 503].includes(calendarRes.status))
+  const calendarBody = await calendarRes.json()
+  assert.match(calendarBody.error, /(store is disabled|not linked)/i)
+
+  const submitRes = await fetchLocal(port, "/api/student/news-reports", {
+    method: "POST",
+    headers: {
+      Cookie: studentSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      reportDate: "2026-03-11",
+      sourceLink: "https://example.com/news",
+      articleTitle: "Sample title",
+      leadSynopsis: "Lead summary",
+      actionActor: "Actor",
+      actionAffected: "Affected group",
+      actionWhere: "Location",
+      actionWhat: "Event details",
+      actionWhy: "Cause details",
+      biasAssessment: "No bias detected",
+    }),
+  })
+  assert.ok([403, 503].includes(submitRes.status))
+  const submitBody = await submitRes.json()
+  assert.match(submitBody.error, /(store is disabled|not linked)/i)
+})
+
+test("points endpoints return 503 when admin store disabled", async () => {
+  const summaryRes = await fetchLocal(port, "/api/admin/points/summary", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(summaryRes.status, 503)
+  const summaryBody = await summaryRes.json()
+  assert.match(summaryBody.error, /store is disabled/i)
+
+  const studentsRes = await fetchLocal(port, "/api/admin/points/students", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(studentsRes.status, 503)
+  const studentsBody = await studentsRes.json()
+  assert.match(studentsBody.error, /store is disabled/i)
+
+  const setTotalRes = await fetchLocal(port, "/api/admin/points/students/abc/points", {
+    method: "PUT",
+    headers: {
+      Cookie: adminSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ targetPoints: 100, reason: "test override" }),
+  })
+  assert.equal(setTotalRes.status, 503)
+  const setTotalBody = await setTotalRes.json()
+  assert.match(setTotalBody.error, /store is disabled/i)
 })
 
 test("GET /api/admin/students returns 503 when admin store disabled", async () => {

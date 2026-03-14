@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import fs from "node:fs"
 import test from "node:test"
 
 import {
@@ -38,6 +39,65 @@ test("normalizeParentReportRubricPayload keeps only valid rubric keys and scores
     },
     recommendations: {
       pt_rec_focus: "Review focus routine.",
+    },
+  })
+})
+
+test("normalizeParentReportRubricPayload drops restricted digital-reading rubric fields below Flyers", () => {
+  const normalized = normalizeParentReportRubricPayload(
+    {
+      skillScores: {
+        pt_skill_internationalNews: "8",
+        pt_skill_readingEnglishEnjoyment: "7",
+        pt_skill_vocabularyLookup: "9",
+        pt_skill_questions: "6",
+      },
+      recommendations: {
+        pt_rec_internationalNews: "Blocked below Flyers.",
+        pt_rec_vocabularyLookup: "Blocked below Flyers.",
+        pt_rec_questions: "Keep asking questions.",
+      },
+    },
+    { level: "A1 Movers" }
+  )
+
+  assert.deepEqual(normalized, {
+    skillScores: {
+      pt_skill_questions: "6",
+    },
+    conductScores: {},
+    recommendations: {
+      pt_rec_questions: "Keep asking questions.",
+    },
+  })
+})
+
+test("normalizeParentReportRubricPayload keeps digital-reading rubric fields for Flyers and above", () => {
+  const normalized = normalizeParentReportRubricPayload(
+    {
+      skillScores: {
+        pt_skill_internationalNews: "8",
+        pt_skill_readingEnglishEnjoyment: "7",
+        pt_skill_vocabularyLookup: "9",
+      },
+      recommendations: {
+        pt_rec_internationalNews: "Read and summarize.",
+        pt_rec_vocabularyLookup: "Use dictionary audio.",
+      },
+    },
+    { className: "A2 Flyers" }
+  )
+
+  assert.deepEqual(normalized, {
+    skillScores: {
+      pt_skill_internationalNews: "8",
+      pt_skill_readingEnglishEnjoyment: "7",
+      pt_skill_vocabularyLookup: "9",
+    },
+    conductScores: {},
+    recommendations: {
+      pt_rec_internationalNews: "Read and summarize.",
+      pt_rec_vocabularyLookup: "Use dictionary audio.",
     },
   })
 })
@@ -82,4 +142,19 @@ test("decodeParentReportCommentBundle handles plain comments and invalid markers
   const invalidMarker = decodeParentReportCommentBundle("Only plain comment\n[[SIS-RUBRIC-V1:not-valid-json]]")
   assert.equal(invalidMarker.comment, "Only plain comment")
   assert.equal(invalidMarker.rubricPayload, null)
+})
+
+test("parent report save path keeps legacy participation-points schema fallback guards", () => {
+  const source = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
+  assert.match(source, /isLegacyParentReportParticipationPointsSchemaError\(/)
+  assert.match(source, /isUnknownPrismaArgumentError\(error, "participationPointsAward"\)/)
+  assert.match(source, /isUnknownPrismaFieldError\(error, "participationPointsAward"\)/)
+  assert.match(source, /stripLegacyParentReportFields\(reportData\)/)
+})
+
+test("student news save/list paths keep model-drift fallback guards", () => {
+  const source = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
+  assert.match(source, /isStudentNewsReportSchemaUnavailableError\(/)
+  assert.match(source, /listStudentNewsReportsFromFallbackStore\(/)
+  assert.match(source, /upsertStudentNewsReportInFallbackStore\(/)
 })

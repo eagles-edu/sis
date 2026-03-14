@@ -4,6 +4,8 @@ import fs from "node:fs"
 import path from "node:path"
 import PDFDocument from "pdfkit"
 
+const FIXED_TIME_ZONE_OFFSET_MS = 7 * 60 * 60 * 1000
+
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
@@ -41,9 +43,10 @@ function formatDate(value) {
   if (!value) return ""
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.valueOf())) return ""
-  const yyyy = date.getFullYear()
-  const mm = String(date.getMonth() + 1).padStart(2, "0")
-  const dd = String(date.getDate()).padStart(2, "0")
+  const shifted = new Date(date.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
+  const yyyy = shifted.getUTCFullYear()
+  const mm = String(shifted.getUTCMonth() + 1).padStart(2, "0")
+  const dd = String(shifted.getUTCDate()).padStart(2, "0")
   return `${yyyy}-${mm}-${dd}`
 }
 

@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Points Management</title>
+  <style>
+    :root {
+      --bg: #f7fbff;
+      --bg-accent: linear-gradient(140deg, #e9f4ff 0%, #fdf7eb 100%);
+      --card: #ffffff;
+      --ink: #18314f;
+      --muted: #60728a;
+      --line: #d5e3f4;
+      --primary: #0d66c2;
+      --primary-strong: #08488b;
+      --ok: #198754;
+      --warn: #b25012;
+      --bad: #bf1e2e;
+      --shadow: 0 10px 28px rgba(24, 49, 79, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      background: var(--bg-accent);
+      padding: 20px;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+      letter-spacing: 0.02em;
+    }
+
+    .sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .row {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: 0.8rem; color: var(--muted); }
+    .c2 { grid-column: span 2; }
+    .c3 { grid-column: span 3; }
+    .c4 { grid-column: span 4; }
+    .c6 { grid-column: span 6; }
+    .c12 { grid-column: span 12; }
+
+    input,
+    select,
+    button {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid #b8cce4;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    button {
+      cursor: pointer;
+      background: #f5f9ff;
+      transition: transform 120ms ease, border-color 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: #7fa4d4;
+    }
+
+    .primary {
+      background: linear-gradient(160deg, var(--primary), var(--primary-strong));
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .status {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-height: 1.4em;
+    }
+
+    .status.bad { color: var(--bad); }
+    .status.ok { color: var(--ok); }
+
+    .chart-wrap {
+      width: 100%;
+      height: 280px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px;
+      box-sizing: border-box;
+      background: #fbfdff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      text-align: left;
+      border-bottom: 1px solid #e3ebf6;
+      padding: 9px 8px;
+      font-size: 0.92rem;
+    }
+
+    th button {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      color: inherit;
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 9px;
+      background: #eff6ff;
+      border: 1px solid #cde0fb;
+      font-size: 0.78rem;
+      color: #184372;
+    }
+
+    .mini {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 8px;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 920px) {
+      .c2,
+      .c3,
+      .c4,
+      .c6 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="card">
+      <h1>Points Management</h1>
+      <p class="sub">School YTD trend + student point ledger controls.</p>
+      <p id="globalStatus" class="status">Checking admin session...</p>
+    </section>
+
+    <section id="loginPanel" class="card hidden" aria-label="Admin login">
+        <div class="row">
+          <div class="field c4">
+            <label for="loginUsername">Username</label>
+            <input id="loginUsername" type="text" autocomplete="username">
+          </div>
+        <div class="field c4">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" autocomplete="current-password">
+        </div>
+        <div class="field c4">
+          <label>&nbsp;</label>
+          <button id="loginBtn" class="primary" type="button">Sign In</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="appPanel" class="hidden">
+      <div class="card">
+        <div class="row">
+          <div class="field c3">
+            <label for="startDate">Start Date</label>
+            <input id="startDate" type="date">
+          </div>
+          <div class="field c3">
+            <label for="endDate">End Date</label>
+            <input id="endDate" type="date">
+          </div>
+          <div class="field c3">
+            <label>&nbsp;</label>
+            <button id="refreshChartBtn" type="button">Refresh Chart</button>
+          </div>
+          <div class="field c3">
+            <label>&nbsp;</label>
+            <button id="logoutBtn" type="button">Logout</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="ytdChart" viewBox="0 0 900 260" width="100%" height="100%" aria-hidden="true"></svg>
+        </div>
+        <p id="chartSummary" class="mini">No data loaded.</p>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="field c4">
+            <label for="studentSearch">Student Search</label>
+            <input id="studentSearch" type="search" placeholder="name, eagles ID, number">
+          </div>
+          <div class="field c3">
+            <label for="studentLevel">Level</label>
+            <select id="studentLevel"><option value="">Any</option></select>
+          </div>
+          <div class="field c3">
+            <label for="sortField">Sort</label>
+            <select id="sortField">
+              <option value="totalPoints">Total Points</option>
+              <option value="fullName">Full Name</option>
+              <option value="studentNumber">Student Number</option>
+              <option value="eaglesId">Eagles ID</option>
+              <option value="level">Level</option>
+              <option value="lastActivityAt">Last Activity</option>
+            </select>
+          </div>
+          <div class="field c2">
+            <label for="sortDir">Direction</label>
+            <select id="sortDir">
+              <option value="desc">Desc</option>
+              <option value="asc">Asc</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col"><button type="button" data-sort="studentNumber">#</button></th>
+                <th scope="col"><button type="button" data-sort="eaglesId">Eagles ID</button></th>
+                <th scope="col"><button type="button" data-sort="fullName">Name</button></th>
+                <th scope="col"><button type="button" data-sort="level">Level</button></th>
+                <th scope="col"><button type="button" data-sort="totalPoints">Points</button></th>
+                <th scope="col"><button type="button" data-sort="lastActivityAt">Last Activity</button></th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody id="studentRows"><tr><td colspan="7">No rows.</td></tr></tbody>
+          </table>
+        </div>
+        <p id="studentSummary" class="mini">No data loaded.</p>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:0 0 8px; font-size:1.1rem;">Selected Student Ledger</h2>
+        <p id="ledgerSummary" class="mini">Select a student to view recent points events.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Event</th>
+                <th scope="col">Points</th>
+                <th scope="col">Detail</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerRows"><tr><td colspan="4">No ledger loaded.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      const ADMIN_AUTH_PREFIX = window.__SIS_ADMIN_AUTH_PREFIX || "/api/admin/auth";
+      const POINTS_SUMMARY_PATH = window.__SIS_ADMIN_POINTS_SUMMARY_PATH || "/api/admin/points/summary";
+      const POINTS_STUDENTS_PATH = window.__SIS_ADMIN_POINTS_STUDENTS_PATH || "/api/admin/points/students";
+      const POINTS_LEDGER_PATH = window.__SIS_ADMIN_POINTS_LEDGER_PATH || "/api/admin/points/ledger";
+      const POINTS_ADJUSTMENTS_PATH = window.__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH || "/api/admin/points/adjustments";
+
+      const state = {
+        students: [],
+        selectedStudentRefId: "",
+      };
+
+      function t(v) {
+        return String(v == null ? "" : v).trim();
+      }
+
+      function setStatus(message, isError = false) {
+        const el = document.getElementById("globalStatus");
+        if (!el) return;
+        el.textContent = t(message);
+        el.className = isError ? "status bad" : "status";
+      }
+
+      async function api(path, options = {}) {
+        const init = {
+          method: options.method || "GET",
+          headers: {},
+          credentials: "include",
+        };
+        if (options.body !== undefined) {
+          init.headers["Content-Type"] = "application/json";
+          init.body = JSON.stringify(options.body);
+        }
+        const response = await fetch(path, init);
+        if (response.status === 204) return null;
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const err = new Error(data.error || `HTTP ${response.status}`);
+          err.status = response.status;
+          throw err;
+        }
+        return data;
+      }
+
+      function setAuthenticatedView(authenticated) {
+        document.getElementById("loginPanel")?.classList.toggle("hidden", authenticated);
+        document.getElementById("appPanel")?.classList.toggle("hidden", !authenticated);
+      }
+
+      function isoDate(value) {
+        const d = new Date(value);
+        if (Number.isNaN(d.valueOf())) return "";
+        const shifted = new Date(d.getTime() + (7 * 60 * 60 * 1000));
+        const year = String(shifted.getUTCFullYear()).padStart(4, "0");
+        const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(shifted.getUTCDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function renderChart(summary = {}) {
+        const svg = document.getElementById("ytdChart");
+        const rows = Array.isArray(summary.series) ? summary.series : [];
+        const width = 900;
+        const height = 260;
+        const left = 50;
+        const top = 20;
+        const right = 16;
+        const bottom = 36;
+        const chartW = width - left - right;
+        const chartH = height - top - bottom;
+
+        if (!rows.length) {
+          svg.innerHTML = "";
+          document.getElementById("chartSummary").textContent = "No YTD data in selected window.";
+          return;
+        }
+
+        const maxY = Math.max(1, ...rows.map((r) => Number(r.cumulativePoints || 0)));
+        const xAt = (i) => left + (rows.length > 1 ? (chartW * i) / (rows.length - 1) : 0);
+        const yAt = (v) => top + chartH - (Number(v || 0) / maxY) * chartH;
+
+        const points = rows.map((r, i) => `${xAt(i)},${yAt(r.cumulativePoints)}`).join(" ");
+        const xLabels = rows
+          .filter((_, i) => i === 0 || i === rows.length - 1 || i % Math.max(1, Math.floor(rows.length / 6)) === 0)
+          .map((r, i) => {
+            const idx = rows.indexOf(r);
+            return `<text x="${xAt(idx)}" y="${height - 12}" text-anchor="middle" font-size="11" fill="#5f7088">${isoDate(r.date)}</text>`;
+          })
+          .join("");
+
+        const yTicks = [0, 0.25, 0.5, 0.75, 1]
+          .map((ratio) => {
+            const v = Math.round(maxY * ratio);
+            const y = yAt(v);
+            return `<line x1="${left}" y1="${y}" x2="${left + chartW}" y2="${y}" stroke="#e1ebf8"/><text x="${left - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#5f7088">${v}</text>`;
+          })
+          .join("");
+
+        svg.innerHTML = `
+          <rect x="${left}" y="${top}" width="${chartW}" height="${chartH}" fill="none" stroke="#cfe0f3"/>
+          ${yTicks}
+          <polyline fill="none" stroke="#0d66c2" stroke-width="3" points="${points}"/>
+          ${rows.map((r, i) => `<circle cx="${xAt(i)}" cy="${yAt(r.cumulativePoints)}" r="3" fill="#0d66c2"/>`).join("")}
+          ${xLabels}
+        `;
+
+        document.getElementById("chartSummary").textContent =
+          `YTD total points: ${Number(summary.totalPoints || 0)} | range: ${t(summary.startDate)} -> ${t(summary.endDate)}`;
+      }
+
+      function renderStudents(rows = []) {
+        const tbody = document.getElementById("studentRows");
+        if (!tbody) return;
+        const source = Array.isArray(rows) ? rows : [];
+        if (!source.length) {
+          tbody.innerHTML = '<tr><td colspan="7">No students match current filters.</td></tr>';
+          document.getElementById("studentSummary").textContent = "0 students";
+          return;
+        }
+
+        tbody.innerHTML = "";
+        source.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${t(row.studentNumber)}</td>
+            <td>${t(row.eaglesId)}</td>
+            <td>${t(row.fullName)}</td>
+            <td><span class="pill">${t(row.level) || "-"}</span></td>
+            <td>${Number(row.totalPoints || 0)}</td>
+            <td>${t(row.lastActivityAt).slice(0, 10) || "-"}</td>
+            <td>
+              <button type="button" data-open-ledger="${t(row.studentRefId)}">Ledger</button>
+              <button type="button" class="primary" data-edit-total="${t(row.studentRefId)}">Set Total</button>
+            </td>
+          `;
+
+          tr.querySelector(`[data-open-ledger="${row.studentRefId}"]`)?.addEventListener("click", () => {
+            state.selectedStudentRefId = t(row.studentRefId);
+            loadLedger().catch(handleError);
+          });
+
+          tr.querySelector(`[data-edit-total="${row.studentRefId}"]`)?.addEventListener("click", () => {
+            editStudentTotal(row).catch(handleError);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById("studentSummary").textContent = `${source.length} students loaded.`;
+      }
+
+      function renderLedger(payload = null) {
+        const tbody = document.getElementById("ledgerRows");
+        const summaryEl = document.getElementById("ledgerSummary");
+        if (!tbody || !summaryEl) return;
+        const items = Array.isArray(payload?.items) ? payload.items : [];
+        if (!payload) {
+          tbody.innerHTML = '<tr><td colspan="4">No ledger loaded.</td></tr>';
+          summaryEl.textContent = "Select a student to view recent points events.";
+          return;
+        }
+
+        summaryEl.textContent = `${t(payload?.student?.fullName)} (${t(payload?.student?.eaglesId)}) total=${Number(payload?.summary?.totalPoints || 0)} points`;
+        if (!items.length) {
+          tbody.innerHTML = '<tr><td colspan="4">No events for selected range.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = items
+          .map((item) => `
+            <tr>
+              <td>${t(item.occurredAt).slice(0, 10)}</td>
+              <td>${t(item.eventType)}</td>
+              <td>${Number(item.points || 0)}</td>
+              <td>${t(item.title)} ${t(item.details)}</td>
+            </tr>
+          `)
+          .join("");
+      }
+
+      async function loadChart() {
+        const params = new URLSearchParams();
+        const start = t(document.getElementById("startDate")?.value);
+        const end = t(document.getElementById("endDate")?.value);
+        if (start) params.set("startDate", start);
+        if (end) params.set("endDate", end);
+        const data = await api(`${POINTS_SUMMARY_PATH}?${params.toString()}`);
+        renderChart(data);
+      }
+
+      async function loadStudents() {
+        const params = new URLSearchParams();
+        const q = t(document.getElementById("studentSearch")?.value);
+        const level = t(document.getElementById("studentLevel")?.value);
+        const sortField = t(document.getElementById("sortField")?.value) || "totalPoints";
+        const sortDir = t(document.getElementById("sortDir")?.value) || "desc";
+        if (q) params.set("q", q);
+        if (level) params.set("level", level);
+        params.set("sortField", sortField);
+        params.set("sortDir", sortDir);
+        params.set("take", "500");
+        const data = await api(`${POINTS_STUDENTS_PATH}?${params.toString()}`);
+        state.students = Array.isArray(data.items) ? data.items : [];
+        renderStudents(state.students);
+
+        const levelEl = document.getElementById("studentLevel");
+        if (levelEl && !levelEl.dataset.loaded) {
+          const levels = Array.from(new Set(state.students.map((r) => t(r.level)).filter(Boolean))).sort();
+          levels.forEach((name) => {
+            const option = document.createElement("option");
+            option.value = name;
+            option.textContent = name;
+            levelEl.appendChild(option);
+          });
+          levelEl.dataset.loaded = "1";
+        }
+      }
+
+      async function loadLedger() {
+        const id = t(state.selectedStudentRefId);
+        if (!id) {
+          renderLedger(null);
+          return;
+        }
+        const params = new URLSearchParams();
+        params.set("studentRefId", id);
+        params.set("take", "120");
+        const data = await api(`${POINTS_LEDGER_PATH}?${params.toString()}`);
+        renderLedger(data);
+      }
+
+      async function editStudentTotal(row) {
+        const studentRefId = t(row?.studentRefId);
+        if (!studentRefId) return;
+        const currentPoints = Number(row?.totalPoints || 0);
+        const targetRaw = prompt(`Set total points for ${t(row?.fullName)}. Current total: ${currentPoints}`, String(currentPoints));
+        if (targetRaw === null) return;
+        const target = Number.parseInt(String(targetRaw), 10);
+        if (!Number.isFinite(target) || target < 0) throw new Error("Target points must be a non-negative integer.");
+        const reason = prompt("Reason for points edit", `Manual total override to ${target}`) || "Manual total override";
+        await api(`${POINTS_STUDENTS_PATH}/${encodeURIComponent(studentRefId)}/points`, {
+          method: "PUT",
+          body: { targetPoints: target, reason },
+        });
+        setStatus("Student points updated.");
+        await loadStudents();
+        state.selectedStudentRefId = studentRefId;
+        await loadLedger();
+      }
+
+      async function login() {
+        const username = t(document.getElementById("loginUsername")?.value);
+        const password = t(document.getElementById("loginPassword")?.value);
+        if (!username || !password) throw new Error("Username and password are required.");
+        await api(`${ADMIN_AUTH_PREFIX}/login`, {
+          method: "POST",
+          body: { username, password },
+        });
+      }
+
+      async function logout() {
+        await api(`${ADMIN_AUTH_PREFIX}/logout`, { method: "POST" });
+      }
+
+      async function boot() {
+        try {
+          await api(`${ADMIN_AUTH_PREFIX}/me`);
+          setAuthenticatedView(true);
+          setStatus("Admin session active.");
+          await Promise.all([loadChart(), loadStudents()]);
+        } catch (error) {
+          if (error && error.status === 401) {
+            setAuthenticatedView(false);
+            setStatus("Sign in to manage student points.");
+            return;
+          }
+          throw error;
+        }
+      }
+
+      function handleError(error) {
+        setStatus(error?.message || String(error), true);
+      }
+
+      document.getElementById("loginBtn")?.addEventListener("click", async () => {
+        setStatus("Signing in...");
+        try {
+          await login();
+          await boot();
+        } catch (error) {
+          handleError(error);
+        }
+      });
+
+      document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+        try {
+          await logout();
+          setAuthenticatedView(false);
+          setStatus("Logged out.");
+        } catch (error) {
+          handleError(error);
+        }
+      });
+
+      document.getElementById("refreshChartBtn")?.addEventListener("click", () => {
+        loadChart().catch(handleError);
+      });
+
+      ["studentSearch", "studentLevel", "sortField", "sortDir"].forEach((id) => {
+        document.getElementById(id)?.addEventListener("change", () => {
+          loadStudents().catch(handleError);
+        });
+      });
+
+      document.querySelectorAll("[data-sort]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const sortFieldEl = document.getElementById("sortField");
+          const sortDirEl = document.getElementById("sortDir");
+          const target = t(button.getAttribute("data-sort"));
+          const previous = t(sortFieldEl?.value);
+          if (sortFieldEl) sortFieldEl.value = target;
+          if (sortDirEl && previous === target) sortDirEl.value = t(sortDirEl.value) === "asc" ? "desc" : "asc";
+          loadStudents().catch(handleError);
+        });
+      });
+
+      boot().catch(handleError);
+    })();
+  </script>
+</body>
+</html>

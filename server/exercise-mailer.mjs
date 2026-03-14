@@ -95,6 +95,8 @@ const DEFAULT_INTAKE_PATH =
 const DEFAULT_HOST = process.env.EXERCISE_MAILER_HOST || "0.0.0.0"
 const DOCS_URL_PREFIX = "/docs"
 const DOCS_PUBLIC_ROOT = path.resolve(process.cwd(), "docs")
+const WEB_ASSET_URL_PREFIX = "/web-asset"
+const WEB_ASSET_PUBLIC_ROOT = path.resolve(process.cwd(), "web-asset")
 const STATIC_MIME_TYPES = Object.freeze({
   ".css": "text/css; charset=utf-8",
   ".dsl": "text/plain; charset=utf-8",
@@ -242,11 +244,11 @@ function resolveStaticContentType(filePath) {
   return STATIC_MIME_TYPES[ext] || "application/octet-stream"
 }
 
-function resolveDocsFilePath(pathname) {
+function resolveScopedStaticFilePath(pathname, urlPrefix, publicRoot) {
   const normalizedPathname = normalizeString(pathname)
-  if (!normalizedPathname.startsWith(DOCS_URL_PREFIX)) return ""
+  if (!normalizedPathname.startsWith(urlPrefix)) return ""
 
-  let relativePath = normalizedPathname.slice(DOCS_URL_PREFIX.length)
+  let relativePath = normalizedPathname.slice(urlPrefix.length)
   if (relativePath.startsWith("/")) relativePath = relativePath.slice(1)
 
   let decodedPath = ""
@@ -257,9 +259,17 @@ function resolveDocsFilePath(pathname) {
     return ""
   }
 
-  const targetPath = path.resolve(DOCS_PUBLIC_ROOT, decodedPath)
-  if (!isPathWithinRoot(targetPath, DOCS_PUBLIC_ROOT)) return ""
+  const targetPath = path.resolve(publicRoot, decodedPath)
+  if (!isPathWithinRoot(targetPath, publicRoot)) return ""
   return targetPath
+}
+
+function resolveDocsFilePath(pathname) {
+  return resolveScopedStaticFilePath(pathname, DOCS_URL_PREFIX, DOCS_PUBLIC_ROOT)
+}
+
+function resolveWebAssetFilePath(pathname) {
+  return resolveScopedStaticFilePath(pathname, WEB_ASSET_URL_PREFIX, WEB_ASSET_PUBLIC_ROOT)
 }
 
 function trySendStaticFile(request, response, filePath) {
@@ -326,6 +336,27 @@ function handleDocsStaticRequest(request, response, pathname) {
   if (!filePath) {
     response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" })
     response.end("Invalid docs path")
+    return true
+  }
+
+  if (trySendStaticFile(request, response, filePath)) return true
+
+  response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" })
+  response.end("Not Found")
+  return true
+}
+
+function handleWebAssetStaticRequest(request, response, pathname) {
+  const method = normalizeString(request.method).toUpperCase()
+  if (method !== "GET" && method !== "HEAD") return false
+
+  const normalizedPathname = normalizeString(pathname)
+  if (!normalizedPathname.startsWith(`${WEB_ASSET_URL_PREFIX}/`)) return false
+
+  const filePath = resolveWebAssetFilePath(normalizedPathname)
+  if (!filePath) {
+    response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" })
+    response.end("Invalid web asset path")
     return true
   }
 
@@ -927,6 +958,32 @@ function allowCors(request, response) {
     SMTP Transport
    ========================= */
 
+function resolveSmtpAuthMode(value) {
+  const mode = normalizeEnvText(value).toLowerCase()
+  if (!mode) return ""
+  if (
+    mode === "none" ||
+    mode === "off" ||
+    mode === "disabled" ||
+    mode === "false" ||
+    mode === "no" ||
+    mode === "relay"
+  ) {
+    return "none"
+  }
+  if (
+    mode === "auth" ||
+    mode === "on" ||
+    mode === "enabled" ||
+    mode === "true" ||
+    mode === "yes" ||
+    mode === "login"
+  ) {
+    return "auth"
+  }
+  return ""
+}
+
 function createTransport() {
   if (!nodemailer) {
     throw new Error(
@@ -936,12 +993,17 @@ function createTransport() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com"
   const port = Number(process.env.SMTP_PORT || 465)
   const secure = resolveBoolean(process.env.SMTP_SECURE, port === 465)
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
+  const user = normalizeEnvText(process.env.SMTP_USER)
+  const pass = normalizeEnvText(process.env.SMTP_PASS)
+  const configuredAuthMode = resolveSmtpAuthMode(process.env.SMTP_AUTH_MODE || process.env.SMTP_AUTH)
+  const useAuth = configuredAuthMode
+    ? configuredAuthMode === "auth"
+    : Boolean(user || pass)
 
-  // Fail fast: creds must exist for Gmail/App Password flow
-  if (!user || !pass) {
-    console.error("❌ Missing SMTP credentials. Set SMTP_USER and SMTP_PASS in environment.")
+  if (useAuth && (!user || !pass)) {
+    console.error(
+      "❌ Missing SMTP credentials. Set SMTP_USER and SMTP_PASS, or disable auth with SMTP_AUTH_MODE=none."
+    )
     process.exit(1)
   }
 
@@ -952,17 +1014,22 @@ function createTransport() {
       secure,
       user,
       passLen: pass ? pass.length : 0,
+      authMode: configuredAuthMode || (useAuth ? "auth" : "none"),
     })
   }
 
-  const transporter = nodemailer.createTransport({
+  const transportOptions = {
     host,
     port,
     secure,
-    auth: { user, pass },
     logger: MAILER_DEBUG,
     debug: MAILER_DEBUG,
-  })
+  }
+  if (useAuth) {
+    transportOptions.auth = { user, pass }
+  }
+
+  const transporter = nodemailer.createTransport(transportOptions)
 
   // Verify once at startup (non-fatal if it fails; server can still start)
   transporter
@@ -989,6 +1056,9 @@ function createTransport() {
 async function handleRequest(request, response, transporter) {
   const { method } = request
   const url = new URL(request.url || "", `http://${request.headers.host || "localhost"}`)
+
+  const webAssetHandled = handleWebAssetStaticRequest(request, response, url.pathname)
+  if (webAssetHandled) return
 
   const adminHandled = await handleStudentAdminRequest(request, response)
   if (adminHandled) return

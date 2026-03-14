@@ -20,7 +20,10 @@ model Student {
   attendanceRecords StudentAttendance[]
   gradeRecords      StudentGradeRecord[]
   parentReports     ParentClassReport[]
+  pointsAdjustments StudentPointsAdjustment[]
+  newsReports       StudentNewsReport[]
   parentPortalLinks ParentPortalStudentLink[]
+  studentPortalAccount StudentPortalAccount?
   parentProfileSubmissions ParentProfileSubmissionQueue[]
   parentProfileFieldLocks ParentProfileFieldLock[]
   createdAt         DateTime            @default(now())
@@ -286,6 +289,9 @@ model ParentClassReport {
   behaviorScore          Float?
   participationScore     Float?
   inClassScore           Float?
+  participationPointsAward Int?
+  approvedAt             DateTime?
+  approvedByUsername     String?
   comments               String?
   generatedAt            DateTime      @default(now())
   createdAt              DateTime      @default(now())
@@ -293,6 +299,45 @@ model ParentClassReport {
 
   @@unique([studentRefId, className, schoolYear, quarter])
   @@index([level, schoolYear, quarter])
+  @@index([approvedAt])
+}
+
+model StudentPointsAdjustment {
+  id               String   @id @default(cuid())
+  studentRefId     String
+  student          Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  pointsDelta      Int
+  reason           String?
+  adjustedByUsername String?
+  appliedAt        DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([studentRefId, appliedAt])
+}
+
+model StudentNewsReport {
+  id            String   @id @default(cuid())
+  studentRefId  String
+  student       Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reportDate    DateTime
+  sourceLink    String
+  articleTitle  String
+  byline        String?
+  articleDateline String?
+  leadSynopsis  String
+  actionActor   String
+  actionAffected String
+  actionWhere   String
+  actionWhat    String
+  actionWhy     String
+  biasAssessment String?
+  submittedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([studentRefId, reportDate])
+  @@index([reportDate, submittedAt])
 }
 
 model AdminUser {
@@ -395,4 +440,19 @@ model ParentProfileFieldLock {
 
   @@unique([studentRefId, fieldKey])
   @@index([studentRefId, locked])
+}
+
+model StudentPortalAccount {
+  id               String   @id @default(cuid())
+  eaglesId         String   @unique
+  passwordHash     String
+  status           String   @default("active")
+  studentRefId     String?  @unique
+  student          Student? @relation(fields: [studentRefId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  lastLoginAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+  @@index([studentRefId])
 }

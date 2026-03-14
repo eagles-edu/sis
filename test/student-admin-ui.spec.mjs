@@ -2764,6 +2764,19 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.ok(hwCompletion > 0)
   })
 
+  await waitFor(() => {
+    ;["internationalNews", "readingEnglishEnjoyment", "vocabularyLookup"].forEach((fieldSuffix) => {
+      const scoreField = document.querySelector(`select[name="pt_skill_${fieldSuffix}"]`)
+      const recommendationField = document.querySelector(`textarea[name="pt_rec_${fieldSuffix}"]`)
+      assert.ok(scoreField)
+      assert.ok(recommendationField)
+      assert.equal(scoreField.disabled, true)
+      assert.equal(recommendationField.disabled, true)
+      assert.equal(scoreField.closest("tr")?.classList.contains("progress-report-rubric-row-disabled"), true)
+    })
+    assert.equal(document.querySelector('select[name="pt_skill_noteTaking"]')?.disabled, false)
+  })
+
   document.getElementById("pt_studentRefId").value = "stu-02"
   document.getElementById("pt_studentRefId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {

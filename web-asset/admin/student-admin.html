@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
-<!-- cspell:ignore KET TAYK eggchic YTD Ytd IELTS ielts healthz blinkmacsystemfont blkquot openxmlformats officedocument spreadsheetml -->
+<!-- cspell:ignore KET TAYK eggchic YTD Ytd IELTS ielts healthz blinkmacsystemfont blkquot  openxmlformats officedocument spreadsheetml -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Eagles Club Student Info System </title>
-  <link href="web-asset/admin/favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon">
+  <link href="./favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
 
   <style>
     :root {
@@ -2061,6 +2061,19 @@
       min-height: 48px;
       resize: vertical;
     }
+    .progress-report-rubric-row-disabled td {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .progress-report-rubric-row-disabled .score-cell select:disabled,
+    .progress-report-rubric-row-disabled .score-cell input:disabled,
+    .progress-report-rubric-row-disabled .recommendation-cell textarea:disabled {
+      box-sizing: border-box;
+      background: #e5e7eb;
+      color: #6b7280;
+      cursor: not-allowed;
+      opacity: 1;
+    }
     .progress-shorthand-row {
       align-items: end;
     }
@@ -3112,6 +3125,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           <div class="col-3"><label>Homework Timeliness %</label><input id="pt_homeworkOnTimeRate" type="number" step="0.01" readonly aria-readonly="true"></div>
                           <div class="col-3"><label>Assignment Completion %</label><input id="pt_homeworkCompletionRate" type="number" step="0.01" readonly aria-readonly="true"></div>
                         </div>
+                        <div class="row">
+                          <div class="col-3"><label>Participation Points (0-32)</label><input id="pt_participationPointsAward" type="number" min="0" max="32" step="1" placeholder="0"></div>
+                        </div>
                         <p class="small">
                           Behavior = mean of Behavior scores; Skills = mean of Skills scores; Academic = mean of exercise/quiz/exam scores (current quarter); Homework Timeliness % = on-time/tracked assignments (current quarter); Assignment Completion % = completed/tracked assignments (current quarter).
                         </p>
@@ -3158,9 +3174,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                               </tr>
                             </thead>
                             <tbody>
-                              <tr><td>Leverages computer/phone daily to read international news (for Flyers and above only).</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_internationalNews" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_internationalNews" placeholder="Action note"></textarea></td></tr>
-                              <tr><td>Leverages computer/phone to read for enjoyment in English.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_readingEnglishEnjoyment" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_readingEnglishEnjoyment" placeholder="Action note"></textarea></td></tr>
-                              <tr><td>Leverages computer/phone to look up, translate, and hear new vocabulary.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_vocabularyLookup" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_vocabularyLookup" placeholder="Action note"></textarea></td></tr>
+                              <tr data-pt-min-level="A2 Flyers"><td>Leverages computer/phone daily to read international news (for Flyers and above only).</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_internationalNews" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_internationalNews" placeholder="Action note"></textarea></td></tr>
+                              <tr data-pt-min-level="A2 Flyers"><td>Leverages computer/phone to read for enjoyment in English (for Flyers and above only).</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_readingEnglishEnjoyment" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_readingEnglishEnjoyment" placeholder="Action note"></textarea></td></tr>
+                              <tr data-pt-min-level="A2 Flyers"><td>Leverages computer/phone to look up, translate, and hear new vocabulary (for Flyers and above only).</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_vocabularyLookup" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_vocabularyLookup" placeholder="Action note"></textarea></td></tr>
                               <tr><td>Writes notes independently.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_noteTaking" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_noteTaking" placeholder="Action note"></textarea></td></tr>
                               <tr><td>Asks questions in real-time whenever needed.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_questions" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_questions" placeholder="Action note"></textarea></td></tr>
                               <tr><td>Consistently studies class notes outside of class.</td><td class="score-cell"><input type="number" min="0" max="10" step="1" name="pt_skill_studyOutsideClass" placeholder="x/10"></td><td class="recommendation-cell"><textarea name="pt_rec_studyOutsideClass" placeholder="Action note"></textarea></td></tr>
@@ -3496,7 +3512,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="col-2"><label>Behavior</label><input id="r_behaviorScore" type="number" step="0.01"></div>
                   <div class="col-2"><label>Participation</label><input id="r_participationScore" type="number" step="0.01"></div>
                   <div class="col-2"><label>In Class</label><input id="r_inClassScore" type="number" step="0.01"></div>
-                  <div class="col-6"><label>Comments</label><input id="r_comments" type="text"></div>
+                  <div class="col-2"><label>Participation Points (0-32)</label><input id="r_participationPointsAward" type="number" min="0" max="32" step="1"></div>
+                  <div class="col-4"><label>Comments</label><input id="r_comments" type="text"></div>
                 </div>
                 <div class="actions actions-3">
                   <button id="reportGenerateBtn" type="button" class="btn-refresh">Generate from Grade Records</button>
@@ -4363,7 +4380,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function nowClockStamp() {
-      return new Date().toLocaleTimeString()
+      return new Intl.DateTimeFormat(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: FIXED_TIME_ZONE,
+      }).format(new Date())
     }
 
     function monotonicNowMs() {
@@ -4967,8 +4990,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const date = value instanceof Date ? new Date(value.getTime()) : new Date(value)
       const fallback = new Date()
       const source = Number.isNaN(date.valueOf()) ? fallback : date
-      const month = source.getMonth() + 1
-      const startYear = month >= 8 ? source.getFullYear() : source.getFullYear() - 1
+      const shifted = new Date(source.getTime() + (7 * 60 * 60 * 1000))
+      const month = shifted.getUTCMonth() + 1
+      const startYear = month >= 8 ? shifted.getUTCFullYear() : shifted.getUTCFullYear() - 1
       return {
         startDate: `${String(startYear).padStart(4, "0")}-08-01`,
         endDate: `${String(startYear + 1).padStart(4, "0")}-05-31`,
@@ -5020,6 +5044,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const ASSIGNMENT_TEMPLATE_STORAGE_KEY = "sis.admin.assignmentTemplates"
     const PARENT_TRACKING_TEACHER_STORAGE_KEY = "sis.admin.parentTracking.teacherNames"
     const PARENT_TRACKING_SUMMARY_STORAGE_KEY = "sis.admin.parentTracking.lessonSummaryByLevelDate"
+    const PARENT_TRACKING_DIGITAL_SKILL_MIN_LEVEL = "A2 Flyers"
     const DESKTOP_MENU_COLLAPSED_STORAGE_KEY = "sis.admin.menuCollapsed.desktop"
     const TABLE_ARCHIVE_STORAGE_KEY = "sis.admin.tableArchiveIndex.v1"
     const STUDENT_ID_SEARCH_STORAGE_KEY = "sis.admin.eaglesIdSearchHistory.v1"
@@ -5174,13 +5199,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       reports: "reportDataSummary",
     }
     const SEARCH_INPUT_DEBOUNCE_MS = 240
+    const FIXED_TIME_ZONE = "Asia/Ho_Chi_Minh"
+    const FIXED_TIME_ZONE_OFFSET_MS = 7 * 60 * 60 * 1000
+
+    function shiftToFixedTimeZone(value) {
+      return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
+    }
+
+    function shiftFromFixedTimeZone(value) {
+      return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
+    }
 
     function localIsoDate(value = new Date()) {
       const date = value instanceof Date ? new Date(value.getTime()) : new Date(value)
       if (Number.isNaN(date.valueOf())) return ""
-      const year = String(date.getFullYear()).padStart(4, "0")
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const day = String(date.getDate()).padStart(2, "0")
+      const shifted = shiftToFixedTimeZone(date)
+      const year = String(shifted.getUTCFullYear()).padStart(4, "0")
+      const month = String(shifted.getUTCMonth() + 1).padStart(2, "0")
+      const day = String(shifted.getUTCDate()).padStart(2, "0")
       return `${year}-${month}-${day}`
     }
 
@@ -5192,21 +5228,22 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const month = Number.parseInt(match[2], 10)
       const day = Number.parseInt(match[3], 10)
       if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null
-      const parsed = new Date(year, month - 1, day)
+      const parsed = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) - FIXED_TIME_ZONE_OFFSET_MS)
       if (Number.isNaN(parsed.valueOf())) return null
-      if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) return null
+      if (localIsoDate(parsed) !== text) return null
       return parsed
     }
 
     function nextSundayIsoDate(value = "") {
       const source = parseIsoDateLocal(value) || new Date()
       if (Number.isNaN(source.valueOf())) return ""
-      const date = new Date(source.getFullYear(), source.getMonth(), source.getDate())
-      const weekday = date.getDay()
+      const date = shiftToFixedTimeZone(source)
+      date.setUTCHours(0, 0, 0, 0)
+      const weekday = date.getUTCDay()
       let offset = (7 - weekday) % 7
       if (offset === 0) offset = 7
-      date.setDate(date.getDate() + offset)
-      return localIsoDate(date)
+      date.setUTCDate(date.getUTCDate() + offset)
+      return localIsoDate(shiftFromFixedTimeZone(date))
     }
 
     function createLocalId(prefix = "id") {
@@ -7002,7 +7039,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
   </head>
   <body>
     <h1>${escapeHtml(tableLabelForKey(tableKey))} Data</h1>
-    <p>Printed: ${escapeHtml(new Date().toLocaleString())}</p>
+    <p>Printed: ${escapeHtml(formatDateTime(new Date()))}</p>
     ${filterSummary ? `<p>Filters: ${escapeHtml(filterSummary)}</p>` : ""}
     <table>
       <thead><tr>${headerHtml}</tr></thead>
@@ -7545,9 +7582,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function isoDateOffset(value = "", days = 0) {
       const parsed = parseIsoDateLocal(value)
       if (!parsed) return ""
-      const date = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate())
-      date.setDate(date.getDate() + (Number.isFinite(days) ? Math.trunc(days) : 0))
-      return localIsoDate(date)
+      const date = shiftToFixedTimeZone(parsed)
+      date.setUTCHours(0, 0, 0, 0)
+      date.setUTCDate(date.getUTCDate() + (Number.isFinite(days) ? Math.trunc(days) : 0))
+      return localIsoDate(shiftFromFixedTimeZone(date))
     }
 
     function isoDateDiffDays(startIso = "", endIso = "") {
@@ -7555,15 +7593,25 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const end = parseIsoDateLocal(endIso)
       if (!start || !end) return 0
       const millisPerDay = 24 * 60 * 60 * 1000
-      const utcStart = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())
-      const utcEnd = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate())
+      const shiftedStart = shiftToFixedTimeZone(start)
+      const shiftedEnd = shiftToFixedTimeZone(end)
+      const utcStart = Date.UTC(
+        shiftedStart.getUTCFullYear(),
+        shiftedStart.getUTCMonth(),
+        shiftedStart.getUTCDate()
+      )
+      const utcEnd = Date.UTC(
+        shiftedEnd.getUTCFullYear(),
+        shiftedEnd.getUTCMonth(),
+        shiftedEnd.getUTCDate()
+      )
       return Math.round((utcEnd - utcStart) / millisPerDay)
     }
 
     function isWeekendIsoDate(value = "") {
       const parsed = parseIsoDateLocal(value)
       if (!parsed) return false
-      const weekday = parsed.getDay()
+      const weekday = shiftToFixedTimeZone(parsed).getUTCDay()
       return weekday === 0 || weekday === 6
     }
 
@@ -7571,8 +7619,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const start = parseIsoDateLocal(startDate)
       const end = parseIsoDateLocal(endDate)
       if (!start || !end) return ""
-      const startYear = start.getFullYear()
-      const endYear = end.getFullYear()
+      const shiftedStart = shiftToFixedTimeZone(start)
+      const shiftedEnd = shiftToFixedTimeZone(end)
+      const startYear = shiftedStart.getUTCFullYear()
+      const endYear = shiftedEnd.getUTCFullYear()
       if (startYear === endYear) return String(startYear)
       return `${startYear}-${endYear}`
     }
@@ -7835,7 +7885,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const ATTENDANCE_STATUS_CHOICES = ["absent", "present", "tardy10", "tardy30"]
 
     function attendanceTodayIsoDate() {
-      return new Date().toISOString().slice(0, 10)
+      return localIsoDate(new Date())
     }
 
     function defaultAttendanceSchoolYear(value = new Date()) {
@@ -7852,8 +7902,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       const date = value instanceof Date ? value : parseIsoDateLocal(isoDate) || new Date(value)
       if (!date || Number.isNaN(date.valueOf())) return setup.schoolYear
-      const year = date.getFullYear()
-      const month = date.getMonth() + 1
+      const shifted = shiftToFixedTimeZone(date)
+      const year = shifted.getUTCFullYear()
+      const month = shifted.getUTCMonth() + 1
       if (month >= 8) return `${year}-${year + 1}`
       return `${year - 1}-${year}`
     }
@@ -8267,7 +8318,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         teacher: {
           role: "teacher",
           canRead: true,
-          canWrite: false,
+          canWrite: true,
           canManageUsers: false,
           canManagePermissions: false,
           startPage: "overview",
@@ -8369,6 +8420,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       normalized.admin.allowedPages = uniquePageList(normalized.admin.allowedPages, defaults.admin.allowedPages)
       if (!normalized.admin.allowedPages.includes(normalized.admin.startPage)) {
         normalized.admin.startPage = normalized.admin.allowedPages[0] || DEFAULT_ADMIN_PAGE_SLUG
+      }
+      if (normalized.teacher) {
+        normalized.teacher.canRead = true
+        normalized.teacher.canWrite = true
       }
 
       return normalized
@@ -8797,7 +8852,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (!text) return ""
       const parsed = new Date(text)
       if (Number.isNaN(parsed.valueOf())) return text
-      return parsed.toLocaleString()
+      return new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: FIXED_TIME_ZONE,
+      }).format(parsed)
     }
 
     function selectedStudentId() {
@@ -9786,12 +9850,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     function startOfWeekMonday(value = new Date()) {
-      const date = new Date(value)
-      date.setHours(0, 0, 0, 0)
-      const day = date.getDay()
+      const source = value instanceof Date ? new Date(value.getTime()) : new Date(value)
+      if (Number.isNaN(source.valueOf())) return new Date(Number.NaN)
+      const shifted = shiftToFixedTimeZone(source)
+      shifted.setUTCHours(0, 0, 0, 0)
+      const day = shifted.getUTCDay()
       const diffToMonday = (day + 6) % 7
-      date.setDate(date.getDate() - diffToMonday)
-      return date
+      shifted.setUTCDate(shifted.getUTCDate() - diffToMonday)
+      shifted.setUTCHours(0, 0, 0, 0)
+      return shiftFromFixedTimeZone(shifted)
     }
 
     function buildDefaultWeeklyAssignmentCompletion(value = new Date()) {
@@ -9799,11 +9866,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
       return dayLabels.map((day, index) => {
         const dayDate = new Date(weekStart)
-        dayDate.setDate(dayDate.getDate() + index)
+        const shifted = shiftToFixedTimeZone(dayDate)
+        shifted.setUTCDate(shifted.getUTCDate() + index)
+        const normalizedDay = shiftFromFixedTimeZone(shifted)
         return {
           index,
           day,
-          date: dayDate.toISOString().slice(0, 10),
+          date: localIsoDate(normalizedDay),
           studentsWithAssignments: 0,
           studentsCompletedAll: 0,
           weeklyAssignedStudents: 0,
@@ -9821,8 +9890,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const dayIndexByName = new Map(
         ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label, index) => [normalizeLower(label), index])
       )
-      const weekStart = new Date(normalized[0].date)
-      weekStart.setHours(0, 0, 0, 0)
+      const weekStart = parseIsoDateLocal(normalized[0].date) || startOfWeekMonday(new Date())
       const msPerDay = 24 * 60 * 60 * 1000
 
       source.forEach((row) => {
@@ -9832,9 +9900,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
         // Week boundary is authoritative: only current Monday-Sunday rows are accepted.
         if (dateText) {
-          const parsed = new Date(dateText)
-          if (!Number.isNaN(parsed.valueOf())) {
-            parsed.setHours(0, 0, 0, 0)
+          const parsed = parseIsoDateLocal(dateText)
+          if (parsed && !Number.isNaN(parsed.valueOf())) {
             const offset = Math.round((parsed.valueOf() - weekStart.valueOf()) / msPerDay)
             if (offset < 0 || offset > 6) return
             index = offset
@@ -9937,7 +10004,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return {
         generatedAt: new Date().toISOString(),
         today: {
-          date: new Date().toISOString().slice(0, 10),
+          date: localIsoDate(new Date()),
           totalStudents: students.length,
           totalEnrollment,
           attendancePercentOfEnrollment: 0,
@@ -10002,8 +10069,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const xAt = (index) => padLeft + stepX * index
       const yAt = (value) => padTop + chartHeight - (Number(value || 0) / maxValue) * chartHeight
 
-      // Use local weekday index to avoid timezone drift into tomorrow.
-      const todayIndex = (new Date().getDay() + 6) % 7
+      const todayIndex = (shiftToFixedTimeZone(new Date()).getUTCDay() + 6) % 7
       const cappedTodayIndex = Math.max(0, Math.min(rows.length - 1, todayIndex))
       const fallbackCompletionPercent = Math.max(
         0,
@@ -10122,9 +10188,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function currentWeekBounds(value = new Date()) {
       const start = startOfWeekMonday(value)
-      const end = new Date(start.getTime())
-      end.setDate(end.getDate() + 6)
-      end.setHours(23, 59, 59, 999)
+      const shiftedEnd = shiftToFixedTimeZone(start)
+      shiftedEnd.setUTCDate(shiftedEnd.getUTCDate() + 6)
+      shiftedEnd.setUTCHours(23, 59, 59, 999)
+      const end = shiftFromFixedTimeZone(shiftedEnd)
       return { start, end }
     }
 
@@ -10167,8 +10234,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const asOf = asOfDate instanceof Date ? asOfDate : new Date(asOfDate)
       if (!(dueAt instanceof Date) || Number.isNaN(dueAt.valueOf())) return null
       if (Number.isNaN(asOf.valueOf())) return null
-      const dueDay = new Date(dueAt.getFullYear(), dueAt.getMonth(), dueAt.getDate())
-      const asOfDay = new Date(asOf.getFullYear(), asOf.getMonth(), asOf.getDate())
+      const dueDay = shiftToFixedTimeZone(dueAt)
+      dueDay.setUTCHours(0, 0, 0, 0)
+      const asOfDay = shiftToFixedTimeZone(asOf)
+      asOfDay.setUTCHours(0, 0, 0, 0)
       const msPerDay = 24 * 60 * 60 * 1000
       return Math.floor((dueDay.valueOf() - asOfDay.valueOf()) / msPerDay)
     }
@@ -11601,6 +11670,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         behaviorScore: row.behaviorScore,
         participationScore: row.participationScore,
         inClassScore: row.inClassScore,
+        participationPointsAward: row.participationPointsAward,
         homeworkOnTimeRate: row.homeworkOnTimeRate,
         homeworkCompletionRate: row.homeworkCompletionRate,
         comments: normalizeText(row.comments),
@@ -11794,6 +11864,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           `Academic: ${normalizeText(stagedRow.inClassScore) || "-"}`,
           `Homework Timeliness %: ${normalizeText(stagedRow.homeworkOnTimeRate) || "0"}`,
           `Assignment Completion %: ${normalizeText(stagedRow.homeworkCompletionRate) || "0"}`,
+          `Participation Points: ${normalizeText(stagedRow.participationPointsAward) || "0"}`,
         ]
         const messageLines = [
           `Full Name: ${fullName}`,
@@ -11826,6 +11897,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
             className: normalizeText(stagedRow.className),
             schoolYear: normalizeText(stagedRow.schoolYear),
             quarter: normalizeText(stagedRow.quarter),
+            participationPointsAward: normalizeText(stagedRow.participationPointsAward),
           },
         })
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
@@ -12261,6 +12333,53 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       )
     }
 
+    function parentTrackingCurrentRubricLevel(detail = null) {
+      const detailLevel = resolveSystemLevelName(detail?.profile?.currentGrade || detail?.currentGrade || "")
+      if (detailLevel) return detailLevel
+      const selectedLevel = selectedParentTrackingLevel()
+      if (selectedLevel) return selectedLevel
+      return resolveSystemLevelName(document.getElementById("pt_classLevel")?.value || "")
+    }
+
+    function shouldDisableParentTrackingRubricRow(requiredLevelName = "", currentLevelName = "") {
+      const requiredLevel = fullLevelLabel(resolveSystemLevelName(requiredLevelName || ""))
+      const currentLevel = fullLevelLabel(resolveSystemLevelName(currentLevelName || ""))
+      if (!requiredLevel || !currentLevel) return false
+      return compareLevelLabels(currentLevel, requiredLevel) < 0
+    }
+
+    function applyParentTrackingLevelBasedRubricAvailability(detail = null) {
+      const currentLevel = parentTrackingCurrentRubricLevel(detail)
+      let mutatedFields = false
+
+      Array.from(document.querySelectorAll(".progress-report-rubric-table tr[data-pt-min-level]")).forEach((rowEl) => {
+        if (!(rowEl instanceof HTMLTableRowElement)) return
+        const requiredLevel = normalizeText(rowEl.getAttribute("data-pt-min-level")) || PARENT_TRACKING_DIGITAL_SKILL_MIN_LEVEL
+        const disabled = shouldDisableParentTrackingRubricRow(requiredLevel, currentLevel)
+        rowEl.classList.toggle("progress-report-rubric-row-disabled", disabled)
+        rowEl.dataset.ptDisabled = disabled ? "true" : "false"
+
+        Array.from(rowEl.querySelectorAll("select, textarea, input")).forEach((fieldEl) => {
+          if (
+            !(fieldEl instanceof HTMLSelectElement) &&
+            !(fieldEl instanceof HTMLTextAreaElement) &&
+            !(fieldEl instanceof HTMLInputElement)
+          ) {
+            return
+          }
+          if (disabled && normalizeText(fieldEl.value)) {
+            fieldEl.value = ""
+            mutatedFields = true
+          }
+          fieldEl.disabled = disabled
+          if (disabled) fieldEl.setAttribute("title", `${fullLevelLabel(requiredLevel)} and above only.`)
+          else fieldEl.removeAttribute("title")
+        })
+      })
+
+      if (mutatedFields) applyParentTrackingRubricSummaryScores()
+    }
+
     function collectParentTrackingRubricPayload() {
       const skillScores = {}
       const conductScores = {}
@@ -12337,6 +12456,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         })
       }
 
+      applyParentTrackingLevelBasedRubricAvailability()
       applyParentTrackingRubricSummaryScores()
     }
 
@@ -12423,7 +12543,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function dayLabelFromIsoDate(value) {
       const parsed = parseIsoDateLocal(value)
       if (!parsed) return ""
-      return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][parsed.getDay()] || ""
+      const dayIndex = shiftToFixedTimeZone(parsed).getUTCDay()
+      return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][dayIndex] || ""
     }
 
     function quarterFromIsoDate(value) {
@@ -12432,7 +12553,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (setupQuarter?.quarter) return normalizeLower(setupQuarter.quarter)
       const parsed = parseIsoDateLocal(isoDate)
       if (!parsed) return "q1"
-      const month = parsed.getMonth() + 1
+      const month = shiftToFixedTimeZone(parsed).getUTCMonth() + 1
       if (month >= 8 && month <= 10) return "q1"
       if (month >= 11 || month <= 1) return "q2"
       if (month >= 2 && month <= 4) return "q3"
@@ -12696,7 +12817,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           gradeRecordMatchesQuarter(entry, currentQuarter, classDate)
       )
       const asOf = parseIsoDateLocal(classDate) || new Date()
-      const asOfEnd = new Date(asOf.getFullYear(), asOf.getMonth(), asOf.getDate(), 23, 59, 59, 999)
+      const shiftedAsOfEnd = shiftToFixedTimeZone(asOf)
+      shiftedAsOfEnd.setUTCHours(23, 59, 59, 999)
+      const asOfEnd = shiftFromFixedTimeZone(shiftedAsOfEnd)
       const trackedHomeworkRecords = records.filter((entry) => isTrackedHomeworkRecord(entry))
 
       const completedCount = trackedHomeworkRecords.filter((entry) => isGradeRecordCompleted(entry)).length
@@ -12740,6 +12863,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       parentTrackingFieldSetValue("pt_academicScore", "")
       parentTrackingFieldSetValue("pt_homeworkOnTimeRate", "")
       parentTrackingFieldSetValue("pt_homeworkCompletionRate", "")
+      parentTrackingFieldSetValue("pt_participationPointsAward", "")
       parentTrackingFieldSetValue("pt_recipients", "")
       parentTrackingFieldSetValue("pt_homeworkAnnouncement", "")
       const rowsEl = document.getElementById("pt_outstandingRows")
@@ -12973,6 +13097,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (classLevelEl) classLevelEl.value = selectedLevel ? fullLevelLabel(selectedLevel) : ""
       renderParentTrackingTeacherOptions()
       applyParentTrackingLessonSummaryFromMemory({ force: forceSummaryFromMemory })
+      applyParentTrackingLevelBasedRubricAvailability()
     }
 
     function levelMatchesParentReport(record, selectedLevel) {
@@ -13046,6 +13171,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
             parentTrackingFieldSetValue("pt_classDate", generatedDate)
             parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(generatedDate))
           }
+          parentTrackingFieldSetValue("pt_participationPointsAward", row.participationPointsAward ?? "")
           parentTrackingFieldSetValue("pt_comments", row.comments || "")
           applyParentTrackingRubricPayload(row.rubricPayload || null)
           resetParentTrackingManualMetricsTouched()
@@ -13110,6 +13236,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         clearParentTrackingRubricInputs()
         clearParentTrackingComputedFields()
         renderParentTrackingReportRows([])
+        applyParentTrackingLevelBasedRubricAvailability()
         setParentTrackingStatus("Select a student to auto-fill report metrics.")
         return null
       }
@@ -13120,6 +13247,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         clearParentTrackingRubricInputs()
         clearParentTrackingComputedFields()
         renderParentTrackingReportRows([])
+        applyParentTrackingLevelBasedRubricAvailability()
         setParentTrackingStatus("Unable to load selected student details.", true)
         return null
       }
@@ -13132,6 +13260,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         renderParentTrackingLevelTiles()
       }
 
+      applyParentTrackingLevelBasedRubricAvailability(detail)
       const metrics = parentTrackingMetricsForStudent(detail, selectedLevel, classDate)
       renderParentTrackingMetrics(metrics)
       const recipients = parentTrackingRecipientsForStudent(detail)
@@ -13237,6 +13366,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         reportId: normalizeText(document.getElementById("pt_reportId")?.value),
         homeworkCompletionRate: normalizeText(document.getElementById("pt_homeworkCompletionRate")?.value),
         homeworkOnTimeRate: normalizeText(document.getElementById("pt_homeworkOnTimeRate")?.value),
+        participationPointsAward: normalizeText(document.getElementById("pt_participationPointsAward")?.value),
         comment: normalizeText(document.getElementById("pt_comments")?.value),
       }
       const context = await resolveParentTrackingContext({ includeStudentRefresh: false })
@@ -13249,6 +13379,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         inClassScore: normalizeParentTrackingScoreValue(context.metrics?.academicScore),
         homeworkCompletionRate: normalizeText(context.metrics?.homeworkCompletionRate ?? rawForm.homeworkCompletionRate),
         homeworkOnTimeRate: normalizeText(context.metrics?.homeworkOnTimeRate ?? rawForm.homeworkOnTimeRate),
+        participationPointsAward: rawForm.participationPointsAward,
         comment: rawForm.comment || parentTrackingCommentFallbackFromRecommendations(),
         rubricPayload,
       }
@@ -13265,6 +13396,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           behaviorScore: savedForm.behaviorScore,
           participationScore: savedForm.participationScore,
           inClassScore: savedForm.inClassScore,
+          participationPointsAward: savedForm.participationPointsAward,
           comments: savedForm.comment,
           rubricPayload: savedForm.rubricPayload,
           level: context.selectedLevel,
@@ -13325,6 +13457,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         `Academic: ${normalizeText(context.savedForm?.inClassScore) || "-"}`,
         `Homework Timeliness %: ${normalizeText(context.savedForm?.homeworkOnTimeRate) || "0"}`,
         `Assignment Completion %: ${normalizeText(context.savedForm?.homeworkCompletionRate) || "0"}`,
+        `Participation Points: ${normalizeText(context.savedForm?.participationPointsAward) || "0"}`,
       ]
 
       const message = [
@@ -13363,6 +13496,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           className: normalizeText(context.className),
           schoolYear: normalizeText(context.schoolYear),
           quarter: normalizeText(context.quarter),
+          participationPointsAward: normalizeText(context.savedForm?.participationPointsAward),
         },
       })
 
@@ -13403,12 +13537,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(localIsoDate()))
       parentTrackingFieldSetValue("pt_lessonSummary", "")
       parentTrackingFieldSetValue("pt_comments", "")
+      parentTrackingFieldSetValue("pt_participationPointsAward", "")
       state.parentTracking.activeRecommendationFieldName = ""
       clearParentTrackingActionShortcutInputs({ preserveStatus: true })
       setParentTrackingActionHelperStatus("")
       clearParentTrackingRubricInputs()
       clearParentTrackingComputedFields()
       applyParentTrackingLessonSummaryFromMemory({ force: true })
+      applyParentTrackingLevelBasedRubricAvailability()
       setParentTrackingStatus("Performance tracking form cleared.")
       setParentTrackingSaveNotice("")
     }
@@ -15694,6 +15830,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         behaviorScore: normalizeText(document.getElementById("r_behaviorScore").value),
         participationScore: normalizeText(document.getElementById("r_participationScore").value),
         inClassScore: normalizeText(document.getElementById("r_inClassScore").value),
+        participationPointsAward: normalizeText(document.getElementById("r_participationPointsAward").value),
         comments: normalizeText(document.getElementById("r_comments").value),
         level: resolveSystemLevelName(getFormValue("currentGrade")),
       }
@@ -15709,6 +15846,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       document.getElementById("r_behaviorScore").value = ""
       document.getElementById("r_participationScore").value = ""
       document.getElementById("r_inClassScore").value = ""
+      document.getElementById("r_participationPointsAward").value = ""
       document.getElementById("r_comments").value = ""
     }
 
@@ -15850,6 +15988,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           document.getElementById("r_behaviorScore").value = row.behaviorScore ?? ""
           document.getElementById("r_participationScore").value = row.participationScore ?? ""
           document.getElementById("r_inClassScore").value = row.inClassScore ?? ""
+          document.getElementById("r_participationPointsAward").value = row.participationPointsAward ?? ""
           document.getElementById("r_comments").value = row.comments || ""
         })
         tr.querySelector(`[data-archive="${row.id}"]`).addEventListener("click", () => {

@@ -16,6 +16,9 @@ import {
   setIncomingExerciseResultStatus,
 } from "./exercise-store.mjs"
 import {
+  approveParentClassReport,
+  createStudentPointsAdjustment,
+  decodeParentReportCommentBundle,
   deleteAttendanceRecord,
   deleteGradeRecord,
   deleteParentClassReport,
@@ -24,16 +27,22 @@ import {
   generateParentClassReportFromGrades,
   getAdminDashboardSummary,
   getNextStudentNumber,
+  getSchoolPointsYtdSummary,
   getStudentAdminFilterCacheStatus,
   getStudentById,
   importStudentsFromRows,
   isStudentAdminStoreEnabled,
+  listStudentNewsCalendar,
+  listStudentPointsLedger,
+  listStudentPointsSnapshots,
   listExerciseTitles,
   listLevelAndSchoolFilters,
   listStudents,
   saveAttendanceRecord,
   saveGradeRecord,
   saveParentClassReport,
+  saveStudentNewsReport,
+  setStudentPointsTotal,
   saveStudent,
 } from "./student-admin-store.mjs"
 import {
@@ -52,7 +61,12 @@ import { createStudentAdminSessionStore } from "./student-admin-session-store.mj
 import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin/students")
+const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
+  process.env.STUDENT_POINTS_PAGE_PATH,
+  "/admin/students/points-management"
+)
 const PARENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_PARENT_PORTAL_PAGE_PATH, "/parent/portal")
+const STUDENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_STUDENT_PORTAL_PAGE_PATH, "/student/portal")
 const ADMIN_PAGE_DEFAULT_SLUG = "overview"
 const ADMIN_PAGE_SECTIONS = [
   "overview",
@@ -92,12 +106,21 @@ const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-resul
 const ADMIN_PROFILE_SUBMISSIONS_PATH = `${ADMIN_API_PREFIX}/profile-submissions`
 const ADMIN_RUNTIME_HEALTH_PATH = `${ADMIN_API_PREFIX}/runtime/health`
 const ADMIN_SERVICE_CONTROL_PATH = `${ADMIN_API_PREFIX}/runtime/service-control`
+const ADMIN_POINTS_SUMMARY_PATH = `${ADMIN_API_PREFIX}/points/summary`
+const ADMIN_POINTS_STUDENTS_PATH = `${ADMIN_API_PREFIX}/points/students`
+const ADMIN_POINTS_LEDGER_PATH = `${ADMIN_API_PREFIX}/points/ledger`
+const ADMIN_POINTS_ADJUSTMENTS_PATH = `${ADMIN_API_PREFIX}/points/adjustments`
 const ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH =
   `${ADMIN_API_PREFIX}/assignment-announcements/volatile`
 const PARENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_PARENT_API_PREFIX, "/api/parent")
 const PARENT_AUTH_PREFIX = `${PARENT_API_PREFIX}/auth`
 const PARENT_CHILDREN_PATH = `${PARENT_API_PREFIX}/children`
 const PARENT_DASHBOARD_PATH = `${PARENT_API_PREFIX}/dashboard`
+const STUDENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_STUDENT_API_PREFIX, "/api/student")
+const STUDENT_AUTH_PREFIX = `${STUDENT_API_PREFIX}/auth`
+const STUDENT_DASHBOARD_PATH = `${STUDENT_API_PREFIX}/dashboard`
+const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
+const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
   process.env.STUDENT_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
   "/assignment-announcements/volatile"
@@ -124,7 +147,9 @@ const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
 )
 const ADMIN_PROFILE_SUBMISSION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PROFILE_SUBMISSIONS_PATH)}/([^/]+)$`)
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
+const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
+const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
 const ADMIN_UI_SETTINGS_FILE_PATH = path.resolve(
   process.cwd(),
@@ -138,6 +163,7 @@ const ADMIN_PAGE_SECTION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PAGE_PATH)}/
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE = new RegExp(
   `^${escapeRegex(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)}/([a-f0-9]{24})$`
 )
+const ADMIN_POINTS_STUDENT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_POINTS_STUDENTS_PATH)}/([^/]+)/points$`)
 const PARENT_CHILD_PROFILE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile$`)
 const PARENT_CHILD_PROFILE_DRAFT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-draft$`)
 const PARENT_CHILD_PROFILE_SUBMIT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-submit$`)
@@ -168,6 +194,20 @@ const PARENT_SESSION_COOKIE_SECURE = resolveBoolean(
   process.env.STUDENT_PARENT_SESSION_COOKIE_SECURE,
   resolveBoolean(process.env.STUDENT_ADMIN_SESSION_COOKIE_SECURE, normalizeText(process.env.NODE_ENV).toLowerCase() !== "test")
 )
+const STUDENT_SESSION_TTL_SECONDS = Math.max(
+  60,
+  Number.parseInt(String(process.env.STUDENT_STUDENT_SESSION_TTL_SECONDS || "86400"), 10) || 86400
+)
+const STUDENT_SESSION_COOKIE_NAME = normalizeText(process.env.STUDENT_STUDENT_SESSION_COOKIE_NAME) || "student_portal_sid"
+const STUDENT_SESSION_COOKIE_PATH = normalizeText(process.env.STUDENT_STUDENT_SESSION_COOKIE_PATH) || "/"
+const STUDENT_SESSION_COOKIE_SAME_SITE =
+  normalizeText(process.env.STUDENT_STUDENT_SESSION_COOKIE_SAMESITE)
+  || normalizeText(process.env.STUDENT_ADMIN_SESSION_COOKIE_SAMESITE)
+  || "Strict"
+const STUDENT_SESSION_COOKIE_SECURE = resolveBoolean(
+  process.env.STUDENT_STUDENT_SESSION_COOKIE_SECURE,
+  resolveBoolean(process.env.STUDENT_ADMIN_SESSION_COOKIE_SECURE, normalizeText(process.env.NODE_ENV).toLowerCase() !== "test")
+)
 const SERVICE_CONTROL_ENABLED = resolveBoolean(process.env.STUDENT_ADMIN_SERVICE_CONTROL_ENABLED, true)
 const EXERCISE_MAILER_SERVICE_NAME =
   normalizeText(process.env.EXERCISE_MAILER_SYSTEMD_SERVICE) || "exercise-mailer.service"
@@ -185,6 +225,9 @@ const SESSION_STORE = createStudentAdminSessionStore({
 })
 const PARENT_SESSION_STORE = createStudentAdminSessionStore({
   ttlSeconds: PARENT_SESSION_TTL_SECONDS,
+})
+const STUDENT_SESSION_STORE = createStudentAdminSessionStore({
+  ttlSeconds: STUDENT_SESSION_TTL_SECONDS,
 })
 const PARENT_PROFILE_QUEUE_STATUS_DRAFT = "draft"
 const PARENT_PROFILE_QUEUE_STATUS_SUBMITTED = "submitted"
@@ -292,6 +335,8 @@ const PARENT_PORTAL_MEMORY = {
 }
 let PARENT_PORTAL_DB_DISABLED = false
 let PARENT_PORTAL_DB_WARNED = false
+let STUDENT_PORTAL_DB_DISABLED = false
+let STUDENT_PORTAL_DB_WARNED = false
 let runtimeHealthProvider = null
 
 function normalizeText(value) {
@@ -307,6 +352,40 @@ function normalizeLower(value) {
 
 function normalizeUpper(value) {
   return normalizeText(value).toUpperCase()
+}
+
+function normalizeInteger(value) {
+  const text = normalizeText(value)
+  if (!text) return null
+  const parsed = Number.parseInt(text, 10)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function normalizePositiveInteger(value) {
+  const parsed = normalizeInteger(value)
+  if (!Number.isFinite(parsed) || parsed < 1) return null
+  return parsed
+}
+
+function normalizeAliasToken(value) {
+  const raw = normalizeLower(value)
+  if (!raw) return ""
+  let safe = raw
+  try {
+    safe = safe.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  } catch (error) {
+    void error
+  }
+  return safe.replace(/[^a-z0-9]+/g, "")
+}
+
+function normalizeGenderSelectionValue(value) {
+  const token = normalizeAliasToken(value)
+  if (!token) return ""
+  if (token === "m" || token === "male" || token === "nam" || token === "boy" || token === "man") return "male"
+  if (token === "f" || token === "female" || token === "nu" || token === "girl" || token === "woman") return "female"
+  if (token === "nonbinary" || token === "nonbin" || token === "nb") return "non-binary"
+  return normalizeLower(value)
 }
 
 function normalizePathPrefix(value, fallback) {
@@ -379,7 +458,7 @@ function createDefaultRolePermissions() {
     teacher: {
       role: "teacher",
       canRead: true,
-      canWrite: false,
+      canWrite: true,
       canManageUsers: false,
       canManagePermissions: false,
       startPage: "overview",
@@ -446,6 +525,8 @@ function normalizeRolePermissionsPayload(payload = {}) {
   if (!normalized.admin.allowedPages.includes(normalized.admin.startPage)) {
     normalized.admin.startPage = normalized.admin.allowedPages[0] || ADMIN_PAGE_DEFAULT_SLUG
   }
+  if (!normalized.teacher.canRead) normalized.teacher.canRead = true
+  if (!normalized.teacher.canWrite) normalized.teacher.canWrite = true
 
   return normalized
 }
@@ -497,8 +578,7 @@ function canManageSettings(sessionOrPolicy) {
     sessionOrPolicy && typeof sessionOrPolicy === "object" && Object.prototype.hasOwnProperty.call(sessionOrPolicy, "role")
       ? getRolePolicy(sessionOrPolicy.role)
       : sessionOrPolicy
-  const allowedPages = Array.isArray(policy?.allowedPages) ? policy.allowedPages.map((entry) => normalizeLower(entry)) : []
-  return resolveBoolean(policy?.canWrite, false) && allowedPages.includes("settings")
+  return canManageUsers(policy) || canManagePermissions(policy)
 }
 
 function getOriginList() {
@@ -528,7 +608,7 @@ function allowCors(request, response) {
   const origins = getOriginList()
   let allowOrigin = "null"
 
-  if (origins.includes("*")) allowOrigin = "*"
+  if (origins.includes("*")) allowOrigin = reqOrigin || "*"
   else if (reqOrigin && (origins.includes(reqOrigin) || isLoopbackOrigin(reqOrigin))) allowOrigin = reqOrigin
 
   response.setHeader("Vary", "Origin")
@@ -570,6 +650,22 @@ function injectParentRuntimeConfig(html) {
   return `${runtimeConfig}\n${html}`
 }
 
+function injectAdminPointsRuntimeConfig(html) {
+  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_POINTS_SUMMARY_PATH=${JSON.stringify(ADMIN_POINTS_SUMMARY_PATH)};window.__SIS_ADMIN_POINTS_STUDENTS_PATH=${JSON.stringify(ADMIN_POINTS_STUDENTS_PATH)};window.__SIS_ADMIN_POINTS_LEDGER_PATH=${JSON.stringify(ADMIN_POINTS_LEDGER_PATH)};window.__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH=${JSON.stringify(ADMIN_POINTS_ADJUSTMENTS_PATH)};</script>`
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${html}`
+}
+
+function injectStudentPortalRuntimeConfig(html) {
+  const runtimeConfig = `<script>window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};</script>`
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${html}`
+}
+
 function resolveAdminPageSlug(pathname) {
   if (pathname === ADMIN_PAGE_PATH) return ADMIN_PAGE_DEFAULT_SLUG
   const match = pathname.match(ADMIN_PAGE_SECTION_PATH_RE)
@@ -598,11 +694,22 @@ export function getStudentAdminRuntimeStatus() {
     assignmentAnnouncementPreviewCreatePath: ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH,
     assignmentAnnouncementPreviewPath: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
     assignmentAnnouncementPreviewTtlMinutes: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES,
+    pointsPagePath: ADMIN_POINTS_PAGE_PATH,
+    pointsSummaryPath: ADMIN_POINTS_SUMMARY_PATH,
+    pointsStudentsPath: ADMIN_POINTS_STUDENTS_PATH,
+    pointsLedgerPath: ADMIN_POINTS_LEDGER_PATH,
+    pointsAdjustmentsPath: ADMIN_POINTS_ADJUSTMENTS_PATH,
     parentPortalPagePath: PARENT_PORTAL_PAGE_PATH,
     parentApiPrefix: PARENT_API_PREFIX,
     parentDashboardPath: PARENT_DASHBOARD_PATH,
     parentChildrenPath: PARENT_CHILDREN_PATH,
     parentAuthPrefix: PARENT_AUTH_PREFIX,
+    studentPortalPagePath: STUDENT_PORTAL_PAGE_PATH,
+    studentApiPrefix: STUDENT_API_PREFIX,
+    studentAuthPrefix: STUDENT_AUTH_PREFIX,
+    studentDashboardPath: STUDENT_DASHBOARD_PATH,
+    studentNewsReportsPath: STUDENT_NEWS_REPORTS_PATH,
+    studentNewsCalendarPath: STUDENT_NEWS_CALENDAR_PATH,
     notifyBatchQueue: getEmailBatchQueueRuntimeStatus(),
     pageDefaultSlug: ADMIN_PAGE_DEFAULT_SLUG,
     pageSections: [...ADMIN_PAGE_SECTIONS],
@@ -1316,10 +1423,59 @@ async function requireAuthenticatedParentSession(request, response) {
   return session
 }
 
-function canTeacherWriteParentTrackingPath(pathname, method) {
+function makeStudentSessionCookieValue(sessionId, maxAgeSeconds) {
+  const parts = [
+    `${STUDENT_SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}`,
+    `Path=${STUDENT_SESSION_COOKIE_PATH}`,
+    "HttpOnly",
+    `SameSite=${normalizeSameSite(STUDENT_SESSION_COOKIE_SAME_SITE)}`,
+  ]
+
+  if (STUDENT_SESSION_COOKIE_SECURE) parts.push("Secure")
+  if (Number.isInteger(maxAgeSeconds)) {
+    parts.push(`Max-Age=${Math.max(0, maxAgeSeconds)}`)
+    parts.push(`Expires=${new Date(Date.now() + Math.max(0, maxAgeSeconds) * 1000).toUTCString()}`)
+  }
+
+  return parts.join("; ")
+}
+
+function clearStudentSessionCookie(response) {
+  response.setHeader("Set-Cookie", makeStudentSessionCookieValue("", 0))
+}
+
+function readStudentSessionIdFromRequest(request) {
+  const cookies = parseCookies(request.headers.cookie)
+  return normalizeText(cookies[STUDENT_SESSION_COOKIE_NAME] || "")
+}
+
+async function requireAuthenticatedStudentSession(request, response) {
+  const sessionId = readStudentSessionIdFromRequest(request)
+  if (!sessionId) {
+    const error = new Error("Unauthorized")
+    error.statusCode = 401
+    throw error
+  }
+
+  const session = await STUDENT_SESSION_STORE.touchSession(sessionId)
+  if (!session) {
+    clearStudentSessionCookie(response)
+    const error = new Error("Unauthorized")
+    error.statusCode = 401
+    throw error
+  }
+
+  response.setHeader("Set-Cookie", makeStudentSessionCookieValue(sessionId, STUDENT_SESSION_TTL_SECONDS))
+  return session
+}
+
+function canTeacherWriteDataEntryPath(pathname, method) {
   if (method !== "POST") return false
   if (pathname === ADMIN_NOTIFY_EMAIL_PATH) return true
+  if (ADMIN_ATTENDANCE_PATH_RE.test(pathname)) return true
+  if (ADMIN_GRADES_PATH_RE.test(pathname)) return true
   if (ADMIN_REPORTS_PATH_RE.test(pathname)) return true
+  if (ADMIN_REPORTS_GENERATE_PATH_RE.test(pathname)) return true
   return false
 }
 
@@ -1330,11 +1486,16 @@ function enforceRoleAccess(session, method, pathname) {
     error.statusCode = 403
     throw error
   }
-  if (method !== "GET" && !policy.canWrite) {
-    const isTeacher = normalizeRoleName(session?.role) === "teacher"
-    if (isTeacher && canTeacherWriteParentTrackingPath(pathname, method)) {
-      return policy
+  const role = normalizeRoleName(session?.role)
+  if (method !== "GET") {
+    if (role === "teacher") {
+      if (canTeacherWriteDataEntryPath(pathname, method)) return policy
+      const error = new Error("Forbidden")
+      error.statusCode = 403
+      throw error
     }
+  }
+  if (method !== "GET" && !policy.canWrite) {
     const error = new Error("Forbidden")
     error.statusCode = 403
     throw error
@@ -2013,13 +2174,46 @@ function smtpConfigFromEnv() {
   const secure = resolveBoolean(process.env.SMTP_SECURE, port === 465)
   const user = normalizeText(process.env.SMTP_USER)
   const pass = normalizeText(process.env.SMTP_PASS)
+  const authMode = resolveSmtpAuthMode(process.env.SMTP_AUTH_MODE || process.env.SMTP_AUTH)
+  const useAuth = authMode ? authMode === "auth" : Boolean(user || pass)
   const from = normalizeText(process.env.SMTP_FROM || user)
-  if (!host || !user || !pass || !from) {
+  if (!host || !from) {
     const error = new Error("SMTP is not configured for assignment announcements")
     error.statusCode = 503
     throw error
   }
-  return { host, port, secure, user, pass, from }
+  if (useAuth && (!user || !pass)) {
+    const error = new Error("SMTP auth requires SMTP_USER and SMTP_PASS")
+    error.statusCode = 503
+    throw error
+  }
+  return { host, port, secure, user, pass, from, useAuth, authMode: authMode || (useAuth ? "auth" : "none") }
+}
+
+function resolveSmtpAuthMode(value) {
+  const mode = normalizeLower(value)
+  if (!mode) return ""
+  if (
+    mode === "none" ||
+    mode === "off" ||
+    mode === "disabled" ||
+    mode === "false" ||
+    mode === "no" ||
+    mode === "relay"
+  ) {
+    return "none"
+  }
+  if (
+    mode === "auth" ||
+    mode === "on" ||
+    mode === "enabled" ||
+    mode === "true" ||
+    mode === "yes" ||
+    mode === "login"
+  ) {
+    return "auth"
+  }
+  return ""
 }
 
 const WEEKEND_BATCH_WINDOWS = Object.freeze([
@@ -2081,6 +2275,17 @@ function weekendBatchScheduleLabel() {
   return WEEKEND_BATCH_WINDOWS.map((entry) => entry.label).join(", ")
 }
 
+const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
+const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
+
+function shiftToFixedTimeZone(value) {
+  return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
+}
+
+function shiftFromFixedTimeZone(value) {
+  return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
+}
+
 function parseIsoDateTime(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -2092,24 +2297,38 @@ function parseIsoDateTime(value) {
 function nextWeekendBatchDispatchAt(value = new Date()) {
   const now = value instanceof Date ? new Date(value.getTime()) : new Date(value)
   if (Number.isNaN(now.valueOf())) return null
+  const shiftedNow = shiftToFixedTimeZone(now)
 
   for (let offset = 0; offset < 14; offset += 1) {
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 0, 0, 0, 0)
-    const dayOfWeek = dayStart.getDay()
+    const dayStart = new Date(
+      Date.UTC(
+        shiftedNow.getUTCFullYear(),
+        shiftedNow.getUTCMonth(),
+        shiftedNow.getUTCDate() + offset,
+        0,
+        0,
+        0,
+        0
+      )
+    )
+    const dayOfWeek = dayStart.getUTCDay()
     if (dayOfWeek !== 0 && dayOfWeek !== 6) continue
 
     for (let i = 0; i < WEEKEND_BATCH_WINDOWS.length; i += 1) {
       const slot = WEEKEND_BATCH_WINDOWS[i]
       if (slot.day !== dayOfWeek) continue
-      const candidate = new Date(
-        dayStart.getFullYear(),
-        dayStart.getMonth(),
-        dayStart.getDate(),
-        slot.hour,
-        slot.minute,
-        0,
-        0
+      const candidateShifted = new Date(
+        Date.UTC(
+          dayStart.getUTCFullYear(),
+          dayStart.getUTCMonth(),
+          dayStart.getUTCDate(),
+          slot.hour,
+          slot.minute,
+          0,
+          0
+        )
       )
+      const candidate = shiftFromFixedTimeZone(candidateShifted)
       if (candidate > now) return candidate
     }
   }
@@ -2368,15 +2587,18 @@ async function sendAnnouncementEmail(payload = {}) {
 
   const nodemailer = await getNodemailer()
   const smtp = smtpConfigFromEnv()
-  const transporter = nodemailer.createTransport({
+  const transportOptions = {
     host: smtp.host,
     port: smtp.port,
     secure: smtp.secure,
-    auth: {
+  }
+  if (smtp.useAuth) {
+    transportOptions.auth = {
       user: smtp.user,
       pass: smtp.pass,
-    },
-  })
+    }
+  }
+  const transporter = nodemailer.createTransport(transportOptions)
 
   await transporter.sendMail({
     from: smtp.from,
@@ -2579,6 +2801,16 @@ async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
   )
 }
 
+async function approveQueuedParentReportIfPresent(item = {}, reviewedByUsername = "") {
+  const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {}
+  const reportId = normalizeText(payload?.reportId || item?.reportId)
+  if (!reportId) return null
+  return approveParentClassReport(reportId, {
+    approvedByUsername: normalizeText(reviewedByUsername),
+    participationPointsAward: payload?.participationPointsAward,
+  })
+}
+
 async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername = "" } = {}) {
   const source = await listQueuedAnnouncements({
     queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
@@ -2602,6 +2834,9 @@ async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername =
         message: item.message,
         senderName: item.senderName,
       })
+      if (normalizeQueueType(item.queueType) === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT) {
+        await approveQueuedParentReportIfPresent(item, reviewedByUsername)
+      }
       await updateQueuedAnnouncement(
         item.id,
         {
@@ -2671,6 +2906,13 @@ function isParentPortalTableMissingError(error) {
   )
 }
 
+function isStudentPortalTableMissingError(error) {
+  const code = normalizeUpper(error?.code)
+  if (code === "P2021") return true
+  const message = normalizeLower(error?.message || error)
+  return message.includes("studentportalaccount")
+}
+
 function markParentPortalDbFallback(error) {
   PARENT_PORTAL_DB_DISABLED = true
   if (!PARENT_PORTAL_DB_WARNED) {
@@ -2708,6 +2950,43 @@ async function runParentPortalDbOperation(handler, fallbackHandler) {
   } catch (error) {
     if (isParentPortalTableMissingError(error)) {
       markParentPortalDbFallback(error)
+      return fallbackHandler()
+    }
+    throw error
+  }
+}
+
+function markStudentPortalDbFallback(error) {
+  STUDENT_PORTAL_DB_DISABLED = true
+  if (!STUDENT_PORTAL_DB_WARNED) {
+    STUDENT_PORTAL_DB_WARNED = true
+    console.warn(`student portal persistence falling back to env: ${normalizeText(error?.message || error)}`)
+  }
+}
+
+async function getStudentPortalPrismaClient() {
+  if (STUDENT_PORTAL_DB_DISABLED || !isStudentAdminStoreEnabled()) return null
+  try {
+    const prisma = await getSharedPrismaClient()
+    if (!prisma || !prisma.studentPortalAccount) {
+      markStudentPortalDbFallback(new Error("Prisma student portal models unavailable"))
+      return null
+    }
+    return prisma
+  } catch (error) {
+    markStudentPortalDbFallback(error)
+    return null
+  }
+}
+
+async function runStudentPortalDbOperation(handler, fallbackHandler) {
+  const prisma = await getStudentPortalPrismaClient()
+  if (!prisma) return fallbackHandler()
+  try {
+    return await handler(prisma)
+  } catch (error) {
+    if (isStudentPortalTableMissingError(error)) {
+      markStudentPortalDbFallback(error)
       return fallbackHandler()
     }
     throw error
@@ -2787,6 +3066,121 @@ async function verifyParentPortalCredentials(parentsId, password) {
   )
 
   return dbResult
+}
+
+function parseStudentPortalAccountsJson(value) {
+  const raw = normalizeText(value)
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .map((entry) => ({
+        eaglesId: normalizeText(entry?.eaglesId || entry?.username),
+        password: normalizeText(entry?.password),
+        passwordHash: normalizeText(entry?.passwordHash),
+        studentRefId: normalizeText(entry?.studentRefId),
+        status: normalizeLower(entry?.status) || "active",
+      }))
+      .filter((entry) => entry.eaglesId && (entry.password || entry.passwordHash))
+  } catch (error) {
+    console.warn(`STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON parse failed: ${error.message}`)
+    return []
+  }
+}
+
+function configuredStudentPortalAccounts() {
+  const accounts = parseStudentPortalAccountsJson(process.env.STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON)
+  const fallbackEaglesId = normalizeText(process.env.STUDENT_STUDENT_USER)
+  const fallbackPassword = normalizeText(process.env.STUDENT_STUDENT_PASS)
+  const fallbackPasswordHash = normalizeText(process.env.STUDENT_STUDENT_PASSWORD_HASH)
+  const fallbackStudentRefId = normalizeText(process.env.STUDENT_STUDENT_REF_ID)
+  if (fallbackEaglesId && (fallbackPassword || fallbackPasswordHash)) {
+    accounts.push({
+      eaglesId: fallbackEaglesId,
+      password: fallbackPassword,
+      passwordHash: fallbackPasswordHash,
+      studentRefId: fallbackStudentRefId,
+      status: "active",
+    })
+  }
+  return accounts
+}
+
+async function verifyStudentPortalCredentials(eaglesId, password) {
+  const requestedEaglesId = normalizeText(eaglesId)
+  const inputPassword = normalizeText(password)
+  if (!requestedEaglesId || !inputPassword) return null
+
+  const dbResult = await runStudentPortalDbOperation(
+    async (prisma) => {
+      const account = await prisma.studentPortalAccount.findUnique({
+        where: { eaglesId: requestedEaglesId },
+      })
+      if (!account) return null
+      if (normalizeLower(account.status) !== "active") return null
+      if (!verifyPassword("", account.passwordHash, inputPassword)) return null
+
+      let mappedStudent = null
+      if (!normalizeText(account.studentRefId) && isStudentAdminStoreEnabled()) {
+        mappedStudent = await findStudentByEaglesIdForParent(requestedEaglesId)
+      }
+      const studentRefId = normalizeText(account.studentRefId || mappedStudent?.studentRefId)
+      if (!studentRefId && isStudentAdminStoreEnabled()) return null
+      return {
+        eaglesId: requestedEaglesId,
+        studentRefId,
+        accountId: account.id,
+        source: "database",
+      }
+    },
+    async () => {
+      const accounts = configuredStudentPortalAccounts()
+      for (let i = 0; i < accounts.length; i += 1) {
+        const account = accounts[i]
+        if (!timingSafeEqualText(requestedEaglesId, account.eaglesId)) continue
+        if (normalizeLower(account.status) !== "active") return null
+        if (!verifyPassword(account.password, account.passwordHash, inputPassword)) return null
+
+        let mappedStudent = null
+        if (!normalizeText(account.studentRefId) && isStudentAdminStoreEnabled()) {
+          mappedStudent = await findStudentByEaglesIdForParent(requestedEaglesId)
+        }
+        const studentRefId = normalizeText(account.studentRefId || mappedStudent?.studentRefId)
+        if (!studentRefId && isStudentAdminStoreEnabled()) return null
+        return {
+          eaglesId: requestedEaglesId,
+          studentRefId,
+          accountId: `env:${account.eaglesId}`,
+          source: "env",
+        }
+      }
+      return null
+    }
+  )
+
+  return dbResult
+}
+
+async function resolveStudentPortalSessionStudentRefId(session = {}) {
+  const sessionStudentRefId = normalizeText(session?.studentRefId)
+  const eaglesId = normalizeText(session?.eaglesId || session?.username)
+  if (!eaglesId) return sessionStudentRefId
+
+  // In DB-backed mode, trust canonical eaglesId -> student mapping over stale env/session ids.
+  if (isStudentAdminStoreEnabled()) {
+    const mappedStudent = await findStudentByEaglesIdForParent(eaglesId)
+    const mappedStudentRefId = normalizeText(mappedStudent?.studentRefId)
+    if (mappedStudentRefId) return mappedStudentRefId
+    return ""
+  }
+
+  const account = configuredStudentPortalAccounts().find(
+    (entry) => normalizeLower(entry?.eaglesId) === normalizeLower(eaglesId)
+  )
+  const configuredStudentRefId = normalizeText(account?.studentRefId)
+  if (configuredStudentRefId) return configuredStudentRefId
+  return sessionStudentRefId
 }
 
 function mapStudentToParentChildSummary(student = {}) {
@@ -2883,6 +3277,13 @@ function normalizeParentProfilePatch(rawPatch) {
             .split(",")
             .map((entry) => normalizeText(entry))
             .filter(Boolean)
+      if (fieldKey === "genderSelections") {
+        const normalizedGenderValues = arr
+          .map((entry) => normalizeGenderSelectionValue(entry))
+          .filter(Boolean)
+        normalizedPatch[fieldKey] = normalizedGenderValues.length ? [normalizedGenderValues[0]] : []
+        return
+      }
       normalizedPatch[fieldKey] = arr
       return
     }
@@ -3274,6 +3675,11 @@ function buildChildDashboardSnapshot({
   gradeRows = [],
   reportRows = [],
 } = {}) {
+  const details = buildChildDashboardDetails({
+    attendanceRows,
+    gradeRows,
+    reportRows,
+  })
   const attendance = {
     total: attendanceRows.length,
     present: attendanceRows.filter((row) => normalizeLower(row?.status) === "present").length,
@@ -3314,6 +3720,10 @@ function buildChildDashboardSnapshot({
   return {
     eaglesId: normalizeText(child?.eaglesId),
     eaglesRefId: normalizeText(child?.eaglesRefId),
+    studentNumber: Number.parseInt(String(child?.studentNumber || ""), 10) || null,
+    fullName: normalizeText(child?.fullName),
+    englishName: normalizeText(child?.englishName),
+    currentGrade: normalizeText(child?.currentGrade),
     attendance,
     assignments,
     grades: {
@@ -3321,7 +3731,205 @@ function buildChildDashboardSnapshot({
       averageScorePercent: averageScore,
     },
     performance,
+    details,
   }
+}
+
+function startOfPortalWeek(value) {
+  const date = parseIsoDateTime(value)
+  if (!date) return null
+  const shifted = shiftToFixedTimeZone(new Date(date.getTime()))
+  shifted.setUTCHours(0, 0, 0, 0)
+  shifted.setUTCDate(shifted.getUTCDate() - shifted.getUTCDay())
+  return shiftFromFixedTimeZone(shifted)
+}
+
+function addPortalDays(value, days = 0) {
+  const date = value instanceof Date ? new Date(value.getTime()) : null
+  if (!date) return null
+  const shifted = shiftToFixedTimeZone(date)
+  shifted.setUTCDate(shifted.getUTCDate() + days)
+  return shiftFromFixedTimeZone(shifted)
+}
+
+function toPortalDateKey(value) {
+  const date = value instanceof Date ? value : parseIsoDateTime(value)
+  if (!date) return ""
+  const shifted = shiftToFixedTimeZone(date)
+  const year = String(shifted.getUTCFullYear())
+  const month = String(shifted.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(shifted.getUTCDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function toIsoOrEmpty(value) {
+  return value?.toISOString?.() || ""
+}
+
+function toFiniteNumberOrNull(value, digits = 2) {
+  const parsed = Number.parseFloat(String(value))
+  if (!Number.isFinite(parsed)) return null
+  return Number(parsed.toFixed(digits))
+}
+
+function toGradeScorePercent(row = {}) {
+  const score = Number.parseFloat(String(row?.score))
+  const maxScore = Number.parseFloat(String(row?.maxScore))
+  if (!Number.isFinite(score) || !Number.isFinite(maxScore) || maxScore <= 0) return null
+  return Number(((score / maxScore) * 100).toFixed(2))
+}
+
+function resolveGradeRecordStatus(row = {}, now = new Date()) {
+  if (row?.homeworkCompleted === true || row?.submittedAt) return "completed"
+  const dueAt = parseIsoDateTime(row?.dueAt)
+  if (dueAt && dueAt < now) return "overdue"
+  return "pending"
+}
+
+function serializeAttendanceRows(rows = []) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row, index) => ({
+      id: normalizeText(row?.id) || `attendance-${index}-${toPortalDateKey(row?.attendanceDate)}`,
+      className: normalizeText(row?.className),
+      level: normalizeText(row?.level),
+      schoolYear: normalizeText(row?.schoolYear),
+      quarter: normalizeText(row?.quarter),
+      attendanceDate: toPortalDateKey(row?.attendanceDate),
+      status: normalizeLower(row?.status) || "present",
+      comments: normalizeText(row?.comments),
+    }))
+    .filter((row) => row.attendanceDate)
+}
+
+function serializeGradeRows(rows = [], now = new Date()) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row, index) => {
+      const dueAt = parseIsoDateTime(row?.dueAt)
+      const submittedAt = parseIsoDateTime(row?.submittedAt)
+      return {
+        id: normalizeText(row?.id) || `grade-${index}-${toPortalDateKey(dueAt || submittedAt)}`,
+        className: normalizeText(row?.className),
+        level: normalizeText(row?.level),
+        schoolYear: normalizeText(row?.schoolYear),
+        quarter: normalizeText(row?.quarter),
+        assignmentName: normalizeText(row?.assignmentName),
+        dueAt: toIsoOrEmpty(dueAt),
+        dueDate: toPortalDateKey(dueAt),
+        submittedAt: toIsoOrEmpty(submittedAt),
+        submittedDate: toPortalDateKey(submittedAt),
+        score: toFiniteNumberOrNull(row?.score),
+        maxScore: toFiniteNumberOrNull(row?.maxScore),
+        scorePercent: toGradeScorePercent(row),
+        homeworkCompleted: row?.homeworkCompleted === true,
+        homeworkOnTime: row?.homeworkOnTime === true,
+        behaviorScore: toFiniteNumberOrNull(row?.behaviorScore, 0),
+        participationScore: toFiniteNumberOrNull(row?.participationScore, 0),
+        inClassScore: toFiniteNumberOrNull(row?.inClassScore, 0),
+        comments: normalizeText(row?.comments),
+        status: resolveGradeRecordStatus(row, now),
+      }
+    })
+    .filter((row) => row.assignmentName)
+}
+
+function serializeReportRows(rows = []) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row, index) => {
+      const generatedAt = parseIsoDateTime(row?.generatedAt)
+      const approvedAt = parseIsoDateTime(row?.approvedAt)
+      const decoded = decodeParentReportCommentBundle(row?.comments)
+      return {
+        id: normalizeText(row?.id) || `report-${index}-${toPortalDateKey(generatedAt)}`,
+        className: normalizeText(row?.className),
+        level: normalizeText(row?.level),
+        schoolYear: normalizeText(row?.schoolYear),
+        quarter: normalizeText(row?.quarter),
+        generatedAt: toIsoOrEmpty(generatedAt),
+        generatedDate: toPortalDateKey(generatedAt),
+        approvedAt: toIsoOrEmpty(approvedAt),
+        homeworkCompletionRate: toFiniteNumberOrNull(row?.homeworkCompletionRate),
+        homeworkOnTimeRate: toFiniteNumberOrNull(row?.homeworkOnTimeRate),
+        behaviorScore: toFiniteNumberOrNull(row?.behaviorScore),
+        participationScore: toFiniteNumberOrNull(row?.participationScore),
+        inClassScore: toFiniteNumberOrNull(row?.inClassScore),
+        participationPointsAward: Number.parseInt(String(row?.participationPointsAward || ""), 10) || 0,
+        approvedByUsername: normalizeText(row?.approvedByUsername),
+        comments: normalizeText(decoded.comment),
+      }
+    })
+    .filter((row) => row.generatedDate)
+}
+
+function buildChildDashboardDetails({
+  attendanceRows = [],
+  gradeRows = [],
+  reportRows = [],
+} = {}) {
+  const assignmentHistory = serializeGradeRows(gradeRows, new Date())
+  const gradeHistory = assignmentHistory.filter((row) => row.status === "completed" || row.scorePercent !== null)
+  return {
+    attendanceHistory: serializeAttendanceRows(attendanceRows).slice(0, 90),
+    assignmentHistory: assignmentHistory.slice(0, 48),
+    currentHomework: assignmentHistory.filter((row) => row.status === "pending").slice(0, 24),
+    overdueHomework: assignmentHistory.filter((row) => row.status === "overdue").slice(0, 24),
+    gradeHistory: gradeHistory.slice(0, 36),
+    reportArchive: serializeReportRows(reportRows).slice(0, 24),
+  }
+}
+
+export function buildStudentPortalCalendarTracks({ now = new Date(), gradeRows = [], reportRows = [] } = {}) {
+  const nowDate = parseIsoDateTime(now) || new Date()
+  const homework = (Array.isArray(gradeRows) ? gradeRows : [])
+    .filter((row) => {
+      if (row?.homeworkCompleted === true || row?.submittedAt) return false
+      return Boolean(parseIsoDateTime(row?.dueAt))
+    })
+    .sort((left, right) => {
+      const leftTime = parseIsoDateTime(left?.dueAt)?.getTime?.() || 0
+      const rightTime = parseIsoDateTime(right?.dueAt)?.getTime?.() || 0
+      return leftTime - rightTime
+    })
+    .slice(0, 18)
+    .map((row, index) => {
+      const dueAt = parseIsoDateTime(row?.dueAt)
+      const weekStart = startOfPortalWeek(dueAt)
+      const weekEndExclusive = addPortalDays(weekStart, 7)
+      return {
+        id: normalizeText(row?.id) || `homework-${index}-${toPortalDateKey(dueAt)}`,
+        title: normalizeText(row?.assignmentName) || normalizeText(row?.className) || "Current homework track",
+        className: normalizeText(row?.className),
+        dueDate: toPortalDateKey(dueAt),
+        startDate: toPortalDateKey(weekStart),
+        endDate: toPortalDateKey(weekEndExclusive),
+        overdue: Boolean(dueAt && dueAt < nowDate),
+      }
+    })
+    .filter((row) => row.startDate && row.endDate && row.dueDate)
+
+  const review = (Array.isArray(reportRows) ? reportRows : [])
+    .filter((row) => Boolean(parseIsoDateTime(row?.generatedAt)))
+    .sort((left, right) => {
+      const leftTime = parseIsoDateTime(left?.generatedAt)?.getTime?.() || 0
+      const rightTime = parseIsoDateTime(right?.generatedAt)?.getTime?.() || 0
+      return rightTime - leftTime
+    })
+    .slice(0, 16)
+    .map((row, index) => {
+      const generatedAt = parseIsoDateTime(row?.generatedAt)
+      const weekStart = startOfPortalWeek(generatedAt)
+      const weekEndExclusive = addPortalDays(weekStart, 7)
+      return {
+        id: normalizeText(row?.id) || `review-${index}-${toPortalDateKey(generatedAt)}`,
+        title: normalizeText(row?.className) || "Notes review track",
+        quarter: normalizeText(row?.quarter),
+        startDate: toPortalDateKey(weekStart),
+        endDate: toPortalDateKey(weekEndExclusive),
+        generatedDate: toPortalDateKey(generatedAt),
+      }
+    })
+    .filter((row) => row.startDate && row.endDate && row.generatedDate)
+
+  return { homework, review }
 }
 
 async function buildParentDashboardPayload(session = {}) {
@@ -3388,6 +3996,105 @@ async function buildParentDashboardPayload(session = {}) {
     }
   } catch (error) {
     const wrapped = new Error("Unable to load parent dashboard")
+    wrapped.statusCode = 503
+    throw wrapped
+  }
+}
+
+async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" } = {}) {
+  const id = normalizeText(studentRefId)
+  if (!id) {
+    const error = new Error("studentRefId is required")
+    error.statusCode = 400
+    throw error
+  }
+
+  try {
+    const prisma = await getSharedPrismaClient()
+    const newsAggregatePromise =
+      prisma?.studentNewsReport && typeof prisma.studentNewsReport.aggregate === "function"
+        ? prisma.studentNewsReport.aggregate({
+            where: { studentRefId: id },
+            _count: { _all: true },
+            _max: { submittedAt: true },
+          })
+        : Promise.resolve({
+            _count: { _all: 0 },
+            _max: { submittedAt: null },
+          })
+    const [student, attendanceRows, gradeRows, reportRows, pointsLedger, newsAggregate] = await Promise.all([
+      prisma.student.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          eaglesId: true,
+          studentNumber: true,
+          profile: true,
+        },
+      }),
+      prisma.studentAttendance.findMany({
+        where: { studentRefId: id },
+        orderBy: { attendanceDate: "desc" },
+      }),
+      prisma.studentGradeRecord.findMany({
+        where: { studentRefId: id },
+        orderBy: { dueAt: "desc" },
+      }),
+      prisma.parentClassReport.findMany({
+        where: { studentRefId: id },
+        orderBy: { generatedAt: "desc" },
+      }),
+      listStudentPointsLedger(id, { take: 1 }),
+      newsAggregatePromise,
+    ])
+
+    const mappedChild = mapStudentToParentChildSummary(student || { id, eaglesId })
+    const child = {
+      ...mappedChild,
+      eaglesId: normalizeText(mappedChild.eaglesId) || normalizeText(eaglesId),
+    }
+    const dashboard = buildChildDashboardSnapshot({
+      child,
+      attendanceRows,
+      gradeRows,
+      reportRows,
+    })
+    const pointsSummary = pointsLedger?.summary && typeof pointsLedger.summary === "object"
+      ? pointsLedger.summary
+      : {}
+    const submittedCount = Number.parseInt(String(newsAggregate?._count?._all || 0), 10) || 0
+    const latestSubmittedAt = newsAggregate?._max?.submittedAt?.toISOString?.() || ""
+    const calendarTracks = buildStudentPortalCalendarTracks({
+      gradeRows,
+      reportRows,
+    })
+
+    return {
+      ok: true,
+      generatedAt: nowIso(),
+      child: {
+        ...dashboard,
+        studentNumber: child.studentNumber,
+        fullName: child.fullName,
+        englishName: child.englishName,
+        currentGrade: child.currentGrade,
+      },
+      points: {
+        totalPoints: Number.parseInt(String(pointsSummary.totalPoints || 0), 10) || 0,
+        scheduledOnTimeCount: Number.parseInt(String(pointsSummary.scheduledOnTimeCount || 0), 10) || 0,
+        electiveCount: Number.parseInt(String(pointsSummary.electiveCount || 0), 10) || 0,
+        approvedReportCount: Number.parseInt(String(pointsSummary.approvedReportCount || 0), 10) || 0,
+        adjustmentTotal: Number.parseInt(String(pointsSummary.adjustmentTotal || 0), 10) || 0,
+        lastActivityAt: normalizeText(pointsSummary.lastActivityAt),
+      },
+      calendarTracks,
+      newsReports: {
+        submittedCount,
+        latestSubmittedAt,
+      },
+    }
+  } catch (error) {
+    const wrapped = new Error("Unable to load student dashboard")
     wrapped.statusCode = 503
     throw wrapped
   }
@@ -3631,6 +4338,80 @@ async function handleApiRequest(request, response, pathname, url) {
       }
     }
     sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_POINTS_SUMMARY_PATH) {
+    assertStoreEnabled()
+    const data = await getSchoolPointsYtdSummary({
+      startDate: url.searchParams.get("startDate") || "",
+      endDate: url.searchParams.get("endDate") || "",
+    })
+    sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_POINTS_STUDENTS_PATH) {
+    assertStoreEnabled()
+    const data = await listStudentPointsSnapshots({
+      query: url.searchParams.get("q") || "",
+      level: url.searchParams.get("level") || "",
+      take: url.searchParams.get("take") || "250",
+      sortField: url.searchParams.get("sortField") || "totalPoints",
+      sortDir: url.searchParams.get("sortDir") || "desc",
+    })
+    sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_POINTS_LEDGER_PATH) {
+    assertStoreEnabled()
+    const studentRefId = normalizeText(url.searchParams.get("studentRefId") || "")
+    if (!studentRefId) {
+      const error = new Error("studentRefId is required")
+      error.statusCode = 400
+      throw error
+    }
+    const data = await listStudentPointsLedger(studentRefId, {
+      take: url.searchParams.get("take") || "200",
+      startDate: url.searchParams.get("startDate") || "",
+      endDate: url.searchParams.get("endDate") || "",
+    })
+    sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "POST" && pathname === ADMIN_POINTS_ADJUSTMENTS_PATH) {
+    assertStoreEnabled()
+    const payload = await parseBody(request)
+    const studentRefId = normalizeText(payload?.studentRefId)
+    if (!studentRefId) {
+      const error = new Error("studentRefId is required")
+      error.statusCode = 400
+      throw error
+    }
+    const adjustment = await createStudentPointsAdjustment(studentRefId, payload, {
+      adjustedByUsername: normalizeText(session?.username),
+    })
+    sendJson(response, 200, {
+      ok: true,
+      item: adjustment,
+    })
+    return true
+  }
+
+  const adminPointsStudentMatch = pathname.match(ADMIN_POINTS_STUDENT_PATH_RE)
+  if (adminPointsStudentMatch && method === "PUT") {
+    assertStoreEnabled()
+    const studentRefId = decodeURIComponent(adminPointsStudentMatch[1])
+    const payload = await parseBody(request)
+    const result = await setStudentPointsTotal(studentRefId, payload, {
+      adjustedByUsername: normalizeText(session?.username),
+    })
+    sendJson(response, 200, {
+      ok: true,
+      ...result,
+    })
     return true
   }
 
@@ -4058,7 +4839,8 @@ async function handleApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const deliveryMode = normalizeDeliveryMode(payload?.deliveryMode)
     const queueType = normalizeQueueType(payload?.queueType || NOTIFICATION_QUEUE_TYPE_ANNOUNCEMENT)
-    if (!rolePolicy.canWrite) {
+    const isTeacher = normalizeRoleName(session?.role) === "teacher"
+    if (isTeacher) {
       const teacherQueueAllowed =
         deliveryMode === "weekend-batch" && queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT
       if (!teacherQueueAllowed) {
@@ -4066,6 +4848,10 @@ async function handleApiRequest(request, response, pathname, url) {
         error.statusCode = 403
         throw error
       }
+    } else if (!rolePolicy.canWrite) {
+      const error = new Error("Forbidden")
+      error.statusCode = 403
+      throw error
     }
     const result =
       deliveryMode === "weekend-batch"
@@ -4522,6 +5308,109 @@ async function handleParentApiRequest(request, response, pathname, url) {
   return false
 }
 
+async function handleStudentApiRequest(request, response, pathname, url) {
+  const { method } = request
+  const loginPath = `${STUDENT_AUTH_PREFIX}/login`
+  const logoutPath = `${STUDENT_AUTH_PREFIX}/logout`
+  const mePath = `${STUDENT_AUTH_PREFIX}/me`
+
+  if (method === "POST" && pathname === loginPath) {
+    const payload = await parseBody(request)
+    const eaglesId = normalizeText(payload?.eaglesId || payload?.username)
+    const password = normalizeText(payload?.password)
+    const principal = await verifyStudentPortalCredentials(eaglesId, password)
+    if (!principal) {
+      const error = new Error("Invalid eaglesId or password")
+      error.statusCode = 401
+      throw error
+    }
+
+    const session = await STUDENT_SESSION_STORE.createSession({
+      username: principal.eaglesId,
+      role: "student",
+      eaglesId: principal.eaglesId,
+      studentRefId: principal.studentRefId,
+      accountId: principal.accountId,
+    })
+    if (!session?.id) {
+      const error = new Error("Unable to establish student session")
+      error.statusCode = 500
+      throw error
+    }
+    response.setHeader("Set-Cookie", makeStudentSessionCookieValue(session.id, STUDENT_SESSION_TTL_SECONDS))
+    sendJson(response, 200, {
+      authenticated: true,
+      user: {
+        eaglesId: principal.eaglesId,
+        role: "student",
+      },
+    })
+    return true
+  }
+
+  if (method === "POST" && pathname === logoutPath) {
+    const sessionId = readStudentSessionIdFromRequest(request)
+    if (sessionId) await STUDENT_SESSION_STORE.deleteSession(sessionId)
+    clearStudentSessionCookie(response)
+    sendJson(response, 200, { ok: true, authenticated: false })
+    return true
+  }
+
+  if (method === "GET" && pathname === mePath) {
+    const session = await requireAuthenticatedStudentSession(request, response)
+    sendJson(response, 200, {
+      authenticated: true,
+      user: {
+        eaglesId: normalizeText(session?.eaglesId || session?.username),
+        role: "student",
+      },
+    })
+    return true
+  }
+
+  const session = await requireAuthenticatedStudentSession(request, response)
+  const studentRefId = await resolveStudentPortalSessionStudentRefId(session)
+  if (!studentRefId) {
+    const error = new Error("Student portal account is not linked to a student record")
+    error.statusCode = 403
+    throw error
+  }
+
+  if (method === "GET" && pathname === STUDENT_DASHBOARD_PATH) {
+    const data = await buildStudentDashboardPayload({
+      studentRefId,
+      eaglesId: normalizeText(session?.eaglesId || session?.username),
+    })
+    sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "GET" && pathname === STUDENT_NEWS_CALENDAR_PATH) {
+    const data = await listStudentNewsCalendar(studentRefId, {
+      days: url.searchParams.get("days") || "30",
+    })
+    sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "GET" && pathname === STUDENT_NEWS_REPORTS_PATH) {
+    const data = await listStudentNewsCalendar(studentRefId, {
+      days: url.searchParams.get("days") || "30",
+    })
+    sendJson(response, 200, data)
+    return true
+  }
+
+  if (method === "POST" && pathname === STUDENT_NEWS_REPORTS_PATH) {
+    const payload = await parseBody(request)
+    const result = await saveStudentNewsReport(studentRefId, payload)
+    sendJson(response, 200, result)
+    return true
+  }
+
+  return false
+}
+
 export async function handleStudentAdminRequest(request, response) {
   const method = normalizeText(request.method).toUpperCase()
   const host = normalizeText(request.headers.host) || "localhost"
@@ -4546,12 +5435,32 @@ export async function handleStudentAdminRequest(request, response) {
     return true
   }
 
+  if (method === "GET" && pathname === ADMIN_POINTS_PAGE_PATH) {
+    if (!fs.existsSync(ADMIN_POINTS_HTML_PATH)) {
+      sendJson(response, 404, { error: "Student points page not found" })
+      return true
+    }
+    const html = injectAdminPointsRuntimeConfig(fs.readFileSync(ADMIN_POINTS_HTML_PATH, "utf8"))
+    sendHtml(response, 200, html)
+    return true
+  }
+
   if (method === "GET" && pathname === PARENT_PORTAL_PAGE_PATH) {
     if (!fs.existsSync(PARENT_PORTAL_HTML_PATH)) {
       sendJson(response, 404, { error: "Parent portal page not found" })
       return true
     }
     const html = injectParentRuntimeConfig(fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8"))
+    sendHtml(response, 200, html)
+    return true
+  }
+
+  if (method === "GET" && pathname === STUDENT_PORTAL_PAGE_PATH) {
+    if (!fs.existsSync(STUDENT_PORTAL_HTML_PATH)) {
+      sendJson(response, 404, { error: "Student portal page not found" })
+      return true
+    }
+    const html = injectStudentPortalRuntimeConfig(fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8"))
     sendHtml(response, 200, html)
     return true
   }
@@ -4568,6 +5477,25 @@ export async function handleStudentAdminRequest(request, response) {
     try {
       const handled = await handleParentApiRequest(request, response, pathname, url)
       if (!handled) sendJson(response, 404, { error: "Parent endpoint not found" })
+      return true
+    } catch (error) {
+      withError(response, request, error)
+      return true
+    }
+  }
+
+  if (isPathWithinPrefix(pathname, STUDENT_API_PREFIX)) {
+    allowCors(request, response)
+
+    if (method === "OPTIONS") {
+      response.writeHead(204)
+      response.end()
+      return true
+    }
+
+    try {
+      const handled = await handleStudentApiRequest(request, response, pathname, url)
+      if (!handled) sendJson(response, 404, { error: "Student endpoint not found" })
       return true
     } catch (error) {
       withError(response, request, error)

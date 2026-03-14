@@ -45,3 +45,4 @@ docs/mapping/out/*
 nginx
 .playwright-cli
 .sto
+frogbot.yml
