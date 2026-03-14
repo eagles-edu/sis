@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
-<!-- cspell:ignore KET TAYK eggchic YTD Ytd IELTS ielts healthz blinkmacsystemfont blkquot  openxmlformats officedocument spreadsheetml -->
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>The Eagles Club Student Info System </title>
+  <title>The Eagles Club Student Information System </title>
   <link href="./favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
 
   <style>
@@ -2473,6 +2473,7 @@
                     Performance data
                   </a>
                 </div>
+                <a href="#" class="menu-link" data-page-link="news-reports">News Reports</a>
                 <a href="#" class="menu-link" data-page-link="reports">All Reports</a>
               </div>
             </div>
@@ -3390,6 +3391,74 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </section>
               </div>
 
+              <div class="panel page-section" data-page="news-reports">
+                <h2>Student news reports [review queue]</h2>
+                <div class="table-toolbar">
+                  <div class="toolbar-field">
+                    <label for="newsReviewStatusFilter">Status</label>
+                    <select id="newsReviewStatusFilter">
+                      <option value="submitted">Submitted</option>
+                      <option value="approved">Approved</option>
+                      <option value="revision-requested">Revision Requested</option>
+                      <option value="all">All</option>
+                    </select>
+                  </div>
+                  <div class="toolbar-field">
+                    <label for="newsReviewLevelFilter">Class Level</label>
+                    <select id="newsReviewLevelFilter">
+                      <option value="">Any</option>
+                    </select>
+                  </div>
+                  <div class="toolbar-field">
+                    <label for="newsReviewStudentFilter">Student</label>
+                    <select id="newsReviewStudentFilter">
+                      <option value="">All students</option>
+                    </select>
+                  </div>
+                  <div class="toolbar-field">
+                    <label for="newsReviewDateFromFilter">Date from</label>
+                    <input id="newsReviewDateFromFilter" type="date">
+                  </div>
+                  <div class="toolbar-field">
+                    <label for="newsReviewDateToFilter">Date to</label>
+                    <input id="newsReviewDateToFilter" type="date">
+                  </div>
+                  <div class="toolbar-field">
+                    <label for="newsReviewQueryFilter">Free text search</label>
+                    <input id="newsReviewQueryFilter" type="search" placeholder="student, title, source, synopsis">
+                  </div>
+                  <div class="toolbar-field compact">
+                    <label>Action</label>
+                    <button id="newsReviewRefreshBtn" type="button" class="btn-refresh">Refresh Queue</button>
+                  </div>
+                  <div class="toolbar-field compact">
+                    <label>Action</label>
+                    <button id="newsReviewClearFiltersBtn" type="button">Clear Filters</button>
+                  </div>
+                </div>
+                <p class="small admin-table-summary" id="newsReviewSummary">Submitted news reports are ready for review.</p>
+                <div class="table-scroll-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Report Date</th>
+                        <th scope="col">Student</th>
+                        <th scope="col">Level</th>
+                        <th scope="col">Article</th>
+                        <th scope="col">Source</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Review Note</th>
+                        <th scope="col">Reviewed</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="newsReviewRows">
+                      <tr><td colspan="9">Open this page to load student news reports.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               <div class="panel page-section" data-page="grades">
                 <h2>Grades [input]</h2>
                 <p class="section-label">Grades input</p>
@@ -3954,6 +4023,26 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         sourceRows: [],
         stagedRows: [],
         pendingStageQueueById: {},
+      },
+      newsReview: {
+        items: [],
+        total: 0,
+        hasMore: false,
+        statusSummary: {
+          submitted: 0,
+          approved: 0,
+          revisionRequested: 0,
+        },
+        pendingById: {},
+        filters: {
+          status: "submitted",
+          level: "",
+          studentRefId: "",
+          dateFrom: "",
+          dateTo: "",
+          query: "",
+          take: 200,
+        },
       },
       queueHub: {
         loaded: false,
@@ -5154,6 +5243,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       "assignments-data",
       "parent-tracking",
       "performance-data",
+      "news-reports",
       "grades",
       "grades-data",
       "reports",
@@ -7427,6 +7517,255 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function refreshAllTableSearchFilterControls() {
       DATA_TABLE_KEYS.forEach((tableKey) => refreshTableSearchFilterControls(tableKey))
+      refreshNewsReviewFilterControls()
+    }
+
+    function normalizeNewsReviewFilters(filters = {}) {
+      const source = filters && typeof filters === "object" ? filters : {}
+      const status = normalizeLower(source.status || "submitted")
+      const normalizedStatus = ["submitted", "approved", "revision-requested", "all"].includes(status)
+        ? status
+        : "submitted"
+      return {
+        status: normalizedStatus,
+        level: resolveSystemLevelName(source.level || ""),
+        studentRefId: normalizeText(source.studentRefId),
+        dateFrom: normalizeText(source.dateFrom).slice(0, 10),
+        dateTo: normalizeText(source.dateTo).slice(0, 10),
+        query: normalizeText(source.query),
+        take: Math.max(1, Math.min(Number.parseInt(String(source.take || 200), 10) || 200, 500)),
+      }
+    }
+
+    function newsReviewFilters() {
+      const normalized = normalizeNewsReviewFilters(state.newsReview?.filters || {})
+      state.newsReview.filters = normalized
+      return normalized
+    }
+
+    function setNewsReviewFilterValues(patch = {}) {
+      state.newsReview.filters = normalizeNewsReviewFilters({
+        ...newsReviewFilters(),
+        ...(patch && typeof patch === "object" ? patch : {}),
+      })
+      refreshNewsReviewFilterControls()
+    }
+
+    function newsReviewStudentOptionValue(student = {}) {
+      const id = normalizeText(student?.id)
+      if (id) return id
+      return normalizeText(student?.eaglesId)
+    }
+
+    function populateNewsReviewLevelOptions() {
+      const selectEl = document.getElementById("newsReviewLevelFilter")
+      if (!selectEl) return
+      const selectedLevel = resolveSystemLevelName(newsReviewFilters().level)
+      const levelValues = collectKnownLevelNames([selectedLevel])
+      selectEl.innerHTML = '<option value="">Any</option>'
+      levelValues.forEach((levelName) => {
+        if (!levelName) return
+        const option = document.createElement("option")
+        option.value = resolveSystemLevelName(levelName)
+        option.textContent = fullLevelLabel(levelName)
+        if (selectedLevel && levelNamesMatch(option.value, selectedLevel)) option.selected = true
+        selectEl.appendChild(option)
+      })
+      if (!selectedLevel) selectEl.value = ""
+    }
+
+    function populateNewsReviewStudentOptions() {
+      const selectEl = document.getElementById("newsReviewStudentFilter")
+      if (!selectEl) return
+      const selectedRef = normalizeText(newsReviewFilters().studentRefId)
+      const selectedRefLower = normalizeLower(selectedRef)
+      const selectedLevel = resolveSystemLevelName(newsReviewFilters().level)
+      const students = Array.from(
+        new Map(
+          studentSourceForPage("news-reports")
+            .filter((student) => {
+              if (!selectedLevel) return true
+              return levelNamesMatch(student?.profile?.currentGrade || "", selectedLevel)
+            })
+            .map((student) => [newsReviewStudentOptionValue(student), student])
+            .filter(([value]) => Boolean(value))
+        ).values()
+      ).sort((left, right) => {
+        const leftFullName = studentFullName(left)
+        const rightFullName = studentFullName(right)
+        const byName = leftFullName.localeCompare(rightFullName, undefined, { sensitivity: "base" })
+        if (byName !== 0) return byName
+        return normalizeText(left?.eaglesId).localeCompare(normalizeText(right?.eaglesId), undefined, { sensitivity: "base" })
+      })
+
+      selectEl.innerHTML = '<option value="">All students</option>'
+      let hasSelection = false
+      students.forEach((student) => {
+        const option = document.createElement("option")
+        option.value = newsReviewStudentOptionValue(student)
+        option.textContent = studentIdentityLabel(student, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
+        const optionLower = normalizeLower(option.value)
+        const publicIdLower = normalizeLower(student?.eaglesId)
+        if (selectedRef && (option.value === selectedRef || optionLower === selectedRefLower || publicIdLower === selectedRefLower)) {
+          option.selected = true
+          if (option.value && option.value !== selectedRef) {
+            state.newsReview.filters.studentRefId = option.value
+          }
+          hasSelection = true
+        }
+        selectEl.appendChild(option)
+      })
+      if (!selectedRef || !hasSelection) {
+        if (selectedRef && !hasSelection) state.newsReview.filters.studentRefId = ""
+        selectEl.value = ""
+      }
+    }
+
+    function syncNewsReviewFilterInputValues() {
+      const filters = newsReviewFilters()
+      const statusEl = document.getElementById("newsReviewStatusFilter")
+      const levelEl = document.getElementById("newsReviewLevelFilter")
+      const studentEl = document.getElementById("newsReviewStudentFilter")
+      const fromEl = document.getElementById("newsReviewDateFromFilter")
+      const toEl = document.getElementById("newsReviewDateToFilter")
+      const queryEl = document.getElementById("newsReviewQueryFilter")
+      if (statusEl) statusEl.value = filters.status
+      if (levelEl) levelEl.value = resolveSystemLevelName(filters.level)
+      if (studentEl) studentEl.value = filters.studentRefId
+      if (fromEl) fromEl.value = filters.dateFrom
+      if (toEl) toEl.value = filters.dateTo
+      if (queryEl) queryEl.value = filters.query
+    }
+
+    function refreshNewsReviewFilterControls() {
+      populateNewsReviewLevelOptions()
+      populateNewsReviewStudentOptions()
+      syncNewsReviewFilterInputValues()
+    }
+
+    function newsReviewStatusLabel(status = "") {
+      const normalized = normalizeLower(status)
+      if (normalized === "approved") return "Approved"
+      if (normalized === "revision-requested") return "Revision Requested"
+      return "Submitted"
+    }
+
+    function newsReviewSummaryText() {
+      const total = Math.max(0, Number.parseInt(String(state.newsReview?.total || 0), 10) || 0)
+      const showing = Array.isArray(state.newsReview?.items) ? state.newsReview.items.length : 0
+      const summary = state.newsReview?.statusSummary || {}
+      const submitted = Math.max(0, Number.parseInt(String(summary.submitted || 0), 10) || 0)
+      const approved = Math.max(0, Number.parseInt(String(summary.approved || 0), 10) || 0)
+      const revisionRequested = Math.max(0, Number.parseInt(String(summary.revisionRequested || 0), 10) || 0)
+      return `total=${total} | showing=${showing} | submitted=${submitted} | approved=${approved} | revision=${revisionRequested}`
+    }
+
+    function renderNewsReviewRows() {
+      const summaryEl = document.getElementById("newsReviewSummary")
+      const rowsEl = document.getElementById("newsReviewRows")
+      if (!summaryEl || !rowsEl) return
+      summaryEl.textContent = newsReviewSummaryText()
+      const items = Array.isArray(state.newsReview?.items) ? state.newsReview.items : []
+      rowsEl.innerHTML = ""
+      if (!items.length) {
+        rowsEl.innerHTML = '<tr><td colspan="9">No student news reports for the current filters.</td></tr>'
+        return
+      }
+
+      const canReview = canManageUsers()
+      items.forEach((item) => {
+        const reviewId = normalizeText(item?.id)
+        const pendingAction = normalizeText(state.newsReview?.pendingById?.[reviewId])
+        const student = item?.student && typeof item.student === "object" ? item.student : {}
+        const studentLabel = studentIdentityLabel({
+          id: student?.studentRefId,
+          studentNumber: student?.studentNumber,
+          eaglesId: student?.eaglesId,
+          profile: {
+            fullName: student?.fullName,
+            englishName: student?.englishName,
+            currentGrade: student?.level,
+          },
+        }, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
+        const row = document.createElement("tr")
+        row.innerHTML = `
+          <td>${escapeHtml(normalizeText(item?.reportDate))}</td>
+          <td>${escapeHtml(studentLabel)}</td>
+          <td>${escapeHtml(fullLevelLabel(student?.level || ""))}</td>
+          <td>${escapeHtml(normalizeText(item?.articleTitle || "-"))}</td>
+          <td><a href="${escapeHtml(normalizeText(item?.sourceLink || "#"))}" target="_blank" rel="noopener noreferrer">${escapeHtml(normalizeText(item?.sourceLink || "-"))}</a></td>
+          <td>${escapeHtml(newsReviewStatusLabel(item?.reviewStatus))}</td>
+          <td><textarea rows="2" data-news-review-note="${escapeHtml(reviewId)}" ${!canReview || Boolean(pendingAction) ? "disabled" : ""}>${escapeHtml(normalizeText(item?.reviewNote))}</textarea></td>
+          <td>${escapeHtml(formatDateTime(item?.reviewedAt || item?.submittedAt || ""))}<br><span class="small">${escapeHtml(normalizeText(item?.reviewedByUsername || "-"))}</span></td>
+          <td>
+            <div class="actions actions-2">
+              <button type="button" class="btn-edit" data-news-review-action="approve" data-news-review-id="${escapeHtml(reviewId)}" ${!canReview || Boolean(pendingAction) ? "disabled" : ""}>${pendingAction === "approve" ? "Approving..." : "Approve"}</button>
+              <button type="button" data-news-review-action="revision-requested" data-news-review-id="${escapeHtml(reviewId)}" ${!canReview || Boolean(pendingAction) ? "disabled" : ""}>${pendingAction === "revision-requested" ? "Saving..." : "Request Revision"}</button>
+            </div>
+          </td>
+        `
+        rowsEl.appendChild(row)
+      })
+    }
+
+    async function loadNewsReviewQueue({ notify = false } = {}) {
+      const filters = newsReviewFilters()
+      const params = new URLSearchParams()
+      params.set("status", normalizeText(filters.status || "submitted"))
+      if (filters.level) params.set("level", filters.level)
+      if (filters.studentRefId) params.set("studentRefId", filters.studentRefId)
+      if (filters.dateFrom) params.set("dateFrom", filters.dateFrom)
+      if (filters.dateTo) params.set("dateTo", filters.dateTo)
+      if (filters.query) params.set("q", filters.query)
+      params.set("take", String(filters.take || 200))
+      const payload = await api(`${ADMIN_NEWS_REPORTS_PATH}?${params.toString()}`)
+      state.newsReview.items = Array.isArray(payload?.items) ? payload.items : []
+      state.newsReview.total = Number.parseInt(String(payload?.total || state.newsReview.items.length), 10) || 0
+      state.newsReview.hasMore = Boolean(payload?.hasMore)
+      state.newsReview.statusSummary = payload?.statusSummary && typeof payload.statusSummary === "object"
+        ? {
+            submitted: Number.parseInt(String(payload.statusSummary.submitted || 0), 10) || 0,
+            approved: Number.parseInt(String(payload.statusSummary.approved || 0), 10) || 0,
+            revisionRequested: Number.parseInt(String(payload.statusSummary.revisionRequested || 0), 10) || 0,
+          }
+        : { submitted: 0, approved: 0, revisionRequested: 0 }
+      state.newsReview.filters = normalizeNewsReviewFilters({
+        ...filters,
+        ...(payload?.filters && typeof payload.filters === "object" ? payload.filters : {}),
+      })
+      refreshNewsReviewFilterControls()
+      renderNewsReviewRows()
+      if (notify) setStatus(`News review queue loaded: ${state.newsReview.items.length} rows.`)
+    }
+
+    async function applyNewsReviewAction(reportId = "", action = "") {
+      const id = normalizeText(reportId)
+      const normalizedAction = normalizeLower(action)
+      if (!id) throw new Error("Missing news report id.")
+      if (!["approve", "revision-requested"].includes(normalizedAction)) {
+        throw new Error("Unsupported news review action.")
+      }
+      const noteField = Array.from(document.querySelectorAll("textarea[data-news-review-note]")).find(
+        (entry) => normalizeText(entry?.getAttribute("data-news-review-note")) === id
+      )
+      const reviewNote = normalizeText(noteField?.value || "")
+      state.newsReview.pendingById[id] = normalizedAction
+      renderNewsReviewRows()
+      try {
+        await api(`${ADMIN_NEWS_REPORTS_PATH}/${encodeURIComponent(id)}`, {
+          method: "POST",
+          body: {
+            action: normalizedAction,
+            reviewNote,
+          },
+        })
+        await loadNewsReviewQueue()
+        const actionLabel = normalizedAction === "approve" ? "approved" : "marked for revision"
+        setStatus(`News report ${id} ${actionLabel}.`)
+      } finally {
+        delete state.newsReview.pendingById[id]
+        renderNewsReviewRows()
+      }
     }
 
     function parsePositiveInteger(value) {
@@ -8242,6 +8581,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     const ADMIN_UI_SETTINGS_PATH = normalizeText(window.__SIS_ADMIN_UI_SETTINGS_PATH) || "/api/admin/settings/ui"
     const ADMIN_DASHBOARD_PATH = normalizeText(window.__SIS_ADMIN_DASHBOARD_PATH) || "/api/admin/dashboard"
     const ADMIN_QUEUE_HUB_PATH = normalizeText(window.__SIS_ADMIN_QUEUE_HUB_PATH) || "/api/admin/queue-hub"
+    const ADMIN_NEWS_REPORTS_PATH = normalizeText(window.__SIS_ADMIN_NEWS_REPORTS_PATH) || "/api/admin/news-reports"
     const ADMIN_EXERCISE_TITLES_PATH = normalizeText(window.__SIS_ADMIN_EXERCISE_TITLES_PATH) || "/api/admin/exercise-titles"
     const ADMIN_NOTIFY_EMAIL_PATH = normalizeText(window.__SIS_ADMIN_NOTIFY_EMAIL_PATH) || "/api/admin/notifications/email"
     const ADMIN_NOTIFY_BATCH_STATUS_PATH =
@@ -8276,6 +8616,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         "grades-data",
         "parent-tracking",
         "performance-data",
+        "news-reports",
         "reports",
       ],
       support: ["family"],
@@ -8292,6 +8633,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       "grades-data",
       "parent-tracking",
       "performance-data",
+      "news-reports",
       "school-setup",
       "settings",
       "users",
@@ -8322,7 +8664,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           canManageUsers: false,
           canManagePermissions: false,
           startPage: "overview",
-          allowedPages: ["overview", "profile", "attendance", "assignments", "parent-tracking", "grades", "reports", "family"],
+          allowedPages: ["overview", "profile", "attendance", "assignments", "parent-tracking", "news-reports", "grades", "reports", "family"],
         },
         student: {
           role: "student",
@@ -8649,6 +8991,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
       if (slug === "performance-data") {
         loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(handleError)
+      }
+      if (slug === "news-reports") {
+        loadNewsReviewQueue({ notify: false }).catch(handleError)
       }
       const adminDataTableKey = adminDataTableKeyForPage(slug)
       if (adminDataTableKey) {
@@ -16221,6 +16566,70 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       dateFromEl?.addEventListener("change", applyDateRange)
       dateToEl?.addEventListener("change", applyDateRange)
     })
+    const newsReviewStatusEl = document.getElementById("newsReviewStatusFilter")
+    const newsReviewLevelEl = document.getElementById("newsReviewLevelFilter")
+    const newsReviewStudentEl = document.getElementById("newsReviewStudentFilter")
+    const newsReviewDateFromEl = document.getElementById("newsReviewDateFromFilter")
+    const newsReviewDateToEl = document.getElementById("newsReviewDateToFilter")
+    const newsReviewQueryEl = document.getElementById("newsReviewQueryFilter")
+    const newsReviewRowsEl = document.getElementById("newsReviewRows")
+    newsReviewStatusEl?.addEventListener("change", () => {
+      setNewsReviewFilterValues({ status: normalizeText(newsReviewStatusEl.value) || "submitted" })
+      loadNewsReviewQueue().catch(handleError)
+    })
+    newsReviewLevelEl?.addEventListener("change", () => {
+      setNewsReviewFilterValues({ level: newsReviewLevelEl.value, studentRefId: "" })
+      loadNewsReviewQueue().catch(handleError)
+    })
+    newsReviewStudentEl?.addEventListener("change", () => {
+      setNewsReviewFilterValues({ studentRefId: newsReviewStudentEl.value })
+      loadNewsReviewQueue().catch(handleError)
+    })
+    const applyNewsReviewDateRange = () => {
+      let fromIso = normalizeText(newsReviewDateFromEl?.value).slice(0, 10)
+      let toIso = normalizeText(newsReviewDateToEl?.value).slice(0, 10)
+      if (fromIso && toIso && compareIsoDateText(fromIso, toIso) > 0) {
+        const swapped = fromIso
+        fromIso = toIso
+        toIso = swapped
+        if (newsReviewDateFromEl) newsReviewDateFromEl.value = fromIso
+        if (newsReviewDateToEl) newsReviewDateToEl.value = toIso
+      }
+      setNewsReviewFilterValues({ dateFrom: fromIso, dateTo: toIso })
+      loadNewsReviewQueue().catch(handleError)
+    }
+    newsReviewDateFromEl?.addEventListener("change", applyNewsReviewDateRange)
+    newsReviewDateToEl?.addEventListener("change", applyNewsReviewDateRange)
+    newsReviewQueryEl?.addEventListener("input", () => {
+      setNewsReviewFilterValues({ query: newsReviewQueryEl.value })
+      loadNewsReviewQueue().catch(handleError)
+    })
+    document.getElementById("newsReviewRefreshBtn")?.addEventListener("click", () => {
+      loadNewsReviewQueue({ notify: true }).catch(handleError)
+    })
+    document.getElementById("newsReviewClearFiltersBtn")?.addEventListener("click", () => {
+      state.newsReview.filters = normalizeNewsReviewFilters({
+        status: "submitted",
+        level: "",
+        studentRefId: "",
+        dateFrom: "",
+        dateTo: "",
+        query: "",
+        take: state.newsReview?.filters?.take || 200,
+      })
+      refreshNewsReviewFilterControls()
+      loadNewsReviewQueue({ notify: true }).catch(handleError)
+    })
+    newsReviewRowsEl?.addEventListener("click", (event) => {
+      const target = event?.target
+      if (!(target instanceof Element)) return
+      const actionBtn = target.closest("button[data-news-review-action][data-news-review-id]")
+      if (!(actionBtn instanceof HTMLButtonElement)) return
+      const action = normalizeText(actionBtn.getAttribute("data-news-review-action"))
+      const reportId = normalizeText(actionBtn.getAttribute("data-news-review-id"))
+      if (!action || !reportId) return
+      applyNewsReviewAction(reportId, action).catch(handleError)
+    })
     bindAllTableColumnVisibilityControls()
     document.addEventListener("click", (event) => {
       const target = event?.target
@@ -16250,6 +16659,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         await loadServiceControlStatus({ notify: false })
         await loadIncomingExerciseResults({ showAll: state.incomingExerciseQueue.showAll })
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
+        if (state.activePage === "news-reports") await loadNewsReviewQueue({ notify: false })
         await loadExerciseTitles()
         await probeHubConnection({ notify: false })
         setStatus("Data refreshed.")

@@ -2902,6 +2902,9 @@ const STUDENT_NEWS_FALLBACK_MAX_ITEMS = Math.max(
   200,
   Number.parseInt(String(process.env.STUDENT_NEWS_REPORTS_FALLBACK_MAX_ITEMS || "5000"), 10) || 5000
 )
+const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"
+const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"
+const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"
 
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
@@ -3195,6 +3198,24 @@ function isStudentNewsReportSchemaUnavailableError(error) {
   )
 }
 
+function isStudentNewsReviewSchemaUnavailableError(error) {
+  return (
+    isStudentNewsReportSchemaUnavailableError(error)
+    || isUnknownPrismaArgumentError(error, "reviewStatus")
+    || isUnknownPrismaFieldError(error, "reviewStatus")
+    || isMissingPrismaColumnError(error, "reviewStatus")
+    || isUnknownPrismaArgumentError(error, "reviewNote")
+    || isUnknownPrismaFieldError(error, "reviewNote")
+    || isMissingPrismaColumnError(error, "reviewNote")
+    || isUnknownPrismaArgumentError(error, "reviewedAt")
+    || isUnknownPrismaFieldError(error, "reviewedAt")
+    || isMissingPrismaColumnError(error, "reviewedAt")
+    || isUnknownPrismaArgumentError(error, "reviewedByUsername")
+    || isUnknownPrismaFieldError(error, "reviewedByUsername")
+    || isMissingPrismaColumnError(error, "reviewedByUsername")
+  )
+}
+
 function stripLegacyParentReportFields(data = {}) {
   if (!data || typeof data !== "object") return {}
   const next = { ...data }
@@ -3312,6 +3333,122 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
   else source.push(normalized)
   writeStudentNewsFallbackEntries(source)
   return normalized
+}
+
+function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) {
+  const token = normalizeLower(value)
+  if (!token) return fallback
+  if (token === "all") return "all"
+  if (token === "approved" || token === "approve") return STUDENT_NEWS_REVIEW_STATUS_APPROVED
+  if (
+    token === "revision-requested"
+    || token === "revision_requested"
+    || token === "revision"
+    || token === "request-revision"
+    || token === "request_revision"
+  ) {
+    return STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
+  }
+  if (
+    token === "submitted"
+    || token === "pending"
+    || token === "needs-review"
+    || token === "needs_review"
+    || token === "needsreview"
+  ) {
+    return STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  }
+  return fallback
+}
+
+function mapStudentNewsReviewStudentSummary(student = {}, fallbackStudentRefId = "") {
+  const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
+  return {
+    studentRefId: normalizeText(student?.id || fallbackStudentRefId),
+    eaglesId: normalizeText(student?.eaglesId),
+    studentNumber: normalizeInteger(student?.studentNumber),
+    fullName: normalizeText(profile?.fullName || profile?.englishName),
+    englishName: normalizeText(profile?.englishName),
+    level: canonicalizeLevel(profile?.currentGrade || "") || "",
+  }
+}
+
+function mapStudentNewsReviewItem(row = {}, options = {}) {
+  const studentByRefId = options?.studentByRefId instanceof Map ? options.studentByRefId : new Map()
+  const report = mapStudentNewsReportRow(row)
+  const fallbackStudent = studentByRefId.get(report.studentRefId) || {}
+  const student = mapStudentNewsReviewStudentSummary(
+    row?.student && typeof row.student === "object" ? row.student : fallbackStudent,
+    report.studentRefId
+  )
+  return {
+    ...report,
+    student,
+  }
+}
+
+function studentNewsReviewSortValue(item = {}) {
+  const submittedAt = parseDateOrNull(item?.submittedAt)
+  if (submittedAt instanceof Date && !Number.isNaN(submittedAt.valueOf())) return submittedAt.valueOf()
+  const reportDate = parseLocalDateOnly(item?.reportDate)
+  if (reportDate instanceof Date && !Number.isNaN(reportDate.valueOf())) return reportDate.valueOf()
+  return 0
+}
+
+function studentNewsReviewSearchText(item = {}) {
+  const student = item?.student && typeof item.student === "object" ? item.student : {}
+  return normalizeLower([
+    item?.articleTitle,
+    item?.sourceLink,
+    item?.leadSynopsis,
+    item?.actionActor,
+    item?.actionAffected,
+    item?.actionWhere,
+    item?.actionWhat,
+    item?.actionWhy,
+    student?.eaglesId,
+    student?.fullName,
+    student?.englishName,
+    student?.level,
+  ].map((entry) => normalizeText(entry)).filter(Boolean).join(" "))
+}
+
+function normalizeStudentNewsReviewTake(value) {
+  const parsed = Number.parseInt(String(value), 10)
+  if (!Number.isFinite(parsed)) return 200
+  return Math.max(1, Math.min(parsed, 500))
+}
+
+async function loadStudentNewsReviewStudentMap(prisma, studentRefIds = []) {
+  const ids = Array.isArray(studentRefIds) ? Array.from(new Set(studentRefIds.map((entry) => normalizeText(entry)).filter(Boolean))) : []
+  if (!ids.length || !hasPrismaDelegateMethod(prisma, "student", "findMany")) return new Map()
+  const rows = await prisma.student.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      eaglesId: true,
+      studentNumber: true,
+      profile: true,
+    },
+  })
+  return new Map(rows.map((row) => [normalizeText(row?.id), row]))
+}
+
+function resolveStudentNewsReviewActionStatus(payload = {}) {
+  const action = normalizeLower(payload?.action || payload?.status)
+  if (!action) return ""
+  if (action === "approve" || action === "approved") return STUDENT_NEWS_REVIEW_STATUS_APPROVED
+  if (
+    action === "revision"
+    || action === "revision-requested"
+    || action === "revision_requested"
+    || action === "request-revision"
+    || action === "request_revision"
+  ) {
+    return STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
+  }
+  if (action === "submitted" || action === "reset") return STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  return ""
 }
 
 async function loadApprovedParentReportRowsForPoints(prisma, idFilter = {}) {
@@ -3715,6 +3852,10 @@ function mapStudentNewsReportRow(row = {}) {
     actionWhy: normalizeText(row?.actionWhy),
     biasAssessment,
     submittedAt: parseDateOrNull(row?.submittedAt)?.toISOString?.() || "",
+    reviewStatus: normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED),
+    reviewNote: normalizeText(row?.reviewNote),
+    reviewedByUsername: normalizeText(row?.reviewedByUsername),
+    reviewedAt: parseDateOrNull(row?.reviewedAt)?.toISOString?.() || "",
   }
 }
 
@@ -3903,5 +4044,263 @@ export async function saveStudentNewsReport(studentRefId, payload = {}, { now = 
     generatedAt: nowIso(),
     window,
     item: mapStudentNewsReportRow(saved),
+  }
+}
+
+function normalizeStudentNewsReviewDateFilter(value) {
+  const date = parseLocalDateOnly(value)
+  return date instanceof Date && !Number.isNaN(date.valueOf()) ? date : null
+}
+
+function buildStudentNewsReviewSelect({ includeReviewFields = true } = {}) {
+  const select = {
+    id: true,
+    studentRefId: true,
+    reportDate: true,
+    sourceLink: true,
+    articleTitle: true,
+    byline: true,
+    articleDateline: true,
+    leadSynopsis: true,
+    actionActor: true,
+    actionAffected: true,
+    actionWhere: true,
+    actionWhat: true,
+    actionWhy: true,
+    biasAssessment: true,
+    submittedAt: true,
+    student: {
+      select: {
+        id: true,
+        eaglesId: true,
+        studentNumber: true,
+        profile: true,
+      },
+    },
+  }
+  if (includeReviewFields) {
+    select.reviewStatus = true
+    select.reviewNote = true
+    select.reviewedByUsername = true
+    select.reviewedAt = true
+  }
+  return select
+}
+
+export async function listStudentNewsReportsForReview({
+  status = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED,
+  level = "",
+  studentRefId = "",
+  dateFrom = "",
+  dateTo = "",
+  query = "",
+  take = "200",
+} = {}) {
+  const prisma = await getPrismaClient()
+  const limit = normalizeStudentNewsReviewTake(take)
+  const requestedStatus = normalizeStudentNewsReviewStatus(status, "all")
+  const requestedLevel = canonicalizeLevel(level || "") || ""
+  const requestedStudentRefId = normalizeText(studentRefId)
+  const requestedQuery = normalizeLower(query)
+  const fromDate = normalizeStudentNewsReviewDateFilter(dateFrom)
+  const toDate = normalizeStudentNewsReviewDateFilter(dateTo)
+
+  const where = {}
+  if (requestedStudentRefId) where.studentRefId = requestedStudentRefId
+  if (fromDate || toDate) {
+    where.reportDate = {}
+    if (fromDate) where.reportDate.gte = startOfDay(fromDate)
+    if (toDate) where.reportDate.lte = endOfDay(toDate)
+  }
+  if (requestedStatus !== "all") {
+    where.reviewStatus = requestedStatus
+  }
+
+  let reportRows = []
+  let requiresFallback = false
+  let reviewSchemaUnavailable = false
+  if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findMany")) {
+    const query = {
+      where,
+      select: buildStudentNewsReviewSelect({ includeReviewFields: true }),
+      orderBy: [{ submittedAt: "desc" }, { reportDate: "desc" }],
+      take: Math.max(limit * 3, limit + 50),
+    }
+    try {
+      reportRows = await prisma.studentNewsReport.findMany(query)
+    } catch (error) {
+      if (isStudentNewsReviewSchemaUnavailableError(error)) {
+        reviewSchemaUnavailable = true
+        const legacyWhere = { ...where }
+        delete legacyWhere.reviewStatus
+        try {
+          reportRows = await prisma.studentNewsReport.findMany({
+            ...query,
+            where: legacyWhere,
+            select: buildStudentNewsReviewSelect({ includeReviewFields: false }),
+          })
+        } catch (legacyError) {
+          if (!isStudentNewsReportSchemaUnavailableError(legacyError)) throw legacyError
+          requiresFallback = true
+        }
+      } else if (isStudentNewsReportSchemaUnavailableError(error)) {
+        requiresFallback = true
+      } else {
+        throw error
+      }
+    }
+  } else {
+    requiresFallback = true
+  }
+
+  if (requiresFallback) {
+    const fromDateKey = fromDate ? toLocalIsoDate(fromDate) : ""
+    const toDateKey = toDate ? toLocalIsoDate(toDate) : ""
+    reportRows = readStudentNewsFallbackEntries()
+      .filter((entry) => !requestedStudentRefId || normalizeText(entry?.studentRefId) === requestedStudentRefId)
+      .filter((entry) => !fromDateKey || normalizeText(entry?.reportDate) >= fromDateKey)
+      .filter((entry) => !toDateKey || normalizeText(entry?.reportDate) <= toDateKey)
+      .sort((left, right) => {
+        const leftDate = parseDateOrNull(left?.submittedAt)?.valueOf?.() || parseLocalDateOnly(left?.reportDate)?.valueOf?.() || 0
+        const rightDate = parseDateOrNull(right?.submittedAt)?.valueOf?.() || parseLocalDateOnly(right?.reportDate)?.valueOf?.() || 0
+        if (leftDate !== rightDate) return rightDate - leftDate
+        return normalizeText(left?.id).localeCompare(normalizeText(right?.id))
+      })
+  }
+
+  const studentByRefId = await loadStudentNewsReviewStudentMap(
+    prisma,
+    reportRows.map((entry) => normalizeText(entry?.studentRefId))
+  )
+  const mapped = reportRows.map((row) =>
+    mapStudentNewsReviewItem(row, {
+      studentByRefId,
+    })
+  )
+  const filtered = mapped.filter((entry) => {
+    if (
+      reviewSchemaUnavailable
+      && requestedStatus !== "all"
+      && requestedStatus !== STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+    ) {
+      return false
+    }
+    if (requestedStatus !== "all" && normalizeStudentNewsReviewStatus(entry?.reviewStatus, "") !== requestedStatus) return false
+    if (requestedLevel) {
+      const entryLevel = canonicalizeLevel(entry?.student?.level || "") || ""
+      if (entryLevel !== requestedLevel) return false
+    }
+    if (requestedQuery && !studentNewsReviewSearchText(entry).includes(requestedQuery)) return false
+    return true
+  })
+  filtered.sort((left, right) => {
+    const diff = studentNewsReviewSortValue(right) - studentNewsReviewSortValue(left)
+    if (diff !== 0) return diff
+    return normalizeText(left?.id).localeCompare(normalizeText(right?.id))
+  })
+
+  const statusSummary = {
+    submitted: 0,
+    approved: 0,
+    revisionRequested: 0,
+  }
+  filtered.forEach((entry) => {
+    const entryStatus = normalizeStudentNewsReviewStatus(entry?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+    if (entryStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED) statusSummary.approved += 1
+    else if (entryStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED) statusSummary.revisionRequested += 1
+    else statusSummary.submitted += 1
+  })
+
+  return {
+    generatedAt: nowIso(),
+    filters: {
+      status: requestedStatus || "all",
+      level: requestedLevel,
+      studentRefId: requestedStudentRefId,
+      dateFrom: fromDate ? toLocalIsoDate(fromDate) : "",
+      dateTo: toDate ? toLocalIsoDate(toDate) : "",
+      query: normalizeText(query),
+      take: limit,
+    },
+    total: filtered.length,
+    hasMore: filtered.length > limit,
+    statusSummary,
+    items: filtered.slice(0, limit),
+  }
+}
+
+export async function reviewStudentNewsReport(reportId, payload = {}, options = {}) {
+  const prisma = await getPrismaClient()
+  const id = normalizeText(reportId)
+  assertWithStatus(Boolean(id), 400, "reportId is required")
+  const reviewStatus = resolveStudentNewsReviewActionStatus(payload)
+  assertWithStatus(Boolean(reviewStatus), 400, "Unsupported news review action")
+  assertWithStatus(
+    hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")
+    && hasPrismaDelegateMethod(prisma, "studentNewsReport", "update"),
+    503,
+    "Student news review persistence is unavailable"
+  )
+
+  let existingReport
+  try {
+    existingReport = await prisma.studentNewsReport.findUnique({
+      where: { id },
+      select: buildStudentNewsReviewSelect({ includeReviewFields: false }),
+    })
+  } catch (error) {
+    if (isStudentNewsReportSchemaUnavailableError(error)) {
+      assertWithStatus(false, 503, "Student news review persistence is unavailable")
+    }
+    if (isStudentNewsReviewSchemaUnavailableError(error)) {
+      assertWithStatus(
+        false,
+        503,
+        "Student news review fields are unavailable. Run Prisma migration and regenerate the client."
+      )
+    }
+    throw error
+  }
+  assertWithStatus(Boolean(existingReport), 404, "Student news report not found")
+
+  const now = new Date()
+  const reviewNote = normalizeNullableText(payload?.reviewNote || payload?.note || payload?.comment)
+  const reviewedByUsername = normalizeNullableText(options?.reviewedByUsername || payload?.reviewedByUsername)
+  let updatedReport
+  try {
+    updatedReport = await prisma.studentNewsReport.update({
+      where: { id },
+      data: {
+        reviewStatus,
+        reviewNote,
+        reviewedByUsername,
+        reviewedAt: now,
+      },
+      select: buildStudentNewsReviewSelect({ includeReviewFields: true }),
+    })
+  } catch (error) {
+    if (isStudentNewsReportSchemaUnavailableError(error)) {
+      assertWithStatus(false, 503, "Student news review persistence is unavailable")
+    }
+    if (isStudentNewsReviewSchemaUnavailableError(error)) {
+      assertWithStatus(
+        false,
+        503,
+        "Student news review fields are unavailable. Run Prisma migration and regenerate the client."
+      )
+    }
+    if (normalizeText(error?.code).toUpperCase() === "P2025") {
+      assertWithStatus(false, 404, "Student news report not found")
+    }
+    throw error
+  }
+  const studentByRefId = await loadStudentNewsReviewStudentMap(prisma, [normalizeText(updatedReport?.studentRefId)])
+  const item = mapStudentNewsReviewItem(updatedReport, {
+    studentByRefId,
+  })
+
+  return {
+    generatedAt: nowIso(),
+    item,
   }
 }

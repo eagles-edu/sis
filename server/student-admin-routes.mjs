@@ -33,11 +33,13 @@ import {
   importStudentsFromRows,
   isStudentAdminStoreEnabled,
   listStudentNewsCalendar,
+  listStudentNewsReportsForReview,
   listStudentPointsLedger,
   listStudentPointsSnapshots,
   listExerciseTitles,
   listLevelAndSchoolFilters,
   listStudents,
+  reviewStudentNewsReport,
   saveAttendanceRecord,
   saveGradeRecord,
   saveParentClassReport,
@@ -81,6 +83,7 @@ const ADMIN_PAGE_SECTIONS = [
   "performance-data",
   "grades",
   "grades-data",
+  "news-reports",
   "reports",
   "family",
   "users",
@@ -98,6 +101,7 @@ const ADMIN_PERMISSIONS_PATH = `${ADMIN_API_PREFIX}/permissions`
 const ADMIN_UI_SETTINGS_PATH = `${ADMIN_API_PREFIX}/settings/ui`
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_QUEUE_HUB_PATH = `${ADMIN_API_PREFIX}/queue-hub`
+const ADMIN_NEWS_REPORTS_PATH = `${ADMIN_API_PREFIX}/news-reports`
 const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
 const ADMIN_EXPORT_XLSX_PATH = `${ADMIN_API_PREFIX}/exports/xlsx`
 const ADMIN_NOTIFY_EMAIL_PATH = `${ADMIN_API_PREFIX}/notifications/email`
@@ -146,6 +150,7 @@ const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
   `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/reports/([^/]+)$`
 )
 const ADMIN_PROFILE_SUBMISSION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PROFILE_SUBMISSIONS_PATH)}/([^/]+)$`)
+const ADMIN_NEWS_REPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_NEWS_REPORTS_PATH)}/([^/]+)$`)
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
@@ -635,7 +640,7 @@ function sendHtml(response, statusCode, html) {
 }
 
 function injectAdminRuntimeConfig(html, pageSlug) {
-  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
+  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -683,6 +688,7 @@ export function getStudentAdminRuntimeStatus() {
     uiSettingsPath: ADMIN_UI_SETTINGS_PATH,
     dashboardPath: ADMIN_DASHBOARD_PATH,
     queueHubPath: ADMIN_QUEUE_HUB_PATH,
+    newsReportsPath: ADMIN_NEWS_REPORTS_PATH,
     exerciseTitlesPath: ADMIN_EXERCISE_TITLES_PATH,
     exportXlsxPath: ADMIN_EXPORT_XLSX_PATH,
     notifyEmailPath: ADMIN_NOTIFY_EMAIL_PATH,
@@ -4419,6 +4425,37 @@ async function handleApiRequest(request, response, pathname, url) {
     assertCanManageUsers(rolePolicy)
     const payload = await buildQueueHubPayload()
     sendJson(response, 200, payload)
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_NEWS_REPORTS_PATH) {
+    assertStoreEnabled()
+    const data = await listStudentNewsReportsForReview({
+      status: url.searchParams.get("status") || "submitted",
+      level: url.searchParams.get("level") || "",
+      studentRefId: url.searchParams.get("studentRefId") || "",
+      dateFrom: url.searchParams.get("dateFrom") || "",
+      dateTo: url.searchParams.get("dateTo") || "",
+      query: url.searchParams.get("q") || "",
+      take: url.searchParams.get("take") || "200",
+    })
+    sendJson(response, 200, data)
+    return true
+  }
+
+  const newsReportMatch = pathname.match(ADMIN_NEWS_REPORT_PATH_RE)
+  if (newsReportMatch && method === "POST") {
+    assertStoreEnabled()
+    assertCanManageUsers(rolePolicy)
+    const reportId = decodeURIComponent(newsReportMatch[1])
+    const payload = await parseBody(request)
+    const result = await reviewStudentNewsReport(reportId, payload, {
+      reviewedByUsername: normalizeText(session?.username),
+    })
+    sendJson(response, 200, {
+      ok: true,
+      ...result,
+    })
     return true
   }
 

@@ -7,6 +7,87 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-14 - hardened student-news review persistence to DB-native fields)
+
+- Updated [prisma/schema.prisma](prisma/schema.prisma):
+  - added DB-native review fields on `StudentNewsReport`:
+    - `reviewStatus` (default: `submitted`)
+    - `reviewNote`
+    - `reviewedAt`
+    - `reviewedByUsername`
+  - added review-oriented indexes for queue filtering and audit lookup.
+- Added migration [prisma/migrations/20260314202000_add_student_news_review_fields/migration.sql](prisma/migrations/20260314202000_add_student_news_review_fields/migration.sql):
+  - alters `StudentNewsReport` with the new review columns and indexes.
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - removed file-backed review-state persistence path (`runtime-data/student-news-review-state.json` no longer used for queue/review status).
+  - review queue now reads review metadata from `StudentNewsReport` DB fields.
+  - review action now persists via `prisma.studentNewsReport.update(...)`.
+  - hardened mixed-schema behavior:
+    - list path retries with legacy-safe selection when review columns are missing.
+    - review mutation returns explicit `503` migration-required errors when review fields are unavailable.
+- Updated regression coverage:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - replaced file-backed drift assertion with DB-native review persistence assertions.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added Prisma schema contract test for `StudentNewsReport` review fields.
+    - expanded store source-contract test to guard DB-native review helpers and prevent file-backed regression.
+- Verification:
+  - `npm run db:generate` => pass.
+  - `node --test test/student-admin-store-parent-report.spec.mjs test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `159` pass, `0` fail.
+  - `npm test` => `246` pass, `0` fail, `0` skip.
+- Residual risk:
+  - student-news content fallback remains local-file backed when `StudentNewsReport` model/table is unavailable; review-status fallback is now removed in favor of DB-only persistence.
+- Prioritized next action:
+  - apply Prisma migration (`npm run db:migrate:deploy`) to each runtime DB before live review actions, then validate `/api/admin/news-reports/:id` approve/revision flows against live.
+
+## Update (2026-03-14 - admin news review MVP queue with filters/actions and regression coverage)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - added admin review queue query path for student news reports:
+    - `listStudentNewsReportsForReview({ status, level, studentRefId, dateFrom, dateTo, query, take })`.
+  - added review action mutation path:
+    - `reviewStudentNewsReport(reportId, { action, reviewNote }, { reviewedByUsername })`.
+  - added file-backed review-state persistence:
+    - `runtime-data/student-news-review-state.json` (configurable via `STUDENT_NEWS_REVIEW_STATE_FILE`).
+  - preserved schema-drift safety:
+    - when `StudentNewsReport` model/table is unavailable, queue/list/review still resolve against existing fallback report storage and persisted review-state metadata.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added admin API endpoints:
+    - `GET /api/admin/news-reports` (queue + filters).
+    - `POST /api/admin/news-reports/:id` (approve / revision-requested actions).
+  - added admin page slug support for `news-reports`:
+    - `/admin/students/news-reports`.
+  - injected runtime config path:
+    - `window.__SIS_ADMIN_NEWS_REPORTS_PATH`.
+  - enforced mutation authority for review actions:
+    - review mutations require management privileges (`canManageUsers`).
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added Tracking nav link and page:
+    - `News Reports` (`data-page="news-reports"`).
+  - implemented queue UI:
+    - filters: status, level, student, date range, free-text.
+    - actions: `Approve`, `Request Revision`.
+    - summary counters and refresh/clear controls.
+  - wired page lifecycle:
+    - auto-load queue on page open,
+    - post-action reload,
+    - filter-driven reload.
+- Updated regression coverage:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - `/admin/students/news-reports` slug/runtime-config contract.
+    - auth requirement for `GET /api/admin/news-reports`.
+    - store-disabled contract for `GET /api/admin/news-reports`.
+    - teacher forbidden contract for `POST /api/admin/news-reports/:id`.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - news review page queue/filter/load flow and approve action request payload.
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - drift guard contracts for news-review state storage and exported review queue/action functions.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs test/student-admin-store-parent-report.spec.mjs` => `158` pass, `0` fail.
+  - `npm test` => `245` pass, `0` fail, `0` skip.
+- Residual risk:
+  - review statuses are persisted in a local file-backed metadata store for compatibility with mixed-schema runtimes; a DB-native review-status column/model is still preferable for horizontally scaled runtimes and strict transactional consistency.
+
 ## Update (2026-03-14 - data-entry hardening, parent-report schema-drift fallback, student-news fallback, and parent profile-submit error coverage)
 
 - Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):

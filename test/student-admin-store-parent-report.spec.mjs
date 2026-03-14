@@ -158,3 +158,15 @@ test("student news save/list paths keep model-drift fallback guards", () => {
   assert.match(source, /listStudentNewsReportsFromFallbackStore\(/)
   assert.match(source, /upsertStudentNewsReportInFallbackStore\(/)
 })
+
+test("student news review queue keeps DB-native review persistence guards", () => {
+  const source = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
+  assert.match(source, /buildStudentNewsReviewSelect\(/)
+  assert.match(source, /isStudentNewsReviewSchemaUnavailableError\(/)
+  assert.match(source, /prisma\.studentNewsReport\.update\(/)
+  assert.match(source, /reviewStatus,\s*reviewNote,\s*reviewedByUsername,\s*reviewedAt/)
+  assert.doesNotMatch(source, /STUDENT_NEWS_REVIEW_STATE_FILE_PATH/)
+  assert.doesNotMatch(source, /upsertStudentNewsReviewState\(/)
+  assert.match(source, /export async function listStudentNewsReportsForReview\(/)
+  assert.match(source, /export async function reviewStudentNewsReport\(/)
+})

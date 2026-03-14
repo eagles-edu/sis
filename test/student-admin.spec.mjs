@@ -197,6 +197,17 @@ test("StudentPortalAccount model exists in Prisma schema contract", () => {
   assert.match(schema, /passwordHash\s+String/)
 })
 
+test("StudentNewsReport review fields exist in Prisma schema contract", () => {
+  const schema = fs.readFileSync(new URL("../prisma/schema.prisma", import.meta.url), "utf8")
+  const modelStart = schema.indexOf("model StudentNewsReport {")
+  assert.ok(modelStart >= 0, "StudentNewsReport model is present")
+  const modelChunk = schema.slice(modelStart, modelStart + 1600)
+  assert.match(modelChunk, /reviewStatus\s+String\s+@default\("submitted"\)/)
+  assert.match(modelChunk, /reviewNote\s+String\?/)
+  assert.match(modelChunk, /reviewedAt\s+DateTime\?/)
+  assert.match(modelChunk, /reviewedByUsername\s+String\?/)
+})
+
 test("student portal login resolver keeps DB-first auth with env fallback", () => {
   const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
   const verifyStart = routes.indexOf("async function verifyStudentPortalCredentials(")
@@ -238,6 +249,9 @@ test("student dashboard/news paths guard missing optional Prisma delegates", () 
   assert.match(store, /listStudentNewsReportsFromFallbackStore\(/)
   assert.match(store, /upsertStudentNewsReportInFallbackStore\(/)
   assert.match(store, /isStudentNewsReportSchemaUnavailableError\(/)
+  assert.match(store, /isStudentNewsReviewSchemaUnavailableError\(/)
+  assert.match(store, /buildStudentNewsReviewSelect\(/)
+  assert.doesNotMatch(store, /STUDENT_NEWS_REVIEW_STATE_FILE_PATH/)
   assert.match(store, /loadApprovedParentReportRowsForPoints\(prisma, idFilter\)/)
   assert.match(store, /isLegacyParentReportApprovedAtSchemaError/)
   assert.match(store, /isLegacyParentReportParticipationPointsSchemaError/)
@@ -430,6 +444,16 @@ test("GET /admin/students/queue-hub returns section page HTML with slug config",
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"queue-hub"/i)
   assert.match(html, /__SIS_ADMIN_QUEUE_HUB_PATH/i)
+})
+
+test("GET /admin/students/news-reports returns section page HTML with slug config", async () => {
+  const res = await fetchLocal(port, "/admin/students/news-reports")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
+  assert.match(html, /"news-reports"/i)
+  assert.match(html, /__SIS_ADMIN_NEWS_REPORTS_PATH/i)
 })
 
 test("GET /parent/portal returns parent portal HTML with runtime config", async () => {
@@ -882,6 +906,23 @@ test("teacher cannot access queue hub or profile submissions endpoints", async (
   assert.match(profileSubmissionsBody.error, /Forbidden/i)
 })
 
+test("teacher cannot apply student news review actions", async () => {
+  const res = await fetchLocal(port, "/api/admin/news-reports/news-001", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      action: "approve",
+      reviewNote: "approved by teacher",
+    }),
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
 test("teacher cannot create volatile assignment announcement preview", async () => {
   const res = await fetchLocal(port, "/api/admin/assignment-announcements/volatile", {
     method: "POST",
@@ -928,6 +969,15 @@ test("GET /api/admin/profile-submissions returns queue payload for admin", async
 
 test("GET /api/admin/queue-hub returns store-disabled response when admin store is disabled", async () => {
   const res = await fetchLocal(port, "/api/admin/queue-hub", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
+})
+
+test("GET /api/admin/news-reports returns store-disabled response when admin store is disabled", async () => {
+  const res = await fetchLocal(port, "/api/admin/news-reports", {
     headers: { Cookie: adminSessionCookie },
   })
   assert.equal(res.status, 503)
@@ -1340,6 +1390,13 @@ test("GET /api/admin/dashboard requires auth", async () => {
 
 test("GET /api/admin/queue-hub requires auth", async () => {
   const res = await fetchLocal(port, "/api/admin/queue-hub")
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("GET /api/admin/news-reports requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/news-reports")
   assert.equal(res.status, 401)
   const body = await res.json()
   assert.match(body.error, /Unauthorized/i)

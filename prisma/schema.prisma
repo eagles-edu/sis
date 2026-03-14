@@ -333,11 +333,17 @@ model StudentNewsReport {
   actionWhy     String
   biasAssessment String?
   submittedAt   DateTime @default(now())
+  reviewStatus  String   @default("submitted")
+  reviewNote    String?
+  reviewedAt    DateTime?
+  reviewedByUsername String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@unique([studentRefId, reportDate])
   @@index([reportDate, submittedAt])
+  @@index([reviewStatus, reportDate, submittedAt])
+  @@index([reviewedAt])
 }
 
 model AdminUser {

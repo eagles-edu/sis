@@ -106,6 +106,7 @@ const SCHOOL_SETUP_ADMIN_ALLOWED_PAGES = [
   "assignments-data",
   "parent-tracking",
   "performance-data",
+  "news-reports",
   "grades",
   "grades-data",
   "reports",
@@ -391,6 +392,225 @@ test("admin ui preserves queue-hub deep link after login bootstrap", async () =>
     assert.equal(dom.window.location.pathname, "/admin/students/queue-hub")
     const active = dom.window.document.querySelector(".page-section.active")
     assert.equal(active?.getAttribute("data-page"), "queue-hub")
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("news review page loads queue filters and sends approve action payload", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [...SCHOOL_SETUP_ADMIN_ALLOWED_PAGES],
+  }
+  let authenticated = false
+  let latestQueryString = ""
+  const requestLog = []
+  const newsItems = [
+    {
+      id: "news-001",
+      reportDate: "2026-03-14",
+      sourceLink: "https://example.com/news/market",
+      articleTitle: "Market news update",
+      leadSynopsis: "Summary one",
+      actionActor: "City leaders",
+      actionAffected: "Families",
+      actionWhere: "HCMC",
+      actionWhat: "Policy update",
+      actionWhy: "Public safety",
+      submittedAt: "2026-03-14T08:00:00.000Z",
+      student: {
+        studentRefId: "student-001",
+        eaglesId: "vi001",
+        studentNumber: 101,
+        fullName: "Student One",
+        englishName: "Student One",
+        level: "Pre-A1 Starters",
+      },
+      reviewStatus: "submitted",
+      reviewNote: "",
+      reviewedByUsername: "",
+      reviewedAt: "",
+    },
+  ]
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const urlText = String(resource)
+    const method = String(init.method || "GET").toUpperCase()
+    const parsed = new URL(urlText, "http://127.0.0.1")
+    const pathname = parsed.pathname
+
+    if (pathname === "/api/admin/auth/me" && method === "GET") {
+      if (!authenticated) return jsonResponse(401, { error: "Unauthorized" })
+      return jsonResponse(200, {
+        authenticated: true,
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+
+    if (pathname === "/api/admin/auth/login" && method === "POST") {
+      authenticated = true
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+
+    if (pathname === "/api/admin/permissions" && method === "GET") {
+      return jsonResponse(200, {
+        roles: {
+          admin: { ...rolePolicy, allowedPages: [...rolePolicy.allowedPages] },
+        },
+      })
+    }
+
+    if (pathname === "/api/admin/users" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters" && method === "GET") {
+      return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main"] })
+    }
+    if (pathname === "/api/admin/students" && method === "GET") {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "student-001",
+            eaglesId: "vi001",
+            studentNumber: 101,
+            profile: { fullName: "Student One", englishName: "Student One", currentGrade: "Pre-A1 Starters" },
+          },
+        ],
+      })
+    }
+    if (pathname === "/api/admin/dashboard" && method === "GET") {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (pathname === "/api/admin/queue-hub" && method === "GET") {
+      return jsonResponse(200, { generatedAt: "", panelOrder: [], panels: [] })
+    }
+    if (pathname === "/api/admin/notifications/batch-status" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    }
+    if (pathname === "/api/admin/exercise-results/incoming" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/runtime/service-control" && method === "GET") {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+
+    if (pathname === "/api/admin/news-reports" && method === "GET") {
+      latestQueryString = parsed.search
+      const status = parsed.searchParams.get("status") || "submitted"
+      const query = String(parsed.searchParams.get("q") || "").toLowerCase().trim()
+      const items = newsItems.filter((item) => {
+        if (status !== "all" && String(item.reviewStatus || "").toLowerCase() !== status.toLowerCase()) return false
+        if (query && !`${item.articleTitle} ${item.sourceLink} ${item.student?.fullName || ""}`.toLowerCase().includes(query)) {
+          return false
+        }
+        return true
+      })
+      return jsonResponse(200, {
+        total: items.length,
+        hasMore: false,
+        filters: {
+          status,
+          level: parsed.searchParams.get("level") || "",
+          studentRefId: parsed.searchParams.get("studentRefId") || "",
+          dateFrom: parsed.searchParams.get("dateFrom") || "",
+          dateTo: parsed.searchParams.get("dateTo") || "",
+          query: parsed.searchParams.get("q") || "",
+          take: 200,
+        },
+        statusSummary: {
+          submitted: items.filter((item) => item.reviewStatus === "submitted").length,
+          approved: items.filter((item) => item.reviewStatus === "approved").length,
+          revisionRequested: items.filter((item) => item.reviewStatus === "revision-requested").length,
+        },
+        items,
+      })
+    }
+
+    if (pathname === "/api/admin/news-reports/news-001" && method === "POST") {
+      const body = init?.body ? JSON.parse(String(init.body)) : {}
+      requestLog.push({
+        method,
+        pathname,
+        body,
+      })
+      newsItems[0] = {
+        ...newsItems[0],
+        reviewStatus: String(body.action || "") === "approve" ? "approved" : "revision-requested",
+        reviewNote: String(body.reviewNote || ""),
+        reviewedByUsername: "admin",
+        reviewedAt: "2026-03-14T09:00:00.000Z",
+      }
+      return jsonResponse(200, {
+        ok: true,
+        item: newsItems[0],
+      })
+    }
+
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    const app = dom.window.document.getElementById("app")
+    assert.equal(app.classList.contains("hidden"), false)
+  })
+
+  openPage(dom, "news-reports")
+
+  await waitFor(() => {
+    const rows = dom.window.document.querySelectorAll("#newsReviewRows tr")
+    assert.equal(rows.length, 1)
+    assert.match(rows[0].textContent || "", /Market news update/i)
+  })
+
+  const document = dom.window.document
+  const queryInput = document.getElementById("newsReviewQueryFilter")
+  queryInput.value = "market"
+  queryInput.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.match(latestQueryString, /q=market/i)
+  })
+
+  const noteEl = document.querySelector('textarea[data-news-review-note="news-001"]')
+  noteEl.value = "Strong summary and clear source."
+  const approveBtn = document.querySelector('button[data-news-review-action="approve"][data-news-review-id="news-001"]')
+  approveBtn.click()
+
+  await waitFor(() => {
+    const post = requestLog.find((entry) => entry.method === "POST" && entry.pathname === "/api/admin/news-reports/news-001")
+    assert.ok(post)
+    assert.equal(post.body.action, "approve")
+    assert.equal(post.body.reviewNote, "Strong summary and clear source.")
+  })
+
+  const statusSelect = document.getElementById("newsReviewStatusFilter")
+  statusSelect.value = "approved"
+  statusSelect.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.match(latestQueryString, /status=approved/i)
   })
 
   await settleDomAsync(dom)
