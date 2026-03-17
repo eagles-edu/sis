@@ -398,7 +398,7 @@ test("admin ui preserves queue-hub deep link after login bootstrap", async () =>
   dom.window.close()
 })
 
-test("news review page loads queue filters and sends approve action payload", async () => {
+test("news review modal supports student-scoped navigation and modal review actions", async () => {
   const rolePolicy = {
     role: "admin",
     canRead: true,
@@ -411,19 +411,21 @@ test("news review page loads queue filters and sends approve action payload", as
   let authenticated = false
   let latestQueryString = ""
   const requestLog = []
-  const newsItems = [
-    {
-      id: "news-001",
-      reportDate: "2026-03-14",
-      sourceLink: "https://example.com/news/market",
-      articleTitle: "Market news update",
-      leadSynopsis: "Summary one",
+  const newsItems = Array.from({ length: 7 }, (_, index) => {
+    const day = String(9 + index).padStart(2, "0")
+    const reportDate = `2026-03-${day}`
+    return {
+      id: `news-00${index + 1}`,
+      reportDate,
+      sourceLink: `https://example.com/news/week-${index + 1}`,
+      articleTitle: index === 6 ? "Market week wrap-up" : `Week article ${index + 1}`,
+      leadSynopsis: `Summary ${index + 1}`,
       actionActor: "City leaders",
       actionAffected: "Families",
       actionWhere: "HCMC",
-      actionWhat: "Policy update",
+      actionWhat: `Policy update ${index + 1}`,
       actionWhy: "Public safety",
-      submittedAt: "2026-03-14T08:00:00.000Z",
+      submittedAt: `${reportDate}T08:00:00.000Z`,
       student: {
         studentRefId: "student-001",
         eaglesId: "vi001",
@@ -436,8 +438,8 @@ test("news review page loads queue filters and sends approve action payload", as
       reviewNote: "",
       reviewedByUsername: "",
       reviewedAt: "",
-    },
-  ]
+    }
+  })
 
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const urlText = String(resource)
@@ -546,23 +548,27 @@ test("news review page loads queue filters and sends approve action payload", as
       })
     }
 
-    if (pathname === "/api/admin/news-reports/news-001" && method === "POST") {
+    if (pathname.startsWith("/api/admin/news-reports/") && method === "POST") {
+      const reportId = pathname.split("/").pop() || ""
       const body = init?.body ? JSON.parse(String(init.body)) : {}
       requestLog.push({
         method,
         pathname,
         body,
       })
-      newsItems[0] = {
-        ...newsItems[0],
-        reviewStatus: String(body.action || "") === "approve" ? "approved" : "revision-requested",
-        reviewNote: String(body.reviewNote || ""),
-        reviewedByUsername: "admin",
-        reviewedAt: "2026-03-14T09:00:00.000Z",
+      const targetIndex = newsItems.findIndex((item) => item.id === reportId)
+      if (targetIndex >= 0) {
+        newsItems[targetIndex] = {
+          ...newsItems[targetIndex],
+          reviewStatus: String(body.action || "") === "approve" ? "approved" : "revision-requested",
+          reviewNote: String(body.reviewNote || ""),
+          reviewedByUsername: "admin",
+          reviewedAt: "2026-03-14T09:00:00.000Z",
+        }
       }
       return jsonResponse(200, {
         ok: true,
-        item: newsItems[0],
+        item: targetIndex >= 0 ? newsItems[targetIndex] : null,
       })
     }
 
@@ -581,28 +587,50 @@ test("news review page loads queue filters and sends approve action payload", as
   await waitFor(() => {
     const rows = dom.window.document.querySelectorAll("#newsReviewRows tr")
     assert.equal(rows.length, 1)
-    assert.match(rows[0].textContent || "", /Market news update/i)
+    assert.match(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
   })
 
   const document = dom.window.document
+  const firstRow = document.querySelector('#newsReviewRows tr[data-news-review-week-set-id]')
+  firstRow.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  await waitFor(() => {
+    const viewer = document.getElementById("newsReviewViewerModal")
+    assert.equal(viewer.classList.contains("hidden"), false)
+    assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Week article|Market week wrap-up/i)
+    assert.match(normalizeText(document.getElementById("newsReviewViewerStatus").textContent), /Opened week set/i)
+    assert.equal(normalizeText(document.getElementById("newsReviewViewerIndex").textContent), "1 / 7")
+  })
+  const firstBodyText = normalizeText(document.getElementById("newsReviewViewerBody").textContent)
+  document.getElementById("newsReviewViewerNextBtn").click()
+
+  await waitFor(() => {
+    assert.equal(normalizeText(document.getElementById("newsReviewViewerIndex").textContent), "2 / 7")
+    assert.notEqual(normalizeText(document.getElementById("newsReviewViewerBody").textContent), firstBodyText)
+  })
+
   const queryInput = document.getElementById("newsReviewQueryFilter")
   queryInput.value = "market"
   queryInput.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
 
   await waitFor(() => {
-    assert.match(latestQueryString, /q=market/i)
+    assert.match(latestQueryString, /status=all/i)
   })
 
-  const noteEl = document.querySelector('textarea[data-news-review-note="news-001"]')
-  noteEl.value = "Strong summary and clear source."
-  const approveBtn = document.querySelector('button[data-news-review-action="approve"][data-news-review-id="news-001"]')
+  const modalNote = document.getElementById("newsReviewViewerNote")
+  modalNote.value = "Needs one more source citation."
+  const approveBtn = document.getElementById("newsReviewViewerApproveBtn")
   approveBtn.click()
 
   await waitFor(() => {
-    const post = requestLog.find((entry) => entry.method === "POST" && entry.pathname === "/api/admin/news-reports/news-001")
+    const post = requestLog.find((entry) => entry.method === "POST" && entry.pathname.startsWith("/api/admin/news-reports/news-"))
     assert.ok(post)
     assert.equal(post.body.action, "approve")
-    assert.equal(post.body.reviewNote, "Strong summary and clear source.")
+    assert.equal(post.body.reviewNote, "Needs one more source citation.")
+  })
+  await waitFor(() => {
+    const statusText = normalizeText(document.getElementById("status").textContent)
+    assert.match(statusText, /News report .* approved/i)
   })
 
   const statusSelect = document.getElementById("newsReviewStatusFilter")
@@ -610,7 +638,671 @@ test("news review page loads queue filters and sends approve action payload", as
   statusSelect.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
 
   await waitFor(() => {
-    assert.match(latestQueryString, /status=approved/i)
+    assert.match(latestQueryString, /status=all/i)
+    const rows = Array.from(document.querySelectorAll("#newsReviewRows tr"))
+    assert.equal(rows.length, 1)
+    assert.match(rows[0].textContent || "", /No student week sets/i)
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("news review queue includes incomplete student week sets and marks status", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [...SCHOOL_SETUP_ADMIN_ALLOWED_PAGES],
+  }
+  let authenticated = false
+  let latestQueryString = ""
+  const newsItems = Array.from({ length: 5 }, (_, index) => {
+    const day = String(9 + index).padStart(2, "0")
+    const reportDate = `2026-03-${day}`
+    return {
+      id: `news-incomplete-00${index + 1}`,
+      reportDate,
+      sourceLink: `https://example.com/news/incomplete-${index + 1}`,
+      articleTitle: `Incomplete week article ${index + 1}`,
+      leadSynopsis: `Incomplete summary ${index + 1}`,
+      actionActor: "City leaders",
+      actionAffected: "Families",
+      actionWhere: "HCMC",
+      actionWhat: `Policy update ${index + 1}`,
+      actionWhy: "Public safety",
+      submittedAt: `${reportDate}T08:00:00.000Z`,
+      student: {
+        studentRefId: "student-001",
+        eaglesId: "vi001",
+        studentNumber: 101,
+        fullName: "Student One",
+        englishName: "Student One",
+        level: "Pre-A1 Starters",
+      },
+      reviewStatus: "submitted",
+      reviewNote: "",
+      reviewedByUsername: "",
+      reviewedAt: "",
+    }
+  })
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const urlText = String(resource)
+    const method = String(init.method || "GET").toUpperCase()
+    const parsed = new URL(urlText, "http://127.0.0.1")
+    const pathname = parsed.pathname
+
+    if (pathname === "/api/admin/auth/me" && method === "GET") {
+      if (!authenticated) return jsonResponse(401, { error: "Unauthorized" })
+      return jsonResponse(200, {
+        authenticated: true,
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/auth/login" && method === "POST") {
+      authenticated = true
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/permissions" && method === "GET") {
+      return jsonResponse(200, {
+        roles: {
+          admin: { ...rolePolicy, allowedPages: [...rolePolicy.allowedPages] },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters" && method === "GET") {
+      return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main"] })
+    }
+    if (pathname === "/api/admin/students" && method === "GET") {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "student-001",
+            eaglesId: "vi001",
+            studentNumber: 101,
+            profile: { fullName: "Student One", englishName: "Student One", currentGrade: "Pre-A1 Starters" },
+          },
+        ],
+      })
+    }
+    if (pathname === "/api/admin/dashboard" && method === "GET") {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (pathname === "/api/admin/queue-hub" && method === "GET") return jsonResponse(200, { generatedAt: "", panelOrder: [], panels: [] })
+    if (pathname === "/api/admin/notifications/batch-status" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    }
+    if (pathname === "/api/admin/exercise-results/incoming" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/runtime/service-control" && method === "GET") {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    if (pathname === "/api/admin/news-reports" && method === "GET") {
+      latestQueryString = parsed.search
+      return jsonResponse(200, {
+        total: newsItems.length,
+        hasMore: false,
+        filters: {
+          status: parsed.searchParams.get("status") || "all",
+          level: parsed.searchParams.get("level") || "",
+          studentRefId: parsed.searchParams.get("studentRefId") || "",
+          dateFrom: parsed.searchParams.get("dateFrom") || "",
+          dateTo: parsed.searchParams.get("dateTo") || "",
+          query: parsed.searchParams.get("q") || "",
+          take: 200,
+        },
+        statusSummary: {
+          submitted: newsItems.length,
+          approved: 0,
+          revisionRequested: 0,
+        },
+        items: newsItems,
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => {
+    const app = dom.window.document.getElementById("app")
+    assert.equal(app.classList.contains("hidden"), false)
+  })
+
+  openPage(dom, "news-reports")
+  await waitFor(() => {
+    assert.match(latestQueryString, /status=all/i)
+    const row = dom.window.document.querySelector("#newsReviewRows tr[data-news-review-week-set-id]")
+    assert.ok(row)
+    assert.match(row.textContent || "", /5\/7/i)
+    assert.match(row.textContent || "", /Incomplete/i)
+    const summaryText = normalizeText(dom.window.document.getElementById("newsReviewSummary").textContent)
+    assert.match(summaryText, /incomplete=1/i)
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("news review week-set table headers sort all visible columns", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [...SCHOOL_SETUP_ADMIN_ALLOWED_PAGES],
+  }
+  let authenticated = false
+
+  const shiftDays = (value, offset) => {
+    const date = new Date(value.getTime())
+    date.setDate(date.getDate() + offset)
+    return date
+  }
+  const weekStartForOffset = (offsetWeeks = 0) => {
+    const today = new Date()
+    const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const day = monday.getDay()
+    const diffToMonday = (day + 6) % 7
+    monday.setDate(monday.getDate() - diffToMonday + (offsetWeeks * 7))
+    return monday
+  }
+  const buildWeekReports = ({ idPrefix, student, weekStart, reportCount, reviewStatus = "submitted" }) =>
+    Array.from({ length: reportCount }, (_, index) => {
+      const reportDate = localIsoDate(shiftDays(weekStart, index))
+      return {
+        id: `${idPrefix}-${String(index + 1).padStart(2, "0")}`,
+        reportDate,
+        sourceLink: `https://example.com/news/${idPrefix}-${index + 1}`,
+        articleTitle: `${student.fullName} article ${index + 1}`,
+        leadSynopsis: `${student.fullName} summary ${index + 1}`,
+        actionActor: "City leaders",
+        actionAffected: "Families",
+        actionWhere: "HCMC",
+        actionWhat: `Policy update ${index + 1}`,
+        actionWhy: "Public safety",
+        submittedAt: `${reportDate}T08:00:00.000Z`,
+        student: { ...student },
+        reviewStatus,
+        reviewNote: "",
+        reviewedByUsername: "",
+        reviewedAt: "",
+      }
+    })
+
+  const oldestWeekStart = weekStartForOffset(-3)
+  const middleWeekStart = weekStartForOffset(-2)
+  const newestWeekStart = weekStartForOffset(-1)
+  const newsItems = [
+    ...buildWeekReports({
+      idPrefix: "alpha",
+      student: {
+        studentRefId: "student-alpha",
+        eaglesId: "alpha001",
+        studentNumber: 101,
+        fullName: "Alpha Student",
+        englishName: "Alpha Student",
+        level: "A2 KET",
+      },
+      weekStart: oldestWeekStart,
+      reportCount: 5,
+      reviewStatus: "submitted",
+    }),
+    ...buildWeekReports({
+      idPrefix: "bravo",
+      student: {
+        studentRefId: "student-bravo",
+        eaglesId: "bravo001",
+        studentNumber: 102,
+        fullName: "Bravo Student",
+        englishName: "Bravo Student",
+        level: "A1 Movers",
+      },
+      weekStart: middleWeekStart,
+      reportCount: 7,
+      reviewStatus: "approved",
+    }),
+    ...buildWeekReports({
+      idPrefix: "charlie",
+      student: {
+        studentRefId: "student-charlie",
+        eaglesId: "charlie001",
+        studentNumber: 103,
+        fullName: "Charlie Student",
+        englishName: "Charlie Student",
+        level: "Pre-A1 Starters",
+      },
+      weekStart: newestWeekStart,
+      reportCount: 6,
+      reviewStatus: "submitted",
+    }),
+  ]
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const urlText = String(resource)
+    const method = String(init.method || "GET").toUpperCase()
+    const parsed = new URL(urlText, "http://127.0.0.1")
+    const pathname = parsed.pathname
+
+    if (pathname === "/api/admin/auth/me" && method === "GET") {
+      if (!authenticated) return jsonResponse(401, { error: "Unauthorized" })
+      return jsonResponse(200, {
+        authenticated: true,
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/auth/login" && method === "POST") {
+      authenticated = true
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/permissions" && method === "GET") {
+      return jsonResponse(200, {
+        roles: {
+          admin: { ...rolePolicy, allowedPages: [...rolePolicy.allowedPages] },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters" && method === "GET") {
+      return jsonResponse(200, { levels: ["Pre-A1 Starters", "A1 Movers", "A2 KET"], schools: ["Main"] })
+    }
+    if (pathname === "/api/admin/students" && method === "GET") {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "student-alpha",
+            eaglesId: "alpha001",
+            studentNumber: 101,
+            profile: { fullName: "Alpha Student", englishName: "Alpha Student", currentGrade: "A2 KET" },
+          },
+          {
+            id: "student-bravo",
+            eaglesId: "bravo001",
+            studentNumber: 102,
+            profile: { fullName: "Bravo Student", englishName: "Bravo Student", currentGrade: "A1 Movers" },
+          },
+          {
+            id: "student-charlie",
+            eaglesId: "charlie001",
+            studentNumber: 103,
+            profile: { fullName: "Charlie Student", englishName: "Charlie Student", currentGrade: "Pre-A1 Starters" },
+          },
+        ],
+      })
+    }
+    if (pathname === "/api/admin/dashboard" && method === "GET") {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (pathname === "/api/admin/queue-hub" && method === "GET") return jsonResponse(200, { generatedAt: "", panelOrder: [], panels: [] })
+    if (pathname === "/api/admin/notifications/batch-status" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    }
+    if (pathname === "/api/admin/exercise-results/incoming" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/runtime/service-control" && method === "GET") {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    if (pathname === "/api/admin/news-reports" && method === "GET") {
+      return jsonResponse(200, {
+        total: newsItems.length,
+        hasMore: false,
+        filters: {
+          status: parsed.searchParams.get("status") || "all",
+          level: parsed.searchParams.get("level") || "",
+          studentRefId: parsed.searchParams.get("studentRefId") || "",
+          dateFrom: parsed.searchParams.get("dateFrom") || "",
+          dateTo: parsed.searchParams.get("dateTo") || "",
+          query: parsed.searchParams.get("q") || "",
+          take: 200,
+        },
+        statusSummary: {
+          submitted: 11,
+          approved: 7,
+          revisionRequested: 0,
+        },
+        items: newsItems,
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  await waitFor(() => {
+    const app = dom.window.document.getElementById("app")
+    assert.equal(app.classList.contains("hidden"), false)
+  })
+
+  openPage(dom, "news-reports")
+  const document = dom.window.document
+  const getRows = () => Array.from(document.querySelectorAll("#newsReviewRows tr[data-news-review-week-set-id]"))
+
+  await waitFor(() => {
+    assert.equal(getRows().length, 3)
+  })
+
+  const sortableFields = ["weekSet", "student", "level", "reports", "setStatus", "latestSubmittedAt"]
+  sortableFields.forEach((field) => {
+    const header = document.querySelector(`th[data-table-sort=\"newsReview\"][data-sort-field=\"${field}\"]`)
+    assert.ok(header)
+    assert.equal(header.getAttribute("tabindex"), "0")
+  })
+
+  const weekSetHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="weekSet"]')
+  assert.ok(weekSetHeader)
+  weekSetHeader.click()
+  await waitFor(() => {
+    assert.equal(weekSetHeader.getAttribute("aria-sort"), "ascending")
+    const firstWeekSetCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(1)")?.textContent)
+    assert.match(firstWeekSetCell, new RegExp(`^${localIsoDate(oldestWeekStart)}`))
+  })
+
+  const reportsHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="reports"]')
+  assert.ok(reportsHeader)
+  reportsHeader.click()
+  await waitFor(() => {
+    assert.equal(reportsHeader.getAttribute("aria-sort"), "descending")
+    const firstReportsCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(4)")?.textContent)
+    assert.equal(firstReportsCell, "7/7")
+  })
+  reportsHeader.click()
+  await waitFor(() => {
+    assert.equal(reportsHeader.getAttribute("aria-sort"), "ascending")
+    const firstReportsCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(4)")?.textContent)
+    assert.equal(firstReportsCell, "5/7")
+  })
+
+  const statusHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="setStatus"]')
+  assert.ok(statusHeader)
+  statusHeader.click()
+  await waitFor(() => {
+    assert.equal(statusHeader.getAttribute("aria-sort"), "descending")
+    const firstStatusCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(5)")?.textContent)
+    assert.equal(firstStatusCell, "Incomplete")
+  })
+  statusHeader.click()
+  await waitFor(() => {
+    assert.equal(statusHeader.getAttribute("aria-sort"), "ascending")
+    const firstStatusCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(5)")?.textContent)
+    assert.equal(firstStatusCell, "Approved")
+  })
+
+  const latestHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="latestSubmittedAt"]')
+  assert.ok(latestHeader)
+  latestHeader.click()
+  await waitFor(() => {
+    assert.equal(latestHeader.getAttribute("aria-sort"), "descending")
+    const firstStudentCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(2)")?.textContent)
+    assert.match(firstStudentCell, /Charlie Student/i)
+  })
+
+  const studentHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="student"]')
+  assert.ok(studentHeader)
+  studentHeader.click()
+  studentHeader.click()
+  await waitFor(() => {
+    assert.equal(studentHeader.getAttribute("aria-sort"), "ascending")
+    const firstStudentCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(2)")?.textContent)
+    assert.match(firstStudentCell, /Alpha Student/i)
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("queue hub news panel opens news-reports viewer for clicked row", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [...SCHOOL_SETUP_ADMIN_ALLOWED_PAGES, "queue-hub"],
+  }
+  let authenticated = false
+  let latestNewsReportsSearch = ""
+
+  const queuePayload = {
+    generatedAt: "2026-03-15T01:45:00.000Z",
+    panelOrder: [
+      "news-report-review",
+      "queued-performance-reports",
+      "unmatched-exercise-submissions",
+      "current-assignments-pending",
+      "overdue-homework",
+      "attendance-risk",
+      "pending-profile-submissions",
+    ],
+    panels: [
+      {
+        id: "news-report-review",
+        title: "News Report Week Sets",
+        total: 1,
+        items: [
+          {
+            id: "news-week-set:student-001:2026-03-09",
+            studentRefId: "student-001",
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            englishName: "Student One",
+            level: "Pre-A1 Starters",
+            weekStart: "2026-03-09",
+            weekEnd: "2026-03-15",
+            reportCount: 7,
+            submittedCount: 7,
+            approvedCount: 0,
+            revisionRequestedCount: 0,
+            setStatus: "submitted",
+            latestReportId: "news-007",
+            latestReportDate: "2026-03-15",
+            latestSubmittedAt: "2026-03-15T08:00:00.000Z",
+            latestReviewStatus: "submitted",
+            latestArticleTitle: "Market week wrap-up",
+            latestSourceLink: "https://example.com/news/week-7",
+          },
+        ],
+      },
+    ],
+  }
+
+  const newsItems = Array.from({ length: 7 }, (_, index) => {
+    const day = String(9 + index).padStart(2, "0")
+    const reportDate = `2026-03-${day}`
+    return {
+      id: `news-00${index + 1}`,
+      studentRefId: "student-001",
+      reportDate,
+      sourceLink: `https://example.com/news/week-${index + 1}`,
+      articleTitle: index === 6 ? "Market week wrap-up" : `Week article ${index + 1}`,
+      leadSynopsis: `Summary ${index + 1}`,
+      actionActor: "City leaders",
+      actionAffected: "Families",
+      actionWhere: "HCMC",
+      actionWhat: `Policy update ${index + 1}`,
+      actionWhy: "Public safety",
+      submittedAt: `${reportDate}T08:00:00.000Z`,
+      reviewStatus: "submitted",
+      reviewNote: "",
+      reviewedByUsername: "",
+      reviewedAt: "",
+      student: {
+        studentRefId: "student-001",
+        eaglesId: "vi001",
+        studentNumber: 101,
+        fullName: "Student One",
+        englishName: "Student One",
+        level: "Pre-A1 Starters",
+      },
+    }
+  })
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const urlText = String(resource)
+    const method = String(init.method || "GET").toUpperCase()
+    const parsed = new URL(urlText, "http://127.0.0.1")
+    const pathname = parsed.pathname
+
+    if (pathname === "/api/admin/auth/me" && method === "GET") {
+      if (!authenticated) return jsonResponse(401, { error: "Unauthorized" })
+      return jsonResponse(200, {
+        authenticated: true,
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/auth/login" && method === "POST") {
+      authenticated = true
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/permissions" && method === "GET") {
+      return jsonResponse(200, {
+        roles: {
+          admin: { ...rolePolicy, allowedPages: [...rolePolicy.allowedPages] },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters" && method === "GET") {
+      return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main"] })
+    }
+    if (pathname === "/api/admin/students" && method === "GET") {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "student-001",
+            eaglesId: "vi001",
+            studentNumber: 101,
+            profile: { fullName: "Student One", englishName: "Student One", currentGrade: "Pre-A1 Starters" },
+          },
+        ],
+      })
+    }
+    if (pathname === "/api/admin/dashboard" && method === "GET") {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (pathname === "/api/admin/queue-hub" && method === "GET") return jsonResponse(200, queuePayload)
+    if (pathname === "/api/admin/notifications/batch-status" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    }
+    if (pathname === "/api/admin/exercise-results/incoming" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/runtime/service-control" && method === "GET") {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    if (pathname === "/api/admin/news-reports" && method === "GET") {
+      latestNewsReportsSearch = parsed.search
+      return jsonResponse(200, {
+        total: newsItems.length,
+        hasMore: false,
+        filters: {
+          status: parsed.searchParams.get("status") || "submitted",
+          level: parsed.searchParams.get("level") || "",
+          studentRefId: parsed.searchParams.get("studentRefId") || "",
+          dateFrom: parsed.searchParams.get("dateFrom") || "",
+          dateTo: parsed.searchParams.get("dateTo") || "",
+          query: parsed.searchParams.get("q") || "",
+          take: Number.parseInt(String(parsed.searchParams.get("take") || "200"), 10) || 200,
+        },
+        statusSummary: {
+          submitted: 1,
+          approved: 0,
+          revisionRequested: 0,
+        },
+        items: newsItems,
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    const app = dom.window.document.getElementById("app")
+    assert.equal(app.classList.contains("hidden"), false)
+  })
+
+  openPage(dom, "queue-hub")
+
+  await waitFor(() => {
+    const openBtn = dom.window.document.querySelector(
+      'button[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]'
+    )
+    assert.ok(openBtn)
+  })
+
+  dom.window.document
+    .querySelector('button[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]')
+    .click()
+
+  await waitFor(() => {
+    assert.equal(dom.window.location.pathname, "/admin/students/news-reports")
+    const active = dom.window.document.querySelector(".page-section.active")
+    assert.equal(active?.getAttribute("data-page"), "news-reports")
+    assert.match(latestNewsReportsSearch, /status=all/i)
+    assert.match(latestNewsReportsSearch, /studentRefId=student-001/i)
+    assert.equal(dom.window.document.getElementById("newsReviewViewerModal").classList.contains("hidden"), false)
+    assert.match(
+      normalizeText(dom.window.document.getElementById("newsReviewViewerBody").textContent),
+      /Market week wrap-up|Week article/i
+    )
+    assert.equal(normalizeText(dom.window.document.getElementById("newsReviewViewerIndex").textContent), "1 / 7")
   })
 
   await settleDomAsync(dom)
@@ -1944,7 +2636,44 @@ test("top search results support show-all expansion and sortable headers", async
   dom.window.close()
 })
 
-test("static preview path over http allows login without apiOrigin", async () => {
+test("static preview path over http requires explicit apiOrigin", async () => {
+  const calls = []
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      const method = init.method || "GET"
+      calls.push(`${method} ${url}`)
+
+      if (url.includes("/healthz")) return jsonResponse(200, { status: "ok", lastVerifyOk: true })
+
+      if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+      if (url.includes("/api/admin/auth/login")) return jsonResponse(200, { user: { username: "admin", role: "admin" } })
+      return jsonResponse(200, {})
+    },
+    "http://127.0.0.1:46145/web-asset/admin/student-admin.html"
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.match(document.getElementById("status").textContent, /Static preview mode requires \?apiOrigin=/i)
+  })
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    assert.match(document.getElementById("status").textContent, /Static preview mode requires \?apiOrigin=/i)
+  })
+
+  assert.ok(!calls.some((entry) => entry.includes("/healthz")))
+  assert.ok(!calls.some((entry) => entry.includes("/api/admin/auth/me")))
+  assert.ok(!calls.some((entry) => entry.includes("/api/admin/auth/login")))
+  assert.equal(document.getElementById("authPanel").classList.contains("hidden"), false)
+  assert.equal(document.getElementById("app").classList.contains("hidden"), true)
+
+  dom.window.close()
+})
+
+test("static preview path over http supports login when apiOrigin is explicit", async () => {
   const calls = []
   let healthzInit = null
   const dom = await createAdminUiDom(
@@ -2027,7 +2756,7 @@ test("static preview path over http allows login without apiOrigin", async () =>
 
       return jsonResponse(200, {})
     },
-    "http://127.0.0.1:46145/web-asset/admin/student-admin.html"
+    "http://127.0.0.1:46145/web-asset/admin/student-admin.html?apiOrigin=http://127.0.0.1:8788"
   )
 
   const document = dom.window.document
@@ -2055,7 +2784,7 @@ test("static preview path over http allows login without apiOrigin", async () =>
   submitLogin(dom)
 
   await waitFor(() => {
-    assert.ok(calls.some((entry) => entry === "POST http://127.0.0.1:8787/api/admin/auth/login"))
+    assert.ok(calls.some((entry) => entry === "POST http://127.0.0.1:8788/api/admin/auth/login"))
   })
 
   await waitFor(() => {
@@ -5974,6 +6703,165 @@ test("profile payload mapping preserves mapped fields and custom form payload ke
   dom.window.close()
 })
 
+test("profile info display emphasizes student summary and clusters empty fields", async () => {
+  const studentDetail = {
+    id: "stu-01",
+    studentNumber: 1088,
+    eaglesId: "EGL-1088",
+    email: "learner@example.com",
+    profile: {
+      fullName: "Nguyen Bao Anh",
+      englishName: "Anna Nguyen",
+      currentGrade: "A1 Movers",
+      schoolName: "Eagles Main",
+      studentPhone: "0900000001",
+      motherName: "Tran Mai",
+      motherPhone: "0900000002",
+      fatherName: "",
+      fatherPhone: "",
+      normalizedFormPayload: {},
+      rawFormPayload: {},
+    },
+    attendanceRecords: [],
+    gradeRecords: [],
+    parentReports: [],
+  }
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: [
+            "overview",
+            "student-admin",
+            "profile",
+            "attendance",
+            "assignments",
+            "parent-tracking",
+            "grades",
+            "reports",
+            "family",
+            "users",
+            "permissions",
+            "settings",
+          ],
+        },
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: [
+              "overview",
+              "student-admin",
+              "profile",
+              "attendance",
+              "assignments",
+              "parent-tracking",
+              "grades",
+              "reports",
+              "family",
+              "users",
+              "permissions",
+              "settings",
+            ],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["A1 Movers"], schools: ["Eagles Main"] })
+    if (method === "GET" && url.includes("/api/admin/students/stu-01")) return jsonResponse(200, studentDetail)
+    if (method === "GET" && url.includes("/api/admin/students")) {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "stu-01",
+            studentNumber: 1088,
+            eaglesId: "EGL-1088",
+            profile: {
+              fullName: "Nguyen Bao Anh",
+              englishName: "Anna Nguyen",
+              currentGrade: "A1 Movers",
+            },
+          },
+        ],
+      })
+    }
+    if (url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    if (url.includes("/api/admin/exercise-results/incoming")) return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    if (url.includes("/api/admin/runtime/service-control")) {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+  const document = dom.window.document
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("app").classList.contains("hidden"), false)
+  })
+  await waitFor(() => {
+    const firstRow = document.querySelector("#studentRows tr")
+    assert.ok(firstRow)
+    firstRow.click()
+  })
+
+  openPage(dom, "profile")
+  await waitFor(() => {
+    const summaryText = normalizeText(document.getElementById("profileInfoDataSummary")?.textContent || "")
+    assert.match(summaryText, /Nguyen Bao Anh/i)
+    assert.match(summaryText, /Eagles ID: EGL-1088/i)
+    assert.match(summaryText, /Class Level/i)
+    assert.match(summaryText, /Primary Contact/i)
+  })
+
+  await waitFor(() => {
+    const activePanel = document.querySelector('#profileInfoPanels .profile-info-panel.active')
+    assert.ok(activePanel)
+    assert.ok(activePanel.querySelector(".profile-info-group"))
+    assert.ok(activePanel.querySelector(".profile-info-item[data-priority='primary']"))
+    const emptyStack = activePanel.querySelector("details.profile-info-empty-stack")
+    assert.ok(emptyStack)
+    assert.match(normalizeText(emptyStack.querySelector("summary")?.textContent || ""), /Show .* empty fields/i)
+  })
+
+  dom.window.close()
+})
+
 test("new profile form hydrates next student number and keeps floor at 100+", async () => {
   let nextStudentNumberCalls = 0
   const dom = await createAdminUiDom(async (resource, init = {}) => {
@@ -6565,6 +7453,39 @@ test("table sort controls and column-click headers reorder grade/performance dat
 
   const gradeBaselineRowCount = document.querySelectorAll("#gradeRows tr").length
   assert.ok(gradeBaselineRowCount >= 1)
+  assert.ok(document.getElementById("gradeChartGroupBy"))
+  assert.ok(document.getElementById("gradeChartQuarter"))
+  assert.ok(document.getElementById("gradeChartSchoolYear"))
+  assert.ok(document.getElementById("gradeChartCustomFrom"))
+  assert.ok(document.getElementById("gradeChartCustomTo"))
+  assert.ok(document.querySelector('#gradeChartPeriods [data-grade-chart-period="qtd"]'))
+  await waitFor(() => {
+    const lanes = document.querySelectorAll("#gradeChartLanes .grade-chart-lane")
+    assert.equal(lanes.length >= 1, true)
+  })
+  const gradeChartGroupBy = document.getElementById("gradeChartGroupBy")
+  gradeChartGroupBy.value = "student"
+  gradeChartGroupBy.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  await waitFor(() => {
+    const laneText = normalizeText(document.getElementById("gradeChartLanes")?.textContent || "")
+    assert.match(laneText, /Student One/i)
+  })
+  gradeChartGroupBy.value = "class"
+  gradeChartGroupBy.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  document.querySelector('#gradeChartPeriods [data-grade-chart-period="custom"]')?.click()
+  const gradeChartCustomFrom = document.getElementById("gradeChartCustomFrom")
+  const gradeChartCustomTo = document.getElementById("gradeChartCustomTo")
+  gradeChartCustomFrom.value = "2026-02-06"
+  gradeChartCustomFrom.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  gradeChartCustomTo.value = "2026-02-12"
+  gradeChartCustomTo.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  await waitFor(() => {
+    const summary = normalizeText(document.getElementById("gradeChartSummary")?.textContent || "")
+    assert.match(summary, /Rows: 1/i)
+    assert.match(summary, /2026-02-06 to 2026-02-12/i)
+    const laneText = normalizeText(document.getElementById("gradeChartLanes")?.textContent || "")
+    assert.match(laneText, /Class B/i)
+  })
   const gradeStudentFilter = document.getElementById("gradeDataStudent")
   const gradeStudentOption =
     Array.from(gradeStudentFilter.options).find(
@@ -6760,6 +7681,7 @@ test("school setup profile fields persist and reset from saved values", async ()
     schoolSetupBusinessTaxId: "TAX-7788",
     schoolSetupTimeFormat: "24h",
     schoolSetupTimeZone: "Asia/Ho_Chi_Minh",
+    schoolSetupLetterGradeRanges: "A:92-100\nB:84-91.99\nC:76-83.99\nD:60-75.99\nF:0-59.99",
   }
   for (const [id, value] of Object.entries(fieldValuesById)) {
     const field = document.getElementById(id)
@@ -6780,6 +7702,10 @@ test("school setup profile fields persist and reset from saved values", async ()
   const saved = JSON.parse(savedRaw)
   assert.equal(saved.schoolSetup.startDate, "2026-08-10")
   assert.equal(saved.schoolSetup.endDate, "2027-05-28")
+  assert.equal(saved.schoolSetup.letterGradeRanges[0].letter, "A")
+  assert.equal(saved.schoolSetup.letterGradeRanges[0].minPercent, 92)
+  assert.equal(saved.schoolSetup.letterGradeRanges[4].letter, "F")
+  assert.equal(saved.schoolSetup.letterGradeRanges[4].maxPercent, 59.99)
   assert.equal(saved.schoolProfile.schoolName, fieldValuesById.schoolSetupName)
   assert.equal(saved.schoolProfile.phone, fieldValuesById.schoolSetupPhone)
   assert.equal(saved.schoolProfile.bilingualTextVi, fieldValuesById.schoolSetupBilingualVi)
@@ -6800,6 +7726,7 @@ test("school setup profile fields persist and reset from saved values", async ()
   document.getElementById("schoolSetupMission").value = "Unsaved temp mission"
   document.getElementById("schoolSetupStartDate").value = "2026-09-01"
   document.getElementById("schoolSetupEndDate").value = "2027-06-01"
+  document.getElementById("schoolSetupLetterGradeRanges").value = "A:95-100\nB:90-94.99"
   document.getElementById("schoolSetupResetBtn").click()
 
   await waitFor(() => {
@@ -6807,6 +7734,10 @@ test("school setup profile fields persist and reset from saved values", async ()
     assert.equal(document.getElementById("schoolSetupMission").value, "Deliver student outcomes")
     assert.equal(document.getElementById("schoolSetupStartDate").value, "2026-08-10")
     assert.equal(document.getElementById("schoolSetupEndDate").value, "2027-05-28")
+    assert.equal(
+      document.getElementById("schoolSetupLetterGradeRanges").value,
+      fieldValuesById.schoolSetupLetterGradeRanges
+    )
   })
 
   dom.window.close()

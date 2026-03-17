@@ -1,0 +1,6 @@
+{
+  "createdAt": "2026-03-16T19:08:21Z",
+  "backupFile": "db-backup-20260317-020819.dump",
+  "backupPath": "backups/postgres/dev-before-live-20260317-020819/db-backup-20260317-020819.dump",
+  "checksumFile": "backups/postgres/dev-before-live-20260317-020819/db-backup-20260317-020819.sha256"
+}

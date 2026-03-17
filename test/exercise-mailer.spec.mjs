@@ -357,11 +357,13 @@ test("runtime self-heal supports same-root SIS check mode when explicitly enable
   const prevSourceRoot = process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT
   const prevRuntimeRoot = process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT
   const prevInterval = process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
+  const prevNodeEnv = process.env.NODE_ENV
 
   process.env.SIS_RUNTIME_SELF_HEAL_ENABLED = "true"
   process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT = root
   process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT = root
   process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = "1000"
+  process.env.NODE_ENV = "development"
 
   let tmp = null
   try {
@@ -389,6 +391,9 @@ test("runtime self-heal supports same-root SIS check mode when explicitly enable
 
     if (prevInterval === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
     else process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = prevInterval
+
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
   }
 })
 
@@ -407,11 +412,13 @@ test("runtime self-heal syncs admin html on mismatch when enabled", async () => 
   const prevSourceRoot = process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT
   const prevRuntimeRoot = process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT
   const prevInterval = process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
+  const prevNodeEnv = process.env.NODE_ENV
 
   process.env.SIS_RUNTIME_SELF_HEAL_ENABLED = "true"
   process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT = sourceRoot
   process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT = runtimeRoot
   process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = "1000"
+  process.env.NODE_ENV = "development"
 
   let tmp = null
   try {
@@ -442,6 +449,76 @@ test("runtime self-heal syncs admin html on mismatch when enabled", async () => 
 
     if (prevInterval === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
     else process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = prevInterval
+
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
+  }
+})
+
+test("runtime self-heal is blocked for live-root paths in development", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const liveRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sis-live-root-"))
+  const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sis-runtime-root-"))
+  const sourceHtmlPath = path.join(liveRoot, "web-asset", "admin", "student-admin.html")
+  const runtimeHtmlPath = path.join(runtimeRoot, "web-asset", "admin", "student-admin.html")
+  fs.mkdirSync(path.dirname(sourceHtmlPath), { recursive: true })
+  fs.mkdirSync(path.dirname(runtimeHtmlPath), { recursive: true })
+  fs.writeFileSync(sourceHtmlPath, "<html>live-source</html>\n")
+  fs.writeFileSync(runtimeHtmlPath, "<html>runtime-before</html>\n")
+
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevLiveRoot = process.env.SIS_LIVE_ROOT
+  const prevEnabled = process.env.SIS_RUNTIME_SELF_HEAL_ENABLED
+  const prevSourceRoot = process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT
+  const prevRuntimeRoot = process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT
+  const prevInterval = process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
+  const prevAllowLiveOverride = process.env.SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT
+
+  process.env.NODE_ENV = "development"
+  process.env.SIS_LIVE_ROOT = liveRoot
+  process.env.SIS_RUNTIME_SELF_HEAL_ENABLED = "true"
+  process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT = liveRoot
+  process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT = runtimeRoot
+  process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = "1000"
+  delete process.env.SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT
+
+  let tmp = null
+  try {
+    tmp = await startExerciseMailer({ transporter: makeMockTransport(), port: 0, host: "127.0.0.1" })
+    await new Promise((r) => tmp.once("listening", r))
+
+    const stillRuntimeBefore = fs.readFileSync(runtimeHtmlPath, "utf8")
+    assert.equal(stillRuntimeBefore, "<html>runtime-before</html>\n")
+
+    const tmpPort = tmp.address().port
+    const res = await fetch(`http://127.0.0.1:${tmpPort}/healthz`)
+    assert.equal(res.status, 200)
+    const body = await res.json()
+    assert.equal(body.runtimeSelfHeal?.enabled, false)
+    assert.equal(body.runtimeSelfHeal?.lastResult, "blocked-live-root-in-dev")
+  } finally {
+    if (tmp) await new Promise((done) => tmp.close(done))
+
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
+
+    if (prevLiveRoot === undefined) delete process.env.SIS_LIVE_ROOT
+    else process.env.SIS_LIVE_ROOT = prevLiveRoot
+
+    if (prevEnabled === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_ENABLED
+    else process.env.SIS_RUNTIME_SELF_HEAL_ENABLED = prevEnabled
+
+    if (prevSourceRoot === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT
+    else process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT = prevSourceRoot
+
+    if (prevRuntimeRoot === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT
+    else process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT = prevRuntimeRoot
+
+    if (prevInterval === undefined) delete process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS
+    else process.env.SIS_RUNTIME_SELF_HEAL_INTERVAL_MS = prevInterval
+
+    if (prevAllowLiveOverride === undefined) delete process.env.SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT
+    else process.env.SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT = prevAllowLiveOverride
   }
 })
 

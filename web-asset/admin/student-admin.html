@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Eagles Club Student Information System </title>
-  <link href="./favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
+  <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
 
   <style>
     :root {
@@ -420,54 +420,152 @@
     .profile-tab-panel.active {
       display: block;
     }
-    .profile-info-panel {
-      border: 1px solid #90a6c8;
+    .profile-info-summary {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      border: 1px solid #b3c3dd;
       border-radius: var(--radius-3);
       padding: 10px;
-      background: #f7faff;
+      background: linear-gradient(180deg, #f3f8ff 0%, #eaf2ff 100%);
+    }
+    .profile-summary-primary {
+      box-sizing: border-box;
+      grid-column: span 6;
+      border: 1px solid #a8bbda;
+      border-radius: var(--radius-2);
+      padding: 10px 12px;
+      min-height: 94px;
+      background: #fff;
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+    .profile-summary-kicker {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: #445f89;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .profile-summary-name {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+      color: #102f59;
+    }
+    .profile-summary-subline {
+      margin: 0;
+      font-size: 13px;
+      color: #304f7a;
+      line-height: 1.35;
+    }
+    .profile-summary-chip {
+      box-sizing: border-box;
+      grid-column: span 3;
+      border: 1px solid #b8c8e0;
+      border-radius: var(--radius-2);
+      padding: 8px 10px;
+      min-height: 70px;
+      background: #fff;
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+    .profile-summary-chip-label {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: #516991;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .profile-summary-chip-value {
+      margin: 0;
+      font-size: 14px;
+      color: #163a6d;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .profile-info-panel {
+      border: 1px solid #96abc9;
+      border-radius: var(--radius-3);
+      padding: 12px;
+      background: #f8fbff;
       display: none;
     }
     .profile-info-panel.active {
       display: block;
     }
     .profile-info-group {
-      border: 1px solid #c5d2e6;
+      border: 1px solid #c1d0e4;
       border-radius: var(--radius-2);
-      padding: 8px;
-      margin: 0 0 8px;
+      padding: 10px;
+      margin: 0 0 10px;
       background: #fff;
+      box-shadow: inset 0 0 0 1px #edf3ff;
     }
     .profile-info-group:last-child {
       margin-bottom: 0;
     }
+    .profile-info-group-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+      margin: 0 0 8px;
+      flex-wrap: wrap;
+    }
     .profile-info-group h4 {
-      margin: 0 0 6px;
-      font-size: 13px;
-      color: #1a3f76;
+      margin: 0;
+      font-size: 14px;
+      color: #163a72;
       line-height: 1.3;
+    }
+    .profile-info-group-meta {
+      margin: 0;
+      font-size: 11px;
+      color: #536b92;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      line-height: 1.2;
     }
     .profile-info-grid {
       display: grid;
-      gap: 6px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
     }
     .profile-info-item {
+      box-sizing: border-box;
+      grid-column: span var(--profile-span, 4);
       border: 1px solid #d4ddeb;
       border-radius: var(--radius-2);
       background: #fafcff;
-      padding: 7px 8px;
-      min-height: 58px;
+      padding: 8px 10px;
+      min-height: 66px;
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+    .profile-info-item[data-priority="primary"] {
+      border-color: #9eb7dd;
+      background: #f3f8ff;
     }
     .profile-info-label {
       display: block;
-      margin: 0 0 3px;
-      font-size: 12px;
-      color: #41587a;
+      margin: 0;
+      font-size: 11px;
+      color: #4c6489;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
       line-height: 1.3;
     }
     .profile-info-value {
       display: block;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: #1d2f4a;
       line-height: 1.35;
@@ -475,7 +573,48 @@
     }
     .profile-info-empty {
       color: #7a8ca9;
-      font-weight: 500;
+      font-weight: 600;
+    }
+    .profile-info-empty-stack {
+      margin-top: 8px;
+      border: 1px dashed #c7d4e8;
+      border-radius: var(--radius-2);
+      padding: 8px;
+      background: #fcfdff;
+    }
+    .profile-info-empty-stack[open] {
+      background: #f7faff;
+    }
+    .profile-info-empty-toggle {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: #415b84;
+      line-height: 1.35;
+      list-style: none;
+      outline: none;
+    }
+    .profile-info-empty-toggle::-webkit-details-marker {
+      display: none;
+    }
+    .profile-info-empty-toggle::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 6px;
+      transform: translateY(-1px);
+      transition: transform 140ms ease;
+    }
+    .profile-info-empty-stack[open] .profile-info-empty-toggle::before {
+      transform: rotate(90deg) translateY(-1px);
+    }
+    .profile-info-empty-grid {
+      margin-top: 8px;
+    }
+    .profile-info-empty-note {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: #5f7599;
+      line-height: 1.4;
     }
     .profile-field-group {
       border: 1px solid #b5c4da;
@@ -615,9 +754,19 @@
         min-height: 38px;
         padding: 7px 12px;
         width: auto;
-  }
-      .profile-info-grid {
+      }
+      .profile-info-summary {
         grid-template-columns: 1fr;
+      }
+      .profile-summary-primary,
+      .profile-summary-chip {
+        grid-column: 1 / -1;
+      }
+      .profile-info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .profile-info-item {
+        grid-column: span 2;
       }
       .profile-choice-item {
         min-height: 48px;
@@ -633,6 +782,14 @@
       }
       .profile-choice-item label {
         font-size: 14px;
+      }
+    }
+    @media (max-width: 560px) {
+      .profile-info-grid {
+        grid-template-columns: 1fr;
+      }
+      .profile-info-item {
+        grid-column: 1 / -1;
       }
     }
     .profile-layout-editor {
@@ -1121,6 +1278,155 @@
     .table-toolbar button {
       inline-size: auto;
       min-width: 140px;
+    }
+    .grade-chart-shell {
+      margin: 10px 0 14px;
+      padding: 10px;
+      border: 1px solid #ccd9ed;
+      border-radius: var(--radius-2);
+      background: linear-gradient(160deg, #f7fbff 0%, #eef4ff 42%, #f9fbff 100%);
+    }
+    .grade-chart-head {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .grade-chart-head h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+    .grade-chart-head .small {
+      margin: 0;
+      color: #324f77;
+    }
+    .grade-chart-periods {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .grade-chart-period-btn {
+      inline-size: auto;
+      min-width: 0;
+      margin: 0;
+      padding: 7px 10px;
+      border: 1px solid #b6c8e4;
+      border-radius: var(--radius-pill);
+      background: #fff;
+      color: #19406d;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .grade-chart-period-btn.is-active {
+      background: #0f4a9f;
+      border-color: #0f4a9f;
+      color: #f5f8ff;
+      box-shadow: 0 3px 8px rgba(7, 32, 73, 0.22);
+    }
+    .grade-chart-filter-grid {
+      margin-top: 8px;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .grade-chart-field {
+      display: grid;
+      gap: 4px;
+    }
+    .grade-chart-field label {
+      margin: 0;
+      font-size: 11px;
+      color: #35547d;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .grade-chart-field select,
+    .grade-chart-field input {
+      margin: 0;
+      border: 1px solid #bdd0ea;
+      background: #fff;
+      min-width: 0;
+    }
+    .grade-chart-field input:disabled,
+    .grade-chart-field select:disabled {
+      background: #eef3fb;
+      color: #6e7f98;
+      cursor: not-allowed;
+    }
+    .grade-chart-summary {
+      margin: 10px 0 8px;
+      color: #1f3d63;
+      line-height: 1.4;
+    }
+    .grade-chart-lanes {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+    .grade-chart-lane {
+      padding: 8px;
+      border: 1px solid #d2deef;
+      border-radius: var(--radius-2);
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+    }
+    .grade-chart-lane-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .grade-chart-lane-title {
+      margin: 0;
+      font-size: 13px;
+      color: #1b365a;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .grade-chart-lane-metrics {
+      margin: 0;
+      text-align: right;
+      font-size: 11px;
+      color: #365b86;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .grade-chart-svg-wrap {
+      margin-top: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .grade-chart-svg {
+      display: block;
+      width: 100%;
+      min-width: 240px;
+      height: 90px;
+    }
+    .grade-chart-lane-meta {
+      margin: 6px 0 0;
+      font-size: 11px;
+      color: #4a668c;
+      line-height: 1.35;
+    }
+    .grade-chart-empty {
+      margin: 0;
+      border: 1px dashed #b7c7df;
+      border-radius: var(--radius-2);
+      background: #fff;
+      padding: 10px;
+      font-size: 12px;
+      color: #4d6588;
     }
     .table-column-controls,
     .attendance-column-controls {
@@ -2207,6 +2513,42 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
     }
+    .news-review-viewer-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .news-review-viewer-block {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-2);
+      padding: 8px;
+      box-sizing: border-box;
+      background: #fafcff;
+      display: grid;
+      gap: 4px;
+    }
+    .news-review-viewer-block strong {
+      color: var(--ink);
+    }
+    .news-review-viewer-long {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.4;
+    }
+    .news-review-viewer-review {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .news-review-viewer-review textarea {
+      min-height: 72px;
+    }
+    .news-review-viewer-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
     .small {
       font-size: 13px;
       color: var(--primary-color);
@@ -2382,6 +2724,16 @@
       #overviewIncomingExerciseSection .actions,
       #performanceQueueSection .actions {
         grid-template-columns: 1fr;
+      }
+      .grade-chart-filter-grid {
+        grid-template-columns: 1fr;
+      }
+      .grade-chart-lane-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .grade-chart-lane-metrics {
+        text-align: left;
       }
       .table-scroll-wrap {
         border-radius: var(--radius-2);
@@ -2800,6 +3152,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <button id="profileRefreshInfoBtn" type="button" class="btn-refresh">Refresh Info</button>
                       </div>
                     </div>
+                    <div id="profileInfoDataSummary" class="profile-info-summary" aria-live="polite"></div>
                     <div class="profile-tabs-shell profile-info-tabs">
                       <div class="profile-tab-nav" id="profileInfoTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile info tabs"></div>
                       <div id="profileInfoPanels"></div>
@@ -3397,10 +3750,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="toolbar-field">
                     <label for="newsReviewStatusFilter">Status</label>
                     <select id="newsReviewStatusFilter">
+                      <option value="all">All</option>
+                      <option value="incomplete">Incomplete</option>
                       <option value="submitted">Submitted</option>
                       <option value="approved">Approved</option>
                       <option value="revision-requested">Revision Requested</option>
-                      <option value="all">All</option>
                     </select>
                   </div>
                   <div class="toolbar-field">
@@ -3441,19 +3795,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <table>
                     <thead>
                       <tr>
-                        <th scope="col">Report Date</th>
-                        <th scope="col">Student</th>
-                        <th scope="col">Level</th>
-                        <th scope="col">Article</th>
-                        <th scope="col">Source</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Review Note</th>
-                        <th scope="col">Reviewed</th>
-                        <th scope="col">Action</th>
+                        <th scope="col" data-table-sort="newsReview" data-sort-field="weekSet" tabindex="0" aria-sort="none">Week Set</th>
+                        <th scope="col" data-table-sort="newsReview" data-sort-field="student" tabindex="0" aria-sort="none">Student</th>
+                        <th scope="col" data-table-sort="newsReview" data-sort-field="level" tabindex="0" aria-sort="none">Level</th>
+                        <th scope="col" data-table-sort="newsReview" data-sort-field="reports" tabindex="0" aria-sort="none">Reports</th>
+                        <th scope="col" data-table-sort="newsReview" data-sort-field="setStatus" tabindex="0" aria-sort="none">Set Status</th>
+                        <th scope="col" data-table-sort="newsReview" data-sort-field="latestSubmittedAt" tabindex="0" aria-sort="none">Latest Submission</th>
+                        <th scope="col">Open</th>
                       </tr>
                     </thead>
                     <tbody id="newsReviewRows">
-                      <tr><td colspan="9">Open this page to load student news reports.</td></tr>
+                      <tr><td colspan="7">Open this page to load student week sets.</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -3488,6 +3840,62 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
               <div class="panel page-section" data-page="grades-data">
                 <h2>Grades data [view, sort, manage, edit data]</h2>
+                <section class="grade-chart-shell" id="gradeChartShell">
+                  <div class="grade-chart-head">
+                    <h3>Grades Pulse (mobile-first)</h3>
+                    <p class="small">Sparkline lanes from current grade rows. Switch period windows and group by class, student, or school.</p>
+                    <p class="small">
+                      Open
+                      <a href="/web-asset/admin/grades-tabulator-dev.html">Tabulator Grades Dev View</a>
+                      for school-wide grid exploration.
+                    </p>
+                  </div>
+                  <div class="grade-chart-periods" id="gradeChartPeriods" role="toolbar" aria-label="Grade chart period">
+                    <button type="button" class="grade-chart-period-btn" data-grade-chart-period="week">Week</button>
+                    <button type="button" class="grade-chart-period-btn" data-grade-chart-period="quarter">Quarter</button>
+                    <button type="button" class="grade-chart-period-btn" data-grade-chart-period="qtd">QTD</button>
+                    <button type="button" class="grade-chart-period-btn" data-grade-chart-period="sytd">SYTD</button>
+                    <button type="button" class="grade-chart-period-btn" data-grade-chart-period="archive">Archive</button>
+                    <button type="button" class="grade-chart-period-btn" data-grade-chart-period="custom">Custom</button>
+                  </div>
+                  <div class="grade-chart-filter-grid">
+                    <div class="grade-chart-field">
+                      <label for="gradeChartGroupBy">Group by</label>
+                      <select id="gradeChartGroupBy">
+                        <option value="class">By Class</option>
+                        <option value="student">By Student</option>
+                        <option value="school">By School</option>
+                      </select>
+                    </div>
+                    <div class="grade-chart-field">
+                      <label for="gradeChartSchoolYear">School year scope</label>
+                      <select id="gradeChartSchoolYear">
+                        <option value="all">All school years</option>
+                      </select>
+                    </div>
+                    <div class="grade-chart-field">
+                      <label for="gradeChartQuarter">Quarter focus</label>
+                      <select id="gradeChartQuarter">
+                        <option value="q1">Q1</option>
+                        <option value="q2">Q2</option>
+                        <option value="q3">Q3</option>
+                        <option value="q4">Q4</option>
+                      </select>
+                    </div>
+                    <div class="grade-chart-field">
+                      <label for="gradeChartCustomFrom">Custom from</label>
+                      <input id="gradeChartCustomFrom" type="date">
+                    </div>
+                    <div class="grade-chart-field">
+                      <label for="gradeChartCustomTo">Custom to</label>
+                      <input id="gradeChartCustomTo" type="date">
+                    </div>
+                  </div>
+                  <p class="small grade-chart-summary" id="gradeChartSummary">Grade pulse chart is ready.</p>
+                  <div class="grade-chart-lanes" id="gradeChartLanes">
+                    <p class="grade-chart-empty">No grade rows loaded yet.</p>
+                  </div>
+                </section>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="gradeSortField">Sort Grades Data By</label>
@@ -3771,6 +4179,11 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <div class="col-2"><label for="schoolSetupStartDate">First school day</label><input id="schoolSetupStartDate" type="date"></div>
                   <div class="col-2"><label for="schoolSetupEndDate">Last school day</label><input id="schoolSetupEndDate" type="date"></div>
                   <div class="col-3"><label>&nbsp;</label><button id="schoolSetupAutoFillBtn" type="button" class="btn-refresh">Auto-Fill Quarters</button></div>
+                  <div class="col-9">
+                    <label for="schoolSetupLetterGradeRanges">Global letter grade mapping (percent)</label>
+                    <textarea id="schoolSetupLetterGradeRanges" placeholder="A:90-100&#10;B:80-89.99&#10;C:70-79.99&#10;D:60-69.99&#10;F:0-59.99"></textarea>
+                    <p class="small">Format: <code>LETTER:min-max</code>, one row per line. This mapping is shared globally for grade bands.</p>
+                  </div>
                 </div>
                 <div class="row school-setup-links-grid">
                   <div class="col-6"><label for="schoolSetupPublicSite">Public site</label><textarea id="schoolSetupPublicSite" placeholder="https://school-public-site"></textarea></div>
@@ -3938,6 +4351,32 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     </div>
   </div>
 
+  <div id="newsReviewViewerModal" class="queue-modal hidden" role="dialog" aria-modal="true" aria-label="Student news report detail viewer">
+    <div class="queue-modal-card">
+      <div class="queue-modal-header">
+        <div class="queue-modal-nav">
+          <strong>Student News Report Viewer</strong>
+          <button id="newsReviewViewerPrevBtn" type="button" aria-label="Previous report">&larr;</button>
+          <span id="newsReviewViewerIndex">0 / 0</span>
+          <button id="newsReviewViewerNextBtn" type="button" aria-label="Next report">&rarr;</button>
+        </div>
+        <button id="newsReviewViewerCloseBtn" type="button" class="btn-delete">Close</button>
+      </div>
+      <div id="newsReviewViewerBody" class="queue-modal-body">
+        <p class="small">Select a report row to open details.</p>
+      </div>
+      <div class="news-review-viewer-review">
+        <label for="newsReviewViewerNote">Review Note</label>
+        <textarea id="newsReviewViewerNote" rows="3" placeholder="Save note with approve/revision action"></textarea>
+      </div>
+      <div class="news-review-viewer-actions">
+        <button id="newsReviewViewerApproveBtn" type="button" class="btn-edit">Approve</button>
+        <button id="newsReviewViewerRevisionBtn" type="button">Request Revision</button>
+      </div>
+      <p class="small" id="newsReviewViewerStatus">Viewer is ready.</p>
+    </div>
+  </div>
+
   <script>
     const state = {
       authUser: null,
@@ -4025,17 +4464,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         pendingStageQueueById: {},
       },
       newsReview: {
+        sourceReports: [],
         items: [],
         total: 0,
         hasMore: false,
         statusSummary: {
+          incomplete: 0,
           submitted: 0,
           approved: 0,
           revisionRequested: 0,
         },
         pendingById: {},
+        viewerReportId: "",
+        viewerWeekSetId: "",
+        viewerItems: [],
+        viewerIndex: -1,
+        viewerStudentKey: "",
         filters: {
-          status: "submitted",
+          status: "all",
           level: "",
           studentRefId: "",
           dateFrom: "",
@@ -4053,6 +4499,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           "current-assignments-pending",
           "overdue-homework",
           "attendance-risk",
+          "news-report-review",
           "pending-profile-submissions",
         ],
         panelsById: {},
@@ -4080,6 +4527,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         performance: { field: "generatedAt", dir: "desc" },
         grades: { field: "dueAt", dir: "desc" },
         reports: { field: "generatedAt", dir: "desc" },
+        newsReview: { field: "weekSet", dir: "desc" },
       },
       tableSearch: {
         attendance: "",
@@ -4130,6 +4578,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         collapsedRows: 12,
         rows: [],
       },
+      gradeChart: {
+        period: "custom",
+        groupBy: "class",
+        quarter: "q1",
+        schoolYear: "all",
+        customFrom: "",
+        customTo: "",
+      },
     }
 
     const statusEl = document.getElementById("status")
@@ -4154,6 +4610,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       "feverMedicineAllowed",
     ])
     const PROFILE_LOCKED_FIELD_KEYS = new Set(["eaglesId"])
+    const PROFILE_INFO_PRIMARY_ID_SUFFIXES = new Set([
+      "studentPhoto",
+      "fullName",
+      "englishName",
+      "currentGrade",
+      "eaglesId",
+      "studentNumber",
+      "parentsId",
+      "schoolName",
+      "studentEmail",
+      "studentPhone",
+      "motherName",
+      "motherPhone",
+      "motherEmail",
+      "fatherName",
+      "fatherPhone",
+      "fatherEmail",
+    ])
     const PROFILE_FORM_FIELD_ROWS = [
       ["studentPhoto","photoUrl","Tải ảnh học sinh lên","Upload student photo","profile","Thông tin của người học","file","Tải ảnh học sinh lên","","photoUrl","",12],
       ["fullNameStudent","fullName","Họ tên của người học","Full name of the learner","profile","Thông tin của người học","text","Họ tên","","fullName","",8],
@@ -5088,6 +5562,87 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       }
     }
 
+    function defaultSchoolLetterGradeRanges() {
+      return [
+        { letter: "A", minPercent: 90, maxPercent: 100 },
+        { letter: "B", minPercent: 80, maxPercent: 89.99 },
+        { letter: "C", minPercent: 70, maxPercent: 79.99 },
+        { letter: "D", minPercent: 60, maxPercent: 69.99 },
+        { letter: "F", minPercent: 0, maxPercent: 59.99 },
+      ]
+    }
+
+    function normalizeSchoolLetterCode(value) {
+      const text = normalizeText(value).toUpperCase()
+      if (!text) return ""
+      if (!/^[A-Z][A-Z0-9+-]{0,3}$/u.test(text)) return ""
+      return text
+    }
+
+    function parseSchoolPercentValue(value) {
+      const parsed = Number.parseFloat(String(value))
+      if (!Number.isFinite(parsed)) return null
+      if (parsed < 0) return 0
+      if (parsed > 100) return 100
+      return parsed
+    }
+
+    function formatSchoolPercentValue(value) {
+      if (!Number.isFinite(value)) return ""
+      const rounded = Math.round(value * 100) / 100
+      return Number.isInteger(rounded) ? String(rounded) : String(rounded)
+    }
+
+    function normalizeSchoolLetterGradeRanges(values = []) {
+      const source = Array.isArray(values) ? values : []
+      const mapped = source
+        .map((entry) => {
+          const letter = normalizeSchoolLetterCode(entry?.letter)
+          const minPercent = parseSchoolPercentValue(entry?.minPercent)
+          const maxPercent = parseSchoolPercentValue(entry?.maxPercent)
+          if (!letter) return null
+          if (!Number.isFinite(minPercent) || !Number.isFinite(maxPercent)) return null
+          return {
+            letter,
+            minPercent: Math.min(minPercent, maxPercent),
+            maxPercent: Math.max(minPercent, maxPercent),
+          }
+        })
+        .filter((entry) => entry && typeof entry === "object")
+        .sort((left, right) => right.minPercent - left.minPercent)
+      if (!mapped.length) return defaultSchoolLetterGradeRanges()
+      return mapped
+    }
+
+    function parseSchoolLetterGradeRangesText(value = "") {
+      const text = normalizeText(value)
+      if (!text) return defaultSchoolLetterGradeRanges()
+      const lines = text
+        .split(/\r?\n/)
+        .map((entry) => normalizeText(entry))
+        .filter(Boolean)
+      if (!lines.length) return defaultSchoolLetterGradeRanges()
+      const parsed = lines.map((line) => {
+        const match = line.match(/^([A-Za-z][A-Za-z0-9+\-]{0,3})\s*:\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/u)
+        if (!match) {
+          throw new Error("Grade mapping format is LETTER:min-max (one per line).")
+        }
+        return {
+          letter: normalizeSchoolLetterCode(match[1]),
+          minPercent: parseSchoolPercentValue(match[2]),
+          maxPercent: parseSchoolPercentValue(match[3]),
+        }
+      })
+      return normalizeSchoolLetterGradeRanges(parsed)
+    }
+
+    function schoolLetterGradeRangesText(value = []) {
+      const ranges = normalizeSchoolLetterGradeRanges(value)
+      return ranges
+        .map((entry) => `${entry.letter}:${formatSchoolPercentValue(entry.minPercent)}-${formatSchoolPercentValue(entry.maxPercent)}`)
+        .join("\n")
+    }
+
     function defaultSchoolProfile() {
       return {
         schoolName: "",
@@ -5124,6 +5679,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           "current-assignments-pending",
           "overdue-homework",
           "attendance-risk",
+          "news-report-review",
           "pending-profile-submissions",
         ],
       },
@@ -5999,6 +6555,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return 0
     }
 
+    function compareTableIsoDateTime(left, right) {
+      const a = normalizeText(left)
+      const b = normalizeText(right)
+      if (a && b) return a.localeCompare(b)
+      if (a) return 1
+      if (b) return -1
+      return 0
+    }
+
     function applySortDirection(compareValue, dir = "desc") {
       return normalizeLower(dir) === "asc" ? compareValue : -compareValue
     }
@@ -6130,6 +6695,41 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         if (compareValue === 0) compareValue = compareTableIsoDate(left?.generatedAt, right?.generatedAt)
         if (compareValue === 0) compareValue = compareTableText(leftFullName, rightFullName)
         if (compareValue === 0) compareValue = compareTableText(left?.eaglesId, right?.eaglesId)
+        if (compareValue === 0) compareValue = compareTableText(left?.id, right?.id)
+        return applySortDirection(compareValue, sortDir)
+      })
+    }
+
+    function normalizedNewsReviewSortField(field = "") {
+      const normalized = normalizeText(field)
+      if (["weekSet", "student", "level", "reports", "setStatus", "latestSubmittedAt"].includes(normalized)) {
+        return normalized
+      }
+      return "weekSet"
+    }
+
+    function sortedNewsReviewWeekSets(rows = []) {
+      const list = [...(Array.isArray(rows) ? rows : [])]
+      const sortField = normalizedNewsReviewSortField(state.tableSort?.newsReview?.field)
+      const sortDir = normalizeLower(state.tableSort?.newsReview?.dir) === "asc" ? "asc" : "desc"
+      return list.sort((left, right) => {
+        const leftStudentLabel = normalizeText(
+          left?.student?.fullName || left?.student?.englishName || left?.student?.eaglesId || left?.student?.studentRefId
+        )
+        const rightStudentLabel = normalizeText(
+          right?.student?.fullName || right?.student?.englishName || right?.student?.eaglesId || right?.student?.studentRefId
+        )
+        let compareValue = 0
+        if (sortField === "student") compareValue = compareTableText(leftStudentLabel, rightStudentLabel)
+        else if (sortField === "level") compareValue = compareLevelLabels(left?.student?.level || "", right?.student?.level || "")
+        else if (sortField === "reports") compareValue = compareTableNumber(left?.reportCount, right?.reportCount)
+        else if (sortField === "setStatus") compareValue = compareTableText(newsReviewStatusLabel(left?.setStatus), newsReviewStatusLabel(right?.setStatus))
+        else if (sortField === "latestSubmittedAt") {
+          compareValue = compareTableIsoDateTime(left?.latestSubmittedAt, right?.latestSubmittedAt)
+        } else compareValue = compareTableIsoDate(left?.weekStart, right?.weekStart)
+        if (compareValue === 0) compareValue = compareTableIsoDate(left?.weekStart, right?.weekStart)
+        if (compareValue === 0) compareValue = compareTableIsoDateTime(left?.latestSubmittedAt, right?.latestSubmittedAt)
+        if (compareValue === 0) compareValue = compareTableText(leftStudentLabel, rightStudentLabel)
         if (compareValue === 0) compareValue = compareTableText(left?.id, right?.id)
         return applySortDirection(compareValue, sortDir)
       })
@@ -7174,6 +7774,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       else if (sortKey === "performance") renderParentTrackingReportRows(state.tableRows.performance)
       else if (sortKey === "grades") renderGradeRows(state.tableRows.grades)
       else if (sortKey === "reports") renderReportRows(state.tableRows.reports)
+      else if (sortKey === "newsReview") renderNewsReviewRows()
     }
 
     function bindColumnSortHeaderEvents() {
@@ -7522,10 +8123,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function normalizeNewsReviewFilters(filters = {}) {
       const source = filters && typeof filters === "object" ? filters : {}
-      const status = normalizeLower(source.status || "submitted")
-      const normalizedStatus = ["submitted", "approved", "revision-requested", "all"].includes(status)
+      const status = normalizeLower(source.status || "all")
+      const normalizedStatus = ["all", "incomplete", "submitted", "approved", "revision-requested"].includes(status)
         ? status
-        : "submitted"
+        : "all"
       return {
         status: normalizedStatus,
         level: resolveSystemLevelName(source.level || ""),
@@ -7645,6 +8246,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
     function newsReviewStatusLabel(status = "") {
       const normalized = normalizeLower(status)
+      if (normalized === "incomplete") return "Incomplete"
       if (normalized === "approved") return "Approved"
       if (normalized === "revision-requested") return "Revision Requested"
       return "Submitted"
@@ -7654,10 +8256,240 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const total = Math.max(0, Number.parseInt(String(state.newsReview?.total || 0), 10) || 0)
       const showing = Array.isArray(state.newsReview?.items) ? state.newsReview.items.length : 0
       const summary = state.newsReview?.statusSummary || {}
+      const incomplete = Math.max(0, Number.parseInt(String(summary.incomplete || 0), 10) || 0)
       const submitted = Math.max(0, Number.parseInt(String(summary.submitted || 0), 10) || 0)
       const approved = Math.max(0, Number.parseInt(String(summary.approved || 0), 10) || 0)
       const revisionRequested = Math.max(0, Number.parseInt(String(summary.revisionRequested || 0), 10) || 0)
-      return `total=${total} | showing=${showing} | submitted=${submitted} | approved=${approved} | revision=${revisionRequested}`
+      return `total=${total} | showing=${showing} | incomplete=${incomplete} | submitted=${submitted} | approved=${approved} | revision=${revisionRequested}`
+    }
+
+    function newsReviewWeekSetStatusToken(set = {}) {
+      const revisionRequested = Math.max(0, Number.parseInt(String(set?.revisionRequestedCount || 0), 10) || 0)
+      const approved = Math.max(0, Number.parseInt(String(set?.approvedCount || 0), 10) || 0)
+      const reportCount = Math.max(0, Number.parseInt(String(set?.reportCount || 0), 10) || 0)
+      if (reportCount < 7) return "incomplete"
+      if (revisionRequested > 0) return "revision-requested"
+      if (reportCount >= 7 && approved >= reportCount) return "approved"
+      return "submitted"
+    }
+
+    function newsReviewWeekStartIso(reportDate = "") {
+      const parsed = parseIsoDateLocal(reportDate)
+      if (!(parsed instanceof Date) || Number.isNaN(parsed.valueOf())) return ""
+      const shifted = shiftToFixedTimeZone(parsed)
+      shifted.setUTCHours(0, 0, 0, 0)
+      const day = shifted.getUTCDay()
+      const diffToMonday = (day + 6) % 7
+      shifted.setUTCDate(shifted.getUTCDate() - diffToMonday)
+      return localIsoDate(shiftFromFixedTimeZone(shifted))
+    }
+
+    function newsReviewWeekEndIso(weekStart = "") {
+      return isoDateOffset(weekStart, 6)
+    }
+
+    function newsReviewWeekSetId({ studentRefId = "", eaglesId = "", weekStart = "", latestReportId = "" } = {}) {
+      const studentToken = normalizeText(studentRefId || eaglesId || latestReportId || "unknown")
+      const weekToken = normalizeText(weekStart) || "week"
+      return `news-week-set:${studentToken}:${weekToken}`
+    }
+
+    function newsReviewReportSortValue(item = {}) {
+      const submittedAt = normalizeText(item?.submittedAt)
+      if (submittedAt) return submittedAt
+      return normalizeText(item?.reportDate)
+    }
+
+    function sortNewsReviewViewerItems(items = []) {
+      const source = Array.isArray(items) ? items : []
+      return [...source].sort((left, right) => {
+        const submittedCompare = newsReviewReportSortValue(right).localeCompare(newsReviewReportSortValue(left))
+        if (submittedCompare !== 0) return submittedCompare
+        const reportDateCompare = normalizeText(right?.reportDate).localeCompare(normalizeText(left?.reportDate))
+        if (reportDateCompare !== 0) return reportDateCompare
+        return normalizeText(right?.id).localeCompare(normalizeText(left?.id))
+      })
+    }
+
+    function newsReviewWeekSetSearchText(weekSet = {}) {
+      const student = weekSet?.student && typeof weekSet.student === "object" ? weekSet.student : {}
+      const reports = Array.isArray(weekSet?.reports) ? weekSet.reports : []
+      const reportTokens = reports
+        .flatMap((entry) => [
+          entry?.articleTitle,
+          entry?.sourceLink,
+          entry?.leadSynopsis,
+          entry?.actionActor,
+          entry?.actionAffected,
+          entry?.actionWhere,
+          entry?.actionWhat,
+          entry?.actionWhy,
+          entry?.reviewNote,
+        ])
+        .map((entry) => normalizeText(entry))
+        .filter(Boolean)
+      return normalizeLower([
+        weekSet?.weekStart,
+        weekSet?.weekEnd,
+        student?.studentRefId,
+        student?.eaglesId,
+        student?.fullName,
+        student?.englishName,
+        student?.level,
+        ...reportTokens,
+      ].join(" "))
+    }
+
+    function buildNewsReviewWeekSets(reports = [], filters = {}) {
+      const source = Array.isArray(reports) ? reports : []
+      const grouped = new Map()
+      source.forEach((entry) => {
+        if (!entry || typeof entry !== "object") return
+        const student = entry?.student && typeof entry.student === "object" ? entry.student : {}
+        const studentRefId = normalizeText(student?.studentRefId || entry?.studentRefId)
+        const eaglesId = normalizeText(student?.eaglesId || entry?.eaglesId)
+        const weekStart = newsReviewWeekStartIso(entry?.reportDate)
+        if (!weekStart) return
+        const key = `${studentRefId || eaglesId || normalizeText(entry?.id)}:${weekStart}`
+        if (!key) return
+
+        const level = resolveSystemLevelName(student?.level || entry?.level || "")
+        const reportDate = normalizeText(entry?.reportDate).slice(0, 10)
+        const normalizedReport = {
+          ...entry,
+          reportDate,
+          student: {
+            studentRefId,
+            eaglesId,
+            studentNumber: Number.parseInt(String(student?.studentNumber || entry?.studentNumber || ""), 10) || null,
+            fullName: normalizeText(student?.fullName || entry?.fullName || student?.englishName || entry?.englishName),
+            englishName: normalizeText(student?.englishName || entry?.englishName),
+            level,
+          },
+        }
+
+        const existing = grouped.get(key) || {
+          id: "",
+          weekStart,
+          weekEnd: newsReviewWeekEndIso(weekStart),
+          student: normalizedReport.student,
+          reports: [],
+          reportCount: 0,
+          submittedCount: 0,
+          approvedCount: 0,
+          revisionRequestedCount: 0,
+          latestReportId: "",
+          latestReportDate: "",
+          latestSubmittedAt: "",
+          latestReviewedAt: "",
+          latestReviewedByUsername: "",
+          setStatus: "submitted",
+          _reportDateSet: new Set(),
+        }
+        existing.reports.push(normalizedReport)
+        if (reportDate) existing._reportDateSet.add(reportDate)
+
+        const status = normalizeLower(normalizedReport?.reviewStatus)
+        if (status === "approved") existing.approvedCount += 1
+        else if (status === "revision-requested") existing.revisionRequestedCount += 1
+        else existing.submittedCount += 1
+
+        const submittedAt = normalizeText(normalizedReport?.submittedAt)
+        const currentLatest = normalizeText(existing.latestSubmittedAt)
+        if (!currentLatest || submittedAt > currentLatest) {
+          existing.latestReportId = normalizeText(normalizedReport?.id)
+          existing.latestReportDate = reportDate
+          existing.latestSubmittedAt = submittedAt
+          existing.latestReviewedAt = normalizeText(normalizedReport?.reviewedAt)
+          existing.latestReviewedByUsername = normalizeText(normalizedReport?.reviewedByUsername)
+        }
+        grouped.set(key, existing)
+      })
+
+      const normalizedFilters = normalizeNewsReviewFilters(filters)
+      const selectedStatus = normalizeLower(normalizedFilters.status || "submitted")
+      const selectedLevel = resolveSystemLevelName(normalizedFilters.level || "")
+      const selectedStudentRef = normalizeText(normalizedFilters.studentRefId)
+      const selectedStudentRefLower = normalizeLower(selectedStudentRef)
+      const fromDate = normalizeText(normalizedFilters.dateFrom).slice(0, 10)
+      const toDate = normalizeText(normalizedFilters.dateTo).slice(0, 10)
+      const selectedQuery = normalizeLower(normalizedFilters.query || "")
+
+      const sets = Array.from(grouped.values())
+        .map((weekSet) => {
+          const reportsSorted = sortNewsReviewViewerItems(weekSet.reports)
+          const latest = reportsSorted[0] || null
+          const reportCount = Math.max(weekSet._reportDateSet?.size || 0, reportsSorted.length)
+          return {
+            id: newsReviewWeekSetId({
+              studentRefId: weekSet?.student?.studentRefId,
+              eaglesId: weekSet?.student?.eaglesId,
+              weekStart: weekSet?.weekStart,
+              latestReportId: weekSet?.latestReportId,
+            }),
+            weekStart: normalizeText(weekSet?.weekStart),
+            weekEnd: normalizeText(weekSet?.weekEnd),
+            student: weekSet.student,
+            reports: reportsSorted,
+            reportCount,
+            submittedCount: weekSet.submittedCount,
+            approvedCount: weekSet.approvedCount,
+            revisionRequestedCount: weekSet.revisionRequestedCount,
+            latestReportId: normalizeText(weekSet?.latestReportId || latest?.id),
+            latestReportDate: normalizeText(weekSet?.latestReportDate || latest?.reportDate),
+            latestSubmittedAt: normalizeText(weekSet?.latestSubmittedAt || latest?.submittedAt),
+            latestReviewedAt: normalizeText(weekSet?.latestReviewedAt || latest?.reviewedAt),
+            latestReviewedByUsername: normalizeText(weekSet?.latestReviewedByUsername || latest?.reviewedByUsername),
+            setStatus: "submitted",
+          }
+        })
+        .map((weekSet) => ({
+          ...weekSet,
+          setStatus: newsReviewWeekSetStatusToken(weekSet),
+        }))
+        .filter((weekSet) => {
+          if (selectedLevel && !levelNamesMatch(weekSet?.student?.level || "", selectedLevel)) return false
+          if (selectedStudentRef) {
+            const studentRef = normalizeText(weekSet?.student?.studentRefId)
+            const eaglesId = normalizeLower(weekSet?.student?.eaglesId)
+            if (studentRef !== selectedStudentRef && normalizeLower(studentRef) !== selectedStudentRefLower && eaglesId !== selectedStudentRefLower) {
+              return false
+            }
+          }
+          if (fromDate && compareIsoDateText(weekSet?.weekEnd || "", fromDate) < 0) return false
+          if (toDate && compareIsoDateText(weekSet?.weekStart || "", toDate) > 0) return false
+          if (selectedStatus !== "all" && normalizeLower(weekSet?.setStatus) !== selectedStatus) return false
+          if (selectedQuery && !newsReviewWeekSetSearchText(weekSet).includes(selectedQuery)) return false
+          return true
+        })
+        .sort((left, right) => {
+          const weekCompare = normalizeText(right?.weekStart).localeCompare(normalizeText(left?.weekStart))
+          if (weekCompare !== 0) return weekCompare
+          const submittedCompare = normalizeText(right?.latestSubmittedAt).localeCompare(normalizeText(left?.latestSubmittedAt))
+          if (submittedCompare !== 0) return submittedCompare
+          return normalizeText(left?.student?.fullName).localeCompare(normalizeText(right?.student?.fullName), undefined, {
+            sensitivity: "base",
+          })
+        })
+      return sets
+    }
+
+    function summarizeNewsReviewWeekSets(sets = []) {
+      const summary = {
+        incomplete: 0,
+        submitted: 0,
+        approved: 0,
+        revisionRequested: 0,
+      }
+      const source = Array.isArray(sets) ? sets : []
+      source.forEach((entry) => {
+        const status = normalizeLower(entry?.setStatus)
+        if (status === "incomplete") summary.incomplete += 1
+        else if (status === "approved") summary.approved += 1
+        else if (status === "revision-requested") summary.revisionRequested += 1
+        else summary.submitted += 1
+      })
+      return summary
     }
 
     function renderNewsReviewRows() {
@@ -7665,17 +8497,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const rowsEl = document.getElementById("newsReviewRows")
       if (!summaryEl || !rowsEl) return
       summaryEl.textContent = newsReviewSummaryText()
-      const items = Array.isArray(state.newsReview?.items) ? state.newsReview.items : []
+      const items = sortedNewsReviewWeekSets(state.newsReview?.items)
       rowsEl.innerHTML = ""
       if (!items.length) {
-        rowsEl.innerHTML = '<tr><td colspan="9">No student news reports for the current filters.</td></tr>'
+        rowsEl.innerHTML = '<tr><td colspan="7">No student week sets found for the current filters.</td></tr>'
         return
       }
 
-      const canReview = canManageUsers()
       items.forEach((item) => {
-        const reviewId = normalizeText(item?.id)
-        const pendingAction = normalizeText(state.newsReview?.pendingById?.[reviewId])
+        const weekSetId = normalizeText(item?.id)
         const student = item?.student && typeof item.student === "object" ? item.student : {}
         const studentLabel = studentIdentityLabel({
           id: student?.studentRefId,
@@ -7688,69 +8518,338 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           },
         }, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
         const row = document.createElement("tr")
+        row.dataset.newsReviewWeekSetId = weekSetId
         row.innerHTML = `
-          <td>${escapeHtml(normalizeText(item?.reportDate))}</td>
+          <td>${escapeHtml(normalizeText(item?.weekStart))} to ${escapeHtml(normalizeText(item?.weekEnd))}</td>
           <td>${escapeHtml(studentLabel)}</td>
           <td>${escapeHtml(fullLevelLabel(student?.level || ""))}</td>
-          <td>${escapeHtml(normalizeText(item?.articleTitle || "-"))}</td>
-          <td><a href="${escapeHtml(normalizeText(item?.sourceLink || "#"))}" target="_blank" rel="noopener noreferrer">${escapeHtml(normalizeText(item?.sourceLink || "-"))}</a></td>
-          <td>${escapeHtml(newsReviewStatusLabel(item?.reviewStatus))}</td>
-          <td><textarea rows="2" data-news-review-note="${escapeHtml(reviewId)}" ${!canReview || Boolean(pendingAction) ? "disabled" : ""}>${escapeHtml(normalizeText(item?.reviewNote))}</textarea></td>
-          <td>${escapeHtml(formatDateTime(item?.reviewedAt || item?.submittedAt || ""))}<br><span class="small">${escapeHtml(normalizeText(item?.reviewedByUsername || "-"))}</span></td>
-          <td>
-            <div class="actions actions-2">
-              <button type="button" class="btn-edit" data-news-review-action="approve" data-news-review-id="${escapeHtml(reviewId)}" ${!canReview || Boolean(pendingAction) ? "disabled" : ""}>${pendingAction === "approve" ? "Approving..." : "Approve"}</button>
-              <button type="button" data-news-review-action="revision-requested" data-news-review-id="${escapeHtml(reviewId)}" ${!canReview || Boolean(pendingAction) ? "disabled" : ""}>${pendingAction === "revision-requested" ? "Saving..." : "Request Revision"}</button>
-            </div>
-          </td>
+          <td>${escapeHtml(`${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`)}</td>
+          <td>${escapeHtml(newsReviewStatusLabel(item?.setStatus))}</td>
+          <td>${escapeHtml(formatDateTime(item?.latestSubmittedAt || ""))}<br><span class="small">${escapeHtml(normalizeText(item?.latestReviewedByUsername || "-"))}</span></td>
+          <td><button type="button" class="queue-row-btn" data-news-review-open-week-set="${escapeHtml(weekSetId)}" data-news-review-open-report="${escapeHtml(normalizeText(item?.latestReportId))}">Open Week Set</button></td>
         `
         rowsEl.appendChild(row)
+      })
+    }
+
+    function newsReviewWeekSetById(weekSetId = "", sets = null) {
+      const id = normalizeText(weekSetId)
+      if (!id) return null
+      const source = Array.isArray(sets) ? sets : (Array.isArray(state.newsReview?.items) ? state.newsReview.items : [])
+      return source.find((entry) => normalizeText(entry?.id) === id) || null
+    }
+
+    function newsReviewItemById(reportId = "", sets = null) {
+      const id = normalizeText(reportId)
+      if (!id) return null
+      const source = Array.isArray(sets) ? sets : (Array.isArray(state.newsReview?.items) ? state.newsReview.items : [])
+      for (const weekSet of source) {
+        const reports = Array.isArray(weekSet?.reports) ? weekSet.reports : []
+        const found = reports.find((entry) => normalizeText(entry?.id) === id)
+        if (found) return found
+      }
+      return null
+    }
+
+    async function loadNewsReviewViewerItems(weekSet = null, options = {}) {
+      const selectedWeekSet = weekSet && typeof weekSet === "object" ? weekSet : null
+      if (!selectedWeekSet) return []
+      const fallbackItems = sortNewsReviewViewerItems(selectedWeekSet?.reports)
+      const loadSetAll = options && options.loadSetAll === false ? false : true
+      const studentRefId = normalizeText(selectedWeekSet?.student?.studentRefId || selectedWeekSet?.studentRefId)
+      const weekStart = normalizeText(selectedWeekSet?.weekStart)
+      const weekEnd = normalizeText(selectedWeekSet?.weekEnd)
+      if (!loadSetAll || !studentRefId || !weekStart || !weekEnd) return fallbackItems
+
+      const params = new URLSearchParams()
+      params.set("status", "all")
+      params.set("studentRefId", studentRefId)
+      params.set("dateFrom", weekStart)
+      params.set("dateTo", weekEnd)
+      params.set("take", "500")
+      const payload = await api(`${ADMIN_NEWS_REPORTS_PATH}?${params.toString()}`)
+      const fetchedReports = Array.isArray(payload?.items) ? payload.items : []
+      const fetchedSets = buildNewsReviewWeekSets(fetchedReports, {
+        status: "all",
+        studentRefId,
+        dateFrom: weekStart,
+        dateTo: weekEnd,
+        query: "",
+        take: 500,
+      })
+      const match = newsReviewWeekSetById(selectedWeekSet?.id, fetchedSets)
+        || fetchedSets.find((entry) =>
+          normalizeText(entry?.student?.studentRefId) === studentRefId
+          && normalizeText(entry?.weekStart) === weekStart
+        )
+      const scopedItems = sortNewsReviewViewerItems(match?.reports)
+      return scopedItems.length ? scopedItems : fallbackItems
+    }
+
+    function newsReviewViewerCurrentItem() {
+      const items = Array.isArray(state.newsReview?.viewerItems) ? state.newsReview.viewerItems : []
+      if (!items.length) return null
+      const index = Number.parseInt(String(state.newsReview?.viewerIndex), 10)
+      const safeIndex = Number.isFinite(index) ? Math.max(0, Math.min(items.length - 1, index)) : 0
+      return items[safeIndex] || null
+    }
+
+    function setNewsReviewViewerStatus(message = "", isError = false) {
+      const statusEl = document.getElementById("newsReviewViewerStatus")
+      if (!statusEl) return
+      statusEl.style.color = isError ? "#b3262d" : "#5f6d87"
+      statusEl.textContent = normalizeText(message) || "Viewer is ready."
+    }
+
+    function syncNewsReviewViewerControls(report = null) {
+      const items = Array.isArray(state.newsReview?.viewerItems) ? state.newsReview.viewerItems : []
+      const reportId = normalizeText(report?.id)
+      const explicitIndex = Number.parseInt(String(state.newsReview?.viewerIndex), 10)
+      let index = Number.isFinite(explicitIndex) ? explicitIndex : -1
+      if (reportId) {
+        const locatedIndex = items.findIndex((entry) => normalizeText(entry?.id) === reportId)
+        if (locatedIndex >= 0) index = locatedIndex
+      }
+      if (!items.length) index = -1
+      else if (index < 0) index = 0
+      else if (index >= items.length) index = items.length - 1
+      state.newsReview.viewerIndex = index
+      const activeReport = index >= 0 ? items[index] : null
+      const activeReportId = normalizeText(activeReport?.id)
+      if (activeReportId) state.newsReview.viewerReportId = activeReportId
+
+      const indexEl = document.getElementById("newsReviewViewerIndex")
+      if (indexEl) indexEl.textContent = items.length ? `${index + 1} / ${items.length}` : "0 / 0"
+
+      const prevBtn = document.getElementById("newsReviewViewerPrevBtn")
+      if (prevBtn instanceof HTMLButtonElement) prevBtn.disabled = !items.length || index <= 0
+      const nextBtn = document.getElementById("newsReviewViewerNextBtn")
+      if (nextBtn instanceof HTMLButtonElement) nextBtn.disabled = !items.length || index < 0 || index >= items.length - 1
+
+      const canReview = canManageUsers()
+      const pendingAction = normalizeText(state.newsReview?.pendingById?.[activeReportId])
+      const noteField = document.getElementById("newsReviewViewerNote")
+      if (noteField instanceof HTMLTextAreaElement) {
+        if (document.activeElement !== noteField) {
+          noteField.value = normalizeText(activeReport?.reviewNote)
+        }
+        noteField.disabled = !canReview || !activeReportId || Boolean(pendingAction)
+      }
+
+      const approveBtn = document.getElementById("newsReviewViewerApproveBtn")
+      if (approveBtn instanceof HTMLButtonElement) {
+        approveBtn.disabled = !canReview || !activeReportId || Boolean(pendingAction)
+        approveBtn.textContent = pendingAction === "approve" ? "Approving..." : "Approve"
+      }
+      const revisionBtn = document.getElementById("newsReviewViewerRevisionBtn")
+      if (revisionBtn instanceof HTMLButtonElement) {
+        revisionBtn.disabled = !canReview || !activeReportId || Boolean(pendingAction)
+        revisionBtn.textContent = pendingAction === "revision-requested" ? "Saving..." : "Request Revision"
+      }
+    }
+
+    function renderNewsReviewViewer(report = null) {
+      const bodyEl = document.getElementById("newsReviewViewerBody")
+      if (!bodyEl) return
+      if (!report || typeof report !== "object") {
+        bodyEl.innerHTML = '<p class="small">Report details are unavailable.</p>'
+        syncNewsReviewViewerControls(null)
+        return
+      }
+
+      const student = report?.student && typeof report.student === "object" ? report.student : {}
+      const studentLabel = studentIdentityLabel({
+        id: student?.studentRefId || report?.studentRefId,
+        studentNumber: student?.studentNumber,
+        eaglesId: student?.eaglesId || report?.eaglesId,
+        profile: {
+          fullName: student?.fullName || report?.fullName,
+          englishName: student?.englishName || report?.englishName,
+          currentGrade: student?.level || report?.level,
+        },
+      }, { preferEnglish: true, wrapName: true, includeStudentNumber: true })
+
+      bodyEl.innerHTML = `
+        <div class="news-review-viewer-grid">
+          <div class="news-review-viewer-block"><strong>Report ID</strong><span>${escapeHtml(normalizeText(report?.id))}</span></div>
+          <div class="news-review-viewer-block"><strong>Status</strong><span>${escapeHtml(newsReviewStatusLabel(report?.reviewStatus))}</span></div>
+          <div class="news-review-viewer-block"><strong>Student</strong><span>${escapeHtml(studentLabel)}</span></div>
+          <div class="news-review-viewer-block"><strong>Level</strong><span>${escapeHtml(fullLevelLabel(student?.level || report?.level || ""))}</span></div>
+          <div class="news-review-viewer-block"><strong>Report Date</strong><span>${escapeHtml(normalizeText(report?.reportDate))}</span></div>
+          <div class="news-review-viewer-block"><strong>Reviewed</strong><span>${escapeHtml(formatDateTime(report?.reviewedAt || report?.submittedAt || ""))} ${normalizeText(report?.reviewedByUsername) ? `| ${escapeHtml(normalizeText(report?.reviewedByUsername))}` : ""}</span></div>
+          <div class="news-review-viewer-block"><strong>Article</strong><span>${escapeHtml(normalizeText(report?.articleTitle))}</span></div>
+          <div class="news-review-viewer-block"><strong>Source</strong><span><a href="${escapeHtml(normalizeText(report?.sourceLink || "#"))}" target="_blank" rel="noopener noreferrer">${escapeHtml(normalizeText(report?.sourceLink || "-"))}</a></span></div>
+          <div class="news-review-viewer-block"><strong>Byline</strong><span>${escapeHtml(normalizeText(report?.byline || "-"))}</span></div>
+          <div class="news-review-viewer-block"><strong>Dateline</strong><span>${escapeHtml(normalizeText(report?.articleDateline || "-"))}</span></div>
+        </div>
+        <div class="news-review-viewer-block"><strong>Lead Synopsis</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.leadSynopsis || "-"))}</div></div>
+        <div class="news-review-viewer-grid">
+          <div class="news-review-viewer-block"><strong>Action Actor</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionActor || "-"))}</div></div>
+          <div class="news-review-viewer-block"><strong>Action Affected</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionAffected || "-"))}</div></div>
+          <div class="news-review-viewer-block"><strong>Action Where</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhere || "-"))}</div></div>
+          <div class="news-review-viewer-block"><strong>Action What</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhat || "-"))}</div></div>
+        </div>
+        <div class="news-review-viewer-block"><strong>Action Why</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhy || "-"))}</div></div>
+        <div class="news-review-viewer-block"><strong>Bias Assessment</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.biasAssessment || "-"))}</div></div>
+        <div class="news-review-viewer-block"><strong>Review Note</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.reviewNote || "-"))}</div></div>
+      `
+      syncNewsReviewViewerControls(report)
+    }
+
+    function closeNewsReviewViewer() {
+      const modalEl = document.getElementById("newsReviewViewerModal")
+      if (!modalEl) return
+      modalEl.classList.add("hidden")
+      state.newsReview.viewerReportId = ""
+      state.newsReview.viewerWeekSetId = ""
+      state.newsReview.viewerItems = []
+      state.newsReview.viewerIndex = -1
+      state.newsReview.viewerStudentKey = ""
+      syncNewsReviewViewerControls(null)
+      setNewsReviewViewerStatus("")
+    }
+
+    function shiftNewsReviewViewer(offset = 0) {
+      const items = Array.isArray(state.newsReview?.viewerItems) ? state.newsReview.viewerItems : []
+      if (!items.length) return
+      const parsedOffset = Number.parseInt(String(offset), 10)
+      if (!Number.isFinite(parsedOffset) || parsedOffset === 0) return
+      const currentIndex = Number.parseInt(String(state.newsReview?.viewerIndex), 10)
+      const baseIndex = Number.isFinite(currentIndex) ? currentIndex : 0
+      const nextIndex = Math.max(0, Math.min(items.length - 1, baseIndex + parsedOffset))
+      if (nextIndex === baseIndex) return
+      const nextItem = items[nextIndex] || null
+      if (!nextItem) return
+      state.newsReview.viewerIndex = nextIndex
+      state.newsReview.viewerReportId = normalizeText(nextItem?.id)
+      renderNewsReviewViewer(nextItem)
+      setNewsReviewViewerStatus(`Viewing ${nextIndex + 1} / ${items.length} for selected week set.`)
+    }
+
+    async function openNewsReviewViewerByWeekSetId(weekSetId = "", options = {}) {
+      const id = normalizeText(weekSetId)
+      if (!id) throw new Error("Missing news week-set id.")
+      const modalEl = document.getElementById("newsReviewViewerModal")
+      if (!modalEl) return
+      const preferLoadAll = options && options.loadAll === false ? false : true
+
+      let weekSet = newsReviewWeekSetById(id)
+      if (!weekSet && preferLoadAll) {
+        const payload = await api(`${ADMIN_NEWS_REPORTS_PATH}?status=all&take=500`)
+        const fetchedReports = Array.isArray(payload?.items) ? payload.items : []
+        const fetchedSets = buildNewsReviewWeekSets(fetchedReports, {
+          status: "all",
+          take: 500,
+        })
+        weekSet = newsReviewWeekSetById(id, fetchedSets)
+      }
+      if (!weekSet) throw new Error("News week set was not found.")
+
+      const viewerItems = await loadNewsReviewViewerItems(weekSet, options)
+      const preferredReportId = normalizeText(options?.reportId || weekSet?.latestReportId || viewerItems[0]?.id)
+      const viewerIndex = viewerItems.findIndex((entry) => normalizeText(entry?.id) === preferredReportId)
+      state.newsReview.viewerItems = viewerItems
+      state.newsReview.viewerIndex = viewerIndex >= 0 ? viewerIndex : 0
+      state.newsReview.viewerWeekSetId = id
+      state.newsReview.viewerStudentKey = normalizeText(weekSet?.student?.studentRefId || weekSet?.student?.eaglesId)
+      const activeItem = newsReviewViewerCurrentItem() || viewerItems[0] || null
+      state.newsReview.viewerReportId = normalizeText(activeItem?.id)
+      renderNewsReviewViewer(activeItem)
+      modalEl.classList.remove("hidden")
+      if (!(options && options.silentStatus)) {
+        setNewsReviewViewerStatus(
+          `Opened week set ${normalizeText(weekSet?.weekStart)} to ${normalizeText(weekSet?.weekEnd)}.`
+        )
+      }
+    }
+
+    async function openNewsReviewViewerById(reportId = "", options = {}) {
+      const id = normalizeText(reportId)
+      if (!id) throw new Error("Missing news report id.")
+      const preferLoadAll = options && options.loadAll === false ? false : true
+      let weekSet = null
+      const inMemorySets = Array.isArray(state.newsReview?.items) ? state.newsReview.items : []
+      weekSet = inMemorySets.find((entry) => {
+        const reports = Array.isArray(entry?.reports) ? entry.reports : []
+        return reports.some((report) => normalizeText(report?.id) === id)
+      }) || null
+
+      if (!weekSet && preferLoadAll) {
+        const payload = await api(`${ADMIN_NEWS_REPORTS_PATH}?status=all&take=500`)
+        const fetchedReports = Array.isArray(payload?.items) ? payload.items : []
+        const fetchedSets = buildNewsReviewWeekSets(fetchedReports, {
+          status: "all",
+          take: 500,
+        })
+        weekSet = fetchedSets.find((entry) => {
+          const reports = Array.isArray(entry?.reports) ? entry.reports : []
+          return reports.some((report) => normalizeText(report?.id) === id)
+        }) || null
+      }
+      if (!weekSet) throw new Error("News report details were not found.")
+
+      await openNewsReviewViewerByWeekSetId(weekSet.id, {
+        ...options,
+        reportId: id,
+      })
+      if (!(options && options.silentStatus)) setNewsReviewViewerStatus(`Opened report ${id}.`)
+    }
+
+    async function applyNewsReviewViewerAction(action = "") {
+      const item = newsReviewViewerCurrentItem()
+      const reportId = normalizeText(item?.id)
+      if (!reportId) throw new Error("Select a report first.")
+      const noteField = document.getElementById("newsReviewViewerNote")
+      const reviewNote = noteField instanceof HTMLTextAreaElement ? normalizeText(noteField.value) : ""
+      await applyNewsReviewAction(reportId, action, {
+        reviewNote,
+        keepViewerOpen: true,
       })
     }
 
     async function loadNewsReviewQueue({ notify = false } = {}) {
       const filters = newsReviewFilters()
       const params = new URLSearchParams()
-      params.set("status", normalizeText(filters.status || "submitted"))
+      params.set("status", "all")
       if (filters.level) params.set("level", filters.level)
       if (filters.studentRefId) params.set("studentRefId", filters.studentRefId)
-      if (filters.dateFrom) params.set("dateFrom", filters.dateFrom)
-      if (filters.dateTo) params.set("dateTo", filters.dateTo)
-      if (filters.query) params.set("q", filters.query)
-      params.set("take", String(filters.take || 200))
+      params.set("take", "500")
       const payload = await api(`${ADMIN_NEWS_REPORTS_PATH}?${params.toString()}`)
-      state.newsReview.items = Array.isArray(payload?.items) ? payload.items : []
-      state.newsReview.total = Number.parseInt(String(payload?.total || state.newsReview.items.length), 10) || 0
-      state.newsReview.hasMore = Boolean(payload?.hasMore)
-      state.newsReview.statusSummary = payload?.statusSummary && typeof payload.statusSummary === "object"
-        ? {
-            submitted: Number.parseInt(String(payload.statusSummary.submitted || 0), 10) || 0,
-            approved: Number.parseInt(String(payload.statusSummary.approved || 0), 10) || 0,
-            revisionRequested: Number.parseInt(String(payload.statusSummary.revisionRequested || 0), 10) || 0,
-          }
-        : { submitted: 0, approved: 0, revisionRequested: 0 }
+      const sourceReports = Array.isArray(payload?.items) ? payload.items : []
+      const groupedSets = buildNewsReviewWeekSets(sourceReports, filters)
+      const limit = Math.max(1, Math.min(Number.parseInt(String(filters.take || 200), 10) || 200, 500))
+      const visibleSets = groupedSets.slice(0, limit)
+      state.newsReview.sourceReports = sourceReports
+      state.newsReview.items = visibleSets
+      state.newsReview.total = groupedSets.length
+      state.newsReview.hasMore = groupedSets.length > visibleSets.length
+      state.newsReview.statusSummary = summarizeNewsReviewWeekSets(groupedSets)
       state.newsReview.filters = normalizeNewsReviewFilters({
-        ...filters,
         ...(payload?.filters && typeof payload.filters === "object" ? payload.filters : {}),
+        ...filters,
       })
       refreshNewsReviewFilterControls()
       renderNewsReviewRows()
-      if (notify) setStatus(`News review queue loaded: ${state.newsReview.items.length} rows.`)
+      if (notify) setStatus(`News review week sets loaded: ${state.newsReview.items.length} rows.`)
     }
 
-    async function applyNewsReviewAction(reportId = "", action = "") {
+    async function applyNewsReviewAction(reportId = "", action = "", options = {}) {
       const id = normalizeText(reportId)
       const normalizedAction = normalizeLower(action)
       if (!id) throw new Error("Missing news report id.")
       if (!["approve", "revision-requested"].includes(normalizedAction)) {
         throw new Error("Unsupported news review action.")
       }
-      const noteField = Array.from(document.querySelectorAll("textarea[data-news-review-note]")).find(
-        (entry) => normalizeText(entry?.getAttribute("data-news-review-note")) === id
-      )
-      const reviewNote = normalizeText(noteField?.value || "")
+      const hasReviewNoteOverride = options && Object.prototype.hasOwnProperty.call(options, "reviewNote")
+      const noteField = document.getElementById("newsReviewViewerNote")
+      const reviewNote = hasReviewNoteOverride
+        ? normalizeText(options.reviewNote)
+        : normalizeText(noteField instanceof HTMLTextAreaElement ? noteField.value : "")
       state.newsReview.pendingById[id] = normalizedAction
       renderNewsReviewRows()
+      if (!document.getElementById("newsReviewViewerModal")?.classList.contains("hidden")) {
+        renderNewsReviewViewer(newsReviewViewerCurrentItem())
+      }
       try {
         await api(`${ADMIN_NEWS_REPORTS_PATH}/${encodeURIComponent(id)}`, {
           method: "POST",
@@ -7760,11 +8859,21 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           },
         })
         await loadNewsReviewQueue()
+        if (options && options.keepViewerOpen) {
+          await openNewsReviewViewerById(id, {
+            loadAll: true,
+            loadSetAll: true,
+            silentStatus: true,
+          })
+        }
         const actionLabel = normalizedAction === "approve" ? "approved" : "marked for revision"
         setStatus(`News report ${id} ${actionLabel}.`)
       } finally {
         delete state.newsReview.pendingById[id]
         renderNewsReviewRows()
+        if (!document.getElementById("newsReviewViewerModal")?.classList.contains("hidden")) {
+          renderNewsReviewViewer(newsReviewViewerCurrentItem())
+        }
       }
     }
 
@@ -7872,42 +8981,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return normalizeText(pathname || window.location.pathname).endsWith("/web-asset/admin/student-admin.html")
     }
 
-    function inferLocalPreviewApiOrigin() {
-      if (!isStaticAdminPreviewPath(window.location.pathname)) return ""
-      const protocol = normalizeLower(window.location.protocol)
-      if (protocol !== "http:" && protocol !== "https:") return ""
-      const host = normalizeLower(window.location.hostname)
-      const port = normalizeText(window.location.port)
-      if (!["127.0.0.1", "localhost", "::1"].includes(host)) return ""
-      if (!port || port === "8787") return ""
-      return `${window.location.protocol}//${window.location.hostname}:8787`
-    }
-
     function resolveApiOrigin() {
       const params = new URLSearchParams(window.location.search || "")
       const queryOrigin = normalizeText(params.get("apiOrigin"))
       const injectedOrigin = normalizeText(window.__SIS_ADMIN_API_ORIGIN)
-      let storedOrigin = ""
-      try {
-        storedOrigin = normalizeText(window.localStorage.getItem("sis.admin.apiOrigin"))
-      } catch (error) {
-        void error
-      }
-
-      const selectedOrigin = queryOrigin || injectedOrigin || storedOrigin
+      const selectedOrigin = queryOrigin || injectedOrigin
       if (!selectedOrigin) {
-        return inferLocalPreviewApiOrigin()
+        return ""
       }
       try {
-        const resolved = new URL(selectedOrigin, window.location.origin).origin
-        if (queryOrigin) {
-          try {
-            window.localStorage.setItem("sis.admin.apiOrigin", resolved)
-          } catch (error) {
-            void error
-          }
-        }
-        return resolved
+        return new URL(selectedOrigin, window.location.origin).origin
       } catch (error) {
         void error
         return ""
@@ -8052,11 +9135,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         endDate = fallback.endDate
       }
       const quarters = splitSchoolYearIntoQuarters(startDate, endDate)
+      const letterGradeRanges = normalizeSchoolLetterGradeRanges(source?.letterGradeRanges)
       return {
         startDate,
         endDate,
         schoolYear: schoolYearLabelFromRange(startDate, endDate),
         quarters,
+        letterGradeRanges,
       }
     }
 
@@ -8442,6 +9527,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const timeFormatEl = document.getElementById("schoolSetupTimeFormat")
       const timeZoneEl = document.getElementById("schoolSetupTimeZone")
       const logoDataUrlEl = document.getElementById("schoolSetupLogoDataUrl")
+      const letterGradeRangesEl = document.getElementById("schoolSetupLetterGradeRanges")
       if (startEl) startEl.value = normalizedSetup.startDate
       if (endEl) endEl.value = normalizedSetup.endDate
       if (labelEl) labelEl.value = normalizedSetup.schoolYear
@@ -8461,6 +9547,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       if (timeFormatEl) timeFormatEl.value = normalizedProfile.timeFormat
       if (timeZoneEl) timeZoneEl.value = normalizedProfile.timeZone
       if (logoDataUrlEl) logoDataUrlEl.value = normalizedProfile.logoDataUrl
+      if (letterGradeRangesEl) letterGradeRangesEl.value = schoolLetterGradeRangesText(normalizedSetup.letterGradeRanges)
       renderSchoolSetupLogoPreview(normalizedProfile.logoDataUrl)
       if (rowsEl) rowsEl.innerHTML = schoolSetupQuarterRowsHtml(normalizedSetup)
       if (statusEl) {
@@ -8475,13 +9562,18 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     function draftSchoolSetupFromInputs() {
       const startDate = normalizeText(document.getElementById("schoolSetupStartDate")?.value).slice(0, 10)
       const endDate = normalizeText(document.getElementById("schoolSetupEndDate")?.value).slice(0, 10)
+      const letterGradeRangesText = normalizeText(document.getElementById("schoolSetupLetterGradeRanges")?.value)
       if (!parseIsoDateLocal(startDate) || !parseIsoDateLocal(endDate)) {
         throw new Error("First and last school day are required.")
       }
       if (compareIsoDateText(startDate, endDate) > 0) {
         throw new Error("Last school day must be on or after the first school day.")
       }
-      return normalizeSchoolSetup({ startDate, endDate })
+      return normalizeSchoolSetup({
+        startDate,
+        endDate,
+        letterGradeRanges: parseSchoolLetterGradeRangesText(letterGradeRangesText),
+      })
     }
 
     async function saveSchoolSetupFromInputs({ notify = true } = {}) {
@@ -8493,6 +9585,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         schoolSetup: {
           startDate: setup.startDate,
           endDate: setup.endDate,
+          letterGradeRanges: normalizeSchoolLetterGradeRanges(setup.letterGradeRanges),
         },
         schoolProfile: profile,
       })
@@ -8817,19 +9910,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return isStaticAdminPreviewPath(window.location.pathname)
     }
 
-    function requiresApiOriginForStaticPreview() {
-      const protocol = normalizeLower(window.location.protocol)
-      const origin = normalizeLower(window.location.origin)
-      return protocol === "file:" || !origin || origin === "null"
-    }
-
     function staticPreviewHelpMessage() {
       return `Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening ${ADMIN_PAGE_PATH}.`
     }
 
     function assertApiOriginConfiguredForStaticPreview() {
       if (!isStaticAdminPreviewMode() || ADMIN_API_ORIGIN) return
-      if (!requiresApiOriginForStaticPreview()) return
       const error = new Error(staticPreviewHelpMessage())
       error.status = 400
       throw error
@@ -8948,6 +10034,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       let slug = normalizePageSlug(pageSlug)
       if (!isPageAllowedForCurrentRole(slug)) slug = roleStartPage()
       state.activePage = slug
+      if (slug !== "news-reports") closeNewsReviewViewer()
 
       document.querySelectorAll(".page-section[data-page]").forEach((sectionEl) => {
         if (sectionEl.dataset.page === slug) sectionEl.classList.add("active")
@@ -9238,6 +10325,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
 
     async function api(path, options = {}) {
+      assertApiOriginConfiguredForStaticPreview()
       const method = options.method || "GET"
       const headers = {}
       if (options.body !== undefined) {
@@ -11540,6 +12628,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           return "Past Overdue Homework"
         case "attendance-risk":
           return "At-Risk Attendance"
+        case "news-report-review":
+          return "News Week Sets (7 Reports)"
         case "pending-profile-submissions":
           return "Pending Profile Submissions"
         default:
@@ -11562,6 +12652,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         case "queued-performance-reports":
           return {
             columns: ["Queued At", "Assignment", "Status", "Level", "Queued By"],
+            openColumnIndex: 1,
             row: (item) => [
               formatDateTime(item?.queuedAt),
               normalizeText(item?.assignmentTitle || item?.exerciseTitle),
@@ -11574,6 +12665,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         case "unmatched-exercise-submissions":
           return {
             columns: ["Received", "Eagles ID", "Email", "Exercise", "Score", "Status"],
+            openColumnIndex: 3,
             row: (item) => {
               const totalQuestions = Math.max(0, Number.parseInt(String(item?.totalQuestions || 0), 10) || 0)
               const correctCount = Math.max(0, Number.parseInt(String(item?.correctCount || 0), 10) || 0)
@@ -11595,6 +12687,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         case "current-assignments-pending":
           return {
             columns: ["Level", "Targeted", "Completed", "Pending", "Due At"],
+            openColumnIndex: 0,
             row: (item) => {
               const targeted = Number.parseInt(
                 String(item?.currentTargetedStudents ?? item?.targetedStudents ?? item?.enrolled ?? 0),
@@ -11625,6 +12718,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         case "overdue-homework":
           return {
             columns: ["Student", "Eagles ID", "Class", "Assignment", "Due At"],
+            openColumnIndex: 0,
             row: (item) => [
               normalizeText(item?.fullName),
               normalizeText(item?.eaglesId || item?.studentRefId),
@@ -11637,6 +12731,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         case "attendance-risk":
           return {
             columns: ["Student", "Eagles ID", "Absences", "Late 30+", "Risk Score"],
+            openColumnIndex: 0,
             row: (item) => {
               const absences = Math.max(0, Number.parseInt(String(item?.absences || 0), 10) || 0)
               const late30 = Math.max(0, Number.parseInt(String(item?.late30Plus || 0), 10) || 0)
@@ -11651,9 +12746,24 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
             },
             emptyText: "No attendance risk rows.",
           }
+        case "news-report-review":
+          return {
+            columns: ["Week Set", "Student", "Eagles ID", "Level", "Reports", "Set Status"],
+            openColumnIndex: 0,
+            row: (item) => [
+              `${normalizeText(item?.weekStart)} to ${normalizeText(item?.weekEnd)}`,
+              normalizeText(item?.fullName || item?.student?.fullName),
+              normalizeText(item?.eaglesId || item?.student?.eaglesId || item?.studentRefId),
+              fullLevelLabel(resolveSystemLevelName(item?.level || "")),
+              `${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`,
+              newsReviewStatusLabel(item?.setStatus || item?.latestReviewStatus),
+            ],
+            emptyText: "No week sets found.",
+          }
         case "pending-profile-submissions":
           return {
             columns: ["Submitted At", "Submission", "Student Ref", "Status", "Failure Point"],
+            openColumnIndex: 1,
             row: (item) => [
               formatDateTime(item?.submittedAt || item?.updatedAt),
               normalizeText(item?.id),
@@ -11681,8 +12791,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       const visibleItems = items.slice(0, 25)
       const headerHtml = spec.columns.map((label) => `<th scope="col">${escapeHtml(label)}</th>`).join("")
       const bodyHtml = visibleItems
-        .map((item) => {
-          const cells = spec.row(item).map((value) => `<td>${escapeHtml(normalizeText(value))}</td>`).join("")
+        .map((item, index) => {
+          const openColumnIndex = Number.parseInt(String(spec?.openColumnIndex), 10)
+          const cells = spec.row(item).map((value, cellIndex) => {
+            const text = normalizeText(value)
+            if (cellIndex === openColumnIndex) {
+              return `<td><button type="button" class="queue-row-btn" data-queue-hub-open-panel="${escapeHtml(normalizeText(panel?.id))}" data-queue-hub-open-index="${index}">${escapeHtml(text || "(open)")}</button></td>`
+            }
+            return `<td>${escapeHtml(text)}</td>`
+          }).join("")
           return `<tr>${cells}</tr>`
         })
         .join("")
@@ -11819,6 +12936,110 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         })
         panelRoot.appendChild(panelEl)
       })
+    }
+
+    function queueHubPanelById(panelId = "") {
+      const id = normalizeText(panelId)
+      if (!id) return null
+      const panelsById = state.queueHub?.panelsById && typeof state.queueHub.panelsById === "object"
+        ? state.queueHub.panelsById
+        : {}
+      return panelsById[id] || null
+    }
+
+    function queueHubItemByPanelIndex(panelId = "", rowIndex = 0) {
+      const panel = queueHubPanelById(panelId)
+      if (!panel || !Array.isArray(panel.items)) return null
+      const index = Math.max(0, Number.parseInt(String(rowIndex), 10) || 0)
+      return panel.items[index] || null
+    }
+
+    async function openQueueHubItem(panelId = "", rowIndex = 0) {
+      const id = normalizeText(panelId)
+      const item = queueHubItemByPanelIndex(id, rowIndex)
+      if (!id || !item) throw new Error("Queue item not found.")
+
+      if (id === "queued-performance-reports") {
+        await loadParentReportQueue({ showAll: true })
+        setActivePage("parent-tracking")
+        const queueIndex = state.parentReportQueue.items.findIndex(
+          (entry) => normalizeText(entry?.id) === normalizeText(item?.id)
+        )
+        if (queueIndex >= 0) {
+          openParentQueueModal(queueIndex)
+          setStatus("Opened queued performance report details.")
+        } else {
+          setStatus("Queued report detail was not found in current queue data.", true)
+        }
+        return
+      }
+
+      if (id === "unmatched-exercise-submissions") {
+        await loadIncomingExerciseResults({ showAll: true })
+        setActivePage("overview")
+        const detailsEl = document.getElementById("overviewIncomingExerciseDetails")
+        if (detailsEl) detailsEl.open = true
+        setStatus("Opened unmatched exercise submission details.")
+        return
+      }
+
+      if (id === "current-assignments-pending") {
+        setActivePage("overview")
+        openLevelDetailPanel(item)
+        setStatus("Opened current-assignment detail panel.")
+        return
+      }
+
+      if (id === "overdue-homework") {
+        const studentRefId = normalizeText(item?.studentRefId)
+        if (!studentRefId) throw new Error("Student detail is unavailable for this overdue homework row.")
+        await loadStudentDetail(studentRefId)
+        setActivePage("assignments-data")
+        setStatus("Opened overdue-homework student details.")
+        return
+      }
+
+      if (id === "attendance-risk") {
+        const studentRefId = normalizeText(item?.studentRefId)
+        if (!studentRefId) throw new Error("Student detail is unavailable for this attendance-risk row.")
+        await loadStudentDetail(studentRefId)
+        setActivePage("attendance-admin")
+        setStatus("Opened attendance-risk student details.")
+        return
+      }
+
+      if (id === "news-report-review") {
+        const weekSetId = normalizeText(item?.id)
+        const reportId = normalizeText(item?.latestReportId || item?.id)
+        const studentRefId = normalizeText(item?.studentRefId)
+        const weekStart = normalizeText(item?.weekStart)
+        const weekEnd = normalizeText(item?.weekEnd)
+        setActivePage("news-reports")
+        setNewsReviewFilterValues({
+          status: "all",
+          studentRefId,
+          dateFrom: weekStart,
+          dateTo: weekEnd,
+        })
+        await loadNewsReviewQueue({ notify: false })
+        if (weekSetId) {
+          await openNewsReviewViewerByWeekSetId(weekSetId, { loadAll: true, reportId })
+          setStatus("Opened student news report viewer.")
+        } else {
+          setStatus("News review queue opened. No week-set id was provided for this row.", true)
+        }
+        return
+      }
+
+      if (id === "pending-profile-submissions") {
+        const studentRefId = normalizeText(item?.studentRefId)
+        if (studentRefId) await loadStudentDetail(studentRefId)
+        setActivePage("family")
+        setStatus("Opened pending profile submission context.")
+        return
+      }
+
+      setStatus("Queue detail open is not configured for this panel.", true)
     }
 
     async function loadQueueHub({ notify = false } = {}) {
@@ -13140,6 +14361,499 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return quarterKeyForGradeRecord(record, fallbackDate) === normalizedQuarter
     }
 
+    function gradeChartPeriodLabel(period = "") {
+      const normalized = normalizedGradeChartPeriod(period)
+      if (normalized === "week") return "Week"
+      if (normalized === "quarter") return "Quarter"
+      if (normalized === "qtd") return "QTD"
+      if (normalized === "sytd") return "SYTD"
+      if (normalized === "archive") return "Archive"
+      return "Custom"
+    }
+
+    function normalizedGradeChartPeriod(value = "") {
+      const normalized = normalizeLower(value)
+      if (["week", "quarter", "qtd", "sytd", "archive", "custom"].includes(normalized)) return normalized
+      return "custom"
+    }
+
+    function normalizedGradeChartGroupBy(value = "") {
+      const normalized = normalizeLower(value)
+      if (["class", "student", "school"].includes(normalized)) return normalized
+      return "class"
+    }
+
+    function gradeChartGroupLabel(value = "") {
+      const normalized = normalizedGradeChartGroupBy(value)
+      if (normalized === "student") return "By Student"
+      if (normalized === "school") return "By School"
+      return "By Class"
+    }
+
+    function parseSchoolYearRange(value = "") {
+      const match = normalizeText(value).match(/(\d{4})(?:\D+(\d{4}))?/)
+      if (!match) return null
+      const startYear = Number.parseInt(match[1], 10)
+      const endYearRaw = Number.parseInt(match[2], 10)
+      const endYear = Number.isFinite(endYearRaw) ? endYearRaw : startYear + 1
+      if (!Number.isFinite(startYear) || !Number.isFinite(endYear) || endYear < startYear) return null
+      return { startYear, endYear }
+    }
+
+    function gradeChartCurrentSchoolYear() {
+      return normalizeText(schoolSetupState()?.schoolYear || defaultAttendanceSchoolYear(localIsoDate()))
+    }
+
+    function normalizeGradeChartState(source = {}) {
+      const next = source && typeof source === "object" ? source : {}
+      const normalizedQuarter = quarterKey(next.quarter) || quarterKey(quarterFromIsoDate(localIsoDate())) || "q1"
+      let customFrom = normalizeText(next.customFrom).slice(0, 10)
+      let customTo = normalizeText(next.customTo).slice(0, 10)
+      if (customFrom && customTo && compareIsoDateText(customFrom, customTo) > 0) {
+        const swapped = customFrom
+        customFrom = customTo
+        customTo = swapped
+      }
+      const schoolYear = normalizeLower(next.schoolYear) === "all" ? "all" : normalizeText(next.schoolYear)
+      return {
+        period: normalizedGradeChartPeriod(next.period),
+        groupBy: normalizedGradeChartGroupBy(next.groupBy),
+        quarter: normalizedQuarter,
+        schoolYear: schoolYear || "all",
+        customFrom,
+        customTo,
+      }
+    }
+
+    function gradeChartState() {
+      state.gradeChart = normalizeGradeChartState(state.gradeChart || {})
+      return state.gradeChart
+    }
+
+    function setGradeChartState(patch = {}) {
+      const merged = {
+        ...gradeChartState(),
+        ...(patch && typeof patch === "object" ? patch : {}),
+      }
+      state.gradeChart = normalizeGradeChartState(merged)
+      return state.gradeChart
+    }
+
+    function gradeRecordPrimaryIsoDate(record = {}) {
+      const candidates = [
+        record?.dueAt,
+        record?.submittedAt,
+        record?.generatedAt,
+        record?.createdAt,
+        record?.attendanceDate,
+      ]
+      for (let index = 0; index < candidates.length; index += 1) {
+        const raw = normalizeText(candidates[index])
+        if (!raw) continue
+        const parsed = parseDateTime(raw) || parseIsoDateLocal(raw.slice(0, 10))
+        if (!parsed) continue
+        return localIsoDate(parsed)
+      }
+      return ""
+    }
+
+    function gradeRecordSchoolYear(record = {}) {
+      const explicit = normalizeText(record?.schoolYear)
+      if (explicit) return explicit
+      const isoDate = gradeRecordPrimaryIsoDate(record)
+      if (isoDate) return defaultAttendanceSchoolYear(isoDate)
+      return gradeChartCurrentSchoolYear()
+    }
+
+    function gradeChartSchoolYearRange(yearLabel = "") {
+      const currentSchoolYear = gradeChartCurrentSchoolYear()
+      const targetYear = normalizeText(yearLabel) || currentSchoolYear
+      const setup = schoolSetupState()
+      if (
+        targetYear &&
+        targetYear === currentSchoolYear &&
+        parseIsoDateLocal(setup?.startDate) &&
+        parseIsoDateLocal(setup?.endDate)
+      ) {
+        return {
+          startDate: normalizeText(setup.startDate).slice(0, 10),
+          endDate: normalizeText(setup.endDate).slice(0, 10),
+        }
+      }
+      const parsed = parseSchoolYearRange(targetYear)
+      if (!parsed) return { startDate: "", endDate: "" }
+      return {
+        startDate: `${String(parsed.startYear).padStart(4, "0")}-08-01`,
+        endDate: `${String(parsed.endYear).padStart(4, "0")}-05-31`,
+      }
+    }
+
+    function gradeChartQuarterRange(quarter = "", schoolYearLabel = "") {
+      const normalizedQuarter = quarterKey(quarter)
+      if (!normalizedQuarter) return { startDate: "", endDate: "" }
+      const currentSchoolYear = gradeChartCurrentSchoolYear()
+      const targetYear = normalizeText(schoolYearLabel) || currentSchoolYear
+      const setup = schoolSetupState()
+      if (targetYear === currentSchoolYear && Array.isArray(setup?.quarters)) {
+        const matched = setup.quarters.find((entry) => quarterKey(entry?.quarter) === normalizedQuarter)
+        if (matched) {
+          return {
+            startDate: normalizeText(matched.startDate).slice(0, 10),
+            endDate: normalizeText(matched.endDate).slice(0, 10),
+          }
+        }
+      }
+      const parsed = parseSchoolYearRange(targetYear)
+      if (!parsed) return { startDate: "", endDate: "" }
+      if (normalizedQuarter === "q1") {
+        return {
+          startDate: `${String(parsed.startYear).padStart(4, "0")}-08-01`,
+          endDate: `${String(parsed.startYear).padStart(4, "0")}-10-31`,
+        }
+      }
+      if (normalizedQuarter === "q2") {
+        return {
+          startDate: `${String(parsed.startYear).padStart(4, "0")}-11-01`,
+          endDate: `${String(parsed.endYear).padStart(4, "0")}-01-31`,
+        }
+      }
+      if (normalizedQuarter === "q3") {
+        return {
+          startDate: `${String(parsed.endYear).padStart(4, "0")}-02-01`,
+          endDate: `${String(parsed.endYear).padStart(4, "0")}-04-30`,
+        }
+      }
+      return {
+        startDate: `${String(parsed.endYear).padStart(4, "0")}-05-01`,
+        endDate: `${String(parsed.endYear).padStart(4, "0")}-07-31`,
+      }
+    }
+
+    function gradeChartSchoolYearOptionValues(rows = []) {
+      const source = Array.isArray(rows) ? rows : []
+      const currentSchoolYear = gradeChartCurrentSchoolYear()
+      const values = new Set([currentSchoolYear])
+      source.forEach((row) => {
+        const schoolYear = gradeRecordSchoolYear(row)
+        if (schoolYear) values.add(schoolYear)
+      })
+      return Array.from(values)
+        .filter(Boolean)
+        .sort((left, right) => {
+          const leftRange = parseSchoolYearRange(left)
+          const rightRange = parseSchoolYearRange(right)
+          const leftStart = Number.isFinite(leftRange?.startYear) ? leftRange.startYear : -1
+          const rightStart = Number.isFinite(rightRange?.startYear) ? rightRange.startYear : -1
+          if (leftStart !== rightStart) return rightStart - leftStart
+          return right.localeCompare(left, undefined, { sensitivity: "base" })
+        })
+    }
+
+    function gradeChartGroupIdentity(row = {}, groupBy = "class") {
+      const grouping = normalizedGradeChartGroupBy(groupBy)
+      if (grouping === "student") {
+        const fallbackProfile = state.currentStudent?.profile || {}
+        const fullName = normalizeText(
+          row?.fullName ||
+          row?.englishName ||
+          fallbackProfile?.fullName ||
+          fallbackProfile?.englishName
+        )
+        const eaglesId = normalizeText(row?.eaglesId || row?.studentRefId || state.currentStudent?.eaglesId)
+        const studentNumber = parsePositiveInteger(row?.studentNumber || state.currentStudent?.studentNumber)
+        let label = fullName || eaglesId || "Unknown student"
+        if (fullName && eaglesId) label = `${fullName} (${eaglesId})`
+        if (studentNumber) label = `${label} <${studentNumber}>`
+        return {
+          key: `student:${normalizeLower(eaglesId || fullName || label)}`,
+          label,
+        }
+      }
+      if (grouping === "school") {
+        const schoolName = normalizeText(row?.profile?.schoolName || row?.schoolName) || "No school"
+        return {
+          key: `school:${normalizeLower(schoolName)}`,
+          label: schoolName,
+        }
+      }
+      const classLabel =
+        normalizeText(row?.className) ||
+        fullLevelLabel(resolveSystemLevelName(row?.classLevel || row?.level || "")) ||
+        "No class"
+      return {
+        key: `class:${normalizeLower(classLabel)}`,
+        label: classLabel,
+      }
+    }
+
+    function gradeScoreBandColor(value = null) {
+      if (!Number.isFinite(value)) return "#96a6bd"
+      if (value >= 90) return "#0c8f54"
+      if (value >= 80) return "#2ca56b"
+      if (value >= 70) return "#c69a17"
+      if (value >= 60) return "#c6761c"
+      return "#b73b44"
+    }
+
+    function gradeScoreText(value = null) {
+      if (!Number.isFinite(value)) return "n/a"
+      return `${Math.round(value)}%`
+    }
+
+    function gradeChartSparklineSvg(points = [], laneLabel = "") {
+      const source = Array.isArray(points) ? points.slice(-12) : []
+      const width = 320
+      const height = 90
+      const leftPad = 14
+      const rightPad = 14
+      const topPad = 10
+      const bottomPad = 16
+      const usableWidth = Math.max(1, width - leftPad - rightPad)
+      const usableHeight = Math.max(1, height - topPad - bottomPad)
+      const baselineY = height - bottomPad
+
+      const mapped = source.map((point, index) => {
+        const ratio = source.length <= 1 ? 0.5 : index / (source.length - 1)
+        const x = leftPad + (ratio * usableWidth)
+        const numericScore = Number(point?.score)
+        const score = Number.isFinite(numericScore)
+          ? Math.max(0, Math.min(100, numericScore))
+          : null
+        const y = score === null
+          ? baselineY
+          : topPad + (((100 - score) / 100) * usableHeight)
+        return {
+          ...point,
+          x,
+          y,
+          score,
+        }
+      })
+
+      const linePoints = mapped
+        .filter((point) => point.score !== null)
+        .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+        .join(" ")
+
+      const lineSvg = linePoints.split(" ").length >= 2
+        ? `<polyline fill="none" stroke="#2f5f9d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${linePoints}"></polyline>`
+        : ""
+
+      const dotsSvg = mapped.map((point) => {
+        const fill = gradeScoreBandColor(point.score)
+        const radius = point.score === null ? 2.4 : 3.8
+        const scoreLabel = point.score === null ? "No score" : `${Math.round(point.score)}%`
+        const dateLabel = normalizeText(point?.date)
+        const titleLabel = normalizeText(point?.title)
+        const hoverLabel = [scoreLabel, titleLabel, dateLabel].filter(Boolean).join(" | ")
+        return `<circle cx="${point.x.toFixed(2)}" cy="${point.y.toFixed(2)}" r="${radius}" fill="${fill}" stroke="#ffffff" stroke-width="1"><title>${escapeHtml(hoverLabel)}</title></circle>`
+      }).join("")
+
+      return `<svg class="grade-chart-svg" viewBox="0 0 ${width} ${height}" role="img"><title>${escapeHtml(laneLabel)}</title><line x1="${leftPad}" y1="${baselineY}" x2="${width - rightPad}" y2="${baselineY}" stroke="#d5e0ef" stroke-width="1"></line><line x1="${leftPad}" y1="${topPad}" x2="${leftPad}" y2="${baselineY}" stroke="#d5e0ef" stroke-width="1"></line>${lineSvg}${dotsSvg}</svg>`
+    }
+
+    function gradeChartFilteredRows(rows = [], chart = gradeChartState()) {
+      const source = Array.isArray(rows) ? rows : []
+      const normalized = normalizeGradeChartState(chart)
+      const todayIso = localIsoDate()
+      const currentSchoolYear = gradeChartCurrentSchoolYear()
+      const selectedSchoolYear = normalized.schoolYear === "all" ? "" : normalizeText(normalized.schoolYear)
+      let rangeStart = ""
+      let rangeEnd = ""
+
+      if (normalized.period === "week") {
+        rangeEnd = todayIso
+        rangeStart = isoDateOffset(todayIso, -6)
+      } else if (normalized.period === "quarter" || normalized.period === "qtd") {
+        const targetSchoolYear = selectedSchoolYear || currentSchoolYear
+        const quarterRange = gradeChartQuarterRange(normalized.quarter, targetSchoolYear)
+        rangeStart = normalizeText(quarterRange.startDate).slice(0, 10)
+        rangeEnd = normalized.period === "quarter"
+          ? normalizeText(quarterRange.endDate).slice(0, 10)
+          : todayIso
+      } else if (normalized.period === "sytd") {
+        const targetSchoolYear = selectedSchoolYear || currentSchoolYear
+        const schoolYearRange = gradeChartSchoolYearRange(targetSchoolYear)
+        rangeStart = normalizeText(schoolYearRange.startDate).slice(0, 10)
+        rangeEnd = targetSchoolYear === currentSchoolYear
+          ? todayIso
+          : normalizeText(schoolYearRange.endDate).slice(0, 10)
+      } else if (normalized.period === "custom") {
+        rangeStart = normalizeText(normalized.customFrom).slice(0, 10)
+        rangeEnd = normalizeText(normalized.customTo).slice(0, 10)
+      }
+
+      if (rangeStart && rangeEnd && compareIsoDateText(rangeStart, rangeEnd) > 0) {
+        const swapped = rangeStart
+        rangeStart = rangeEnd
+        rangeEnd = swapped
+      }
+
+      const filteredRows = source.filter((row) => {
+        const rowSchoolYear = gradeRecordSchoolYear(row)
+        if (normalized.period === "archive") {
+          if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false
+          if (selectedSchoolYear && rowSchoolYear !== selectedSchoolYear) return false
+          return true
+        }
+        if (selectedSchoolYear && rowSchoolYear && rowSchoolYear !== selectedSchoolYear) return false
+        if (!rangeStart && !rangeEnd) return true
+        const rowDate = gradeRecordPrimaryIsoDate(row)
+        if (!rowDate) return false
+        if (rangeStart && compareIsoDateText(rowDate, rangeStart) < 0) return false
+        if (rangeEnd && compareIsoDateText(rowDate, rangeEnd) > 0) return false
+        return true
+      })
+
+      return {
+        rows: filteredRows,
+        rangeStart,
+        rangeEnd,
+        selectedSchoolYear: selectedSchoolYear || "all",
+        currentSchoolYear,
+        period: normalized.period,
+      }
+    }
+
+    function refreshGradeChartControls(rows = []) {
+      const chart = gradeChartState()
+      const sourceRows = Array.isArray(rows) ? rows : []
+      const periodBarEl = document.getElementById("gradeChartPeriods")
+      const groupByEl = document.getElementById("gradeChartGroupBy")
+      const quarterEl = document.getElementById("gradeChartQuarter")
+      const schoolYearEl = document.getElementById("gradeChartSchoolYear")
+      const customFromEl = document.getElementById("gradeChartCustomFrom")
+      const customToEl = document.getElementById("gradeChartCustomTo")
+
+      periodBarEl?.querySelectorAll("[data-grade-chart-period]").forEach((buttonEl) => {
+        const period = normalizedGradeChartPeriod(buttonEl.getAttribute("data-grade-chart-period"))
+        buttonEl.classList.toggle("is-active", chart.period === period)
+      })
+
+      if (groupByEl) groupByEl.value = normalizedGradeChartGroupBy(chart.groupBy)
+      if (quarterEl) {
+        quarterEl.value = quarterKey(chart.quarter) || "q1"
+        quarterEl.disabled = !["quarter", "qtd"].includes(chart.period)
+      }
+
+      if (schoolYearEl) {
+        const currentSchoolYear = gradeChartCurrentSchoolYear()
+        const optionValues = gradeChartSchoolYearOptionValues(sourceRows)
+        schoolYearEl.innerHTML = '<option value="all">All school years</option>'
+        optionValues.forEach((schoolYear) => {
+          const option = document.createElement("option")
+          option.value = schoolYear
+          option.textContent = schoolYear === currentSchoolYear ? `${schoolYear} (current)` : schoolYear
+          schoolYearEl.appendChild(option)
+        })
+        if (chart.schoolYear !== "all" && !optionValues.includes(chart.schoolYear)) {
+          setGradeChartState({ schoolYear: "all" })
+        }
+        schoolYearEl.value = gradeChartState().schoolYear
+      }
+
+      if (customFromEl) {
+        customFromEl.value = normalizeText(chart.customFrom).slice(0, 10)
+        customFromEl.disabled = chart.period !== "custom"
+      }
+      if (customToEl) {
+        customToEl.value = normalizeText(chart.customTo).slice(0, 10)
+        customToEl.disabled = chart.period !== "custom"
+      }
+    }
+
+    function renderGradePulseChart(rows = []) {
+      const lanesEl = document.getElementById("gradeChartLanes")
+      const summaryEl = document.getElementById("gradeChartSummary")
+      if (!lanesEl || !summaryEl) return
+
+      const sourceRows = Array.isArray(rows) ? rows : []
+      refreshGradeChartControls(sourceRows)
+      const chart = gradeChartState()
+      const filtered = gradeChartFilteredRows(sourceRows, chart)
+      const grouped = new Map()
+
+      filtered.rows.forEach((row) => {
+        const group = gradeChartGroupIdentity(row, chart.groupBy)
+        if (!grouped.has(group.key)) {
+          grouped.set(group.key, { label: group.label, rows: [] })
+        }
+        grouped.get(group.key).rows.push(row)
+      })
+
+      const lanes = Array.from(grouped.values())
+        .map((group) => {
+          const orderedRows = [...group.rows].sort((left, right) => {
+            const leftDate = gradeRecordPrimaryIsoDate(left)
+            const rightDate = gradeRecordPrimaryIsoDate(right)
+            const dateCompare = compareIsoDateText(leftDate, rightDate)
+            if (dateCompare !== 0) return dateCompare
+            return normalizeText(left?.id).localeCompare(normalizeText(right?.id))
+          })
+          const points = orderedRows.map((row) => ({
+            score: gradeSortScoreValue(row),
+            date: gradeRecordPrimaryIsoDate(row),
+            title: normalizeText(row?.assignmentName || row?.className || row?.eaglesId),
+          }))
+          const scoreValues = points
+            .map((entry) => Number(entry.score))
+            .filter((entry) => Number.isFinite(entry))
+          const averageScore = scoreValues.length ? toAverage(scoreValues) : null
+          const trendScore = scoreValues.length >= 2
+            ? scoreValues[scoreValues.length - 1] - scoreValues[0]
+            : null
+          const completionRows = orderedRows.filter((entry) => typeof entry?.homeworkCompleted === "boolean")
+          const completionDone = completionRows.filter((entry) => entry.homeworkCompleted === true).length
+          const onTimeRows = orderedRows.filter((entry) => typeof entry?.homeworkOnTime === "boolean")
+          const onTimeDone = onTimeRows.filter((entry) => entry.homeworkOnTime === true).length
+          return {
+            label: group.label,
+            rows: orderedRows,
+            points,
+            averageScore,
+            trendScore,
+            completionRate: completionRows.length ? percentValue(completionDone, completionRows.length) : null,
+            onTimeRate: onTimeRows.length ? percentValue(onTimeDone, onTimeRows.length) : null,
+          }
+        })
+        .sort((left, right) => {
+          const leftAverage = Number.isFinite(left.averageScore) ? left.averageScore : -1
+          const rightAverage = Number.isFinite(right.averageScore) ? right.averageScore : -1
+          if (leftAverage !== rightAverage) return rightAverage - leftAverage
+          return normalizeText(left.label).localeCompare(normalizeText(right.label), undefined, { sensitivity: "base" })
+        })
+
+      const periodLabel = gradeChartPeriodLabel(filtered.period)
+      const groupLabel = gradeChartGroupLabel(chart.groupBy)
+      const schoolYearLabel = chart.schoolYear === "all" ? "All school years" : chart.schoolYear
+      const rangeLabel = filtered.period === "archive"
+        ? `Past years only (current ${filtered.currentSchoolYear})`
+        : (filtered.rangeStart || filtered.rangeEnd)
+          ? `${filtered.rangeStart || "..."} to ${filtered.rangeEnd || "..."}`
+          : "All dates"
+
+      if (!lanes.length) {
+        lanesEl.innerHTML = '<p class="grade-chart-empty">No grade records match the pulse chart period and scope.</p>'
+        summaryEl.textContent =
+          `Period: ${periodLabel} | Group: ${groupLabel} | School year: ${schoolYearLabel} | Range: ${rangeLabel} | Rows: 0 | Lanes: 0`
+        return
+      }
+
+      lanesEl.innerHTML = lanes.map((lane) => {
+        const averageLabel = gradeScoreText(lane.averageScore)
+        const trendLabel = Number.isFinite(lane.trendScore)
+          ? `${lane.trendScore >= 0 ? "+" : ""}${Math.round(lane.trendScore)}`
+          : "n/a"
+        const completionLabel = Number.isFinite(lane.completionRate) ? `${Math.round(lane.completionRate)}%` : "n/a"
+        const onTimeLabel = Number.isFinite(lane.onTimeRate) ? `${Math.round(lane.onTimeRate)}%` : "n/a"
+        const sparkline = gradeChartSparklineSvg(lane.points, `${lane.label} score pulse`)
+        return `<article class="grade-chart-lane"><div class="grade-chart-lane-head"><h4 class="grade-chart-lane-title">${escapeHtml(lane.label)}</h4><p class="grade-chart-lane-metrics">Rows ${lane.rows.length} | Avg ${averageLabel}</p></div><div class="grade-chart-svg-wrap">${sparkline}</div><p class="grade-chart-lane-meta">Trend: ${trendLabel} | HW Completion: ${completionLabel} | On-Time: ${onTimeLabel}</p></article>`
+      }).join("")
+
+      summaryEl.textContent =
+        `Period: ${periodLabel} | Group: ${groupLabel} | School year: ${schoolYearLabel} | Range: ${rangeLabel} | Rows: ${filtered.rows.length} | Lanes: ${lanes.length}`
+    }
+
     function isTrackedHomeworkRecord(record = {}) {
       return (
         typeof record?.homeworkCompleted === "boolean" ||
@@ -14231,6 +15945,124 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       return normalizeText(rawValue)
     }
 
+    function profileInfoHasValue(rawValue = "") {
+      if (Array.isArray(rawValue)) return profileFieldValueAsArray(rawValue).length > 0
+      return normalizeText(rawValue) !== ""
+    }
+
+    function profileInfoFieldPriority(field = {}) {
+      const idSuffix = normalizeText(field?.idSuffix)
+      return PROFILE_INFO_PRIMARY_ID_SUFFIXES.has(idSuffix) ? "primary" : "standard"
+    }
+
+    function profileInfoFieldSpan(field = {}, { hasValue = true } = {}) {
+      const width = Math.max(1, Math.min(12, Number.parseInt(String(field?.width || 4), 10) || 4))
+      const inputType = normalizeLower(field?.inputType)
+      const idSuffix = normalizeText(field?.idSuffix)
+      if (inputType === "textarea" || inputType === "file") return 12
+      if (inputType === "checkbox" && Array.isArray(field?.options) && field.options.length >= 4) return 12
+      if (idSuffix === "studentPhoto") return 4
+      if (idSuffix === "fullName") return 6
+      if (idSuffix === "englishName") return 4
+      if (idSuffix === "currentGrade") return 4
+      if (idSuffix === "eaglesId" || idSuffix === "studentNumber") return 3
+      if (idSuffix === "parentsId") return 4
+      if (idSuffix === "schoolName") return 4
+      if (!hasValue) return Math.max(3, Math.min(6, width))
+      return Math.max(3, Math.min(12, width))
+    }
+
+    function profileInfoSectionPriority(tabId = "", sectionLabel = "") {
+      const tabToken = normalizeLower(tabId)
+      const sectionToken = normalizeSearchComparable(sectionLabel)
+      if (tabToken === "profile") {
+        if (sectionToken.includes("thong tin cua nguoi hoc")) return 10
+        if (sectionToken.includes("lien he cua me")) return 20
+        if (sectionToken.includes("lien he cua ba")) return 30
+        if (sectionToken.includes("dia chi")) return 40
+      }
+      if (tabToken === "medical") {
+        if (sectionToken.includes("thi giac")) return 10
+        if (sectionToken.includes("thuoc uong")) return 20
+        if (sectionToken.includes("kho khan khi hoc")) return 30
+        if (sectionToken.includes("di ung")) return 40
+        if (sectionToken.includes("tiem chung")) return 50
+        if (sectionToken.includes("cham soc trong gio hoc")) return 60
+      }
+      if (tabToken === "covid") return 10
+      if (tabToken === "submission") return 10
+      return 90
+    }
+
+    function profileSummaryChipHtml(label = "", value = "") {
+      return `
+        <article class="profile-summary-chip">
+          <p class="profile-summary-chip-label">${escapeHtml(label)}</p>
+          <p class="profile-summary-chip-value">${value ? escapeHtml(value) : "No value"}</p>
+        </article>
+      `
+    }
+
+    function renderProfileInfoSummary(student = state.currentStudent) {
+      const summaryEl = document.getElementById("profileInfoDataSummary")
+      if (!summaryEl) return
+
+      const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
+      const fullName = normalizeText(profile?.fullName)
+      const englishName = normalizeText(profile?.englishName)
+      const studentName = firstNonEmpty(fullName, englishName, normalizeText(student?.eaglesId), "No student selected")
+      const sublineParts = []
+      if (fullName && englishName && normalizeLower(fullName) !== normalizeLower(englishName)) {
+        sublineParts.push(`English: ${englishName}`)
+      }
+      const eaglesId = normalizeText(student?.eaglesId)
+      if (eaglesId) sublineParts.push(`Eagles ID: ${eaglesId}`)
+      const studentNumber = Number.parseInt(String(student?.studentNumber || profile?.studentNumber || ""), 10) || null
+      if (studentNumber) sublineParts.push(`Student #: ${studentNumber}`)
+      const subline = sublineParts.length ? sublineParts.join(" | ") : "Select a student row to review profile clusters."
+
+      const currentGrade = resolveSystemLevelName(profile?.currentGrade || "")
+      const schoolName = normalizeText(profile?.schoolName)
+      const motherContact = normalizeText([profile?.motherName, profile?.motherPhone].filter(Boolean).join(" / "))
+      const fatherContact = normalizeText([profile?.fatherName, profile?.fatherPhone].filter(Boolean).join(" / "))
+
+      summaryEl.innerHTML = `
+        <article class="profile-summary-primary">
+          <p class="profile-summary-kicker">Student Snapshot</p>
+          <p class="profile-summary-name">${escapeHtml(studentName)}</p>
+          <p class="profile-summary-subline">${escapeHtml(subline)}</p>
+        </article>
+        ${profileSummaryChipHtml("Class Level", currentGrade)}
+        ${profileSummaryChipHtml("School", schoolName)}
+        ${profileSummaryChipHtml("Primary Contact", motherContact)}
+        ${profileSummaryChipHtml("Secondary Contact", fatherContact)}
+      `
+    }
+
+    function renderProfileInfoItem(field = {}, rawValue = "") {
+      const renderedValue = formatProfileInfoValue(field, rawValue)
+      const hasValue = profileInfoHasValue(rawValue)
+      const item = document.createElement("article")
+      item.className = "profile-info-item"
+      item.dataset.priority = profileInfoFieldPriority(field)
+      item.style.setProperty("--profile-span", String(profileInfoFieldSpan(field, { hasValue })))
+      const labelEl = document.createElement("span")
+      labelEl.className = "profile-info-label"
+      labelEl.textContent = profileFieldLabel(field)
+
+      const valueEl = document.createElement("span")
+      valueEl.className = `profile-info-value${renderedValue ? "" : " profile-info-empty"}`
+      valueEl.textContent = renderedValue || "No value"
+
+      item.appendChild(labelEl)
+      item.appendChild(valueEl)
+      return {
+        item,
+        hasValue,
+        renderedValue,
+      }
+    }
+
     function setProfileMode(mode = "info") {
       const normalizedMode = normalizeLower(mode) === "edit" ? "edit" : "info"
       state.profileMode = normalizedMode
@@ -14579,6 +16411,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
 
       const tabs = PROFILE_FORM_TABS.filter((tab) => (fieldsByTab.get(tab.id) || []).length > 0)
       if (!tabs.length) {
+        renderProfileInfoSummary(student)
         const empty = document.createElement("p")
         empty.className = "small"
         empty.textContent = "No profile fields configured."
@@ -14631,41 +16464,81 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
           sectionMap.get(sectionKey).push(field)
         })
 
-        Array.from(sectionMap.entries()).forEach(([sectionLabel, sectionFields]) => {
+        const sectionEntries = Array.from(sectionMap.entries())
+          .sort((left, right) => {
+            const leftPriority = profileInfoSectionPriority(tab.id, left[0])
+            const rightPriority = profileInfoSectionPriority(tab.id, right[0])
+            if (leftPriority !== rightPriority) return leftPriority - rightPriority
+            return normalizeText(left[0]).localeCompare(normalizeText(right[0]), undefined, { sensitivity: "base" })
+          })
+
+        sectionEntries.forEach(([sectionLabel, sectionFields]) => {
           const group = document.createElement("section")
           group.className = "profile-info-group"
+
+          const headingRow = document.createElement("div")
+          headingRow.className = "profile-info-group-head"
           const title = document.createElement("h4")
           title.textContent = sectionLabel
-          group.appendChild(title)
+          const meta = document.createElement("p")
+          meta.className = "profile-info-group-meta"
+          meta.textContent = `${sectionFields.length} fields`
+          headingRow.appendChild(title)
+          headingRow.appendChild(meta)
+          group.appendChild(headingRow)
+
+          const renderedRecords = sectionFields
+            .map((field) => ({ field, ...renderProfileInfoItem(field, resolveProfileFieldValueForStudent(student, field)) }))
+            .sort((left, right) => {
+              if (left.hasValue !== right.hasValue) return left.hasValue ? -1 : 1
+              const leftPriority = left.item.dataset.priority === "primary" ? 0 : 1
+              const rightPriority = right.item.dataset.priority === "primary" ? 0 : 1
+              if (leftPriority !== rightPriority) return leftPriority - rightPriority
+              const leftSequence = Number.parseInt(String(left?.field?.sequence || 0), 10) || 0
+              const rightSequence = Number.parseInt(String(right?.field?.sequence || 0), 10) || 0
+              if (leftSequence !== rightSequence) return leftSequence - rightSequence
+              return normalizeText(left?.field?.key).localeCompare(normalizeText(right?.field?.key))
+            })
+
+          const populatedRecords = renderedRecords.filter((entry) => entry.hasValue)
+          const emptyRecords = renderedRecords.filter((entry) => !entry.hasValue)
 
           const grid = document.createElement("div")
           grid.className = "profile-info-grid"
-          sectionFields.forEach((field) => {
-            const item = document.createElement("article")
-            item.className = "profile-info-item"
-
-            const labelEl = document.createElement("span")
-            labelEl.className = "profile-info-label"
-            labelEl.textContent = profileFieldLabel(field)
-
-            const valueEl = document.createElement("span")
-            const rawValue = resolveProfileFieldValueForStudent(student, field)
-            const renderedValue = formatProfileInfoValue(field, rawValue)
-            valueEl.className = `profile-info-value${renderedValue ? "" : " profile-info-empty"}`
-            valueEl.textContent = renderedValue || "No value"
-
-            item.appendChild(labelEl)
-            item.appendChild(valueEl)
-            grid.appendChild(item)
+          populatedRecords.forEach((entry) => {
+            grid.appendChild(entry.item)
           })
+          if (!populatedRecords.length) {
+            const note = document.createElement("p")
+            note.className = "small profile-info-empty-note"
+            note.textContent = "No populated values in this cluster yet."
+            group.appendChild(note)
+          } else group.appendChild(grid)
 
-          group.appendChild(grid)
+          if (emptyRecords.length) {
+            const emptyDetails = document.createElement("details")
+            emptyDetails.className = "profile-info-empty-stack"
+            const summary = document.createElement("summary")
+            summary.className = "profile-info-empty-toggle"
+            summary.textContent = `Show ${emptyRecords.length} empty fields`
+            emptyDetails.appendChild(summary)
+
+            const emptyGrid = document.createElement("div")
+            emptyGrid.className = "profile-info-grid profile-info-empty-grid"
+            emptyRecords.forEach((entry) => {
+              emptyGrid.appendChild(entry.item)
+            })
+            emptyDetails.appendChild(emptyGrid)
+            group.appendChild(emptyDetails)
+          }
+
           panel.appendChild(group)
         })
 
         panelsEl.appendChild(panel)
       })
 
+      renderProfileInfoSummary(student)
       const label = normalizeText(student?.profile?.fullName)
       setProfileTabStatus(label ? `Info view for ${label}.` : "No student selected. Use New Form to create a profile.")
     }
@@ -14844,6 +16717,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
       document.getElementById("attendanceRows").innerHTML = ""
       document.getElementById("gradeRows").innerHTML = ""
       document.getElementById("reportRows").innerHTML = ""
+      renderGradePulseChart([])
       renderProfileInfoLayout(null)
       setProfileMode(state.profileMode)
       updateOverviewStudentSummary()
@@ -16162,6 +18036,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         tbody.innerHTML = '<tr><td colspan="13">No grade rows match current search/archive filters.</td></tr>'
       }
       applyTableColumnVisibility("grades")
+      renderGradePulseChart(filteredRows)
     }
 
     function reportPayload() {
@@ -16623,12 +18498,59 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     newsReviewRowsEl?.addEventListener("click", (event) => {
       const target = event?.target
       if (!(target instanceof Element)) return
-      const actionBtn = target.closest("button[data-news-review-action][data-news-review-id]")
-      if (!(actionBtn instanceof HTMLButtonElement)) return
-      const action = normalizeText(actionBtn.getAttribute("data-news-review-action"))
-      const reportId = normalizeText(actionBtn.getAttribute("data-news-review-id"))
-      if (!action || !reportId) return
-      applyNewsReviewAction(reportId, action).catch(handleError)
+      if (target.closest('a[href]')) return
+
+      const openBtn = target.closest("button[data-news-review-open-week-set]")
+      if (openBtn instanceof HTMLButtonElement) {
+        const weekSetId = normalizeText(openBtn.getAttribute("data-news-review-open-week-set"))
+        const reportId = normalizeText(openBtn.getAttribute("data-news-review-open-report"))
+        if (!weekSetId) return
+        openNewsReviewViewerByWeekSetId(weekSetId, { reportId }).catch(handleError)
+        return
+      }
+
+      const rowEl = target.closest("tr[data-news-review-week-set-id]")
+      if (rowEl instanceof HTMLTableRowElement) {
+        const weekSetId = normalizeText(rowEl.dataset.newsReviewWeekSetId)
+        if (!weekSetId) return
+        openNewsReviewViewerByWeekSetId(weekSetId).catch(handleError)
+      }
+    })
+    const queueHubPanelsEl = document.getElementById("queueHubPanels")
+    queueHubPanelsEl?.addEventListener("click", (event) => {
+      const target = event?.target
+      if (!(target instanceof Element)) return
+      const openBtn = target.closest("button[data-queue-hub-open-panel][data-queue-hub-open-index]")
+      if (!(openBtn instanceof HTMLButtonElement)) return
+      const panelId = normalizeText(openBtn.getAttribute("data-queue-hub-open-panel"))
+      const rowIndex = Number.parseInt(normalizeText(openBtn.getAttribute("data-queue-hub-open-index")), 10) || 0
+      openQueueHubItem(panelId, rowIndex).catch(handleError)
+    })
+    document.getElementById("newsReviewViewerCloseBtn")?.addEventListener("click", () => closeNewsReviewViewer())
+    document.getElementById("newsReviewViewerPrevBtn")?.addEventListener("click", () => shiftNewsReviewViewer(-1))
+    document.getElementById("newsReviewViewerNextBtn")?.addEventListener("click", () => shiftNewsReviewViewer(1))
+    document.getElementById("newsReviewViewerApproveBtn")?.addEventListener("click", () => {
+      applyNewsReviewViewerAction("approve").catch(handleError)
+    })
+    document.getElementById("newsReviewViewerRevisionBtn")?.addEventListener("click", () => {
+      applyNewsReviewViewerAction("revision-requested").catch(handleError)
+    })
+    document.getElementById("newsReviewViewerModal")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) closeNewsReviewViewer()
+    })
+    document.addEventListener("keydown", (event) => {
+      const modalEl = document.getElementById("newsReviewViewerModal")
+      if (!(modalEl instanceof HTMLDivElement)) return
+      if (modalEl.classList.contains("hidden")) return
+      const key = normalizeText(event.key)
+      if (key !== "ArrowLeft" && key !== "ArrowRight") return
+      const target = event.target
+      if (target instanceof HTMLElement) {
+        const tagName = normalizeLower(target.tagName)
+        if (tagName === "input" || tagName === "textarea" || tagName === "select" || target.isContentEditable) return
+      }
+      event.preventDefault()
+      shiftNewsReviewViewer(key === "ArrowLeft" ? -1 : 1)
     })
     bindAllTableColumnVisibilityControls()
     document.addEventListener("click", (event) => {
@@ -16757,6 +18679,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     }
     document.getElementById("schoolSetupStartDate")?.addEventListener("change", previewSchoolSetupFromInputs)
     document.getElementById("schoolSetupEndDate")?.addEventListener("change", previewSchoolSetupFromInputs)
+    document.getElementById("schoolSetupLetterGradeRanges")?.addEventListener("change", previewSchoolSetupFromInputs)
     document.getElementById("schoolSetupAutoFillBtn")?.addEventListener("click", previewSchoolSetupFromInputs)
     document.getElementById("schoolSetupLogoFile")?.addEventListener("change", (event) => {
       handleSchoolSetupLogoUpload(event).catch((error) => {
@@ -17178,6 +19101,48 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
         handleError(error)
       }
     })
+    document.getElementById("gradeChartPeriods")?.addEventListener("click", (event) => {
+      const target = event?.target
+      if (!(target instanceof Element)) return
+      const buttonEl = target.closest("[data-grade-chart-period]")
+      if (!(buttonEl instanceof HTMLButtonElement)) return
+      const period = normalizedGradeChartPeriod(buttonEl.getAttribute("data-grade-chart-period"))
+      const patch = { period }
+      if (period === "archive" && gradeChartState().schoolYear === gradeChartCurrentSchoolYear()) {
+        patch.schoolYear = "all"
+      }
+      setGradeChartState(patch)
+      renderGradePulseChart(state.visibleTableRows?.grades || [])
+    })
+    document.getElementById("gradeChartGroupBy")?.addEventListener("change", () => {
+      setGradeChartState({ groupBy: document.getElementById("gradeChartGroupBy")?.value || "class" })
+      renderGradePulseChart(state.visibleTableRows?.grades || [])
+    })
+    document.getElementById("gradeChartQuarter")?.addEventListener("change", () => {
+      setGradeChartState({ quarter: document.getElementById("gradeChartQuarter")?.value || "q1" })
+      renderGradePulseChart(state.visibleTableRows?.grades || [])
+    })
+    document.getElementById("gradeChartSchoolYear")?.addEventListener("change", () => {
+      setGradeChartState({ schoolYear: document.getElementById("gradeChartSchoolYear")?.value || "all" })
+      renderGradePulseChart(state.visibleTableRows?.grades || [])
+    })
+    const applyGradeChartCustomRange = () => {
+      let customFrom = normalizeText(document.getElementById("gradeChartCustomFrom")?.value).slice(0, 10)
+      let customTo = normalizeText(document.getElementById("gradeChartCustomTo")?.value).slice(0, 10)
+      if (customFrom && customTo && compareIsoDateText(customFrom, customTo) > 0) {
+        const swapped = customFrom
+        customFrom = customTo
+        customTo = swapped
+      }
+      const fromEl = document.getElementById("gradeChartCustomFrom")
+      const toEl = document.getElementById("gradeChartCustomTo")
+      if (fromEl) fromEl.value = customFrom
+      if (toEl) toEl.value = customTo
+      setGradeChartState({ customFrom, customTo })
+      renderGradePulseChart(state.visibleTableRows?.grades || [])
+    }
+    document.getElementById("gradeChartCustomFrom")?.addEventListener("change", applyGradeChartCustomRange)
+    document.getElementById("gradeChartCustomTo")?.addEventListener("change", applyGradeChartCustomRange)
     document.getElementById("reportSaveBtn").addEventListener("click", () => saveReport().catch(handleError))
     document.getElementById("reportGenerateBtn").addEventListener("click", () => generateReport().catch(handleError))
     document.getElementById("reportCardBtn").addEventListener("click", () => downloadReportCard().catch(handleError))
@@ -17245,6 +19210,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     populateAssignmentLevelOptions()
     populateAttendanceLevelStyleOptions()
     refreshAllTableSearchFilterControls()
+    renderGradePulseChart(state.visibleTableRows?.grades || [])
     syncAttendanceLevelEditorInputs()
     refreshAssignmentStudentOptions()
     renderTopSearchStudentOptions()
@@ -17254,10 +19220,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
     refreshAttendanceLanding({ reloadRows: false }).catch(() => {})
     renderHubConnectionStatus()
     renderServiceControlCard()
-    probeHubConnection({ notify: false }).catch(() => {})
+    if (!(isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN)) {
+      probeHubConnection({ notify: false }).catch(() => {})
+    }
 
     ;(async () => {
-      if (isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN && requiresApiOriginForStaticPreview()) {
+      if (isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN) {
         showLogin()
         setStatus(staticPreviewHelpMessage(), true)
         return

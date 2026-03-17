@@ -266,6 +266,17 @@ test("student dashboard/news paths guard missing optional Prisma delegates", () 
   assert.match(routes, /ADMIN_REPORTS_PATH_RE\.test\(pathname\)/)
 })
 
+test("queue hub source contract includes student-week news-set panel", () => {
+  const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+  assert.match(routes, /"news-report-review"/)
+  assert.match(routes, /News Report Week Sets/)
+  assert.match(routes, /weekStart/)
+  assert.match(routes, /weekEnd/)
+  assert.match(routes, /reportCount/)
+  assert.match(routes, /setStatus/)
+  assert.match(routes, /"incomplete"/)
+})
+
 test("generateStudentReportCardPdf returns a PDF buffer", async () => {
   const student = {
     eaglesId: "S001",
@@ -415,7 +426,10 @@ test("GET /admin/students returns HTML UI", async () => {
   assert.match(html, /"\/api\/admin"/i)
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"overview"/i)
+  assert.match(html, /id="schoolSetupLetterGradeRanges"/i)
   assert.match(html, /Static preview mode requires \?apiOrigin=/i)
+  assert.match(html, /function assertApiOriginConfiguredForStaticPreview\(\)/i)
+  assert.doesNotMatch(html, /function inferLocalPreviewApiOrigin\(/i)
 })
 
 test("GET /admin/students/attendance returns section page HTML with slug config", async () => {
@@ -468,6 +482,9 @@ test("GET /parent/portal returns parent portal HTML with runtime config", async 
   assert.match(html, /\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js/i)
   assert.match(html, /id="draftCountBadge"/i)
   assert.match(html, /id="draftActions"/i)
+  assert.match(html, /Static preview mode requires \?apiOrigin=/i)
+  assert.match(html, /function assertApiOriginConfiguredForStaticPreview\(\)/i)
+  assert.doesNotMatch(html, /function inferLocalPreviewApiOrigin\(/i)
   assert.doesNotMatch(html, /fonts\\.googleapis\\.com/i)
   assert.doesNotMatch(html, /fonts\\.gstatic\\.com/i)
 })
@@ -508,7 +525,9 @@ test("GET /student/portal returns student portal HTML with runtime config", asyn
   assert.match(html, /__SIS_STUDENT_DASHBOARD_PATH/i)
   assert.match(html, /__SIS_STUDENT_NEWS_REPORTS_PATH/i)
   assert.match(html, /__SIS_STUDENT_NEWS_CALENDAR_PATH/i)
-  assert.match(html, /function inferLocalPreviewApiOrigin\(\)[\s\S]*:8788`;/i)
+  assert.match(html, /Static preview mode requires \?apiOrigin=/i)
+  assert.match(html, /function assertApiOriginConfiguredForStaticPreview\(\)/i)
+  assert.doesNotMatch(html, /function inferLocalPreviewApiOrigin\(/i)
   assert.match(html, /id="calendarTitle"/i)
   assert.match(html, /id="calendarGrid" class="calendar-shell"/i)
 })
@@ -519,6 +538,42 @@ test("GET /web-asset/vendor/fullcalendar/index.global.min.js returns runtime sta
   assert.match(res.headers.get("content-type") || "", /javascript/i)
   const js = await res.text()
   assert.match(js, /FullCalendar Standard Bundle v6\.1\.20/i)
+})
+
+test("GET /web-asset/admin/grades-tabulator-dev.html returns tabulator dev page", async () => {
+  const res = await fetchLocal(port, "/web-asset/admin/grades-tabulator-dev.html")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /Grades Tabulator Dev/i)
+  assert.match(html, /data-period=\"qtd\"/i)
+  assert.match(html, /\/api\/admin\/auth\/me/i)
+  assert.match(html, /counts\?\.gradeRecords/)
+  assert.match(html, /detail\?\.student/)
+  assert.match(html, /normalizeText\(detail\.id\)/)
+  assert.match(html, /pagination:\s*false/)
+  assert.match(html, /const scoreValues = cells/)
+  assert.match(html, /formatQRightStat\(mean\)/)
+  assert.match(html, /schoolSetup\?\.letterGradeRanges/)
+  assert.match(html, /studentDisplay:\s*"Mean"/)
+  assert.match(html, /studentDisplay:\s*"Grade distribution"/)
+  assert.match(html, /vendor\/tabulatorz\/tabulator\.min\.js/i)
+})
+
+test("GET /web-asset/vendor/tabulatorz/tabulator.min.js returns runtime static asset", async () => {
+  const res = await fetchLocal(port, "/web-asset/vendor/tabulatorz/tabulator.min.js")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /javascript/i)
+  const js = await res.text()
+  assert.match(js, /Tabulator v6\.4\.0/i)
+})
+
+test("GET /web-asset/vendor/tabulatorz/tabulator.min.css returns runtime static asset", async () => {
+  const res = await fetchLocal(port, "/web-asset/vendor/tabulatorz/tabulator.min.css")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/css/i)
+  const css = await res.text()
+  assert.match(css, /\.tabulator/)
 })
 
 test("GET /web-asset/images/logo.svg returns runtime image asset", async () => {
@@ -1000,6 +1055,13 @@ test("admin can persist and reload school setup ui settings", async () => {
       schoolSetup: {
         startDate: "2026-08-10",
         endDate: "2027-05-28",
+        letterGradeRanges: [
+          { letter: "A", minPercent: 92, maxPercent: 100 },
+          { letter: "B", minPercent: 84, maxPercent: 91.99 },
+          { letter: "C", minPercent: 76, maxPercent: 83.99 },
+          { letter: "D", minPercent: 60, maxPercent: 75.99 },
+          { letter: "F", minPercent: 0, maxPercent: 59.99 },
+        ],
       },
       schoolProfile: {
         schoolName: "Eagles Live",
@@ -1032,6 +1094,8 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(afterBody.ok, true)
   assert.equal(afterBody.uiSettings.multiSchool, true)
   assert.equal(afterBody.uiSettings.schoolSetup.startDate, "2026-08-10")
+  assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].letter, "A")
+  assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].minPercent, 92)
   assert.equal(afterBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(afterBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
 })

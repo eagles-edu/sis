@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIS Grades Tabulator Dev</title>
+  <link rel="stylesheet" href="../vendor/tabulatorz/tabulator.min.css">
+  <style>
+    :root {
+      --bg: #f3f7fb;
+      --panel: #ffffff;
+      --ink: #11263f;
+      --ink-soft: #5d718a;
+      --accent: #0054b5;
+      --accent-soft: #d9e8ff;
+      --line: #d3deec;
+      --ok: #0c8f5c;
+      --warn: #b45309;
+      --bad: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #f9fbff 0%, var(--bg) 38%, #eef3f9 100%);
+      color: var(--ink);
+      font-family: "Segoe UI", "Noto Sans", sans-serif;
+      line-height: 1.4;
+    }
+
+    .page-shell {
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      padding: 0.85rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .hero,
+    .control-card,
+    .grid-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.8rem;
+      box-shadow: 0 8px 22px rgb(17 38 63 / 8%);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .hero p {
+      margin: 0.25rem 0 0;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+
+    .hero-actions {
+      margin-top: 0.65rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn,
+    .chip-link {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      min-height: 2rem;
+      padding: 0.3rem 0.8rem;
+      box-sizing: border-box;
+    }
+
+    .btn.primary {
+      border-color: #0a4ea5;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .status {
+      margin: 0.55rem 0 0;
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      min-height: 1.2rem;
+    }
+
+    .status.is-error {
+      color: var(--bad);
+    }
+
+    .periods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .period-btn {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      min-height: 2rem;
+      padding: 0.25rem 0.75rem;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+
+    .period-btn.is-active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: #09346d;
+      font-weight: 700;
+    }
+
+    .control-grid {
+      display: grid;
+      gap: 0.55rem;
+      grid-template-columns: 1fr;
+    }
+
+    .field {
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .field label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #28405e;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+
+    .field select,
+    .field input {
+      width: 100%;
+      min-height: 2.15rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.38rem 0.55rem;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      box-sizing: border-box;
+    }
+
+    .field select:disabled,
+    .field input:disabled {
+      opacity: 0.6;
+      background: #f5f7fa;
+      cursor: not-allowed;
+    }
+
+    .metrics {
+      display: grid;
+      gap: 0.5rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .metric-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.45rem 0.6rem;
+      box-sizing: border-box;
+    }
+
+    .metric-card h2 {
+      margin: 0;
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: var(--ink-soft);
+      font-weight: 700;
+    }
+
+    .metric-card p {
+      margin: 0.18rem 0 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f3059;
+    }
+
+    #gradeGrid {
+      min-height: 360px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .tabulator {
+      border: none;
+      font-size: 0.84rem;
+    }
+
+    .tabulator .tabulator-col {
+      background: #f6f9ff;
+      border-right-color: #d6e2f0;
+    }
+
+    .tabulator .tabulator-row.tabulator-row-even {
+      background: #fbfdff;
+    }
+
+    .group-meta {
+      margin-left: 0.45rem;
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+    }
+
+    .score-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-width: 6.6rem;
+    }
+
+    .score-bar {
+      display: inline-block;
+      width: 3.3rem;
+      height: 0.38rem;
+      border-radius: 999px;
+      background: #dfebff;
+      overflow: hidden;
+      border: 1px solid #c6daf8;
+      box-sizing: border-box;
+    }
+
+    .score-bar-fill {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
+    }
+
+    .assignment-sub {
+      display: block;
+      margin-top: 0.1rem;
+      color: #4d627c;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .exercise-cell {
+      border-radius: 8px;
+      border: 1px solid transparent;
+      padding: 0.2rem 0.35rem;
+      box-sizing: border-box;
+      display: grid;
+      gap: 0.08rem;
+      min-width: 5.2rem;
+      font-size: 0.72rem;
+      line-height: 1.15;
+      font-weight: 600;
+    }
+
+    .exercise-cell.ontime {
+      border-color: #92d2aa;
+      background: #dcf6e7;
+      color: #0f5a34;
+    }
+
+    .exercise-cell.late {
+      border-color: #e5cb66;
+      background: #fff3c9;
+      color: #6a4a00;
+    }
+
+    .exercise-cell.notdone {
+      border-color: #e7b6b2;
+      background: #fde4e2;
+      color: #8a1f1c;
+    }
+
+    .stat-chip {
+      display: block;
+      color: #173a61;
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .tabulator-row.is-stat-row .tabulator-cell {
+      background: #eef5ff !important;
+      color: #173a61;
+      font-weight: 600;
+    }
+
+    .dim {
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+    }
+
+    @media (min-width: 760px) {
+      .page-shell {
+        padding: 1rem;
+      }
+
+      .control-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .metrics {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero">
+      <h1>Grades Tabulator Dev</h1>
+      <p>Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
+      <div class="hero-actions">
+        <a class="chip-link" href="/admin/students/grades-data">Back to Grades Admin</a>
+        <button class="btn primary" id="reloadBtn" type="button">Reload SIS Grade Data</button>
+      </div>
+      <p class="status" id="statusLine">Booting grade interface...</p>
+    </section>
+
+    <section class="control-card">
+      <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
+        <button type="button" class="period-btn" data-period="week">Week</button>
+        <button type="button" class="period-btn" data-period="quarter">Quarter</button>
+        <button type="button" class="period-btn" data-period="qtd">QTD</button>
+        <button type="button" class="period-btn" data-period="sytd">SYTD</button>
+        <button type="button" class="period-btn" data-period="archive">Archive</button>
+        <button type="button" class="period-btn" data-period="custom">Custom</button>
+      </div>
+      <div class="control-grid">
+        <div class="field">
+          <label for="schoolYear">School year</label>
+          <select id="schoolYear">
+            <option value="all">All school years</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="quarter">Quarter</label>
+          <select id="quarter">
+            <option value="q1">Q1</option>
+            <option value="q2">Q2</option>
+            <option value="q3">Q3</option>
+            <option value="q4">Q4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="classFilter">Class level</label>
+          <select id="classFilter">
+            <option value="all">All class levels</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="studentFilter">Student</label>
+          <select id="studentFilter">
+            <option value="all">All students</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="schoolFilter">School</label>
+          <select id="schoolFilter">
+            <option value="all">All schools</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="customFrom">Custom from</label>
+          <input id="customFrom" type="date">
+        </div>
+        <div class="field">
+          <label for="customTo">Custom to</label>
+          <input id="customTo" type="date">
+        </div>
+        <div class="field">
+          <label for="searchInput">Search</label>
+          <input id="searchInput" type="search" placeholder="student, class, assignment">
+        </div>
+      </div>
+    </section>
+
+    <section class="metrics" aria-label="Grade data snapshot">
+      <article class="metric-card"><h2>Rows</h2><p id="metricRows">0</p></article>
+      <article class="metric-card"><h2>Students</h2><p id="metricStudents">0</p></article>
+      <article class="metric-card"><h2>Classes</h2><p id="metricClasses">0</p></article>
+      <article class="metric-card"><h2>Avg Score %</h2><p id="metricAvgPercent">n/a</p></article>
+      <article class="metric-card"><h2>HW Completion</h2><p id="metricCompletion">n/a</p></article>
+    </section>
+
+    <section class="grid-card">
+      <div id="gradeGrid"></div>
+      <p class="dim" id="rangeHint"></p>
+    </section>
+  </main>
+
+  <script src="../vendor/tabulatorz/tabulator.min.js"></script>
+  <script>
+    (() => {
+      "use strict"
+
+      const state = {
+        allRows: [],
+        filteredRows: [],
+        matrixRows: [],
+        table: null,
+        tableBuilt: false,
+        loading: false,
+        letterGradeRanges: [],
+        filters: {
+          period: "sytd",
+          schoolYear: "all",
+          quarter: "q1",
+          classKey: "all",
+          studentKey: "all",
+          schoolKey: "all",
+          customFrom: "",
+          customTo: "",
+          search: "",
+        },
+      }
+
+      const DEFAULT_SYSTEM_SCHOOL_YEAR = "2026-2027"
+      const DEFAULT_LETTER_GRADE_RANGES = Object.freeze([
+        Object.freeze({ letter: "A", minPercent: 90, maxPercent: 100 }),
+        Object.freeze({ letter: "B", minPercent: 80, maxPercent: 89.99 }),
+        Object.freeze({ letter: "C", minPercent: 70, maxPercent: 79.99 }),
+        Object.freeze({ letter: "D", minPercent: 60, maxPercent: 69.99 }),
+        Object.freeze({ letter: "F", minPercent: 0, maxPercent: 59.99 }),
+      ])
+      const API_ORIGIN = resolveApiOrigin()
+      const TODAY_ISO = localIsoDate(new Date())
+      const SYSTEM_CURRENT_SCHOOL_YEAR = resolveSystemCurrentSchoolYear()
+
+      function normalizeText(value) {
+        if (value === undefined || value === null) return ""
+        return String(value).trim()
+      }
+
+      function normalizeLower(value) {
+        return normalizeText(value).toLowerCase()
+      }
+
+      function normalizeLetterCode(value) {
+        const text = normalizeText(value).toUpperCase()
+        if (!text) return ""
+        if (!/^[A-Z][A-Z0-9+-]{0,3}$/u.test(text)) return ""
+        return text
+      }
+
+      function clampPercent(value) {
+        if (!Number.isFinite(value)) return null
+        if (value < 0) return 0
+        if (value > 100) return 100
+        return value
+      }
+
+      function normalizeLetterGradeRanges(source = []) {
+        const rows = Array.isArray(source) ? source : []
+        const normalized = rows
+          .map((entry) => {
+            const letter = normalizeLetterCode(entry?.letter)
+            const minPercentRaw = toNumber(entry?.minPercent)
+            const maxPercentRaw = toNumber(entry?.maxPercent)
+            const minPercent = clampPercent(minPercentRaw)
+            const maxPercent = clampPercent(maxPercentRaw)
+            if (!letter) return null
+            if (!Number.isFinite(minPercent) || !Number.isFinite(maxPercent)) return null
+            const low = Math.min(minPercent, maxPercent)
+            const high = Math.max(minPercent, maxPercent)
+            return {
+              letter,
+              minPercent: low,
+              maxPercent: high,
+            }
+          })
+          .filter((entry) => entry && typeof entry === "object")
+          .sort((left, right) => right.minPercent - left.minPercent)
+
+        if (!normalized.length) {
+          return DEFAULT_LETTER_GRADE_RANGES.map((entry) => ({ ...entry }))
+        }
+        return normalized
+      }
+
+      function letterGradeRangesFromUiSettings(settings) {
+        const candidate = settings && typeof settings === "object"
+          ? settings?.schoolSetup?.letterGradeRanges
+          : null
+        return normalizeLetterGradeRanges(candidate)
+      }
+
+      function normalizeSearch(value) {
+        return normalizeLower(value)
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/đ/g, "d")
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim()
+      }
+
+      function isSchoolYearKey(value) {
+        return /^\d{4}-\d{4}$/.test(normalizeText(value))
+      }
+
+      function localIsoDate(value) {
+        const date = value instanceof Date ? new Date(value.getTime()) : new Date(value)
+        if (Number.isNaN(date.valueOf())) return ""
+        const y = String(date.getFullYear()).padStart(4, "0")
+        const m = String(date.getMonth() + 1).padStart(2, "0")
+        const d = String(date.getDate()).padStart(2, "0")
+        return `${y}-${m}-${d}`
+      }
+
+      function parseIsoDate(value) {
+        const text = normalizeText(value).slice(0, 10)
+        const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+        if (!match) return null
+        const y = Number.parseInt(match[1], 10)
+        const m = Number.parseInt(match[2], 10)
+        const d = Number.parseInt(match[3], 10)
+        const date = new Date(y, m - 1, d)
+        if (Number.isNaN(date.valueOf())) return null
+        if (localIsoDate(date) !== text) return null
+        return date
+      }
+
+      function isoDateOffset(value, days) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const copy = new Date(parsed.getTime())
+        copy.setDate(copy.getDate() + (Number.isFinite(days) ? Math.trunc(days) : 0))
+        return localIsoDate(copy)
+      }
+
+      function compareIsoDate(left, right) {
+        return normalizeText(left).slice(0, 10).localeCompare(normalizeText(right).slice(0, 10))
+      }
+
+      function startOfWeekIso(value) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const copy = new Date(parsed.getTime())
+        const weekday = copy.getDay()
+        const diff = (weekday + 6) % 7
+        copy.setDate(copy.getDate() - diff)
+        return localIsoDate(copy)
+      }
+
+      function schoolYearForIsoDate(value) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const year = parsed.getFullYear()
+        const month = parsed.getMonth() + 1
+        if (month >= 8) return `${year}-${year + 1}`
+        return `${year - 1}-${year}`
+      }
+
+      function quarterFromIsoDate(value) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const month = parsed.getMonth() + 1
+        if (month >= 8 && month <= 10) return "q1"
+        if (month === 11 || month === 12 || month === 1) return "q2"
+        if (month === 2 || month === 3) return "q3"
+        return "q4"
+      }
+
+      function normalizeQuarterCode(value) {
+        const text = normalizeLower(value)
+        if (text === "q1" || text === "q2" || text === "q3" || text === "q4") return text
+        if (text === "1") return "q1"
+        if (text === "2") return "q2"
+        if (text === "3") return "q3"
+        if (text === "4") return "q4"
+        return ""
+      }
+
+      function quarterSortKey(value) {
+        const quarter = normalizeQuarterCode(value)
+        if (quarter === "q1") return 1
+        if (quarter === "q2") return 2
+        if (quarter === "q3") return 3
+        if (quarter === "q4") return 4
+        return 9
+      }
+
+      function resolveSystemCurrentSchoolYear() {
+        const params = new URLSearchParams(window.location.search || "")
+        const explicit = normalizeText(params.get("currentSchoolYear") || params.get("schoolYear"))
+        if (isSchoolYearKey(explicit)) return explicit
+        const fallback = normalizeText(DEFAULT_SYSTEM_SCHOOL_YEAR)
+        if (isSchoolYearKey(fallback)) return fallback
+        return schoolYearForIsoDate(TODAY_ISO)
+      }
+
+      function parseCorrectTotalFromComments(value) {
+        const text = normalizeText(value)
+        const match = text.match(/\(\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*correct\s*\)/i)
+        if (!match) return { correctCount: null, totalQuestions: null }
+        const correctCount = toNumber(match[1])
+        const totalQuestions = toNumber(match[2])
+        return {
+          correctCount: Number.isFinite(correctCount) ? correctCount : null,
+          totalQuestions: Number.isFinite(totalQuestions) ? totalQuestions : null,
+        }
+      }
+
+      function toNumber(value) {
+        const parsed = Number.parseFloat(String(value))
+        return Number.isFinite(parsed) ? parsed : null
+      }
+
+      function toBoolLabel(value) {
+        if (value === true) return "Yes"
+        if (value === false) return "No"
+        return ""
+      }
+
+      function percentValue(part, whole) {
+        if (!Number.isFinite(part) || !Number.isFinite(whole) || whole <= 0) return null
+        return (part / whole) * 100
+      }
+
+      function formatPercent(value) {
+        if (!Number.isFinite(value)) return "n/a"
+        return `${Math.round(value)}%`
+      }
+
+      function formatScoreCell(cell) {
+        const row = cell.getRow().getData()
+        const score = Number.isFinite(row.score) ? row.score : null
+        const maxScore = Number.isFinite(row.maxScore) && row.maxScore > 0 ? row.maxScore : null
+        const percent = Number.isFinite(row.scorePercent) ? Math.max(0, Math.min(100, row.scorePercent)) : null
+        const valueText = score === null ? "-" : maxScore === null ? `${score}` : `${score}/${maxScore}`
+        if (percent === null) return `<span>${escapeHtml(valueText)}</span>`
+        return (
+          `<span class="score-chip">`
+          + `<span>${escapeHtml(valueText)}</span>`
+          + `<span class="score-bar"><span class="score-bar-fill" style="width:${Math.round(percent)}%"></span></span>`
+          + `</span>`
+        )
+      }
+
+      function escapeHtml(value) {
+        return normalizeText(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;")
+      }
+
+      function resolveApiOrigin() {
+        const params = new URLSearchParams(window.location.search || "")
+        const explicitOrigin = normalizeText(params.get("apiOrigin"))
+        const fromLocation = window.location.protocol.startsWith("http") ? window.location.origin : ""
+        const raw = explicitOrigin || fromLocation
+        if (!raw) return ""
+        try {
+          return new URL(raw, window.location.origin).origin
+        } catch (error) {
+          void error
+          return ""
+        }
+      }
+
+      function resolveApiUrl(path) {
+        const normalizedPath = normalizeText(path)
+        if (!normalizedPath) return ""
+        if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath
+        if (!API_ORIGIN) return normalizedPath
+        return new URL(normalizedPath, API_ORIGIN).toString()
+      }
+
+      function setStatus(message, isError) {
+        const el = document.getElementById("statusLine")
+        if (!el) return
+        el.textContent = normalizeText(message)
+        el.classList.toggle("is-error", Boolean(isError))
+      }
+
+      async function apiJson(path, options = {}) {
+        const requestInit = {
+          method: normalizeText(options.method || "GET") || "GET",
+          credentials: "include",
+          headers: {
+            ...(options.headers || {}),
+          },
+        }
+        if (options.body !== undefined) {
+          requestInit.headers["content-type"] = "application/json"
+          requestInit.body = JSON.stringify(options.body)
+        }
+
+        const response = await fetch(resolveApiUrl(path), requestInit)
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          const message = normalizeText(payload?.error) || `HTTP ${response.status}`
+          const error = new Error(message)
+          error.status = response.status
+          throw error
+        }
+        return payload
+      }
+
+      async function ensureAuthenticated() {
+        const payload = await apiJson("/api/admin/auth/me")
+        if (!payload || payload.authenticated === false) {
+          const error = new Error("Authentication required")
+          error.status = 401
+          throw error
+        }
+        return payload
+      }
+
+      function loadUiSettingsFromLocalStorage() {
+        try {
+          const raw = window.localStorage.getItem("sis.admin.uiSettings")
+          if (!raw) return null
+          const parsed = JSON.parse(raw)
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
+          return parsed
+        } catch (error) {
+          void error
+          return null
+        }
+      }
+
+      async function hydrateLetterGradeRanges() {
+        const localSettings = loadUiSettingsFromLocalStorage()
+        state.letterGradeRanges = letterGradeRangesFromUiSettings(localSettings)
+        try {
+          const payload = await apiJson("/api/admin/settings/ui")
+          state.letterGradeRanges = letterGradeRangesFromUiSettings(payload?.uiSettings)
+        } catch (error) {
+          void error
+        }
+      }
+
+      function formatStudentDisplay(eaglesId, englishName, fullName) {
+        const left = normalizeText(eaglesId) || "-"
+        const right = normalizeText(englishName) || normalizeText(fullName) || "-"
+        return `${left}/${right}`
+      }
+
+      function flattenGradeRowsFromStudent(student) {
+        const source = student && typeof student === "object" ? student : {}
+        const profile = source.profile && typeof source.profile === "object" ? source.profile : {}
+        const gradeRecords = Array.isArray(source.gradeRecords) ? source.gradeRecords : []
+        const studentRefId = normalizeText(source.id)
+        const eaglesId = normalizeText(source.eaglesId)
+        const studentNumber = source.studentNumber === undefined || source.studentNumber === null
+          ? ""
+          : String(source.studentNumber)
+        const fullName = normalizeText(profile.fullName)
+        const englishName = normalizeText(profile.englishName)
+        const schoolName = normalizeText(profile.schoolName) || "Unspecified"
+        const level = normalizeText(profile.currentGrade)
+        const studentLabel = formatStudentDisplay(eaglesId, englishName, fullName) || studentRefId
+
+        return gradeRecords.map((record, index) => {
+          const dueAt = localIsoDate(record?.dueAt)
+          const submittedAt = localIsoDate(record?.submittedAt)
+          const dateKey = dueAt || submittedAt
+          const commentText = normalizeText(record?.comments)
+          const parsedCorrectTotal = parseCorrectTotalFromComments(commentText)
+          const rawScore = toNumber(record?.score)
+          const rawMaxScore = toNumber(record?.maxScore)
+          const questionCount = Number.isFinite(parsedCorrectTotal.totalQuestions) && parsedCorrectTotal.totalQuestions > 0
+            ? parsedCorrectTotal.totalQuestions
+            : rawMaxScore && rawMaxScore > 0
+              ? rawMaxScore
+              : null
+          let correctCount = Number.isFinite(parsedCorrectTotal.correctCount)
+            ? parsedCorrectTotal.correctCount
+            : rawScore
+          if (
+            correctCount !== null
+            && Number.isFinite(rawMaxScore)
+            && rawMaxScore > 0
+            && Number.isFinite(questionCount)
+            && questionCount > 0
+            && rawMaxScore !== questionCount
+          ) {
+            correctCount = Number(((correctCount / rawMaxScore) * questionCount).toFixed(2))
+          }
+          const scorePercent = Number.isFinite(correctCount) && Number.isFinite(questionCount) && questionCount > 0
+            ? percentValue(correctCount, questionCount)
+            : rawMaxScore && rawMaxScore > 0 && rawScore !== null
+              ? percentValue(rawScore, rawMaxScore)
+              : null
+          const quarter = normalizeLower(record?.quarter) || quarterFromIsoDate(dateKey)
+          const schoolYear = normalizeText(record?.schoolYear) || schoolYearForIsoDate(dateKey)
+          const className = normalizeText(record?.className)
+          const assignmentName = normalizeText(record?.assignmentName)
+
+          return {
+            id: normalizeText(record?.id) || `${studentRefId}-${index + 1}`,
+            studentRefId,
+            studentNumber,
+            eaglesId,
+            fullName,
+            englishName,
+            studentLabel,
+            studentDisplay: studentLabel,
+            schoolName,
+            level,
+            className,
+            assignmentName,
+            schoolYear,
+            quarter,
+            dueAt,
+            submittedAt,
+            dateKey,
+            score: correctCount,
+            maxScore: questionCount,
+            rawScore,
+            rawMaxScore,
+            scorePercent,
+            homeworkCompleted: record?.homeworkCompleted === true ? true : record?.homeworkCompleted === false ? false : null,
+            homeworkOnTime: record?.homeworkOnTime === true ? true : record?.homeworkOnTime === false ? false : null,
+            behaviorScore: toNumber(record?.behaviorScore),
+            participationScore: toNumber(record?.participationScore),
+            inClassScore: toNumber(record?.inClassScore),
+            comments: commentText,
+            searchText: normalizeSearch(
+              [
+                eaglesId,
+                fullName,
+                englishName,
+                schoolName,
+                className,
+                assignmentName,
+                schoolYear,
+                quarter,
+                level,
+                record?.comments,
+              ].join(" ")
+            ),
+          }
+        })
+      }
+
+      function formatShortNumber(value) {
+        if (!Number.isFinite(value)) return ""
+        const rounded = Math.round(value * 100) / 100
+        if (Number.isInteger(rounded)) return String(rounded)
+        return String(rounded)
+      }
+
+      function resolveExerciseStatus(record = {}) {
+        const completed = record?.homeworkCompleted === true || Boolean(record?.submittedAt) || Number.isFinite(record?.score)
+        if (!completed) return "notdone"
+        if (record?.homeworkOnTime === true) return "ontime"
+        if (record?.homeworkOnTime === false) return "late"
+        const dueAt = parseIsoDate(record?.dueAt)
+        const submittedAt = parseIsoDate(record?.submittedAt)
+        if (dueAt && submittedAt && submittedAt.valueOf() > dueAt.valueOf()) return "late"
+        return "ontime"
+      }
+
+      function assignmentKeyFromRow(row = {}) {
+        const title = normalizeText(row?.assignmentName) || "Untitled"
+        const dueAt = normalizeText(row?.dueAt)
+        const schoolYear = normalizeText(row?.schoolYear)
+        const quarter = normalizeQuarterCode(row?.quarter)
+        return `${normalizeLower(title)}|${dueAt}|${schoolYear}|${quarter}`
+      }
+
+      function medianOfNumbers(values = []) {
+        const numbers = (Array.isArray(values) ? values : [])
+          .map((entry) => Number(entry))
+          .filter((entry) => Number.isFinite(entry))
+          .sort((left, right) => left - right)
+        if (!numbers.length) return null
+        const mid = Math.floor(numbers.length / 2)
+        if (numbers.length % 2 === 1) return numbers[mid]
+        return (numbers[mid - 1] + numbers[mid]) / 2
+      }
+
+      function modeOfNumbers(values = [], precision = 2) {
+        const counts = new Map()
+        ;(Array.isArray(values) ? values : [])
+          .map((entry) => Number(entry))
+          .filter((entry) => Number.isFinite(entry))
+          .forEach((entry) => {
+            const key = Number(entry.toFixed(Math.max(0, Math.min(6, precision))))
+            counts.set(key, (counts.get(key) || 0) + 1)
+          })
+        let bestValue = null
+        let bestCount = 0
+        counts.forEach((count, key) => {
+          if (count > bestCount) {
+            bestCount = count
+            bestValue = key
+          }
+        })
+        return bestCount > 1 ? bestValue : null
+      }
+
+      function gradeBandFromPercent(percent) {
+        if (!Number.isFinite(percent)) return "N/A"
+        const ranges = normalizeLetterGradeRanges(state.letterGradeRanges)
+        for (let index = 0; index < ranges.length; index += 1) {
+          const range = ranges[index]
+          if (percent >= range.minPercent && percent <= range.maxPercent) return range.letter
+        }
+        return "N/A"
+      }
+
+      function withCorrectCountComment(existing, correctCount, totalQuestions) {
+        const base = normalizeText(existing)
+          .replace(/\(\s*\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?\s*correct\s*\)\.?/gi, "")
+          .trim()
+        const detail = `(${formatShortNumber(correctCount)}/${formatShortNumber(totalQuestions)} correct).`
+        if (!base) return `Manual score update ${detail}`
+        return `${base.replace(/[.\s]+$/g, "")} ${detail}`
+      }
+
+      async function editExerciseCellScore(cell, meta = {}) {
+        const rowData = cell?.getRow?.().getData?.() || {}
+        if (rowData?.rowType === "stat") return
+
+        const studentRefId = normalizeText(rowData?.studentRefId)
+        if (!studentRefId) {
+          setStatus("Cannot edit score: missing student id.", true)
+          return
+        }
+
+        const currentValue = cell.getValue()
+        const current = currentValue && typeof currentValue === "object" ? currentValue : {}
+        const fallbackQuestions = Number.isFinite(meta?.totalQuestions) && meta.totalQuestions > 0 ? meta.totalQuestions : 10
+        const totalQuestions =
+          Number.isFinite(current?.maxScore) && current.maxScore > 0 ? current.maxScore : fallbackQuestions
+        const currentScore = Number.isFinite(current?.score) ? current.score : null
+
+        const promptValue = currentScore === null ? "" : formatShortNumber(currentScore)
+        const promptLabel =
+          `Correct answers for ${normalizeText(rowData.studentDisplay) || "student"}\n`
+          + `${normalizeText(meta.title) || "Exercise"}\n`
+          + `Enter a value between 0 and ${formatShortNumber(totalQuestions)}`
+        const rawInput = window.prompt(promptLabel, promptValue)
+        if (rawInput === null) return
+
+        const parsedScore = toNumber(rawInput)
+        if (!Number.isFinite(parsedScore) || parsedScore < 0) {
+          setStatus("Invalid score. Enter a non-negative number.", true)
+          return
+        }
+        if (Number.isFinite(totalQuestions) && parsedScore > totalQuestions) {
+          setStatus(`Invalid score. Max allowed is ${formatShortNumber(totalQuestions)}.`, true)
+          return
+        }
+
+        const dueAt = normalizeText(current?.dueAt) || normalizeText(meta?.dueAt)
+        const effectiveSchoolYear =
+          normalizeText(current?.schoolYear)
+          || (state.filters.schoolYear !== "all" ? normalizeText(state.filters.schoolYear) : "")
+          || SYSTEM_CURRENT_SCHOOL_YEAR
+          || schoolYearForIsoDate(dueAt || TODAY_ISO)
+        const effectiveQuarter =
+          normalizeQuarterCode(current?.quarter)
+          || normalizeQuarterCode(rowData?.quarter)
+          || normalizeQuarterCode(meta?.quarter)
+          || normalizeQuarterCode(state.filters.quarter)
+          || quarterFromIsoDate(dueAt || TODAY_ISO)
+          || "q1"
+        const todayIso = localIsoDate(new Date())
+        const homeworkOnTime = dueAt ? compareIsoDate(todayIso, dueAt) <= 0 : true
+
+        const payload = {
+          id: normalizeText(current?.recordId) || undefined,
+          className: normalizeText(current?.className) || normalizeText(rowData?.level) || "Unassigned class",
+          level: normalizeText(current?.level) || normalizeText(rowData?.level) || null,
+          schoolYear: effectiveSchoolYear,
+          quarter: effectiveQuarter,
+          assignmentName: normalizeText(current?.assignmentName) || normalizeText(meta?.title) || "Exercise",
+          dueAt: dueAt || undefined,
+          submittedAt: todayIso,
+          score: parsedScore,
+          maxScore: totalQuestions,
+          homeworkCompleted: true,
+          homeworkOnTime,
+          comments: withCorrectCountComment(current?.comments, parsedScore, totalQuestions),
+        }
+
+        setStatus("Saving score edit...")
+        try {
+          await apiJson(`/api/admin/students/${encodeURIComponent(studentRefId)}/grades`, {
+            method: "POST",
+            body: payload,
+          })
+          await bootstrapRows()
+          setStatus(
+            `Saved ${normalizeText(rowData.studentDisplay)} ${normalizeText(meta.title)} `
+            + `(${formatShortNumber(parsedScore)}/${formatShortNumber(totalQuestions)}).`
+          )
+        } catch (error) {
+          setStatus(normalizeText(error?.message) || "Failed to save score edit.", true)
+        }
+      }
+
+      function buildMatrixModel(rows = []) {
+        const sourceRows = Array.isArray(rows) ? rows : []
+        const assignmentMetaMap = new Map()
+
+        sourceRows.forEach((entry) => {
+          const key = assignmentKeyFromRow(entry)
+          if (!assignmentMetaMap.has(key)) {
+            assignmentMetaMap.set(key, {
+              key,
+              title: normalizeText(entry?.assignmentName) || "Untitled",
+              dueAt: normalizeText(entry?.dueAt),
+              quarter: normalizeUpper(entry?.quarter),
+              totalQuestions: Number.isFinite(entry?.maxScore) ? entry.maxScore : null,
+            })
+            return
+          }
+          const existing = assignmentMetaMap.get(key)
+          if (!existing.dueAt && normalizeText(entry?.dueAt)) existing.dueAt = normalizeText(entry?.dueAt)
+          if (
+            Number.isFinite(entry?.maxScore)
+            && (!Number.isFinite(existing.totalQuestions) || entry.maxScore > existing.totalQuestions)
+          ) {
+            existing.totalQuestions = entry.maxScore
+          }
+        })
+
+        const assignmentMeta = Array.from(assignmentMetaMap.values()).sort((left, right) => {
+          const leftDue = normalizeText(left.dueAt)
+          const rightDue = normalizeText(right.dueAt)
+          if (leftDue && rightDue) return compareIsoDate(leftDue, rightDue)
+          if (leftDue) return -1
+          if (rightDue) return 1
+          return normalizeText(left.title).localeCompare(normalizeText(right.title))
+        })
+
+        const byStudent = new Map()
+        sourceRows.forEach((entry) => {
+          const studentRefId = normalizeText(entry?.studentRefId)
+          if (!studentRefId) return
+          if (!byStudent.has(studentRefId)) {
+            byStudent.set(studentRefId, {
+              id: `student-${studentRefId}`,
+              rowType: "student",
+              rowOrder: 0,
+              studentRefId,
+              level: normalizeText(entry?.level) || "Unassigned",
+              studentDisplay: normalizeText(entry?.studentDisplay) || normalizeText(entry?.studentLabel),
+              studentNumber: normalizeText(entry?.studentNumber),
+              quarter: normalizeUpper(entry?.quarter),
+            })
+          }
+          const row = byStudent.get(studentRefId)
+          if (!row.quarter && normalizeText(entry?.quarter)) row.quarter = normalizeUpper(entry?.quarter)
+          const assignmentKey = assignmentKeyFromRow(entry)
+          const scoreValue = toNumber(entry?.score)
+          const maxScoreValue = toNumber(entry?.maxScore)
+          const scorePercent = Number.isFinite(entry?.scorePercent)
+            ? entry.scorePercent
+            : scoreValue !== null && maxScoreValue !== null && maxScoreValue > 0
+              ? percentValue(scoreValue, maxScoreValue)
+              : null
+          row[assignmentKey] = {
+            score: scoreValue,
+            maxScore: maxScoreValue,
+            percent: scorePercent,
+            status: resolveExerciseStatus(entry),
+            completed: entry?.homeworkCompleted === true || Boolean(entry?.submittedAt) || Number.isFinite(scoreValue),
+            recordId: normalizeText(entry?.id),
+            className: normalizeText(entry?.className),
+            schoolYear: normalizeText(entry?.schoolYear),
+            quarter: normalizeQuarterCode(entry?.quarter),
+            assignmentName: normalizeText(entry?.assignmentName),
+            dueAt: normalizeText(entry?.dueAt),
+            submittedAt: normalizeText(entry?.submittedAt),
+            comments: normalizeText(entry?.comments),
+            level: normalizeText(entry?.level),
+          }
+        })
+
+        const studentRows = Array.from(byStudent.values())
+          .sort((left, right) => {
+            const levelCompare = normalizeText(left.level).localeCompare(normalizeText(right.level))
+            if (levelCompare !== 0) return levelCompare
+            return normalizeText(left.studentDisplay).localeCompare(normalizeText(right.studentDisplay))
+          })
+        studentRows.forEach((row, index) => {
+          row.rowOrder = index + 1
+        })
+
+        assignmentMeta.forEach((meta) => {
+          studentRows.forEach((row) => {
+            if (!row[meta.key]) row[meta.key] = null
+          })
+        })
+
+        const classSize = studentRows.length || 1
+        const statRows = [
+          {
+            id: "stat-mean",
+            rowType: "stat",
+            rowOrder: studentRows.length + 1,
+            level: "",
+            studentDisplay: "Mean",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-median",
+            rowType: "stat",
+            rowOrder: studentRows.length + 2,
+            level: "",
+            studentDisplay: "Median",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-mode",
+            rowType: "stat",
+            rowOrder: studentRows.length + 3,
+            level: "",
+            studentDisplay: "Mode",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-completion",
+            rowType: "stat",
+            rowOrder: studentRows.length + 4,
+            level: "",
+            studentDisplay: "Class completion",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-distribution",
+            rowType: "stat",
+            rowOrder: studentRows.length + 5,
+            level: "",
+            studentDisplay: "Grade distribution",
+            studentNumber: "",
+            quarter: "",
+          },
+        ]
+
+        assignmentMeta.forEach((meta) => {
+          const cells = studentRows.map((row) => row[meta.key]).filter((entry) => entry && typeof entry === "object")
+          const scoreValues = cells
+            .map((entry) => Number(entry?.score))
+            .filter((entry) => Number.isFinite(entry))
+          const percents = cells
+            .map((entry) => Number(entry?.percent))
+            .filter((entry) => Number.isFinite(entry))
+          const mean = scoreValues.length
+            ? scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length
+            : null
+          const median = medianOfNumbers(scoreValues)
+          const mode = modeOfNumbers(scoreValues)
+          const completionCount = cells.filter((entry) => entry?.completed === true).length
+          const completionPercent = percentValue(completionCount, classSize)
+
+          const distribution = new Map()
+          normalizeLetterGradeRanges(state.letterGradeRanges).forEach((entry) => {
+            distribution.set(entry.letter, 0)
+          })
+          distribution.set("N/A", distribution.get("N/A") || 0)
+          percents.forEach((entry) => {
+            const band = gradeBandFromPercent(entry)
+            distribution.set(band, (distribution.get(band) || 0) + 1)
+          })
+
+          const questionTotal = Number.isFinite(meta.totalQuestions) ? meta.totalQuestions : null
+          const formatQRightStat = (value) => {
+            if (!Number.isFinite(value)) return "n/a"
+            const rightText = formatShortNumber(value)
+            if (!Number.isFinite(questionTotal) || questionTotal <= 0) return rightText
+            return `${rightText}/${formatShortNumber(questionTotal)}`
+          }
+
+          const distributionText = Array.from(distribution.entries())
+            .filter(([, count]) => Number.isFinite(count))
+            .map(([letter, count]) => `${letter}:${Math.max(0, Math.round(count))}`)
+            .join(" ")
+
+          statRows[0][meta.key] = formatQRightStat(mean)
+          statRows[1][meta.key] = formatQRightStat(median)
+          statRows[2][meta.key] = formatQRightStat(mode)
+          statRows[3][meta.key] = Number.isFinite(completionPercent) ? `${Math.round(completionPercent)}%` : "0%"
+          statRows[4][meta.key] = distributionText || "n/a"
+        })
+
+        const baseColumns = [
+          { title: "Order", field: "rowOrder", visible: false, headerSort: false },
+          { title: "Class Level", field: "level", minWidth: 118, frozen: true, headerSort: true },
+          { title: "Student (eaglesId/englishName)", field: "studentDisplay", minWidth: 220, frozen: true, headerSort: true },
+          { title: "Student Number", field: "studentNumber", minWidth: 118, hozAlign: "center", headerSort: true },
+          { title: "Quarter", field: "quarter", minWidth: 88, hozAlign: "center", headerSort: true },
+        ]
+
+        const assignmentColumns = assignmentMeta.map((meta) => {
+          const dueLabel = normalizeText(meta.dueAt) || "-"
+          const questionLabel = Number.isFinite(meta.totalQuestions) ? formatShortNumber(meta.totalQuestions) : "-"
+          return {
+            title:
+              `${escapeHtml(meta.title)}`
+              + `<span class=\"assignment-sub\">Q: ${escapeHtml(questionLabel)}</span>`
+              + `<span class=\"assignment-sub\">Due: ${escapeHtml(dueLabel)}</span>`,
+            field: meta.key,
+            minWidth: 150,
+            hozAlign: "center",
+            headerSort: true,
+            sorter: (left, right) => {
+              const leftPercent = left && typeof left === "object" && Number.isFinite(left.percent) ? left.percent : -1
+              const rightPercent = right && typeof right === "object" && Number.isFinite(right.percent) ? right.percent : -1
+              return leftPercent - rightPercent
+            },
+            tooltip: () => "Double-click a student score cell to edit and save.",
+            cellDblClick: (_event, cell) => {
+              void editExerciseCellScore(cell, meta)
+            },
+            formatter: (cell) => {
+              const rowData = cell.getRow().getData()
+              const value = cell.getValue()
+              if (rowData?.rowType === "stat") {
+                return `<span class=\"stat-chip\">${escapeHtml(value)}</span>`
+              }
+              if (!value || typeof value !== "object") {
+                return (
+                  `<span class=\"exercise-cell notdone\">`
+                  + `<span>-/-</span><span>Not done</span>`
+                  + `</span>`
+                )
+              }
+              const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0
+                ? `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}`
+                : Number.isFinite(value.score)
+                  ? `${formatShortNumber(value.score)}`
+                  : "-/-"
+              const percentLabel = Number.isFinite(value.percent) ? `${Math.round(value.percent)}%` : "n/a"
+              const status = ["ontime", "late", "notdone"].includes(value.status) ? value.status : "notdone"
+              return (
+                `<span class=\"exercise-cell ${status}\">`
+                + `<span>${escapeHtml(scoreLabel)}</span>`
+                + `<span>${escapeHtml(percentLabel)}</span>`
+                + `</span>`
+              )
+            },
+          }
+        })
+
+        const rowsWithStats = assignmentMeta.length ? [...studentRows, ...statRows] : studentRows
+
+        return {
+          columns: [...baseColumns, ...assignmentColumns],
+          rows: rowsWithStats,
+          assignmentCount: assignmentColumns.length,
+          studentCount: studentRows.length,
+        }
+      }
+
+      function chunkArray(items, size) {
+        const chunks = []
+        const safeSize = Math.max(1, Number.parseInt(String(size || 1), 10) || 1)
+        for (let i = 0; i < items.length; i += safeSize) {
+          chunks.push(items.slice(i, i + safeSize))
+        }
+        return chunks
+      }
+
+      async function loadGradeRows() {
+        state.loading = true
+        setStatus("Loading student roster...")
+
+        const roster = await apiJson("/api/admin/students?take=1000")
+        const students = Array.isArray(roster?.items) ? roster.items : []
+        const withGradeCounts = students.filter((entry) => {
+          const gradeCount = Number(entry?.counts?.gradeRecords ?? entry?._count?.gradeRecords ?? 0)
+          return Number.isFinite(gradeCount) && gradeCount > 0
+        })
+        const targetStudents = withGradeCounts.length ? withGradeCounts : students
+
+        const allRows = []
+        const chunks = chunkArray(targetStudents, 10)
+        for (let index = 0; index < chunks.length; index += 1) {
+          const batch = chunks[index]
+          setStatus(`Loading grade details ${index + 1}/${chunks.length}...`)
+          const details = await Promise.all(
+            batch.map(async (student) => {
+              const id = normalizeText(student?.id)
+              if (!id) return null
+              try {
+                const detail = await apiJson(`/api/admin/students/${encodeURIComponent(id)}`)
+                if (detail?.student && typeof detail.student === "object") return detail.student
+                if (detail && typeof detail === "object" && normalizeText(detail.id)) return detail
+                return null
+              } catch (error) {
+                void error
+                return null
+              }
+            })
+          )
+
+          details.forEach((entry) => {
+            if (!entry) return
+            allRows.push(...flattenGradeRowsFromStudent(entry))
+          })
+        }
+
+        state.allRows = allRows
+        state.loading = false
+      }
+
+      function uniqueSortedValues(rows, key) {
+        const values = Array.from(new Set((Array.isArray(rows) ? rows : [])
+          .map((entry) => normalizeText(entry?.[key]))
+          .filter(Boolean)))
+        values.sort((left, right) => left.localeCompare(right, undefined, { sensitivity: "base" }))
+        return values
+      }
+
+      function replaceSelectOptions(selectEl, values, selectedValue, allLabel) {
+        if (!(selectEl instanceof HTMLSelectElement)) return
+        const current = normalizeText(selectedValue) || "all"
+        const options = [`<option value=\"all\">${escapeHtml(allLabel)}</option>`]
+        values.forEach((value) => {
+          options.push(`<option value=\"${escapeHtml(value)}\">${escapeHtml(value)}</option>`)
+        })
+        selectEl.innerHTML = options.join("")
+        selectEl.value = values.includes(current) ? current : "all"
+      }
+
+      function refreshFilterOptionLists() {
+        const rows = Array.isArray(state.allRows) ? state.allRows : []
+        const classValues = uniqueSortedValues(rows, "level")
+        const schoolValues = uniqueSortedValues(rows, "schoolName")
+        const currentYear = SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO)
+        const yearValues = uniqueSortedValues(rows, "schoolYear")
+        if (currentYear && !yearValues.includes(currentYear)) yearValues.push(currentYear)
+        yearValues.sort((left, right) => right.localeCompare(left))
+
+        const studentValues = Array.from(new Map(
+          rows.map((row) => [normalizeText(row.studentRefId), normalizeText(row.studentLabel)])
+            .filter(([key, value]) => key && value)
+        ))
+          .sort((left, right) => left[1].localeCompare(right[1], undefined, { sensitivity: "base" }))
+
+        replaceSelectOptions(document.getElementById("classFilter"), classValues, state.filters.classKey, "All class levels")
+        replaceSelectOptions(document.getElementById("schoolFilter"), schoolValues, state.filters.schoolKey, "All schools")
+        replaceSelectOptions(document.getElementById("schoolYear"), yearValues, state.filters.schoolYear, "All school years")
+
+        const studentFilter = document.getElementById("studentFilter")
+        if (studentFilter instanceof HTMLSelectElement) {
+          const options = ["<option value=\"all\">All students</option>"]
+          studentValues.forEach(([studentRefId, label]) => {
+            options.push(`<option value=\"${escapeHtml(studentRefId)}\">${escapeHtml(label)}</option>`)
+          })
+          studentFilter.innerHTML = options.join("")
+          const current = normalizeText(state.filters.studentKey) || "all"
+          studentFilter.value = studentValues.some(([studentRefId]) => studentRefId === current) ? current : "all"
+        }
+
+        if (currentYear && (state.filters.schoolYear === "all" || !yearValues.includes(state.filters.schoolYear))) {
+          state.filters.schoolYear = currentYear
+          const yearSelect = document.getElementById("schoolYear")
+          if (yearSelect instanceof HTMLSelectElement) yearSelect.value = currentYear
+        }
+
+        const selectedSchoolYear = state.filters.schoolYear === "all" ? currentYear : state.filters.schoolYear
+        const availableQuarters = Array.from(new Set(
+          rows
+            .filter((entry) => normalizeText(entry?.schoolYear) === normalizeText(selectedSchoolYear))
+            .map((entry) => normalizeQuarterCode(entry?.quarter))
+            .filter(Boolean)
+        )).sort((left, right) => quarterSortKey(left) - quarterSortKey(right))
+
+        const currentQuarter = normalizeQuarterCode(quarterFromIsoDate(TODAY_ISO)) || "q1"
+        const preferredQuarter = availableQuarters.includes(currentQuarter)
+          ? currentQuarter
+          : availableQuarters[0] || currentQuarter
+
+        if (!normalizeQuarterCode(state.filters.quarter) || !availableQuarters.includes(normalizeQuarterCode(state.filters.quarter))) {
+          state.filters.quarter = preferredQuarter
+        }
+        const quarterSelect = document.getElementById("quarter")
+        if (quarterSelect instanceof HTMLSelectElement) {
+          quarterSelect.value = normalizeQuarterCode(state.filters.quarter) || preferredQuarter
+        }
+      }
+
+      function rangeLabelForActiveFilters(period, rangeStart, rangeEnd, currentSchoolYear) {
+        if (period === "archive") return `Archive only (excluding ${currentSchoolYear})`
+        if (rangeStart || rangeEnd) return `${rangeStart || "..."} to ${rangeEnd || "..."}`
+        return "All dates"
+      }
+
+      function shouldApplyTodayCap(targetSchoolYear, dateDerivedCurrentSchoolYear) {
+        const target = normalizeText(targetSchoolYear)
+        const dateDerived = normalizeText(dateDerivedCurrentSchoolYear)
+        if (!target || !dateDerived) return true
+        return target === dateDerived
+      }
+
+      function filteredRowsWithRange() {
+        const rows = Array.isArray(state.allRows) ? state.allRows : []
+        const filters = state.filters
+        const currentSchoolYear = SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO)
+        const dateDerivedCurrentSchoolYear = schoolYearForIsoDate(TODAY_ISO)
+        let rangeStart = ""
+        let rangeEnd = ""
+
+        if (filters.period === "week") {
+          rangeStart = startOfWeekIso(TODAY_ISO)
+          rangeEnd = isoDateOffset(rangeStart, 6)
+        } else if (filters.period === "custom") {
+          rangeStart = normalizeText(filters.customFrom).slice(0, 10)
+          rangeEnd = normalizeText(filters.customTo).slice(0, 10)
+        }
+
+        if (rangeStart && rangeEnd && compareIsoDate(rangeStart, rangeEnd) > 0) {
+          const swap = rangeStart
+          rangeStart = rangeEnd
+          rangeEnd = swap
+        }
+
+        const filtered = rows.filter((row) => {
+          const rowDate = normalizeText(row?.dateKey)
+          const rowQuarter = normalizeLower(row?.quarter)
+          const rowSchoolYear = normalizeText(row?.schoolYear)
+
+          if (filters.period === "archive") {
+            if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false
+            if (filters.schoolYear !== "all" && rowSchoolYear !== filters.schoolYear) return false
+          } else {
+            if (filters.schoolYear !== "all" && rowSchoolYear && rowSchoolYear !== filters.schoolYear) return false
+          }
+
+          if (filters.period === "quarter" || filters.period === "qtd") {
+            if (!rowQuarter || rowQuarter !== normalizeLower(filters.quarter)) return false
+            if (filters.period === "qtd") {
+              const targetYear = filters.schoolYear !== "all" ? filters.schoolYear : currentSchoolYear
+              if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
+                return false
+              }
+            }
+          }
+
+          if (filters.period === "sytd") {
+            const targetYear = filters.schoolYear !== "all" ? filters.schoolYear : currentSchoolYear
+            if (rowSchoolYear && rowSchoolYear !== targetYear) return false
+            if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
+              return false
+            }
+          }
+
+          if (filters.period === "week" || filters.period === "custom") {
+            if (rangeStart || rangeEnd) {
+              if (!rowDate) return false
+              if (rangeStart && compareIsoDate(rowDate, rangeStart) < 0) return false
+              if (rangeEnd && compareIsoDate(rowDate, rangeEnd) > 0) return false
+            }
+          }
+
+          if (filters.classKey !== "all" && normalizeText(row?.level) !== filters.classKey) return false
+          if (filters.studentKey !== "all" && normalizeText(row?.studentRefId) !== filters.studentKey) return false
+          if (filters.schoolKey !== "all" && normalizeText(row?.schoolName) !== filters.schoolKey) return false
+
+          const needle = normalizeSearch(filters.search)
+          if (needle && !normalizeSearch(row?.searchText).includes(needle)) return false
+
+          return true
+        })
+
+        return {
+          rows: filtered,
+          rangeStart,
+          rangeEnd,
+          currentSchoolYear,
+          rangeLabel: rangeLabelForActiveFilters(filters.period, rangeStart, rangeEnd, currentSchoolYear),
+        }
+      }
+
+      function ensureTable() {
+        if (state.table) return
+        if (typeof window.Tabulator !== "function") {
+          setStatus("Tabulator assets are missing. Run: tools/sync-tabulatorz-assets.sh", true)
+          return
+        }
+
+        state.table = new window.Tabulator("#gradeGrid", {
+          data: [],
+          layout: "fitDataTable",
+          responsiveLayout: "collapse",
+          responsiveLayoutCollapseStartOpen: false,
+          height: 560,
+          placeholder: "No grade rows match the selected filters.",
+          pagination: false,
+          movableColumns: true,
+          initialSort: [
+            { column: "rowOrder", dir: "asc" },
+          ],
+          columns: [
+            { title: "Order", field: "rowOrder", visible: false, headerSort: false },
+            { title: "Class Level", field: "level", minWidth: 118, headerSort: true },
+            { title: "Student (eaglesId/englishName)", field: "studentDisplay", minWidth: 220, headerSort: true },
+            { title: "Student Number", field: "studentNumber", minWidth: 118, hozAlign: "center", headerSort: true },
+            { title: "Quarter", field: "quarter", minWidth: 88, hozAlign: "center", headerSort: true },
+          ],
+          rowFormatter: (row) => {
+            const data = row.getData()
+            const el = row.getElement()
+            if (!el) return
+            if (data?.rowType === "stat") {
+              el.classList.add("is-stat-row")
+            } else {
+              el.classList.remove("is-stat-row")
+            }
+          },
+        })
+        state.tableBuilt = false
+        if (typeof state.table?.on === "function") {
+          state.table.on("tableBuilt", () => {
+            state.tableBuilt = true
+            renderTable()
+          })
+        }
+      }
+
+      function normalizeUpper(value) {
+        return normalizeText(value).toUpperCase()
+      }
+
+      function updateMetrics(rows) {
+        const source = Array.isArray(rows) ? rows : []
+        const studentCount = new Set(source.map((entry) => normalizeText(entry?.studentRefId)).filter(Boolean)).size
+        const classCount = new Set(source.map((entry) => normalizeText(entry?.level)).filter(Boolean)).size
+        const scoreValues = source
+          .map((entry) => Number(entry?.scorePercent))
+          .filter((entry) => Number.isFinite(entry))
+        const averagePercent = scoreValues.length
+          ? scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length
+          : null
+
+        const homeworkRows = source.filter((entry) => typeof entry?.homeworkCompleted === "boolean")
+        const completedRows = homeworkRows.filter((entry) => entry.homeworkCompleted === true).length
+        const completionRate = homeworkRows.length ? percentValue(completedRows, homeworkRows.length) : null
+
+        const rowEl = document.getElementById("metricRows")
+        const studentEl = document.getElementById("metricStudents")
+        const classEl = document.getElementById("metricClasses")
+        const avgEl = document.getElementById("metricAvgPercent")
+        const completionEl = document.getElementById("metricCompletion")
+        if (rowEl) rowEl.textContent = String(source.length)
+        if (studentEl) studentEl.textContent = String(studentCount)
+        if (classEl) classEl.textContent = String(classCount)
+        if (avgEl) avgEl.textContent = formatPercent(averagePercent)
+        if (completionEl) completionEl.textContent = formatPercent(completionRate)
+      }
+
+      function applyFilterControlState() {
+        const quarter = document.getElementById("quarter")
+        const customFrom = document.getElementById("customFrom")
+        const customTo = document.getElementById("customTo")
+        const isQuarterMode = state.filters.period === "quarter" || state.filters.period === "qtd"
+        const isCustomMode = state.filters.period === "custom"
+        if (quarter instanceof HTMLSelectElement) quarter.disabled = !isQuarterMode
+        if (customFrom instanceof HTMLInputElement) customFrom.disabled = !isCustomMode
+        if (customTo instanceof HTMLInputElement) customTo.disabled = !isCustomMode
+      }
+
+      function syncPeriodButtons() {
+        document.querySelectorAll("[data-period]").forEach((button) => {
+          const period = normalizeLower(button.getAttribute("data-period"))
+          button.classList.toggle("is-active", period === state.filters.period)
+        })
+      }
+
+      function renderTable() {
+        const outcome = filteredRowsWithRange()
+        state.filteredRows = outcome.rows
+        const matrix = buildMatrixModel(state.filteredRows)
+        state.matrixRows = matrix.rows
+
+        ensureTable()
+        if (state.table && state.tableBuilt) {
+          try {
+            state.table.setColumns(matrix.columns)
+            const replaceResult = state.table.replaceData(matrix.rows)
+            if (replaceResult && typeof replaceResult.then === "function") {
+              replaceResult
+                .then(() => {
+                  state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+                })
+                .catch(() => {})
+            } else {
+              state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+            }
+          } catch (error) {
+            void error
+          }
+        }
+
+        updateMetrics(state.filteredRows)
+        const rangeHint = document.getElementById("rangeHint")
+        if (rangeHint) {
+          const periodLabel = state.filters.period.toUpperCase()
+          rangeHint.textContent =
+            `Period ${periodLabel} | Range ${outcome.rangeLabel} | Students ${matrix.studentCount} | Exercises ${matrix.assignmentCount}`
+        }
+
+        if (!state.loading) {
+          setStatus(`Loaded ${state.filteredRows.length} grade rows into ${matrix.studentCount} students x ${matrix.assignmentCount} exercise columns.`)
+        }
+      }
+
+      function readControlValues() {
+        const schoolYear = document.getElementById("schoolYear")
+        const quarter = document.getElementById("quarter")
+        const classFilter = document.getElementById("classFilter")
+        const studentFilter = document.getElementById("studentFilter")
+        const schoolFilter = document.getElementById("schoolFilter")
+        const customFrom = document.getElementById("customFrom")
+        const customTo = document.getElementById("customTo")
+        const searchInput = document.getElementById("searchInput")
+
+        if (schoolYear instanceof HTMLSelectElement) state.filters.schoolYear = normalizeText(schoolYear.value) || "all"
+        if (quarter instanceof HTMLSelectElement) state.filters.quarter = normalizeLower(quarter.value) || "q1"
+        if (classFilter instanceof HTMLSelectElement) state.filters.classKey = normalizeText(classFilter.value) || "all"
+        if (studentFilter instanceof HTMLSelectElement) state.filters.studentKey = normalizeText(studentFilter.value) || "all"
+        if (schoolFilter instanceof HTMLSelectElement) state.filters.schoolKey = normalizeText(schoolFilter.value) || "all"
+        if (customFrom instanceof HTMLInputElement) state.filters.customFrom = normalizeText(customFrom.value).slice(0, 10)
+        if (customTo instanceof HTMLInputElement) state.filters.customTo = normalizeText(customTo.value).slice(0, 10)
+        if (searchInput instanceof HTMLInputElement) state.filters.search = normalizeText(searchInput.value)
+      }
+
+      function bindControls() {
+        const controls = [
+          "schoolYear",
+          "quarter",
+          "classFilter",
+          "studentFilter",
+          "schoolFilter",
+          "customFrom",
+          "customTo",
+        ]
+
+        controls.forEach((id) => {
+          const el = document.getElementById(id)
+          if (!el) return
+          el.addEventListener("change", () => {
+            readControlValues()
+            applyFilterControlState()
+            renderTable()
+          })
+        })
+
+        const searchInput = document.getElementById("searchInput")
+        if (searchInput) {
+          searchInput.addEventListener("input", () => {
+            readControlValues()
+            renderTable()
+          })
+        }
+
+        document.querySelectorAll("[data-period]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.filters.period = normalizeLower(button.getAttribute("data-period")) || "week"
+            syncPeriodButtons()
+            applyFilterControlState()
+            renderTable()
+          })
+        })
+
+        const reloadBtn = document.getElementById("reloadBtn")
+        if (reloadBtn) {
+          reloadBtn.addEventListener("click", async () => {
+            try {
+              await bootstrapRows()
+            } catch (error) {
+              setStatus(normalizeText(error?.message) || "Reload failed.", true)
+            }
+          })
+        }
+      }
+
+      async function bootstrapRows() {
+        if (state.loading) return
+        state.loading = true
+        try {
+          await hydrateLetterGradeRanges()
+          await loadGradeRows()
+          refreshFilterOptionLists()
+          readControlValues()
+          syncPeriodButtons()
+          applyFilterControlState()
+          renderTable()
+          setStatus(`SIS load complete. ${state.allRows.length} grade rows ready.`)
+        } finally {
+          state.loading = false
+        }
+      }
+
+      async function init() {
+        if (!API_ORIGIN) {
+          setStatus("Missing API origin. Open with ?apiOrigin=http://127.0.0.1:8788", true)
+          return
+        }
+
+        bindControls()
+        syncPeriodButtons()
+        applyFilterControlState()
+
+        try {
+          await ensureAuthenticated()
+        } catch (error) {
+          if (error && error.status === 401) {
+            setStatus("Login required. Open /admin/students first, then return here.", true)
+            return
+          }
+          throw error
+        }
+
+        await bootstrapRows()
+      }
+
+      init().catch((error) => {
+        setStatus(normalizeText(error?.message) || "Failed to initialize tabulator page.", true)
+      })
+    })()
+  </script>
+</body>
+</html>

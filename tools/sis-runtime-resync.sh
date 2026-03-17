@@ -16,6 +16,8 @@ PINNED_MAILER_HOST="${PINNED_MAILER_HOST:-127.0.0.1}"
 PINNED_MAILER_PORT="${PINNED_MAILER_PORT:-8787}"
 PINNED_ADMIN_STORE_ENABLED="${PINNED_ADMIN_STORE_ENABLED:-true}"
 PINNED_STATIC_PREVIEW_ORIGIN="${PINNED_STATIC_PREVIEW_ORIGIN:-http://127.0.0.1:5500}"
+PINNED_RUNTIME_PRIMARY_ORIGIN="${PINNED_RUNTIME_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
+STRIP_STATIC_PREVIEW_ORIGIN="${STRIP_STATIC_PREVIEW_ORIGIN:-true}"
 
 usage() {
   cat <<'USAGE'
@@ -42,7 +44,8 @@ Sync contract (applied during sync):
   EXERCISE_MAILER_HOST=127.0.0.1
   EXERCISE_MAILER_PORT=8787
   STUDENT_ADMIN_STORE_ENABLED=true
-  EXERCISE_MAILER_ORIGIN includes http://127.0.0.1:5500
+  EXERCISE_MAILER_ORIGIN removes http://127.0.0.1:5500
+  EXERCISE_MAILER_ORIGIN includes https://admin.eagles.edu.vn
 
 Examples:
   ./tools/sis-runtime-resync.sh --check-only --scope html
@@ -158,6 +161,26 @@ process.stdout.write(ordered.join(","))
 EOF
 }
 
+remove_origin_from_list() {
+  local current_value="$1"
+  local remove_origin="$2"
+  CURRENT_VALUE="${current_value}" REMOVE_ORIGIN="${remove_origin}" node --input-type=module <<'EOF'
+const currentValue = String(process.env.CURRENT_VALUE || "")
+const removeOrigin = String(process.env.REMOVE_ORIGIN || "").trim()
+const ordered = []
+const seen = new Set()
+
+for (const entry of currentValue.split(",")) {
+  const normalized = String(entry || "").trim()
+  if (!normalized || normalized === removeOrigin || seen.has(normalized)) continue
+  seen.add(normalized)
+  ordered.push(normalized)
+}
+
+process.stdout.write(ordered.join(","))
+EOF
+}
+
 origin_list_contains() {
   local origin_list="$1"
   local expected_origin="$2"
@@ -201,8 +224,11 @@ collect_env_contract_drift() {
   if [[ -z "${mailer_origin}" ]]; then
     mailer_origin="$(read_env_value "${env_path}" "EXERCISE_MAILER_ORIGINS")"
   fi
-  if ! origin_list_contains "${mailer_origin}" "${PINNED_STATIC_PREVIEW_ORIGIN}"; then
-    record_drift "[runtime-env] EXERCISE_MAILER_ORIGIN missing ${PINNED_STATIC_PREVIEW_ORIGIN}"
+  if [[ "${STRIP_STATIC_PREVIEW_ORIGIN}" != "false" ]] && origin_list_contains "${mailer_origin}" "${PINNED_STATIC_PREVIEW_ORIGIN}"; then
+    record_drift "[runtime-env] EXERCISE_MAILER_ORIGIN contains dev-only origin ${PINNED_STATIC_PREVIEW_ORIGIN}"
+  fi
+  if [[ -n "${PINNED_RUNTIME_PRIMARY_ORIGIN}" ]] && ! origin_list_contains "${mailer_origin}" "${PINNED_RUNTIME_PRIMARY_ORIGIN}"; then
+    record_drift "[runtime-env] EXERCISE_MAILER_ORIGIN missing ${PINNED_RUNTIME_PRIMARY_ORIGIN}"
   fi
 }
 
@@ -218,16 +244,26 @@ sync_runtime_env_contract() {
   if [[ -z "${current_origin}" ]]; then
     current_origin="$(read_env_value "${env_path}" "EXERCISE_MAILER_ORIGINS")"
   fi
-  local merged_origin
-  merged_origin="$(merge_origin_list_with_required "${current_origin}" "${PINNED_STATIC_PREVIEW_ORIGIN}")"
+  local transformed_origin
+  transformed_origin="${current_origin}"
+  if [[ "${STRIP_STATIC_PREVIEW_ORIGIN}" != "false" ]]; then
+    transformed_origin="$(remove_origin_from_list "${transformed_origin}" "${PINNED_STATIC_PREVIEW_ORIGIN}")"
+  fi
+  if [[ -n "${PINNED_RUNTIME_PRIMARY_ORIGIN}" ]]; then
+    transformed_origin="$(merge_origin_list_with_required "${transformed_origin}" "${PINNED_RUNTIME_PRIMARY_ORIGIN}")"
+  fi
+  if [[ -z "${transformed_origin}" ]]; then
+    echo "Runtime env origin transform produced empty EXERCISE_MAILER_ORIGIN; set PINNED_RUNTIME_PRIMARY_ORIGIN before syncing." >&2
+    exit 1
+  fi
 
   upsert_env_value "${env_path}" "EXERCISE_MAILER_HOST" "${PINNED_MAILER_HOST}"
   upsert_env_value "${env_path}" "EXERCISE_MAILER_PORT" "${PINNED_MAILER_PORT}"
   upsert_env_value "${env_path}" "STUDENT_ADMIN_STORE_ENABLED" "${PINNED_ADMIN_STORE_ENABLED}"
-  upsert_env_value "${env_path}" "EXERCISE_MAILER_ORIGIN" "${merged_origin}"
+  upsert_env_value "${env_path}" "EXERCISE_MAILER_ORIGIN" "${transformed_origin}"
 
   echo "[sync] runtime env pinned: EXERCISE_MAILER_HOST=${PINNED_MAILER_HOST}, EXERCISE_MAILER_PORT=${PINNED_MAILER_PORT}, STUDENT_ADMIN_STORE_ENABLED=${PINNED_ADMIN_STORE_ENABLED}"
-  echo "[sync] runtime env origin: EXERCISE_MAILER_ORIGIN=${merged_origin}"
+  echo "[sync] runtime env origin: EXERCISE_MAILER_ORIGIN=${transformed_origin}"
 }
 
 DRIFT_FOUND=0

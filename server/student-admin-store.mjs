@@ -2089,14 +2089,8 @@ export function summarizeTodayAttendanceForDashboard({
     if (entry.absent) todayAbsences += 1
   })
 
-  const reportDate = new Date(asOfDate)
-  const shiftedReportDate = Number.isNaN(reportDate.valueOf()) ? null : shiftToFixedTimeZone(reportDate)
-  const dayOfWeek = shiftedReportDate instanceof Date ? shiftedReportDate.getUTCDay() : -1
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-  if (isWeekend) {
-    // Weekend dashboard should always reconcile to enrolled headcount.
-    todayAbsences = Math.max(0, enrollmentTotal - todayAttendanceCount)
-  }
+  void asOfDate
+  void enrollmentTotal
 
   return {
     todayAttendanceCount,

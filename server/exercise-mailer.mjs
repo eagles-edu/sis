@@ -4,13 +4,6 @@ import fs from "node:fs"
 import http from "node:http"
 import path from "node:path"
 import { URL, fileURLToPath } from "node:url"
-import { isExerciseStoreRequired, persistExerciseSubmission } from "./exercise-store.mjs"
-import { persistStudentIntakeSubmission } from "./student-intake-store.mjs"
-import {
-  getStudentAdminRuntimeStatus,
-  handleStudentAdminRequest,
-  setStudentAdminRuntimeHealthProvider,
-} from "./student-admin-routes.mjs"
 
 const require = createRequire(import.meta.url)
 const isDebugEnabled = () =>
@@ -61,6 +54,16 @@ function loadEnvironmentFile() {
 }
 
 loadEnvironmentFile()
+
+// Load SIS route/store modules after env hydration so their module-level config reads
+// the intended env file values instead of shell defaults.
+const { isExerciseStoreRequired, persistExerciseSubmission } = await import("./exercise-store.mjs")
+const { persistStudentIntakeSubmission } = await import("./student-intake-store.mjs")
+const {
+  getStudentAdminRuntimeStatus,
+  handleStudentAdminRequest,
+  setStudentAdminRuntimeHealthProvider,
+} = await import("./student-admin-routes.mjs")
 
 let nodemailer = null
 
@@ -369,11 +372,24 @@ function handleWebAssetStaticRequest(request, response, pathname) {
 
 function resolveLiveRuntimeRoots() {
   const configuredRoots = [
+    normalizeString(process.env.SIS_LIVE_ROOTS),
     normalizeString(process.env.SIS_LIVE_ROOT) || "/home/admin.eagles.edu.vn/sis",
-    normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT),
-    normalizeString(process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT),
-  ].filter(Boolean)
+  ]
+    .filter(Boolean)
+    .flatMap((entry) =>
+      String(entry)
+        .split(",")
+        .map((item) => normalizeString(item))
+        .filter(Boolean)
+    )
   return Array.from(new Set(configuredRoots.map((entry) => path.resolve(entry))))
+}
+
+function isPathWithinAnyRoot(candidatePath, roots = []) {
+  for (let i = 0; i < roots.length; i += 1) {
+    if (isPathWithinRoot(candidatePath, roots[i])) return true
+  }
+  return false
 }
 
 function assertRuntimeEnvironmentSeparation() {
@@ -469,6 +485,22 @@ function resolveRuntimeSelfHealConfig() {
   }
 
   const resolvedSourceRoot = path.resolve(sourceRoot)
+  const nodeEnv = normalizeString(process.env.NODE_ENV).toLowerCase()
+  const allowDevSelfHealLiveRoot = resolveBoolean(process.env.SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT, false)
+  if (nodeEnv === "development" && !allowDevSelfHealLiveRoot) {
+    const liveRoots = resolveLiveRuntimeRoots()
+    const touchesLiveRoot =
+      isPathWithinAnyRoot(resolvedSourceRoot, liveRoots) || isPathWithinAnyRoot(runtimeRoot, liveRoots)
+    if (touchesLiveRoot) {
+      return {
+        enabled: false,
+        reason: "blocked-live-root-in-dev",
+        sourceRoot: resolvedSourceRoot,
+        runtimeRoot,
+      }
+    }
+  }
+
   const sourceHtmlPath = path.join(resolvedSourceRoot, SELF_HEAL_RELATIVE_ADMIN_HTML)
   const runtimeHtmlPath = path.join(runtimeRoot, SELF_HEAL_RELATIVE_ADMIN_HTML)
 

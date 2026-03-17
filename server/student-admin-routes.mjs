@@ -330,6 +330,7 @@ const QUEUE_HUB_PANEL_IDS = [
   "current-assignments-pending",
   "overdue-homework",
   "attendance-risk",
+  "news-report-review",
   "pending-profile-submissions",
 ]
 const PARENT_PORTAL_MEMORY = {
@@ -4109,7 +4110,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
 async function buildQueueHubPayload() {
   assertStoreEnabled()
   const dashboard = await getAdminDashboardSummary()
-  const [parentQueue, incomingQueue, submissions] = await Promise.all([
+  const [parentQueue, incomingQueue, submissions, newsReviewQueue] = await Promise.all([
     listQueuedAnnouncements({
       queueType: NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
       includeSent: false,
@@ -4124,6 +4125,157 @@ async function buildQueueHubPayload() {
       statuses: [PARENT_PROFILE_QUEUE_STATUS_SUBMITTED],
       take: 20,
     }),
+    (async () => {
+      try {
+        const prisma = await getSharedPrismaClient()
+        const now = new Date()
+        const start = new Date(now)
+        start.setHours(0, 0, 0, 0)
+        start.setDate(start.getDate() - 180)
+        const rows = await prisma.studentNewsReport.findMany({
+          where: {
+            reportDate: {
+              gte: start,
+              lte: now,
+            },
+          },
+          orderBy: [{ submittedAt: "desc" }, { reportDate: "desc" }],
+          take: 500,
+          select: {
+            id: true,
+            studentRefId: true,
+            reportDate: true,
+            submittedAt: true,
+            reviewStatus: true,
+            articleTitle: true,
+            sourceLink: true,
+            student: {
+              select: {
+                id: true,
+                eaglesId: true,
+                studentNumber: true,
+                profile: {
+                  select: {
+                    fullName: true,
+                    englishName: true,
+                    currentGrade: true,
+                  },
+                },
+              },
+            },
+          },
+        })
+
+        const startOfNewsWeek = (value) => {
+          const parsed = parseIsoDateTime(value)
+          if (!parsed) return null
+          const shifted = shiftToFixedTimeZone(new Date(parsed.getTime()))
+          shifted.setUTCHours(0, 0, 0, 0)
+          const diffToMonday = (shifted.getUTCDay() + 6) % 7
+          shifted.setUTCDate(shifted.getUTCDate() - diffToMonday)
+          return shiftFromFixedTimeZone(shifted)
+        }
+        const endOfNewsWeek = (weekStartDate) => {
+          const startDate = weekStartDate instanceof Date ? weekStartDate : null
+          if (!startDate || Number.isNaN(startDate.valueOf())) return null
+          const shifted = shiftToFixedTimeZone(new Date(startDate.getTime()))
+          shifted.setUTCDate(shifted.getUTCDate() + 6)
+          return shiftFromFixedTimeZone(shifted)
+        }
+        const groupedByWeekSet = new Map()
+        rows.forEach((row) => {
+          const studentRefId = normalizeText(row?.studentRefId)
+          const student = row?.student && typeof row.student === "object" ? row.student : {}
+          const eaglesId = normalizeText(student?.eaglesId)
+          const weekStartDate = startOfNewsWeek(row?.reportDate)
+          const weekStart = toPortalDateKey(weekStartDate)
+          if (!weekStart) return
+          const weekEnd = toPortalDateKey(endOfNewsWeek(weekStartDate))
+          const key = `${studentRefId || eaglesId || normalizeText(row?.id)}:${weekStart}`
+          if (!key) return
+
+          const existing = groupedByWeekSet.get(key) || {
+            id: `news-week-set:${key}`,
+            studentRefId,
+            eaglesId,
+            studentNumber: Number.parseInt(String(student?.studentNumber || ""), 10) || null,
+            fullName: normalizeText(student?.profile?.fullName || student?.profile?.englishName),
+            englishName: normalizeText(student?.profile?.englishName),
+            level: normalizeText(student?.profile?.currentGrade),
+            weekStart,
+            weekEnd,
+            reportCount: 0,
+            submittedCount: 0,
+            approvedCount: 0,
+            revisionRequestedCount: 0,
+            latestReportId: "",
+            latestReportDate: "",
+            latestSubmittedAt: "",
+            latestReviewStatus: "",
+            latestArticleTitle: "",
+            latestSourceLink: "",
+            setStatus: "submitted",
+            _reportDates: new Set(),
+          }
+          const reportDateKey = toPortalDateKey(row?.reportDate)
+          if (reportDateKey) existing._reportDates.add(reportDateKey)
+          const status = normalizeLower(row?.reviewStatus)
+          if (status === "approved") existing.approvedCount += 1
+          else if (status === "revision-requested") existing.revisionRequestedCount += 1
+          else existing.submittedCount += 1
+
+          const submittedAtIso = row?.submittedAt?.toISOString?.() || ""
+          const latestSubmittedAtIso = normalizeText(existing.latestSubmittedAt)
+          if (!latestSubmittedAtIso || submittedAtIso > latestSubmittedAtIso) {
+            existing.latestReportId = normalizeText(row?.id)
+            existing.latestReportDate = row?.reportDate?.toISOString?.()?.slice?.(0, 10) || ""
+            existing.latestSubmittedAt = submittedAtIso
+            existing.latestReviewStatus = normalizeText(row?.reviewStatus)
+            existing.latestArticleTitle = normalizeText(row?.articleTitle)
+            existing.latestSourceLink = normalizeText(row?.sourceLink)
+          }
+          groupedByWeekSet.set(key, existing)
+        })
+
+        const weekSets = Array.from(groupedByWeekSet.values())
+          .map((entry) => {
+            const reportDates = entry?._reportDates instanceof Set ? entry._reportDates : new Set()
+            const reportCount = Math.max(0, reportDates.size)
+            const setStatus = reportCount < 7
+              ? "incomplete"
+              : entry?.revisionRequestedCount > 0
+              ? "revision-requested"
+              : reportCount >= 7 && entry?.approvedCount >= reportCount
+                ? "approved"
+                : "submitted"
+            const { _reportDates, ...safeEntry } = entry || {}
+            void _reportDates
+            return {
+              ...safeEntry,
+              reportCount,
+              setStatus,
+            }
+          })
+        const sortedItems = weekSets
+          .sort((left, right) => {
+            const byWeek = normalizeText(right?.weekStart).localeCompare(normalizeText(left?.weekStart))
+            if (byWeek !== 0) return byWeek
+            return normalizeText(right?.latestSubmittedAt).localeCompare(normalizeText(left?.latestSubmittedAt))
+          })
+        const items = sortedItems.slice(0, 200)
+
+        return {
+          total: sortedItems.length,
+          items,
+        }
+      } catch (error) {
+        void error
+        return {
+          total: 0,
+          items: [],
+        }
+      }
+    })(),
   ])
 
   let overdueItems = []
@@ -4210,6 +4362,12 @@ async function buildQueueHubPayload() {
         title: "At-Risk Attendance",
         total: Number.parseInt(String(dashboard?.attendanceRiskWeek?.total || 0), 10) || 0,
         items: Array.isArray(dashboard?.attendanceRiskWeek?.students) ? dashboard.attendanceRiskWeek.students : [],
+      },
+      {
+        id: "news-report-review",
+        title: "News Report Week Sets",
+        total: Number.parseInt(String(newsReviewQueue?.total || 0), 10) || 0,
+        items: Array.isArray(newsReviewQueue?.items) ? newsReviewQueue.items : [],
       },
       {
         id: "pending-profile-submissions",

@@ -7,6 +7,398 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-17 - Q-right matrix stats + global letter-grade mapping in school setup)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - matrix stat rows now compute `Mean`, `Median`, and `Mode` from exercise `# correct` values (Q-right), not score percent.
+  - stat row values now render as `x/n` where `n` is assignment question count.
+  - grade distribution now reads letter bands from global school setup mapping (`uiSettings.schoolSetup.letterGradeRanges`) with local/default fallback.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - School Setup now includes a persisted global letter-grade mapping editor:
+    - field: `#schoolSetupLetterGradeRanges`
+    - format: `LETTER:min-max` per line.
+  - school setup normalization now stores and reloads `schoolSetup.letterGradeRanges`.
+  - save/reset/preview flow includes this mapping alongside school year dates/profile branding.
+- Updated tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added HTML source-contract assertions for new school setup mapping field and Q-right stat logic hooks.
+    - extended persisted UI settings test to include `schoolSetup.letterGradeRanges`.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - extended school setup persistence/reset test to verify mapping save + reset behavior.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - `node --test --test-name-pattern "school setup profile fields persist and reset from saved values" test/student-admin-ui.spec.mjs` => pass.
+  - `npm test` => `264` pass, `0` fail.
+- Residual risk:
+  - grade-mapping parser intentionally enforces strict line format; partially typed rows show validation errors until corrected.
+- Prioritized next action:
+  - expose the same global letter-grade mapping to non-tabulator grade analytics and report-card exports for consistent banding across all admin views.
+
+## Update (2026-03-17 - school-year rollover utility with archive, purge, and inspect flows)
+
+- Added [tools/school-year-rollover.mjs](tools/school-year-rollover.mjs):
+  - new CLI with commands:
+    - `archive`: archives scoped school-year datasets and optionally purges them from active DB.
+    - `inspect`: lists archive runs and previews archived dataset rows.
+  - archive command contract:
+    - requires explicit `--school-year`, `--start-date`, `--end-date`.
+    - default mode is dry-run (count/scope only).
+    - `--apply` writes compressed archive files and purges matching rows from active tables.
+  - archive output:
+    - `backups/school-year-archive/<schoolYear>/<runId>/`
+    - per-dataset `*.ndjson.gz` files + `manifest.json`.
+  - rollover scope (default):
+    - `StudentAttendance` (by `schoolYear`)
+    - `StudentGradeRecord` (by `schoolYear`)
+    - `ParentClassReport` (by `schoolYear`)
+    - date-window scoped volatile domains:
+      - `ExerciseSubmission`
+      - `IncomingExerciseResult`
+      - `StudentNewsReport`
+      - `StudentPointsAdjustment`
+      - `AdminNotificationQueue`
+      - `ParentProfileSubmissionQueue`
+  - student identity data is preserved:
+    - utility does not purge `Student`, `StudentProfile`, or class-level identity records.
+  - archive reference support:
+    - writes `studentSnapshot.ndjson.gz` for referenced student identities so archived records remain human-resolvable after purge.
+- Added [test/school-year-rollover.spec.mjs](test/school-year-rollover.spec.mjs):
+  - validates school-year/date-range parsing and CLI argument handling.
+- Updated [package.json](package.json):
+  - added scripts:
+    - `db:rollover`
+    - `db:rollover:inspect`
+    - `db:rollover:help`
+- Updated [README.md](README.md):
+  - documented rollover dry-run/apply/inspect workflow with command examples.
+- Verification:
+  - baseline `npm test` before changes => `257` pass, `0` fail.
+  - `node --test test/school-year-rollover.spec.mjs` => `7` pass, `0` fail.
+  - `node tools/school-year-rollover.mjs inspect --json` => command healthy, returns empty run list on fresh archive root.
+- Residual risk:
+  - applying rollover uses direct purge after archive creation; operators should run a full DB backup immediately before any `--apply` run.
+- Prioritized next action:
+  - add an optional `restore` command targeting a separate archive database for full historical UI replay without rehydrating production tables.
+
+## Update (2026-03-17 - grade matrix keeps stats rows visible under exercise columns)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - disabled local pagination in matrix mode (`pagination: false`) so the summary rows stay directly under student rows in the same grid.
+  - preserves required summary rows per exercise column:
+    - `Mean`
+    - `Median`
+    - `Mode`
+    - `Class completion`
+    - `Grade distribution`
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended tabulator page source-contract test to assert:
+    - matrix pagination disabled (`pagination: false`)
+    - summary row labels (`Mean`, `Grade distribution`) remain present.
+- Verification:
+  - baseline `npm test` before this update => `257` pass, `0` fail.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - post-change `npm test` => `257` pass, `0` fail.
+  - Browser validation on `http://127.0.0.1:8788/web-asset/admin/grades-tabulator-dev.html`:
+    - `SYTD` view renders student rows followed by all five summary/stat rows in-order within the same table.
+- Residual risk:
+  - with pagination disabled, very large rosters will rely on table scroll performance in a single view.
+- Prioritized next action:
+  - if very large cohorts become slow, switch to server-side paging while rendering summary stats in a fixed footer panel to preserve constant visibility.
+
+## Update (2026-03-17 - reused dev runtime on :8788, aligned sis_dev schema, and fixed Tabulator SIS data hydration)
+
+- Reused already-running dev runtime on `http://127.0.0.1:8788` (no duplicate listener started).
+- Applied pending Prisma migrations to `sis_dev` after live->dev clone:
+  - `20260312191000_add_points_and_student_news_portal`
+  - `20260314025500_add_student_portal_account_model`
+  - `20260314134720_align_updatedat_defaults_and_indexes`
+  - `20260314202000_add_student_news_review_fields`
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - fixed roster grade-count hint resolution to support both payload shapes:
+    - `counts.gradeRecords` (current API)
+    - `_count.gradeRecords` (legacy shape)
+  - fixed student-detail mapping to support both response shapes:
+    - wrapped `{ student: ... }`
+    - direct student object payload.
+  - fixed Tabulator timing by gating `setGroupBy` and `replaceData` until `tableBuilt`, removing initialization warnings/errors.
+- Updated regression source contract in [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added assertions for:
+    - `counts?.gradeRecords` support
+    - direct student-object fallback path.
+- Verification:
+  - `npm test` baseline before edits => `257` pass, `0` fail.
+  - `npm run db:migrate:deploy` (with `.env.dev` `DATABASE_URL`) => 4 pending migrations applied successfully.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - Browser validation on `:8788`:
+    - login succeeds,
+    - `Grades Tabulator Dev` status reports `Loaded 48 rows from 48 SIS grade records`,
+    - `SYTD` view renders populated grouped rows,
+    - console clean (`0` warnings, `0` errors).
+- Residual risk:
+  - default period is `Week`; if no rows fall in the current week window, table can appear empty even when historical rows exist. Use `SYTD`/`Quarter`/`Archive` to inspect broader ranges.
+- Prioritized next action:
+  - add one browser regression test that toggles period from `Week` to `SYTD` and asserts non-zero rows when historical grade data exists.
+
+## Update (2026-03-17 - tabulator dev integration for SIS grades)
+
+- Added local Tabulator workspace source clone path:
+  - `dev/tabulatorz` (from `https://github.com/eagles-edu/tabulatorz.git`)
+- Added asset sync utility:
+  - [tools/sync-tabulatorz-assets.sh](tools/sync-tabulatorz-assets.sh)
+  - syncs `dev/tabulatorz/dist` minified assets into `web-asset/vendor/tabulatorz`.
+- Added new SIS-integrated dev page:
+  - [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html)
+  - mobile-first Tabulator grid with:
+    - period scopes: `Week`, `Quarter`, `QTD`, `SYTD`, `Archive`, `Custom`,
+    - grouping: `By Class`, `By Student`, `By School`,
+    - school year, quarter, class, student, school, custom date, and free-text filters.
+  - pulls authenticated SIS data from existing admin APIs:
+    - `GET /api/admin/auth/me`
+    - `GET /api/admin/students?take=1000`
+    - `GET /api/admin/students/:id`
+  - flattens student `gradeRecords` into table rows and renders with local pagination/group headers/score bars.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added direct launch link from `Grades data` page to the Tabulator dev view.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - added static-asset/page coverage for:
+    - `GET /web-asset/admin/grades-tabulator-dev.html`
+    - `GET /web-asset/vendor/tabulatorz/tabulator.min.js`
+    - `GET /web-asset/vendor/tabulatorz/tabulator.min.css`
+- Updated [.gitignore](.gitignore):
+  - ignored `dev/tabulatorz/` local clone path.
+- Verification:
+  - `tools/sync-tabulatorz-assets.sh` => synced `tabulator.min.js` and `tabulator.min.css` into `web-asset/vendor/tabulatorz`.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - `node --test --test-name-pattern "table sort controls and column-click headers reorder grade/performance data" test/student-admin-ui.spec.mjs` => `1` pass, `0` fail (`47` skipped by name pattern).
+  - `npm test` => `257` pass, `0` fail, `0` skip.
+- Residual risk:
+  - school-wide row loading currently uses detail fan-out (`/api/admin/students/:id` per student) and may feel slow for very large rosters.
+- Prioritized next action:
+  - add a dedicated aggregate grades API endpoint (`/api/admin/grades`) to replace per-student detail fan-out for Tabulator workloads.
+
+## Update (2026-03-16 - grades admin mobile-first pulse chart with week/quarter/QTD/SYTD/archive/custom views)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added a mobile-first `Grades Pulse` chart section in `Grades data` (`data-page="grades-data"`).
+  - added chart period controls:
+    - `Week`
+    - `Quarter`
+    - `QTD`
+    - `SYTD`
+    - `Archive` (past school years)
+    - `Custom` (manual date range)
+  - added chart grouping controls:
+    - `By Class`
+    - `By Student`
+    - `By School`
+  - added chart scope controls:
+    - quarter selector,
+    - school-year selector,
+    - custom date range.
+  - chart rendering is client-side and updates whenever grade rows are re-rendered, including sort/filter/search/archive table interactions.
+  - chart summary and lane cards now provide:
+    - row/lane counts,
+    - average score,
+    - trend,
+    - homework completion/on-time rates,
+    - per-lane sparkline pulse visualization.
+- Updated regression coverage in [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - extended `table sort controls and column-click headers reorder grade/performance data` to assert:
+    - chart controls render,
+    - student grouping renders expected lane label,
+    - custom date range narrows chart rows/lanes.
+- Verification:
+  - `node --test --test-name-pattern "table sort controls and column-click headers reorder grade/performance data" test/student-admin-ui.spec.mjs` => `1` pass, `0` fail (`47` skipped by name pattern).
+  - `npm test` => `254` pass, `0` fail, `0` skip.
+- Residual risk:
+  - chart aggregation is browser-side over loaded grade rows; very large grade datasets may impact client render latency.
+- Prioritized next action:
+  - add one browser-level visual regression for `grades-data` on narrow/mobile viewport to guard lane/card layout and period toggles.
+
+## Update (2026-03-16 - sync transform now enforces explicit live-origin contract)
+
+- Updated sync transform algorithm in:
+  - [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh)
+  - [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh)
+- Contract change:
+  - keeps runtime key pinning: `EXERCISE_MAILER_HOST`, `EXERCISE_MAILER_PORT`, `STUDENT_ADMIN_STORE_ENABLED`.
+  - `EXERCISE_MAILER_ORIGIN` transform now:
+    - removes dev-only preview origin `http://127.0.0.1:5500`,
+    - ensures live primary origin `https://admin.eagles.edu.vn`.
+  - transform now fails fast if origin transform would produce an empty origin list.
+- Operational rationale:
+  - keeps dev/static-preview allowances out of live runtime env,
+  - aligns with explicit `apiOrigin` portal policy and strict dev/live separation.
+- Verification:
+  - `bash -n tools/sis-runtime-resync.sh tools/deploy-api-safe.sh` => pass.
+  - `tools/sis-runtime-resync.sh --help` => shows updated sync contract text.
+  - `tools/deploy-api-safe.sh --help` => shows updated sync contract text.
+  - `tools/deploy-api-safe.sh --check-only` => drift now explicitly reports:
+    - runtime origin still contains dev preview origin,
+    - runtime origin missing `https://admin.eagles.edu.vn`.
+  - `tools/sis-runtime-resync.sh --check-only --runtime-root /home/admin.eagles.edu.vn/sis --scope html` => same origin drift signals.
+
+## Update (2026-03-16 - static preview now requires explicit API origin for all portals)
+
+- Enforced strict dev/live separation for static preview mode across all three portals.
+- Updated API-origin resolution:
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html)
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html)
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html)
+  - removed loopback auto-origin inference (`inferLocalPreviewApiOrigin` path) from each portal.
+  - removed admin `localStorage` API-origin persistence (`sis.admin.apiOrigin`) to prevent hidden cross-session origin carry-over.
+  - static preview now requires explicit API origin (`?apiOrigin=...` or injected runtime origin) before any API call.
+- Added hard runtime guard in each portal API client:
+  - all API calls now run `assertApiOriginConfiguredForStaticPreview()` first.
+  - this prevents accidental relative-path requests from static preview when `apiOrigin` is missing.
+- Updated regression coverage:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - added/updated tests to verify:
+      - static admin preview without `apiOrigin` is blocked with explicit guidance.
+      - static admin preview with explicit `apiOrigin` can authenticate.
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - added/updated tests to verify:
+      - static parent preview without `apiOrigin` is blocked with explicit guidance.
+      - static parent preview with explicit `apiOrigin` can authenticate.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - updated HTML source contract assertions to require explicit static-preview guard functions and reject inferred-origin function presence.
+- Verification:
+  - `node --test --test-name-pattern "static preview path over http requires explicit apiOrigin|static preview path over http supports login when apiOrigin is explicit" test/student-admin-ui.spec.mjs` => `2` pass, `0` fail.
+  - `node --test --test-name-pattern "parent portal static preview over http requires explicit apiOrigin|parent portal static preview over http uses explicit apiOrigin for login" test/parent-portal-ui.spec.mjs` => `2` pass, `0` fail.
+  - `node --test test/student-admin.spec.mjs` => `109` pass, `0` fail.
+  - `npm test` => `254` pass, `0` fail, `0` skip.
+
+## Update (2026-03-16 - pure-dev static-preview baseline aligned across all portals, superseded)
+
+- This same-day update was superseded by the stricter explicit-config policy above:
+  - [Update (2026-03-16 - static preview now requires explicit API origin for all portals)](#update-2026-03-16---static-preview-now-requires-explicit-api-origin-for-all-portals)
+
+## Update (2026-03-15 - student profile display view regrouped for data-centric readability)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added a display-only student snapshot strip above profile info tabs (`#profileInfoDataSummary`) to anchor familiar identity clusters first:
+    - student identity, class level, school, and primary/secondary contact chips.
+  - redesigned profile info cards into width-aware clusters:
+    - display view now uses 12-column spans based on profile field width and semantic priority.
+    - key identity/contact fields render with stronger emphasis (`data-priority="primary"`).
+  - improved section logic in read view:
+    - section groups now sort in a more familiar order per tab (profile/medical/covid/submission).
+    - populated fields are shown first.
+    - empty fields are moved into a collapsible block (`Show X empty fields`) per section to reduce visual noise while preserving full data visibility.
+  - edit form behavior remains unchanged; changes apply only to profile read/display mode.
+- Updated regression coverage:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - added test `profile info display emphasizes student summary and clusters empty fields`.
+    - verifies summary anchors, primary-priority field rendering, and collapsible empty-field grouping in display view.
+
+## Update (2026-03-15 - sortable student news week-set queue columns)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added sortable header bindings for News Reports week-set columns:
+    - `Week Set`, `Student`, `Level`, `Reports`, `Set Status`, `Latest Submission`.
+  - added `newsReview` sort state and `sortedNewsReviewWeekSets(...)` comparator path.
+  - wired table-header sort re-render for `newsReview` key through existing global sort handlers.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - added regression test:
+    - `news review week-set table headers sort all visible columns`.
+  - test asserts sortable header wiring and order changes across week set, reports, status, latest submission, and student columns.
+- Verification:
+  - `node --test --test-name-pattern "news review modal supports student-scoped navigation and modal review actions|news review queue includes incomplete student week sets and marks status|news review week-set table headers sort all visible columns|queue hub news panel opens news-reports viewer for clicked row" test/student-admin-ui.spec.mjs` => `4` pass, `0` fail (`42` skipped by name pattern).
+
+## Update (2026-03-15 - dashboard absences now reflect tracked attendance only)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - removed weekend-only enrollment reconciliation from `summarizeTodayAttendanceForDashboard(...)`.
+  - `today.absences` now always reflects explicitly tracked `absent` records for the selected day.
+  - this prevents synthetic absences from appearing when some students are not yet marked.
+- Updated [test/student-admin-dashboard-summary.spec.mjs](test/student-admin-dashboard-summary.spec.mjs):
+  - replaced weekend expectation from enrollment reconciliation to tracked-row behavior.
+- Verification:
+  - `node --test test/student-admin-dashboard-summary.spec.mjs` => pass.
+- Residual risk:
+  - dashboard now shows attendance completeness implicitly; unmarked students are no longer folded into `today.absences`.
+
+## Update (2026-03-15 - show incomplete student news week sets in review queue)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - removed strict `reportCount === 7` filtering from week-set rendering.
+  - added explicit `Incomplete` week-set status (`reportCount < 7`).
+  - updated news-review status controls to include `Incomplete` and default to `All`.
+  - updated summary and empty-state text to reflect complete + incomplete week sets.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - queue-hub week-set aggregation now keeps incomplete sets and marks them with `setStatus: "incomplete"`.
+  - queue-hub panel title updated to `News Report Week Sets`.
+- Updated regression coverage:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - added test: `news review queue includes incomplete student week sets and marks status`.
+    - updated queue-hub fixture title to match new contract.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - source-contract assertion now accepts the new queue-hub title and checks for `"incomplete"` status token.
+- Verification:
+  - `node --test --test-name-pattern "news review modal supports student-scoped navigation and modal review actions|news review queue includes incomplete student week sets and marks status|queue hub news panel opens news-reports viewer for clicked row" test/student-admin-ui.spec.mjs` => `3` pass, `0` fail.
+  - `node --test --test-name-pattern "queue hub source contract includes student-week news-set panel" test/student-admin.spec.mjs` => pass.
+
+## Update (2026-03-15 - admin favicon path stability for nested routes)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - changed favicon href from relative `./favicon.ico?=v2` to absolute `/web-asset/admin/favicon.ico?=v2`.
+  - this avoids browser requests to `/admin/favicon.ico` when loaded at nested admin paths (for example `/admin/students`), which previously returned 404.
+- Verification:
+  - `curl -I http://127.0.0.1:8788/web-asset/admin/favicon.ico` => `200 OK`.
+  - `node --test test/student-admin.spec.mjs` => `109` pass, `0` fail.
+- Residual risk:
+  - browsers with aggressive page caching may still hold the old HTML until a hard refresh.
+
+## Update (2026-03-15 - dev/prod self-heal separation guard + local UI restore)
+
+- Updated [server/exercise-mailer.mjs](server/exercise-mailer.mjs):
+  - narrowed live-root detection to explicit live-root env (`SIS_LIVE_ROOT` or `SIS_LIVE_ROOTS`) instead of self-heal roots.
+  - added development guard for runtime self-heal:
+    - when `NODE_ENV=development`, self-heal is now disabled with reason `blocked-live-root-in-dev` if source or runtime self-heal root resolves inside configured live roots.
+    - explicit override is required to bypass this guard: `SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT=true`.
+- Updated regression coverage:
+  - [test/exercise-mailer.spec.mjs](test/exercise-mailer.spec.mjs):
+    - added test: `runtime self-heal is blocked for live-root paths in development`.
+    - kept same-root and mismatch self-heal tests running in `NODE_ENV=development` to preserve expected dev behavior for non-live roots.
+- Restored [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) from pre-incident local snapshot and removed one server-injected runtime-config line that belongs only to response-time injection.
+- Verification:
+  - `node --test test/exercise-mailer.spec.mjs` => `18` pass, `0` fail.
+  - `node --test --test-name-pattern "news review modal supports student-scoped navigation and modal review actions" test/student-admin-ui.spec.mjs` => matching test pass.
+  - `npm test` => `249` pass, `0` fail, `0` skip.
+- Residual risk:
+  - enabling `SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT=true` in development can still permit cross-root syncing; keep this unset for normal dev workflows.
+- Prioritized next action:
+  - keep `SIS_RUNTIME_SELF_HEAL_ENABLED=false` in `.env.dev` unless there is a deliberate same-root dev use case.
+
+## Update (2026-03-15 - news-review week-set model and queue-hub week-set routing)
+
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - Queue Hub `news-report-review` now exposes `News Report Week Sets (7 Reports per Student Week)`.
+  - groups records by `student + weekStart` over a rolling lookback window and emits:
+    - `weekStart`, `weekEnd`, `reportCount`,
+    - `submittedCount`, `approvedCount`, `revisionRequestedCount`,
+    - `setStatus` plus latest-report metadata.
+  - filters panel items to complete week sets only (`reportCount === 7`).
+  - aligns panel item ids to week-set ids: `news-week-set:<studentToken>:<weekStart>`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - News Reports page now renders one row per complete student-week set (7 reports), not per individual report.
+  - row open action now opens the selected week set and the modal navigates within that set (`1 / 7`, `2 / 7`, etc.).
+  - Queue Hub news panel rows now open the corresponding week set in the News Reports modal.
+  - modal approve/revision actions remain available in-view and use the modal note field payload.
+- Updated regression coverage:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - asserts week-set row rendering and modal navigation across a 7-report week.
+    - asserts modal approve action payload includes modal review note.
+    - asserts Queue Hub week-set row opens the News Reports week-set viewer.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - source-contract test now guards week-set fields (`weekStart`, `weekEnd`, `reportCount`, `setStatus`) for Queue Hub news panel items.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs test/student-admin.spec.mjs` => `153` pass, `0` fail.
+- Residual risk:
+  - end-to-end browser coverage for click-open routing across all Queue Hub panel types is still partial.
+- Prioritized next action:
+  - add one browser-level regression that opens one row from each non-empty Queue Hub panel and validates the expected detail target.
+
 ## Update (2026-03-14 - hardened student-news review persistence to DB-native fields)
 
 - Updated [prisma/schema.prisma](prisma/schema.prisma):

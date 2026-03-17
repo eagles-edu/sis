@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="shortcut icon" href="../web-asset/student/favicon.ico">
+  <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
   <title>Student Portal</title>
 
   <style>
@@ -1586,22 +1586,12 @@
         return t(pathname || window.location.pathname).endsWith("/web-asset/student/student-portal.html");
       }
 
-      function inferLocalPreviewApiOrigin() {
-        if (!isStaticStudentPreviewPath(window.location.pathname)) return "";
-        const protocol = normalizeLower(window.location.protocol);
-        if (protocol !== "http:" && protocol !== "https:") return "";
-        if (!isLoopbackHostname(window.location.hostname)) return "";
-        const port = t(window.location.port);
-        if (!port || port === "8787" || port === "8788") return "";
-        return `${window.location.protocol}//${window.location.hostname}:8788`;
-      }
-
       function resolveStudentApiOrigin() {
         const params = new URLSearchParams(window.location.search || "");
         const queryOrigin = t(params.get("apiOrigin"));
         const injectedOrigin = t(window.__SIS_STUDENT_API_ORIGIN);
         const selectedOrigin = queryOrigin || injectedOrigin;
-        if (!selectedOrigin) return inferLocalPreviewApiOrigin();
+        if (!selectedOrigin) return "";
         try {
           return new URL(selectedOrigin, window.location.origin).origin;
         } catch (error) {
@@ -1628,19 +1618,12 @@
         return isStaticStudentPreviewPath(window.location.pathname);
       }
 
-      function requiresApiOriginForStaticPreview() {
-        const protocol = normalizeLower(window.location.protocol);
-        const origin = normalizeLower(window.location.origin);
-        return protocol === "file:" || !origin || origin === "null";
-      }
-
       function staticPreviewHelpMessage() {
         return "Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening /student/portal.";
       }
 
       function assertApiOriginConfiguredForStaticPreview() {
         if (!isStaticStudentPreviewMode() || STUDENT_API_ORIGIN) return;
-        if (!requiresApiOriginForStaticPreview()) return;
         const error = new Error(staticPreviewHelpMessage());
         error.status = 400;
         throw error;
@@ -2347,6 +2330,7 @@
       }
 
       async function api(path, options = {}) {
+        assertApiOriginConfiguredForStaticPreview();
         const init = {
           method: options.method || "GET",
           headers: {},

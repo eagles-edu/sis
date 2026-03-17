@@ -7,7 +7,7 @@
   <meta name="keywords" content="The Eagles Club, cổng thông tin, kết quả học tập của học sinh, dành cho phụ huynh>">
   <meta name="author" content="The Eagles American Club, Ltd.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="shortcut icon" href="../web-asset/student/favicon.ico">
+  <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
   <title>Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club</title>
   <style>
     :root {
@@ -1864,22 +1864,12 @@
       return normalizeText(pathname || window.location.pathname).endsWith("/web-asset/parent/parent-portal.html")
     }
 
-    function inferLocalPreviewApiOrigin() {
-      if (!isStaticParentPreviewPath(window.location.pathname)) return ""
-      const protocol = normalizeText(window.location.protocol).toLowerCase()
-      if (protocol !== "http:" && protocol !== "https:") return ""
-      if (!isLoopbackHostname(window.location.hostname)) return ""
-      const port = normalizeText(window.location.port)
-      if (!port || port === "8787") return ""
-      return `${window.location.protocol}//${window.location.hostname}:8787`
-    }
-
     function resolveParentApiOrigin() {
       const params = new URLSearchParams(window.location.search || "")
       const queryOrigin = normalizeText(params.get("apiOrigin"))
       const injectedOrigin = normalizeText(window.__SIS_PARENT_API_ORIGIN)
       const selectedOrigin = queryOrigin || injectedOrigin
-      if (!selectedOrigin) return inferLocalPreviewApiOrigin()
+      if (!selectedOrigin) return ""
       try {
         return new URL(selectedOrigin, window.location.origin).origin
       } catch (error) {
@@ -1900,6 +1890,21 @@
         void error
         return normalizedPath
       }
+    }
+
+    function isStaticParentPreviewMode() {
+      return isStaticParentPreviewPath(window.location.pathname)
+    }
+
+    function staticPreviewHelpMessage() {
+      return "Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening /parent/portal."
+    }
+
+    function assertApiOriginConfiguredForStaticPreview() {
+      if (!isStaticParentPreviewMode() || PARENT_API_ORIGIN) return
+      const error = new Error(staticPreviewHelpMessage())
+      error.status = 400
+      throw error
     }
 
     function escapeHtml(value) {
@@ -2129,6 +2134,7 @@
     }
 
     async function api(pathname, init = {}) {
+      assertApiOriginConfiguredForStaticPreview()
       const headers = {
         "content-type": "application/json",
         ...(init.headers || {}),
@@ -3182,11 +3188,12 @@
 
     async function bootstrap() {
       try {
+        assertApiOriginConfiguredForStaticPreview()
         await hydratePortal()
         document.getElementById("loginCard").classList.add("hidden")
         setActivePortalView("dashboard")
       } catch (error) {
-        void error
+        setStatus(error?.message || "Unable to initialize parent portal.", "err")
         updateSessionBadge("Chưa đăng nhập", false)
         document.getElementById("portalCard").classList.add("hidden")
         document.getElementById("portalDetailCard").classList.add("hidden")

@@ -38,7 +38,7 @@ function buildTodayRows({ present = 0, absent = 0 } = {}) {
   return rows
 }
 
-test("summarizeTodayAttendanceForDashboard reconciles weekend attendance to enrolled headcount", () => {
+test("summarizeTodayAttendanceForDashboard keeps weekend absences tied to tracked rows", () => {
   const profileByStudentRefId = buildProfileMap(126)
   const rows = buildTodayRows({ present: 17, absent: 21 })
 
@@ -50,8 +50,8 @@ test("summarizeTodayAttendanceForDashboard reconciles weekend attendance to enro
   })
 
   assert.equal(result.todayAttendanceCount, 17)
-  assert.equal(result.todayAbsences, 109)
-  assert.equal(result.totalTodayTracked, 126)
+  assert.equal(result.todayAbsences, 21)
+  assert.equal(result.totalTodayTracked, 38)
   assert.equal(result.tardy10PlusCount, 2)
   assert.equal(result.tardy30PlusCount, 1)
   assert.equal(result.attendanceByLevel.get("A1 Movers"), 17)

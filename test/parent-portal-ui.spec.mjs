@@ -102,7 +102,41 @@ async function createParentPortalDom(fetchHandler, url) {
   return dom
 }
 
-test("parent portal static preview over http uses local mailer origin for login", async () => {
+test("parent portal static preview over http requires explicit apiOrigin", async () => {
+  const calls = []
+
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      calls.push(`${method} ${urlText}`)
+      return jsonTextResponse(200, {})
+    },
+    "http://127.0.0.1:5500/web-asset/parent/parent-portal.html"
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.match(document.getElementById("loginStatus").textContent || "", /Static preview mode requires \?apiOrigin=/i)
+  })
+
+  document.getElementById("parentsId").value = "cmkramer001"
+  document.getElementById("parentPassword").value = "family-pass-123"
+  document.getElementById("loginForm").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }))
+
+  await waitFor(() => {
+    assert.match(document.getElementById("loginStatus").textContent || "", /Static preview mode requires \?apiOrigin=/i)
+  })
+
+  assert.ok(!calls.some((entry) => entry.includes("/api/parent/auth/login")))
+  assert.equal(document.getElementById("loginCard").classList.contains("hidden"), false)
+  assert.equal(document.getElementById("portalCard").classList.contains("hidden"), true)
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("parent portal static preview over http uses explicit apiOrigin for login", async () => {
   const calls = []
   let authenticated = false
 
@@ -177,7 +211,7 @@ test("parent portal static preview over http uses local mailer origin for login"
 
       return jsonTextResponse(404, { error: "Not found" })
     },
-    "http://127.0.0.1:5500/web-asset/parent/parent-portal.html"
+    "http://127.0.0.1:5500/web-asset/parent/parent-portal.html?apiOrigin=http://127.0.0.1:8788"
   )
 
   const document = dom.window.document
@@ -186,7 +220,7 @@ test("parent portal static preview over http uses local mailer origin for login"
   document.getElementById("loginForm").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
-    assert.ok(calls.includes("POST http://127.0.0.1:8787/api/parent/auth/login"))
+    assert.ok(calls.includes("POST http://127.0.0.1:8788/api/parent/auth/login"))
   })
 
   assert.ok(!calls.includes("POST /api/parent/auth/login"))

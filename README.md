@@ -84,7 +84,7 @@ npm run dev
 - `ffs-sis-root --batch` now applies sync-time separation defaults:
   - ensures `/home/eagles/dockerz/sis/.env.dev` has dev-safe values.
   - ensures live non-secret runtime keys stay pinned (`EXERCISE_MAILER_HOST`, `EXERCISE_MAILER_PORT`, `STUDENT_ADMIN_STORE_ENABLED`).
-  - ensures `EXERCISE_MAILER_ORIGIN` includes local static preview origin `http://127.0.0.1:5500`.
+  - transforms live `EXERCISE_MAILER_ORIGIN` by removing dev-only preview origin `http://127.0.0.1:5500` and ensuring live portal origin (default `https://admin.eagles.edu.vn`).
   - prints current dev/live port values after sync.
 - `ffs-sis-public-root --batch` prints dev/live port values after sync for quick verification.
 - `tools/deploy-api-safe.sh` and `tools/sis-runtime-resync.sh` apply the same runtime env pinning contract during sync.
@@ -439,7 +439,45 @@ npm test
 npm run db:migrate:deploy
 npm run db:backup
 npm run db:restore:verify
+npm run db:rollover:help
 ```
+
+## School-Year Rollover
+
+Use rollover to archive and purge old operational year data (grades, attendance, year-window volatile queues) while keeping student identity/class data in place.
+
+1. Run a dry-run first to inspect scope and row counts.
+2. Run `--apply` only after validating date window and school year.
+3. Use inspect mode to view archived rows after purge.
+
+```bash
+# dry-run (no writes)
+npm run db:rollover -- \
+  --school-year 2025-2026 \
+  --start-date 2025-02-10 \
+  --end-date 2026-02-01
+
+# archive + purge active DB rows for that year window
+npm run db:rollover -- \
+  --school-year 2025-2026 \
+  --start-date 2025-02-10 \
+  --end-date 2026-02-01 \
+  --apply
+
+# list archived runs
+npm run db:rollover:inspect -- --school-year 2025-2026
+
+# preview archived grade rows
+npm run db:rollover:inspect -- \
+  --school-year 2025-2026 \
+  --dataset studentGradeRecord \
+  --limit 40
+```
+
+Archive output path:
+
+- `backups/school-year-archive/<schoolYear>/<runId>/`
+- contains per-dataset `*.ndjson.gz` files plus `manifest.json`.
 
 ## Primary Entry Files
 
