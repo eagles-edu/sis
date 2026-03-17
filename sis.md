@@ -7,6 +7,87 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-18 - grade distribution mini chart + hover-detail modal in tabulator matrix)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - `Grade distribution` stat cells now render as mini line-chart buttons (sparkline) per assignment column.
+  - clicking a mini chart opens a modal with a detailed labeled line chart.
+  - modal chart points now expose count and percentage on hover/focus (values marked directly in tooltip).
+  - removed `N/A` bucket from distribution labels/series so charts show only configured letter bands.
+  - distribution payload is now stored as structured data (`entries`, `totalCount`, assignment/due metadata) instead of plain text-only rendering.
+  - added modal close controls (close button, backdrop click, `Escape`) and scroll-lock while modal is open.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended static source-contract assertions for distribution modal/chart hooks and chart renderer functions.
+- Verification:
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - `npm test` => `264` pass, `0` fail.
+  - Playwright authenticated verification on `http://127.0.0.1:8788/web-asset/admin/grades-tabulator-dev.html` confirmed:
+    - mini chart present in distribution stat cells,
+    - modal opens from cell interaction,
+    - hover tooltip displays labeled values (example: `A: 31 (52%)`).
+- Residual risk:
+  - very narrow columns can make the mini chart dense; detailed inspection is intended via modal interaction.
+- Prioritized next action:
+  - add a dedicated Playwright regression that clicks a distribution mini chart and asserts modal hover tooltip text.
+
+## Update (2026-03-18 - grades tabulator header symmetry + resilient assignment-column restore)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - moved sortable arrow into a dedicated bottom row under assignment header content and centered alignment.
+  - centered assignment menu trigger row above header card content for visual symmetry.
+  - hardened table schema/layout restore flow so assignment columns are re-applied when exercise data exists.
+  - rejected invalid persisted layout restores that would hide all assignment columns when exercises are present.
+  - reset-columns action now clears persisted state without immediately re-saving stale/broken layout.
+- Verification:
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - `npm test` => `264` pass, `0` fail.
+  - Playwright authenticated check on `http://127.0.0.1:8788/web-asset/admin/grades-tabulator-dev.html`:
+    - table now resolves to `15` live columns (`10` assignment columns) in desktop mode.
+    - assignment header geometry checks:
+      - sorter below header card: true
+      - menu row above header card: true
+      - centered deltas about `0.5px` for sorter/title/menu.
+- Residual risk:
+  - if users intentionally hide every assignment column, the runtime fallback can repopulate assignment columns when exercise data is present.
+- Prioritized next action:
+  - add a focused Playwright regression asserting assignment-column count and header/sorter geometry on desktop after reload/reset.
+
+## Update (2026-03-17 - Tabulator header-density redesign + responsive collapse UX in grades dev matrix)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - redesigned assignment header cards so the header content now fills the full header container height (no half-height header block).
+  - preserved visible `Q` and `Due` sublines while keeping title truncation + full-title hover tooltip behavior.
+  - retained MEGS title token removal from visible header text and strengthened subtle MEGS tan highlight styling.
+  - added grid toolbar actions:
+    - `Dense rows: On/Off` toggle
+    - `Reset columns`
+  - added Tabulator feature upgrades:
+    - row-level responsive collapse toggle column (`rowHeader` + `responsiveCollapse` formatter)
+    - custom responsive collapse detail renderer (`responsiveLayoutCollapseFormatter`) with labeled field/value cards
+    - assignment header menu actions (`pin/unpin`, `hide`, `show all exercise columns`)
+    - centralized `columnDefaults` and bottom-aligned header vertical alignment.
+  - improved mobile/tablet handling:
+    - responsive priorities for core identity columns vs exercise columns
+    - compact collapse-card layout at narrow widths
+    - centered top-stack controls retained with max-width shell.
+- Verification:
+  - baseline before edits: `npm test` => `264` pass, `0` fail.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - Playwright authenticated live verification on `http://127.0.0.1:8788/web-asset/admin/grades-tabulator-dev.html`:
+    - page loaded real SIS data (`600` grade rows, `60` students, `10` exercise columns).
+    - assignment header card fill ratio now about `0.93` of the full header container.
+    - visible header sublines confirmed (`Q: ...`, `Due: ...`) with full-title tooltip still present.
+- Residual risk:
+  - scripted browser verification depends on valid admin credentials in `.env.dev`.
+- Prioritized next action:
+  - add an authenticated Playwright UI regression that loads real SIS rows and snapshots header density + mobile collapse rows across desktop and phone breakpoints.
+
 ## Update (2026-03-17 - Q-right matrix stats + global letter-grade mapping in school setup)
 
 - Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):

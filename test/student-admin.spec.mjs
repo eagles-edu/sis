@@ -557,6 +557,10 @@ test("GET /web-asset/admin/grades-tabulator-dev.html returns tabulator dev page"
   assert.match(html, /schoolSetup\?\.letterGradeRanges/)
   assert.match(html, /studentDisplay:\s*"Mean"/)
   assert.match(html, /studentDisplay:\s*"Grade distribution"/)
+  assert.match(html, /id="distributionModal"/)
+  assert.match(html, /id="distributionModalChart"/)
+  assert.match(html, /function renderDistributionMiniCell\(/)
+  assert.match(html, /function openDistributionModal\(/)
   assert.match(html, /vendor\/tabulatorz\/tabulator\.min\.js/i)
 })
 

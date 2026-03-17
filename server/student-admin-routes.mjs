@@ -1552,7 +1552,7 @@ function parseBody(request) {
         resolve({})
         return
       }
-      let raw = ""
+      let raw
       try {
         raw = decodeUtf8BufferStrict(Buffer.concat(chunks), "Request payload")
       } catch (error) {
@@ -4278,7 +4278,7 @@ async function buildQueueHubPayload() {
     })(),
   ])
 
-  let overdueItems = []
+  let overdueItems
   try {
     const prisma = await getSharedPrismaClient()
     overdueItems = await prisma.studentGradeRecord.findMany({

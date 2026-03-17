@@ -48,15 +48,16 @@
     "sis",
     "student",
     "admin",
-    "education"
+    "english language education",
+    "school",
+    "student information system"
   ],
-  "author": "Eagles Education",
-  "license": "ISC",
+  "author": "The Eagles American English Club, Ltd.",
+  "license": "Copyright © 2026 | The Eagles American English Club, Ltd. | All rights reserved",
   "bugs": {},
   "homepage": "",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "@redocly/cli": "^2.22.1",
     "@types/node": "^20.19.35",
     "dependency-cruiser": "^17.3.9",
@@ -71,7 +72,7 @@
     "postcss-html": "^1.8.1",
     "prettier": "^3.8.1",
     "prisma": "^7.5.0",
-    "stylelint": "^16.24.0",
+    "stylelint": "^17.0.0",
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {

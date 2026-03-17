@@ -61,7 +61,7 @@ async function measureGeometry(page, url, selectors) {
   await page.goto(url, { waitUntil: "domcontentloaded" });
   return await page.evaluate((input) => {
     const readRect = (selector) => {
-      const node = document.querySelector(selector);
+      const node = globalThis.document.querySelector(selector);
       if (!node) return null;
       const rect = node.getBoundingClientRect();
       return {
@@ -72,7 +72,7 @@ async function measureGeometry(page, url, selectors) {
       };
     };
     return {
-      viewport: { w: window.innerWidth, h: window.innerHeight },
+      viewport: { w: globalThis.window.innerWidth, h: globalThis.window.innerHeight },
       menu: readRect(input.menu),
       header: readRect(input.header),
       logo: readRect(input.logo),
@@ -86,7 +86,7 @@ async function measureMenuState(page, url, selectors) {
   await page.waitForTimeout(240);
   return await page.evaluate((input) => {
     const readRect = (selector) => {
-      const node = document.querySelector(selector);
+      const node = globalThis.document.querySelector(selector);
       if (!node) return null;
       const rect = node.getBoundingClientRect();
       return {
@@ -96,15 +96,15 @@ async function measureMenuState(page, url, selectors) {
         h: Math.round(rect.height),
       };
     };
-    const overlay = document.querySelector(input.overlay);
-    const overlayStyle = overlay ? window.getComputedStyle(overlay) : null;
+    const overlay = globalThis.document.querySelector(input.overlay);
+    const overlayStyle = overlay ? globalThis.window.getComputedStyle(overlay) : null;
     return {
-      viewport: { w: window.innerWidth, h: window.innerHeight },
+      viewport: { w: globalThis.window.innerWidth, h: globalThis.window.innerHeight },
       nav: readRect(input.nav),
       overlay: readRect(input.overlay),
       overlayOpacity: overlayStyle ? overlayStyle.opacity : "",
       overlayBg: overlayStyle ? overlayStyle.backgroundColor : "",
-      menuOpen: document.body.classList.contains("menu-open"),
+      menuOpen: globalThis.document.body.classList.contains("menu-open"),
     };
   }, selectors);
 }

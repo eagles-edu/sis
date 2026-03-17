@@ -75,7 +75,7 @@ test("SMTP relay mode starts without SMTP auth credentials", async () => {
     stdio: ["ignore", "pipe", "pipe"],
   })
 
-  let port = 0
+  let port
   try {
     port = await waitForPortAnnouncement(child)
     const response = await fetch(`http://127.0.0.1:${port}/healthz`)

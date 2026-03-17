@@ -888,7 +888,7 @@ export function decodeParentReportCommentBundle(value = "") {
   const markerMatch = rawText.match(PARENT_REPORT_RUBRIC_MARKER_RE)
   if (!markerMatch?.[1]) return { comment: normalizeNullableText(rawText), rubricPayload: null }
 
-  let rubricPayload = null
+  let rubricPayload
   try {
     const decodedJson = Buffer.from(markerMatch[1], "base64url").toString("utf8")
     const parsedPayload = JSON.parse(decodedJson)
@@ -3094,7 +3094,7 @@ function sortStudentPointsRows(rows = [], sortField = "totalPoints", sortDir = "
   const direction = normalizeStudentPointsSortDir(sortDir) === "asc" ? 1 : -1
   const field = normalizeStudentPointsSortField(sortField)
   source.sort((left, right) => {
-    let compare = 0
+    let compare
     if (field === "studentNumber") {
       compare = (normalizeInteger(left?.studentNumber) || 0) - (normalizeInteger(right?.studentNumber) || 0)
     } else if (field === "eaglesId") {
@@ -3903,7 +3903,7 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
     startDate: toLocalIsoDate(reportStart),
     endDate: toLocalIsoDate(reportEnd),
   }
-  let reports = []
+  let reports
   if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findMany")) {
     try {
       reports = await prisma.studentNewsReport.findMany({

@@ -373,14 +373,14 @@ test(
       await page.click('#loginForm button[type="submit"]');
 
       await page.waitForFunction(() => {
-        const appPanel = document.getElementById("appPanel");
-        const homeCard = document.getElementById("studentHomeCard");
+        const appPanel = globalThis.document.getElementById("appPanel");
+        const homeCard = globalThis.document.getElementById("studentHomeCard");
         return Boolean(appPanel && !appPanel.classList.contains("hidden") && homeCard && !homeCard.classList.contains("hidden"));
       });
 
       await page.waitForFunction(() => {
-        const badge = document.getElementById("snapshotBadge");
-        const studentNumber = document.getElementById("studentNumberValue");
+        const badge = globalThis.document.getElementById("snapshotBadge");
+        const studentNumber = globalThis.document.getElementById("studentNumberValue");
         return Boolean(
           badge &&
           badge.textContent &&
@@ -393,12 +393,12 @@ test(
 
       const homeState = await page.evaluate(() => {
         return {
-          overviewPanel: Boolean(document.getElementById("overviewPanel")),
-          snapshotBadge: document.getElementById("snapshotBadge")?.textContent || "",
-          portalStatus: document.getElementById("portalStatus")?.textContent || "",
-          studentNumber: document.getElementById("studentNumberValue")?.textContent || "",
-          metricLabels: Array.from(document.querySelectorAll("#dashboardMetrics .metric .k")).map((node) => node.textContent || ""),
-          identityHeadAscii: (document.querySelector("#identityPanel .section-head h3")?.textContent || "")
+          overviewPanel: Boolean(globalThis.document.getElementById("overviewPanel")),
+          snapshotBadge: globalThis.document.getElementById("snapshotBadge")?.textContent || "",
+          portalStatus: globalThis.document.getElementById("portalStatus")?.textContent || "",
+          studentNumber: globalThis.document.getElementById("studentNumberValue")?.textContent || "",
+          metricLabels: Array.from(globalThis.document.querySelectorAll("#dashboardMetrics .metric .k")).map((node) => node.textContent || ""),
+          identityHeadAscii: (globalThis.document.querySelector("#identityPanel .section-head h3")?.textContent || "")
             .normalize("NFD")
             .replace(/[đĐ]/g, (char) => (char === "Đ" ? "D" : "d"))
             .replace(/[\u0300-\u036f]/g, ""),
@@ -413,39 +413,39 @@ test(
       assert(homeState.metricLabels.includes("Absent SYTD"));
 
       await page.evaluate(() => {
-        document.querySelector('a[data-page-target="current-homework"]')?.click();
+        globalThis.document.querySelector('a[data-page-target="current-homework"]')?.click();
       });
       await page.waitForFunction(() => {
-        const detailCard = document.getElementById("studentDetailPageCard");
+        const detailCard = globalThis.document.getElementById("studentDetailPageCard");
         return Boolean(
           detailCard &&
           !detailCard.classList.contains("hidden") &&
-          /Current Homework/i.test(document.getElementById("studentDetailTitle")?.textContent || "") &&
-          /Essay Draft/i.test(document.getElementById("studentDetailPrimaryList")?.textContent || "") &&
-          /Essay Draft/i.test(document.getElementById("studentDetailCalendarGrid")?.textContent || "")
+          /Current Homework/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "") &&
+          /Essay Draft/i.test(globalThis.document.getElementById("studentDetailPrimaryList")?.textContent || "") &&
+          /Essay Draft/i.test(globalThis.document.getElementById("studentDetailCalendarGrid")?.textContent || "")
         );
       });
 
       await page.evaluate(() => {
-        document.querySelector('a[data-page-target="home"]')?.click();
+        globalThis.document.querySelector('a[data-page-target="home"]')?.click();
       });
       await page.click("#openNewsPageBtn");
       await page.waitForFunction(() => {
-        const newsCard = document.getElementById("newsPageCard");
+        const newsCard = globalThis.document.getElementById("newsPageCard");
         return Boolean(newsCard && !newsCard.classList.contains("hidden"));
       });
 
       await page.waitForFunction(() => {
         return Boolean(
-          document.querySelector("#calendarGrid.fc") &&
-          document.querySelector("#calendarGrid .fc-obtrusive-alert") &&
-          document.querySelector("#calendarGrid .fc-daygrid-day.calendar-day-alert") &&
-          document.querySelectorAll("#calendarGrid .fc-event").length >= 5
+          globalThis.document.querySelector("#calendarGrid.fc") &&
+          globalThis.document.querySelector("#calendarGrid .fc-obtrusive-alert") &&
+          globalThis.document.querySelector("#calendarGrid .fc-daygrid-day.calendar-day-alert") &&
+          globalThis.document.querySelectorAll("#calendarGrid .fc-event").length >= 5
         );
       });
 
       const calendarState = await page.evaluate(() => {
-        const grid = document.getElementById("calendarGrid");
+        const grid = globalThis.document.getElementById("calendarGrid");
         const eventTitles = Array.from(grid?.querySelectorAll(".fc-event") || []).map((node) =>
           node.getAttribute("title") || node.textContent || ""
         );
@@ -456,17 +456,17 @@ test(
         const openNewsEvent = Array.from(grid?.querySelectorAll(".fc-event") || []).find((node) =>
           /News report window open/i.test(node.getAttribute("title") || node.textContent || "")
         );
-        const alertStyle = alertEvent ? window.getComputedStyle(alertEvent) : null;
-        const missedNewsStyle = missedNewsEvent ? window.getComputedStyle(missedNewsEvent) : null;
-        const openNewsStyle = openNewsEvent ? window.getComputedStyle(openNewsEvent) : null;
+        const alertStyle = alertEvent ? globalThis.window.getComputedStyle(alertEvent) : null;
+        const missedNewsStyle = missedNewsEvent ? globalThis.window.getComputedStyle(missedNewsEvent) : null;
+        const openNewsStyle = openNewsEvent ? globalThis.window.getComputedStyle(openNewsEvent) : null;
         const alertDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-11"]');
         const completedDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-12"]');
         const openDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-13"]');
-        const alertDayStyle = alertDay ? window.getComputedStyle(alertDay) : null;
+        const alertDayStyle = alertDay ? globalThis.window.getComputedStyle(alertDay) : null;
         return {
           rendered: Boolean(grid?.classList.contains("fc") && grid?.querySelector(".fc-toolbar")),
-          toolbarButtons: Array.from(document.querySelectorAll(".fc-button")).map((node) => node.textContent || ""),
-          calendarTitle: document.getElementById("calendarTitle")?.textContent || "",
+          toolbarButtons: Array.from(globalThis.document.querySelectorAll(".fc-button")).map((node) => node.textContent || ""),
+          calendarTitle: globalThis.document.getElementById("calendarTitle")?.textContent || "",
           eventTitles,
           dotEventCount: grid?.querySelectorAll(".fc-daygrid-dot-event, .fc-daygrid-event-dot")?.length || 0,
           alertAnimationName: alertStyle?.animationName || "",

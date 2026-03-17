@@ -234,7 +234,7 @@ async function acquireLock(lockPath, staleMinutes) {
       return handle
     }
 
-    throw new Error(`Backup lock already exists at ${lockPath}`)
+    throw new Error(`Backup lock already exists at ${lockPath}`, { cause: error })
   }
 }
 

@@ -26,7 +26,7 @@ function resolveDefaultEnvFilePath() {
 }
 
 function loadEnvironmentFile() {
-  let dotenv = null
+  let dotenv
   try {
     const mod = require("dotenv")
     dotenv = mod?.default || mod
@@ -254,7 +254,7 @@ function resolveScopedStaticFilePath(pathname, urlPrefix, publicRoot) {
   let relativePath = normalizedPathname.slice(urlPrefix.length)
   if (relativePath.startsWith("/")) relativePath = relativePath.slice(1)
 
-  let decodedPath = ""
+  let decodedPath
   try {
     decodedPath = decodeURIComponent(relativePath)
   } catch (error) {
@@ -279,7 +279,7 @@ function trySendStaticFile(request, response, filePath) {
   if (!filePath || !fs.existsSync(filePath)) return false
 
   let targetPath = filePath
-  let stat = null
+  let stat
   try {
     stat = fs.statSync(targetPath)
   } catch (error) {
@@ -671,7 +671,7 @@ function fromCodePointSafe(code) {
 
 function decodeCodePoints(value) {
   if (value === undefined || value === null) return ""
-  let list = []
+  let list
   if (Array.isArray(value)) list = value.slice()
   else if (typeof value === "string") list = value.split(/[^0-9]+/g)
   else list = [value]

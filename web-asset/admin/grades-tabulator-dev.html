@@ -24,21 +24,29 @@
     }
 
     body {
-      margin: 0;
-      min-height: 100vh;
       background: linear-gradient(180deg, #f9fbff 0%, var(--bg) 38%, #eef3f9 100%);
       color: var(--ink);
-      font-family: "Segoe UI", "Noto Sans", sans-serif;
+      font-family: "Manrope", "Avenir Next", "Segoe UI", "Noto Sans", sans-serif;
       line-height: 1.4;
-    }
+      margin: 0;
+      min-height: 100vh;
+  }
 
     .page-shell {
-      width: min(1200px, 100%);
-      margin: 0 auto;
-      padding: 0.85rem;
+      box-sizing: border-box;
       display: grid;
       gap: 0.75rem;
-    }
+      margin: 0 auto;
+      padding: 0.85rem;
+      width: min(1420px, 100%);
+  }
+
+    .top-stack {
+      display: grid;
+      gap: 0.75rem;
+      margin: 0 auto;
+      width: min(1040px, 100%);
+  }
 
     .hero,
     .control-card,
@@ -46,369 +54,934 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 0.8rem;
       box-shadow: 0 8px 22px rgb(17 38 63 / 8%);
-    }
+      padding: 0.8rem;
+  }
+
+    .grid-card {
+
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 96%) 0%, rgb(248 251 255 / 96%) 100%),
+        #fff;
+  }
 
     .hero h1 {
-      margin: 0;
       font-size: 1.15rem;
-    }
+      margin: 0;
+  }
 
     .hero p {
-      margin: 0.25rem 0 0;
       color: var(--ink-soft);
       font-size: 0.9rem;
-    }
+      margin: 0.25rem 0 0;
+  }
 
     .hero-actions {
-      margin-top: 0.65rem;
+      align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      align-items: center;
-    }
+      margin-top: 0.65rem;
+  }
 
     .btn,
     .chip-link {
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: #fff;
-      color: var(--ink);
-      font: inherit;
-      text-decoration: none;
-      display: inline-flex;
       align-items: center;
-      justify-content: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      box-sizing: border-box;
+      color: var(--ink);
       cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      justify-content: center;
       min-height: 2rem;
       padding: 0.3rem 0.8rem;
-      box-sizing: border-box;
-    }
+      text-decoration: none;
+  }
 
     .btn.primary {
-      border-color: #0a4ea5;
       background: var(--accent);
+      border-color: #0a4ea5;
       color: #fff;
-    }
+  }
+
+    .btn.subtle {
+      background: #f5f9ff;
+      border-color: #bed1ea;
+      color: #14385e;
+      font-weight: 600;
+  }
 
     .status {
-      margin: 0.55rem 0 0;
-      font-size: 0.85rem;
       color: var(--ink-soft);
+      font-size: 0.85rem;
+      margin: 0.55rem 0 0;
       min-height: 1.2rem;
-    }
+  }
 
     .status.is-error {
       color: var(--bad);
-    }
+  }
 
     .periods {
       display: flex;
       flex-wrap: wrap;
       gap: 0.45rem;
       margin-bottom: 0.65rem;
-    }
+  }
 
     .period-btn {
-      border-radius: 999px;
-      border: 1px solid var(--line);
       background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      box-sizing: border-box;
       color: var(--ink);
+      cursor: pointer;
       font: inherit;
       min-height: 2rem;
       padding: 0.25rem 0.75rem;
-      box-sizing: border-box;
-      cursor: pointer;
-    }
+  }
 
     .period-btn.is-active {
-      border-color: var(--accent);
       background: var(--accent-soft);
+      border-color: var(--accent);
       color: #09346d;
       font-weight: 700;
-    }
+  }
 
     .control-grid {
       display: grid;
       gap: 0.55rem;
       grid-template-columns: 1fr;
-    }
+  }
 
     .field {
       display: grid;
       gap: 0.3rem;
-    }
+  }
 
     .field label {
+      color: #28405e;
       font-size: 0.76rem;
       font-weight: 700;
-      color: #28405e;
       letter-spacing: 0.01em;
       text-transform: uppercase;
-    }
+  }
 
     .field select,
     .field input {
-      width: 100%;
-      min-height: 2.15rem;
+      background: #fff;
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 0.38rem 0.55rem;
-      background: #fff;
+      box-sizing: border-box;
       color: var(--ink);
       font: inherit;
-      box-sizing: border-box;
-    }
+      min-height: 2.15rem;
+      padding: 0.38rem 0.55rem;
+      width: 100%;
+  }
 
     .field select:disabled,
     .field input:disabled {
-      opacity: 0.6;
       background: #f5f7fa;
       cursor: not-allowed;
-    }
+      opacity: 0.6;
+  }
 
     .metrics {
       display: grid;
       gap: 0.5rem;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  }
 
     .metric-card {
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 12px;
-      padding: 0.45rem 0.6rem;
       box-sizing: border-box;
-    }
+      padding: 0.45rem 0.6rem;
+  }
 
     .metric-card h2 {
-      margin: 0;
-      font-size: 0.73rem;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
       color: var(--ink-soft);
+      font-size: 0.73rem;
       font-weight: 700;
-    }
+      letter-spacing: 0.02em;
+      margin: 0;
+      text-transform: uppercase;
+  }
 
     .metric-card p {
-      margin: 0.18rem 0 0;
-      font-size: 1rem;
-      font-weight: 700;
       color: #0f3059;
-    }
+      font-size: 1.08rem;
+      font-weight: 700;
+      margin: 0.18rem 0 0;
+  }
 
     #gradeGrid {
-      min-height: 360px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      overflow: hidden;
       background: #fff;
-    }
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-sizing: border-box;
+      min-height: 360px;
+      overflow: hidden;
+  }
+
+    .grid-head {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+      margin-bottom: 0.55rem;
+  }
+
+    .grid-title {
+      color: #173b62;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin: 0;
+  }
+
+    .grid-actions {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+  }
 
     .tabulator {
+      background: transparent;
       border: none;
-      font-size: 0.84rem;
-    }
+      font-size: 0.98rem;
+  }
 
     .tabulator .tabulator-col {
-      background: #f6f9ff;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+      border-bottom: 1px solid #cfdced;
       border-right-color: #d6e2f0;
-    }
+      box-sizing: border-box;
+  }
+
+    .tabulator .tabulator-col:last-child {
+      border-right-color: #c8d8ed;
+  }
+
+    .tabulator .tabulator-col .tabulator-col-content {
+      align-items: stretch;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+      justify-content: flex-start;
+      min-height: 100%;
+      padding: 0.16rem 0.3rem 0.2rem;
+  }
+
+    .tabulator .tabulator-col-title-holder {
+      box-sizing: border-box;
+      display: block;
+      flex: 1 1 auto;
+      height: 100%;
+      width: 100%;
+  }
+
+    .tabulator .tabulator-col .tabulator-col-title {
+      box-sizing: border-box;
+      color: #173a61;
+      font-size: 0.79rem;
+      font-weight: 700;
+      line-height: 1.2;
+  }
+
+    .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-content .tabulator-col-sorter {
+      align-items: flex-end;
+      bottom: auto;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      left: auto;
+      margin: 0.04rem 0 0;
+      min-height: 0.72rem;
+      padding: 0;
+      pointer-events: none;
+      position: static;
+      right: auto;
+      top: auto;
+      width: 100%;
+  }
+
+    .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable.tabulator-col-sorter-element .tabulator-col-content .tabulator-col-sorter {
+      pointer-events: auto;
+  }
+
+    .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-title {
+      padding-right: 0;
+  }
+
+    .tabulator .tabulator-row {
+      border-bottom-color: #e6effb;
+  }
 
     .tabulator .tabulator-row.tabulator-row-even {
       background: #fbfdff;
-    }
+  }
 
     .group-meta {
-      margin-left: 0.45rem;
       color: var(--ink-soft);
       font-size: 0.76rem;
-    }
+      margin-left: 0.45rem;
+  }
 
     .score-chip {
-      display: inline-flex;
       align-items: center;
+      display: inline-flex;
       gap: 0.4rem;
       min-width: 6.6rem;
-    }
+  }
 
     .score-bar {
-      display: inline-block;
-      width: 3.3rem;
-      height: 0.38rem;
-      border-radius: 999px;
       background: #dfebff;
-      overflow: hidden;
       border: 1px solid #c6daf8;
+      border-radius: 999px;
       box-sizing: border-box;
-    }
+      display: inline-block;
+      height: 0.38rem;
+      overflow: hidden;
+      width: 3.3rem;
+  }
 
     .score-bar-fill {
+      background: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
       display: block;
       height: 100%;
       width: 0;
-      background: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
-    }
+  }
 
     .assignment-sub {
-      display: block;
-      margin-top: 0.1rem;
       color: #4d627c;
+      display: block;
       font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: none;
+      font-weight: 700;
       letter-spacing: 0;
-    }
+      line-height: 1.12;
+      margin-top: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-align: center;
+      text-overflow: ellipsis;
+      text-transform: none;
+      white-space: nowrap;
+  }
+
+    .tabulator .tabulator-col.assignment-col .tabulator-col-content,
+    .tabulator .tabulator-col.assignment-col .tabulator-col-title-holder {
+      height: 100%;
+  }
+
+    .tabulator .tabulator-col.assignment-col .tabulator-col-title {
+      align-items: stretch;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+      justify-content: stretch;
+      min-height: 5.95rem;
+      padding: 0.06rem 0;
+  }
+
+    .assignment-menu-trigger {
+      box-sizing: border-box;
+      color: #35567c;
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      padding: 0 0 0.16rem;
+      text-align: center;
+      width: 100%;
+  }
+
+    .tabulator .tabulator-col.assignment-col {
+      background: linear-gradient(180deg, #f7f8fb 0%, #edf1f8 100%);
+  }
+
+    .tabulator .tabulator-col.assignment-col .tabulator-col-content {
+      box-sizing: border-box;
+      padding: 0.12rem 0.2rem 0.1rem;
+  }
+
+    .assignment-head {
+      align-items: center;
+      background: linear-gradient(180deg, #fbfdff 0%, #eef3fb 100%);
+      border: 1px solid #dbe5f3;
+      border-radius: 6px;
+      box-sizing: border-box;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 0.16rem;
+      height: auto;
+      justify-content: space-between;
+      padding: 0.24rem 0.28rem;
+      width: 100%;
+  }
+
+    .assignment-head.megs {
+      background: linear-gradient(180deg, #f8ecd4 0%, #f2e2c0 100%);
+      border: 1px solid #e2d1ab;
+  }
+
+    .assignment-title-text {
+      align-self: center;
+      color: #0e3359;
+      display: block;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.18;
+      overflow: hidden;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+  }
 
     .exercise-cell {
-      border-radius: 8px;
       border: 1px solid transparent;
-      padding: 0.2rem 0.35rem;
+      border-radius: 8px;
       box-sizing: border-box;
       display: grid;
-      gap: 0.08rem;
-      min-width: 5.2rem;
-      font-size: 0.72rem;
-      line-height: 1.15;
+      font-size: 1.08rem;
       font-weight: 600;
-    }
+      gap: 0.08rem;
+      line-height: 1.2;
+      min-width: 3.5rem;
+      padding: 0.2rem 0.35rem;
+  }
 
     .exercise-cell.ontime {
-      border-color: #92d2aa;
       background: #dcf6e7;
+      border-color: #92d2aa;
       color: #0f5a34;
-    }
+  }
 
     .exercise-cell.late {
-      border-color: #e5cb66;
       background: #fff3c9;
+      border-color: #e5cb66;
       color: #6a4a00;
-    }
+  }
 
     .exercise-cell.notdone {
-      border-color: #e7b6b2;
       background: #fde4e2;
+      border-color: #e7b6b2;
       color: #8a1f1c;
-    }
+  }
 
     .stat-chip {
-      display: block;
       color: #173a61;
-      font-size: 0.72rem;
+      display: block;
+      font-size: 0.96rem;
       font-weight: 600;
       line-height: 1.2;
-    }
+  }
+
+    .distribution-mini {
+      background: linear-gradient(180deg, #f9fbff 0%, #eef4ff 100%);
+      border: 1px solid #c5d7ee;
+      border-radius: 8px;
+      box-sizing: border-box;
+      color: #11385d;
+      cursor: pointer;
+      display: grid;
+      gap: 0.14rem;
+      padding: 0.14rem 0.2rem;
+      width: 100%;
+  }
+
+    .distribution-mini:hover {
+      background: linear-gradient(180deg, #f5f9ff 0%, #e8f1ff 100%);
+      border-color: #9fbce4;
+  }
+
+    .distribution-mini:focus-visible {
+      outline: 2px solid #2f6fb5;
+      outline-offset: 1px;
+  }
+
+    .distribution-mini-chart {
+      box-sizing: border-box;
+      display: block;
+      height: 1.18rem;
+      width: 100%;
+  }
+
+    .distribution-mini-chart svg {
+      display: block;
+      height: 100%;
+      width: 100%;
+  }
+
+    .distribution-mini-meta {
+      color: #345a87;
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      text-align: center;
+      text-transform: uppercase;
+  }
+
+    .distribution-modal[hidden] {
+      display: none;
+  }
+
+    .distribution-modal {
+      align-items: center;
+      box-sizing: border-box;
+      display: flex;
+      inset: 0;
+      justify-content: center;
+      padding: 0.85rem;
+      position: fixed;
+      z-index: 3000;
+  }
+
+    .distribution-modal-backdrop {
+      background: rgb(8 22 40 / 52%);
+      inset: 0;
+      position: absolute;
+  }
+
+    .distribution-dialog {
+      background: #fff;
+      border: 1px solid #bfd3ea;
+      border-radius: 14px;
+      box-shadow: 0 26px 60px rgb(8 22 40 / 26%);
+      box-sizing: border-box;
+      display: grid;
+      gap: 0.5rem;
+      max-height: min(88vh, 760px);
+      overflow: hidden;
+      padding: 0.84rem;
+      position: relative;
+      width: min(860px, 100%);
+  }
+
+    .distribution-dialog-head {
+      align-items: center;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: space-between;
+  }
+
+    .distribution-dialog-head h2 {
+      color: #12365c;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+      margin: 0;
+  }
+
+    .distribution-close {
+      background: #f4f8ff;
+      border: 1px solid #b9cce6;
+      border-radius: 8px;
+      box-sizing: border-box;
+      color: #18436f;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.56rem;
+  }
+
+    .distribution-close:hover {
+      background: #eaf2ff;
+      border-color: #9ab9e0;
+  }
+
+    .distribution-dialog-meta {
+      color: #345777;
+      font-size: 0.78rem;
+      line-height: 1.3;
+      margin: 0;
+  }
+
+    .distribution-chart-shell {
+      background: linear-gradient(180deg, #fafdff 0%, #eef4ff 100%);
+      border: 1px solid #cfddf1;
+      border-radius: 11px;
+      box-sizing: border-box;
+      min-height: 320px;
+      padding: 0.5rem 0.46rem 0.42rem;
+      position: relative;
+  }
+
+    .distribution-modal-chart {
+      display: block;
+      height: min(54vh, 390px);
+      width: 100%;
+  }
+
+    .distribution-modal-chart .dist-grid {
+      stroke: #dce7f8;
+      stroke-width: 1;
+  }
+
+    .distribution-modal-chart .dist-axis {
+      stroke: #9db5d7;
+      stroke-width: 1.4;
+  }
+
+    .distribution-modal-chart .dist-area {
+      fill: rgb(62 123 192 / 15%);
+  }
+
+    .distribution-modal-chart .dist-line {
+      fill: none;
+      stroke: #2f75bc;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2.2;
+  }
+
+    .distribution-modal-chart .dist-point {
+      cursor: pointer;
+      fill: #1d5ea0;
+      stroke: #fff;
+      stroke-width: 1.5;
+  }
+
+    .distribution-modal-chart .dist-point.is-active {
+      fill: #f0950f;
+      stroke: #143f69;
+      stroke-width: 1.8;
+  }
+
+    .distribution-modal-chart .dist-point:focus-visible {
+      outline: 2px solid #2f6fb5;
+      outline-offset: 1px;
+  }
+
+    .distribution-modal-chart .dist-label {
+      fill: #31587f;
+      font-size: 12px;
+      font-weight: 700;
+      text-anchor: middle;
+  }
+
+    .distribution-modal-chart .dist-y-label {
+      fill: #466487;
+      font-size: 12px;
+      font-weight: 600;
+      text-anchor: end;
+  }
+
+    .distribution-hover {
+      background: #fff;
+      border: 1px solid #9db8da;
+      border-radius: 8px;
+      box-shadow: 0 8px 22px rgb(10 28 48 / 18%);
+      box-sizing: border-box;
+      color: #143b60;
+      font-size: 0.72rem;
+      font-weight: 700;
+      left: 0;
+      padding: 0.22rem 0.4rem;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      transform: translate(-50%, -108%);
+      white-space: nowrap;
+  }
+
+    .distribution-dialog-hint {
+      color: #4a6282;
+      font-size: 0.74rem;
+      margin: 0;
+  }
+
+    body.distribution-modal-open {
+      overflow: hidden;
+  }
+
+    .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
+      background: #f1f6ff;
+      border-right: 1px solid #dae6f6;
+      box-sizing: border-box;
+      color: #1f4f81;
+      text-align: center;
+  }
+
+    .tabulator-responsive-collapse {
+      background: #f9fbff;
+      border-top: 1px dashed #d9e6f6;
+      box-sizing: border-box;
+      padding: 0.42rem 0.5rem;
+  }
+
+    .collapse-list {
+      display: grid;
+      gap: 0.28rem;
+  }
+
+    .collapse-item {
+      background: #fff;
+      border: 1px solid #dce7f8;
+      border-radius: 8px;
+      box-sizing: border-box;
+      display: grid;
+      font-size: 0.74rem;
+      gap: 0.42rem;
+      grid-template-columns: minmax(5.8rem, auto) 1fr;
+      padding: 0.28rem 0.4rem;
+  }
+
+    .collapse-label {
+      color: #2b4c72;
+      font-weight: 700;
+  }
+
+    .collapse-value {
+      color: #12395f;
+      min-width: 0;
+      overflow-wrap: anywhere;
+  }
 
     .tabulator-row.is-stat-row .tabulator-cell {
       background: #eef5ff !important;
       color: #173a61;
       font-weight: 600;
-    }
+  }
+
+    body.is-compact .tabulator {
+      font-size: 0.84rem;
+  }
+
+    body.is-compact .tabulator .tabulator-col.assignment-col .tabulator-col-title {
+      min-height: 5.25rem;
+  }
+
+    body.is-compact .exercise-cell {
+      font-size: 0.92rem;
+      min-width: 3.2rem;
+      padding: 0.16rem 0.28rem;
+  }
 
     .dim {
       color: var(--ink-soft);
       font-size: 0.82rem;
-    }
+  }
 
     @media (min-width: 760px) {
       .page-shell {
         padding: 1rem;
-      }
+    }
 
       .control-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
+    }
 
       .metrics {
         grid-template-columns: repeat(5, minmax(0, 1fr));
-      }
     }
+  }
+
+    @media (max-width: 1080px) {
+      .tabulator .tabulator-col.assignment-col .tabulator-col-title {
+        min-height: 5.35rem;
+    }
+
+      .assignment-title-text {
+        font-size: 0.7rem;
+    }
+
+      .grid-actions .btn {
+        min-height: 1.9rem;
+        padding: 0.26rem 0.66rem;
+    }
+  }
+
+    @media (max-width: 760px) {
+      .page-shell {
+        box-sizing: border-box;
+        padding: 0.65rem;
+        width: 100%;
+    }
+
+      .top-stack {
+        width: 100%;
+    }
+
+      .grid-head {
+        gap: 0.4rem;
+    }
+
+      .grid-title {
+        font-size: 0.84rem;
+    }
+
+      .grid-actions {
+        width: 100%;
+    }
+
+      .grid-actions .btn {
+        flex: 1 1 auto;
+    }
+
+      .tabulator .tabulator-col.assignment-col .tabulator-col-title {
+        align-items: stretch;
+        min-height: 5.1rem;
+        padding: 0.04rem 0;
+    }
+
+      .assignment-head {
+        padding: 0.16rem 0.18rem;
+    }
+
+      .exercise-cell {
+        font-size: 0.75rem;
+        min-width: 3.25rem;
+    }
+
+      .collapse-item {
+        gap: 0.18rem;
+        grid-template-columns: 1fr;
+    }
+
+      .distribution-dialog {
+        box-sizing: border-box;
+        max-height: 92vh;
+        padding: 0.65rem;
+        width: 100%;
+    }
+
+      .distribution-dialog-head h2 {
+        font-size: 0.9rem;
+    }
+
+      .distribution-chart-shell {
+        min-height: 252px;
+    }
+
+      .distribution-modal-chart {
+        height: min(50vh, 320px);
+    }
+  }
   </style>
 </head>
 <body>
   <main class="page-shell">
-    <section class="hero">
-      <h1>Grades Tabulator Dev</h1>
-      <p>Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
-      <div class="hero-actions">
-        <a class="chip-link" href="/admin/students/grades-data">Back to Grades Admin</a>
-        <button class="btn primary" id="reloadBtn" type="button">Reload SIS Grade Data</button>
-      </div>
-      <p class="status" id="statusLine">Booting grade interface...</p>
-    </section>
+    <div class="top-stack">
+      <section class="hero">
+        <h1>Grades Tabulator Dev</h1>
+        <p>Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
+        <div class="hero-actions">
+          <a class="chip-link" href="/admin/students/grades-data">Back to Grades Admin</a>
+          <button class="btn primary" id="reloadBtn" type="button">Reload SIS Grade Data</button>
+        </div>
+        <p class="status" id="statusLine">Booting grade interface...</p>
+      </section>
 
-    <section class="control-card">
-      <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
-        <button type="button" class="period-btn" data-period="week">Week</button>
-        <button type="button" class="period-btn" data-period="quarter">Quarter</button>
-        <button type="button" class="period-btn" data-period="qtd">QTD</button>
-        <button type="button" class="period-btn" data-period="sytd">SYTD</button>
-        <button type="button" class="period-btn" data-period="archive">Archive</button>
-        <button type="button" class="period-btn" data-period="custom">Custom</button>
-      </div>
-      <div class="control-grid">
-        <div class="field">
-          <label for="schoolYear">School year</label>
-          <select id="schoolYear">
-            <option value="all">All school years</option>
-          </select>
+      <section class="control-card">
+        <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
+          <button type="button" class="period-btn" data-period="week">Week</button>
+          <button type="button" class="period-btn" data-period="quarter">Quarter</button>
+          <button type="button" class="period-btn" data-period="qtd">QTD</button>
+          <button type="button" class="period-btn" data-period="sytd">SYTD</button>
+          <button type="button" class="period-btn" data-period="archive">Archive</button>
+          <button type="button" class="period-btn" data-period="custom">Custom</button>
         </div>
-        <div class="field">
-          <label for="quarter">Quarter</label>
-          <select id="quarter">
-            <option value="q1">Q1</option>
-            <option value="q2">Q2</option>
-            <option value="q3">Q3</option>
-            <option value="q4">Q4</option>
-          </select>
+        <div class="control-grid">
+          <div class="field">
+            <label for="schoolYear">School year</label>
+            <select id="schoolYear">
+              <option value="all">All school years</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="quarter">Quarter</label>
+            <select id="quarter">
+              <option value="q1">Q1</option>
+              <option value="q2">Q2</option>
+              <option value="q3">Q3</option>
+              <option value="q4">Q4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="classFilter">Class level</label>
+            <select id="classFilter">
+              <option value="all">All class levels</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="studentFilter">Student</label>
+            <select id="studentFilter">
+              <option value="all">All students</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="schoolFilter">School</label>
+            <select id="schoolFilter">
+              <option value="all">All schools</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="customFrom">Custom from</label>
+            <input id="customFrom" type="date">
+          </div>
+          <div class="field">
+            <label for="customTo">Custom to</label>
+            <input id="customTo" type="date">
+          </div>
+          <div class="field">
+            <label for="searchInput">Search</label>
+            <input id="searchInput" type="search" placeholder="student, class, assignment">
+          </div>
         </div>
-        <div class="field">
-          <label for="classFilter">Class level</label>
-          <select id="classFilter">
-            <option value="all">All class levels</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="studentFilter">Student</label>
-          <select id="studentFilter">
-            <option value="all">All students</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="schoolFilter">School</label>
-          <select id="schoolFilter">
-            <option value="all">All schools</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="customFrom">Custom from</label>
-          <input id="customFrom" type="date">
-        </div>
-        <div class="field">
-          <label for="customTo">Custom to</label>
-          <input id="customTo" type="date">
-        </div>
-        <div class="field">
-          <label for="searchInput">Search</label>
-          <input id="searchInput" type="search" placeholder="student, class, assignment">
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="metrics" aria-label="Grade data snapshot">
-      <article class="metric-card"><h2>Rows</h2><p id="metricRows">0</p></article>
-      <article class="metric-card"><h2>Students</h2><p id="metricStudents">0</p></article>
-      <article class="metric-card"><h2>Classes</h2><p id="metricClasses">0</p></article>
-      <article class="metric-card"><h2>Avg Score %</h2><p id="metricAvgPercent">n/a</p></article>
-      <article class="metric-card"><h2>HW Completion</h2><p id="metricCompletion">n/a</p></article>
-    </section>
+      <section class="metrics" aria-label="Grade data snapshot">
+        <article class="metric-card"><h2>Rows</h2><p id="metricRows">0</p></article>
+        <article class="metric-card"><h2>Students</h2><p id="metricStudents">0</p></article>
+        <article class="metric-card"><h2>Classes</h2><p id="metricClasses">0</p></article>
+        <article class="metric-card"><h2>Avg Score %</h2><p id="metricAvgPercent">n/a</p></article>
+        <article class="metric-card"><h2>HW Completion</h2><p id="metricCompletion">n/a</p></article>
+      </section>
+    </div>
 
     <section class="grid-card">
+      <div class="grid-head">
+        <p class="grid-title">Interactive Matrix</p>
+        <div class="grid-actions">
+          <button class="btn subtle" id="toggleCompactBtn" type="button">Dense rows: Off</button>
+          <button class="btn subtle" id="resetColumnsBtn" type="button">Reset columns</button>
+        </div>
+      </div>
       <div id="gradeGrid"></div>
       <p class="dim" id="rangeHint"></p>
     </section>
   </main>
+
+  <div id="distributionModal" class="distribution-modal" hidden>
+    <div class="distribution-modal-backdrop" data-close-distribution-modal="true"></div>
+    <section class="distribution-dialog" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
+      <div class="distribution-dialog-head">
+        <h2 id="distributionModalTitle">Grade Distribution Detail</h2>
+        <button id="distributionModalClose" class="distribution-close" type="button" aria-label="Close distribution chart">Close</button>
+      </div>
+      <p id="distributionModalMeta" class="distribution-dialog-meta">Hover points to inspect each label and count.</p>
+      <div id="distributionChartShell" class="distribution-chart-shell">
+        <svg id="distributionModalChart" class="distribution-modal-chart" viewBox="0 0 760 360" preserveAspectRatio="none"></svg>
+        <div id="distributionModalHover" class="distribution-hover" hidden></div>
+      </div>
+      <p class="distribution-dialog-hint">Hover points to inspect counts and percentages.</p>
+    </section>
+  </div>
 
   <script src="../vendor/tabulatorz/tabulator.min.js"></script>
   <script>
@@ -421,7 +994,13 @@
         matrixRows: [],
         table: null,
         tableBuilt: false,
+        columnSchemaKey: "",
+        responsiveCollapseEnabled: false,
         loading: false,
+        compactMode: false,
+        distributionModalPayload: null,
+        distributionModalPoints: [],
+        distributionModalActiveIndex: -1,
         letterGradeRanges: [],
         filters: {
           period: "sytd",
@@ -447,6 +1026,9 @@
       const API_ORIGIN = resolveApiOrigin()
       const TODAY_ISO = localIsoDate(new Date())
       const SYSTEM_CURRENT_SCHOOL_YEAR = resolveSystemCurrentSchoolYear()
+      const TABLE_PERSISTENCE_ID = "sis-grades-tabulator-dev-v1"
+      const UI_PREFS_KEY = "sis.grades-tabulator-dev.ui-prefs.v1"
+      const TABLE_UI_STATE_KEY = "sis.grades-tabulator-dev.table-state.v1"
 
       function normalizeText(value) {
         if (value === undefined || value === null) return ""
@@ -455,6 +1037,25 @@
 
       function normalizeLower(value) {
         return normalizeText(value).toLowerCase()
+      }
+
+      function isMegsAssignmentTitle(value) {
+        return /\bmegs\b/i.test(normalizeText(value))
+      }
+
+      function normalizeAssignmentHeaderTitle(value) {
+        const raw = normalizeText(value)
+        if (!raw) return "Exercise"
+        const stripped = raw.replace(/\bmegs\b/gi, " ").replace(/\s+/g, " ").trim()
+        return stripped || "Exercise"
+      }
+
+      function truncateHeaderTitle(value, maxLength = 12) {
+        const text = normalizeText(value)
+        if (!text) return ""
+        const limit = Number.isFinite(maxLength) ? Math.max(4, Math.trunc(maxLength)) : 12
+        if (text.length <= limit) return text
+        return `${text.slice(0, Math.max(1, limit - 1)).trimEnd()}…`
       }
 
       function normalizeLetterCode(value) {
@@ -665,6 +1266,774 @@
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#39;")
+      }
+
+      function stripHtmlToText(value) {
+        const html = normalizeText(value)
+        if (!html) return ""
+        const holder = document.createElement("div")
+        holder.innerHTML = html
+        return normalizeText(holder.textContent || holder.innerText)
+      }
+
+      function collapseValueToText(value) {
+        if (value instanceof HTMLElement) return normalizeText(value.textContent || value.innerText)
+        const text = normalizeText(value)
+        if (!text) return "-"
+        if (/[<>&]/.test(text)) {
+          const stripped = stripHtmlToText(text)
+          if (stripped) return stripped
+        }
+        return text
+      }
+
+      function buildResponsiveCollapseContent(hiddenData) {
+        const entries = Array.isArray(hiddenData) ? hiddenData : []
+        if (!entries.length) return ""
+        const wrapper = document.createElement("div")
+        wrapper.className = "collapse-list"
+        entries.forEach((entry) => {
+          const titleText = collapseValueToText(entry?.title) || "Field"
+          const valueText = collapseValueToText(entry?.value)
+          const item = document.createElement("div")
+          item.className = "collapse-item"
+          item.innerHTML =
+            `<span class=\"collapse-label\">${escapeHtml(titleText)}</span>`
+            + `<span class=\"collapse-value\">${escapeHtml(valueText)}</span>`
+          wrapper.appendChild(item)
+        })
+        return wrapper
+      }
+
+      function orderedDistributionLabels() {
+        const labels = normalizeLetterGradeRanges(state.letterGradeRanges)
+          .map((entry) => normalizeText(entry?.letter))
+          .filter((label) => Boolean(label) && label !== "N/A")
+        return labels
+      }
+
+      function normalizeDistributionLabel(value) {
+        const upper = normalizeText(value).toUpperCase()
+        if (!upper) return ""
+        if (upper === "NA" || upper === "N-A" || upper === "N/A") return ""
+        return upper
+      }
+
+      function normalizeDistributionEntries(source = []) {
+        const rows = Array.isArray(source) ? source : []
+        const ordered = orderedDistributionLabels()
+        const rank = new Map(ordered.map((label, index) => [label, index]))
+        const normalized = rows
+          .map((entry) => {
+            let label = ""
+            let rawCount = null
+            if (Array.isArray(entry)) {
+              label = normalizeDistributionLabel(entry[0])
+              rawCount = toNumber(entry[1])
+            } else if (entry && typeof entry === "object") {
+              label = normalizeDistributionLabel(entry.label || entry.letter)
+              rawCount = toNumber(entry.count)
+            }
+            if (!label || !Number.isFinite(rawCount)) return null
+            return {
+              label,
+              count: Math.max(0, Math.round(rawCount)),
+            }
+          })
+          .filter((entry) => entry && typeof entry === "object")
+        normalized.sort((left, right) => {
+          const leftRank = rank.has(left.label) ? rank.get(left.label) : 999
+          const rightRank = rank.has(right.label) ? rank.get(right.label) : 999
+          if (leftRank !== rightRank) return leftRank - rightRank
+          return left.label.localeCompare(right.label)
+        })
+        return normalized
+      }
+
+      function parseDistributionEntriesFromText(value) {
+        const text = normalizeText(value)
+        if (!text) return []
+        const parsed = []
+        const regex = /([A-Z][A-Z0-9+\-/]*)\s*:\s*(\d+(?:\.\d+)?)/gi
+        let match = regex.exec(text)
+        while (match) {
+          parsed.push({
+            label: normalizeDistributionLabel(match[1]),
+            count: toNumber(match[2]),
+          })
+          match = regex.exec(text)
+        }
+        return normalizeDistributionEntries(parsed)
+      }
+
+      function normalizeDistributionPayload(value, meta = {}) {
+        const input = value && typeof value === "object" && !Array.isArray(value) ? value : {}
+        const metaInput = meta && typeof meta === "object" ? meta : {}
+        const fallbackSummary = normalizeText(value)
+        const summaryText = normalizeText(input.summaryText) || fallbackSummary
+        let entries = normalizeDistributionEntries(input.entries)
+        if (!entries.length && summaryText) {
+          entries = parseDistributionEntriesFromText(summaryText)
+        }
+        if (!entries.length) return null
+
+        const totalFromPayload = toNumber(input.totalCount)
+        const totalCount = Number.isFinite(totalFromPayload)
+          ? Math.max(0, Math.round(totalFromPayload))
+          : entries.reduce((sum, entry) => sum + entry.count, 0)
+        const assignmentTitle = normalizeText(input.assignmentTitle) || normalizeAssignmentHeaderTitle(metaInput.title)
+        const dueLabel = normalizeText(input.dueLabel) || normalizeText(metaInput.dueAt) || "-"
+        const questionTotalRaw = toNumber(input.questionTotal ?? metaInput.totalQuestions)
+        const questionTotal = Number.isFinite(questionTotalRaw) ? questionTotalRaw : null
+        const normalizedSummaryText = summaryText || entries.map((entry) => `${entry.label}:${entry.count}`).join(" ")
+
+        return {
+          entries,
+          summaryText: normalizedSummaryText || "-",
+          totalCount: Math.max(0, totalCount),
+          assignmentTitle: assignmentTitle || "Exercise",
+          dueLabel,
+          questionTotal,
+        }
+      }
+
+      function buildDistributionPointSeries(entries = [], options = {}) {
+        const width = Math.max(120, Number(options.width) || 120)
+        const height = Math.max(42, Number(options.height) || 42)
+        const marginLeft = Math.max(0, Number(options.marginLeft) || 0)
+        const marginRight = Math.max(0, Number(options.marginRight) || 0)
+        const marginTop = Math.max(0, Number(options.marginTop) || 0)
+        const marginBottom = Math.max(0, Number(options.marginBottom) || 0)
+        const safeEntries = normalizeDistributionEntries(entries)
+        if (!safeEntries.length) {
+          return {
+            points: [],
+            maxCount: 1,
+            width,
+            height,
+            marginLeft,
+            marginRight,
+            marginTop,
+            marginBottom,
+            plotWidth: Math.max(4, width - marginLeft - marginRight),
+            plotHeight: Math.max(4, height - marginTop - marginBottom),
+          }
+        }
+        const maxCount = Math.max(1, ...safeEntries.map((entry) => entry.count))
+        const plotWidth = Math.max(4, width - marginLeft - marginRight)
+        const plotHeight = Math.max(4, height - marginTop - marginBottom)
+        const lastIndex = Math.max(1, safeEntries.length - 1)
+        const points = safeEntries.map((entry, index) => {
+          const x = safeEntries.length === 1
+            ? marginLeft + (plotWidth / 2)
+            : marginLeft + ((plotWidth * index) / lastIndex)
+          const y = marginTop + plotHeight - ((entry.count / maxCount) * plotHeight)
+          return {
+            index,
+            label: entry.label,
+            count: entry.count,
+            x,
+            y,
+          }
+        })
+        return {
+          points,
+          maxCount,
+          width,
+          height,
+          marginLeft,
+          marginRight,
+          marginTop,
+          marginBottom,
+          plotWidth,
+          plotHeight,
+        }
+      }
+
+      function buildDistributionSparklineSvg(entries = []) {
+        const width = 158
+        const height = 34
+        const series = buildDistributionPointSeries(entries, {
+          width,
+          height,
+          marginLeft: 4,
+          marginRight: 4,
+          marginTop: 3,
+          marginBottom: 3,
+        })
+        if (!series.points.length) {
+          return `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\"></svg>`
+        }
+        const baselineY = Math.round((height - series.marginBottom) * 100) / 100
+        const pointsText = series.points
+          .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+          .join(" ")
+        const circles = series.points
+          .map((point) => (
+            `<circle cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\" fill=\"#1d5ea0\"></circle>`
+          ))
+          .join("")
+        return (
+          `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\" aria-hidden=\"true\">`
+          + `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"#d7e3f6\" stroke-width=\"1\"></line>`
+          + `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"#2f75bc\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>`
+          + `${circles}`
+          + `</svg>`
+        )
+      }
+
+      function distributionModalElements() {
+        return {
+          modal: document.getElementById("distributionModal"),
+          closeButton: document.getElementById("distributionModalClose"),
+          title: document.getElementById("distributionModalTitle"),
+          meta: document.getElementById("distributionModalMeta"),
+          chartShell: document.getElementById("distributionChartShell"),
+          chart: document.getElementById("distributionModalChart"),
+          hover: document.getElementById("distributionModalHover"),
+        }
+      }
+
+      function hideDistributionHover() {
+        const elements = distributionModalElements()
+        if (elements.hover) {
+          elements.hover.hidden = true
+          elements.hover.textContent = ""
+        }
+        if (elements.chart) {
+          elements.chart.querySelectorAll(".dist-point.is-active").forEach((point) => {
+            point.classList.remove("is-active")
+          })
+        }
+        state.distributionModalActiveIndex = -1
+      }
+
+      function showDistributionHover(index) {
+        const pointIndex = Number.parseInt(String(index), 10)
+        const payload = state.distributionModalPayload
+        const points = Array.isArray(state.distributionModalPoints) ? state.distributionModalPoints : []
+        const point = Number.isFinite(pointIndex) ? points[pointIndex] : null
+        if (!payload || !point) {
+          hideDistributionHover()
+          return
+        }
+
+        const elements = distributionModalElements()
+        if (!elements.chartShell || !elements.chart || !elements.hover) return
+        const total = Number.isFinite(payload.totalCount) && payload.totalCount > 0 ? payload.totalCount : 0
+        const percent = total > 0 ? ((point.count / total) * 100) : 0
+        elements.hover.textContent = `${point.label}: ${point.count} (${Math.round(percent)}%)`
+        elements.hover.hidden = false
+
+        elements.chart.querySelectorAll(".dist-point").forEach((node) => {
+          node.classList.toggle("is-active", Number.parseInt(node.getAttribute("data-point-index"), 10) === pointIndex)
+        })
+
+        const viewBox = elements.chart.viewBox?.baseVal
+        const chartRect = elements.chart.getBoundingClientRect()
+        const shellRect = elements.chartShell.getBoundingClientRect()
+        if (!viewBox || !viewBox.width || !viewBox.height || chartRect.width <= 0 || chartRect.height <= 0) return
+        const rawLeft = ((point.x / viewBox.width) * chartRect.width) + (chartRect.left - shellRect.left)
+        const rawTop = ((point.y / viewBox.height) * chartRect.height) + (chartRect.top - shellRect.top)
+        const clampedLeft = Math.min(Math.max(rawLeft, 12), Math.max(12, shellRect.width - 12))
+        const clampedTop = Math.min(Math.max(rawTop, 26), Math.max(26, shellRect.height - 10))
+        elements.hover.style.left = `${Math.round(clampedLeft)}px`
+        elements.hover.style.top = `${Math.round(clampedTop)}px`
+        state.distributionModalActiveIndex = pointIndex
+      }
+
+      function bindDistributionHoverHandlers() {
+        const elements = distributionModalElements()
+        if (!elements.chart) return
+        elements.chart.onpointerleave = () => {
+          hideDistributionHover()
+        }
+        elements.chart.querySelectorAll(".dist-point").forEach((pointNode) => {
+          const pointIndex = Number.parseInt(pointNode.getAttribute("data-point-index"), 10)
+          if (!Number.isFinite(pointIndex)) return
+          pointNode.addEventListener("pointerenter", () => {
+            showDistributionHover(pointIndex)
+          })
+          pointNode.addEventListener("pointermove", () => {
+            showDistributionHover(pointIndex)
+          })
+          pointNode.addEventListener("focus", () => {
+            showDistributionHover(pointIndex)
+          })
+          pointNode.addEventListener("blur", () => {
+            hideDistributionHover()
+          })
+        })
+      }
+
+      function renderDistributionModalChart(payload) {
+        const elements = distributionModalElements()
+        if (!elements.chart) return
+        const normalized = normalizeDistributionPayload(payload)
+        if (!normalized || !normalized.entries.length) {
+          elements.chart.innerHTML = ""
+          state.distributionModalPoints = []
+          hideDistributionHover()
+          return
+        }
+
+        const width = 760
+        const height = 360
+        const series = buildDistributionPointSeries(normalized.entries, {
+          width,
+          height,
+          marginLeft: 58,
+          marginRight: 24,
+          marginTop: 22,
+          marginBottom: 56,
+        })
+        const maxCount = Math.max(1, series.maxCount)
+        const tickCount = 4
+        const gridLines = []
+        for (let tick = 0; tick <= tickCount; tick += 1) {
+          const y = series.marginTop + ((series.plotHeight * tick) / tickCount)
+          const value = Math.round(maxCount - ((maxCount * tick) / tickCount))
+          gridLines.push(
+            `<line class=\"dist-grid\" x1=\"${series.marginLeft}\" y1=\"${y.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${y.toFixed(2)}\"></line>`
+            + `<text class=\"dist-y-label\" x=\"${(series.marginLeft - 8).toFixed(2)}\" y=\"${(y + 4).toFixed(2)}\">${escapeHtml(formatShortNumber(value))}</text>`
+          )
+        }
+
+        const linePoints = series.points
+          .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+          .join(" ")
+        const plotBottom = height - series.marginBottom
+        const areaPath = series.points.length
+          ? (
+            `M ${series.points[0].x.toFixed(2)} ${plotBottom.toFixed(2)}`
+            + ` L ${series.points.map((point) => `${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" L ")}`
+            + ` L ${series.points[series.points.length - 1].x.toFixed(2)} ${plotBottom.toFixed(2)} Z`
+          )
+          : ""
+        const xLabels = series.points
+          .map((point) => (
+            `<text class=\"dist-label\" x=\"${point.x.toFixed(2)}\" y=\"${(height - 22).toFixed(2)}\">${escapeHtml(point.label)}</text>`
+          ))
+          .join("")
+        const circles = series.points
+          .map((point) => (
+            `<circle class=\"dist-point\" data-point-index=\"${point.index}\" cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"6\" tabindex=\"0\" aria-label=\"${escapeHtml(point.label)} ${escapeHtml(String(point.count))}\"></circle>`
+          ))
+          .join("")
+
+        elements.chart.setAttribute("viewBox", `0 0 ${width} ${height}`)
+        elements.chart.innerHTML =
+          `<g>${gridLines.join("")}</g>`
+          + `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${plotBottom.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${plotBottom.toFixed(2)}\"></line>`
+          + `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${series.marginTop}\" x2=\"${series.marginLeft}\" y2=\"${plotBottom.toFixed(2)}\"></line>`
+          + `<path class=\"dist-area\" d=\"${areaPath}\"></path>`
+          + `<polyline class=\"dist-line\" points=\"${linePoints}\"></polyline>`
+          + `${circles}`
+          + `${xLabels}`
+
+        state.distributionModalPoints = series.points
+        state.distributionModalActiveIndex = -1
+        bindDistributionHoverHandlers()
+      }
+
+      function closeDistributionModal() {
+        const elements = distributionModalElements()
+        if (!elements.modal) return
+        elements.modal.hidden = true
+        hideDistributionHover()
+        state.distributionModalPayload = null
+        state.distributionModalPoints = []
+        document.body.classList.remove("distribution-modal-open")
+      }
+
+      function openDistributionModal(payload) {
+        const normalized = normalizeDistributionPayload(payload)
+        if (!normalized) return
+        const elements = distributionModalElements()
+        if (!elements.modal) return
+
+        state.distributionModalPayload = normalized
+        if (elements.title) {
+          elements.title.textContent = `${normalized.assignmentTitle} Distribution`
+        }
+        if (elements.meta) {
+          const questionText = Number.isFinite(normalized.questionTotal)
+            ? ` | Q ${formatShortNumber(normalized.questionTotal)}`
+            : ""
+          elements.meta.textContent =
+            `${normalized.assignmentTitle} | Due ${normalized.dueLabel} | Total ${formatShortNumber(normalized.totalCount)}${questionText}`
+        }
+        renderDistributionModalChart(normalized)
+        elements.modal.hidden = false
+        document.body.classList.add("distribution-modal-open")
+        if (elements.closeButton) {
+          elements.closeButton.focus()
+        }
+      }
+
+      function bindDistributionModalControls() {
+        const elements = distributionModalElements()
+        if (!elements.modal || elements.modal.dataset.bound === "true") return
+        elements.modal.dataset.bound = "true"
+        if (elements.closeButton) {
+          elements.closeButton.addEventListener("click", () => {
+            closeDistributionModal()
+          })
+        }
+        elements.modal.addEventListener("click", (event) => {
+          const target = event.target
+          if (!(target instanceof HTMLElement)) return
+          if (target.getAttribute("data-close-distribution-modal") === "true") {
+            closeDistributionModal()
+          }
+        })
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && !elements.modal.hidden) {
+            closeDistributionModal()
+          }
+        })
+      }
+
+      function renderDistributionMiniCell(value, meta = {}) {
+        const payload = normalizeDistributionPayload(value, meta)
+        if (!payload) {
+          const fallback = document.createElement("span")
+          fallback.className = "stat-chip"
+          fallback.textContent = normalizeText(value) || "n/a"
+          return fallback
+        }
+        const button = document.createElement("button")
+        button.type = "button"
+        button.className = "distribution-mini"
+        button.title = `${payload.summaryText} | Click for detail chart`
+        button.setAttribute("aria-label", `Open distribution chart for ${payload.assignmentTitle}`)
+        button.innerHTML =
+          `<span class=\"distribution-mini-chart\" aria-hidden=\"true\">${buildDistributionSparklineSvg(payload.entries)}</span>`
+          + `<span class=\"distribution-mini-meta\">View chart</span>`
+        button.addEventListener("click", () => {
+          openDistributionModal(payload)
+        })
+        return button
+      }
+
+      function syncCompactModeUi() {
+        document.body.classList.toggle("is-compact", Boolean(state.compactMode))
+        const button = document.getElementById("toggleCompactBtn")
+        if (button) {
+          button.textContent = state.compactMode ? "Dense rows: On" : "Dense rows: Off"
+        }
+      }
+
+      function setCompactMode(nextValue) {
+        state.compactMode = Boolean(nextValue)
+        syncCompactModeUi()
+        persistUiPreferences()
+        if (state.table && typeof state.table.redraw === "function") {
+          state.table.redraw(true)
+        }
+      }
+
+      function toggleCompactMode() {
+        setCompactMode(!state.compactMode)
+      }
+
+      function revealAllAssignmentColumns() {
+        if (!state.table || typeof state.table.getColumns !== "function") return
+        state.table.getColumns().forEach((column) => {
+          const field = normalizeText(column?.getField?.())
+          if (!field || !field.includes("|")) return
+          if (typeof column?.show === "function") column.show()
+        })
+      }
+
+      function debounce(fn, delay = 160) {
+        let timer = null
+        return (...args) => {
+          if (timer !== null) window.clearTimeout(timer)
+          timer = window.setTimeout(() => {
+            timer = null
+            fn(...args)
+          }, Math.max(0, Number(delay) || 0))
+        }
+      }
+
+      const persistTableUiStateSoon = debounce(() => {
+        persistTableUiStateFromTable()
+      }, 140)
+
+      function normalizePeriodCode(value) {
+        const period = normalizeLower(value)
+        if (["week", "quarter", "qtd", "sytd", "archive", "custom"].includes(period)) return period
+        return "sytd"
+      }
+
+      function normalizedFiltersSnapshot(source = {}) {
+        const input = source && typeof source === "object" ? source : {}
+        return {
+          period: normalizePeriodCode(input.period),
+          schoolYear: normalizeText(input.schoolYear) || "all",
+          quarter: normalizeQuarterCode(input.quarter) || "q1",
+          classKey: normalizeText(input.classKey) || "all",
+          studentKey: normalizeText(input.studentKey) || "all",
+          schoolKey: normalizeText(input.schoolKey) || "all",
+          customFrom: normalizeText(input.customFrom).slice(0, 10),
+          customTo: normalizeText(input.customTo).slice(0, 10),
+          search: normalizeText(input.search),
+        }
+      }
+
+      function persistUiPreferences() {
+        try {
+          const payload = {
+            compactMode: Boolean(state.compactMode),
+            filters: normalizedFiltersSnapshot(state.filters),
+          }
+          window.localStorage.setItem(UI_PREFS_KEY, JSON.stringify(payload))
+        } catch (error) {
+          void error
+        }
+      }
+
+      function restoreUiPreferences() {
+        try {
+          const raw = window.localStorage.getItem(UI_PREFS_KEY)
+          if (!raw) return
+          const parsed = JSON.parse(raw)
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return
+          state.compactMode = Boolean(parsed.compactMode)
+          state.filters = {
+            ...state.filters,
+            ...normalizedFiltersSnapshot(parsed.filters),
+          }
+        } catch (error) {
+          void error
+        }
+      }
+
+      function normalizeSortDirection(value) {
+        const text = normalizeLower(value)
+        return text === "desc" ? "desc" : "asc"
+      }
+
+      function normalizeTableSortersSnapshot(source = []) {
+        return (Array.isArray(source) ? source : [])
+          .map((entry) => {
+            const columnCandidate = entry?.column
+            let column = ""
+            if (typeof columnCandidate === "string") {
+              column = normalizeText(columnCandidate)
+            } else if (columnCandidate && typeof columnCandidate?.getField === "function") {
+              column = normalizeText(columnCandidate.getField())
+            } else if (columnCandidate && typeof columnCandidate === "object") {
+              column = normalizeText(columnCandidate.field)
+            }
+            if (!column) column = normalizeText(entry?.field)
+            if (!column) return null
+            return {
+              column,
+              dir: normalizeSortDirection(entry?.dir),
+            }
+          })
+          .filter((entry) => entry && typeof entry === "object")
+      }
+
+      function normalizeTableColumnLayoutSnapshot(source = []) {
+        return (Array.isArray(source) ? source : [])
+          .map((entry) => {
+            if (!entry || typeof entry !== "object") return null
+            const field = normalizeText(entry.field)
+            if (!field) return null
+            const width = Number(entry.width)
+            const normalized = { field }
+            if (Number.isFinite(width) && width >= 30) normalized.width = Math.round(width)
+            if (typeof entry.visible === "boolean") normalized.visible = entry.visible
+            if (typeof entry.frozen === "boolean") normalized.frozen = entry.frozen
+            return normalized
+          })
+          .filter((entry) => entry && typeof entry === "object")
+      }
+
+      function readTableUiState() {
+        try {
+          const raw = window.localStorage.getItem(TABLE_UI_STATE_KEY)
+          if (!raw) return null
+          const parsed = JSON.parse(raw)
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
+          return {
+            columnLayout: normalizeTableColumnLayoutSnapshot(parsed.columnLayout),
+            sorters: normalizeTableSortersSnapshot(parsed.sorters),
+          }
+        } catch (error) {
+          void error
+          return null
+        }
+      }
+
+      function writeTableUiState(payload = {}) {
+        const input = payload && typeof payload === "object" ? payload : {}
+        const existing = readTableUiState() || { columnLayout: [], sorters: [] }
+        const nextColumnLayout = Array.isArray(input.columnLayout)
+          ? normalizeTableColumnLayoutSnapshot(input.columnLayout)
+          : existing.columnLayout
+        const nextSorters = Array.isArray(input.sorters)
+          ? normalizeTableSortersSnapshot(input.sorters)
+          : existing.sorters
+        try {
+          window.localStorage.setItem(
+            TABLE_UI_STATE_KEY,
+            JSON.stringify({
+              columnLayout: nextColumnLayout,
+              sorters: nextSorters,
+            })
+          )
+        } catch (error) {
+          void error
+        }
+      }
+
+      function tableColumnFieldSet() {
+        if (!state.table || typeof state.table.getColumns !== "function") return new Set()
+        const fields = state.table.getColumns()
+          .map((column) => normalizeText(column?.getField?.()))
+          .filter(Boolean)
+        return new Set(fields)
+      }
+
+      function waitForExpectedColumnCount(expectedCount, timeoutMs = 700) {
+        const expected = Math.max(0, Number.parseInt(String(expectedCount || 0), 10) || 0)
+        const timeout = Math.max(80, Number.parseInt(String(timeoutMs || 0), 10) || 0)
+        if (!state.table || expected <= 0 || typeof state.table.getColumns !== "function") {
+          return Promise.resolve(false)
+        }
+        const startedAt = Date.now()
+        return new Promise((resolve) => {
+          const check = () => {
+            const columns = state.table && typeof state.table.getColumns === "function"
+              ? state.table.getColumns()
+              : []
+            const currentCount = Array.isArray(columns) ? columns.length : 0
+            if (currentCount >= expected) {
+              resolve(true)
+              return
+            }
+            if (Date.now() - startedAt >= timeout) {
+              resolve(false)
+              return
+            }
+            window.setTimeout(check, 16)
+          }
+          check()
+        })
+      }
+
+      function ensureAssignmentColumnsPresent(columns = [], expectedAssignmentCount = 0) {
+        const expected = Math.max(0, Number.parseInt(String(expectedAssignmentCount || 0), 10) || 0)
+        if (!state.table || expected <= 0 || typeof state.table.getColumns !== "function") return
+        const currentAssignmentCount = state.table.getColumns()
+          .map((column) => normalizeText(column?.getField?.()))
+          .filter((field) => field.includes("|"))
+          .length
+        if (currentAssignmentCount > 0) return
+        try {
+          state.table.setColumns(Array.isArray(columns) ? columns : [])
+        } catch (error) {
+          void error
+        }
+      }
+
+      function persistTableUiStateFromTable() {
+        if (!state.table) return
+        const snapshot = {}
+        if (typeof state.table.getColumnLayout === "function") {
+          const layout = normalizeTableColumnLayoutSnapshot(state.table.getColumnLayout())
+          const hasAssignmentColumns = layout.some((entry) => normalizeText(entry?.field).includes("|"))
+          if (Array.isArray(state.allRows) && state.allRows.length > 0 && hasAssignmentColumns) {
+            snapshot.columnLayout = layout
+          }
+        }
+        if (typeof state.table.getSorters === "function") {
+          snapshot.sorters = normalizeTableSortersSnapshot(state.table.getSorters())
+        }
+        writeTableUiState(snapshot)
+      }
+
+      function applyStoredTableUiState(options = {}) {
+        const config = options && typeof options === "object" ? options : {}
+        const applyLayout = config.applyLayout !== false
+        const applySort = config.applySort !== false
+        const requiredAssignmentColumns = Math.max(
+          0,
+          Number.parseInt(String(config.requiredAssignmentColumns || 0), 10) || 0
+        )
+        const stored = readTableUiState()
+        if (!stored || !state.table) return { layoutApplied: false, sortApplied: false }
+
+        let layoutApplied = false
+        let sortApplied = false
+
+        if (applyLayout && stored.columnLayout.length && typeof state.table.setColumnLayout === "function") {
+          const availableFields = tableColumnFieldSet()
+          const filteredLayout = stored.columnLayout
+            .filter((entry) => availableFields.has(normalizeText(entry?.field)))
+          const currentAssignmentCount = Array.from(availableFields.values())
+            .filter((field) => field.includes("|"))
+            .length
+          const layoutAssignmentCount = filteredLayout
+            .filter((entry) => normalizeText(entry?.field).includes("|"))
+            .length
+          const visibleLayoutAssignmentCount = filteredLayout
+            .filter((entry) => normalizeText(entry?.field).includes("|") && entry.visible !== false)
+            .length
+          const layoutHasExpectedAssignments = requiredAssignmentColumns <= 0 || layoutAssignmentCount > 0
+          const layoutKeepsAssignmentsVisible = requiredAssignmentColumns <= 0 || visibleLayoutAssignmentCount > 0
+          try {
+            if (
+              filteredLayout.length
+              && layoutHasExpectedAssignments
+              && layoutKeepsAssignmentsVisible
+              && (!currentAssignmentCount || layoutAssignmentCount > 0)
+            ) {
+              state.table.setColumnLayout(filteredLayout)
+              layoutApplied = true
+            }
+          } catch (error) {
+            void error
+          }
+        }
+
+        if (applySort && stored.sorters.length && typeof state.table.setSort === "function") {
+          const availableFields = tableColumnFieldSet()
+          const sortable = stored.sorters
+            .filter((entry) => availableFields.has(normalizeText(entry?.column)))
+          try {
+            if (sortable.length) {
+              state.table.setSort(sortable)
+              sortApplied = true
+            }
+          } catch (error) {
+            void error
+          }
+        }
+
+        return { layoutApplied, sortApplied }
+      }
+
+      function clearStoredTableUiState() {
+        try {
+          window.localStorage.removeItem(TABLE_UI_STATE_KEY)
+          const legacyPrefix = `tabulator-${TABLE_PERSISTENCE_ID}-`
+          const toRemove = []
+          for (let index = 0; index < window.localStorage.length; index += 1) {
+            const key = window.localStorage.key(index)
+            if (!key || !key.startsWith(legacyPrefix)) continue
+            toRemove.push(key)
+          }
+          toRemove.forEach((key) => {
+            window.localStorage.removeItem(key)
+          })
+        } catch (error) {
+          void error
+        }
       }
 
       function resolveApiOrigin() {
@@ -1017,6 +2386,54 @@
         }
       }
 
+      function assignmentHeaderMenu(meta = {}) {
+        return [
+          {
+            label: "<span>Toggle pin column</span>",
+            action: (_event, column) => {
+              const definition = column?.getDefinition?.() || {}
+              const nextFrozen = !Boolean(definition?.frozen)
+              const updateResult = column?.updateDefinition?.({ frozen: nextFrozen })
+              if (updateResult && typeof updateResult.then === "function") {
+                updateResult
+                  .then(() => {
+                    setStatus(
+                      `${normalizeAssignmentHeaderTitle(meta.title) || "Exercise"} column `
+                      + `${nextFrozen ? "pinned" : "unpinned"}.`
+                    )
+                    persistTableUiStateFromTable()
+                  })
+                  .catch(() => {})
+                return
+              }
+              setStatus(
+                `${normalizeAssignmentHeaderTitle(meta.title) || "Exercise"} column `
+                + `${nextFrozen ? "pinned" : "unpinned"}.`
+              )
+              persistTableUiStateFromTable()
+            },
+          },
+          {
+            label: "<span>Hide this column</span>",
+            action: (_event, column) => {
+              if (typeof column?.hide === "function") {
+                column.hide()
+                setStatus(`${normalizeAssignmentHeaderTitle(meta.title) || "Exercise"} column hidden.`)
+                persistTableUiStateSoon()
+              }
+            },
+          },
+          {
+            label: "<span>Show all exercise columns</span>",
+            action: () => {
+              revealAllAssignmentColumns()
+              setStatus("All exercise columns are visible again.")
+              persistTableUiStateSoon()
+            },
+          },
+        ]
+      }
+
       function buildMatrixModel(rows = []) {
         const sourceRows = Array.isArray(rows) ? rows : []
         const assignmentMetaMap = new Map()
@@ -1181,9 +2598,9 @@
           normalizeLetterGradeRanges(state.letterGradeRanges).forEach((entry) => {
             distribution.set(entry.letter, 0)
           })
-          distribution.set("N/A", distribution.get("N/A") || 0)
           percents.forEach((entry) => {
             const band = gradeBandFromPercent(entry)
+            if (band === "N/A") return
             distribution.set(band, (distribution.get(band) || 0) + 1)
           })
 
@@ -1195,37 +2612,69 @@
             return `${rightText}/${formatShortNumber(questionTotal)}`
           }
 
-          const distributionText = Array.from(distribution.entries())
+          const distributionEntries = Array.from(distribution.entries())
             .filter(([, count]) => Number.isFinite(count))
-            .map(([letter, count]) => `${letter}:${Math.max(0, Math.round(count))}`)
+            .map(([letter, count]) => ({
+              label: letter,
+              count: Math.max(0, Math.round(count)),
+            }))
+          const distributionText = distributionEntries
+            .map((entry) => `${entry.label}:${entry.count}`)
             .join(" ")
 
           statRows[0][meta.key] = formatQRightStat(mean)
           statRows[1][meta.key] = formatQRightStat(median)
           statRows[2][meta.key] = formatQRightStat(mode)
           statRows[3][meta.key] = Number.isFinite(completionPercent) ? `${Math.round(completionPercent)}%` : "0%"
-          statRows[4][meta.key] = distributionText || "n/a"
+          statRows[4][meta.key] = {
+            type: "distribution",
+            entries: distributionEntries,
+            summaryText: distributionText || "-",
+            totalCount: distributionEntries.reduce((sum, entry) => sum + entry.count, 0),
+            assignmentTitle: normalizeAssignmentHeaderTitle(meta.title),
+            dueLabel: normalizeText(meta.dueAt) || "-",
+            questionTotal,
+          }
         })
 
         const baseColumns = [
           { title: "Order", field: "rowOrder", visible: false, headerSort: false },
-          { title: "Class Level", field: "level", minWidth: 118, frozen: true, headerSort: true },
-          { title: "Student (eaglesId/englishName)", field: "studentDisplay", minWidth: 220, frozen: true, headerSort: true },
-          { title: "Student Number", field: "studentNumber", minWidth: 118, hozAlign: "center", headerSort: true },
-          { title: "Quarter", field: "quarter", minWidth: 88, hozAlign: "center", headerSort: true },
+          { title: "Class Level", field: "level", minWidth: 120, frozen: true, headerSort: true, responsive: 0 },
+          { title: "Student (eaglesId/englishName)", field: "studentDisplay", minWidth: 230, frozen: true, headerSort: true, responsive: 0 },
+          { title: "Student Number", field: "studentNumber", minWidth: 112, hozAlign: "center", headerSort: true, responsive: 9 },
+          { title: "Quarter", field: "quarter", minWidth: 84, hozAlign: "center", headerSort: true, responsive: 10 },
         ]
 
-        const assignmentColumns = assignmentMeta.map((meta) => {
+        const viewportWidth = Number(window.innerWidth) || 1280
+        const assignmentColumnMinWidth =
+          viewportWidth <= 560 ? 68 : viewportWidth <= 880 ? 76 : viewportWidth <= 1180 ? 84 : 92
+        const assignmentTitleMaxChars =
+          viewportWidth <= 560 ? 8 : viewportWidth <= 880 ? 10 : viewportWidth <= 1180 ? 12 : 14
+
+        const assignmentColumns = assignmentMeta.map((meta, index) => {
+          const rawTitle = normalizeText(meta.title) || "Untitled"
+          const fullTitle = normalizeAssignmentHeaderTitle(rawTitle)
+          const headerTitle = truncateHeaderTitle(fullTitle, assignmentTitleMaxChars)
+          const isMegsTitle = isMegsAssignmentTitle(rawTitle)
+          const headerClass = isMegsTitle ? "assignment-head megs" : "assignment-head"
           const dueLabel = normalizeText(meta.dueAt) || "-"
           const questionLabel = Number.isFinite(meta.totalQuestions) ? formatShortNumber(meta.totalQuestions) : "-"
           return {
             title:
-              `${escapeHtml(meta.title)}`
+              `<span class=\"${headerClass}\">`
+              + `<span class=\"assignment-title-text\" title=\"${escapeHtml(fullTitle)}\">${escapeHtml(headerTitle)}</span>`
               + `<span class=\"assignment-sub\">Q: ${escapeHtml(questionLabel)}</span>`
-              + `<span class=\"assignment-sub\">Due: ${escapeHtml(dueLabel)}</span>`,
+              + `<span class=\"assignment-sub\">Due: ${escapeHtml(dueLabel)}</span>`
+              + `</span>`,
             field: meta.key,
-            minWidth: 150,
+            minWidth: assignmentColumnMinWidth,
+            width: assignmentColumnMinWidth,
             hozAlign: "center",
+            cssClass: "assignment-col",
+            responsive: 30 + index,
+            headerTooltip: () => `${fullTitle} | Q: ${questionLabel} | Due: ${dueLabel}`,
+            headerMenu: assignmentHeaderMenu(meta),
+            headerMenuIcon: "<span class=\"assignment-menu-trigger\" aria-hidden=\"true\">&#x22ef;</span>",
             headerSort: true,
             sorter: (left, right) => {
               const leftPercent = left && typeof left === "object" && Number.isFinite(left.percent) ? left.percent : -1
@@ -1240,7 +2689,13 @@
               const rowData = cell.getRow().getData()
               const value = cell.getValue()
               if (rowData?.rowType === "stat") {
-                return `<span class=\"stat-chip\">${escapeHtml(value)}</span>`
+                if (normalizeText(rowData?.id) === "stat-distribution") {
+                  return renderDistributionMiniCell(value, meta)
+                }
+                const statText = value && typeof value === "object"
+                  ? normalizeText(value.summaryText)
+                  : normalizeText(value)
+                return `<span class=\"stat-chip\">${escapeHtml(statText || "n/a")}</span>`
               }
               if (!value || typeof value !== "object") {
                 return (
@@ -1504,24 +2959,52 @@
           return
         }
 
+        const viewportHeight = Number(window.innerHeight) || 900
+        const tableHeight = Math.max(420, Math.min(760, Math.round(viewportHeight * 0.66)))
+        const useResponsiveCollapse = (Number(window.innerWidth) || 1280) <= 980
+        state.responsiveCollapseEnabled = useResponsiveCollapse
+
         state.table = new window.Tabulator("#gradeGrid", {
           data: [],
           layout: "fitDataTable",
-          responsiveLayout: "collapse",
+          columnHeaderVertAlign: "bottom",
+          columnDefaults: {
+            headerSort: true,
+            headerHozAlign: "left",
+            vertAlign: "middle",
+            resizable: true,
+          },
+          responsiveLayout: useResponsiveCollapse ? "collapse" : false,
+          responsiveLayoutCollapseUseFormatters: useResponsiveCollapse,
+          responsiveLayoutCollapseFormatter: buildResponsiveCollapseContent,
           responsiveLayoutCollapseStartOpen: false,
-          height: 560,
+          rowHeader: useResponsiveCollapse
+            ? {
+                formatter: "responsiveCollapse",
+                width: 36,
+                minWidth: 36,
+                hozAlign: "center",
+                resizable: false,
+                headerSort: false,
+                frozen: true,
+              }
+            : false,
+          height: tableHeight,
           placeholder: "No grade rows match the selected filters.",
           pagination: false,
           movableColumns: true,
+          resizableColumns: true,
+          resizableColumnGuide: true,
+          tooltipDelay: 120,
           initialSort: [
             { column: "rowOrder", dir: "asc" },
           ],
           columns: [
             { title: "Order", field: "rowOrder", visible: false, headerSort: false },
-            { title: "Class Level", field: "level", minWidth: 118, headerSort: true },
-            { title: "Student (eaglesId/englishName)", field: "studentDisplay", minWidth: 220, headerSort: true },
-            { title: "Student Number", field: "studentNumber", minWidth: 118, hozAlign: "center", headerSort: true },
-            { title: "Quarter", field: "quarter", minWidth: 88, hozAlign: "center", headerSort: true },
+            { title: "Class Level", field: "level", minWidth: 120, frozen: true, responsive: 0 },
+            { title: "Student (eaglesId/englishName)", field: "studentDisplay", minWidth: 230, frozen: true, responsive: 0 },
+            { title: "Student Number", field: "studentNumber", minWidth: 112, hozAlign: "center", responsive: 9 },
+            { title: "Quarter", field: "quarter", minWidth: 84, hozAlign: "center", responsive: 10 },
           ],
           rowFormatter: (row) => {
             const data = row.getData()
@@ -1540,11 +3023,45 @@
             state.tableBuilt = true
             renderTable()
           })
+          state.table.on("columnMoved", () => {
+            persistTableUiStateSoon()
+          })
+          state.table.on("columnResized", () => {
+            persistTableUiStateSoon()
+          })
+          state.table.on("columnVisibilityChanged", () => {
+            persistTableUiStateSoon()
+          })
+          state.table.on("dataSorted", () => {
+            persistTableUiStateSoon()
+          })
         }
       }
 
       function normalizeUpper(value) {
         return normalizeText(value).toUpperCase()
+      }
+
+      function matrixColumnSchemaKey(columns = []) {
+        return (Array.isArray(columns) ? columns : [])
+          .map((column) => {
+            const field = normalizeText(column?.field)
+            if (field) return field
+            const titleText = stripHtmlToText(column?.title)
+            return titleText || "column"
+          })
+          .join("|")
+      }
+
+      function currentTableColumnSchemaKey() {
+        if (!state.table || typeof state.table.getColumns !== "function") return ""
+        const columns = state.table.getColumns().map((column) => {
+          const field = normalizeText(column?.getField?.())
+          if (field) return { field }
+          const definition = column?.getDefinition?.() || {}
+          return { title: definition.title }
+        })
+        return matrixColumnSchemaKey(columns)
       }
 
       function updateMetrics(rows) {
@@ -1601,16 +3118,87 @@
         ensureTable()
         if (state.table && state.tableBuilt) {
           try {
-            state.table.setColumns(matrix.columns)
-            const replaceResult = state.table.replaceData(matrix.rows)
-            if (replaceResult && typeof replaceResult.then === "function") {
-              replaceResult
-                .then(() => {
-                  state.table.setSort([{ column: "rowOrder", dir: "asc" }])
-                })
-                .catch(() => {})
+            const nextSchemaKey = matrixColumnSchemaKey(matrix.columns)
+            const liveSchemaKey = currentTableColumnSchemaKey()
+            const liveFieldSet = tableColumnFieldSet()
+            const tableHasAssignmentColumns = Array.from(liveFieldSet.values()).some((field) => field.includes("|"))
+            const shouldResetColumns =
+              nextSchemaKey !== state.columnSchemaKey
+              || (liveSchemaKey && liveSchemaKey !== nextSchemaKey)
+              || (matrix.assignmentCount > 0 && !tableHasAssignmentColumns)
+            const applySortAndPersistState = () => {
+              if (shouldResetColumns) {
+                const applied = applyStoredTableUiState({ applyLayout: false, applySort: true })
+                if (
+                  !applied.sortApplied
+                  && typeof state.table?.setSort === "function"
+                  && typeof state.table?.getSorters === "function"
+                ) {
+                  const activeSorters = normalizeTableSortersSnapshot(state.table.getSorters())
+                  if (!activeSorters.length) {
+                    state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+                  }
+                }
+              }
+              persistTableUiStateFromTable()
+              if (shouldResetColumns && matrix.assignmentCount > 0) {
+                window.setTimeout(() => {
+                  ensureAssignmentColumnsPresent(matrix.columns, matrix.assignmentCount)
+                }, 0)
+              }
+            }
+
+            const replaceRows = () => {
+              const replaceResult = state.table.replaceData(matrix.rows)
+              if (replaceResult && typeof replaceResult.then === "function") {
+                replaceResult
+                  .then(() => {
+                    applySortAndPersistState()
+                  })
+                  .catch(() => {})
+                return
+              }
+              applySortAndPersistState()
+            }
+
+            if (shouldResetColumns) {
+              const setColumnsResult = state.table.setColumns(matrix.columns)
+              state.columnSchemaKey = nextSchemaKey
+              const expectedColumnCount = Array.isArray(matrix.columns) ? matrix.columns.length : 0
+              const afterSetColumns = () => {
+                const finishAfterColumnsReady = () => {
+                  applyStoredTableUiState({
+                    applyLayout: true,
+                    applySort: false,
+                    requiredAssignmentColumns: matrix.assignmentCount,
+                  })
+                  replaceRows()
+                }
+                if (!expectedColumnCount) {
+                  finishAfterColumnsReady()
+                  return
+                }
+                waitForExpectedColumnCount(expectedColumnCount)
+                  .then(() => {
+                    finishAfterColumnsReady()
+                  })
+                  .catch(() => {
+                    finishAfterColumnsReady()
+                  })
+              }
+              if (setColumnsResult && typeof setColumnsResult.then === "function") {
+                setColumnsResult
+                  .then(() => {
+                    afterSetColumns()
+                  })
+                  .catch(() => {
+                    replaceRows()
+                  })
+              } else {
+                afterSetColumns()
+              }
             } else {
-              state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+              replaceRows()
             }
           } catch (error) {
             void error
@@ -1621,8 +3209,12 @@
         const rangeHint = document.getElementById("rangeHint")
         if (rangeHint) {
           const periodLabel = state.filters.period.toUpperCase()
+          const viewportHint = state.responsiveCollapseEnabled
+            ? "Mobile collapse: tap first-column toggle for hidden fields"
+            : "Desktop scroll: use horizontal scroll for full matrix"
           rangeHint.textContent =
             `Period ${periodLabel} | Range ${outcome.rangeLabel} | Students ${matrix.studentCount} | Exercises ${matrix.assignmentCount}`
+            + ` | ${viewportHint}`
         }
 
         if (!state.loading) {
@@ -1648,6 +3240,7 @@
         if (customFrom instanceof HTMLInputElement) state.filters.customFrom = normalizeText(customFrom.value).slice(0, 10)
         if (customTo instanceof HTMLInputElement) state.filters.customTo = normalizeText(customTo.value).slice(0, 10)
         if (searchInput instanceof HTMLInputElement) state.filters.search = normalizeText(searchInput.value)
+        persistUiPreferences()
       }
 
       function bindControls() {
@@ -1682,6 +3275,7 @@
         document.querySelectorAll("[data-period]").forEach((button) => {
           button.addEventListener("click", () => {
             state.filters.period = normalizeLower(button.getAttribute("data-period")) || "week"
+            persistUiPreferences()
             syncPeriodButtons()
             applyFilterControlState()
             renderTable()
@@ -1698,6 +3292,46 @@
             }
           })
         }
+
+        const toggleCompactBtn = document.getElementById("toggleCompactBtn")
+        if (toggleCompactBtn) {
+          toggleCompactBtn.addEventListener("click", () => {
+            toggleCompactMode()
+          })
+        }
+
+        const resetColumnsBtn = document.getElementById("resetColumnsBtn")
+        if (resetColumnsBtn) {
+          resetColumnsBtn.addEventListener("click", () => {
+            clearStoredTableUiState()
+            state.columnSchemaKey = ""
+            renderTable()
+            if (state.table && typeof state.table.setSort === "function") {
+              state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+            }
+            setStatus("Saved column layout and sort reset to default.")
+          })
+        }
+
+        const handleResize = debounce(() => {
+          if (state.loading) return
+          const nextCollapse = (Number(window.innerWidth) || 1280) <= 980
+          if (state.table && nextCollapse !== state.responsiveCollapseEnabled) {
+            try {
+              if (typeof state.table.destroy === "function") {
+                state.table.destroy()
+              }
+            } catch (error) {
+              void error
+            }
+            state.table = null
+            state.tableBuilt = false
+            state.columnSchemaKey = ""
+            state.responsiveCollapseEnabled = nextCollapse
+          }
+          renderTable()
+        }, 190)
+        window.addEventListener("resize", handleResize)
       }
 
       async function bootstrapRows() {
@@ -1711,6 +3345,7 @@
           syncPeriodButtons()
           applyFilterControlState()
           renderTable()
+          persistUiPreferences()
           setStatus(`SIS load complete. ${state.allRows.length} grade rows ready.`)
         } finally {
           state.loading = false
@@ -1723,7 +3358,10 @@
           return
         }
 
+        restoreUiPreferences()
         bindControls()
+        bindDistributionModalControls()
+        syncCompactModeUi()
         syncPeriodButtons()
         applyFilterControlState()
 
