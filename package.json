@@ -55,7 +55,7 @@
   "bugs": {},
   "homepage": "",
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
+    "@eslint/js": "^10.0.1",
     "@microsoft/eslint-formatter-sarif": "^3.1.0",
     "@redocly/cli": "^2.22.1",
     "@types/node": "^20.19.35",
