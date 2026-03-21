@@ -7,6 +7,990 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-21 - grade-chart school-year defaults to current year instead of all)
+
+- User requirement:
+  - when grade/completion chart scope lands on `schoolYear=all`, default must show current school year by default.
+- Root cause:
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) grade chart state initialized with `schoolYear: "all"` and kept that value on first render for non-archive periods.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added `applyGradeChartCurrentSchoolYearDefault()` to normalize non-archive chart scope from `all` -> current school year.
+  - applied it:
+    - during initial app bootstrap before first `renderGradePulseChart(...)`,
+    - after period button transitions (while preserving archive handling logic).
+- Updated tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - in `table sort controls and column-click headers reorder grade/performance data`, assert grade chart school-year control is not `all` on default render.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added shipped-HTML contract assertions for `applyGradeChartCurrentSchoolYearDefault()` wiring.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs test/student-admin.spec.mjs` => `163` pass, `0` fail.
+  - `npm test` => `284` pass, `0` fail.
+  - deploy/parity:
+    - `./tools/deploy-api-safe.sh --force-sync --no-restart` => complete, route matrices pass.
+    - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+    - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+    - local/runtime/live hash parity for admin page:
+      - `student-admin.html` => `db8bd5900202a7d71dcf810c7f6c41b1bb247d38261f9a62db3f1abdf99b007b`.
+
+## Update (2026-03-21 - quarter SSOT wiring now overrides stale query/default drift on tabulator)
+
+- User requirement:
+  - for tabulator query `?period=quarter&schoolYear=all&quarter=q3` during first quarter, quarter must resolve to current school quarter from School Setup SSOT (`q1`), and school-year defaults must remain current (`2026-2027`).
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) previously normalized `schoolYear=all` to current year but did not consistently coerce quarter using School Setup quarter windows.
+  - quarter derivation relied on calendar fallback in several code paths and allowed stale explicit `quarter=q3` query values to persist.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - added SSOT setup state (`state.schoolSetup`) and `syncSchoolSetupFromUiSettings(...)` to hydrate School Setup `schoolYear` and quarter windows from local/server UI settings.
+  - added `schoolSetupQuarterForIsoDate(...)` and `quarterForSchoolYear(...)` helpers.
+  - made `quarterFromIsoDate(...)` SSOT-first (School Setup window mapping, then calendar fallback).
+  - in query override handling, when `schoolYear=all` and period is quarter/QTD, coerce quarter to SSOT current quarter for the resolved current school year.
+  - in option refresh, default preferred quarter now resolves via SSOT-aware helper.
+- Updated tests:
+  - [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs):
+    - strengthened `tabulator query schoolYear=all still resolves current school-year default` with quarter assertion (`q1`).
+    - added `tabulator schoolYear=all quarter query uses ssot current quarter`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - updated shipped-HTML contract assertions for new quarter SSOT helpers and `requestedSchoolYearAll` path.
+- Verification:
+  - `node --test test/grades-tabulator-ui.spec.mjs test/student-admin.spec.mjs` => `122` pass, `0` fail.
+  - `npm test` => `284` pass, `0` fail.
+  - deploy/parity:
+    - `./tools/deploy-api-safe.sh --force-sync --no-restart` => sync complete, route matrices pass.
+    - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+    - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+  - live DOM probe:
+    - `https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html?period=quarter&schoolYear=all&quarter=q3`
+      now resolves `schoolYear=2026-2027` and `quarter=q1`.
+
+## Update (2026-03-21 - school-setup school-year now drives tabulator defaults)
+
+- User requirement:
+  - when School Setup is `2026-2027`, tabulator defaults must use that year (not date-derived `2025-2026`).
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) resolved `SYSTEM_CURRENT_SCHOOL_YEAR` from query/date fallback only.
+  - it ignored persisted `sis.admin.uiSettings.schoolSetup.schoolYear` and did not promote server settings after authenticated bootstrap.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - `SYSTEM_CURRENT_SCHOOL_YEAR` is now mutable and can be refreshed from settings.
+  - `resolveSystemCurrentSchoolYear()` now priority-resolves:
+    1. query (`currentSchoolYear`/`schoolYear`)
+    2. local persisted School Setup (`sis.admin.uiSettings.schoolSetup.schoolYear`)
+    3. static fallback (`DEFAULT_SYSTEM_SCHOOL_YEAR`, currently `2026-2027`)
+    4. date-derived year.
+  - added `schoolYearFromUiSettings(...)` + `refreshSystemCurrentSchoolYear(...)`.
+  - `hydrateLetterGradeRanges()` now also refreshes current school-year from:
+    - local settings first
+    - server `/api/admin/settings/ui` settings second.
+- Updated tests:
+  - [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs):
+    - `tabulator no-query load uses school setup year from local settings`
+    - `tabulator authenticated bootstrap promotes server school setup year over stale local year`
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - updated shipped-HTML contract assertions for local-settings precedence and refresh hook.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/grades-tabulator-ui.spec.mjs` => `121` pass, `0` fail.
+  - `npm test` => `283` pass, `0` fail.
+  - live DOM probe results:
+    - without local School Setup key: `schoolYear = 2026-2027`.
+    - with `sis.admin.uiSettings.schoolSetup.schoolYear = 2026-2027`: `schoolYear = 2026-2027`.
+    - with query `?period=quarter&schoolYear=all&quarter=q3` + local School Setup key: `schoolYear = 2026-2027`.
+  - deploy + parity:
+    - `./tools/deploy-api-safe.sh --force-sync --no-restart` => sync complete, local+edge route matrices pass.
+    - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+    - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+- Remaining gap:
+  1. add one authenticated edge-browser smoke that logs in and confirms server-side School Setup year is applied without relying on localStorage seeding.
+
+## Update (2026-03-21 - tabulator current-school-year default hardening completed)
+
+- User concern:
+  - live tabulator page (`https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html`) reported missing current school-year default.
+- Live verification:
+  - direct live render check confirms current-year default is present:
+    - `schoolYear = 2025-2026`,
+    - options include `["all","2025-2026"]`.
+  - additional live check with explicit query override (`?period=quarter&schoolYear=all&quarter=q3`) now also resolves to current school year (`2025-2026`) on initial load.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - in `init()`, added a second pass `applyCurrentSchoolYearDefault()` immediately after `applyFilterQueryOverrides()`.
+  - this prevents stale/bookmarked `schoolYear=all` query input from overriding the current school-year default during initial bootstrap.
+- Updated tests:
+  - [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs):
+    - added `tabulator no-query load seeds current school-year over stale all preference`.
+    - added `tabulator query schoolYear=all still resolves current school-year default`.
+- Verification:
+  - `node --test test/grades-tabulator-ui.spec.mjs` => `4` pass, `0` fail.
+  - `node --test test/student-admin.spec.mjs test/grades-tabulator-ui.spec.mjs` => `118` pass, `0` fail.
+  - `./tools/deploy-api-safe.sh --force-sync --no-restart` => sync complete, local+edge route matrices all pass.
+  - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+  - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+- Remaining gap:
+  1. add one authenticated browser test that verifies post-login quarter retention behavior for explicit query `quarter` values with real data rows.
+
+## Update (2026-03-21 - completed production parity hardening for runtime/public sync + route/session regression checks)
+
+- Root cause (live sync incompleteness):
+  - [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh) mirrored only one public admin file (`student-admin.html`) and did not mirror parent/student portal public assets.
+  - both [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh) and [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh) copied source->target without `--delete`, allowing stale runtime/public files to survive.
+  - deploy checks covered only a narrow health/auth path and one edge URL, so link and portal parity regressions could pass unnoticed.
+- Updated [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh):
+  - sync roots are now env-overridable (`SOURCE_ROOT`, `RUNTIME_ROOT`, `PUBLIC_ROOT`) while preserving existing defaults.
+  - added full portal public mirror targets:
+    - `${PUBLIC_ROOT}/sis-admin` <- `web-asset/admin/`
+    - `${PUBLIC_ROOT}/sis-parent` <- `web-asset/parent/`
+    - `${PUBLIC_ROOT}/sis-student` <- `web-asset/student/`
+  - drift detection now compares full public portal directories, not a single admin HTML file.
+  - all source->runtime and source->public rsync operations now use `--delete`.
+  - added `LOCAL_ROUTE_CHECK_MATRIX` and `EDGE_HTTPS_CHECK_MATRIX` checks to validate:
+    - health/auth (`/healthz`, `/api/admin/auth/me`, `/api/parent/auth/me`, `/api/student/auth/me`),
+    - routing/link targets (`/admin/students?page=grades-data`, `/web-asset/admin/grades-tabulator.html`, `/parent/portal`, `/student/portal`).
+  - public mirror writes now auto-use `sudo -n` when `PUBLIC_ROOT` is not directly writable.
+- Updated [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh):
+  - all source->runtime rsync operations now use `--delete` (full scope and html scope).
+  - added the same local/edge route matrix health checks to cover admin + tabulator + parent + student portal paths.
+- Updated tests:
+  - added [test/deploy-sync-contract.spec.mjs](test/deploy-sync-contract.spec.mjs):
+    - verifies delete-sync mirror semantics and portal route matrices for both deploy scripts.
+  - updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added `GET /admin/students?page=grades-data resolves query deep-link route`.
+- Verification:
+  - `bash -n tools/deploy-api-safe.sh tools/sis-runtime-resync.sh` => pass.
+  - `node --test test/deploy-sync-contract.spec.mjs test/student-admin.spec.mjs` => `117` pass, `0` fail.
+  - deployed sync:
+    - `./tools/deploy-api-safe.sh --force-sync --no-restart` => complete.
+    - local matrix checks all pass for health/auth/admin/tabulator/parent/student routes.
+    - edge matrix checks all pass (`https://admin.eagles.edu.vn/admin/students?page=grades-data`, `/web-asset/admin/grades-tabulator.html`, `/parent/portal`, `/student/portal` => `200`).
+  - parity checks:
+    - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+    - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+    - `./tools/sis-runtime-resync.sh --check-only --scope html --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+  - full regression:
+    - `npm test` => `278` pass, `0` fail.
+- Coverage gaps and next actions:
+  1. consider adding one end-to-end Playwright deploy smoke that loads the three edge portals after sync and verifies first authenticated API probe status for each.
+  2. if operations require non-sudo sync mode in some environments, add an explicit `PUBLIC_WRITE_MODE=direct|sudo` switch to make elevation behavior policy-driven.
+
+## Update (2026-03-21 - resolved blocked UI regressions, full-suite green, and confirmed dev/live/public parity)
+
+- Root cause (regression blockers):
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - `studentDisplayName(..., { preferEnglish: true })` returned only English name and did not fall back to full name, causing attendance landing rows to hide names when English name was blank.
+    - `refreshDashboardSummaryAfterAttendanceChange()` gated on `state.authenticated`, but runtime state tracks auth via `state.authUser`; this prevented dashboard refresh after attendance save.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - `studentDisplayName` now falls back safely:
+    - `preferEnglish=true` => `englishName || fullName`
+    - default => `fullName || englishName`
+  - attendance dashboard refresh gate now uses `state.authUser`.
+- Regression verification:
+  - targeted failures now pass:
+    - `node --test --test-name-pattern="top search level scope narrows assignment student dropdown and supports datalist selection|attendance main defaults to absent and admin child shows per-student stats" test/student-admin-ui.spec.mjs`
+      => both target tests pass.
+  - full suite:
+    - `npm test` => `274` pass, `0` fail.
+- Live/dev/public sync and parity:
+  - `./tools/deploy-api-safe.sh --force-sync --no-restart` => sync completed, edge probe `200`.
+  - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+  - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+  - hash parity checks:
+    - `student-admin.html` hash matches across:
+      - dev: `/home/eagles/dockerz/sis/web-asset/admin/student-admin.html`
+      - runtime: `/home/admin.eagles.edu.vn/sis/web-asset/admin/student-admin.html`
+      - public mirror: `/home/admin.eagles.edu.vn/public_html/sis-admin/student-admin.html`
+    - `grades-tabulator.html` and `grades-tabulator-dev.html` hashes match across dev/runtime.
+- Coverage gaps and next actions:
+  1. add a dedicated UI test for attendance-row display fallback (`englishName` empty -> full-name visible) to guard this exact regression path.
+  2. consider replacing the implicit auth guard pattern with one helper (`isAuthenticatedSession()`) to prevent future `state.authenticated`/`state.authUser` drift.
+
+## Update (2026-03-21 - tabulator launch now carries current school-year context and query overrides beat stale Q3 prefs)
+
+- Root cause:
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) opened tabulator via a bare URL (`/web-asset/admin/grades-tabulator.html`) without carrying grade context.
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) restored persisted filter prefs before any launch context, so stale localStorage (for example `quarter=q3` and older `schoolYear`) could override intended defaults.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added `buildGradesTabulatorLaunchUrl()` to propagate launch context through query params:
+    - `currentSchoolYear`
+    - `schoolYear` (falls back to current if chart state is `all`)
+    - `quarter`
+    - `period` (normalizes empty custom range to `sytd`)
+    - `customFrom` / `customTo` when relevant.
+  - `openTabulatorGradesBtn` now navigates with `window.location.assign(buildGradesTabulatorLaunchUrl())`.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - added `filterQueryOverridesFromLocation()` + `applyFilterQueryOverrides()`.
+  - query params now override restored UI prefs for:
+    - `period`, `schoolYear`, `quarter`,
+    - `classKey`, `studentKey`, `schoolKey`,
+    - `customFrom`, `customTo`, `search`.
+  - init order now applies query overrides immediately after current-school-year seeding.
+- Updated tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - validates new tabulator launch URL builder contract and query-param propagation hooks.
+    - validates tabulator query-override helper presence in shipped HTML contract.
+  - added [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs):
+    - `query filters override persisted preferences for school-year and quarter`
+    - `seeds current school-year even when auth is required`.
+- Verification:
+  - baseline before changes: `npm test` reproduced existing unrelated UI failures in `test/student-admin-ui.spec.mjs`:
+    - `top search level scope narrows assignment student dropdown and supports datalist selection`
+    - `attendance main defaults to absent and admin child shows per-student stats`
+  - `node --test test/student-admin.spec.mjs test/grades-tabulator-ui.spec.mjs` => `115` pass, `0` fail.
+  - note: the two failures above were subsequently fixed in the later update section
+    `resolved blocked UI regressions, full-suite green, and confirmed dev/live/public parity`.
+- Coverage gaps and prioritized next actions:
+  1. stabilize or fix the two pre-existing `student-admin-ui.spec.mjs` failures so full-suite regression gating can run green again.
+  2. add an end-to-end admin-UI test that clicks `Open Tabulator Grades Admin` and asserts final navigation URL values.
+  3. add live-safe smoke coverage for query-driven tabulator load (`/web-asset/admin/grades-tabulator.html?...`) in deploy checks.
+
+## Update (2026-03-21 - tabulator back-link switched to live-safe query deep link)
+
+- Root cause:
+  - live edge serves `GET /admin/students` but returns `404` for deep path variants like `GET /admin/students/grades-data`.
+  - tabulator page linked back via `/admin/students/grades-data`, so the "Back to Grades Admin" link was dead in production.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - changed back link to `/admin/students?page=grades-data`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added query deep-link parsing (`?page=` / `?pageSlug=`) and initial-page resolution support.
+  - added adaptive URL sync mode (`query` vs `path`) via `resolveAdminPageUrlMode()`:
+    - defaults to `query` on `admin.eagles.edu.vn`,
+    - defaults to `query` whenever `page`/`pageSlug` query params exist,
+    - keeps `path` mode for local/test by default.
+  - history sync now writes query URLs in query mode (`/admin/students?page=<slug>`) instead of path URLs.
+  - popstate handling now restores from query deep links first, then pathname fallback.
+- Updated tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added HTML-contract assertions for query deep-link routing helpers/mode.
+    - added assertion that tabulator back-link href is `/admin/students?page=grades-data`.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - added `admin ui resolves query deep link and keeps ?page routing after login bootstrap`.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - `node --test --test-name-pattern="queue-hub deep link|query deep link" test/student-admin-ui.spec.mjs` => target tests pass.
+  - live checks:
+    - `https://admin.eagles.edu.vn/admin/students/grades-data` => `404` (edge limitation persists),
+    - `https://admin.eagles.edu.vn/admin/students?page=grades-data` => `200`,
+    - `https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html` => `200` and contains updated href.
+  - sync status:
+    - `./tools/deploy-api-safe.sh --force-sync --no-restart` completed successfully,
+    - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+
+## Update (2026-03-21 - grades-tabulator always seeds current school-year control on initial load)
+
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) only finalized school-year selection after authenticated data bootstrap.
+  - when auth/bootstrap did not complete immediately (or failed), the UI control could still show only `All school years`, making the current school year appear missing.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - `normalizedFiltersSnapshot` now defaults `schoolYear` to `SYSTEM_CURRENT_SCHOOL_YEAR` when unset.
+  - added `applyCurrentSchoolYearDefault(...)` to ensure the current school-year option exists in `#schoolYear` and is selected.
+  - `init()` now calls `applyCurrentSchoolYearDefault({ force: true })` before auth/bootstrap so the control is correct even on login-required path.
+- Updated tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added HTML-contract assertions for:
+      - school-year default fallback to `SYSTEM_CURRENT_SCHOOL_YEAR`,
+      - `applyCurrentSchoolYearDefault(...)` function presence,
+      - forced init call `applyCurrentSchoolYearDefault({ force: true })`.
+- Verification:
+  - baseline before change: `timeout 180s npm test` hit known UI failures and timed out:
+    - `test/student-admin-ui.spec.mjs` subtests `top search level scope narrows assignment student dropdown and supports datalist selection`
+    - `test/student-admin-ui.spec.mjs` subtest `attendance main defaults to absent and admin child shows per-student stats`
+  - focused suite: `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - jsdom smoke (unauthenticated path) confirms seeded control:
+    - `schoolYearValue: "2025-2026"`,
+    - options include `["all","2025-2026"]`,
+    - status line shows login-required message.
+  - live wiring:
+    - `./tools/deploy-api-safe.sh --force-sync --no-restart` completed with health and edge checks.
+    - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+    - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+    - live page source at `https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html` includes `applyCurrentSchoolYearDefault` and forced init call.
+
+## Update (2026-03-21 - grades tabulator exercise columns hidden by wrong school-year default)
+
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) resolved `SYSTEM_CURRENT_SCHOOL_YEAR` from hardcoded fallback (`2026-2027`) before date-derived year.
+  - with current date in March 2026, default period `SYTD` filtered rows to `2026-2027`, excluding existing `2025-2026` grade records and producing empty exercise columns.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - `resolveSystemCurrentSchoolYear()` now prioritizes `schoolYearForIsoDate(TODAY_ISO)` before static fallback.
+  - query param override (`?currentSchoolYear=` / `?schoolYear=`) remains highest priority.
+- Updated tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added tabulator contract assertions for date-derived school-year precedence.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - deployed runtime admin assets via:
+    - `./tools/sis-runtime-resync.sh --sync-on-mismatch --scope html --runtime-root /home/admin.eagles.edu.vn/sis --no-restart`
+  - edge probe confirms page serves (`200`) and includes patched `dateDerived` school-year logic.
+
+## Update (2026-03-21 - terminal HTTPS probe now bypasses bot-deny false 403)
+
+- Root cause:
+  - edge layer returns `403 Forbidden: Malicious bot detected.` for default `curl` user-agent on `https://admin.eagles.edu.vn/...`.
+  - previous verification used local runtime service only, leaving direct HTTPS check as a residual gap.
+- Updated [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh):
+  - added browser-like UA support for health-check requests (`CURL_BROWSER_USER_AGENT`).
+  - added explicit edge HTTPS probe (`EDGE_HTTPS_CHECK_URL`, default `https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html`) with expected-status guard (`EDGE_HTTPS_CHECK_EXPECTED_CODE`, default `200`).
+  - health-check output now reports edge probe result and prints response preview on failure.
+- Updated [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh):
+  - added the same browser-like UA + edge HTTPS probe controls.
+  - auto-enables default edge URL probe when runtime root is `/home/admin.eagles.edu.vn/sis` (or uses explicit `EDGE_HTTPS_CHECK_URL`).
+- Verification:
+  - direct probe with default curl UA still reproduces bot-deny body (`Forbidden: Malicious bot detected.`).
+  - direct probe with browser-like UA now returns `200` for `https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html`.
+  - `./tools/sis-runtime-resync.sh --scope html --runtime-root /home/admin.eagles.edu.vn/sis --no-restart` => edge HTTPS probe `200`.
+  - `./tools/deploy-api-safe.sh --force-sync --no-restart` => edge HTTPS probe `200`.
+  - `bash -n tools/deploy-api-safe.sh tools/sis-runtime-resync.sh` => `OK`.
+
+## Update (2026-03-21 - live grades-tabulator URL missing in runtime admin assets)
+
+- Root cause:
+  - runtime path `/home/admin.eagles.edu.vn/sis/web-asset/admin/` only had `student-admin.html`; `grades-tabulator.html` and other admin static files were missing.
+  - sync scripts only mirrored `web-asset/admin/student-admin.html`, not the full admin asset directory.
+- Updated [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh):
+  - drift detection now checks full `web-asset/admin/` asset parity (`admin-assets`).
+  - sync step now mirrors full `web-asset/admin/` with rsync exclusions, while still separately mirroring `student-admin.html` to public nginx path.
+  - added rsync exclude for `.sync.ffs_db`.
+- Updated [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh):
+  - `--scope html` now compares/syncs full `web-asset/admin/` assets, not only `student-admin.html`.
+  - drift and sync rsync calls now use consistent excludes (`*.BAK-*`, `*~`, `.DS_Store`, `.sync.ffs_db`).
+  - html-scope backup now snapshots runtime `web-asset/admin/` directory contents.
+- Runtime fix applied:
+  - ran `./tools/sis-runtime-resync.sh --sync-on-mismatch --scope html --runtime-root /home/admin.eagles.edu.vn/sis --no-restart --skip-health-check`.
+  - this copied `grades-tabulator.html` and `grades-tabulator-dev.html` into live runtime admin assets.
+- Verification:
+  - `ls -l /home/admin.eagles.edu.vn/sis/web-asset/admin/grades-tabulator.html /home/admin.eagles.edu.vn/sis/web-asset/admin/grades-tabulator-dev.html` => files present.
+  - `curl -I http://127.0.0.1:8787/web-asset/admin/grades-tabulator.html` => `200 OK`.
+  - `curl -I http://127.0.0.1:8787/web-asset/admin/grades-tabulator-dev.html` => `200 OK`.
+  - `bash -n tools/deploy-api-safe.sh tools/sis-runtime-resync.sh` => `OK`.
+- Test status:
+  - baseline `npm test` before changes reported at least one failure (`test/student-admin-ui.spec.mjs`, subtest `attendance main defaults to absent and admin child shows per-student stats`) and did not complete cleanly in this session.
+
+## Update (2026-03-21 - live Today Snapshot count parity + current-assignment chart SVG fix)
+
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - `summarizeTodayAttendanceForDashboard` now backfills unresolved absences to the enrolled baseline on local weekend days (Saturday/Sunday) only:
+    - `todayAbsences = explicitAbsences + max(0, totalEnrollment - (attendance + explicitAbsences))`
+  - this enforces `todayAttendance + todayAbsences == totalEnrollment` on weekends when enrollment is known, preventing mismatched dashboard totals.
+  - weekday behavior remains tracked-row based; when enrollment is unknown (`0`), behavior also remains tracked-row based.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - fixed malformed overview chart SVG grid tick markup by properly closing `<line>` before `<text>` in both line/bar chart renderers.
+  - removes invalid nested SVG structure that could render assignment charts as blank.
+- Updated tests:
+  - [test/student-admin-dashboard-summary.spec.mjs](test/student-admin-dashboard-summary.spec.mjs):
+    - updated attendance-summary expectations for weekend baseline vs weekday tracked behavior.
+    - added Sunday + enrollment-unknown fallback coverage.
+- Verification:
+  - `node --test test/student-admin-dashboard-summary.spec.mjs` => `12` pass, `0` fail.
+  - `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - `node --test --test-name-pattern="overview assignment line chart|overview bar chart|overview assignment charts fall back" test/student-admin-ui.spec.mjs` => `4` pass, `0` fail.
+  - deployed and re-verified live (`https://admin.eagles.edu.vn/admin/students`) with parity check:
+    - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+
+## Update (2026-03-21 - rubric score ? icon legend popover in parent-tracking tables)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added compact `?` info icon next to rubric score headers (`x/5`) in both:
+    - `Basic Student Skills`
+    - `Conduct During Class`
+  - implemented interactive score-legend popover (`data-pt-score-legend-popover`) with the same 0-5 Vietnamese definitions used by radio tooltips.
+  - added popover initialization + interaction handlers:
+    - click `?` to toggle
+    - click outside to close
+    - `Escape` to close
+  - popover content is generated from `PARENT_TRACKING_SCORE_TOOLTIPS` to keep one shared source of truth for score definitions.
+- Updated tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - verifies popover opens from `?` icon and shows expected 0/5 legend text, then closes on second click.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - verifies legend markup/hooks (`data-pt-score-legend-toggle`, `data-pt-score-legend-popover`) and initializer function exist in admin HTML contract.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `161` pass, `0` fail.
+  - `npm test` => `161` pass, `0` fail.
+- Residual risk:
+  - popover width is constrained for mobile; very long localized strings may wrap to multiple lines by design.
+
+## Update (2026-03-21 - Eggs & Chicks rubric rows set to N/A and gray-disabled)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - marked these skill rubric rows with `data-pt-min-level="Pre-A1 Starters"` so they are disabled (N/A) for `Eggs & Chicks`:
+    - `Writes notes independently.`
+    - `Consistently studies class notes outside of class.`
+    - `Reviews notes before attending class.`
+    - `Knows and uses Eagles Club Notebook extensive grammar references, word lists, and speaking practice drills.`
+  - existing row-disable behavior applies gray-out styling and disables score/recommendation inputs for those rows when class level is below `Pre-A1 Starters`.
+- Updated tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added HTML contract checks confirming the four rows are gated with `data-pt-min-level="Pre-A1 Starters"`.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `161` pass, `0` fail.
+  - `npm test` => `269` pass, `0` fail.
+- Residual risk:
+  - gating is level-threshold based; if level ordering metadata changes, the disable boundary should be rechecked.
+
+## Update (2026-03-21 - parent-tracking rubric radio score tooltips)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - added score-definition tooltip map for parent-tracking rubric radios:
+    - `0 = hiện không áp dụng cho học sinh.`
+    - `1 = thể hiện hành vi nếu được nhắc nhở trực tiếp`
+    - `2 = thể hiện hành vi nếu được nhắc nhở gián tiếp`
+    - `3 = thể hiện hành vi một cách độc lập dưới 50% thời gian`
+    - `4 = thể hiện hành vi một cách độc lập trên 50% thời gian`
+    - `5 = thể hiện hành vi một cách độc lập`
+  - applied tooltips to each score radio input and its label chip in rubric rows.
+  - added aria labels per score radio so hover/help text semantics are available to assistive tech.
+- Updated tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - validates tooltip text appears on generated rubric radios for scores `0` and `5`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - validates tooltip map and radio tooltip wiring exist in shipped admin HTML contract.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `161` pass, `0` fail.
+  - `npm test` => `269` pass, `0` fail.
+- Residual risk:
+  - tooltip UX is browser-native (`title`) and therefore style/position varies by browser/OS.
+
+## Update (2026-03-21 - legacy report metadata backfill + Grades Pulse trendline modal)
+
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added legacy parent-report metadata backfill flow for pre-bundle records without `metaPayload`.
+  - backfill now derives and persists class-focus/homework snapshot metadata into the bundled comment payload (`classDate`, `classDay`, `teacherName`, `lessonSummary`, `visionStatus`, homework snapshot fields, recipients/outstanding assignments).
+  - backfill runs before parent/student dashboard payload serialization and before admin student-detail/report-card reads, making legacy reports persistently up-converted when accessed.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - Grades Pulse chart lanes now render a calculated least-squares trendline overlay.
+  - added per-lane `Open` action to launch a full-size detail modal with higher-resolution SVG (`980x420`) that preserves trendline/target/average overlays.
+  - added lane legend markers for Data/Trend/Target/Average and modal close wiring (button, backdrop click, Escape key).
+- Updated tests:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - added assertions for legacy metadata backfill guards and route wiring.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added HTML contract assertions for trendline CSS, lane-open trigger, and grade-chart modal hooks.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - extended UI assertions to validate lane rendering, modal opening, and trendline SVG presence.
+- Verification:
+  - `node --test test/student-admin-store-parent-report.spec.mjs test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `171` pass, `0` fail.
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npm test` => `269` pass, `0` fail.
+- Residual risk:
+  - legacy rows only get backfilled when read through updated routes; offline rows untouched by runtime traffic remain pre-bundle until first access.
+
+## Update (2026-03-21 - parent-report form metadata now persisted/retrievable end-to-end)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - parent-report save payload now persists class-focus and homework snapshot metadata in `metaPayload`:
+    - `classDate`, `classDay`, `teacherName`, `lessonSummary`, `visionStatus`,
+    - `homeworkAnnouncement`, `currentHomeworkStatus`, `currentHomeworkHeader`, `currentHomeworkSummary`,
+    - `pastDueHomeworkCount`, `pastDueHomeworkSummary`,
+    - `recipients` snapshot,
+    - `outstandingAssignments` snapshot.
+  - edit flow now restores persisted class-focus fields (`teacher`, `lesson summary`, `vision status`, homework announcement) when loading saved reports.
+  - clear/reset flow now explicitly restores default vision status.
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - extended parent-report comment bundling with `[[SIS-REPORT-BUNDLE-V2:...]]` marker for combined `rubricPayload + metaPayload`.
+  - kept legacy `[[SIS-RUBRIC-V1:...]]` decode compatibility for historical records.
+  - normalized and persisted report metadata payload so it is stored, retrievable, and returned with mapped `parentReports`.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - parent dashboard `reportArchive` serialization now emits decoded report metadata fields, plus snapshot arrays (`recipients`, `outstandingAssignments`).
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - parent report modal now renders an additional `Class Focus` band from persisted PR-form fields.
+  - homework snapshot rendering now uses persisted `homeworkAnnouncement` before default fallback text.
+  - report-level overdue preview button now opens the modal table from persisted `outstandingAssignments` snapshot (fallback to live overdue rows when snapshot is absent).
+- Updated tests:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - added metadata bundle round-trip coverage for class-focus/homework snapshot + recipients/outstanding rows.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - validates admin save payload includes `metaPayload` with persisted class-focus/homework snapshot fields and snapshot arrays.
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - validates parent modal `Class Focus` band rendering and report snapshot overdue-table preview.
+- Verification:
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => `9` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `48` pass, `0` fail.
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npm test` => `268` pass, `0` fail.
+- Residual risk:
+  - legacy archived reports created before bundle v2 will not contain class-focus/homework snapshot metadata and will continue to use fallback display text.
+
+## Update (2026-03-20 - parent-tracking rubric scoring changed to 0-5 with 2x3 radio groups)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - changed PR scoring labels from `0-10` to `0-5` and rubric column headers from `x/10` to `x/5`.
+  - replaced rubric score entry controls with `2x3` radio-button groups (`0..5`) per rubric row while preserving payload field names via hidden score inputs.
+  - updated rubric state sync logic (row disable/clear/apply payload) so radio UI and hidden score values stay consistent.
+  - added explicit `.grade-chart-dot` CSS to resolve selector diagnostics and keep chart-dot hover behavior explicit.
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - rubric score normalization now clamps persisted rubric scores to `0..5`.
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - report snapshot labels now show `Behavior/Skills/Academic (0-5)`.
+  - report score formatting now renders `x/5` for 0-5 records and preserves legacy `x/10` display for older archived 0-10 values.
+- Updated tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs) now validates hidden-score + radio-group rubric controls and updated 0-5 payload expectations.
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs) now validates 0-5 clamping in rubric normalization.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/student-admin.html web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => `8` pass, `0` fail.
+  - `node --test test/student-admin-ui.spec.mjs` => `48` pass, `0` fail.
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npm test` => `267` pass, `0` fail.
+- Residual risk:
+  - archived parent reports created before this change may still carry 0-10 scores; parent display preserves them as `x/10` for backward readability.
+
+## Update (2026-03-20 - parent report header styling + PR-form category bands)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - styled top report metadata (`Date | Day | Time`) and identity line (`Class | StudentNumber | StudentFullName | StudentId`) as dedicated report header cards.
+  - replaced report body groupings with PR-form-aligned categories:
+    - `Performance Snapshot (Auto from records)`,
+    - `Basic Student Skills`,
+    - `Conduct During Class`,
+    - `Parent-facing Comment (Vietnamese)`.
+  - switched the band table header to `Prose | Score | Comments`.
+  - mapped rubric rows to full PR-form prose strings (instead of shortened labels) and kept snapshot values sourced from archived report data.
+  - tuned report-band column widths for dense stacked readability.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - updated modal assertions to match new category headings and `Prose` column label.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npm test` => `267` pass, `0` fail.
+- Residual risk:
+  - fields not persisted in the current parent-report payload (for example class-focus lesson summary) cannot be rendered in parent modal until they are added to report storage.
+
+## Update (2026-03-20 - parent performance-report body now renders direct admin PR-form parameters/scores/comments in bands)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - removed the narrative summary block from the performance-report modal body.
+  - rebuilt modal metrics using the same parent square elements/styles (`homework-square`, `attendance-square`) instead of simplified cards.
+  - rendered headings as requested:
+    - `Date | Day | Time`,
+    - `class | studentnumber | studentFullName | studentId`.
+  - rebuilt report body into banded `Parameter | Score | Comments` tables for:
+    - `Class`,
+    - `Behavior`,
+    - `Student Skills`,
+    - `Academic Performance`,
+    - `Engagement In & Out Of Class`.
+  - mapped values directly from archived admin report fields (including rubric payload when present) instead of synthetic corrective-action summary text.
+  - fixed inconsistent modal wiring by removing stale references (`performanceReportQuickMetrics`, `performanceReportModalSummary`, `performanceReportGradesTableBody`) and rendering Grades YTD as a report-period facsimile row (no live wiring dependency).
+  - updated acknowledgement CTA copy to `<Parent> acknowledges review of this report` and timestamp status text.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - parent dashboard `reportArchive` rows now include decoded `rubricPayload` so parent modal can render PR-form rubric rows directly.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - aligned modal assertions to new IDs/body structure and acknowledgement copy.
+  - added rubric payload fixture checks so band rows assert direct recommendation text appears.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => `8` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Residual risk:
+  - homework snapshot fields beyond default copy (`currentHomeworkStatus`, `pastDueHomeworkCount`, etc.) are rendered when present but are not yet persisted by the current parent-report model.
+
+## Update (2026-03-20 - parent report modal restructured with identity header, homework/attendance strips, and Grades YTD table)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - added report identity header line in modal:
+    - `class | studentnumber | studentFullName | studentId`.
+  - changed report timestamp display to include weekday/date/time.
+  - added compact report strips for:
+    - `Bài tập về nhà hiện tại | Bài tập về nhà quá hạn`,
+    - `Hồ sơ điểm danh lớp học`.
+  - embedded `Grades YTD` table block in modal with Tabulator integration (column tooltips, movable/resizable columns, per-column hide controls, no stats rows).
+  - kept and integrated banded corrective-action sections below metrics for readability.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - strips Tabulator CSS/JS tags from JSDOM fixture bootstrap.
+  - added modal assertions for new identity/quick-metric/report-structure elements.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Residual risk:
+  - full Tabulator visual parity with the admin grades page still depends on authenticated browser QA in runtime (JSDOM path validates structure/fallback only).
+
+## Update (2026-03-20 - parent performance-report modal rebuilt with corrective-action bands)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - replaced the report modal's single free-text summary body with structured, banded sections:
+    - `Class`,
+    - `Behavior`,
+    - `Student Skills`,
+    - `Academic Performance`,
+    - `Engagement In & Out Of Class`.
+  - mapped report metrics from parent dashboard archive rows (`homeworkCompletionRate`, `homeworkOnTimeRate`, `behaviorScore`, `participationScore`, `inClassScore`, `participationPointsAward`) into readable section bullets.
+  - added corrective-action focused recommendations that activate when metric thresholds are below target.
+  - added visual section band styling with severity tones (`ok/watch/alert`) to make weak areas obvious at a glance.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - extended report-archive fixture with performance metric fields.
+  - added assertions that the modal renders banded section headings and corrective-action guidance text.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Residual risk:
+  - corrective-action text is currently rule-based from available numeric fields; if richer rubric/form outputs are added later, recommendation logic should be expanded.
+
+## Update (2026-03-20 - fixed clipped percent glyph in parent attendance squares)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - fixed right-edge clipping on `%` values in `Chuyên cần` and `% đi trễ` tiles by allowing percent value overflow visibility and reserving a small inline-end breathing space.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Residual risk:
+  - if future square width is reduced further, percent typography may need another pass on clamp/letter-spacing values.
+
+## Update (2026-03-20 - restored Vietnamese diacritics in student portal homework UI text)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - corrected non-diacritic Vietnamese strings to proper diacritics across homework badge labels, homework summary/status text, overdue modal empty state, and announcement link captions.
+  - kept rendering logic unchanged (text-only localization cleanup).
+- Verification:
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `1` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+- Residual risk:
+  - other student-portal sections may still contain legacy non-diacritic strings outside the homework surface.
+
+## Update (2026-03-20 - restored Vietnamese diacritics in parent portal script UI text)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - corrected user-facing Vietnamese strings in script-rendered UI text from non-diacritic forms to proper diacritics (homework summaries, overdue table states, report acknowledgement status, attendance/report summaries, and report archive status lines).
+  - preserved non-UI normalization tokens (for example `khong`) used for input parsing compatibility.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Residual risk:
+  - additional non-diacritic text may still exist in future newly-added script strings unless kept under the same localization/QA checks.
+
+## Update (2026-03-20 - attendance tiles switched from square to compact rectangles)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - changed `Hồ sơ điểm danh lớp học` tiles from fixed squares to compact rectangles to reduce unused vertical space.
+  - kept label wrapping enabled and adjusted tile row sizing (`auto/auto`) to preserve readability inside shorter cards.
+  - reduced attendance value scale slightly so numbers stay balanced after height reduction.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Residual risk:
+  - at extreme zoom levels, wrapped labels can still increase per-tile height beyond the minimum rectangle target.
+
+## Update (2026-03-20 - attendance row break locked after "Chuyên cần" with full label wrapping)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - locked attendance overview to a 3-column desktop grid so `Chuyên cần` is the last square in row 1 and `Đi trễ 10'` starts row 2.
+  - kept 2-column layout for <=520px screens.
+  - removed attendance label truncation and enabled wrapped/balanced labels so square captions display fully.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+- Residual risk:
+  - wrapped labels increase vertical text density; visual QA is still recommended on the smallest supported viewport.
+
+## Update (2026-03-20 - attendance overview squares matched to overdue-homework tile proportions)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - aligned `Hồ sơ điểm danh lớp học` square geometry to the same visual ratio used by the `Bài tập về nhà quá hạn` tile.
+  - tuned attendance square layout to keep tile sizing consistent across breakpoints (`auto-fit` + square-safe minimum tile width).
+  - tightened attendance value typography/spacing to mirror overdue-count balance and avoid oversized `%` composition.
+  - clamped attendance tile labels to single-line ellipsis so long strings do not distort value proportions.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+- Residual risk:
+  - final visual polish still depends on browser/device QA (especially narrow viewport label truncation behavior).
+
+## Update (2026-03-20 - parent attendance square stats + report archive modal acknowledgement)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - rebuilt `Hồ sơ điểm danh lớp học` into six square counters:
+    - classes attended,
+    - total classes,
+    - attendance rate,
+    - tardy 10-minute count,
+    - tardy 30-minute count,
+    - late-arrival rate.
+  - rebuilt `Lưu trữ báo cáo kết quả học tập của sinh viên` into newest-first archive items.
+  - added performance report modal with top navigation arrows (`Trước` / `Tiếp`) and close control.
+  - added per-report acknowledgement action (`<parentId> xác nhận đã xem báo cáo`) with timestamp rendering and outstanding row emphasis removal.
+  - added client-side acknowledgement persistence in localStorage scoped by parent account + selected child.
+  - unified modal body scroll-lock handling so homework and report modals can coexist without lock leaks.
+- Updated [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+  - added coverage for attendance square metric values/rates.
+  - added coverage for performance archive newest-first ordering, modal arrow navigation, and acknowledgement clearing outstanding state.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+- Residual risk:
+  - report modal currently renders stored report summary/comments as the public-facing body because the parent dashboard payload does not yet provide a full rendered report document/HTML endpoint.
+
+## Update (2026-03-20 - parent portal symmetry polish for attendance/report surfaces)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - moved attendance and report section titles outside the bordered data surface, matching homework-card label treatment.
+  - introduced a shared `dashboard-surface-shell` wrapper so attendance and report cards follow consistent border/radius/padding geometry.
+  - enforced square attendance tiles with `aspect-ratio: 1 / 1` (no rectangle drift across breakpoints).
+  - normalized report archive row styling to align with the same panel rhythm and stronger outstanding-state contrast.
+  - tightened square data density by increasing value typography and reducing interior padding/gap so the numeric content nearly fills each square.
+  - refined square metric number handling:
+    - `%` values use tighter spacing and condensed handling at `100%`,
+    - numeric rendering trims trailing `.0` (`0.0%` now renders `0%`).
+  - refreshed surface styling with subtle brand-tinted gradients and stronger contrast while keeping palette restrained.
+  - standardized square proportions with a shared base style (`.homework-square, .attendance-square`) to keep geometry/padding/line-height consistent across dashboard cards.
+  - increased metric label readability and rebalanced value scale so percentages remain contained while numbers still dominate tile space.
+  - rendered square `%` symbols as superscript micro-markers (`square-number` + `square-percent-symbol`) for tighter `100%` composition.
+  - added a dedicated status clamp style on current-homework square values (`.homework-square-v.is-status`) so `Khong/Khong co` labels stay balanced inside the tile.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `10` pass, `0` fail.
+
+## Update (2026-03-19 - mirrored homework card/modal UX to parent portal)
+
+- Updated [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+  - mirrored the exact homework-card pattern from student portal:
+    - outside clamped card labels,
+    - square status badges (`Current Homework`: green/purple/gray status in VI),
+    - square arrears counter (`Past Due Homework`: 0 green, >0 red),
+    - current assignment announcement hotlink when URL data exists.
+  - added parent overdue modal table (`Due Date`, `Assignment`) with ascending due-date sort and assignment links when available.
+  - added modal controls (open/close/backdrop/Escape) and `body.modal-open` scroll lock.
+  - hooked modal shutdown into parent page/view changes so overlay state cannot leak between views.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - expanded `/parent/portal` static source-contract assertions for mirrored homework badge/modal IDs and helper functions.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/parent/parent-portal.html` => pass.
+  - `npx --yes html-validate web-asset/parent/parent-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - `node --test test/parent-portal-ui.spec.mjs` => `8` pass, `0` fail.
+- Residual risk:
+  - announcement links are shown only when a URL is present on homework rows (or parseable from comments); rows without URLs remain plain text in overdue tables.
+
+## Update (2026-03-19 - student portal homework cards redesigned with square badges + overdue modal links)
+
+- Updated [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+  - moved `Current Homework` and `Past Due Homework` labels outside card data surfaces with clamped, high-weight heading styles.
+  - replaced plain summary rows with square status badges:
+    - `Current Homework`: Vietnamese status states (`Hoan thanh` green, `Chua xong` purple, `Khong co` gray).
+    - `Past Due Homework`: large centered arrears number (`0` green, `>0` red).
+  - current-homework card now shows assignment title in the main body and hotlinks to an announcement URL when one is available on the row payload (direct URL fields or URL extracted from comments).
+  - added overdue modal table (date + assignment columns) for uncompleted assignments, sorted ascending by due date, with assignment links to announcement URLs when available.
+  - added modal open/close controls (button, backdrop click, `Escape`) and scroll lock via `body.modal-open`.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - expanded `/student/portal` static contract assertions for new homework badge/modal IDs and helper functions.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/student/student-portal.html` => pass.
+  - `npx --yes html-validate web-asset/student/student-portal.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `1` pass, `0` fail.
+- Residual risk:
+  - assignment announcement links render only when URL data is present in homework rows (or embedded in comments as `http/https` text); rows without URLs render plain assignment text in the overdue table.
+  - parent portal currently retains the previous homework-card layout and has not yet been mirrored to this new pattern.
+
+## Update (2026-03-19 - grades admin/tabulator UI controls, chart readability, and <=480 clamps)
+
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - replaced the Grades Data inline link with descriptive prose and a real button (`#openTabulatorGradesBtn`) that navigates to `/web-asset/admin/grades-tabulator.html`.
+  - enforced grade-chart responsive layout contract:
+    - single-column lanes by default,
+    - two-column lanes only at `min-width: 481px`.
+  - added chart readability signals per lane:
+    - axis lines and grid gradations,
+    - labeled threshold and average guide lines,
+    - x-axis labels,
+    - compact legend with distinct colors for data/threshold/average.
+  - added <=480 text clamps for lane titles/headings to keep chart labels tight on narrow screens.
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - replaced header `...` menu affordance with two side-by-side buttons in each column header:
+    - green `+` for pin/unpin,
+    - dark gray `-` for hide.
+  - removed legacy header-menu wiring and bound the new button actions through `columnDefaults.headerClick`.
+  - kept Student width auto-fit tied to student data rows (not stat/footer rows) and preserved the 3-character minimum resize floor helper.
+  - added <=480 metric-card label/value clamps for the top summary labels (`Rows`, `Students`, `Classes`, `Avg Score %`, `HW Completion`).
+  - added a subtle hover highlight on every table row for easier scanning.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - removed legacy `headerMenu`/`coreHeaderMenu` source-contract assertions.
+  - added source-contract assertions for new header-action buttons (`data-header-action="pin|hide"`), click handler wiring, and no `headerMenu` usage.
+  - added assertions for Grades Data tabulator button/callout and responsive/chart markers.
+  - added assertions for <=480 metric-card text clamps on tabulator page.
+- Verification:
+  - `npx --yes html-validate web-asset/admin/student-admin.html web-asset/admin/grades-tabulator.html` => pass.
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/student-admin.html web-asset/admin/grades-tabulator.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - `npm test` => `265` pass, `0` fail.
+- Residual risk:
+  - static tests assert key source contracts, but visual spacing/contrast at extreme zoom levels still relies on manual browser QA.
+- Prioritized next action:
+  - run authenticated Playwright checks at `http://127.0.0.1:8788/admin/students/grades-data` and `http://127.0.0.1:8788/web-asset/admin/grades-tabulator.html` to verify mobile (<480) clamp behavior and header action-button ergonomics in live rendering.
+
+## Update (2026-03-19 - student/name column now data-cell fit only + resize floor reduced to ~3 chars)
+
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - Student (`studentDisplay`) width estimation now uses `studentRows` only (excludes summary/stat footer rows).
+  - lowered Student column minimum resize width to a 3-character target (`studentColumnMinWidthForResize`, ~47px).
+  - kept a separate viewport-based default width for initial render (`studentColumnDefaultWidthForViewport`) so the table does not boot with an ultra-narrow Student column.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended static source-contract assertions to lock Student-column width sizing to `studentRows` and new 3-character minimum-width helper.
+- Verification:
+  - baseline before changes: `npm test` => `265` pass, `0` fail.
+  - after changes: `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - after changes: `npm test` => `265` pass, `0` fail.
+- Residual risk:
+  - 3-character minimum is pixel-estimated and can render a little wider/narrower depending on font metrics across browsers.
+- Prioritized next action:
+  - add authenticated Playwright coverage that drags Student column below old clamp and asserts persistence/reload behavior with the new minimum.
+
+## Update (2026-03-19 - consolidated grades tabulator table-state migration now enforces data-fit defaults)
+
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - added table UI state schema versioning (`TABLE_UI_STATE_SCHEMA_VERSION = 2`).
+  - legacy/unversioned table-state migration now strips persisted column widths, so default column widths are recalculated from data (not headers) on first load after migration.
+  - keeps column resizing enabled and still persists user-resized widths after migration.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended static source-contract assertions for table-state schema version and width-reset migration logic.
+- Verification:
+  - baseline before changes: `npm test` => `265` pass, `0` fail.
+  - after changes: `node --test test/student-admin.spec.mjs` => pass.
+  - after changes: `npm test` => `265` pass, `0` fail.
+- Residual risk:
+  - users with previously saved manual column widths in legacy/unversioned state get a one-time reset to data-fit defaults.
+- Prioritized next action:
+  - add authenticated Playwright regression that seeds legacy table-state, loads the consolidated page, and verifies recalculated widths plus post-resize persistence.
+
+## Update (2026-03-19 - grades tabulator promoted from dev path + data-fit default widths + normalized page margins)
+
+- Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+  - promoted the tabulator page to non-dev naming (`SIS Grades Tabulator`) and non-dev storage keys:
+    - `sis-grades-tabulator-v1`
+    - `sis.grades-tabulator.ui-prefs.v1`
+    - `sis.grades-tabulator.table-state.v1`
+  - added legacy-key fallback/migration so existing dev-path local preferences are retained on first load.
+  - kept column resizing enabled and changed default width strategy to data-driven sizing (`coreColumnDataWidth`, `assignmentColumnDataWidth`) so initial widths are based on matrix data instead of header labels.
+  - normalized page-shell top/bottom margins to the repo default spacing (`24px auto`) across breakpoints.
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - converted dev URL into a compatibility redirect shim to `/web-asset/admin/grades-tabulator.html`.
+- Updated [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+  - switched Grades Data panel link text/path from `Tabulator Grades Dev View` to `Tabulator Grades View`.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - moved static page source-contract coverage to `/web-asset/admin/grades-tabulator.html`.
+  - added compatibility coverage for dev-path redirect behavior.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
+  - `npm test` => `265` pass, `0` fail.
+- Residual risk:
+  - data-driven width estimation is character-based (not canvas-measured), so exact pixel fit can vary slightly by browser font rendering.
+- Prioritized next action:
+  - add authenticated Playwright coverage that drags a column resize handle, reloads, and asserts persisted width behavior on the consolidated page path.
+
+## Update (2026-03-18 - header alignment correction after scroll overrides)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - replaced forced horizontal scroll + gutter overrides with Tabulator-safe `overflow-x: auto` on table host and tableholder.
+  - removed `scrollbar-gutter: stable both-edges` from matrix containers to eliminate header/body horizontal offset.
+  - preserved horizontal scrolling behavior and sticky identity columns.
+- Verification:
+  - authenticated Playwright check on `http://127.0.0.1:8788/web-asset/admin/grades-tabulator-dev.html`:
+    - load status reached `Loaded 600 grade rows...`
+    - header/cell left deltas for `level`, `studentDisplay`, `studentNumber`, `quarter` are all `0.0` (aligned).
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+- Residual risk:
+  - scrollbar visibility remains platform/browser dependent (`auto` behavior), but alignment is stable with real data.
+
+## Update (2026-03-18 - table modal toolbar control + non-redundant student-number sublines)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - replaced toolbar’s chart-open action with a true full-screen table modal toggle (`Open table modal` / `Exit table modal`) using `#gradeGridCard` modal state and backdrop close.
+  - modal mode now locks page scroll and redraws Tabulator to fit modal viewport while preserving horizontal matrix scrolling/sticky columns.
+  - updated Student Number header card sublines to non-redundant labels (`Roster` / `ID`) while keeping 3-line symmetric header structure.
+  - first 4 core columns now share `assignment-col core-col` classing so the top `...` row and header shell match exercise-column structure.
+  - removed visible `Due:` prefix from assignment header subline (date remains) to tighten exercise column width.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - switched source-contract assertions to table-modal controls/functions and new student-number subline contract.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - `npm test` => `264` pass, `0` fail.
+- Residual risk:
+  - table modal uses fixed-position layout; if browser zoom is extreme, close control remains available but vertical space can become tight.
+- Prioritized next action:
+  - add authenticated Playwright checks for modal open/close + redraw correctness with real grade rows.
+
+## Update (2026-03-18 - follow-up: stable centered shell + visible horizontal scroll + explicit modal trigger + fully symmetric core headers)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - fixed post-load layout drift by constraining grid children with `min-width: 0` and keeping shell centering stable after Tabulator renders.
+  - enforced horizontal-scroll table navigation model (`responsiveLayout: false`) so all columns remain in one matrix and sticky identity columns can be verified.
+  - strengthened horizontal-scroll visibility (`overflow-x: scroll` + stable scrollbar gutter) on host/container layers.
+  - added explicit `Open chart modal` action button in grid toolbar (enabled when distribution row payload exists).
+  - tightened first 4 columns to match exercise-style 3-line header card structure and retained shared `...` header menus.
+  - narrowed/wrapped student-number rendering using `student-number-col` + wrapped formatter output.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended source-contract checks for fixed horizontal-scroll mode, explicit chart-open button, core-header 3-line card calls, and student-number wrap hooks.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - `npm test` => `264` pass, `0` fail.
+- Residual risk:
+  - when no assignment/distribution data exists for active filters, the chart-open toolbar button remains disabled by design.
+- Prioritized next action:
+  - add authenticated Playwright coverage for sticky-column behavior during horizontal scroll with real matrix data.
+
+## Update (2026-03-18 - centered grades shell + compact fit columns + symmetric sticky core headers + fullscreen distribution zoom)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - centered page shell with bounded width + consistent margins/padding to match other SIS admin pages.
+  - grade grid keeps horizontal scrolling enabled and sticky frozen identity columns (class/student) for rightward scroll workflows.
+  - tightened column fit by lowering assignment/base-column minimum widths and reducing header-card padding while preserving readability.
+  - assignment header titles are explicitly truncated with Tabulator header tooltips (full title + Q + due); removed native browser `title` tooltip from title span.
+  - tooltip typography standardized with `.tabulator-tooltip { font-size: 1rem; }`.
+  - first 4 core columns now use the same card-style header structure as exercise columns and retain shared `...` header menu behavior.
+  - distribution modal now supports dedicated fullscreen/windowed mode plus granular zoom controls (buttons, slider, wheel, and keyboard shortcuts).
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended tabulator-dev source-contract assertions for fullscreen/zoom controls, core header-card builder usage, and tooltip styling.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - `npm test` => `264` pass, `0` fail.
+- Residual risk:
+  - if users intentionally unpin the Student column via `...` menu, sticky behavior is disabled until re-pinned.
+- Prioritized next action:
+  - add authenticated Playwright coverage for column-width persistence + fullscreen zoom interactions using real grade data.
+
+## Update (2026-03-18 - horizontal scroll + content-fit columns + base-column header menus in grades matrix)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - grade grid container now explicitly allows horizontal scrolling (`overflow-x: auto`) while keeping vertical resize support.
+  - assignment columns no longer force a fixed width; they keep `minWidth` and now size to content under `fitDataTable`.
+  - student column remains frozen/sticky on horizontal scroll.
+  - first four base columns now include the same `...` header menu affordance as exercise columns (pin/unpin + hide actions).
+  - unified header menu icon string and shared menu builder for both base and assignment columns.
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended source-contract checks for horizontal overflow, base-column menu hooks, and sticky student-column contract.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+- Residual risk:
+  - on very narrow viewports, column menus can overlap compact headers until columns are scrolled into view.
+- Prioritized next action:
+  - add Playwright assertions for base-column `...` menu interactions (`hide`, `pin`) alongside existing exercise-column actions.
+
+## Update (2026-03-18 - resizable grade matrix height via corner hotspot + persisted table height)
+
+- Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):
+  - enabled native resize hotspot on the grade matrix container (`#gradeGrid { resize: vertical; }`).
+  - added table-height state management helpers (`applyTableHeight`, `observeTableHeightResize`) so container height changes are captured and persisted.
+  - persisted table height in existing table UI state storage (`sis.grades-tabulator-dev.table-state.v1`) and restored it on reload.
+  - preserved user-selected height when running `Reset columns` (column layout/sort reset no longer drops saved height).
+- Updated [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+  - extended tabulator dev source-contract assertions for resize hotspot CSS and new height-resize functions.
+- Verification:
+  - `npx --yes stylelint --config stylelint.config.mjs web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `npx --yes html-validate web-asset/admin/grades-tabulator-dev.html` => pass.
+  - `node --test test/student-admin.spec.mjs` => `112` pass, `0` fail.
+  - Playwright live check (`http://127.0.0.1:8788/web-asset/admin/grades-tabulator-dev.html?apiOrigin=http://127.0.0.1:8788`) confirmed:
+    - computed `resize` value is `vertical`,
+    - resizing `#gradeGrid` updates stored `tableHeight`,
+    - reload restores the resized height (`storedHeight` and loaded height remain aligned).
+- Residual risk:
+  - browser-native resize hotspot visibility can vary slightly by OS/browser theme, but the vertical resize behavior and persistence are functional.
+- Prioritized next action:
+  - add an authenticated Playwright regression that drags the resize handle and asserts persisted height across reload.
+
 ## Update (2026-03-18 - grade distribution mini chart + hover-detail modal in tabulator matrix)
 
 - Updated [web-asset/admin/grades-tabulator-dev.html](web-asset/admin/grades-tabulator-dev.html):

@@ -398,6 +398,93 @@ test("admin ui preserves queue-hub deep link after login bootstrap", async () =>
   dom.window.close()
 })
 
+test("admin ui resolves query deep link and keeps ?page routing after login bootstrap", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [
+      "overview",
+      "queue-hub",
+      "student-admin",
+      "profile",
+      "attendance",
+      "attendance-admin",
+      "assignments",
+      "assignments-data",
+      "parent-tracking",
+      "performance-data",
+      "grades",
+      "grades-data",
+      "reports",
+      "family",
+      "users",
+      "permissions",
+      "settings",
+    ],
+  }
+
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      void init
+
+      if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+      if (url.includes("/api/admin/auth/login")) return jsonResponse(200, { user: { username: "admin", role: "admin" }, rolePolicy })
+      if (url.includes("/api/admin/permissions")) {
+        return jsonResponse(200, {
+          roles: {
+            admin: rolePolicy,
+          },
+        })
+      }
+      if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: [], schools: [] })
+      if (url.includes("/api/admin/students")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/admin/dashboard")) {
+        return jsonResponse(200, {
+          levelCompletion: [],
+          classEnrollmentAttendance: [],
+          weeklyAssignmentCompletion: [],
+          today: {},
+        })
+      }
+      if (url.includes("/api/admin/queue-hub")) return jsonResponse(200, { generatedAt: "", panelOrder: [], panels: [] })
+      if (url.includes("/api/admin/notifications/batch-status")) return jsonResponse(200, { items: [], total: 0, hasMore: false })
+      if (url.includes("/api/admin/exercise-results/incoming")) {
+        return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+      }
+      if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/admin/runtime/service-control")) {
+        return jsonResponse(200, {
+          available: false,
+          enabled: false,
+          service: "exercise-mailer.service",
+          status: "inactive",
+          detail: "n/a",
+        })
+      }
+      return jsonResponse(200, {})
+    },
+    "http://127.0.0.1/admin/students?page=grades-data"
+  )
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    assert.equal(dom.window.location.pathname, "/admin/students")
+    assert.equal(dom.window.location.search, "?page=grades-data")
+    const active = dom.window.document.querySelector(".page-section.active")
+    assert.equal(active?.getAttribute("data-page"), "grades-data")
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
 test("news review modal supports student-scoped navigation and modal review actions", async () => {
   const rolePolicy = {
     role: "admin",
@@ -2005,6 +2092,20 @@ test("top search level scope narrows assignment student dropdown and supports da
     const optionText = studentOptions.map((option) => normalizeText(option.textContent || ""))
     assert.equal(optionText.some((text) => /\bSIS-002\b/i.test(text)), true)
     assert.equal(optionText.some((text) => /\bSIS-001\b/i.test(text)), false)
+  })
+
+  openPage(dom, "attendance")
+  await waitFor(() => {
+    const starterTile = document.querySelector(
+      '#attendanceLevelTiles .attendance-level-tile[data-level="Pre-A1 Starters"]'
+    )
+    assert.ok(starterTile)
+    starterTile.click()
+  })
+  await waitFor(() => {
+    const attendanceText = normalizeText(document.getElementById("attendanceLandingRows")?.textContent || "")
+    assert.match(attendanceText, /Starter Student/i)
+    assert.match(attendanceText, /\bSIS-001\b/i)
   })
 
   const datalistValue = normalizeText(document.querySelector("#searchStudentOptions option")?.value)
@@ -3654,13 +3755,43 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     const behaviorField = document.getElementById("pt_behaviorScore")
     assert.equal(behaviorField?.tagName, "INPUT")
     assert.equal(behaviorField?.readOnly, true)
-    const rubricScoreSelect = document.querySelector('select[name="pt_skill_questions"]')
-    assert.equal(rubricScoreSelect?.tagName, "SELECT")
-    const scoreValues = Array.from(rubricScoreSelect?.options || []).map((entry) => entry.value)
+    const rubricScoreField = document.querySelector('input[type="hidden"][name="pt_skill_questions"]')
+    assert.equal(rubricScoreField?.tagName, "INPUT")
+    const rubricScoreRadios = Array.from(
+      document.querySelectorAll('input[type="radio"][data-pt-score-name="pt_skill_questions"]')
+    )
+    assert.equal(rubricScoreRadios.length, 6)
+    const scoreValues = rubricScoreRadios.map((entry) => entry.value)
     assert.ok(scoreValues.includes("0"))
-    assert.ok(scoreValues.includes("10"))
-    const notApplicableOption = Array.from(rubricScoreSelect?.options || []).find((entry) => entry.value === "0")
-    assert.match(notApplicableOption?.textContent || "", /not applicable/i)
+    assert.ok(scoreValues.includes("5"))
+    const scoreZeroRadio = rubricScoreRadios.find((entry) => normalizeText(entry.value) === "0")
+    const scoreFiveRadio = rubricScoreRadios.find((entry) => normalizeText(entry.value) === "5")
+    assert.equal(
+      normalizeText(scoreZeroRadio?.getAttribute("title")),
+      "0 = hiện không áp dụng cho học sinh."
+    )
+    assert.equal(
+      normalizeText(scoreFiveRadio?.getAttribute("title")),
+      "5 = thể hiện hành vi một cách độc lập"
+    )
+  })
+  const scoreLegendBtn = document.querySelector('[data-pt-score-legend-toggle]')
+  assert.ok(scoreLegendBtn)
+  scoreLegendBtn.click()
+  await waitFor(() => {
+    const visiblePopover = Array.from(document.querySelectorAll('[data-pt-score-legend-popover]'))
+      .find((entry) => !entry.classList.contains("hidden"))
+    assert.ok(visiblePopover)
+    const legendText = normalizeText(visiblePopover.textContent || "")
+    assert.match(legendText, /Thang điểm 0-5/i)
+    assert.match(legendText, /0 = hiện không áp dụng cho học sinh\./i)
+    assert.match(legendText, /5 = thể hiện hành vi một cách độc lập/i)
+  })
+  scoreLegendBtn.click()
+  await waitFor(() => {
+    const visiblePopover = Array.from(document.querySelectorAll('[data-pt-score-legend-popover]'))
+      .find((entry) => !entry.classList.contains("hidden"))
+    assert.equal(Boolean(visiblePopover), false)
   })
 
   const skillsCard = Array.from(document.querySelectorAll(".progress-report-card h4")).find((entry) =>
@@ -3700,6 +3831,10 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
 
   document.getElementById("pt_lessonSummary").value = "Reviewed Unit 3 grammar and reading strategy."
   document.getElementById("pt_lessonSummary").dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+  const visionStatusNeedsCheck = document.querySelector('input[name="pt_visionStatus"][value="needs-check"]')
+  assert.ok(visionStatusNeedsCheck)
+  visionStatusNeedsCheck.checked = true
+  visionStatusNeedsCheck.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
 
   document.getElementById("pt_studentRefId").value = "stu-01"
   document.getElementById("pt_studentRefId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
@@ -3715,15 +3850,20 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
 
   await waitFor(() => {
     ;["internationalNews", "readingEnglishEnjoyment", "vocabularyLookup"].forEach((fieldSuffix) => {
-      const scoreField = document.querySelector(`select[name="pt_skill_${fieldSuffix}"]`)
+      const scoreField = document.querySelector(`input[type="hidden"][name="pt_skill_${fieldSuffix}"]`)
       const recommendationField = document.querySelector(`textarea[name="pt_rec_${fieldSuffix}"]`)
+      const scoreRadios = Array.from(
+        document.querySelectorAll(`input[type="radio"][data-pt-score-name="pt_skill_${fieldSuffix}"]`)
+      )
       assert.ok(scoreField)
+      assert.ok(scoreRadios.length > 0)
       assert.ok(recommendationField)
       assert.equal(scoreField.disabled, true)
+      assert.equal(scoreRadios.every((entry) => entry.disabled), true)
       assert.equal(recommendationField.disabled, true)
       assert.equal(scoreField.closest("tr")?.classList.contains("progress-report-rubric-row-disabled"), true)
     })
-    assert.equal(document.querySelector('select[name="pt_skill_noteTaking"]')?.disabled, false)
+    assert.equal(document.querySelector('input[type="hidden"][name="pt_skill_noteTaking"]')?.disabled, false)
   })
 
   document.getElementById("pt_studentRefId").value = "stu-02"
@@ -3737,28 +3877,33 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
 
   document.getElementById("pt_studentRefId").value = "stu-01"
   document.getElementById("pt_studentRefId").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  const skillRubricA = document.querySelector('select[name="pt_skill_questions"]')
-  const skillRubricB = document.querySelector('select[name="pt_skill_logic"]')
-  const conductRubricA = document.querySelector('select[name="pt_conduct_focus"]')
-  const conductRubricB = document.querySelector('select[name="pt_conduct_maturity"]')
+  const skillRubricA = document.querySelector('input[type="hidden"][name="pt_skill_questions"]')
+  const skillRubricB = document.querySelector('input[type="hidden"][name="pt_skill_logic"]')
+  const conductRubricA = document.querySelector('input[type="hidden"][name="pt_conduct_focus"]')
+  const conductRubricB = document.querySelector('input[type="hidden"][name="pt_conduct_maturity"]')
   assert.ok(skillRubricA)
   assert.ok(skillRubricB)
   assert.ok(conductRubricA)
   assert.ok(conductRubricB)
 
-  skillRubricA.value = "3"
-  skillRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  skillRubricB.value = "3"
-  skillRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  conductRubricA.value = "2"
-  conductRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  conductRubricB.value = "2"
-  conductRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  const setRubricScore = (fieldName, score) => {
+    const radio = document.querySelector(
+      `input[type="radio"][data-pt-score-name="${fieldName}"][value="${String(score)}"]`
+    )
+    assert.ok(radio)
+    radio.checked = true
+    radio.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  }
+
+  setRubricScore("pt_skill_questions", 3)
+  setRubricScore("pt_skill_logic", 3)
+  setRubricScore("pt_conduct_focus", 2)
+  setRubricScore("pt_conduct_maturity", 2)
 
   await waitFor(() => {
     assert.equal(document.getElementById("pt_behaviorScore").value, "2")
     assert.equal(document.getElementById("pt_participationScore").value, "3")
-    assert.equal(document.getElementById("pt_academicScore").value, "8")
+    assert.equal(document.getElementById("pt_academicScore").value, "5")
   })
 
   document.getElementById("pt_comments").value = "Parent should review vocabulary notebook daily."
@@ -3786,12 +3931,31 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     const latestPayload = savedReportPayloads[savedReportPayloads.length - 1] || {}
     assert.equal(latestPayload.behaviorScore, "2")
     assert.equal(latestPayload.participationScore, "3")
-    assert.equal(latestPayload.inClassScore, "8")
+    assert.equal(latestPayload.inClassScore, "5")
     assert.equal(latestPayload.comments, "Parent should review vocabulary notebook daily.")
     assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_questions, "3")
     assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_logic, "3")
     assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_focus, "2")
     assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_maturity, "2")
+    assert.equal(latestPayload.metaPayload?.classDate, selectedDate)
+    assert.equal(latestPayload.metaPayload?.classDay, "Tuesday")
+    assert.equal(
+      latestPayload.metaPayload?.lessonSummary,
+      "Reviewed Unit 3 grammar and reading strategy."
+    )
+    assert.equal(latestPayload.metaPayload?.visionStatus, "needs-check")
+    assert.match(latestPayload.metaPayload?.homeworkAnnouncement || "", /Homework Past Due|No overdue/i)
+    assert.match(latestPayload.metaPayload?.currentHomeworkSummary || "", /Homework|bài tập/i)
+    assert.equal(latestPayload.metaPayload?.pastDueHomeworkCount, "1")
+    assert.ok(Array.isArray(latestPayload.metaPayload?.recipients))
+    assert.ok(latestPayload.metaPayload?.recipients?.includes("starter@example.com"))
+    assert.ok(latestPayload.metaPayload?.recipients?.includes("mom@example.com"))
+    assert.equal(Array.isArray(latestPayload.metaPayload?.outstandingAssignments), true)
+    assert.equal(latestPayload.metaPayload?.outstandingAssignments?.length, 1)
+    assert.match(
+      latestPayload.metaPayload?.outstandingAssignments?.[0]?.assignmentName || "",
+      /Homework Past Due/i
+    )
   })
 
   await waitFor(() => {
@@ -3799,14 +3963,10 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.match(statusText, /Queued for weekend batch/i)
   })
 
-  skillRubricA.value = "7"
-  skillRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  skillRubricB.value = "9"
-  skillRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  conductRubricA.value = "4"
-  conductRubricA.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  conductRubricB.value = "6"
-  conductRubricB.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  setRubricScore("pt_skill_questions", 5)
+  setRubricScore("pt_skill_logic", 4)
+  setRubricScore("pt_conduct_focus", 4)
+  setRubricScore("pt_conduct_maturity", 3)
 
   document.getElementById("pt_comments").value = ""
   document.getElementById("pt_comments").dispatchEvent(new dom.window.Event("input", { bubbles: true }))
@@ -3816,13 +3976,13 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
 
   await waitFor(() => {
     const latestPayload = savedReportPayloads[savedReportPayloads.length - 1] || {}
-    assert.equal(latestPayload.behaviorScore, "5")
-    assert.equal(latestPayload.participationScore, "8")
+    assert.equal(latestPayload.behaviorScore, "4")
+    assert.equal(latestPayload.participationScore, "5")
     assert.match(latestPayload.comments || "", /Rubric fallback comment token/i)
-    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_questions, "7")
-    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_logic, "9")
+    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_questions, "5")
+    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_logic, "4")
     assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_focus, "4")
-    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_maturity, "6")
+    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_maturity, "3")
     assert.match(
       latestPayload.rubricPayload?.recommendations?.pt_rec_listening || "",
       /Rubric fallback comment token/i
@@ -5992,6 +6152,7 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
 })
 
 test("attendance main defaults to absent and admin child shows per-student stats", async () => {
+  let dashboardCalls = 0
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
     void init
@@ -6081,6 +6242,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
       })
     }
     if (url.includes("/api/admin/dashboard")) {
+      dashboardCalls += 1
       return jsonResponse(200, {
         today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
         assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
@@ -6148,6 +6310,13 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.match(summaryText, /absent=0/i)
     assert.match(summaryText, /tardy10=1/i)
     assert.match(summaryText, /totalTardy=1 \(100\.0%\)/i)
+  })
+  const dashboardCallsBeforeSave = dashboardCalls
+  dom.window.document.getElementById("attendanceLandingSaveAllBtn")?.click()
+  await waitFor(() => {
+    const statusText = normalizeText(dom.window.document.getElementById("status")?.textContent)
+    assert.match(statusText, /Attendance saved for Pre-A1 Starters/i)
+    assert.ok(dashboardCalls > dashboardCallsBeforeSave)
   })
 
   dom.window.document.querySelector('[data-page-link="attendance-admin"]').click()
@@ -7463,12 +7632,41 @@ test("table sort controls and column-click headers reorder grade/performance dat
     const lanes = document.querySelectorAll("#gradeChartLanes .grade-chart-lane")
     assert.equal(lanes.length >= 1, true)
   })
+  await waitFor(() => {
+    const laneLegendText = normalizeText(document.querySelector("#gradeChartLanes .grade-chart-lane-legend")?.textContent || "")
+    assert.match(laneLegendText, /Trend/i)
+  })
+  const gradeChartSchoolYear = document.getElementById("gradeChartSchoolYear")
+  assert.ok(gradeChartSchoolYear)
+  await waitFor(() => {
+    assert.notEqual(normalizeText(gradeChartSchoolYear.value).toLowerCase(), "all")
+  })
   const gradeChartGroupBy = document.getElementById("gradeChartGroupBy")
   gradeChartGroupBy.value = "student"
   gradeChartGroupBy.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
     const laneText = normalizeText(document.getElementById("gradeChartLanes")?.textContent || "")
     assert.match(laneText, /Student One/i)
+  })
+  document.querySelector('#gradeChartLanes button[data-grade-chart-open]')?.click()
+  await waitFor(() => {
+    const modal = document.getElementById("gradeChartModal")
+    assert.ok(modal)
+    assert.equal(modal.classList.contains("hidden"), false)
+    assert.ok(document.querySelector("#gradeChartModalSvgWrap .grade-chart-svg"))
+    const modalMeta = normalizeText(document.getElementById("gradeChartModalMeta")?.textContent || "")
+    assert.match(modalMeta, /Trend/i)
+    const rowMatch = modalMeta.match(/Rows:\s*(\d+)/i)
+    const rowCount = rowMatch ? Number.parseInt(rowMatch[1], 10) : 0
+    if (rowCount >= 2) {
+      assert.ok(document.querySelector("#gradeChartModalSvgWrap .grade-chart-svg .grade-chart-trend"))
+    }
+  })
+  document.getElementById("gradeChartModalCloseBtn")?.click()
+  await waitFor(() => {
+    const modal = document.getElementById("gradeChartModal")
+    assert.ok(modal)
+    assert.equal(modal.classList.contains("hidden"), true)
   })
   gradeChartGroupBy.value = "class"
   gradeChartGroupBy.dispatchEvent(new dom.window.Event("change", { bubbles: true }))

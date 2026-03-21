@@ -38,7 +38,7 @@ function buildTodayRows({ present = 0, absent = 0 } = {}) {
   return rows
 }
 
-test("summarizeTodayAttendanceForDashboard keeps weekend absences tied to tracked rows", () => {
+test("summarizeTodayAttendanceForDashboard backfills weekend absences to enrollment baseline", () => {
   const profileByStudentRefId = buildProfileMap(126)
   const rows = buildTodayRows({ present: 17, absent: 21 })
 
@@ -50,14 +50,14 @@ test("summarizeTodayAttendanceForDashboard keeps weekend absences tied to tracke
   })
 
   assert.equal(result.todayAttendanceCount, 17)
-  assert.equal(result.todayAbsences, 21)
-  assert.equal(result.totalTodayTracked, 38)
+  assert.equal(result.todayAbsences, 109)
+  assert.equal(result.totalTodayTracked, 126)
   assert.equal(result.tardy10PlusCount, 2)
   assert.equal(result.tardy30PlusCount, 1)
   assert.equal(result.attendanceByLevel.get("A1 Movers"), 17)
 })
 
-test("summarizeTodayAttendanceForDashboard keeps weekday tracked absences unchanged", () => {
+test("summarizeTodayAttendanceForDashboard keeps weekday absences tied to tracked rows", () => {
   const profileByStudentRefId = buildProfileMap(126)
   const rows = buildTodayRows({ present: 17, absent: 21 })
 
@@ -99,6 +99,43 @@ test("summarizeTodayAttendanceForDashboard de-duplicates per student and prefers
   assert.equal(result.tardy10PlusCount, 1)
   assert.equal(result.tardy30PlusCount, 1)
   assert.equal(result.attendanceByLevel.get("A1 Movers"), 2)
+})
+
+test("summarizeTodayAttendanceForDashboard keeps tracked totals when enrollment is unknown", () => {
+  const profileByStudentRefId = buildProfileMap(0)
+  const rows = buildTodayRows({ present: 12, absent: 5 })
+
+  const result = summarizeTodayAttendanceForDashboard({
+    rows,
+    profileByStudentRefId,
+    totalEnrollment: 0,
+    asOfDate: new Date("2026-03-10T09:00:00.000Z"),
+  })
+
+  assert.equal(result.todayAttendanceCount, 12)
+  assert.equal(result.todayAbsences, 5)
+  assert.equal(result.totalTodayTracked, 17)
+  assert.equal(result.tardy10PlusCount, 2)
+  assert.equal(result.tardy30PlusCount, 1)
+})
+
+test("summarizeTodayAttendanceForDashboard backfills Sunday absences to enrollment baseline", () => {
+  const profileByStudentRefId = buildProfileMap(126)
+  const rows = buildTodayRows({ present: 17, absent: 21 })
+
+  const result = summarizeTodayAttendanceForDashboard({
+    rows,
+    profileByStudentRefId,
+    totalEnrollment: 126,
+    asOfDate: new Date("2026-03-08T09:00:00.000Z"), // Sunday
+  })
+
+  assert.equal(result.todayAttendanceCount, 17)
+  assert.equal(result.todayAbsences, 109)
+  assert.equal(result.totalTodayTracked, 126)
+  assert.equal(result.tardy10PlusCount, 2)
+  assert.equal(result.tardy30PlusCount, 1)
+  assert.equal(result.attendanceByLevel.get("A1 Movers"), 17)
 })
 
 test("selectCurrentNotYetDueAssignmentsByLevel chooses the nearest future assignment per level", () => {

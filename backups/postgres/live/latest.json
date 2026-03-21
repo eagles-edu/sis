@@ -1,0 +1,7 @@
+{
+  "createdAt": "2026-03-20T20:58:41.344Z",
+  "backupFile": "db-backup-live-20260320-205840.dump",
+  "backupPath": "/home/eagles/dockerz/sis/backups/postgres/live/db-backup-live-20260320-205840.dump",
+  "checksumFile": "/home/eagles/dockerz/sis/backups/postgres/live/db-backup-live-20260320-205840.sha256",
+  "source": "runtime:/home/admin.eagles.edu.vn/sis/.env"
+}

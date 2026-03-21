@@ -161,6 +161,10 @@
       overflow: hidden;
     }
 
+    body.modal-open {
+      overflow: hidden;
+    }
+
     .main-col {
       box-sizing: border-box;
       width: 100%;
@@ -612,6 +616,249 @@
       margin: 0;
       font-size: 12px;
       color: var(--ink-soft);
+    }
+
+    .homework-card {
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+    }
+
+    .homework-card-label {
+      margin: 0 0 6px;
+      padding-left: 2px;
+      color: #284a72;
+      font-size: clamp(11px, 2.7vw, 13px);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+
+    .homework-card-shell {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-3);
+      background: #fff;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 96px minmax(0, 1fr);
+      align-items: stretch;
+      box-sizing: border-box;
+    }
+
+    .homework-square {
+      border: 1px solid #b7c8dd;
+      border-radius: 8px;
+      min-height: 96px;
+      box-sizing: border-box;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+      gap: 4px;
+      padding: 8px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #264868;
+      background: #eef4fb;
+    }
+
+    .homework-square.is-complete {
+      border-color: #8ccba9;
+      color: #1b5e3f;
+      background: #eaf8f0;
+    }
+
+    .homework-square.is-pending {
+      border-color: #b4a8df;
+      color: #47358d;
+      background: #f2eeff;
+    }
+
+    .homework-square.is-none {
+      border-color: #b6beca;
+      color: #5a6270;
+      background: #f1f3f6;
+    }
+
+    .homework-square.is-clear {
+      border-color: #8ccba9;
+      color: #1b5e3f;
+      background: #eaf8f0;
+    }
+
+    .homework-square.is-arrears {
+      border-color: #e1a8a8;
+      color: #8f2c2c;
+      background: #fff0f0;
+    }
+
+    .homework-square-k {
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.88;
+    }
+
+    .homework-square-v {
+      font-size: clamp(14px, 3.4vw, 18px);
+    }
+
+    .homework-square-v.is-count {
+      font-size: clamp(28px, 5.5vw, 36px);
+      line-height: 0.95;
+    }
+
+    .homework-card-content {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+      align-content: center;
+    }
+
+    .homework-content-title {
+      margin: 0;
+      font-size: clamp(14px, 3vw, 17px);
+      font-weight: 800;
+      line-height: 1.15;
+      color: #18395d;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .homework-link {
+      min-width: 0;
+      color: #174f92;
+      font-size: clamp(12px, 2.8vw, 14px);
+      font-weight: 700;
+      line-height: 1.35;
+      text-decoration: underline;
+      text-decoration-thickness: 1.2px;
+      text-underline-offset: 2px;
+      overflow-wrap: anywhere;
+    }
+
+    .homework-link:hover,
+    .homework-link:focus-visible {
+      color: #0f3c70;
+    }
+
+    .homework-modal-btn {
+      justify-self: start;
+      min-height: 36px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #b7c8df;
+      border-radius: 8px;
+      background: #f5f8fd;
+      color: #24466b;
+      cursor: pointer;
+    }
+
+    .homework-modal-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .portal-modal.hidden {
+      display: none;
+    }
+
+    .portal-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 95;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      box-sizing: border-box;
+    }
+
+    .portal-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgb(13 22 34 / 58%);
+    }
+
+    .portal-modal-dialog {
+      position: relative;
+      width: min(720px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      border: 1px solid #cad7ea;
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      box-sizing: border-box;
+      overflow: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .portal-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .portal-modal-head h4 {
+      margin: 0;
+      font-size: clamp(16px, 3.6vw, 19px);
+      line-height: 1.2;
+      color: #1f3f63;
+    }
+
+    .portal-modal-close {
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 1px solid #b7c8df;
+      border-radius: 8px;
+      background: #f6f9ff;
+      color: #24466b;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .homework-modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .homework-modal-table th,
+    .homework-modal-table td {
+      border-bottom: 1px solid #dde6f2;
+      text-align: left;
+      padding: 8px 6px;
+      vertical-align: top;
+    }
+
+    .homework-modal-table th {
+      color: #36577e;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .homework-modal-table td:first-child,
+    .homework-modal-table th:first-child {
+      width: 140px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      .homework-card-shell {
+        grid-template-columns: 86px minmax(0, 1fr);
+        gap: 8px;
+      }
     }
 
     .quick-link {
@@ -1238,18 +1485,53 @@
                 <div id="dashboardMetrics" class="metrics"></div>
               </section>
 
-              <section id="currentHomeworkCard" class="panel">
-                <div class="section-head">
-                  <h3>Current Homework</h3>
+              <section id="currentHomeworkCard" class="panel homework-card">
+                <h3 class="homework-card-label">Current Homework</h3>
+                <div class="homework-card-shell">
+                  <div id="currentHomeworkBadge" class="homework-square is-none">
+                    <span class="homework-square-k">Trang thai</span>
+                    <strong id="currentHomeworkBadgeValue" class="homework-square-v">Không có</strong>
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 id="currentHomeworkHeader" class="homework-content-title">Bài tập hiện tại</h4>
+                    <a id="currentHomeworkAssignmentLink" class="homework-link hidden" href="#" target="_blank" rel="noopener noreferrer">Xem thông báo bài tập</a>
+                    <p id="currentHomeworkSummary" class="hint">No data yet.</p>
+                  </div>
                 </div>
-                <p id="currentHomeworkSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="pastDueHomeworkCard" class="panel">
-                <div class="section-head">
-                  <h3>Past Due Homework</h3>
+              <section id="pastDueHomeworkCard" class="panel homework-card">
+                <h3 class="homework-card-label">Past Due Homework</h3>
+                <div class="homework-card-shell">
+                  <div id="pastDueHomeworkBadge" class="homework-square is-clear">
+                    <span class="homework-square-k">Arrears</span>
+                    <strong id="pastDueHomeworkBadgeValue" class="homework-square-v is-count">0</strong>
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 class="homework-content-title">Nợ đọng quá hạn</h4>
+                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn" type="button">Mo danh sach chua hoan thanh</button>
+                    <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
+                  </div>
                 </div>
-                <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="pastDueHomeworkModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="pastDueHomeworkModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="pastDueHomeworkModalTitle">Bài tập chưa hoàn thành</h4>
+                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close" type="button">Dong</button>
+                  </div>
+                  <table class="homework-modal-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Due Date</th>
+                        <th scope="col">Assignment</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pastDueHomeworkTableBody"></tbody>
+                  </table>
+                </div>
               </section>
 
               <section id="attendanceCalendarCard" class="panel">
@@ -1445,6 +1727,8 @@
       const state = {
         window: null,
         dashboard: null,
+        overdueHomeworkRows: [],
+        pastDueModalOpen: false,
         calendarRows: [],
         calendarAlertDates: new Set(),
         calendarStatusByDate: new Map(),
@@ -1685,6 +1969,156 @@
         const target = field(id);
         if (!target) return;
         target.textContent = t(textValue) || "No data yet.";
+      }
+
+      function normalizePortalLinkUrl(value) {
+        const raw = t(value);
+        if (!raw) return "";
+        if (/^\//.test(raw)) return raw;
+        try {
+          const parsed = new URL(raw, window.location.origin);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.toString();
+          return "";
+        } catch (error) {
+          void error;
+          return "";
+        }
+      }
+
+      function extractFirstHttpUrl(text) {
+        const match = t(text).match(/https?:\/\/[^\s<>"')]+/i);
+        return match ? match[0] : "";
+      }
+
+      function resolveHomeworkAnnouncementUrl(row = {}) {
+        const directCandidates = [
+          row?.assignmentAnnouncementUrl,
+          row?.announcementUrl,
+          row?.assignmentLink,
+          row?.exerciseUrl,
+          row?.url,
+          row?.link,
+          row?.href,
+        ];
+        for (const candidate of directCandidates) {
+          const normalized = normalizePortalLinkUrl(candidate);
+          if (normalized) return normalized;
+        }
+        return normalizePortalLinkUrl(extractFirstHttpUrl(row?.comments));
+      }
+
+      function parseHomeworkDueMs(row = {}) {
+        const dueAtRaw = t(row?.dueAt);
+        if (dueAtRaw) {
+          const dueAt = new Date(dueAtRaw);
+          if (!Number.isNaN(dueAt.getTime())) return dueAt.getTime();
+        }
+        const dueDateRaw = t(row?.dueDate);
+        if (dueDateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dueDateRaw)) {
+          const dueDate = new Date(`${dueDateRaw}T00:00:00+07:00`);
+          if (!Number.isNaN(dueDate.getTime())) return dueDate.getTime();
+        }
+        return Number.MAX_SAFE_INTEGER;
+      }
+
+      function sortedHomeworkRows(rows = []) {
+        return (Array.isArray(rows) ? rows : [])
+          .slice()
+          .sort((left, right) => {
+            const byDue = parseHomeworkDueMs(left) - parseHomeworkDueMs(right);
+            if (byDue !== 0) return byDue;
+            return t(left?.assignmentName).localeCompare(t(right?.assignmentName));
+          });
+      }
+
+      function renderOverdueHomeworkTableRows(rows = []) {
+        const target = field("pastDueHomeworkTableBody");
+        if (!target) return;
+        const list = Array.isArray(rows) ? rows : [];
+        if (!list.length) {
+          target.innerHTML = "<tr><td colspan=\"2\">Không có bài tập quá hạn.</td></tr>";
+          return;
+        }
+        target.innerHTML = list.map((row) => {
+          const dueText = escapeHtml(formatPortalDate(row?.dueAt || row?.dueDate));
+          const assignmentText = escapeHtml(t(row?.assignmentName) || "Bài tập");
+          const announcementUrl = resolveHomeworkAnnouncementUrl(row);
+          const assignmentCell = announcementUrl
+            ? `<a class=\"homework-link\" href=\"${escapeHtml(announcementUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">${assignmentText}</a>`
+            : `<span>${assignmentText}</span>`;
+          return `<tr><td>${dueText}</td><td>${assignmentCell}</td></tr>`;
+        }).join("");
+      }
+
+      function setPastDueHomeworkModalOpen(open) {
+        const shouldOpen = Boolean(open);
+        state.pastDueModalOpen = shouldOpen;
+        const modal = field("pastDueHomeworkModal");
+        if (!modal) return;
+        modal.classList.toggle("hidden", !shouldOpen);
+        document.body.classList.toggle("modal-open", shouldOpen);
+      }
+
+      function renderCurrentHomeworkOverviewCard(child = {}, pendingHomework = 0) {
+        const currentRows = sortedHomeworkRows(child?.details?.currentHomework || []);
+        const assignmentsTotal = parseNumber(child?.assignments?.total);
+        const badge = field("currentHomeworkBadge");
+        const badgeValue = field("currentHomeworkBadgeValue");
+        const summary = field("currentHomeworkSummary");
+        const assignmentLink = field("currentHomeworkAssignmentLink");
+        const header = field("currentHomeworkHeader");
+
+        if (badge) badge.className = "homework-square is-none";
+        if (badgeValue) badgeValue.textContent = "Không có";
+        if (header) header.textContent = "Bài tập hiện tại";
+
+        if (assignmentLink) {
+          assignmentLink.classList.add("hidden");
+          assignmentLink.removeAttribute("href");
+          assignmentLink.textContent = "Xem thông báo bài tập";
+        }
+
+        if (pendingHomework > 0) {
+          if (badge) badge.className = "homework-square is-pending";
+          if (badgeValue) badgeValue.textContent = "Chưa xong";
+          if (summary) summary.textContent = `${pendingHomework} bài tập hiện tại chưa nộp.`;
+        } else if (assignmentsTotal > 0) {
+          if (badge) badge.className = "homework-square is-complete";
+          if (badgeValue) badgeValue.textContent = "Hoan thanh";
+          if (summary) summary.textContent = "Tất cả bài tập hiện tại đã hoàn thành.";
+        } else if (summary) {
+          summary.textContent = "Không có bài tập hiện tại.";
+        }
+
+        const currentTop = currentRows[0] || null;
+        if (!currentTop) return;
+        if (header) header.textContent = t(currentTop.assignmentName) || "Bài tập hiện tại";
+        if (assignmentLink) {
+          const url = resolveHomeworkAnnouncementUrl(currentTop);
+          if (url) {
+            assignmentLink.href = url;
+            assignmentLink.textContent = `Thông báo: ${t(currentTop.assignmentName) || "Bài tập"}`;
+            assignmentLink.classList.remove("hidden");
+          }
+        }
+      }
+
+      function renderPastDueHomeworkOverviewCard(child = {}, overdueHomework = 0) {
+        state.overdueHomeworkRows = sortedHomeworkRows(child?.details?.overdueHomework || []);
+        const badge = field("pastDueHomeworkBadge");
+        const badgeValue = field("pastDueHomeworkBadgeValue");
+        const summary = field("pastDueHomeworkSummary");
+        const openModalBtn = field("openPastDueHomeworkModalBtn");
+
+        if (badgeValue) badgeValue.textContent = String(Math.max(0, overdueHomework));
+        if (badge) badge.className = overdueHomework > 0 ? "homework-square is-arrears" : "homework-square is-clear";
+        if (summary) {
+          summary.textContent = overdueHomework > 0
+            ? `${overdueHomework} bài tập quá hạn cần xử lý ngay.`
+            : "Không có bài tập quá hạn.";
+        }
+        if (openModalBtn) openModalBtn.disabled = state.overdueHomeworkRows.length === 0;
+        renderOverdueHomeworkTableRows(state.overdueHomeworkRows);
       }
 
       function formatPortalDate(value) {
@@ -2213,6 +2647,7 @@
       function setActiveStudentPage(page) {
         state.activePage = normalizeStudentPage(page);
         state.activeView = "home";
+        setPastDueHomeworkModalOpen(false);
         syncStudentPortalView();
       }
 
@@ -2229,8 +2664,8 @@
         if (!child) {
           identity.textContent = "Student metrics are not available.";
           root.replaceChildren(metricCard("Tổng quan", "Chưa có dữ liệu"));
-          setSummary("currentHomeworkSummary", "No data yet.");
-          setSummary("pastDueHomeworkSummary", "No data yet.");
+          renderCurrentHomeworkOverviewCard({}, 0);
+          renderPastDueHomeworkOverviewCard({}, 0);
           setSummary("attendanceCalendarSummary", "No data yet.");
           setSummary("performanceReportsSummary", "No data yet.");
           setSummary("gradesYtdSummary", "No data yet.");
@@ -2287,18 +2722,8 @@
           metricCard("Performance Reports", String(reportCount)),
         );
 
-        setSummary(
-          "currentHomeworkSummary",
-          pendingHomework > 0
-            ? `${pendingHomework} current homework item(s) pending submission.`
-            : "All current homework is up to date."
-        );
-        setSummary(
-          "pastDueHomeworkSummary",
-          overdueHomework > 0
-            ? `${overdueHomework} past-due homework item(s) require immediate action.`
-            : "No past-due homework currently flagged."
-        );
+        renderCurrentHomeworkOverviewCard(child, pendingHomework);
+        renderPastDueHomeworkOverviewCard(child, overdueHomework);
         setSummary(
           "attendanceCalendarSummary",
           totalAttendance > 0
@@ -2357,6 +2782,7 @@
         if (!authenticated) {
           state.activeView = "home";
           state.activePage = "home";
+          setPastDueHomeworkModalOpen(false);
           state.calendarHasMounted = false;
           state.detailCalendarHasMounted = false;
           state.calendarRows = [];
@@ -2371,6 +2797,7 @@
       function setActiveStudentView(view) {
         const nextView = normalizeLower(view) === "news" ? "news" : "home";
         state.activeView = nextView;
+        setPastDueHomeworkModalOpen(false);
         if (nextView === "home" && !STUDENT_PORTAL_PAGES.has(state.activePage)) {
           state.activePage = "home";
         }
@@ -2801,6 +3228,25 @@
 
       field("backToHomeBtn")?.addEventListener("click", () => {
         setActiveStudentPage("home");
+      });
+
+      field("openPastDueHomeworkModalBtn")?.addEventListener("click", () => {
+        renderOverdueHomeworkTableRows(state.overdueHomeworkRows);
+        setPastDueHomeworkModalOpen(true);
+      });
+
+      field("closePastDueHomeworkModalBtn")?.addEventListener("click", () => {
+        setPastDueHomeworkModalOpen(false);
+      });
+
+      field("pastDueHomeworkModalBackdrop")?.addEventListener("click", () => {
+        setPastDueHomeworkModalOpen(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && state.pastDueModalOpen) {
+          setPastDueHomeworkModalOpen(false);
+        }
       });
 
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));

@@ -666,6 +666,284 @@ test("parent portal menu opens a detailed homework page with calendar and histor
   dom.window.close()
 })
 
+test("parent portal attendance overview renders class/tardy square stats", async () => {
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "A2 Flyers",
+            },
+          ],
+        })
+      }
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          children: [
+            {
+              eaglesId: "vi001",
+              attendance: { total: 40, present: 34, absent: 2, late: 4, tardy10: 3, tardy30: 1, excused: 0 },
+              assignments: { pending: 0, overdue: 0 },
+              grades: { averageScorePercent: 90 },
+              performance: { reportCount: 0 },
+              details: { reportArchive: [] },
+            },
+          ],
+        })
+      }
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "A2 Flyers",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal"
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
+
+  assert.equal(normalizeText(document.getElementById("attendanceClassesAttendedValue")?.textContent), "34")
+  assert.equal(normalizeText(document.getElementById("attendanceClassesTotalValue")?.textContent), "40")
+  assert.equal(normalizeText(document.getElementById("attendanceRateValue")?.textContent), "85%")
+  assert.equal(normalizeText(document.getElementById("attendanceLateTardy10Value")?.textContent), "3")
+  assert.equal(normalizeText(document.getElementById("attendanceLateTardy30Value")?.textContent), "1")
+  assert.equal(normalizeText(document.getElementById("attendanceLateRateValue")?.textContent), "10%")
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("parent portal report archive sorts newest first and clears outstanding after acknowledgement", async () => {
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "A2 Flyers",
+            },
+          ],
+        })
+      }
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          children: [
+            {
+              eaglesId: "vi001",
+              attendance: { total: 10, present: 10, absent: 0, late: 0, excused: 0 },
+              assignments: { pending: 0, overdue: 0 },
+              grades: { averageScorePercent: 92 },
+              performance: { reportCount: 2 },
+              details: {
+                reportArchive: [
+                  {
+                    id: "report-old",
+                    className: "A2 Flyers",
+                    schoolYear: "2025-2026",
+                    quarter: "q1",
+                    generatedDate: "2026-03-09",
+                    generatedAt: "2026-03-09T09:00:00.000Z",
+                    comments: "Older report",
+                    homeworkCompletionRate: 92,
+                    homeworkOnTimeRate: 90,
+                    behaviorScore: 88,
+                    participationScore: 87,
+                    inClassScore: 89,
+                    participationPointsAward: 8,
+                  },
+                  {
+                    id: "report-new",
+                    className: "A2 Flyers",
+                    schoolYear: "2025-2026",
+                    quarter: "q2",
+                    generatedDate: "2026-05-09",
+                    generatedAt: "2026-05-09T09:00:00.000Z",
+                    comments: "Most recent report",
+                    classDate: "2026-05-08",
+                    classDay: "Friday",
+                    teacherName: "Ms. Nguyen",
+                    lessonSummary: "Reviewed Unit 6 reading and speaking strategy.",
+                    visionStatus: "needs-check",
+                    homeworkAnnouncement: "Homework Past Due | due 2026-05-07",
+                    currentHomeworkStatus: "Cần theo dõi",
+                    currentHomeworkHeader: "Homework Past Due",
+                    currentHomeworkSummary: "Homework Past Due | due 2026-05-07",
+                    pastDueHomeworkCount: "2",
+                    pastDueHomeworkSummary: "2 bài tập quá hạn cần xử lý ngay.",
+                    outstandingAssignments: [
+                      {
+                        assignmentName: "Homework Past Due",
+                        dueAt: "2026-05-07",
+                        deepLink: "https://eagles.edu.vn/homework/hw-1",
+                      },
+                      {
+                        assignmentName: "Workbook Review",
+                        dueAt: "2026-05-08",
+                      },
+                    ],
+                    homeworkCompletionRate: 68,
+                    homeworkOnTimeRate: 72,
+                    behaviorScore: 74,
+                    participationScore: 70,
+                    inClassScore: 73,
+                    participationPointsAward: 3,
+                    rubricPayload: {
+                      skillScores: { pt_skill_questions: "6" },
+                      conductScores: { pt_conduct_focus: "7" },
+                      recommendations: {
+                        pt_rec_questions: "Ask at least one clarifying question each class.",
+                        pt_rec_focus: "Move seat forward and reduce distractions.",
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        })
+      }
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "A2 Flyers",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal"
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
+
+  const reportLinks = Array.from(document.querySelectorAll("#performanceReportsList .report-archive-link"))
+  assert.equal(reportLinks.length, 2)
+  assert.match(normalizeText(reportLinks[0]?.textContent), /Q2/i)
+  assert.match(normalizeText(reportLinks[1]?.textContent), /Q1/i)
+
+  reportLinks[0].dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("performanceReportModal").classList.contains("hidden"), false)
+    assert.match(normalizeText(document.getElementById("performanceReportModalTitle")?.textContent), /1\/2/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalMeta")?.textContent), /Date:.*\| Day:.*\| Time:/i)
+    assert.match(normalizeText(document.getElementById("performanceReportIdentity")?.textContent), /A2 Flyers \| 101 \| Student One \| vi001/i)
+    assert.match(normalizeText(document.getElementById("reportCurrentHomeworkHeader")?.textContent), /Homework Past Due/i)
+    assert.match(normalizeText(document.getElementById("reportCurrentHomeworkBadgeValue")?.textContent), /theo dõi|theo doi/i)
+    assert.match(normalizeText(document.getElementById("reportCurrentHomeworkSummary")?.textContent), /Homework Past Due/i)
+    assert.match(normalizeText(document.getElementById("reportPastDueHomeworkPreviewBtn")?.textContent), /Xem danh sách chưa đầy đủ/i)
+    assert.match(normalizeText(document.getElementById("reportPastDueHomeworkSummary")?.textContent), /2 bài tập quá hạn/i)
+    assert.match(normalizeText(document.getElementById("performanceReportAttendanceMetrics")?.textContent), /Hồ sơ điểm danh lớp học|Chuyên cần|Lớp đã học/i)
+    assert.equal(document.getElementById("performanceReportGradesHint")?.classList.contains("hidden"), true)
+    assert.match(normalizeText(document.getElementById("performanceReportGradesTable")?.textContent), /Q2|68%/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Class Focus/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Lesson Summary/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Needs eye check/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Ms\. Nguyen/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Performance Snapshot/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Basic Student Skills/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Conduct During Class/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Prose/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Comments/i)
+    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /clarifying question/i)
+  })
+
+  document
+    .getElementById("reportPastDueHomeworkPreviewBtn")
+    ?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("pastDueHomeworkModal").classList.contains("hidden"), false)
+    const tableText = normalizeText(document.getElementById("pastDueHomeworkTableBody")?.textContent)
+    assert.match(tableText, /Homework Past Due/i)
+    assert.match(tableText, /Workbook Review/i)
+  })
+
+  document
+    .getElementById("closePastDueHomeworkModalBtn")
+    ?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  document.getElementById("performanceReportNextBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.match(normalizeText(document.getElementById("performanceReportModalTitle")?.textContent), /2\/2/i)
+  })
+
+  document.getElementById("performanceReportPrevBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.match(normalizeText(document.getElementById("performanceReportModalTitle")?.textContent), /1\/2/i)
+  })
+
+  document.getElementById("acknowledgePerformanceReportBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  await waitFor(() => {
+    assert.match(normalizeText(document.getElementById("performanceReportAckStatus")?.textContent), /acknowledged on/i)
+    assert.equal(document.querySelector('#performanceReportsList [data-report-id="report-new"]')?.classList.contains("is-outstanding"), false)
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
 test("parent portal grade/class fallback ignores immutable eagles level when public-school field is missing", async () => {
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {

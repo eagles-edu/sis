@@ -825,6 +825,8 @@ function normalizeProfilePayload(payload = {}) {
 }
 
 const PARENT_REPORT_RUBRIC_MARKER_RE = /\[\[SIS-RUBRIC-V1:([A-Za-z0-9_-]+)\]\]\s*$/
+const PARENT_REPORT_BUNDLE_MARKER_RE = /\[\[SIS-REPORT-BUNDLE-V2:([A-Za-z0-9_-]+)\]\]\s*$/
+const PARENT_REPORT_VISION_STATUS_ALLOWED = new Set(["no-issues", "needs-check", "monitor"])
 
 function normalizeParentReportScoreMap(value = {}, requiredPrefix = "", blockedKeys = null) {
   if (!value || typeof value !== "object") return {}
@@ -834,7 +836,7 @@ function normalizeParentReportScoreMap(value = {}, requiredPrefix = "", blockedK
     if (blockedKeys instanceof Set && blockedKeys.has(normalizedKey)) return acc
     const parsed = Number.parseFloat(String(rawValue))
     if (!Number.isFinite(parsed)) return acc
-    const clamped = Math.max(0, Math.min(10, Math.round(parsed)))
+    const clamped = Math.max(0, Math.min(5, Math.round(parsed)))
     acc[normalizedKey] = String(clamped)
     return acc
   }, {})
@@ -872,21 +874,124 @@ export function normalizeParentReportRubricPayload(value = {}, options = {}) {
   }
 }
 
-export function encodeParentReportCommentBundle(comment = "", rubricPayload = null) {
+function normalizeParentReportVisionStatus(value = "") {
+  const normalized = normalizeText(value)
+  return PARENT_REPORT_VISION_STATUS_ALLOWED.has(normalized) ? normalized : null
+}
+
+function normalizeParentReportMetaPayload(value = {}) {
+  if (!value || typeof value !== "object") return null
+  const pastDueHomeworkCountValue =
+    value.pastDueHomeworkCount !== undefined && value.pastDueHomeworkCount !== null
+      ? value.pastDueHomeworkCount
+      : value.overdueHomeworkCount
+  const parsedPastDueHomeworkCount = Number.parseInt(String(pastDueHomeworkCountValue), 10)
+  const normalizedRecipients = Array.isArray(value.recipients)
+    ? value.recipients.map((entry) => normalizeText(entry)).filter(Boolean)
+    : []
+  const normalizedOutstandingAssignments = (Array.isArray(value.outstandingAssignments) ? value.outstandingAssignments : [])
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null
+      const assignmentName = normalizeNullableText(entry.assignmentName)
+      const dueAt = normalizeNullableText(entry.dueAt)
+      if (!assignmentName && !dueAt) return null
+      return {
+        assignmentName,
+        dueAt,
+        className: normalizeNullableText(entry.className),
+        quarter: normalizeNullableText(entry.quarter),
+        deepLink: normalizeNullableText(entry.deepLink),
+      }
+    })
+    .filter(Boolean)
+  const normalized = {
+    classDate: normalizeNullableText(value.classDate),
+    classDay: normalizeNullableText(value.classDay),
+    teacherName: normalizeNullableText(value.teacherName),
+    lessonSummary: normalizeNullableText(value.lessonSummary),
+    visionStatus: normalizeParentReportVisionStatus(value.visionStatus),
+    homeworkAnnouncement: normalizeNullableText(value.homeworkAnnouncement),
+    currentHomeworkStatus: normalizeNullableText(value.currentHomeworkStatus),
+    currentHomeworkHeader: normalizeNullableText(value.currentHomeworkHeader),
+    currentHomeworkSummary: normalizeNullableText(value.currentHomeworkSummary),
+    pastDueHomeworkCount:
+      Number.isFinite(parsedPastDueHomeworkCount) && parsedPastDueHomeworkCount >= 0
+        ? String(parsedPastDueHomeworkCount)
+        : null,
+    pastDueHomeworkSummary: normalizeNullableText(value.pastDueHomeworkSummary),
+    recipients: normalizedRecipients,
+    outstandingAssignments: normalizedOutstandingAssignments,
+  }
+  if (
+    !Object.entries(normalized).some(([key, entry]) => {
+      if (key === "recipients" || key === "outstandingAssignments") {
+        return Array.isArray(entry) && entry.length > 0
+      }
+      return entry !== null
+    })
+  ) {
+    return null
+  }
+  return normalized
+}
+
+export function encodeParentReportCommentBundle(comment = "", rubricPayload = null, metaPayload = null) {
   const normalizedComment = normalizeNullableText(comment)
   const normalizedRubricPayload = normalizeParentReportRubricPayload(rubricPayload)
-  if (!normalizedRubricPayload) return normalizedComment
-  const encodedPayload = Buffer.from(JSON.stringify(normalizedRubricPayload), "utf8").toString("base64url")
+  const normalizedMetaPayload = normalizeParentReportMetaPayload(metaPayload)
+  if (!normalizedRubricPayload && !normalizedMetaPayload) return normalizedComment
+  if (normalizedRubricPayload && !normalizedMetaPayload) {
+    const encodedRubricPayload = Buffer.from(JSON.stringify(normalizedRubricPayload), "utf8").toString("base64url")
+    if (!encodedRubricPayload) return normalizedComment
+    const marker = `[[SIS-RUBRIC-V1:${encodedRubricPayload}]]`
+    return normalizedComment ? `${normalizedComment}\n${marker}` : marker
+  }
+  const encodedPayload = Buffer.from(
+    JSON.stringify({
+      rubricPayload: normalizedRubricPayload,
+      metaPayload: normalizedMetaPayload,
+    }),
+    "utf8"
+  ).toString("base64url")
   if (!encodedPayload) return normalizedComment
-  const marker = `[[SIS-RUBRIC-V1:${encodedPayload}]]`
+  const marker = `[[SIS-REPORT-BUNDLE-V2:${encodedPayload}]]`
   return normalizedComment ? `${normalizedComment}\n${marker}` : marker
 }
 
 export function decodeParentReportCommentBundle(value = "") {
   const rawText = normalizeText(value)
-  if (!rawText) return { comment: null, rubricPayload: null }
+  if (!rawText) return { comment: null, rubricPayload: null, metaPayload: null }
+
+  const bundleMatch = rawText.match(PARENT_REPORT_BUNDLE_MARKER_RE)
+  if (bundleMatch?.[1]) {
+    let rubricPayload = null
+    let metaPayload = null
+    try {
+      const decodedJson = Buffer.from(bundleMatch[1], "base64url").toString("utf8")
+      const parsedPayload = JSON.parse(decodedJson)
+      if (parsedPayload && typeof parsedPayload === "object") {
+        rubricPayload = normalizeParentReportRubricPayload(parsedPayload.rubricPayload)
+        metaPayload = normalizeParentReportMetaPayload(
+          parsedPayload.metaPayload && typeof parsedPayload.metaPayload === "object"
+            ? parsedPayload.metaPayload
+            : parsedPayload.metadataPayload
+        )
+      }
+    } catch {
+      rubricPayload = null
+      metaPayload = null
+    }
+
+    const commentOnlyText = normalizeNullableText(rawText.replace(PARENT_REPORT_BUNDLE_MARKER_RE, "").trimEnd())
+    return {
+      comment: commentOnlyText,
+      rubricPayload,
+      metaPayload,
+    }
+  }
+
   const markerMatch = rawText.match(PARENT_REPORT_RUBRIC_MARKER_RE)
-  if (!markerMatch?.[1]) return { comment: normalizeNullableText(rawText), rubricPayload: null }
+  if (!markerMatch?.[1]) return { comment: normalizeNullableText(rawText), rubricPayload: null, metaPayload: null }
 
   let rubricPayload
   try {
@@ -901,16 +1006,20 @@ export function decodeParentReportCommentBundle(value = "") {
   return {
     comment: commentOnlyText,
     rubricPayload,
+    metaPayload: null,
   }
 }
 
 function mapParentClassReport(report) {
   if (!report) return report
   const decoded = decodeParentReportCommentBundle(report.comments)
+  const metaPayload = decoded.metaPayload && typeof decoded.metaPayload === "object" ? decoded.metaPayload : null
   return {
     ...report,
     comments: decoded.comment,
     rubricPayload: decoded.rubricPayload,
+    metaPayload,
+    ...(metaPayload || {}),
   }
 }
 
@@ -2089,8 +2198,18 @@ export function summarizeTodayAttendanceForDashboard({
     if (entry.absent) todayAbsences += 1
   })
 
-  void asOfDate
-  void enrollmentTotal
+  const asOf = normalizeDateValue(asOfDate)
+  const asOfShifted = shiftToFixedTimeZone(asOf)
+  const localWeekday = asOfShifted.getUTCDay()
+  const isWeekendLocal = localWeekday === 0 || localWeekday === 6
+
+  if (isWeekendLocal && enrollmentTotal > 0) {
+    const unresolvedAbsences = Math.max(
+      0,
+      enrollmentTotal - (todayAttendanceCount + todayAbsences)
+    )
+    todayAbsences += unresolvedAbsences
+  }
 
   return {
     todayAttendanceCount,
@@ -2725,6 +2844,25 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     level: payload.level,
     className,
   })
+  const normalizedMetaPayload = normalizeParentReportMetaPayload(
+    payload.metaPayload && typeof payload.metaPayload === "object"
+      ? payload.metaPayload
+      : {
+          classDate: payload.classDate,
+          classDay: payload.classDay,
+          teacherName: payload.teacherName,
+          lessonSummary: payload.lessonSummary,
+          visionStatus: payload.visionStatus,
+          homeworkAnnouncement: payload.homeworkAnnouncement,
+          currentHomeworkStatus: payload.currentHomeworkStatus,
+          currentHomeworkHeader: payload.currentHomeworkHeader,
+          currentHomeworkSummary: payload.currentHomeworkSummary,
+          pastDueHomeworkCount: payload.pastDueHomeworkCount,
+          pastDueHomeworkSummary: payload.pastDueHomeworkSummary,
+          recipients: payload.recipients,
+          outstandingAssignments: payload.outstandingAssignments,
+        }
+  )
   const participationPointsAward = normalizeReportParticipationPoints(payload.participationPointsAward)
   const reportData = {
     className,
@@ -2737,7 +2875,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     participationScore: normalizeFloat(payload.participationScore),
     inClassScore: normalizeFloat(payload.inClassScore),
     participationPointsAward,
-    comments: encodeParentReportCommentBundle(payload.comments, normalizedRubricPayload),
+    comments: encodeParentReportCommentBundle(payload.comments, normalizedRubricPayload, normalizedMetaPayload),
     generatedAt: normalizeDate(payload.generatedAt) || new Date(),
   }
 

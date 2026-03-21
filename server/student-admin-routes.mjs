@@ -17,6 +17,7 @@ import {
 } from "./exercise-store.mjs"
 import {
   approveParentClassReport,
+  encodeParentReportCommentBundle,
   createStudentPointsAdjustment,
   decodeParentReportCommentBundle,
   deleteAttendanceRecord,
@@ -2284,6 +2285,7 @@ function weekendBatchScheduleLabel() {
 
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
+const PORTAL_FIXED_TIME_ZONE = "Asia/Ho_Chi_Minh"
 
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
@@ -3793,6 +3795,181 @@ function resolveGradeRecordStatus(row = {}, now = new Date()) {
   return "pending"
 }
 
+function extractFirstHttpUrl(value = "") {
+  const match = normalizeText(value).match(/https?:\/\/[^\s<>"')]+/i)
+  return match ? match[0] : ""
+}
+
+function weekdayLabelFromDateKey(value = "") {
+  const dateKey = normalizeText(value).slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return ""
+  const date = parseIsoDateTime(`${dateKey}T00:00:00+07:00`)
+  if (!date) return ""
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    timeZone: PORTAL_FIXED_TIME_ZONE,
+  }).format(date)
+}
+
+function buildLegacyReportOutstandingAssignments(reportRow = {}, gradeRows = []) {
+  const classDateKey = toPortalDateKey(reportRow?.generatedAt || reportRow?.generatedDate)
+  const asOfDate = parseIsoDateTime(`${classDateKey || toPortalDateKey(new Date())}T23:59:59+07:00`) || new Date()
+  return (Array.isArray(gradeRows) ? gradeRows : [])
+    .filter((row) => {
+      if (row?.homeworkCompleted === true || row?.submittedAt) return false
+      const dueAt = parseIsoDateTime(row?.dueAt)
+      if (!dueAt || dueAt > asOfDate) return false
+      return true
+    })
+    .slice()
+    .sort((left, right) => {
+      const leftDue = parseIsoDateTime(left?.dueAt)?.getTime?.() || Number.MAX_SAFE_INTEGER
+      const rightDue = parseIsoDateTime(right?.dueAt)?.getTime?.() || Number.MAX_SAFE_INTEGER
+      if (leftDue !== rightDue) return leftDue - rightDue
+      return normalizeText(left?.assignmentName).localeCompare(normalizeText(right?.assignmentName))
+    })
+    .map((row) => {
+      const assignmentName = normalizeText(row?.assignmentName) || "Homework item"
+      const dueAt = toPortalDateKey(row?.dueAt)
+      const link =
+        normalizeText(
+          row?.assignmentAnnouncementUrl ||
+          row?.announcementUrl ||
+          row?.assignmentLink ||
+          row?.exerciseUrl ||
+          row?.url ||
+          row?.link ||
+          row?.href
+        ) || extractFirstHttpUrl(row?.comments)
+      return {
+        assignmentName,
+        dueAt,
+        className: normalizeText(row?.className || reportRow?.className),
+        quarter: normalizeText(row?.quarter || reportRow?.quarter),
+        deepLink: link,
+      }
+    })
+}
+
+function buildLegacyReportMetaPayload(reportRow = {}, decoded = {}, gradeRows = []) {
+  const classDate = toPortalDateKey(reportRow?.generatedAt || reportRow?.generatedDate)
+  const classDay = weekdayLabelFromDateKey(classDate)
+  const outstandingAssignments = buildLegacyReportOutstandingAssignments(reportRow, gradeRows)
+  const firstOutstanding = outstandingAssignments[0] || null
+  const homeworkAnnouncement = firstOutstanding
+    ? `${firstOutstanding.assignmentName}${firstOutstanding.dueAt ? ` | due ${firstOutstanding.dueAt}` : ""}${firstOutstanding.deepLink ? ` | ${firstOutstanding.deepLink}` : ""}`
+    : "No overdue homework items for selected class date."
+  const pastDueHomeworkCount = outstandingAssignments.length
+  return {
+    classDate: classDate || null,
+    classDay: classDay || null,
+    teacherName: normalizeText(reportRow?.approvedByUsername) || null,
+    lessonSummary: normalizeText(decoded?.comment) || null,
+    visionStatus: "no-issues",
+    homeworkAnnouncement,
+    currentHomeworkStatus: pastDueHomeworkCount > 0 ? "Cần theo dõi" : "Không có",
+    currentHomeworkHeader: firstOutstanding ? firstOutstanding.assignmentName : "Bài tập hiện tại",
+    currentHomeworkSummary:
+      pastDueHomeworkCount > 0 ? homeworkAnnouncement : "Không có bài tập hiện tại.",
+    pastDueHomeworkCount: String(pastDueHomeworkCount),
+    pastDueHomeworkSummary:
+      pastDueHomeworkCount > 0
+        ? `${pastDueHomeworkCount} bài tập quá hạn cần xử lý ngay.`
+        : "Không có bài tập quá hạn.",
+    recipients: [],
+    outstandingAssignments,
+  }
+}
+
+async function backfillLegacyParentReportMetadataRows({
+  prisma = null,
+  reportRows = [],
+  gradeRows = [],
+} = {}) {
+  const sourceReports = Array.isArray(reportRows) ? reportRows : []
+  if (!sourceReports.length || !prisma?.parentClassReport?.update) return sourceReports
+
+  const groupedGrades = new Map()
+  ;(Array.isArray(gradeRows) ? gradeRows : []).forEach((row) => {
+    const key = [
+      normalizeText(row?.studentRefId),
+      normalizeText(row?.className),
+      normalizeText(row?.schoolYear),
+      normalizeLower(row?.quarter),
+    ].join("|")
+    if (!groupedGrades.has(key)) groupedGrades.set(key, [])
+    groupedGrades.get(key).push(row)
+  })
+
+  const patchedRows = sourceReports.map((row) => ({ ...row }))
+  const updates = []
+
+  patchedRows.forEach((row) => {
+    const decoded = decodeParentReportCommentBundle(row?.comments)
+    if (decoded?.metaPayload && typeof decoded.metaPayload === "object") return
+    const gradeKey = [
+      normalizeText(row?.studentRefId),
+      normalizeText(row?.className),
+      normalizeText(row?.schoolYear),
+      normalizeLower(row?.quarter),
+    ].join("|")
+    const relatedGrades = groupedGrades.get(gradeKey) || []
+    const legacyMetaPayload = buildLegacyReportMetaPayload(row, decoded, relatedGrades)
+    const encodedComments = encodeParentReportCommentBundle(
+      decoded?.comment,
+      decoded?.rubricPayload,
+      legacyMetaPayload
+    )
+    if (!normalizeText(encodedComments) || normalizeText(encodedComments) === normalizeText(row?.comments)) return
+    row.comments = encodedComments
+    const reportId = normalizeText(row?.id)
+    if (!reportId) return
+    updates.push(
+      prisma.parentClassReport.update({
+        where: { id: reportId },
+        data: { comments: encodedComments },
+      })
+    )
+  })
+
+  if (updates.length) {
+    await Promise.allSettled(updates)
+  }
+  return patchedRows
+}
+
+async function backfillLegacyParentReportMetadataForStudentRefs(prisma = null, studentRefIds = []) {
+  const ids = (Array.isArray(studentRefIds) ? studentRefIds : []).map((entry) => normalizeText(entry)).filter(Boolean)
+  if (!ids.length || !prisma) return
+  const [gradeRows, reportRows] = await Promise.all([
+    prisma.studentGradeRecord.findMany({
+      where: { studentRefId: { in: ids } },
+      orderBy: { dueAt: "desc" },
+    }),
+    prisma.parentClassReport.findMany({
+      where: { studentRefId: { in: ids } },
+      orderBy: { generatedAt: "desc" },
+    }),
+  ])
+  await backfillLegacyParentReportMetadataRows({
+    prisma,
+    gradeRows,
+    reportRows,
+  })
+}
+
+async function getStudentByIdWithReportBackfill(studentRefId = "") {
+  const studentId = normalizeText(studentRefId)
+  if (!studentId) return getStudentById(studentRefId)
+  try {
+    const prisma = await getSharedPrismaClient()
+    await backfillLegacyParentReportMetadataForStudentRefs(prisma, [studentId])
+  } catch (error) {
+    void error
+  }
+  return getStudentById(studentRefId)
+}
+
 function serializeAttendanceRows(rows = []) {
   return (Array.isArray(rows) ? rows : [])
     .map((row, index) => ({
@@ -3845,6 +4022,7 @@ function serializeReportRows(rows = []) {
       const generatedAt = parseIsoDateTime(row?.generatedAt)
       const approvedAt = parseIsoDateTime(row?.approvedAt)
       const decoded = decodeParentReportCommentBundle(row?.comments)
+      const metaPayload = decoded.metaPayload && typeof decoded.metaPayload === "object" ? decoded.metaPayload : null
       return {
         id: normalizeText(row?.id) || `report-${index}-${toPortalDateKey(generatedAt)}`,
         className: normalizeText(row?.className),
@@ -3862,6 +4040,37 @@ function serializeReportRows(rows = []) {
         participationPointsAward: Number.parseInt(String(row?.participationPointsAward || ""), 10) || 0,
         approvedByUsername: normalizeText(row?.approvedByUsername),
         comments: normalizeText(decoded.comment),
+        rubricPayload: decoded.rubricPayload && typeof decoded.rubricPayload === "object" ? decoded.rubricPayload : null,
+        metaPayload,
+        classDate: normalizeText(metaPayload?.classDate),
+        classDay: normalizeText(metaPayload?.classDay),
+        teacherName: normalizeText(metaPayload?.teacherName),
+        lessonSummary: normalizeText(metaPayload?.lessonSummary),
+        visionStatus: normalizeText(metaPayload?.visionStatus),
+        homeworkAnnouncement: normalizeText(metaPayload?.homeworkAnnouncement),
+        currentHomeworkStatus: normalizeText(metaPayload?.currentHomeworkStatus),
+        currentHomeworkHeader: normalizeText(metaPayload?.currentHomeworkHeader),
+        currentHomeworkSummary: normalizeText(metaPayload?.currentHomeworkSummary),
+        pastDueHomeworkCount: normalizeText(metaPayload?.pastDueHomeworkCount),
+        pastDueHomeworkSummary: normalizeText(metaPayload?.pastDueHomeworkSummary),
+        recipients: Array.isArray(metaPayload?.recipients)
+          ? metaPayload.recipients.map((entry) => normalizeText(entry)).filter(Boolean)
+          : [],
+        outstandingAssignments: (Array.isArray(metaPayload?.outstandingAssignments)
+          ? metaPayload.outstandingAssignments
+          : []
+        )
+          .map((entry) => {
+            if (!entry || typeof entry !== "object") return null
+            return {
+              assignmentName: normalizeText(entry.assignmentName),
+              dueAt: normalizeText(entry.dueAt),
+              className: normalizeText(entry.className),
+              quarter: normalizeText(entry.quarter),
+              deepLink: normalizeText(entry.deepLink),
+            }
+          })
+          .filter((entry) => Boolean(entry?.assignmentName || entry?.dueAt)),
       }
     })
     .filter((row) => row.generatedDate)
@@ -3969,6 +4178,11 @@ async function buildParentDashboardPayload(session = {}) {
         orderBy: { generatedAt: "desc" },
       }),
     ])
+    const backfilledReportRows = await backfillLegacyParentReportMetadataRows({
+      prisma,
+      reportRows,
+      gradeRows,
+    })
 
     const groupedAttendance = new Map()
     const groupedGrades = new Map()
@@ -3983,7 +4197,7 @@ async function buildParentDashboardPayload(session = {}) {
       if (!groupedGrades.has(id)) groupedGrades.set(id, [])
       groupedGrades.get(id).push(row)
     })
-    reportRows.forEach((row) => {
+    backfilledReportRows.forEach((row) => {
       const id = normalizeText(row?.studentRefId)
       if (!groupedReports.has(id)) groupedReports.set(id, [])
       groupedReports.get(id).push(row)
@@ -4054,6 +4268,11 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       listStudentPointsLedger(id, { take: 1 }),
       newsAggregatePromise,
     ])
+    const backfilledReportRows = await backfillLegacyParentReportMetadataRows({
+      prisma,
+      reportRows,
+      gradeRows,
+    })
 
     const mappedChild = mapStudentToParentChildSummary(student || { id, eaglesId })
     const child = {
@@ -4064,7 +4283,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       child,
       attendanceRows,
       gradeRows,
-      reportRows,
+      reportRows: backfilledReportRows,
     })
     const pointsSummary = pointsLedger?.summary && typeof pointsLedger.summary === "object"
       ? pointsLedger.summary
@@ -4073,7 +4292,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
     const latestSubmittedAt = newsAggregate?._max?.submittedAt?.toISOString?.() || ""
     const calendarTracks = buildStudentPortalCalendarTracks({
       gradeRows,
-      reportRows,
+      reportRows: backfilledReportRows,
     })
 
     return {
@@ -5176,7 +5395,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const schoolYear = normalizeText(url.searchParams.get("schoolYear") || "")
     const quarter = normalizeText(url.searchParams.get("quarter") || "")
 
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     const pdfBuffer = await generateStudentReportCardPdf(student, {
       className,
       schoolYear,
@@ -5197,7 +5416,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(studentPathMatch[1])
 
     if (method === "GET") {
-      const student = await getStudentById(studentRefId)
+      const student = await getStudentByIdWithReportBackfill(studentRefId)
       sendJson(response, 200, student)
       return true
     }
@@ -5222,7 +5441,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(attendancePathMatch[1])
     const payload = await parseBody(request)
     const record = await saveAttendanceRecord(studentRefId, payload)
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { record, student })
     return true
   }
@@ -5233,7 +5452,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(attendanceDeleteMatch[1])
     const recordId = decodeURIComponent(attendanceDeleteMatch[2])
     const result = await deleteAttendanceRecord(studentRefId, recordId)
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { ...result, student })
     return true
   }
@@ -5244,7 +5463,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(gradePathMatch[1])
     const payload = await parseBody(request)
     const record = await saveGradeRecord(studentRefId, payload)
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { record, student })
     return true
   }
@@ -5255,7 +5474,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(gradeDeleteMatch[1])
     const recordId = decodeURIComponent(gradeDeleteMatch[2])
     const result = await deleteGradeRecord(studentRefId, recordId)
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { ...result, student })
     return true
   }
@@ -5266,7 +5485,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(reportPathMatch[1])
     const payload = await parseBody(request)
     const report = await saveParentClassReport(studentRefId, payload)
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { report, student })
     return true
   }
@@ -5277,7 +5496,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(reportGenerateMatch[1])
     const payload = await parseBody(request)
     const report = await generateParentClassReportFromGrades(studentRefId, payload)
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { report, student })
     return true
   }
@@ -5288,7 +5507,7 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(reportDeleteMatch[1])
     const reportId = decodeURIComponent(reportDeleteMatch[2])
     const result = await deleteParentClassReport(studentRefId, reportId)
-    const student = await getStudentById(studentRefId)
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { ...result, student })
     return true
   }

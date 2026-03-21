@@ -1,0 +1,4435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
+  <title>SIS Grades Tabulator</title>
+  <link rel="stylesheet" href="../vendor/tabulatorz/tabulator.min.css">
+  <style>
+    :root {
+      --bg: #f3f7fb;
+      --panel: #ffffff;
+      --ink: #11263f;
+      --ink-soft: #5d718a;
+      --accent: #0054b5;
+      --accent-soft: #d9e8ff;
+      --line: #d3deec;
+      --ok: #0c8f5c;
+      --warn: #b45309;
+      --bad: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(180deg, #f9fbff 0%, var(--bg) 38%, #eef3f9 100%);
+      color: var(--ink);
+      font-family: "Manrope", "Avenir Next", "Segoe UI", "Noto Sans", sans-serif;
+      line-height: 1.4;
+      margin: 0;
+      min-height: 100vh;
+  }
+
+    .page-shell {
+      box-sizing: border-box;
+      display: grid;
+      gap: 0.75rem;
+      margin: 24px auto;
+      padding: 16px;
+      width: min(1460px, calc(100% - 32px));
+  }
+
+    .page-shell > * {
+      min-width: 0;
+  }
+
+    .top-stack {
+      display: grid;
+      gap: 0.75rem;
+      margin: 0 auto;
+      min-width: 0;
+      width: min(1040px, 100%);
+  }
+
+    .hero,
+    .control-card,
+    .grid-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 8px 22px rgb(17 38 63 / 8%);
+      padding: 0.8rem;
+  }
+
+    .grid-card {
+
+      background:
+        linear-gradient(180deg, rgb(255 255 255 / 96%) 0%, rgb(248 251 255 / 96%) 100%),
+        #fff;
+      min-width: 0;
+  }
+
+    .hero h1 {
+      font-size: 1.35rem;
+      margin: 0;
+  }
+
+    .hero p {
+      color: var(--ink-soft);
+      font-size: 1rem;
+      margin: 0.25rem 0 0;
+  }
+
+    .hero-actions {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.65rem;
+  }
+
+    .btn,
+    .chip-link {
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      box-sizing: border-box;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      justify-content: center;
+      min-height: 2rem;
+      padding: 0.3rem 0.8rem;
+      text-decoration: none;
+  }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: #0a4ea5;
+      color: #fff;
+  }
+
+    .btn.subtle {
+      background: #f5f9ff;
+      border-color: #bed1ea;
+      color: #14385e;
+      font-weight: 600;
+  }
+
+    .status {
+      color: var(--ink-soft);
+      font-size: 1rem;
+      margin: 0.55rem 0 0;
+      min-height: 1.2rem;
+  }
+
+    .status.is-error {
+      color: var(--bad);
+  }
+
+    .periods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 0.65rem;
+  }
+
+    .period-btn {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      box-sizing: border-box;
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      min-height: 2rem;
+      padding: 0.25rem 0.75rem;
+  }
+
+    .period-btn.is-active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #09346d;
+      font-weight: 700;
+  }
+
+    .control-grid {
+      display: grid;
+      gap: 0.55rem;
+      grid-template-columns: 1fr;
+  }
+
+    .field {
+      display: grid;
+      gap: 0.3rem;
+  }
+
+    .field label {
+      color: #28405e;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+  }
+
+    .field select,
+    .field input {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-sizing: border-box;
+      color: var(--ink);
+      font: inherit;
+      min-height: 2.15rem;
+      padding: 0.38rem 0.55rem;
+      width: 100%;
+  }
+
+    .field select:disabled,
+    .field input:disabled {
+      background: #f5f7fa;
+      cursor: not-allowed;
+      opacity: 0.6;
+  }
+
+    .metrics {
+      display: grid;
+      gap: 0.5rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+    .metric-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-sizing: border-box;
+      padding: 0.45rem 0.6rem;
+  }
+
+    .metric-card h2 {
+      color: var(--ink-soft);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin: 0;
+      text-transform: uppercase;
+  }
+
+    .metric-card p {
+      color: #0f3059;
+      font-size: 1.08rem;
+      font-weight: 700;
+      margin: 0.18rem 0 0;
+  }
+
+    #gradeGrid {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-sizing: border-box;
+      min-height: 480px;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      resize: vertical;
+      width: 100%;
+  }
+
+    .grid-head {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+      margin-bottom: 0.55rem;
+  }
+
+    .grid-title {
+      color: #173b62;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin: 0;
+  }
+
+    .grid-actions {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+  }
+
+    .grid-actions .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
+  }
+
+    .table-modal-backdrop[hidden] {
+      display: none;
+  }
+
+    .table-modal-backdrop {
+      background: rgb(8 22 40 / 56%);
+      border: 0;
+      cursor: pointer;
+      inset: 0;
+      position: fixed;
+      z-index: 2700;
+  }
+
+    .grid-card.is-table-modal {
+      box-sizing: border-box;
+      display: grid;
+      gap: 0.55rem;
+      grid-template-rows: auto 1fr auto;
+      inset: 0.75rem;
+      margin: 0;
+      max-height: calc(100vh - 1.5rem);
+      max-width: none;
+      position: fixed;
+      width: auto;
+      z-index: 2800;
+  }
+
+    .grid-card.is-table-modal #gradeGrid {
+      height: 100%;
+      max-height: none;
+      min-height: 0;
+      resize: none;
+  }
+
+    body.table-modal-open {
+      overflow: hidden;
+  }
+
+    .tabulator {
+      background: transparent;
+      border: none;
+      font-size: 0.98rem;
+      max-width: 100%;
+      min-width: 0;
+      width: 100%;
+  }
+
+    .tabulator .tabulator-tableholder {
+      max-width: 100%;
+      overflow-x: auto !important;
+      width: 100%;
+  }
+
+    .tabulator .tabulator-col {
+      background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+      border-bottom: 1px solid #cfdced;
+      border-right-color: #d6e2f0;
+      box-sizing: border-box;
+  }
+
+    .tabulator .tabulator-col:last-child {
+      border-right-color: #c8d8ed;
+  }
+
+    .tabulator .tabulator-col .tabulator-col-content {
+      align-items: stretch;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+      justify-content: flex-start;
+      min-height: 100%;
+      padding: 0.12rem 0.24rem 0.16rem;
+  }
+
+    .tabulator .tabulator-col-title-holder {
+      box-sizing: border-box;
+      display: block;
+      flex: 1 1 auto;
+      height: 100%;
+      width: 100%;
+  }
+
+    .tabulator .tabulator-col .tabulator-col-title {
+      box-sizing: border-box;
+      color: #173a61;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.2;
+  }
+
+    .tabulator-tooltip {
+      box-sizing: border-box;
+      font-size: 1rem;
+      line-height: 1.34;
+      max-width: min(32rem, 84vw);
+      padding: 0.35rem 0.52rem;
+      white-space: normal;
+  }
+
+    .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-content .tabulator-col-sorter {
+      align-items: flex-end;
+      bottom: auto;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      left: auto;
+      margin: 0.04rem 0 0;
+      min-height: 0.72rem;
+      padding: 0;
+      pointer-events: none;
+      position: static;
+      right: auto;
+      top: auto;
+      width: 100%;
+  }
+
+    .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable.tabulator-col-sorter-element .tabulator-col-content .tabulator-col-sorter {
+      pointer-events: auto;
+  }
+
+    .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-title {
+      padding-right: 0;
+  }
+
+    .tabulator .tabulator-row {
+      border-bottom: 1px solid #e4e9f1;
+      border-bottom-color: #e6effb;
+    }
+
+    .tabulator .tabulator-row:hover {
+      background: var(--surface-highlight, #eef4ff);
+    }
+
+    .tabulator .tabulator-row.tabulator-row-even {
+      background: #f1f4f8;
+  }
+
+    .group-meta {
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      margin-left: 0.45rem;
+  }
+
+    .score-chip {
+      align-items: center;
+      display: inline-flex;
+      gap: 0.4rem;
+      min-width: 6.6rem;
+  }
+
+    .score-bar {
+      background: #dfebff;
+      border: 1px solid #c6daf8;
+      border-radius: 999px;
+      box-sizing: border-box;
+      display: inline-block;
+      height: 0.38rem;
+      overflow: hidden;
+      width: 3.3rem;
+  }
+
+    .score-bar-fill {
+      background: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
+      display: block;
+      height: 100%;
+      width: 0;
+  }
+
+    .assignment-sub {
+      color: #4d627c;
+      display: block;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.12;
+      margin-top: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-align: center;
+      text-overflow: ellipsis;
+      text-transform: none;
+      white-space: nowrap;
+  }
+
+    .tabulator .tabulator-col.assignment-col .tabulator-col-content,
+    .tabulator .tabulator-col.assignment-col .tabulator-col-title-holder,
+    .tabulator .tabulator-col.core-col .tabulator-col-content,
+    .tabulator .tabulator-col.core-col .tabulator-col-title-holder {
+      height: 100%;
+  }
+
+    .tabulator .tabulator-col.assignment-col .tabulator-col-title,
+    .tabulator .tabulator-col.core-col .tabulator-col-title {
+      align-items: stretch;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+      justify-content: stretch;
+      min-height: 5.45rem;
+      padding: 0.06rem 0;
+  }
+
+    .header-action-row {
+      box-sizing: border-box;
+      display: grid;
+      gap: 0.22rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 0.14rem;
+      width: 100%;
+  }
+
+    .header-action-btn {
+      appearance: none;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      box-sizing: border-box;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 800;
+      line-height: 1;
+      min-height: 1.05rem;
+      padding: 0.08rem 0;
+      width: 100%;
+  }
+
+    .header-action-btn.plus {
+      background: #1f9d51;
+      border-color: #14743a;
+  }
+
+    .header-action-btn.minus {
+      background: #3e4652;
+      border-color: #2e3440;
+  }
+
+    .header-action-btn:hover {
+      filter: brightness(1.05);
+  }
+
+    .header-action-btn:focus-visible {
+      outline: 2px solid #2f6fb5;
+      outline-offset: 1px;
+  }
+
+    .tabulator .tabulator-col.assignment-col,
+    .tabulator .tabulator-col.core-col {
+      background: linear-gradient(180deg, #f7f8fb 0%, #edf1f8 100%);
+  }
+
+    .tabulator .tabulator-col.assignment-col .tabulator-col-content,
+    .tabulator .tabulator-col.core-col .tabulator-col-content {
+      box-sizing: border-box;
+      padding: 0.1rem 0.16rem 0.08rem;
+  }
+
+    .assignment-head {
+      align-items: center;
+      background: linear-gradient(180deg, #fbfdff 0%, #eef3fb 100%);
+      border: 1px solid #dbe5f3;
+      border-radius: 6px;
+      box-sizing: border-box;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 0.16rem;
+      height: auto;
+      justify-content: space-between;
+      padding: 0.2rem 0.22rem;
+      width: 100%;
+  }
+
+    .assignment-head.megs {
+      background: linear-gradient(180deg, #f8ecd4 0%, #f2e2c0 100%);
+      border: 1px solid #e2d1ab;
+  }
+
+    .assignment-head.core {
+      background: linear-gradient(180deg, #f7fbff 0%, #e9f1fc 100%);
+      border: 1px solid #c9d9ee;
+      justify-content: space-between;
+  }
+
+    .assignment-title-text {
+      align-self: center;
+      color: #0e3359;
+      display: block;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.18;
+      overflow: hidden;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+  }
+
+    .assignment-head.core .assignment-title-text {
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.15;
+  }
+
+    .tabulator .tabulator-cell.student-number-col {
+      box-sizing: border-box;
+      line-height: 1.1;
+      white-space: normal;
+  }
+
+    .student-number-wrap {
+      display: block;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      word-break: break-word;
+  }
+
+    .exercise-cell {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      box-sizing: border-box;
+      display: grid;
+      font-size: 1.08rem;
+      font-weight: 600;
+      gap: 0.08rem;
+      line-height: 1.2;
+      min-width: 0;
+      padding: 0.2rem 0.35rem;
+      width: 100%;
+  }
+
+    .exercise-cell.ontime {
+      background: #dcf6e7;
+      border-color: #92d2aa;
+      color: #0f5a34;
+  }
+
+    .exercise-cell.late {
+      background: #fff3c9;
+      border-color: #e5cb66;
+      color: #6a4a00;
+  }
+
+    .exercise-cell.notdone {
+      background: #fde4e2;
+      border-color: #e7b6b2;
+      color: #8a1f1c;
+  }
+
+    .stat-chip {
+      color: #173a61;
+      display: block;
+      font-size: 0.96rem;
+      font-weight: 600;
+      line-height: 1.2;
+  }
+
+    .assignment-sub.core-sub {
+      color: #345777;
+      font-size: 0.92rem;
+      font-weight: 700;
+  }
+
+    .distribution-mini {
+      background: linear-gradient(180deg, #f9fbff 0%, #eef4ff 100%);
+      border: 1px solid #c5d7ee;
+      border-radius: 8px;
+      box-sizing: border-box;
+      color: #11385d;
+      cursor: pointer;
+      display: grid;
+      gap: 0.14rem;
+      padding: 0.14rem 0.2rem;
+      width: 100%;
+  }
+
+    .distribution-mini:hover {
+      background: linear-gradient(180deg, #f5f9ff 0%, #e8f1ff 100%);
+      border-color: #9fbce4;
+  }
+
+    .distribution-mini:focus-visible {
+      outline: 2px solid #2f6fb5;
+      outline-offset: 1px;
+  }
+
+    .distribution-mini-chart {
+      box-sizing: border-box;
+      display: block;
+      height: 1.18rem;
+      width: 100%;
+  }
+
+    .distribution-mini-chart svg {
+      display: block;
+      height: 100%;
+      width: 100%;
+  }
+
+    .distribution-mini-meta {
+      color: #345a87;
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      text-align: center;
+      text-transform: uppercase;
+  }
+
+    .distribution-modal[hidden] {
+      display: none;
+  }
+
+    .distribution-modal {
+      align-items: center;
+      box-sizing: border-box;
+      display: flex;
+      inset: 0;
+      justify-content: center;
+      padding: 0.65rem;
+      position: fixed;
+      z-index: 3000;
+  }
+
+    .distribution-modal-backdrop {
+      background: rgb(8 22 40 / 52%);
+      inset: 0;
+      position: absolute;
+  }
+
+    .distribution-dialog {
+      background: #fff;
+      border: 1px solid #bfd3ea;
+      border-radius: 14px;
+      box-shadow: 0 26px 60px rgb(8 22 40 / 26%);
+      box-sizing: border-box;
+      display: grid;
+      gap: 0.6rem;
+      grid-template-rows: auto auto auto 1fr auto;
+      height: min(96vh, 1080px);
+      max-height: 96vh;
+      overflow: hidden;
+      padding: 0.9rem;
+      position: relative;
+      width: min(96vw, 1640px);
+  }
+
+    .distribution-dialog.is-fullscreen {
+      border-radius: 0;
+      box-sizing: border-box;
+      height: 100vh;
+      max-height: 100vh;
+      max-width: 100vw;
+      padding: 0.75rem 0.85rem;
+      width: 100vw;
+  }
+
+    .distribution-dialog-head {
+      align-items: center;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: space-between;
+  }
+
+    .distribution-dialog-head h2 {
+      color: #12365c;
+      font-size: 1.12rem;
+      letter-spacing: 0.01em;
+      margin: 0;
+  }
+
+    .distribution-dialog-actions {
+      align-items: center;
+      display: inline-flex;
+      gap: 0.4rem;
+  }
+
+    .distribution-close {
+      background: #f4f8ff;
+      border: 1px solid #b9cce6;
+      border-radius: 8px;
+      box-sizing: border-box;
+      color: #18436f;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.56rem;
+  }
+
+    .distribution-close:hover {
+      background: #eaf2ff;
+      border-color: #9ab9e0;
+  }
+
+    .distribution-expand {
+      background: #f4f8ff;
+      border: 1px solid #b9cce6;
+      border-radius: 8px;
+      box-sizing: border-box;
+      color: #18436f;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.56rem;
+  }
+
+    .distribution-expand:hover {
+      background: #eaf2ff;
+      border-color: #9ab9e0;
+  }
+
+    .distribution-dialog-meta {
+      color: #345777;
+      font-size: 0.92rem;
+      line-height: 1.3;
+      margin: 0;
+  }
+
+    .distribution-toolbar {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+  }
+
+    .distribution-zoom-btn {
+      background: #f4f8ff;
+      border: 1px solid #b9cce6;
+      border-radius: 8px;
+      box-sizing: border-box;
+      color: #18436f;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      min-height: 2rem;
+      min-width: 2rem;
+      padding: 0.2rem 0.45rem;
+  }
+
+    .distribution-zoom-btn:hover {
+      background: #eaf2ff;
+      border-color: #9ab9e0;
+  }
+
+    .distribution-zoom-range {
+      accent-color: #2f75bc;
+      flex: 1 1 220px;
+      max-width: 420px;
+      min-width: 180px;
+  }
+
+    .distribution-zoom-label {
+      color: #234d78;
+      font-size: 0.86rem;
+      font-weight: 700;
+      min-width: 3.2rem;
+      text-align: right;
+  }
+
+    .distribution-chart-shell {
+      background: linear-gradient(180deg, #fafdff 0%, #eef4ff 100%);
+      border: 1px solid #cfddf1;
+      border-radius: 11px;
+      box-sizing: border-box;
+      min-height: 420px;
+      overflow: hidden;
+      padding: 0.32rem;
+      position: relative;
+  }
+
+    .distribution-chart-scroll {
+      box-sizing: border-box;
+      height: 100%;
+      overflow: auto;
+      width: 100%;
+  }
+
+    .distribution-modal-chart {
+      display: block;
+      height: 520px;
+      min-height: 100%;
+      min-width: 100%;
+      width: 960px;
+  }
+
+    .distribution-modal-chart .dist-grid {
+      stroke: #dce7f8;
+      stroke-width: 1;
+  }
+
+    .distribution-modal-chart .dist-axis {
+      stroke: #9db5d7;
+      stroke-width: 1.4;
+  }
+
+    .distribution-modal-chart .dist-area {
+      fill: rgb(62 123 192 / 15%);
+  }
+
+    .distribution-modal-chart .dist-line {
+      fill: none;
+      stroke: #2f75bc;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2.2;
+  }
+
+    .distribution-modal-chart .dist-point {
+      cursor: pointer;
+      fill: #1d5ea0;
+      stroke: #fff;
+      stroke-width: 1.5;
+  }
+
+    .distribution-modal-chart .dist-point.is-active {
+      fill: #f0950f;
+      stroke: #143f69;
+      stroke-width: 1.8;
+  }
+
+    .distribution-modal-chart .dist-point:focus-visible {
+      outline: 2px solid #2f6fb5;
+      outline-offset: 1px;
+  }
+
+    .distribution-modal-chart .dist-label {
+      fill: #31587f;
+      font-size: 1rem;
+      font-weight: 700;
+      text-anchor: middle;
+  }
+
+    .distribution-modal-chart .dist-y-label {
+      fill: #466487;
+      font-size: 1rem;
+      font-weight: 600;
+      text-anchor: end;
+  }
+
+    .distribution-hover {
+      background: #fff;
+      border: 1px solid #9db8da;
+      border-radius: 8px;
+      box-shadow: 0 8px 22px rgb(10 28 48 / 18%);
+      box-sizing: border-box;
+      color: #143b60;
+      font-size: 1rem;
+      font-weight: 700;
+      left: 0;
+      padding: 0.22rem 0.4rem;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      transform: translate(-50%, -108%);
+      white-space: nowrap;
+  }
+
+    .distribution-dialog-hint {
+      color: #4a6282;
+      font-size: 0.88rem;
+      margin: 0;
+  }
+
+    body.distribution-modal-open {
+      overflow: hidden;
+  }
+
+    .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
+      background: #f1f6ff;
+      border-right: 1px solid #dae6f6;
+      box-sizing: border-box;
+      color: #1f4f81;
+      text-align: center;
+  }
+
+    .tabulator-responsive-collapse {
+      background: #f9fbff;
+      border-top: 1px dashed #d9e6f6;
+      box-sizing: border-box;
+      padding: 0.42rem 0.5rem;
+  }
+
+    .collapse-list {
+      display: grid;
+      gap: 0.28rem;
+  }
+
+    .collapse-item {
+      background: #fff;
+      border: 1px solid #dce7f8;
+      border-radius: 8px;
+      box-sizing: border-box;
+      display: grid;
+      font-size: 0.94rem;
+      gap: 0.42rem;
+      grid-template-columns: minmax(5.8rem, auto) 1fr;
+      padding: 0.28rem 0.4rem;
+  }
+
+    .collapse-label {
+      color: #2b4c72;
+      font-weight: 700;
+  }
+
+    .collapse-value {
+      color: #12395f;
+      min-width: 0;
+      overflow-wrap: anywhere;
+  }
+
+    .tabulator-row.is-stat-row .tabulator-cell {
+      background: #eef5ff !important;
+      color: #173a61;
+      font-weight: 600;
+  }
+
+    body.is-compact .tabulator {
+      font-size: 1rem;
+  }
+
+    body.is-compact .tabulator .tabulator-col.assignment-col .tabulator-col-title {
+      min-height: 5.25rem;
+  }
+
+    body.is-compact .exercise-cell {
+      font-size: 1rem;
+      padding: 0.16rem 0.28rem;
+  }
+
+    .dim {
+      color: var(--ink-soft);
+      font-size: 1rem;
+  }
+
+    @media (min-width: 760px) {
+      .page-shell {
+        margin: 24px auto;
+        padding: 16px;
+    }
+
+      .control-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+      .metrics {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+    @media (max-width: 1080px) {
+      .tabulator .tabulator-col.assignment-col .tabulator-col-title {
+        min-height: 5rem;
+    }
+
+      .assignment-title-text {
+        font-size: 1rem;
+    }
+
+      .grid-actions .btn {
+        min-height: 1.9rem;
+        padding: 0.26rem 0.66rem;
+    }
+  }
+
+    @media (max-width: 760px) {
+      .page-shell {
+        box-sizing: border-box;
+        margin: 24px auto;
+        padding: 16px;
+        width: min(100%, calc(100% - 32px));
+    }
+
+      .top-stack {
+        width: 100%;
+    }
+
+      .grid-head {
+        gap: 0.4rem;
+    }
+
+      .grid-title {
+        font-size: 1rem;
+    }
+
+      .grid-actions {
+        width: 100%;
+    }
+
+      .grid-actions .btn {
+        flex: 1 1 auto;
+    }
+
+      .grid-card.is-table-modal {
+        inset: 0.3rem;
+        max-height: calc(100vh - 0.6rem);
+    }
+
+      .tabulator .tabulator-col.assignment-col .tabulator-col-title {
+        align-items: stretch;
+        min-height: 4.8rem;
+        padding: 0.04rem 0;
+    }
+
+      .assignment-head {
+        padding: 0.16rem 0.18rem;
+    }
+
+      .exercise-cell {
+        font-size: 1rem;
+    }
+
+      .collapse-item {
+        gap: 0.18rem;
+        grid-template-columns: 1fr;
+    }
+
+      .distribution-dialog {
+        box-sizing: border-box;
+        height: min(95vh, 920px);
+        max-height: 95vh;
+        padding: 0.6rem;
+        width: 100%;
+    }
+
+      .distribution-dialog.is-fullscreen {
+        padding: 0.45rem 0.5rem;
+    }
+
+      .distribution-dialog-head h2 {
+        font-size: 1rem;
+    }
+
+      .distribution-toolbar {
+        gap: 0.3rem;
+    }
+
+      .distribution-zoom-range {
+        flex: 1 1 100%;
+        max-width: none;
+        order: 2;
+    }
+
+      .distribution-chart-shell {
+        min-height: 260px;
+    }
+
+      .distribution-modal-chart {
+        height: 360px;
+        width: 760px;
+    }
+  }
+
+    @media (max-width: 480px) {
+      .metric-card h2 {
+        font-size: clamp(0.74rem, 3.6vw, 0.84rem);
+        letter-spacing: 0.01em;
+        line-height: 1.1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+      .metric-card p {
+        font-size: clamp(0.92rem, 4.2vw, 1rem);
+    }
+  }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <div class="top-stack">
+      <section class="hero">
+        <h1>Grades Tabulator</h1>
+        <p>Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
+        <div class="hero-actions">
+          <a class="chip-link" href="/admin/students?page=grades-data">Back to Grades Admin</a>
+          <button class="btn primary" id="reloadBtn" type="button">Reload SIS Grade Data</button>
+        </div>
+        <p class="status" id="statusLine">Booting grade interface...</p>
+      </section>
+
+      <section class="control-card">
+        <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
+          <button type="button" class="period-btn" data-period="week">Week</button>
+          <button type="button" class="period-btn" data-period="quarter">Quarter</button>
+          <button type="button" class="period-btn" data-period="qtd">QTD</button>
+          <button type="button" class="period-btn" data-period="sytd">SYTD</button>
+          <button type="button" class="period-btn" data-period="archive">Archive</button>
+          <button type="button" class="period-btn" data-period="custom">Custom</button>
+        </div>
+        <div class="control-grid">
+          <div class="field">
+            <label for="schoolYear">School year</label>
+            <select id="schoolYear">
+              <option value="all">All school years</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="quarter">Quarter</label>
+            <select id="quarter">
+              <option value="q1">Q1</option>
+              <option value="q2">Q2</option>
+              <option value="q3">Q3</option>
+              <option value="q4">Q4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="classFilter">Class level</label>
+            <select id="classFilter">
+              <option value="all">All class levels</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="studentFilter">Student</label>
+            <select id="studentFilter">
+              <option value="all">All students</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="schoolFilter">School</label>
+            <select id="schoolFilter">
+              <option value="all">All schools</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="customFrom">Custom from</label>
+            <input id="customFrom" type="date">
+          </div>
+          <div class="field">
+            <label for="customTo">Custom to</label>
+            <input id="customTo" type="date">
+          </div>
+          <div class="field">
+            <label for="searchInput">Search</label>
+            <input id="searchInput" type="search" placeholder="student, class, assignment">
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="Grade data snapshot">
+        <article class="metric-card"><h2>Rows</h2><p id="metricRows">0</p></article>
+        <article class="metric-card"><h2>Students</h2><p id="metricStudents">0</p></article>
+        <article class="metric-card"><h2>Classes</h2><p id="metricClasses">0</p></article>
+        <article class="metric-card"><h2>Avg Score %</h2><p id="metricAvgPercent">n/a</p></article>
+        <article class="metric-card"><h2>HW Completion</h2><p id="metricCompletion">n/a</p></article>
+      </section>
+    </div>
+
+    <section id="gradeGridCard" class="grid-card">
+      <div class="grid-head">
+        <p class="grid-title">Interactive Matrix</p>
+        <div class="grid-actions">
+          <button class="btn subtle" id="tableModalBtn" type="button">Open table modal</button>
+          <button class="btn subtle" id="toggleCompactBtn" type="button">Dense rows: Off</button>
+          <button class="btn subtle" id="resetColumnsBtn" type="button">Reset columns</button>
+        </div>
+      </div>
+      <div id="gradeGrid"></div>
+      <p class="dim" id="rangeHint"></p>
+    </section>
+  </main>
+
+  <button id="tableModalBackdrop" class="table-modal-backdrop" type="button" hidden data-close-table-modal="true" aria-label="Close table modal"></button>
+
+  <div id="distributionModal" class="distribution-modal" hidden>
+    <div class="distribution-modal-backdrop" data-close-distribution-modal="true"></div>
+    <section id="distributionDialog" class="distribution-dialog is-fullscreen" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
+      <div class="distribution-dialog-head">
+        <h2 id="distributionModalTitle">Grade Distribution Detail</h2>
+        <div class="distribution-dialog-actions">
+          <button id="distributionModalExpand" class="distribution-expand" type="button" aria-label="Toggle full screen chart modal">Windowed</button>
+          <button id="distributionModalClose" class="distribution-close" type="button" aria-label="Close distribution chart">Close</button>
+        </div>
+      </div>
+      <p id="distributionModalMeta" class="distribution-dialog-meta">Hover points to inspect each label and count.</p>
+      <div class="distribution-toolbar" role="toolbar" aria-label="Distribution chart zoom controls">
+        <button id="distributionZoomOut" class="distribution-zoom-btn" type="button" aria-label="Zoom out chart">-</button>
+        <button id="distributionZoomIn" class="distribution-zoom-btn" type="button" aria-label="Zoom in chart">+</button>
+        <button id="distributionZoomReset" class="distribution-zoom-btn" type="button" aria-label="Reset chart zoom">Reset</button>
+        <input id="distributionZoomRange" class="distribution-zoom-range" type="range" min="1" max="6" step="0.1" value="1" aria-label="Chart zoom level">
+        <span id="distributionZoomLabel" class="distribution-zoom-label">100%</span>
+      </div>
+      <div id="distributionChartShell" class="distribution-chart-shell">
+        <div id="distributionChartScroll" class="distribution-chart-scroll">
+          <svg id="distributionModalChart" class="distribution-modal-chart" viewBox="0 0 760 360" preserveAspectRatio="none"></svg>
+        </div>
+        <div id="distributionModalHover" class="distribution-hover" hidden></div>
+      </div>
+      <p class="distribution-dialog-hint">Hover points for values. Use slider, +/- buttons, or mouse wheel to zoom.</p>
+    </section>
+  </div>
+
+  <script src="../vendor/tabulatorz/tabulator.min.js"></script>
+  <script>
+    (() => {
+      "use strict"
+
+      const state = {
+        allRows: [],
+        filteredRows: [],
+        matrixRows: [],
+        table: null,
+        tableBuilt: false,
+        columnSchemaKey: "",
+        tableHeightPx: null,
+        tableResizeObserver: null,
+        responsiveCollapseEnabled: false,
+        loading: false,
+        compactMode: false,
+        distributionModalPayload: null,
+        distributionModalPoints: [],
+        distributionModalActiveIndex: -1,
+        distributionModalZoom: 1,
+        distributionModalBaseWidth: 760,
+        distributionModalBaseHeight: 360,
+        distributionModalFullscreen: true,
+        tableModalOpen: false,
+        letterGradeRanges: [],
+        schoolSetup: {
+          schoolYear: "",
+          startDate: "",
+          endDate: "",
+          quarters: [],
+        },
+        filters: {
+          period: "sytd",
+          schoolYear: "all",
+          quarter: "q1",
+          classKey: "all",
+          studentKey: "all",
+          schoolKey: "all",
+          customFrom: "",
+          customTo: "",
+          search: "",
+        },
+      }
+
+      const DEFAULT_SYSTEM_SCHOOL_YEAR = "2026-2027"
+      const DEFAULT_LETTER_GRADE_RANGES = Object.freeze([
+        Object.freeze({ letter: "A", minPercent: 90, maxPercent: 100 }),
+        Object.freeze({ letter: "B", minPercent: 80, maxPercent: 89.99 }),
+        Object.freeze({ letter: "C", minPercent: 70, maxPercent: 79.99 }),
+        Object.freeze({ letter: "D", minPercent: 60, maxPercent: 69.99 }),
+        Object.freeze({ letter: "F", minPercent: 0, maxPercent: 59.99 }),
+      ])
+      const API_ORIGIN = resolveApiOrigin()
+      const TODAY_ISO = localIsoDate(new Date())
+      let SYSTEM_CURRENT_SCHOOL_YEAR = resolveSystemCurrentSchoolYear()
+      const TABLE_PERSISTENCE_ID = "sis-grades-tabulator-v1"
+      const LEGACY_TABLE_PERSISTENCE_ID = "sis-grades-tabulator-dev-v1"
+      const UI_PREFS_KEY = "sis.grades-tabulator.ui-prefs.v1"
+      const LEGACY_UI_PREFS_KEY = "sis.grades-tabulator-dev.ui-prefs.v1"
+      const TABLE_UI_STATE_KEY = "sis.grades-tabulator.table-state.v1"
+      const LEGACY_TABLE_UI_STATE_KEY = "sis.grades-tabulator-dev.table-state.v1"
+      const TABLE_UI_STATE_SCHEMA_VERSION = 2
+      const TABLE_HEIGHT_MIN_PX = 320
+      const TABLE_HEIGHT_MAX_PX = 1400
+      const DISTRIBUTION_ZOOM_MIN = 1
+      const DISTRIBUTION_ZOOM_MAX = 6
+      const DISTRIBUTION_ZOOM_STEP = 0.1
+
+      function normalizeText(value) {
+        if (value === undefined || value === null) return ""
+        return String(value).trim()
+      }
+
+      function normalizeLower(value) {
+        return normalizeText(value).toLowerCase()
+      }
+
+      function tableHostElement() {
+        const el = document.getElementById("gradeGrid")
+        return el instanceof HTMLElement ? el : null
+      }
+
+      function defaultTableHeightPx() {
+        const viewportHeight = Number(window.innerHeight) || 900
+        return Math.max(420, Math.min(760, Math.round(viewportHeight * 0.66)))
+      }
+
+      function normalizeTableHeightPx(value, fallback) {
+        const hasValue = value !== null && value !== undefined && value !== ""
+        const hasFallback = fallback !== null && fallback !== undefined && fallback !== ""
+        const raw = hasValue ? Number(value) : Number.NaN
+        const fallbackRaw = hasFallback ? Number(fallback) : Number.NaN
+        const candidate = Number.isFinite(raw)
+          ? raw
+          : Number.isFinite(fallbackRaw)
+            ? fallbackRaw
+            : null
+        if (!Number.isFinite(candidate)) return null
+        return Math.max(TABLE_HEIGHT_MIN_PX, Math.min(TABLE_HEIGHT_MAX_PX, Math.round(candidate)))
+      }
+
+      function isMegsAssignmentTitle(value) {
+        return /\bmegs\b/i.test(normalizeText(value))
+      }
+
+      function normalizeAssignmentHeaderTitle(value) {
+        const raw = normalizeText(value)
+        if (!raw) return "Exercise"
+        const stripped = raw.replace(/\bmegs\b/gi, " ").replace(/\s+/g, " ").trim()
+        return stripped || "Exercise"
+      }
+
+      function truncateHeaderTitle(value, maxLength = 12) {
+        const text = normalizeText(value)
+        if (!text) return ""
+        const limit = Number.isFinite(maxLength) ? Math.max(4, Math.trunc(maxLength)) : 12
+        if (text.length <= limit) return text
+        return `${text.slice(0, Math.max(1, limit - 1)).trimEnd()}…`
+      }
+
+      function buildHeaderActionButtons(label = "Column") {
+        const normalizedLabel = normalizeText(label) || "Column"
+        const safeLabel = escapeHtml(normalizedLabel)
+        return (
+          `<span class=\"header-action-row\" role=\"group\" aria-label=\"${safeLabel} column controls\">`
+          + `<button class=\"header-action-btn plus\" type=\"button\" data-header-action=\"pin\" aria-label=\"Pin or unpin ${safeLabel} column\">+</button>`
+          + `<button class=\"header-action-btn minus\" type=\"button\" data-header-action=\"hide\" aria-label=\"Hide ${safeLabel} column\">-</button>`
+          + `</span>`
+        )
+      }
+
+      function buildCoreHeaderCard(title, topSubline, bottomSubline, maxLength = 12) {
+        const normalizedTitle = normalizeText(title) || "Column"
+        const normalizedTopSubline = normalizeText(topSubline) || "-"
+        const normalizedBottomSubline = normalizeText(bottomSubline)
+        const shortTitle = truncateHeaderTitle(normalizedTitle, maxLength)
+        return (
+          `<span class=\"assignment-head core\">`
+          + `${buildHeaderActionButtons(normalizedTitle)}`
+          + `<span class=\"assignment-title-text\">${escapeHtml(shortTitle)}</span>`
+          + `<span class=\"assignment-sub core-sub\">${escapeHtml(normalizedTopSubline)}</span>`
+          + (normalizedBottomSubline
+            ? `<span class=\"assignment-sub core-sub\">${escapeHtml(normalizedBottomSubline)}</span>`
+            : "")
+          + `</span>`
+        )
+      }
+
+      function studentColumnDefaultWidthForViewport(viewportWidth) {
+        const width = Number.isFinite(viewportWidth) ? viewportWidth : 1280
+        if (width <= 420) return 92
+        if (width <= 560) return 104
+        if (width <= 760) return 118
+        if (width <= 980) return 136
+        return 182
+      }
+
+      function studentColumnMinWidthForResize() {
+        return Math.max(24, Math.round((3 * 7.6) + 24))
+      }
+
+      function clampNumber(value, minValue, maxValue) {
+        const min = Number.isFinite(minValue) ? minValue : 0
+        const max = Number.isFinite(maxValue) ? Math.max(min, maxValue) : min
+        if (!Number.isFinite(value)) return min
+        return Math.min(max, Math.max(min, value))
+      }
+
+      function estimatedWidthFromChars(charCount, options = {}) {
+        const minWidth = Math.max(48, Number(options.minWidth) || 48)
+        const maxWidth = Math.max(minWidth, Number(options.maxWidth) || minWidth)
+        const charWidth = Math.max(5.4, Number(options.charWidth) || 7.4)
+        const cellPadding = Math.max(12, Number(options.cellPadding) || 28)
+        const chars = Math.max(0, Number.isFinite(charCount) ? Math.round(charCount) : 0)
+        const estimatedWidth = Math.round((chars * charWidth) + cellPadding)
+        return clampNumber(estimatedWidth, minWidth, maxWidth)
+      }
+
+      function coreColumnDataWidth(rows, field, options = {}) {
+        const sourceRows = Array.isArray(rows) ? rows : []
+        const projectedText = typeof options.getText === "function"
+          ? options.getText
+          : (value) => normalizeText(value)
+        let maxChars = Math.max(0, Number.parseInt(String(options.minChars || 0), 10) || 0)
+        sourceRows.forEach((row) => {
+          const text = normalizeText(projectedText(row?.[field], row))
+          if (text.length > maxChars) maxChars = text.length
+        })
+        return estimatedWidthFromChars(maxChars, options)
+      }
+
+      function assignmentCellSummaryForWidth(value, rowData = {}) {
+        if (rowData?.rowType === "stat") {
+          if (normalizeText(rowData?.id) === "stat-distribution") return "Distribution"
+          const summaryText = value && typeof value === "object"
+            ? normalizeText(value.summaryText)
+            : normalizeText(value)
+          return summaryText || "n/a"
+        }
+        if (!value || typeof value !== "object") return "-/- Not done"
+        const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0
+          ? `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}`
+          : Number.isFinite(value.score)
+            ? `${formatShortNumber(value.score)}`
+            : "-/-"
+        const percentLabel = Number.isFinite(value.percent) ? `${Math.round(value.percent)}%` : "n/a"
+        return `${scoreLabel} ${percentLabel}`.trim()
+      }
+
+      function assignmentColumnDataWidth(rows, field, options = {}) {
+        return coreColumnDataWidth(rows, field, {
+          ...options,
+          getText: (value, row) => assignmentCellSummaryForWidth(value, row),
+        })
+      }
+
+      function formatStudentNumberForWrap(value) {
+        const text = normalizeText(value)
+        if (!text) return ""
+        const escaped = escapeHtml(text)
+        if (/^\d{7,}$/u.test(text)) {
+          return escaped.replace(/(\d{3})(?=\d)/g, "$1<wbr>")
+        }
+        return escaped
+      }
+
+      function normalizeLetterCode(value) {
+        const text = normalizeText(value).toUpperCase()
+        if (!text) return ""
+        if (!/^[A-Z][A-Z0-9+-]{0,3}$/u.test(text)) return ""
+        return text
+      }
+
+      function clampPercent(value) {
+        if (!Number.isFinite(value)) return null
+        if (value < 0) return 0
+        if (value > 100) return 100
+        return value
+      }
+
+      function normalizeLetterGradeRanges(source = []) {
+        const rows = Array.isArray(source) ? source : []
+        const normalized = rows
+          .map((entry) => {
+            const letter = normalizeLetterCode(entry?.letter)
+            const minPercentRaw = toNumber(entry?.minPercent)
+            const maxPercentRaw = toNumber(entry?.maxPercent)
+            const minPercent = clampPercent(minPercentRaw)
+            const maxPercent = clampPercent(maxPercentRaw)
+            if (!letter) return null
+            if (!Number.isFinite(minPercent) || !Number.isFinite(maxPercent)) return null
+            const low = Math.min(minPercent, maxPercent)
+            const high = Math.max(minPercent, maxPercent)
+            return {
+              letter,
+              minPercent: low,
+              maxPercent: high,
+            }
+          })
+          .filter((entry) => entry && typeof entry === "object")
+          .sort((left, right) => right.minPercent - left.minPercent)
+
+        if (!normalized.length) {
+          return DEFAULT_LETTER_GRADE_RANGES.map((entry) => ({ ...entry }))
+        }
+        return normalized
+      }
+
+      function letterGradeRangesFromUiSettings(settings) {
+        const candidate = settings && typeof settings === "object"
+          ? settings?.schoolSetup?.letterGradeRanges
+          : null
+        return normalizeLetterGradeRanges(candidate)
+      }
+
+      function schoolYearFromUiSettings(settings) {
+        const candidate = settings && typeof settings === "object"
+          ? normalizeText(settings?.schoolSetup?.schoolYear)
+          : ""
+        return isSchoolYearKey(candidate) ? candidate : ""
+      }
+
+      function normalizeSchoolSetupQuarters(source = []) {
+        return (Array.isArray(source) ? source : [])
+          .map((entry) => {
+            const quarter = normalizeQuarterCode(entry?.quarter)
+            const startDate = normalizeText(entry?.startDate).slice(0, 10)
+            const endDate = normalizeText(entry?.endDate).slice(0, 10)
+            if (!quarter || !parseIsoDate(startDate) || !parseIsoDate(endDate)) return null
+            if (compareIsoDate(startDate, endDate) > 0) return null
+            return { quarter, startDate, endDate }
+          })
+          .filter((entry) => entry && typeof entry === "object")
+          .sort((left, right) => quarterSortKey(left?.quarter) - quarterSortKey(right?.quarter))
+      }
+
+      function syncSchoolSetupFromUiSettings(settings) {
+        const setup = settings && typeof settings === "object" && settings.schoolSetup && typeof settings.schoolSetup === "object"
+          ? settings.schoolSetup
+          : {}
+        const schoolYear = schoolYearFromUiSettings({ schoolSetup: setup })
+        const startDate = normalizeText(setup?.startDate).slice(0, 10)
+        const endDate = normalizeText(setup?.endDate).slice(0, 10)
+        state.schoolSetup = {
+          schoolYear: isSchoolYearKey(schoolYear) ? schoolYear : "",
+          startDate: parseIsoDate(startDate) ? startDate : "",
+          endDate: parseIsoDate(endDate) ? endDate : "",
+          quarters: normalizeSchoolSetupQuarters(setup?.quarters),
+        }
+        refreshSystemCurrentSchoolYear(state.schoolSetup.schoolYear)
+      }
+
+      function normalizeSearch(value) {
+        return normalizeLower(value)
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/đ/g, "d")
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim()
+      }
+
+      function isSchoolYearKey(value) {
+        return /^\d{4}-\d{4}$/.test(normalizeText(value))
+      }
+
+      function localIsoDate(value) {
+        const date = value instanceof Date ? new Date(value.getTime()) : new Date(value)
+        if (Number.isNaN(date.valueOf())) return ""
+        const y = String(date.getFullYear()).padStart(4, "0")
+        const m = String(date.getMonth() + 1).padStart(2, "0")
+        const d = String(date.getDate()).padStart(2, "0")
+        return `${y}-${m}-${d}`
+      }
+
+      function parseIsoDate(value) {
+        const text = normalizeText(value).slice(0, 10)
+        const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+        if (!match) return null
+        const y = Number.parseInt(match[1], 10)
+        const m = Number.parseInt(match[2], 10)
+        const d = Number.parseInt(match[3], 10)
+        const date = new Date(y, m - 1, d)
+        if (Number.isNaN(date.valueOf())) return null
+        if (localIsoDate(date) !== text) return null
+        return date
+      }
+
+      function isoDateOffset(value, days) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const copy = new Date(parsed.getTime())
+        copy.setDate(copy.getDate() + (Number.isFinite(days) ? Math.trunc(days) : 0))
+        return localIsoDate(copy)
+      }
+
+      function compareIsoDate(left, right) {
+        return normalizeText(left).slice(0, 10).localeCompare(normalizeText(right).slice(0, 10))
+      }
+
+      function startOfWeekIso(value) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const copy = new Date(parsed.getTime())
+        const weekday = copy.getDay()
+        const diff = (weekday + 6) % 7
+        copy.setDate(copy.getDate() - diff)
+        return localIsoDate(copy)
+      }
+
+      function schoolYearForIsoDate(value) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const year = parsed.getFullYear()
+        const month = parsed.getMonth() + 1
+        if (month >= 8) return `${year}-${year + 1}`
+        return `${year - 1}-${year}`
+      }
+
+      function quarterFromIsoDate(value) {
+        const setupQuarter = normalizeQuarterCode(schoolSetupQuarterForIsoDate(value))
+        if (setupQuarter) return setupQuarter
+        return calendarQuarterFromIsoDate(value)
+      }
+
+      function calendarQuarterFromIsoDate(value) {
+        const parsed = parseIsoDate(value)
+        if (!parsed) return ""
+        const month = parsed.getMonth() + 1
+        if (month >= 8 && month <= 10) return "q1"
+        if (month === 11 || month === 12 || month === 1) return "q2"
+        if (month === 2 || month === 3) return "q3"
+        return "q4"
+      }
+
+      function normalizeQuarterCode(value) {
+        const text = normalizeLower(value)
+        if (text === "q1" || text === "q2" || text === "q3" || text === "q4") return text
+        if (text === "1") return "q1"
+        if (text === "2") return "q2"
+        if (text === "3") return "q3"
+        if (text === "4") return "q4"
+        return ""
+      }
+
+      function quarterSortKey(value) {
+        const quarter = normalizeQuarterCode(value)
+        if (quarter === "q1") return 1
+        if (quarter === "q2") return 2
+        if (quarter === "q3") return 3
+        if (quarter === "q4") return 4
+        return 9
+      }
+
+      function parseSchoolYearRange(value = "") {
+        const match = normalizeText(value).match(/^(\d{4})-(\d{4})$/)
+        if (!match) return null
+        const startYear = Number.parseInt(match[1], 10)
+        const endYear = Number.parseInt(match[2], 10)
+        if (!Number.isFinite(startYear) || !Number.isFinite(endYear) || endYear < startYear) return null
+        return { startYear, endYear }
+      }
+
+      function schoolSetupQuarterForIsoDate(value = "") {
+        const isoDate = normalizeText(value).slice(0, 10)
+        if (!parseIsoDate(isoDate)) return ""
+        const setup = state.schoolSetup && typeof state.schoolSetup === "object" ? state.schoolSetup : {}
+        const quarters = Array.isArray(setup.quarters) ? setup.quarters : []
+        for (let index = 0; index < quarters.length; index += 1) {
+          const entry = quarters[index]
+          const startDate = normalizeText(entry?.startDate).slice(0, 10)
+          const endDate = normalizeText(entry?.endDate).slice(0, 10)
+          if (!parseIsoDate(startDate) || !parseIsoDate(endDate)) continue
+          if (compareIsoDate(isoDate, startDate) >= 0 && compareIsoDate(isoDate, endDate) <= 0) {
+            return normalizeQuarterCode(entry?.quarter)
+          }
+        }
+        if (
+          parseIsoDate(setup?.startDate)
+          && parseIsoDate(setup?.endDate)
+          && compareIsoDate(isoDate, setup.startDate) >= 0
+          && compareIsoDate(isoDate, setup.endDate) <= 0
+        ) {
+          const lastQuarter = quarters.length ? quarters[quarters.length - 1] : null
+          return normalizeQuarterCode(lastQuarter?.quarter)
+        }
+        return ""
+      }
+
+      function quarterForSchoolYear(yearLabel = "", isoDate = TODAY_ISO) {
+        const targetYear = normalizeText(yearLabel)
+        const dateKey = normalizeText(isoDate).slice(0, 10)
+        if (!parseIsoDate(dateKey)) return "q1"
+        const setupYear = normalizeText(state.schoolSetup?.schoolYear)
+        if (targetYear && setupYear && targetYear === setupYear) {
+          const setupQuarter = normalizeQuarterCode(schoolSetupQuarterForIsoDate(dateKey))
+          if (setupQuarter) return setupQuarter
+        }
+        const parsed = parseSchoolYearRange(targetYear)
+        if (parsed) {
+          const startDate = `${String(parsed.startYear).padStart(4, "0")}-08-01`
+          const endDate = `${String(parsed.endYear).padStart(4, "0")}-07-31`
+          if (compareIsoDate(dateKey, startDate) < 0 || compareIsoDate(dateKey, endDate) > 0) return "q1"
+        }
+        return normalizeQuarterCode(calendarQuarterFromIsoDate(dateKey)) || "q1"
+      }
+
+      function resolveSystemCurrentSchoolYear() {
+        const params = new URLSearchParams(window.location.search || "")
+        const explicit = normalizeText(params.get("currentSchoolYear") || params.get("schoolYear"))
+        if (isSchoolYearKey(explicit)) return explicit
+        const localSettingsSchoolYear = schoolYearFromUiSettings(loadUiSettingsFromLocalStorage())
+        if (isSchoolYearKey(localSettingsSchoolYear)) return localSettingsSchoolYear
+        const fallback = normalizeText(DEFAULT_SYSTEM_SCHOOL_YEAR)
+        if (isSchoolYearKey(fallback)) return fallback
+        const dateDerived = normalizeText(schoolYearForIsoDate(TODAY_ISO))
+        if (isSchoolYearKey(dateDerived)) return dateDerived
+        return dateDerived
+      }
+
+      function refreshSystemCurrentSchoolYear(nextSchoolYear) {
+        const normalizedNext = normalizeText(nextSchoolYear)
+        if (!isSchoolYearKey(normalizedNext)) return
+        const previousYear = normalizeText(SYSTEM_CURRENT_SCHOOL_YEAR)
+        SYSTEM_CURRENT_SCHOOL_YEAR = normalizedNext
+        const activeYear = normalizeText(state.filters.schoolYear)
+        const shouldPromoteFilter =
+          activeYear === "all"
+          || !isSchoolYearKey(activeYear)
+          || (isSchoolYearKey(previousYear) && activeYear === previousYear)
+        if (shouldPromoteFilter) {
+          state.filters.schoolYear = normalizedNext
+        }
+        applyCurrentSchoolYearDefault()
+      }
+
+      function parseCorrectTotalFromComments(value) {
+        const text = normalizeText(value)
+        const match = text.match(/\(\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*correct\s*\)/i)
+        if (!match) return { correctCount: null, totalQuestions: null }
+        const correctCount = toNumber(match[1])
+        const totalQuestions = toNumber(match[2])
+        return {
+          correctCount: Number.isFinite(correctCount) ? correctCount : null,
+          totalQuestions: Number.isFinite(totalQuestions) ? totalQuestions : null,
+        }
+      }
+
+      function toNumber(value) {
+        const parsed = Number.parseFloat(String(value))
+        return Number.isFinite(parsed) ? parsed : null
+      }
+
+      function toBoolLabel(value) {
+        if (value === true) return "Yes"
+        if (value === false) return "No"
+        return ""
+      }
+
+      function percentValue(part, whole) {
+        if (!Number.isFinite(part) || !Number.isFinite(whole) || whole <= 0) return null
+        return (part / whole) * 100
+      }
+
+      function formatPercent(value) {
+        if (!Number.isFinite(value)) return "n/a"
+        return `${Math.round(value)}%`
+      }
+
+      function formatScoreCell(cell) {
+        const row = cell.getRow().getData()
+        const score = Number.isFinite(row.score) ? row.score : null
+        const maxScore = Number.isFinite(row.maxScore) && row.maxScore > 0 ? row.maxScore : null
+        const percent = Number.isFinite(row.scorePercent) ? Math.max(0, Math.min(100, row.scorePercent)) : null
+        const valueText = score === null ? "-" : maxScore === null ? `${score}` : `${score}/${maxScore}`
+        if (percent === null) return `<span>${escapeHtml(valueText)}</span>`
+        return (
+          `<span class="score-chip">`
+          + `<span>${escapeHtml(valueText)}</span>`
+          + `<span class="score-bar"><span class="score-bar-fill" style="width:${Math.round(percent)}%"></span></span>`
+          + `</span>`
+        )
+      }
+
+      function escapeHtml(value) {
+        return normalizeText(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;")
+      }
+
+      function stripHtmlToText(value) {
+        const html = normalizeText(value)
+        if (!html) return ""
+        const holder = document.createElement("div")
+        holder.innerHTML = html
+        return normalizeText(holder.textContent || holder.innerText)
+      }
+
+      function collapseValueToText(value) {
+        if (value instanceof HTMLElement) return normalizeText(value.textContent || value.innerText)
+        const text = normalizeText(value)
+        if (!text) return "-"
+        if (/[<>&]/.test(text)) {
+          const stripped = stripHtmlToText(text)
+          if (stripped) return stripped
+        }
+        return text
+      }
+
+      function buildResponsiveCollapseContent(hiddenData) {
+        const entries = Array.isArray(hiddenData) ? hiddenData : []
+        if (!entries.length) return ""
+        const wrapper = document.createElement("div")
+        wrapper.className = "collapse-list"
+        entries.forEach((entry) => {
+          const titleText = collapseValueToText(entry?.title) || "Field"
+          const valueText = collapseValueToText(entry?.value)
+          const item = document.createElement("div")
+          item.className = "collapse-item"
+          item.innerHTML =
+            `<span class=\"collapse-label\">${escapeHtml(titleText)}</span>`
+            + `<span class=\"collapse-value\">${escapeHtml(valueText)}</span>`
+          wrapper.appendChild(item)
+        })
+        return wrapper
+      }
+
+      function orderedDistributionLabels() {
+        const labels = normalizeLetterGradeRanges(state.letterGradeRanges)
+          .map((entry) => normalizeText(entry?.letter))
+          .filter((label) => Boolean(label) && label !== "N/A")
+        return labels
+      }
+
+      function normalizeDistributionLabel(value) {
+        const upper = normalizeText(value).toUpperCase()
+        if (!upper) return ""
+        if (upper === "NA" || upper === "N-A" || upper === "N/A") return ""
+        return upper
+      }
+
+      function normalizeDistributionEntries(source = []) {
+        const rows = Array.isArray(source) ? source : []
+        const ordered = orderedDistributionLabels()
+        const rank = new Map(ordered.map((label, index) => [label, index]))
+        const normalized = rows
+          .map((entry) => {
+            let label = ""
+            let rawCount = null
+            if (Array.isArray(entry)) {
+              label = normalizeDistributionLabel(entry[0])
+              rawCount = toNumber(entry[1])
+            } else if (entry && typeof entry === "object") {
+              label = normalizeDistributionLabel(entry.label || entry.letter)
+              rawCount = toNumber(entry.count)
+            }
+            if (!label || !Number.isFinite(rawCount)) return null
+            return {
+              label,
+              count: Math.max(0, Math.round(rawCount)),
+            }
+          })
+          .filter((entry) => entry && typeof entry === "object")
+        normalized.sort((left, right) => {
+          const leftRank = rank.has(left.label) ? rank.get(left.label) : 999
+          const rightRank = rank.has(right.label) ? rank.get(right.label) : 999
+          if (leftRank !== rightRank) return leftRank - rightRank
+          return left.label.localeCompare(right.label)
+        })
+        return normalized
+      }
+
+      function parseDistributionEntriesFromText(value) {
+        const text = normalizeText(value)
+        if (!text) return []
+        const parsed = []
+        const regex = /([A-Z][A-Z0-9+\-/]*)\s*:\s*(\d+(?:\.\d+)?)/gi
+        let match = regex.exec(text)
+        while (match) {
+          parsed.push({
+            label: normalizeDistributionLabel(match[1]),
+            count: toNumber(match[2]),
+          })
+          match = regex.exec(text)
+        }
+        return normalizeDistributionEntries(parsed)
+      }
+
+      function normalizeDistributionPayload(value, meta = {}) {
+        const input = value && typeof value === "object" && !Array.isArray(value) ? value : {}
+        const metaInput = meta && typeof meta === "object" ? meta : {}
+        const fallbackSummary = normalizeText(value)
+        const summaryText = normalizeText(input.summaryText) || fallbackSummary
+        let entries = normalizeDistributionEntries(input.entries)
+        if (!entries.length && summaryText) {
+          entries = parseDistributionEntriesFromText(summaryText)
+        }
+        if (!entries.length) return null
+
+        const totalFromPayload = toNumber(input.totalCount)
+        const totalCount = Number.isFinite(totalFromPayload)
+          ? Math.max(0, Math.round(totalFromPayload))
+          : entries.reduce((sum, entry) => sum + entry.count, 0)
+        const assignmentTitle = normalizeText(input.assignmentTitle) || normalizeAssignmentHeaderTitle(metaInput.title)
+        const dueLabel = normalizeText(input.dueLabel) || normalizeText(metaInput.dueAt) || "-"
+        const questionTotalRaw = toNumber(input.questionTotal ?? metaInput.totalQuestions)
+        const questionTotal = Number.isFinite(questionTotalRaw) ? questionTotalRaw : null
+        const normalizedSummaryText = summaryText || entries.map((entry) => `${entry.label}:${entry.count}`).join(" ")
+
+        return {
+          entries,
+          summaryText: normalizedSummaryText || "-",
+          totalCount: Math.max(0, totalCount),
+          assignmentTitle: assignmentTitle || "Exercise",
+          dueLabel,
+          questionTotal,
+        }
+      }
+
+      function buildDistributionPointSeries(entries = [], options = {}) {
+        const width = Math.max(120, Number(options.width) || 120)
+        const height = Math.max(42, Number(options.height) || 42)
+        const marginLeft = Math.max(0, Number(options.marginLeft) || 0)
+        const marginRight = Math.max(0, Number(options.marginRight) || 0)
+        const marginTop = Math.max(0, Number(options.marginTop) || 0)
+        const marginBottom = Math.max(0, Number(options.marginBottom) || 0)
+        const safeEntries = normalizeDistributionEntries(entries)
+        if (!safeEntries.length) {
+          return {
+            points: [],
+            maxCount: 1,
+            width,
+            height,
+            marginLeft,
+            marginRight,
+            marginTop,
+            marginBottom,
+            plotWidth: Math.max(4, width - marginLeft - marginRight),
+            plotHeight: Math.max(4, height - marginTop - marginBottom),
+          }
+        }
+        const maxCount = Math.max(1, ...safeEntries.map((entry) => entry.count))
+        const plotWidth = Math.max(4, width - marginLeft - marginRight)
+        const plotHeight = Math.max(4, height - marginTop - marginBottom)
+        const lastIndex = Math.max(1, safeEntries.length - 1)
+        const points = safeEntries.map((entry, index) => {
+          const x = safeEntries.length === 1
+            ? marginLeft + (plotWidth / 2)
+            : marginLeft + ((plotWidth * index) / lastIndex)
+          const y = marginTop + plotHeight - ((entry.count / maxCount) * plotHeight)
+          return {
+            index,
+            label: entry.label,
+            count: entry.count,
+            x,
+            y,
+          }
+        })
+        return {
+          points,
+          maxCount,
+          width,
+          height,
+          marginLeft,
+          marginRight,
+          marginTop,
+          marginBottom,
+          plotWidth,
+          plotHeight,
+        }
+      }
+
+      function buildDistributionSparklineSvg(entries = []) {
+        const width = 158
+        const height = 34
+        const series = buildDistributionPointSeries(entries, {
+          width,
+          height,
+          marginLeft: 4,
+          marginRight: 4,
+          marginTop: 3,
+          marginBottom: 3,
+        })
+        if (!series.points.length) {
+          return `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\"></svg>`
+        }
+        const baselineY = Math.round((height - series.marginBottom) * 100) / 100
+        const pointsText = series.points
+          .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+          .join(" ")
+        const circles = series.points
+          .map((point) => (
+            `<circle cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\" fill=\"#1d5ea0\"></circle>`
+          ))
+          .join("")
+        return (
+          `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\" aria-hidden=\"true\">`
+          + `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"#d7e3f6\" stroke-width=\"1\"></line>`
+          + `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"#2f75bc\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>`
+          + `${circles}`
+          + `</svg>`
+        )
+      }
+
+      function distributionModalElements() {
+        return {
+          modal: document.getElementById("distributionModal"),
+          dialog: document.getElementById("distributionDialog"),
+          closeButton: document.getElementById("distributionModalClose"),
+          expandButton: document.getElementById("distributionModalExpand"),
+          title: document.getElementById("distributionModalTitle"),
+          meta: document.getElementById("distributionModalMeta"),
+          chartShell: document.getElementById("distributionChartShell"),
+          chartScroll: document.getElementById("distributionChartScroll"),
+          chart: document.getElementById("distributionModalChart"),
+          hover: document.getElementById("distributionModalHover"),
+          zoomOut: document.getElementById("distributionZoomOut"),
+          zoomIn: document.getElementById("distributionZoomIn"),
+          zoomReset: document.getElementById("distributionZoomReset"),
+          zoomRange: document.getElementById("distributionZoomRange"),
+          zoomLabel: document.getElementById("distributionZoomLabel"),
+        }
+      }
+
+      function clampDistributionZoom(value) {
+        const raw = Number(value)
+        if (!Number.isFinite(raw)) return state.distributionModalZoom
+        const clamped = Math.min(DISTRIBUTION_ZOOM_MAX, Math.max(DISTRIBUTION_ZOOM_MIN, raw))
+        return Math.round(clamped / DISTRIBUTION_ZOOM_STEP) * DISTRIBUTION_ZOOM_STEP
+      }
+
+      function setDistributionDialogFullscreen(nextValue) {
+        const elements = distributionModalElements()
+        const next = Boolean(nextValue)
+        state.distributionModalFullscreen = next
+        if (elements.dialog) {
+          elements.dialog.classList.toggle("is-fullscreen", next)
+        }
+        if (elements.expandButton) {
+          elements.expandButton.textContent = next ? "Windowed" : "Full screen"
+          elements.expandButton.setAttribute(
+            "aria-label",
+            next ? "Switch distribution chart modal to windowed mode" : "Switch distribution chart modal to full screen mode"
+          )
+        }
+      }
+
+      function updateDistributionZoomUi() {
+        const elements = distributionModalElements()
+        if (elements.zoomRange) {
+          elements.zoomRange.value = String(state.distributionModalZoom.toFixed(1))
+        }
+        if (elements.zoomLabel) {
+          elements.zoomLabel.textContent = `${Math.round(state.distributionModalZoom * 100)}%`
+        }
+      }
+
+      function applyDistributionChartZoom(nextZoom, options = {}) {
+        const zoom = clampDistributionZoom(nextZoom)
+        state.distributionModalZoom = zoom
+        const config = options && typeof options === "object" ? options : {}
+        const elements = distributionModalElements()
+        if (elements.chart) {
+          const baseWidth = Math.max(760, Number(state.distributionModalBaseWidth) || 760)
+          const baseHeight = Math.max(360, Number(state.distributionModalBaseHeight) || 360)
+          elements.chart.style.width = `${Math.round(baseWidth * zoom)}px`
+          elements.chart.style.height = `${Math.round(baseHeight * zoom)}px`
+        }
+        updateDistributionZoomUi()
+        if (config.refreshHover === true && state.distributionModalActiveIndex >= 0) {
+          showDistributionHover(state.distributionModalActiveIndex)
+        }
+      }
+
+      function hideDistributionHover() {
+        const elements = distributionModalElements()
+        if (elements.hover) {
+          elements.hover.hidden = true
+          elements.hover.textContent = ""
+        }
+        if (elements.chart) {
+          elements.chart.querySelectorAll(".dist-point.is-active").forEach((point) => {
+            point.classList.remove("is-active")
+          })
+        }
+        state.distributionModalActiveIndex = -1
+      }
+
+      function showDistributionHover(index) {
+        const pointIndex = Number.parseInt(String(index), 10)
+        const payload = state.distributionModalPayload
+        const points = Array.isArray(state.distributionModalPoints) ? state.distributionModalPoints : []
+        const point = Number.isFinite(pointIndex) ? points[pointIndex] : null
+        if (!payload || !point) {
+          hideDistributionHover()
+          return
+        }
+
+        const elements = distributionModalElements()
+        if (!elements.chartShell || !elements.chart || !elements.hover) return
+        const total = Number.isFinite(payload.totalCount) && payload.totalCount > 0 ? payload.totalCount : 0
+        const percent = total > 0 ? ((point.count / total) * 100) : 0
+        elements.hover.textContent = `${point.label}: ${point.count} (${Math.round(percent)}%)`
+        elements.hover.hidden = false
+
+        elements.chart.querySelectorAll(".dist-point").forEach((node) => {
+          node.classList.toggle("is-active", Number.parseInt(node.getAttribute("data-point-index"), 10) === pointIndex)
+        })
+
+        const viewBox = elements.chart.viewBox?.baseVal
+        const chartRect = elements.chart.getBoundingClientRect()
+        const shellRect = elements.chartShell.getBoundingClientRect()
+        if (!viewBox || !viewBox.width || !viewBox.height || chartRect.width <= 0 || chartRect.height <= 0) return
+        const rawLeft = ((point.x / viewBox.width) * chartRect.width) + (chartRect.left - shellRect.left)
+        const rawTop = ((point.y / viewBox.height) * chartRect.height) + (chartRect.top - shellRect.top)
+        const clampedLeft = Math.min(Math.max(rawLeft, 12), Math.max(12, shellRect.width - 12))
+        const clampedTop = Math.min(Math.max(rawTop, 26), Math.max(26, shellRect.height - 10))
+        elements.hover.style.left = `${Math.round(clampedLeft)}px`
+        elements.hover.style.top = `${Math.round(clampedTop)}px`
+        state.distributionModalActiveIndex = pointIndex
+      }
+
+      function bindDistributionHoverHandlers() {
+        const elements = distributionModalElements()
+        if (!elements.chart) return
+        elements.chart.onpointerleave = () => {
+          hideDistributionHover()
+        }
+        elements.chart.querySelectorAll(".dist-point").forEach((pointNode) => {
+          const pointIndex = Number.parseInt(pointNode.getAttribute("data-point-index"), 10)
+          if (!Number.isFinite(pointIndex)) return
+          pointNode.addEventListener("pointerenter", () => {
+            showDistributionHover(pointIndex)
+          })
+          pointNode.addEventListener("pointermove", () => {
+            showDistributionHover(pointIndex)
+          })
+          pointNode.addEventListener("focus", () => {
+            showDistributionHover(pointIndex)
+          })
+          pointNode.addEventListener("blur", () => {
+            hideDistributionHover()
+          })
+        })
+      }
+
+      function renderDistributionModalChart(payload) {
+        const elements = distributionModalElements()
+        if (!elements.chart) return
+        const normalized = normalizeDistributionPayload(payload)
+        if (!normalized || !normalized.entries.length) {
+          elements.chart.innerHTML = ""
+          state.distributionModalPoints = []
+          hideDistributionHover()
+          return
+        }
+
+        const width = Math.max(980, (normalized.entries.length * 128) + 220)
+        const height = 480
+        const series = buildDistributionPointSeries(normalized.entries, {
+          width,
+          height,
+          marginLeft: 64,
+          marginRight: 30,
+          marginTop: 26,
+          marginBottom: 70,
+        })
+        const maxCount = Math.max(1, series.maxCount)
+        const tickCount = 4
+        const gridLines = []
+        for (let tick = 0; tick <= tickCount; tick += 1) {
+          const y = series.marginTop + ((series.plotHeight * tick) / tickCount)
+          const value = Math.round(maxCount - ((maxCount * tick) / tickCount))
+          gridLines.push(
+            `<line class=\"dist-grid\" x1=\"${series.marginLeft}\" y1=\"${y.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${y.toFixed(2)}\"></line>`
+            + `<text class=\"dist-y-label\" x=\"${(series.marginLeft - 8).toFixed(2)}\" y=\"${(y + 4).toFixed(2)}\">${escapeHtml(formatShortNumber(value))}</text>`
+          )
+        }
+
+        const linePoints = series.points
+          .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+          .join(" ")
+        const plotBottom = height - series.marginBottom
+        const areaPath = series.points.length
+          ? (
+            `M ${series.points[0].x.toFixed(2)} ${plotBottom.toFixed(2)}`
+            + ` L ${series.points.map((point) => `${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" L ")}`
+            + ` L ${series.points[series.points.length - 1].x.toFixed(2)} ${plotBottom.toFixed(2)} Z`
+          )
+          : ""
+        const xLabels = series.points
+          .map((point) => (
+            `<text class=\"dist-label\" x=\"${point.x.toFixed(2)}\" y=\"${(height - 22).toFixed(2)}\">${escapeHtml(point.label)}</text>`
+          ))
+          .join("")
+        const circles = series.points
+          .map((point) => (
+            `<circle class=\"dist-point\" data-point-index=\"${point.index}\" cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"6\" tabindex=\"0\" aria-label=\"${escapeHtml(point.label)} ${escapeHtml(String(point.count))}\"></circle>`
+          ))
+          .join("")
+
+        elements.chart.setAttribute("viewBox", `0 0 ${width} ${height}`)
+        elements.chart.innerHTML =
+          `<g>${gridLines.join("")}</g>`
+          + `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${plotBottom.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${plotBottom.toFixed(2)}\"></line>`
+          + `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${series.marginTop}\" x2=\"${series.marginLeft}\" y2=\"${plotBottom.toFixed(2)}\"></line>`
+          + `<path class=\"dist-area\" d=\"${areaPath}\"></path>`
+          + `<polyline class=\"dist-line\" points=\"${linePoints}\"></polyline>`
+          + `${circles}`
+          + `${xLabels}`
+
+        state.distributionModalBaseWidth = width
+        state.distributionModalBaseHeight = height
+        state.distributionModalPoints = series.points
+        state.distributionModalActiveIndex = -1
+        bindDistributionHoverHandlers()
+        applyDistributionChartZoom(state.distributionModalZoom, { refreshHover: false })
+        if (elements.chartScroll) {
+          elements.chartScroll.scrollLeft = 0
+          elements.chartScroll.scrollTop = 0
+        }
+      }
+
+      function closeDistributionModal() {
+        const elements = distributionModalElements()
+        if (!elements.modal) return
+        elements.modal.hidden = true
+        hideDistributionHover()
+        state.distributionModalPayload = null
+        state.distributionModalPoints = []
+        state.distributionModalZoom = DISTRIBUTION_ZOOM_MIN
+        updateDistributionZoomUi()
+        document.body.classList.remove("distribution-modal-open")
+      }
+
+      function openDistributionModal(payload) {
+        const normalized = normalizeDistributionPayload(payload)
+        if (!normalized) return
+        const elements = distributionModalElements()
+        if (!elements.modal) return
+
+        state.distributionModalZoom = DISTRIBUTION_ZOOM_MIN
+        setDistributionDialogFullscreen(true)
+        updateDistributionZoomUi()
+        state.distributionModalPayload = normalized
+        if (elements.title) {
+          elements.title.textContent = `${normalized.assignmentTitle} Distribution`
+        }
+        if (elements.meta) {
+          const questionText = Number.isFinite(normalized.questionTotal)
+            ? ` | Q ${formatShortNumber(normalized.questionTotal)}`
+            : ""
+          elements.meta.textContent =
+            `${normalized.assignmentTitle} | Due ${normalized.dueLabel} | Total ${formatShortNumber(normalized.totalCount)}${questionText}`
+        }
+        renderDistributionModalChart(normalized)
+        elements.modal.hidden = false
+        document.body.classList.add("distribution-modal-open")
+        if (elements.closeButton) {
+          elements.closeButton.focus()
+        }
+      }
+
+      function tableModalElements() {
+        return {
+          card: document.getElementById("gradeGridCard"),
+          backdrop: document.getElementById("tableModalBackdrop"),
+          toggleButton: document.getElementById("tableModalBtn"),
+        }
+      }
+
+      function setTableModalOpen(nextValue) {
+        const elements = tableModalElements()
+        const next = Boolean(nextValue)
+        state.tableModalOpen = next
+        if (elements.card) {
+          elements.card.classList.toggle("is-table-modal", next)
+        }
+        if (elements.backdrop) {
+          elements.backdrop.hidden = !next
+        }
+        if (elements.toggleButton) {
+          elements.toggleButton.textContent = next ? "Exit table modal" : "Open table modal"
+          elements.toggleButton.setAttribute(
+            "aria-label",
+            next ? "Exit table modal view" : "Open table modal view"
+          )
+        }
+        document.body.classList.toggle("table-modal-open", next)
+        if (state.table && typeof state.table.redraw === "function") {
+          window.setTimeout(() => {
+            state.table.redraw(true)
+          }, 0)
+        }
+      }
+
+      function bindTableModalControls() {
+        const elements = tableModalElements()
+        if (!elements.toggleButton || elements.toggleButton.dataset.bound === "true") return
+        elements.toggleButton.dataset.bound = "true"
+        elements.toggleButton.addEventListener("click", () => {
+          setTableModalOpen(!state.tableModalOpen)
+        })
+        if (elements.backdrop) {
+          elements.backdrop.addEventListener("click", () => {
+            setTableModalOpen(false)
+          })
+        }
+        document.addEventListener("keydown", (event) => {
+          if (!state.tableModalOpen) return
+          if (event.key === "Escape") {
+            setTableModalOpen(false)
+          }
+        })
+      }
+
+      function bindDistributionModalControls() {
+        const elements = distributionModalElements()
+        if (!elements.modal || elements.modal.dataset.bound === "true") return
+        elements.modal.dataset.bound = "true"
+        if (elements.closeButton) {
+          elements.closeButton.addEventListener("click", () => {
+            closeDistributionModal()
+          })
+        }
+        if (elements.expandButton) {
+          elements.expandButton.addEventListener("click", () => {
+            setDistributionDialogFullscreen(!state.distributionModalFullscreen)
+          })
+        }
+        if (elements.zoomOut) {
+          elements.zoomOut.addEventListener("click", () => {
+            applyDistributionChartZoom(state.distributionModalZoom - DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+          })
+        }
+        if (elements.zoomIn) {
+          elements.zoomIn.addEventListener("click", () => {
+            applyDistributionChartZoom(state.distributionModalZoom + DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+          })
+        }
+        if (elements.zoomReset) {
+          elements.zoomReset.addEventListener("click", () => {
+            applyDistributionChartZoom(DISTRIBUTION_ZOOM_MIN, { refreshHover: true })
+          })
+        }
+        if (elements.zoomRange) {
+          elements.zoomRange.addEventListener("input", () => {
+            applyDistributionChartZoom(elements.zoomRange?.value, { refreshHover: true })
+          })
+        }
+        if (elements.chartScroll) {
+          elements.chartScroll.addEventListener("scroll", () => {
+            hideDistributionHover()
+          })
+          elements.chartScroll.addEventListener(
+            "wheel",
+            (event) => {
+              if (elements.modal?.hidden) return
+              event.preventDefault()
+              const delta = event.deltaY < 0 ? DISTRIBUTION_ZOOM_STEP : -DISTRIBUTION_ZOOM_STEP
+              applyDistributionChartZoom(state.distributionModalZoom + delta, { refreshHover: true })
+            },
+            { passive: false }
+          )
+        }
+        elements.modal.addEventListener("click", (event) => {
+          const target = event.target
+          if (!(target instanceof HTMLElement)) return
+          if (target.getAttribute("data-close-distribution-modal") === "true") {
+            closeDistributionModal()
+          }
+        })
+        document.addEventListener("keydown", (event) => {
+          if (elements.modal.hidden) return
+          if (event.key === "Escape") {
+            closeDistributionModal()
+            return
+          }
+          if (event.key === "+" || event.key === "=") {
+            event.preventDefault()
+            applyDistributionChartZoom(state.distributionModalZoom + DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+            return
+          }
+          if (event.key === "-" || event.key === "_") {
+            event.preventDefault()
+            applyDistributionChartZoom(state.distributionModalZoom - DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+            return
+          }
+          if (event.key === "0") {
+            event.preventDefault()
+            applyDistributionChartZoom(DISTRIBUTION_ZOOM_MIN, { refreshHover: true })
+          }
+        })
+      }
+
+      function renderDistributionMiniCell(value, meta = {}) {
+        const payload = normalizeDistributionPayload(value, meta)
+        if (!payload) {
+          const fallback = document.createElement("span")
+          fallback.className = "stat-chip"
+          fallback.textContent = normalizeText(value) || "n/a"
+          return fallback
+        }
+        const button = document.createElement("button")
+        button.type = "button"
+        button.className = "distribution-mini"
+        button.title = `${payload.summaryText} | Click for detail chart`
+        button.setAttribute("aria-label", `Open distribution chart for ${payload.assignmentTitle}`)
+        button.innerHTML =
+          `<span class=\"distribution-mini-chart\" aria-hidden=\"true\">${buildDistributionSparklineSvg(payload.entries)}</span>`
+          + `<span class=\"distribution-mini-meta\">View chart</span>`
+        button.addEventListener("click", () => {
+          openDistributionModal(payload)
+        })
+        return button
+      }
+
+      function syncCompactModeUi() {
+        document.body.classList.toggle("is-compact", Boolean(state.compactMode))
+        const button = document.getElementById("toggleCompactBtn")
+        if (button) {
+          button.textContent = state.compactMode ? "Dense rows: On" : "Dense rows: Off"
+        }
+      }
+
+      function setCompactMode(nextValue) {
+        state.compactMode = Boolean(nextValue)
+        syncCompactModeUi()
+        persistUiPreferences()
+        if (state.table && typeof state.table.redraw === "function") {
+          state.table.redraw(true)
+        }
+      }
+
+      function toggleCompactMode() {
+        setCompactMode(!state.compactMode)
+      }
+
+      function revealAllAssignmentColumns() {
+        if (!state.table || typeof state.table.getColumns !== "function") return
+        state.table.getColumns().forEach((column) => {
+          const field = normalizeText(column?.getField?.())
+          if (!field || !field.includes("|")) return
+          if (typeof column?.show === "function") column.show()
+        })
+      }
+
+      function debounce(fn, delay = 160) {
+        let timer = null
+        return (...args) => {
+          if (timer !== null) window.clearTimeout(timer)
+          timer = window.setTimeout(() => {
+            timer = null
+            fn(...args)
+          }, Math.max(0, Number(delay) || 0))
+        }
+      }
+
+      const persistTableUiStateSoon = debounce(() => {
+        persistTableUiStateFromTable()
+      }, 140)
+
+      const persistTableHeightSoon = debounce(() => {
+        if (!Number.isFinite(state.tableHeightPx)) return
+        writeTableUiState({ tableHeight: state.tableHeightPx })
+      }, 140)
+
+      function applyTableHeight(nextHeight, options = {}) {
+        const config = options && typeof options === "object" ? options : {}
+        const normalizedHeight = normalizeTableHeightPx(nextHeight, state.tableHeightPx || defaultTableHeightPx())
+        if (!Number.isFinite(normalizedHeight)) return null
+        state.tableHeightPx = normalizedHeight
+        const host = tableHostElement()
+        if (host && normalizeText(host.style.height) !== `${normalizedHeight}px`) {
+          host.style.height = `${normalizedHeight}px`
+        }
+        if (config.redraw !== false && state.tableBuilt && state.table && typeof state.table.redraw === "function") {
+          state.table.redraw(true)
+        }
+        if (config.persist !== false) {
+          persistTableHeightSoon()
+        }
+        return normalizedHeight
+      }
+
+      function disconnectTableHeightResizeObserver() {
+        if (state.tableResizeObserver && typeof state.tableResizeObserver.disconnect === "function") {
+          state.tableResizeObserver.disconnect()
+        }
+        state.tableResizeObserver = null
+      }
+
+      function observeTableHeightResize() {
+        disconnectTableHeightResizeObserver()
+        if (typeof window.ResizeObserver !== "function") return
+        const host = tableHostElement()
+        if (!host) return
+        state.tableResizeObserver = new window.ResizeObserver((entries) => {
+          const firstEntry = Array.isArray(entries) && entries.length ? entries[0] : null
+          const entryTarget = firstEntry?.target
+          const rawHeight = entryTarget instanceof HTMLElement
+            ? entryTarget.getBoundingClientRect().height
+            : firstEntry?.contentRect?.height
+          const normalizedHeight = normalizeTableHeightPx(rawHeight)
+          if (!Number.isFinite(normalizedHeight)) return
+          if (Math.abs(normalizedHeight - state.tableHeightPx) <= 1) return
+          applyTableHeight(normalizedHeight, { persist: true, redraw: true })
+        })
+        state.tableResizeObserver.observe(host)
+      }
+
+      function normalizePeriodCode(value) {
+        const period = normalizeLower(value)
+        if (["week", "quarter", "qtd", "sytd", "archive", "custom"].includes(period)) return period
+        return "sytd"
+      }
+
+      function normalizedFiltersSnapshot(source = {}) {
+        const input = source && typeof source === "object" ? source : {}
+        return {
+          period: normalizePeriodCode(input.period),
+          schoolYear: normalizeText(input.schoolYear) || SYSTEM_CURRENT_SCHOOL_YEAR || "all",
+          quarter: normalizeQuarterCode(input.quarter) || "q1",
+          classKey: normalizeText(input.classKey) || "all",
+          studentKey: normalizeText(input.studentKey) || "all",
+          schoolKey: normalizeText(input.schoolKey) || "all",
+          customFrom: normalizeText(input.customFrom).slice(0, 10),
+          customTo: normalizeText(input.customTo).slice(0, 10),
+          search: normalizeText(input.search),
+        }
+      }
+
+      function persistUiPreferences() {
+        try {
+          const payload = {
+            compactMode: Boolean(state.compactMode),
+            filters: normalizedFiltersSnapshot(state.filters),
+          }
+          window.localStorage.setItem(UI_PREFS_KEY, JSON.stringify(payload))
+          window.localStorage.removeItem(LEGACY_UI_PREFS_KEY)
+        } catch (error) {
+          void error
+        }
+      }
+
+      function restoreUiPreferences() {
+        try {
+          const raw =
+            window.localStorage.getItem(UI_PREFS_KEY)
+            || window.localStorage.getItem(LEGACY_UI_PREFS_KEY)
+          if (!raw) return
+          const parsed = JSON.parse(raw)
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return
+          if (!window.localStorage.getItem(UI_PREFS_KEY)) {
+            window.localStorage.setItem(UI_PREFS_KEY, JSON.stringify(parsed))
+          }
+          state.compactMode = Boolean(parsed.compactMode)
+          state.filters = {
+            ...state.filters,
+            ...normalizedFiltersSnapshot(parsed.filters),
+          }
+        } catch (error) {
+          void error
+        }
+      }
+
+      function filterQueryOverridesFromLocation() {
+        const params = new URLSearchParams(window.location.search || "")
+        const overrides = {}
+
+        if (params.has("period")) {
+          overrides.period = normalizePeriodCode(params.get("period"))
+        }
+
+        if (params.has("schoolYear")) {
+          const schoolYear = normalizeText(params.get("schoolYear"))
+          overrides.schoolYear = normalizeLower(schoolYear) === "all" ? "all" : schoolYear
+        }
+
+        if (params.has("quarter")) {
+          const quarter = normalizeQuarterCode(params.get("quarter"))
+          overrides.quarter = quarter || "q1"
+        }
+
+        if (params.has("classKey")) {
+          overrides.classKey = normalizeText(params.get("classKey")) || "all"
+        }
+        if (params.has("studentKey")) {
+          overrides.studentKey = normalizeText(params.get("studentKey")) || "all"
+        }
+        if (params.has("schoolKey")) {
+          overrides.schoolKey = normalizeText(params.get("schoolKey")) || "all"
+        }
+
+        if (params.has("customFrom")) {
+          overrides.customFrom = normalizeText(params.get("customFrom")).slice(0, 10)
+        }
+        if (params.has("customTo")) {
+          overrides.customTo = normalizeText(params.get("customTo")).slice(0, 10)
+        }
+        if (params.has("search")) {
+          overrides.search = normalizeText(params.get("search"))
+        }
+
+        const requestedSchoolYearAll =
+          params.has("schoolYear")
+          && normalizeLower(params.get("schoolYear")) === "all"
+        const requestedPeriod = normalizePeriodCode(overrides.period || state.filters.period)
+        if (requestedSchoolYearAll && (requestedPeriod === "quarter" || requestedPeriod === "qtd")) {
+          overrides.quarter = quarterForSchoolYear(SYSTEM_CURRENT_SCHOOL_YEAR, TODAY_ISO)
+        }
+
+        return overrides
+      }
+
+      function applyFilterQueryOverrides() {
+        const overrides = filterQueryOverridesFromLocation()
+        if (!Object.keys(overrides).length) return
+        state.filters = normalizedFiltersSnapshot({
+          ...state.filters,
+          ...overrides,
+        })
+      }
+
+      function applyCurrentSchoolYearDefault(options = {}) {
+        const config = options && typeof options === "object" ? options : {}
+        const force = config.force === true
+        const currentYear = normalizeText(SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO))
+        if (!isSchoolYearKey(currentYear)) return
+
+        const activeYear = normalizeText(state.filters.schoolYear)
+        if (force || activeYear === "all" || !isSchoolYearKey(activeYear)) {
+          state.filters.schoolYear = currentYear
+        }
+
+        const schoolYearSelect = document.getElementById("schoolYear")
+        if (!(schoolYearSelect instanceof HTMLSelectElement)) return
+
+        const hasCurrentOption = Array.from(schoolYearSelect.options || [])
+          .some((option) => normalizeText(option?.value) === currentYear)
+        if (!hasCurrentOption) {
+          const option = document.createElement("option")
+          option.value = currentYear
+          option.textContent = currentYear
+          schoolYearSelect.appendChild(option)
+        }
+
+        const selectedYear = normalizeText(state.filters.schoolYear)
+        schoolYearSelect.value = isSchoolYearKey(selectedYear) ? selectedYear : currentYear
+      }
+
+      function normalizeSortDirection(value) {
+        const text = normalizeLower(value)
+        return text === "desc" ? "desc" : "asc"
+      }
+
+      function normalizeTableSortersSnapshot(source = []) {
+        return (Array.isArray(source) ? source : [])
+          .map((entry) => {
+            const columnCandidate = entry?.column
+            let column = ""
+            if (typeof columnCandidate === "string") {
+              column = normalizeText(columnCandidate)
+            } else if (columnCandidate && typeof columnCandidate?.getField === "function") {
+              column = normalizeText(columnCandidate.getField())
+            } else if (columnCandidate && typeof columnCandidate === "object") {
+              column = normalizeText(columnCandidate.field)
+            }
+            if (!column) column = normalizeText(entry?.field)
+            if (!column) return null
+            return {
+              column,
+              dir: normalizeSortDirection(entry?.dir),
+            }
+          })
+          .filter((entry) => entry && typeof entry === "object")
+      }
+
+      function normalizeTableColumnLayoutSnapshot(source = [], options = {}) {
+        const config = options && typeof options === "object" ? options : {}
+        const includeWidth = config.includeWidth !== false
+        return (Array.isArray(source) ? source : [])
+          .map((entry) => {
+            if (!entry || typeof entry !== "object") return null
+            const field = normalizeText(entry.field)
+            if (!field) return null
+            const width = Number(entry.width)
+            const normalized = { field }
+            if (includeWidth && Number.isFinite(width) && width >= 30) normalized.width = Math.round(width)
+            if (typeof entry.visible === "boolean") normalized.visible = entry.visible
+            if (typeof entry.frozen === "boolean") normalized.frozen = entry.frozen
+            return normalized
+          })
+          .filter((entry) => entry && typeof entry === "object")
+      }
+
+      function readTableUiState() {
+        try {
+          const rawCurrent = window.localStorage.getItem(TABLE_UI_STATE_KEY)
+          const rawLegacy = window.localStorage.getItem(LEGACY_TABLE_UI_STATE_KEY)
+          const raw = rawCurrent || rawLegacy
+          if (!raw) return null
+          const parsed = JSON.parse(raw)
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
+          const sourceIsLegacy = !rawCurrent && Boolean(rawLegacy)
+          const storedSchemaVersion = Number(parsed.schemaVersion) || 0
+          const shouldResetPersistedWidths =
+            sourceIsLegacy
+            || storedSchemaVersion < TABLE_UI_STATE_SCHEMA_VERSION
+          const columnLayout = normalizeTableColumnLayoutSnapshot(parsed.columnLayout, {
+            includeWidth: !shouldResetPersistedWidths,
+          })
+          const sorters = normalizeTableSortersSnapshot(parsed.sorters)
+          const tableHeight = normalizeTableHeightPx(parsed.tableHeight)
+          if (sourceIsLegacy || storedSchemaVersion !== TABLE_UI_STATE_SCHEMA_VERSION) {
+            const migratedPayload = {
+              schemaVersion: TABLE_UI_STATE_SCHEMA_VERSION,
+              columnLayout,
+              sorters,
+            }
+            if (Number.isFinite(tableHeight)) {
+              migratedPayload.tableHeight = tableHeight
+            }
+            window.localStorage.setItem(TABLE_UI_STATE_KEY, JSON.stringify(migratedPayload))
+            window.localStorage.removeItem(LEGACY_TABLE_UI_STATE_KEY)
+          }
+          return {
+            columnLayout,
+            sorters,
+            tableHeight,
+          }
+        } catch (error) {
+          void error
+          return null
+        }
+      }
+
+      function writeTableUiState(payload = {}) {
+        const input = payload && typeof payload === "object" ? payload : {}
+        const existing = readTableUiState() || { columnLayout: [], sorters: [], tableHeight: null }
+        const nextColumnLayout = Array.isArray(input.columnLayout)
+          ? normalizeTableColumnLayoutSnapshot(input.columnLayout)
+          : existing.columnLayout
+        const nextSorters = Array.isArray(input.sorters)
+          ? normalizeTableSortersSnapshot(input.sorters)
+          : existing.sorters
+        const nextTableHeight = normalizeTableHeightPx(input.tableHeight, existing.tableHeight)
+        const nextPayload = {
+          schemaVersion: TABLE_UI_STATE_SCHEMA_VERSION,
+          columnLayout: nextColumnLayout,
+          sorters: nextSorters,
+        }
+        if (Number.isFinite(nextTableHeight)) {
+          nextPayload.tableHeight = nextTableHeight
+        }
+        try {
+          window.localStorage.setItem(
+            TABLE_UI_STATE_KEY,
+            JSON.stringify(nextPayload)
+          )
+          window.localStorage.removeItem(LEGACY_TABLE_UI_STATE_KEY)
+        } catch (error) {
+          void error
+        }
+      }
+
+      function tableColumnFieldSet() {
+        if (!state.table || typeof state.table.getColumns !== "function") return new Set()
+        const fields = state.table.getColumns()
+          .map((column) => normalizeText(column?.getField?.()))
+          .filter(Boolean)
+        return new Set(fields)
+      }
+
+      function waitForExpectedColumnCount(expectedCount, timeoutMs = 700) {
+        const expected = Math.max(0, Number.parseInt(String(expectedCount || 0), 10) || 0)
+        const timeout = Math.max(80, Number.parseInt(String(timeoutMs || 0), 10) || 0)
+        if (!state.table || expected <= 0 || typeof state.table.getColumns !== "function") {
+          return Promise.resolve(false)
+        }
+        const startedAt = Date.now()
+        return new Promise((resolve) => {
+          const check = () => {
+            const columns = state.table && typeof state.table.getColumns === "function"
+              ? state.table.getColumns()
+              : []
+            const currentCount = Array.isArray(columns) ? columns.length : 0
+            if (currentCount >= expected) {
+              resolve(true)
+              return
+            }
+            if (Date.now() - startedAt >= timeout) {
+              resolve(false)
+              return
+            }
+            window.setTimeout(check, 16)
+          }
+          check()
+        })
+      }
+
+      function ensureAssignmentColumnsPresent(columns = [], expectedAssignmentCount = 0) {
+        const expected = Math.max(0, Number.parseInt(String(expectedAssignmentCount || 0), 10) || 0)
+        if (!state.table || expected <= 0 || typeof state.table.getColumns !== "function") return
+        const currentAssignmentCount = state.table.getColumns()
+          .map((column) => normalizeText(column?.getField?.()))
+          .filter((field) => field.includes("|"))
+          .length
+        if (currentAssignmentCount > 0) return
+        try {
+          state.table.setColumns(Array.isArray(columns) ? columns : [])
+        } catch (error) {
+          void error
+        }
+      }
+
+      function persistTableUiStateFromTable() {
+        if (!state.table) return
+        const snapshot = {}
+        const host = tableHostElement()
+        const measuredHeight = host ? host.getBoundingClientRect().height : state.tableHeightPx
+        const normalizedHeight = normalizeTableHeightPx(measuredHeight, state.tableHeightPx)
+        if (Number.isFinite(normalizedHeight)) {
+          snapshot.tableHeight = normalizedHeight
+        }
+        if (typeof state.table.getColumnLayout === "function") {
+          const layout = normalizeTableColumnLayoutSnapshot(state.table.getColumnLayout())
+          const hasAssignmentColumns = layout.some((entry) => normalizeText(entry?.field).includes("|"))
+          if (Array.isArray(state.allRows) && state.allRows.length > 0 && hasAssignmentColumns) {
+            snapshot.columnLayout = layout
+          }
+        }
+        if (typeof state.table.getSorters === "function") {
+          snapshot.sorters = normalizeTableSortersSnapshot(state.table.getSorters())
+        }
+        writeTableUiState(snapshot)
+      }
+
+      function applyStoredTableUiState(options = {}) {
+        const config = options && typeof options === "object" ? options : {}
+        const applyLayout = config.applyLayout !== false
+        const applySort = config.applySort !== false
+        const requiredAssignmentColumns = Math.max(
+          0,
+          Number.parseInt(String(config.requiredAssignmentColumns || 0), 10) || 0
+        )
+        const stored = readTableUiState()
+        if (!stored || !state.table) return { layoutApplied: false, sortApplied: false }
+
+        let layoutApplied = false
+        let sortApplied = false
+
+        if (applyLayout && stored.columnLayout.length && typeof state.table.setColumnLayout === "function") {
+          const availableFields = tableColumnFieldSet()
+          const filteredLayout = stored.columnLayout
+            .filter((entry) => availableFields.has(normalizeText(entry?.field)))
+          const currentAssignmentCount = Array.from(availableFields.values())
+            .filter((field) => field.includes("|"))
+            .length
+          const layoutAssignmentCount = filteredLayout
+            .filter((entry) => normalizeText(entry?.field).includes("|"))
+            .length
+          const visibleLayoutAssignmentCount = filteredLayout
+            .filter((entry) => normalizeText(entry?.field).includes("|") && entry.visible !== false)
+            .length
+          const layoutHasExpectedAssignments = requiredAssignmentColumns <= 0 || layoutAssignmentCount > 0
+          const layoutKeepsAssignmentsVisible = requiredAssignmentColumns <= 0 || visibleLayoutAssignmentCount > 0
+          try {
+            if (
+              filteredLayout.length
+              && layoutHasExpectedAssignments
+              && layoutKeepsAssignmentsVisible
+              && (!currentAssignmentCount || layoutAssignmentCount > 0)
+            ) {
+              state.table.setColumnLayout(filteredLayout)
+              layoutApplied = true
+            }
+          } catch (error) {
+            void error
+          }
+        }
+
+        if (applySort && stored.sorters.length && typeof state.table.setSort === "function") {
+          const availableFields = tableColumnFieldSet()
+          const sortable = stored.sorters
+            .filter((entry) => availableFields.has(normalizeText(entry?.column)))
+          try {
+            if (sortable.length) {
+              state.table.setSort(sortable)
+              sortApplied = true
+            }
+          } catch (error) {
+            void error
+          }
+        }
+
+        return { layoutApplied, sortApplied }
+      }
+
+      function clearStoredTableUiState() {
+        const preservedHeight = normalizeTableHeightPx(state.tableHeightPx)
+        try {
+          window.localStorage.removeItem(TABLE_UI_STATE_KEY)
+          window.localStorage.removeItem(LEGACY_TABLE_UI_STATE_KEY)
+          const persistencePrefixes = [
+            `tabulator-${TABLE_PERSISTENCE_ID}-`,
+            `tabulator-${LEGACY_TABLE_PERSISTENCE_ID}-`,
+          ]
+          const toRemove = []
+          for (let index = 0; index < window.localStorage.length; index += 1) {
+            const key = window.localStorage.key(index)
+            if (!key) continue
+            const matchesPrefix = persistencePrefixes.some((prefix) => key.startsWith(prefix))
+            if (!matchesPrefix) continue
+            toRemove.push(key)
+          }
+          toRemove.forEach((key) => {
+            window.localStorage.removeItem(key)
+          })
+          if (Number.isFinite(preservedHeight)) {
+            writeTableUiState({ tableHeight: preservedHeight, columnLayout: [], sorters: [] })
+          }
+        } catch (error) {
+          void error
+        }
+      }
+
+      function resolveApiOrigin() {
+        const params = new URLSearchParams(window.location.search || "")
+        const explicitOrigin = normalizeText(params.get("apiOrigin"))
+        const fromLocation = window.location.protocol.startsWith("http") ? window.location.origin : ""
+        const raw = explicitOrigin || fromLocation
+        if (!raw) return ""
+        try {
+          return new URL(raw, window.location.origin).origin
+        } catch (error) {
+          void error
+          return ""
+        }
+      }
+
+      function resolveApiUrl(path) {
+        const normalizedPath = normalizeText(path)
+        if (!normalizedPath) return ""
+        if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath
+        if (!API_ORIGIN) return normalizedPath
+        return new URL(normalizedPath, API_ORIGIN).toString()
+      }
+
+      function setStatus(message, isError) {
+        const el = document.getElementById("statusLine")
+        if (!el) return
+        el.textContent = normalizeText(message)
+        el.classList.toggle("is-error", Boolean(isError))
+      }
+
+      async function apiJson(path, options = {}) {
+        const requestInit = {
+          method: normalizeText(options.method || "GET") || "GET",
+          credentials: "include",
+          headers: {
+            ...(options.headers || {}),
+          },
+        }
+        if (options.body !== undefined) {
+          requestInit.headers["content-type"] = "application/json"
+          requestInit.body = JSON.stringify(options.body)
+        }
+
+        const response = await fetch(resolveApiUrl(path), requestInit)
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          const message = normalizeText(payload?.error) || `HTTP ${response.status}`
+          const error = new Error(message)
+          error.status = response.status
+          throw error
+        }
+        return payload
+      }
+
+      async function ensureAuthenticated() {
+        const payload = await apiJson("/api/admin/auth/me")
+        if (!payload || payload.authenticated === false) {
+          const error = new Error("Authentication required")
+          error.status = 401
+          throw error
+        }
+        return payload
+      }
+
+      function loadUiSettingsFromLocalStorage() {
+        try {
+          const raw = window.localStorage.getItem("sis.admin.uiSettings")
+          if (!raw) return null
+          const parsed = JSON.parse(raw)
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
+          return parsed
+        } catch (error) {
+          void error
+          return null
+        }
+      }
+
+      async function hydrateLetterGradeRanges() {
+        const localSettings = loadUiSettingsFromLocalStorage()
+        state.letterGradeRanges = letterGradeRangesFromUiSettings(localSettings)
+        syncSchoolSetupFromUiSettings(localSettings)
+        try {
+          const payload = await apiJson("/api/admin/settings/ui")
+          const uiSettings = payload?.uiSettings
+          state.letterGradeRanges = letterGradeRangesFromUiSettings(uiSettings)
+          syncSchoolSetupFromUiSettings(uiSettings)
+        } catch (error) {
+          void error
+        }
+      }
+
+      function formatStudentDisplay(eaglesId, englishName, fullName) {
+        const left = normalizeText(eaglesId) || "-"
+        const right = normalizeText(englishName) || normalizeText(fullName) || "-"
+        return `${left}/${right}`
+      }
+
+      function formatStudentDisplayCompact(eaglesId, englishName, fullName) {
+        const idText = normalizeText(eaglesId)
+        if (idText) return idText
+        return normalizeText(englishName) || normalizeText(fullName) || "-"
+      }
+
+      function flattenGradeRowsFromStudent(student) {
+        const source = student && typeof student === "object" ? student : {}
+        const profile = source.profile && typeof source.profile === "object" ? source.profile : {}
+        const gradeRecords = Array.isArray(source.gradeRecords) ? source.gradeRecords : []
+        const studentRefId = normalizeText(source.id)
+        const eaglesId = normalizeText(source.eaglesId)
+        const studentNumber = source.studentNumber === undefined || source.studentNumber === null
+          ? ""
+          : String(source.studentNumber)
+        const fullName = normalizeText(profile.fullName)
+        const englishName = normalizeText(profile.englishName)
+        const schoolName = normalizeText(profile.schoolName) || "Unspecified"
+        const level = normalizeText(profile.currentGrade)
+        const studentLabel = formatStudentDisplay(eaglesId, englishName, fullName) || studentRefId
+        const studentDisplayCompact = formatStudentDisplayCompact(eaglesId, englishName, fullName) || studentLabel
+
+        return gradeRecords.map((record, index) => {
+          const dueAt = localIsoDate(record?.dueAt)
+          const submittedAt = localIsoDate(record?.submittedAt)
+          const dateKey = dueAt || submittedAt
+          const commentText = normalizeText(record?.comments)
+          const parsedCorrectTotal = parseCorrectTotalFromComments(commentText)
+          const rawScore = toNumber(record?.score)
+          const rawMaxScore = toNumber(record?.maxScore)
+          const questionCount = Number.isFinite(parsedCorrectTotal.totalQuestions) && parsedCorrectTotal.totalQuestions > 0
+            ? parsedCorrectTotal.totalQuestions
+            : rawMaxScore && rawMaxScore > 0
+              ? rawMaxScore
+              : null
+          let correctCount = Number.isFinite(parsedCorrectTotal.correctCount)
+            ? parsedCorrectTotal.correctCount
+            : rawScore
+          if (
+            correctCount !== null
+            && Number.isFinite(rawMaxScore)
+            && rawMaxScore > 0
+            && Number.isFinite(questionCount)
+            && questionCount > 0
+            && rawMaxScore !== questionCount
+          ) {
+            correctCount = Number(((correctCount / rawMaxScore) * questionCount).toFixed(2))
+          }
+          const scorePercent = Number.isFinite(correctCount) && Number.isFinite(questionCount) && questionCount > 0
+            ? percentValue(correctCount, questionCount)
+            : rawMaxScore && rawMaxScore > 0 && rawScore !== null
+              ? percentValue(rawScore, rawMaxScore)
+              : null
+          const quarter = normalizeLower(record?.quarter) || quarterFromIsoDate(dateKey)
+          const schoolYear = normalizeText(record?.schoolYear) || schoolYearForIsoDate(dateKey)
+          const className = normalizeText(record?.className)
+          const assignmentName = normalizeText(record?.assignmentName)
+
+          return {
+            id: normalizeText(record?.id) || `${studentRefId}-${index + 1}`,
+            studentRefId,
+            studentNumber,
+            eaglesId,
+            fullName,
+            englishName,
+            studentLabel,
+            studentDisplay: studentDisplayCompact,
+            schoolName,
+            level,
+            className,
+            assignmentName,
+            schoolYear,
+            quarter,
+            dueAt,
+            submittedAt,
+            dateKey,
+            score: correctCount,
+            maxScore: questionCount,
+            rawScore,
+            rawMaxScore,
+            scorePercent,
+            homeworkCompleted: record?.homeworkCompleted === true ? true : record?.homeworkCompleted === false ? false : null,
+            homeworkOnTime: record?.homeworkOnTime === true ? true : record?.homeworkOnTime === false ? false : null,
+            behaviorScore: toNumber(record?.behaviorScore),
+            participationScore: toNumber(record?.participationScore),
+            inClassScore: toNumber(record?.inClassScore),
+            comments: commentText,
+            searchText: normalizeSearch(
+              [
+                eaglesId,
+                fullName,
+                englishName,
+                schoolName,
+                className,
+                assignmentName,
+                schoolYear,
+                quarter,
+                level,
+                record?.comments,
+              ].join(" ")
+            ),
+          }
+        })
+      }
+
+      function formatShortNumber(value) {
+        if (!Number.isFinite(value)) return ""
+        const rounded = Math.round(value * 100) / 100
+        if (Number.isInteger(rounded)) return String(rounded)
+        return String(rounded)
+      }
+
+      function resolveExerciseStatus(record = {}) {
+        const completed = record?.homeworkCompleted === true || Boolean(record?.submittedAt) || Number.isFinite(record?.score)
+        if (!completed) return "notdone"
+        if (record?.homeworkOnTime === true) return "ontime"
+        if (record?.homeworkOnTime === false) return "late"
+        const dueAt = parseIsoDate(record?.dueAt)
+        const submittedAt = parseIsoDate(record?.submittedAt)
+        if (dueAt && submittedAt && submittedAt.valueOf() > dueAt.valueOf()) return "late"
+        return "ontime"
+      }
+
+      function assignmentKeyFromRow(row = {}) {
+        const title = normalizeText(row?.assignmentName) || "Untitled"
+        const dueAt = normalizeText(row?.dueAt)
+        const schoolYear = normalizeText(row?.schoolYear)
+        const quarter = normalizeQuarterCode(row?.quarter)
+        return `${normalizeLower(title)}|${dueAt}|${schoolYear}|${quarter}`
+      }
+
+      function medianOfNumbers(values = []) {
+        const numbers = (Array.isArray(values) ? values : [])
+          .map((entry) => Number(entry))
+          .filter((entry) => Number.isFinite(entry))
+          .sort((left, right) => left - right)
+        if (!numbers.length) return null
+        const mid = Math.floor(numbers.length / 2)
+        if (numbers.length % 2 === 1) return numbers[mid]
+        return (numbers[mid - 1] + numbers[mid]) / 2
+      }
+
+      function modeOfNumbers(values = [], precision = 2) {
+        const counts = new Map()
+        ;(Array.isArray(values) ? values : [])
+          .map((entry) => Number(entry))
+          .filter((entry) => Number.isFinite(entry))
+          .forEach((entry) => {
+            const key = Number(entry.toFixed(Math.max(0, Math.min(6, precision))))
+            counts.set(key, (counts.get(key) || 0) + 1)
+          })
+        let bestValue = null
+        let bestCount = 0
+        counts.forEach((count, key) => {
+          if (count > bestCount) {
+            bestCount = count
+            bestValue = key
+          }
+        })
+        return bestCount > 1 ? bestValue : null
+      }
+
+      function gradeBandFromPercent(percent) {
+        if (!Number.isFinite(percent)) return "N/A"
+        const ranges = normalizeLetterGradeRanges(state.letterGradeRanges)
+        for (let index = 0; index < ranges.length; index += 1) {
+          const range = ranges[index]
+          if (percent >= range.minPercent && percent <= range.maxPercent) return range.letter
+        }
+        return "N/A"
+      }
+
+      function withCorrectCountComment(existing, correctCount, totalQuestions) {
+        const base = normalizeText(existing)
+          .replace(/\(\s*\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?\s*correct\s*\)\.?/gi, "")
+          .trim()
+        const detail = `(${formatShortNumber(correctCount)}/${formatShortNumber(totalQuestions)} correct).`
+        if (!base) return `Manual score update ${detail}`
+        return `${base.replace(/[.\s]+$/g, "")} ${detail}`
+      }
+
+      async function editExerciseCellScore(cell, meta = {}) {
+        const rowData = cell?.getRow?.().getData?.() || {}
+        if (rowData?.rowType === "stat") return
+
+        const studentRefId = normalizeText(rowData?.studentRefId)
+        if (!studentRefId) {
+          setStatus("Cannot edit score: missing student id.", true)
+          return
+        }
+
+        const currentValue = cell.getValue()
+        const current = currentValue && typeof currentValue === "object" ? currentValue : {}
+        const fallbackQuestions = Number.isFinite(meta?.totalQuestions) && meta.totalQuestions > 0 ? meta.totalQuestions : 10
+        const totalQuestions =
+          Number.isFinite(current?.maxScore) && current.maxScore > 0 ? current.maxScore : fallbackQuestions
+        const currentScore = Number.isFinite(current?.score) ? current.score : null
+
+        const promptValue = currentScore === null ? "" : formatShortNumber(currentScore)
+        const promptLabel =
+          `Correct answers for ${normalizeText(rowData.studentDisplay) || "student"}\n`
+          + `${normalizeText(meta.title) || "Exercise"}\n`
+          + `Enter a value between 0 and ${formatShortNumber(totalQuestions)}`
+        const rawInput = window.prompt(promptLabel, promptValue)
+        if (rawInput === null) return
+
+        const parsedScore = toNumber(rawInput)
+        if (!Number.isFinite(parsedScore) || parsedScore < 0) {
+          setStatus("Invalid score. Enter a non-negative number.", true)
+          return
+        }
+        if (Number.isFinite(totalQuestions) && parsedScore > totalQuestions) {
+          setStatus(`Invalid score. Max allowed is ${formatShortNumber(totalQuestions)}.`, true)
+          return
+        }
+
+        const dueAt = normalizeText(current?.dueAt) || normalizeText(meta?.dueAt)
+        const effectiveSchoolYear =
+          normalizeText(current?.schoolYear)
+          || (state.filters.schoolYear !== "all" ? normalizeText(state.filters.schoolYear) : "")
+          || SYSTEM_CURRENT_SCHOOL_YEAR
+          || schoolYearForIsoDate(dueAt || TODAY_ISO)
+        const effectiveQuarter =
+          normalizeQuarterCode(current?.quarter)
+          || normalizeQuarterCode(rowData?.quarter)
+          || normalizeQuarterCode(meta?.quarter)
+          || normalizeQuarterCode(state.filters.quarter)
+          || quarterFromIsoDate(dueAt || TODAY_ISO)
+          || "q1"
+        const todayIso = localIsoDate(new Date())
+        const homeworkOnTime = dueAt ? compareIsoDate(todayIso, dueAt) <= 0 : true
+
+        const payload = {
+          id: normalizeText(current?.recordId) || undefined,
+          className: normalizeText(current?.className) || normalizeText(rowData?.level) || "Unassigned class",
+          level: normalizeText(current?.level) || normalizeText(rowData?.level) || null,
+          schoolYear: effectiveSchoolYear,
+          quarter: effectiveQuarter,
+          assignmentName: normalizeText(current?.assignmentName) || normalizeText(meta?.title) || "Exercise",
+          dueAt: dueAt || undefined,
+          submittedAt: todayIso,
+          score: parsedScore,
+          maxScore: totalQuestions,
+          homeworkCompleted: true,
+          homeworkOnTime,
+          comments: withCorrectCountComment(current?.comments, parsedScore, totalQuestions),
+        }
+
+        setStatus("Saving score edit...")
+        try {
+          await apiJson(`/api/admin/students/${encodeURIComponent(studentRefId)}/grades`, {
+            method: "POST",
+            body: payload,
+          })
+          await bootstrapRows()
+          setStatus(
+            `Saved ${normalizeText(rowData.studentDisplay)} ${normalizeText(meta.title)} `
+            + `(${formatShortNumber(parsedScore)}/${formatShortNumber(totalQuestions)}).`
+          )
+        } catch (error) {
+          setStatus(normalizeText(error?.message) || "Failed to save score edit.", true)
+        }
+      }
+
+      function resolveHeaderActionLabel(column) {
+        const definition = column?.getDefinition?.() || {}
+        const explicitLabel = normalizeText(definition?.headerActionLabel)
+        if (explicitLabel) return explicitLabel
+        const fallbackTitle = normalizeText(definition?.title)
+        if (fallbackTitle) return fallbackTitle
+        const fallbackField = normalizeText(definition?.field)
+        return fallbackField || "Column"
+      }
+
+      function toggleColumnPinnedState(column) {
+        const safeLabel = resolveHeaderActionLabel(column)
+        const definition = column?.getDefinition?.() || {}
+        const nextFrozen = !Boolean(definition?.frozen)
+        const updateResult = column?.updateDefinition?.({ frozen: nextFrozen })
+        if (updateResult && typeof updateResult.then === "function") {
+          updateResult
+            .then(() => {
+              setStatus(`${safeLabel} column ${nextFrozen ? "pinned" : "unpinned"}.`)
+              persistTableUiStateFromTable()
+            })
+            .catch(() => {})
+          return
+        }
+        setStatus(`${safeLabel} column ${nextFrozen ? "pinned" : "unpinned"}.`)
+        persistTableUiStateFromTable()
+      }
+
+      function hideColumnFromHeaderAction(column) {
+        const safeLabel = resolveHeaderActionLabel(column)
+        if (typeof column?.hide === "function") {
+          column.hide()
+          setStatus(`${safeLabel} column hidden.`)
+          persistTableUiStateSoon()
+        }
+      }
+
+      function handleHeaderActionClick(event, column) {
+        const eventTarget = event?.target
+        if (!(eventTarget instanceof Element)) return
+        const actionButton = eventTarget.closest("[data-header-action]")
+        if (!(actionButton instanceof HTMLButtonElement)) return
+        const action = normalizeLower(actionButton.getAttribute("data-header-action"))
+        if (!action) return
+        event.preventDefault()
+        event.stopPropagation()
+        if (action === "pin") {
+          toggleColumnPinnedState(column)
+          return
+        }
+        if (action === "hide") {
+          hideColumnFromHeaderAction(column)
+        }
+      }
+
+      function buildMatrixModel(rows = []) {
+        const sourceRows = Array.isArray(rows) ? rows : []
+        const assignmentMetaMap = new Map()
+
+        sourceRows.forEach((entry) => {
+          const key = assignmentKeyFromRow(entry)
+          if (!assignmentMetaMap.has(key)) {
+            assignmentMetaMap.set(key, {
+              key,
+              title: normalizeText(entry?.assignmentName) || "Untitled",
+              dueAt: normalizeText(entry?.dueAt),
+              quarter: normalizeUpper(entry?.quarter),
+              totalQuestions: Number.isFinite(entry?.maxScore) ? entry.maxScore : null,
+            })
+            return
+          }
+          const existing = assignmentMetaMap.get(key)
+          if (!existing.dueAt && normalizeText(entry?.dueAt)) existing.dueAt = normalizeText(entry?.dueAt)
+          if (
+            Number.isFinite(entry?.maxScore)
+            && (!Number.isFinite(existing.totalQuestions) || entry.maxScore > existing.totalQuestions)
+          ) {
+            existing.totalQuestions = entry.maxScore
+          }
+        })
+
+        const assignmentMeta = Array.from(assignmentMetaMap.values()).sort((left, right) => {
+          const leftDue = normalizeText(left.dueAt)
+          const rightDue = normalizeText(right.dueAt)
+          if (leftDue && rightDue) return compareIsoDate(leftDue, rightDue)
+          if (leftDue) return -1
+          if (rightDue) return 1
+          return normalizeText(left.title).localeCompare(normalizeText(right.title))
+        })
+
+        const byStudent = new Map()
+        sourceRows.forEach((entry) => {
+          const studentRefId = normalizeText(entry?.studentRefId)
+          if (!studentRefId) return
+          if (!byStudent.has(studentRefId)) {
+            byStudent.set(studentRefId, {
+              id: `student-${studentRefId}`,
+              rowType: "student",
+              rowOrder: 0,
+              studentRefId,
+              level: normalizeText(entry?.level) || "Unassigned",
+              studentDisplay: normalizeText(entry?.studentDisplay) || normalizeText(entry?.studentLabel),
+              studentNumber: normalizeText(entry?.studentNumber),
+              quarter: normalizeUpper(entry?.quarter),
+            })
+          }
+          const row = byStudent.get(studentRefId)
+          if (!row.quarter && normalizeText(entry?.quarter)) row.quarter = normalizeUpper(entry?.quarter)
+          const assignmentKey = assignmentKeyFromRow(entry)
+          const scoreValue = toNumber(entry?.score)
+          const maxScoreValue = toNumber(entry?.maxScore)
+          const scorePercent = Number.isFinite(entry?.scorePercent)
+            ? entry.scorePercent
+            : scoreValue !== null && maxScoreValue !== null && maxScoreValue > 0
+              ? percentValue(scoreValue, maxScoreValue)
+              : null
+          row[assignmentKey] = {
+            score: scoreValue,
+            maxScore: maxScoreValue,
+            percent: scorePercent,
+            status: resolveExerciseStatus(entry),
+            completed: entry?.homeworkCompleted === true || Boolean(entry?.submittedAt) || Number.isFinite(scoreValue),
+            recordId: normalizeText(entry?.id),
+            className: normalizeText(entry?.className),
+            schoolYear: normalizeText(entry?.schoolYear),
+            quarter: normalizeQuarterCode(entry?.quarter),
+            assignmentName: normalizeText(entry?.assignmentName),
+            dueAt: normalizeText(entry?.dueAt),
+            submittedAt: normalizeText(entry?.submittedAt),
+            comments: normalizeText(entry?.comments),
+            level: normalizeText(entry?.level),
+          }
+        })
+
+        const studentRows = Array.from(byStudent.values())
+          .sort((left, right) => {
+            const levelCompare = normalizeText(left.level).localeCompare(normalizeText(right.level))
+            if (levelCompare !== 0) return levelCompare
+            return normalizeText(left.studentDisplay).localeCompare(normalizeText(right.studentDisplay))
+          })
+        studentRows.forEach((row, index) => {
+          row.rowOrder = index + 1
+        })
+
+        assignmentMeta.forEach((meta) => {
+          studentRows.forEach((row) => {
+            if (!row[meta.key]) row[meta.key] = null
+          })
+        })
+
+        const classSize = studentRows.length || 1
+        const statRows = [
+          {
+            id: "stat-mean",
+            rowType: "stat",
+            rowOrder: studentRows.length + 1,
+            level: "",
+            studentDisplay: "Mean",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-median",
+            rowType: "stat",
+            rowOrder: studentRows.length + 2,
+            level: "",
+            studentDisplay: "Median",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-mode",
+            rowType: "stat",
+            rowOrder: studentRows.length + 3,
+            level: "",
+            studentDisplay: "Mode",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-completion",
+            rowType: "stat",
+            rowOrder: studentRows.length + 4,
+            level: "",
+            studentDisplay: "Class completion",
+            studentNumber: "",
+            quarter: "",
+          },
+          {
+            id: "stat-distribution",
+            rowType: "stat",
+            rowOrder: studentRows.length + 5,
+            level: "",
+            studentDisplay: "Grade distribution",
+            studentNumber: "",
+            quarter: "",
+          },
+        ]
+
+        assignmentMeta.forEach((meta) => {
+          const cells = studentRows.map((row) => row[meta.key]).filter((entry) => entry && typeof entry === "object")
+          const scoreValues = cells
+            .map((entry) => Number(entry?.score))
+            .filter((entry) => Number.isFinite(entry))
+          const percents = cells
+            .map((entry) => Number(entry?.percent))
+            .filter((entry) => Number.isFinite(entry))
+          const mean = scoreValues.length
+            ? scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length
+            : null
+          const median = medianOfNumbers(scoreValues)
+          const mode = modeOfNumbers(scoreValues)
+          const completionCount = cells.filter((entry) => entry?.completed === true).length
+          const completionPercent = percentValue(completionCount, classSize)
+
+          const distribution = new Map()
+          normalizeLetterGradeRanges(state.letterGradeRanges).forEach((entry) => {
+            distribution.set(entry.letter, 0)
+          })
+          percents.forEach((entry) => {
+            const band = gradeBandFromPercent(entry)
+            if (band === "N/A") return
+            distribution.set(band, (distribution.get(band) || 0) + 1)
+          })
+
+          const questionTotal = Number.isFinite(meta.totalQuestions) ? meta.totalQuestions : null
+          const formatQRightStat = (value) => {
+            if (!Number.isFinite(value)) return "n/a"
+            const rightText = formatShortNumber(value)
+            if (!Number.isFinite(questionTotal) || questionTotal <= 0) return rightText
+            return `${rightText}/${formatShortNumber(questionTotal)}`
+          }
+
+          const distributionEntries = Array.from(distribution.entries())
+            .filter(([, count]) => Number.isFinite(count))
+            .map(([letter, count]) => ({
+              label: letter,
+              count: Math.max(0, Math.round(count)),
+            }))
+          const distributionText = distributionEntries
+            .map((entry) => `${entry.label}:${entry.count}`)
+            .join(" ")
+
+          statRows[0][meta.key] = formatQRightStat(mean)
+          statRows[1][meta.key] = formatQRightStat(median)
+          statRows[2][meta.key] = formatQRightStat(mode)
+          statRows[3][meta.key] = Number.isFinite(completionPercent) ? `${Math.round(completionPercent)}%` : "0%"
+          statRows[4][meta.key] = {
+            type: "distribution",
+            entries: distributionEntries,
+            summaryText: distributionText || "-",
+            totalCount: distributionEntries.reduce((sum, entry) => sum + entry.count, 0),
+            assignmentTitle: normalizeAssignmentHeaderTitle(meta.title),
+            dueLabel: normalizeText(meta.dueAt) || "-",
+            questionTotal,
+          }
+        })
+
+        const viewportWidth = Number(window.innerWidth) || 1280
+        const assignmentTitleMaxChars =
+          viewportWidth <= 560 ? 7 : viewportWidth <= 880 ? 9 : viewportWidth <= 1180 ? 10 : 12
+        const coreTitleMaxChars =
+          viewportWidth <= 560 ? 8 : viewportWidth <= 880 ? 10 : viewportWidth <= 1180 ? 12 : 14
+        const studentColumnMinWidth = studentColumnMinWidthForResize()
+        const studentColumnDefaultWidth = studentColumnDefaultWidthForViewport(viewportWidth)
+        const rowsWithStats = assignmentMeta.length ? [...studentRows, ...statRows] : studentRows
+        const classColumnWidth = coreColumnDataWidth(rowsWithStats, "level", {
+          minWidth: 104,
+          maxWidth: 226,
+          minChars: 8,
+          charWidth: 7.2,
+          cellPadding: 28,
+        })
+        const studentColumnWidth = coreColumnDataWidth(studentRows, "studentDisplay", {
+          minWidth: studentColumnMinWidth,
+          maxWidth: 420,
+          minChars: 3,
+          charWidth: 7.6,
+          cellPadding: 32,
+        })
+        const studentNumberColumnWidth = coreColumnDataWidth(rowsWithStats, "studentNumber", {
+          minWidth: 74,
+          maxWidth: 192,
+          minChars: 5,
+          charWidth: 7.1,
+          cellPadding: 26,
+        })
+        const quarterColumnWidth = coreColumnDataWidth(rowsWithStats, "quarter", {
+          minWidth: 72,
+          maxWidth: 114,
+          minChars: 2,
+          charWidth: 7.2,
+          cellPadding: 24,
+        })
+
+        const baseColumns = [
+          { title: "Order", field: "rowOrder", visible: false, headerSort: false },
+          {
+            title: buildCoreHeaderCard("Class Level", "Class", "Grouping", coreTitleMaxChars),
+            field: "level",
+            headerActionLabel: "Class Level",
+            minWidth: 104,
+            width: classColumnWidth,
+            frozen: true,
+            headerSort: true,
+            cssClass: "assignment-col core-col",
+            responsive: 0,
+            headerTooltip: () => "Class Level | Roster grouping",
+          },
+          {
+            title: buildCoreHeaderCard("Student", "eaglesId", "", coreTitleMaxChars),
+            field: "studentDisplay",
+            headerActionLabel: "Student",
+            minWidth: studentColumnMinWidth,
+            width: studentColumnWidth,
+            frozen: true,
+            headerSort: true,
+            cssClass: "assignment-col core-col",
+            responsive: 0,
+            headerTooltip: () => "Student | eaglesId",
+          },
+          {
+            title: buildCoreHeaderCard("Student Number", "Roster", "ID", coreTitleMaxChars),
+            field: "studentNumber",
+            headerActionLabel: "Student Number",
+            minWidth: 74,
+            width: studentNumberColumnWidth,
+            hozAlign: "center",
+            headerSort: true,
+            cssClass: "assignment-col core-col student-number-col",
+            responsive: 9,
+            headerTooltip: () => "Student Number | Roster number",
+            formatter: (cell) => (
+              `<span class=\"student-number-wrap\">${formatStudentNumberForWrap(cell.getValue())}</span>`
+            ),
+          },
+          {
+            title: buildCoreHeaderCard("Quarter", "Term", "Bucket", coreTitleMaxChars),
+            field: "quarter",
+            headerActionLabel: "Quarter",
+            minWidth: 72,
+            width: quarterColumnWidth,
+            hozAlign: "center",
+            headerSort: true,
+            cssClass: "assignment-col core-col",
+            responsive: 10,
+            headerTooltip: () => "Quarter | Term bucket",
+          },
+        ]
+
+        const assignmentColumns = assignmentMeta.map((meta, index) => {
+          const rawTitle = normalizeText(meta.title) || "Untitled"
+          const fullTitle = normalizeAssignmentHeaderTitle(rawTitle)
+          const headerTitle = truncateHeaderTitle(fullTitle, assignmentTitleMaxChars)
+          const isMegsTitle = isMegsAssignmentTitle(rawTitle)
+          const headerClass = isMegsTitle ? "assignment-head megs" : "assignment-head"
+          const dueLabel = normalizeText(meta.dueAt) || "-"
+          const questionLabel = Number.isFinite(meta.totalQuestions) ? formatShortNumber(meta.totalQuestions) : "-"
+          const assignmentColumnMinWidth = viewportWidth <= 560 ? 66 : viewportWidth <= 880 ? 72 : 78
+          const assignmentColumnMaxWidth = viewportWidth <= 560 ? 154 : viewportWidth <= 880 ? 170 : 190
+          const assignmentColumnWidth = assignmentColumnDataWidth(rowsWithStats, meta.key, {
+            minWidth: assignmentColumnMinWidth,
+            maxWidth: assignmentColumnMaxWidth,
+            minChars: viewportWidth <= 560 ? 8 : 9,
+            charWidth: 7.1,
+            cellPadding: 24,
+          })
+          return {
+            title:
+              `<span class=\"${headerClass}\">`
+              + `${buildHeaderActionButtons(fullTitle)}`
+              + `<span class=\"assignment-title-text\">${escapeHtml(headerTitle)}</span>`
+              + `<span class=\"assignment-sub\">Q: ${escapeHtml(questionLabel)}</span>`
+              + `<span class=\"assignment-sub\">${escapeHtml(dueLabel)}</span>`
+              + `</span>`,
+            field: meta.key,
+            headerActionLabel: fullTitle,
+            minWidth: assignmentColumnMinWidth,
+            width: assignmentColumnWidth,
+            hozAlign: "center",
+            cssClass: "assignment-col",
+            responsive: 30 + index,
+            headerTooltip: () => `${fullTitle} | Q: ${questionLabel} | Due: ${dueLabel}`,
+            headerSort: true,
+            sorter: (left, right) => {
+              const leftPercent = left && typeof left === "object" && Number.isFinite(left.percent) ? left.percent : -1
+              const rightPercent = right && typeof right === "object" && Number.isFinite(right.percent) ? right.percent : -1
+              return leftPercent - rightPercent
+            },
+            tooltip: () => "Double-click a student score cell to edit and save.",
+            cellDblClick: (_event, cell) => {
+              void editExerciseCellScore(cell, meta)
+            },
+            formatter: (cell) => {
+              const rowData = cell.getRow().getData()
+              const value = cell.getValue()
+              if (rowData?.rowType === "stat") {
+                if (normalizeText(rowData?.id) === "stat-distribution") {
+                  return renderDistributionMiniCell(value, meta)
+                }
+                const statText = value && typeof value === "object"
+                  ? normalizeText(value.summaryText)
+                  : normalizeText(value)
+                return `<span class=\"stat-chip\">${escapeHtml(statText || "n/a")}</span>`
+              }
+              if (!value || typeof value !== "object") {
+                return (
+                  `<span class=\"exercise-cell notdone\">`
+                  + `<span>-/-</span><span>Not done</span>`
+                  + `</span>`
+                )
+              }
+              const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0
+                ? `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}`
+                : Number.isFinite(value.score)
+                  ? `${formatShortNumber(value.score)}`
+                  : "-/-"
+              const percentLabel = Number.isFinite(value.percent) ? `${Math.round(value.percent)}%` : "n/a"
+              const status = ["ontime", "late", "notdone"].includes(value.status) ? value.status : "notdone"
+              return (
+                `<span class=\"exercise-cell ${status}\">`
+                + `<span>${escapeHtml(scoreLabel)}</span>`
+                + `<span>${escapeHtml(percentLabel)}</span>`
+                + `</span>`
+              )
+            },
+          }
+        })
+
+        return {
+          columns: [...baseColumns, ...assignmentColumns],
+          rows: rowsWithStats,
+          assignmentCount: assignmentColumns.length,
+          studentCount: studentRows.length,
+        }
+      }
+
+      function chunkArray(items, size) {
+        const chunks = []
+        const safeSize = Math.max(1, Number.parseInt(String(size || 1), 10) || 1)
+        for (let i = 0; i < items.length; i += safeSize) {
+          chunks.push(items.slice(i, i + safeSize))
+        }
+        return chunks
+      }
+
+      async function loadGradeRows() {
+        state.loading = true
+        setStatus("Loading student roster...")
+
+        const roster = await apiJson("/api/admin/students?take=1000")
+        const students = Array.isArray(roster?.items) ? roster.items : []
+        const withGradeCounts = students.filter((entry) => {
+          const gradeCount = Number(entry?.counts?.gradeRecords ?? entry?._count?.gradeRecords ?? 0)
+          return Number.isFinite(gradeCount) && gradeCount > 0
+        })
+        const targetStudents = withGradeCounts.length ? withGradeCounts : students
+
+        const allRows = []
+        const chunks = chunkArray(targetStudents, 10)
+        for (let index = 0; index < chunks.length; index += 1) {
+          const batch = chunks[index]
+          setStatus(`Loading grade details ${index + 1}/${chunks.length}...`)
+          const details = await Promise.all(
+            batch.map(async (student) => {
+              const id = normalizeText(student?.id)
+              if (!id) return null
+              try {
+                const detail = await apiJson(`/api/admin/students/${encodeURIComponent(id)}`)
+                if (detail?.student && typeof detail.student === "object") return detail.student
+                if (detail && typeof detail === "object" && normalizeText(detail.id)) return detail
+                return null
+              } catch (error) {
+                void error
+                return null
+              }
+            })
+          )
+
+          details.forEach((entry) => {
+            if (!entry) return
+            allRows.push(...flattenGradeRowsFromStudent(entry))
+          })
+        }
+
+        state.allRows = allRows
+        state.loading = false
+      }
+
+      function uniqueSortedValues(rows, key) {
+        const values = Array.from(new Set((Array.isArray(rows) ? rows : [])
+          .map((entry) => normalizeText(entry?.[key]))
+          .filter(Boolean)))
+        values.sort((left, right) => left.localeCompare(right, undefined, { sensitivity: "base" }))
+        return values
+      }
+
+      function replaceSelectOptions(selectEl, values, selectedValue, allLabel) {
+        if (!(selectEl instanceof HTMLSelectElement)) return
+        const current = normalizeText(selectedValue) || "all"
+        const options = [`<option value=\"all\">${escapeHtml(allLabel)}</option>`]
+        values.forEach((value) => {
+          options.push(`<option value=\"${escapeHtml(value)}\">${escapeHtml(value)}</option>`)
+        })
+        selectEl.innerHTML = options.join("")
+        selectEl.value = values.includes(current) ? current : "all"
+      }
+
+      function refreshFilterOptionLists() {
+        const rows = Array.isArray(state.allRows) ? state.allRows : []
+        const classValues = uniqueSortedValues(rows, "level")
+        const schoolValues = uniqueSortedValues(rows, "schoolName")
+        const currentYear = SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO)
+        const yearValues = uniqueSortedValues(rows, "schoolYear")
+        if (currentYear && !yearValues.includes(currentYear)) yearValues.push(currentYear)
+        yearValues.sort((left, right) => right.localeCompare(left))
+
+        const studentValues = Array.from(new Map(
+          rows.map((row) => [normalizeText(row.studentRefId), normalizeText(row.studentLabel)])
+            .filter(([key, value]) => key && value)
+        ))
+          .sort((left, right) => left[1].localeCompare(right[1], undefined, { sensitivity: "base" }))
+
+        replaceSelectOptions(document.getElementById("classFilter"), classValues, state.filters.classKey, "All class levels")
+        replaceSelectOptions(document.getElementById("schoolFilter"), schoolValues, state.filters.schoolKey, "All schools")
+        replaceSelectOptions(document.getElementById("schoolYear"), yearValues, state.filters.schoolYear, "All school years")
+
+        const studentFilter = document.getElementById("studentFilter")
+        if (studentFilter instanceof HTMLSelectElement) {
+          const options = ["<option value=\"all\">All students</option>"]
+          studentValues.forEach(([studentRefId, label]) => {
+            options.push(`<option value=\"${escapeHtml(studentRefId)}\">${escapeHtml(label)}</option>`)
+          })
+          studentFilter.innerHTML = options.join("")
+          const current = normalizeText(state.filters.studentKey) || "all"
+          studentFilter.value = studentValues.some(([studentRefId]) => studentRefId === current) ? current : "all"
+        }
+
+        if (currentYear && (state.filters.schoolYear === "all" || !yearValues.includes(state.filters.schoolYear))) {
+          state.filters.schoolYear = currentYear
+          const yearSelect = document.getElementById("schoolYear")
+          if (yearSelect instanceof HTMLSelectElement) yearSelect.value = currentYear
+        }
+
+        const selectedSchoolYear = state.filters.schoolYear === "all" ? currentYear : state.filters.schoolYear
+        const availableQuarters = Array.from(new Set(
+          rows
+            .filter((entry) => normalizeText(entry?.schoolYear) === normalizeText(selectedSchoolYear))
+            .map((entry) => normalizeQuarterCode(entry?.quarter))
+            .filter(Boolean)
+        )).sort((left, right) => quarterSortKey(left) - quarterSortKey(right))
+
+        const currentQuarter = normalizeQuarterCode(quarterFromIsoDate(TODAY_ISO)) || "q1"
+        const ssotQuarter = quarterForSchoolYear(selectedSchoolYear || currentYear, TODAY_ISO)
+        const currentQuarterFromSsot = normalizeQuarterCode(ssotQuarter) || currentQuarter
+        const preferredQuarter = availableQuarters.includes(currentQuarterFromSsot)
+          ? currentQuarterFromSsot
+          : availableQuarters[0] || currentQuarterFromSsot
+
+        if (!normalizeQuarterCode(state.filters.quarter) || !availableQuarters.includes(normalizeQuarterCode(state.filters.quarter))) {
+          state.filters.quarter = preferredQuarter
+        }
+        const quarterSelect = document.getElementById("quarter")
+        if (quarterSelect instanceof HTMLSelectElement) {
+          quarterSelect.value = normalizeQuarterCode(state.filters.quarter) || preferredQuarter
+        }
+      }
+
+      function rangeLabelForActiveFilters(period, rangeStart, rangeEnd, currentSchoolYear) {
+        if (period === "archive") return `Archive only (excluding ${currentSchoolYear})`
+        if (rangeStart || rangeEnd) return `${rangeStart || "..."} to ${rangeEnd || "..."}`
+        return "All dates"
+      }
+
+      function shouldApplyTodayCap(targetSchoolYear, dateDerivedCurrentSchoolYear) {
+        const target = normalizeText(targetSchoolYear)
+        const dateDerived = normalizeText(dateDerivedCurrentSchoolYear)
+        if (!target || !dateDerived) return true
+        return target === dateDerived
+      }
+
+      function filteredRowsWithRange() {
+        const rows = Array.isArray(state.allRows) ? state.allRows : []
+        const filters = state.filters
+        const currentSchoolYear = SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO)
+        const dateDerivedCurrentSchoolYear = schoolYearForIsoDate(TODAY_ISO)
+        let rangeStart = ""
+        let rangeEnd = ""
+
+        if (filters.period === "week") {
+          rangeStart = startOfWeekIso(TODAY_ISO)
+          rangeEnd = isoDateOffset(rangeStart, 6)
+        } else if (filters.period === "custom") {
+          rangeStart = normalizeText(filters.customFrom).slice(0, 10)
+          rangeEnd = normalizeText(filters.customTo).slice(0, 10)
+        }
+
+        if (rangeStart && rangeEnd && compareIsoDate(rangeStart, rangeEnd) > 0) {
+          const swap = rangeStart
+          rangeStart = rangeEnd
+          rangeEnd = swap
+        }
+
+        const filtered = rows.filter((row) => {
+          const rowDate = normalizeText(row?.dateKey)
+          const rowQuarter = normalizeLower(row?.quarter)
+          const rowSchoolYear = normalizeText(row?.schoolYear)
+
+          if (filters.period === "archive") {
+            if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false
+            if (filters.schoolYear !== "all" && rowSchoolYear !== filters.schoolYear) return false
+          } else {
+            if (filters.schoolYear !== "all" && rowSchoolYear && rowSchoolYear !== filters.schoolYear) return false
+          }
+
+          if (filters.period === "quarter" || filters.period === "qtd") {
+            if (!rowQuarter || rowQuarter !== normalizeLower(filters.quarter)) return false
+            if (filters.period === "qtd") {
+              const targetYear = filters.schoolYear !== "all" ? filters.schoolYear : currentSchoolYear
+              if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
+                return false
+              }
+            }
+          }
+
+          if (filters.period === "sytd") {
+            const targetYear = filters.schoolYear !== "all" ? filters.schoolYear : currentSchoolYear
+            if (rowSchoolYear && rowSchoolYear !== targetYear) return false
+            if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
+              return false
+            }
+          }
+
+          if (filters.period === "week" || filters.period === "custom") {
+            if (rangeStart || rangeEnd) {
+              if (!rowDate) return false
+              if (rangeStart && compareIsoDate(rowDate, rangeStart) < 0) return false
+              if (rangeEnd && compareIsoDate(rowDate, rangeEnd) > 0) return false
+            }
+          }
+
+          if (filters.classKey !== "all" && normalizeText(row?.level) !== filters.classKey) return false
+          if (filters.studentKey !== "all" && normalizeText(row?.studentRefId) !== filters.studentKey) return false
+          if (filters.schoolKey !== "all" && normalizeText(row?.schoolName) !== filters.schoolKey) return false
+
+          const needle = normalizeSearch(filters.search)
+          if (needle && !normalizeSearch(row?.searchText).includes(needle)) return false
+
+          return true
+        })
+
+        return {
+          rows: filtered,
+          rangeStart,
+          rangeEnd,
+          currentSchoolYear,
+          rangeLabel: rangeLabelForActiveFilters(filters.period, rangeStart, rangeEnd, currentSchoolYear),
+        }
+      }
+
+      function ensureTable() {
+        if (state.table) return
+        if (typeof window.Tabulator !== "function") {
+          setStatus("Tabulator assets are missing. Run: tools/sync-tabulatorz-assets.sh", true)
+          return
+        }
+
+        const storedTableUiState = readTableUiState()
+        const tableHeight = normalizeTableHeightPx(state.tableHeightPx, storedTableUiState?.tableHeight ?? defaultTableHeightPx())
+        applyTableHeight(tableHeight, { persist: false, redraw: false })
+        const viewportWidth = Number(window.innerWidth) || 1280
+        const useResponsiveCollapse = false
+        const coreTitleMaxChars =
+          viewportWidth <= 560 ? 8 : viewportWidth <= 880 ? 10 : viewportWidth <= 1180 ? 12 : 14
+        const studentColumnMinWidth = studentColumnMinWidthForResize()
+        const studentColumnDefaultWidth = studentColumnDefaultWidthForViewport(viewportWidth)
+        state.responsiveCollapseEnabled = useResponsiveCollapse
+
+        state.table = new window.Tabulator("#gradeGrid", {
+          data: [],
+          layout: "fitDataTable",
+          columnHeaderVertAlign: "bottom",
+          columnDefaults: {
+            headerSort: true,
+            headerHozAlign: "left",
+            vertAlign: "middle",
+            resizable: true,
+            headerClick: handleHeaderActionClick,
+          },
+          responsiveLayout: false,
+          responsiveLayoutCollapseUseFormatters: false,
+          responsiveLayoutCollapseFormatter: buildResponsiveCollapseContent,
+          responsiveLayoutCollapseStartOpen: false,
+          rowHeader: false,
+          height: tableHeight,
+          placeholder: "No grade rows match the selected filters.",
+          pagination: false,
+          movableColumns: true,
+          resizableColumns: true,
+          resizableColumnGuide: true,
+          tooltipDelay: 120,
+          initialSort: [
+            { column: "rowOrder", dir: "asc" },
+          ],
+          columns: [
+            { title: "Order", field: "rowOrder", visible: false, headerSort: false },
+            {
+              title: buildCoreHeaderCard("Class Level", "Class", "Grouping", coreTitleMaxChars),
+              field: "level",
+              headerActionLabel: "Class Level",
+              minWidth: 104,
+              frozen: true,
+              cssClass: "assignment-col core-col",
+              responsive: 0,
+              headerTooltip: () => "Class Level | Roster grouping",
+            },
+            {
+              title: buildCoreHeaderCard("Student", "eaglesId", "", coreTitleMaxChars),
+              field: "studentDisplay",
+              headerActionLabel: "Student",
+              minWidth: studentColumnMinWidth,
+              width: studentColumnDefaultWidth,
+              frozen: true,
+              cssClass: "assignment-col core-col",
+              responsive: 0,
+              headerTooltip: () => "Student | eaglesId",
+            },
+            {
+              title: buildCoreHeaderCard("Student Number", "Roster", "ID", coreTitleMaxChars),
+              field: "studentNumber",
+              headerActionLabel: "Student Number",
+              minWidth: 74,
+              hozAlign: "center",
+              cssClass: "assignment-col core-col student-number-col",
+              responsive: 9,
+              headerTooltip: () => "Student Number | Roster number",
+              formatter: (cell) => (
+                `<span class=\"student-number-wrap\">${formatStudentNumberForWrap(cell.getValue())}</span>`
+              ),
+            },
+            {
+              title: buildCoreHeaderCard("Quarter", "Term", "Bucket", coreTitleMaxChars),
+              field: "quarter",
+              headerActionLabel: "Quarter",
+              minWidth: 72,
+              hozAlign: "center",
+              cssClass: "assignment-col core-col",
+              responsive: 10,
+              headerTooltip: () => "Quarter | Term bucket",
+            },
+          ],
+          rowFormatter: (row) => {
+            const data = row.getData()
+            const el = row.getElement()
+            if (!el) return
+            if (data?.rowType === "stat") {
+              el.classList.add("is-stat-row")
+            } else {
+              el.classList.remove("is-stat-row")
+            }
+          },
+        })
+        observeTableHeightResize()
+        state.tableBuilt = false
+        if (typeof state.table?.on === "function") {
+          state.table.on("tableBuilt", () => {
+            state.tableBuilt = true
+            renderTable()
+          })
+          state.table.on("columnMoved", () => {
+            persistTableUiStateSoon()
+          })
+          state.table.on("columnResized", () => {
+            persistTableUiStateSoon()
+          })
+          state.table.on("columnVisibilityChanged", () => {
+            persistTableUiStateSoon()
+          })
+          state.table.on("dataSorted", () => {
+            persistTableUiStateSoon()
+          })
+        }
+      }
+
+      function normalizeUpper(value) {
+        return normalizeText(value).toUpperCase()
+      }
+
+      function matrixColumnSchemaKey(columns = []) {
+        return (Array.isArray(columns) ? columns : [])
+          .map((column) => {
+            const field = normalizeText(column?.field)
+            if (field) return field
+            const titleText = stripHtmlToText(column?.title)
+            return titleText || "column"
+          })
+          .join("|")
+      }
+
+      function currentTableColumnSchemaKey() {
+        if (!state.table || typeof state.table.getColumns !== "function") return ""
+        const columns = state.table.getColumns().map((column) => {
+          const field = normalizeText(column?.getField?.())
+          if (field) return { field }
+          const definition = column?.getDefinition?.() || {}
+          return { title: definition.title }
+        })
+        return matrixColumnSchemaKey(columns)
+      }
+
+      function updateMetrics(rows) {
+        const source = Array.isArray(rows) ? rows : []
+        const studentCount = new Set(source.map((entry) => normalizeText(entry?.studentRefId)).filter(Boolean)).size
+        const classCount = new Set(source.map((entry) => normalizeText(entry?.level)).filter(Boolean)).size
+        const scoreValues = source
+          .map((entry) => Number(entry?.scorePercent))
+          .filter((entry) => Number.isFinite(entry))
+        const averagePercent = scoreValues.length
+          ? scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length
+          : null
+
+        const homeworkRows = source.filter((entry) => typeof entry?.homeworkCompleted === "boolean")
+        const completedRows = homeworkRows.filter((entry) => entry.homeworkCompleted === true).length
+        const completionRate = homeworkRows.length ? percentValue(completedRows, homeworkRows.length) : null
+
+        const rowEl = document.getElementById("metricRows")
+        const studentEl = document.getElementById("metricStudents")
+        const classEl = document.getElementById("metricClasses")
+        const avgEl = document.getElementById("metricAvgPercent")
+        const completionEl = document.getElementById("metricCompletion")
+        if (rowEl) rowEl.textContent = String(source.length)
+        if (studentEl) studentEl.textContent = String(studentCount)
+        if (classEl) classEl.textContent = String(classCount)
+        if (avgEl) avgEl.textContent = formatPercent(averagePercent)
+        if (completionEl) completionEl.textContent = formatPercent(completionRate)
+      }
+
+      function applyFilterControlState() {
+        const quarter = document.getElementById("quarter")
+        const customFrom = document.getElementById("customFrom")
+        const customTo = document.getElementById("customTo")
+        const isQuarterMode = state.filters.period === "quarter" || state.filters.period === "qtd"
+        const isCustomMode = state.filters.period === "custom"
+        if (quarter instanceof HTMLSelectElement) quarter.disabled = !isQuarterMode
+        if (customFrom instanceof HTMLInputElement) customFrom.disabled = !isCustomMode
+        if (customTo instanceof HTMLInputElement) customTo.disabled = !isCustomMode
+      }
+
+      function syncPeriodButtons() {
+        document.querySelectorAll("[data-period]").forEach((button) => {
+          const period = normalizeLower(button.getAttribute("data-period"))
+          button.classList.toggle("is-active", period === state.filters.period)
+        })
+      }
+
+      function renderTable() {
+        const outcome = filteredRowsWithRange()
+        state.filteredRows = outcome.rows
+        const matrix = buildMatrixModel(state.filteredRows)
+        state.matrixRows = matrix.rows
+
+        ensureTable()
+        if (state.table && state.tableBuilt) {
+          try {
+            const nextSchemaKey = matrixColumnSchemaKey(matrix.columns)
+            const liveSchemaKey = currentTableColumnSchemaKey()
+            const liveFieldSet = tableColumnFieldSet()
+            const tableHasAssignmentColumns = Array.from(liveFieldSet.values()).some((field) => field.includes("|"))
+            const shouldResetColumns =
+              nextSchemaKey !== state.columnSchemaKey
+              || (liveSchemaKey && liveSchemaKey !== nextSchemaKey)
+              || (matrix.assignmentCount > 0 && !tableHasAssignmentColumns)
+            const applySortAndPersistState = () => {
+              if (shouldResetColumns) {
+                const applied = applyStoredTableUiState({ applyLayout: false, applySort: true })
+                if (
+                  !applied.sortApplied
+                  && typeof state.table?.setSort === "function"
+                  && typeof state.table?.getSorters === "function"
+                ) {
+                  const activeSorters = normalizeTableSortersSnapshot(state.table.getSorters())
+                  if (!activeSorters.length) {
+                    state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+                  }
+                }
+              }
+              persistTableUiStateFromTable()
+              if (shouldResetColumns && matrix.assignmentCount > 0) {
+                window.setTimeout(() => {
+                  ensureAssignmentColumnsPresent(matrix.columns, matrix.assignmentCount)
+                }, 0)
+              }
+            }
+
+            const replaceRows = () => {
+              const replaceResult = state.table.replaceData(matrix.rows)
+              if (replaceResult && typeof replaceResult.then === "function") {
+                replaceResult
+                  .then(() => {
+                    applySortAndPersistState()
+                  })
+                  .catch(() => {})
+                return
+              }
+              applySortAndPersistState()
+            }
+
+            if (shouldResetColumns) {
+              const setColumnsResult = state.table.setColumns(matrix.columns)
+              state.columnSchemaKey = nextSchemaKey
+              const expectedColumnCount = Array.isArray(matrix.columns) ? matrix.columns.length : 0
+              const afterSetColumns = () => {
+                const finishAfterColumnsReady = () => {
+                  applyStoredTableUiState({
+                    applyLayout: true,
+                    applySort: false,
+                    requiredAssignmentColumns: matrix.assignmentCount,
+                  })
+                  replaceRows()
+                }
+                if (!expectedColumnCount) {
+                  finishAfterColumnsReady()
+                  return
+                }
+                waitForExpectedColumnCount(expectedColumnCount)
+                  .then(() => {
+                    finishAfterColumnsReady()
+                  })
+                  .catch(() => {
+                    finishAfterColumnsReady()
+                  })
+              }
+              if (setColumnsResult && typeof setColumnsResult.then === "function") {
+                setColumnsResult
+                  .then(() => {
+                    afterSetColumns()
+                  })
+                  .catch(() => {
+                    replaceRows()
+                  })
+              } else {
+                afterSetColumns()
+              }
+            } else {
+              replaceRows()
+            }
+          } catch (error) {
+            void error
+          }
+        }
+
+        updateMetrics(state.filteredRows)
+        const rangeHint = document.getElementById("rangeHint")
+        if (rangeHint) {
+          const periodLabel = state.filters.period.toUpperCase()
+          const viewportHint = "Use horizontal scroll for full matrix and sticky identity columns."
+          rangeHint.textContent =
+            `Period ${periodLabel} | Range ${outcome.rangeLabel} | Students ${matrix.studentCount} | Exercises ${matrix.assignmentCount}`
+            + ` | ${viewportHint}`
+        }
+
+        if (!state.loading) {
+          setStatus(`Loaded ${state.filteredRows.length} grade rows into ${matrix.studentCount} students x ${matrix.assignmentCount} exercise columns.`)
+        }
+      }
+
+      function readControlValues() {
+        const schoolYear = document.getElementById("schoolYear")
+        const quarter = document.getElementById("quarter")
+        const classFilter = document.getElementById("classFilter")
+        const studentFilter = document.getElementById("studentFilter")
+        const schoolFilter = document.getElementById("schoolFilter")
+        const customFrom = document.getElementById("customFrom")
+        const customTo = document.getElementById("customTo")
+        const searchInput = document.getElementById("searchInput")
+
+        if (schoolYear instanceof HTMLSelectElement) state.filters.schoolYear = normalizeText(schoolYear.value) || "all"
+        if (quarter instanceof HTMLSelectElement) state.filters.quarter = normalizeLower(quarter.value) || "q1"
+        if (classFilter instanceof HTMLSelectElement) state.filters.classKey = normalizeText(classFilter.value) || "all"
+        if (studentFilter instanceof HTMLSelectElement) state.filters.studentKey = normalizeText(studentFilter.value) || "all"
+        if (schoolFilter instanceof HTMLSelectElement) state.filters.schoolKey = normalizeText(schoolFilter.value) || "all"
+        if (customFrom instanceof HTMLInputElement) state.filters.customFrom = normalizeText(customFrom.value).slice(0, 10)
+        if (customTo instanceof HTMLInputElement) state.filters.customTo = normalizeText(customTo.value).slice(0, 10)
+        if (searchInput instanceof HTMLInputElement) state.filters.search = normalizeText(searchInput.value)
+        persistUiPreferences()
+      }
+
+      function bindControls() {
+        const controls = [
+          "schoolYear",
+          "quarter",
+          "classFilter",
+          "studentFilter",
+          "schoolFilter",
+          "customFrom",
+          "customTo",
+        ]
+
+        controls.forEach((id) => {
+          const el = document.getElementById(id)
+          if (!el) return
+          el.addEventListener("change", () => {
+            readControlValues()
+            applyFilterControlState()
+            renderTable()
+          })
+        })
+
+        const searchInput = document.getElementById("searchInput")
+        if (searchInput) {
+          searchInput.addEventListener("input", () => {
+            readControlValues()
+            renderTable()
+          })
+        }
+
+        document.querySelectorAll("[data-period]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.filters.period = normalizeLower(button.getAttribute("data-period")) || "week"
+            persistUiPreferences()
+            syncPeriodButtons()
+            applyFilterControlState()
+            renderTable()
+          })
+        })
+
+        const reloadBtn = document.getElementById("reloadBtn")
+        if (reloadBtn) {
+          reloadBtn.addEventListener("click", async () => {
+            try {
+              await bootstrapRows()
+            } catch (error) {
+              setStatus(normalizeText(error?.message) || "Reload failed.", true)
+            }
+          })
+        }
+
+        const toggleCompactBtn = document.getElementById("toggleCompactBtn")
+        if (toggleCompactBtn) {
+          toggleCompactBtn.addEventListener("click", () => {
+            toggleCompactMode()
+          })
+        }
+
+        const resetColumnsBtn = document.getElementById("resetColumnsBtn")
+        if (resetColumnsBtn) {
+          resetColumnsBtn.addEventListener("click", () => {
+            clearStoredTableUiState()
+            state.columnSchemaKey = ""
+            renderTable()
+            if (state.table && typeof state.table.setSort === "function") {
+              state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+            }
+            setStatus("Saved column layout and sort reset to default.")
+          })
+        }
+
+        const handleResize = debounce(() => {
+          if (state.loading) return
+          renderTable()
+        }, 190)
+        window.addEventListener("resize", handleResize)
+      }
+
+      async function bootstrapRows() {
+        if (state.loading) return
+        state.loading = true
+        try {
+          await hydrateLetterGradeRanges()
+          await loadGradeRows()
+          refreshFilterOptionLists()
+          readControlValues()
+          syncPeriodButtons()
+          applyFilterControlState()
+          renderTable()
+          persistUiPreferences()
+          setStatus(`SIS load complete. ${state.allRows.length} grade rows ready.`)
+        } finally {
+          state.loading = false
+        }
+      }
+
+      async function init() {
+        if (!API_ORIGIN) {
+          setStatus("Missing API origin. Open with ?apiOrigin=http://127.0.0.1:8788", true)
+          return
+        }
+
+        restoreUiPreferences()
+        applyCurrentSchoolYearDefault({ force: true })
+        applyFilterQueryOverrides()
+        applyCurrentSchoolYearDefault()
+        bindControls()
+        bindTableModalControls()
+        bindDistributionModalControls()
+        syncCompactModeUi()
+        syncPeriodButtons()
+        applyFilterControlState()
+
+        try {
+          await ensureAuthenticated()
+        } catch (error) {
+          if (error && error.status === 401) {
+            setStatus("Login required. Open /admin/students first, then return here.", true)
+            return
+          }
+          throw error
+        }
+
+        await bootstrapRows()
+      }
+
+      init().catch((error) => {
+        setStatus(normalizeText(error?.message) || "Failed to initialize tabulator page.", true)
+      })
+    })()
+  </script>
+</body>
+</html>
