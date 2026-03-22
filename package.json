@@ -58,10 +58,10 @@
   "homepage": "",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@redocly/cli": "^2.22.1",
+    "@redocly/cli": "^2.24.1",
     "@types/node": "^20.19.35",
     "dependency-cruiser": "^17.3.9",
-    "eslint": "^10.0.3",
+    "eslint": "^10.1.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^17.4.0",
     "html-validate": "^10.11.2",
@@ -72,7 +72,7 @@
     "postcss-html": "^1.8.1",
     "prettier": "^3.8.1",
     "prisma": "^7.5.0",
-    "stylelint": "^17.0.0",
+    "stylelint": "^17.5.0",
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
