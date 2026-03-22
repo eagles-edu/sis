@@ -1,0 +1,10 @@
+[Unit]
+Description=Run SIS Incoming Exercise Vacuum Daily
+
+[Timer]
+OnCalendar={{VACUUM_SCHEDULE}}
+Persistent=true
+Unit=sis-incoming-vacuum.service
+
+[Install]
+WantedBy=timers.target

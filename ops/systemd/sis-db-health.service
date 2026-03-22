@@ -1,0 +1,13 @@
+[Unit]
+Description=SIS Database Health Snapshot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User={{USER}}
+Group={{GROUP}}
+WorkingDirectory={{RUNTIME_ROOT}}
+EnvironmentFile={{ENV_FILE}}
+Environment=DOTENV_CONFIG_PATH={{ENV_FILE}}
+ExecStart={{NODE_BIN}} -r dotenv/config {{RUNTIME_ROOT}}/tools/db-health-check.mjs --output {{DB_HEALTH_OUTPUT}} --backup-latest {{BACKUP_LATEST_PATH}} --vacuum-report-dir {{REPORT_DIR}}

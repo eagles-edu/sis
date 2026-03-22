@@ -7,6 +7,392 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-22 - strict live/dev port isolation and sync wiring hardening)
+
+- User requirement:
+  - no live/dev port intermixing.
+  - no fallback wiring between runtime modes.
+  - sync paths must stay pinned to live port contract.
+- Runtime hardening:
+  - [server/exercise-mailer.mjs](server/exercise-mailer.mjs):
+    - fixed dedicated port contract:
+      - development => `8788`
+      - live/non-dev => `8787`
+    - startup now rejects mismatched `EXERCISE_MAILER_PORT` for current mode.
+    - added reverse root guard:
+      - existing guard kept: dev-in-live-root blocked by default.
+      - new guard: live-in-dev-root blocked by default (`SIS_ALLOW_LIVE_ON_DEV_ROOT=true` override).
+  - [package.json](package.json):
+    - `npm run dev` locked to `NODE_ENV=development SIS_ENV_FILE=.env.dev`.
+    - `npm start` locked to `NODE_ENV=production SIS_ENV_FILE=.env`.
+- Sync hardening:
+  - [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh):
+    - live pin `EXERCISE_MAILER_PORT=8787` is now non-overridable in script wiring.
+    - local route matrix fixed to port `8787`.
+  - [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh):
+    - removed mutable `--mailer-port` path.
+    - live route matrix fixed to port `8787`.
+    - live pin `EXERCISE_MAILER_PORT=8787` made non-overridable in script wiring.
+- Tests updated:
+  - [test/exercise-mailer.spec.mjs](test/exercise-mailer.spec.mjs):
+    - added dev-port mismatch rejection coverage.
+    - added live-in-dev-root block/override coverage.
+  - [test/deploy-sync-contract.spec.mjs](test/deploy-sync-contract.spec.mjs):
+    - added assertions that sync scripts keep pinned `8787` wiring and do not expose legacy mutable port hooks.
+
+## Update (2026-03-22 - dev-first critical DB/session reliability hardening)
+
+- Implemented strict Redis session runtime behavior:
+  - [server/student-admin-session-store.mjs](server/student-admin-session-store.mjs):
+    - `STUDENT_ADMIN_SESSION_DRIVER=redis` now fails closed (`503`) when Redis is unavailable.
+    - no implicit fallback to memory in required Redis mode.
+    - added reconnect strategy, readiness checks, and runtime telemetry:
+      - `redisConnected`
+      - `redisReady`
+      - `lastRedisError`
+      - `lastReconnectAt`
+      - `reconnectAttempts`
+- Extended runtime health payloads (additive only):
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - `studentAdminRuntime.sessionRedis.*`
+    - `studentAdminRuntime.maintenance.*`
+    - top-level fallback `maintenance` in admin runtime health.
+  - [server/exercise-mailer.mjs](server/exercise-mailer.mjs):
+    - `/healthz` now includes top-level `maintenance`.
+- Finalized incoming vacuum tool:
+  - [tools/vacuum-incoming-exercise-results.mjs](tools/vacuum-incoming-exercise-results.mjs):
+    - deterministic report ordering.
+    - report retention pruning via `--report-retention-days` (default `30` days).
+    - fixed lint blocker (`no-useless-assignment`).
+- Added DB health machine-readable snapshot tool:
+  - [tools/db-health-check.mjs](tools/db-health-check.mjs):
+    - DB connectivity + query latency thresholding.
+    - backup freshness (`latest.json` age).
+    - orphan counters (`ExerciseSubmission`/`StudentGradeRecord` FK drift).
+    - incoming queue artifact counters + latest vacuum summary.
+    - writes status JSON used by health payload summary.
+- Replaced cron-first scheduling with systemd-first templates + installer:
+  - unit templates under [ops/systemd](ops/systemd)
+    - `sis-incoming-vacuum.service/.timer` (`03:17` daily)
+    - `sis-db-backup.service/.timer` (`02:30` daily)
+    - `sis-db-health.service/.timer` (every `15` minutes)
+  - installer:
+    - [tools/install-maintenance-systemd.sh](tools/install-maintenance-systemd.sh)
+  - cron installer kept as fallback with deprecation warning:
+    - [tools/install-incoming-vacuum-cron.sh](tools/install-incoming-vacuum-cron.sh)
+- Updated scripts/docs:
+  - [package.json](package.json):
+    - `db:health:check`
+    - `ops:maintenance:systemd:check`
+  - [README.md](README.md):
+    - dev-first install/verify commands,
+    - timer defaults,
+    - failure-response playbook,
+    - promotion checklist.
+
+## Update (2026-03-22 - live incoming-result disposition cleanup + scheduled vacuum job)
+
+- User requirement:
+  - resolve orphaned/unmatched incoming exercise results to a student when possible.
+  - if not matchable, delete the record.
+  - add periodic vacuum to clean artifacts/orphans/malformed rows and dump review lists.
+- Live disposition executed (runtime env):
+  - pre-check unmatched incoming count: `2`.
+  - one-off disposition run:
+    - resolved: `0`
+    - deleted: `2` (both no student match)
+  - post-check unmatched incoming count: `0`.
+- Added tooling:
+  - new [tools/vacuum-incoming-exercise-results.mjs](tools/vacuum-incoming-exercise-results.mjs):
+    - scans unresolved incoming queue rows (`queued`, `temporary`).
+    - classifies duplicates/malformed/unmatched rows.
+    - resolves to student when confidently matched (`eaglesId`, then unique email match).
+    - deletes per policy (`--delete-unmatched`, `--delete-malformed`) and purges old resolved/archived queue records.
+    - writes timestamped report JSON under `runtime-data/maintenance-reports/`.
+    - reports DB orphan signals for:
+      - dangling `ExerciseSubmission.studentRefId`,
+      - dangling `ExerciseSubmission.exerciseRefId`,
+      - dangling `StudentGradeRecord.studentRefId`.
+  - new cron installer [tools/install-incoming-vacuum-cron.sh](tools/install-incoming-vacuum-cron.sh):
+    - installs a daily cron entry (default `17 3 * * *`) to run the vacuum in apply mode.
+- Added npm scripts in [package.json](package.json):
+  - `db:incoming:vacuum`
+  - `ops:incoming:vacuum:cron:check`
+- Tests added:
+  - [test/vacuum-incoming-exercise-results.spec.mjs](test/vacuum-incoming-exercise-results.spec.mjs) for arg parsing, malformed detection, fingerprinting, and action classification.
+
+## Update (2026-03-22 - assignment-only tabulator headers with explicit grade source tagging + live auto-import purge)
+
+- User requirement:
+  - exclude standalone auto-import rows from tabulator header/column generation.
+  - tag grade row source explicitly (`assignment`, `manual`, `auto-import`) in API/store responses.
+  - run one-time live cleanup to remove current auto-import header-driving rows.
+- Updated runtime behavior:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - added grade source constants + `inferGradeRecordSource(...)`.
+    - `mapStudent(...)` now maps `gradeRecords` with explicit `source`.
+    - `saveGradeRecord(...)` returns mapped records with explicit `source`.
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+    - added grade source constants + `normalizeGradeRecordSource(...)`.
+    - flattening now keeps `source` in row state.
+    - non-`assignment` rows are excluded from tabulator matrix filtering (no header/column generation).
+    - score edit writeback now sends `source: "assignment"`.
+  - [tools/cleanup-auto-import-exercise-titles.mjs](tools/cleanup-auto-import-exercise-titles.mjs):
+    - added `--delete-all-auto-import` for one-off deletion mode.
+- Tests updated:
+  - [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs):
+    - added regression: auto-import standalone rows are excluded from assignment matrix metrics.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added contract assertions for store source tagging + tabulator assignment-only source filtering.
+- Verification:
+  - targeted: `node --test test/grades-tabulator-ui.spec.mjs test/student-admin.spec.mjs test/exercise-store.spec.mjs` => `133` pass, `0` fail.
+- Live DB one-time cleanup (runtime `.env`):
+  - dry-run with `--delete-all-auto-import`: `processedRows=47`.
+  - apply with `--delete-all-auto-import`: `deletedRows=47`.
+  - post-check: `rowsQ1=0`, `autoImportedRemaining=0`.
+- Deploy/sync:
+  - `./tools/deploy-api-safe.sh --force-sync` completed with local/edge route matrix pass.
+  - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+
+## Update (2026-03-22 - one-off DB cleanup tool added and executed for noisy auto-import exercise titles)
+
+- User request:
+  - clean/delete existing noisy auto-imported exercise title rows in DB and harden recurrence.
+- Added migration/cleanup tooling:
+  - new [tools/cleanup-auto-import-exercise-titles.mjs](tools/cleanup-auto-import-exercise-titles.mjs):
+    - targets `StudentGradeRecord` rows whose comments start with `Auto-imported exercise score`.
+    - canonicalizes noisy `assignmentName`/`className` (URL/query/hash/suffix/separator cleanup).
+    - supports dry-run and apply modes.
+    - supports optional duplicate deletion (`--delete-duplicates`) using canonical key grouping and deterministic best-row retention.
+  - new npm script in [package.json](package.json):
+    - `db:auto-import:cleanup-titles`
+- Execution in this session (`.env` loaded):
+  - dry-run:
+    - `processedRows: 47`
+    - `noisyRows: 0`
+    - `duplicateCandidates: 0`
+  - apply + delete duplicates:
+    - `updatedRows: 0`
+    - `deletedRows: 0`
+  - conclusion:
+    - there were no remaining noisy/duplicate auto-import rows to rewrite in current DB context.
+- Verification:
+  - `node --test test/exercise-store.spec.mjs test/student-admin.spec.mjs` => `122` pass, `0` fail.
+
+## Update (2026-03-22 - hardened noisy upstream pageTitle handling for auto-import exercise columns)
+
+- User-reported risk:
+  - inconsistent/noisy upstream `pageTitle` values can fragment auto-import exercise rows into unexpected tabulator columns.
+- Root cause:
+  - [server/exercise-store.mjs](server/exercise-store.mjs) and [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) previously used raw `pageTitle`/`assignmentName` text as-is for keying and labeling.
+- Updated runtime behavior:
+  - [server/exercise-store.mjs](server/exercise-store.mjs):
+    - added `canonicalizeExercisePageTitle(...)` during submission normalization.
+    - normalizes URL-encoded/noisy titles by stripping query/hash, html/php/aspx suffixes, and collapsing separators/whitespace before persisting auto-import grade rows.
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+    - added `canonicalizeStandaloneAutoImportedTitle(...)` and `normalizedAssignmentTitleForRow(...)`.
+    - standalone auto-import rows now use canonicalized titles for column keying and display, reducing legacy noisy-column fragmentation.
+- Tests updated:
+  - [test/exercise-store.spec.mjs](test/exercise-store.spec.mjs):
+    - added regression test that a URL-style noisy title canonicalizes to `Movers Unit 3` and stable slug `movers-unit-3`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added shipped-HTML contract assertions for new tabulator canonicalization helpers.
+
+## Update (2026-03-22 - normalized one-off unassigned exercise submissions to student-scoped tabulator cells)
+
+- User-reported issue:
+  - live tabulator displayed red `Not done` across class rows for exercise names that were never assigned class-wide.
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) keyed all exercise rows as class-wide columns and rendered missing cells as `Not done`, including auto-imported one-off submissions from `/api/exercise-submission`.
+- Updated runtime behavior:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+    - added `isStandaloneAutoImportedExerciseRow(...)` detection for auto-imported standalone submission rows.
+    - `assignmentKeyFromRow(...)` now appends a student scope suffix for standalone auto-import rows, so they stay student-specific.
+    - assignment cell renderer now shows blank cells for missing/uncompleted values instead of red `Not done`.
+    - completed scored cells still render with `ontime`/`late` status styling.
+  - operational effect:
+    - one-off unassigned submissions add only to the submitting student and are counted as an extra scored observation (`n+1`) in mean-style aggregations.
+- Tests updated:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added shipped-HTML contract assertions for:
+      - auto-import comment prefix wiring,
+      - standalone-row detector,
+      - student-scoped assignment-key suffix,
+      - blank-cell renderer for missing/uncompleted values.
+- Verification:
+  - baseline before edits: `npm test` => `287` pass, `0` fail.
+  - targeted after edits: `node --test test/grades-tabulator-ui.spec.mjs test/student-admin.spec.mjs` (run in this task).
+
+## Update (2026-03-22 - fixed live Q3 mislabels by wiring exercise auto-import quarter to School Setup SSOT and syncing runtime/public)
+
+- User-reported issue:
+  - live tabulator/grade rows for current school year were showing `quarter=q3` even though operations are in `q1`.
+- Root cause:
+  - [server/exercise-store.mjs](server/exercise-store.mjs) still labeled auto-imported grade rows with month-bucket fallback (`Feb-Apr => q3`) via `quarterFromDate(...)`.
+  - this ignored persisted School Setup quarter windows in `runtime-data/admin-ui-settings.json`.
+- Updated runtime behavior:
+  - [server/exercise-store.mjs](server/exercise-store.mjs):
+    - added School Setup quarter parsing from persisted UI settings (`schoolSetup.quarters`).
+    - added SSOT quarter resolution for timestamps in UTC+7 date semantics.
+    - `quarterFromDate(...)` now uses School Setup quarter windows first, then falls back to legacy month buckets only when SSOT data is unavailable.
+    - auto-imported grade record creation now passes resolved school-year into quarter resolution to keep school-year/quarter consistent.
+- Tests updated:
+  - [test/exercise-store.spec.mjs](test/exercise-store.spec.mjs):
+    - expanded school-setup auto-import test to include quarter windows and assert March `completedAt` resolves to `q1` (not `q3`).
+- Live data remediation:
+  - inspected live DB (`/home/admin.eagles.edu.vn/sis`) before fix:
+    - `StudentGradeRecord` for `schoolYear=2026-2027`: `48` rows all in `q3` (`47` auto-imported).
+  - applied one-time SSOT quarter relabel using current School Setup quarter windows:
+    - updated `48` rows from `q3 => q1`.
+  - verified after relabel:
+    - `StudentGradeRecord` for `schoolYear=2026-2027`: `48` rows in `q1`, `0` rows in `q3`.
+- Verification:
+  - targeted:
+    - `node --test test/exercise-store.spec.mjs` => `7` pass, `0` fail.
+    - `node --test test/exercise-store.spec.mjs test/exercise-mailer.spec.mjs` => `25` pass, `0` fail.
+  - full:
+    - `npm test` => `287` pass, `0` fail.
+  - deploy/sync:
+    - `./tools/deploy-api-safe.sh --check-only` initially showed drift (`server/exercise-store.mjs`).
+    - `./tools/deploy-api-safe.sh --force-sync` synced runtime + public mirrors and restarted service.
+    - post-sync parity:
+      - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+      - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+      - SHA256 parity confirmed for:
+        - `/home/eagles/dockerz/sis/server/exercise-store.mjs`
+        - `/home/admin.eagles.edu.vn/sis/server/exercise-store.mjs`
+        - `/home/eagles/dockerz/sis/web-asset/admin/grades-tabulator.html`
+        - `/home/admin.eagles.edu.vn/sis/web-asset/admin/grades-tabulator.html`
+        - `/home/admin.eagles.edu.vn/public_html/sis-admin/grades-tabulator.html`
+  - live UI probe:
+    - `https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html?period=sytd&schoolYear=all&quarter=q3`
+      shows `School year=2026-2027` and `Quarter=Q1` by default.
+
+## Update (2026-03-22 - fixed tabulator SYTD/Q3 drift, restored archive/all-year visibility, and synced runtime/public parity)
+
+- User-reported regressions:
+  - `SYTD` loaded with stale `quarter=q3` from query/preferences.
+  - historical results were inaccessible in tabulator.
+  - period controls were misleading because quarter state stayed stale in non-quarter modes.
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) had removed archive/all-year support and forced operational-year normalization globally.
+  - filtering had a hard lock to current school year for all periods.
+  - quarter preference logic preferred available stale quarter values (for example `q3`) over current SSOT quarter in non-quarter modes.
+- Updated runtime behavior:
+  - restored tabulator period `archive` button and parsing support.
+  - restored school-year `all` option in tabulator controls while keeping current school year as default for active (non-archive) flows.
+  - reintroduced archive filter semantics: archive excludes current school year and can show all prior years.
+  - removed global current-school-year hard lock and replaced with period-aware school-year filtering.
+  - hardened quarter state to reset to current SSOT quarter in non-quarter modes (`sytd`, `week`, `custom`, `archive`) so stale query `quarter=q3` does not persist visually.
+  - kept SSOT quarter coercion for `schoolYear=all` quarter/QTD query flows.
+- Tests updated:
+  - [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs):
+    - school-year select now asserts `all` option presence.
+    - archive test now verifies archive mode remains active and excludes current-year rows.
+    - added regression test: `sytd` query with `quarter=q3` resets to current SSOT quarter.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - tabulator HTML contract updated for restored archive/all-year controls and `normalizeSchoolYearFilter(...)`.
+- Verification:
+  - targeted: `node --test test/grades-tabulator-ui.spec.mjs test/student-admin.spec.mjs` => `124` pass, `0` fail.
+  - full: `npm test` => `287` pass, `0` fail.
+  - deploy/parity:
+    - `./tools/deploy-api-safe.sh --check-only` initially reported drift for `grades-tabulator.html` (runtime/public).
+    - `./tools/deploy-api-safe.sh --force-sync --no-restart` applied runtime/public sync.
+    - post-sync parity checks:
+      - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+      - `./tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+  - Playwright verification:
+    - `http://127.0.0.1:8787/web-asset/admin/grades-tabulator.html?period=sytd&schoolYear=all&quarter=q3` now loads with `quarter=Q1` (disabled in SYTD), archive button visible.
+    - `https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html?period=sytd&schoolYear=all&quarter=q3` (unauthenticated) now also shows `quarter=Q1`, archive button, and all-school-years option.
+
+## Update (2026-03-22 - continued regression mitigation: removed grade-chart archive/all-years mixing in student admin)
+
+- User requirement:
+  - archived school-year data must not intermingle with current-year live operations.
+  - remove `all years` behavior from active grade chart controls.
+  - archive review flow should be separate and deferred.
+- Root cause:
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) grade chart still exposed:
+    - `Archive` period button (`data-grade-chart-period="archive"`),
+    - `All school years` select option (`value="all"`),
+    - archive/all-years filtering branches in grade-chart state/filtering logic.
+- Updated runtime behavior:
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - removed grade-chart `Archive` period control from live UI.
+    - removed `All school years` school-year option from grade-chart control.
+    - introduced `normalizeGradeChartOperationalSchoolYear(...)` and normalized grade-chart school-year state to operational year semantics.
+    - removed archive-period branches in grade-chart filtering/summaries.
+    - updated tabulator-launch URL builder to use normalized operational school year.
+    - simplified grade-chart period click handler (no archive coercion path).
+    - school-year change handler now falls back to current school year, not `all`.
+- Updated tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - HTML contract now asserts no grade-chart archive period button and no `All school years` text.
+    - updated event-handler contract assertion for period-state patch.
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - added UI assertion that archive period control is absent.
+    - added UI assertion that grade-chart school-year select has no `all` option.
+- Verification:
+  - targeted:
+    - `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs` => `163` pass, `0` fail.
+  - full suite:
+    - `npm test` => `286` pass, `0` fail.
+- Deferred follow-up:
+  1. archive review remains deferred as a separate interface; current mitigation only removes archive/all-years behavior from active grade-chart operations.
+
+## Update (2026-03-22 - migrated legacy `2025-2026` labels to `2026-2027` and hardened exercise import year labeling)
+
+- User requirement:
+  - remove dev-era `2025-2026` artifacts and relabel all live school-year data to `2026-2027`.
+- Root cause:
+  - exercise auto-import records in [server/exercise-store.mjs](server/exercise-store.mjs) derived `schoolYear` from submission date; this can still produce `2025-2026` during 2026 calendar months.
+  - existing DB rows already persisted with `schoolYear = 2025-2026`.
+- Updated runtime behavior:
+  - [server/exercise-store.mjs](server/exercise-store.mjs):
+    - added current school-year resolution priority:
+      1. env override (`SIS_CURRENT_SCHOOL_YEAR`, `STUDENT_CURRENT_SCHOOL_YEAR`, `STUDENT_ADMIN_CURRENT_SCHOOL_YEAR`)
+      2. persisted admin UI settings file (`runtime-data/admin-ui-settings.json` or `STUDENT_ADMIN_UI_SETTINGS_FILE`)
+      3. fallback `DEFAULT_SYSTEM_SCHOOL_YEAR = 2026-2027`
+      4. date-derived fallback.
+    - exercise auto-import grade rows now use the resolved current school year (not date-only derivation).
+- Added migration tooling:
+  - new [tools/migrate-school-year-label.mjs](tools/migrate-school-year-label.mjs) (dry-run/apply):
+    - relabels `StudentAttendance`, `StudentGradeRecord`, and `ParentClassReport` from `2025-2026` to `2026-2027`.
+    - includes conflict detection for `ParentClassReport` unique-key collisions.
+    - updates UI settings `schoolSetup.schoolYear` when the settings file exists and matches source year.
+    - parent-report relabel uses raw SQL update to tolerate legacy DB schema drift (missing `updatedAt` column).
+  - added npm script:
+    - [package.json](package.json) `db:school-year:migrate-label`.
+- Docs/tests updates:
+  - updated examples and test fixtures to `2026-2027` where `2025-2026` was only a dev artifact:
+    - [README.md](README.md)
+    - [tools/school-year-rollover.mjs](tools/school-year-rollover.mjs)
+    - [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs)
+    - [test/student-admin.spec.mjs](test/student-admin.spec.mjs)
+    - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs)
+    - [test/school-year-rollover.spec.mjs](test/school-year-rollover.spec.mjs)
+  - added regression test in [test/exercise-store.spec.mjs](test/exercise-store.spec.mjs) to verify exercise import uses configured school-year.
+- Live migration execution (from this workspace shell with `.env` loaded):
+  - dry-run before apply:
+    - `StudentAttendance: 445`
+    - `StudentGradeRecord: 48`
+    - `ParentClassReport: 5`
+    - conflicts: `0`
+  - apply pass 1:
+    - attendance + grade relabel applied.
+    - parent-report relabel initially failed due legacy schema drift (`updatedAt` column missing).
+  - tool patched to raw SQL for parent-report relabel; apply pass 2 succeeded:
+    - `ParentClassReport: 5` relabeled.
+  - final dry-run after migration:
+    - all source-year counts are `0`.
+- Verification:
+  - targeted tests:
+    - `node --test test/exercise-store.spec.mjs test/grades-tabulator-ui.spec.mjs test/school-year-rollover.spec.mjs test/student-admin.spec.mjs test/parent-portal-ui.spec.mjs` => `146` pass, `0` fail.
+  - full suite:
+    - `npm test` => `285` pass, `0` fail.
+- Remaining gap / next action:
+  1. if deployment environments do not export `DATABASE_URL` in shell, run migration via `set -a; source .env; set +a; npm run db:school-year:migrate-label -- --apply`.
+
 ## Update (2026-03-21 - grade-chart school-year defaults to current year instead of all)
 
 - User requirement:
@@ -66,7 +452,7 @@
 ## Update (2026-03-21 - school-setup school-year now drives tabulator defaults)
 
 - User requirement:
-  - when School Setup is `2026-2027`, tabulator defaults must use that year (not date-derived `2025-2026`).
+  - when School Setup is `2026-2027`, tabulator defaults must use that year (not date-derived `2026-2027`).
 - Root cause:
   - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) resolved `SYSTEM_CURRENT_SCHOOL_YEAR` from query/date fallback only.
   - it ignored persisted `sis.admin.uiSettings.schoolSetup.schoolYear` and did not promote server settings after authenticated bootstrap.
@@ -107,9 +493,9 @@
   - live tabulator page (`https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html`) reported missing current school-year default.
 - Live verification:
   - direct live render check confirms current-year default is present:
-    - `schoolYear = 2025-2026`,
-    - options include `["all","2025-2026"]`.
-  - additional live check with explicit query override (`?period=quarter&schoolYear=all&quarter=q3`) now also resolves to current school year (`2025-2026`) on initial load.
+    - `schoolYear = 2026-2027`,
+    - options include `["all","2026-2027"]`.
+  - additional live check with explicit query override (`?period=quarter&schoolYear=all&quarter=q3`) now also resolves to current school year (`2026-2027`) on initial load.
 - Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
   - in `init()`, added a second pass `applyCurrentSchoolYearDefault()` immediately after `applyFilterQueryOverrides()`.
   - this prevents stale/bookmarked `schoolYear=all` query input from overriding the current school-year default during initial bootstrap.
@@ -292,8 +678,8 @@
     - `test/student-admin-ui.spec.mjs` subtest `attendance main defaults to absent and admin child shows per-student stats`
   - focused suite: `node --test test/student-admin.spec.mjs` => `113` pass, `0` fail.
   - jsdom smoke (unauthenticated path) confirms seeded control:
-    - `schoolYearValue: "2025-2026"`,
-    - options include `["all","2025-2026"]`,
+    - `schoolYearValue: "2026-2027"`,
+    - options include `["all","2026-2027"]`,
     - status line shows login-required message.
   - live wiring:
     - `./tools/deploy-api-safe.sh --force-sync --no-restart` completed with health and edge checks.
@@ -305,7 +691,7 @@
 
 - Root cause:
   - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) resolved `SYSTEM_CURRENT_SCHOOL_YEAR` from hardcoded fallback (`2026-2027`) before date-derived year.
-  - with current date in March 2026, default period `SYTD` filtered rows to `2026-2027`, excluding existing `2025-2026` grade records and producing empty exercise columns.
+  - with current date in March 2026, default period `SYTD` filtered rows to `2026-2027`, excluding existing `2026-2027` grade records and producing empty exercise columns.
 - Updated [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
   - `resolveSystemCurrentSchoolYear()` now prioritizes `schoolYearForIsoDate(TODAY_ISO)` before static fallback.
   - query param override (`?currentSchoolYear=` / `?schoolYear=`) remains highest priority.

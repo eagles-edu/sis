@@ -1,0 +1,10 @@
+[Unit]
+Description=Run SIS Database Health Snapshot Every 15 Minutes
+
+[Timer]
+OnCalendar={{HEALTH_SCHEDULE}}
+Persistent=true
+Unit=sis-db-health.service
+
+[Install]
+WantedBy=timers.target

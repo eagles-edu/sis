@@ -6084,12 +6084,6 @@ Select an assignment link to inspect details.</pre
                       <button
                         type="button"
                         class="grade-chart-period-btn"
-                        data-grade-chart-period="archive">
-                        Archive
-                      </button>
-                      <button
-                        type="button"
-                        class="grade-chart-period-btn"
                         data-grade-chart-period="custom">
                         Custom
                       </button>
@@ -6106,7 +6100,7 @@ Select an assignment link to inspect details.</pre
                       <div class="grade-chart-field">
                         <label for="gradeChartSchoolYear">School year scope</label>
                         <select id="gradeChartSchoolYear">
-                          <option value="all">All school years</option>
+                          <option value="2026-2027">2026-2027 (current)</option>
                         </select>
                       </div>
                       <div class="grade-chart-field">
@@ -7560,7 +7554,7 @@ Select an assignment link to inspect details.</pre
           period: "custom",
           groupBy: "class",
           quarter: "q1",
-          schoolYear: "all",
+          schoolYear: "",
           customFrom: "",
           customTo: "",
         },
@@ -20386,15 +20380,12 @@ Select an assignment link to inspect details.</pre
         if (normalized === "quarter") return "Quarter";
         if (normalized === "qtd") return "QTD";
         if (normalized === "sytd") return "SYTD";
-        if (normalized === "archive") return "Archive";
         return "Custom";
       }
 
       function normalizedGradeChartPeriod(value = "") {
         const normalized = normalizeLower(value);
-        if (
-          ["week", "quarter", "qtd", "sytd", "archive", "custom"].includes(normalized)
-        )
+        if (["week", "quarter", "qtd", "sytd", "custom"].includes(normalized))
           return normalized;
         return "custom";
       }
@@ -20433,6 +20424,12 @@ Select an assignment link to inspect details.</pre
         );
       }
 
+      function normalizeGradeChartOperationalSchoolYear(value = "") {
+        const normalized = normalizeText(value);
+        if (normalizeLower(normalized) === "all") return gradeChartCurrentSchoolYear();
+        return normalized || gradeChartCurrentSchoolYear();
+      }
+
       function normalizeGradeChartState(source = {}) {
         const next = source && typeof source === "object" ? source : {};
         const normalizedQuarter =
@@ -20446,15 +20443,12 @@ Select an assignment link to inspect details.</pre
           customFrom = customTo;
           customTo = swapped;
         }
-        const schoolYear =
-          normalizeLower(next.schoolYear) === "all" ? "all" : (
-            normalizeText(next.schoolYear)
-          );
+        const schoolYear = normalizeGradeChartOperationalSchoolYear(next.schoolYear);
         return {
           period: normalizedGradeChartPeriod(next.period),
           groupBy: normalizedGradeChartGroupBy(next.groupBy),
           quarter: normalizedQuarter,
-          schoolYear: schoolYear || "all",
+          schoolYear,
           customFrom,
           customTo,
         };
@@ -20476,10 +20470,10 @@ Select an assignment link to inspect details.</pre
 
       function applyGradeChartCurrentSchoolYearDefault() {
         const chart = gradeChartState();
-        if (normalizedGradeChartPeriod(chart.period) === "archive") return chart;
-        if (normalizeLower(chart.schoolYear) !== "all") return chart;
         const currentSchoolYear = normalizeText(gradeChartCurrentSchoolYear());
         if (!currentSchoolYear) return chart;
+        if (normalizeText(chart.schoolYear) === currentSchoolYear) return chart;
+        if (normalizeText(chart.schoolYear)) return chart;
         return setGradeChartState({ schoolYear: currentSchoolYear });
       }
 
@@ -20839,8 +20833,9 @@ Select an assignment link to inspect details.</pre
         const normalized = normalizeGradeChartState(chart);
         const todayIso = localIsoDate();
         const currentSchoolYear = gradeChartCurrentSchoolYear();
-        const selectedSchoolYear =
-          normalized.schoolYear === "all" ? "" : normalizeText(normalized.schoolYear);
+        const selectedSchoolYear = normalizeGradeChartOperationalSchoolYear(
+          normalized.schoolYear,
+        );
         let rangeStart = "";
         let rangeEnd = "";
 
@@ -20848,7 +20843,7 @@ Select an assignment link to inspect details.</pre
           rangeEnd = todayIso;
           rangeStart = isoDateOffset(todayIso, -6);
         } else if (normalized.period === "quarter" || normalized.period === "qtd") {
-          const targetSchoolYear = selectedSchoolYear || currentSchoolYear;
+          const targetSchoolYear = selectedSchoolYear;
           const quarterRange = gradeChartQuarterRange(
             normalized.quarter,
             targetSchoolYear,
@@ -20859,7 +20854,7 @@ Select an assignment link to inspect details.</pre
               normalizeText(quarterRange.endDate).slice(0, 10)
             : todayIso;
         } else if (normalized.period === "sytd") {
-          const targetSchoolYear = selectedSchoolYear || currentSchoolYear;
+          const targetSchoolYear = selectedSchoolYear;
           const schoolYearRange = gradeChartSchoolYearRange(targetSchoolYear);
           rangeStart = normalizeText(schoolYearRange.startDate).slice(0, 10);
           rangeEnd =
@@ -20879,17 +20874,7 @@ Select an assignment link to inspect details.</pre
 
         const filteredRows = source.filter((row) => {
           const rowSchoolYear = gradeRecordSchoolYear(row);
-          if (normalized.period === "archive") {
-            if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false;
-            if (selectedSchoolYear && rowSchoolYear !== selectedSchoolYear)
-              return false;
-            return true;
-          }
-          if (
-            selectedSchoolYear &&
-            rowSchoolYear &&
-            rowSchoolYear !== selectedSchoolYear
-          )
+          if (selectedSchoolYear && rowSchoolYear && rowSchoolYear !== selectedSchoolYear)
             return false;
           if (!rangeStart && !rangeEnd) return true;
           const rowDate = gradeRecordPrimaryIsoDate(row);
@@ -20903,7 +20888,7 @@ Select an assignment link to inspect details.</pre
           rows: filteredRows,
           rangeStart,
           rangeEnd,
-          selectedSchoolYear: selectedSchoolYear || "all",
+          selectedSchoolYear,
           currentSchoolYear,
           period: normalized.period,
         };
@@ -20937,7 +20922,7 @@ Select an assignment link to inspect details.</pre
         if (schoolYearEl) {
           const currentSchoolYear = gradeChartCurrentSchoolYear();
           const optionValues = gradeChartSchoolYearOptionValues(sourceRows);
-          schoolYearEl.innerHTML = '<option value="all">All school years</option>';
+          schoolYearEl.innerHTML = "";
           optionValues.forEach((schoolYear) => {
             const option = document.createElement("option");
             option.value = schoolYear;
@@ -20945,8 +20930,8 @@ Select an assignment link to inspect details.</pre
               schoolYear === currentSchoolYear ? `${schoolYear} (current)` : schoolYear;
             schoolYearEl.appendChild(option);
           });
-          if (chart.schoolYear !== "all" && !optionValues.includes(chart.schoolYear)) {
-            setGradeChartState({ schoolYear: "all" });
+          if (!optionValues.includes(chart.schoolYear)) {
+            setGradeChartState({ schoolYear: currentSchoolYear });
           }
           schoolYearEl.value = gradeChartState().schoolYear;
         }
@@ -21046,12 +21031,9 @@ Select an assignment link to inspect details.</pre
 
         const periodLabel = gradeChartPeriodLabel(filtered.period);
         const groupLabel = gradeChartGroupLabel(chart.groupBy);
-        const schoolYearLabel =
-          chart.schoolYear === "all" ? "All school years" : chart.schoolYear;
+        const schoolYearLabel = chart.schoolYear;
         const rangeLabel =
-          filtered.period === "archive" ?
-            `Past years only (current ${filtered.currentSchoolYear})`
-          : filtered.rangeStart || filtered.rangeEnd ?
+          filtered.rangeStart || filtered.rangeEnd ?
             `${filtered.rangeStart || "..."} to ${filtered.rangeEnd || "..."}`
           : "All dates";
 
@@ -26616,10 +26598,9 @@ Select an assignment link to inspect details.</pre
       function buildGradesTabulatorLaunchUrl() {
         const chart = gradeChartState();
         const currentSchoolYear = normalizeText(gradeChartCurrentSchoolYear());
-        const selectedSchoolYear =
-          normalizeLower(chart.schoolYear) === "all"
-            ? currentSchoolYear
-            : normalizeText(chart.schoolYear);
+        const selectedSchoolYear = normalizeGradeChartOperationalSchoolYear(
+          chart.schoolYear,
+        );
         const selectedQuarter =
           quarterKey(chart.quarter) || quarterKey(quarterFromIsoDate(localIsoDate())) || "q1";
         const selectedPeriod = normalizedGradeChartPeriod(chart.period);
@@ -26681,14 +26662,7 @@ Select an assignment link to inspect details.</pre
           const period = normalizedGradeChartPeriod(
             buttonEl.getAttribute("data-grade-chart-period"),
           );
-          const patch = { period };
-          if (
-            period === "archive" &&
-            gradeChartState().schoolYear === gradeChartCurrentSchoolYear()
-          ) {
-            patch.schoolYear = "all";
-          }
-          setGradeChartState(patch);
+          setGradeChartState({ period });
           applyGradeChartCurrentSchoolYearDefault();
           renderGradePulseChart(state.visibleTableRows?.grades || []);
         });
@@ -26708,7 +26682,9 @@ Select an assignment link to inspect details.</pre
         .getElementById("gradeChartSchoolYear")
         ?.addEventListener("change", () => {
           setGradeChartState({
-            schoolYear: document.getElementById("gradeChartSchoolYear")?.value || "all",
+            schoolYear:
+              document.getElementById("gradeChartSchoolYear")?.value ||
+              gradeChartCurrentSchoolYear(),
           });
           renderGradePulseChart(state.visibleTableRows?.grades || []);
         });

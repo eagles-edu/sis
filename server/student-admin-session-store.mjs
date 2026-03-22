@@ -17,6 +17,47 @@ function toPositiveInt(value, fallback) {
   return fallback
 }
 
+function createStatusError(message, statusCode = 500, cause = null) {
+  const error = new Error(message)
+  error.statusCode = statusCode
+  if (cause) error.cause = cause
+  return error
+}
+
+function stringifyError(error) {
+  if (!error) return ""
+  const message = normalizeText(error?.message || error)
+  if (message) return message
+  return "unknown-error"
+}
+
+function nowIsoString() {
+  return new Date().toISOString()
+}
+
+function isRedisClientReady(client) {
+  if (!client || typeof client !== "object") return false
+  if (typeof client.isReady === "boolean") return client.isReady
+  if (typeof client.isOpen === "boolean") return client.isOpen
+  return true
+}
+
+function isRedisAvailabilityError(error) {
+  const message = normalizeLower(error?.message || error)
+  if (!message) return false
+  return (
+    message.includes("redis-not-connected") ||
+    message.includes("connection is closed") ||
+    message.includes("socket closed") ||
+    message.includes("econnrefused") ||
+    message.includes("ecconnrefused") ||
+    message.includes("econnreset") ||
+    message.includes("nr_closed") ||
+    message.includes("the client is closed") ||
+    message.includes("socket hang up")
+  )
+}
+
 function makeSessionPayload(id, principal, ttlSeconds) {
   const now = Math.floor(Date.now() / 1000)
   const expiresAt = now + ttlSeconds
@@ -105,6 +146,15 @@ function createMemoryStore(ttlSeconds) {
 
   return {
     driver: "memory",
+    getRuntimeStatus() {
+      return {
+        redisConnected: false,
+        redisReady: false,
+        lastRedisError: "",
+        lastReconnectAt: "",
+        reconnectAttempts: 0,
+      }
+    },
     createSession,
     getSession,
     touchSession,
@@ -125,32 +175,92 @@ function createRedisBackedStore({
   let redisClient = null
   let redisConnectPromise = null
   let usingFallback = false
+  const runtimeStatus = {
+    redisConnected: false,
+    redisReady: false,
+    lastRedisError: "",
+    lastReconnectAt: "",
+    reconnectAttempts: 0,
+  }
 
   const keyFor = (id) => `${keyPrefix}${id}`
 
+  function markRedisError(error) {
+    runtimeStatus.lastRedisError = stringifyError(error)
+    runtimeStatus.redisConnected = false
+    runtimeStatus.redisReady = false
+  }
+
+  function markRedisReady(client) {
+    runtimeStatus.redisConnected = true
+    runtimeStatus.redisReady = isRedisClientReady(client)
+    runtimeStatus.lastRedisError = ""
+  }
+
+  function markRedisReconnectAttempt() {
+    runtimeStatus.reconnectAttempts += 1
+    runtimeStatus.lastReconnectAt = nowIsoString()
+    runtimeStatus.redisConnected = false
+    runtimeStatus.redisReady = false
+  }
+
+  function createRedisUnavailableError(error, operation = "redis session operation") {
+    const message = `Redis session store unavailable during ${operation}: ${stringifyError(error)}`
+    return createStatusError(message, 503, error)
+  }
+
+  function bindRedisClientEvents(client) {
+    if (!client || typeof client.on !== "function") return
+    client.on("error", (error) => {
+      markRedisError(error)
+      if (!required) {
+        console.warn(`student-admin session redis error: ${stringifyError(error)}`)
+      }
+    })
+    client.on("ready", () => {
+      markRedisReady(client)
+    })
+    client.on("end", () => {
+      runtimeStatus.redisConnected = false
+      runtimeStatus.redisReady = false
+    })
+    client.on("reconnecting", () => {
+      markRedisReconnectAttempt()
+    })
+  }
+
   async function ensureRedisClient() {
     if (usingFallback) return null
-    if (redisClient) return redisClient
+    if (redisClient && isRedisClientReady(redisClient)) return redisClient
+    if (redisClient && !isRedisClientReady(redisClient)) {
+      redisClient = null
+      if (required) markRedisReconnectAttempt()
+    }
     if (redisConnectPromise) return redisConnectPromise
 
     redisConnectPromise = (async () => {
       try {
+        if (required) {
+          markRedisReconnectAttempt()
+        }
         const client = await createRedisClient(redisUrl, redisConnectTimeoutMs)
         if (!client || typeof client.connect !== "function") {
           throw new Error("Redis client factory returned an invalid client")
         }
-        if (typeof client.on === "function") {
-          client.on("error", (error) => {
-            if (!required) {
-              console.warn(`student-admin session redis error: ${error.message}`)
-            }
-          })
-        }
+        bindRedisClientEvents(client)
         await client.connect()
         redisClient = client
+        markRedisReady(client)
         return client
       } catch (error) {
-        if (required) throw error
+        markRedisError(error)
+        if (required) {
+          throw createStatusError(
+            `Redis session store unavailable during connect: ${stringifyError(error)}`,
+            503,
+            error,
+          )
+        }
         console.warn(`student-admin session store falling back to memory: ${error.message}`)
         usingFallback = true
         return null
@@ -176,6 +286,8 @@ function createRedisBackedStore({
 
     redisClient = null
     redisConnectPromise = null
+    runtimeStatus.redisConnected = false
+    runtimeStatus.redisReady = false
 
     if (!client) return
 
@@ -197,59 +309,112 @@ function createRedisBackedStore({
     }
   }
 
+  async function executeRedisOperation(operationName, operation, fallbackOperation) {
+    const useFallback = typeof fallbackOperation === "function"
+
+    const run = async () => {
+      const client = await ensureRedisClient()
+      if (!client) {
+        if (useFallback) return fallbackOperation()
+        return null
+      }
+      return operation(client)
+    }
+
+    try {
+      return await run()
+    } catch (error) {
+      if (!isRedisAvailabilityError(error)) throw error
+      markRedisError(error)
+      redisClient = null
+
+      try {
+        return await run()
+      } catch (retryError) {
+        markRedisError(retryError)
+        redisClient = null
+        if (!required && useFallback) {
+          usingFallback = true
+          return fallbackOperation()
+        }
+        throw createRedisUnavailableError(retryError, operationName)
+      }
+    }
+  }
+
   async function createSession(principal) {
     const sessionId = crypto.randomBytes(32).toString("base64url")
     const session = makeSessionPayload(sessionId, principal, ttlSeconds)
-    const client = await ensureRedisClient()
-
-    if (!client) return fallbackStore.createSession(principal)
-
-    await client.set(keyFor(sessionId), JSON.stringify(session), { EX: ttlSeconds })
-    return session
+    return executeRedisOperation(
+      "createSession",
+      async (client) => {
+        await client.set(keyFor(sessionId), JSON.stringify(session), { EX: ttlSeconds })
+        return session
+      },
+      () => fallbackStore.createSession(principal),
+    )
   }
 
   async function getSession(sessionId) {
     const id = normalizeText(sessionId)
     if (!id) return null
-    const client = await ensureRedisClient()
-    if (!client) return fallbackStore.getSession(id)
-
-    const raw = await client.get(keyFor(id))
-    return parseSessionJson(raw)
+    return executeRedisOperation(
+      "getSession",
+      async (client) => {
+        const raw = await client.get(keyFor(id))
+        return parseSessionJson(raw)
+      },
+      () => fallbackStore.getSession(id),
+    )
   }
 
   async function touchSession(sessionId) {
     const id = normalizeText(sessionId)
     if (!id) return null
-    const client = await ensureRedisClient()
-    if (!client) return fallbackStore.touchSession(id)
-
-    const raw = await client.get(keyFor(id))
-    const existing = parseSessionJson(raw)
-    if (!existing) return null
-    const now = Math.floor(Date.now() / 1000)
-    const updated = {
-      ...existing,
-      updatedAt: now,
-      expiresAt: now + ttlSeconds,
-    }
-    await client.set(keyFor(id), JSON.stringify(updated), { EX: ttlSeconds })
-    return updated
+    return executeRedisOperation(
+      "touchSession",
+      async (client) => {
+        const raw = await client.get(keyFor(id))
+        const existing = parseSessionJson(raw)
+        if (!existing) return null
+        const now = Math.floor(Date.now() / 1000)
+        const updated = {
+          ...existing,
+          updatedAt: now,
+          expiresAt: now + ttlSeconds,
+        }
+        await client.set(keyFor(id), JSON.stringify(updated), { EX: ttlSeconds })
+        return updated
+      },
+      () => fallbackStore.touchSession(id),
+    )
   }
 
   async function deleteSession(sessionId) {
     const id = normalizeText(sessionId)
     if (!id) return false
-    const client = await ensureRedisClient()
-    if (!client) return fallbackStore.deleteSession(id)
-
-    const count = await client.del(keyFor(id))
-    return count > 0
+    return executeRedisOperation(
+      "deleteSession",
+      async (client) => {
+        const count = await client.del(keyFor(id))
+        return count > 0
+      },
+      () => fallbackStore.deleteSession(id),
+    )
   }
 
   return {
     get driver() {
       return usingFallback ? "memory" : "redis"
+    },
+    getRuntimeStatus() {
+      return {
+        redisConnected: runtimeStatus.redisConnected,
+        redisReady: runtimeStatus.redisReady,
+        lastRedisError: runtimeStatus.lastRedisError,
+        lastReconnectAt: runtimeStatus.lastReconnectAt,
+        reconnectAttempts: runtimeStatus.reconnectAttempts,
+      }
     },
     createSession,
     getSession,
@@ -265,6 +430,11 @@ function defaultCreateRedisClient(redisUrl, connectTimeoutMs) {
       url: redisUrl,
       socket: {
         connectTimeout: connectTimeoutMs,
+        reconnectStrategy(retries) {
+          const jitter = Math.floor(Math.random() * 100)
+          const delay = Math.min((2 ** retries) * 50, 3000)
+          return delay + jitter
+        },
       },
     })
   )

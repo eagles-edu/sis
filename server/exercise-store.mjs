@@ -1,5 +1,8 @@
 // server/exercise-store.mjs
 
+import fs from "node:fs"
+import path from "node:path"
+
 import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
 
 export const INCOMING_EXERCISE_RESULT_STATUS_QUEUED = "queued"
@@ -17,6 +20,19 @@ const INCOMING_DUPLICATE_COMPLETED_AT_WINDOW_MS = 1500
 const INCOMING_DUPLICATE_CREATED_AT_LOOKBACK_MS = 5 * 60 * 1000
 const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "Auto-imported exercise score"
 const FIXED_TIME_ZONE_OFFSET_MS = 7 * 60 * 60 * 1000
+const DEFAULT_SYSTEM_SCHOOL_YEAR = "2026-2027"
+const SCHOOL_YEAR_OVERRIDE_ENV_KEYS = [
+  "SIS_CURRENT_SCHOOL_YEAR",
+  "STUDENT_CURRENT_SCHOOL_YEAR",
+  "STUDENT_ADMIN_CURRENT_SCHOOL_YEAR",
+]
+
+let cachedUiSettingsSchoolYear = {
+  filePath: "",
+  mtimeMs: -1,
+  schoolYear: "",
+  quarters: [],
+}
 
 function resolveBoolean(value, fallback) {
   if (value === undefined || value === null || value === "") return fallback
@@ -38,6 +54,50 @@ function normalizeString(value) {
 
 function normalizeLower(value) {
   return normalizeString(value).toLowerCase()
+}
+
+function normalizeQuarterCode(value) {
+  const normalized = normalizeLower(value)
+  if (normalized === "q1" || normalized === "q2" || normalized === "q3" || normalized === "q4") {
+    return normalized
+  }
+  return ""
+}
+
+function isoDateKeyFromFixedTimeZone(value = new Date()) {
+  const date = value instanceof Date ? value : parseCompletedAt(value)
+  if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
+  const shifted = shiftToFixedTimeZone(date)
+  return shifted.toISOString().slice(0, 10)
+}
+
+function normalizeIsoDateKey(value) {
+  const raw = normalizeString(value)
+  if (!raw) return ""
+  const match = raw.match(/^([0-9]{4}-[0-9]{2}-[0-9]{2})/)
+  if (!match || !match[1]) return ""
+  const parsed = new Date(`${match[1]}T00:00:00.000Z`)
+  if (Number.isNaN(parsed.valueOf())) return ""
+  return match[1]
+}
+
+function normalizeSchoolSetupQuarters(value) {
+  const entries = Array.isArray(value) ? value : []
+  const normalized = []
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index]
+    const quarter = normalizeQuarterCode(entry?.quarter)
+    const startDate = normalizeIsoDateKey(entry?.startDate)
+    const endDate = normalizeIsoDateKey(entry?.endDate)
+    if (!quarter || !startDate || !endDate) continue
+    if (startDate > endDate) continue
+    normalized.push({ quarter, startDate, endDate })
+  }
+  return normalized
+}
+
+function isSchoolYearLabel(value) {
+  return /^[0-9]{4}-[0-9]{4}$/u.test(normalizeString(value))
 }
 
 function createStatusError(message, statusCode) {
@@ -107,6 +167,94 @@ function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+function resolveSchoolYearFromEnv() {
+  for (let index = 0; index < SCHOOL_YEAR_OVERRIDE_ENV_KEYS.length; index += 1) {
+    const key = SCHOOL_YEAR_OVERRIDE_ENV_KEYS[index]
+    const value = normalizeString(process.env[key])
+    if (isSchoolYearLabel(value)) return value
+  }
+  return ""
+}
+
+function resolveUiSettingsFilePath() {
+  return path.resolve(
+    process.cwd(),
+    normalizeString(process.env.STUDENT_ADMIN_UI_SETTINGS_FILE) || "runtime-data/admin-ui-settings.json"
+  )
+}
+
+function schoolSetupFromUiSettingsPayload(payload = {}) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return {
+      schoolYear: "",
+      quarters: [],
+    }
+  }
+  const wrapped = payload?.uiSettings && typeof payload.uiSettings === "object" ? payload.uiSettings : payload
+  const candidate = normalizeString(wrapped?.schoolSetup?.schoolYear)
+  return {
+    schoolYear: isSchoolYearLabel(candidate) ? candidate : "",
+    quarters: normalizeSchoolSetupQuarters(wrapped?.schoolSetup?.quarters),
+  }
+}
+
+function readSchoolSetupFromUiSettingsFile() {
+  const filePath = resolveUiSettingsFilePath()
+  let stat
+  try {
+    stat = fs.statSync(filePath)
+  } catch {
+    cachedUiSettingsSchoolYear = {
+      filePath,
+      mtimeMs: -1,
+      schoolYear: "",
+      quarters: [],
+    }
+    return { schoolYear: "", quarters: [] }
+  }
+
+  const mtimeMs = Number.isFinite(stat?.mtimeMs) ? stat.mtimeMs : -1
+  if (
+    cachedUiSettingsSchoolYear.filePath === filePath
+    && cachedUiSettingsSchoolYear.mtimeMs === mtimeMs
+  ) {
+    return {
+      schoolYear: cachedUiSettingsSchoolYear.schoolYear,
+      quarters: Array.isArray(cachedUiSettingsSchoolYear.quarters)
+        ? [...cachedUiSettingsSchoolYear.quarters]
+        : [],
+    }
+  }
+
+  let schoolSetup = {
+    schoolYear: "",
+    quarters: [],
+  }
+  try {
+    const raw = fs.readFileSync(filePath, "utf8")
+    if (normalizeString(raw)) {
+      const parsed = JSON.parse(raw)
+      schoolSetup = schoolSetupFromUiSettingsPayload(parsed)
+    }
+  } catch {
+    schoolSetup = {
+      schoolYear: "",
+      quarters: [],
+    }
+  }
+
+  cachedUiSettingsSchoolYear = {
+    filePath,
+    mtimeMs,
+    schoolYear: schoolSetup.schoolYear,
+    quarters: Array.isArray(schoolSetup.quarters) ? [...schoolSetup.quarters] : [],
+  }
+  return {
+    schoolYear: schoolSetup.schoolYear,
+    quarters: Array.isArray(schoolSetup.quarters) ? [...schoolSetup.quarters] : [],
+  }
+}
+
 function schoolYearFromDate(value = new Date()) {
   const date = value instanceof Date ? value : parseCompletedAt(value)
   const shifted = shiftToFixedTimeZone(date)
@@ -116,7 +264,41 @@ function schoolYearFromDate(value = new Date()) {
   return `${year - 1}-${year}`
 }
 
-function quarterFromDate(value = new Date()) {
+function resolveCurrentSchoolYear(value = new Date()) {
+  const fromEnv = resolveSchoolYearFromEnv()
+  if (fromEnv) return fromEnv
+  const fromUiSettings = readSchoolSetupFromUiSettingsFile().schoolYear
+  if (fromUiSettings) return fromUiSettings
+  if (isSchoolYearLabel(DEFAULT_SYSTEM_SCHOOL_YEAR)) return DEFAULT_SYSTEM_SCHOOL_YEAR
+  return schoolYearFromDate(value)
+}
+
+function schoolSetupQuarterForDate(value = new Date(), schoolYear = "") {
+  const setup = readSchoolSetupFromUiSettingsFile()
+  const setupYear = normalizeString(setup?.schoolYear)
+  const requestedSchoolYear = normalizeString(schoolYear)
+  if (
+    requestedSchoolYear
+    && setupYear
+    && requestedSchoolYear !== setupYear
+  ) {
+    return ""
+  }
+  const dateKey = isoDateKeyFromFixedTimeZone(value)
+  if (!dateKey) return ""
+  const quarters = Array.isArray(setup?.quarters) ? setup.quarters : []
+  for (let index = 0; index < quarters.length; index += 1) {
+    const entry = quarters[index]
+    if (dateKey < entry.startDate || dateKey > entry.endDate) continue
+    const quarter = normalizeQuarterCode(entry.quarter)
+    if (quarter) return quarter
+  }
+  return ""
+}
+
+function quarterFromDate(value = new Date(), schoolYear = "") {
+  const schoolSetupQuarter = schoolSetupQuarterForDate(value, schoolYear)
+  if (schoolSetupQuarter) return schoolSetupQuarter
   const date = value instanceof Date ? value : parseCompletedAt(value)
   const shifted = shiftToFixedTimeZone(date)
   const month = shifted.getUTCMonth() + 1
@@ -249,10 +431,48 @@ function normalizeAnswers(value) {
   })
 }
 
+function canonicalizeExercisePageTitle(value) {
+  let title = normalizeString(value)
+  if (!title) return ""
+
+  try {
+    if (/%[0-9a-f]{2}/iu.test(title)) {
+      const decoded = decodeURIComponent(title)
+      if (normalizeString(decoded)) title = normalizeString(decoded)
+    }
+  } catch {
+    // keep original title when URI decode fails
+  }
+
+  if (/^https?:\/\//iu.test(title)) {
+    try {
+      const parsed = new URL(title)
+      const segments = parsed.pathname
+        .split("/")
+        .map((entry) => normalizeString(entry))
+        .filter(Boolean)
+      const lastSegment = segments.length ? segments[segments.length - 1] : ""
+      if (lastSegment) title = lastSegment
+    } catch {
+      // keep original title when URL parse fails
+    }
+  }
+
+  title = title
+    .replace(/[?#].*$/u, "")
+    .replace(/\.(?:html?|php|aspx?)$/iu, "")
+    .replace(/[-_]+/gu, " ")
+    .replace(/\s+\|\s+(?:id|sid|ref|session|attempt|timestamp|time|date)\s*[:=#-].*$/iu, "")
+    .replace(/\s+/gu, " ")
+    .trim()
+
+  return normalizeString(title)
+}
+
 function normalizeSubmissionPayload(payload = {}) {
   const submittedStudentId = normalizeString(payload?.studentId)
   const submittedEmail = normalizeLower(payload?.email)
-  const pageTitle = normalizeString(payload?.pageTitle) || "Untitled exercise"
+  const pageTitle = canonicalizeExercisePageTitle(payload?.pageTitle) || "Untitled exercise"
   const completedAt = parseCompletedAt(payload?.completedAt)
   const recipientsJson = normalizeRecipients(payload?.recipients)
   const answersJson = normalizeAnswers(payload?.answers)
@@ -467,12 +687,13 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     ? `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX} (${correctCount}/${totalQuestions} correct).`
     : `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX}.`
 
+  const schoolYear = resolveCurrentSchoolYear(completedAt)
   return {
     studentRefId: student.id,
     className,
     level: gradeLevel || null,
-    schoolYear: schoolYearFromDate(completedAt),
-    quarter: quarterFromDate(completedAt),
+    schoolYear,
+    quarter: quarterFromDate(completedAt, schoolYear),
     assignmentName: className,
     dueAt: completedAt,
     submittedAt: completedAt,

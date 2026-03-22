@@ -7,19 +7,18 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 RUNTIME_ROOT="${RUNTIME_ROOT:-/home/eagles/dockerz/megs}"
 SERVICE_NAME="${SERVICE_NAME:-exercise-mailer.service}"
-MAILER_PORT="${MAILER_PORT:-8787}"
 RESTART_SERVICE=1
 MODE="sync"
 SCOPE="full"
 RUN_HEALTH_CHECK=1
 PINNED_MAILER_HOST="${PINNED_MAILER_HOST:-127.0.0.1}"
-PINNED_MAILER_PORT="${PINNED_MAILER_PORT:-8787}"
+PINNED_MAILER_PORT="8787"
 PINNED_ADMIN_STORE_ENABLED="${PINNED_ADMIN_STORE_ENABLED:-true}"
 PINNED_STATIC_PREVIEW_ORIGIN="${PINNED_STATIC_PREVIEW_ORIGIN:-http://127.0.0.1:5500}"
 PINNED_RUNTIME_PRIMARY_ORIGIN="${PINNED_RUNTIME_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
 STRIP_STATIC_PREVIEW_ORIGIN="${STRIP_STATIC_PREVIEW_ORIGIN:-true}"
 CURL_BROWSER_USER_AGENT="${CURL_BROWSER_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36}"
-LOCAL_ROUTE_CHECK_MATRIX="${LOCAL_ROUTE_CHECK_MATRIX:-http://127.0.0.1:${MAILER_PORT}/healthz|200;http://127.0.0.1:${MAILER_PORT}/api/admin/auth/me|401;http://127.0.0.1:${MAILER_PORT}/api/parent/auth/me|401;http://127.0.0.1:${MAILER_PORT}/api/student/auth/me|401;http://127.0.0.1:${MAILER_PORT}/admin/students?page=grades-data|200;http://127.0.0.1:${MAILER_PORT}/web-asset/admin/grades-tabulator.html|200;http://127.0.0.1:${MAILER_PORT}/parent/portal|200;http://127.0.0.1:${MAILER_PORT}/student/portal|200}"
+LOCAL_ROUTE_CHECK_MATRIX="http://127.0.0.1:${PINNED_MAILER_PORT}/healthz|200;http://127.0.0.1:${PINNED_MAILER_PORT}/api/admin/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/api/parent/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/api/student/auth/me|401;http://127.0.0.1:${PINNED_MAILER_PORT}/admin/students?page=grades-data|200;http://127.0.0.1:${PINNED_MAILER_PORT}/web-asset/admin/grades-tabulator.html|200;http://127.0.0.1:${PINNED_MAILER_PORT}/parent/portal|200;http://127.0.0.1:${PINNED_MAILER_PORT}/student/portal|200"
 EDGE_HTTPS_CHECK_URL="${EDGE_HTTPS_CHECK_URL:-}"
 EDGE_HTTPS_CHECK_EXPECTED_CODE="${EDGE_HTTPS_CHECK_EXPECTED_CODE:-200}"
 EDGE_HTTPS_CHECK_MATRIX="${EDGE_HTTPS_CHECK_MATRIX:-https://admin.eagles.edu.vn/admin/students?page=grades-data|200;https://admin.eagles.edu.vn/web-asset/admin/grades-tabulator.html|200;https://admin.eagles.edu.vn/parent/portal|200;https://admin.eagles.edu.vn/student/portal|200}"
@@ -46,7 +45,6 @@ Scopes:
 Options:
   --runtime-root PATH  Runtime root (default: /home/eagles/dockerz/megs)
   --service NAME       systemd service name (default: exercise-mailer.service)
-  --mailer-port PORT   Mailer port for post-sync checks (default: 8787)
   --no-restart         Do not restart service after sync.
   --skip-health-check  Skip local and edge route matrix checks.
   -h, --help           Show this help text.
@@ -62,7 +60,7 @@ Optional HTTPS verification env:
   EDGE_HTTPS_CHECK_URL (overrides matrix when set, format: full URL)
   EDGE_HTTPS_CHECK_EXPECTED_CODE (default: 200)
   EDGE_HTTPS_CHECK_MATRIX (default: admin + tabulator + parent + student routes)
-  LOCAL_ROUTE_CHECK_MATRIX (default: health/auth + admin/tabulator + parent + student routes)
+  Local route matrix is fixed to port 8787 (health/auth + admin/tabulator + parent + student routes)
   CURL_BROWSER_USER_AGENT (default: Chrome-like UA to bypass bot-deny edge rules)
 
 Examples:
@@ -504,10 +502,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --service)
       SERVICE_NAME="$2"
-      shift 2
-      ;;
-    --mailer-port)
-      MAILER_PORT="$2"
       shift 2
       ;;
     --scope)

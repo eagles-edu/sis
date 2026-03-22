@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
-  <title>SIS Grades Tabulator</title>
+  <title>The Eagles Club SIS Grades Table</title>
   <link rel="stylesheet" href="../vendor/tabulatorz/tabulator.min.css">
   <style>
     :root {
@@ -1298,7 +1299,7 @@
         },
         filters: {
           period: "sytd",
-          schoolYear: "all",
+          schoolYear: "",
           quarter: "q1",
           classKey: "all",
           studentKey: "all",
@@ -1327,6 +1328,10 @@
       const TABLE_UI_STATE_KEY = "sis.grades-tabulator.table-state.v1"
       const LEGACY_TABLE_UI_STATE_KEY = "sis.grades-tabulator-dev.table-state.v1"
       const TABLE_UI_STATE_SCHEMA_VERSION = 2
+      const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"
+      const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment"
+      const GRADE_RECORD_SOURCE_MANUAL = "manual"
+      const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"
       const TABLE_HEIGHT_MIN_PX = 320
       const TABLE_HEIGHT_MAX_PX = 1400
       const DISTRIBUTION_ZOOM_MIN = 1
@@ -1340,6 +1345,18 @@
 
       function normalizeLower(value) {
         return normalizeText(value).toLowerCase()
+      }
+
+      function normalizeGradeRecordSource(value) {
+        const source = normalizeLower(value)
+        if (
+          source === GRADE_RECORD_SOURCE_ASSIGNMENT
+          || source === GRADE_RECORD_SOURCE_MANUAL
+          || source === GRADE_RECORD_SOURCE_AUTO_IMPORT
+        ) {
+          return source
+        }
+        return ""
       }
 
       function tableHostElement() {
@@ -2544,11 +2561,28 @@
         return "sytd"
       }
 
+      function currentOperationalSchoolYear() {
+        return normalizeText(SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO))
+      }
+
+      function normalizeSchoolYearFilter(value) {
+        const normalized = normalizeText(value)
+        if (normalizeLower(normalized) === "all") return "all"
+        if (isSchoolYearKey(normalized)) return normalized
+        return currentOperationalSchoolYear()
+      }
+
+      function normalizeOperationalSchoolYear(value) {
+        const normalized = normalizeText(value)
+        if (isSchoolYearKey(normalized)) return normalized
+        return currentOperationalSchoolYear()
+      }
+
       function normalizedFiltersSnapshot(source = {}) {
         const input = source && typeof source === "object" ? source : {}
         return {
           period: normalizePeriodCode(input.period),
-          schoolYear: normalizeText(input.schoolYear) || SYSTEM_CURRENT_SCHOOL_YEAR || "all",
+          schoolYear: normalizeSchoolYearFilter(input.schoolYear),
           quarter: normalizeQuarterCode(input.quarter) || "q1",
           classKey: normalizeText(input.classKey) || "all",
           studentKey: normalizeText(input.studentKey) || "all",
@@ -2654,11 +2688,18 @@
       function applyCurrentSchoolYearDefault(options = {}) {
         const config = options && typeof options === "object" ? options : {}
         const force = config.force === true
-        const currentYear = normalizeText(SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO))
+        const currentYear = currentOperationalSchoolYear()
         if (!isSchoolYearKey(currentYear)) return
 
         const activeYear = normalizeText(state.filters.schoolYear)
-        if (force || activeYear === "all" || !isSchoolYearKey(activeYear)) {
+        const activePeriod = normalizePeriodCode(state.filters.period)
+        if (activePeriod === "archive") {
+          if (force) {
+            state.filters.schoolYear = "all"
+          } else if (activeYear === "all" || !isSchoolYearKey(activeYear) || activeYear === currentYear) {
+            state.filters.schoolYear = "all"
+          }
+        } else if (force || activeYear === "all" || !isSchoolYearKey(activeYear)) {
           state.filters.schoolYear = currentYear
         }
 
@@ -2675,7 +2716,7 @@
         }
 
         const selectedYear = normalizeText(state.filters.schoolYear)
-        schoolYearSelect.value = isSchoolYearKey(selectedYear) ? selectedYear : currentYear
+        schoolYearSelect.value = selectedYear === "all" || isSchoolYearKey(selectedYear) ? selectedYear : currentYear
       }
 
       function normalizeSortDirection(value) {
@@ -3107,6 +3148,20 @@
           const schoolYear = normalizeText(record?.schoolYear) || schoolYearForIsoDate(dateKey)
           const className = normalizeText(record?.className)
           const assignmentName = normalizeText(record?.assignmentName)
+          const sourceFromApi = normalizeGradeRecordSource(record?.source)
+          const isStandaloneAutoImport =
+            normalizeLower(commentText).startsWith(AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX)
+            && assignmentName
+            && className
+            && normalizeLower(assignmentName) === normalizeLower(className)
+            && dueAt
+            && submittedAt
+            && dueAt === submittedAt
+            && record?.homeworkCompleted === true
+            && record?.homeworkOnTime === true
+          const rowSource =
+            sourceFromApi
+            || (isStandaloneAutoImport ? GRADE_RECORD_SOURCE_AUTO_IMPORT : GRADE_RECORD_SOURCE_ASSIGNMENT)
 
           return {
             id: normalizeText(record?.id) || `${studentRefId}-${index + 1}`,
@@ -3121,6 +3176,7 @@
             level,
             className,
             assignmentName,
+            source: rowSource,
             schoolYear,
             quarter,
             dueAt,
@@ -3173,12 +3229,57 @@
         return "ontime"
       }
 
+      function isStandaloneAutoImportedExerciseRow(row = {}) {
+        const comments = normalizeLower(row?.comments)
+        if (!comments.startsWith(AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX)) return false
+        const assignmentName = normalizeLower(row?.assignmentName)
+        const className = normalizeLower(row?.className)
+        const dueAt = normalizeText(row?.dueAt)
+        const submittedAt = normalizeText(row?.submittedAt)
+        if (!assignmentName || !className || assignmentName !== className) return false
+        if (!dueAt || !submittedAt || dueAt !== submittedAt) return false
+        if (row?.homeworkCompleted !== true || row?.homeworkOnTime !== true) return false
+        return true
+      }
+
+      function canonicalizeStandaloneAutoImportedTitle(value) {
+        let title = normalizeText(value)
+        if (!title) return ""
+        try {
+          if (/%[0-9a-f]{2}/i.test(title)) {
+            const decoded = decodeURIComponent(title)
+            if (normalizeText(decoded)) title = normalizeText(decoded)
+          }
+        } catch (error) {
+          void error
+        }
+        title = title
+          .replace(/[?#].*$/u, "")
+          .replace(/\.(?:html?|php|aspx?)$/iu, "")
+          .replace(/[-_]+/g, " ")
+          .replace(/\s+\|\s+(?:id|sid|ref|session|attempt|timestamp|time|date)\s*[:=#-].*$/iu, "")
+          .replace(/\s+/g, " ")
+          .trim()
+        return normalizeText(title)
+      }
+
+      function normalizedAssignmentTitleForRow(row = {}) {
+        const baseTitle = normalizeText(row?.assignmentName) || "Untitled"
+        if (!isStandaloneAutoImportedExerciseRow(row)) return baseTitle
+        return canonicalizeStandaloneAutoImportedTitle(baseTitle) || baseTitle
+      }
+
       function assignmentKeyFromRow(row = {}) {
-        const title = normalizeText(row?.assignmentName) || "Untitled"
+        const title = normalizedAssignmentTitleForRow(row)
         const dueAt = normalizeText(row?.dueAt)
         const schoolYear = normalizeText(row?.schoolYear)
         const quarter = normalizeQuarterCode(row?.quarter)
-        return `${normalizeLower(title)}|${dueAt}|${schoolYear}|${quarter}`
+        const studentRefId = normalizeText(row?.studentRefId)
+        const studentScopeSuffix =
+          isStandaloneAutoImportedExerciseRow(row) && studentRefId
+            ? `|student:${normalizeLower(studentRefId)}`
+            : ""
+        return `${normalizeLower(title)}|${dueAt}|${schoolYear}|${quarter}${studentScopeSuffix}`
       }
 
       function medianOfNumbers(values = []) {
@@ -3289,6 +3390,7 @@
           schoolYear: effectiveSchoolYear,
           quarter: effectiveQuarter,
           assignmentName: normalizeText(current?.assignmentName) || normalizeText(meta?.title) || "Exercise",
+          source: GRADE_RECORD_SOURCE_ASSIGNMENT,
           dueAt: dueAt || undefined,
           submittedAt: todayIso,
           score: parsedScore,
@@ -3378,7 +3480,7 @@
           if (!assignmentMetaMap.has(key)) {
             assignmentMetaMap.set(key, {
               key,
-              title: normalizeText(entry?.assignmentName) || "Untitled",
+              title: normalizedAssignmentTitleForRow(entry),
               dueAt: normalizeText(entry?.dueAt),
               quarter: normalizeUpper(entry?.quarter),
               totalQuestions: Number.isFinite(entry?.maxScore) ? entry.maxScore : null,
@@ -3440,7 +3542,7 @@
             className: normalizeText(entry?.className),
             schoolYear: normalizeText(entry?.schoolYear),
             quarter: normalizeQuarterCode(entry?.quarter),
-            assignmentName: normalizeText(entry?.assignmentName),
+            assignmentName: normalizedAssignmentTitleForRow(entry),
             dueAt: normalizeText(entry?.dueAt),
             submittedAt: normalizeText(entry?.submittedAt),
             comments: normalizeText(entry?.comments),
@@ -3720,11 +3822,7 @@
                 return `<span class=\"stat-chip\">${escapeHtml(statText || "n/a")}</span>`
               }
               if (!value || typeof value !== "object") {
-                return (
-                  `<span class=\"exercise-cell notdone\">`
-                  + `<span>-/-</span><span>Not done</span>`
-                  + `</span>`
-                )
+                return `<span class=\"exercise-cell\"><span></span><span></span></span>`
               }
               const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0
                 ? `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}`
@@ -3732,7 +3830,14 @@
                   ? `${formatShortNumber(value.score)}`
                   : "-/-"
               const percentLabel = Number.isFinite(value.percent) ? `${Math.round(value.percent)}%` : "n/a"
-              const status = ["ontime", "late", "notdone"].includes(value.status) ? value.status : "notdone"
+              const isCompleted =
+                value?.completed === true
+                || Boolean(value?.submittedAt)
+                || Number.isFinite(value?.score)
+              const status = ["ontime", "late"].includes(value.status) ? value.status : ""
+              if (!isCompleted || !status) {
+                return `<span class=\"exercise-cell\"><span></span><span></span></span>`
+              }
               return (
                 `<span class=\"exercise-cell ${status}\">`
                 + `<span>${escapeHtml(scoreLabel)}</span>`
@@ -3811,22 +3916,30 @@
         return values
       }
 
-      function replaceSelectOptions(selectEl, values, selectedValue, allLabel) {
+      function replaceSelectOptions(selectEl, values, selectedValue, allLabel, options = {}) {
         if (!(selectEl instanceof HTMLSelectElement)) return
-        const current = normalizeText(selectedValue) || "all"
-        const options = [`<option value=\"all\">${escapeHtml(allLabel)}</option>`]
+        const config = options && typeof options === "object" ? options : {}
+        const includeAll = config.includeAll !== false
+        const current = normalizeText(selectedValue)
+        const markup = includeAll ? [`<option value=\"all\">${escapeHtml(allLabel)}</option>`] : []
         values.forEach((value) => {
-          options.push(`<option value=\"${escapeHtml(value)}\">${escapeHtml(value)}</option>`)
+          markup.push(`<option value=\"${escapeHtml(value)}\">${escapeHtml(value)}</option>`)
         })
-        selectEl.innerHTML = options.join("")
-        selectEl.value = values.includes(current) ? current : "all"
+        selectEl.innerHTML = markup.join("")
+        if (includeAll) {
+          const selected = current || "all"
+          selectEl.value = values.includes(selected) ? selected : "all"
+          return
+        }
+        const fallback = values.length ? values[0] : ""
+        selectEl.value = values.includes(current) ? current : fallback
       }
 
       function refreshFilterOptionLists() {
         const rows = Array.isArray(state.allRows) ? state.allRows : []
         const classValues = uniqueSortedValues(rows, "level")
         const schoolValues = uniqueSortedValues(rows, "schoolName")
-        const currentYear = SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO)
+        const currentYear = currentOperationalSchoolYear()
         const yearValues = uniqueSortedValues(rows, "schoolYear")
         if (currentYear && !yearValues.includes(currentYear)) yearValues.push(currentYear)
         yearValues.sort((left, right) => right.localeCompare(left))
@@ -3852,13 +3965,22 @@
           studentFilter.value = studentValues.some(([studentRefId]) => studentRefId === current) ? current : "all"
         }
 
-        if (currentYear && (state.filters.schoolYear === "all" || !yearValues.includes(state.filters.schoolYear))) {
-          state.filters.schoolYear = currentYear
+        const periodCode = normalizePeriodCode(state.filters.period)
+        const activeSchoolYear = normalizeText(state.filters.schoolYear)
+        if (periodCode === "archive") {
+          if (activeSchoolYear !== "all" && activeSchoolYear && !yearValues.includes(activeSchoolYear)) {
+            state.filters.schoolYear = "all"
+          }
+        } else if (currentYear && (activeSchoolYear === "all" || !isSchoolYearKey(activeSchoolYear) || !yearValues.includes(activeSchoolYear))) {
+          state.filters.schoolYear = yearValues.includes(currentYear) ? currentYear : (yearValues[0] || currentYear)
           const yearSelect = document.getElementById("schoolYear")
-          if (yearSelect instanceof HTMLSelectElement) yearSelect.value = currentYear
+          if (yearSelect instanceof HTMLSelectElement) yearSelect.value = state.filters.schoolYear
         }
 
-        const selectedSchoolYear = state.filters.schoolYear === "all" ? currentYear : state.filters.schoolYear
+        const selectedSchoolYear =
+          normalizeText(state.filters.schoolYear) === "all"
+            ? currentYear
+            : normalizeOperationalSchoolYear(state.filters.schoolYear)
         const availableQuarters = Array.from(new Set(
           rows
             .filter((entry) => normalizeText(entry?.schoolYear) === normalizeText(selectedSchoolYear))
@@ -3869,16 +3991,19 @@
         const currentQuarter = normalizeQuarterCode(quarterFromIsoDate(TODAY_ISO)) || "q1"
         const ssotQuarter = quarterForSchoolYear(selectedSchoolYear || currentYear, TODAY_ISO)
         const currentQuarterFromSsot = normalizeQuarterCode(ssotQuarter) || currentQuarter
-        const preferredQuarter = availableQuarters.includes(currentQuarterFromSsot)
-          ? currentQuarterFromSsot
-          : availableQuarters[0] || currentQuarterFromSsot
-
-        if (!normalizeQuarterCode(state.filters.quarter) || !availableQuarters.includes(normalizeQuarterCode(state.filters.quarter))) {
-          state.filters.quarter = preferredQuarter
+        const activeQuarter = normalizeQuarterCode(state.filters.quarter)
+        if (periodCode !== "quarter" && periodCode !== "qtd") {
+          state.filters.quarter = currentQuarterFromSsot
+        } else if (!activeQuarter) {
+          state.filters.quarter = currentQuarterFromSsot
+        } else if (!availableQuarters.length && activeQuarter !== currentQuarterFromSsot) {
+          state.filters.quarter = currentQuarterFromSsot
+        } else if (availableQuarters.length && !availableQuarters.includes(activeQuarter)) {
+          state.filters.quarter = currentQuarterFromSsot
         }
         const quarterSelect = document.getElementById("quarter")
         if (quarterSelect instanceof HTMLSelectElement) {
-          quarterSelect.value = normalizeQuarterCode(state.filters.quarter) || preferredQuarter
+          quarterSelect.value = normalizeQuarterCode(state.filters.quarter) || currentQuarterFromSsot
         }
       }
 
@@ -3898,7 +4023,12 @@
       function filteredRowsWithRange() {
         const rows = Array.isArray(state.allRows) ? state.allRows : []
         const filters = state.filters
-        const currentSchoolYear = SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO)
+        const requestedSchoolYear = normalizeSchoolYearFilter(filters.schoolYear)
+        const currentSchoolYear = currentOperationalSchoolYear()
+        const selectedSchoolYear =
+          requestedSchoolYear === "all"
+            ? "all"
+            : normalizeOperationalSchoolYear(requestedSchoolYear)
         const dateDerivedCurrentSchoolYear = schoolYearForIsoDate(TODAY_ISO)
         let rangeStart = ""
         let rangeEnd = ""
@@ -3921,18 +4051,22 @@
           const rowDate = normalizeText(row?.dateKey)
           const rowQuarter = normalizeLower(row?.quarter)
           const rowSchoolYear = normalizeText(row?.schoolYear)
+          const rowSource = normalizeGradeRecordSource(row?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
+
+          if (rowSource !== GRADE_RECORD_SOURCE_ASSIGNMENT) return false
 
           if (filters.period === "archive") {
             if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false
-            if (filters.schoolYear !== "all" && rowSchoolYear !== filters.schoolYear) return false
+            if (selectedSchoolYear !== "all" && rowSchoolYear !== selectedSchoolYear) return false
           } else {
-            if (filters.schoolYear !== "all" && rowSchoolYear && rowSchoolYear !== filters.schoolYear) return false
+            const targetSchoolYear = selectedSchoolYear === "all" ? currentSchoolYear : selectedSchoolYear
+            if (rowSchoolYear && rowSchoolYear !== targetSchoolYear) return false
           }
 
           if (filters.period === "quarter" || filters.period === "qtd") {
             if (!rowQuarter || rowQuarter !== normalizeLower(filters.quarter)) return false
             if (filters.period === "qtd") {
-              const targetYear = filters.schoolYear !== "all" ? filters.schoolYear : currentSchoolYear
+              const targetYear = selectedSchoolYear !== "all" ? selectedSchoolYear : currentSchoolYear
               if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
                 return false
               }
@@ -3940,7 +4074,7 @@
           }
 
           if (filters.period === "sytd") {
-            const targetYear = filters.schoolYear !== "all" ? filters.schoolYear : currentSchoolYear
+            const targetYear = selectedSchoolYear !== "all" ? selectedSchoolYear : currentSchoolYear
             if (rowSchoolYear && rowSchoolYear !== targetYear) return false
             if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
               return false
@@ -4290,7 +4424,9 @@
         const customTo = document.getElementById("customTo")
         const searchInput = document.getElementById("searchInput")
 
-        if (schoolYear instanceof HTMLSelectElement) state.filters.schoolYear = normalizeText(schoolYear.value) || "all"
+        if (schoolYear instanceof HTMLSelectElement) {
+          state.filters.schoolYear = normalizeSchoolYearFilter(schoolYear.value)
+        }
         if (quarter instanceof HTMLSelectElement) state.filters.quarter = normalizeLower(quarter.value) || "q1"
         if (classFilter instanceof HTMLSelectElement) state.filters.classKey = normalizeText(classFilter.value) || "all"
         if (studentFilter instanceof HTMLSelectElement) state.filters.studentKey = normalizeText(studentFilter.value) || "all"
@@ -4332,7 +4468,10 @@
 
         document.querySelectorAll("[data-period]").forEach((button) => {
           button.addEventListener("click", () => {
-            state.filters.period = normalizeLower(button.getAttribute("data-period")) || "week"
+            const nextPeriod = normalizePeriodCode(button.getAttribute("data-period"))
+            state.filters.period = nextPeriod
+            applyCurrentSchoolYearDefault()
+            refreshFilterOptionLists()
             persistUiPreferences()
             syncPeriodButtons()
             applyFilterControlState()

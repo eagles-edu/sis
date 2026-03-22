@@ -275,6 +275,21 @@ function isOnTimeCompletedGradeRecord(record) {
 }
 
 const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"
+const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment"
+const GRADE_RECORD_SOURCE_MANUAL = "manual"
+const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"
+
+function normalizeGradeRecordSource(value) {
+  const source = normalizeLower(value)
+  if (
+    source === GRADE_RECORD_SOURCE_ASSIGNMENT
+    || source === GRADE_RECORD_SOURCE_MANUAL
+    || source === GRADE_RECORD_SOURCE_AUTO_IMPORT
+  ) {
+    return source
+  }
+  return ""
+}
 
 function datesShareExactTimestamp(left, right) {
   const leftDate = parseDateOrNull(left)
@@ -300,6 +315,30 @@ function isAutoImportedExerciseGradeRecord(record = {}) {
 function isAssignmentTrackingGradeRecord(record = {}) {
   if (!record || typeof record !== "object") return false
   return !isAutoImportedExerciseGradeRecord(record)
+}
+
+function inferGradeRecordSource(record = {}) {
+  const explicitSource = normalizeGradeRecordSource(record?.source)
+  if (explicitSource) return explicitSource
+  if (isAutoImportedExerciseGradeRecord(record)) return GRADE_RECORD_SOURCE_AUTO_IMPORT
+
+  const hasAssignmentSignals = Boolean(
+    parseDateOrNull(record?.dueAt)
+    || parseDateOrNull(record?.submittedAt)
+    || typeof record?.homeworkCompleted === "boolean"
+    || typeof record?.homeworkOnTime === "boolean"
+    || normalizeText(record?.assignmentName)
+  )
+  if (hasAssignmentSignals) return GRADE_RECORD_SOURCE_ASSIGNMENT
+  return GRADE_RECORD_SOURCE_MANUAL
+}
+
+function mapGradeRecordForApi(record = {}) {
+  if (!record || typeof record !== "object") return record
+  return {
+    ...record,
+    source: inferGradeRecordSource(record),
+  }
 }
 
 function normalizeOutstandingWeekCount(value) {
@@ -1054,7 +1093,9 @@ function mapStudent(student) {
       parentReports: 0,
     },
     attendanceRecords: Array.isArray(student.attendanceRecords) ? student.attendanceRecords : undefined,
-    gradeRecords: Array.isArray(student.gradeRecords) ? student.gradeRecords : undefined,
+    gradeRecords: Array.isArray(student.gradeRecords)
+      ? student.gradeRecords.map((entry) => mapGradeRecordForApi(entry))
+      : undefined,
     parentReports: Array.isArray(student.parentReports)
       ? student.parentReports.map((entry) => mapParentClassReport(entry))
       : undefined,
@@ -2798,18 +2839,20 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     assertWithStatus(Boolean(existing), 404, "Grade record not found")
     assertWithStatus(existing.studentRefId === studentRef, 403, "Grade record does not belong to student")
 
-    return prisma.studentGradeRecord.update({
+    const updated = await prisma.studentGradeRecord.update({
       where: { id: recordId },
       data,
     })
+    return mapGradeRecordForApi(updated)
   }
 
-  return prisma.studentGradeRecord.create({
+  const created = await prisma.studentGradeRecord.create({
     data: {
       studentRefId: studentRef,
       ...data,
     },
   })
+  return mapGradeRecordForApi(created)
 }
 
 export async function deleteGradeRecord(studentRefId, gradeRecordId) {

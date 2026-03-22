@@ -246,6 +246,12 @@ test("student dashboard/news paths guard missing optional Prisma delegates", () 
   assert.match(store, /findManyOrEmpty\(prisma, "studentPointsAdjustment"/)
   assert.match(store, /hasPrismaDelegateMethod\(prisma, "studentPointsAdjustment", "create"\)/)
   assert.match(store, /hasPrismaDelegateMethod\(prisma, "studentNewsReport", "upsert"\)/)
+  assert.match(store, /const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment"/)
+  assert.match(store, /const GRADE_RECORD_SOURCE_MANUAL = "manual"/)
+  assert.match(store, /const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"/)
+  assert.match(store, /function inferGradeRecordSource\(/)
+  assert.match(store, /function mapGradeRecordForApi\(/)
+  assert.match(store, /source:\s*inferGradeRecordSource\(record\),/)
   assert.match(store, /listStudentNewsReportsFromFallbackStore\(/)
   assert.match(store, /upsertStudentNewsReportInFallbackStore\(/)
   assert.match(store, /isStudentNewsReportSchemaUnavailableError\(/)
@@ -466,8 +472,10 @@ test("GET /admin/students returns HTML UI", async () => {
   assert.match(html, /Thang điểm 0-5/i)
   assert.match(html, /function buildGradesTabulatorLaunchUrl\(\)/i)
   assert.match(html, /function applyGradeChartCurrentSchoolYearDefault\(\)/i)
-  assert.match(html, /setGradeChartState\(patch\);\s*applyGradeChartCurrentSchoolYearDefault\(\);\s*renderGradePulseChart/i)
+  assert.match(html, /setGradeChartState\(\{\s*period\s*\}\);\s*applyGradeChartCurrentSchoolYearDefault\(\);\s*renderGradePulseChart/i)
   assert.match(html, /applyGradeChartCurrentSchoolYearDefault\(\);\s*renderGradePulseChart\(state\.visibleTableRows\?\.grades \|\| \[\]\);/i)
+  assert.doesNotMatch(html, /data-grade-chart-period="archive"/i)
+  assert.doesNotMatch(html, /All school years/i)
   assert.match(html, /params\.set\("currentSchoolYear",\s*currentSchoolYear\)/i)
   assert.match(html, /params\.set\("schoolYear",\s*selectedSchoolYear\)/i)
   assert.match(html, /params\.set\("quarter",\s*selectedQuarter\)/i)
@@ -638,7 +646,7 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /const localSettingsSchoolYear = schoolYearFromUiSettings\(loadUiSettingsFromLocalStorage\(\)\)/)
   assert.match(html, /if \(isSchoolYearKey\(localSettingsSchoolYear\)\) return localSettingsSchoolYear/)
   assert.match(html, /function refreshSystemCurrentSchoolYear\(/)
-  assert.match(html, /schoolYear:\s*normalizeText\(input\.schoolYear\)\s*\|\|\s*SYSTEM_CURRENT_SCHOOL_YEAR\s*\|\|\s*"all"/)
+  assert.match(html, /schoolYear:\s*normalizeSchoolYearFilter\(input\.schoolYear\)/)
   assert.match(html, /function filterQueryOverridesFromLocation\(/)
   assert.match(html, /if \(params\.has\("quarter"\)\) \{/)
   assert.match(html, /state\.filters = normalizedFiltersSnapshot\(\{/)
@@ -658,6 +666,8 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /id="distributionZoomRange"/)
   assert.match(html, /function renderDistributionMiniCell\(/)
   assert.match(html, /function openDistributionModal\(/)
+  assert.match(html, /data-period=\"archive\"/)
+  assert.match(html, /All school years/)
   assert.match(html, /function setTableModalOpen\(/)
   assert.match(html, /function bindTableModalControls\(/)
   assert.match(html, /function setDistributionDialogFullscreen\(/)
@@ -697,6 +707,20 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /const UI_PREFS_KEY = "sis\.grades-tabulator\.ui-prefs\.v1"/)
   assert.match(html, /const TABLE_UI_STATE_KEY = "sis\.grades-tabulator\.table-state\.v1"/)
   assert.match(html, /const TABLE_UI_STATE_SCHEMA_VERSION = 2/)
+  assert.match(html, /const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"/)
+  assert.match(html, /const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment"/)
+  assert.match(html, /const GRADE_RECORD_SOURCE_MANUAL = "manual"/)
+  assert.match(html, /const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"/)
+  assert.match(html, /function normalizeGradeRecordSource\(/)
+  assert.match(html, /function isStandaloneAutoImportedExerciseRow\(/)
+  assert.match(html, /function canonicalizeStandaloneAutoImportedTitle\(/)
+  assert.match(html, /function normalizedAssignmentTitleForRow\(/)
+  assert.match(html, /source:\s*rowSource,/)
+  assert.match(html, /source:\s*GRADE_RECORD_SOURCE_ASSIGNMENT,/)
+  assert.match(html, /if \(rowSource !== GRADE_RECORD_SOURCE_ASSIGNMENT\) return false/)
+  assert.match(html, /\|student:\$\{normalizeLower\(studentRefId\)\}/)
+  assert.match(html, /<span class=\\\"exercise-cell\\\"><span><\/span><span><\/span><\/span>/)
+  assert.match(html, /const status = \["ontime", "late"\]\.includes\(value\.status\) \? value\.status : ""/)
   assert.match(html, /includeWidth:\s*!shouldResetPersistedWidths/)
   assert.match(html, /schemaVersion:\s*TABLE_UI_STATE_SCHEMA_VERSION/)
   assert.match(html, /field:\s*"studentDisplay"[\s\S]*minWidth:\s*studentColumnMinWidth[\s\S]*width:\s*studentColumnWidth[\s\S]*frozen:\s*true/)
@@ -1030,7 +1054,7 @@ test("teacher can access attendance save path and reaches store-disabled respons
     },
     body: JSON.stringify({
       className: "A2 KET",
-      schoolYear: "2025-2026",
+      schoolYear: "2026-2027",
       quarter: "q3",
       attendanceDate: "2026-03-14T08:00:00.000Z",
       status: "present",
@@ -1050,7 +1074,7 @@ test("teacher can access grade save path and reaches store-disabled response", a
     },
     body: JSON.stringify({
       className: "A2 KET",
-      schoolYear: "2025-2026",
+      schoolYear: "2026-2027",
       quarter: "q3",
       assignmentName: "News Summary",
       dueAt: "2026-03-14T08:00:00.000Z",
@@ -1099,6 +1123,14 @@ test("teacher can access runtime health endpoint", async () => {
   assert.equal(body.status, "ok")
   assert.ok(body.studentAdminRuntime && typeof body.studentAdminRuntime === "object")
   assert.equal(body.studentAdminRuntime.apiPrefix, "/api/admin")
+  assert.ok(body.studentAdminRuntime.sessionRedis && typeof body.studentAdminRuntime.sessionRedis === "object")
+  assert.ok(Object.prototype.hasOwnProperty.call(body.studentAdminRuntime.sessionRedis, "redisConnected"))
+  assert.ok(Object.prototype.hasOwnProperty.call(body.studentAdminRuntime.sessionRedis, "redisReady"))
+  assert.ok(body.maintenance && typeof body.maintenance === "object")
+  assert.ok(Object.prototype.hasOwnProperty.call(body.maintenance, "lastIncomingVacuumAt"))
+  assert.ok(Object.prototype.hasOwnProperty.call(body.maintenance, "lastBackupAt"))
+  assert.ok(Object.prototype.hasOwnProperty.call(body.maintenance, "dbHealthStatus"))
+  assert.ok(Object.prototype.hasOwnProperty.call(body.maintenance, "manualReviewCount"))
   assert.ok(body.runtimeSelfHeal && typeof body.runtimeSelfHeal === "object")
 })
 

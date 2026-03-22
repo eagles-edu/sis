@@ -7628,6 +7628,10 @@ test("table sort controls and column-click headers reorder grade/performance dat
   assert.ok(document.getElementById("gradeChartCustomFrom"))
   assert.ok(document.getElementById("gradeChartCustomTo"))
   assert.ok(document.querySelector('#gradeChartPeriods [data-grade-chart-period="qtd"]'))
+  assert.equal(
+    document.querySelector('#gradeChartPeriods [data-grade-chart-period="archive"]'),
+    null,
+  )
   await waitFor(() => {
     const lanes = document.querySelectorAll("#gradeChartLanes .grade-chart-lane")
     assert.equal(lanes.length >= 1, true)
@@ -7638,6 +7642,10 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
   const gradeChartSchoolYear = document.getElementById("gradeChartSchoolYear")
   assert.ok(gradeChartSchoolYear)
+  const gradeChartSchoolYearOptions = Array.from(gradeChartSchoolYear.options || []).map(
+    (entry) => normalizeText(entry.value).toLowerCase(),
+  )
+  assert.equal(gradeChartSchoolYearOptions.includes("all"), false)
   await waitFor(() => {
     assert.notEqual(normalizeText(gradeChartSchoolYear.value).toLowerCase(), "all")
   })

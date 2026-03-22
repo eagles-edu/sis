@@ -161,6 +161,18 @@ const ADMIN_UI_SETTINGS_FILE_PATH = path.resolve(
   process.cwd(),
   normalizeText(process.env.STUDENT_ADMIN_UI_SETTINGS_FILE) || "runtime-data/admin-ui-settings.json"
 )
+const MAINTENANCE_REPORT_DIR = path.resolve(
+  process.cwd(),
+  normalizeText(process.env.SIS_MAINTENANCE_REPORT_DIR) || "runtime-data/maintenance-reports"
+)
+const MAINTENANCE_DB_HEALTH_STATUS_PATH = path.resolve(
+  process.cwd(),
+  normalizeText(process.env.SIS_DB_HEALTH_STATUS_FILE) || "runtime-data/maintenance/db-health-status.json"
+)
+const DB_BACKUP_LATEST_FILE_PATH = path.resolve(
+  process.cwd(),
+  normalizeText(process.env.DB_BACKUP_LATEST_FILE) || "backups/postgres/latest.json"
+)
 const ADMIN_UI_SETTINGS_MAX_BYTES = Math.max(
   1024,
   Number.parseInt(String(process.env.STUDENT_ADMIN_UI_SETTINGS_MAX_BYTES || 1024 * 1024), 10) || 1024 * 1024
@@ -431,6 +443,97 @@ function resolveBoolean(value, fallback) {
   return fallback
 }
 
+function safeIsoDate(value) {
+  const date = new Date(value)
+  if (!Number.isFinite(date.valueOf())) return ""
+  return date.toISOString()
+}
+
+function safeDateFromPath(pathname) {
+  try {
+    const stat = fs.statSync(pathname)
+    return safeIsoDate(stat?.mtime)
+  } catch {
+    return ""
+  }
+}
+
+function readJsonFileSafe(filePath) {
+  const resolvedPath = normalizeText(filePath)
+  if (!resolvedPath || !fs.existsSync(resolvedPath)) return null
+  try {
+    const raw = fs.readFileSync(resolvedPath, "utf8")
+    const trimmed = normalizeText(raw)
+    if (!trimmed) return null
+    const parsed = JSON.parse(trimmed)
+    return parsed && typeof parsed === "object" ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function listIncomingVacuumReports() {
+  if (!fs.existsSync(MAINTENANCE_REPORT_DIR)) return []
+  try {
+    return fs.readdirSync(MAINTENANCE_REPORT_DIR)
+      .filter((entry) => /^incoming-vacuum-[0-9]{8}-[0-9]{6}Z\.json$/u.test(entry))
+      .sort((left, right) => right.localeCompare(left))
+      .slice(0, 20)
+  } catch {
+    return []
+  }
+}
+
+function readMaintenanceRuntimeStatus() {
+  const latestReportFile = listIncomingVacuumReports()[0] || ""
+  const latestReportPath = latestReportFile ? path.join(MAINTENANCE_REPORT_DIR, latestReportFile) : ""
+  const latestReport = latestReportPath ? readJsonFileSafe(latestReportPath) : null
+  const latestHealth = readJsonFileSafe(MAINTENANCE_DB_HEALTH_STATUS_PATH)
+  const latestBackup = readJsonFileSafe(DB_BACKUP_LATEST_FILE_PATH)
+  const backupPath = normalizeText(latestBackup?.backupPath || latestBackup?.backupFile || latestBackup?.filePath)
+  const backupTimestamp =
+    safeIsoDate(latestBackup?.createdAt || latestBackup?.created_at || latestBackup?.completedAt || latestBackup?.finishedAt)
+    || safeDateFromPath(backupPath)
+  const manualReviewCount = Number.isFinite(Number(latestReport?.manualReviewCount))
+    ? Number(latestReport.manualReviewCount)
+    : Array.isArray(latestReport?.manualReview)
+      ? latestReport.manualReview.length
+      : 0
+  const lastIncomingVacuumAt =
+    safeIsoDate(latestReport?.runStartedAt || latestReport?.createdAt || latestReport?.checkedAt || latestReport?.timestamp)
+    || safeDateFromPath(latestReportPath)
+  return {
+    reportDir: MAINTENANCE_REPORT_DIR,
+    dbHealthPath: MAINTENANCE_DB_HEALTH_STATUS_PATH,
+    backupLatestPath: DB_BACKUP_LATEST_FILE_PATH,
+    lastIncomingVacuumAt,
+    lastBackupAt: backupTimestamp,
+    dbHealthStatus: normalizeLower(latestHealth?.status) || "unknown",
+    manualReviewCount: Math.max(0, Number.parseInt(String(manualReviewCount), 10) || 0),
+    lastDbHealthCheckAt: safeIsoDate(latestHealth?.checkedAt || latestHealth?.runStartedAt),
+  }
+}
+
+function normalizeSessionRedisRuntimeStatus(store) {
+  if (!store || typeof store.getRuntimeStatus !== "function") {
+    return {
+      redisConnected: false,
+      redisReady: false,
+      lastRedisError: "",
+      lastReconnectAt: "",
+      reconnectAttempts: 0,
+    }
+  }
+  const status = store.getRuntimeStatus() || {}
+  return {
+    redisConnected: status.redisConnected === true,
+    redisReady: status.redisReady === true,
+    lastRedisError: normalizeText(status.lastRedisError),
+    lastReconnectAt: safeIsoDate(status.lastReconnectAt),
+    reconnectAttempts: Math.max(0, Number.parseInt(String(status.reconnectAttempts), 10) || 0),
+  }
+}
+
 function isKnownRole(value) {
   return ADMIN_PERMISSION_ROLES.includes(normalizeLower(value))
 }
@@ -683,6 +786,8 @@ function resolveAdminPageSlug(pathname) {
 }
 
 export function getStudentAdminRuntimeStatus() {
+  const sessionRedis = normalizeSessionRedisRuntimeStatus(SESSION_STORE)
+  const maintenance = readMaintenanceRuntimeStatus()
   return {
     pagePath: ADMIN_PAGE_PATH,
     apiPrefix: ADMIN_API_PREFIX,
@@ -724,9 +829,11 @@ export function getStudentAdminRuntimeStatus() {
     permissionRoles: [...ADMIN_PERMISSION_ROLES],
     rolePermissions: getRolePermissionsSnapshot(),
     sessionDriver: SESSION_STORE.driver,
+    sessionRedis,
     sessionTtlSeconds: SESSION_TTL_SECONDS,
     sessionCookieName: SESSION_COOKIE_NAME,
     filterCache: getStudentAdminFilterCacheStatus(),
+    maintenance,
   }
 }
 
@@ -740,6 +847,7 @@ async function resolveAdminRuntimeHealthPayload() {
     if (payload && typeof payload === "object") return payload
   }
 
+  const runtimeStatus = getStudentAdminRuntimeStatus()
   return {
     status: "ok",
     startedAt: "",
@@ -754,7 +862,8 @@ async function resolveAdminRuntimeHealthPayload() {
     lastSendAt: "",
     lastError: "",
     node: process.version,
-    studentAdminRuntime: getStudentAdminRuntimeStatus(),
+    studentAdminRuntime: runtimeStatus,
+    maintenance: runtimeStatus.maintenance || null,
     runtimeSelfHeal: {
       enabled: false,
       lastResult: "unavailable",

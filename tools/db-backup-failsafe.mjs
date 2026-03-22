@@ -60,6 +60,38 @@ function redactDatabaseUrl(url) {
   }
 }
 
+const LIBPQ_URL_PARAM_ALLOWLIST = new Set([
+  "application_name",
+  "channel_binding",
+  "connect_timeout",
+  "gssencmode",
+  "options",
+  "passfile",
+  "sslcert",
+  "sslcrl",
+  "sslkey",
+  "sslmode",
+  "sslpassword",
+  "sslrootcert",
+  "target_session_attrs",
+])
+
+function sanitizeDatabaseUrlForPgTools(databaseUrl) {
+  try {
+    const parsed = new URL(databaseUrl)
+    const keys = Array.from(parsed.searchParams.keys())
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = normalizeText(keys[index])
+      if (!LIBPQ_URL_PARAM_ALLOWLIST.has(key)) {
+        parsed.searchParams.delete(key)
+      }
+    }
+    return parsed.toString()
+  } catch {
+    return databaseUrl
+  }
+}
+
 function parseArgs(argv) {
   const args = {
     outputDir: "",
@@ -353,7 +385,8 @@ async function main() {
     const manifestPath = path.join(config.outputDir, "manifest.jsonl")
     const latestPath = path.join(config.outputDir, "latest.json")
 
-    const redactedUrl = redactDatabaseUrl(config.databaseUrl)
+    const databaseUrlForDump = sanitizeDatabaseUrlForPgTools(config.databaseUrl)
+    const redactedUrl = redactDatabaseUrl(databaseUrlForDump)
 
     if (config.verbose || config.dryRun) {
       console.log(`[backup] outputDir=${config.outputDir}`)
@@ -368,7 +401,7 @@ async function main() {
       "--file",
       tmpDumpPath,
       "--dbname",
-      config.databaseUrl,
+      databaseUrlForDump,
     ]
 
     if (config.dryRun) {

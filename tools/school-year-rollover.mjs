@@ -23,7 +23,7 @@ Commands:
   inspect   List archive runs or preview archived rows
 
 Archive options:
-  --school-year <YYYY-YYYY>      Required. Example: 2025-2026
+  --school-year <YYYY-YYYY>      Required. Example: 2026-2027
   --start-date <YYYY-MM-DD>      Required. School year start date (inclusive)
   --end-date <YYYY-MM-DD>        Required. School year end date (inclusive)
   --archive-root <dir>           Archive root directory (default: ${DEFAULT_ARCHIVE_ROOT})
@@ -43,10 +43,10 @@ Inspect options:
   --json                         Force JSON output
 
 Examples:
-  node tools/school-year-rollover.mjs archive --school-year 2025-2026 --start-date 2025-02-10 --end-date 2026-02-01
-  node tools/school-year-rollover.mjs archive --school-year 2025-2026 --start-date 2025-02-10 --end-date 2026-02-01 --apply
-  node tools/school-year-rollover.mjs inspect --school-year 2025-2026
-  node tools/school-year-rollover.mjs inspect --school-year 2025-2026 --dataset studentGradeRecord --limit 40
+  node tools/school-year-rollover.mjs archive --school-year 2026-2027 --start-date 2026-08-01 --end-date 2027-07-31
+  node tools/school-year-rollover.mjs archive --school-year 2026-2027 --start-date 2026-08-01 --end-date 2027-07-31 --apply
+  node tools/school-year-rollover.mjs inspect --school-year 2026-2027
+  node tools/school-year-rollover.mjs inspect --school-year 2026-2027 --dataset studentGradeRecord --limit 40
 `)
 }
 

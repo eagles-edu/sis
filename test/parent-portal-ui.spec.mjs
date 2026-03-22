@@ -788,7 +788,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
                   {
                     id: "report-old",
                     className: "A2 Flyers",
-                    schoolYear: "2025-2026",
+                    schoolYear: "2026-2027",
                     quarter: "q1",
                     generatedDate: "2026-03-09",
                     generatedAt: "2026-03-09T09:00:00.000Z",
@@ -803,7 +803,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
                   {
                     id: "report-new",
                     className: "A2 Flyers",
-                    schoolYear: "2025-2026",
+                    schoolYear: "2026-2027",
                     quarter: "q2",
                     generatedDate: "2026-05-09",
                     generatedAt: "2026-05-09T09:00:00.000Z",

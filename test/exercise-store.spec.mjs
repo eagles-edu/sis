@@ -1,5 +1,8 @@
 import test from "node:test"
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 
 import {
   INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
@@ -270,6 +273,117 @@ test("persistExerciseSubmission records directly when student account is matched
   assert.equal(prisma.state.queueCreateCalls.length, 0)
   assert.equal(prisma.state.submissionCreateCalls.length, 1)
   assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
+})
+
+test("persistExerciseSubmission canonicalizes noisy pageTitle for auto-import grade keys", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      studentId: "S001",
+      email: "student@example.com",
+    },
+  })
+
+  const result = await persistExerciseSubmission(
+    {
+      studentId: "S001",
+      email: "student@example.com",
+      pageTitle: "https://portal.eagles.edu.vn/exercises/Movers-Unit-3.html?session=abc123#result",
+      answers: [{ id: 1, answers: ["B"], status: "correct" }],
+      recipients: ["teacher@example.com"],
+    },
+    { prisma }
+  )
+
+  assert.equal(result.saved, true)
+  assert.equal(result.matched, true)
+  assert.equal(prisma.state.exerciseUpsertCalls.length, 1)
+  assert.equal(prisma.state.exerciseUpsertCalls[0]?.where?.slug, "movers-unit-3")
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.className, "Movers Unit 3")
+  assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.assignmentName, "Movers Unit 3")
+})
+
+test("persistExerciseSubmission uses configured school setup year and quarter windows for auto-imported grade records", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      studentId: "S001",
+      email: "student@example.com",
+    },
+  })
+  const originalUiSettingsFile = process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+  const originalSchoolYearOverride = process.env.SIS_CURRENT_SCHOOL_YEAR
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "sis-exercise-schoolyear-"))
+  const uiSettingsPath = path.join(tempDir, "admin-ui-settings.json")
+  fs.writeFileSync(
+    uiSettingsPath,
+    JSON.stringify({
+      uiSettings: {
+        schoolSetup: {
+          schoolYear: "2026-2027",
+          quarters: [
+            {
+              quarter: "q1",
+              startDate: "2026-02-21",
+              endDate: "2026-05-15",
+            },
+            {
+              quarter: "q2",
+              startDate: "2026-05-16",
+              endDate: "2026-08-07",
+            },
+            {
+              quarter: "q3",
+              startDate: "2026-08-08",
+              endDate: "2026-10-30",
+            },
+            {
+              quarter: "q4",
+              startDate: "2026-10-31",
+              endDate: "2027-01-22",
+            },
+          ],
+        },
+      },
+    }),
+    "utf8"
+  )
+
+  delete process.env.SIS_CURRENT_SCHOOL_YEAR
+  process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = uiSettingsPath
+
+  try {
+    const result = await persistExerciseSubmission(
+      {
+        studentId: "S001",
+        email: "student@example.com",
+        pageTitle: "Movers Unit 4",
+        completedAt: "2026-03-21T09:15:00.000Z",
+        answers: [{ id: 1, answers: ["B"], status: "correct" }],
+        recipients: ["teacher@example.com"],
+      },
+      { prisma }
+    )
+
+    assert.equal(result.saved, true)
+    assert.equal(result.matched, true)
+    assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
+    assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.schoolYear, "2026-2027")
+    assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.quarter, "q1")
+  } finally {
+    if (originalUiSettingsFile === undefined) {
+      delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+    } else {
+      process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = originalUiSettingsFile
+    }
+    if (originalSchoolYearOverride === undefined) {
+      delete process.env.SIS_CURRENT_SCHOOL_YEAR
+    } else {
+      process.env.SIS_CURRENT_SCHOOL_YEAR = originalSchoolYearOverride
+    }
+    fs.rmSync(tempDir, { recursive: true, force: true })
+  }
 })
 
 test("persistExerciseSubmission de-duplicates matched records and updates existing grade when incoming payload is richer", async () => {

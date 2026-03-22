@@ -12,8 +12,8 @@
     "node": "20.19.4"
   },
   "scripts": {
-    "start": "node server/exercise-mailer.mjs",
-    "dev": "NODE_ENV=development SIS_ENV_FILE=.env.dev EXERCISE_MAILER_PORT=${EXERCISE_MAILER_PORT:-8788} node server/exercise-mailer.mjs",
+    "start": "NODE_ENV=production SIS_ENV_FILE=.env node server/exercise-mailer.mjs",
+    "dev": "NODE_ENV=development SIS_ENV_FILE=.env.dev node server/exercise-mailer.mjs",
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
@@ -26,6 +26,12 @@
     "db:rollover": "node tools/school-year-rollover.mjs archive",
     "db:rollover:inspect": "node tools/school-year-rollover.mjs inspect",
     "db:rollover:help": "node tools/school-year-rollover.mjs --help",
+    "db:school-year:migrate-label": "node tools/migrate-school-year-label.mjs",
+    "db:auto-import:cleanup-titles": "node tools/cleanup-auto-import-exercise-titles.mjs",
+    "db:incoming:vacuum": "node tools/vacuum-incoming-exercise-results.mjs",
+    "db:health:check": "node tools/db-health-check.mjs",
+    "ops:incoming:vacuum:cron:check": "tools/install-incoming-vacuum-cron.sh --check-only",
+    "ops:maintenance:systemd:check": "tools/install-maintenance-systemd.sh --check-only",
     "ffs-sis-public-root": "ffs-sis-public-root --batch",
     "ffs-sis-root": "ffs-sis-root --batch",
     "sync:full:sis-public-root": "ffs-sis-public-root --batch",

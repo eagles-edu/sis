@@ -71,23 +71,25 @@ npm run map:all
 cd /home/eagles/dockerz/sis
 npm install
 npm test
-EXERCISE_MAILER_HOST=127.0.0.1 EXERCISE_MAILER_PORT=8787 npm start
 cp -n .env.dev.example .env.dev
 npm run dev
+# production-mode boot (uses .env and fixed live port contract)
+npm start
 ```
 
 ## Dev/Live Separation
 
-- `npm run dev` now uses `SIS_ENV_FILE=.env.dev` and defaults to port `8788`.
-- Production remains on `/home/admin.eagles.edu.vn/sis/.env` with port `8787`.
-- Runtime guard in `server/exercise-mailer.mjs` blocks `NODE_ENV=development` inside live root unless `SIS_ALLOW_DEV_ON_LIVE_ROOT=true`.
-- `ffs-sis-root --batch` now applies sync-time separation defaults:
-  - ensures `/home/eagles/dockerz/sis/.env.dev` has dev-safe values.
-  - ensures live non-secret runtime keys stay pinned (`EXERCISE_MAILER_HOST`, `EXERCISE_MAILER_PORT`, `STUDENT_ADMIN_STORE_ENABLED`).
-  - transforms live `EXERCISE_MAILER_ORIGIN` by removing dev-only preview origin `http://127.0.0.1:5500` and ensuring live portal origin (default `https://admin.eagles.edu.vn`).
-  - prints current dev/live port values after sync.
-- `ffs-sis-public-root --batch` prints dev/live port values after sync for quick verification.
-- `tools/deploy-api-safe.sh` and `tools/sis-runtime-resync.sh` apply the same runtime env pinning contract during sync.
+- Dedicated port contract is now strict and fail-fast:
+  - dev runtime: `NODE_ENV=development` + expected port `8788`.
+  - live runtime: non-dev mode + expected port `8787`.
+- `npm run dev` is fixed to `NODE_ENV=development SIS_ENV_FILE=.env.dev`.
+- `npm start` is fixed to `NODE_ENV=production SIS_ENV_FILE=.env`.
+- Runtime guard in `server/exercise-mailer.mjs` blocks:
+  - dev mode inside live root unless `SIS_ALLOW_DEV_ON_LIVE_ROOT=true`.
+  - live mode inside dev root unless `SIS_ALLOW_LIVE_ON_DEV_ROOT=true`.
+- Sync scripts now lock live checks/wiring to port `8787` without `MAILER_PORT`/`--mailer-port` overrides:
+  - `tools/deploy-api-safe.sh`
+  - `tools/sis-runtime-resync.sh`
 
 ## Feature List
 
@@ -413,6 +415,53 @@ This repo should follow a strict release gate even when deployed manually.
 - Daily DB backup verification.
 - Weekly full snapshot for disaster recovery readiness.
 - Monthly restore drill in non-production environment.
+- Daily incoming exercise vacuum (resolve/delete queue artifacts + orphan/malformed report).
+- DB health snapshot every 15 minutes (machine-readable JSON).
+
+Dev-first reliability commands:
+
+```bash
+# dry-run + report
+npm run db:incoming:vacuum
+
+# apply disposition (resolve if matched, delete if not) + purge old resolved/archived queue rows
+npm run db:incoming:vacuum -- --apply
+
+# run DB health snapshot and write status file
+npm run db:health:check
+
+# render systemd units/timers (check-only)
+npm run ops:maintenance:systemd:check
+
+# install and enable timers (requires writable systemd unit dir)
+tools/install-maintenance-systemd.sh
+```
+
+Installed timer defaults:
+
+- `sis-db-backup.timer` => `02:30` daily
+- `sis-incoming-vacuum.timer` => `03:17` daily
+- `sis-db-health.timer` => every 15 minutes (`*:0/15`)
+
+Failure-response playbook:
+
+1. Redis/session failure:
+   - Check `/healthz` -> `studentAdminRuntime.sessionRedis`.
+   - Confirm Redis reachability and credentials.
+   - Restart Redis first, then `exercise-mailer.service`.
+2. Backup stale:
+   - Run `npm run db:backup`.
+   - Re-run `npm run db:health:check` and confirm `backup.status = ok`.
+3. Vacuum manual-review backlog:
+   - Inspect latest `runtime-data/maintenance-reports/incoming-vacuum-*.json`.
+   - Resolve ambiguous student matches manually in queue-hub or purge invalid rows.
+
+Promotion checklist (dev -> live):
+
+1. Run `npm test` with all new reliability tests green.
+2. Run 72-hour dev soak with no timer failures and stable Redis session behavior after restarts.
+3. Deploy runtime sync (`tools/deploy-api-safe.sh --force-sync`) and verify `/healthz`.
+4. Install systemd timers on live (`tools/install-maintenance-systemd.sh`) and verify with `systemctl list-timers`.
 
 ## Best Practices (Practical and Non-Negotiable)
 
@@ -453,23 +502,23 @@ Use rollover to archive and purge old operational year data (grades, attendance,
 ```bash
 # dry-run (no writes)
 npm run db:rollover -- \
-  --school-year 2025-2026 \
-  --start-date 2025-02-10 \
-  --end-date 2026-02-01
+  --school-year 2026-2027 \
+  --start-date 2026-08-01 \
+  --end-date 2027-07-31
 
 # archive + purge active DB rows for that year window
 npm run db:rollover -- \
-  --school-year 2025-2026 \
-  --start-date 2025-02-10 \
-  --end-date 2026-02-01 \
+  --school-year 2026-2027 \
+  --start-date 2026-08-01 \
+  --end-date 2027-07-31 \
   --apply
 
 # list archived runs
-npm run db:rollover:inspect -- --school-year 2025-2026
+npm run db:rollover:inspect -- --school-year 2026-2027
 
 # preview archived grade rows
 npm run db:rollover:inspect -- \
-  --school-year 2025-2026 \
+  --school-year 2026-2027 \
   --dataset studentGradeRecord \
   --limit 40
 ```
@@ -478,6 +527,18 @@ Archive output path:
 
 - `backups/school-year-archive/<schoolYear>/<runId>/`
 - contains per-dataset `*.ndjson.gz` files plus `manifest.json`.
+
+## School-Year Label Migration
+
+Use this when historical rows were labeled with an incorrect year marker and should be relabeled in-place.
+
+```bash
+# dry-run impact report
+npm run db:school-year:migrate-label
+
+# apply relabel: 2025-2026 -> 2026-2027
+npm run db:school-year:migrate-label -- --apply
+```
 
 ## Primary Entry Files
 

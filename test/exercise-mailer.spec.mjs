@@ -578,6 +578,94 @@ test("development runtime override allows start inside configured live root", as
   }
 })
 
+test("development runtime rejects live-port EXERCISE_MAILER_PORT wiring", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevMailerPort = process.env.EXERCISE_MAILER_PORT
+  const prevLiveRoot = process.env.SIS_LIVE_ROOT
+  const prevAllowDevOnLiveRoot = process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+
+  process.env.NODE_ENV = "development"
+  process.env.EXERCISE_MAILER_PORT = "8787"
+  process.env.SIS_LIVE_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), "sis-live-root-"))
+  delete process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+
+  try {
+    assert.throws(
+      () => startExerciseMailer({ transporter: makeMockTransport() }),
+      /Refusing to start development runtime on EXERCISE_MAILER_PORT=8787; expected 8788/i
+    )
+  } finally {
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
+
+    if (prevMailerPort === undefined) delete process.env.EXERCISE_MAILER_PORT
+    else process.env.EXERCISE_MAILER_PORT = prevMailerPort
+
+    if (prevLiveRoot === undefined) delete process.env.SIS_LIVE_ROOT
+    else process.env.SIS_LIVE_ROOT = prevLiveRoot
+
+    if (prevAllowDevOnLiveRoot === undefined) delete process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT
+    else process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT = prevAllowDevOnLiveRoot
+  }
+})
+
+test("live runtime is blocked when current directory matches configured dev root", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevDevRoot = process.env.SIS_DEV_ROOT
+  const prevAllowLiveOnDevRoot = process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT
+
+  process.env.NODE_ENV = "production"
+  process.env.SIS_DEV_ROOT = process.cwd()
+  delete process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT
+
+  try {
+    assert.throws(
+      () => startExerciseMailer({ transporter: makeMockTransport(), port: 0, host: "127.0.0.1" }),
+      /Refusing to start live runtime inside dev root/i
+    )
+  } finally {
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
+
+    if (prevDevRoot === undefined) delete process.env.SIS_DEV_ROOT
+    else process.env.SIS_DEV_ROOT = prevDevRoot
+
+    if (prevAllowLiveOnDevRoot === undefined) delete process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT
+    else process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT = prevAllowLiveOnDevRoot
+  }
+})
+
+test("live runtime override allows start inside configured dev root", async () => {
+  const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevDevRoot = process.env.SIS_DEV_ROOT
+  const prevAllowLiveOnDevRoot = process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT
+
+  process.env.NODE_ENV = "production"
+  process.env.SIS_DEV_ROOT = process.cwd()
+  process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT = "true"
+
+  let tmp = null
+  try {
+    tmp = await startExerciseMailer({ transporter: makeMockTransport(), port: 0, host: "127.0.0.1" })
+    await new Promise((resolve) => tmp.once("listening", resolve))
+    assert.ok(tmp.address().port > 0)
+  } finally {
+    if (tmp) await new Promise((done) => tmp.close(done))
+
+    if (prevNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = prevNodeEnv
+
+    if (prevDevRoot === undefined) delete process.env.SIS_DEV_ROOT
+    else process.env.SIS_DEV_ROOT = prevDevRoot
+
+    if (prevAllowLiveOnDevRoot === undefined) delete process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT
+    else process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT = prevAllowLiveOnDevRoot
+  }
+})
+
 test("shutdown", async () => {
   await new Promise((res) => server.close(res))
 })

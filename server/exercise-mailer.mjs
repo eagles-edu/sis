@@ -83,15 +83,8 @@ try {
   Configuration & Defaults
    ========================= */
 
-const DEFAULT_PORT = (() => {
-  const configuredPort = normalizeEnvText(process.env.EXERCISE_MAILER_PORT)
-  if (configuredPort) {
-    const parsed = Number(configuredPort)
-    if (Number.isFinite(parsed)) return parsed
-  }
-  const nodeEnv = normalizeEnvText(process.env.NODE_ENV).toLowerCase()
-  return nodeEnv === "development" ? 8788 : 8787
-})()
+const DEV_RUNTIME_PORT = 8788
+const LIVE_RUNTIME_PORT = 8787
 const DEFAULT_PATH = process.env.EXERCISE_MAILER_PATH || "/api/exercise-submission"
 const DEFAULT_INTAKE_PATH =
   process.env.EXERCISE_MAILER_INTAKE_PATH || "/api/student-intake-submission"
@@ -385,6 +378,21 @@ function resolveLiveRuntimeRoots() {
   return Array.from(new Set(configuredRoots.map((entry) => path.resolve(entry))))
 }
 
+function resolveDevRuntimeRoots() {
+  const configuredRoots = [
+    normalizeString(process.env.SIS_DEV_ROOTS),
+    normalizeString(process.env.SIS_DEV_ROOT) || "/home/eagles/dockerz/sis",
+  ]
+    .filter(Boolean)
+    .flatMap((entry) =>
+      String(entry)
+        .split(",")
+        .map((item) => normalizeString(item))
+        .filter(Boolean)
+    )
+  return Array.from(new Set(configuredRoots.map((entry) => path.resolve(entry))))
+}
+
 function isPathWithinAnyRoot(candidatePath, roots = []) {
   for (let i = 0; i < roots.length; i += 1) {
     if (isPathWithinRoot(candidatePath, roots[i])) return true
@@ -394,18 +402,61 @@ function isPathWithinAnyRoot(candidatePath, roots = []) {
 
 function assertRuntimeEnvironmentSeparation() {
   const nodeEnv = normalizeString(process.env.NODE_ENV).toLowerCase()
-  if (nodeEnv !== "development") return
-  if (resolveBoolean(process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT, false)) return
   const cwd = path.resolve(process.cwd())
-  const liveRoots = resolveLiveRuntimeRoots()
-  for (let i = 0; i < liveRoots.length; i += 1) {
-    if (isPathWithinRoot(cwd, liveRoots[i])) {
+  if (nodeEnv === "development") {
+    if (resolveBoolean(process.env.SIS_ALLOW_DEV_ON_LIVE_ROOT, false)) return
+    const liveRoots = resolveLiveRuntimeRoots()
+    for (let i = 0; i < liveRoots.length; i += 1) {
+      if (isPathWithinRoot(cwd, liveRoots[i])) {
+        throw new Error(
+          `Refusing to start development runtime inside live root (${liveRoots[i]}). ` +
+            "Use SIS_ALLOW_DEV_ON_LIVE_ROOT=true to override."
+        )
+      }
+    }
+    return
+  }
+  if (nodeEnv === "test") return
+  if (resolveBoolean(process.env.SIS_ALLOW_LIVE_ON_DEV_ROOT, false)) return
+  const devRoots = resolveDevRuntimeRoots()
+  for (let i = 0; i < devRoots.length; i += 1) {
+    if (isPathWithinRoot(cwd, devRoots[i])) {
       throw new Error(
-        `Refusing to start development runtime inside live root (${liveRoots[i]}). ` +
-          "Use SIS_ALLOW_DEV_ON_LIVE_ROOT=true to override."
+        `Refusing to start live runtime inside dev root (${devRoots[i]}). ` +
+          "Use NODE_ENV=development or set SIS_ALLOW_LIVE_ON_DEV_ROOT=true to override."
       )
     }
   }
+}
+
+function resolveExpectedMailerPort() {
+  const nodeEnv = normalizeString(process.env.NODE_ENV).toLowerCase()
+  return nodeEnv === "development" ? DEV_RUNTIME_PORT : LIVE_RUNTIME_PORT
+}
+
+function parseConfiguredMailerPort() {
+  const raw = normalizeEnvText(process.env.EXERCISE_MAILER_PORT)
+  if (!raw) return null
+  const parsed = Number(raw)
+  if (!Number.isInteger(parsed) || parsed <= 0 || parsed > 65535) {
+    throw new Error(`Invalid EXERCISE_MAILER_PORT value: ${raw}`)
+  }
+  return parsed
+}
+
+function resolveRuntimeMailerPort() {
+  const nodeEnv = normalizeString(process.env.NODE_ENV).toLowerCase()
+  const configuredPort = parseConfiguredMailerPort()
+  if (nodeEnv === "test") return configuredPort === null ? LIVE_RUNTIME_PORT : configuredPort
+  const expectedPort = resolveExpectedMailerPort()
+  if (configuredPort === null) return expectedPort
+  if (configuredPort !== expectedPort) {
+    const runtimeLabel = nodeEnv || "production"
+    throw new Error(
+      `Refusing to start ${runtimeLabel} runtime on EXERCISE_MAILER_PORT=${configuredPort}; expected ${expectedPort}.`
+    )
+  }
+  return configuredPort
 }
 
 function buildSubmissionActorKey(payload) {
@@ -628,6 +679,7 @@ function getRuntimeSelfHealStatus() {
 
 function buildRuntimeHealthPayload() {
   const studentAdminRuntime = getStudentAdminRuntimeStatus()
+  const maintenance = studentAdminRuntime?.maintenance || null
   return {
     status: "ok",
     startedAt: STATUS.startedAt,
@@ -645,6 +697,7 @@ function buildRuntimeHealthPayload() {
     endpoint: DEFAULT_PATH,
     intakeEndpoint: DEFAULT_INTAKE_PATH,
     studentAdminRuntime,
+    maintenance,
     runtimeSelfHeal: getRuntimeSelfHealStatus(),
   }
 }
@@ -1286,8 +1339,8 @@ async function handleRequest(request, response, transporter) {
 export function startExerciseMailer(options = {}) {
   assertRuntimeEnvironmentSeparation()
   const transporter = options.transporter || createTransport()
-  const port =
-    options.port === undefined || options.port === null ? DEFAULT_PORT : Number(options.port)
+  const hasExplicitPort = options.port !== undefined && options.port !== null
+  const port = hasExplicitPort ? Number(options.port) : resolveRuntimeMailerPort()
   const host =
     options.host === undefined || options.host === null ? DEFAULT_HOST : String(options.host)
   const selfHealLoop = startRuntimeSelfHealLoop()

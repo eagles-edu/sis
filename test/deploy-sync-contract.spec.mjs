@@ -32,6 +32,9 @@ test("deploy-api-safe mirrors runtime and public portal assets with delete seman
 })
 
 test("deploy-api-safe route matrices include admin/tabulator and parent/student routes", () => {
+  assert.match(deployScript, /PINNED_MAILER_PORT=\"8787\"/)
+  assert.doesNotMatch(deployScript, /MAILER_PORT=\"\$\{MAILER_PORT:-/)
+
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/admin\/auth\/me\|401/)
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/parent\/auth\/me\|401/)
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/student\/auth\/me\|401/)
@@ -47,6 +50,10 @@ test("deploy-api-safe route matrices include admin/tabulator and parent/student 
 })
 
 test("sis-runtime-resync uses delete-sync rsync and route matrices for all portals", () => {
+  assert.match(runtimeResyncScript, /PINNED_MAILER_PORT=\"8787\"/)
+  assert.doesNotMatch(runtimeResyncScript, /MAILER_PORT=\"\$\{MAILER_PORT:-/)
+  assert.doesNotMatch(runtimeResyncScript, /--mailer-port/)
+
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/parent\/auth\/me\|401/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/student\/auth\/me\|401/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/admin\/students\?page=grades-data\|200/)
