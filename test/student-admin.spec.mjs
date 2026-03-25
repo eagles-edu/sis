@@ -722,7 +722,7 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /assignment-head elective/)
   assert.match(html, /\|student:\$\{normalizeLower\(studentRefId\)\}/)
   assert.match(html, /<span class=\\\"exercise-cell\\\"><span><\/span><span><\/span><\/span>/)
-  assert.match(html, /const status = \["ontime", "late"\]\.includes\(value\.status\) \? value\.status : ""/)
+  assert.match(html, /const status = \["ontime", "late"\]\.includes\(value\.status\)\s*\?\s*value\.status\s*:\s*\(isCompleted \? "ontime" : ""\)/)
   assert.match(html, /includeWidth:\s*!shouldResetPersistedWidths/)
   assert.match(html, /schemaVersion:\s*TABLE_UI_STATE_SCHEMA_VERSION/)
   assert.match(html, /field:\s*"studentDisplay"[\s\S]*minWidth:\s*studentColumnMinWidth[\s\S]*width:\s*studentColumnWidth[\s\S]*frozen:\s*true/)

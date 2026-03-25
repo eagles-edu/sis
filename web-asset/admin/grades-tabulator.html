@@ -3861,8 +3861,10 @@
                 value?.completed === true
                 || Boolean(value?.submittedAt)
                 || Number.isFinite(value?.score)
-              const status = ["ontime", "late"].includes(value.status) ? value.status : ""
-              if (!isCompleted || !status) {
+              const status = ["ontime", "late"].includes(value.status)
+                ? value.status
+                : (isCompleted ? "ontime" : "")
+              if (!isCompleted) {
                 return `<span class=\"exercise-cell\"><span></span><span></span></span>`
               }
               return (
