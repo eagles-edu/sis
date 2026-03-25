@@ -461,7 +461,7 @@ test("tabulator archive period keeps archive mode and excludes current school-ye
   dom.window.close()
 })
 
-test("tabulator excludes auto-import standalone rows from assignment matrix headers", async () => {
+test("tabulator includes manual and auto-import rows in assignment matrix", async () => {
   const expectedSchoolYear = "2026-2027"
   const dom = await createTabulatorDom(
     makeTabulatorFetchHandler({
@@ -509,7 +509,7 @@ test("tabulator excludes auto-import standalone rows from assignment matrix head
 
   const document = dom.window.document
   const rowCountEl = document.getElementById("metricRows")
-  assert.equal(String(rowCountEl?.textContent || ""), "1")
+  assert.equal(String(rowCountEl?.textContent || ""), "2")
 
   dom.window.close()
 })

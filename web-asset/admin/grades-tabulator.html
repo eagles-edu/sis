@@ -545,6 +545,11 @@
       width: 100%;
   }
 
+    .assignment-head.elective {
+      background: linear-gradient(180deg, #d9ecff 0%, #c4dfff 100%);
+      border: 1px solid #b2d8f6;
+    }
+
     .assignment-head.megs {
       background: linear-gradient(180deg, #f8ecd4 0%, #f2e2c0 100%);
       border: 1px solid #e2d1ab;
@@ -575,6 +580,10 @@
       font-weight: 700;
       line-height: 1.15;
   }
+
+    .assignment-col.elective-col .assignment-title-text {
+      color: #0c4f8b;
+    }
 
     .tabulator .tabulator-cell.student-number-col {
       box-sizing: border-box;
@@ -1332,6 +1341,13 @@
       const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment"
       const GRADE_RECORD_SOURCE_MANUAL = "manual"
       const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"
+      const GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX = new Set([
+        GRADE_RECORD_SOURCE_ASSIGNMENT,
+        GRADE_RECORD_SOURCE_MANUAL,
+        GRADE_RECORD_SOURCE_AUTO_IMPORT,
+      ])
+      const ASSIGNMENT_HEAD_CLASS = "assignment-head"
+      const ASSIGNMENT_HEAD_ELECTIVE_CLASS = "assignment-head elective"
       const TABLE_HEIGHT_MIN_PX = 320
       const TABLE_HEIGHT_MAX_PX = 1400
       const DISTRIBUTION_ZOOM_MIN = 1
@@ -3476,18 +3492,23 @@
         const assignmentMetaMap = new Map()
 
         sourceRows.forEach((entry) => {
-          const key = assignmentKeyFromRow(entry)
-          if (!assignmentMetaMap.has(key)) {
-            assignmentMetaMap.set(key, {
-              key,
-              title: normalizedAssignmentTitleForRow(entry),
-              dueAt: normalizeText(entry?.dueAt),
-              quarter: normalizeUpper(entry?.quarter),
-              totalQuestions: Number.isFinite(entry?.maxScore) ? entry.maxScore : null,
-            })
-            return
-          }
-          const existing = assignmentMetaMap.get(key)
+        const key = assignmentKeyFromRow(entry)
+        const rowSource = normalizeGradeRecordSource(entry?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
+        if (!assignmentMetaMap.has(key)) {
+          assignmentMetaMap.set(key, {
+            key,
+            title: normalizedAssignmentTitleForRow(entry),
+            dueAt: normalizeText(entry?.dueAt),
+            quarter: normalizeUpper(entry?.quarter),
+            totalQuestions: Number.isFinite(entry?.maxScore) ? entry.maxScore : null,
+            type: rowSource === GRADE_RECORD_SOURCE_ASSIGNMENT ? "assignment" : "elective",
+          })
+          return
+        }
+        const existing = assignmentMetaMap.get(key)
+        if (existing && existing.type !== "elective" && rowSource !== GRADE_RECORD_SOURCE_ASSIGNMENT) {
+          existing.type = "elective"
+        }
           if (!existing.dueAt && normalizeText(entry?.dueAt)) existing.dueAt = normalizeText(entry?.dueAt)
           if (
             Number.isFinite(entry?.maxScore)
@@ -3771,7 +3792,13 @@
           const fullTitle = normalizeAssignmentHeaderTitle(rawTitle)
           const headerTitle = truncateHeaderTitle(fullTitle, assignmentTitleMaxChars)
           const isMegsTitle = isMegsAssignmentTitle(rawTitle)
-          const headerClass = isMegsTitle ? "assignment-head megs" : "assignment-head"
+          const isElective = normalizeText(meta.type) === "elective"
+          const headerClass = [
+            isElective ? ASSIGNMENT_HEAD_ELECTIVE_CLASS : ASSIGNMENT_HEAD_CLASS,
+            isMegsTitle ? "megs" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")
           const dueLabel = normalizeText(meta.dueAt) || "-"
           const questionLabel = Number.isFinite(meta.totalQuestions) ? formatShortNumber(meta.totalQuestions) : "-"
           const assignmentColumnMinWidth = viewportWidth <= 560 ? 66 : viewportWidth <= 880 ? 72 : 78
@@ -3796,7 +3823,7 @@
             minWidth: assignmentColumnMinWidth,
             width: assignmentColumnWidth,
             hozAlign: "center",
-            cssClass: "assignment-col",
+            cssClass: ["assignment-col", isElective ? "elective-col" : ""].filter(Boolean).join(" "),
             responsive: 30 + index,
             headerTooltip: () => `${fullTitle} | Q: ${questionLabel} | Due: ${dueLabel}`,
             headerSort: true,
@@ -4053,7 +4080,7 @@
           const rowSchoolYear = normalizeText(row?.schoolYear)
           const rowSource = normalizeGradeRecordSource(row?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
 
-          if (rowSource !== GRADE_RECORD_SOURCE_ASSIGNMENT) return false
+          if (!GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX.has(rowSource)) return false
 
           if (filters.period === "archive") {
             if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false
