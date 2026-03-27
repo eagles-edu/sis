@@ -77,10 +77,15 @@ test("GET /healthz returns ok + endpoint", async () => {
 test("POST /api/exercise-submission succeeds (204) and dispatches notifications", async () => {
   const payload = {
     email: "student@example.com",
-    studentId: "abc123",
+    eaglesId: "abc123",
     pageTitle: "Test Page",
+    completedAt: "2026-03-01T07:34:04.862Z",
+    correctCount: 9,
+    pendingCount: 0,
+    incorrectCount: 1,
+    totalQuestions: 10,
+    scorePercent: 90,
     recipients: ["recipient@example.com"],
-    answers: [{ id: 1, answers: ["ok"] }],
   }
   const res = await fetchLocal(basePort, "/api/exercise-submission", {
     method: "POST",
@@ -97,28 +102,62 @@ test("POST /api/exercise-submission succeeds (204) and dispatches notifications"
   assert.equal(teacherMail.to[0], "recipient@example.com")
   assert.equal(teacherMail.subject, "abc123 Exercise submission — Test Page")
   assert.match(teacherMail.text, /^abc123 just completed Test Page\./m)
-  assert.match(teacherMail.text, /Student ID: abc123/)
+  assert.match(teacherMail.text, /Eagles ID: abc123/)
   assert.match(teacherMail.text, /Student email: student@example.com/)
-  assert.match(teacherMail.text, /Question 1:/)
+  assert.match(teacherMail.text, /Score summary: 9\/10/)
   assert.equal(teacherMail.cc, undefined)
 
   assert.ok(learnerMail, "learner confirmation payload captured")
   assert.equal(learnerMail.to[0], "student@example.com")
   assert.match(learnerMail.subject, /Confirmation/)
   assert.match(learnerMail.text, /Test Page/)
-  assert.match(learnerMail.text, /Student ID: abc123/)
-  assert.doesNotMatch(learnerMail.text, /Question 1:/)
+  assert.match(learnerMail.text, /Eagles ID: abc123/)
+  assert.match(learnerMail.text, /Score summary: 9\/10/)
+})
+
+test("POST /api/exercise-submission normalizes dotted numeric sections in pageTitle", async () => {
+  const beforeHistory = transport.calls.history.length
+  const payload = {
+    email: "section@example.com",
+    eaglesId: "sec111",
+    pageTitle: "1.1.1 Common Nouns",
+    completedAt: "2026-03-01T07:35:04.862Z",
+    correctCount: 10,
+    pendingCount: 0,
+    incorrectCount: 0,
+    totalQuestions: 10,
+    scorePercent: 100,
+    recipients: ["section-recipient@example.com"],
+  }
+  const res = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  assert.equal(res.status, 204)
+
+  const newHistory = transport.calls.history.slice(beforeHistory)
+  assert.equal(newHistory.length, 2, "teacher + learner mails captured")
+  const [teacherMail, learnerMail] = newHistory
+  assert.equal(teacherMail.subject, "sec111 Exercise submission — 1 1 1 Common Nouns")
+  assert.match(teacherMail.text, /completed 1 1 1 Common Nouns\./)
+  assert.match(learnerMail.subject, /1 1 1 Common Nouns/)
+  assert.match(learnerMail.text, /1 1 1 Common Nouns/)
 })
 
 test("POST /api/exercise-submission suppresses duplicate notifications for same submission", async () => {
   const beforeHistory = transport.calls.history.length
   const payload = {
     email: "once@example.com",
-    studentId: "once001",
+    eaglesId: "once001",
     pageTitle: "Notify Once",
     completedAt: "2026-03-01T07:42:57.670Z",
+    correctCount: 8,
+    pendingCount: 0,
+    incorrectCount: 2,
+    totalQuestions: 10,
+    scorePercent: 80,
     recipients: ["recipient-once@example.com"],
-    answers: [{ id: 1, answers: ["ok"] }],
   }
 
   const first = await fetchLocal(basePort, "/api/exercise-submission", {
@@ -145,15 +184,20 @@ test("POST /api/exercise-submission decodes obfuscated recipients", async () => 
   const beforeHistory = transport.calls.history.length
   const payload = {
     email: "student2@example.com",
-    studentId: "def456",
+    eaglesId: "def456",
     pageTitle: "Decode Test",
+    completedAt: "2026-03-01T07:59:21.000Z",
+    correctCount: 7,
+    pendingCount: 1,
+    incorrectCount: 2,
+    totalQuestions: 10,
+    scorePercent: 70,
     recipients: [
       { utf8: Buffer.from("teacher2@example.com", "utf8").toString("hex") },
       {
         codepoints: Array.from("admin@example.com").map((char) => char.codePointAt(0)),
       },
     ],
-    answers: [{ id: 1, answers: ["ok"] }],
   }
 
   const res = await fetchLocal(basePort, "/api/exercise-submission", {
@@ -171,8 +215,19 @@ test("POST /api/exercise-submission decodes obfuscated recipients", async () => 
   assert.equal(learnerMail.to[0], "student2@example.com")
 })
 
-test("POST /api/exercise-submission with missing answers returns 400", async () => {
-  const bad = { email: "x@example.com", answers: [] }
+test("POST /api/exercise-submission rejects unsupported answers field", async () => {
+  const bad = {
+    eaglesId: "x001",
+    email: "x@example.com",
+    pageTitle: "Unsupported Answers",
+    completedAt: "2026-03-01T08:00:00.000Z",
+    correctCount: 1,
+    pendingCount: 0,
+    incorrectCount: 0,
+    totalQuestions: 1,
+    scorePercent: 100,
+    answers: [],
+  }
   const res = await fetchLocal(basePort, "/api/exercise-submission", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -180,7 +235,52 @@ test("POST /api/exercise-submission with missing answers returns 400", async () 
   })
   assert.equal(res.status, 400)
   const b = await res.json()
-  assert.match(b.error, /Missing answers/i)
+  assert.match(b.error, /Unsupported field: answers/i)
+})
+
+test("POST /api/exercise-submission rejects unsupported studentId field", async () => {
+  const bad = {
+    eaglesId: "x002",
+    studentId: "legacy-x002",
+    email: "x2@example.com",
+    pageTitle: "Unsupported StudentId",
+    completedAt: "2026-03-01T08:01:00.000Z",
+    correctCount: 1,
+    pendingCount: 0,
+    incorrectCount: 0,
+    totalQuestions: 1,
+    scorePercent: 100,
+  }
+  const res = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(bad),
+  })
+  assert.equal(res.status, 400)
+  const body = await res.json()
+  assert.match(body.error, /Unsupported field: studentId/i)
+})
+
+test("POST /api/exercise-submission rejects inconsistent metrics", async () => {
+  const bad = {
+    eaglesId: "x003",
+    email: "x3@example.com",
+    pageTitle: "Metric mismatch",
+    completedAt: "2026-03-01T08:02:00.000Z",
+    correctCount: 8,
+    pendingCount: 1,
+    incorrectCount: 1,
+    totalQuestions: 12,
+    scorePercent: 80,
+  }
+  const res = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(bad),
+  })
+  assert.equal(res.status, 400)
+  const body = await res.json()
+  assert.match(body.error, /totalQuestions must equal correctCount \+ pendingCount \+ incorrectCount/i)
 })
 
 test("POST /api/student-intake-submission accepts intake payload and does not send email", async () => {

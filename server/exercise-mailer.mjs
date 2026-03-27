@@ -228,6 +228,15 @@ function normalizeString(value) {
   return String(value).trim()
 }
 
+function normalizeExerciseSectionNotation(value) {
+  const text = normalizeString(value)
+  if (!text) return ""
+  return text
+    .replace(/\b\d+(?:\.\d+)+\b/gu, (token) => token.replace(/\./gu, " "))
+    .replace(/\s+/gu, " ")
+    .trim()
+}
+
 function isPathWithinRoot(candidatePath, rootPath) {
   const candidate = path.resolve(candidatePath)
   const root = path.resolve(rootPath)
@@ -460,10 +469,10 @@ function resolveRuntimeMailerPort() {
 }
 
 function buildSubmissionActorKey(payload) {
-  const studentId = normalizeString(payload?.studentId || "(not provided)").toLowerCase()
+  const eaglesId = normalizeString(payload?.eaglesId || "(not provided)").toLowerCase()
   const email = normalizeString(payload?.email).toLowerCase() || "-"
-  const pageTitle = normalizeString(payload?.pageTitle || "Untitled exercise").toLowerCase()
-  return `${studentId}|${email}|${pageTitle}`
+  const pageTitle = normalizeExerciseSectionNotation(payload?.pageTitle || "Untitled exercise").toLowerCase()
+  return `${eaglesId}|${email}|${pageTitle}`
 }
 
 function buildSubmissionNotificationKey(payload) {
@@ -795,19 +804,6 @@ function decodeRecipients(list) {
   return decoded
 }
 
-function formatAnswers(answers) {
-  if (!Array.isArray(answers) || !answers.length) return "(no answers recorded)"
-  const rows = answers.map((entry) => {
-    const id = entry && entry.id ? String(entry.id) : "?"
-    const values = Array.isArray(entry?.answers) ? entry.answers : []
-    const formattedValues = values
-      .map((value, index) => `  ${index + 1}. ${value || "(blank)"}`)
-      .join("\n")
-    return `Question ${id}:\n${formattedValues || "  (no responses)"}`
-  })
-  return rows.join("\n\n")
-}
-
 function isEmailLike(value) {
   if (typeof value !== "string") return false
   const trimmed = value.trim()
@@ -815,19 +811,46 @@ function isEmailLike(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
 }
 
-function createEmail({ email, studentId, pageTitle, completedAt, recipients, answers }) {
+function formatMetricSummary({ correctCount, pendingCount, incorrectCount, totalQuestions, scorePercent }) {
+  const total = Number.parseInt(String(totalQuestions || 0), 10) || 0
+  const correct = Number.parseInt(String(correctCount || 0), 10) || 0
+  const pending = Number.parseInt(String(pendingCount || 0), 10) || 0
+  const incorrect = Number.parseInt(String(incorrectCount || 0), 10) || 0
+  const percent = Number.isFinite(Number(scorePercent)) ? Number(scorePercent).toFixed(2) : "0.00"
+  return `${correct}/${total} (${percent}%) | pending=${pending} | incorrect=${incorrect}`
+}
+
+function createEmail({
+  email,
+  eaglesId,
+  pageTitle,
+  completedAt,
+  recipients,
+  correctCount,
+  pendingCount,
+  incorrectCount,
+  totalQuestions,
+  scorePercent,
+}) {
   const to = coerceArray(recipients)
   const trimmedEmail = isEmailLike(email) ? email.trim() : ""
   const submittedAt = completedAt || new Date().toISOString()
   const subjectBase = `Exercise submission${pageTitle ? ` — ${pageTitle}` : ""}`
-  const teacherSubject = `${studentId ? `${studentId} ` : ""}${subjectBase}`
+  const teacherSubject = `${eaglesId ? `${eaglesId} ` : ""}${subjectBase}`
 
-  const studentDisplayId = studentId || "(not provided)"
-  const introIdentifier = studentId ? studentId : "Student ID (not provided)"
-  const studentIdLine = `Student ID: ${studentDisplayId}`
+  const studentDisplayId = eaglesId || "(not provided)"
+  const introIdentifier = eaglesId ? eaglesId : "Eagles ID (not provided)"
+  const studentIdLine = `Eagles ID: ${studentDisplayId}`
   const studentEmailLine = trimmedEmail
     ? `Student email: ${trimmedEmail}`
     : "Student email: (not provided)"
+  const scoreLine = `Score summary: ${formatMetricSummary({
+    correctCount,
+    pendingCount,
+    incorrectCount,
+    totalQuestions,
+    scorePercent,
+  })}`
 
   const textBody = [
     `${introIdentifier} just completed ${pageTitle || "an exercise"}.`,
@@ -835,25 +858,8 @@ function createEmail({ email, studentId, pageTitle, completedAt, recipients, ans
     `Submitted at: ${submittedAt}`,
     studentEmailLine,
     studentIdLine,
-    "",
-    formatAnswers(answers),
+    scoreLine,
   ].join("\n")
-
-  const htmlAnswers = Array.isArray(answers)
-    ? answers
-        .map((entry) => {
-          const id = entry && entry.id ? String(entry.id) : "?"
-          const values = Array.isArray(entry?.answers) ? entry.answers : []
-          const items = values
-            .map(
-              (value, index) =>
-                `<li><strong>${index + 1}.</strong> ${value || "<em>(blank)</em>"}</li>`
-            )
-            .join("")
-          return `<section><h3>Question ${id}</h3><ol>${items || "<li><em>(no responses)</em></li>"}</ol></section>`
-        })
-        .join("")
-    : "<p><em>No answers recorded.</em></p>"
 
   const htmlBody = `
     <div>
@@ -861,9 +867,15 @@ function createEmail({ email, studentId, pageTitle, completedAt, recipients, ans
       <ul>
         <li><strong>Submitted at:</strong> ${submittedAt}</li>
         <li><strong>Student email:</strong> ${trimmedEmail || "(not provided)"}</li>
-        <li><strong>Student ID:</strong> ${studentDisplayId}</li>
+        <li><strong>Eagles ID:</strong> ${studentDisplayId}</li>
+        <li><strong>Score summary:</strong> ${formatMetricSummary({
+          correctCount,
+          pendingCount,
+          incorrectCount,
+          totalQuestions,
+          scorePercent,
+        })}</li>
       </ul>
-      ${htmlAnswers}
     </div>
   `
 
@@ -883,7 +895,14 @@ function createEmail({ email, studentId, pageTitle, completedAt, recipients, ans
       `Thanks for completing ${pageName}.`,
       "",
       `Submitted at: ${submittedAt}`,
-      `Student ID: ${studentId || "(not provided)"}`,
+      `Eagles ID: ${eaglesId || "(not provided)"}`,
+      `Score summary: ${formatMetricSummary({
+        correctCount,
+        pendingCount,
+        incorrectCount,
+        totalQuestions,
+        scorePercent,
+      })}`,
       `Email: ${trimmedEmail}`,
     ].join("\n")
 
@@ -892,7 +911,14 @@ function createEmail({ email, studentId, pageTitle, completedAt, recipients, ans
         <p>Thanks for completing <strong>${pageName}</strong>.</p>
         <ul>
           <li><strong>Submitted at:</strong> ${submittedAt}</li>
-          <li><strong>Student ID:</strong> ${studentId || "(not provided)"}</li>
+          <li><strong>Eagles ID:</strong> ${eaglesId || "(not provided)"}</li>
+          <li><strong>Score summary:</strong> ${formatMetricSummary({
+            correctCount,
+            pendingCount,
+            incorrectCount,
+            totalQuestions,
+            scorePercent,
+          })}</li>
           <li><strong>Email:</strong> ${trimmedEmail}</li>
         </ul>
       </div>
@@ -931,20 +957,84 @@ function parseBody(request) {
   })
 }
 
+function createBadRequestError(message) {
+  const error = new Error(message)
+  error.statusCode = 400
+  return error
+}
+
+function parseRequiredNonNegativeInteger(value, fieldName) {
+  const parsed = Number.parseInt(String(value), 10)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw createBadRequestError(`Invalid ${fieldName}`)
+  }
+  return parsed
+}
+
+function parseRequiredPercent(value, fieldName) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+    throw createBadRequestError(`Invalid ${fieldName}`)
+  }
+  return Number(parsed.toFixed(2))
+}
+
+function expectedScorePercent(correctCount, totalQuestions) {
+  if (!Number.isFinite(totalQuestions) || totalQuestions <= 0) return 0
+  return Number(((correctCount / totalQuestions) * 100).toFixed(2))
+}
+
 function validatePayload(payload) {
-  if (!payload || typeof payload !== "object") throw new Error("Invalid payload")
-  const email = typeof payload.email === "string" ? payload.email.trim() : ""
-  const studentId = typeof payload.studentId === "string" ? payload.studentId.trim() : ""
-  const answers = Array.isArray(payload.answers) ? payload.answers : []
-  if (!answers.length) throw new Error("Missing answers")
+  if (!payload || typeof payload !== "object") throw createBadRequestError("Invalid payload")
+  if (Object.prototype.hasOwnProperty.call(payload, "studentId")) {
+    throw createBadRequestError("Unsupported field: studentId")
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, "answers")) {
+    throw createBadRequestError("Unsupported field: answers")
+  }
+
+  const eaglesId = normalizeString(payload?.eaglesId)
+  if (!eaglesId) throw createBadRequestError("Missing eaglesId")
+
+  const email = normalizeString(payload?.email)
+  if (!isEmailLike(email)) throw createBadRequestError("Invalid email")
+
+  const rawPageTitle = normalizeString(payload?.pageTitle)
+  if (!rawPageTitle) throw createBadRequestError("Missing pageTitle")
+  const pageTitle = normalizeExerciseSectionNotation(rawPageTitle)
+
+  const completedAt = normalizeString(payload?.completedAt)
+  if (!completedAt || Number.isNaN(Date.parse(completedAt))) {
+    throw createBadRequestError("Invalid completedAt")
+  }
+
+  const correctCount = parseRequiredNonNegativeInteger(payload?.correctCount, "correctCount")
+  const pendingCount = parseRequiredNonNegativeInteger(payload?.pendingCount, "pendingCount")
+  const incorrectCount = parseRequiredNonNegativeInteger(payload?.incorrectCount, "incorrectCount")
+  const totalQuestions = parseRequiredNonNegativeInteger(payload?.totalQuestions, "totalQuestions")
+  const scorePercent = parseRequiredPercent(payload?.scorePercent, "scorePercent")
+
+  if (totalQuestions !== correctCount + pendingCount + incorrectCount) {
+    throw createBadRequestError(
+      "Invalid metrics: totalQuestions must equal correctCount + pendingCount + incorrectCount"
+    )
+  }
+  const expectedPercent = expectedScorePercent(correctCount, totalQuestions)
+  if (Math.abs(scorePercent - expectedPercent) > 0.01) {
+    throw createBadRequestError("Invalid metrics: scorePercent mismatch")
+  }
+
   return {
+    eaglesId,
     email,
-    studentId,
-    pageTitle: typeof payload.pageTitle === "string" ? payload.pageTitle.trim() : "",
-    completedAt:
-      typeof payload.completedAt === "string" ? payload.completedAt : new Date().toISOString(),
+    pageTitle,
+    completedAt,
     recipients: decodeRecipients(Array.isArray(payload.recipients) ? payload.recipients : []),
-    answers,
+    correctCount,
+    pendingCount,
+    incorrectCount,
+    totalQuestions,
+    scorePercent,
   }
 }
 
@@ -1318,7 +1408,7 @@ async function handleRequest(request, response, transporter) {
     STATUS.lastSendAt = new Date().toISOString()
     STATUS.lastError = String(error?.message || error)
     const status =
-      error.message === "Missing answers" ||
+      error?.statusCode === 400 ||
       error.message === "Missing intake form fields" ||
       error.message === "Invalid intake payload"
         ? 400

@@ -514,6 +514,62 @@ test("tabulator includes manual and auto-import rows in assignment matrix", asyn
   dom.window.close()
 })
 
+test("tabulator merges standalone auto-import attempts into one exercise column", async () => {
+  const expectedSchoolYear = "2026-2027"
+  const dom = await createTabulatorDom(
+    makeTabulatorFetchHandler({
+      authenticated: true,
+      settingsSchoolYear: expectedSchoolYear,
+      gradeRecords: [
+        {
+          id: "grade-auto-import-1",
+          assignmentName: "1.1.2 Proper Nouns",
+          className: "1.1.2 Proper Nouns",
+          dueAt: "2026-03-16T01:23:45.000Z",
+          submittedAt: "2026-03-16T01:23:45.000Z",
+          score: 30,
+          maxScore: 100,
+          homeworkCompleted: true,
+          homeworkOnTime: true,
+          schoolYear: expectedSchoolYear,
+          quarter: "q1",
+          comments: "Auto-imported exercise score (3/10 correct).",
+          source: "auto-import",
+        },
+        {
+          id: "grade-auto-import-2",
+          assignmentName: "1.1.2 Proper Nouns",
+          className: "1.1.2 Proper Nouns",
+          dueAt: "2026-03-16T01:29:05.000Z",
+          submittedAt: "2026-03-16T01:29:05.000Z",
+          score: 80,
+          maxScore: 100,
+          homeworkCompleted: true,
+          homeworkOnTime: true,
+          schoolYear: expectedSchoolYear,
+          quarter: "q1",
+          comments: "Auto-imported exercise score (8/10 correct).",
+          source: "auto-import",
+        },
+      ],
+    }),
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=sytd&schoolYear=2026-2027",
+  )
+
+  await waitFor(() => {
+    const statusText = String(dom.window.document.getElementById("statusLine")?.textContent || "")
+    assert.match(statusText, /SIS load complete/i)
+  }, 5000)
+
+  const document = dom.window.document
+  const rowCountEl = document.getElementById("metricRows")
+  const rangeHintText = String(document.getElementById("rangeHint")?.textContent || "")
+  assert.equal(String(rowCountEl?.textContent || ""), "2")
+  assert.match(rangeHintText, /Exercises 1/i)
+
+  dom.window.close()
+})
+
 test("tabulator sytd query quarter=q3 resets to ssot current quarter", async () => {
   const expectedSchoolYear = "2026-2027"
   const dom = await createTabulatorDom(

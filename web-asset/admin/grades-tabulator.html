@@ -3136,17 +3136,22 @@
           const commentText = normalizeText(record?.comments)
           const parsedCorrectTotal = parseCorrectTotalFromComments(commentText)
           const rawScore = toNumber(record?.score)
+          const rawScorePercent = toNumber(record?.scorePercent)
+          const effectiveScore = rawScore
           const rawMaxScore = toNumber(record?.maxScore)
           const questionCount = Number.isFinite(parsedCorrectTotal.totalQuestions) && parsedCorrectTotal.totalQuestions > 0
             ? parsedCorrectTotal.totalQuestions
             : rawMaxScore && rawMaxScore > 0
               ? rawMaxScore
               : null
-          let correctCount = Number.isFinite(parsedCorrectTotal.correctCount)
+          const usesParsedCorrectCount = Number.isFinite(parsedCorrectTotal.correctCount)
+          let correctCount = usesParsedCorrectCount
             ? parsedCorrectTotal.correctCount
-            : rawScore
+            : effectiveScore
           if (
-            correctCount !== null
+            !usesParsedCorrectCount
+            && Number.isFinite(correctCount)
+            && correctCount !== null
             && Number.isFinite(rawMaxScore)
             && rawMaxScore > 0
             && Number.isFinite(questionCount)
@@ -3157,8 +3162,10 @@
           }
           const scorePercent = Number.isFinite(correctCount) && Number.isFinite(questionCount) && questionCount > 0
             ? percentValue(correctCount, questionCount)
-            : rawMaxScore && rawMaxScore > 0 && rawScore !== null
-              ? percentValue(rawScore, rawMaxScore)
+            : rawScorePercent !== null
+              ? rawScorePercent
+            : rawMaxScore && rawMaxScore > 0 && effectiveScore !== null
+              ? percentValue(effectiveScore, rawMaxScore)
               : null
           const quarter = normalizeLower(record?.quarter) || quarterFromIsoDate(dateKey)
           const schoolYear = normalizeText(record?.schoolYear) || schoolYearForIsoDate(dateKey)
@@ -3287,15 +3294,14 @@
 
       function assignmentKeyFromRow(row = {}) {
         const title = normalizedAssignmentTitleForRow(row)
-        const dueAt = normalizeText(row?.dueAt)
+        const isStandaloneAutoImport = isStandaloneAutoImportedExerciseRow(row)
+        const rowSource = isStandaloneAutoImport
+          ? GRADE_RECORD_SOURCE_AUTO_IMPORT
+          : normalizeGradeRecordSource(row?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
+        const dueAt = isStandaloneAutoImport ? "" : normalizeText(row?.dueAt)
         const schoolYear = normalizeText(row?.schoolYear)
         const quarter = normalizeQuarterCode(row?.quarter)
-        const studentRefId = normalizeText(row?.studentRefId)
-        const studentScopeSuffix =
-          isStandaloneAutoImportedExerciseRow(row) && studentRefId
-            ? `|student:${normalizeLower(studentRefId)}`
-            : ""
-        return `${normalizeLower(title)}|${dueAt}|${schoolYear}|${quarter}${studentScopeSuffix}`
+        return `${rowSource}|${normalizeLower(title)}|${dueAt}|${schoolYear}|${quarter}`
       }
 
       function medianOfNumbers(values = []) {
@@ -3487,6 +3493,66 @@
         }
       }
 
+      function scoreCellRank(cell = {}) {
+        if (!cell || typeof cell !== "object") return -1
+        if (Number.isFinite(cell?.score)) return 3
+        if (cell?.completed === true || Boolean(cell?.submittedAt)) return 2
+        if (Number.isFinite(cell?.maxScore)) return 1
+        return 0
+      }
+
+      function scoreCellPercentValue(cell = {}) {
+        if (!cell || typeof cell !== "object") return null
+        if (Number.isFinite(cell?.percent)) return Number(cell.percent)
+        const score = Number(cell?.score)
+        const maxScore = Number(cell?.maxScore)
+        if (Number.isFinite(score) && Number.isFinite(maxScore) && maxScore > 0) {
+          return percentValue(score, maxScore)
+        }
+        return null
+      }
+
+      function scoreCellTimestampValue(cell = {}) {
+        const submittedAt = normalizeText(cell?.submittedAt)
+        const dueAt = normalizeText(cell?.dueAt)
+        const candidate = submittedAt || dueAt
+        if (!candidate) return null
+        const parsed = new Date(candidate)
+        if (Number.isNaN(parsed.valueOf())) return null
+        return parsed.valueOf()
+      }
+
+      function shouldReplaceScoreCell(existingCell, nextCell) {
+        if (!existingCell || typeof existingCell !== "object") return true
+        if (!nextCell || typeof nextCell !== "object") return false
+        const existingPercent = scoreCellPercentValue(existingCell)
+        const nextPercent = scoreCellPercentValue(nextCell)
+        if (Number.isFinite(nextPercent) && Number.isFinite(existingPercent)) {
+          if (nextPercent !== existingPercent) return nextPercent > existingPercent
+        } else if (Number.isFinite(nextPercent) && !Number.isFinite(existingPercent)) {
+          return true
+        } else if (!Number.isFinite(nextPercent) && Number.isFinite(existingPercent)) {
+          return false
+        }
+        const existingRank = scoreCellRank(existingCell)
+        const nextRank = scoreCellRank(nextCell)
+        if (nextRank !== existingRank) return nextRank > existingRank
+        const existingTimestamp = scoreCellTimestampValue(existingCell)
+        const nextTimestamp = scoreCellTimestampValue(nextCell)
+        if (
+          Number.isFinite(nextTimestamp)
+          && Number.isFinite(existingTimestamp)
+          && nextTimestamp !== existingTimestamp
+        ) {
+          return nextTimestamp > existingTimestamp
+        }
+        if (Number.isFinite(nextCell?.percent) && !Number.isFinite(existingCell?.percent)) return true
+        if (Number.isFinite(existingCell?.percent) && !Number.isFinite(nextCell?.percent)) return false
+        if (Number.isFinite(nextCell?.score) && !Number.isFinite(existingCell?.score)) return true
+        if (Number.isFinite(existingCell?.score) && !Number.isFinite(nextCell?.score)) return false
+        return false
+      }
+
       function buildMatrixModel(rows = []) {
         const sourceRows = Array.isArray(rows) ? rows : []
         const assignmentMetaMap = new Map()
@@ -3553,7 +3619,7 @@
             : scoreValue !== null && maxScoreValue !== null && maxScoreValue > 0
               ? percentValue(scoreValue, maxScoreValue)
               : null
-          row[assignmentKey] = {
+          const nextCell = {
             score: scoreValue,
             maxScore: maxScoreValue,
             percent: scorePercent,
@@ -3568,6 +3634,10 @@
             submittedAt: normalizeText(entry?.submittedAt),
             comments: normalizeText(entry?.comments),
             level: normalizeText(entry?.level),
+          }
+          const currentCell = row[assignmentKey]
+          if (shouldReplaceScoreCell(currentCell, nextCell)) {
+            row[assignmentKey] = nextCell
           }
         })
 

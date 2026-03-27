@@ -4511,7 +4511,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
     {
       id: "incoming-01",
       status: "queued",
-      submittedStudentId: "anon001",
+      submittedEaglesId: "anon001",
       submittedEmail: "anon001@example.com",
       pageTitle: "Starter Homework Quiz",
       totalQuestions: 20,
@@ -4523,7 +4523,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
     {
       id: "incoming-02",
       status: "queued",
-      submittedStudentId: "anon002",
+      submittedEaglesId: "anon002",
       submittedEmail: "anon002@example.com",
       pageTitle: "Common Nouns Checkpoint",
       totalQuestions: 20,
@@ -4535,7 +4535,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
     {
       id: "incoming-03",
       status: "resolved",
-      submittedStudentId: "anon003",
+      submittedEaglesId: "anon003",
       submittedEmail: "anon003@example.com",
       pageTitle: "Resolved Listening Quiz",
       totalQuestions: 10,

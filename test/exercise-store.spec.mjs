@@ -72,7 +72,7 @@ function makePersistPrisma({
         const matches = state.matchedSubmissionRows.filter((row) => {
           if (where.studentRefId !== undefined && row?.studentRefId !== where.studentRefId) return false
           if (where.exerciseRefId !== undefined && row?.exerciseRefId !== where.exerciseRefId) return false
-          if (where.submittedStudentId !== undefined && row?.submittedStudentId !== where.submittedStudentId) return false
+          if (where.submittedEaglesId !== undefined && row?.submittedEaglesId !== where.submittedEaglesId) return false
           if (where.submittedEmail !== undefined && row?.submittedEmail !== where.submittedEmail) return false
           if (where.completedAt && !matchesDateRange(row?.completedAt, where.completedAt)) return false
           if (where.createdAt && !matchesDateRange(row?.createdAt, where.createdAt)) return false
@@ -176,17 +176,31 @@ function makePersistPrisma({
   return prisma
 }
 
+function nativeExercisePayload(overrides = {}) {
+  return {
+    eaglesId: "S001",
+    email: "student@example.com",
+    pageTitle: "Movers Unit 3",
+    completedAt: "2026-03-01T07:34:04.862Z",
+    correctCount: 8,
+    pendingCount: 1,
+    incorrectCount: 1,
+    totalQuestions: 10,
+    scorePercent: 80,
+    recipients: ["teacher@example.com"],
+    ...overrides,
+  }
+}
+
 test("persistExerciseSubmission queues unmatched payload for manual disposition", async () => {
   const prisma = makePersistPrisma({ matchedStudent: null })
 
   const result = await persistExerciseSubmission(
-    {
-      studentId: "",
+    nativeExercisePayload({
+      eaglesId: "unknown-001",
       email: "unknown@example.com",
       pageTitle: "Starter Listening 01",
-      answers: [{ id: 1, answers: ["A"], status: "correct" }],
-      recipients: ["teacher@example.com"],
-    },
+    }),
     { prisma }
   )
 
@@ -203,17 +217,20 @@ test("persistExerciseSubmission queues unmatched payload for manual disposition"
   )
 })
 
-test("persistExerciseSubmission de-duplicates nearby queue records and prefers richer status payload", async () => {
+test("persistExerciseSubmission de-duplicates nearby queue records and keeps the highest score", async () => {
   const prisma = makePersistPrisma({ matchedStudent: null })
 
-  const firstPayload = {
-    studentId: "dup-01",
+  const firstPayload = nativeExercisePayload({
+    eaglesId: "dup-01",
     email: "dup@example.com",
     pageTitle: "Common Nouns",
     completedAt: "2026-03-01T07:34:04.862Z",
-    recipients: ["teacher@example.com"],
-    answers: [{ id: 1, answers: ["book"] }],
-  }
+    correctCount: 5,
+    pendingCount: 0,
+    incorrectCount: 5,
+    totalQuestions: 10,
+    scorePercent: 50,
+  })
 
   const firstResult = await persistExerciseSubmission(firstPayload, { prisma })
   assert.equal(firstResult.shouldNotify, true)
@@ -223,7 +240,11 @@ test("persistExerciseSubmission de-duplicates nearby queue records and prefers r
   const secondPayload = {
     ...firstPayload,
     completedAt: "2026-03-01T07:34:05.100Z",
-    answers: [{ id: 1, answers: ["book"], status: "correct", needsReview: false }],
+    correctCount: 10,
+    pendingCount: 0,
+    incorrectCount: 0,
+    totalQuestions: 10,
+    scorePercent: 100,
   }
 
   const secondResult = await persistExerciseSubmission(secondPayload, { prisma })
@@ -239,28 +260,30 @@ test("persistExerciseSubmission de-duplicates nearby queue records and prefers r
   assert.equal(prisma.state.incomingUpdateCalls.length, 1)
 
   const stored = prisma.state.queueRows[0]
-  assert.equal(stored.correctCount, 1)
+  assert.equal(stored.correctCount, 10)
   assert.equal(stored.scorePercent, 100)
-  assert.equal(stored.answersJson[0].status, "correct")
 })
 
 test("persistExerciseSubmission records directly when student account is matched", async () => {
   const prisma = makePersistPrisma({
     matchedStudent: {
       id: "student-1",
-      studentId: "S001",
+      eaglesId: "S001",
       email: "student@example.com",
     },
   })
 
   const result = await persistExerciseSubmission(
-    {
-      studentId: "S001",
+    nativeExercisePayload({
+      eaglesId: "S001",
       email: "student@example.com",
       pageTitle: "Movers Unit 3",
-      answers: [{ id: 1, answers: ["B"], status: "correct" }],
-      recipients: ["teacher@example.com"],
-    },
+      correctCount: 10,
+      pendingCount: 0,
+      incorrectCount: 0,
+      totalQuestions: 10,
+      scorePercent: 100,
+    }),
     { prisma }
   )
 
@@ -279,19 +302,22 @@ test("persistExerciseSubmission canonicalizes noisy pageTitle for auto-import gr
   const prisma = makePersistPrisma({
     matchedStudent: {
       id: "student-1",
-      studentId: "S001",
+      eaglesId: "S001",
       email: "student@example.com",
     },
   })
 
   const result = await persistExerciseSubmission(
-    {
-      studentId: "S001",
+    nativeExercisePayload({
+      eaglesId: "S001",
       email: "student@example.com",
       pageTitle: "https://portal.eagles.edu.vn/exercises/Movers-Unit-3.html?session=abc123#result",
-      answers: [{ id: 1, answers: ["B"], status: "correct" }],
-      recipients: ["teacher@example.com"],
-    },
+      correctCount: 10,
+      pendingCount: 0,
+      incorrectCount: 0,
+      totalQuestions: 10,
+      scorePercent: 100,
+    }),
     { prisma }
   )
 
@@ -304,11 +330,43 @@ test("persistExerciseSubmission canonicalizes noisy pageTitle for auto-import gr
   assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.assignmentName, "Movers Unit 3")
 })
 
+test("persistExerciseSubmission normalizes dotted section tokens in pageTitle", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      eaglesId: "S001",
+      email: "student@example.com",
+    },
+  })
+
+  const result = await persistExerciseSubmission(
+    nativeExercisePayload({
+      eaglesId: "S001",
+      email: "student@example.com",
+      pageTitle: "1.1.1 Common Nouns",
+      correctCount: 10,
+      pendingCount: 0,
+      incorrectCount: 0,
+      totalQuestions: 10,
+      scorePercent: 100,
+    }),
+    { prisma }
+  )
+
+  assert.equal(result.saved, true)
+  assert.equal(result.matched, true)
+  assert.equal(prisma.state.exerciseUpsertCalls.length, 1)
+  assert.equal(prisma.state.exerciseUpsertCalls[0]?.create?.title, "1 1 1 Common Nouns")
+  assert.equal(prisma.state.gradeRecordCreateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.className, "1 1 1 Common Nouns")
+  assert.equal(prisma.state.gradeRecordCreateCalls[0]?.data?.assignmentName, "1 1 1 Common Nouns")
+})
+
 test("persistExerciseSubmission uses configured school setup year and quarter windows for auto-imported grade records", async () => {
   const prisma = makePersistPrisma({
     matchedStudent: {
       id: "student-1",
-      studentId: "S001",
+      eaglesId: "S001",
       email: "student@example.com",
     },
   })
@@ -355,14 +413,17 @@ test("persistExerciseSubmission uses configured school setup year and quarter wi
 
   try {
     const result = await persistExerciseSubmission(
-      {
-        studentId: "S001",
+      nativeExercisePayload({
+        eaglesId: "S001",
         email: "student@example.com",
         pageTitle: "Movers Unit 4",
         completedAt: "2026-03-21T09:15:00.000Z",
-        answers: [{ id: 1, answers: ["B"], status: "correct" }],
-        recipients: ["teacher@example.com"],
-      },
+        correctCount: 10,
+        pendingCount: 0,
+        incorrectCount: 0,
+        totalQuestions: 10,
+        scorePercent: 100,
+      }),
       { prisma }
     )
 
@@ -401,7 +462,7 @@ test("persistExerciseSubmission de-duplicates matched records and updates existi
         id: "submission-existing",
         studentRefId: "student-1",
         exerciseRefId: "exercise-1",
-        submittedStudentId: "S001",
+        submittedEaglesId: "S001",
         submittedEmail: "student@example.com",
         completedAt: new Date("2026-03-01T07:34:04.862Z"),
         totalQuestions: 1,
@@ -409,7 +470,6 @@ test("persistExerciseSubmission de-duplicates matched records and updates existi
         pendingCount: 0,
         incorrectCount: 1,
         scorePercent: 0,
-        answersJson: [{ id: "1", answers: ["book"] }],
         recipientsJson: ["teacher@example.com"],
         createdAt: new Date("2026-03-01T07:34:04.900Z"),
       },
@@ -433,14 +493,17 @@ test("persistExerciseSubmission de-duplicates matched records and updates existi
   })
 
   const result = await persistExerciseSubmission(
-    {
-      studentId: "S001",
+    nativeExercisePayload({
+      eaglesId: "S001",
       email: "student@example.com",
       pageTitle: "Movers Unit 3",
       completedAt: "2026-03-01T07:34:05.100Z",
-      answers: [{ id: 1, answers: ["B"], status: "correct" }],
-      recipients: ["teacher@example.com"],
-    },
+      correctCount: 1,
+      pendingCount: 0,
+      incorrectCount: 0,
+      totalQuestions: 1,
+      scorePercent: 100,
+    }),
     { prisma }
   )
 
@@ -477,7 +540,7 @@ test("persistExerciseSubmission de-duplicates matched records using canonical fi
         id: "submission-stale",
         studentRefId: "student-1",
         exerciseRefId: "exercise-1",
-        submittedStudentId: "(not provided)",
+        submittedEaglesId: "(not provided)",
         submittedEmail: null,
         completedAt: new Date("2026-03-01T07:34:04.862Z"),
         totalQuestions: 1,
@@ -485,7 +548,6 @@ test("persistExerciseSubmission de-duplicates matched records using canonical fi
         pendingCount: 0,
         incorrectCount: 1,
         scorePercent: 0,
-        answersJson: [{ id: "1", answers: ["book"] }],
         recipientsJson: ["teacher@example.com"],
         createdAt: staleCreatedAt,
       },
@@ -509,14 +571,17 @@ test("persistExerciseSubmission de-duplicates matched records using canonical fi
   })
 
   const result = await persistExerciseSubmission(
-    {
-      studentId: "S001",
+    nativeExercisePayload({
+      eaglesId: "S001",
       email: "student@example.com",
       pageTitle: "Movers Unit 3",
       completedAt: "2026-03-01T07:34:05.100Z",
-      answers: [{ id: 1, answers: ["B"], status: "correct" }],
-      recipients: ["teacher@example.com"],
-    },
+      correctCount: 1,
+      pendingCount: 0,
+      incorrectCount: 0,
+      totalQuestions: 1,
+      scorePercent: 100,
+    }),
     { prisma }
   )
 
@@ -537,7 +602,7 @@ test("persistExerciseSubmission de-duplicates matched records using canonical fi
   assert.equal(prisma.state.matchedGradeRows[0].score, 100)
 
   const submissionWhere = prisma.state.submissionFindFirstCalls[0]?.where || {}
-  assert.equal("submittedStudentId" in submissionWhere, false)
+  assert.equal("submittedEaglesId" in submissionWhere, false)
   assert.equal("submittedEmail" in submissionWhere, false)
   assert.equal("createdAt" in submissionWhere, false)
 
@@ -558,7 +623,7 @@ function makeResolvePrisma() {
         return {
           id: "incoming-2",
           status: "queued",
-          submittedStudentId: "TEMP-200",
+          submittedEaglesId: "TEMP-200",
           submittedEmail: "temp-200@example.com",
           pageTitle: "Flyers Reading 02",
           completedAt: new Date("2026-02-28T08:00:00.000Z"),
@@ -567,10 +632,6 @@ function makeResolvePrisma() {
           pendingCount: 0,
           incorrectCount: 1,
           scorePercent: 50,
-          answersJson: [
-            { id: "1", answers: ["A"], status: "correct" },
-            { id: "2", answers: ["B"], status: "incorrect" },
-          ],
           recipientsJson: ["teacher@example.com"],
           notes: null,
         }
@@ -580,7 +641,7 @@ function makeResolvePrisma() {
         return {
           id: "incoming-2",
           status: "resolved",
-          submittedStudentId: "TEMP-200",
+          submittedEaglesId: "TEMP-200",
           submittedEmail: "temp-200@example.com",
           pageTitle: "Flyers Reading 02",
           completedAt: new Date("2026-02-28T08:00:00.000Z"),
@@ -589,10 +650,6 @@ function makeResolvePrisma() {
           pendingCount: 0,
           incorrectCount: 1,
           scorePercent: 50,
-          answersJson: [
-            { id: "1", answers: ["A"], status: "correct" },
-            { id: "2", answers: ["B"], status: "incorrect" },
-          ],
           recipientsJson: ["teacher@example.com"],
           notes: args.data.notes || null,
           reviewedByUsername: args.data.reviewedByUsername || null,
@@ -602,7 +659,7 @@ function makeResolvePrisma() {
           updatedAt: new Date("2026-02-28T08:01:00.000Z"),
           matchedStudent: {
             id: args.data.matchedStudentRefId,
-            studentId: "S200",
+            eaglesId: "S200",
           },
         }
       },
@@ -611,7 +668,7 @@ function makeResolvePrisma() {
       async findUnique() {
         return {
           id: "student-200",
-          studentId: "S200",
+          eaglesId: "S200",
         }
       },
     },

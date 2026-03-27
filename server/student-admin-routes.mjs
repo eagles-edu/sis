@@ -5045,7 +5045,7 @@ async function handleApiRequest(request, response, pathname, url) {
 
     if (action === "create-account") {
       const incoming = await getIncomingExerciseResultById(incomingResultId)
-      const fallbackEaglesId = normalizeText(incoming?.submittedStudentId)
+      const fallbackEaglesId = normalizeText(incoming?.submittedEaglesId)
       const requestedEaglesId = normalizeText(payload?.eaglesId || fallbackEaglesId)
       const eaglesId = requestedEaglesId && requestedEaglesId !== "(not provided)" ? requestedEaglesId : ""
       if (!eaglesId) {

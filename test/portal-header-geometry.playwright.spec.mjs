@@ -13,6 +13,20 @@ try {
   void error;
 }
 
+function resolvePlaywrightSkipReason() {
+  if (!chromium) return "playwright package is not installed";
+  try {
+    const executablePath = chromium.executablePath();
+    if (!executablePath || !fs.existsSync(executablePath)) {
+      return "playwright browser executable is not installed";
+    }
+    return false;
+  } catch (error) {
+    void error;
+    return "playwright browser executable is not installed";
+  }
+}
+
 function createStaticServer(rootDir) {
   return http.createServer((request, response) => {
     const requestUrl = new URL(request.url || "/", "http://127.0.0.1");
@@ -109,21 +123,24 @@ async function measureMenuState(page, url, selectors) {
   }, selectors);
 }
 
-const skipReason = chromium ? false : "playwright package is not installed";
+const skipReason = resolvePlaywrightSkipReason();
 
 test(
   "portal headers keep floating-hamburger geometry and admin-aligned header spacing",
   { skip: skipReason },
   async () => {
     const server = createStaticServer(ROOT_DIR);
-    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const address = server.address();
-    const port = typeof address === "object" && address ? address.port : 0;
-
-    const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    let browser = null;
+    let page = null;
 
     try {
+      await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+
+      browser = await chromium.launch({ headless: true });
+      page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+
       const parentMobile = await measureGeometry(
         page,
         `http://127.0.0.1:${port}/web-asset/parent/parent-portal.html?geo=mobile`,
@@ -197,9 +214,15 @@ test(
         assert.ok(geometry.header.h <= 78, `${label} header should stay compact on desktop`);
       }
     } finally {
-      await page.close();
-      await browser.close();
-      await new Promise((resolve) => server.close(resolve));
+      if (page) {
+        await page.close().catch(() => {});
+      }
+      if (browser) {
+        await browser.close().catch(() => {});
+      }
+      if (server.listening) {
+        await new Promise((resolve) => server.close(resolve));
+      }
     }
   }
 );

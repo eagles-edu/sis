@@ -17652,7 +17652,7 @@ Select an assignment link to inspect details.</pre
         return {
           id: normalizeText(item.id),
           status: normalizeText(item.status),
-          submittedStudentId: normalizeText(item.submittedStudentId),
+          submittedEaglesId: normalizeText(item.submittedEaglesId),
           submittedEmail: normalizeText(item.submittedEmail),
           pageTitle: normalizeText(item.pageTitle),
           totalQuestions: Number.parseInt(String(item.totalQuestions || 0), 10) || 0,
@@ -17682,7 +17682,7 @@ Select an assignment link to inspect details.</pre
           normalizeText(message) || "Disposition actions are available per queue row.";
       }
 
-      function normalizeIncomingSubmittedStudentId(value) {
+      function normalizeIncomingSubmittedEaglesId(value) {
         const text = normalizeText(value);
         if (!text) return "";
         if (normalizeLower(text) === "(not provided)") return "";
@@ -17729,7 +17729,7 @@ Select an assignment link to inspect details.</pre
       async function addIncomingExerciseToSpecificStudent(item = {}) {
         const defaultStudentId =
           normalizeText(state.currentStudent?.eaglesId) ||
-          normalizeIncomingSubmittedStudentId(item.submittedStudentId) ||
+          normalizeIncomingSubmittedEaglesId(item.submittedEaglesId) ||
           "";
         const enteredStudentId = window.prompt(
           "Add to specific student: enter Eagles ID",
@@ -17751,8 +17751,8 @@ Select an assignment link to inspect details.</pre
       }
 
       async function createIncomingExerciseStudentAccount(item = {}) {
-        const suggestedEaglesId = normalizeIncomingSubmittedStudentId(
-          item.submittedStudentId,
+        const suggestedEaglesId = normalizeIncomingSubmittedEaglesId(
+          item.submittedEaglesId,
         );
         const enteredEaglesId = window.prompt(
           "Create new user: Eagles ID",
@@ -17981,7 +17981,7 @@ Select an assignment link to inspect details.</pre
           const tr = document.createElement("tr");
           tr.innerHTML = `
           <td>${escapeHtml(formatDateTime(item.createdAt))}</td>
-          <td>${escapeHtml(item.submittedStudentId || "(not provided)")}</td>
+          <td>${escapeHtml(item.submittedEaglesId || "(not provided)")}</td>
           <td>${escapeHtml(item.submittedEmail || "-")}</td>
           <td>${escapeHtml(item.pageTitle || "-")}</td>
           <td>${escapeHtml(formatIncomingExerciseScore(item))}</td>
@@ -18155,7 +18155,7 @@ Select an assignment link to inspect details.</pre
                   : `${Number.isFinite(scorePercent) ? scorePercent.toFixed(1) : "0.0"}%`;
                 return [
                   formatDateTime(item?.createdAt),
-                  normalizeText(item?.submittedStudentId || "(not provided)"),
+                  normalizeText(item?.submittedEaglesId || "(not provided)"),
                   normalizeText(item?.submittedEmail),
                   normalizeText(item?.pageTitle),
                   scoreLabel,

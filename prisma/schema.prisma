@@ -47,7 +47,7 @@ model ExerciseSubmission {
   exerciseRefId      String
   student            Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   exercise           Exercise @relation(fields: [exerciseRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  submittedStudentId String
+  submittedEaglesId  String
   submittedEmail     String?
   completedAt        DateTime
   totalQuestions     Int
@@ -55,19 +55,18 @@ model ExerciseSubmission {
   pendingCount       Int
   incorrectCount     Int
   scorePercent       Float
-  answersJson        Json
   recipientsJson     Json?
   createdAt          DateTime @default(now())
 
   @@index([studentRefId, completedAt])
   @@index([exerciseRefId, completedAt])
-  @@index([submittedStudentId, completedAt])
+  @@index([submittedEaglesId, completedAt])
 }
 
 model IncomingExerciseResult {
   id                 String   @id @default(cuid())
   status             String
-  submittedStudentId String
+  submittedEaglesId  String
   submittedEmail     String?
   pageTitle          String
   completedAt        DateTime
@@ -76,7 +75,6 @@ model IncomingExerciseResult {
   pendingCount       Int
   incorrectCount     Int
   scorePercent       Float
-  answersJson        Json
   recipientsJson     Json?
   payloadJson        Json?
   notes              String?
@@ -88,7 +86,7 @@ model IncomingExerciseResult {
   updatedAt          DateTime @updatedAt
 
   @@index([status, createdAt])
-  @@index([submittedStudentId, createdAt])
+  @@index([submittedEaglesId, createdAt])
   @@index([submittedEmail, createdAt])
   @@index([matchedStudentRefId, createdAt])
 }

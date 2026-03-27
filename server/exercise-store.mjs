@@ -308,31 +308,58 @@ function quarterFromDate(value = new Date(), schoolYear = "") {
   return "q4"
 }
 
-function summarizeAnswers(answers) {
-  const list = Array.isArray(answers) ? answers : []
-  let correctCount = 0
-  let pendingCount = 0
-  let incorrectCount = 0
+function parseRequiredString(value, fieldName) {
+  const normalized = normalizeString(value)
+  if (!normalized) throw createStatusError(`${fieldName} is required`, 400)
+  return normalized
+}
 
-  for (let i = 0; i < list.length; i += 1) {
-    const entry = list[i]
-    const status = normalizeLower(entry?.status)
-    const needsReview = entry?.needsReview === true
-    if (status === "correct") {
-      correctCount += 1
-      continue
-    }
-    if (status === "pending" || needsReview) {
-      pendingCount += 1
-      continue
-    }
-    incorrectCount += 1
+function parseRequiredNonNegativeInteger(value, fieldName) {
+  const parsed = Number.parseInt(String(value), 10)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw createStatusError(`${fieldName} must be a non-negative integer`, 400)
   }
+  return parsed
+}
 
-  const totalQuestions = list.length
-  const scorePercent =
-    totalQuestions > 0 ? Number(((correctCount / totalQuestions) * 100).toFixed(2)) : 0
+function parseRequiredPercent(value, fieldName) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
+    throw createStatusError(`${fieldName} must be a number between 0 and 100`, 400)
+  }
+  return Number(parsed.toFixed(2))
+}
 
+function parseRequiredCompletedAt(value) {
+  const raw = parseRequiredString(value, "completedAt")
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.valueOf())) {
+    throw createStatusError("completedAt must be a valid date/time value", 400)
+  }
+  return parsed
+}
+
+function expectedScorePercent(correctCount, totalQuestions) {
+  if (!Number.isFinite(totalQuestions) || totalQuestions <= 0) return 0
+  return Number(((correctCount / totalQuestions) * 100).toFixed(2))
+}
+
+function buildSubmissionSummaryFromPayload(payload = {}) {
+  const correctCount = parseRequiredNonNegativeInteger(payload?.correctCount, "correctCount")
+  const pendingCount = parseRequiredNonNegativeInteger(payload?.pendingCount, "pendingCount")
+  const incorrectCount = parseRequiredNonNegativeInteger(payload?.incorrectCount, "incorrectCount")
+  const totalQuestions = parseRequiredNonNegativeInteger(payload?.totalQuestions, "totalQuestions")
+  const scorePercent = parseRequiredPercent(payload?.scorePercent, "scorePercent")
+  if (totalQuestions !== correctCount + pendingCount + incorrectCount) {
+    throw createStatusError(
+      "Invalid metrics: totalQuestions must equal correctCount + pendingCount + incorrectCount",
+      400
+    )
+  }
+  const expectedPercent = expectedScorePercent(correctCount, totalQuestions)
+  if (Math.abs(scorePercent - expectedPercent) > 0.01) {
+    throw createStatusError("Invalid metrics: scorePercent mismatch", 400)
+  }
   return {
     totalQuestions,
     correctCount,
@@ -342,36 +369,11 @@ function summarizeAnswers(answers) {
   }
 }
 
-function countAnswerStatusSignals(answers) {
-  const list = Array.isArray(answers) ? answers : []
-  let count = 0
-  for (let i = 0; i < list.length; i += 1) {
-    const entry = list[i]
-    if (normalizeLower(entry?.status)) {
-      count += 1
-      continue
-    }
-    if (entry?.needsReview === true) count += 1
-  }
-  return count
-}
-
-function countAnsweredQuestions(answers) {
-  const list = Array.isArray(answers) ? answers : []
-  let count = 0
-  for (let i = 0; i < list.length; i += 1) {
-    const values = Array.isArray(list[i]?.answers) ? list[i].answers : []
-    if (values.some((value) => normalizeString(value) !== "")) count += 1
-  }
-  return count
-}
-
-function buildSubmissionQuality(summary, answers, completedAtValue) {
+function buildSubmissionQuality(summary, completedAtValue) {
   const scorePercent = Number(summary?.scorePercent || 0)
+  const totalQuestions = Number.parseInt(String(summary?.totalQuestions || 0), 10) || 0
   const correctCount = Number.parseInt(String(summary?.correctCount || 0), 10) || 0
   const pendingCount = Number.parseInt(String(summary?.pendingCount || 0), 10) || 0
-  const statusSignals = countAnswerStatusSignals(answers)
-  const answeredQuestions = countAnsweredQuestions(answers)
   const completedAtMs =
     completedAtValue instanceof Date
       ? completedAtValue.valueOf()
@@ -380,30 +382,26 @@ function buildSubmissionQuality(summary, answers, completedAtValue) {
         : 0
 
   return {
-    statusSignals,
-    answeredQuestions,
+    scorePercent,
+    totalQuestions,
     correctCount,
     pendingCount,
-    scorePercent,
     completedAtMs,
   }
 }
 
 function isSubmissionQualityBetter(candidate, baseline) {
-  if (candidate.statusSignals !== baseline.statusSignals) {
-    return candidate.statusSignals > baseline.statusSignals
+  if (candidate.scorePercent !== baseline.scorePercent) {
+    return candidate.scorePercent > baseline.scorePercent
   }
   if (candidate.correctCount !== baseline.correctCount) {
     return candidate.correctCount > baseline.correctCount
   }
+  if (candidate.totalQuestions !== baseline.totalQuestions) {
+    return candidate.totalQuestions > baseline.totalQuestions
+  }
   if (candidate.pendingCount !== baseline.pendingCount) {
-    return candidate.pendingCount > baseline.pendingCount
-  }
-  if (candidate.answeredQuestions !== baseline.answeredQuestions) {
-    return candidate.answeredQuestions > baseline.answeredQuestions
-  }
-  if (candidate.scorePercent !== baseline.scorePercent) {
-    return candidate.scorePercent > baseline.scorePercent
+    return candidate.pendingCount < baseline.pendingCount
   }
   return candidate.completedAtMs > baseline.completedAtMs
 }
@@ -414,21 +412,6 @@ function normalizeRecipients(value) {
     .map((entry) => normalizeString(entry))
     .filter(Boolean)
   return cleaned.length ? cleaned : null
-}
-
-function normalizeAnswers(value) {
-  if (!Array.isArray(value)) return []
-  return value.map((entry) => {
-    const answers = Array.isArray(entry?.answers)
-      ? entry.answers.map((answer) => (answer == null ? "" : String(answer)))
-      : []
-    return {
-      id: entry?.id == null ? "" : String(entry.id),
-      answers,
-      status: normalizeLower(entry?.status),
-      needsReview: entry?.needsReview === true,
-    }
-  })
 }
 
 function canonicalizeExercisePageTitle(value) {
@@ -461,6 +444,7 @@ function canonicalizeExercisePageTitle(value) {
   title = title
     .replace(/[?#].*$/u, "")
     .replace(/\.(?:html?|php|aspx?)$/iu, "")
+    .replace(/\b\d+(?:\.\d+)+\b/gu, (token) => token.replace(/\./gu, " "))
     .replace(/[-_]+/gu, " ")
     .replace(/\s+\|\s+(?:id|sid|ref|session|attempt|timestamp|time|date)\s*[:=#-].*$/iu, "")
     .replace(/\s+/gu, " ")
@@ -470,22 +454,25 @@ function canonicalizeExercisePageTitle(value) {
 }
 
 function normalizeSubmissionPayload(payload = {}) {
-  const submittedStudentId = normalizeString(payload?.studentId)
-  const submittedEmail = normalizeLower(payload?.email)
-  const pageTitle = canonicalizeExercisePageTitle(payload?.pageTitle) || "Untitled exercise"
-  const completedAt = parseCompletedAt(payload?.completedAt)
+  if (Object.prototype.hasOwnProperty.call(payload, "studentId")) {
+    throw createStatusError("Unsupported field: studentId", 400)
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, "answers")) {
+    throw createStatusError("Unsupported field: answers", 400)
+  }
+  const submittedEaglesId = parseRequiredString(payload?.eaglesId, "eaglesId")
+  const submittedEmail = parseRequiredString(payload?.email, "email").toLowerCase()
+  const pageTitle = canonicalizeExercisePageTitle(parseRequiredString(payload?.pageTitle, "pageTitle")) || "Untitled exercise"
+  const completedAt = parseRequiredCompletedAt(payload?.completedAt)
+  const summary = buildSubmissionSummaryFromPayload(payload)
   const recipientsJson = normalizeRecipients(payload?.recipients)
-  const answersJson = normalizeAnswers(payload?.answers)
-  const summary = summarizeAnswers(answersJson)
 
   return {
-    submittedStudentId,
-    submittedStudentIdDisplay: submittedStudentId || "(not provided)",
+    submittedEaglesId,
     submittedEmail,
     pageTitle,
     completedAt,
     recipientsJson,
-    answersJson,
     summary,
   }
 }
@@ -532,7 +519,7 @@ function buildIncomingWhere({ statuses = [], query = "" } = {}) {
   if (search) {
     where.OR = [
       {
-        submittedStudentId: {
+        submittedEaglesId: {
           contains: search,
           mode: "insensitive",
         },
@@ -556,14 +543,14 @@ function buildIncomingWhere({ statuses = [], query = "" } = {}) {
 }
 
 async function findMatchedStudent(prisma, submission) {
-  const submittedStudentId = normalizeString(submission?.submittedStudentId)
+  const submittedEaglesId = normalizeString(submission?.submittedEaglesId)
   const submittedEmail = normalizeLower(submission?.submittedEmail)
 
-  if (submittedStudentId) {
+  if (submittedEaglesId) {
     const matchedById = await prisma.student.findFirst({
       where: {
         eaglesId: {
-          equals: submittedStudentId,
+          equals: submittedEaglesId,
           mode: "insensitive",
         },
       },
@@ -663,7 +650,7 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
   return {
     studentRefId,
     exerciseRefId,
-    submittedStudentId: submission.submittedStudentIdDisplay,
+    submittedEaglesId: submission.submittedEaglesId,
     submittedEmail: submission.submittedEmail || null,
     completedAt: submission.completedAt,
     totalQuestions: summary.totalQuestions,
@@ -671,7 +658,6 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
     pendingCount: summary.pendingCount,
     incorrectCount: summary.incorrectCount,
     scorePercent: summary.scorePercent,
-    answersJson: submission.answersJson,
     recipientsJson: submission.recipientsJson,
   }
 }
@@ -708,7 +694,7 @@ function buildExerciseGradeRecordData(student, submission, summary) {
 function buildIncomingQueueRecordData(submission, summary, options = {}) {
   return {
     status: INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
-    submittedStudentId: submission.submittedStudentIdDisplay,
+    submittedEaglesId: submission.submittedEaglesId,
     submittedEmail: submission.submittedEmail || null,
     pageTitle: submission.pageTitle,
     completedAt: submission.completedAt,
@@ -717,7 +703,6 @@ function buildIncomingQueueRecordData(submission, summary, options = {}) {
     pendingCount: summary.pendingCount,
     incorrectCount: summary.incorrectCount,
     scorePercent: summary.scorePercent,
-    answersJson: submission.answersJson,
     recipientsJson: submission.recipientsJson,
     payloadJson:
       options.payloadJson && typeof options.payloadJson === "object" ? options.payloadJson : null,
@@ -750,7 +735,7 @@ function buildExerciseSubmissionSummary(item) {
 
 function buildIncomingDuplicateUpdateData(submission, summary, options = {}) {
   return {
-    submittedStudentId: submission.submittedStudentIdDisplay,
+    submittedEaglesId: submission.submittedEaglesId,
     submittedEmail: submission.submittedEmail || null,
     pageTitle: submission.pageTitle,
     completedAt: submission.completedAt,
@@ -759,7 +744,6 @@ function buildIncomingDuplicateUpdateData(submission, summary, options = {}) {
     pendingCount: summary.pendingCount,
     incorrectCount: summary.incorrectCount,
     scorePercent: summary.scorePercent,
-    answersJson: submission.answersJson,
     recipientsJson: submission.recipientsJson,
     payloadJson:
       options.payloadJson && typeof options.payloadJson === "object" ? options.payloadJson : null,
@@ -787,7 +771,7 @@ async function findIncomingDuplicate(prisma, submission) {
           INCOMING_EXERCISE_RESULT_STATUS_TEMPORARY,
         ],
       },
-      submittedStudentId: submission.submittedStudentIdDisplay,
+      submittedEaglesId: submission.submittedEaglesId,
       submittedEmail: submission.submittedEmail || null,
       pageTitle: submission.pageTitle,
       completedAt: completedAtRange,
@@ -839,7 +823,7 @@ function mapIncomingExerciseResult(item) {
   return {
     id: item.id,
     status: normalizeStatus(item.status),
-    submittedStudentId: normalizeString(item.submittedStudentId),
+    submittedEaglesId: normalizeString(item.submittedEaglesId),
     submittedEmail: normalizeString(item.submittedEmail),
     pageTitle: normalizeString(item.pageTitle),
     completedAt: item.completedAt ? new Date(item.completedAt).toISOString() : "",
@@ -848,7 +832,6 @@ function mapIncomingExerciseResult(item) {
     pendingCount: Number.parseInt(String(item.pendingCount || 0), 10) || 0,
     incorrectCount: Number.parseInt(String(item.incorrectCount || 0), 10) || 0,
     scorePercent: Number(item.scorePercent || 0),
-    answersJson: item.answersJson,
     recipientsJson: item.recipientsJson,
     payloadJson: item.payloadJson,
     notes: normalizeString(item.notes),
@@ -872,11 +855,10 @@ export async function persistExerciseSubmission(payload, options = {}) {
   if (!matchedStudent) {
     const existingIncoming = await findIncomingDuplicate(prisma, submission)
     if (existingIncoming) {
-      const incomingQuality = buildSubmissionQuality(summary, submission.answersJson, submission.completedAt)
+      const incomingQuality = buildSubmissionQuality(summary, submission.completedAt)
       const existingSummary = buildIncomingSummary(existingIncoming)
       const existingQuality = buildSubmissionQuality(
         existingSummary,
-        existingIncoming.answersJson,
         existingIncoming.completedAt
       )
 
@@ -929,13 +911,12 @@ export async function persistExerciseSubmission(payload, options = {}) {
       exercise.id,
       submission
     )
-    const incomingQuality = buildSubmissionQuality(summary, submission.answersJson, submission.completedAt)
+    const incomingQuality = buildSubmissionQuality(summary, submission.completedAt)
 
     if (existingSubmission) {
       const existingSummary = buildExerciseSubmissionSummary(existingSubmission)
       const existingQuality = buildSubmissionQuality(
         existingSummary,
-        existingSubmission.answersJson,
         existingSubmission.completedAt
       )
       const shouldReplaceExisting = isSubmissionQualityBetter(incomingQuality, existingQuality)
@@ -1139,13 +1120,11 @@ export async function deleteIncomingExerciseResultById(incomingResultId, options
 
 function incomingResultToSubmissionPayload(row) {
   return {
-    submittedStudentId: normalizeString(row.submittedStudentId),
-    submittedStudentIdDisplay: normalizeString(row.submittedStudentId) || "(not provided)",
+    submittedEaglesId: normalizeString(row.submittedEaglesId),
     submittedEmail: normalizeLower(row.submittedEmail),
     pageTitle: normalizeString(row.pageTitle) || "Untitled exercise",
     completedAt: row.completedAt ? new Date(row.completedAt) : new Date(),
     recipientsJson: Array.isArray(row.recipientsJson) ? row.recipientsJson : null,
-    answersJson: Array.isArray(row.answersJson) ? row.answersJson : [],
   }
 }
 

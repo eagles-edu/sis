@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-03-26T20:19:04.582Z",
+  "backupFile": "postgres-20260326-201904Z.dump",
+  "backupPath": "/home/eagles/dockerz/sis/backups/postgres/live-reset-20260327-031904/postgres-20260326-201904Z.dump",
+  "outputDir": "/home/eagles/dockerz/sis/backups/postgres/live-reset-20260327-031904",
+  "checksumSha256": "fdbf3c20baf95ff7c8f1260f01e05d590b5612e8bb5c816dbf1cf385b7733111",
+  "sizeBytes": 141069,
+  "verified": true,
+  "databaseUrlRedacted": "postgresql://***:***@127.0.0.1:5432/sis",
+  "retentionDays": 30,
+  "keepMin": 14,
+  "toolVersion": "1"
+}

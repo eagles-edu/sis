@@ -19,6 +19,20 @@ try {
   void error;
 }
 
+function resolvePlaywrightSkipReason() {
+  if (!chromium) return "playwright package is not installed";
+  try {
+    const executablePath = chromium.executablePath();
+    if (!executablePath || !fs.existsSync(executablePath)) {
+      return "playwright browser executable is not installed";
+    }
+    return false;
+  } catch (error) {
+    void error;
+    return "playwright browser executable is not installed";
+  }
+}
+
 function readJsonBody(request) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -351,21 +365,24 @@ function createStudentPortalFixtureServer(rootDir) {
   });
 }
 
-const skipReason = chromium ? false : "playwright package is not installed";
+const skipReason = resolvePlaywrightSkipReason();
 
 test(
   "student portal login renders FullCalendar alerts and blinking overdue states",
   { skip: skipReason },
   async () => {
     const server = createStudentPortalFixtureServer(ROOT_DIR);
-    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const address = server.address();
-    const port = typeof address === "object" && address ? address.port : 0;
-
-    const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+    let browser = null;
+    let page = null;
 
     try {
+      await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+
+      browser = await chromium.launch({ headless: true });
+      page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+
       await page.goto(`http://127.0.0.1:${port}/student/portal`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector("#loginForm");
       await page.fill("#loginEaglesId", STUDENT_LOGIN.eaglesId);
@@ -497,9 +514,15 @@ test(
       assert.match(calendarState.completedDayClassName, /calendar-day-completed/);
       assert.match(calendarState.openDayClassName, /calendar-day-open/);
     } finally {
-      await page.close();
-      await browser.close();
-      await new Promise((resolve) => server.close(resolve));
+      if (page) {
+        await page.close().catch(() => {});
+      }
+      if (browser) {
+        await browser.close().catch(() => {});
+      }
+      if (server.listening) {
+        await new Promise((resolve) => server.close(resolve));
+      }
     }
   }
 );

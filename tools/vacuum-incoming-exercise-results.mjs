@@ -142,7 +142,7 @@ function toIso(value) {
 
 function incomingFingerprint(row = {}) {
   return [
-    normalizeLower(row.submittedStudentId),
+    normalizeLower(row.submittedEaglesId),
     normalizeLower(row.submittedEmail),
     normalizeLower(row.pageTitle),
     toIso(row.completedAt),
@@ -150,7 +150,7 @@ function incomingFingerprint(row = {}) {
 }
 
 export function isIncomingMalformed(row = {}) {
-  const submittedStudentId = normalizeText(row.submittedStudentId)
+  const submittedEaglesId = normalizeText(row.submittedEaglesId)
   const submittedEmail = normalizeText(row.submittedEmail)
   const pageTitle = normalizeText(row.pageTitle)
   const completedAtIso = toIso(row.completedAt)
@@ -159,7 +159,7 @@ export function isIncomingMalformed(row = {}) {
   const pendingCount = Number(row.pendingCount)
   const incorrectCount = Number(row.incorrectCount)
 
-  if (!submittedStudentId && !submittedEmail) return true
+  if (!submittedEaglesId && !submittedEmail) return true
   if (!pageTitle) return true
   if (!completedAtIso) return true
   if (!Number.isFinite(totalQuestions) || totalQuestions < 0) return true
@@ -170,14 +170,14 @@ export function isIncomingMalformed(row = {}) {
 }
 
 async function resolveStudentCandidate(prisma, row = {}) {
-  const submittedStudentId = normalizeText(row.submittedStudentId)
+  const submittedEaglesId = normalizeText(row.submittedEaglesId)
   const submittedEmail = normalizeLower(row.submittedEmail)
 
-  if (submittedStudentId) {
+  if (submittedEaglesId) {
     const matchedById = await prisma.student.findFirst({
       where: {
         eaglesId: {
-          equals: submittedStudentId,
+          equals: submittedEaglesId,
           mode: "insensitive",
         },
       },
@@ -275,7 +275,7 @@ function resultSnapshot(row = {}) {
   return {
     id: normalizeText(row.id),
     status: normalizeText(row.status),
-    submittedStudentId: normalizeText(row.submittedStudentId),
+    submittedEaglesId: normalizeText(row.submittedEaglesId),
     submittedEmail: normalizeText(row.submittedEmail),
     pageTitle: normalizeText(row.pageTitle),
     completedAt: toIso(row.completedAt),
@@ -437,7 +437,7 @@ async function runVacuum(args) {
       select: {
         id: true,
         status: true,
-        submittedStudentId: true,
+        submittedEaglesId: true,
         submittedEmail: true,
         pageTitle: true,
         completedAt: true,

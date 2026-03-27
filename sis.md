@@ -7,6 +7,108 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-27 - normalize dotted exercise section notation on SIS receipt)
+
+- Requirement:
+  - normalize dotted section tokens like `1.1.1` to spaced notation (`1 1 1`) on receipt to avoid tabulator field-key rendering issues.
+- Runtime behavior change:
+  - [server/exercise-mailer.mjs](server/exercise-mailer.mjs):
+    - added `normalizeExerciseSectionNotation(...)`.
+    - payload validation now normalizes `pageTitle` before dedupe/email composition.
+  - [server/exercise-store.mjs](server/exercise-store.mjs):
+    - `canonicalizeExercisePageTitle(...)` now converts dotted numeric section tokens to spaced notation before persistence.
+    - affects `Exercise.title`, matched `StudentGradeRecord.className/assignmentName`, and incoming queue title normalization path.
+- Tests:
+  - [test/exercise-mailer.spec.mjs](test/exercise-mailer.spec.mjs):
+    - added `POST /api/exercise-submission normalizes dotted numeric sections in pageTitle`.
+  - [test/exercise-store.spec.mjs](test/exercise-store.spec.mjs):
+    - added `persistExerciseSubmission normalizes dotted section tokens in pageTitle`.
+  - verification:
+    - `node --test test/exercise-store.spec.mjs test/exercise-mailer.spec.mjs` => `33` pass, `0` fail.
+- Live deploy + verification:
+  - deployed with `tools/deploy-api-safe.sh --force-sync` (service restart + route checks passed).
+  - live DB was backed up and reset for exercise/grade tables earlier in-session.
+  - post-deploy live smoke check confirmed row render for `vee001` includes `20/20` and `100%` for normalized `1 1 1` exercise title.
+
+## Update (2026-03-26 - tabulator keeps scored row when duplicate assignment-key rows exist)
+
+- Live symptom:
+  - grade cell still appeared empty even after score fallback patch.
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) used last-write-wins when multiple rows mapped to the same student+assignment key.
+  - a later weaker row (no score / incomplete) could overwrite an earlier scored row.
+- Runtime behavior change:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+    - added `scoreCellRank(...)`, `scoreCellTimestampValue(...)`, and `shouldReplaceScoreCell(...)`.
+    - matrix population now keeps the stronger cell (scored/completed/newer) instead of blindly overwriting.
+- Tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added shipped-HTML contract assertions for duplicate-row merge helpers and call site.
+  - verification run:
+    - `node --test test/grades-tabulator-ui.spec.mjs` => `11` pass, `0` fail.
+    - `node --test --test-name-pattern "start server for admin routes|GET /web-asset/admin/grades-tabulator.html returns tabulator page|shutdown admin route server" test/student-admin.spec.mjs` => `3` pass, `0` fail (`111` skipped by pattern).
+- Current gap:
+  - full `student-admin.spec.mjs` still reports a pre-existing file-level failure in this workspace and requires separate triage.
+
+## Update (2026-03-26 - live EES score recovery + standalone auto-import column merge)
+
+- User-reported live issue:
+  - EES scores still appeared empty on:
+    - `/web-asset/admin/grades-tabulator.html?currentSchoolYear=2026-2027&schoolYear=2026-2027&quarter=q1&period=sytd`
+- Root cause 1 (data):
+  - historical live runtime code path (verified in `/home/admin.eagles.edu.vn/sis/server/exercise-store.mjs.BAK-20260307-132808`) created `ExerciseSubmission` rows but did not create `StudentGradeRecord` rows for matched submissions.
+  - live DB snapshot before remediation:
+    - `exerciseSubmission=74`
+    - `studentGradeRecord=2`
+    - `missing submission->auto-import-grade parity=72`
+- Live data remediation:
+  - executed idempotent live backfill script (`/tmp/backfill-live-ees-grades.mjs`) against runtime DB.
+  - result:
+    - `created=48`, `skipped=26`, `remainingMissing=0`
+    - `studentGradeRecord total=50`
+    - all backfilled rows resolved to `schoolYear=2026-2027`, `quarter=q1` via School Setup windows.
+- Root cause 2 (UI matrix keying):
+  - standalone auto-import rows were keyed with full per-submission `dueAt` timestamps, fragmenting one exercise into many sparse columns.
+  - live key-shape check on current DB:
+    - `autoImportRows=50`
+    - legacy effective columns=`50`
+    - patched effective columns=`5`
+- Runtime behavior change:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+    - `assignmentKeyFromRow(...)` now collapses standalone auto-import rows by `source + normalized title + schoolYear + quarter` (no per-submission timestamp key segment).
+    - this keeps EES exercise scores in shared exercise columns instead of per-attempt fragmented columns.
+- Tests:
+  - [test/grades-tabulator-ui.spec.mjs](test/grades-tabulator-ui.spec.mjs):
+    - added regression: `tabulator merges standalone auto-import attempts into one exercise column`.
+  - verification:
+    - `node --test test/grades-tabulator-ui.spec.mjs` => `12` pass, `0` fail.
+- Deploy / parity:
+  - `./tools/deploy-api-safe.sh` executed (runtime + public sync, service restart).
+  - `./tools/deploy-api-safe.sh --check-only` => no mismatch.
+
+## Update (2026-03-26 - grades tabulator keeps EES score visible when score is stored in in-class field)
+
+- User-reported live issue:
+  - `grades-tabulator.html` showed empty score cells for `EES` rows.
+- Root cause:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html) only derived tabulator score from `gradeRecord.score`.
+  - records with `score=null` and `inClassScore` populated rendered as empty cells.
+- Runtime behavior change:
+  - [web-asset/admin/grades-tabulator.html](web-asset/admin/grades-tabulator.html):
+    - added `effectiveScore` fallback (`score` -> `inClassScore`) in `flattenGradeRowsFromStudent(...)`.
+    - kept existing percent math behavior when `maxScore` exists.
+- Tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added shipped-HTML contract assertions for `fallbackInClassScore` and `effectiveScore` wiring.
+  - verification run:
+    - `node --test test/grades-tabulator-ui.spec.mjs` => `11` pass, `0` fail.
+    - `node --test --test-name-pattern "start server for admin routes|GET /web-asset/admin/grades-tabulator.html returns tabulator page|shutdown admin route server" test/student-admin.spec.mjs` => `3` pass, `0` fail (`111` skipped by pattern).
+- Current test status snapshot in this session:
+  - baseline `npm test` reported existing failure before these edits (`test/student-admin-prefix.spec.mjs`).
+  - `node --test test/student-admin.spec.mjs` currently returns file-level failure in this workspace (pre-existing investigation required).
+- Coverage gap / next action:
+  - add a dedicated UI regression test that asserts rendered score text for an `inClassScore`-only row (not just shipped-HTML contract).
+
 ## Update (2026-03-22 - strict live/dev port isolation and sync wiring hardening)
 
 - User requirement:

@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-03-26T18:32:24.738Z",
+  "backupFile": "postgres-20260326-183224Z.dump",
+  "backupPath": "/home/eagles/dockerz/sis/backups/postgres/native-cutover-20260326-183224Z/postgres-20260326-183224Z.dump",
+  "outputDir": "/home/eagles/dockerz/sis/backups/postgres/native-cutover-20260326-183224Z",
+  "checksumSha256": "e0d7c016a94bd790dc1fb8350ac234505682de4608c5d4081412370cf741406e",
+  "sizeBytes": 146357,
+  "verified": true,
+  "databaseUrlRedacted": "postgresql://***:***@127.0.0.1:5432/sis",
+  "retentionDays": 30,
+  "keepMin": 14,
+  "toolVersion": "1"
+}

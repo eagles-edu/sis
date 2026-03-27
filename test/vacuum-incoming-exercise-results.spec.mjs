@@ -40,7 +40,7 @@ test("parseArgs supports keep flags and numeric windows", () => {
 
 test("isIncomingMalformed validates required identity/title and score sums", () => {
   const valid = {
-    submittedStudentId: "eag001",
+    submittedEaglesId: "eag001",
     submittedEmail: "student@example.com",
     pageTitle: "1.1.4 Collective Nouns",
     completedAt: "2026-03-14T13:39:59.540Z",
@@ -50,20 +50,20 @@ test("isIncomingMalformed validates required identity/title and score sums", () 
     incorrectCount: 1,
   }
   assert.equal(isIncomingMalformed(valid), false)
-  assert.equal(isIncomingMalformed({ ...valid, submittedStudentId: "", submittedEmail: "" }), true)
+  assert.equal(isIncomingMalformed({ ...valid, submittedEaglesId: "", submittedEmail: "" }), true)
   assert.equal(isIncomingMalformed({ ...valid, pageTitle: "" }), true)
   assert.equal(isIncomingMalformed({ ...valid, totalQuestions: 10, correctCount: 9, pendingCount: 1, incorrectCount: 1 }), true)
 })
 
 test("incomingFingerprint collapses case-only differences", () => {
   const left = incomingFingerprint({
-    submittedStudentId: "EAG001",
+    submittedEaglesId: "EAG001",
     submittedEmail: "A@EXAMPLE.COM",
     pageTitle: "Unit 1",
     completedAt: "2026-03-14T13:39:59.540Z",
   })
   const right = incomingFingerprint({
-    submittedStudentId: "eag001",
+    submittedEaglesId: "eag001",
     submittedEmail: "a@example.com",
     pageTitle: "unit 1",
     completedAt: "2026-03-14T13:39:59.540Z",
@@ -73,7 +73,7 @@ test("incomingFingerprint collapses case-only differences", () => {
 
 test("classifyAction resolves matched rows and routes malformed/unmatched correctly", () => {
   const row = {
-    submittedStudentId: "eag001",
+    submittedEaglesId: "eag001",
     pageTitle: "Unit 1",
     completedAt: "2026-03-14T13:39:59.540Z",
     totalQuestions: 10,
