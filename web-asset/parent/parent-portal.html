@@ -137,30 +137,41 @@
         font-size: 14px;
       }
 
-      .side-brand span {
-        color: var(--ink-soft);
-        font-size: 12px;
-      }
+    .side-brand span {
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
 
-      .side-links {
-        display: grid;
-        gap: 6px;
-      }
+    .side-links {
+      display: grid;
+      gap: 6px;
+    }
 
-      .side-link {
-        align-items: center;
-        background: var(--menu-link-bg);
-        border: 1px solid var(--menu-border);
-        border-radius: var(--radius-2);
-        color: var(--ink);
-        display: inline-flex;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        min-height: 36px;
-        padding: 8px 10px;
-        text-decoration: none;
-      }
+    .side-actions {
+      border-top: 1px solid var(--menu-border);
+      margin-top: 4px;
+      padding: 8px 4px 0;
+    }
+
+    .side-actions button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .side-link {
+      align-items: center;
+      background: var(--menu-link-bg);
+      border: 1px solid var(--menu-border);
+      border-radius: var(--radius-2);
+      color: var(--ink);
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      min-height: 36px;
+      padding: 8px 10px;
+      text-decoration: none;
+    }
 
       .side-link:hover,
       .side-link:focus-visible {
@@ -173,6 +184,35 @@
         background: var(--menu-link-active-bg);
         border-color: #90acd4;
         color: #0f2545;
+      }
+
+      .env-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        border: 1px solid #b7cae3;
+        background: #eef3ff;
+        color: #1d2e4f;
+        max-width: 360px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .env-badge[data-env="development"] {
+        background: #e8f8ef;
+        border-color: #9dd5b3;
+        color: #0f4f30;
+      }
+
+      .env-badge[data-env="production"] {
+        background: #fff4da;
+        border-color: #d8b228;
+        color: #5b3b00;
       }
 
       .nav-scrim {
@@ -666,12 +706,24 @@
         justify-content: space-between;
       }
 
-      .portal-modal-head h4 {
-        color: #1f3f63;
-        font-size: clamp(16px, 3.6vw, 19px);
-        line-height: 1.2;
-        margin: 0;
+      .portal-modal-body {
+        display: grid;
+        gap: 10px;
       }
+
+    .portal-modal-head h4 {
+      color: #1f3f63;
+      font-size: clamp(16px, 3.6vw, 19px);
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    .portal-modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
 
       .portal-modal-close {
         background: #f6f9ff;
@@ -683,6 +735,13 @@
         font-weight: 700;
         min-height: 34px;
         padding: 6px 10px;
+      }
+
+      .portal-modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
       }
 
       .homework-modal-table {
@@ -1172,6 +1231,41 @@
         color: #195d3d;
       }
 
+      .chip-warn {
+        background: #fff5df;
+        border-color: #e7a23c;
+        color: #8a5600;
+      }
+
+      .chip-open {
+        background: #e7f4ff;
+        border-color: #6eaedc;
+        color: #0f4d78;
+      }
+
+      .chip-revise {
+        background: #f3ecff;
+        border-color: #a48ad8;
+        color: #4b2f8a;
+      }
+
+      .chip-link {
+        cursor: pointer;
+        display: inline-flex;
+      }
+
+      .chip-bad {
+        background: #fbe9ea;
+        border-color: #e58a92;
+        color: #9b1520;
+      }
+
+      .chip-checked {
+        background: #e1fbf9;
+        border-color: #2ba39a;
+        color: #085852;
+      }
+
       .chip-lock {
         background: #fff0f0;
         border-color: #d3aaaa;
@@ -1182,6 +1276,91 @@
         background: #e9f1ff;
         border-color: #6a8fcc;
         color: #113f85;
+      }
+
+      .queue-panel details summary {
+        display: grid;
+        gap: 4px;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .queue-panel details summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .queue-summary-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .summary-title {
+        display: block;
+        font-weight: 800;
+        font-size: 1rem;
+        line-height: 1.2;
+      }
+
+      .queue-table-wrap {
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-2);
+        padding: 6px;
+        max-height: 260px;
+        overflow: auto;
+        box-sizing: border-box;
+        background: #fff;
+      }
+
+      .queue-table-wrap table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .queue-table-wrap th,
+      .queue-table-wrap td {
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--line-strong);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .queue-table-wrap tr:last-child td {
+        border-bottom: none;
+      }
+
+      .queue-table-wrap .link-btn {
+        padding: 6px 10px;
+        min-height: 0;
+        font-size: 12px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .actions-2 > * {
+        flex: 1 1 45%;
+      }
+
+      .actions-3 > * {
+        flex: 1 1 30%;
+      }
+
+      .btn-refresh {
+        background: #f1f5ff;
+        border: 1px solid #9bb5df;
+        color: #214072;
+      }
+
+      .queue-table-wrap .cell-actions {
+        white-space: nowrap;
       }
 
       .hidden {
@@ -1311,7 +1490,7 @@
       .toolbar-actions {
         display: grid;
         gap: 8px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
       }
 
       .panel {
@@ -1724,7 +1903,7 @@
       }
 
       .calendar-shell {
-        min-height: 380px;
+        min-height: 480px;
       }
 
       .fc {
@@ -1783,17 +1962,97 @@
       }
 
       .fc .fc-daygrid-event {
-        border-radius: 9px;
-        margin-top: 3px;
-        padding: 2px 4px;
+        border-radius: 10px;
+        margin-top: 4px;
+        padding: 4px 6px;
         white-space: normal;
       }
 
       .fc .fc-event-main {
-        font-size: 0.72rem;
+        font-size: 0.9rem;
         font-weight: 700;
-        line-height: 1.25;
+        line-height: 1.2;
         white-space: normal;
+      }
+
+      .news-week-modal {
+        max-width: 760px;
+      }
+
+      .news-week-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 6px;
+      }
+
+      .news-week-list li {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-2);
+        background: #fff;
+      }
+
+      .news-week-list li.selected {
+        border-color: #7a59cc;
+        background: #f6f1ff;
+      }
+
+      @media (max-width: 720px) {
+        .news-week-list li {
+          grid-template-columns: 1fr;
+        }
+        .news-week-list li > span:nth-child(2),
+        .news-week-list li > span:nth-child(3) {
+          justify-self: start;
+        }
+      }
+
+      .fc .fc-event.fc-event-news-status-green {
+        background: #e7f8ef !important;
+        border-color: #36a66a !important;
+        color: #0f4f30 !important;
+      }
+
+      .fc .fc-event.fc-event-news-status-amber {
+        background: #fff4da !important;
+        border-color: #d89d28 !important;
+        color: #5b3b00 !important;
+      }
+
+      .fc .fc-event.fc-event-news-status-purple {
+        background: #f3ecff !important;
+        border-color: #a48ad8 !important;
+        color: #422b7a !important;
+      }
+
+      .fc .fc-event.fc-event-news-status-red {
+        background: #ffe1e5 !important;
+        border-color: #d43b4e !important;
+        color: #6d0d1a !important;
+      }
+
+      .fc .fc-event.fc-event-news-status-blue {
+        background: #e6f3ff !important;
+        border-color: #4093d2 !important;
+        color: #0f4a73 !important;
+      }
+
+      .fc .fc-event.fc-event-news-status-turquoise {
+        background: #e1fbf9 !important;
+        border-color: #2ba39a !important;
+        color: #085852 !important;
+      }
+
+      .fc .fc-event.fc-event-news-status-revise {
+        background: #f3ecff !important;
+        border-color: #a48ad8 !important;
+        color: #422b7a !important;
       }
 
       .fc .fc-event.fc-event-homework-track {
@@ -1997,6 +2256,13 @@
           >
           <a
             class="side-link"
+            href="#portalCard"
+            data-view-target="dashboard"
+            data-page-target="news-reports"
+            >Báo cáo tin tức</a
+          >
+          <a
+            class="side-link"
             href="#childPageCard"
             data-view-target="child"
             data-page-target="home"
@@ -2045,6 +2311,9 @@
             >Các khuyến nghị để đạt được thành công trong học tập</a
           >
         </nav>
+        <div class="side-actions">
+          <button id="parentNavLogoutBtn" type="button" class="alt">Đăng xuất</button>
+        </div>
       </aside>
 
       <button
@@ -2073,6 +2342,7 @@
               <h1>Cổng phụ huynh (Parents' Dashboard)</h1>
             </div>
             <div class="hero-actions">
+              <span id="envBadgeParent" class="env-badge" aria-live="polite"></span>
               <div
                 class="text-zoom-controls"
                 role="toolbar"
@@ -2141,6 +2411,7 @@
                 </div>
                 <div class="toolbar-actions">
                   <button id="reloadBtn" type="button">Tải lại</button>
+                  <button id="openChildPageBtn" type="button">Chỉnh sửa hồ sơ</button>
                   <button id="logoutBtn" type="button" class="alt">Đăng xuất</button>
                 </div>
               </div>
@@ -2180,6 +2451,67 @@
                 <div class="metrics" id="dashboardMetrics"></div>
               </section>
 
+              <section id="pastDueHomeworkCard" class="panel homework-card">
+                <h3 class="homework-card-label">Bài tập về nhà quá hạn</h3>
+                <div class="homework-card-shell">
+                  <div id="pastDueHomeworkBadge" class="homework-square is-clear">
+                    <span class="homework-square-k">Quá hạn</span>
+                    <strong
+                      id="pastDueHomeworkBadgeValue"
+                      class="homework-square-v is-count"
+                      >0</strong
+                    >
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 class="homework-content-title">Bài tập về nhà quá hạn</h4>
+                    <button
+                      id="openPastDueHomeworkModalBtn"
+                      class="homework-modal-btn"
+                      type="button">
+                      Xem danh sách chưa đầy đủ
+                    </button>
+                    <p class="hint" id="pastDueHomeworkSummary">Chưa có dữ liệu.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="newsQueueCard" class="panel queue-panel">
+                <details id="newsQueueDetails" open>
+                  <summary class="queue-summary-head">
+                    <span>
+                      <span class="summary-title">Hàng chờ báo cáo tin tức</span>
+                      <span class="hint" id="newsQueueSummary">Chưa có dữ liệu.</span>
+                    </span>
+                    <span class="chip chip-neutral" id="newsQueueBadge">Đang tải</span>
+                  </summary>
+                  <div class="queue-table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Tuần</th>
+                          <th scope="col">Trạng thái</th>
+                          <th scope="col">Số lượng</th>
+                          <th scope="col">Gần nhất</th>
+                        </tr>
+                      </thead>
+                      <tbody id="newsQueueBody">
+                        <tr>
+                          <td colspan="4">Đang tải...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="actions actions-2">
+                    <button id="openNewsQueueDetailBtn" type="button">
+                      Xem chi tiết
+                    </button>
+                    <button id="refreshNewsQueueBtn" type="button" class="btn-refresh">
+                      Tải lại
+                    </button>
+                  </div>
+                </details>
+              </section>
+
               <section id="currentHomeworkCard" class="panel homework-card">
                 <h3 class="homework-card-label">Bài tập về nhà hiện tại</h3>
                 <div class="homework-card-shell">
@@ -2204,30 +2536,6 @@
                       >Xem thông báo phân công nhiệm vụ.</a
                     >
                     <p class="hint" id="currentHomeworkSummary">Chưa có dữ liệu.</p>
-                  </div>
-                </div>
-              </section>
-
-              <section id="pastDueHomeworkCard" class="panel homework-card">
-                <h3 class="homework-card-label">Bài tập về nhà quá hạn</h3>
-                <div class="homework-card-shell">
-                  <div id="pastDueHomeworkBadge" class="homework-square is-clear">
-                    <span class="homework-square-k">Quá hạn</span>
-                    <strong
-                      id="pastDueHomeworkBadgeValue"
-                      class="homework-square-v is-count"
-                      >0</strong
-                    >
-                  </div>
-                  <div class="homework-card-content">
-                    <h4 class="homework-content-title">Bài tập về nhà quá hạn</h4>
-                    <button
-                      id="openPastDueHomeworkModalBtn"
-                      class="homework-modal-btn"
-                      type="button">
-                      Xem danh sách chưa đầy đủ
-                    </button>
-                    <p class="hint" id="pastDueHomeworkSummary">Chưa có dữ liệu.</p>
                   </div>
                 </div>
               </section>
@@ -2259,6 +2567,29 @@
                     </thead>
                     <tbody id="pastDueHomeworkTableBody"></tbody>
                   </table>
+                </div>
+              </section>
+
+              <section id="newsWeekModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="newsWeekModalBackdrop"></div>
+                <div
+                  class="portal-modal-dialog news-week-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="newsWeekModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="newsWeekModalTitle">Tuần báo cáo tin tức</h4>
+                    <button
+                      id="closeNewsWeekModalBtn"
+                      class="portal-modal-close"
+                      type="button">
+                      Đóng
+                    </button>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p id="newsWeekModalSummary" class="hint">Đang tải dữ liệu...</p>
+                    <ul id="newsWeekModalList" class="news-week-list"></ul>
+                  </div>
                 </div>
               </section>
 
@@ -2461,24 +2792,6 @@
                 <p class="hint" id="recommendationsSummary">Chưa có dữ liệu.</p>
               </section>
 
-              <section id="quickLinksPanel" class="panel">
-                <div class="section-head">
-                  <h3>Liên kết nhanh</h3>
-                </div>
-                <div class="quick-links">
-                  <button class="quick-link" id="openChildPageBtn" type="button">
-                    Chỉnh sửa hồ sơ học sinh
-                  </button>
-                  <a
-                    class="quick-link"
-                    href="/student/portal"
-                    target="_blank"
-                    rel="noopener"
-                    >Mở cổng học sinh / News Report</a
-                  >
-                </div>
-              </section>
-
               <p id="portalStatus" class="status"></p>
             </div>
           </div>
@@ -2507,6 +2820,23 @@
                 <h3 id="portalDetailPrimaryTitle">Current Focus</h3>
               </div>
               <div id="portalDetailPrimaryList" class="detail-list"></div>
+              <div id="portalDetailPrimaryTable" class="queue-table-wrap hidden">
+                <table>
+                  <thead>
+                    <tr>
+                        <th scope="col">Tuần</th>
+                        <th scope="col">Trạng thái</th>
+                        <th scope="col">Số lượng</th>
+                        <th scope="col">Gần nhất</th>
+                    </tr>
+                  </thead>
+                  <tbody id="portalDetailQueueBody">
+                    <tr>
+                      <td colspan="4">Chưa có báo cáo tin tức.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
 
             <section class="panel">
@@ -2576,6 +2906,7 @@
         `${PARENT_API_PREFIX}/dashboard`,
       );
       const PORTAL_TIME_ZONE = "Asia/Ho_Chi_Minh";
+      const RUNTIME_ENV = (window.__SIS_RUNTIME_ENV || "").toLowerCase() || "development";
       const PARENT_API_ORIGIN = resolveParentApiOrigin();
 
       const PROFILE_REFERENCE_SECTIONS = [
@@ -3146,12 +3477,22 @@
         activeView: "dashboard",
         activeDashboardPage: "home",
         detailCalendar: null,
+        newsWeekSets: [],
         status: "",
         textZoomPct: TEXT_ZOOM_DEFAULT,
       };
 
+      function updateEnvBadgeParent() {
+        const badge = document.getElementById("envBadgeParent");
+        if (!badge) return;
+        const envLabel = RUNTIME_ENV === "development" ? "DEV" : "LIVE";
+        badge.dataset.env = RUNTIME_ENV === "development" ? "development" : "production";
+        badge.textContent = `${envLabel} • ${PARENT_API_ORIGIN || "(missing apiOrigin)"}`;
+      }
+
       const PARENT_DASHBOARD_PAGES = new Set([
         "home",
+        "news-reports",
         "current-homework",
         "past-due-homework",
         "attendance-calendar",
@@ -3245,13 +3586,26 @@
         const queryOrigin = normalizeText(params.get("apiOrigin"));
         const injectedOrigin = normalizeText(window.__SIS_PARENT_API_ORIGIN);
         const selectedOrigin = queryOrigin || injectedOrigin;
-        if (!selectedOrigin) return "";
-        try {
-          return new URL(selectedOrigin, window.location.origin).origin;
-        } catch (error) {
-          void error;
-          return "";
+        if (selectedOrigin) {
+          try {
+            const origin = new URL(selectedOrigin, window.location.origin).origin;
+            return assertApiOriginSafe(origin);
+          } catch (error) {
+            void error;
+            return "";
+          }
         }
+
+        if (!isStaticParentPreviewPath(window.location.pathname)) {
+          try {
+            return assertApiOriginSafe(window.location.origin);
+          } catch (error) {
+            void error;
+            return "";
+          }
+        }
+
+        return "";
       }
 
       function resolveApiUrl(pathname) {
@@ -3281,6 +3635,24 @@
         const error = new Error(staticPreviewHelpMessage());
         error.status = 400;
         throw error;
+      }
+
+      function assertApiOriginSafe(origin) {
+        const text = normalizeText(origin);
+        if (!text) throw new Error("Missing API origin. Set ?apiOrigin or use runtime-served portal.");
+        let parsed;
+        try {
+          parsed = new URL(text);
+        } catch (error) {
+          throw new Error("Invalid API origin. Use a full http(s)://host[:port] value.");
+        }
+        const hostname = parsed.hostname.toLowerCase();
+        const loopback = isLoopbackHostname(hostname);
+        if (RUNTIME_ENV === "development" && !loopback)
+          throw new Error("Dev portal requires a loopback apiOrigin (http://127.0.0.1:<port>).");
+        if (RUNTIME_ENV !== "development" && loopback)
+          throw new Error("Live portal cannot use loopback apiOrigin.");
+        return parsed.origin;
       }
 
       function escapeHtml(value) {
@@ -3784,7 +4156,9 @@
           ) ?
             "change"
           : "input";
-        binding.controls.forEach((control) => {
+        const controls = Array.isArray(binding.controls) ? binding.controls : [];
+        controls.forEach((control) => {
+          if (!control || typeof control.addEventListener !== "function") return;
           control.addEventListener(eventName, handler);
           if (eventName !== "change") control.addEventListener("change", handler);
         });
@@ -5083,6 +5457,482 @@
         target.innerHTML = items.map((item) => buildDetailItemMarkup(item)).join("");
       }
 
+      function resolveNewsCalendarStatus(row = {}) {
+        const status = normalizeText(row?.status).toLowerCase();
+        if (status === "completed" || status === "open" || status === "missed")
+          return status;
+        if (
+          status === "approved" ||
+          status === "waiting" ||
+          status === "submitted" ||
+          status === "revise"
+        ) {
+          return "completed";
+        }
+        if (status === "none-submitted") return "missed";
+        const color = normalizeText(row?.color).toLowerCase();
+        if (color === "green") return "completed";
+        if (color === "purple") return "completed";
+        if (
+          ["amber", "yellow", "orange", "blue", "skyblue", "sky-blue"].includes(
+            color,
+          )
+        ) {
+          return "open";
+        }
+        if (color === "red") return "missed";
+        if (row?.canSubmit === true) return "open";
+        if (normalizeText(row?.submittedAt)) return "completed";
+        return "missed";
+      }
+
+      function normalizeNewsReviewStatusToken(reviewStatus = "") {
+        const token = normalizeText(reviewStatus).toLowerCase();
+        if (token === "approved") return "approved";
+        if (
+          token === "revision-requested" ||
+          token === "revision" ||
+          token === "request-revision"
+        )
+          return "revision-requested";
+        return "submitted";
+      }
+
+      function resolveNewsChipToken(status = "", reviewStatus = "", awaitingReReview = false) {
+        const normalizedStatus = normalizeText(status).toLowerCase();
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
+        if (normalizedReview === "revision-requested") return "revise";
+        if (normalizedStatus === "open") return "open";
+        if (normalizedStatus === "missed") return "none-submitted";
+        if (awaitingReReview === true) return "waiting";
+        if (normalizedReview === "approved") return "approved";
+        if (normalizedStatus === "completed" || normalizedReview === "submitted")
+          return "submitted";
+        return "none-submitted";
+      }
+
+      function newsStatusLabel(status = "", reviewStatus = "", awaitingReReview = false) {
+        const token = resolveNewsChipToken(status, reviewStatus, awaitingReReview);
+        if (token === "approved") return "Approved";
+        if (token === "waiting") return "Waiting";
+        if (token === "revise") return "Revise";
+        if (token === "submitted") return "Submitted";
+        if (token === "open") return "Open";
+        return "None Submitted";
+      }
+
+      function newsStatusColorToken(status = "", reviewStatus = "", awaitingReReview = false) {
+        const token = resolveNewsChipToken(status, reviewStatus, awaitingReReview);
+        if (token === "approved") return "green";
+        if (token === "revise") return "revise";
+        if (token === "submitted") return "amber";
+        if (token === "waiting") return "purple";
+        if (token === "open") return "blue";
+        return "red";
+      }
+
+      function newsStatusTone(status = "", reviewStatus = "", awaitingReReview = false) {
+        const token = newsStatusColorToken(status, reviewStatus, awaitingReReview);
+        if (token === "revise") return "revise";
+        if (token === "purple") return "revise";
+        if (token === "blue") return "open";
+        if (token === "amber") return "warn";
+        if (token === "red") return "bad";
+        if (token === "turquoise") return "checked";
+        return "good";
+      }
+
+      function newsStatusColor(status = "", reviewStatus = "", awaitingReReview = false) {
+        const token = newsStatusColorToken(status, reviewStatus, awaitingReReview);
+        if (token === "revise") return "#7a59cc";
+        if (token === "purple") return "#7a59cc";
+        if (token === "blue") return "#0f4a73";
+        if (token === "amber") return "#f6a609";
+        if (token === "red") return "#d92d20";
+        return "#2e7d32";
+      }
+
+      function isoWeekStart(dateText = "") {
+        const raw = normalizeText(dateText);
+        if (!raw) return "";
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
+          new Date(`${raw}T00:00:00Z`) :
+          new Date(raw);
+        if (!date || Number.isNaN(date.getTime())) return "";
+        const day = date.getUTCDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        date.setUTCDate(date.getUTCDate() + diff);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function isoWeekEndFromStart(weekStart = "") {
+        const raw = normalizeText(weekStart);
+        if (!raw) return "";
+        const date = new Date(`${raw}T00:00:00Z`);
+        if (!date || Number.isNaN(date.getTime())) return "";
+        date.setUTCDate(date.getUTCDate() + 6);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function newsReviewLabel(status = "", reviewStatus = "", awaitingReReview = false) {
+        const normalizedStatus = normalizeText(status).toLowerCase();
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
+        if (normalizedReview === "approved") return "Approved";
+        if (awaitingReReview === true) return "Waiting";
+        if (normalizedReview === "revision-requested") return "Revise";
+        if (normalizedStatus === "completed") return "Submitted";
+        if (normalizedStatus === "open") return "Open";
+        return "None Submitted";
+      }
+
+      function chipClassForTone(tone = "") {
+        const normalized = normalizeText(tone).toLowerCase();
+        if (normalized === "good" || normalized === "ok" || normalized === "positive")
+          return "chip-ok";
+        if (normalized === "checked") return "chip-checked";
+        if (normalized === "open") return "chip-open";
+        if (normalized === "revise") return "chip-revise";
+        if (normalized === "warn" || normalized === "warning") return "chip-warn";
+        if (normalized === "bad" || normalized === "error") return "chip-bad";
+        return "chip-neutral";
+      }
+
+      function newsStatusChipHtml(status = "", reviewStatus = "", awaitingReReview = false) {
+        const label = newsStatusLabel(status, reviewStatus, awaitingReReview);
+        const cls = chipClassForTone(
+          newsStatusTone(status, reviewStatus, awaitingReReview),
+        );
+        const span = document.createElement("span");
+        span.className = "chip " + cls;
+        span.textContent = label;
+        return span.outerHTML;
+      }
+
+      function newsReviewChipHtml(status = "", reviewStatus = "", awaitingReReview = false) {
+        const label = newsReviewLabel(status, reviewStatus, awaitingReReview);
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
+        const tone =
+          normalizedReview === "approved" ? "good"
+          : awaitingReReview === true ? "revise"
+          : normalizedReview === "revision-requested" ? "revise"
+          : normalizeText(status).toLowerCase() === "completed" ? "warn"
+          : normalizeText(status).toLowerCase() === "open" ? "open"
+          : "bad";
+        const cls = chipClassForTone(tone);
+        const span = document.createElement("span");
+        span.className = "chip " + cls;
+        span.textContent = label;
+        return span.outerHTML;
+      }
+
+      function buildNewsQueueItems(calendar = [], windowInfo = {}) {
+        const rows = (Array.isArray(calendar) ? calendar : [])
+          .map((entry) => {
+            const dateKey = normalizeText(entry?.date || entry?.reportDate);
+            const status = resolveNewsCalendarStatus(entry);
+            if (!dateKey || !status) return null;
+            const reviewStatus = normalizeText(entry?.reviewStatus);
+            const awaitingReReview = entry?.awaitingReReview === true;
+            const submittedAt = normalizeText(entry?.submittedAt);
+            return {
+              dateKey,
+              status,
+              reviewStatus,
+              awaitingReReview,
+              submittedAt,
+            };
+          })
+          .filter(Boolean)
+          .sort((left, right) => right.dateKey.localeCompare(left.dateKey));
+
+        const limited = rows.slice(0, 20);
+        const openDate = normalizeText(windowInfo?.reportDate);
+        if (openDate && !limited.find((row) => row.dateKey === openDate)) {
+          limited.unshift({
+            dateKey: openDate,
+            status: "open",
+            reviewStatus: "",
+            awaitingReReview: false,
+            submittedAt: "",
+          });
+        }
+
+        return limited.map((row) => {
+          const statusLabel = newsStatusLabel(
+            row.status,
+            row.reviewStatus,
+            row.awaitingReReview === true,
+          );
+          const reviewLabel = newsReviewLabel(
+            row.status,
+            row.reviewStatus,
+            row.awaitingReReview === true,
+          );
+          const submittedLabel = row.submittedAt ? formatPortalDateTime(row.submittedAt) : "";
+          return {
+            ...row,
+            statusLabel,
+            reviewLabel,
+            submittedLabel,
+            title: formatPortalDate(row.dateKey),
+            meta: [statusLabel, submittedLabel].filter(Boolean).join(" • "),
+            note:
+              row.reviewStatus === "revision-requested" ?
+                "Cần sửa theo hướng dẫn trước khi duyệt."
+              : row.awaitingReReview === true ?
+                "Đã gửi lại và đang chờ giáo viên duyệt."
+              : row.status === "open" ?
+                "Nhắc học sinh gửi báo cáo trước khi hết hạn."
+              : row.status === "missed" ?
+                "Đã bỏ lỡ. Trao đổi với giáo viên nếu cần bổ sung."
+              : "Đang chờ duyệt hoặc đã duyệt.",
+            tone: newsStatusTone(
+              row.status,
+              row.reviewStatus,
+              row.awaitingReReview === true,
+            ),
+          };
+        });
+      }
+
+      function buildNewsWeekSets(calendar = [], windowInfo = {}) {
+        const rows = Array.isArray(calendar) ? calendar : [];
+        const grouped = new Map();
+        rows.forEach((entry) => {
+          const dateKey = normalizeText(entry?.date || entry?.reportDate);
+          const status = resolveNewsCalendarStatus(entry);
+          if (!dateKey || !status) return;
+          const reviewStatus = normalizeText(entry?.reviewStatus);
+          const awaitingReReview = entry?.awaitingReReview === true;
+          const submittedAt = normalizeText(entry?.submittedAt);
+          const weekStart = isoWeekStart(dateKey);
+          if (!weekStart) return;
+          const weekEnd = isoWeekEndFromStart(weekStart);
+          const existing = grouped.get(weekStart) || {
+            weekStart,
+            weekEnd,
+            reports: [],
+            reportCount: 0,
+            submittedCount: 0,
+            approvedCount: 0,
+            revisionRequestedCount: 0,
+            awaitingReReviewCount: 0,
+            missedCount: 0,
+            openCount: 0,
+            latestSubmittedAt: "",
+            latestDate: "",
+            latestStatus: "",
+            latestReviewStatus: "",
+            latestAwaitingReReview: false,
+          };
+          existing.reports.push({
+            dateKey,
+            status,
+            reviewStatus,
+            awaitingReReview,
+            submittedAt,
+          });
+          existing.reportCount += 1;
+          if (status === "missed") existing.missedCount += 1;
+          if (status === "open") existing.openCount += 1;
+          else if (reviewStatus === "approved") existing.approvedCount += 1;
+          else if (reviewStatus === "revision-requested")
+            existing.revisionRequestedCount += 1;
+          else {
+            existing.submittedCount += 1;
+            if (awaitingReReview) {
+              existing.awaitingReReviewCount =
+                Math.max(
+                  0,
+                  Number.parseInt(String(existing.awaitingReReviewCount || 0), 10) || 0,
+                ) + 1;
+            }
+          }
+          const latestKey = normalizeText(existing.latestSubmittedAt || existing.latestDate);
+          const candidateKey = submittedAt || dateKey;
+          if (!latestKey || candidateKey > latestKey) {
+            existing.latestSubmittedAt = submittedAt;
+            existing.latestDate = dateKey;
+            existing.latestStatus = status;
+            existing.latestReviewStatus = reviewStatus;
+            existing.latestAwaitingReReview = awaitingReReview === true;
+          }
+          grouped.set(weekStart, existing);
+        });
+        return Array.from(grouped.values()).sort((a, b) =>
+          normalizeText(b.weekStart).localeCompare(normalizeText(a.weekStart)),
+        );
+      }
+
+      function newsWeekSetStatusToken(weekSet = {}) {
+        const reportCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
+        );
+        const approved = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
+        );
+        const submitted = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.submittedCount || 0), 10) || 0,
+        );
+        const revisionRequested = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) || 0,
+        );
+        const awaiting = Math.max(
+          0,
+          Math.min(
+            submitted,
+            Number.parseInt(String(weekSet?.awaitingReReviewCount || 0), 10) || 0,
+          ),
+        );
+        const initialSubmitted = Math.max(0, submitted - awaiting);
+        const openCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.openCount || 0), 10) || 0,
+        );
+        if (reportCount >= 7 && approved >= 7) return "approved";
+        if (awaiting > 0 && revisionRequested === 0 && initialSubmitted === 0)
+          return "waiting";
+        if (revisionRequested > 0) return "revise";
+        if (submitted > 0) return "submitted";
+        if (openCount > 0) return "open";
+        return "none-submitted";
+      }
+
+      function renderNewsQueueTable(bodyId, items = [], { readOnly = true, mode = "week" } = {}) {
+        const body = document.getElementById(bodyId);
+        if (!body) return;
+        const safeItems = Array.isArray(items) ? items : [];
+        const colCount = mode === "week" ? 5 : readOnly ? 4 : 5;
+        if (!safeItems.length) {
+          body.innerHTML = `<tr><td colspan=\"${colCount}\">Chưa có báo cáo tin tức.</td></tr>`;
+          return;
+        }
+        body.innerHTML = safeItems
+          .map((item) => {
+            if (mode === "week") {
+              const counts = `${Math.max(0, item.approvedCount || 0)}/${Math.max(0, item.submittedCount || 0)}/${Math.max(0, item.revisionRequestedCount || 0)}`;
+              const weekStatus = newsWeekSetStatusToken(item);
+              const statusChip = newsStatusChipHtml(
+                weekStatus,
+                item.latestReviewStatus || "",
+                item.latestAwaitingReReview === true,
+              );
+              const latestLabel = item.latestSubmittedAt ?
+                escapeHtml(formatPortalDateTime(item.latestSubmittedAt))
+              : escapeHtml(formatPortalDate(item.latestDate || item.weekStart));
+              const weekAttrs = `data-open-news-week=\"${escapeHtml(item.weekStart)}\" data-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\" data-open-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\"`;
+              const actionCell = `<td class=\"cell-actions\"><button type=\"button\" class=\"link-btn\" data-open-news-week=\"${escapeHtml(item.weekStart)}\" data-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\" data-open-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\">Xem</button></td>`;
+              return `<tr>\n                <td>${escapeHtml(formatPortalDate(item.weekStart))} - ${escapeHtml(formatPortalDate(item.weekEnd))}</td>\n                <td><span class=\"chip-link\" ${weekAttrs}>${statusChip}</span></td>\n                <td>${escapeHtml(counts)}</td>\n                <td>${latestLabel}</td>\n                ${actionCell}\n              </tr>`;
+            }
+            const dateCell = escapeHtml(formatPortalDate(item.dateKey));
+            const statusChip = newsStatusChipHtml(
+              item.status,
+              item.reviewStatus,
+              item.awaitingReReview === true,
+            );
+            const reviewChip = newsReviewChipHtml(
+              item.status,
+              item.reviewStatus,
+              item.awaitingReReview === true,
+            );
+            const submittedCell = item.submittedAt ?
+              escapeHtml(formatPortalDateTime(item.submittedAt))
+            : "—";
+            const actionCell = readOnly ?
+              ""
+            : `<td class=\"cell-actions\"><button type=\"button\" class=\"link-btn\" data-open-news-date=\"${escapeHtml(item.dateKey)}\">Xem</button></td>`;
+            return `<tr>\n              <td>${dateCell}</td>\n              <td>${statusChip}</td>\n              <td>${reviewChip}</td>\n              <td>${submittedCell}</td>\n              ${actionCell}\n            </tr>`;
+          })
+          .join("");
+      }
+
+      async function openNewsWeekModal(weekStart = "", selectedDate = "") {
+        setActivePortalView("dashboard");
+        setActiveDashboardPage("news-reports");
+        const modal = document.getElementById("newsWeekModal");
+        const list = document.getElementById("newsWeekModalList");
+        const summary = document.getElementById("newsWeekModalSummary");
+        if (!modal || !list || !summary) return;
+        try {
+          await refreshParentNewsCalendarForSelectedChild();
+        } catch (error) {
+          void error;
+        }
+        const weekKey = normalizeText(weekStart);
+        const weekSets = ensureParentNewsWeekSets();
+        const weekSet =
+          Array.isArray(weekSets) ?
+            weekSets.find((entry) => normalizeText(entry.weekStart) === weekKey)
+          : null;
+        if (!weekSet) {
+          if (selectedDate) setStatus(`Không tìm thấy tuần cho ${selectedDate}.`, "warn");
+          return;
+        }
+        const title = document.getElementById("newsWeekModalTitle");
+        if (title)
+          title.textContent = `Tuần ${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)}`;
+        summary.textContent = `Tổng ${weekSet.reportCount} báo cáo, cập nhật gần nhất ${weekSet.latestSubmittedAt ? formatPortalDateTime(weekSet.latestSubmittedAt) : formatPortalDate(weekSet.latestDate || weekSet.weekStart)}.`;
+        list.innerHTML = "";
+        const reports = Array.isArray(weekSet.reports) ? weekSet.reports : [];
+        const selectedDateKey = normalizeText(selectedDate);
+        reports
+          .slice()
+          .sort((a, b) => normalizeText(b.dateKey).localeCompare(normalizeText(a.dateKey)))
+          .forEach((report) => {
+            const li = document.createElement("li");
+            if (selectedDateKey && selectedDateKey === normalizeText(report.dateKey))
+              li.classList.add("selected");
+            li.innerHTML = `
+              <span>${escapeHtml(formatPortalDate(report.dateKey))}</span>
+              <span>${newsStatusChipHtml(report.status, report.reviewStatus, report.awaitingReReview === true)}</span>
+              <span>${escapeHtml(report.submittedAt ? formatPortalDateTime(report.submittedAt) : "Chưa gửi")}</span>
+            `;
+            li.setAttribute("data-open-news-date", normalizeText(report.dateKey));
+            list.appendChild(li);
+          });
+        modal.classList.remove("hidden");
+      }
+
+      function closeNewsWeekModal() {
+        document.getElementById("newsWeekModal")?.classList.add("hidden");
+      }
+
+      function newsCalendarEvents(calendar = []) {
+        return (Array.isArray(calendar) ? calendar : [])
+          .map((entry) => {
+            const dateKey = normalizeText(entry?.date || entry?.reportDate);
+            const status = resolveNewsCalendarStatus(entry);
+            if (!dateKey || !status) return null;
+            const reviewStatus = normalizeText(entry?.reviewStatus);
+            const awaitingReReview = entry?.awaitingReReview === true;
+            const colorToken = newsStatusColorToken(
+              status,
+              reviewStatus,
+              awaitingReReview,
+            );
+            const color = newsStatusColor(
+              status,
+              reviewStatus,
+              awaitingReReview,
+            );
+            return {
+              id: `news-${dateKey}`,
+              title: newsStatusLabel(status, reviewStatus, awaitingReReview),
+              start: dateKey,
+              allDay: true,
+              display: "block",
+              backgroundColor: color,
+              borderColor: color,
+              classNames: ["fc-event-news-status", `fc-event-news-status-${colorToken}`],
+            };
+          })
+          .filter(Boolean);
+      }
+
       function buildHomeworkEvent(row, overdue = false) {
         const start = normalizeText(row?.dueDate || row?.submittedDate);
         if (!start) return null;
@@ -5188,6 +6038,42 @@
             note: "Keep the current homework, attendance, and review rhythm in place this week.",
             tone: "good",
           });
+        }
+
+        if (page === "news-reports") {
+          const news = child.newsReports || {};
+          const newsSummary = news.statusSummary || {};
+          const calendar = Array.isArray(news.calendar) ? news.calendar : [];
+          const queueItems = buildNewsQueueItems(calendar, news.window || {});
+          const approved = parseNumber(newsSummary.approved);
+          const submitted = parseNumber(newsSummary.submitted);
+          const revisionRequested = parseNumber(newsSummary.revisionRequested);
+          const total = approved + submitted + revisionRequested;
+          return {
+            title: "Báo cáo tin tức",
+            lead:
+              total ?
+                `${total} báo cáo tin tức gần đây cho ${normalizeText(child.fullName || child.eaglesId)}.`
+              : "Chưa có báo cáo tin tức nào.",
+            metrics: [
+              metricCard("Approved", String(approved), approved ? "green" : ""),
+              metricCard("Submitted", String(submitted), submitted ? "blue" : ""),
+              metricCard("Revise", String(revisionRequested), revisionRequested ? "purple" : ""),
+              metricCard("Tổng", String(total)),
+            ],
+            calendarTitle: "Lịch báo cáo tin tức",
+            calendarSummary:
+              calendar.length ?
+                "Trạng thái báo cáo trong 60 ngày gần nhất."
+              : "Chưa có lịch báo cáo để hiển thị.",
+            events: newsCalendarEvents(calendar),
+            primaryTitle: "Hàng chờ gần nhất",
+            primaryItems: queueItems.slice(0, 6),
+            primaryEmpty: "Chưa có báo cáo tin tức.",
+            historyTitle: "Lịch sử báo cáo",
+            historyItems: queueItems.slice(6),
+            historyEmpty: "Chưa có lịch sử báo cáo.",
+          };
         }
 
         if (page === "current-homework") {
@@ -5622,6 +6508,16 @@
             buttonText: {
               today: "Today",
             },
+            eventClick(info) {
+              const dateKey =
+                normalizeText(info?.event?.startStr || info?.event?.start);
+              if (!dateKey) return;
+              setActiveDashboardPage("news-reports");
+              setActivePortalView("dashboard");
+              const weekStart = isoWeekStart(dateKey);
+              if (weekStart) openNewsWeekModal(weekStart, dateKey);
+              setStatus(`Đã mở báo cáo tin tức cho ngày ${dateKey}.`, "ok");
+            },
             events: [],
           });
         }
@@ -5642,14 +6538,29 @@
           model.primaryTitle;
         document.getElementById("portalDetailHistoryTitle").textContent =
           model.historyTitle;
+        const primaryList = document.getElementById("portalDetailPrimaryList");
+        const primaryTable = document.getElementById("portalDetailPrimaryTable");
         document
           .getElementById("portalDetailMetrics")
           .replaceChildren(...model.metrics);
-        renderDetailList(
-          "portalDetailPrimaryList",
-          model.primaryItems,
-          model.primaryEmpty,
-        );
+        const isNewsPage = state.activeDashboardPage === "news-reports";
+        if (isNewsPage) {
+          primaryList?.classList.add("hidden");
+          primaryTable?.classList.remove("hidden");
+          renderNewsQueueTable(
+            "portalDetailQueueBody",
+            model.primaryItems,
+            { readOnly: true },
+          );
+        } else {
+          primaryList?.classList.remove("hidden");
+          primaryTable?.classList.add("hidden");
+          renderDetailList(
+            "portalDetailPrimaryList",
+            model.primaryItems,
+            model.primaryEmpty,
+          );
+        }
         renderDetailList(
           "portalDetailHistoryList",
           model.historyItems,
@@ -5731,6 +6642,7 @@
             snapshotBadge.textContent = "Chưa có dữ liệu";
             snapshotBadge.className = "chip chip-neutral";
           }
+          renderNewsQueueHome();
           return;
         }
 
@@ -5738,6 +6650,8 @@
         const assignments = child.assignments || {};
         const grades = child.grades || {};
         const performance = child.performance || {};
+        const news = child.newsReports || {};
+        const newsSummary = news.statusSummary || {};
 
         const totalAttendance = parseNumber(attendance.total);
         const presentAttendance = parseNumber(attendance.present);
@@ -5756,6 +6670,10 @@
             null
           : Number(grades.averageScorePercent);
         const reportCount = parseNumber(performance.reportCount);
+        const approvedNews = parseNumber(newsSummary.approved);
+        const submittedNews = parseNumber(newsSummary.submitted);
+        const revisionNews = parseNumber(newsSummary.revisionRequested);
+        const totalNews = approvedNews + submittedNews + revisionNews;
 
         const absenceTone =
           absencePercent > 10 ? "red"
@@ -5766,6 +6684,11 @@
         const averageTone =
           Number.isFinite(averageScore) && averageScore <= 70 ? "red"
           : Number.isFinite(averageScore) && averageScore <= 76 ? "purple"
+          : "";
+        const newsTone =
+          revisionNews > 0 ? "purple"
+          : submittedNews > 0 ? "blue"
+          : totalNews > 0 ? "green"
           : "";
 
         root.replaceChildren(
@@ -5779,6 +6702,11 @@
             averageTone,
           ),
           metricCard("Báo cáo", String(reportCount)),
+          metricCard(
+            "Tin tức",
+            totalNews ? `${approvedNews}/${submittedNews}/${revisionNews}` : "0/0/0",
+            newsTone,
+          ),
         );
 
         renderCurrentHomeworkOverviewCard(child, pendingHomework);
@@ -5815,6 +6743,8 @@
           recommendations.push("Improve attendance consistency to protect outcomes.");
         if (Number.isFinite(averageScore) && averageScore < 75)
           recommendations.push("Prioritize review on low-scoring topics this week.");
+        if (totalNews === 0)
+          recommendations.push("Khuyến khích học sinh gửi báo cáo tin tức hôm nay.");
         if (!recommendations.length)
           recommendations.push(
             "Maintain the current routine and run one weekly progress review.",
@@ -5826,6 +6756,100 @@
           snapshotBadge.className = "chip chip-ok";
         }
         renderPortalDetailPage();
+        renderNewsQueueHome();
+      }
+
+      function buildParentNewsWeekSetsFromState() {
+        const child = selectedDashboardChild();
+        const news = child?.newsReports || {};
+        const calendar = Array.isArray(news.calendar) ? news.calendar : [];
+        const windowInfo = news.window || {};
+        return buildNewsWeekSets(calendar, windowInfo);
+      }
+
+      async function refreshParentNewsCalendarForSelectedChild(days = 60) {
+        const child = selectedDashboardChild();
+        const eaglesId = normalizeText(child?.eaglesId);
+        if (!child || !eaglesId) return null;
+        const payload = await api(
+          `${PARENT_CHILDREN_PATH}/${encodeURIComponent(eaglesId)}/news-reports/calendar?days=${encodeURIComponent(String(days))}`,
+        );
+        const statusSummary = payload?.statusSummary || {
+          submitted: 0,
+          approved: 0,
+          revisionRequested: 0,
+        };
+        const calendar = Array.isArray(payload?.calendar) ? payload.calendar : [];
+        const latestSubmittedAt = Array.isArray(payload?.items) ?
+          normalizeText(
+            payload.items
+              .map((entry) => entry?.submittedAt)
+              .filter(Boolean)
+              .sort()
+              .reverse()[0],
+          )
+        : "";
+        child.newsReports = {
+          ...(child?.newsReports || {}),
+          submittedCount:
+            parseNumber(statusSummary.approved)
+            + parseNumber(statusSummary.submitted)
+            + parseNumber(statusSummary.revisionRequested),
+          statusSummary,
+          latestSubmittedAt,
+          window: payload?.window || null,
+          openReport: payload?.openReport || null,
+          calendar,
+        };
+        state.newsWeekSets = buildParentNewsWeekSetsFromState();
+        return payload;
+      }
+
+      function ensureParentNewsWeekSets() {
+        if (!Array.isArray(state.newsWeekSets) || !state.newsWeekSets.length) {
+          try {
+            state.newsWeekSets = buildParentNewsWeekSetsFromState();
+          } catch (error) {
+            console.error("ensureParentNewsWeekSets: failed to build week sets", error);
+            state.newsWeekSets = [];
+          }
+        }
+        return state.newsWeekSets;
+      }
+
+      function renderNewsQueueHome() {
+        const summaryEl = document.getElementById("newsQueueSummary");
+        const badgeEl = document.getElementById("newsQueueBadge");
+        if (!summaryEl || !badgeEl) return;
+        const child = selectedDashboardChild();
+        if (!child) {
+          badgeEl.className = "chip chip-neutral";
+          badgeEl.textContent = "Chưa có";
+          summaryEl.textContent = "Chưa có dữ liệu.";
+          renderNewsQueueTable("newsQueueBody", [], { readOnly: true });
+          return;
+        }
+        const news = child.newsReports || {};
+        const newsSummary = news.statusSummary || {};
+        const approved = parseNumber(newsSummary.approved);
+        const submitted = parseNumber(newsSummary.submitted);
+        const revision = parseNumber(newsSummary.revisionRequested);
+        const total = approved + submitted + revision;
+        const badgeTone =
+          revision > 0 ? "chip-bad"
+          : submitted > 0 ? "chip-warn"
+          : total > 0 ? "chip-ok"
+          : "chip-neutral";
+        badgeEl.className = `chip ${badgeTone}`;
+        badgeEl.textContent = total ? `${approved}/${submitted}/${revision}` : "Không có";
+        const summaryText =
+          total ?
+            `Approved ${approved} • Submitted ${submitted} • Revise ${revision}`
+          : "Chưa có báo cáo tin tức.";
+        summaryEl.textContent = summaryText;
+        const items = buildParentNewsWeekSetsFromState();
+        state.newsWeekSets = items;
+        renderNewsQueueTable("newsQueueBody", items, { readOnly: true, mode: "week" });
       }
 
       function applyPatchToProfileState() {
@@ -6019,6 +7043,7 @@
       async function bootstrap() {
         try {
           assertApiOriginConfiguredForStaticPreview();
+          updateEnvBadgeParent();
           await hydratePortal();
           document.getElementById("loginCard").classList.add("hidden");
           setActivePortalView("dashboard");
@@ -6071,26 +7096,30 @@
 
       applyPortalTextZoom(readStoredTextZoomPct());
 
-      document.getElementById("loginForm").addEventListener("submit", (event) => {
+      document.getElementById("loginForm")?.addEventListener("submit", (event) => {
         event.preventDefault();
         login().catch((error) => setStatus(error.message, "err"));
       });
 
-      document.getElementById("logoutBtn").addEventListener("click", () => {
+      document.getElementById("logoutBtn")?.addEventListener("click", () => {
         logout().catch((error) => setStatus(error.message, "err"));
       });
 
-      document.getElementById("logoutBtnChild").addEventListener("click", () => {
+      document.getElementById("logoutBtnChild")?.addEventListener("click", () => {
         logout().catch((error) => setStatus(error.message, "err"));
       });
 
-      document.getElementById("reloadBtn").addEventListener("click", () => {
+      document.getElementById("parentNavLogoutBtn")?.addEventListener("click", () => {
+        logout().catch((error) => setStatus(error.message, "err"));
+      });
+
+      document.getElementById("reloadBtn")?.addEventListener("click", () => {
         hydratePortal()
           .then(() => setStatus("Đã tải lại dữ liệu.", "ok"))
           .catch((error) => setStatus(error.message, "err"));
       });
 
-      document.getElementById("childSelect").addEventListener("change", (event) => {
+      document.getElementById("childSelect")?.addEventListener("change", (event) => {
         const target = event.target;
         if (!(target instanceof HTMLSelectElement)) return;
         loadChildProfile(target.value).catch((error) =>
@@ -6098,11 +7127,23 @@
         );
       });
 
-      document.getElementById("openChildPageBtn").addEventListener("click", () => {
+      document.getElementById("openChildPageBtn")?.addEventListener("click", () => {
         setActivePortalView("child");
       });
 
-      document.getElementById("backToDashboardBtn").addEventListener("click", () => {
+      document
+        .getElementById("openNewsQueueDetailBtn")
+        ?.addEventListener("click", () => setActiveDashboardPage("news-reports"));
+
+      document
+        .getElementById("refreshNewsQueueBtn")
+        ?.addEventListener("click", () => {
+          hydratePortal()
+            .then(() => setStatus("Đã tải lại hàng chờ báo cáo tin tức.", "ok"))
+            .catch((error) => setStatus(error.message, "err"));
+        });
+
+      document.getElementById("backToDashboardBtn")?.addEventListener("click", () => {
         setActiveDashboardPage("home");
       });
 
@@ -6135,6 +7176,23 @@
         ?.addEventListener("click", () => {
           setPastDueHomeworkModalOpen(false);
         });
+
+      document.addEventListener("click", (event) => {
+        const weekTarget = event.target?.closest?.("[data-open-news-week]");
+        if (weekTarget) {
+          event.preventDefault();
+          const weekStart = weekTarget.getAttribute("data-open-news-week");
+          const selectedDate = weekTarget.getAttribute("data-news-date") || "";
+          openNewsWeekModal(weekStart, selectedDate);
+        }
+      });
+
+      document
+        .getElementById("newsWeekModalBackdrop")
+        ?.addEventListener("click", closeNewsWeekModal);
+      document
+        .getElementById("closeNewsWeekModalBtn")
+        ?.addEventListener("click", closeNewsWeekModal);
 
       document
         .getElementById("performanceReportsList")
@@ -6202,11 +7260,11 @@
         }
       });
 
-      document.getElementById("saveDraftBtn").addEventListener("click", () => {
+      document.getElementById("saveDraftBtn")?.addEventListener("click", () => {
         saveDraft().catch((error) => setStatus(error.message, "err"));
       });
 
-      document.getElementById("submitReviewBtn").addEventListener("click", () => {
+      document.getElementById("submitReviewBtn")?.addEventListener("click", () => {
         submitForReview().catch((error) => setStatus(error.message, "err"));
       });
 

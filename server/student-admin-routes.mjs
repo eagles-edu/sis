@@ -185,6 +185,9 @@ const ADMIN_POINTS_STUDENT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_POINTS_STU
 const PARENT_CHILD_PROFILE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile$`)
 const PARENT_CHILD_PROFILE_DRAFT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-draft$`)
 const PARENT_CHILD_PROFILE_SUBMIT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-submit$`)
+const PARENT_CHILD_NEWS_CALENDAR_PATH_RE = new RegExp(
+  `^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/news-reports/calendar$`
+)
 
 const SESSION_TTL_SECONDS = Math.max(
   60,
@@ -257,6 +260,157 @@ const PARENT_PROFILE_QUEUE_ALLOWED_STATUSES = new Set([
   PARENT_PROFILE_QUEUE_STATUS_APPROVED,
   PARENT_PROFILE_QUEUE_STATUS_REJECTED,
 ])
+const STUDENT_NEWS_SOURCE_DEFAULT_DOMAINS = Object.freeze({
+  cnn: "cnn.com",
+  bbc: "bbc.com",
+})
+const STUDENT_NEWS_SOURCE_MAX_CUSTOM = 8
+const STUDENT_NEWS_VALIDATION_THRESHOLDS = Object.freeze({
+  articleTitle: 0.7,
+  byline: 0.7,
+  articleDateline: 0.7,
+  leadSynopsis: 0.5,
+})
+const NEWS_AWAITING_RE_REVIEW_MARKER = "[[SIS-AWAITING-RE-REVIEW]]"
+
+function resolveNewsStatusColor(status) {
+  const normalized = normalizeLower(status)
+  if (
+    normalized === "green"
+    || normalized === "amber"
+    || normalized === "red"
+    || normalized === "purple"
+    || normalized === "blue"
+    || normalized === "turquoise"
+  ) {
+    return normalized
+  }
+  if (normalized === "approved") return "green"
+  if (normalized === "waiting") return "purple"
+  if (normalized === "checked") return "turquoise"
+  if (normalized === "revise" || normalized === "revision-requested") return "purple"
+  if (normalized === "submitted") return "amber"
+  if (normalized === "open") return "blue"
+  if (normalized === "none-submitted" || normalized === "none submitted") return "red"
+  return "amber"
+}
+
+function toNonNegativeInt(value) {
+  return Math.max(0, Number.parseInt(String(value || 0), 10) || 0)
+}
+
+function resolveNewsSetUnapprovedCount({
+  submittedCount = 0,
+  revisionRequestedCount = 0,
+} = {}) {
+  const submitted = toNonNegativeInt(submittedCount)
+  const revisionRequested = toNonNegativeInt(revisionRequestedCount)
+  return Math.max(0, submitted + revisionRequested)
+}
+
+function resolveNewsSetStatus({
+  reportCount = 0,
+  approvedCount = 0,
+  submittedCount = 0,
+  revisionRequestedCount = 0,
+  awaitingReReviewCount = 0,
+} = {}) {
+  const totalReports = toNonNegativeInt(reportCount)
+  const approved = toNonNegativeInt(approvedCount)
+  const submitted = toNonNegativeInt(submittedCount)
+  const revisionRequested = toNonNegativeInt(revisionRequestedCount)
+  const awaitingReReview = Math.min(submitted, toNonNegativeInt(awaitingReReviewCount))
+  const uncheckedInitial = Math.max(0, submitted - awaitingReReview)
+  if (totalReports >= 7 && approved >= 7) return "approved"
+  if (awaitingReReview > 0 && revisionRequested === 0 && uncheckedInitial === 0) return "waiting"
+  if (submitted === 0 && revisionRequested === 0) return "checked"
+  if (revisionRequested > 0) return "revise"
+  if (submitted > 0) return "submitted"
+  return "none-submitted"
+}
+
+function resolveNewsSetAction({
+  reportCount = 0,
+  approvedCount = 0,
+  submittedCount = 0,
+  revisionRequestedCount = 0,
+} = {}) {
+  const totalReports = toNonNegativeInt(reportCount)
+  const approved = toNonNegativeInt(approvedCount)
+  const unapproved = resolveNewsSetUnapprovedCount({ submittedCount, revisionRequestedCount })
+  if (totalReports >= 7 && approved >= 7) return "completed"
+  if (unapproved === 0) return "incomplete"
+  return `unapproved-${unapproved}`
+}
+
+function resolveNewsSetActionColor(action = "") {
+  const normalized = normalizeLower(action)
+  if (normalized === "completed") return "green"
+  if (normalized === "incomplete") return "amber"
+  if (normalized.startsWith("unapproved-")) return "turquoise"
+  return "amber"
+}
+
+function resolveNewsAwaitingReReviewFlag(report = {}) {
+  const normalizedStatus = normalizeNewsReviewStatus(report?.reviewStatus)
+  if (normalizedStatus !== "submitted") return false
+  if (report?.awaitingReReview === true) return true
+  return normalizeText(report?.reviewNote).includes(NEWS_AWAITING_RE_REVIEW_MARKER)
+}
+
+function normalizeNewsReviewStatus(value) {
+  const token = normalizeLower(value)
+  if (token === "approved") return "approved"
+  if (token === "revision-requested" || token === "revision" || token === "request-revision") return "revision-requested"
+  return "submitted"
+}
+
+function normalizeNewsSourceDomain(value) {
+  const token = normalizeLower(value)
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .replace(/[#?].*$/, "")
+    .replace(/^www\./, "")
+    .trim()
+  if (!token) return ""
+  if (!token.includes(".")) return ""
+  if (!/^[a-z0-9.-]+$/.test(token)) return ""
+  return token
+}
+
+function resolveStudentNewsValidationConfigFromSettings() {
+  const persisted = readPersistedUiSettings()
+  const uiSettings = persisted?.uiSettings && typeof persisted.uiSettings === "object"
+    ? persisted.uiSettings
+    : {}
+  const rawValidation = uiSettings?.newsReportValidation && typeof uiSettings.newsReportValidation === "object"
+    ? uiSettings.newsReportValidation
+    : {}
+  const defaultSources = rawValidation?.defaultSources && typeof rawValidation.defaultSources === "object"
+    ? rawValidation.defaultSources
+    : {}
+  const allowedDomains = []
+  if (defaultSources.cnn !== false) allowedDomains.push(STUDENT_NEWS_SOURCE_DEFAULT_DOMAINS.cnn)
+  if (defaultSources.bbc !== false) allowedDomains.push(STUDENT_NEWS_SOURCE_DEFAULT_DOMAINS.bbc)
+  const customSources = Array.isArray(rawValidation?.customSources) ? rawValidation.customSources : []
+  customSources.slice(0, STUDENT_NEWS_SOURCE_MAX_CUSTOM).forEach((entry) => {
+    if (!entry || typeof entry !== "object") return
+    if (entry.enabled !== true) return
+    const domain = normalizeNewsSourceDomain(entry.domain)
+    if (!domain) return
+    allowedDomains.push(domain)
+  })
+  const uniqueDomains = Array.from(new Set(allowedDomains.map((entry) => normalizeNewsSourceDomain(entry)).filter(Boolean)))
+  return {
+    allowedDomains: uniqueDomains.length
+      ? uniqueDomains
+      : [
+          STUDENT_NEWS_SOURCE_DEFAULT_DOMAINS.cnn,
+          STUDENT_NEWS_SOURCE_DEFAULT_DOMAINS.bbc,
+        ],
+    thresholds: { ...STUDENT_NEWS_VALIDATION_THRESHOLDS },
+  }
+}
 const PARENT_PROFILE_IMMUTABLE_FIELDS = new Set(["eaglesId", "studentNumber"])
 const PARENT_PROFILE_ARRAY_FIELDS = new Set([
   "genderSelections",
@@ -744,32 +898,32 @@ function sendHtml(response, statusCode, html) {
   response.end(html)
 }
 
-function injectAdminRuntimeConfig(html, pageSlug) {
-  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
+function injectAdminRuntimeConfig(html, pageSlug, origin) {
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
   return `${runtimeConfig}\n${html}`
 }
 
-function injectParentRuntimeConfig(html) {
-  const runtimeConfig = `<script>window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};</script>`
+function injectParentRuntimeConfig(html, origin) {
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
   return `${runtimeConfig}\n${html}`
 }
 
-function injectAdminPointsRuntimeConfig(html) {
-  const runtimeConfig = `<script>window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_POINTS_SUMMARY_PATH=${JSON.stringify(ADMIN_POINTS_SUMMARY_PATH)};window.__SIS_ADMIN_POINTS_STUDENTS_PATH=${JSON.stringify(ADMIN_POINTS_STUDENTS_PATH)};window.__SIS_ADMIN_POINTS_LEDGER_PATH=${JSON.stringify(ADMIN_POINTS_LEDGER_PATH)};window.__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH=${JSON.stringify(ADMIN_POINTS_ADJUSTMENTS_PATH)};</script>`
+function injectAdminPointsRuntimeConfig(html, origin) {
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_POINTS_SUMMARY_PATH=${JSON.stringify(ADMIN_POINTS_SUMMARY_PATH)};window.__SIS_ADMIN_POINTS_STUDENTS_PATH=${JSON.stringify(ADMIN_POINTS_STUDENTS_PATH)};window.__SIS_ADMIN_POINTS_LEDGER_PATH=${JSON.stringify(ADMIN_POINTS_LEDGER_PATH)};window.__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH=${JSON.stringify(ADMIN_POINTS_ADJUSTMENTS_PATH)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
   return `${runtimeConfig}\n${html}`
 }
 
-function injectStudentPortalRuntimeConfig(html) {
-  const runtimeConfig = `<script>window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};</script>`
+function injectStudentPortalRuntimeConfig(html, origin) {
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};</script>`
   if (html.includes("</head>")) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
@@ -2143,10 +2297,35 @@ async function restartExerciseMailerServiceControl() {
 }
 
 function withError(response, request, error) {
-  const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500
-  const message = normalizeText(error?.message) || "Request failed"
+  let statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500
+  let message = normalizeText(error?.message) || "Request failed"
+  const code = normalizeText(error?.code).toUpperCase()
+  const errorText = normalizeLower(error?.message || error)
+  const schemaDriftDetected =
+    code === "P2022"
+    || errorText.includes("column `(not available)` does not exist in the current database")
+    || (
+      errorText.includes("column")
+      && errorText.includes("does not exist")
+      && (
+        errorText.includes("incomingexerciseresult")
+        || errorText.includes("submittedeaglesid")
+        || errorText.includes("studentnewsreport")
+        || errorText.includes("reviewstatus")
+        || errorText.includes("validationissuesjson")
+      )
+    )
+  if (schemaDriftDetected) {
+    statusCode = 503
+    message = "Database schema mismatch detected. Run Prisma migration and regenerate Prisma client for this runtime."
+  }
+  const payload =
+    error && typeof error.payload === "object" && !Array.isArray(error.payload)
+      ? error.payload
+      : null
+  const responseBody = payload ? { error: message, ...payload } : { error: message }
   allowCors(request, response)
-  sendJson(response, statusCode, { error: message })
+  sendJson(response, statusCode, responseBody)
 }
 
 async function handleLogin(request, response) {
@@ -4311,18 +4490,56 @@ async function buildParentDashboardPayload(session = {}) {
       if (!groupedReports.has(id)) groupedReports.set(id, [])
       groupedReports.get(id).push(row)
     })
+  const newsSummaries = new Map()
+  const newsSnapshots = new Map()
+  await Promise.all(
+    linkedChildren.map(async (child) => {
+      try {
+        const summary = await listStudentNewsCalendar(child.studentRefId, { now: new Date(), days: 60 })
+        const statusSummary = summary?.statusSummary || { submitted: 0, approved: 0, revisionRequested: 0 }
+        newsSummaries.set(child.studentRefId, statusSummary)
+        newsSnapshots.set(child.studentRefId, summary || null)
+      } catch (error) {
+        void error
+        newsSummaries.set(child.studentRefId, { submitted: 0, approved: 0, revisionRequested: 0 })
+        newsSnapshots.set(child.studentRefId, null)
+      }
+    })
+  )
 
     return {
       ok: true,
       generatedAt: nowIso(),
-      children: linkedChildren.map((child) =>
-        buildChildDashboardSnapshot({
+      children: linkedChildren.map((child) => {
+        const newsSummary = newsSummaries.get(child.studentRefId) || { submitted: 0, approved: 0, revisionRequested: 0 }
+        const newsSnapshot = newsSnapshots.get(child.studentRefId)
+        const latestSubmittedAt = Array.isArray(newsSnapshot?.items)
+          ? normalizeText(
+              newsSnapshot.items
+                .map((entry) => entry?.submittedAt)
+                .filter(Boolean)
+                .sort()
+                .reverse()[0]
+            )
+          : ""
+        const snapshot = buildChildDashboardSnapshot({
           child,
           attendanceRows: groupedAttendance.get(child.studentRefId) || [],
           gradeRows: groupedGrades.get(child.studentRefId) || [],
           reportRows: groupedReports.get(child.studentRefId) || [],
         })
-      ),
+        return {
+          ...snapshot,
+          newsReports: {
+            submittedCount: newsSummary.submitted + newsSummary.approved + newsSummary.revisionRequested,
+            statusSummary: newsSummary,
+            latestSubmittedAt,
+            window: newsSnapshot?.window || null,
+            openReport: newsSnapshot?.openReport || null,
+            calendar: Array.isArray(newsSnapshot?.calendar) ? newsSnapshot.calendar : [],
+          },
+        }
+      }),
     }
   } catch (error) {
     const wrapped = new Error("Unable to load parent dashboard")
@@ -4341,18 +4558,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
 
   try {
     const prisma = await getSharedPrismaClient()
-    const newsAggregatePromise =
-      prisma?.studentNewsReport && typeof prisma.studentNewsReport.aggregate === "function"
-        ? prisma.studentNewsReport.aggregate({
-            where: { studentRefId: id },
-            _count: { _all: true },
-            _max: { submittedAt: true },
-          })
-        : Promise.resolve({
-            _count: { _all: 0 },
-            _max: { submittedAt: null },
-          })
-    const [student, attendanceRows, gradeRows, reportRows, pointsLedger, newsAggregate] = await Promise.all([
+    const [student, attendanceRows, gradeRows, reportRows, pointsLedger] = await Promise.all([
       prisma.student.findUnique({
         where: { id },
         select: {
@@ -4375,8 +4581,8 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
         orderBy: { generatedAt: "desc" },
       }),
       listStudentPointsLedger(id, { take: 1 }),
-      newsAggregatePromise,
     ])
+    const newsCalendar = await listStudentNewsCalendar(id, { now: new Date(), days: 60 })
     const backfilledReportRows = await backfillLegacyParentReportMetadataRows({
       prisma,
       reportRows,
@@ -4397,8 +4603,20 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
     const pointsSummary = pointsLedger?.summary && typeof pointsLedger.summary === "object"
       ? pointsLedger.summary
       : {}
-    const submittedCount = Number.parseInt(String(newsAggregate?._count?._all || 0), 10) || 0
-    const latestSubmittedAt = newsAggregate?._max?.submittedAt?.toISOString?.() || ""
+    const statusSummary = newsCalendar?.statusSummary || { submitted: 0, approved: 0, revisionRequested: 0 }
+    const submittedCount = Number.parseInt(
+      String(statusSummary.submitted + statusSummary.approved + statusSummary.revisionRequested || 0),
+      10
+    ) || 0
+    const latestSubmittedAt = Array.isArray(newsCalendar?.items)
+      ? normalizeText(
+          newsCalendar.items
+            .map((entry) => entry?.submittedAt)
+            .filter(Boolean)
+            .sort()
+            .reverse()[0]
+        )
+      : ""
     const calendarTracks = buildStudentPortalCalendarTracks({
       gradeRows,
       reportRows: backfilledReportRows,
@@ -4426,6 +4644,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       newsReports: {
         submittedCount,
         latestSubmittedAt,
+        statusSummary,
       },
     }
   } catch (error) {
@@ -4475,6 +4694,7 @@ async function buildQueueHubPayload() {
             reportDate: true,
             submittedAt: true,
             reviewStatus: true,
+            reviewNote: true,
             articleTitle: true,
             sourceLink: true,
             student: {
@@ -4536,6 +4756,7 @@ async function buildQueueHubPayload() {
             submittedCount: 0,
             approvedCount: 0,
             revisionRequestedCount: 0,
+            awaitingReReviewCount: 0,
             latestReportId: "",
             latestReportDate: "",
             latestSubmittedAt: "",
@@ -4543,14 +4764,19 @@ async function buildQueueHubPayload() {
             latestArticleTitle: "",
             latestSourceLink: "",
             setStatus: "submitted",
+            setAction: "incomplete",
             _reportDates: new Set(),
           }
           const reportDateKey = toPortalDateKey(row?.reportDate)
           if (reportDateKey) existing._reportDates.add(reportDateKey)
           const status = normalizeLower(row?.reviewStatus)
+          const awaitingReReview = resolveNewsAwaitingReReviewFlag(row)
           if (status === "approved") existing.approvedCount += 1
           else if (status === "revision-requested") existing.revisionRequestedCount += 1
-          else existing.submittedCount += 1
+          else {
+            existing.submittedCount += 1
+            if (awaitingReReview) existing.awaitingReReviewCount += 1
+          }
 
           const submittedAtIso = row?.submittedAt?.toISOString?.() || ""
           const latestSubmittedAtIso = normalizeText(existing.latestSubmittedAt)
@@ -4569,19 +4795,27 @@ async function buildQueueHubPayload() {
           .map((entry) => {
             const reportDates = entry?._reportDates instanceof Set ? entry._reportDates : new Set()
             const reportCount = Math.max(0, reportDates.size)
-            const setStatus = reportCount < 7
-              ? "incomplete"
-              : entry?.revisionRequestedCount > 0
-              ? "revision-requested"
-              : reportCount >= 7 && entry?.approvedCount >= reportCount
-                ? "approved"
-                : "submitted"
+            const setStatus = resolveNewsSetStatus({
+              reportCount,
+              approvedCount: entry?.approvedCount,
+              submittedCount: entry?.submittedCount,
+              revisionRequestedCount: entry?.revisionRequestedCount,
+              awaitingReReviewCount: entry?.awaitingReReviewCount,
+            })
+            const setAction = resolveNewsSetAction({
+              reportCount,
+              approvedCount: entry?.approvedCount,
+              submittedCount: entry?.submittedCount,
+              revisionRequestedCount: entry?.revisionRequestedCount,
+            })
             const { _reportDates, ...safeEntry } = entry || {}
             void _reportDates
             return {
               ...safeEntry,
               reportCount,
               setStatus,
+              setAction,
+              setActionColor: resolveNewsSetActionColor(setAction),
             }
           })
         const sortedItems = weekSets
@@ -4591,15 +4825,33 @@ async function buildQueueHubPayload() {
             return normalizeText(right?.latestSubmittedAt).localeCompare(normalizeText(left?.latestSubmittedAt))
           })
         const items = sortedItems.slice(0, 200)
+        const statusSummary = sortedItems.reduce(
+          (acc, entry) => {
+            const status = normalizeNewsReviewStatus(entry?.latestReviewStatus)
+            if (status === "approved") acc.approved += 1
+            else if (status === "revision-requested") acc.revisionRequested += 1
+            else acc.submitted += 1
+            return acc
+          },
+          { submitted: 0, approved: 0, revisionRequested: 0 }
+        )
 
         return {
           total: sortedItems.length,
-          items,
+          statusSummary,
+          items: items.map((entry) => ({
+            ...entry,
+            statusColor: resolveNewsStatusColor(entry.setStatus),
+            setStatus: normalizeText(entry?.setStatus) || resolveNewsSetStatus(entry),
+            setAction: normalizeText(entry?.setAction) || resolveNewsSetAction(entry),
+            setActionColor: normalizeText(entry?.setActionColor) || resolveNewsSetActionColor(entry?.setAction),
+          })),
         }
       } catch (error) {
         void error
         return {
           total: 0,
+          statusSummary: { submitted: 0, approved: 0, revisionRequested: 0 },
           items: [],
         }
       }
@@ -4693,8 +4945,9 @@ async function buildQueueHubPayload() {
       },
       {
         id: "news-report-review",
-        title: "News Report Week Sets",
+        title: "News Week Sets",
         total: Number.parseInt(String(newsReviewQueue?.total || 0), 10) || 0,
+        statusSummary: newsReviewQueue?.statusSummary || { submitted: 0, approved: 0, revisionRequested: 0 },
         items: Array.isArray(newsReviewQueue?.items) ? newsReviewQueue.items : [],
       },
       {
@@ -5717,6 +5970,26 @@ async function handleParentApiRequest(request, response, pathname, url) {
     return true
   }
 
+  const childNewsCalendarPathMatch = pathname.match(PARENT_CHILD_NEWS_CALENDAR_PATH_RE)
+  if (childNewsCalendarPathMatch && method === "GET") {
+    const requestedEaglesId = normalizeText(decodeURIComponent(childNewsCalendarPathMatch[1]))
+    const children = await listParentLinkedStudents({
+      parentsId: parentContext.parentsId,
+      parentAccountId: parentContext.parentAccountId,
+    })
+    const child = children.find((entry) => normalizeLower(entry?.eaglesId) === normalizeLower(requestedEaglesId))
+    if (!child) {
+      const error = new Error("Child is not linked to this parent account")
+      error.statusCode = 403
+      throw error
+    }
+    const payload = await listStudentNewsCalendar(child.studentRefId, {
+      days: url.searchParams.get("days") || "60",
+    })
+    sendJson(response, 200, payload)
+    return true
+  }
+
   const profilePathMatch = pathname.match(PARENT_CHILD_PROFILE_PATH_RE)
   if (profilePathMatch && method === "GET") {
     const requestedEaglesId = normalizeText(decodeURIComponent(profilePathMatch[1]))
@@ -5926,7 +6199,10 @@ async function handleStudentApiRequest(request, response, pathname, url) {
 
   if (method === "POST" && pathname === STUDENT_NEWS_REPORTS_PATH) {
     const payload = await parseBody(request)
-    const result = await saveStudentNewsReport(studentRefId, payload)
+    const validationConfig = resolveStudentNewsValidationConfigFromSettings()
+    const result = await saveStudentNewsReport(studentRefId, payload, {
+      validationConfig,
+    })
     sendJson(response, 200, result)
     return true
   }
@@ -5939,6 +6215,7 @@ export async function handleStudentAdminRequest(request, response) {
   const host = normalizeText(request.headers.host) || "localhost"
   const url = new URL(request.url || "/", `http://${host}`)
   const pathname = url.pathname
+  const requestOrigin = resolveRequestOrigin(request)
 
   const previewMatch = pathname.match(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE)
   if (method === "GET" && previewMatch) {
@@ -5953,7 +6230,7 @@ export async function handleStudentAdminRequest(request, response) {
 
   const pageSlug = resolveAdminPageSlug(pathname)
   if (method === "GET" && pageSlug) {
-    const html = injectAdminRuntimeConfig(fs.readFileSync(ADMIN_HTML_PATH, "utf8"), pageSlug)
+    const html = injectAdminRuntimeConfig(fs.readFileSync(ADMIN_HTML_PATH, "utf8"), pageSlug, requestOrigin)
     sendHtml(response, 200, html)
     return true
   }
@@ -5963,7 +6240,7 @@ export async function handleStudentAdminRequest(request, response) {
       sendJson(response, 404, { error: "Student points page not found" })
       return true
     }
-    const html = injectAdminPointsRuntimeConfig(fs.readFileSync(ADMIN_POINTS_HTML_PATH, "utf8"))
+    const html = injectAdminPointsRuntimeConfig(fs.readFileSync(ADMIN_POINTS_HTML_PATH, "utf8"), requestOrigin)
     sendHtml(response, 200, html)
     return true
   }
@@ -5973,7 +6250,7 @@ export async function handleStudentAdminRequest(request, response) {
       sendJson(response, 404, { error: "Parent portal page not found" })
       return true
     }
-    const html = injectParentRuntimeConfig(fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8"))
+    const html = injectParentRuntimeConfig(fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8"), requestOrigin)
     sendHtml(response, 200, html)
     return true
   }
@@ -5983,7 +6260,7 @@ export async function handleStudentAdminRequest(request, response) {
       sendJson(response, 404, { error: "Student portal page not found" })
       return true
     }
-    const html = injectStudentPortalRuntimeConfig(fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8"))
+    const html = injectStudentPortalRuntimeConfig(fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8"), requestOrigin)
     sendHtml(response, 200, html)
     return true
   }

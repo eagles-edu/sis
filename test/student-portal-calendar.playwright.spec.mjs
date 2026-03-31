@@ -329,17 +329,23 @@ function createStudentPortalFixtureServer(rootDir) {
           ok: true,
           window: {
             todayDate: "2026-03-13",
-            reportDate: "2026-03-13",
-            closesAt: "2026-03-13T23:59:00.000Z",
+            reportDate: "2026-03-16",
+            closesAt: "2026-03-16T23:59:00.000Z",
           },
           calendar: [
             { date: "2026-03-10", color: "red", submittedAt: "" },
             { date: "2026-03-11", status: "missed", submittedAt: "" },
             { date: "2026-03-12", color: "green", submittedAt: "2026-03-12T10:15:00.000Z" },
-            { date: "2026-03-13", color: "amber", canSubmit: true, submittedAt: "" },
+            {
+              date: "2026-03-13",
+              status: "completed",
+              reviewStatus: "revision-requested",
+              submittedAt: "2026-03-13T11:30:00.000Z",
+            },
+            { date: "2026-03-16", color: "amber", canSubmit: true, submittedAt: "" },
           ],
           openReport: {
-            reportDate: "2026-03-13",
+            reportDate: "2026-03-16",
           },
         });
         return;
@@ -429,6 +435,28 @@ test(
       assert.equal(homeState.identityHeadAscii.trim(), "Thong tin dinh danh hoc sinh");
       assert(homeState.metricLabels.includes("Absent SYTD"));
 
+      await page.waitForFunction(() => {
+        const body = globalThis.document.getElementById("newsQueueBody");
+        return Boolean(body && body.textContent && !/Loading/i.test(body.textContent));
+      });
+
+      const newsQueueState = await page.evaluate(() => {
+        const body = globalThis.document.getElementById("newsQueueBody");
+        const rows = Array.from(body?.querySelectorAll("tr") || []);
+        return {
+          text: body?.textContent || "",
+          rowCount: rows.length,
+          actionButtons: Array.from(body?.querySelectorAll("[data-open-news-date]") || []).length,
+        };
+      });
+
+      assert.match(newsQueueState.text, /(Approved|Open|Revise|Incomplete|No news reports yet\.)/i);
+      assert.equal(newsQueueState.text.includes("Loading"), false);
+      assert.ok(newsQueueState.rowCount >= 1);
+      assert.ok(newsQueueState.actionButtons >= 1);
+      assert.match(newsQueueState.text, /Revise/i);
+      assert.equal(/Needs Revision/i.test(newsQueueState.text), false);
+
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="current-homework"]')?.click();
       });
@@ -468,17 +496,17 @@ test(
         );
         const alertEvent = grid?.querySelector(".fc-obtrusive-alert");
         const missedNewsEvent = Array.from(grid?.querySelectorAll(".fc-event") || []).find((node) =>
-          /MISSED NEWS REPORT/i.test(node.getAttribute("title") || node.textContent || "")
+          /NONE SUBMITTED/i.test(node.getAttribute("title") || node.textContent || "")
         );
         const openNewsEvent = Array.from(grid?.querySelectorAll(".fc-event") || []).find((node) =>
-          /News report window open/i.test(node.getAttribute("title") || node.textContent || "")
+          /OPEN/i.test(node.getAttribute("title") || node.textContent || "")
         );
         const alertStyle = alertEvent ? globalThis.window.getComputedStyle(alertEvent) : null;
         const missedNewsStyle = missedNewsEvent ? globalThis.window.getComputedStyle(missedNewsEvent) : null;
         const openNewsStyle = openNewsEvent ? globalThis.window.getComputedStyle(openNewsEvent) : null;
         const alertDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-11"]');
         const completedDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-12"]');
-        const openDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-13"]');
+        const openDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-16"]');
         const alertDayStyle = alertDay ? globalThis.window.getComputedStyle(alertDay) : null;
         return {
           rendered: Boolean(grid?.classList.contains("fc") && grid?.querySelector(".fc-toolbar")),
@@ -500,7 +528,7 @@ test(
       assert.equal(calendarState.rendered, true);
       assert.ok(calendarState.toolbarButtons.some((label) => /your view/i.test(label)));
       assert.match(calendarState.calendarTitle, /Your View/i);
-      assert.ok(calendarState.eventTitles.some((label) => /MISSED NEWS REPORT/i.test(label)));
+      assert.ok(calendarState.eventTitles.some((label) => /NONE SUBMITTED/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /MISSED HOMEWORK DEADLINE/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /Notes review track: Science/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /Current homework: Essay Draft/i.test(label)));
@@ -508,7 +536,7 @@ test(
       assert.match(calendarState.alertAnimationName, /overdueBlink/i);
       assert.match(calendarState.alertBackgroundColor, /rgb\(255,\s*35,\s*56\)/i);
       assert.match(calendarState.missedNewsTextColor, /rgb\(255,\s*255,\s*255\)/i);
-      assert.match(calendarState.openNewsTextColor, /rgb\(0,\s*0,\s*0\)/i);
+      assert.match(calendarState.openNewsTextColor, /rgb\(15,\s*74,\s*115\)/i);
       assert.match(calendarState.alertDayClassName, /calendar-day-alert/);
       assert.match(calendarState.alertDayAnimationName, /dayAlertPulse/i);
       assert.match(calendarState.completedDayClassName, /calendar-day-completed/);

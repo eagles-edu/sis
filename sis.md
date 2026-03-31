@@ -7,6 +7,65 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-03-30 - portal-wide canonical news chips across admin/parent/student)
+
+- Requirement:
+  - enforce one shared chip contract for news status/review across all portals (admin, parent, student), not admin-only.
+  - keep the internal status token `revision-requested` unchanged while rendering canonical label `Revise`.
+  - remove portal-specific drift labels (`Needs Revision`, `Cần sửa`) from news chips.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - added shared helpers `normalizeNewsReviewStatusToken(...)` and `resolveNewsChipToken(...)` for canonical status mapping.
+    - news status chips now render canonical labels: `Approved`, `Submitted`, `Revise`, `Open`, `Incomplete`.
+    - news review chip labels now render canonical labels: `Approved`, `Submitted`, `Revise`, `Unchecked`.
+    - updated legend text to match canonical chip contract.
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - added shared helpers `normalizeNewsReviewStatusToken(...)` and `resolveNewsChipToken(...)` for canonical status mapping.
+    - news status chips and review chips now render canonical labels aligned with admin semantics.
+    - updated parent news queue summary/metrics wording to `Approved/Submitted/Revise` to stay consistent with chip semantics.
+- Tests:
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - added `parent portal news queue chips use canonical Approved/Submitted/Revise labels`.
+    - asserts `Revise` is present and `Cần sửa` is absent.
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - expanded calendar fixture with a `revision-requested` report row.
+    - asserts queue text includes `Revise` and excludes `Needs Revision`.
+  - verification:
+    - baseline before edits: `npm test` => `313` pass, `0` fail.
+    - targeted after edits: `node --test test/parent-portal-ui.spec.mjs test/student-portal-calendar.playwright.spec.mjs` => `12` pass, `0` fail.
+    - full suite after edits: `npm test` => `314` pass, `0` fail.
+
+## Update (2026-03-28 - admin news review check-state chips/filter + revise label)
+
+- Requirement:
+  - add a week-set-level admin review-check state independent from existing set status:
+    - `unchecked` (purple) when `submittedCount > 0`
+    - `waiting-revise` (amber) when `submittedCount = 0` and `revisionRequestedCount > 0`
+    - `checked` (green) when `submittedCount = 0` and `revisionRequestedCount = 0`
+  - expose this state on `/admin/students/news-reports` and Queue Hub `news-report-review`.
+  - keep internal status key `revision-requested` unchanged but render chip label as `Revise`.
+- Runtime behavior change:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - added `resolveNewsReviewCheckStatus(...)` and `resolveNewsReviewCheckColor(...)`.
+    - queue-hub news week-set payload now returns `reviewCheckStatus` and `reviewCheckColor` per item.
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - added `Review Check` filter (`All/Checked/Unchecked/Waiting Revise`) and `Review Check` sortable column on news review page.
+    - week-set builder now computes `reviewCheckStatus` from counts using the locked rule.
+    - summary line now includes `checked/unchecked/waiting` counts.
+    - added deterministic sort ranking for `setStatus` and `reviewCheckStatus`.
+    - updated status label mapping so `revision-requested` renders as `Revise`.
+    - Queue Hub `news-report-review` panel now renders chip-based `Set Status` + `Review Check` columns.
+- Tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - updated news review UI assertions for new filter/column/chips and `Revise` label.
+    - added review-check filter behavior checks and queue-hub panel display checks.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added source-contract checks for `reviewCheckStatus/reviewCheckColor`.
+    - added static UI contract checks for review-check rule and `Revise` label mapping.
+  - verification:
+    - baseline before edits: `npm test --silent` => `311` pass, `0` fail.
+    - after edits: `node --test test/student-admin-ui.spec.mjs test/student-admin.spec.mjs` => `165` pass, `0` fail.
+
 ## Update (2026-03-27 - normalize dotted exercise section notation on SIS receipt)
 
 - Requirement:
@@ -4852,3 +4911,52 @@ curl -fsS http://127.0.0.1:8787/healthz
 ```
 
 Reference: [docs/ffs.md](docs/ffs.md) `Systemd Runtime Policy (Canonical)`.
+
+## Update (2026-03-27 - codified sync + runtime restart workflow)
+
+- Added `tools/sync-and-restart-runtimes.sh` with three modes:
+  - `full` => runs `ffs-sis-root --batch`, restarts live runtime, restarts dev runtime.
+  - `public` => runs `ffs-sis-public-root --batch`, restarts live runtime, restarts dev runtime.
+  - `restart-only` => restarts both runtimes without running sync.
+- Added npm scripts:
+  - `sync:full:sis-root:restart-runtimes`
+  - `sync:full:sis-public-root:restart-runtimes`
+  - `runtimes:restart`
+- Launcher hardening:
+  - dev runtime now starts detached via `child_process.spawn(..., { detached: true })` to avoid npm-script process-tree cleanup killing `:8788`.
+  - live/dev health checks use retry loops during restart windows.
+- Documentation updated:
+  - `ffs.md` adds codified commands and behavior.
+  - `docs/Live portal links.txt` adds the same operational command set.
+- Verification:
+  - `npm run runtimes:restart` succeeds.
+- `curl -fsS http://127.0.0.1:8787/healthz` => ok.
+- `curl -fsS http://127.0.0.1:8788/healthz` => ok.
+
+## Update (2026-03-28 - news compliance soft-save + dev repair)
+
+- Dev DB drift repair completed for local `:8788` runtime path:
+  - applied Prisma migration `20260328034600_student_news_validation_issues_json`,
+  - regenerated Prisma client via `npm run db:generate`.
+- Student news compliance workflow now soft-saves on validation failure:
+  - save persists report and marks `reviewStatus=revision-requested`,
+  - API returns `422` with saved payload, `failedFields`, `revisionTasks`, and item state,
+  - successful re-save returns `200` and flips status back to `submitted`.
+- Added tagged compliance state persistence:
+  - `StudentNewsReport.validationIssuesJson` stores per-field pending/fixed state,
+  - compliance notes preserve manual/admin text and update tagged lines in-place,
+  - fixed lines use prefix: `FIXED PER COMPLIANCE RESOLUTION ON SAVE`.
+- Dateline/byline/lead checks aligned to compliance criteria:
+  - byline supports organization/domain fallback,
+  - dateline enforces updated/tz+GMT requirements with similarity threshold,
+  - lead synopsis threshold enforced at `0.50`.
+- Added ops script for queue-wide compliance audit:
+  - `tools/news-validation-audit.mjs`,
+  - package script: `npm run news:validation:audit`,
+  - `--apply` updates review status/note and persists `validationIssuesJson`.
+- Test coverage added for compliance rules and note lifecycle:
+  - new unit suite `test/news-compliance.spec.mjs`,
+  - schema/contract assertions extended in `test/student-admin.spec.mjs`.
+- Latest full test run:
+  - command: `npm test`
+  - result: pass (`311/311`).

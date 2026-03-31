@@ -1422,7 +1422,7 @@
         const normalizedLabel = normalizeText(label) || "Column"
         const safeLabel = escapeHtml(normalizedLabel)
         return (
-          `<span class=\"header-action-row\" role=\"group\" aria-label=\"${safeLabel} column controls\">`
+          `<span class=\"header-action-row\" role=\"group\" aria-label=\"${safeLabel} column controls\" data-header-label=\"${safeLabel}\">`
           + `<button class=\"header-action-btn plus\" type=\"button\" data-header-action=\"pin\" aria-label=\"Pin or unpin ${safeLabel} column\">+</button>`
           + `<button class=\"header-action-btn minus\" type=\"button\" data-header-action=\"hide\" aria-label=\"Hide ${safeLabel} column\">-</button>`
           + `</span>`
@@ -3439,11 +3439,24 @@
       }
 
       function resolveHeaderActionLabel(column) {
+        const headerEl = column?.getElement?.()
+        if (headerEl instanceof HTMLElement) {
+          const actionRow = headerEl.querySelector(".header-action-row")
+          const dataLabel = normalizeText(actionRow?.getAttribute("data-header-label"))
+            || normalizeText(actionRow?.getAttribute("aria-label"))
+          if (dataLabel) return dataLabel.replace(/\\s*column controls$/i, "") || "Column"
+          const titleNode = headerEl.querySelector(".assignment-title-text")
+          const titleText = normalizeText(titleNode?.textContent)
+          if (titleText) return titleText
+        }
         const definition = column?.getDefinition?.() || {}
-        const explicitLabel = normalizeText(definition?.headerActionLabel)
-        if (explicitLabel) return explicitLabel
-        const fallbackTitle = normalizeText(definition?.title)
-        if (fallbackTitle) return fallbackTitle
+        const fallbackTitleHtml = normalizeText(definition?.title)
+        if (fallbackTitleHtml) {
+          const temp = document.createElement("div")
+          temp.innerHTML = fallbackTitleHtml
+          const titleText = normalizeText(temp.textContent || temp.innerText)
+          if (titleText) return titleText
+        }
         const fallbackField = normalizeText(definition?.field)
         return fallbackField || "Column"
       }
@@ -3807,7 +3820,6 @@
           {
             title: buildCoreHeaderCard("Class Level", "Class", "Grouping", coreTitleMaxChars),
             field: "level",
-            headerActionLabel: "Class Level",
             minWidth: 104,
             width: classColumnWidth,
             frozen: true,
@@ -3819,7 +3831,6 @@
           {
             title: buildCoreHeaderCard("Student", "eaglesId", "", coreTitleMaxChars),
             field: "studentDisplay",
-            headerActionLabel: "Student",
             minWidth: studentColumnMinWidth,
             width: studentColumnWidth,
             frozen: true,
@@ -3831,7 +3842,6 @@
           {
             title: buildCoreHeaderCard("Student Number", "Roster", "ID", coreTitleMaxChars),
             field: "studentNumber",
-            headerActionLabel: "Student Number",
             minWidth: 74,
             width: studentNumberColumnWidth,
             hozAlign: "center",
@@ -3846,7 +3856,6 @@
           {
             title: buildCoreHeaderCard("Quarter", "Term", "Bucket", coreTitleMaxChars),
             field: "quarter",
-            headerActionLabel: "Quarter",
             minWidth: 72,
             width: quarterColumnWidth,
             hozAlign: "center",
@@ -3889,7 +3898,6 @@
               + `<span class=\"assignment-sub\">${escapeHtml(dueLabel)}</span>`
               + `</span>`,
             field: meta.key,
-            headerActionLabel: fullTitle,
             minWidth: assignmentColumnMinWidth,
             width: assignmentColumnWidth,
             hozAlign: "center",
@@ -4256,7 +4264,6 @@
             {
               title: buildCoreHeaderCard("Class Level", "Class", "Grouping", coreTitleMaxChars),
               field: "level",
-              headerActionLabel: "Class Level",
               minWidth: 104,
               frozen: true,
               cssClass: "assignment-col core-col",
@@ -4266,7 +4273,6 @@
             {
               title: buildCoreHeaderCard("Student", "eaglesId", "", coreTitleMaxChars),
               field: "studentDisplay",
-              headerActionLabel: "Student",
               minWidth: studentColumnMinWidth,
               width: studentColumnDefaultWidth,
               frozen: true,
@@ -4277,7 +4283,6 @@
             {
               title: buildCoreHeaderCard("Student Number", "Roster", "ID", coreTitleMaxChars),
               field: "studentNumber",
-              headerActionLabel: "Student Number",
               minWidth: 74,
               hozAlign: "center",
               cssClass: "assignment-col core-col student-number-col",
@@ -4290,7 +4295,6 @@
             {
               title: buildCoreHeaderCard("Quarter", "Term", "Bucket", coreTitleMaxChars),
               field: "quarter",
-              headerActionLabel: "Quarter",
               minWidth: 72,
               hozAlign: "center",
               cssClass: "assignment-col core-col",

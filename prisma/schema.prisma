@@ -333,6 +333,7 @@ model StudentNewsReport {
   submittedAt   DateTime @default(now())
   reviewStatus  String   @default("submitted")
   reviewNote    String?
+  validationIssuesJson Json?
   reviewedAt    DateTime?
   reviewedByUsername String?
   createdAt     DateTime @default(now())
