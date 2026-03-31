@@ -666,6 +666,125 @@ test("parent portal menu opens a detailed homework page with calendar and histor
   dom.window.close()
 })
 
+test("parent portal news queue chips use canonical Approved/Submitted/Revise labels", async () => {
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "A2 Flyers",
+            },
+          ],
+        })
+      }
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          children: [
+            {
+              eaglesId: "vi001",
+              attendance: { total: 20, present: 19, absent: 1, late: 0, excused: 0 },
+              assignments: { pending: 0, overdue: 0, completed: 2 },
+              grades: { averageScorePercent: 91 },
+              performance: { reportCount: 1 },
+              details: { reportArchive: [] },
+              newsReports: {
+                submittedCount: 3,
+                statusSummary: {
+                  approved: 1,
+                  submitted: 1,
+                  revisionRequested: 1,
+                },
+                window: {
+                  todayDate: "2026-03-13",
+                  reportDate: "2026-03-16",
+                  closesAt: "2026-03-16T23:59:00.000Z",
+                },
+                calendar: [
+                  {
+                    date: "2026-03-10",
+                    status: "completed",
+                    reviewStatus: "approved",
+                    submittedAt: "2026-03-10T09:20:00.000Z",
+                  },
+                  {
+                    date: "2026-03-11",
+                    status: "completed",
+                    reviewStatus: "submitted",
+                    submittedAt: "2026-03-11T09:20:00.000Z",
+                  },
+                  {
+                    date: "2026-03-12",
+                    status: "completed",
+                    reviewStatus: "revision-requested",
+                    submittedAt: "2026-03-12T09:20:00.000Z",
+                  },
+                  {
+                    date: "2026-03-16",
+                    status: "open",
+                    canSubmit: true,
+                    submittedAt: "",
+                  },
+                ],
+              },
+            },
+          ],
+        })
+      }
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "A2 Flyers",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal"
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
+
+  await waitFor(() => {
+    const queueText = normalizeText(document.getElementById("newsQueueBody")?.textContent)
+    assert.match(queueText, /Approved|Submitted|Revise|Open|Incomplete/i)
+    assert.match(queueText, /Revise/i)
+    assert.doesNotMatch(queueText, /Cần sửa/i)
+    const summaryText = normalizeText(document.getElementById("newsQueueSummary")?.textContent)
+    assert.match(summaryText, /Approved\s+1\s+•\s+Submitted\s+1\s+•\s+Revise\s+1/i)
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
 test("parent portal attendance overview renders class/tardy square stats", async () => {
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {

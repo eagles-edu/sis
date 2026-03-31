@@ -110,6 +110,17 @@
       gap: 6px;
     }
 
+    .side-actions {
+      border-top: 1px solid var(--menu-border);
+      margin-top: 4px;
+      padding: 8px 4px 0;
+    }
+
+    .side-actions button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
     .side-link {
       align-items: center;
       background: var(--menu-link-bg);
@@ -122,7 +133,7 @@
       min-height: 36px;
       padding: 8px 10px;
       text-decoration: none;
-  }
+    }
 
     .side-link:hover,
     .side-link:focus-visible {
@@ -198,6 +209,35 @@
       align-items: center;
       gap: 10px;
       grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .env-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid #b7cae3;
+      background: #eef3ff;
+      color: #1d2e4f;
+      max-width: 360px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .env-badge[data-env="development"] {
+      background: #e8f8ef;
+      border-color: #9dd5b3;
+      color: #0f4f30;
+    }
+
+    .env-badge[data-env="production"] {
+      background: #fff4da;
+      border-color: #d8b228;
+      color: #5b3b00;
     }
 
     .brand-head {
@@ -387,6 +427,29 @@
       background: #ecf9f1;
     }
 
+    .chip-warn {
+      border-color: #e7a23c;
+      color: #8a5600;
+      background: #fff5df;
+    }
+
+    .chip-link {
+      cursor: pointer;
+      display: inline-flex;
+    }
+
+    .chip-revise {
+      border-color: #a48ad8;
+      color: #4b2f8a;
+      background: #f3ecff;
+    }
+
+    .chip-bad {
+      border-color: #e58a92;
+      color: #9b1520;
+      background: #fbe9ea;
+    }
+
     .chip-lock {
       border-color: #d3aaaa;
       color: #8a2f2f;
@@ -401,6 +464,70 @@
       display: grid;
       gap: 10px;
       grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .queue-panel details summary {
+      display: grid;
+      gap: 4px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .queue-panel details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .queue-summary-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .summary-title {
+      display: block;
+      font-weight: 800;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .queue-table-wrap {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-2);
+      padding: 6px;
+      max-height: 260px;
+      overflow: auto;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    .queue-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .queue-table-wrap th,
+    .queue-table-wrap td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .queue-table-wrap tr:last-child td {
+      border-bottom: none;
+    }
+
+    .queue-table-wrap .link-btn {
+      padding: 6px 10px;
+      min-height: 0;
+      font-size: 12px;
+    }
+
+    .queue-table-wrap .cell-actions {
+      white-space: nowrap;
     }
 
     .field {
@@ -418,6 +545,21 @@
       color: var(--ink-soft);
       font-weight: 700;
       letter-spacing: 0.02em;
+    }
+    .field.is-invalid label {
+      color: #9a1424;
+    }
+    .field.is-invalid input,
+    .field.is-invalid textarea {
+      border-color: #d43b4e;
+      box-shadow: 0 0 0 1px rgba(212, 59, 78, 0.22);
+      background: #fff6f7;
+    }
+    .field-validation-message {
+      margin: 2px 0 0;
+      font-size: 12px;
+      line-height: 1.35;
+      color: #9a1424;
     }
 
     .c3 { grid-column: span 3; }
@@ -455,9 +597,39 @@
       min-height: 42px;
     }
 
-    .primary {
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .actions-2 > * {
+      flex: 1 1 45%;
+    }
+
+    .actions-3 > * {
+      flex: 1 1 30%;
+    }
+
+    .btn-refresh {
+      background: #f1f5ff;
+      border-color: #9bb5df;
+      color: #214072;
+    }
+
+    .primary,
+    #newsQueueOpenBtn,
+    #openNewsPageBtn {
       background: linear-gradient(180deg, var(--brand), var(--brand-strong));
       border-color: #7f1520;
+      color: #fff;
+    }
+
+    .primary:hover,
+    #newsQueueOpenBtn:hover,
+    #openNewsPageBtn:hover {
+      background: linear-gradient(180deg, #8f1220, #780f1b);
       color: #fff;
     }
 
@@ -799,6 +971,18 @@
       gap: 10px;
     }
 
+    .portal-modal-body {
+      display: grid;
+      gap: 10px;
+    }
+
+    .portal-modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
     .portal-modal-head {
       display: flex;
       align-items: center;
@@ -1015,9 +1199,11 @@
     .dot.good { background: #40b06c; }
     .dot.bad { background: #d45a66; }
     .dot.open { background: #d2912b; }
+    .dot.revise { background: #7a59cc; }
 
     .calendar-shell {
-      min-height: 580px;
+      min-height: 520px;
+      box-sizing: border-box;
     }
 
     .fc {
@@ -1093,6 +1279,11 @@
       background: linear-gradient(180deg, rgba(212, 90, 102, 0.14), rgba(212, 90, 102, 0.04));
     }
 
+    .fc .fc-daygrid-day.calendar-day-revise {
+      background: linear-gradient(180deg, rgba(122, 89, 204, 0.16), rgba(122, 89, 204, 0.04));
+      box-shadow: inset 0 0 0 2px rgba(122, 89, 204, 0.35);
+    }
+
     .fc .fc-daygrid-day.calendar-day-alert {
       background: linear-gradient(180deg, rgba(255, 35, 56, 0.16), rgba(255, 35, 56, 0.03));
       box-shadow: inset 0 0 0 2px rgba(255, 35, 56, 0.42);
@@ -1100,17 +1291,55 @@
     }
 
     .fc .fc-daygrid-event {
-      margin-top: 3px;
-      border-radius: 9px;
-      padding: 2px 4px;
+      margin-top: 4px;
+      border-radius: 10px;
+      padding: 4px 6px;
       white-space: normal;
     }
 
     .fc .fc-event-main {
       white-space: normal;
-      font-size: 0.72rem;
-      line-height: 1.25;
+      font-size: 0.9rem;
+      line-height: 1.2;
       font-weight: 700;
+    }
+
+    .news-week-modal {
+      max-width: 760px;
+    }
+
+    .news-week-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .news-week-list li {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-2);
+      background: #fff;
+    }
+
+    .news-week-list li.selected {
+      border-color: #7a59cc;
+      background: #f6f1ff;
+    }
+
+    @media (max-width: 720px) {
+      .news-week-list li {
+        grid-template-columns: 1fr;
+      }
+      .news-week-list li > span:nth-child(2),
+      .news-week-list li > span:nth-child(3) {
+        justify-self: start;
+      }
     }
 
     .fc .fc-event.fc-event-news-completed {
@@ -1129,6 +1358,30 @@
     .fc .fc-event.fc-event-news-open .fc-event-title,
     .fc .fc-event.fc-event-news-open .fc-event-time {
       color: #000 !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-green {
+      background: #e7f8ef !important;
+      border-color: #36a66a !important;
+      color: #0f4f30 !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-amber {
+      background: #fff4da !important;
+      border-color: #d89d28 !important;
+      color: #5b3b00 !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-red {
+      background: #ffe1e5 !important;
+      border-color: #d43b4e !important;
+      color: #6d0d1a !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-revise {
+      background: #f3ecff !important;
+      border-color: #a48ad8 !important;
+      color: #422b7a !important;
     }
 
     .fc .fc-event.fc-event-news-missed {
@@ -1384,6 +1637,7 @@
       </div>
       <nav class="side-links">
         <a class="side-link active" href="#studentHomeCard" data-view-target="home" data-page-target="home">Home</a>
+        <a class="side-link" href="#newsPageCard" data-view-target="news" data-page-target="news">News Reports</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="current-homework">Current Homework</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="past-due-homework">Past Due Homework</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="attendance-calendar">Attendance Calendar SYTD</a>
@@ -1391,6 +1645,9 @@
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="grades-ytd">Grades YTD</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="recommendations">Recommendations for Success</a>
       </nav>
+      <div class="side-actions">
+        <button id="studentNavLogoutBtn" type="button" class="alt">Log Out</button>
+      </div>
     </aside>
 
     <button id="navOverlay" class="nav-overlay" type="button" aria-label="Close navigation"></button>
@@ -1408,6 +1665,7 @@
             <h1>Student Portal Dashboard</h1>
           </div>
           <div class="header-actions">
+            <span id="envBadge" class="env-badge" aria-live="polite"></span>
             <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
               <span>Text Size</span>
               <button id="studentTextZoomDownBtn" type="button" aria-label="Decrease text size">A-</button>
@@ -1479,10 +1737,60 @@
 
               <section id="metricsPanel" class="panel">
                 <div class="section-head">
-                  <h3>Tổng quan nhanh</h3>
-                  <span id="snapshotBadge" class="chip chip-neutral">Chưa có dữ liệu</span>
+                  <h3>Quick Overview</h3>
+                  <span id="snapshotBadge" class="chip chip-neutral">No data yet</span>
                 </div>
                 <div id="dashboardMetrics" class="metrics"></div>
+              </section>
+
+              <section id="pastDueHomeworkCard" class="panel homework-card">
+                <h3 class="homework-card-label">Past Due Homework</h3>
+                <div class="homework-card-shell">
+                  <div id="pastDueHomeworkBadge" class="homework-square is-clear">
+                    <span class="homework-square-k">Arrears</span>
+                    <strong id="pastDueHomeworkBadgeValue" class="homework-square-v is-count">0</strong>
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 class="homework-content-title">Overdue items</h4>
+                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn" type="button">Open overdue list</button>
+                    <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="newsQueueCard" class="panel queue-panel">
+                <details id="newsQueueDetails" open>
+                  <summary class="queue-summary-head">
+                    <span>
+                      <span class="summary-title">News Report Queue</span>
+                      <span id="newsQueueSummary" class="hint">Loading news report queue...</span>
+                    </span>
+                    <span id="newsQueueBadge" class="chip chip-neutral">Loading</span>
+                  </summary>
+                  <div class="queue-table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Week</th>
+                          <th scope="col">Status</th>
+                          <th scope="col">Counts</th>
+                          <th scope="col">Latest</th>
+                          <th scope="col">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="newsQueueBody">
+                        <tr>
+                          <td colspan="5">Loading...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="actions actions-3">
+                    <button id="openNewsPageBtn" type="button">Open News Page</button>
+                    <button id="newsQueueRefreshBtn" type="button" class="btn-refresh">Refresh</button>
+                    <button id="newsQueueScrollTodayBtn" type="button">Jump to Today</button>
+                  </div>
+                </details>
               </section>
 
               <section id="currentHomeworkCard" class="panel homework-card">
@@ -1496,21 +1804,6 @@
                     <h4 id="currentHomeworkHeader" class="homework-content-title">Bài tập hiện tại</h4>
                     <a id="currentHomeworkAssignmentLink" class="homework-link hidden" href="#" target="_blank" rel="noopener noreferrer">Xem thông báo bài tập</a>
                     <p id="currentHomeworkSummary" class="hint">No data yet.</p>
-                  </div>
-                </div>
-              </section>
-
-              <section id="pastDueHomeworkCard" class="panel homework-card">
-                <h3 class="homework-card-label">Past Due Homework</h3>
-                <div class="homework-card-shell">
-                  <div id="pastDueHomeworkBadge" class="homework-square is-clear">
-                    <span class="homework-square-k">Arrears</span>
-                    <strong id="pastDueHomeworkBadgeValue" class="homework-square-v is-count">0</strong>
-                  </div>
-                  <div class="homework-card-content">
-                    <h4 class="homework-content-title">Nợ đọng quá hạn</h4>
-                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn" type="button">Mo danh sach chua hoan thanh</button>
-                    <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
                   </div>
                 </div>
               </section>
@@ -1531,6 +1824,23 @@
                     </thead>
                     <tbody id="pastDueHomeworkTableBody"></tbody>
                   </table>
+                </div>
+              </section>
+
+              <section id="newsWeekModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="newsWeekModalBackdrop"></div>
+                <div class="portal-modal-dialog news-week-modal" role="dialog" aria-modal="true" aria-labelledby="newsWeekModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="newsWeekModalTitle">News Report Week</h4>
+                    <button id="closeNewsWeekModalBtn" class="portal-modal-close" type="button">Close</button>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p id="newsWeekModalSummary" class="hint">Loading week set...</p>
+                    <ul id="newsWeekModalList" class="news-week-list"></ul>
+                  </div>
+                  <div class="portal-modal-actions">
+                    <button id="newsWeekModalEditBtn" type="button">Edit in form</button>
+                  </div>
                 </div>
               </section>
 
@@ -1562,12 +1872,9 @@
                 <p id="recommendationsSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="quickLinksPanel" class="panel">
+              <section id="quickLinksPanel" class="panel" style="display:none">
                 <div class="section-head">
                   <h3>Liên kết nhanh</h3>
-                </div>
-                <div class="quick-links">
-                  <button id="openNewsPageBtn" class="quick-link" type="button">Open Daily News Report Page</button>
                 </div>
               </section>
 
@@ -1620,12 +1927,43 @@
               <h2>Your View Month Calendar</h2>
               <p id="calendarTitle" class="sub calendar-range">Your View timeline</p>
               <div class="legend">
-                <span><span class="dot good"></span>Completed</span>
-                <span><span class="dot bad"></span>Missed</span>
-                <span><span class="dot open"></span>Open (today only)</span>
+                <span><span class="dot good"></span>Approved</span>
+                <span><span class="dot open"></span>Submitted / Open</span>
+                <span><span class="dot revise"></span>Revise</span>
+                <span><span class="dot bad"></span>Incomplete</span>
               </div>
               <p id="windowSummary" class="sub">Loading calendar...</p>
               <div id="calendarGrid" class="calendar-shell" aria-live="polite"></div>
+            </section>
+
+            <section id="newsQueuePanel" class="panel queue-panel">
+              <details id="newsPageQueueDetails" open>
+                <summary class="queue-summary-head">
+                  <span>
+                    <span class="summary-title">News Report Queue</span>
+                    <span id="newsPageQueueSummary" class="sub">Loading news report queue...</span>
+                  </span>
+                  <span id="newsPageQueueBadge" class="chip chip-neutral">Loading</span>
+                </summary>
+                <div class="queue-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Week</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Counts</th>
+                        <th scope="col">Latest</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="newsPageQueueBody">
+                      <tr>
+                        <td colspan="5">Loading...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
             </section>
 
             <section id="newsReportFormCard" class="panel">
@@ -1716,6 +2054,7 @@
       const STUDENT_DASHBOARD_PATH = window.__SIS_STUDENT_DASHBOARD_PATH || "/api/student/dashboard";
       const STUDENT_NEWS_REPORTS_PATH = window.__SIS_STUDENT_NEWS_REPORTS_PATH || "/api/student/news-reports";
       const STUDENT_NEWS_CALENDAR_PATH = window.__SIS_STUDENT_NEWS_CALENDAR_PATH || "/api/student/news-reports/calendar";
+      const RUNTIME_ENV = (window.__SIS_RUNTIME_ENV || "").toLowerCase() || "development";
       const PORTAL_TIME_ZONE = "Asia/Ho_Chi_Minh";
       const STUDENT_API_ORIGIN = resolveStudentApiOrigin();
       const TEXT_ZOOM_KEY = "sis.studentPortal.textZoomPct";
@@ -1736,10 +2075,21 @@
         calendarHasMounted: false,
         activeView: "home",
         activePage: "home",
+        newsWeekSets: [],
         detailCalendar: null,
         detailCalendarHasMounted: false,
         textZoomPct: TEXT_ZOOM_DEFAULT,
+        newsFieldErrors: {},
+        newsRevisionTasks: [],
       };
+
+      function updateEnvBadge() {
+        const badge = document.getElementById("envBadge");
+        if (!badge) return;
+        const envLabel = RUNTIME_ENV === "development" ? "DEV" : "LIVE";
+        badge.dataset.env = RUNTIME_ENV === "development" ? "development" : "production";
+        badge.textContent = `${envLabel} • ${STUDENT_API_ORIGIN || "(missing apiOrigin)"}`;
+      }
 
       const STUDENT_PORTAL_PAGES = new Set([
         "home",
@@ -1753,6 +2103,124 @@
 
       function t(v) {
         return String(v == null ? "" : v).trim();
+      }
+
+      const NEWS_FORM_FIELD_IDS = [
+        "sourceLink",
+        "articleTitle",
+        "byline",
+        "articleDateline",
+        "leadSynopsis",
+        "actionActor",
+        "actionAffected",
+        "actionWhere",
+        "actionWhat",
+        "actionWhy",
+        "biasAssessment",
+      ];
+
+      function newsFormFieldElement(fieldId = "") {
+        const id = t(fieldId);
+        if (!id) return null;
+        return document.getElementById(id);
+      }
+
+      function newsFormFieldContainer(fieldId = "") {
+        return newsFormFieldElement(fieldId)?.closest(".field") || null;
+      }
+
+      function normalizeFailedFieldMap(value = {}) {
+        const source = value && typeof value === "object" ? value : {};
+        const map = {};
+        Object.keys(source).forEach((fieldKey) => {
+          const normalizedKey = t(fieldKey);
+          if (!normalizedKey) return;
+          const entry =
+            source[fieldKey] && typeof source[fieldKey] === "object" ?
+              source[fieldKey]
+            : {};
+          map[normalizedKey] = {
+            message: t(entry.message),
+            score:
+              Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
+            threshold:
+              Number.isFinite(Number(entry.threshold)) ?
+                Number(entry.threshold)
+              : null,
+          };
+        });
+        return map;
+      }
+
+      function pendingFailedFieldsFromIssues(issueMap = {}) {
+        const source = issueMap && typeof issueMap === "object" ? issueMap : {};
+        const failed = {};
+        Object.keys(source).forEach((fieldKey) => {
+          const entry =
+            source[fieldKey] && typeof source[fieldKey] === "object" ?
+              source[fieldKey]
+            : {};
+          if (normalizeLower(entry.status) === "fixed") return;
+          failed[fieldKey] = {
+            message: t(entry.message) || "This field still needs revision.",
+            score:
+              Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
+            threshold:
+              Number.isFinite(Number(entry.threshold)) ?
+                Number(entry.threshold)
+              : null,
+          };
+        });
+        return failed;
+      }
+
+      function clearNewsFieldValidationUi() {
+        NEWS_FORM_FIELD_IDS.forEach((fieldId) => {
+          const container = newsFormFieldContainer(fieldId);
+          if (container) container.classList.remove("is-invalid");
+          const helpEl = document.getElementById(`newsValidationHelp-${fieldId}`);
+          if (helpEl) helpEl.remove();
+        });
+      }
+
+      function applyNewsFieldValidationUi(failedFieldMap = {}, revisionTasks = []) {
+        clearNewsFieldValidationUi();
+        const failed = normalizeFailedFieldMap(failedFieldMap);
+        state.newsFieldErrors = failed;
+        state.newsRevisionTasks = Array.isArray(revisionTasks) ? revisionTasks : [];
+        const taskByField = new Map();
+        state.newsRevisionTasks.forEach((task) => {
+          const field = t(task?.field);
+          if (!field) return;
+          taskByField.set(field, task);
+        });
+        Object.keys(failed).forEach((fieldId) => {
+          const container = newsFormFieldContainer(fieldId);
+          if (!container) return;
+          container.classList.add("is-invalid");
+          const messageParts = [];
+          const detail = failed[fieldId];
+          if (t(detail.message)) messageParts.push(t(detail.message));
+          if (
+            Number.isFinite(Number(detail.score)) &&
+            Number.isFinite(Number(detail.threshold))
+          ) {
+            messageParts.push(
+              `Score ${Number(detail.score).toFixed(2)} < ${Number(detail.threshold).toFixed(2)}`,
+            );
+          }
+          const task = taskByField.get(fieldId);
+          if (task && Array.isArray(task.steps) && task.steps.length) {
+            task.steps.forEach((step, index) => {
+              messageParts.push(`Step ${index + 1}: ${t(step)}`);
+            });
+          }
+          const helpEl = document.createElement("p");
+          helpEl.id = `newsValidationHelp-${fieldId}`;
+          helpEl.className = "field-validation-message";
+          helpEl.textContent = messageParts.join(" | ");
+          container.appendChild(helpEl);
+        });
       }
 
       function escapeHtml(value) {
@@ -1877,7 +2345,8 @@
         const selectedOrigin = queryOrigin || injectedOrigin;
         if (!selectedOrigin) return "";
         try {
-          return new URL(selectedOrigin, window.location.origin).origin;
+          const origin = new URL(selectedOrigin, window.location.origin).origin;
+          return assertApiOriginSafe(origin);
         } catch (error) {
           void error;
           return "";
@@ -1911,6 +2380,27 @@
         const error = new Error(staticPreviewHelpMessage());
         error.status = 400;
         throw error;
+      }
+
+       function assertApiOriginSafe(origin) {
+        const text = t(origin);
+        if (!text) throw new Error("Missing API origin. Set ?apiOrigin or use runtime-served portal.");
+        let parsed;
+        try {
+          parsed = new URL(text);
+        } catch (error) {
+          throw new Error("Invalid API origin. Use a full http(s)://host[:port] value.");
+        }
+        const hostname = parsed.hostname.toLowerCase();
+        const isLoopback = isLoopbackHostname(hostname);
+        const env = RUNTIME_ENV;
+        if (env === "development" && !isLoopback) {
+          throw new Error("Dev portal requires a loopback apiOrigin (http://127.0.0.1:<port>).");
+        }
+        if (env !== "development" && isLoopback) {
+          throw new Error("Live portal cannot use loopback apiOrigin.");
+        }
+        return parsed.origin;
       }
 
       function field(id) {
@@ -2158,9 +2648,13 @@
 
       function updateActiveStudentNav() {
         document.querySelectorAll(".side-link").forEach((link) => {
+          const viewTarget = normalizeLower(link.getAttribute("data-view-target"));
           const pageTarget = normalizeStudentPage(link.getAttribute("data-page-target"));
-          const shouldBeActive = state.activeView === "home"
-            ? pageTarget === state.activePage
+          const shouldBeActive =
+            viewTarget === "news" ?
+              state.activeView === "news"
+            : state.activeView === "home" ?
+              pageTarget === state.activePage
             : pageTarget === "home";
           link.classList.toggle("active", shouldBeActive);
         });
@@ -2703,6 +3197,8 @@
         const pendingTone = pendingHomework > 0 ? "warn" : "";
         const overdueTone = overdueHomework > 0 ? "bad" : "";
         const scoreTone = Number.isFinite(averageScore) && averageScore < 70 ? "bad" : Number.isFinite(averageScore) && averageScore < 80 ? "warn" : "good";
+        const newsSummary = news.statusSummary || {};
+        const newsTone = parseNumber(newsSummary.revisionRequested) > 0 ? "bad" : parseNumber(newsSummary.submitted) > 0 ? "warn" : "good";
 
         identity.textContent = `${t(child.fullName || child.englishName || child.eaglesId)} | ${t(child.eaglesId)} | ${t(child.currentGrade || "No class")}`;
         setSummary("studentEaglesIdValue", t(child.eaglesId) || "-");
@@ -2720,6 +3216,11 @@
           metricCard("Homework Overdue", String(overdueHomework), overdueTone),
           metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", scoreTone),
           metricCard("Performance Reports", String(reportCount)),
+          metricCard(
+            "News Reports",
+            `${parseNumber(newsSummary.approved)}/${parseNumber(newsSummary.submitted)}/${parseNumber(newsSummary.revisionRequested)}`,
+            newsTone
+          ),
         );
 
         renderCurrentHomeworkOverviewCard(child, pendingHomework);
@@ -2752,6 +3253,412 @@
           snapshotBadge.textContent = `HS ${t(child.eaglesId)}`;
           snapshotBadge.className = "chip chip-ok";
         }
+
+        renderNewsQueue();
+      }
+
+      function normalizeNewsReviewStatusToken(reviewStatus = "") {
+        const token = normalizeLower(reviewStatus);
+        if (token === "approved") return "approved";
+        if (
+          token === "revision-requested" ||
+          token === "revision" ||
+          token === "request-revision"
+        )
+          return "revision-requested";
+        return "submitted";
+      }
+
+      function resolveNewsChipToken(status = "", reviewStatus = "") {
+        const normalizedStatus = normalizeLower(status);
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
+        if (normalizedStatus === "completed") {
+          if (normalizedReview === "approved") return "approved";
+          if (normalizedReview === "revision-requested") return "revise";
+          return "submitted";
+        }
+        if (normalizedStatus === "open") return "open";
+        return "incomplete";
+      }
+
+      function newsStatusLabel(status = "", reviewStatus = "") {
+        const token = resolveNewsChipToken(status, reviewStatus);
+        if (token === "approved") return "Approved";
+        if (token === "revise") return "Revise";
+        if (token === "submitted") return "Submitted";
+        if (token === "open") return "Open";
+        return "Incomplete";
+      }
+
+      function newsStatusColorToken(status = "", reviewStatus = "") {
+        const token = resolveNewsChipToken(status, reviewStatus);
+        if (token === "approved") return "green";
+        if (token === "revise") return "revise";
+        if (token === "submitted") return "amber";
+        if (token === "open") return "amber";
+        return "red";
+      }
+
+      function newsStatusTone(status = "", reviewStatus = "") {
+        const token = newsStatusColorToken(status, reviewStatus);
+        if (token === "revise") return "revise";
+        if (token === "amber") return "warn";
+        if (token === "red") return "bad";
+        return "good";
+      }
+
+      function newsReviewLabel(status = "", reviewStatus = "") {
+        const normalizedStatus = normalizeLower(status);
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
+        if (normalizedReview === "approved") return "Approved";
+        if (normalizedReview === "revision-requested") return "Revise";
+        if (normalizedStatus === "completed") return "Submitted";
+        return "Unchecked";
+      }
+
+      function isoWeekStart(dateText = "") {
+        const raw = t(dateText);
+        if (!raw) return "";
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
+          new Date(`${raw}T00:00:00Z`) :
+          new Date(raw);
+        if (!date || Number.isNaN(date.getTime())) return "";
+        const day = date.getUTCDay();
+        const diff = day === 0 ? -6 : 1 - day; // Monday start
+        date.setUTCDate(date.getUTCDate() + diff);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function isoWeekEndFromStart(weekStart = "") {
+        const raw = t(weekStart);
+        if (!raw) return "";
+        const date = new Date(`${raw}T00:00:00Z`);
+        if (!date || Number.isNaN(date.getTime())) return "";
+        date.setUTCDate(date.getUTCDate() + 6);
+        return date.toISOString().slice(0, 10);
+      }
+
+      function chipClassForTone(tone = "") {
+        const normalized = normalizeLower(tone);
+        if (normalized === "good" || normalized === "ok" || normalized === "positive")
+          return "chip-ok";
+        if (normalized === "revise") return "chip-revise";
+        if (normalized === "warn" || normalized === "warning") return "chip-warn";
+        if (normalized === "bad" || normalized === "error") return "chip-bad";
+        return "chip-neutral";
+      }
+
+      function newsStatusChipHtml(status = "", reviewStatus = "") {
+        const label = newsStatusLabel(status, reviewStatus);
+        const cls = chipClassForTone(newsStatusTone(status, reviewStatus));
+        const span = document.createElement("span");
+        span.className = "chip " + cls;
+        span.textContent = label;
+        return span.outerHTML;
+      }
+
+      function newsReviewChipHtml(status = "", reviewStatus = "") {
+        const label = newsReviewLabel(status, reviewStatus);
+        const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
+        const tone =
+          normalizedReview === "approved" ? "good"
+          : normalizedReview === "revision-requested" ? "revise"
+          : normalizeLower(status) === "completed" ? "warn"
+          : "neutral";
+        const cls = chipClassForTone(tone);
+        const span = document.createElement("span");
+        span.className = "chip " + cls;
+        span.textContent = label;
+        return span.outerHTML;
+      }
+
+      function buildNewsQueueItems(calendar = [], windowInfo = {}) {
+        const rows = (Array.isArray(calendar) ? calendar : [])
+          .map((entry) => {
+            const dateKey = t(entry?.date);
+            const status = resolveNewsCalendarStatus(entry);
+            if (!dateKey || !status) return null;
+            const reviewStatus = t(entry?.reviewStatus);
+            const submittedAt = t(entry?.submittedAt);
+            return {
+              dateKey,
+              status,
+              reviewStatus,
+              submittedAt,
+            };
+          })
+          .filter(Boolean)
+          .sort((left, right) => right.dateKey.localeCompare(left.dateKey));
+
+        const limited = rows.slice(0, 14);
+        const openDate = t(windowInfo?.reportDate);
+        if (openDate && !limited.find((row) => row.dateKey === openDate)) {
+          limited.unshift({
+            dateKey: openDate,
+            status: "open",
+            reviewStatus: "",
+            submittedAt: "",
+          });
+        }
+
+        return limited.map((row) => {
+          const statusLabel = newsStatusLabel(row.status, row.reviewStatus);
+          const reviewLabel = newsReviewLabel(row.status, row.reviewStatus);
+          const submittedLabel = row.submittedAt ? formatPortalDateTime(row.submittedAt) : "";
+          return {
+            ...row,
+            statusLabel,
+            reviewLabel,
+            submittedLabel,
+            title: formatPortalDate(row.dateKey),
+            meta: [statusLabel, submittedLabel].filter(Boolean).join(" • "),
+            note:
+              row.reviewStatus === "revision-requested" ?
+                "Follow revision guidance and resubmit."
+              : row.status === "open" ?
+                "Submit before the window closes."
+              : row.status === "missed" ?
+                "Missed window. Talk to your teacher if make-up is allowed."
+              : "Awaiting review or already approved.",
+            tone: newsStatusTone(row.status, row.reviewStatus),
+          };
+        });
+      }
+
+      function buildNewsWeekSets(calendar = [], windowInfo = {}) {
+        const rows = Array.isArray(calendar) ? calendar : [];
+        const grouped = new Map();
+        rows.forEach((entry) => {
+          const dateKey = t(entry?.date);
+          const status = resolveNewsCalendarStatus(entry);
+          if (!dateKey || !status) return;
+          const reviewStatus = t(entry?.reviewStatus);
+          const submittedAt = t(entry?.submittedAt);
+          const weekStart = isoWeekStart(dateKey);
+          if (!weekStart) return;
+          const weekEnd = isoWeekEndFromStart(weekStart);
+          const key = weekStart;
+          const existing = grouped.get(key) || {
+            weekStart,
+            weekEnd,
+            reports: [],
+            reportCount: 0,
+            submittedCount: 0,
+            approvedCount: 0,
+            revisionRequestedCount: 0,
+            missedCount: 0,
+            latestSubmittedAt: "",
+            latestDate: "",
+            latestStatus: "",
+            latestReviewStatus: "",
+          };
+          existing.reports.push({
+            dateKey,
+            status,
+            reviewStatus,
+            submittedAt,
+          });
+          existing.reportCount += 1;
+          if (status === "missed") existing.missedCount += 1;
+          else if (reviewStatus === "approved") existing.approvedCount += 1;
+          else if (reviewStatus === "revision-requested")
+            existing.revisionRequestedCount += 1;
+          else existing.submittedCount += 1;
+          const latestKey = t(existing.latestSubmittedAt || existing.latestDate);
+          const candidateKey = submittedAt || dateKey;
+          if (!latestKey || candidateKey > latestKey) {
+            existing.latestSubmittedAt = submittedAt;
+            existing.latestDate = dateKey;
+            existing.latestStatus = status;
+            existing.latestReviewStatus = reviewStatus;
+          }
+          grouped.set(key, existing);
+        });
+
+        return Array.from(grouped.values()).sort((a, b) =>
+          t(b.weekStart).localeCompare(t(a.weekStart)),
+        );
+      }
+
+      function renderNewsQueueTable(bodyId, items = [], { readOnly = false, mode = "week" } = {}) {
+        const body = field(bodyId);
+        if (!body) {
+          console.warn("renderNewsQueueTable: missing tbody", bodyId);
+          return;
+        }
+        const safeItems = Array.isArray(items) ? items : [];
+        const colCount = mode === "week" ? 5 : readOnly ? 4 : 5;
+        if (!safeItems.length) {
+          body.innerHTML = `<tr><td colspan="${colCount}">No news reports yet.</td></tr>`;
+          return;
+        }
+
+        body.innerHTML = safeItems
+          .map((item) => {
+            if (mode === "week") {
+              const statusChip = newsStatusChipHtml(
+                item.latestStatus || "open",
+                item.latestReviewStatus || "",
+              );
+              const counts = `${Math.max(0, item.approvedCount || 0)}/${Math.max(0, item.submittedCount || 0)}/${Math.max(0, item.revisionRequestedCount || 0)}`;
+              const latestLabel = item.latestSubmittedAt ?
+                escapeHtml(formatPortalDateTime(item.latestSubmittedAt))
+              : escapeHtml(formatPortalDate(item.latestDate || item.weekStart));
+              const weekAttrs = `data-open-news-week="${escapeHtml(item.weekStart)}" data-news-date="${escapeHtml(item.latestDate || item.weekStart)}" data-open-news-date="${escapeHtml(item.latestDate || item.weekStart)}"`;
+              const actionCell = readOnly ?
+                ""
+              : `<td class="cell-actions"><button type="button" class="link-btn" data-open-news-week="${escapeHtml(item.weekStart)}" data-news-date="${escapeHtml(item.latestDate || item.weekStart)}" data-open-news-date="${escapeHtml(item.latestDate || item.weekStart)}">Open</button></td>`;
+              return `<tr>\n                <td>${escapeHtml(formatPortalDate(item.weekStart))} - ${escapeHtml(formatPortalDate(item.weekEnd))}</td>\n                <td><span class="chip-link" ${weekAttrs}>${statusChip}</span></td>\n                <td>${escapeHtml(counts)}</td>\n                <td>${latestLabel}</td>\n                ${actionCell}\n              </tr>`;
+            }
+            const dateCell = escapeHtml(formatPortalDate(item.dateKey));
+            const statusChip = newsStatusChipHtml(item.status, item.reviewStatus);
+            const reviewChip = newsReviewChipHtml(item.status, item.reviewStatus);
+            const submittedCell = item.submittedAt ?
+              escapeHtml(formatPortalDateTime(item.submittedAt))
+            : "—";
+            const actionCell = readOnly ?
+              ""
+            : `<td class="cell-actions"><button type="button" class="link-btn" data-open-news-date="${escapeHtml(item.dateKey)}">Open</button></td>`;
+            return `<tr>\n              <td>${dateCell}</td>\n              <td>${statusChip}</td>\n              <td>${reviewChip}</td>\n              <td>${submittedCell}</td>\n              ${actionCell}\n            </tr>`;
+          })
+          .join("");
+      }
+
+      function buildNewsWeekSetsFromState() {
+        const primaryCalendar = Array.isArray(state.calendarRows) && state.calendarRows.length ?
+          state.calendarRows
+          : [];
+        const fallbackCalendar = Array.isArray(state.dashboard?.newsReports?.calendar) ?
+          state.dashboard.newsReports.calendar
+          : [];
+        const calendarSource = primaryCalendar.length ? primaryCalendar : fallbackCalendar;
+        const windowSource =
+          state.window && Object.keys(state.window).length ? state.window
+          : state.dashboard?.newsReports?.window || {};
+        return buildNewsWeekSets(calendarSource, windowSource);
+      }
+
+      function ensureNewsWeekSets() {
+        if (!Array.isArray(state.newsWeekSets) || !state.newsWeekSets.length) {
+          try {
+            state.newsWeekSets = buildNewsWeekSetsFromState();
+          } catch (error) {
+            console.error("ensureNewsWeekSets: failed to build", error);
+            state.newsWeekSets = [];
+          }
+        }
+        return state.newsWeekSets;
+      }
+
+      function renderNewsQueue() {
+        const news = state.dashboard?.newsReports || {};
+        const newsSummary = news.statusSummary || {};
+        const approved = parseNumber(newsSummary.approved);
+        const submitted = parseNumber(newsSummary.submitted);
+        const revisionRequested = parseNumber(newsSummary.revisionRequested);
+        const total = approved + submitted + revisionRequested;
+
+        const badgeIds = ["newsQueueBadge", "newsPageQueueBadge"];
+        badgeIds.forEach((id) => {
+          const badge = field(id);
+          if (!badge) return;
+          const badgeTone =
+            revisionRequested > 0 ? "chip-bad"
+            : submitted > 0 ? "chip-warn"
+            : total > 0 ? "chip-ok"
+            : "chip-neutral";
+          badge.textContent = total ? `${approved}/${submitted}/${revisionRequested}` : "No reports";
+          badge.className = `chip ${badgeTone}`;
+        });
+
+        const summaryText = total ?
+          `Approved ${approved} • Submitted ${submitted} • Revise ${revisionRequested}` :
+          "No news reports are queued yet.";
+        const summaryEl = field("newsQueueSummary");
+        if (summaryEl) summaryEl.textContent = summaryText;
+        const pageSummaryEl = field("newsPageQueueSummary");
+        if (pageSummaryEl) pageSummaryEl.textContent = summaryText;
+
+        let items = [];
+        try {
+          items = buildNewsWeekSetsFromState();
+          state.newsWeekSets = items;
+        } catch (error) {
+          console.error("renderNewsQueue: failed to build news queue items", error);
+          items = [];
+        }
+        renderNewsQueueTable("newsQueueBody", items, { readOnly: false, mode: "week" });
+        renderNewsQueueTable("newsPageQueueBody", items, { readOnly: false, mode: "week" });
+      }
+
+      function openNewsDate(dateKey) {
+        const targetDate = t(dateKey);
+        setActiveStudentView("news");
+        const calendarView = ensureStudentCalendar();
+        if (calendarView && targetDate) {
+          calendarView.gotoDate(targetDate);
+          requestAnimationFrame(() => {
+            calendarView.updateSize?.();
+            syncCalendarAlertDayCells();
+          });
+        }
+      }
+
+      function jumpToToday() {
+        const today =
+          t(state.window?.todayDate) || new Date().toISOString().slice(0, 10);
+        openNewsDate(today);
+      }
+
+      function openNewsWeekModal(weekStart = "", selectedDate = "") {
+        setActiveStudentView("news");
+        const modal = field("newsWeekModal");
+        const list = field("newsWeekModalList");
+        const summary = field("newsWeekModalSummary");
+        const editBtn = field("newsWeekModalEditBtn");
+        if (!modal || !list || !summary) return;
+        const weekKey = t(weekStart);
+        const weekSets = ensureNewsWeekSets();
+        const weekSet =
+          Array.isArray(weekSets) ?
+            weekSets.find((entry) => entry.weekStart === weekKey)
+          : null;
+        if (!weekSet) {
+          if (selectedDate) openNewsDate(selectedDate);
+          return;
+        }
+        const title = field("newsWeekModalTitle");
+        if (title)
+          title.textContent = `Week ${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)}`;
+        summary.textContent = `Reports this week: ${weekSet.reportCount}. Latest update ${weekSet.latestSubmittedAt ? formatPortalDateTime(weekSet.latestSubmittedAt) : formatPortalDate(weekSet.latestDate || weekSet.weekStart)}.`;
+        list.innerHTML = "";
+        const reports = Array.isArray(weekSet.reports) ? weekSet.reports : [];
+        const selectedDateKey = t(selectedDate);
+        reports
+          .slice()
+          .sort((a, b) => t(b.dateKey).localeCompare(t(a.dateKey)))
+          .forEach((report) => {
+            const li = document.createElement("li");
+            if (selectedDateKey && selectedDateKey === t(report.dateKey))
+              li.classList.add("selected");
+            li.innerHTML = `
+              <span>${escapeHtml(formatPortalDate(report.dateKey))}</span>
+              <span>${newsStatusChipHtml(report.status, report.reviewStatus)}</span>
+              <span>${escapeHtml(report.submittedAt ? formatPortalDateTime(report.submittedAt) : "Not submitted")}</span>
+            `;
+            li.dataset.newsDate = report.dateKey;
+            li.setAttribute("data-open-news-date", report.dateKey);
+            list.appendChild(li);
+          });
+        if (editBtn instanceof HTMLButtonElement) {
+          editBtn.dataset.newsDate = selectedDateKey || reports[0]?.dateKey || weekSet.latestDate || weekSet.weekStart;
+          editBtn.disabled = false;
+        }
+        modal.classList.remove("hidden");
+      }
+
+      function closeNewsWeekModal() {
+        field("newsWeekModal")?.classList.add("hidden");
       }
 
       async function api(path, options = {}) {
@@ -2771,6 +3678,7 @@
         if (!response.ok) {
           const err = new Error(data.error || `HTTP ${response.status}`);
           err.status = response.status;
+          err.payload = data;
           throw err;
         }
         return data;
@@ -2789,6 +3697,7 @@
           state.calendarAlertDates = new Set();
           state.calendarStatusByDate = new Map();
           syncStudentPortalView();
+          renderNewsQueue();
           return;
         }
         syncStudentPortalView();
@@ -2839,6 +3748,10 @@
         setInputValue("actionWhat", report?.actionWhat);
         setInputValue("actionWhy", report?.actionWhy);
         setInputValue("biasAssessment", report?.biasAssessment);
+        const failedFromIssues = pendingFailedFieldsFromIssues(
+          report?.validationIssuesJson,
+        );
+        applyNewsFieldValidationUi(failedFromIssues, []);
       }
 
       function buildStudentCalendarEvents(calendar = []) {
@@ -2848,6 +3761,8 @@
               date: t(row?.date),
               status: resolveNewsCalendarStatus(row),
               submittedAt: t(row?.submittedAt),
+              statusColor: t(row?.statusColor || row?.color),
+              reviewStatus: t(row?.reviewStatus),
             }))
             .filter((row) => Boolean(row.date) && Boolean(row.status))
           : [];
@@ -2864,7 +3779,8 @@
         rows.forEach((row) => {
           const date = t(row.date);
           if (!date) return;
-          statusByDate.set(date, row.status);
+          const statusColor = newsStatusColorToken(row.status, row.reviewStatus);
+          statusByDate.set(date, { status: row.status, color: statusColor });
           const submittedClock = formatSubmittedClock(row.submittedAt);
           if (row.status === "completed") {
             events.push({
@@ -2873,9 +3789,12 @@
               start: date,
               end: addDateKeyDays(date, 1),
               allDay: true,
-              classNames: ["fc-event-news-completed"],
+              classNames: ["fc-event-news-status", `fc-event-news-status-${statusColor}`],
               extendedProps: {
-                detail: submittedClock ? `Submitted at ${submittedClock}` : "Submitted",
+                detail: [
+                  submittedClock ? `Submitted at ${submittedClock}` : "Submitted",
+                  row.reviewStatus ? `Status: ${row.reviewStatus}` : "",
+                ].filter(Boolean).join(" | "),
                 displayOrder: 2,
               },
             });
@@ -2900,14 +3819,21 @@
             alertDates.add(date);
             events.push({
               id: `news-missed-${date}`,
-              title: "MISSED NEWS REPORT",
+              title: normalizeLower(row.reviewStatus) === "revision-requested" ? "REVISION REQUESTED" : "MISSED NEWS REPORT",
               start: date,
               end: addDateKeyDays(date, 1),
               allDay: true,
-              classNames: ["fc-obtrusive-alert", "fc-event-news-missed"],
+              classNames:
+                normalizeLower(row.reviewStatus) === "revision-requested" ?
+                  ["fc-event-news-status-revise", "fc-event-news-status"]
+                : ["fc-obtrusive-alert", "fc-event-news-missed"],
               extendedProps: {
-                detail: "This report date was missed.",
-                displayOrder: 0,
+                detail:
+                  normalizeLower(row.reviewStatus) === "revision-requested" ?
+                    "Needs revision before approval."
+                  : "This report date was missed.",
+                displayOrder:
+                  normalizeLower(row.reviewStatus) === "revision-requested" ? 1 : 0,
               },
             });
           }
@@ -2989,9 +3915,12 @@
 
       function buildCalendarDayClassList(dateStr) {
         const classes = [];
-        const status = state.calendarStatusByDate.get(dateStr);
+        const statusEntry = state.calendarStatusByDate.get(dateStr);
+        const status = typeof statusEntry === "object" && statusEntry !== null ? statusEntry.status : statusEntry;
+        const color = typeof statusEntry === "object" && statusEntry !== null ? statusEntry.color : "";
         if (status === "completed" || status === "open" || status === "missed") {
           classes.push(`calendar-day-${status}`);
+          if (color) classes.push(`calendar-day-${color}`);
         }
         if (state.calendarAlertDates.has(dateStr)) {
           classes.push("calendar-day-alert");
@@ -3008,6 +3937,10 @@
           dayEl.classList.toggle("calendar-day-completed", classList.includes("calendar-day-completed"));
           dayEl.classList.toggle("calendar-day-open", classList.includes("calendar-day-open"));
           dayEl.classList.toggle("calendar-day-missed", classList.includes("calendar-day-missed"));
+          dayEl.classList.toggle("calendar-day-green", classList.includes("calendar-day-green"));
+          dayEl.classList.toggle("calendar-day-amber", classList.includes("calendar-day-amber"));
+          dayEl.classList.toggle("calendar-day-red", classList.includes("calendar-day-red"));
+          dayEl.classList.toggle("calendar-day-revise", classList.includes("calendar-day-revise"));
           dayEl.classList.toggle("calendar-day-alert", classList.includes("calendar-day-alert"));
         });
       }
@@ -3056,6 +3989,15 @@
             }
             syncCalendarAlertDayCells();
           },
+          eventClick(info) {
+            const dateKey = t(info?.event?.startStr || info?.event?.start);
+            const weekStart = isoWeekStart(dateKey);
+            if (weekStart) {
+              openNewsWeekModal(weekStart, dateKey);
+            } else {
+              openNewsDate(dateKey);
+            }
+          },
           eventDidMount(info) {
             const detail = t(info.event.extendedProps?.detail);
             const tooltip = [info.event.title, detail].filter(Boolean).join(" - ");
@@ -3083,6 +4025,7 @@
         }
         calendarView.render();
         syncCalendarAlertDayCells();
+        renderNewsQueue();
       }
 
       function updateSubmitAvailability() {
@@ -3118,9 +4061,36 @@
       async function submitReport() {
         const payload = reportPayload();
         if (!payload.reportDate) throw new Error("Report date is locked.");
-        await api(STUDENT_NEWS_REPORTS_PATH, { method: "POST", body: payload });
-        setFormStatus("Report saved.", false, true);
-        await Promise.all([loadDashboard(), loadCalendar()]);
+        try {
+          const saved = await api(STUDENT_NEWS_REPORTS_PATH, {
+            method: "POST",
+            body: payload,
+          });
+          applyNewsFieldValidationUi({}, []);
+          setFormStatus("Report saved.", false, true);
+          if (saved?.item) applyOpenReport(saved.item);
+          await Promise.all([loadDashboard(), loadCalendar()]);
+        } catch (error) {
+          if (error?.status === 422 && error?.payload?.saved === true) {
+            const payloadBody =
+              error.payload && typeof error.payload === "object" ?
+                error.payload
+              : {};
+            applyNewsFieldValidationUi(
+              payloadBody.failedFields || {},
+              payloadBody.revisionTasks || [],
+            );
+            if (payloadBody?.item) applyOpenReport(payloadBody.item);
+            setFormStatus(
+              error.message ||
+                "Saved and marked for revision. Follow field guidance and save again.",
+              true,
+            );
+            await Promise.all([loadDashboard(), loadCalendar()]);
+            return;
+          }
+          throw error;
+        }
       }
 
       async function login() {
@@ -3138,7 +4108,12 @@
       }
 
       async function boot() {
+        setAuthenticatedView(false);
         assertApiOriginConfiguredForStaticPreview();
+        if (!STUDENT_API_ORIGIN) {
+          throw new Error("API origin is missing. Open this portal from the correct runtime or provide ?apiOrigin=");
+        }
+        updateEnvBadge();
         try {
           await api(`${STUDENT_AUTH_PREFIX}/me`);
           setAuthenticatedView(true);
@@ -3151,7 +4126,7 @@
             setGlobalStatus("Sign in to submit daily news reports.");
             return;
           }
-          throw error;
+          handleError(error);
         }
       }
 
@@ -3189,13 +4164,26 @@
         setGlobalStatus("Signing in...");
         try {
           await login();
-          await boot();
+          setAuthenticatedView(true);
+          setGlobalStatus("Student session active.");
+          await Promise.all([loadDashboard(), loadCalendar()]);
+          setFormStatus("Fill out all sections and submit once per open date.");
         } catch (error) {
           handleError(error);
         }
       });
 
       field("logoutBtn")?.addEventListener("click", async () => {
+        try {
+          await logout();
+          setAuthenticatedView(false);
+          setGlobalStatus("Logged out.");
+        } catch (error) {
+          handleError(error);
+        }
+      });
+
+      field("studentNavLogoutBtn")?.addEventListener("click", async () => {
         try {
           await logout();
           setAuthenticatedView(false);
@@ -3220,6 +4208,18 @@
           setFormStatus("Window refreshed.");
           setGlobalStatus("Student dashboard refreshed.");
         }).catch(handleError);
+      });
+
+      (field("openNewsPageBtn") || field("newsQueueOpenBtn"))?.addEventListener("click", () => {
+        openNewsDate(state.window?.reportDate || state.window?.todayDate);
+      });
+
+      field("newsQueueRefreshBtn")?.addEventListener("click", () => {
+        Promise.all([loadDashboard(), loadCalendar()]).catch(handleError);
+      });
+
+      field("newsQueueScrollTodayBtn")?.addEventListener("click", () => {
+        jumpToToday();
       });
 
       field("openNewsPageBtn")?.addEventListener("click", () => {
@@ -3247,6 +4247,33 @@
         if (event.key === "Escape" && state.pastDueModalOpen) {
           setPastDueHomeworkModalOpen(false);
         }
+      });
+
+      document.addEventListener("click", (event) => {
+        const dateTarget = event.target?.closest?.("[data-open-news-date]");
+        if (dateTarget) {
+          event.preventDefault();
+          const dateKey = dateTarget.getAttribute("data-open-news-date");
+          openNewsDate(dateKey);
+          const modal = field("newsWeekModal");
+          if (modal && modal.contains(dateTarget)) closeNewsWeekModal();
+          return;
+        }
+        const weekTarget = event.target?.closest?.("[data-open-news-week]");
+        if (weekTarget) {
+          event.preventDefault();
+          const weekStart = weekTarget.getAttribute("data-open-news-week");
+          const selectedDate = weekTarget.getAttribute("data-news-date") || "";
+          openNewsWeekModal(weekStart, selectedDate);
+        }
+      });
+
+      field("newsWeekModalBackdrop")?.addEventListener("click", closeNewsWeekModal);
+      field("closeNewsWeekModalBtn")?.addEventListener("click", closeNewsWeekModal);
+      field("newsWeekModalEditBtn")?.addEventListener("click", () => {
+        const dateKey = field("newsWeekModalEditBtn")?.getAttribute("data-news-date");
+        if (dateKey) openNewsDate(dateKey);
+        closeNewsWeekModal();
       });
 
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));

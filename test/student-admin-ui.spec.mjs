@@ -521,7 +521,7 @@ test("news review modal supports student-scoped navigation and modal review acti
         englishName: "Student One",
         level: "Pre-A1 Starters",
       },
-      reviewStatus: "submitted",
+      reviewStatus: index === 6 ? "revision-requested" : "submitted",
       reviewNote: "",
       reviewedByUsername: "",
       reviewedAt: "",
@@ -671,10 +671,24 @@ test("news review modal supports student-scoped navigation and modal review acti
 
   openPage(dom, "news-reports")
 
+  assert.equal(
+    normalizeText(
+      dom.window.document.querySelector('#newsReviewStatusFilter option[value="revision-requested"]')?.textContent,
+    ),
+    "Revise",
+  )
+  assert.equal(
+    normalizeText(
+      dom.window.document.querySelector('#newsReviewCheckFilter option[value="waiting-revise"]')?.textContent,
+    ),
+    "Waiting Revise",
+  )
+
   await waitFor(() => {
     const rows = dom.window.document.querySelectorAll("#newsReviewRows tr")
     assert.equal(rows.length, 1)
     assert.match(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
+    assert.match(rows[0].textContent || "", /Unchecked/i)
   })
 
   const document = dom.window.document
@@ -685,6 +699,7 @@ test("news review modal supports student-scoped navigation and modal review acti
     const viewer = document.getElementById("newsReviewViewerModal")
     assert.equal(viewer.classList.contains("hidden"), false)
     assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Week article|Market week wrap-up/i)
+    assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Revise|Submitted/i)
     assert.match(normalizeText(document.getElementById("newsReviewViewerStatus").textContent), /Opened week set/i)
     assert.equal(normalizeText(document.getElementById("newsReviewViewerIndex").textContent), "1 / 7")
   })
@@ -884,8 +899,22 @@ test("news review queue includes incomplete student week sets and marks status",
     assert.ok(row)
     assert.match(row.textContent || "", /5\/7/i)
     assert.match(row.textContent || "", /Incomplete/i)
+    assert.match(row.textContent || "", /Unchecked/i)
     const summaryText = normalizeText(dom.window.document.getElementById("newsReviewSummary").textContent)
     assert.match(summaryText, /incomplete=1/i)
+    assert.match(summaryText, /unchecked=1/i)
+    assert.match(summaryText, /checked=0/i)
+    assert.match(summaryText, /waiting=0/i)
+  })
+
+  const reviewCheckSelect = dom.window.document.getElementById("newsReviewCheckFilter")
+  reviewCheckSelect.value = "checked"
+  reviewCheckSelect.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+
+  await waitFor(() => {
+    const rows = Array.from(dom.window.document.querySelectorAll("#newsReviewRows tr"))
+    assert.equal(rows.length, 1)
+    assert.match(rows[0].textContent || "", /No student week sets/i)
   })
 
   await settleDomAsync(dom)
@@ -1107,7 +1136,7 @@ test("news review week-set table headers sort all visible columns", async () => 
     assert.equal(getRows().length, 3)
   })
 
-  const sortableFields = ["weekSet", "student", "level", "reports", "setStatus", "latestSubmittedAt"]
+  const sortableFields = ["weekSet", "student", "level", "reports", "setStatus", "reviewCheckStatus", "latestSubmittedAt"]
   sortableFields.forEach((field) => {
     const header = document.querySelector(`th[data-table-sort=\"newsReview\"][data-sort-field=\"${field}\"]`)
     assert.ok(header)
@@ -1151,6 +1180,21 @@ test("news review week-set table headers sort all visible columns", async () => 
     assert.equal(statusHeader.getAttribute("aria-sort"), "ascending")
     const firstStatusCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(5)")?.textContent)
     assert.equal(firstStatusCell, "Approved")
+  })
+
+  const reviewCheckHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="reviewCheckStatus"]')
+  assert.ok(reviewCheckHeader)
+  reviewCheckHeader.click()
+  await waitFor(() => {
+    assert.equal(reviewCheckHeader.getAttribute("aria-sort"), "descending")
+    const firstReviewCheckCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(6)")?.textContent)
+    assert.equal(firstReviewCheckCell, "Unchecked")
+  })
+  reviewCheckHeader.click()
+  await waitFor(() => {
+    assert.equal(reviewCheckHeader.getAttribute("aria-sort"), "ascending")
+    const firstReviewCheckCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(6)")?.textContent)
+    assert.equal(firstReviewCheckCell, "Checked")
   })
 
   const latestHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="latestSubmittedAt"]')
@@ -1221,6 +1265,8 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
             approvedCount: 0,
             revisionRequestedCount: 0,
             setStatus: "submitted",
+            reviewCheckStatus: "unchecked",
+            reviewCheckColor: "purple",
             latestReportId: "news-007",
             latestReportDate: "2026-03-15",
             latestSubmittedAt: "2026-03-15T08:00:00.000Z",
@@ -1372,6 +1418,10 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
       'button[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]'
     )
     assert.ok(openBtn)
+    const newsPanel = openBtn.closest(".queue-hub-panel")
+    assert.match(normalizeText(newsPanel?.textContent), /Review Check/i)
+    assert.match(normalizeText(newsPanel?.textContent), /Unchecked/i)
+    assert.match(normalizeText(newsPanel?.textContent), /Submitted/i)
   })
 
   dom.window.document

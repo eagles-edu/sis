@@ -1,2 +1,2 @@
-[dotenv@17.3.1] injecting env (33) from .env.dev -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.3.1] injecting env (33) from .env.dev -- tip: ⚙️  suppress all logs with { quiet: true }
 exercise-mailer listening on 127.0.0.1:8788 at /api/exercise-submission and /api/student-intake-submission (health: /healthz)

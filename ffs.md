@@ -191,6 +191,27 @@ If you set Source to `/home/eagles/dockerz/sis/web-asset/admin` instead, then in
 3. Run Pair B (`sis-public`) sync.
 4. Reload nginx after config update.
 
+## Codified Commands (Sync + Runtime Restart)
+
+Use these npm commands from `/home/eagles/dockerz/sis` to enforce restart-after-sync policy:
+
+```bash
+npm run sync:full:sis-root:restart-runtimes
+npm run sync:full:sis-public-root:restart-runtimes
+```
+
+Behavior:
+
+1. Runs the selected FreeFileSync batch profile.
+2. Restarts live runtime (`exercise-mailer.service`, port `8787`) and checks `/healthz`.
+3. Restarts local dev runtime (port `8788`) and checks `/healthz`.
+
+Restart-only helper (no sync):
+
+```bash
+npm run runtimes:restart
+```
+
 ## Systemd Runtime Policy (Canonical)
 
 Use one runtime root only: `/home/admin.eagles.edu.vn/sis`.
@@ -259,7 +280,7 @@ curl -fsS http://127.0.0.1:8787/healthz
 
 ## Nginx Wiring (Required)
 
-For [admin.eagles.edu.vn.conf](../deploy/nginx/admin.eagles.edu.vn.conf), ensure these blocks exist:
+For [admin.eagles.edu.vn.conf](deploy/nginx/admin.eagles.edu.vn.conf), ensure these blocks exist:
 
 ```nginx
 location = /admin/students {

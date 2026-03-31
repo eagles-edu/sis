@@ -342,6 +342,11 @@
         border-color: var(--btn-delete-border);
         color: var(--btn-delete-text);
       }
+      button.ghost {
+        background: transparent;
+        border-color: var(--btn-delete-border);
+        color: var(--btn-delete-text);
+      }
       button.btn-delete {
         --btn-hover-shadow: 0 9px 16px rgba(181, 0, 16, 0.26);
         --btn-active-shadow:
@@ -1164,6 +1169,15 @@
         display: grid;
         gap: 4px;
         margin: 0 0 2px 12px;
+      }
+      .sidebar-actions {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+      }
+      .sidebar-actions button {
+        width: 100%;
+        box-sizing: border-box;
       }
       /* cspell:words sublink */
       .menu-sublink {
@@ -2951,6 +2965,18 @@
         overflow-wrap: anywhere;
         line-height: 1.4;
       }
+      .news-review-note-line {
+        display: block;
+        margin-bottom: 2px;
+      }
+      .news-review-note-line.pending {
+        color: #7c121d;
+        font-weight: 600;
+      }
+      .news-review-note-line.fixed {
+        color: #0b6f3b;
+        font-weight: 600;
+      }
       .news-review-viewer-review {
         display: grid;
         gap: 6px;
@@ -2961,9 +2987,14 @@
       }
       .news-review-viewer-actions {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-        margin-top: 8px;
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+        gap: 10px;
+      }
+      .news-review-viewer-actions button {
+        min-height: 42px;
+        padding: 10px 12px;
+        font-size: 14px;
+        font-weight: 700;
       }
       .small {
         font-size: 13px;
@@ -3335,6 +3366,11 @@
                 </div>
               </div>
             </nav>
+            <div class="sidebar-actions">
+              <button id="sidebarLogoutBtn" type="button" class="danger ghost">
+                Logout
+              </button>
+            </div>
           </aside>
 
           <div class="section-stack">
@@ -3868,6 +3904,51 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <p class="small" id="overviewIncomingExerciseActionStatus">
                           Disposition actions are available per queue row.
                         </p>
+                      </details>
+                    </section>
+                    <section class="overview-group full" id="overviewNewsQueueSection">
+                      <h3>News Report Review Queue</h3>
+                      <details id="overviewNewsQueueDetails">
+                        <summary>
+                          <span>News Reports</span>
+                          <span class="small" id="overviewNewsQueueSummary"
+                            >News report queue not loaded yet.</span
+                          >
+                        </summary>
+                        <div class="table-scroll-wrap">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th scope="col">Week Set</th>
+                                <th scope="col">Student</th>
+                                <th scope="col">Eagles ID</th>
+                                <th scope="col">Level</th>
+                                <th scope="col">Reports</th>
+                                <th scope="col">Set Status</th>
+                                <th scope="col">Review Check</th>
+                              </tr>
+                            </thead>
+                            <tbody id="overviewNewsQueueRows">
+                              <tr>
+                                <td colspan="7">News report queue not loaded yet.</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="actions actions-3">
+                          <button id="overviewNewsQueueOpenBtn" type="button">
+                            Open News Reports Page
+                          </button>
+                          <button
+                            id="overviewNewsQueueRefreshBtn"
+                            type="button"
+                            class="btn-refresh">
+                            Reload Queue
+                          </button>
+                          <button id="overviewNewsQueueQueueHubBtn" type="button">
+                            Open Queue Hub
+                          </button>
+                        </div>
                       </details>
                     </section>
                   </div>
@@ -5825,7 +5906,16 @@ Select an assignment link to inspect details.</pre
                         <option value="incomplete">Incomplete</option>
                         <option value="submitted">Submitted</option>
                         <option value="approved">Approved</option>
-                        <option value="revision-requested">Revision Requested</option>
+                        <option value="revision-requested">Revise</option>
+                      </select>
+                    </div>
+                    <div class="toolbar-field">
+                      <label for="newsReviewCheckFilter">Review Check</label>
+                      <select id="newsReviewCheckFilter">
+                        <option value="all">All</option>
+                        <option value="checked">Checked</option>
+                        <option value="unchecked">Unchecked</option>
+                        <option value="waiting-revise">Waiting Revise</option>
                       </select>
                     </div>
                     <div class="toolbar-field">
@@ -5921,6 +6011,14 @@ Select an assignment link to inspect details.</pre
                           <th
                             scope="col"
                             data-table-sort="newsReview"
+                            data-sort-field="reviewCheckStatus"
+                            tabindex="0"
+                            aria-sort="none">
+                            Review Check
+                          </th>
+                          <th
+                            scope="col"
+                            data-table-sort="newsReview"
                             data-sort-field="latestSubmittedAt"
                             tabindex="0"
                             aria-sort="none">
@@ -5931,7 +6029,7 @@ Select an assignment link to inspect details.</pre
                       </thead>
                       <tbody id="newsReviewRows">
                         <tr>
-                          <td colspan="7">Open this page to load student week sets.</td>
+                          <td colspan="8">Open this page to load student week sets.</td>
                         </tr>
                       </tbody>
                     </table>
@@ -6879,6 +6977,79 @@ Select an assignment link to inspect details.</pre
                         mapping is shared globally for grade bands.
                       </p>
                     </div>
+                    <div class="col-12">
+                      <label>News Source Validation Allowlist</label>
+                      <p class="small">
+                        Student news source URLs must match enabled domains below.
+                      </p>
+                      <div class="row">
+                        <div class="col-3 permission-page-item">
+                          <input
+                            type="checkbox"
+                            id="schoolSetupNewsSourceDefaultCnn"
+                            checked>
+                          <label for="schoolSetupNewsSourceDefaultCnn"
+                            >Enable cnn.com</label
+                          >
+                        </div>
+                        <div class="col-3 permission-page-item">
+                          <input
+                            type="checkbox"
+                            id="schoolSetupNewsSourceDefaultBbc"
+                            checked>
+                          <label for="schoolSetupNewsSourceDefaultBbc"
+                            >Enable bbc.com</label
+                          >
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-12">
+                          <p class="small">
+                            Custom sources (up to 8). Check to enable each domain.
+                          </p>
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom1Enabled">
+                          <label for="schoolSetupNewsSourceCustom1Enabled">Custom #1</label>
+                          <input id="schoolSetupNewsSourceCustom1Domain" type="text" placeholder="example.com">
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom2Enabled">
+                          <label for="schoolSetupNewsSourceCustom2Enabled">Custom #2</label>
+                          <input id="schoolSetupNewsSourceCustom2Domain" type="text" placeholder="example.com">
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom3Enabled">
+                          <label for="schoolSetupNewsSourceCustom3Enabled">Custom #3</label>
+                          <input id="schoolSetupNewsSourceCustom3Domain" type="text" placeholder="example.com">
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom4Enabled">
+                          <label for="schoolSetupNewsSourceCustom4Enabled">Custom #4</label>
+                          <input id="schoolSetupNewsSourceCustom4Domain" type="text" placeholder="example.com">
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom5Enabled">
+                          <label for="schoolSetupNewsSourceCustom5Enabled">Custom #5</label>
+                          <input id="schoolSetupNewsSourceCustom5Domain" type="text" placeholder="example.com">
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom6Enabled">
+                          <label for="schoolSetupNewsSourceCustom6Enabled">Custom #6</label>
+                          <input id="schoolSetupNewsSourceCustom6Domain" type="text" placeholder="example.com">
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom7Enabled">
+                          <label for="schoolSetupNewsSourceCustom7Enabled">Custom #7</label>
+                          <input id="schoolSetupNewsSourceCustom7Domain" type="text" placeholder="example.com">
+                        </div>
+                        <div class="col-6 permission-page-item">
+                          <input type="checkbox" id="schoolSetupNewsSourceCustom8Enabled">
+                          <label for="schoolSetupNewsSourceCustom8Enabled">Custom #8</label>
+                          <input id="schoolSetupNewsSourceCustom8Domain" type="text" placeholder="example.com">
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div class="row school-setup-links-grid">
                     <div class="col-6">
@@ -7297,6 +7468,14 @@ Select an assignment link to inspect details.</pre
             Close
           </button>
         </div>
+        <div class="news-review-viewer-actions">
+          <button id="newsReviewViewerApproveBtn" type="button" class="btn-edit">
+            Approve
+          </button>
+          <button id="newsReviewViewerRevisionBtn" type="button">
+            Request Revision
+          </button>
+        </div>
         <div id="newsReviewViewerBody" class="queue-modal-body">
           <p class="small">Select a report row to open details.</p>
         </div>
@@ -7306,14 +7485,6 @@ Select an assignment link to inspect details.</pre
             id="newsReviewViewerNote"
             rows="3"
             placeholder="Save note with approve/revision action"></textarea>
-        </div>
-        <div class="news-review-viewer-actions">
-          <button id="newsReviewViewerApproveBtn" type="button" class="btn-edit">
-            Approve
-          </button>
-          <button id="newsReviewViewerRevisionBtn" type="button">
-            Request Revision
-          </button>
         </div>
         <p class="small" id="newsReviewViewerStatus">Viewer is ready.</p>
       </div>
@@ -7445,6 +7616,9 @@ Select an assignment link to inspect details.</pre
             submitted: 0,
             approved: 0,
             revisionRequested: 0,
+            checked: 0,
+            unchecked: 0,
+            waitingRevise: 0,
           },
           pendingById: {},
           viewerReportId: "",
@@ -7454,6 +7628,7 @@ Select an assignment link to inspect details.</pre
           viewerStudentKey: "",
           filters: {
             status: "all",
+            reviewCheck: "all",
             level: "",
             studentRefId: "",
             dateFrom: "",
@@ -9602,6 +9777,58 @@ Select an assignment link to inspect details.</pre
         };
       }
 
+      function defaultNewsReportValidationSettings() {
+        return {
+          defaultSources: {
+            cnn: true,
+            bbc: true,
+          },
+          customSources: Array.from({ length: 8 }, () => ({
+            enabled: false,
+            domain: "",
+          })),
+        };
+      }
+
+      function normalizeNewsSourceDomain(value = "") {
+        const token = normalizeLower(value)
+          .replace(/^https?:\/\//, "")
+          .replace(/\/.*$/, "")
+          .replace(/[#?].*$/, "")
+          .replace(/^www\./, "")
+          .trim();
+        if (!token) return "";
+        if (!token.includes(".")) return "";
+        if (!/^[a-z0-9.-]+$/i.test(token)) return "";
+        return token;
+      }
+
+      function normalizeNewsReportValidationSettings(source = {}) {
+        const fallback = defaultNewsReportValidationSettings();
+        const defaults =
+          source?.defaultSources && typeof source.defaultSources === "object" ?
+            source.defaultSources
+          : {};
+        const custom =
+          Array.isArray(source?.customSources) ? source.customSources : [];
+        const customSources = Array.from({ length: 8 }, (_, index) => {
+          const row = custom[index] && typeof custom[index] === "object" ?
+            custom[index]
+          : {};
+          return {
+            enabled: row.enabled === true,
+            domain: normalizeNewsSourceDomain(row.domain),
+          };
+        });
+        return {
+          defaultSources: {
+            cnn: defaults.cnn !== false,
+            bbc: defaults.bbc !== false,
+          },
+          customSources: customSources.length ? customSources : fallback.customSources,
+        };
+      }
+
       const SCHOOL_LOGO_ALLOWED_MIME = [
         "image/svg+xml",
         "image/jpeg",
@@ -9615,6 +9842,7 @@ Select an assignment link to inspect details.</pre
         multiSchool: false,
         schoolSetup: defaultSchoolSetupRange(),
         schoolProfile: defaultSchoolProfile(),
+        newsReportValidation: defaultNewsReportValidationSettings(),
         queueHub: {
           panelOrder: [
             "queued-performance-reports",
@@ -10880,12 +11108,30 @@ Select an assignment link to inspect details.</pre
             "level",
             "reports",
             "setStatus",
+            "reviewCheckStatus",
             "latestSubmittedAt",
           ].includes(normalized)
         ) {
           return normalized;
         }
         return "weekSet";
+      }
+
+      function newsReviewSetStatusSortRank(status = "") {
+        const normalized = normalizeLower(status);
+        if (normalized === "approved") return 0;
+        if (normalized === "revision-requested") return 1;
+        if (normalized === "submitted") return 2;
+        if (normalized === "incomplete") return 3;
+        return 4;
+      }
+
+      function newsReviewCheckStatusSortRank(status = "") {
+        const normalized = normalizeLower(status);
+        if (normalized === "checked") return 0;
+        if (normalized === "waiting-revise") return 1;
+        if (normalized === "unchecked") return 2;
+        return 3;
       }
 
       function sortedNewsReviewWeekSets(rows = []) {
@@ -10919,9 +11165,14 @@ Select an assignment link to inspect details.</pre
           else if (sortField === "reports")
             compareValue = compareTableNumber(left?.reportCount, right?.reportCount);
           else if (sortField === "setStatus")
-            compareValue = compareTableText(
-              newsReviewStatusLabel(left?.setStatus),
-              newsReviewStatusLabel(right?.setStatus),
+            compareValue = compareTableNumber(
+              newsReviewSetStatusSortRank(left?.setStatus),
+              newsReviewSetStatusSortRank(right?.setStatus),
+            );
+          else if (sortField === "reviewCheckStatus")
+            compareValue = compareTableNumber(
+              newsReviewCheckStatusSortRank(left?.reviewCheckStatus),
+              newsReviewCheckStatusSortRank(right?.reviewCheckStatus),
             );
           else if (sortField === "latestSubmittedAt") {
             compareValue = compareTableIsoDateTime(
@@ -12576,8 +12827,16 @@ Select an assignment link to inspect details.</pre
           ) ?
             status
           : "all";
+        const reviewCheck = normalizeLower(source.reviewCheck || "all");
+        const normalizedReviewCheck =
+          (["all", "checked", "unchecked", "waiting-revise"].includes(
+            reviewCheck,
+          )) ?
+            reviewCheck
+          : "all";
         return {
           status: normalizedStatus,
+          reviewCheck: normalizedReviewCheck,
           level: resolveSystemLevelName(source.level || ""),
           studentRefId: normalizeText(source.studentRefId),
           dateFrom: normalizeText(source.dateFrom).slice(0, 10),
@@ -12696,12 +12955,14 @@ Select an assignment link to inspect details.</pre
       function syncNewsReviewFilterInputValues() {
         const filters = newsReviewFilters();
         const statusEl = document.getElementById("newsReviewStatusFilter");
+        const reviewCheckEl = document.getElementById("newsReviewCheckFilter");
         const levelEl = document.getElementById("newsReviewLevelFilter");
         const studentEl = document.getElementById("newsReviewStudentFilter");
         const fromEl = document.getElementById("newsReviewDateFromFilter");
         const toEl = document.getElementById("newsReviewDateToFilter");
         const queryEl = document.getElementById("newsReviewQueryFilter");
         if (statusEl) statusEl.value = filters.status;
+        if (reviewCheckEl) reviewCheckEl.value = filters.reviewCheck;
         if (levelEl) levelEl.value = resolveSystemLevelName(filters.level);
         if (studentEl) studentEl.value = filters.studentRefId;
         if (fromEl) fromEl.value = filters.dateFrom;
@@ -12719,8 +12980,107 @@ Select an assignment link to inspect details.</pre
         const normalized = normalizeLower(status);
         if (normalized === "incomplete") return "Incomplete";
         if (normalized === "approved") return "Approved";
-        if (normalized === "revision-requested") return "Revision Requested";
+        if (normalized === "revision-requested") return "Revise";
         return "Submitted";
+      }
+
+      function newsReviewCheckStatusToken(set = {}) {
+        const submitted = Math.max(
+          0,
+          Number.parseInt(String(set?.submittedCount || 0), 10) || 0,
+        );
+        const revisionRequested = Math.max(
+          0,
+          Number.parseInt(String(set?.revisionRequestedCount || 0), 10) || 0,
+        );
+        if (submitted > 0) return "unchecked";
+        if (revisionRequested > 0) return "waiting-revise";
+        return "checked";
+      }
+
+      function newsReviewCheckStatusLabel(status = "") {
+        const normalized = normalizeLower(status);
+        if (normalized === "checked") return "Checked";
+        if (normalized === "waiting-revise") return "Waiting Revise";
+        return "Unchecked";
+      }
+
+      function newsReviewStatusColorToken(status = "") {
+        const normalized = normalizeLower(status);
+        if (
+          normalized === "green" ||
+          normalized === "amber" ||
+          normalized === "red" ||
+          normalized === "purple"
+        )
+          return normalized;
+        if (normalized === "approved") return "green";
+        if (normalized === "revision-requested") return "purple";
+        return "amber";
+      }
+
+      function newsReviewCheckStatusColorToken(status = "") {
+        const normalized = normalizeLower(status);
+        if (
+          normalized === "green" ||
+          normalized === "amber" ||
+          normalized === "red" ||
+          normalized === "purple"
+        )
+          return normalized;
+        if (normalized === "checked") return "green";
+        if (normalized === "waiting-revise") return "amber";
+        return "purple";
+      }
+
+      function newsReviewStatusChipStyle(status = "") {
+        const colorToken = newsReviewStatusColorToken(status);
+        if (colorToken === "green")
+          return "--chip-bg:#e7f8ef;--chip-border:#36a66a;--chip-dot:#0f4f30;--chip-text:#0f4f30;";
+        if (colorToken === "red")
+          return "--chip-bg:#ffe1e5;--chip-border:#d43b4e;--chip-dot:#6d0d1a;--chip-text:#6d0d1a;";
+        if (colorToken === "purple")
+          return "--chip-bg:#f1ebff;--chip-border:#7a59cc;--chip-dot:#3d227b;--chip-text:#3d227b;";
+        return "--chip-bg:#fff4da;--chip-border:#d89d28;--chip-dot:#5b3b00;--chip-text:#5b3b00;";
+      }
+
+      function newsReviewStatusChipHtml(status = "") {
+        const chipStyle = newsReviewStatusChipStyle(status);
+        const label = newsReviewStatusLabel(status);
+        return `<span class="level-chip level-chip-standard" style="${chipStyle}">${escapeHtml(label)}</span>`;
+      }
+
+      function newsReviewCheckStatusChipHtml(status = "") {
+        const colorToken = newsReviewCheckStatusColorToken(status);
+        const chipStyle = newsReviewStatusChipStyle(colorToken);
+        const label = newsReviewCheckStatusLabel(status);
+        return `<span class="level-chip level-chip-standard" style="${chipStyle}">${escapeHtml(label)}</span>`;
+      }
+
+      function newsReviewComplianceNoteHtml(noteText = "") {
+        const text = normalizeText(noteText);
+        if (!text) return "-";
+        return text
+          .split(/\r?\n/)
+          .map((line) => {
+            const token = normalizeLower(line);
+            const cssClass =
+              token.includes("[pending]") ? "pending"
+              : token.includes("[fixed]") ||
+                  token.includes(
+                    "fixed per compliance resolution on save",
+                  ) ?
+                  "fixed"
+                : "";
+            const className = cssClass ?
+              `news-review-note-line ${cssClass}` :
+              "news-review-note-line";
+            const span = document.createElement("span");
+            span.className = className;
+            span.textContent = line;
+            return span.outerHTML;
+          })
+          .join("");
       }
 
       function newsReviewSummaryText() {
@@ -12747,7 +13107,19 @@ Select an assignment link to inspect details.</pre
           0,
           Number.parseInt(String(summary.revisionRequested || 0), 10) || 0,
         );
-        return `total=${total} | showing=${showing} | incomplete=${incomplete} | submitted=${submitted} | approved=${approved} | revision=${revisionRequested}`;
+        const checked = Math.max(
+          0,
+          Number.parseInt(String(summary.checked || 0), 10) || 0,
+        );
+        const unchecked = Math.max(
+          0,
+          Number.parseInt(String(summary.unchecked || 0), 10) || 0,
+        );
+        const waitingRevise = Math.max(
+          0,
+          Number.parseInt(String(summary.waitingRevise || 0), 10) || 0,
+        );
+        return `total=${total} | showing=${showing} | incomplete=${incomplete} | submitted=${submitted} | approved=${approved} | revision=${revisionRequested} | checked=${checked} | unchecked=${unchecked} | waiting=${waitingRevise}`;
       }
 
       function newsReviewWeekSetStatusToken(set = {}) {
@@ -12934,7 +13306,10 @@ Select an assignment link to inspect details.</pre
         });
 
         const normalizedFilters = normalizeNewsReviewFilters(filters);
-        const selectedStatus = normalizeLower(normalizedFilters.status || "submitted");
+        const selectedStatus = normalizeLower(normalizedFilters.status || "all");
+        const selectedReviewCheck = normalizeLower(
+          normalizedFilters.reviewCheck || "all",
+        );
         const selectedLevel = resolveSystemLevelName(normalizedFilters.level || "");
         const selectedStudentRef = normalizeText(normalizedFilters.studentRefId);
         const selectedStudentRefLower = normalizeLower(selectedStudentRef);
@@ -12984,6 +13359,7 @@ Select an assignment link to inspect details.</pre
           .map((weekSet) => ({
             ...weekSet,
             setStatus: newsReviewWeekSetStatusToken(weekSet),
+            reviewCheckStatus: newsReviewCheckStatusToken(weekSet),
           }))
           .filter((weekSet) => {
             if (
@@ -13009,6 +13385,11 @@ Select an assignment link to inspect details.</pre
             if (
               selectedStatus !== "all" &&
               normalizeLower(weekSet?.setStatus) !== selectedStatus
+            )
+              return false;
+            if (
+              selectedReviewCheck !== "all" &&
+              normalizeLower(weekSet?.reviewCheckStatus) !== selectedReviewCheck
             )
               return false;
             if (
@@ -13044,6 +13425,9 @@ Select an assignment link to inspect details.</pre
           submitted: 0,
           approved: 0,
           revisionRequested: 0,
+          checked: 0,
+          unchecked: 0,
+          waitingRevise: 0,
         };
         const source = Array.isArray(sets) ? sets : [];
         source.forEach((entry) => {
@@ -13052,6 +13436,11 @@ Select an assignment link to inspect details.</pre
           else if (status === "approved") summary.approved += 1;
           else if (status === "revision-requested") summary.revisionRequested += 1;
           else summary.submitted += 1;
+          const reviewCheckStatus = normalizeLower(entry?.reviewCheckStatus);
+          if (reviewCheckStatus === "checked") summary.checked += 1;
+          else if (reviewCheckStatus === "waiting-revise")
+            summary.waitingRevise += 1;
+          else summary.unchecked += 1;
         });
         return summary;
       }
@@ -13065,7 +13454,7 @@ Select an assignment link to inspect details.</pre
         rowsEl.innerHTML = "";
         if (!items.length) {
           rowsEl.innerHTML =
-            '<tr><td colspan="7">No student week sets found for the current filters.</td></tr>';
+            '<tr><td colspan="8">No student week sets found for the current filters.</td></tr>';
           return;
         }
 
@@ -13086,6 +13475,10 @@ Select an assignment link to inspect details.</pre
             },
             { preferEnglish: true, wrapName: true, includeStudentNumber: true },
           );
+          const rowStatus = normalizeText(item?.setStatus || item?.statusColor);
+          const reviewCheckStatus = normalizeText(
+            item?.reviewCheckStatus || newsReviewCheckStatusToken(item),
+          );
           const row = document.createElement("tr");
           row.dataset.newsReviewWeekSetId = weekSetId;
           row.innerHTML = `
@@ -13093,7 +13486,8 @@ Select an assignment link to inspect details.</pre
           <td>${escapeHtml(studentLabel)}</td>
           <td>${escapeHtml(fullLevelLabel(student?.level || ""))}</td>
           <td>${escapeHtml(`${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`)}</td>
-          <td>${escapeHtml(newsReviewStatusLabel(item?.setStatus))}</td>
+          <td>${newsReviewStatusChipHtml(rowStatus)}</td>
+          <td>${newsReviewCheckStatusChipHtml(reviewCheckStatus)}</td>
           <td>${escapeHtml(formatDateTime(item?.latestSubmittedAt || ""))}<br><span class="small">${escapeHtml(normalizeText(item?.latestReviewedByUsername || "-"))}</span></td>
           <td><button type="button" class="queue-row-btn" data-news-review-open-week-set="${escapeHtml(weekSetId)}" data-news-review-open-report="${escapeHtml(normalizeText(item?.latestReportId))}">Open Week Set</button></td>
         `;
@@ -13277,7 +13671,7 @@ Select an assignment link to inspect details.</pre
         bodyEl.innerHTML = `
         <div class="news-review-viewer-grid">
           <div class="news-review-viewer-block"><strong>Report ID</strong><span>${escapeHtml(normalizeText(report?.id))}</span></div>
-          <div class="news-review-viewer-block"><strong>Status</strong><span>${escapeHtml(newsReviewStatusLabel(report?.reviewStatus))}</span></div>
+          <div class="news-review-viewer-block"><strong>Status</strong>${newsReviewStatusChipHtml(report?.reviewStatus)}</div>
           <div class="news-review-viewer-block"><strong>Student</strong><span>${escapeHtml(studentLabel)}</span></div>
           <div class="news-review-viewer-block"><strong>Level</strong><span>${escapeHtml(fullLevelLabel(student?.level || report?.level || ""))}</span></div>
           <div class="news-review-viewer-block"><strong>Report Date</strong><span>${escapeHtml(normalizeText(report?.reportDate))}</span></div>
@@ -13296,7 +13690,7 @@ Select an assignment link to inspect details.</pre
         </div>
         <div class="news-review-viewer-block"><strong>Action Why</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhy || "-"))}</div></div>
         <div class="news-review-viewer-block"><strong>Bias Assessment</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.biasAssessment || "-"))}</div></div>
-        <div class="news-review-viewer-block"><strong>Review Note</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.reviewNote || "-"))}</div></div>
+        <div class="news-review-viewer-block"><strong>Review Note</strong><div class="news-review-viewer-long">${newsReviewComplianceNoteHtml(report?.reviewNote || "-")}</div></div>
       `;
         syncNewsReviewViewerControls(report);
       }
@@ -13879,6 +14273,13 @@ Select an assignment link to inspect details.</pre
         );
       }
 
+      function newsReportValidationState() {
+        return normalizeNewsReportValidationSettings(
+          state.uiSettings?.newsReportValidation ||
+            DEFAULT_UI_SETTINGS.newsReportValidation,
+        );
+      }
+
       function normalizeQueueHubPanelOrder(values = []) {
         const source = Array.isArray(values) ? values : [];
         const selected = source
@@ -13948,6 +14349,9 @@ Select an assignment link to inspect details.</pre
           ),
           schoolProfile: normalizeSchoolProfile(
             source?.schoolProfile || DEFAULT_UI_SETTINGS.schoolProfile,
+          ),
+          newsReportValidation: normalizeNewsReportValidationSettings(
+            source?.newsReportValidation || DEFAULT_UI_SETTINGS.newsReportValidation,
           ),
           queueHub: normalizeQueueHubSettings(
             source?.queueHub || DEFAULT_UI_SETTINGS.queueHub,
@@ -14179,6 +14583,41 @@ Select an assignment link to inspect details.</pre
         });
       }
 
+      function draftNewsReportValidationFromInputs({
+        fallbackValidation = newsReportValidationState(),
+      } = {}) {
+        const fallback = normalizeNewsReportValidationSettings(fallbackValidation);
+        const readToggle = (id, fallbackValue = false) =>
+          document.getElementById(id) instanceof HTMLInputElement ?
+            document.getElementById(id).checked
+          : Boolean(fallbackValue);
+        const readText = (id, fallbackValue = "") =>
+          document.getElementById(id) instanceof HTMLInputElement ?
+            normalizeNewsSourceDomain(document.getElementById(id).value)
+          : normalizeNewsSourceDomain(fallbackValue);
+        const customSources = Array.from({ length: 8 }, (_, index) => {
+          const slot = fallback.customSources[index] || {};
+          const n = index + 1;
+          return {
+            enabled: readToggle(`schoolSetupNewsSourceCustom${n}Enabled`, slot.enabled),
+            domain: readText(`schoolSetupNewsSourceCustom${n}Domain`, slot.domain),
+          };
+        });
+        return normalizeNewsReportValidationSettings({
+          defaultSources: {
+            cnn: readToggle(
+              "schoolSetupNewsSourceDefaultCnn",
+              fallback.defaultSources.cnn,
+            ),
+            bbc: readToggle(
+              "schoolSetupNewsSourceDefaultBbc",
+              fallback.defaultSources.bbc,
+            ),
+          },
+          customSources,
+        });
+      }
+
       function renderSchoolSetupLogoPreview(logoDataUrl = "") {
         const previewEl = document.getElementById("schoolSetupLogoPreview");
         const imgEl = document.getElementById("schoolSetupLogoPreviewImg");
@@ -14226,6 +14665,9 @@ Select an assignment link to inspect details.</pre
           profile: draftSchoolProfileFromInputs({
             fallbackProfile: schoolProfileState(),
           }),
+          newsReportValidation: draftNewsReportValidationFromInputs({
+            fallbackValidation: newsReportValidationState(),
+          }),
         };
       }
 
@@ -14266,6 +14708,7 @@ Select an assignment link to inspect details.</pre
         renderSchoolSetupPanel({
           setup: draft.setup,
           profile: draft.profile,
+          newsReportValidation: draft.newsReportValidation,
           message: `Logo ready (${dimensions.width || "?"}x${dimensions.height || "?"}). Save School Setup to apply.`,
         });
       }
@@ -14279,6 +14722,7 @@ Select an assignment link to inspect details.</pre
         renderSchoolSetupPanel({
           setup: draft.setup,
           profile: draft.profile,
+          newsReportValidation: draft.newsReportValidation,
           message: "Logo removed from draft.",
         });
       }
@@ -14286,11 +14730,15 @@ Select an assignment link to inspect details.</pre
       function renderSchoolSetupPanel({
         setup = schoolSetupState(),
         profile = schoolProfileState(),
+        newsReportValidation = newsReportValidationState(),
         message = "",
         isError = false,
       } = {}) {
         const normalizedSetup = normalizeSchoolSetup(setup);
         const normalizedProfile = normalizeSchoolProfile(profile);
+        const normalizedNewsValidation = normalizeNewsReportValidationSettings(
+          newsReportValidation,
+        );
         const startEl = document.getElementById("schoolSetupStartDate");
         const endEl = document.getElementById("schoolSetupEndDate");
         const labelEl = document.getElementById("schoolSetupSchoolYearLabel");
@@ -14338,6 +14786,34 @@ Select an assignment link to inspect details.</pre
           letterGradeRangesEl.value = schoolLetterGradeRangesText(
             normalizedSetup.letterGradeRanges,
           );
+        const defaultCnnEl = document.getElementById(
+          "schoolSetupNewsSourceDefaultCnn",
+        );
+        const defaultBbcEl = document.getElementById(
+          "schoolSetupNewsSourceDefaultBbc",
+        );
+        if (defaultCnnEl instanceof HTMLInputElement) {
+          defaultCnnEl.checked = normalizedNewsValidation.defaultSources.cnn === true;
+        }
+        if (defaultBbcEl instanceof HTMLInputElement) {
+          defaultBbcEl.checked = normalizedNewsValidation.defaultSources.bbc === true;
+        }
+        Array.from({ length: 8 }, (_, index) => {
+          const n = index + 1;
+          const slot = normalizedNewsValidation.customSources[index] || {};
+          const enabledEl = document.getElementById(
+            `schoolSetupNewsSourceCustom${n}Enabled`,
+          );
+          const domainEl = document.getElementById(
+            `schoolSetupNewsSourceCustom${n}Domain`,
+          );
+          if (enabledEl instanceof HTMLInputElement) {
+            enabledEl.checked = slot.enabled === true;
+          }
+          if (domainEl instanceof HTMLInputElement) {
+            domainEl.value = normalizeText(slot.domain);
+          }
+        });
         renderSchoolSetupLogoPreview(normalizedProfile.logoDataUrl);
         if (rowsEl) rowsEl.innerHTML = schoolSetupQuarterRowsHtml(normalizedSetup);
         if (statusEl) {
@@ -14381,6 +14857,9 @@ Select an assignment link to inspect details.</pre
         const profile = draftSchoolProfileFromInputs({
           fallbackProfile: schoolProfileState(),
         });
+        const newsReportValidation = draftNewsReportValidationFromInputs({
+          fallbackValidation: newsReportValidationState(),
+        });
         persistUiSettings({
           ...state.uiSettings,
           schoolSetup: {
@@ -14391,10 +14870,16 @@ Select an assignment link to inspect details.</pre
             ),
           },
           schoolProfile: profile,
+          newsReportValidation,
         });
         await persistUiSettingsToServer(state.uiSettings, { notifyOnFailure: notify });
         applyUiSettings();
-        renderSchoolSetupPanel({ setup, profile, message: "School setup saved." });
+        renderSchoolSetupPanel({
+          setup,
+          profile,
+          newsReportValidation,
+          message: "School setup saved.",
+        });
         if (notify) {
           const schoolName = profile.schoolName ? ` for ${profile.schoolName}` : "";
           setStatus(`School setup saved (${setup.schoolYear})${schoolName}.`);
@@ -14462,10 +14947,22 @@ Select an assignment link to inspect details.</pre
           const profileFieldCount = sortedProfileFields(true).length;
           const setup = schoolSetupState();
           const schoolProfile = schoolProfileState();
+          const newsValidation = newsReportValidationState();
+          const allowedSources = [];
+          if (newsValidation.defaultSources.cnn) allowedSources.push("cnn.com");
+          if (newsValidation.defaultSources.bbc) allowedSources.push("bbc.com");
+          (Array.isArray(newsValidation.customSources) ?
+            newsValidation.customSources
+          : []
+          ).forEach((entry) => {
+            if (entry?.enabled === true && normalizeText(entry?.domain)) {
+              allowedSources.push(normalizeText(entry.domain));
+            }
+          });
           const schoolName = schoolProfile.schoolName || "(school name not set)";
           settingsStatus.textContent =
             `Multi-school: ${multiSchool ? "enabled" : "disabled"} | school year: ${setup.schoolYear} ` +
-            `(${setup.startDate} to ${setup.endDate}) | school: ${schoolName} | profile fields: ${profileFieldCount}`;
+            `(${setup.startDate} to ${setup.endDate}) | school: ${schoolName} | profile fields: ${profileFieldCount} | news sources: ${allowedSources.join(", ") || "cnn.com, bbc.com"}`;
         }
         renderSchoolBranding();
         renderSchoolSetupPanel();
@@ -17637,6 +18134,9 @@ Select an assignment link to inspect details.</pre
         renderAttendanceAdminRiskSignals();
         renderOverviewIncomingExerciseSection(summary?.incomingExerciseResults || null);
         renderPerformanceQueueSection(summary?.parentReportQueue || null);
+        renderOverviewNewsQueueSection(
+          state.queueHub?.panelsById?.["news-report-review"] || null,
+        );
         state.parentReportQueue.savedReportCountHint = Math.max(
           0,
           Number(summary?.parentReports?.total || 0) || 0,
@@ -18031,6 +18531,70 @@ Select an assignment link to inspect details.</pre
         });
       }
 
+      function renderOverviewNewsQueueSection(panel = null) {
+        const sectionEl = document.getElementById("overviewNewsQueueSection");
+        const detailsEl = document.getElementById("overviewNewsQueueDetails");
+        const summaryEl = document.getElementById("overviewNewsQueueSummary");
+        const rowsEl = document.getElementById("overviewNewsQueueRows");
+        if (!sectionEl || !summaryEl || !rowsEl) return;
+
+        const canReview = canManageUsers();
+        sectionEl.classList.toggle("hidden", !canReview);
+        if (!canReview) return;
+
+        const sourcePanel =
+          panel ||
+          (state.queueHub?.panelsById ?
+            state.queueHub.panelsById["news-report-review"]
+          : null);
+        const items = Array.isArray(sourcePanel?.items) ? sourcePanel.items : [];
+        const total =
+          Number.isFinite(Number(sourcePanel?.total)) ?
+            Number(sourcePanel.total)
+          : items.length;
+        const visible = Math.min(items.length, 25);
+        summaryEl.textContent =
+          items.length ?
+            `total=${total} | showing=${visible}`
+          : "No news report queue rows.";
+        if (detailsEl && !detailsEl.open && items.length) detailsEl.open = true;
+
+        rowsEl.innerHTML = "";
+        if (!items.length) {
+          rowsEl.innerHTML =
+            '<tr><td colspan="7">No news report queue rows.</td></tr>';
+          return;
+        }
+
+        items.slice(0, 25).forEach((item) => {
+          const setStatus = normalizeText(
+            item?.setStatus || item?.latestReviewStatus,
+          );
+          const reviewCheckStatus = normalizeText(
+            item?.reviewCheckStatus || newsReviewCheckStatusToken(item),
+          );
+          const reportCount =
+            Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10)) || 0;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+          <td>${escapeHtml(`${normalizeText(item?.weekStart)} to ${normalizeText(item?.weekEnd)}`)}</td>
+          <td>${escapeHtml(
+            item?.fullName || item?.student?.fullName || "(student)",
+          )}</td>
+          <td>${escapeHtml(
+            item?.eaglesId || item?.student?.eaglesId || item?.studentRefId || "",
+          )}</td>
+          <td>${escapeHtml(
+            fullLevelLabel(resolveSystemLevelName(item?.level || "")),
+          )}</td>
+          <td>${reportCount}/7</td>
+          <td>${newsReviewStatusChipHtml(setStatus)}</td>
+          <td>${newsReviewCheckStatusChipHtml(reviewCheckStatus)}</td>
+        `;
+          rowsEl.appendChild(tr);
+        });
+      }
+
       async function loadIncomingExerciseResults({
         showAll = state.incomingExerciseQueue.showAll,
       } = {}) {
@@ -18110,6 +18674,38 @@ Select an assignment link to inspect details.</pre
           title: normalizeText(panel?.title) || queueHubPanelTitle(id),
           total: Math.max(0, Number.parseInt(String(panel?.total || 0), 10) || 0),
           items: Array.isArray(panel?.items) ? panel.items : [],
+        };
+      }
+
+      function queueHubCellHtml(html = "", text = "") {
+        return {
+          html: normalizeText(html),
+          text: normalizeText(text),
+          allowHtml: true,
+        };
+      }
+
+      function normalizeQueueHubCell(value = "") {
+        if (value && typeof value === "object") {
+          const html = normalizeText(value?.html);
+          const text = normalizeText(value?.text);
+          if (html) {
+            return {
+              html,
+              text,
+              allowHtml: value?.allowHtml !== false,
+            };
+          }
+          return {
+            html: "",
+            text,
+            allowHtml: false,
+          };
+        }
+        return {
+          html: "",
+          text: normalizeText(value),
+          allowHtml: false,
         };
       }
 
@@ -18253,18 +18849,34 @@ Select an assignment link to inspect details.</pre
                 "Level",
                 "Reports",
                 "Set Status",
+                "Review Check",
               ],
               openColumnIndex: 0,
-              row: (item) => [
-                `${normalizeText(item?.weekStart)} to ${normalizeText(item?.weekEnd)}`,
-                normalizeText(item?.fullName || item?.student?.fullName),
-                normalizeText(
-                  item?.eaglesId || item?.student?.eaglesId || item?.studentRefId,
-                ),
-                fullLevelLabel(resolveSystemLevelName(item?.level || "")),
-                `${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`,
-                newsReviewStatusLabel(item?.setStatus || item?.latestReviewStatus),
-              ],
+              row: (item) => {
+                const setStatus = normalizeText(
+                  item?.setStatus || item?.latestReviewStatus,
+                );
+                const reviewCheckStatus = normalizeText(
+                  item?.reviewCheckStatus || newsReviewCheckStatusToken(item),
+                );
+                return [
+                  `${normalizeText(item?.weekStart)} to ${normalizeText(item?.weekEnd)}`,
+                  normalizeText(item?.fullName || item?.student?.fullName),
+                  normalizeText(
+                    item?.eaglesId || item?.student?.eaglesId || item?.studentRefId,
+                  ),
+                  fullLevelLabel(resolveSystemLevelName(item?.level || "")),
+                  `${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`,
+                  queueHubCellHtml(
+                    newsReviewStatusChipHtml(setStatus),
+                    newsReviewStatusLabel(setStatus),
+                  ),
+                  queueHubCellHtml(
+                    newsReviewCheckStatusChipHtml(reviewCheckStatus),
+                    newsReviewCheckStatusLabel(reviewCheckStatus),
+                  ),
+                ];
+              },
               emptyText: "No week sets found.",
             };
           case "pending-profile-submissions":
@@ -18311,9 +18923,13 @@ Select an assignment link to inspect details.</pre
             const cells = spec
               .row(item)
               .map((value, cellIndex) => {
-                const text = normalizeText(value);
+                const cell = normalizeQueueHubCell(value);
+                const text = normalizeText(cell?.text);
                 if (cellIndex === openColumnIndex) {
                   return `<td><button type="button" class="queue-row-btn" data-queue-hub-open-panel="${escapeHtml(normalizeText(panel?.id))}" data-queue-hub-open-index="${index}">${escapeHtml(text || "(open)")}</button></td>`;
+                }
+                if (cell?.allowHtml && cell?.html) {
+                  return `<td>${cell.html}</td>`;
                 }
                 return `<td>${escapeHtml(text)}</td>`;
               })
@@ -18561,6 +19177,7 @@ Select an assignment link to inspect details.</pre
           setActivePage("news-reports");
           setNewsReviewFilterValues({
             status: "all",
+            reviewCheck: "all",
             studentRefId,
             dateFrom: weekStart,
             dateTo: weekEnd,
@@ -18636,6 +19253,9 @@ Select an assignment link to inspect details.</pre
           });
         }
         renderQueueHubPanels();
+        renderOverviewNewsQueueSection(
+          state.queueHub?.panelsById?.["news-report-review"] || null,
+        );
         const statusMessage = `Queue Hub loaded (${state.queueHub.generatedAt ? formatDateTime(state.queueHub.generatedAt) : "now"}).`;
         setQueueHubStatus(statusMessage);
         if (notify) setStatus(statusMessage);
@@ -25613,6 +26233,9 @@ Select an assignment link to inspect details.</pre
       document
         .getElementById("logoutBtn")
         .addEventListener("click", () => logout().catch(handleError));
+      document
+        .getElementById("sidebarLogoutBtn")
+        ?.addEventListener("click", () => logout().catch(handleError));
       const liveNameSearch = (() => {
         let timer = null;
         return () => {
@@ -25676,6 +26299,7 @@ Select an assignment link to inspect details.</pre
         dateToEl?.addEventListener("change", applyDateRange);
       });
       const newsReviewStatusEl = document.getElementById("newsReviewStatusFilter");
+      const newsReviewCheckEl = document.getElementById("newsReviewCheckFilter");
       const newsReviewLevelEl = document.getElementById("newsReviewLevelFilter");
       const newsReviewStudentEl = document.getElementById("newsReviewStudentFilter");
       const newsReviewDateFromEl = document.getElementById("newsReviewDateFromFilter");
@@ -25684,7 +26308,13 @@ Select an assignment link to inspect details.</pre
       const newsReviewRowsEl = document.getElementById("newsReviewRows");
       newsReviewStatusEl?.addEventListener("change", () => {
         setNewsReviewFilterValues({
-          status: normalizeText(newsReviewStatusEl.value) || "submitted",
+          status: normalizeText(newsReviewStatusEl.value) || "all",
+        });
+        loadNewsReviewQueue().catch(handleError);
+      });
+      newsReviewCheckEl?.addEventListener("change", () => {
+        setNewsReviewFilterValues({
+          reviewCheck: normalizeText(newsReviewCheckEl.value) || "all",
         });
         loadNewsReviewQueue().catch(handleError);
       });
@@ -25722,7 +26352,8 @@ Select an assignment link to inspect details.</pre
         .getElementById("newsReviewClearFiltersBtn")
         ?.addEventListener("click", () => {
           state.newsReview.filters = normalizeNewsReviewFilters({
-            status: "submitted",
+            status: "all",
+            reviewCheck: "all",
             level: "",
             studentRefId: "",
             dateFrom: "",
@@ -25980,17 +26611,25 @@ Select an assignment link to inspect details.</pre
           const draftProfile = draftSchoolProfileFromInputs({
             fallbackProfile: schoolProfileState(),
           });
+          const draftNewsValidation = draftNewsReportValidationFromInputs({
+            fallbackValidation: newsReportValidationState(),
+          });
           renderSchoolSetupPanel({
             setup: draftSetup,
             profile: draftProfile,
+            newsReportValidation: draftNewsValidation,
             message: "Quarter preview updated.",
           });
         } catch (error) {
           const draftProfile = draftSchoolProfileFromInputs({
             fallbackProfile: schoolProfileState(),
           });
+          const draftNewsValidation = draftNewsReportValidationFromInputs({
+            fallbackValidation: newsReportValidationState(),
+          });
           renderSchoolSetupPanel({
             profile: draftProfile,
+            newsReportValidation: draftNewsValidation,
             message: error.message || "Unable to preview school setup.",
             isError: true,
           });
@@ -26008,6 +26647,28 @@ Select an assignment link to inspect details.</pre
       document
         .getElementById("schoolSetupAutoFillBtn")
         ?.addEventListener("click", previewSchoolSetupFromInputs);
+      [
+        "schoolSetupNewsSourceDefaultCnn",
+        "schoolSetupNewsSourceDefaultBbc",
+        "schoolSetupNewsSourceCustom1Enabled",
+        "schoolSetupNewsSourceCustom2Enabled",
+        "schoolSetupNewsSourceCustom3Enabled",
+        "schoolSetupNewsSourceCustom4Enabled",
+        "schoolSetupNewsSourceCustom5Enabled",
+        "schoolSetupNewsSourceCustom6Enabled",
+        "schoolSetupNewsSourceCustom7Enabled",
+        "schoolSetupNewsSourceCustom8Enabled",
+        "schoolSetupNewsSourceCustom1Domain",
+        "schoolSetupNewsSourceCustom2Domain",
+        "schoolSetupNewsSourceCustom3Domain",
+        "schoolSetupNewsSourceCustom4Domain",
+        "schoolSetupNewsSourceCustom5Domain",
+        "schoolSetupNewsSourceCustom6Domain",
+        "schoolSetupNewsSourceCustom7Domain",
+        "schoolSetupNewsSourceCustom8Domain",
+      ].forEach((id) => {
+        document.getElementById(id)?.addEventListener("change", previewSchoolSetupFromInputs);
+      });
       document
         .getElementById("schoolSetupLogoFile")
         ?.addEventListener("change", (event) => {
@@ -26016,6 +26677,7 @@ Select an assignment link to inspect details.</pre
             renderSchoolSetupPanel({
               setup: draft.setup,
               profile: draft.profile,
+              newsReportValidation: draft.newsReportValidation,
               message: error.message || "Unable to process school logo.",
               isError: true,
             });
@@ -26305,6 +26967,21 @@ Select an assignment link to inspect details.</pre
           loadIncomingExerciseResults({
             showAll: state.incomingExerciseQueue.showAll,
           }).catch(handleError);
+        });
+      document
+        .getElementById("overviewNewsQueueRefreshBtn")
+        ?.addEventListener("click", () => {
+          loadQueueHub({ notify: true }).catch(handleError);
+        });
+      document
+        .getElementById("overviewNewsQueueOpenBtn")
+        ?.addEventListener("click", () => {
+          setActivePage("news-reports");
+        });
+      document
+        .getElementById("overviewNewsQueueQueueHubBtn")
+        ?.addEventListener("click", () => {
+          setActivePage("queue-hub");
         });
       document
         .getElementById("performanceQueueRefreshBtn")

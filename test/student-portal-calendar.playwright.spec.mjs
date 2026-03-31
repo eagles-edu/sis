@@ -329,17 +329,23 @@ function createStudentPortalFixtureServer(rootDir) {
           ok: true,
           window: {
             todayDate: "2026-03-13",
-            reportDate: "2026-03-13",
-            closesAt: "2026-03-13T23:59:00.000Z",
+            reportDate: "2026-03-16",
+            closesAt: "2026-03-16T23:59:00.000Z",
           },
           calendar: [
             { date: "2026-03-10", color: "red", submittedAt: "" },
             { date: "2026-03-11", status: "missed", submittedAt: "" },
             { date: "2026-03-12", color: "green", submittedAt: "2026-03-12T10:15:00.000Z" },
-            { date: "2026-03-13", color: "amber", canSubmit: true, submittedAt: "" },
+            {
+              date: "2026-03-13",
+              status: "completed",
+              reviewStatus: "revision-requested",
+              submittedAt: "2026-03-13T11:30:00.000Z",
+            },
+            { date: "2026-03-16", color: "amber", canSubmit: true, submittedAt: "" },
           ],
           openReport: {
-            reportDate: "2026-03-13",
+            reportDate: "2026-03-16",
           },
         });
         return;
@@ -429,6 +435,28 @@ test(
       assert.equal(homeState.identityHeadAscii.trim(), "Thong tin dinh danh hoc sinh");
       assert(homeState.metricLabels.includes("Absent SYTD"));
 
+      await page.waitForFunction(() => {
+        const body = globalThis.document.getElementById("newsQueueBody");
+        return Boolean(body && body.textContent && !/Loading/i.test(body.textContent));
+      });
+
+      const newsQueueState = await page.evaluate(() => {
+        const body = globalThis.document.getElementById("newsQueueBody");
+        const rows = Array.from(body?.querySelectorAll("tr") || []);
+        return {
+          text: body?.textContent || "",
+          rowCount: rows.length,
+          actionButtons: Array.from(body?.querySelectorAll("[data-open-news-date]") || []).length,
+        };
+      });
+
+      assert.match(newsQueueState.text, /(Approved|Open|Revise|Incomplete|No news reports yet\.)/i);
+      assert.equal(newsQueueState.text.includes("Loading"), false);
+      assert.ok(newsQueueState.rowCount >= 1);
+      assert.ok(newsQueueState.actionButtons >= 1);
+      assert.match(newsQueueState.text, /Revise/i);
+      assert.equal(/Needs Revision/i.test(newsQueueState.text), false);
+
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="current-homework"]')?.click();
       });
@@ -478,7 +506,7 @@ test(
         const openNewsStyle = openNewsEvent ? globalThis.window.getComputedStyle(openNewsEvent) : null;
         const alertDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-11"]');
         const completedDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-12"]');
-        const openDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-13"]');
+        const openDay = grid?.querySelector('.fc-daygrid-day[data-date="2026-03-16"]');
         const alertDayStyle = alertDay ? globalThis.window.getComputedStyle(alertDay) : null;
         return {
           rendered: Boolean(grid?.classList.contains("fc") && grid?.querySelector(".fc-toolbar")),

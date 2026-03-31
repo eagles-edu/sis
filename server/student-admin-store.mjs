@@ -3080,6 +3080,934 @@ const STUDENT_NEWS_FALLBACK_MAX_ITEMS = Math.max(
 const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"
 const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"
 const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"
+const STUDENT_NEWS_REVIEW_STATUS_COLOR = {
+  [STUDENT_NEWS_REVIEW_STATUS_APPROVED]: "green",
+  [STUDENT_NEWS_REVIEW_STATUS_SUBMITTED]: "amber",
+  [STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED]: "red",
+}
+const STUDENT_NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]"
+const STUDENT_NEWS_COMPLIANCE_NOTE_END = "[[/SIS-COMPLIANCE-V1]]"
+const STUDENT_NEWS_FIXED_NOTE_PREFIX = "FIXED PER COMPLIANCE RESOLUTION ON SAVE"
+const STUDENT_NEWS_DEFAULT_ALLOWED_SOURCE_DOMAINS = Object.freeze(["cnn.com", "bbc.com"])
+const STUDENT_NEWS_MAX_CUSTOM_ALLOWED_SOURCES = 8
+const STUDENT_NEWS_SOURCE_DOMAIN_MAX_LENGTH = 140
+const STUDENT_NEWS_FIELD_LABELS = Object.freeze({
+  sourceLink: "Source Full Web Address (url)",
+  articleTitle: "Article Title",
+  byline: "Byline (Author)",
+  articleDateline: "Dateline",
+  leadSynopsis: "Lead Synopsis",
+})
+const STUDENT_NEWS_FIELD_MAX_LENGTHS = Object.freeze({
+  sourceLink: 2048,
+  articleTitle: 240,
+  byline: 240,
+  articleDateline: 240,
+  leadSynopsis: 5000,
+  actionActor: 2000,
+  actionAffected: 2000,
+  actionWhere: 2000,
+  actionWhat: 4000,
+  actionWhy: 4000,
+  biasAssessment: 5000,
+})
+const STUDENT_NEWS_DEFAULT_THRESHOLDS = Object.freeze({
+  articleTitle: 0.7,
+  byline: 0.7,
+  articleDateline: 0.7,
+  leadSynopsis: 0.5,
+})
+
+function normalizeDomainToken(value) {
+  const raw = normalizeLower(value)
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .replace(/[#?].*$/, "")
+    .replace(/^www\./, "")
+    .trim()
+  if (!raw) return ""
+  if (raw.length > STUDENT_NEWS_SOURCE_DOMAIN_MAX_LENGTH) return ""
+  if (!/^[a-z0-9.-]+$/.test(raw)) return ""
+  if (!raw.includes(".")) return ""
+  return raw
+}
+
+function hostnameFromUrl(value) {
+  const text = normalizeText(value)
+  if (!text) return ""
+  try {
+    const parsed = new URL(text)
+    const protocol = normalizeLower(parsed.protocol)
+    if (protocol !== "http:" && protocol !== "https:") return ""
+    return normalizeDomainToken(parsed.hostname)
+  } catch (error) {
+    void error
+    return ""
+  }
+}
+
+function sourceDomainMatches(hostname, allowedDomain) {
+  const host = normalizeDomainToken(hostname)
+  const domain = normalizeDomainToken(allowedDomain)
+  if (!host || !domain) return false
+  return host === domain || host.endsWith(`.${domain}`)
+}
+
+function normalizeStudentNewsValidationConfig(config = {}) {
+  const source = config && typeof config === "object" ? config : {}
+  const incomingDomains = Array.isArray(source.allowedDomains)
+    ? source.allowedDomains
+    : []
+  const normalizedDomains = incomingDomains
+    .map((entry) => normalizeDomainToken(entry))
+    .filter(Boolean)
+  const allowedDomains = normalizedDomains.length
+    ? Array.from(new Set(normalizedDomains))
+    : [...STUDENT_NEWS_DEFAULT_ALLOWED_SOURCE_DOMAINS]
+
+  const thresholds = {
+    articleTitle: Number(source?.thresholds?.articleTitle),
+    byline: Number(source?.thresholds?.byline),
+    articleDateline: Number(source?.thresholds?.articleDateline),
+    leadSynopsis: Number(source?.thresholds?.leadSynopsis),
+  }
+  return {
+    allowedDomains,
+    thresholds: {
+      articleTitle: Number.isFinite(thresholds.articleTitle)
+        ? Math.max(0.1, Math.min(1, thresholds.articleTitle))
+        : STUDENT_NEWS_DEFAULT_THRESHOLDS.articleTitle,
+      byline: Number.isFinite(thresholds.byline)
+        ? Math.max(0.1, Math.min(1, thresholds.byline))
+        : STUDENT_NEWS_DEFAULT_THRESHOLDS.byline,
+      articleDateline: Number.isFinite(thresholds.articleDateline)
+        ? Math.max(0.1, Math.min(1, thresholds.articleDateline))
+        : STUDENT_NEWS_DEFAULT_THRESHOLDS.articleDateline,
+      leadSynopsis: Number.isFinite(thresholds.leadSynopsis)
+        ? Math.max(0.1, Math.min(1, thresholds.leadSynopsis))
+        : STUDENT_NEWS_DEFAULT_THRESHOLDS.leadSynopsis,
+    },
+  }
+}
+
+function clampText(value, maxLength = 0) {
+  const text = normalizeText(value)
+  const max = Number.parseInt(String(maxLength), 10) || 0
+  if (max <= 0) return { value: text, truncated: false }
+  if (text.length <= max) return { value: text, truncated: false }
+  return {
+    value: text.slice(0, max),
+    truncated: true,
+  }
+}
+
+function decodeHtmlEntities(text = "") {
+  return normalizeText(text)
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+}
+
+function stripTags(text = "") {
+  return decodeHtmlEntities(
+    normalizeText(text)
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+  )
+}
+
+function extractMetaContent(html = "", selectorPattern = "") {
+  const pattern = normalizeText(selectorPattern)
+  if (!pattern) return ""
+  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const regexes = [
+    new RegExp(`<meta[^>]+(?:name|property)=["']${escaped}["'][^>]+content=["']([^"']+)["'][^>]*>`, "i"),
+    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["']${escaped}["'][^>]*>`, "i"),
+  ]
+  for (const regex of regexes) {
+    const match = normalizeText(html).match(regex)
+    if (match && match[1]) return stripTags(match[1])
+  }
+  return ""
+}
+
+function extractTitleFromHtml(html = "") {
+  const metaTitle = extractMetaContent(html, "og:title")
+    || extractMetaContent(html, "twitter:title")
+  if (metaTitle) return metaTitle
+  const titleMatch = normalizeText(html).match(/<title[^>]*>([\s\S]*?)<\/title>/i)
+  if (titleMatch && titleMatch[1]) return stripTags(titleMatch[1])
+  return ""
+}
+
+function extractFirstParagraphFromHtml(html = "") {
+  const body = normalizeText(html)
+  const paragraphRegex = /<p\b[^>]*>([\s\S]*?)<\/p>/gi
+  let match
+  while ((match = paragraphRegex.exec(body))) {
+    const text = stripTags(match[1])
+    if (text.length >= 40) return text
+  }
+  return ""
+}
+
+function extractBylineFromHtml(html = "", plainText = "") {
+  const metaByline = extractMetaContent(html, "author")
+    || extractMetaContent(html, "article:author")
+    || extractMetaContent(html, "parsely-author")
+  if (metaByline) return metaByline
+  const bylineMatch = normalizeText(plainText).match(/\b(?:by|written by)\s+([A-Z][A-Za-z.'\- ]{2,80})/i)
+  if (bylineMatch && bylineMatch[1]) return normalizeText(bylineMatch[1])
+  return ""
+}
+
+function extractDatelineSnippets(html = "", plainText = "") {
+  const publishedMeta = extractMetaContent(html, "article:published_time")
+    || extractMetaContent(html, "og:published_time")
+    || extractMetaContent(html, "publish_date")
+  const updatedMeta = extractMetaContent(html, "article:modified_time")
+    || extractMetaContent(html, "og:modified_time")
+    || extractMetaContent(html, "lastmod")
+  const publishedVisible = normalizeText(plainText).match(/(?:published|publish date)[^.\n]{0,220}/i)?.[0] || ""
+  const updatedVisible = normalizeText(plainText).match(/(?:updated|last updated)[^.\n]{0,220}/i)?.[0] || ""
+  const publish = publishedVisible || publishedMeta
+  const updated = updatedVisible || updatedMeta
+  return {
+    publish: normalizeText(publish),
+    updated: normalizeText(updated),
+    combined: [publish, updated].map((entry) => normalizeText(entry)).filter(Boolean).join(" | "),
+  }
+}
+
+function isBbcLiveUrl(link = "") {
+  const host = hostnameFromUrl(link)
+  if (!host || !host.endsWith("bbc.com")) return false
+  try {
+    const { pathname } = new URL(link)
+    return /\/news\/live\//i.test(pathname)
+  } catch (error) {
+    void error
+    return false
+  }
+}
+
+async function fetchViaJinaProxy(link = "") {
+  const target = normalizeHttpUrl(link)
+  if (!target) throw new Error("Source link is not a valid http/https URL.")
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12000)
+  try {
+    const response = await fetch(`https://r.jina.ai/${target}`, {
+      headers: {
+        "user-agent": "Mozilla/5.0 SIS-News-Validator/1.0",
+      },
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    if (!response.ok) throw new Error(`Proxy fetch returned HTTP ${response.status}`)
+    return await response.text()
+  } catch (error) {
+    clearTimeout(timeout)
+    throw error
+  }
+}
+
+function parseBbcLiveMarkdown(markdownText = "") {
+  const lines = normalizeText(markdownText).split(/\r?\n/)
+  let title = ""
+  let dateline = ""
+  for (const line of lines) {
+    const titleMatch = line.match(/^title:\s*(.+)$/i)
+    if (!title && titleMatch && titleMatch[1]) title = normalizeText(titleMatch[1])
+    const timeMatch = line.match(/^published\s*time:\s*(.+)$/i)
+    if (!dateline && timeMatch && timeMatch[1]) dateline = normalizeText(timeMatch[1])
+    if (title && dateline) break
+  }
+
+  let headingText = ""
+  let firstParagraph = ""
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (!headingText) {
+      const headingMatch = line.match(/^(?:\d+\.\s*)?(#+)\s+(.+)/)
+      if (headingMatch && headingMatch[2]) {
+        headingText = normalizeText(headingMatch[2])
+        if (!title) title = headingText
+        continue
+      }
+    }
+    if (headingText && !firstParagraph) {
+      if (!line) continue
+      if (/^!\[.*\]\(.+\)/.test(line)) continue
+      if (/^(?:\d+\.\s*)?(#+)\s+/.test(line)) continue
+      firstParagraph = normalizeText(line)
+      break
+    }
+  }
+
+  return {
+    ok: Boolean(title || firstParagraph || dateline),
+    title,
+    firstParagraph,
+    dateline: dateline
+      ? {
+          publish: dateline,
+          updated: "",
+          combined: dateline,
+        }
+      : undefined,
+  }
+}
+
+function tokenizeForSimilarity(value = "") {
+  return new Set(
+    normalizeLower(value)
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(/\s+/)
+      .map((entry) => normalizeText(entry))
+      .filter((entry) => entry.length >= 2)
+  )
+}
+
+export function studentNewsTextSimilarityScore(left = "", right = "") {
+  const a = normalizeLower(left)
+  const b = normalizeLower(right)
+  if (!a || !b) return 0
+  if (a === b) return 1
+  if ((a.length >= 16 && b.includes(a)) || (b.length >= 16 && a.includes(b))) {
+    return 0.92
+  }
+  const tokensA = tokenizeForSimilarity(a)
+  const tokensB = tokenizeForSimilarity(b)
+  if (!tokensA.size || !tokensB.size) return 0
+  let intersection = 0
+  tokensA.forEach((token) => {
+    if (tokensB.has(token)) intersection += 1
+  })
+  const union = tokensA.size + tokensB.size - intersection
+  if (union <= 0) return 0
+  return intersection / union
+}
+
+function inferSourceOrganization(sourceLink = "") {
+  const host = hostnameFromUrl(sourceLink)
+  if (!host) return ""
+  const parts = host.split(".").filter(Boolean)
+  if (!parts.length) return ""
+  if (parts.length === 1) return parts[0]
+  return parts[parts.length - 2]
+}
+
+function statusErrorWithPayload(statusCode = 500, message = "Request failed", payload = {}) {
+  const error = new Error(normalizeText(message) || "Request failed")
+  error.statusCode = statusCode
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    error.payload = payload
+  }
+  return error
+}
+
+function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
+  const key = normalizeText(fieldKey)
+  if (!key) return null
+  const source = entry && typeof entry === "object" ? entry : {}
+  const status = normalizeLower(source.status) === "fixed" ? "fixed" : "pending"
+  const steps = Array.isArray(source.steps)
+    ? source.steps.map((item) => normalizeText(item)).filter(Boolean)
+    : []
+  return {
+    field: key,
+    label: normalizeText(source.label || STUDENT_NEWS_FIELD_LABELS[key] || key),
+    status,
+    message: normalizeText(source.message),
+    criterion: normalizeText(source.criterion),
+    steps,
+    score: Number.isFinite(Number(source.score)) ? Number(source.score) : null,
+    threshold: Number.isFinite(Number(source.threshold)) ? Number(source.threshold) : null,
+    updatedAt: parseDateOrNull(source.updatedAt)?.toISOString?.() || nowIso(),
+  }
+}
+
+function normalizeValidationIssueMap(value = {}) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {}
+  const normalized = {}
+  Object.keys(source).forEach((fieldKey) => {
+    const entry = normalizeValidationIssueEntry(fieldKey, source[fieldKey])
+    if (entry) normalized[fieldKey] = entry
+  })
+  return normalized
+}
+
+function stripComplianceBlockFromReviewNote(note = "") {
+  const text = normalizeText(note)
+  if (!text) return ""
+  const escapedStart = STUDENT_NEWS_COMPLIANCE_NOTE_START.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const escapedEnd = STUDENT_NEWS_COMPLIANCE_NOTE_END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const blockRegex = new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, "g")
+  return normalizeText(text.replace(blockRegex, " ").replace(/\n{3,}/g, "\n\n"))
+}
+
+export function buildStudentNewsComplianceBlock(issueMap = {}) {
+  const normalized = normalizeValidationIssueMap(issueMap)
+  const fields = Object.keys(normalized)
+  if (!fields.length) return ""
+  const lines = fields
+    .sort((left, right) => left.localeCompare(right))
+    .map((fieldKey) => {
+      const entry = normalized[fieldKey]
+      const label = normalizeText(entry?.label || STUDENT_NEWS_FIELD_LABELS[fieldKey] || fieldKey)
+      if (entry?.status === "fixed") {
+        return `- [FIXED][${fieldKey}] ${STUDENT_NEWS_FIXED_NOTE_PREFIX} - ${label} now meets compliance criteria.`
+      }
+      const steps = Array.isArray(entry?.steps) && entry.steps.length
+        ? entry.steps.map((step, index) => `Step ${index + 1}: ${normalizeText(step)}`).join(" ")
+        : "Step 1: update this field to match the source article and save again."
+      const criterion = normalizeText(entry?.criterion)
+      const score = Number.isFinite(Number(entry?.score)) ? Number(entry.score).toFixed(2) : ""
+      const threshold = Number.isFinite(Number(entry?.threshold)) ? Number(entry.threshold).toFixed(2) : ""
+      const scoreToken = score && threshold ? ` (score ${score} < ${threshold})` : ""
+      return `- [PENDING][${fieldKey}] ${label}: ${normalizeText(entry?.message)}${scoreToken}${criterion ? ` | Criteria: ${criterion}` : ""} | ${steps}`
+    })
+  return [STUDENT_NEWS_COMPLIANCE_NOTE_START, ...lines, STUDENT_NEWS_COMPLIANCE_NOTE_END].join("\n")
+}
+
+export function mergeStudentNewsReviewNoteWithCompliance(existingReviewNote = "", issueMap = {}) {
+  const manual = stripComplianceBlockFromReviewNote(existingReviewNote)
+  const complianceBlock = buildStudentNewsComplianceBlock(issueMap)
+  if (manual && complianceBlock) return `${manual}\n\n${complianceBlock}`
+  if (complianceBlock) return complianceBlock
+  return manual
+}
+
+async function fetchStudentNewsArticleMetadata(sourceLink = "") {
+  const link = normalizeHttpUrl(sourceLink)
+  if (!link) {
+    return {
+      ok: false,
+      error: "Source link is not a valid http/https URL.",
+      sourceLink: normalizeText(sourceLink),
+    }
+  }
+  const hostname = hostnameFromUrl(link)
+  const bbcLive = isBbcLiveUrl(link)
+  let primaryError = ""
+  let primaryMetadata = null
+
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 12000)
+    const response = await fetch(link, {
+      redirect: "follow",
+      headers: {
+        "user-agent": "Mozilla/5.0 SIS-News-Validator/1.0",
+      },
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    if (response.ok) {
+      const html = await response.text()
+      const plainText = stripTags(html)
+      primaryMetadata = {
+        ok: true,
+        via: "primary",
+        sourceLink: link,
+        hostname,
+        title: extractTitleFromHtml(html),
+        byline: extractBylineFromHtml(html, plainText),
+        dateline: extractDatelineSnippets(html, plainText),
+        firstParagraph: extractFirstParagraphFromHtml(html),
+      }
+    } else {
+      primaryError = `Source URL returned HTTP ${response.status}.`
+    }
+  } catch (error) {
+    primaryError = normalizeText(error?.message) || "Unable to fetch source article metadata."
+  }
+
+  let fallbackMetadata = null
+  let fallbackError = ""
+  const needsFallback = bbcLive && (!primaryMetadata?.ok || !primaryMetadata?.title || !primaryMetadata?.firstParagraph)
+
+  if (needsFallback) {
+    try {
+      const proxyBody = await fetchViaJinaProxy(link)
+      const parsed = parseBbcLiveMarkdown(proxyBody)
+      if (parsed.ok) {
+        fallbackMetadata = {
+          ok: true,
+          via: primaryMetadata?.ok ? "primary+bbc-live-fallback" : "bbc-live-fallback",
+          sourceLink: link,
+          hostname,
+          title: parsed.title,
+          byline: primaryMetadata?.byline || "",
+          dateline: primaryMetadata?.dateline || parsed.dateline,
+          firstParagraph: parsed.firstParagraph,
+        }
+      } else {
+        fallbackError = "BBC liveblog fallback did not return usable content."
+      }
+    } catch (error) {
+      fallbackError = normalizeText(error?.message) || "BBC liveblog fallback fetch failed."
+    }
+  }
+
+  const chosen = fallbackMetadata?.ok ? fallbackMetadata : primaryMetadata
+  const ok = Boolean(chosen?.ok)
+  if (ok) {
+    return {
+      ...chosen,
+      via: chosen?.via || (fallbackMetadata?.ok ? fallbackMetadata.via : "primary"),
+      primaryError: primaryError || undefined,
+      fallbackError: fallbackError || undefined,
+    }
+  }
+
+  return {
+    ok: false,
+    error: fallbackError || primaryError || "Unable to fetch source article metadata.",
+    sourceLink: link,
+    hostname,
+    via: fallbackMetadata ? fallbackMetadata.via : "primary",
+    primaryError: primaryError || undefined,
+    fallbackError: fallbackError || undefined,
+  }
+}
+
+function buildStudentNewsFieldRevisionTask(fieldKey = "", context = {}) {
+  const allowedSourcesText = Array.isArray(context?.allowedDomains) && context.allowedDomains.length
+    ? context.allowedDomains.join(", ")
+    : STUDENT_NEWS_DEFAULT_ALLOWED_SOURCE_DOMAINS.join(", ")
+  if (fieldKey === "sourceLink") {
+    return {
+      field: fieldKey,
+      label: STUDENT_NEWS_FIELD_LABELS[fieldKey],
+      steps: [
+        `Use a full story URL (http/https) from an approved source: ${allowedSourcesText}.`,
+        "Open the URL and confirm it loads the specific article (not homepage).",
+        "Paste the exact URL including its path and save again.",
+      ],
+      criterion: `Hostname must match approved sources (${allowedSourcesText}).`,
+    }
+  }
+  if (fieldKey === "articleTitle") {
+    return {
+      field: fieldKey,
+      label: STUDENT_NEWS_FIELD_LABELS[fieldKey],
+      steps: [
+        "Copy the article headline exactly as displayed on the source page.",
+        "Remove extra words that are not in the headline.",
+        "Save again after title text matches the source.",
+      ],
+      criterion: "Headline similarity must be at least 0.70.",
+    }
+  }
+  if (fieldKey === "byline") {
+    return {
+      field: fieldKey,
+      label: STUDENT_NEWS_FIELD_LABELS[fieldKey],
+      steps: [
+        "Use the article author name as shown on the source page.",
+        "If author is not listed, use the source organization/domain name (for example: bbc or cnn).",
+        "Save again after byline matches author/organization.",
+      ],
+      criterion: "Byline similarity must be at least 0.70.",
+    }
+  }
+  if (fieldKey === "articleDateline") {
+    return {
+      field: fieldKey,
+      label: STUDENT_NEWS_FIELD_LABELS[fieldKey],
+      steps: [
+        "Enter the visible publish timestamp from the source page.",
+        "If the page shows Updated timestamp, include it in the dateline text.",
+        "If timezone text is used, include full timezone text and GMT offset (example: GMT+7).",
+      ],
+      criterion: "Dateline text similarity must be at least 0.70 and include required updated/timezone tokens.",
+    }
+  }
+  if (fieldKey === "actionActor") {
+    return {
+      field: fieldKey,
+      label: "Who/what did Action?",
+      steps: [
+        "Identify who or what performed the main action in the article.",
+        "Use a clear noun or noun phrase.",
+        "Save again after adding the actor phrase.",
+      ],
+      criterion: "Must contain at least one noun or noun phrase.",
+    }
+  }
+  if (fieldKey === "actionAffected") {
+    return {
+      field: fieldKey,
+      label: "Who/what was Affected by Action?",
+      steps: [
+        "Identify who or what received impact from the action.",
+        "Use a clear noun or noun phrase.",
+        "Save again after adding the affected entity.",
+      ],
+      criterion: "Must contain at least one noun or noun phrase.",
+    }
+  }
+  if (fieldKey === "actionWhere") {
+    return {
+      field: fieldKey,
+      label: "Where did Action take place?",
+      steps: [
+        "Enter the location of the event from the source article.",
+        "Include at least a city or country.",
+        "Save again after adding the location.",
+      ],
+      criterion: "Must include a location phrase (city/country/place).",
+    }
+  }
+  if (fieldKey === "actionWhat") {
+    return {
+      field: fieldKey,
+      label: "What Action Occurred?",
+      steps: [
+        "Describe the action in one complete sentence.",
+        "Keep the sentence factual and source-aligned.",
+        "Save again after updating the action sentence.",
+      ],
+      criterion: "Must be at least one sentence.",
+    }
+  }
+  if (fieldKey === "actionWhy") {
+    return {
+      field: fieldKey,
+      label: "Why did Action happen?",
+      steps: [
+        "Explain why the event happened in one complete sentence.",
+        "Use source-supported reasons only.",
+        "Save again after updating the why sentence.",
+      ],
+      criterion: "Must be at least one sentence.",
+    }
+  }
+  if (fieldKey === "biasAssessment") {
+    return {
+      field: fieldKey,
+      label: "Bias Assessment",
+      steps: [
+        "Write one clear sentence evaluating bias/spin in the report.",
+        "Reference wording, framing, or omitted context.",
+        "Save again after adding the bias sentence.",
+      ],
+      criterion: "Must be at least one sentence.",
+    }
+  }
+  return {
+    field: fieldKey,
+    label: STUDENT_NEWS_FIELD_LABELS[fieldKey] || fieldKey,
+    steps: [
+      "Summarize only the first paragraph of the source article.",
+      "Keep key facts and wording aligned with the source lead paragraph.",
+      "Save again after synopsis reflects the source lead.",
+    ],
+    criterion: "Lead synopsis similarity must be at least 0.50.",
+  }
+}
+
+function shouldRequireGmtOffset(datelineText = "") {
+  const text = normalizeLower(datelineText)
+  if (!text) return false
+  return /(timezone|time zone|gmt|utc|ict|est|edt|pst|pdt|cst|bst)/i.test(text)
+}
+
+function hasTimezoneLiteral(datelineText = "") {
+  const text = normalizeLower(datelineText)
+  if (!text) return false
+  return /\b(?:ict|est|edt|pst|pdt|cst|cdt|bst|cet|cest|ist|jst|aest|aedt|utc|gmt)\b/i.test(text)
+}
+
+function hasTimezoneDescriptor(datelineText = "") {
+  const text = normalizeLower(datelineText)
+  if (!text) return false
+  return (
+    /\b(?:timezone|time zone)\b/i.test(text)
+    || /\b(?:indochina|eastern|pacific|central|british|coordinated universal|greenwich mean)\s+time\b/i.test(text)
+    || /\([^)]*\btime\b[^)]*\)/i.test(text)
+  )
+}
+
+function hasTimezoneOffset(datelineText = "") {
+  const text = normalizeLower(datelineText)
+  if (!text) return false
+  return /\b(?:gmt|utc)\s*[+-]\s*\d{1,2}(?::?\d{2})?\b/i.test(text)
+}
+
+function hasNounLikePhrase(value = "") {
+  const text = normalizeText(value)
+  if (!text) return false
+  const tokens = text
+    .replace(/[^A-Za-z0-9\s-]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+  return tokens.length >= 1
+}
+
+function isSentenceLike(value = "") {
+  const text = normalizeText(value)
+  if (!text) return false
+  const tokens = text.split(/\s+/).filter(Boolean)
+  if (tokens.length < 4) return false
+  return /[.!?]$/.test(text) || text.length >= 24
+}
+
+export async function evaluateStudentNewsCompliance(payload = {}, options = {}) {
+  const config = normalizeStudentNewsValidationConfig(options?.validationConfig || {})
+  const normalizedSourceLink = normalizeHttpUrl(payload?.sourceLink)
+  const rawSourceLink = normalizeText(payload?.sourceLink)
+  const articleTitle = normalizeText(payload?.articleTitle)
+  const byline = normalizeText(payload?.byline)
+  const articleDateline = normalizeText(payload?.articleDateline)
+  const leadSynopsis = normalizeText(payload?.leadSynopsis)
+  const actionActor = normalizeText(payload?.actionActor)
+  const actionAffected = normalizeText(payload?.actionAffected)
+  const actionWhere = normalizeText(payload?.actionWhere)
+  const actionWhat = normalizeText(payload?.actionWhat)
+  const actionWhy = normalizeText(payload?.actionWhy)
+  const biasAssessment = normalizeText(payload?.biasAssessment)
+  const failedFields = {}
+  const validationDetails = {}
+
+  const sourceHostname = hostnameFromUrl(normalizedSourceLink || rawSourceLink)
+  const allowedDomains = Array.isArray(config.allowedDomains) ? config.allowedDomains : []
+  if (!sourceHostname) {
+    failedFields.sourceLink = {
+      message: "Source must be a valid full story URL (http/https).",
+      threshold: 1,
+      score: 0,
+    }
+  } else {
+    const sourceAllowed = allowedDomains.some((domain) => sourceDomainMatches(sourceHostname, domain))
+    validationDetails.sourceLink = {
+      hostname: sourceHostname,
+      allowedDomains,
+      sourceAllowed,
+    }
+    if (!sourceAllowed) {
+      const allowedSourceText = allowedDomains.join(", ")
+      failedFields.sourceLink = {
+        message: `Source domain is not allowed. Approved sources: ${allowedSourceText || STUDENT_NEWS_DEFAULT_ALLOWED_SOURCE_DOMAINS.join(", ")}.`,
+        threshold: 1,
+        score: 0,
+      }
+    }
+  }
+
+  const metadata = await fetchStudentNewsArticleMetadata(normalizedSourceLink || rawSourceLink)
+  validationDetails.metadata = metadata
+  if (!metadata.ok) {
+    failedFields.sourceLink = failedFields.sourceLink || {
+      message: normalizeText(metadata.error) || "Unable to fetch source URL.",
+      threshold: 1,
+      score: 0,
+    }
+  }
+
+  const titleScore = studentNewsTextSimilarityScore(articleTitle, metadata?.title)
+  validationDetails.articleTitle = {
+    score: titleScore,
+    threshold: config.thresholds.articleTitle,
+    fetchedTitle: normalizeText(metadata?.title),
+  }
+  if (!articleTitle || titleScore < config.thresholds.articleTitle) {
+    failedFields.articleTitle = {
+      message: "Article title does not closely match source title.",
+      score: titleScore,
+      threshold: config.thresholds.articleTitle,
+    }
+  }
+
+  const bylineScore = studentNewsTextSimilarityScore(byline, metadata?.byline)
+  const orgFallback = inferSourceOrganization(normalizedSourceLink || rawSourceLink)
+  const bylineOrgScore = studentNewsTextSimilarityScore(byline, orgFallback)
+  const bylineFinalScore = Math.max(bylineScore, bylineOrgScore)
+  validationDetails.byline = {
+    score: bylineFinalScore,
+    threshold: config.thresholds.byline,
+    fetchedByline: normalizeText(metadata?.byline),
+    organizationFallback: orgFallback,
+    fallbackScore: bylineOrgScore,
+  }
+  if (!byline || bylineFinalScore < config.thresholds.byline) {
+    failedFields.byline = {
+      message: "Byline must match fetched author or source organization.",
+      score: bylineFinalScore,
+      threshold: config.thresholds.byline,
+    }
+  }
+
+  const datelineTarget = normalizeText(metadata?.dateline?.combined)
+  const datelineScore = studentNewsTextSimilarityScore(articleDateline, datelineTarget)
+  const requiresUpdatedToken = Boolean(normalizeText(metadata?.dateline?.updated))
+  const hasUpdatedToken = /updated/i.test(articleDateline)
+  const requiresOffset = shouldRequireGmtOffset(datelineTarget) || shouldRequireGmtOffset(articleDateline)
+  const hasLiteralTimezone = hasTimezoneLiteral(articleDateline)
+  const hasFullTimezoneDescriptor = hasTimezoneDescriptor(articleDateline)
+  const hasGmtOffset = hasTimezoneOffset(articleDateline)
+  validationDetails.articleDateline = {
+    score: datelineScore,
+    threshold: config.thresholds.articleDateline,
+    fetchedDateline: datelineTarget,
+    requiresUpdatedToken,
+    hasUpdatedToken,
+    requiresOffset,
+    hasLiteralTimezone,
+    hasFullTimezoneDescriptor,
+    hasGmtOffset,
+  }
+  if (
+    !articleDateline
+    || datelineScore < config.thresholds.articleDateline
+    || (requiresUpdatedToken && !hasUpdatedToken)
+    || (requiresOffset && !hasGmtOffset)
+    || (hasLiteralTimezone && !hasFullTimezoneDescriptor)
+  ) {
+    failedFields.articleDateline = {
+      message: "Dateline must reflect visible publish/updated time and timezone requirements.",
+      score: datelineScore,
+      threshold: config.thresholds.articleDateline,
+    }
+  }
+
+  const leadScore = studentNewsTextSimilarityScore(leadSynopsis, metadata?.firstParagraph)
+  validationDetails.leadSynopsis = {
+    score: leadScore,
+    threshold: config.thresholds.leadSynopsis,
+    fetchedLead: normalizeText(metadata?.firstParagraph),
+  }
+  if (!leadSynopsis || leadScore < config.thresholds.leadSynopsis) {
+    failedFields.leadSynopsis = {
+      message: "Lead synopsis must align with the first paragraph of the source article.",
+      score: leadScore,
+      threshold: config.thresholds.leadSynopsis,
+    }
+  }
+
+  if (!hasNounLikePhrase(actionActor)) {
+    failedFields.actionActor = {
+      message: "Action actor must include a noun or noun phrase.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!hasNounLikePhrase(actionAffected)) {
+    failedFields.actionAffected = {
+      message: "Action affected must include a noun or noun phrase.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!hasNounLikePhrase(actionWhere)) {
+    failedFields.actionWhere = {
+      message: "Action location must include a place (city/country/location phrase).",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!isSentenceLike(actionWhat)) {
+    failedFields.actionWhat = {
+      message: "Action description must be at least one sentence.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!isSentenceLike(actionWhy)) {
+    failedFields.actionWhy = {
+      message: "Action reason must be at least one sentence.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!isSentenceLike(biasAssessment)) {
+    failedFields.biasAssessment = {
+      message: "Bias assessment must be at least one sentence.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+
+  const revisionTasks = Object.keys(failedFields).map((fieldKey) =>
+    buildStudentNewsFieldRevisionTask(fieldKey, {
+      allowedDomains,
+    })
+  )
+  return {
+    passed: Object.keys(failedFields).length === 0,
+    failedFields,
+    revisionTasks,
+    details: validationDetails,
+    config,
+  }
+}
+
+function revisionTasksByField(revisionTasks = []) {
+  const source = Array.isArray(revisionTasks) ? revisionTasks : []
+  const map = new Map()
+  source.forEach((task) => {
+    const field = normalizeText(task?.field)
+    if (!field) return
+    map.set(field, task)
+  })
+  return map
+}
+
+export function updateStudentNewsValidationIssues(previousIssues = {}, compliance = {}) {
+  const previous = normalizeValidationIssueMap(previousIssues)
+  const failedFields = compliance?.failedFields && typeof compliance.failedFields === "object"
+    ? compliance.failedFields
+    : {}
+  const tasksByField = revisionTasksByField(compliance?.revisionTasks)
+  const nextIssues = {}
+  const newlyFixed = []
+  const fieldKeys = new Set([
+    ...Object.keys(previous),
+    ...Object.keys(failedFields),
+  ])
+  fieldKeys.forEach((fieldKey) => {
+    const previousEntry = previous[fieldKey]
+    const failed = failedFields[fieldKey]
+    if (failed) {
+      const task = tasksByField.get(fieldKey) || buildStudentNewsFieldRevisionTask(fieldKey, {
+        allowedDomains: compliance?.config?.allowedDomains || [],
+      })
+      nextIssues[fieldKey] = normalizeValidationIssueEntry(fieldKey, {
+        ...(previousEntry || {}),
+        status: "pending",
+        label: task?.label || STUDENT_NEWS_FIELD_LABELS[fieldKey] || fieldKey,
+        message: normalizeText(failed?.message),
+        criterion: normalizeText(task?.criterion),
+        steps: Array.isArray(task?.steps) ? task.steps : [],
+        score: Number.isFinite(Number(failed?.score)) ? Number(failed?.score) : null,
+        threshold: Number.isFinite(Number(failed?.threshold)) ? Number(failed?.threshold) : null,
+        updatedAt: nowIso(),
+      })
+      return
+    }
+    if (!previousEntry) return
+    if (normalizeLower(previousEntry.status) !== "fixed") newlyFixed.push(fieldKey)
+    nextIssues[fieldKey] = normalizeValidationIssueEntry(fieldKey, {
+      ...previousEntry,
+      status: "fixed",
+      message: "Resolved on latest save.",
+      score: previousEntry?.score,
+      threshold: previousEntry?.threshold,
+      updatedAt: nowIso(),
+    })
+  })
+  return {
+    issues: nextIssues,
+    newlyFixed,
+  }
+}
 
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
@@ -3388,6 +4316,9 @@ function isStudentNewsReviewSchemaUnavailableError(error) {
     || isUnknownPrismaArgumentError(error, "reviewedByUsername")
     || isUnknownPrismaFieldError(error, "reviewedByUsername")
     || isMissingPrismaColumnError(error, "reviewedByUsername")
+    || isUnknownPrismaArgumentError(error, "validationIssuesJson")
+    || isUnknownPrismaFieldError(error, "validationIssuesJson")
+    || isMissingPrismaColumnError(error, "validationIssuesJson")
   )
 }
 
@@ -3407,7 +4338,7 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
   const reportDate = normalizeText(entry?.reportDate)
   if (!studentRefId) return null
   if (!/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) return null
-  const sourceLink = normalizeHttpUrl(entry?.sourceLink)
+  const sourceLink = normalizeText(entry?.sourceLink)
   const articleTitle = normalizeText(entry?.articleTitle)
   const leadSynopsis = normalizeText(entry?.leadSynopsis)
   const actionActor = normalizeText(entry?.actionActor)
@@ -3415,9 +4346,11 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
   const actionWhere = normalizeText(entry?.actionWhere)
   const actionWhat = normalizeText(entry?.actionWhat)
   const actionWhy = normalizeText(entry?.actionWhy)
-  if (!sourceLink || !articleTitle || !leadSynopsis || !actionActor || !actionAffected || !actionWhere || !actionWhat || !actionWhy) {
-    return null
-  }
+  const reviewStatus = normalizeStudentNewsReviewStatus(entry?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+  const reviewNote = normalizeNullableText(entry?.reviewNote)
+  const validationIssuesJson = normalizeValidationIssueMap(entry?.validationIssuesJson)
+  const reviewedAt = parseDateOrNull(entry?.reviewedAt)?.toISOString?.() || ""
+  const reviewedByUsername = normalizeNullableText(entry?.reviewedByUsername)
   const createdAt = parseDateOrNull(entry?.createdAt)?.toISOString?.() || new Date().toISOString()
   return {
     id: normalizeText(entry?.id) || createStudentNewsFallbackId(),
@@ -3434,6 +4367,11 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
     actionWhat,
     actionWhy,
     biasAssessment: normalizeNullableText(entry?.biasAssessment),
+    reviewStatus,
+    reviewNote,
+    validationIssuesJson,
+    reviewedAt,
+    reviewedByUsername,
     submittedAt: parseDateOrNull(entry?.submittedAt)?.toISOString?.() || new Date().toISOString(),
     createdAt,
     updatedAt: parseDateOrNull(entry?.updatedAt)?.toISOString?.() || new Date().toISOString(),
@@ -3494,6 +4432,11 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
   const source = readStudentNewsFallbackEntries()
   const index = source.findIndex((entry) => entry.studentRefId === id && entry.reportDate === dateKey)
   const existing = index >= 0 ? source[index] : null
+  if (normalizeStudentNewsReviewStatus(existing?.reviewStatus) === STUDENT_NEWS_REVIEW_STATUS_APPROVED) {
+    const error = new Error("Approved news reports cannot be edited")
+    error.statusCode = 403
+    throw error
+  }
   const normalized = normalizeStudentNewsFallbackEntry({
     ...(existing || {}),
     ...payload,
@@ -3502,6 +4445,11 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
     reportDate: dateKey,
     createdAt: normalizeText(existing?.createdAt) || now,
     updatedAt: now,
+    reviewStatus: normalizeStudentNewsReviewStatus(payload?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED),
+    reviewNote: payload?.reviewNote,
+    validationIssuesJson: payload?.validationIssuesJson,
+    reviewedAt: payload?.reviewedAt || null,
+    reviewedByUsername: payload?.reviewedByUsername || null,
   })
   assertWithStatus(Boolean(normalized), 500, "Unable to persist student news report")
   if (index >= 0) source[index] = normalized
@@ -3534,6 +4482,11 @@ function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_
     return STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
   }
   return fallback
+}
+
+function resolveStudentNewsStatusColor(status) {
+  const normalized = normalizeStudentNewsReviewStatus(status, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+  return STUDENT_NEWS_REVIEW_STATUS_COLOR[normalized] || "amber"
 }
 
 function mapStudentNewsReviewStudentSummary(student = {}, fallbackStudentRefId = "") {
@@ -4011,6 +4964,14 @@ function mapStudentNewsReportRow(row = {}) {
   const articleTitle = normalizeText(row?.articleTitle || row?.headline)
   const leadSynopsis = normalizeText(row?.leadSynopsis || row?.summary)
   const biasAssessment = normalizeText(row?.biasAssessment || row?.reflection)
+  const reviewStatus = normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+  const validationIssues = normalizeValidationIssueMap(row?.validationIssuesJson)
+  const pendingFieldKeys = Object.keys(validationIssues).filter(
+    (fieldKey) => normalizeLower(validationIssues?.[fieldKey]?.status) !== "fixed"
+  )
+  const fixedFieldKeys = Object.keys(validationIssues).filter(
+    (fieldKey) => normalizeLower(validationIssues?.[fieldKey]?.status) === "fixed"
+  )
   return {
     id: normalizeText(row?.id),
     studentRefId: normalizeText(row?.studentRefId),
@@ -4027,8 +4988,12 @@ function mapStudentNewsReportRow(row = {}) {
     actionWhy: normalizeText(row?.actionWhy),
     biasAssessment,
     submittedAt: parseDateOrNull(row?.submittedAt)?.toISOString?.() || "",
-    reviewStatus: normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED),
+    reviewStatus,
+    statusColor: resolveStudentNewsStatusColor(reviewStatus),
     reviewNote: normalizeText(row?.reviewNote),
+    validationIssuesJson: validationIssues,
+    failedFields: pendingFieldKeys,
+    fixedFields: fixedFieldKeys,
     reviewedByUsername: normalizeText(row?.reviewedByUsername),
     reviewedAt: parseDateOrNull(row?.reviewedAt)?.toISOString?.() || "",
   }
@@ -4055,14 +5020,13 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
       : isOpenDate
         ? "open"
         : "missed"
+    const statusColor = saved ? resolveStudentNewsStatusColor(saved?.reviewStatus) : status === "completed" ? "green" : status === "open" ? "amber" : "red"
     rows.push({
       date,
       status,
-      color: status === "completed"
-        ? "green"
-        : status === "missed"
-          ? "red"
-          : "amber",
+      color: statusColor,
+      statusColor,
+      reviewStatus: saved?.reviewStatus || "",
       canSubmit: status === "open",
       submittedAt: normalizeText(saved?.submittedAt),
     })
@@ -4113,6 +5077,16 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
   })
   const window = resolveStudentNewsSubmissionWindow(nowDate)
   const openReport = mappedReports.find((entry) => normalizeText(entry.reportDate) === window.reportDate) || null
+  const statusSummary = mappedReports.reduce(
+    (acc, entry) => {
+      const status = normalizeStudentNewsReviewStatus(entry?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+      if (status === STUDENT_NEWS_REVIEW_STATUS_APPROVED) acc.approved += 1
+      else if (status === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED) acc.revisionRequested += 1
+      else acc.submitted += 1
+      return acc
+    },
+    { submitted: 0, approved: 0, revisionRequested: 0 }
+  )
 
   return {
     generatedAt: nowIso(),
@@ -4120,53 +5094,77 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
     days: targetDays,
     window,
     openReport,
+    statusSummary,
+    items: mappedReports,
     calendar,
   }
 }
 
-export async function saveStudentNewsReport(studentRefId, payload = {}, { now = new Date() } = {}) {
+export async function saveStudentNewsReport(
+  studentRefId,
+  payload = {},
+  { now = new Date(), validationConfig = {} } = {}
+) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
 
-  const sourceLink = normalizeHttpUrl(payload.sourceLink)
-  const articleTitle = normalizeText(payload.articleTitle)
-  const byline = normalizeNullableText(payload.byline)
-  const articleDateline = normalizeNullableText(payload.articleDateline)
-  const leadSynopsis = normalizeText(payload.leadSynopsis)
-  const actionActor = normalizeText(payload.actionActor)
-  const actionAffected = normalizeText(payload.actionAffected)
-  const actionWhere = normalizeText(payload.actionWhere)
-  const actionWhat = normalizeText(payload.actionWhat)
-  const actionWhy = normalizeText(payload.actionWhy)
-  const biasAssessment = normalizeNullableText(payload.biasAssessment)
-  const reportDateText = normalizeText(payload.reportDate)
-  assertWithStatus(Boolean(sourceLink), 400, "sourceLink must be a valid http/https URL")
-  assertWithStatus(Boolean(articleTitle), 400, "articleTitle is required")
-  assertWithStatus(Boolean(leadSynopsis), 400, "leadSynopsis is required")
-  assertWithStatus(Boolean(actionActor), 400, "actionActor is required")
-  assertWithStatus(Boolean(actionAffected), 400, "actionAffected is required")
-  assertWithStatus(Boolean(actionWhere), 400, "actionWhere is required")
-  assertWithStatus(Boolean(actionWhat), 400, "actionWhat is required")
-  assertWithStatus(Boolean(actionWhy), 400, "actionWhy is required")
-  assertWithStatus(articleTitle.length <= 240, 400, "articleTitle exceeds 240 characters")
-  assertWithStatus(!byline || byline.length <= 240, 400, "byline exceeds 240 characters")
-  assertWithStatus(!articleDateline || articleDateline.length <= 120, 400, "articleDateline exceeds 120 characters")
-  assertWithStatus(leadSynopsis.length <= 5000, 400, "leadSynopsis exceeds 5000 characters")
-  assertWithStatus(actionActor.length <= 2000, 400, "actionActor exceeds 2000 characters")
-  assertWithStatus(actionAffected.length <= 2000, 400, "actionAffected exceeds 2000 characters")
-  assertWithStatus(actionWhere.length <= 2000, 400, "actionWhere exceeds 2000 characters")
-  assertWithStatus(actionWhat.length <= 4000, 400, "actionWhat exceeds 4000 characters")
-  assertWithStatus(actionWhy.length <= 4000, 400, "actionWhy exceeds 4000 characters")
-  assertWithStatus(!biasAssessment || biasAssessment.length <= 5000, 400, "biasAssessment exceeds 5000 characters")
+  const sourceLinkRaw = clampText(payload?.sourceLink, STUDENT_NEWS_FIELD_MAX_LENGTHS.sourceLink).value
+  const sourceLink = normalizeHttpUrl(sourceLinkRaw) || sourceLinkRaw
+  const articleTitle = clampText(payload?.articleTitle, STUDENT_NEWS_FIELD_MAX_LENGTHS.articleTitle).value
+  const byline = clampText(payload?.byline, STUDENT_NEWS_FIELD_MAX_LENGTHS.byline).value
+  const articleDateline = clampText(payload?.articleDateline, STUDENT_NEWS_FIELD_MAX_LENGTHS.articleDateline).value
+  const leadSynopsis = clampText(payload?.leadSynopsis, STUDENT_NEWS_FIELD_MAX_LENGTHS.leadSynopsis).value
+  const actionActor = clampText(payload?.actionActor, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionActor).value
+  const actionAffected = clampText(payload?.actionAffected, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionAffected).value
+  const actionWhere = clampText(payload?.actionWhere, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhere).value
+  const actionWhat = clampText(payload?.actionWhat, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhat).value
+  const actionWhy = clampText(payload?.actionWhy, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhy).value
+  const biasAssessment = clampText(payload?.biasAssessment, STUDENT_NEWS_FIELD_MAX_LENGTHS.biasAssessment).value
+  const reportDateText = normalizeText(payload?.reportDate)
 
   const window = resolveStudentNewsSubmissionWindow(now)
   assertWithStatus(Boolean(reportDateText), 400, "reportDate is required")
   assertWithStatus(reportDateText === window.reportDate, 403, "News report for this date is locked")
   const reportDate = parseLocalDateOnly(reportDateText)
   assertWithStatus(reportDate instanceof Date && !Number.isNaN(reportDate.valueOf()), 400, "Invalid reportDate")
-  const submittedAt = new Date()
-  const reportData = {
+
+  let existing = null
+  let fallbackOnly = false
+  if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")) {
+    try {
+      existing = await prisma.studentNewsReport.findUnique({
+        where: {
+          studentRefId_reportDate: {
+            studentRefId: id,
+            reportDate,
+          },
+        },
+        select: {
+          reviewStatus: true,
+          reviewNote: true,
+          validationIssuesJson: true,
+        },
+      })
+    } catch (error) {
+      if (
+        isStudentNewsReportSchemaUnavailableError(error)
+        || isStudentNewsReviewSchemaUnavailableError(error)
+      ) {
+        fallbackOnly = true
+      } else {
+        throw error
+      }
+    }
+  } else {
+    fallbackOnly = true
+  }
+
+  if (existing && normalizeStudentNewsReviewStatus(existing.reviewStatus) === STUDENT_NEWS_REVIEW_STATUS_APPROVED) {
+    assertWithStatus(false, 403, "Approved news reports cannot be edited")
+  }
+
+  const compliance = await evaluateStudentNewsCompliance({
     sourceLink,
     articleTitle,
     byline,
@@ -4178,11 +5176,42 @@ export async function saveStudentNewsReport(studentRefId, payload = {}, { now = 
     actionWhat,
     actionWhy,
     biasAssessment,
+  }, {
+    validationConfig,
+  })
+  const previousIssues = normalizeValidationIssueMap(existing?.validationIssuesJson)
+  const updatedIssues = updateStudentNewsValidationIssues(previousIssues, compliance)
+  const mergedReviewNote = mergeStudentNewsReviewNoteWithCompliance(existing?.reviewNote, updatedIssues.issues)
+  const hasFailures = Object.keys(compliance.failedFields || {}).length > 0
+  const submittedAt = new Date()
+  const reviewStatus = hasFailures
+    ? STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
+    : STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  const reportData = {
+    sourceLink,
+    articleTitle,
+    byline: normalizeNullableText(byline),
+    articleDateline: normalizeNullableText(articleDateline),
+    leadSynopsis,
+    actionActor,
+    actionAffected,
+    actionWhere,
+    actionWhat,
+    actionWhy,
+    biasAssessment: normalizeNullableText(biasAssessment),
     submittedAt,
+    reviewStatus,
+    reviewNote: normalizeNullableText(mergedReviewNote),
+    validationIssuesJson: updatedIssues.issues,
+    reviewedAt: null,
+    reviewedByUsername: null,
   }
 
   let saved = null
-  if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "upsert")) {
+  if (
+    !fallbackOnly
+    && hasPrismaDelegateMethod(prisma, "studentNewsReport", "upsert")
+  ) {
     try {
       saved = await prisma.studentNewsReport.upsert({
         where: {
@@ -4199,7 +5228,14 @@ export async function saveStudentNewsReport(studentRefId, payload = {}, { now = 
         },
       })
     } catch (error) {
-      if (!isStudentNewsReportSchemaUnavailableError(error)) throw error
+      if (
+        isStudentNewsReportSchemaUnavailableError(error)
+        || isStudentNewsReviewSchemaUnavailableError(error)
+      ) {
+        fallbackOnly = true
+      } else {
+        throw error
+      }
     }
   }
 
@@ -4207,6 +5243,8 @@ export async function saveStudentNewsReport(studentRefId, payload = {}, { now = 
     const fallbackSaved = upsertStudentNewsReportInFallbackStore(id, reportDateText, {
       ...reportData,
       submittedAt: submittedAt.toISOString(),
+      reviewedAt: null,
+      reviewedByUsername: null,
     })
     saved = {
       ...fallbackSaved,
@@ -4215,11 +5253,27 @@ export async function saveStudentNewsReport(studentRefId, payload = {}, { now = 
     }
   }
 
-  return {
+  const mappedItem = mapStudentNewsReportRow(saved)
+  const responsePayload = {
     generatedAt: nowIso(),
     window,
-    item: mapStudentNewsReportRow(saved),
+    saved: true,
+    item: mappedItem,
+    failedFields: compliance.failedFields,
+    revisionTasks: compliance.revisionTasks,
+    fixedFields: updatedIssues.newlyFixed,
+    allowedSources: compliance?.config?.allowedDomains || [],
+    validation: compliance.details,
   }
+
+  if (hasFailures) {
+    throw statusErrorWithPayload(
+      422,
+      "Saved and marked for revision. Update flagged fields and save again.",
+      responsePayload
+    )
+  }
+  return responsePayload
 }
 
 function normalizeStudentNewsReviewDateFilter(value) {
@@ -4256,6 +5310,7 @@ function buildStudentNewsReviewSelect({ includeReviewFields = true } = {}) {
   if (includeReviewFields) {
     select.reviewStatus = true
     select.reviewNote = true
+    select.validationIssuesJson = true
     select.reviewedByUsername = true
     select.reviewedAt = true
   }
@@ -4441,16 +5496,24 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   const now = new Date()
   const reviewNote = normalizeNullableText(payload?.reviewNote || payload?.note || payload?.comment)
   const reviewedByUsername = normalizeNullableText(options?.reviewedByUsername || payload?.reviewedByUsername)
+  const normalizedValidationIssues =
+    payload?.validationIssuesJson && typeof payload.validationIssuesJson === "object" && !Array.isArray(payload.validationIssuesJson)
+      ? normalizeValidationIssueMap(payload.validationIssuesJson)
+      : null
+  const updateData = {
+    reviewStatus,
+    reviewNote,
+    reviewedByUsername,
+    reviewedAt: now,
+  }
+  if (normalizedValidationIssues && Object.keys(normalizedValidationIssues).length) {
+    updateData.validationIssuesJson = normalizedValidationIssues
+  }
   let updatedReport
   try {
     updatedReport = await prisma.studentNewsReport.update({
       where: { id },
-      data: {
-        reviewStatus,
-        reviewNote,
-        reviewedByUsername,
-        reviewedAt: now,
-      },
+      data: updateData,
       select: buildStudentNewsReviewSelect({ includeReviewFields: true }),
     })
   } catch (error) {
