@@ -185,6 +185,9 @@ const ADMIN_POINTS_STUDENT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_POINTS_STU
 const PARENT_CHILD_PROFILE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile$`)
 const PARENT_CHILD_PROFILE_DRAFT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-draft$`)
 const PARENT_CHILD_PROFILE_SUBMIT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-submit$`)
+const PARENT_CHILD_NEWS_CALENDAR_PATH_RE = new RegExp(
+  `^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/news-reports/calendar$`
+)
 
 const SESSION_TTL_SECONDS = Math.max(
   60,
@@ -268,27 +271,91 @@ const STUDENT_NEWS_VALIDATION_THRESHOLDS = Object.freeze({
   articleDateline: 0.7,
   leadSynopsis: 0.5,
 })
+const NEWS_AWAITING_RE_REVIEW_MARKER = "[[SIS-AWAITING-RE-REVIEW]]"
 
 function resolveNewsStatusColor(status) {
   const normalized = normalizeLower(status)
+  if (
+    normalized === "green"
+    || normalized === "amber"
+    || normalized === "red"
+    || normalized === "purple"
+    || normalized === "blue"
+    || normalized === "turquoise"
+  ) {
+    return normalized
+  }
   if (normalized === "approved") return "green"
-  if (normalized === "revision-requested") return "red"
+  if (normalized === "waiting") return "purple"
+  if (normalized === "checked") return "turquoise"
+  if (normalized === "revise" || normalized === "revision-requested") return "purple"
+  if (normalized === "submitted") return "amber"
+  if (normalized === "open") return "blue"
+  if (normalized === "none-submitted" || normalized === "none submitted") return "red"
   return "amber"
 }
 
-function resolveNewsReviewCheckStatus({ submittedCount = 0, revisionRequestedCount = 0 } = {}) {
-  const submitted = Math.max(0, Number.parseInt(String(submittedCount || 0), 10) || 0)
-  const revisionRequested = Math.max(0, Number.parseInt(String(revisionRequestedCount || 0), 10) || 0)
-  if (submitted > 0) return "unchecked"
-  if (revisionRequested > 0) return "waiting-revise"
-  return "checked"
+function toNonNegativeInt(value) {
+  return Math.max(0, Number.parseInt(String(value || 0), 10) || 0)
 }
 
-function resolveNewsReviewCheckColor(status) {
-  const normalized = normalizeLower(status)
-  if (normalized === "checked") return "green"
-  if (normalized === "waiting-revise") return "amber"
-  return "purple"
+function resolveNewsSetUnapprovedCount({
+  submittedCount = 0,
+  revisionRequestedCount = 0,
+} = {}) {
+  const submitted = toNonNegativeInt(submittedCount)
+  const revisionRequested = toNonNegativeInt(revisionRequestedCount)
+  return Math.max(0, submitted + revisionRequested)
+}
+
+function resolveNewsSetStatus({
+  reportCount = 0,
+  approvedCount = 0,
+  submittedCount = 0,
+  revisionRequestedCount = 0,
+  awaitingReReviewCount = 0,
+} = {}) {
+  const totalReports = toNonNegativeInt(reportCount)
+  const approved = toNonNegativeInt(approvedCount)
+  const submitted = toNonNegativeInt(submittedCount)
+  const revisionRequested = toNonNegativeInt(revisionRequestedCount)
+  const awaitingReReview = Math.min(submitted, toNonNegativeInt(awaitingReReviewCount))
+  const uncheckedInitial = Math.max(0, submitted - awaitingReReview)
+  if (totalReports >= 7 && approved >= 7) return "approved"
+  if (awaitingReReview > 0 && revisionRequested === 0 && uncheckedInitial === 0) return "waiting"
+  if (submitted === 0 && revisionRequested === 0) return "checked"
+  if (revisionRequested > 0) return "revise"
+  if (submitted > 0) return "submitted"
+  return "none-submitted"
+}
+
+function resolveNewsSetAction({
+  reportCount = 0,
+  approvedCount = 0,
+  submittedCount = 0,
+  revisionRequestedCount = 0,
+} = {}) {
+  const totalReports = toNonNegativeInt(reportCount)
+  const approved = toNonNegativeInt(approvedCount)
+  const unapproved = resolveNewsSetUnapprovedCount({ submittedCount, revisionRequestedCount })
+  if (totalReports >= 7 && approved >= 7) return "completed"
+  if (unapproved === 0) return "incomplete"
+  return `unapproved-${unapproved}`
+}
+
+function resolveNewsSetActionColor(action = "") {
+  const normalized = normalizeLower(action)
+  if (normalized === "completed") return "green"
+  if (normalized === "incomplete") return "amber"
+  if (normalized.startsWith("unapproved-")) return "turquoise"
+  return "amber"
+}
+
+function resolveNewsAwaitingReReviewFlag(report = {}) {
+  const normalizedStatus = normalizeNewsReviewStatus(report?.reviewStatus)
+  if (normalizedStatus !== "submitted") return false
+  if (report?.awaitingReReview === true) return true
+  return normalizeText(report?.reviewNote).includes(NEWS_AWAITING_RE_REVIEW_MARKER)
 }
 
 function normalizeNewsReviewStatus(value) {
@@ -4627,6 +4694,7 @@ async function buildQueueHubPayload() {
             reportDate: true,
             submittedAt: true,
             reviewStatus: true,
+            reviewNote: true,
             articleTitle: true,
             sourceLink: true,
             student: {
@@ -4688,6 +4756,7 @@ async function buildQueueHubPayload() {
             submittedCount: 0,
             approvedCount: 0,
             revisionRequestedCount: 0,
+            awaitingReReviewCount: 0,
             latestReportId: "",
             latestReportDate: "",
             latestSubmittedAt: "",
@@ -4695,14 +4764,19 @@ async function buildQueueHubPayload() {
             latestArticleTitle: "",
             latestSourceLink: "",
             setStatus: "submitted",
+            setAction: "incomplete",
             _reportDates: new Set(),
           }
           const reportDateKey = toPortalDateKey(row?.reportDate)
           if (reportDateKey) existing._reportDates.add(reportDateKey)
           const status = normalizeLower(row?.reviewStatus)
+          const awaitingReReview = resolveNewsAwaitingReReviewFlag(row)
           if (status === "approved") existing.approvedCount += 1
           else if (status === "revision-requested") existing.revisionRequestedCount += 1
-          else existing.submittedCount += 1
+          else {
+            existing.submittedCount += 1
+            if (awaitingReReview) existing.awaitingReReviewCount += 1
+          }
 
           const submittedAtIso = row?.submittedAt?.toISOString?.() || ""
           const latestSubmittedAtIso = normalizeText(existing.latestSubmittedAt)
@@ -4721,14 +4795,16 @@ async function buildQueueHubPayload() {
           .map((entry) => {
             const reportDates = entry?._reportDates instanceof Set ? entry._reportDates : new Set()
             const reportCount = Math.max(0, reportDates.size)
-            const setStatus = reportCount < 7
-              ? "incomplete"
-              : entry?.revisionRequestedCount > 0
-              ? "revision-requested"
-              : reportCount >= 7 && entry?.approvedCount >= reportCount
-              ? "approved"
-              : "submitted"
-            const reviewCheckStatus = resolveNewsReviewCheckStatus({
+            const setStatus = resolveNewsSetStatus({
+              reportCount,
+              approvedCount: entry?.approvedCount,
+              submittedCount: entry?.submittedCount,
+              revisionRequestedCount: entry?.revisionRequestedCount,
+              awaitingReReviewCount: entry?.awaitingReReviewCount,
+            })
+            const setAction = resolveNewsSetAction({
+              reportCount,
+              approvedCount: entry?.approvedCount,
               submittedCount: entry?.submittedCount,
               revisionRequestedCount: entry?.revisionRequestedCount,
             })
@@ -4738,8 +4814,8 @@ async function buildQueueHubPayload() {
               ...safeEntry,
               reportCount,
               setStatus,
-              reviewCheckStatus,
-              reviewCheckColor: resolveNewsReviewCheckColor(reviewCheckStatus),
+              setAction,
+              setActionColor: resolveNewsSetActionColor(setAction),
             }
           })
         const sortedItems = weekSets
@@ -4765,9 +4841,10 @@ async function buildQueueHubPayload() {
           statusSummary,
           items: items.map((entry) => ({
             ...entry,
-            statusColor: resolveNewsStatusColor(entry.latestReviewStatus || entry.setStatus),
-            reviewCheckStatus: normalizeText(entry?.reviewCheckStatus) || resolveNewsReviewCheckStatus(entry),
-            reviewCheckColor: normalizeText(entry?.reviewCheckColor) || resolveNewsReviewCheckColor(entry?.reviewCheckStatus),
+            statusColor: resolveNewsStatusColor(entry.setStatus),
+            setStatus: normalizeText(entry?.setStatus) || resolveNewsSetStatus(entry),
+            setAction: normalizeText(entry?.setAction) || resolveNewsSetAction(entry),
+            setActionColor: normalizeText(entry?.setActionColor) || resolveNewsSetActionColor(entry?.setAction),
           })),
         }
       } catch (error) {
@@ -4868,7 +4945,7 @@ async function buildQueueHubPayload() {
       },
       {
         id: "news-report-review",
-        title: "News Report Week Sets",
+        title: "News Week Sets",
         total: Number.parseInt(String(newsReviewQueue?.total || 0), 10) || 0,
         statusSummary: newsReviewQueue?.statusSummary || { submitted: 0, approved: 0, revisionRequested: 0 },
         items: Array.isArray(newsReviewQueue?.items) ? newsReviewQueue.items : [],
@@ -5888,6 +5965,26 @@ async function handleParentApiRequest(request, response, pathname, url) {
     const payload = await buildParentDashboardPayload({
       parentsId: parentContext.parentsId,
       accountId: parentContext.parentAccountId,
+    })
+    sendJson(response, 200, payload)
+    return true
+  }
+
+  const childNewsCalendarPathMatch = pathname.match(PARENT_CHILD_NEWS_CALENDAR_PATH_RE)
+  if (childNewsCalendarPathMatch && method === "GET") {
+    const requestedEaglesId = normalizeText(decodeURIComponent(childNewsCalendarPathMatch[1]))
+    const children = await listParentLinkedStudents({
+      parentsId: parentContext.parentsId,
+      parentAccountId: parentContext.parentAccountId,
+    })
+    const child = children.find((entry) => normalizeLower(entry?.eaglesId) === normalizeLower(requestedEaglesId))
+    if (!child) {
+      const error = new Error("Child is not linked to this parent account")
+      error.statusCode = 403
+      throw error
+    }
+    const payload = await listStudentNewsCalendar(child.studentRefId, {
+      days: url.searchParams.get("days") || "60",
     })
     sendJson(response, 200, payload)
     return true

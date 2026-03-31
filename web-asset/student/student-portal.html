@@ -433,6 +433,12 @@
       background: #fff5df;
     }
 
+    .chip-open {
+      border-color: #6eaedc;
+      color: #0f4d78;
+      background: #e7f4ff;
+    }
+
     .chip-link {
       cursor: pointer;
       display: inline-flex;
@@ -448,6 +454,12 @@
       border-color: #e58a92;
       color: #9b1520;
       background: #fbe9ea;
+    }
+
+    .chip-checked {
+      border-color: #2ba39a;
+      color: #085852;
+      background: #e1fbf9;
     }
 
     .chip-lock {
@@ -1198,7 +1210,9 @@
 
     .dot.good { background: #40b06c; }
     .dot.bad { background: #d45a66; }
-    .dot.open { background: #d2912b; }
+    .dot.open { background: #4093d2; }
+    .dot.submitted { background: #d2912b; }
+    .dot.waiting { background: #7a59cc; }
     .dot.revise { background: #7a59cc; }
 
     .calendar-shell {
@@ -1272,7 +1286,15 @@
     }
 
     .fc .fc-daygrid-day.calendar-day-open {
-      background: linear-gradient(180deg, rgba(210, 145, 43, 0.16), rgba(210, 145, 43, 0.04));
+      background: linear-gradient(180deg, rgba(65, 147, 210, 0.16), rgba(65, 147, 210, 0.04));
+    }
+
+    .fc .fc-daygrid-day.calendar-day-blue {
+      background: linear-gradient(180deg, rgba(65, 147, 210, 0.16), rgba(65, 147, 210, 0.04));
+    }
+
+    .fc .fc-daygrid-day.calendar-day-turquoise {
+      background: linear-gradient(180deg, rgba(43, 163, 154, 0.14), rgba(43, 163, 154, 0.04));
     }
 
     .fc .fc-daygrid-day.calendar-day-missed {
@@ -1349,15 +1371,15 @@
     }
 
     .fc .fc-event.fc-event-news-open {
-      background: #fff1cf !important;
-      border-color: #e5ab34 !important;
-      color: #000 !important;
+      background: #e6f3ff !important;
+      border-color: #4093d2 !important;
+      color: #0f4a73 !important;
     }
 
     .fc .fc-event.fc-event-news-open .fc-event-main,
     .fc .fc-event.fc-event-news-open .fc-event-title,
     .fc .fc-event.fc-event-news-open .fc-event-time {
-      color: #000 !important;
+      color: #0f4a73 !important;
     }
 
     .fc .fc-event.fc-event-news-status-green {
@@ -1372,10 +1394,28 @@
       color: #5b3b00 !important;
     }
 
+    .fc .fc-event.fc-event-news-status-purple {
+      background: #f3ecff !important;
+      border-color: #a48ad8 !important;
+      color: #422b7a !important;
+    }
+
     .fc .fc-event.fc-event-news-status-red {
       background: #ffe1e5 !important;
       border-color: #d43b4e !important;
       color: #6d0d1a !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-blue {
+      background: #e6f3ff !important;
+      border-color: #4093d2 !important;
+      color: #0f4a73 !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-turquoise {
+      background: #e1fbf9 !important;
+      border-color: #2ba39a !important;
+      color: #085852 !important;
     }
 
     .fc .fc-event.fc-event-news-status-revise {
@@ -1928,9 +1968,11 @@
               <p id="calendarTitle" class="sub calendar-range">Your View timeline</p>
               <div class="legend">
                 <span><span class="dot good"></span>Approved</span>
-                <span><span class="dot open"></span>Submitted / Open</span>
+                <span><span class="dot submitted"></span>Submitted</span>
+                <span><span class="dot waiting"></span>Waiting</span>
+                <span><span class="dot open"></span>Open</span>
                 <span><span class="dot revise"></span>Revise</span>
-                <span><span class="dot bad"></span>Incomplete</span>
+                <span><span class="dot bad"></span>None Submitted</span>
               </div>
               <p id="windowSummary" class="sub">Loading calendar...</p>
               <div id="calendarGrid" class="calendar-shell" aria-live="polite"></div>
@@ -3269,51 +3311,59 @@
         return "submitted";
       }
 
-      function resolveNewsChipToken(status = "", reviewStatus = "") {
+      function resolveNewsChipToken(status = "", reviewStatus = "", awaitingReReview = false) {
         const normalizedStatus = normalizeLower(status);
         const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
-        if (normalizedStatus === "completed") {
-          if (normalizedReview === "approved") return "approved";
-          if (normalizedReview === "revision-requested") return "revise";
-          return "submitted";
-        }
+        if (normalizedReview === "revision-requested") return "revise";
         if (normalizedStatus === "open") return "open";
-        return "incomplete";
+        if (normalizedStatus === "missed") return "none-submitted";
+        if (awaitingReReview === true) return "waiting";
+        if (normalizedReview === "approved") return "approved";
+        if (normalizedStatus === "completed" || normalizedReview === "submitted")
+          return "submitted";
+        return "none-submitted";
       }
 
-      function newsStatusLabel(status = "", reviewStatus = "") {
-        const token = resolveNewsChipToken(status, reviewStatus);
+      function newsStatusLabel(status = "", reviewStatus = "", awaitingReReview = false) {
+        const token = resolveNewsChipToken(status, reviewStatus, awaitingReReview);
         if (token === "approved") return "Approved";
+        if (token === "waiting") return "Waiting";
         if (token === "revise") return "Revise";
         if (token === "submitted") return "Submitted";
         if (token === "open") return "Open";
-        return "Incomplete";
+        return "None Submitted";
       }
 
-      function newsStatusColorToken(status = "", reviewStatus = "") {
-        const token = resolveNewsChipToken(status, reviewStatus);
+      function newsStatusColorToken(status = "", reviewStatus = "", awaitingReReview = false) {
+        const token = resolveNewsChipToken(status, reviewStatus, awaitingReReview);
         if (token === "approved") return "green";
         if (token === "revise") return "revise";
         if (token === "submitted") return "amber";
-        if (token === "open") return "amber";
+        if (token === "waiting") return "purple";
+        if (token === "open") return "blue";
         return "red";
       }
 
-      function newsStatusTone(status = "", reviewStatus = "") {
-        const token = newsStatusColorToken(status, reviewStatus);
+      function newsStatusTone(status = "", reviewStatus = "", awaitingReReview = false) {
+        const token = newsStatusColorToken(status, reviewStatus, awaitingReReview);
         if (token === "revise") return "revise";
+        if (token === "purple") return "revise";
+        if (token === "blue") return "open";
         if (token === "amber") return "warn";
         if (token === "red") return "bad";
+        if (token === "turquoise") return "checked";
         return "good";
       }
 
-      function newsReviewLabel(status = "", reviewStatus = "") {
+      function newsReviewLabel(status = "", reviewStatus = "", awaitingReReview = false) {
         const normalizedStatus = normalizeLower(status);
         const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
         if (normalizedReview === "approved") return "Approved";
+        if (awaitingReReview === true) return "Waiting";
         if (normalizedReview === "revision-requested") return "Revise";
         if (normalizedStatus === "completed") return "Submitted";
-        return "Unchecked";
+        if (normalizedStatus === "open") return "Open";
+        return "None Submitted";
       }
 
       function isoWeekStart(dateText = "") {
@@ -3342,29 +3392,35 @@
         const normalized = normalizeLower(tone);
         if (normalized === "good" || normalized === "ok" || normalized === "positive")
           return "chip-ok";
+        if (normalized === "checked") return "chip-checked";
+        if (normalized === "open") return "chip-open";
         if (normalized === "revise") return "chip-revise";
         if (normalized === "warn" || normalized === "warning") return "chip-warn";
         if (normalized === "bad" || normalized === "error") return "chip-bad";
         return "chip-neutral";
       }
 
-      function newsStatusChipHtml(status = "", reviewStatus = "") {
-        const label = newsStatusLabel(status, reviewStatus);
-        const cls = chipClassForTone(newsStatusTone(status, reviewStatus));
+      function newsStatusChipHtml(status = "", reviewStatus = "", awaitingReReview = false) {
+        const label = newsStatusLabel(status, reviewStatus, awaitingReReview);
+        const cls = chipClassForTone(
+          newsStatusTone(status, reviewStatus, awaitingReReview),
+        );
         const span = document.createElement("span");
         span.className = "chip " + cls;
         span.textContent = label;
         return span.outerHTML;
       }
 
-      function newsReviewChipHtml(status = "", reviewStatus = "") {
-        const label = newsReviewLabel(status, reviewStatus);
+      function newsReviewChipHtml(status = "", reviewStatus = "", awaitingReReview = false) {
+        const label = newsReviewLabel(status, reviewStatus, awaitingReReview);
         const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
         const tone =
           normalizedReview === "approved" ? "good"
+          : awaitingReReview === true ? "revise"
           : normalizedReview === "revision-requested" ? "revise"
           : normalizeLower(status) === "completed" ? "warn"
-          : "neutral";
+          : normalizeLower(status) === "open" ? "open"
+          : "bad";
         const cls = chipClassForTone(tone);
         const span = document.createElement("span");
         span.className = "chip " + cls;
@@ -3379,11 +3435,13 @@
             const status = resolveNewsCalendarStatus(entry);
             if (!dateKey || !status) return null;
             const reviewStatus = t(entry?.reviewStatus);
+            const awaitingReReview = entry?.awaitingReReview === true;
             const submittedAt = t(entry?.submittedAt);
             return {
               dateKey,
               status,
               reviewStatus,
+              awaitingReReview,
               submittedAt,
             };
           })
@@ -3397,13 +3455,22 @@
             dateKey: openDate,
             status: "open",
             reviewStatus: "",
+            awaitingReReview: false,
             submittedAt: "",
           });
         }
 
         return limited.map((row) => {
-          const statusLabel = newsStatusLabel(row.status, row.reviewStatus);
-          const reviewLabel = newsReviewLabel(row.status, row.reviewStatus);
+          const statusLabel = newsStatusLabel(
+            row.status,
+            row.reviewStatus,
+            row.awaitingReReview === true,
+          );
+          const reviewLabel = newsReviewLabel(
+            row.status,
+            row.reviewStatus,
+            row.awaitingReReview === true,
+          );
           const submittedLabel = row.submittedAt ? formatPortalDateTime(row.submittedAt) : "";
           return {
             ...row,
@@ -3415,12 +3482,18 @@
             note:
               row.reviewStatus === "revision-requested" ?
                 "Follow revision guidance and resubmit."
+              : row.awaitingReReview === true ?
+                "Resubmitted and waiting for admin review."
               : row.status === "open" ?
                 "Submit before the window closes."
               : row.status === "missed" ?
                 "Missed window. Talk to your teacher if make-up is allowed."
               : "Awaiting review or already approved.",
-            tone: newsStatusTone(row.status, row.reviewStatus),
+            tone: newsStatusTone(
+              row.status,
+              row.reviewStatus,
+              row.awaitingReReview === true,
+            ),
           };
         });
       }
@@ -3433,6 +3506,7 @@
           const status = resolveNewsCalendarStatus(entry);
           if (!dateKey || !status) return;
           const reviewStatus = t(entry?.reviewStatus);
+          const awaitingReReview = entry?.awaitingReReview === true;
           const submittedAt = t(entry?.submittedAt);
           const weekStart = isoWeekStart(dateKey);
           if (!weekStart) return;
@@ -3446,24 +3520,36 @@
             submittedCount: 0,
             approvedCount: 0,
             revisionRequestedCount: 0,
+            awaitingReReviewCount: 0,
             missedCount: 0,
+            openCount: 0,
             latestSubmittedAt: "",
             latestDate: "",
             latestStatus: "",
             latestReviewStatus: "",
+            latestAwaitingReReview: false,
           };
           existing.reports.push({
             dateKey,
             status,
             reviewStatus,
+            awaitingReReview,
             submittedAt,
           });
           existing.reportCount += 1;
           if (status === "missed") existing.missedCount += 1;
+          if (status === "open") existing.openCount += 1;
           else if (reviewStatus === "approved") existing.approvedCount += 1;
           else if (reviewStatus === "revision-requested")
             existing.revisionRequestedCount += 1;
-          else existing.submittedCount += 1;
+          else {
+            existing.submittedCount += 1;
+            if (awaitingReReview) {
+              existing.awaitingReReviewCount =
+                Math.max(0, Number.parseInt(String(existing.awaitingReReviewCount || 0), 10) || 0)
+                + 1;
+            }
+          }
           const latestKey = t(existing.latestSubmittedAt || existing.latestDate);
           const candidateKey = submittedAt || dateKey;
           if (!latestKey || candidateKey > latestKey) {
@@ -3471,6 +3557,7 @@
             existing.latestDate = dateKey;
             existing.latestStatus = status;
             existing.latestReviewStatus = reviewStatus;
+            existing.latestAwaitingReReview = awaitingReReview === true;
           }
           grouped.set(key, existing);
         });
@@ -3478,6 +3565,44 @@
         return Array.from(grouped.values()).sort((a, b) =>
           t(b.weekStart).localeCompare(t(a.weekStart)),
         );
+      }
+
+      function newsWeekSetStatusToken(weekSet = {}) {
+        const reportCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
+        );
+        const approved = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
+        );
+        const submitted = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.submittedCount || 0), 10) || 0,
+        );
+        const revisionRequested = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) || 0,
+        );
+        const awaiting = Math.max(
+          0,
+          Math.min(
+            submitted,
+            Number.parseInt(String(weekSet?.awaitingReReviewCount || 0), 10) || 0,
+          ),
+        );
+        const initialSubmitted = Math.max(0, submitted - awaiting);
+        const openCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.openCount || 0), 10) || 0,
+        );
+        if (reportCount >= 7 && approved >= 7) return "approved";
+        if (awaiting > 0 && revisionRequested === 0 && initialSubmitted === 0)
+          return "waiting";
+        if (revisionRequested > 0) return "revise";
+        if (submitted > 0) return "submitted";
+        if (openCount > 0) return "open";
+        return "none-submitted";
       }
 
       function renderNewsQueueTable(bodyId, items = [], { readOnly = false, mode = "week" } = {}) {
@@ -3496,9 +3621,11 @@
         body.innerHTML = safeItems
           .map((item) => {
             if (mode === "week") {
+              const weekStatus = newsWeekSetStatusToken(item);
               const statusChip = newsStatusChipHtml(
-                item.latestStatus || "open",
+                weekStatus,
                 item.latestReviewStatus || "",
+                item.latestAwaitingReReview === true,
               );
               const counts = `${Math.max(0, item.approvedCount || 0)}/${Math.max(0, item.submittedCount || 0)}/${Math.max(0, item.revisionRequestedCount || 0)}`;
               const latestLabel = item.latestSubmittedAt ?
@@ -3511,8 +3638,16 @@
               return `<tr>\n                <td>${escapeHtml(formatPortalDate(item.weekStart))} - ${escapeHtml(formatPortalDate(item.weekEnd))}</td>\n                <td><span class="chip-link" ${weekAttrs}>${statusChip}</span></td>\n                <td>${escapeHtml(counts)}</td>\n                <td>${latestLabel}</td>\n                ${actionCell}\n              </tr>`;
             }
             const dateCell = escapeHtml(formatPortalDate(item.dateKey));
-            const statusChip = newsStatusChipHtml(item.status, item.reviewStatus);
-            const reviewChip = newsReviewChipHtml(item.status, item.reviewStatus);
+            const statusChip = newsStatusChipHtml(
+              item.status,
+              item.reviewStatus,
+              item.awaitingReReview === true,
+            );
+            const reviewChip = newsReviewChipHtml(
+              item.status,
+              item.reviewStatus,
+              item.awaitingReReview === true,
+            );
             const submittedCell = item.submittedAt ?
               escapeHtml(formatPortalDateTime(item.submittedAt))
             : "—";
@@ -3643,7 +3778,7 @@
               li.classList.add("selected");
             li.innerHTML = `
               <span>${escapeHtml(formatPortalDate(report.dateKey))}</span>
-              <span>${newsStatusChipHtml(report.status, report.reviewStatus)}</span>
+              <span>${newsStatusChipHtml(report.status, report.reviewStatus, report.awaitingReReview === true)}</span>
               <span>${escapeHtml(report.submittedAt ? formatPortalDateTime(report.submittedAt) : "Not submitted")}</span>
             `;
             li.dataset.newsDate = report.dateKey;
@@ -3763,6 +3898,7 @@
               submittedAt: t(row?.submittedAt),
               statusColor: t(row?.statusColor || row?.color),
               reviewStatus: t(row?.reviewStatus),
+              awaitingReReview: row?.awaitingReReview === true,
             }))
             .filter((row) => Boolean(row.date) && Boolean(row.status))
           : [];
@@ -3779,64 +3915,61 @@
         rows.forEach((row) => {
           const date = t(row.date);
           if (!date) return;
-          const statusColor = newsStatusColorToken(row.status, row.reviewStatus);
+          const token = resolveNewsChipToken(
+            row.status,
+            row.reviewStatus,
+            row.awaitingReReview === true,
+          );
+          const label = newsStatusLabel(
+            row.status,
+            row.reviewStatus,
+            row.awaitingReReview === true,
+          ).toUpperCase();
+          const statusColor = newsStatusColorToken(
+            row.status,
+            row.reviewStatus,
+            row.awaitingReReview === true,
+          );
           statusByDate.set(date, { status: row.status, color: statusColor });
           const submittedClock = formatSubmittedClock(row.submittedAt);
-          if (row.status === "completed") {
-            events.push({
-              id: `news-completed-${date}`,
-              title: submittedClock ? `News report submitted ${submittedClock}` : "News report submitted",
-              start: date,
-              end: addDateKeyDays(date, 1),
-              allDay: true,
-              classNames: ["fc-event-news-status", `fc-event-news-status-${statusColor}`],
-              extendedProps: {
-                detail: [
-                  submittedClock ? `Submitted at ${submittedClock}` : "Submitted",
-                  row.reviewStatus ? `Status: ${row.reviewStatus}` : "",
-                ].filter(Boolean).join(" | "),
-                displayOrder: 2,
-              },
-            });
-            return;
-          }
-          if (row.status === "open") {
-            events.push({
-              id: `news-open-${date}`,
-              title: "News report window open",
-              start: date,
-              end: addDateKeyDays(date, 1),
-              allDay: true,
-              classNames: ["fc-event-news-open"],
-              extendedProps: {
-                detail: "Submit the daily report before the window closes.",
-                displayOrder: 1,
-              },
-            });
-            return;
-          }
-          if (row.status === "missed") {
+          const classNames = [
+            "fc-event-news-status",
+            `fc-event-news-status-${statusColor}`,
+          ];
+          if (token === "open") classNames.push("fc-event-news-open");
+          if (token === "revise") classNames.push("fc-event-news-status-revise");
+          if (token === "none-submitted") {
             alertDates.add(date);
-            events.push({
-              id: `news-missed-${date}`,
-              title: normalizeLower(row.reviewStatus) === "revision-requested" ? "REVISION REQUESTED" : "MISSED NEWS REPORT",
-              start: date,
-              end: addDateKeyDays(date, 1),
-              allDay: true,
-              classNames:
-                normalizeLower(row.reviewStatus) === "revision-requested" ?
-                  ["fc-event-news-status-revise", "fc-event-news-status"]
-                : ["fc-obtrusive-alert", "fc-event-news-missed"],
-              extendedProps: {
-                detail:
-                  normalizeLower(row.reviewStatus) === "revision-requested" ?
-                    "Needs revision before approval."
-                  : "This report date was missed.",
-                displayOrder:
-                  normalizeLower(row.reviewStatus) === "revision-requested" ? 1 : 0,
-              },
-            });
+            classNames.push("fc-obtrusive-alert", "fc-event-news-missed");
           }
+          const detail =
+            token === "open" ? "Submission window is open."
+            : token === "none-submitted" ? "No submission was recorded for this date."
+            : token === "revise" ? "Revision requested."
+            : token === "waiting" ? "Resubmitted and waiting for admin review."
+            : token === "approved" ? "Approved."
+            : "Submitted and awaiting review.";
+          const displayOrder =
+            token === "none-submitted" ? 0
+            : token === "revise" ? 1
+            : token === "open" ? 2
+            : token === "waiting" ? 3
+            : token === "submitted" ? 4
+            : 5;
+          events.push({
+            id: `news-${token}-${date}`,
+            title: label,
+            start: date,
+            end: addDateKeyDays(date, 1),
+            allDay: true,
+            classNames,
+            extendedProps: {
+              detail: [submittedClock ? `Submitted at ${submittedClock}` : "", detail]
+                .filter(Boolean)
+                .join(" | "),
+              displayOrder,
+            },
+          });
         });
 
         reviewTracks.forEach((track) => {
@@ -3904,9 +4037,22 @@
       function resolveNewsCalendarStatus(row = {}) {
         const status = normalizeLower(row?.status);
         if (status === "completed" || status === "open" || status === "missed") return status;
+        if (status === "approved" || status === "waiting" || status === "submitted" || status === "revise")
+          return "completed";
+        if (status === "none-submitted") return "missed";
         const color = normalizeLower(row?.color);
         if (color === "green") return "completed";
-        if (color === "amber" || color === "yellow" || color === "orange") return "open";
+        if (color === "purple") return "completed";
+        if (
+          color === "amber" ||
+          color === "yellow" ||
+          color === "orange" ||
+          color === "blue" ||
+          color === "skyblue" ||
+          color === "sky-blue"
+        ) {
+          return "open";
+        }
         if (color === "red") return "missed";
         if (row?.canSubmit === true) return "open";
         if (t(row?.submittedAt)) return "completed";
@@ -3939,6 +4085,11 @@
           dayEl.classList.toggle("calendar-day-missed", classList.includes("calendar-day-missed"));
           dayEl.classList.toggle("calendar-day-green", classList.includes("calendar-day-green"));
           dayEl.classList.toggle("calendar-day-amber", classList.includes("calendar-day-amber"));
+          dayEl.classList.toggle("calendar-day-blue", classList.includes("calendar-day-blue"));
+          dayEl.classList.toggle(
+            "calendar-day-turquoise",
+            classList.includes("calendar-day-turquoise"),
+          );
           dayEl.classList.toggle("calendar-day-red", classList.includes("calendar-day-red"));
           dayEl.classList.toggle("calendar-day-revise", classList.includes("calendar-day-revise"));
           dayEl.classList.toggle("calendar-day-alert", classList.includes("calendar-day-alert"));

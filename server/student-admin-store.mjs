@@ -3088,6 +3088,7 @@ const STUDENT_NEWS_REVIEW_STATUS_COLOR = {
 const STUDENT_NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]"
 const STUDENT_NEWS_COMPLIANCE_NOTE_END = "[[/SIS-COMPLIANCE-V1]]"
 const STUDENT_NEWS_FIXED_NOTE_PREFIX = "FIXED PER COMPLIANCE RESOLUTION ON SAVE"
+const STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER = "[[SIS-AWAITING-RE-REVIEW]]"
 const STUDENT_NEWS_DEFAULT_ALLOWED_SOURCE_DOMAINS = Object.freeze(["cnn.com", "bbc.com"])
 const STUDENT_NEWS_MAX_CUSTOM_ALLOWED_SOURCES = 8
 const STUDENT_NEWS_SOURCE_DOMAIN_MAX_LENGTH = 140
@@ -3443,8 +3444,33 @@ function normalizeValidationIssueMap(value = {}) {
   return normalized
 }
 
+function stripAwaitingReReviewMarker(note = "") {
+  return normalizeText(String(note || "").replaceAll(STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER, ""))
+}
+
+function addAwaitingReReviewMarker(note = "") {
+  const clean = stripAwaitingReReviewMarker(note)
+  if (!clean) return STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER
+  return `${clean}\n${STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER}`
+}
+
+function hasAwaitingReReviewMarker(note = "") {
+  return normalizeText(note).includes(STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER)
+}
+
+function resolveStudentNewsAwaitingReReview(row = {}) {
+  if (
+    normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+    !== STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  ) {
+    return false
+  }
+  if (row?.awaitingReReview === true) return true
+  return hasAwaitingReReviewMarker(row?.reviewNote)
+}
+
 function stripComplianceBlockFromReviewNote(note = "") {
-  const text = normalizeText(note)
+  const text = stripAwaitingReReviewMarker(note)
   if (!text) return ""
   const escapedStart = STUDENT_NEWS_COMPLIANCE_NOTE_START.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   const escapedEnd = STUDENT_NEWS_COMPLIANCE_NOTE_END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -4965,6 +4991,7 @@ function mapStudentNewsReportRow(row = {}) {
   const leadSynopsis = normalizeText(row?.leadSynopsis || row?.summary)
   const biasAssessment = normalizeText(row?.biasAssessment || row?.reflection)
   const reviewStatus = normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+  const awaitingReReview = resolveStudentNewsAwaitingReReview(row)
   const validationIssues = normalizeValidationIssueMap(row?.validationIssuesJson)
   const pendingFieldKeys = Object.keys(validationIssues).filter(
     (fieldKey) => normalizeLower(validationIssues?.[fieldKey]?.status) !== "fixed"
@@ -4989,8 +5016,9 @@ function mapStudentNewsReportRow(row = {}) {
     biasAssessment,
     submittedAt: parseDateOrNull(row?.submittedAt)?.toISOString?.() || "",
     reviewStatus,
+    awaitingReReview,
     statusColor: resolveStudentNewsStatusColor(reviewStatus),
-    reviewNote: normalizeText(row?.reviewNote),
+    reviewNote: stripAwaitingReReviewMarker(row?.reviewNote),
     validationIssuesJson: validationIssues,
     failedFields: pendingFieldKeys,
     fixedFields: fixedFieldKeys,
@@ -5027,6 +5055,7 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
       color: statusColor,
       statusColor,
       reviewStatus: saved?.reviewStatus || "",
+      awaitingReReview: saved?.awaitingReReview === true,
       canSubmit: status === "open",
       submittedAt: normalizeText(saved?.submittedAt),
     })
@@ -5183,6 +5212,17 @@ export async function saveStudentNewsReport(
   const updatedIssues = updateStudentNewsValidationIssues(previousIssues, compliance)
   const mergedReviewNote = mergeStudentNewsReviewNoteWithCompliance(existing?.reviewNote, updatedIssues.issues)
   const hasFailures = Object.keys(compliance.failedFields || {}).length > 0
+  const existingStatus = normalizeStudentNewsReviewStatus(
+    existing?.reviewStatus,
+    STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  )
+  let reviewNote = stripAwaitingReReviewMarker(mergedReviewNote)
+  if (
+    !hasFailures
+    && existingStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
+  ) {
+    reviewNote = addAwaitingReReviewMarker(reviewNote)
+  }
   const submittedAt = new Date()
   const reviewStatus = hasFailures
     ? STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
@@ -5201,7 +5241,7 @@ export async function saveStudentNewsReport(
     biasAssessment: normalizeNullableText(biasAssessment),
     submittedAt,
     reviewStatus,
-    reviewNote: normalizeNullableText(mergedReviewNote),
+    reviewNote: normalizeNullableText(reviewNote),
     validationIssuesJson: updatedIssues.issues,
     reviewedAt: null,
     reviewedByUsername: null,
@@ -5232,7 +5272,7 @@ export async function saveStudentNewsReport(
         isStudentNewsReportSchemaUnavailableError(error)
         || isStudentNewsReviewSchemaUnavailableError(error)
       ) {
-        fallbackOnly = true
+        saved = null
       } else {
         throw error
       }
@@ -5494,7 +5534,9 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   assertWithStatus(Boolean(existingReport), 404, "Student news report not found")
 
   const now = new Date()
-  const reviewNote = normalizeNullableText(payload?.reviewNote || payload?.note || payload?.comment)
+  const reviewNote = normalizeNullableText(
+    stripAwaitingReReviewMarker(payload?.reviewNote || payload?.note || payload?.comment)
+  )
   const reviewedByUsername = normalizeNullableText(options?.reviewedByUsername || payload?.reviewedByUsername)
   const normalizedValidationIssues =
     payload?.validationIssuesJson && typeof payload.validationIssuesJson === "object" && !Array.isArray(payload.validationIssuesJson)

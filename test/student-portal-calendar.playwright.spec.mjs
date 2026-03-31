@@ -496,10 +496,10 @@ test(
         );
         const alertEvent = grid?.querySelector(".fc-obtrusive-alert");
         const missedNewsEvent = Array.from(grid?.querySelectorAll(".fc-event") || []).find((node) =>
-          /MISSED NEWS REPORT/i.test(node.getAttribute("title") || node.textContent || "")
+          /NONE SUBMITTED/i.test(node.getAttribute("title") || node.textContent || "")
         );
         const openNewsEvent = Array.from(grid?.querySelectorAll(".fc-event") || []).find((node) =>
-          /News report window open/i.test(node.getAttribute("title") || node.textContent || "")
+          /OPEN/i.test(node.getAttribute("title") || node.textContent || "")
         );
         const alertStyle = alertEvent ? globalThis.window.getComputedStyle(alertEvent) : null;
         const missedNewsStyle = missedNewsEvent ? globalThis.window.getComputedStyle(missedNewsEvent) : null;
@@ -528,7 +528,7 @@ test(
       assert.equal(calendarState.rendered, true);
       assert.ok(calendarState.toolbarButtons.some((label) => /your view/i.test(label)));
       assert.match(calendarState.calendarTitle, /Your View/i);
-      assert.ok(calendarState.eventTitles.some((label) => /MISSED NEWS REPORT/i.test(label)));
+      assert.ok(calendarState.eventTitles.some((label) => /NONE SUBMITTED/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /MISSED HOMEWORK DEADLINE/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /Notes review track: Science/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /Current homework: Essay Draft/i.test(label)));
@@ -536,7 +536,7 @@ test(
       assert.match(calendarState.alertAnimationName, /overdueBlink/i);
       assert.match(calendarState.alertBackgroundColor, /rgb\(255,\s*35,\s*56\)/i);
       assert.match(calendarState.missedNewsTextColor, /rgb\(255,\s*255,\s*255\)/i);
-      assert.match(calendarState.openNewsTextColor, /rgb\(0,\s*0,\s*0\)/i);
+      assert.match(calendarState.openNewsTextColor, /rgb\(15,\s*74,\s*115\)/i);
       assert.match(calendarState.alertDayClassName, /calendar-day-alert/);
       assert.match(calendarState.alertDayAnimationName, /dayAlertPulse/i);
       assert.match(calendarState.completedDayClassName, /calendar-day-completed/);
