@@ -672,10 +672,8 @@ test("news review modal supports student-scoped navigation and modal review acti
   openPage(dom, "news-reports")
 
   assert.equal(
-    normalizeText(
-      dom.window.document.querySelector('#newsReviewStatusFilter option[value="revise"]')?.textContent,
-    ),
-    "Revise",
+    dom.window.document.querySelector('#newsReviewStatusFilter option[value="revise"]'),
+    null,
   )
   assert.equal(
     normalizeText(
@@ -688,7 +686,7 @@ test("news review modal supports student-scoped navigation and modal review acti
     const rows = dom.window.document.querySelectorAll("#newsReviewRows tr")
     assert.equal(rows.length, 1)
     assert.match(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
-    assert.match(rows[0].textContent || "", /Revise/i)
+    assert.match(rows[0].textContent || "", /Waiting/i)
     assert.match(rows[0].textContent || "", /Unapproved-7/i)
   })
 
@@ -899,13 +897,13 @@ test("news review queue includes incomplete student week sets and marks status",
     const row = dom.window.document.querySelector("#newsReviewRows tr[data-news-review-week-set-id]")
     assert.ok(row)
     assert.match(row.textContent || "", /5\/7/i)
-    assert.match(row.textContent || "", /Submitted/i)
+    assert.match(row.textContent || "", /Waiting/i)
     assert.match(row.textContent || "", /Unapproved-5/i)
     const summaryText = normalizeText(dom.window.document.getElementById("newsReviewSummary").textContent)
     assert.match(summaryText, /unapproved=1/i)
-    assert.match(summaryText, /submitted=1/i)
+    assert.match(summaryText, /waiting=1/i)
     assert.match(summaryText, /checked=0/i)
-    assert.match(summaryText, /waiting=0/i)
+    assert.doesNotMatch(summaryText, /submitted=/i)
   })
 
   const reviewCheckSelect = dom.window.document.getElementById("newsReviewCheckFilter")
@@ -1174,7 +1172,7 @@ test("news review week-set table headers sort all visible columns", async () => 
   await waitFor(() => {
     assert.equal(statusHeader.getAttribute("aria-sort"), "descending")
     const firstStatusCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(5)")?.textContent)
-    assert.equal(firstStatusCell, "Submitted")
+    assert.equal(firstStatusCell, "Waiting")
   })
   statusHeader.click()
   await waitFor(() => {
@@ -1422,7 +1420,7 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
     const newsPanel = openBtn.closest(".queue-hub-panel")
     assert.match(normalizeText(newsPanel?.textContent), /Action/i)
     assert.match(normalizeText(newsPanel?.textContent), /Unapproved-7/i)
-    assert.match(normalizeText(newsPanel?.textContent), /Submitted/i)
+    assert.match(normalizeText(newsPanel?.textContent), /Waiting/i)
   })
 
   dom.window.document

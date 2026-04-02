@@ -7,6 +7,324 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-02 - student compliance soft-save status realignment)
+
+- Requirement:
+  - reduce misleading browser console noise for expected compliance soft-saves while keeping guidance workflow intact.
+- Runtime behavior change:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - compliance soft-save now returns success payload (`200`) with `saved=true` and `complianceFailed=true` instead of throwing `422`.
+    - payload shape remains guidance-first (`failedFields`, `revisionTasks`, `validation`, `item`, `message`).
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - submit flow now treats `saved=true + complianceFailed=true` as the primary soft-save path.
+    - legacy `422` soft-save payloads are still handled for runtime compatibility.
+- Test updates:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - updated static contract assertions from `422 throw` to `complianceFailed` success payload contract.
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - fixture compliance responses now use `200` + `complianceFailed=true`; modal assertions unchanged.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-portal-calendar.playwright.spec.mjs` => pass.
+
+## Update (2026-04-02 - resubmission compliance failures stay waiting)
+
+- Requirement:
+  - compliance failures on student report resubmission must not auto-flip queue/modal status to `Revise`.
+- Runtime behavior change:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - on resubmission (`existing` row present), compliance failures now keep `reviewStatus=submitted` (`Waiting`) instead of forcing `revision-requested`.
+    - response messaging now explicitly states waiting/admin-review state for this resubmission path.
+    - existing new-row failure behavior remains unchanged.
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - soft-save compliance feedback message is now shown as informational (non-error styling) in the submit flow.
+- Test updates:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - updated static contract assertions for `isResubmission` + conditional `reviewStatus` assignment.
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - added save-path assertions for resubmission waiting contract and informational waiting message.
+- Verification:
+  - `node --test test/student-admin.spec.mjs test/student-admin-store-parent-report.spec.mjs test/student-portal-calendar.playwright.spec.mjs` => `131` pass, `0` fail.
+
+## Update (2026-04-02 - admin mobile news-reports responsiveness + student modal-resubmit 403 hardening)
+
+- Requirement:
+  - hide `Global Text` header label on small screens.
+  - make `/admin/students/news-reports` mobile-first responsive.
+  - remove false `403` blocks when student modal submit targets an existing historical non-approved report date.
+- Runtime behavior change:
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - `Global Text` header label is now hidden on small screens at `@media (max-width: 820px)` (with <=560 kept as a subset).
+    - news-reports filter toolbar keeps `2-column` controls at <=820 and `1-column` at <=560, with full-width action buttons.
+    - news-reports queue table switches to mobile card rows at <=820 (header hidden, per-cell labels via `data-label`, full-width `Open Week Set` button) instead of requiring a 920px table width.
+    - news-reports row renderer now writes `data-label` on each cell to support the mobile card layout.
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - save path now performs a same-local-day `findFirst` DB fallback lookup when strict `findUnique(studentRefId_reportDate)` misses.
+    - when an existing report row is found, save prefers `update({ where: { id } })` before `upsert` to avoid false "new row" lock behavior caused by legacy timestamp shapes.
+    - open-date lock for true new rows and approved-row lock remain unchanged.
+- Test updates:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - added assertions for `findFirst` same-day fallback and `update`-by-id save path.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added static contract assertions for small-screen `Global Text` label hiding and news-reports toolbar mobile grid rules.
+- Verification:
+  - `node --test test/student-admin-ui.spec.mjs test/student-admin.spec.mjs` => `165` pass, `0` fail.
+  - Playwright check at `http://127.0.0.1:8788/admin/students/news-reports?apiOrigin=http://127.0.0.1:8788` with viewport `390x844` confirmed:
+    - header no longer renders `Global Text` label text.
+    - news-reports queue rows render as labeled mobile cards (no wide desktop table requirement).
+
+## Update (2026-04-02 - student/parent news week-set queue + modal realignment to admin pattern)
+
+- Requirement:
+  - student and parent news-report queue + modal behavior must match admin week-set pattern (queue columns admin-minus-action, week-set viewer modal behavior), with student-specific submit rules.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - queue now renders admin-minus-action columns: `Week Set`, `Student`, `Level`, `Reports`, `Status`, `Latest Submission`, `Open`.
+    - queue week sets now build from calendar payload `items` only (submitted report rows), not raw calendar day rows.
+    - week-set queue status chips now constrained to `Approved` / `Waiting` / `Revise`.
+    - added admin-style week-set viewer modal open from queue row-click/button and calendar event clicks.
+    - student modal is inline-editable and uses `Submit` action only (no request-revision button).
+    - viewer submit path now reuses `/api/student/news-reports`, reopens viewer after refresh, and preserves compliance modal behavior for both `200 + complianceFailed` and legacy soft-save `422` payloads.
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - home/detail news queues now render admin-minus-action week-set columns.
+    - week-set queue/status now use submitted `items` only with `Approved` / `Waiting` / `Revise` chips.
+    - added admin-style read-only week-set viewer modal with prev/next/index/structured fields.
+    - queue row-click/button and news calendar event clicks now open week-set viewer modal.
+    - modal participates in shared body-lock + Escape close behavior with existing parent modals.
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - `saveStudentNewsReport(...)` now allows historical resubmission when an existing non-approved report for that immutable `reportDate` exists.
+    - new creation is still locked to current open report date.
+    - approved reports remain locked.
+    - `submittedAt` continues to refresh on each allowed save/resubmit.
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - parent dashboard payload now includes `newsReports.items` so parent queue/modal can hydrate from submitted report rows without extra route changes.
+- Test updates:
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - queue header contract + week-set open selectors updated.
+    - added student modal submit verification (submit button present, no revision button, submitted timestamp refresh).
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - queue status contract updated to `Approved/Waiting/Revise`.
+    - queue open behavior updated to week-set modal open and read-only modal assertions.
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - added save-path contract checks for open-date restriction, approved lock, fallback existing-row lookup, and submittedAt refresh semantics.
+- Verification:
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => `12` pass, `0` fail.
+  - `node --test test/parent-portal-ui.spec.mjs` => `12` pass, `0` fail.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `3` pass, `0` fail.
+  - `node --test test/student-admin.spec.mjs` => `116` pass, `0` fail.
+
+## Update (2026-04-01 - student compliance modal reopen hardening after 422 refresh)
+
+- Requirement:
+  - keep student compliance modal visibly open after soft-save `422` even when post-save dashboard/calendar reloads run immediately.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - added `hasNewsFieldValidationErrors()` helper to centralize failed-field presence checks.
+    - updated compliance modal render and `applyOpenReport(..., { preserveExistingValidation: true })` logic to use the shared helper.
+    - in submit `422` path, added a final post-refresh modal reopen guard:
+      - after `await Promise.all([loadDashboard(), loadCalendar({ preserveValidation: true })])`, modal is re-rendered if failed fields still exist.
+- Verification:
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `3` pass, `0` fail.
+  - live MCP Playwright against `http://127.0.0.1:8788/student/portal?apiOrigin=http://127.0.0.1:8788` with BBC sample payload:
+    - modal state after submit: `newsComplianceModal` visible (`class="portal-modal"`, computed `display: grid`).
+    - summary/form status both show revision guidance.
+
+## Update (2026-04-01 - align student/parent to admin modal baseline, remove unrequested modal/list flows)
+
+- Requirement:
+  - remove unrequested student/parent modal behavior that does not exist in admin baseline:
+    - no intermediate news-week modal flow,
+    - no `Edit in form` action pattern,
+    - no compliance modal list rendering.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - removed news-week modal markup/handlers and reverted queue/calendar interactions to direct `data-open-news-date` open behavior.
+    - removed compliance modal list markup/rendering (`newsComplianceModalList`) while keeping summary + inline field-level validation hints.
+    - removed custom compliance list styling.
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - removed news-week modal markup/state/handlers and reverted queue/detail calendar interactions to direct date-open behavior.
+    - removed `Edit in form` action wiring and modal-only selection flow.
+- Tests:
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - updated to assert direct news-date open behavior (no news-week modal element).
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - updated to assert direct queue open behavior and no news-week modal dependency.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - removed static contract assertion for `newsComplianceModalList`.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `12` pass, `0` fail.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `3` pass, `0` fail.
+  - `node --test --test-name-pattern "start server for admin routes|GET /student/portal returns student portal HTML with runtime config|shutdown admin route server" test/student-admin.spec.mjs` => `3` pass, `0` fail (`113` skipped by pattern).
+
+## Update (2026-04-01 - parent portal modal visibility hardening)
+
+- Requirement:
+  - parent modals must stay visible when opened from dashboard-detail pages where `#portalCard` is hidden.
+- Root cause:
+  - parent modals (`pastDueHomeworkModal`, `newsWeekModal`, `performanceReportModal`) were mounted under `#portalCard`; detail/news views hide that container.
+- Runtime behavior change:
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - added `hoistPortalModalsToBody()` and run it at bootstrap to move the three parent modal roots to `document.body`.
+    - added explicit `state.newsWeekModalOpen` tracking.
+    - updated modal body-lock sync to include news-week modal state.
+    - updated open/close + Escape/view transitions to close/sync `newsWeekModal` consistently.
+- Tests:
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - added `parent portal opens news week modal from news detail view when dashboard card is hidden`.
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` => `12` pass, `0` fail.
+  - `node --test --test-name-pattern "start server for admin routes|GET /parent/portal returns parent portal HTML with runtime config|shutdown admin route server" test/student-admin.spec.mjs` => `3` pass, `0` fail (`113` skipped by pattern).
+  - `npm test` => `323` pass, `0` fail.
+
+## Update (2026-04-01 - student news compliance modal visibility fix)
+
+- Requirement:
+  - compliance modal must be visibly rendered on student news page soft-save `422` responses, not only logically open in state.
+- Root cause:
+  - portal modals were mounted inside `#studentHomeCard`; when news page is active that card is `display:none`, making fixed-position modal nodes non-rendered (`0x0`).
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - added `hoistPortalModals()` to move `pastDueHomeworkModal`, `newsWeekModal`, and `newsComplianceModal` to `document.body` during bootstrap.
+    - keeps existing modal ids/listeners and state flow intact while removing hidden-ancestor render traps.
+- Verification:
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `3` pass, `0` fail.
+  - `node --test --test-name-pattern "start server for admin routes|GET /student/portal returns student portal HTML with runtime config|student news compliance save path keeps soft-save 422 contract and schema-drift translation|shutdown admin route server" test/student-admin.spec.mjs` => `4` pass, `0` fail (`112` skipped by pattern).
+  - live MCP Playwright flow against `http://127.0.0.1:8788/student/portal?apiOrigin=http://127.0.0.1:8788`:
+    - submit BBC sample -> `POST /api/student/news-reports` `422`.
+    - modal computed box now visible (`width: 780`, `height: 493`).
+    - screenshot evidence: `artifacts/student-modal-live-visible-20260401.png`.
+
+## Update (2026-04-01 - student portal compliance modal persistence hardening)
+
+- Requirement:
+  - keep the compliance modal visible on soft-save `422` responses even when response payloads drift (for example `item.validationIssuesJson` missing on follow-up refresh payloads).
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - fixed submit `422` flow ordering so `payload.failedFields` is applied after `item` hydration (prevents failed-field state from being overwritten before modal render).
+    - added fallback failed-field derivation from `payload.validation` score/threshold details and fetch metadata errors when `failedFields` is missing.
+    - added validation-state preservation path in `applyOpenReport(...)` + `loadCalendar(...)` so modal/CTA state does not get cleared by schema-drifted refresh payloads.
+- Tests:
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - added `student portal opens compliance modal for soft-save 422 even when openReport omits validation issues`.
+    - fixture now includes `POST /api/student/news-reports` soft-save `422` payload coverage.
+- Verification:
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `2` pass, `0` fail.
+  - `node --test --test-name-pattern "start server for admin routes|GET /student/portal returns student portal HTML with runtime config|student news compliance save path keeps soft-save 422 contract and schema-drift translation|shutdown admin route server" test/student-admin.spec.mjs` => `4` pass, `0` fail (`112` skipped by pattern).
+  - `npm test` => `321` pass, `0` fail.
+
+## Update (2026-04-01 - student portal compliance modal on 422 save)
+
+- Requirement:
+  - student news submit flow must open a visible modal when compliance validation fails (soft-save `422` with `saved=true`), not only inline field hints.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - added `newsComplianceModal` markup and `openNewsComplianceModalBtn` reopen control.
+    - added modal render/open helpers:
+      - `setNewsComplianceModalOpen(...)`
+      - `setNewsComplianceModalCtaVisible(...)`
+      - `renderNewsComplianceModalFromState(...)`
+    - submit handler now auto-opens modal on soft-save compliance response and renders failed field messages + revision steps.
+    - escape key and close/backdrop controls now close compliance modal.
+    - view/auth transitions now close modal and clear CTA state.
+- Tests:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - expanded `/student/portal` HTML contract assertions for compliance modal ids/helpers and 422 modal-open callsite.
+- Verification:
+  - `node --test --test-name-pattern "start server for admin routes|GET /student/portal returns student portal HTML with runtime config|student news compliance save path keeps soft-save 422 contract and schema-drift translation|shutdown admin route server" test/student-admin.spec.mjs` => `4` pass, `0` fail (`112` skipped by pattern).
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `1` pass, `0` fail.
+  - `npm test`
+
+## Update (2026-03-31 - primary HTML dateline/byline false-fail hardening for BBC)
+
+- Requirement:
+  - prevent false validation failures when source fetch lands on primary HTML (or AMP HTML) with:
+    - hidden `article:modified_time` metadata but no visible `Updated` label,
+    - prose containing `by ...` phrases (for example `by surprise`) that are not author bylines,
+    - ISO datetime datelines (`YYYY-MM-DDTHH:mm:ssZ`) that should still satisfy same-day date input.
+- Runtime behavior change:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - tightened `extractBylineFromHtml(...)` fallback parsing to line-anchored `By/Written by` patterns with name-shape checks, preventing incidental prose from being parsed as byline.
+    - expanded `extractDateKeysFromDatelineText(...)` ISO parsing to match date keys inside ISO datetime strings (`...T...`).
+    - added `datelineHasExplicitUpdatedCue(...)` and changed dateline compliance gating so `requiresUpdatedToken` is only set when fetched dateline text explicitly includes `Updated/Last updated`, not merely because hidden modified metadata exists.
+    - surfaced `fetchedUpdatedDateline` in compliance details for debugging.
+- Tests:
+  - [test/news-compliance.spec.mjs](test/news-compliance.spec.mjs):
+    - added `primary html extraction avoids prose byline false positives and hidden-meta updated requirements`.
+    - added `ISO datetime dateline metadata accepts same-day date input`.
+- Verification:
+  - `node --test test/news-compliance.spec.mjs` => `11` pass, `0` fail.
+  - `node --test --test-name-pattern "student news compliance save path keeps soft-save 422 contract and schema-drift translation" test/student-admin.spec.mjs` => `1` pass, `0` fail (`115` skipped by pattern).
+  - `npm test` => `320` pass, `0` fail.
+
+## Update (2026-03-31 - student news dateline flexibility + BBC proxy metadata hardening)
+
+- Requirement:
+  - extract visible relative datelines (for example `9 hours ago`) from BBC proxy content.
+  - accept same-day date stamps and `updated today` date/time text for dateline compliance when source dateline is relative.
+  - prevent false failures where proxy fallback picks short headline variants, misses byline, or treats image/link metadata lines as lead paragraph text.
+- Runtime behavior change:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - hardened `parseGenericJinaMarkdown(...)` to prefer article-level H1 headings, parse byline patterns like `Name ... Correspondent`, extract visible relative datelines, and ignore metadata/image lines for lead extraction.
+    - parser now scopes extraction to the `Markdown Content:` region when present, reducing preamble/nav contamination from proxy wrappers.
+    - parser now accepts `By ...`/`Written by ...` and comma-role byline variants (`By Caroline Davies, Pakistan Correspondent`).
+    - expanded BBC/CNN fallback strategy to trigger proxy enrichment when primary metadata lacks byline/dateline, while keeping BBC liveblog behavior stable.
+    - updated proxy metadata merge to preserve/upgrade title, byline, dateline, and lead text instead of keeping empty primary fields.
+    - added relaxed dateline equivalence for:
+      - compatible relative-time expressions,
+      - near-match date keys (timezone drift up to one day),
+      - same-day date entries,
+      - `today` / `updated today` stamps.
+    - retained strict timezone-literal enforcement when a timezone abbreviation is entered without required descriptor/offset.
+- Tests:
+  - [test/news-compliance.spec.mjs](test/news-compliance.spec.mjs):
+    - added `BBC proxy fallback prefers full headline and extracts byline/dateline from markdown body`.
+    - added `relative dateline allows same-day date and updated-today timestamp entries`.
+    - added `proxy parser ignores pre-content nav noise and accepts updated-relative dateline phrasing`.
+    - expanded proxy fixture with image-markdown noise to guard lead-paragraph extraction.
+    - switched proxy timestamp fixture to dynamic `new Date().toISOString()` to avoid date-based brittleness.
+- Verification:
+  - `node --test test/news-compliance.spec.mjs` => `9` pass, `0` fail.
+  - `node --test --test-name-pattern "student news compliance save path keeps soft-save 422 contract and schema-drift translation" test/student-admin.spec.mjs` => `1` pass, `0` fail (`115` skipped by pattern).
+  - `npm test` => `318` pass, `0` fail.
+
+## Update (2026-03-31 - enforce chips.xlsx admin status schema + waiting regression coverage)
+
+- Requirement:
+  - enforce `docs/chips.xlsx` for admin news week-set `Status`: admin queue/set surfaces must use only `Approved`, `Waiting`, or `Checked`.
+  - revised student resubmissions (`reviewStatus=submitted` + `awaitingReReview=true`) must render `Waiting` unless superseded by higher-precedence status rules.
+- Runtime behavior change:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - added `resolveAdminNewsSetStatus(...)` and applied it to Queue Hub `news-report-review` payload, collapsing non-`approved`/`checked` set states to `waiting`.
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - removed `Submitted` and `Revise` from admin news week-set status filters.
+    - admin week-set status resolver now emits only `approved`, `waiting`, or `checked`.
+    - summary counters and queue/news tables now normalize to the same admin status token.
+  - [docs/chips.md](docs/chips.md):
+    - confirmed week-set rules and waiting precedence are aligned with `docs/chips.xlsx`.
+- Tests:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - updated admin week-set queue/news assertions to expect `Waiting` where legacy UI displayed `Submitted`/`Revise`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - updated locked admin week-set status contract assertion.
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - added revised-resubmission fixture (`awaitingReReview=true`) and explicit waiting assertions across student queue, calendar, and week modal.
+  - verification:
+    - `node --test test/student-admin-ui.spec.mjs` => `49` pass, `0` fail.
+    - `node --test test/student-admin.spec.mjs` => `116` pass, `0` fail.
+    - `node --test test/student-portal-calendar.playwright.spec.mjs` => `1` pass, `0` fail.
+    - combined: `node --test test/student-admin.spec.mjs test/student-admin-ui.spec.mjs test/student-portal-calendar.playwright.spec.mjs` => `166` pass, `0` fail.
+
+## Update (2026-03-31 - student news fetch fallback for BBC/CNN)
+
+- Requirement:
+  - reduce bot/anti-scrape blocks when validating BBC/CNN student news sources.
+- Runtime behavior change:
+  - `fetchStudentNewsArticleMetadata(...)` now sends a mainstream browser UA + accept headers.
+  - adds AMP variant fallbacks (`.amp` for BBC, `?outputType=amp` for CNN) before proxying.
+  - keeps BBC liveblog parser but now also proxies other BBC/CNN pages through `r.jina.ai` when direct + AMP fail.
+- Tests:
+  - `node --test test/news-compliance.spec.mjs`
+  - baseline prior to change: `npm test` => `314` pass (2026-03-31).
+
 ## Update (2026-03-30 - portal-wide canonical news chips across admin/parent/student)
 
 - Requirement:
@@ -3228,7 +3546,7 @@
     - stale `createdAt` timestamps.
   - verified richer incoming payload updates existing `0` score row to `100` without inserting a second row.
 - Updated lint stack and CI:
-  - replaced Super-Linter action flow in [.github/workflows/super-linter.yml](.github/workflows/super-linter.yml) with Node-based lint steps:
+  - replaced Super-Linter action flow in <github/workflows/super-linter.yml>(github/workflows/super-linter.yml) with Node-based lint steps:
     - `html-validate`,
     - `eslint`,
     - `stylelint`.
@@ -3328,12 +3646,12 @@
   - pinned runner to `ubuntu-22.04` for deterministic behavior.
   - upgraded `actions/checkout` to `v5`.
   - added YAML doc start (`---`) for consistency.
-- Updated [.github/workflows/summary.yml](.github/workflows/summary.yml):
+- Updated <github/workflows/summary.yml> <github/workflows/summary.yml>:
   - added `concurrency` (issue-number keyed) and `timeout-minutes: 5`.
   - removed unnecessary checkout step and dropped unneeded `contents` permission.
   - kept required `models: read` for `actions/ai-inference@v1`.
   - guarded comment step so it only runs when model output is non-empty.
-- Updated [.github/workflows/super-linter.yml](.github/workflows/super-linter.yml):
+- Updated <github/workflows/super-linter.yml>:
   - upgraded linter action to `super-linter/super-linter@v8.5.0`.
   - added `concurrency`, explicit workflow `permissions`, and `timeout-minutes: 20`.
   - upgraded `actions/checkout` to `v5`.
@@ -3354,7 +3672,7 @@
     - textlint terminology/codespell flags in `sis.md`
     - Trivy vulnerability findings against `backups/.../package-lock.json`
     - formatting-only failures in docs/workflow YAML/markdown files
-- Updated [.github/workflows/super-linter.yml](.github/workflows/super-linter.yml):
+- Updated [.github/workflows/ super-linter.yml](.github/workflows/ super-linter.yml):
   - disabled the noisy validators listed above so CI stays focused on actionable repository checks.
   - added `FILTER_REGEX_EXCLUDE: "(^|/)(backups|docs/logs)/"` to avoid lint/security noise from archival/log artifacts.
 - Verification:
@@ -4146,9 +4464,9 @@
   - added workbook prep utility [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs):
     - regenerated served template [schemas/student-import-template.xlsx](schemas/student-import-template.xlsx) with canonical camelCase headers.
     - generated filled example template [docs/students/student-import-template.filled-example.xlsx](docs/students/student-import-template.filled-example.xlsx).
-    - audited and canonicalized `docs/students/current_matches_amalgamated.xlsx` to [docs/students/current_matches_amalgamated.canonical-ready.xlsx](docs/students/current_matches_amalgamated.canonical-ready.xlsx) with audit report [docs/students/current_matches_amalgamated.canonical-audit.json](docs/students/current_matches_amalgamated.canonical-audit.json).
-    - built import-ready workbook [docs/students/current_matches_amalgamated.import-ready.xlsx](docs/students/current_matches_amalgamated.import-ready.xlsx) with deterministic identity/number autofill (`studentNumber` floor `100`, `eaglesId = SIS-<6 digits>`).
-    - latest audit result: canonicalized source still lacks optional headers `parentsId`, `photoUrl`, `postCode`, but import-ready workbook has `0` missing required ids (`eaglesId`/`studentNumber`).
+    - audited and canonicalized `docs/students/current_matches_amalgamated.xlsx` to [docs/students/current_matches_amalgamated.canonical-ready.xlsx](docs/students/current_matches_amalgamated.canonical-ready.xlsx).
+    - generated import-ready workbook with deterministic identity/number autofill (`studentNumber` floor `100`, `eaglesId = SIS-<6 digits>`).
+    - latest audit result: canonicalized source lacks optional headers `parentsId`, `photoUrl`, `postCode`; import workflow handles missing optional fields gracefully.
 - Follow-up validation and UI hardening (2026-03-04):
   - re-ran `node tools/backfill-student-number-once.mjs --dry-run`, apply mode, and `npm run db:migrate:deploy`; result remains `assignedCount=0` and no pending migrations.
   - verified student-domain cleanup status via DB counts (`students`, `profiles`, `attendance`, `grades`, `parentReports`, `submissions`, `intakeSubmissions`, `incomingExerciseResults`, `adminNotificationQueue`) all at `0`.
@@ -4960,3 +5278,18 @@ Reference: [docs/ffs.md](docs/ffs.md) `Systemd Runtime Policy (Canonical)`.
 - Latest full test run:
   - command: `npm test`
   - result: pass (`311/311`).
+
+** If zygote CPU spikes again, start Code with GPU/UI sandbox off (often fixes runaway zygotes on some systems):
+
+```bash
+code --disable-gpu --disable-features=UseOzonePlatform,WaylandWindowDecorations --disable-extensions
+```
+
+If that stabilizes, re-enable extensions gradually; a bad extension is a common cause.
+
+As a quick health check:
+
+```bash
+ps -o pid,ppid,pcpu,pmem,cmd -C code | head
+```
+to ensure no renderer is pegged.

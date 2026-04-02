@@ -190,6 +190,387 @@ test(
   }
 )
 
+test(
+  "CNN AMP fallback is used when primary fetch is blocked",
+  { concurrency: false },
+  async () => {
+    const cnnUrl = "https://www.cnn.com/2026/03/31/world/example-story/index.html"
+    const originalFetch = globalThis.fetch
+    const fetchCalls = []
+
+    globalThis.fetch = async (url) => {
+      fetchCalls.push(String(url))
+      if (typeof url === "string" && url.includes("outputType=amp")) {
+        return new Response(ARTICLE_HTML, {
+          status: 200,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        })
+      }
+      return new Response("", { status: 503 })
+    }
+
+    try {
+      const result = await evaluateStudentNewsCompliance(
+        basePayload({
+          sourceLink: cnnUrl,
+          byline: "cnn",
+        }),
+        {
+          validationConfig: {
+            allowedDomains: ["bbc.com", "cnn.com"],
+            thresholds: {
+              articleTitle: 0.7,
+              byline: 0.7,
+              articleDateline: 0.7,
+              leadSynopsis: 0.5,
+            },
+          },
+        }
+      )
+
+      assert.equal(result.passed, true)
+      assert.equal(result.failedFields.sourceLink, undefined)
+      assert.ok(fetchCalls.some((url) => url.includes("outputType=amp")))
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  }
+)
+
+test(
+  "BBC proxy fallback prefers full headline and extracts byline/dateline from markdown body",
+  { concurrency: false },
+  async () => {
+    const bbcUrl = "https://www.bbc.com/news/articles/cy91vrzxn34o"
+    const proxyMarkdown = [
+      "Title: Iran war: How Pakistan became an unlikely mediator",
+      "",
+      "URL Source: https://www.bbc.com/news/articles/cy91vrzxn34o",
+      "",
+      "Published Time: 2026-03-31T02:33:18.419Z",
+      "",
+      "Markdown Content:",
+      "# Iran war: How Pakistan became an unlikely mediator",
+      "",
+      "# How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+      "",
+      "13 hours ago",
+      "",
+      "Share Save",
+      "",
+      "Caroline Davies Pakistan Correspondent",
+      "",
+      "![Image 1](https://example.com/a.png)![Image 2](https://example.com/b.png)Getty Images",
+      "",
+      "Pakistan has been making a diplomatic push to position itself as a negotiator in the war",
+    ].join("\n")
+    const originalFetch = globalThis.fetch
+    const fetchCalls = []
+    globalThis.fetch = async (url) => {
+      fetchCalls.push(String(url))
+      if (typeof url === "string" && url.includes("r.jina.ai")) {
+        return new Response(proxyMarkdown, {
+          status: 200,
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        })
+      }
+      return new Response("", { status: 503 })
+    }
+
+    try {
+      const result = await evaluateStudentNewsCompliance(
+        basePayload({
+          sourceLink: bbcUrl,
+          articleTitle:
+            "How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+          byline: "Caroline Davies",
+          articleDateline: "13 hours ago",
+          leadSynopsis:
+            "Pakistan has been making a diplomatic push to position itself as a negotiator in the war",
+        }),
+        {
+          validationConfig: {
+            allowedDomains: ["bbc.com"],
+            thresholds: {
+              articleTitle: 0.7,
+              byline: 0.7,
+              articleDateline: 0.7,
+              leadSynopsis: 0.5,
+            },
+          },
+        }
+      )
+
+      assert.equal(result.passed, true)
+      assert.equal(result.failedFields.articleTitle, undefined)
+      assert.equal(result.failedFields.byline, undefined)
+      assert.equal(result.failedFields.articleDateline, undefined)
+      assert.equal(
+        result.details?.metadata?.title,
+        "How Pakistan won over Trump to become an unlikely mediator in the Iran war"
+      )
+      assert.equal(result.details?.metadata?.byline, "Caroline Davies")
+      assert.match(result.details?.metadata?.dateline?.combined || "", /\bhours?\s+ago\b/i)
+      assert.ok(fetchCalls.some((url) => String(url).includes("r.jina.ai")))
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  }
+)
+
+test(
+  "relative dateline allows same-day date and updated-today timestamp entries",
+  { concurrency: false },
+  async () => {
+    const bbcUrl = "https://www.bbc.com/news/articles/cy91vrzxn34o"
+    const nowIso = new Date().toISOString()
+    const proxyMarkdown = [
+      "Title: Iran war: How Pakistan became an unlikely mediator",
+      "",
+      "URL Source: https://www.bbc.com/news/articles/cy91vrzxn34o",
+      "",
+      `Published Time: ${nowIso}`,
+      "",
+      "Markdown Content:",
+      "# How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+      "",
+      "13 hours ago",
+      "",
+      "Caroline Davies Pakistan Correspondent",
+      "",
+      "Pakistan has been making a diplomatic push to position itself as a negotiator in the war",
+    ].join("\n")
+    const today = new Date()
+    const todayDate = `${String(today.getFullYear()).padStart(4, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    const datelineInputs = [todayDate, "Updated today 10:30 AM"]
+
+    for (const datelineInput of datelineInputs) {
+      const originalFetch = globalThis.fetch
+      globalThis.fetch = async (url) => {
+        if (typeof url === "string" && url.includes("r.jina.ai")) {
+          return new Response(proxyMarkdown, {
+            status: 200,
+            headers: { "content-type": "text/plain; charset=utf-8" },
+          })
+        }
+        return new Response("", { status: 503 })
+      }
+
+      try {
+        const result = await evaluateStudentNewsCompliance(
+          basePayload({
+            sourceLink: bbcUrl,
+            articleTitle:
+              "How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+            byline: "Caroline Davies",
+            articleDateline: datelineInput,
+            leadSynopsis:
+              "Pakistan has been making a diplomatic push to position itself as a negotiator in the war",
+          }),
+          {
+            validationConfig: {
+              allowedDomains: ["bbc.com"],
+              thresholds: {
+                articleTitle: 0.7,
+                byline: 0.7,
+                articleDateline: 0.7,
+                leadSynopsis: 0.5,
+              },
+            },
+          }
+        )
+
+        assert.equal(result.failedFields.articleDateline, undefined)
+      } finally {
+        globalThis.fetch = originalFetch
+      }
+    }
+  }
+)
+
+test(
+  "proxy parser ignores pre-content nav noise and accepts updated-relative dateline phrasing",
+  { concurrency: false },
+  async () => {
+    const bbcUrl = "https://www.bbc.com/news/articles/cy91vrzxn34o"
+    const proxyMarkdown = [
+      "Title: Iran war: How Pakistan became an unlikely mediator",
+      "URL Source: https://www.bbc.com/news/articles/cy91vrzxn34o",
+      "Published Time: 2026-03-31T02:33:18.419Z",
+      "",
+      "Home",
+      "News",
+      "Share Save",
+      "",
+      "Markdown Content:",
+      "# How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+      "",
+      "Updated 9 hours ago",
+      "",
+      "By Caroline Davies, Pakistan Correspondent",
+      "",
+      "Pakistan has been making a diplomatic push to position itself as a negotiator in the war",
+    ].join("\n")
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async (url) => {
+      if (typeof url === "string" && url.includes("r.jina.ai")) {
+        return new Response(proxyMarkdown, {
+          status: 200,
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        })
+      }
+      return new Response("", { status: 503 })
+    }
+    try {
+      const result = await evaluateStudentNewsCompliance(
+        basePayload({
+          sourceLink: bbcUrl,
+          articleTitle:
+            "How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+          byline: "Caroline Davies",
+          articleDateline: "Updated 9 hours ago",
+          leadSynopsis:
+            "Pakistan has been making a diplomatic push to position itself as a negotiator in the war",
+        }),
+        {
+          validationConfig: {
+            allowedDomains: ["bbc.com"],
+            thresholds: {
+              articleTitle: 0.7,
+              byline: 0.7,
+              articleDateline: 0.7,
+              leadSynopsis: 0.5,
+            },
+          },
+        }
+      )
+      assert.equal(result.passed, true)
+      assert.equal(result.failedFields.articleDateline, undefined)
+      assert.equal(result.failedFields.byline, undefined)
+      assert.equal(result.details?.metadata?.byline, "Caroline Davies")
+      assert.match(result.details?.metadata?.dateline?.combined || "", /\b9\s+hours?\s+ago\b/i)
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  }
+)
+
+test(
+  "primary html extraction avoids prose byline false positives and hidden-meta updated requirements",
+  { concurrency: false },
+  async () => {
+    const bbcUrl = "https://www.bbc.com/news/articles/cy91vrzxn34o"
+    const nowIso = new Date().toISOString()
+    const articleTitle = "How Pakistan won over Trump to become an unlikely mediator in the Iran war"
+    const html = `
+<!doctype html>
+<html>
+  <head>
+    <title>Iran war: How Pakistan became an unlikely mediator</title>
+    <meta property="og:title" content="Iran war: How Pakistan became an unlikely mediator" />
+    <meta property="article:published_time" content="${nowIso}" />
+    <meta property="article:modified_time" content="${nowIso}" />
+  </head>
+  <body>
+    <h1>${articleTitle}</h1>
+    <div>9 hours ago</div>
+    <p>Pakistan's role as intermediary in this conflict took many by surprise.</p>
+    <p>Pakistan has been making a diplomatic push to position itself as a negotiator in the war.</p>
+  </body>
+</html>
+`
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = async (url) => {
+      if (typeof url === "string" && url.includes("r.jina.ai")) {
+        return new Response("", { status: 503 })
+      }
+      return new Response(html, {
+        status: 200,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      })
+    }
+
+    try {
+      const result = await evaluateStudentNewsCompliance(
+        basePayload({
+          sourceLink: bbcUrl,
+          articleTitle,
+          byline: "bbc",
+          articleDateline: "9 hours ago",
+          leadSynopsis: "Pakistan's role as intermediary in this conflict took many by surprise.",
+        }),
+        {
+          validationConfig: {
+            allowedDomains: ["bbc.com"],
+            thresholds: {
+              articleTitle: 0.7,
+              byline: 0.7,
+              articleDateline: 0.7,
+              leadSynopsis: 0.5,
+            },
+          },
+        }
+      )
+
+      assert.equal(result.passed, true)
+      assert.equal(result.failedFields.articleTitle, undefined)
+      assert.equal(result.failedFields.byline, undefined)
+      assert.equal(result.failedFields.articleDateline, undefined)
+      assert.ok(["primary", "bbc-amp"].includes(result.details?.metadata?.via))
+      assert.equal(result.details?.metadata?.title, articleTitle)
+      assert.equal(result.details?.metadata?.byline, "")
+      assert.equal(result.details?.articleDateline?.requiresUpdatedToken, false)
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  }
+)
+
+test(
+  "ISO datetime dateline metadata accepts same-day date input",
+  { concurrency: false },
+  async () => {
+    const nowIso = new Date().toISOString()
+    const todayDate = nowIso.slice(0, 10)
+    const html = `
+<!doctype html>
+<html>
+  <head>
+    <title>Storms hit coast city</title>
+    <meta property="article:published_time" content="${nowIso}" />
+    <meta name="author" content="BBC" />
+  </head>
+  <body>
+    <h1>Storms hit coast city</h1>
+    <p>Officials said emergency teams evacuated hundreds of families after rising waters flooded multiple districts near the river.</p>
+  </body>
+</html>
+`
+    const result = await withMockedFetch(html, () =>
+      evaluateStudentNewsCompliance(
+        basePayload({
+          articleDateline: todayDate,
+          byline: "bbc",
+        }),
+        {
+          validationConfig: {
+            allowedDomains: ["bbc.com", "cnn.com"],
+            thresholds: {
+              articleTitle: 0.7,
+              byline: 0.7,
+              articleDateline: 0.7,
+              leadSynopsis: 0.5,
+            },
+          },
+        }
+      )
+    )
+
+    assert.equal(result.failedFields.articleDateline, undefined)
+    assert.ok(result.details?.articleDateline?.targetDateKeys?.includes(todayDate))
+  }
+)
+
 test("compliance note block keeps manual text and marks fixed fields with required prefix", () => {
   const failed = {
     failedFields: {

@@ -258,6 +258,7 @@
         border: 1px solid var(--line);
         border-radius: var(--radius-3);
         box-shadow: var(--shadow);
+        min-width: 0;
         padding: 14px;
       }
 
@@ -1206,47 +1207,62 @@
       }
 
       .chip {
+        --chip-height: 30px;
+        --chip-min-ar: 4.8;
         align-items: center;
-        background: #f4f8ff;
-        border: 1px solid var(--line-strong);
+        justify-content: center;
+        background: #e2edff;
+        border: 2px solid #5f7ca6;
+        border-bottom-width: 3px;
         border-radius: 999px;
-        color: #2f4f76;
+        box-sizing: border-box;
+        color: #173962;
         display: inline-flex;
-        font-size: 11px;
+        inline-size: auto;
+        min-inline-size: calc(var(--chip-height) * var(--chip-min-ar));
+        max-inline-size: 100%;
+        font-size: 12px;
+        font-weight: 800;
         gap: 6px;
         line-height: 1;
-        padding: 5px 10px;
+        min-height: 0;
+        height: var(--chip-height);
+        padding: 0 10px;
+        text-align: center;
+        text-transform: uppercase;
+        box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
         white-space: nowrap;
+        flex: 0 0 auto;
       }
 
       .chip-neutral {
-        background: #eef4ff;
-        border-color: #9ab0ce;
-        color: #3d567a;
+        background: #dfeaff;
+        border-color: #5877a3;
+        color: #12345b;
       }
 
       .chip-ok {
-        background: #ecf9f1;
-        border-color: #86b79e;
-        color: #195d3d;
+        background: #d8f2e3;
+        border-color: #287a4f;
+        color: #0f452c;
       }
 
       .chip-warn {
-        background: #fff5df;
-        border-color: #e7a23c;
-        color: #8a5600;
+        background: #ffe9c7;
+        border-color: #b16d00;
+        color: #5b3500;
       }
 
       .chip-open {
-        background: #e7f4ff;
-        border-color: #6eaedc;
-        color: #0f4d78;
+        background: #d8edff;
+        border-color: #2d78b4;
+        color: #093a63;
       }
 
       .chip-revise {
-        background: #f3ecff;
-        border-color: #a48ad8;
-        color: #4b2f8a;
+        background: #eadcff;
+        border-color: #7348b5;
+        color: #351267;
       }
 
       .chip-link {
@@ -1254,28 +1270,33 @@
         display: inline-flex;
       }
 
+      .chip-link:hover,
+      .chip-link:focus-visible {
+        cursor: pointer;
+      }
+
       .chip-bad {
-        background: #fbe9ea;
-        border-color: #e58a92;
-        color: #9b1520;
+        background: #ffd8dd;
+        border-color: #ad2c3c;
+        color: #67101d;
       }
 
       .chip-checked {
-        background: #e1fbf9;
-        border-color: #2ba39a;
-        color: #085852;
+        background: #cef4ef;
+        border-color: #1d8b82;
+        color: #044e48;
       }
 
       .chip-lock {
-        background: #fff0f0;
-        border-color: #d3aaaa;
-        color: #8a2f2f;
+        background: #ffe1e1;
+        border-color: #b24949;
+        color: #661717;
       }
 
       .chip-edited {
-        background: #e9f1ff;
-        border-color: #6a8fcc;
-        color: #113f85;
+        background: #d7e8ff;
+        border-color: #2f67b8;
+        color: #0c3c7a;
       }
 
       .queue-panel details summary {
@@ -1311,13 +1332,16 @@
         max-height: 260px;
         overflow: auto;
         box-sizing: border-box;
+        min-width: 0;
         background: #fff;
       }
 
       .queue-table-wrap table {
-        width: 100%;
+        min-width: 100%;
         border-collapse: collapse;
         font-size: 13px;
+        table-layout: fixed;
+        width: 100%;
       }
 
       .queue-table-wrap th,
@@ -1326,6 +1350,8 @@
         border-bottom: 1px solid var(--line-strong);
         text-align: left;
         vertical-align: top;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .queue-table-wrap tr:last-child td {
@@ -1363,6 +1389,93 @@
         white-space: nowrap;
       }
 
+      @media (max-width: 920px) {
+        .queue-table-wrap table.news-queue-table th:nth-child(6),
+        .queue-table-wrap table.news-queue-table td:nth-child(6) {
+          display: none;
+        }
+      }
+
+      @media (max-width: 780px) {
+        .queue-table-wrap table.news-queue-table th:nth-child(3),
+        .queue-table-wrap table.news-queue-table td:nth-child(3) {
+          display: none;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .queue-table-wrap table.news-queue-table th:nth-child(2),
+        .queue-table-wrap table.news-queue-table td:nth-child(2) {
+          display: none;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .queue-table-wrap table.news-queue-table th:nth-child(4),
+        .queue-table-wrap table.news-queue-table td:nth-child(4) {
+          display: none;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .queue-table-wrap table.news-queue-table {
+          table-layout: auto;
+        }
+
+        .queue-table-wrap table.news-queue-table thead {
+          display: none;
+        }
+
+        .queue-table-wrap table.news-queue-table th:nth-child(2),
+        .queue-table-wrap table.news-queue-table td:nth-child(2),
+        .queue-table-wrap table.news-queue-table th:nth-child(3),
+        .queue-table-wrap table.news-queue-table td:nth-child(3),
+        .queue-table-wrap table.news-queue-table th:nth-child(4),
+        .queue-table-wrap table.news-queue-table td:nth-child(4),
+        .queue-table-wrap table.news-queue-table th:nth-child(6),
+        .queue-table-wrap table.news-queue-table td:nth-child(6) {
+          display: none;
+        }
+
+        .queue-table-wrap table.news-queue-table tbody {
+          display: grid;
+          gap: 8px;
+        }
+
+        .queue-table-wrap table.news-queue-table tbody tr {
+          display: grid;
+          gap: 6px;
+          grid-template-columns: minmax(0, 1fr);
+          border: 1px solid var(--line-strong);
+          border-radius: var(--radius-2);
+          background: #f5f9ff;
+          padding: 8px;
+        }
+
+        .queue-table-wrap table.news-queue-table tbody td {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          border-bottom: 0;
+          padding: 0;
+        }
+
+        .queue-table-wrap table.news-queue-table tbody td:nth-child(1) {
+          font-weight: 700;
+        }
+
+        .queue-table-wrap table.news-queue-table tbody td:nth-child(7) .queue-row-btn {
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .queue-table-wrap table.news-queue-table tbody td[colspan] {
+          display: block;
+          text-align: center;
+        }
+      }
+
       .hidden {
         display: none !important;
       }
@@ -1370,6 +1483,15 @@
       .form-row {
         display: grid;
         gap: 6px;
+      }
+
+      .parent-overview-title {
+        color: var(--ink);
+        font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        line-height: 1.12;
+        margin: 0;
       }
 
       label {
@@ -1485,6 +1607,7 @@
         display: grid;
         gap: 10px;
         margin-bottom: 12px;
+        min-width: 0;
       }
 
       .toolbar-actions {
@@ -1498,6 +1621,7 @@
         border: 1px solid var(--line);
         border-radius: var(--radius-3);
         margin-top: 10px;
+        min-width: 0;
         padding: 12px;
       }
 
@@ -1508,9 +1632,11 @@
       }
 
       .metric {
-        background: #fbfcff;
-        border: 1px solid var(--line);
+        background: #f3f8ff;
+        border: 2px solid #8ea3c1;
+        border-bottom-width: 4px;
         border-radius: 10px;
+        box-sizing: border-box;
         display: grid;
         gap: 4px;
         min-height: 72px;
@@ -1540,23 +1666,43 @@
       }
 
       .metric.metric-green {
-        background: #eefaf3;
-        border-color: #8ccba9;
+        background: #d7f2e1;
+        border-color: #1f7a4a;
+      }
+
+      .metric.metric-green .k,
+      .metric.metric-green .v {
+        color: #0f4129;
       }
 
       .metric.metric-blue {
-        background: #eff5ff;
-        border-color: #9dbde5;
+        background: #d9eaff;
+        border-color: #265f9f;
+      }
+
+      .metric.metric-blue .k,
+      .metric.metric-blue .v {
+        color: #103d70;
       }
 
       .metric.metric-purple {
-        background: #f6f1ff;
-        border-color: #baa3db;
+        background: #eadcff;
+        border-color: #7348b5;
+      }
+
+      .metric.metric-purple .k,
+      .metric.metric-purple .v {
+        color: #351267;
       }
 
       .metric.metric-red {
-        background: #fff1f1;
-        border-color: #e1a8a8;
+        background: #ffd9de;
+        border-color: #b3263a;
+      }
+
+      .metric.metric-red .k,
+      .metric.metric-red .v {
+        color: #5f0f1c;
       }
 
       .identity-list {
@@ -1785,6 +1931,7 @@
         align-items: start;
         display: grid;
         gap: 12px;
+        min-width: 0;
       }
 
       .portal-col {
@@ -1792,6 +1939,7 @@
         display: grid;
         gap: 10px;
         grid-template-columns: minmax(0, 1fr);
+        min-width: 0;
       }
 
       .quick-links {
@@ -1975,44 +2123,6 @@
         white-space: normal;
       }
 
-      .news-week-modal {
-        max-width: 760px;
-      }
-
-      .news-week-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: grid;
-        gap: 6px;
-      }
-
-      .news-week-list li {
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        gap: 8px;
-        align-items: center;
-        padding: 8px 10px;
-        border: 1px solid var(--line-strong);
-        border-radius: var(--radius-2);
-        background: #fff;
-      }
-
-      .news-week-list li.selected {
-        border-color: #7a59cc;
-        background: #f6f1ff;
-      }
-
-      @media (max-width: 720px) {
-        .news-week-list li {
-          grid-template-columns: 1fr;
-        }
-        .news-week-list li > span:nth-child(2),
-        .news-week-list li > span:nth-child(3) {
-          justify-self: start;
-        }
-      }
-
       .fc .fc-event.fc-event-news-status-green {
         background: #e7f8ef !important;
         border-color: #36a66a !important;
@@ -2108,6 +2218,29 @@
       #portalDetailCard,
       #childPageCard {
         zoom: var(--portal-text-zoom);
+      }
+
+      @media (max-width: 430px) {
+        .hero-line {
+          grid-template-columns: minmax(0, 1fr);
+          align-items: start;
+        }
+
+        .hero-actions {
+          justify-content: flex-start;
+          flex-wrap: wrap;
+          width: 100%;
+        }
+
+        .text-zoom-controls {
+          flex-wrap: wrap;
+          justify-content: flex-start;
+          max-width: 100%;
+        }
+
+        #parentTextZoomResetBtn {
+          display: none;
+        }
       }
 
       @media (max-width: 399px) {
@@ -2224,6 +2357,18 @@
         .text-zoom-controls > span:first-child,
         .text-zoom-controls .zoom-label {
           display: none;
+        }
+
+        .section-head,
+        .queue-summary-head {
+          justify-content: center;
+          text-align: center;
+        }
+
+        .section-head > *,
+        .queue-summary-head > * {
+          margin-inline: auto;
+          text-align: center;
         }
       }
 
@@ -2406,8 +2551,8 @@
             <div class="portal-col">
               <div class="toolbar" id="overviewPanel">
                 <div class="form-row">
-                  <label for="childSelect">Học sinh</label>
-                  <select id="childSelect"></select>
+                  <p id="parentOverviewSummary" class="parent-overview-title">Loading student dashboard...</p>
+                  <select id="childSelect" aria-label="Student selector"></select>
                 </div>
                 <div class="toolbar-actions">
                   <button id="reloadBtn" type="button">Tải lại</button>
@@ -2485,18 +2630,21 @@
                     <span class="chip chip-neutral" id="newsQueueBadge">Đang tải</span>
                   </summary>
                   <div class="queue-table-wrap">
-                    <table>
+                    <table class="news-queue-table">
                       <thead>
                         <tr>
-                          <th scope="col">Tuần</th>
-                          <th scope="col">Trạng thái</th>
-                          <th scope="col">Số lượng</th>
-                          <th scope="col">Gần nhất</th>
+                          <th scope="col">Week Set</th>
+                          <th scope="col">Student</th>
+                          <th scope="col">Level</th>
+                          <th scope="col">Reports</th>
+                          <th scope="col">Status</th>
+                          <th scope="col">Latest Submission</th>
+                          <th scope="col">Open</th>
                         </tr>
                       </thead>
                       <tbody id="newsQueueBody">
                         <tr>
-                          <td colspan="4">Đang tải...</td>
+                          <td colspan="7">Đang tải...</td>
                         </tr>
                       </tbody>
                     </table>
@@ -2570,26 +2718,89 @@
                 </div>
               </section>
 
-              <section id="newsWeekModal" class="portal-modal hidden">
-                <div class="portal-modal-backdrop" id="newsWeekModalBackdrop"></div>
+              <section id="newsWeekSetModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="newsWeekSetModalBackdrop"></div>
                 <div
-                  class="portal-modal-dialog news-week-modal"
+                  class="portal-modal-dialog"
                   role="dialog"
                   aria-modal="true"
-                  aria-labelledby="newsWeekModalTitle">
+                  aria-labelledby="newsWeekSetModalTitle">
                   <div class="portal-modal-head">
-                    <h4 id="newsWeekModalTitle">Tuần báo cáo tin tức</h4>
-                    <button
-                      id="closeNewsWeekModalBtn"
-                      class="portal-modal-close"
-                      type="button">
-                      Đóng
-                    </button>
+                    <h4 id="newsWeekSetModalTitle">Student News Report Viewer</h4>
+                    <div class="actions">
+                      <button id="newsWeekSetModalPrevBtn" type="button" aria-label="Previous report">←</button>
+                      <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
+                      <button id="newsWeekSetModalNextBtn" type="button" aria-label="Next report">→</button>
+                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close" type="button">Close</button>
+                    </div>
                   </div>
                   <div class="portal-modal-body">
-                    <p id="newsWeekModalSummary" class="hint">Đang tải dữ liệu...</p>
-                    <ul id="newsWeekModalList" class="news-week-list"></ul>
+                    <p id="newsWeekSetModalMeta" class="hint">Open a week set to review submitted reports.</p>
+                    <div class="row">
+                      <div class="field c4">
+                        <label for="newsViewerReportDate">Report Date</label>
+                        <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
+                      </div>
+                      <div class="field c4">
+                        <label>Status</label>
+                        <span id="newsViewerReviewStatusChip" class="chip chip-neutral">-</span>
+                      </div>
+                      <div class="field c4">
+                        <label for="newsViewerSubmittedAt">Submitted At</label>
+                        <input id="newsViewerSubmittedAt" type="text" readonly aria-readonly="true">
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="field c12">
+                        <label for="newsViewerSourceLink">I. Source: link to article</label>
+                        <input id="newsViewerSourceLink" type="url" readonly aria-readonly="true">
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerArticleTitle">II.A. Title</label>
+                        <input id="newsViewerArticleTitle" type="text" readonly aria-readonly="true">
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerByline">II.B. Byline (author)</label>
+                        <input id="newsViewerByline" type="text" readonly aria-readonly="true">
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerArticleDateline">II.C. Article Dateline / Publication Date</label>
+                        <input id="newsViewerArticleDateline" type="text" readonly aria-readonly="true">
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerLeadSynopsis">II.D. Lead Synopsis</label>
+                        <textarea id="newsViewerLeadSynopsis" readonly aria-readonly="true"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionActor">II.E.i. Who/what was doing action/news</label>
+                        <textarea id="newsViewerActionActor" readonly aria-readonly="true"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionAffected">II.E.ii. Who/what received/was affected</label>
+                        <textarea id="newsViewerActionAffected" readonly aria-readonly="true"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionWhere">II.E.iii. Where is the action/news</label>
+                        <textarea id="newsViewerActionWhere" readonly aria-readonly="true"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionWhat">II.E.iv. What action/news</label>
+                        <textarea id="newsViewerActionWhat" readonly aria-readonly="true"></textarea>
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerActionWhy">II.E.v. Why was action/news happening</label>
+                        <textarea id="newsViewerActionWhy" readonly aria-readonly="true"></textarea>
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerBiasAssessment">II.F. Bias/agendum/spin/prevarication? Explain</label>
+                        <textarea id="newsViewerBiasAssessment" readonly aria-readonly="true"></textarea>
+                      </div>
+                    </div>
                   </div>
+                  <div class="portal-modal-actions">
+                    <button id="newsWeekSetModalCloseActionBtn" type="button">Close</button>
+                  </div>
+                  <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
                 </div>
               </section>
 
@@ -2821,18 +3032,21 @@
               </div>
               <div id="portalDetailPrimaryList" class="detail-list"></div>
               <div id="portalDetailPrimaryTable" class="queue-table-wrap hidden">
-                <table>
+                <table class="news-queue-table">
                   <thead>
                     <tr>
-                        <th scope="col">Tuần</th>
-                        <th scope="col">Trạng thái</th>
-                        <th scope="col">Số lượng</th>
-                        <th scope="col">Gần nhất</th>
+                      <th scope="col">Week Set</th>
+                      <th scope="col">Student</th>
+                      <th scope="col">Level</th>
+                      <th scope="col">Reports</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Latest Submission</th>
+                      <th scope="col">Open</th>
                     </tr>
                   </thead>
                   <tbody id="portalDetailQueueBody">
                     <tr>
-                      <td colspan="4">Chưa có báo cáo tin tức.</td>
+                      <td colspan="7">Chưa có báo cáo tin tức.</td>
                     </tr>
                   </tbody>
                 </table>
@@ -3443,6 +3657,19 @@
       const REPORT_ACK_STORAGE_KEY_PREFIX = "sis.parentPortal.reportAck";
       const TRUTHY_OPTION_TOKENS = new Set(["y", "yes", "true", "co", "có", "cho"]);
       const FALSY_OPTION_TOKENS = new Set(["n", "no", "false", "khong", "không"]);
+      const NEWS_VIEWER_MODAL_FIELD_IDS = {
+        sourceLink: "newsViewerSourceLink",
+        articleTitle: "newsViewerArticleTitle",
+        byline: "newsViewerByline",
+        articleDateline: "newsViewerArticleDateline",
+        leadSynopsis: "newsViewerLeadSynopsis",
+        actionActor: "newsViewerActionActor",
+        actionAffected: "newsViewerActionAffected",
+        actionWhere: "newsViewerActionWhere",
+        actionWhat: "newsViewerActionWhat",
+        actionWhy: "newsViewerActionWhy",
+        biasAssessment: "newsViewerBiasAssessment",
+      };
 
       const PROFILE_REFERENCE_FIELD_META_BY_KEY = new Map();
       PROFILE_REFERENCE_SECTIONS.forEach((section, sectionOrder) => {
@@ -3466,6 +3693,7 @@
         reportPastDueRows: [],
         pastDueModalOpen: false,
         performanceModalOpen: false,
+        newsWeekSetModalOpen: false,
         reportArchiveRows: [],
         activeReportIndex: 0,
         reportAcknowledgements: {},
@@ -3477,7 +3705,11 @@
         activeView: "dashboard",
         activeDashboardPage: "home",
         detailCalendar: null,
+        newsItems: [],
         newsWeekSets: [],
+        newsWeekSetViewerWeekSetId: "",
+        newsWeekSetViewerItems: [],
+        newsWeekSetViewerIndex: -1,
         status: "",
         textZoomPct: TEXT_ZOOM_DEFAULT,
       };
@@ -3507,7 +3739,9 @@
       }
 
       function clampTextZoomPct(value) {
-        const parsed = Number(value);
+        const rawValue = normalizeText(value);
+        if (!rawValue) return TEXT_ZOOM_DEFAULT;
+        const parsed = Number(rawValue);
         if (!Number.isFinite(parsed)) return TEXT_ZOOM_DEFAULT;
         return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(parsed)));
       }
@@ -3889,12 +4123,23 @@
         document.body.classList.toggle("menu-open", shouldOpen);
       }
 
+      function hoistPortalModalsToBody() {
+        const host = document.body;
+        if (!host) return;
+        ["pastDueHomeworkModal", "performanceReportModal", "newsWeekSetModal"].forEach((id) => {
+          const modal = document.getElementById(id);
+          if (!modal || modal.parentElement === host) return;
+          host.appendChild(modal);
+        });
+      }
+
       function setActivePortalView(view) {
         const nextView =
           normalizeText(view).toLowerCase() === "child" ? "child" : "dashboard";
         state.activeView = nextView;
         setPastDueHomeworkModalOpen(false);
         setPerformanceReportModalOpen(false);
+        closeNewsWeekSetModal();
         syncDashboardPageVisibility();
       }
 
@@ -4434,7 +4679,10 @@
       }
 
       function syncPortalModalBodyState() {
-        const hasOpenModal = state.pastDueModalOpen || state.performanceModalOpen;
+        const hasOpenModal =
+          state.pastDueModalOpen ||
+          state.performanceModalOpen ||
+          state.newsWeekSetModalOpen;
         document.body.classList.toggle("modal-open", hasOpenModal);
       }
 
@@ -5625,280 +5873,421 @@
         return span.outerHTML;
       }
 
-      function buildNewsQueueItems(calendar = [], windowInfo = {}) {
-        const rows = (Array.isArray(calendar) ? calendar : [])
-          .map((entry) => {
-            const dateKey = normalizeText(entry?.date || entry?.reportDate);
-            const status = resolveNewsCalendarStatus(entry);
-            if (!dateKey || !status) return null;
-            const reviewStatus = normalizeText(entry?.reviewStatus);
-            const awaitingReReview = entry?.awaitingReReview === true;
-            const submittedAt = normalizeText(entry?.submittedAt);
-            return {
-              dateKey,
-              status,
-              reviewStatus,
-              awaitingReReview,
-              submittedAt,
-            };
-          })
-          .filter(Boolean)
-          .sort((left, right) => right.dateKey.localeCompare(left.dateKey));
+      function normalizeNewsReportItem(entry = {}) {
+        const reportDate = normalizeText(entry?.reportDate || entry?.date).slice(0, 10);
+        if (!reportDate) return null;
+        return {
+          id: normalizeText(entry?.id) || `news-report:${reportDate}`,
+          reportDate,
+          sourceLink: normalizeText(entry?.sourceLink),
+          articleTitle: normalizeText(entry?.articleTitle),
+          byline: normalizeText(entry?.byline),
+          articleDateline: normalizeText(entry?.articleDateline),
+          leadSynopsis: normalizeText(entry?.leadSynopsis),
+          actionActor: normalizeText(entry?.actionActor),
+          actionAffected: normalizeText(entry?.actionAffected),
+          actionWhere: normalizeText(entry?.actionWhere),
+          actionWhat: normalizeText(entry?.actionWhat),
+          actionWhy: normalizeText(entry?.actionWhy),
+          biasAssessment: normalizeText(entry?.biasAssessment),
+          submittedAt: normalizeText(entry?.submittedAt),
+          reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
+          awaitingReReview: entry?.awaitingReReview === true,
+        };
+      }
 
-        const limited = rows.slice(0, 20);
-        const openDate = normalizeText(windowInfo?.reportDate);
-        if (openDate && !limited.find((row) => row.dateKey === openDate)) {
-          limited.unshift({
-            dateKey: openDate,
-            status: "open",
-            reviewStatus: "",
-            awaitingReReview: false,
-            submittedAt: "",
-          });
-        }
+      function newsWeekSetViewerSortValue(item = {}) {
+        return normalizeText(item?.submittedAt) || normalizeText(item?.reportDate);
+      }
 
-        return limited.map((row) => {
-          const statusLabel = newsStatusLabel(
-            row.status,
-            row.reviewStatus,
-            row.awaitingReReview === true,
+      function sortNewsWeekSetViewerItems(items = []) {
+        const source = Array.isArray(items) ? items : [];
+        return [...source].sort((left, right) => {
+          const submittedCompare = newsWeekSetViewerSortValue(right).localeCompare(
+            newsWeekSetViewerSortValue(left),
           );
-          const reviewLabel = newsReviewLabel(
-            row.status,
-            row.reviewStatus,
-            row.awaitingReReview === true,
+          if (submittedCompare !== 0) return submittedCompare;
+          const dateCompare = normalizeText(right?.reportDate).localeCompare(
+            normalizeText(left?.reportDate),
           );
-          const submittedLabel = row.submittedAt ? formatPortalDateTime(row.submittedAt) : "";
-          return {
-            ...row,
-            statusLabel,
-            reviewLabel,
-            submittedLabel,
-            title: formatPortalDate(row.dateKey),
-            meta: [statusLabel, submittedLabel].filter(Boolean).join(" • "),
-            note:
-              row.reviewStatus === "revision-requested" ?
-                "Cần sửa theo hướng dẫn trước khi duyệt."
-              : row.awaitingReReview === true ?
-                "Đã gửi lại và đang chờ giáo viên duyệt."
-              : row.status === "open" ?
-                "Nhắc học sinh gửi báo cáo trước khi hết hạn."
-              : row.status === "missed" ?
-                "Đã bỏ lỡ. Trao đổi với giáo viên nếu cần bổ sung."
-              : "Đang chờ duyệt hoặc đã duyệt.",
-            tone: newsStatusTone(
-              row.status,
-              row.reviewStatus,
-              row.awaitingReReview === true,
-            ),
-          };
+          if (dateCompare !== 0) return dateCompare;
+          return normalizeText(right?.id).localeCompare(normalizeText(left?.id));
         });
       }
 
-      function buildNewsWeekSets(calendar = [], windowInfo = {}) {
-        const rows = Array.isArray(calendar) ? calendar : [];
+      function newsWeekSetId(weekStart = "") {
+        const child = selectedDashboardChild();
+        const studentToken =
+          normalizeText(child?.eaglesId) ||
+          normalizeText(child?.studentNumber) ||
+          "child";
+        const weekToken = normalizeText(weekStart) || "week";
+        return `news-week-set:${studentToken}:${weekToken}`;
+      }
+
+      function buildNewsQueueItems(items = []) {
+        return sortNewsWeekSetViewerItems(
+          (Array.isArray(items) ? items : [])
+            .map((entry) => normalizeNewsReportItem(entry))
+            .filter(Boolean),
+        ).map((entry) => ({
+          title: formatPortalDate(entry.reportDate),
+          meta: entry.submittedAt ? formatPortalDateTime(entry.submittedAt) : "No submission time",
+          note:
+            normalizeText(entry.reviewStatus) === "approved" ? "Approved."
+            : normalizeText(entry.reviewStatus) === "revision-requested" ? "Revise requested."
+            : "Waiting for admin review.",
+          tone:
+            normalizeText(entry.reviewStatus) === "approved" ? "good"
+            : normalizeText(entry.reviewStatus) === "revision-requested" ? "warn"
+            : "open",
+        }));
+      }
+
+      function buildNewsWeekSets(items = []) {
         const grouped = new Map();
-        rows.forEach((entry) => {
-          const dateKey = normalizeText(entry?.date || entry?.reportDate);
-          const status = resolveNewsCalendarStatus(entry);
-          if (!dateKey || !status) return;
-          const reviewStatus = normalizeText(entry?.reviewStatus);
-          const awaitingReReview = entry?.awaitingReReview === true;
-          const submittedAt = normalizeText(entry?.submittedAt);
-          const weekStart = isoWeekStart(dateKey);
+        (Array.isArray(items) ? items : []).forEach((entry) => {
+          const report = normalizeNewsReportItem(entry);
+          if (!report) return;
+          const weekStart = isoWeekStart(report.reportDate);
           if (!weekStart) return;
-          const weekEnd = isoWeekEndFromStart(weekStart);
           const existing = grouped.get(weekStart) || {
+            id: newsWeekSetId(weekStart),
             weekStart,
-            weekEnd,
+            weekEnd: isoWeekEndFromStart(weekStart),
             reports: [],
-            reportCount: 0,
-            submittedCount: 0,
             approvedCount: 0,
+            waitingCount: 0,
             revisionRequestedCount: 0,
-            awaitingReReviewCount: 0,
-            missedCount: 0,
-            openCount: 0,
             latestSubmittedAt: "",
-            latestDate: "",
-            latestStatus: "",
-            latestReviewStatus: "",
-            latestAwaitingReReview: false,
+            latestReportDate: "",
+            latestReportId: "",
+            _reportDates: new Set(),
           };
-          existing.reports.push({
-            dateKey,
-            status,
-            reviewStatus,
-            awaitingReReview,
-            submittedAt,
-          });
-          existing.reportCount += 1;
-          if (status === "missed") existing.missedCount += 1;
-          if (status === "open") existing.openCount += 1;
-          else if (reviewStatus === "approved") existing.approvedCount += 1;
-          else if (reviewStatus === "revision-requested")
+          existing.reports.push(report);
+          existing._reportDates.add(report.reportDate);
+          if (report.reviewStatus === "approved") existing.approvedCount += 1;
+          else if (report.reviewStatus === "revision-requested")
             existing.revisionRequestedCount += 1;
-          else {
-            existing.submittedCount += 1;
-            if (awaitingReReview) {
-              existing.awaitingReReviewCount =
-                Math.max(
-                  0,
-                  Number.parseInt(String(existing.awaitingReReviewCount || 0), 10) || 0,
-                ) + 1;
-            }
-          }
-          const latestKey = normalizeText(existing.latestSubmittedAt || existing.latestDate);
-          const candidateKey = submittedAt || dateKey;
+          else existing.waitingCount += 1;
+          const candidateKey =
+            normalizeText(report.submittedAt) || normalizeText(report.reportDate);
+          const latestKey =
+            normalizeText(existing.latestSubmittedAt) ||
+            normalizeText(existing.latestReportDate);
           if (!latestKey || candidateKey > latestKey) {
-            existing.latestSubmittedAt = submittedAt;
-            existing.latestDate = dateKey;
-            existing.latestStatus = status;
-            existing.latestReviewStatus = reviewStatus;
-            existing.latestAwaitingReReview = awaitingReReview === true;
+            existing.latestSubmittedAt = normalizeText(report.submittedAt);
+            existing.latestReportDate = normalizeText(report.reportDate);
+            existing.latestReportId = normalizeText(report.id);
           }
           grouped.set(weekStart, existing);
         });
-        return Array.from(grouped.values()).sort((a, b) =>
-          normalizeText(b.weekStart).localeCompare(normalizeText(a.weekStart)),
-        );
+        return Array.from(grouped.values())
+          .map((entry) => {
+            const reports = sortNewsWeekSetViewerItems(entry.reports);
+            return {
+              id: entry.id,
+              weekStart: normalizeText(entry.weekStart),
+              weekEnd: normalizeText(entry.weekEnd),
+              reports,
+              reportCount: Math.max(entry._reportDates?.size || 0, reports.length),
+              approvedCount: entry.approvedCount,
+              waitingCount: entry.waitingCount,
+              revisionRequestedCount: entry.revisionRequestedCount,
+              latestSubmittedAt:
+                normalizeText(entry.latestSubmittedAt) ||
+                normalizeText(reports[0]?.submittedAt),
+              latestReportDate:
+                normalizeText(entry.latestReportDate) ||
+                normalizeText(reports[0]?.reportDate),
+              latestReportId:
+                normalizeText(entry.latestReportId) ||
+                normalizeText(reports[0]?.id),
+            };
+          })
+          .sort((left, right) => {
+            const weekCompare = normalizeText(right?.weekStart).localeCompare(
+              normalizeText(left?.weekStart),
+            );
+            if (weekCompare !== 0) return weekCompare;
+            return normalizeText(right?.latestSubmittedAt).localeCompare(
+              normalizeText(left?.latestSubmittedAt),
+            );
+          });
       }
 
       function newsWeekSetStatusToken(weekSet = {}) {
+        const approvedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
+        );
+        const revisionRequestedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) || 0,
+        );
         const reportCount = Math.max(
           0,
           Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
         );
-        const approved = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
-        );
-        const submitted = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.submittedCount || 0), 10) || 0,
-        );
-        const revisionRequested = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) || 0,
-        );
-        const awaiting = Math.max(
-          0,
-          Math.min(
-            submitted,
-            Number.parseInt(String(weekSet?.awaitingReReviewCount || 0), 10) || 0,
-          ),
-        );
-        const initialSubmitted = Math.max(0, submitted - awaiting);
-        const openCount = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.openCount || 0), 10) || 0,
-        );
-        if (reportCount >= 7 && approved >= 7) return "approved";
-        if (awaiting > 0 && revisionRequested === 0 && initialSubmitted === 0)
-          return "waiting";
-        if (revisionRequested > 0) return "revise";
-        if (submitted > 0) return "submitted";
-        if (openCount > 0) return "open";
-        return "none-submitted";
+        if (reportCount >= 7 && approvedCount >= 7) return "approved";
+        if (revisionRequestedCount > 0) return "revise";
+        return "waiting";
       }
 
-      function renderNewsQueueTable(bodyId, items = [], { readOnly = true, mode = "week" } = {}) {
+      function newsWeekSetStatusLabel(token = "") {
+        const normalized = normalizeText(token).toLowerCase();
+        if (normalized === "approved") return "Approved";
+        if (normalized === "revise") return "Revise";
+        return "Waiting";
+      }
+
+      function newsWeekSetStatusChipHtml(token = "") {
+        const normalized = normalizeText(token).toLowerCase();
+        const tone =
+          normalized === "approved" ? "good"
+          : normalized === "revise" ? "revise"
+          : "warn";
+        const span = document.createElement("span");
+        span.className = "chip " + chipClassForTone(tone);
+        span.textContent = newsWeekSetStatusLabel(normalized);
+        return span.outerHTML;
+      }
+
+      function summarizeNewsWeekSetStatuses(weekSets = []) {
+        const summary = {
+          approved: 0,
+          waiting: 0,
+          revise: 0,
+        };
+        (Array.isArray(weekSets) ? weekSets : []).forEach((entry) => {
+          const token = newsWeekSetStatusToken(entry);
+          if (token === "approved") summary.approved += 1;
+          else if (token === "revise") summary.revise += 1;
+          else summary.waiting += 1;
+        });
+        return summary;
+      }
+
+      function newsWeekSetById(weekSetId = "", weekSets = null) {
+        const id = normalizeText(weekSetId);
+        if (!id) return null;
+        const source =
+          Array.isArray(weekSets) ? weekSets
+          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
+          : [];
+        return source.find((entry) => normalizeText(entry?.id) === id) || null;
+      }
+
+      function newsWeekSetContainingReportDate(reportDate = "", weekSets = null) {
+        const dateKey = normalizeText(reportDate).slice(0, 10);
+        if (!dateKey) return null;
+        const source =
+          Array.isArray(weekSets) ? weekSets
+          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
+          : [];
+        return source.find((entry) =>
+          (Array.isArray(entry?.reports) ? entry.reports : []).some(
+            (report) => normalizeText(report?.reportDate) === dateKey,
+          ),
+        ) || null;
+      }
+
+      function newsViewerItemStatusChipModel(item = {}) {
+        const hasStatus = Boolean(normalizeText(item?.reviewStatus)) || item?.awaitingReReview === true;
+        if (!hasStatus) return { label: "-", tone: "neutral" };
+        const status = normalizeNewsReviewStatusToken(item?.reviewStatus);
+        if (status === "approved") return { label: "Approved", tone: "good" };
+        if (status === "revision-requested") return { label: "Revise", tone: "revise" };
+        return { label: "Waiting", tone: "warn" };
+      }
+
+      function setNewsViewerStatusChip(item = {}) {
+        const chip = document.getElementById("newsViewerReviewStatusChip");
+        if (!chip) return;
+        const model = newsViewerItemStatusChipModel(item);
+        chip.className = `chip ${chipClassForTone(model.tone)}`;
+        chip.textContent = model.label;
+      }
+
+      function newsViewerFieldElement(fieldKey = "") {
+        const id = NEWS_VIEWER_MODAL_FIELD_IDS[normalizeText(fieldKey)];
+        return id ? document.getElementById(id) : null;
+      }
+
+      function setNewsViewerFieldValue(fieldKey = "", value = "") {
+        const input = newsViewerFieldElement(fieldKey);
+        if (!input) return;
+        input.value = normalizeText(value);
+      }
+
+      function setNewsWeekSetModalStatus(message = "") {
+        const statusEl = document.getElementById("newsWeekSetModalStatus");
+        if (!statusEl) return;
+        statusEl.textContent = normalizeText(message) || "Viewer is ready.";
+      }
+
+      function newsWeekSetViewerCurrentItem() {
+        const items = Array.isArray(state.newsWeekSetViewerItems)
+          ? state.newsWeekSetViewerItems
+          : [];
+        const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
+        if (!items.length || !Number.isFinite(index) || index < 0) return null;
+        return items[index] || null;
+      }
+
+      function syncNewsWeekSetViewerControls() {
+        const items = Array.isArray(state.newsWeekSetViewerItems)
+          ? state.newsWeekSetViewerItems
+          : [];
+        const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
+        const total = items.length;
+        const indexEl = document.getElementById("newsWeekSetModalIndex");
+        if (indexEl) {
+          indexEl.textContent =
+            total > 0 && index >= 0 ? `${index + 1} / ${total}` : "0 / 0";
+        }
+        const prevBtn = document.getElementById("newsWeekSetModalPrevBtn");
+        if (prevBtn instanceof HTMLButtonElement) {
+          prevBtn.disabled = total === 0 || index <= 0;
+        }
+        const nextBtn = document.getElementById("newsWeekSetModalNextBtn");
+        if (nextBtn instanceof HTMLButtonElement) {
+          nextBtn.disabled = total === 0 || index >= total - 1;
+        }
+      }
+
+      function renderNewsWeekSetViewer() {
+        const weekSet = newsWeekSetById(state.newsWeekSetViewerWeekSetId);
+        const active = newsWeekSetViewerCurrentItem();
+        const metaEl = document.getElementById("newsWeekSetModalMeta");
+        if (metaEl) {
+          if (!weekSet) {
+            metaEl.textContent = "Open a week set to review submitted reports.";
+          } else {
+            const child = selectedDashboardChild() || {};
+            const studentLabel =
+              normalizeText(child?.fullName || child?.englishName || child?.eaglesId) ||
+              "Student";
+            const level = normalizeText(child?.currentGrade) || "-";
+            metaEl.textContent =
+              `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`;
+          }
+        }
+
+        const reportDateInput = document.getElementById("newsViewerReportDate");
+        if (reportDateInput) reportDateInput.value = normalizeText(active?.reportDate);
+        setNewsViewerStatusChip(active || {});
+        const submittedAtInput = document.getElementById("newsViewerSubmittedAt");
+        if (submittedAtInput) {
+          submittedAtInput.value = normalizeText(active?.submittedAt) ?
+            formatPortalDateTime(active?.submittedAt)
+          : "-";
+        }
+
+        Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
+          setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
+        });
+        syncNewsWeekSetViewerControls();
+      }
+
+      function setNewsWeekSetModalOpen(open) {
+        const shouldOpen = Boolean(open);
+        state.newsWeekSetModalOpen = shouldOpen;
+        const modal = document.getElementById("newsWeekSetModal");
+        if (!modal) return;
+        modal.classList.toggle("hidden", !shouldOpen);
+        syncPortalModalBodyState();
+      }
+
+      function closeNewsWeekSetModal() {
+        setNewsWeekSetModalOpen(false);
+        state.newsWeekSetViewerWeekSetId = "";
+        state.newsWeekSetViewerItems = [];
+        state.newsWeekSetViewerIndex = -1;
+        renderNewsWeekSetViewer();
+        setNewsWeekSetModalStatus("");
+      }
+
+      function shiftNewsWeekSetViewer(offset = 0) {
+        const items = Array.isArray(state.newsWeekSetViewerItems)
+          ? state.newsWeekSetViewerItems
+          : [];
+        if (!items.length) return;
+        const parsedOffset = Number.parseInt(String(offset), 10);
+        if (!Number.isFinite(parsedOffset) || parsedOffset === 0) return;
+        const currentIndex = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
+        const baseIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
+        const nextIndex = Math.max(0, Math.min(items.length - 1, baseIndex + parsedOffset));
+        if (nextIndex === baseIndex) return;
+        state.newsWeekSetViewerIndex = nextIndex;
+        renderNewsWeekSetViewer();
+        setNewsWeekSetModalStatus(`Viewing ${nextIndex + 1} / ${items.length} in selected week set.`);
+      }
+
+      function openNewsWeekSetModalByWeekSetId(weekSetId = "", options = {}) {
+        const id = normalizeText(weekSetId);
+        if (!id) return false;
+        const weekSet = newsWeekSetById(id, ensureParentNewsWeekSets());
+        if (!weekSet) return false;
+        const items = sortNewsWeekSetViewerItems(weekSet.reports);
+        const preferredDate = normalizeText(options?.reportDate).slice(0, 10);
+        const preferredIndex = preferredDate ?
+          items.findIndex((entry) => normalizeText(entry?.reportDate) === preferredDate)
+        : -1;
+        state.newsWeekSetViewerWeekSetId = id;
+        state.newsWeekSetViewerItems = items;
+        state.newsWeekSetViewerIndex = preferredIndex >= 0 ? preferredIndex : 0;
+        renderNewsWeekSetViewer();
+        setNewsWeekSetModalOpen(true);
+        if (!(options && options.silentStatus)) {
+          setNewsWeekSetModalStatus(
+            `Opened week set ${normalizeText(weekSet?.weekStart)} to ${normalizeText(weekSet?.weekEnd)}.`,
+          );
+        }
+        return true;
+      }
+
+      function openNewsWeekSetModalByReportDate(reportDate = "", options = {}) {
+        const dateKey = normalizeText(reportDate).slice(0, 10);
+        if (!dateKey) return false;
+        const weekSet = newsWeekSetContainingReportDate(
+          dateKey,
+          ensureParentNewsWeekSets(),
+        );
+        if (!weekSet) return false;
+        return openNewsWeekSetModalByWeekSetId(weekSet.id, {
+          ...options,
+          reportDate: dateKey,
+        });
+      }
+
+      function renderNewsQueueTable(bodyId, items = []) {
         const body = document.getElementById(bodyId);
         if (!body) return;
-        const safeItems = Array.isArray(items) ? items : [];
-        const colCount = mode === "week" ? 5 : readOnly ? 4 : 5;
-        if (!safeItems.length) {
-          body.innerHTML = `<tr><td colspan=\"${colCount}\">Chưa có báo cáo tin tức.</td></tr>`;
+        const source = Array.isArray(items) ? items : [];
+        if (!source.length) {
+          body.innerHTML = '<tr><td colspan="7">Chưa có báo cáo tin tức.</td></tr>';
           return;
         }
-        body.innerHTML = safeItems
-          .map((item) => {
-            if (mode === "week") {
-              const counts = `${Math.max(0, item.approvedCount || 0)}/${Math.max(0, item.submittedCount || 0)}/${Math.max(0, item.revisionRequestedCount || 0)}`;
-              const weekStatus = newsWeekSetStatusToken(item);
-              const statusChip = newsStatusChipHtml(
-                weekStatus,
-                item.latestReviewStatus || "",
-                item.latestAwaitingReReview === true,
-              );
-              const latestLabel = item.latestSubmittedAt ?
-                escapeHtml(formatPortalDateTime(item.latestSubmittedAt))
-              : escapeHtml(formatPortalDate(item.latestDate || item.weekStart));
-              const weekAttrs = `data-open-news-week=\"${escapeHtml(item.weekStart)}\" data-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\" data-open-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\"`;
-              const actionCell = `<td class=\"cell-actions\"><button type=\"button\" class=\"link-btn\" data-open-news-week=\"${escapeHtml(item.weekStart)}\" data-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\" data-open-news-date=\"${escapeHtml(item.latestDate || item.weekStart)}\">Xem</button></td>`;
-              return `<tr>\n                <td>${escapeHtml(formatPortalDate(item.weekStart))} - ${escapeHtml(formatPortalDate(item.weekEnd))}</td>\n                <td><span class=\"chip-link\" ${weekAttrs}>${statusChip}</span></td>\n                <td>${escapeHtml(counts)}</td>\n                <td>${latestLabel}</td>\n                ${actionCell}\n              </tr>`;
-            }
-            const dateCell = escapeHtml(formatPortalDate(item.dateKey));
-            const statusChip = newsStatusChipHtml(
-              item.status,
-              item.reviewStatus,
-              item.awaitingReReview === true,
-            );
-            const reviewChip = newsReviewChipHtml(
-              item.status,
-              item.reviewStatus,
-              item.awaitingReReview === true,
-            );
-            const submittedCell = item.submittedAt ?
-              escapeHtml(formatPortalDateTime(item.submittedAt))
-            : "—";
-            const actionCell = readOnly ?
-              ""
-            : `<td class=\"cell-actions\"><button type=\"button\" class=\"link-btn\" data-open-news-date=\"${escapeHtml(item.dateKey)}\">Xem</button></td>`;
-            return `<tr>\n              <td>${dateCell}</td>\n              <td>${statusChip}</td>\n              <td>${reviewChip}</td>\n              <td>${submittedCell}</td>\n              ${actionCell}\n            </tr>`;
-          })
-          .join("");
-      }
-
-      async function openNewsWeekModal(weekStart = "", selectedDate = "") {
-        setActivePortalView("dashboard");
-        setActiveDashboardPage("news-reports");
-        const modal = document.getElementById("newsWeekModal");
-        const list = document.getElementById("newsWeekModalList");
-        const summary = document.getElementById("newsWeekModalSummary");
-        if (!modal || !list || !summary) return;
-        try {
-          await refreshParentNewsCalendarForSelectedChild();
-        } catch (error) {
-          void error;
-        }
-        const weekKey = normalizeText(weekStart);
-        const weekSets = ensureParentNewsWeekSets();
-        const weekSet =
-          Array.isArray(weekSets) ?
-            weekSets.find((entry) => normalizeText(entry.weekStart) === weekKey)
-          : null;
-        if (!weekSet) {
-          if (selectedDate) setStatus(`Không tìm thấy tuần cho ${selectedDate}.`, "warn");
-          return;
-        }
-        const title = document.getElementById("newsWeekModalTitle");
-        if (title)
-          title.textContent = `Tuần ${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)}`;
-        summary.textContent = `Tổng ${weekSet.reportCount} báo cáo, cập nhật gần nhất ${weekSet.latestSubmittedAt ? formatPortalDateTime(weekSet.latestSubmittedAt) : formatPortalDate(weekSet.latestDate || weekSet.weekStart)}.`;
-        list.innerHTML = "";
-        const reports = Array.isArray(weekSet.reports) ? weekSet.reports : [];
-        const selectedDateKey = normalizeText(selectedDate);
-        reports
-          .slice()
-          .sort((a, b) => normalizeText(b.dateKey).localeCompare(normalizeText(a.dateKey)))
-          .forEach((report) => {
-            const li = document.createElement("li");
-            if (selectedDateKey && selectedDateKey === normalizeText(report.dateKey))
-              li.classList.add("selected");
-            li.innerHTML = `
-              <span>${escapeHtml(formatPortalDate(report.dateKey))}</span>
-              <span>${newsStatusChipHtml(report.status, report.reviewStatus, report.awaitingReReview === true)}</span>
-              <span>${escapeHtml(report.submittedAt ? formatPortalDateTime(report.submittedAt) : "Chưa gửi")}</span>
-            `;
-            li.setAttribute("data-open-news-date", normalizeText(report.dateKey));
-            list.appendChild(li);
-          });
-        modal.classList.remove("hidden");
-      }
-
-      function closeNewsWeekModal() {
-        document.getElementById("newsWeekModal")?.classList.add("hidden");
+        const child = selectedDashboardChild() || {};
+        const studentLabel =
+          normalizeText(child?.fullName || child?.englishName || child?.eaglesId) || "-";
+        const levelLabel = normalizeText(child?.currentGrade) || "-";
+        body.innerHTML = source.map((item) => {
+          const weekSetId = escapeHtml(normalizeText(item?.id));
+          const statusToken = newsWeekSetStatusToken(item);
+          const reportCount = Math.max(
+            0,
+            Number.parseInt(String(item?.reportCount || 0), 10) || 0,
+          );
+          const latestDate = normalizeText(item?.latestReportDate || item?.reports?.[0]?.reportDate);
+          const latestSubmittedAt = normalizeText(item?.latestSubmittedAt);
+          const latestLabel = latestSubmittedAt ?
+            formatPortalDateTime(latestSubmittedAt)
+          : latestDate ? formatPortalDate(latestDate)
+          : "-";
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalDate(item?.weekStart))} to ${escapeHtml(formatPortalDate(item?.weekEnd))}</td>\n            <td>${escapeHtml(studentLabel)}</td>\n            <td>${escapeHtml(levelLabel)}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${escapeHtml(latestLabel)}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
+        }).join("");
       }
 
       function newsCalendarEvents(calendar = []) {
@@ -6044,7 +6433,10 @@
           const news = child.newsReports || {};
           const newsSummary = news.statusSummary || {};
           const calendar = Array.isArray(news.calendar) ? news.calendar : [];
-          const queueItems = buildNewsQueueItems(calendar, news.window || {});
+          const newsItems = Array.isArray(news.items) ? news.items : [];
+          const queueItems = buildNewsQueueItems(newsItems);
+          const weekItems = buildNewsWeekSets(newsItems);
+          const setSummary = summarizeNewsWeekSetStatuses(weekItems);
           const approved = parseNumber(newsSummary.approved);
           const submitted = parseNumber(newsSummary.submitted);
           const revisionRequested = parseNumber(newsSummary.revisionRequested);
@@ -6056,10 +6448,10 @@
                 `${total} báo cáo tin tức gần đây cho ${normalizeText(child.fullName || child.eaglesId)}.`
               : "Chưa có báo cáo tin tức nào.",
             metrics: [
-              metricCard("Approved", String(approved), approved ? "green" : ""),
-              metricCard("Submitted", String(submitted), submitted ? "blue" : ""),
-              metricCard("Revise", String(revisionRequested), revisionRequested ? "purple" : ""),
-              metricCard("Tổng", String(total)),
+              metricCard("Approved", String(setSummary.approved), setSummary.approved ? "green" : ""),
+              metricCard("Waiting", String(setSummary.waiting), setSummary.waiting ? "blue" : ""),
+              metricCard("Revise", String(setSummary.revise), setSummary.revise ? "purple" : ""),
+              metricCard("Reports", String(total)),
             ],
             calendarTitle: "Lịch báo cáo tin tức",
             calendarSummary:
@@ -6068,7 +6460,7 @@
               : "Chưa có lịch báo cáo để hiển thị.",
             events: newsCalendarEvents(calendar),
             primaryTitle: "Hàng chờ gần nhất",
-            primaryItems: queueItems.slice(0, 6),
+            primaryItems: weekItems,
             primaryEmpty: "Chưa có báo cáo tin tức.",
             historyTitle: "Lịch sử báo cáo",
             historyItems: queueItems.slice(6),
@@ -6514,8 +6906,18 @@
               if (!dateKey) return;
               setActiveDashboardPage("news-reports");
               setActivePortalView("dashboard");
-              const weekStart = isoWeekStart(dateKey);
-              if (weekStart) openNewsWeekModal(weekStart, dateKey);
+              if (
+                openNewsWeekSetModalByReportDate(dateKey, {
+                  silentStatus: true,
+                })
+              ) {
+                setStatus(`Đã mở tuần báo cáo chứa ngày ${dateKey}.`, "ok");
+                return;
+              }
+              requestAnimationFrame(() => {
+                state.detailCalendar?.gotoDate?.(dateKey);
+                state.detailCalendar?.updateSize?.();
+              });
               setStatus(`Đã mở báo cáo tin tức cho ngày ${dateKey}.`, "ok");
             },
             events: [],
@@ -6547,11 +6949,7 @@
         if (isNewsPage) {
           primaryList?.classList.add("hidden");
           primaryTable?.classList.remove("hidden");
-          renderNewsQueueTable(
-            "portalDetailQueueBody",
-            model.primaryItems,
-            { readOnly: true },
-          );
+          renderNewsQueueTable("portalDetailQueueBody", model.primaryItems);
         } else {
           primaryList?.classList.remove("hidden");
           primaryTable?.classList.add("hidden");
@@ -6620,12 +7018,14 @@
         state.activeView = "dashboard";
         setPastDueHomeworkModalOpen(false);
         setPerformanceReportModalOpen(false);
+        closeNewsWeekSetModal();
         syncDashboardPageVisibility();
       }
 
       function renderDashboard() {
         const root = document.getElementById("dashboardMetrics");
         const snapshotBadge = document.getElementById("snapshotBadge");
+        const overview = document.getElementById("parentOverviewSummary");
         const child = selectedDashboardChild();
         if (!child) {
           root.replaceChildren(metricCard("Tổng quan", "Chưa có dữ liệu"));
@@ -6642,6 +7042,7 @@
             snapshotBadge.textContent = "Chưa có dữ liệu";
             snapshotBadge.className = "chip chip-neutral";
           }
+          if (overview) overview.textContent = "Student dashboard is not available.";
           renderNewsQueueHome();
           return;
         }
@@ -6674,6 +7075,22 @@
         const submittedNews = parseNumber(newsSummary.submitted);
         const revisionNews = parseNumber(newsSummary.revisionRequested);
         const totalNews = approvedNews + submittedNews + revisionNews;
+        const linkedChild =
+          Array.isArray(state.children) ?
+            state.children.find(
+              (entry) =>
+                normalizeText(entry?.eaglesId) === normalizeText(child.eaglesId),
+            )
+          : null;
+        const displayEaglesId = normalizeText(child.eaglesId);
+        const displayName = normalizeText(
+          child.englishName ||
+            linkedChild?.englishName ||
+            child.fullName ||
+            linkedChild?.fullName ||
+            child.eaglesId ||
+            linkedChild?.eaglesId,
+        );
 
         const absenceTone =
           absencePercent > 10 ? "red"
@@ -6684,11 +7101,6 @@
         const averageTone =
           Number.isFinite(averageScore) && averageScore <= 70 ? "red"
           : Number.isFinite(averageScore) && averageScore <= 76 ? "purple"
-          : "";
-        const newsTone =
-          revisionNews > 0 ? "purple"
-          : submittedNews > 0 ? "blue"
-          : totalNews > 0 ? "green"
           : "";
 
         root.replaceChildren(
@@ -6702,12 +7114,15 @@
             averageTone,
           ),
           metricCard("Báo cáo", String(reportCount)),
-          metricCard(
-            "Tin tức",
-            totalNews ? `${approvedNews}/${submittedNews}/${revisionNews}` : "0/0/0",
-            newsTone,
-          ),
+          metricCard("News Approved", String(approvedNews), approvedNews ? "green" : ""),
+          metricCard("News Waiting", String(submittedNews), submittedNews ? "blue" : ""),
+          metricCard("News Revise", String(revisionNews), revisionNews ? "red" : ""),
         );
+        if (overview) {
+          overview.textContent = displayEaglesId ?
+            `${displayName} (${displayEaglesId})`
+          : displayName;
+        }
 
         renderCurrentHomeworkOverviewCard(child, pendingHomework);
         renderPastDueHomeworkOverviewCard(child, overdueHomework);
@@ -6762,9 +7177,8 @@
       function buildParentNewsWeekSetsFromState() {
         const child = selectedDashboardChild();
         const news = child?.newsReports || {};
-        const calendar = Array.isArray(news.calendar) ? news.calendar : [];
-        const windowInfo = news.window || {};
-        return buildNewsWeekSets(calendar, windowInfo);
+        const items = Array.isArray(news.items) ? news.items : [];
+        return buildNewsWeekSets(items);
       }
 
       async function refreshParentNewsCalendarForSelectedChild(days = 60) {
@@ -6799,8 +7213,10 @@
           latestSubmittedAt,
           window: payload?.window || null,
           openReport: payload?.openReport || null,
+          items: Array.isArray(payload?.items) ? payload.items : [],
           calendar,
         };
+        state.newsItems = Array.isArray(payload?.items) ? payload.items : [];
         state.newsWeekSets = buildParentNewsWeekSetsFromState();
         return payload;
       }
@@ -6826,30 +7242,26 @@
           badgeEl.className = "chip chip-neutral";
           badgeEl.textContent = "Chưa có";
           summaryEl.textContent = "Chưa có dữ liệu.";
-          renderNewsQueueTable("newsQueueBody", [], { readOnly: true });
+          renderNewsQueueTable("newsQueueBody", []);
           return;
         }
-        const news = child.newsReports || {};
-        const newsSummary = news.statusSummary || {};
-        const approved = parseNumber(newsSummary.approved);
-        const submitted = parseNumber(newsSummary.submitted);
-        const revision = parseNumber(newsSummary.revisionRequested);
-        const total = approved + submitted + revision;
-        const badgeTone =
-          revision > 0 ? "chip-bad"
-          : submitted > 0 ? "chip-warn"
-          : total > 0 ? "chip-ok"
-          : "chip-neutral";
-        badgeEl.className = `chip ${badgeTone}`;
-        badgeEl.textContent = total ? `${approved}/${submitted}/${revision}` : "Không có";
-        const summaryText =
-          total ?
-            `Approved ${approved} • Submitted ${submitted} • Revise ${revision}`
-          : "Chưa có báo cáo tin tức.";
-        summaryEl.textContent = summaryText;
         const items = buildParentNewsWeekSetsFromState();
         state.newsWeekSets = items;
-        renderNewsQueueTable("newsQueueBody", items, { readOnly: true, mode: "week" });
+        const summary = summarizeNewsWeekSetStatuses(items);
+        const total = items.length;
+        const badgeTone =
+          summary.revise > 0 ? "chip-bad"
+          : summary.waiting > 0 ? "chip-warn"
+          : summary.approved > 0 ? "chip-ok"
+          : "chip-neutral";
+        badgeEl.className = `chip ${badgeTone}`;
+        badgeEl.textContent = total ? `${summary.approved}/${summary.waiting}/${summary.revise}` : "Không có";
+        const summaryText =
+          total ?
+            `Approved ${summary.approved} • Waiting ${summary.waiting} • Revise ${summary.revise}`
+          : "Chưa có báo cáo tin tức.";
+        summaryEl.textContent = summaryText;
+        renderNewsQueueTable("newsQueueBody", items);
       }
 
       function applyPatchToProfileState() {
@@ -6897,6 +7309,11 @@
         document.getElementById("immutableGrade").textContent =
           normalizeText(child.currentGrade) || "-";
 
+        const selectedChild = selectedDashboardChild();
+        state.newsItems = Array.isArray(selectedChild?.newsReports?.items)
+          ? selectedChild.newsReports.items
+          : [];
+        state.newsWeekSets = [];
         renderProfileFields();
         renderDashboard();
         updateChildPageBadge();
@@ -6912,7 +7329,7 @@
         state.children.forEach((child) => {
           const option = document.createElement("option");
           option.value = normalizeText(child.eaglesId);
-          option.textContent = `${normalizeText(child.fullName || child.englishName || child.eaglesId)} | ${normalizeText(child.eaglesId)}`;
+          option.textContent = `${normalizeText(child.englishName || child.fullName || child.eaglesId)} | ${normalizeText(child.eaglesId)}`;
           if (option.value === state.selectedEaglesId) option.selected = true;
           select.appendChild(option);
         });
@@ -6937,6 +7354,11 @@
         const selected = normalizeText(document.getElementById("childSelect").value);
         const defaultEaglesId = selected || normalizeText(state.children[0]?.eaglesId);
         state.selectedEaglesId = defaultEaglesId;
+        const selectedChild = selectedDashboardChild();
+        state.newsItems = Array.isArray(selectedChild?.newsReports?.items)
+          ? selectedChild.newsReports.items
+          : [];
+        state.newsWeekSets = [];
         renderChildrenSelect();
         if (defaultEaglesId) {
           await loadChildProfile(defaultEaglesId);
@@ -6973,17 +7395,24 @@
         document.getElementById("portalDetailCard").classList.add("hidden");
         document.getElementById("childPageCard").classList.add("hidden");
         document.getElementById("loginCard").classList.remove("hidden");
+        closeNewsWeekSetModal();
         updateSessionBadge("Chưa đăng nhập", false);
         state.me = null;
         state.children = [];
         state.dashboard = null;
         state.profile = {};
         state.patch = {};
+        state.newsItems = [];
+        state.newsWeekSets = [];
         state.reportArchiveRows = [];
         state.reportAcknowledgements = {};
         state.activeReportIndex = 0;
         state.performanceModalOpen = false;
         state.pastDueModalOpen = false;
+        state.newsWeekSetModalOpen = false;
+        state.newsWeekSetViewerWeekSetId = "";
+        state.newsWeekSetViewerItems = [];
+        state.newsWeekSetViewerIndex = -1;
         state.activeView = "dashboard";
         state.activeDashboardPage = "home";
         syncPortalModalBodyState();
@@ -7094,6 +7523,7 @@
         .getElementById("parentTextZoomResetBtn")
         ?.addEventListener("click", () => applyPortalTextZoom(TEXT_ZOOM_DEFAULT));
 
+      hoistPortalModalsToBody();
       applyPortalTextZoom(readStoredTextZoomPct());
 
       document.getElementById("loginForm")?.addEventListener("submit", (event) => {
@@ -7178,21 +7608,33 @@
         });
 
       document.addEventListener("click", (event) => {
-        const weekTarget = event.target?.closest?.("[data-open-news-week]");
-        if (weekTarget) {
+        const openBtn = event.target?.closest?.("button[data-open-news-week-set]");
+        if (openBtn) {
           event.preventDefault();
-          const weekStart = weekTarget.getAttribute("data-open-news-week");
-          const selectedDate = weekTarget.getAttribute("data-news-date") || "";
-          openNewsWeekModal(weekStart, selectedDate);
+          const weekSetId = normalizeText(
+            openBtn.getAttribute("data-open-news-week-set"),
+          );
+          const reportDate = normalizeText(
+            openBtn.getAttribute("data-open-news-report-date"),
+          );
+          if (!weekSetId) return;
+          setActivePortalView("dashboard");
+          setActiveDashboardPage("news-reports");
+          openNewsWeekSetModalByWeekSetId(weekSetId, { reportDate });
+          return;
+        }
+        const rowTarget = event.target?.closest?.("tr[data-news-week-set-id]");
+        if (rowTarget && !event.target?.closest?.("button, a, input, textarea, select")) {
+          event.preventDefault();
+          const weekSetId = normalizeText(
+            rowTarget.getAttribute("data-news-week-set-id"),
+          );
+          if (!weekSetId) return;
+          setActivePortalView("dashboard");
+          setActiveDashboardPage("news-reports");
+          openNewsWeekSetModalByWeekSetId(weekSetId);
         }
       });
-
-      document
-        .getElementById("newsWeekModalBackdrop")
-        ?.addEventListener("click", closeNewsWeekModal);
-      document
-        .getElementById("closeNewsWeekModalBtn")
-        ?.addEventListener("click", closeNewsWeekModal);
 
       document
         .getElementById("performanceReportsList")
@@ -7253,12 +7695,49 @@
         });
 
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && state.performanceModalOpen) {
+        if (event.key !== "Escape") return;
+        if (state.performanceModalOpen) {
           setPerformanceReportModalOpen(false);
-        } else if (event.key === "Escape" && state.pastDueModalOpen) {
+          return;
+        }
+        if (state.newsWeekSetModalOpen) {
+          closeNewsWeekSetModal();
+          return;
+        }
+        if (state.pastDueModalOpen) {
           setPastDueHomeworkModalOpen(false);
         }
       });
+
+      document
+        .getElementById("newsWeekSetModalBackdrop")
+        ?.addEventListener("click", () => {
+          closeNewsWeekSetModal();
+        });
+
+      document
+        .getElementById("closeNewsWeekSetModalBtn")
+        ?.addEventListener("click", () => {
+          closeNewsWeekSetModal();
+        });
+
+      document
+        .getElementById("newsWeekSetModalCloseActionBtn")
+        ?.addEventListener("click", () => {
+          closeNewsWeekSetModal();
+        });
+
+      document
+        .getElementById("newsWeekSetModalPrevBtn")
+        ?.addEventListener("click", () => {
+          shiftNewsWeekSetViewer(-1);
+        });
+
+      document
+        .getElementById("newsWeekSetModalNextBtn")
+        ?.addEventListener("click", () => {
+          shiftNewsWeekSetViewer(1);
+        });
 
       document.getElementById("saveDraftBtn")?.addEventListener("click", () => {
         saveDraft().catch((error) => setStatus(error.message, "err"));

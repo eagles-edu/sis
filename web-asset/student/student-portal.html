@@ -191,6 +191,7 @@
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius-3);
+      min-width: 0;
       padding: 14px;
       box-shadow: var(--shadow);
     }
@@ -402,41 +403,56 @@
     .status.ok { color: #1c8050; }
 
     .chip {
+      --chip-height: 30px;
+      --chip-min-ar: 4.2;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
+      inline-size: auto;
+      min-inline-size: calc(var(--chip-height) * var(--chip-min-ar));
+      max-inline-size: 100%;
       border-radius: 999px;
-      border: 1px solid var(--line);
-      padding: 5px 10px;
-      font-size: 11px;
+      border: 2px solid #5f7ca6;
+      border-bottom-width: 3px;
+      box-sizing: border-box;
+      min-height: 0;
+      height: var(--chip-height);
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
       line-height: 1;
-      color: #2f4f76;
-      background: #f4f8ff;
+      text-align: center;
+      text-transform: uppercase;
+      color: #173962;
+      background: #e2edff;
+      box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
       white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .chip-neutral {
-      border-color: #9ab0ce;
-      color: #3d567a;
-      background: #eef4ff;
+      border-color: #5877a3;
+      color: #12345b;
+      background: #dfeaff;
     }
 
     .chip-ok {
-      border-color: #86b79e;
-      color: #195d3d;
-      background: #ecf9f1;
+      border-color: #287a4f;
+      color: #0f452c;
+      background: #d8f2e3;
     }
 
     .chip-warn {
-      border-color: #e7a23c;
-      color: #8a5600;
-      background: #fff5df;
+      border-color: #b16d00;
+      color: #5b3500;
+      background: #ffe9c7;
     }
 
     .chip-open {
-      border-color: #6eaedc;
-      color: #0f4d78;
-      background: #e7f4ff;
+      border-color: #2d78b4;
+      color: #093a63;
+      background: #d8edff;
     }
 
     .chip-link {
@@ -444,28 +460,33 @@
       display: inline-flex;
     }
 
+    .chip-link:hover,
+    .chip-link:focus-visible {
+      cursor: pointer;
+    }
+
     .chip-revise {
-      border-color: #a48ad8;
-      color: #4b2f8a;
-      background: #f3ecff;
+      border-color: #7348b5;
+      color: #351267;
+      background: #eadcff;
     }
 
     .chip-bad {
-      border-color: #e58a92;
-      color: #9b1520;
-      background: #fbe9ea;
+      border-color: #ad2c3c;
+      color: #67101d;
+      background: #ffd8dd;
     }
 
     .chip-checked {
-      border-color: #2ba39a;
-      color: #085852;
-      background: #e1fbf9;
+      border-color: #1d8b82;
+      color: #044e48;
+      background: #cef4ef;
     }
 
     .chip-lock {
-      border-color: #d3aaaa;
-      color: #8a2f2f;
-      background: #fff0f0;
+      border-color: #b24949;
+      color: #661717;
+      background: #ffe1e1;
     }
 
     .status-strip {
@@ -511,13 +532,16 @@
       max-height: 260px;
       overflow: auto;
       box-sizing: border-box;
+      min-width: 0;
       background: #fff;
     }
 
     .queue-table-wrap table {
-      width: 100%;
+      min-width: 100%;
       border-collapse: collapse;
       font-size: 13px;
+      table-layout: fixed;
+      width: 100%;
     }
 
     .queue-table-wrap th,
@@ -526,6 +550,8 @@
       border-bottom: 1px solid var(--line);
       text-align: left;
       vertical-align: top;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .queue-table-wrap tr:last-child td {
@@ -542,6 +568,93 @@
       white-space: nowrap;
     }
 
+    @media (max-width: 920px) {
+      .queue-table-wrap table.news-queue-table th:nth-child(6),
+      .queue-table-wrap table.news-queue-table td:nth-child(6) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .queue-table-wrap table.news-queue-table th:nth-child(3),
+      .queue-table-wrap table.news-queue-table td:nth-child(3) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .queue-table-wrap table.news-queue-table th:nth-child(2),
+      .queue-table-wrap table.news-queue-table td:nth-child(2) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .queue-table-wrap table.news-queue-table th:nth-child(4),
+      .queue-table-wrap table.news-queue-table td:nth-child(4) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .queue-table-wrap table.news-queue-table {
+        table-layout: auto;
+      }
+
+      .queue-table-wrap table.news-queue-table thead {
+        display: none;
+      }
+
+      .queue-table-wrap table.news-queue-table th:nth-child(2),
+      .queue-table-wrap table.news-queue-table td:nth-child(2),
+      .queue-table-wrap table.news-queue-table th:nth-child(3),
+      .queue-table-wrap table.news-queue-table td:nth-child(3),
+      .queue-table-wrap table.news-queue-table th:nth-child(4),
+      .queue-table-wrap table.news-queue-table td:nth-child(4),
+      .queue-table-wrap table.news-queue-table th:nth-child(6),
+      .queue-table-wrap table.news-queue-table td:nth-child(6) {
+        display: none;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody {
+        display: grid;
+        gap: 8px;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody tr {
+        display: grid;
+        gap: 6px;
+        grid-template-columns: minmax(0, 1fr);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-2);
+        background: #f5f9ff;
+        padding: 8px;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        border-bottom: 0;
+        padding: 0;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody td:nth-child(1) {
+        font-weight: 700;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody td:nth-child(7) .queue-row-btn {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .queue-table-wrap table.news-queue-table tbody td[colspan] {
+        display: block;
+        text-align: center;
+      }
+    }
+
     .field {
       display: grid;
       gap: 6px;
@@ -550,6 +663,15 @@
     .form-row {
       display: grid;
       gap: 6px;
+    }
+
+    .student-overview-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: 0.01em;
     }
 
     .field label {
@@ -662,12 +784,14 @@
       display: grid;
       gap: 12px;
       align-content: start;
+      min-width: 0;
     }
 
     .portal-grid {
       display: grid;
       gap: 12px;
       align-items: start;
+      min-width: 0;
     }
 
     .portal-col {
@@ -675,12 +799,14 @@
       gap: 10px;
       align-content: start;
       grid-template-columns: minmax(0, 1fr);
+      min-width: 0;
     }
 
     .toolbar {
       display: grid;
       gap: 10px;
       margin-bottom: 12px;
+      min-width: 0;
     }
 
     .toolbar-actions {
@@ -693,6 +819,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius-3);
       background: #fff;
+      min-width: 0;
       padding: 12px;
       margin-top: 10px;
     }
@@ -753,12 +880,14 @@
     }
 
     .metric {
-      border: 1px solid var(--line);
+      border: 2px solid #8ea3c1;
+      border-bottom-width: 4px;
       border-radius: 10px;
+      box-sizing: border-box;
       padding: 8px;
       min-height: 72px;
       min-width: 0;
-      background: #fbfcff;
+      background: #f3f8ff;
       display: grid;
       place-items: center;
       text-align: center;
@@ -785,9 +914,32 @@
       max-width: 100%;
     }
 
-    .metric.good { border-color: #8ccba9; background: #eefaf3; }
-    .metric.warn { border-color: #9dbde5; background: #eff5ff; }
-    .metric.bad { border-color: #e1a8a8; background: #fff1f1; }
+    .metric.good {
+      border-color: #1f7a4a;
+      background: #d7f2e1;
+    }
+    .metric.good .k,
+    .metric.good .v {
+      color: #0f4129;
+    }
+
+    .metric.warn {
+      border-color: #265f9f;
+      background: #d9eaff;
+    }
+    .metric.warn .k,
+    .metric.warn .v {
+      color: #103d70;
+    }
+
+    .metric.bad {
+      border-color: #b3263a;
+      background: #ffd9de;
+    }
+    .metric.bad .k,
+    .metric.bad .v {
+      color: #5f0f1c;
+    }
 
     .quick-links {
       display: grid;
@@ -1326,44 +1478,6 @@
       font-weight: 700;
     }
 
-    .news-week-modal {
-      max-width: 760px;
-    }
-
-    .news-week-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: grid;
-      gap: 6px;
-    }
-
-    .news-week-list li {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 8px;
-      align-items: center;
-      padding: 8px 10px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      background: #fff;
-    }
-
-    .news-week-list li.selected {
-      border-color: #7a59cc;
-      background: #f6f1ff;
-    }
-
-    @media (max-width: 720px) {
-      .news-week-list li {
-        grid-template-columns: 1fr;
-      }
-      .news-week-list li > span:nth-child(2),
-      .news-week-list li > span:nth-child(3) {
-        justify-self: start;
-      }
-    }
-
     .fc .fc-event.fc-event-news-completed {
       background: #eefaf3 !important;
       border-color: #8ccba9 !important;
@@ -1544,6 +1658,43 @@
       .identity-list,
       .toolbar-actions {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .topbar-head {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+      }
+
+      .header-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+
+      .text-zoom-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        max-width: 100%;
+      }
+
+      #studentTextZoomResetBtn {
+        display: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .section-head,
+      .queue-summary-head {
+        justify-content: center;
+        text-align: center;
+      }
+
+      .section-head > *,
+      .queue-summary-head > * {
+        margin-inline: auto;
+        text-align: center;
       }
     }
 
@@ -1740,8 +1891,7 @@
             <div id="studentHomeGrid" class="portal-col">
               <div id="overviewPanel" class="toolbar">
                 <div class="form-row">
-                  <span class="identity-label">Học sinh</span>
-                  <p id="studentOverviewSummary" class="hint">Loading student dashboard...</p>
+                  <p id="studentOverviewSummary" class="student-overview-title">Loading student dashboard...</p>
                 </div>
                 <div class="toolbar-actions">
                   <button id="reloadBtn" type="button">Tải lại</button>
@@ -1808,19 +1958,21 @@
                     <span id="newsQueueBadge" class="chip chip-neutral">Loading</span>
                   </summary>
                   <div class="queue-table-wrap">
-                    <table>
+                    <table class="news-queue-table">
                       <thead>
                         <tr>
-                          <th scope="col">Week</th>
+                          <th scope="col">Week Set</th>
+                          <th scope="col">Student</th>
+                          <th scope="col">Level</th>
+                          <th scope="col">Reports</th>
                           <th scope="col">Status</th>
-                          <th scope="col">Counts</th>
-                          <th scope="col">Latest</th>
-                          <th scope="col">Action</th>
+                          <th scope="col">Latest Submission</th>
+                          <th scope="col">Open</th>
                         </tr>
                       </thead>
                       <tbody id="newsQueueBody">
                         <tr>
-                          <td colspan="5">Loading...</td>
+                          <td colspan="7">Loading...</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1867,20 +2019,102 @@
                 </div>
               </section>
 
-              <section id="newsWeekModal" class="portal-modal hidden">
-                <div class="portal-modal-backdrop" id="newsWeekModalBackdrop"></div>
-                <div class="portal-modal-dialog news-week-modal" role="dialog" aria-modal="true" aria-labelledby="newsWeekModalTitle">
+              <section id="newsComplianceModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="newsComplianceModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsComplianceModalTitle">
                   <div class="portal-modal-head">
-                    <h4 id="newsWeekModalTitle">News Report Week</h4>
-                    <button id="closeNewsWeekModalBtn" class="portal-modal-close" type="button">Close</button>
+                    <h4 id="newsComplianceModalTitle">Revision Required</h4>
+                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close" type="button">Close</button>
                   </div>
                   <div class="portal-modal-body">
-                    <p id="newsWeekModalSummary" class="hint">Loading week set...</p>
-                    <ul id="newsWeekModalList" class="news-week-list"></ul>
+                    <p id="newsComplianceModalSummary" class="hint">Fix the listed fields and submit again.</p>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newsWeekModalEditBtn" type="button">Edit in form</button>
+                    <button id="newsComplianceModalCloseActionBtn" type="button">Close</button>
                   </div>
+                </div>
+              </section>
+
+              <section id="newsWeekSetModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="newsWeekSetModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsWeekSetModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="newsWeekSetModalTitle">Student News Report Viewer</h4>
+                    <div class="actions">
+                      <button id="newsWeekSetModalPrevBtn" type="button" aria-label="Previous report">←</button>
+                      <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
+                      <button id="newsWeekSetModalNextBtn" type="button" aria-label="Next report">→</button>
+                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close" type="button">Close</button>
+                    </div>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p id="newsWeekSetModalMeta" class="hint">Open a week set to review and resubmit reports.</p>
+                    <div class="row">
+                      <div class="field c4">
+                        <label for="newsViewerReportDate">Report Date</label>
+                        <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
+                      </div>
+                      <div class="field c4">
+                        <label>Status</label>
+                        <span id="newsViewerReviewStatusChip" class="chip chip-neutral">-</span>
+                      </div>
+                      <div class="field c4">
+                        <label for="newsViewerSubmittedAt">Submitted At</label>
+                        <input id="newsViewerSubmittedAt" type="text" readonly aria-readonly="true">
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="field c12">
+                        <label for="newsViewerSourceLink">I. Source: link to article</label>
+                        <input id="newsViewerSourceLink" type="url" placeholder="https://...">
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerArticleTitle">II.A. Title</label>
+                        <input id="newsViewerArticleTitle" type="text" maxlength="240">
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerByline">II.B. Byline (author)</label>
+                        <input id="newsViewerByline" type="text" maxlength="240">
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerArticleDateline">II.C. Article Dateline / Publication Date</label>
+                        <input id="newsViewerArticleDateline" type="text">
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerLeadSynopsis">II.D. Lead Synopsis</label>
+                        <textarea id="newsViewerLeadSynopsis"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionActor">II.E.i. Who/what was doing action/news</label>
+                        <textarea id="newsViewerActionActor"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionAffected">II.E.ii. Who/what received/was affected</label>
+                        <textarea id="newsViewerActionAffected"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionWhere">II.E.iii. Where is the action/news</label>
+                        <textarea id="newsViewerActionWhere"></textarea>
+                      </div>
+                      <div class="field c6">
+                        <label for="newsViewerActionWhat">II.E.iv. What action/news</label>
+                        <textarea id="newsViewerActionWhat"></textarea>
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerActionWhy">II.E.v. Why was action/news happening</label>
+                        <textarea id="newsViewerActionWhy"></textarea>
+                      </div>
+                      <div class="field c12">
+                        <label for="newsViewerBiasAssessment">II.F. Bias/agendum/spin/prevarication? Explain</label>
+                        <textarea id="newsViewerBiasAssessment"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="portal-modal-actions">
+                    <button id="newsWeekSetModalSubmitBtn" type="button" class="primary">Submit</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button">Close</button>
+                  </div>
+                  <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
                 </div>
               </section>
 
@@ -1988,19 +2222,21 @@
                   <span id="newsPageQueueBadge" class="chip chip-neutral">Loading</span>
                 </summary>
                 <div class="queue-table-wrap">
-                  <table>
+                  <table class="news-queue-table">
                     <thead>
                       <tr>
-                        <th scope="col">Week</th>
+                        <th scope="col">Week Set</th>
+                        <th scope="col">Student</th>
+                        <th scope="col">Level</th>
+                        <th scope="col">Reports</th>
                         <th scope="col">Status</th>
-                        <th scope="col">Counts</th>
-                        <th scope="col">Latest</th>
-                        <th scope="col">Action</th>
+                        <th scope="col">Latest Submission</th>
+                        <th scope="col">Open</th>
                       </tr>
                     </thead>
                     <tbody id="newsPageQueueBody">
                       <tr>
-                        <td colspan="5">Loading...</td>
+                        <td colspan="7">Loading...</td>
                       </tr>
                     </tbody>
                   </table>
@@ -2073,8 +2309,9 @@
                   <textarea id="biasAssessment"></textarea>
                 </div>
 
-                <div class="field c12">
+                <div class="field c12 actions">
                   <button id="submitBtn" class="primary" type="button">Submit Report</button>
+                  <button id="openNewsComplianceModalBtn" type="button" class="hidden">View validation details</button>
                 </div>
               </div>
               <p id="formStatus" class="status">Waiting for calendar window. </p>
@@ -2110,7 +2347,9 @@
         dashboard: null,
         overdueHomeworkRows: [],
         pastDueModalOpen: false,
+        newsWeekSetModalOpen: false,
         calendarRows: [],
+        newsItems: [],
         calendarAlertDates: new Set(),
         calendarStatusByDate: new Map(),
         studentCalendar: null,
@@ -2118,11 +2357,17 @@
         activeView: "home",
         activePage: "home",
         newsWeekSets: [],
+        newsWeekSetViewerWeekSetId: "",
+        newsWeekSetViewerItems: [],
+        newsWeekSetViewerIndex: -1,
+        newsWeekSetViewerPending: false,
         detailCalendar: null,
         detailCalendarHasMounted: false,
         textZoomPct: TEXT_ZOOM_DEFAULT,
         newsFieldErrors: {},
         newsRevisionTasks: [],
+        newsComplianceModalOpen: false,
+        newsComplianceSummary: "",
       };
 
       function updateEnvBadge() {
@@ -2160,6 +2405,36 @@
         "actionWhy",
         "biasAssessment",
       ];
+      const NEWS_GENERIC_COMPLIANCE_FIELD_ID = "__compliance";
+      const NEWS_VIEWER_MODAL_FIELD_IDS = {
+        sourceLink: "newsViewerSourceLink",
+        articleTitle: "newsViewerArticleTitle",
+        byline: "newsViewerByline",
+        articleDateline: "newsViewerArticleDateline",
+        leadSynopsis: "newsViewerLeadSynopsis",
+        actionActor: "newsViewerActionActor",
+        actionAffected: "newsViewerActionAffected",
+        actionWhere: "newsViewerActionWhere",
+        actionWhat: "newsViewerActionWhat",
+        actionWhy: "newsViewerActionWhy",
+        biasAssessment: "newsViewerBiasAssessment",
+      };
+      const NEWS_FIELD_DEFAULT_FAILURE_MESSAGES = {
+        sourceLink: "Source URL could not be validated from the fetched article.",
+        articleTitle: "Article title does not closely match source title.",
+        byline: "Byline must match fetched author or source organization.",
+        articleDateline:
+          "Dateline must reflect visible publish/updated time and timezone requirements.",
+        leadSynopsis:
+          "Lead synopsis must align with the first paragraph of the source article.",
+        actionActor: "Action actor must include a noun or noun phrase.",
+        actionAffected: "Action affected must include a noun or noun phrase.",
+        actionWhere:
+          "Action location must include a place (city/country/location phrase).",
+        actionWhat: "Action description must be at least one sentence.",
+        actionWhy: "Action reason must be at least one sentence.",
+        biasAssessment: "Bias assessment must be at least one sentence.",
+      };
 
       function newsFormFieldElement(fieldId = "") {
         const id = t(fieldId);
@@ -2216,6 +2491,156 @@
         return failed;
       }
 
+      function extractValidationDetailsObject(payloadBody = {}) {
+        const validation =
+          payloadBody && typeof payloadBody === "object" && payloadBody.validation && typeof payloadBody.validation === "object" ?
+            payloadBody.validation
+          : {};
+        if (validation.details && typeof validation.details === "object") {
+          return validation.details;
+        }
+        return validation;
+      }
+
+      function deriveFailedFieldMapFromValidationDetails(details = {}) {
+        const source = details && typeof details === "object" ? details : {};
+        const failed = {};
+        NEWS_FORM_FIELD_IDS.forEach((fieldId) => {
+          const detail =
+            source[fieldId] && typeof source[fieldId] === "object" ?
+              source[fieldId]
+            : {};
+          const score = Number(detail.score);
+          const threshold = Number(detail.threshold);
+          const hasScore = Number.isFinite(score) && Number.isFinite(threshold);
+          const scoreFailed = hasScore && score < threshold;
+          const sourceBlocked =
+            fieldId === "sourceLink" && detail.sourceAllowed === false;
+          if (!scoreFailed && !sourceBlocked) return;
+          failed[fieldId] = {
+            message:
+              t(detail.message) ||
+              NEWS_FIELD_DEFAULT_FAILURE_MESSAGES[fieldId] ||
+              "This field still needs revision.",
+            score: hasScore ? score : null,
+            threshold: hasScore ? threshold : null,
+          };
+        });
+        const metadata =
+          source.metadata && typeof source.metadata === "object" ?
+            source.metadata
+          : {};
+        if (!failed.sourceLink && metadata.ok === false) {
+          failed.sourceLink = {
+            message:
+              t(metadata.error) ||
+              NEWS_FIELD_DEFAULT_FAILURE_MESSAGES.sourceLink,
+            score: 0,
+            threshold: 1,
+          };
+        }
+        return failed;
+      }
+
+      function failedFieldMapFromFieldKeys(fieldKeys = []) {
+        const source = Array.isArray(fieldKeys) ? fieldKeys : [];
+        const failed = {};
+        source.forEach((fieldKey) => {
+          const id = t(fieldKey);
+          if (!id || failed[id]) return;
+          failed[id] = {
+            message:
+              NEWS_FIELD_DEFAULT_FAILURE_MESSAGES[id] ||
+              "This field still needs revision.",
+            score: null,
+            threshold: null,
+          };
+        });
+        return failed;
+      }
+
+      function revisionTasksFromIssueMap(issueMap = {}) {
+        const source =
+          issueMap && typeof issueMap === "object" && !Array.isArray(issueMap) ?
+            issueMap
+          : {};
+        const tasks = [];
+        Object.keys(source).forEach((fieldKey) => {
+          const field = t(fieldKey);
+          if (!field) return;
+          const issue =
+            source[fieldKey] && typeof source[fieldKey] === "object" ?
+              source[fieldKey]
+            : {};
+          const steps = Array.isArray(issue.steps)
+            ? issue.steps.map((step) => t(step)).filter(Boolean)
+            : [];
+          tasks.push({
+            field,
+            label: t(issue.label),
+            criterion: t(issue.criterion),
+            steps,
+          });
+        });
+        return tasks;
+      }
+
+      function resolveFailedFieldMapFromCompliancePayload(payloadBody = {}) {
+        const direct = normalizeFailedFieldMap(payloadBody?.failedFields || {});
+        if (Object.keys(direct).length) return direct;
+        const failedArray = failedFieldMapFromFieldKeys(payloadBody?.failedFields);
+        if (Object.keys(failedArray).length) return failedArray;
+        const validationDetails = extractValidationDetailsObject(payloadBody);
+        const fromValidation = deriveFailedFieldMapFromValidationDetails(validationDetails);
+        if (Object.keys(fromValidation).length) return fromValidation;
+        const fromItemIssues = pendingFailedFieldsFromIssues(
+          payloadBody?.item?.validationIssuesJson,
+        );
+        if (Object.keys(fromItemIssues).length) return fromItemIssues;
+        const fromItemFailedArray = failedFieldMapFromFieldKeys(
+          payloadBody?.item?.failedFields,
+        );
+        if (Object.keys(fromItemFailedArray).length) return fromItemFailedArray;
+        const taskFields = failedFieldMapFromFieldKeys(
+          (Array.isArray(payloadBody?.revisionTasks) ? payloadBody.revisionTasks : [])
+            .map((task) => task?.field),
+        );
+        if (Object.keys(taskFields).length) return taskFields;
+        return {
+          [NEWS_GENERIC_COMPLIANCE_FIELD_ID]: {
+            message:
+              "Saved and marked for revision, but field-level details were not returned. Update source, title, byline, dateline, and lead, then submit again.",
+            score: null,
+            threshold: null,
+          },
+        };
+      }
+
+      function resolveRevisionTasksFromCompliancePayload(
+        payloadBody = {},
+        failedFieldMap = {},
+      ) {
+        const direct = Array.isArray(payloadBody?.revisionTasks)
+          ? payloadBody.revisionTasks
+            .filter((task) => t(task?.field))
+            .map((task) => ({
+              ...task,
+              field: t(task.field),
+              steps: Array.isArray(task.steps) ? task.steps : [],
+            }))
+          : [];
+        if (direct.length) return direct;
+        const fromItemIssues = revisionTasksFromIssueMap(
+          payloadBody?.item?.validationIssuesJson,
+        );
+        if (fromItemIssues.length) return fromItemIssues;
+        return Object.keys(
+          failedFieldMap && typeof failedFieldMap === "object" ?
+            failedFieldMap
+          : {},
+        ).map((field) => ({ field, steps: [] }));
+      }
+
       function clearNewsFieldValidationUi() {
         NEWS_FORM_FIELD_IDS.forEach((fieldId) => {
           const container = newsFormFieldContainer(fieldId);
@@ -2230,6 +2655,12 @@
         const failed = normalizeFailedFieldMap(failedFieldMap);
         state.newsFieldErrors = failed;
         state.newsRevisionTasks = Array.isArray(revisionTasks) ? revisionTasks : [];
+        const hasFailed = Object.keys(failed).length > 0;
+        setNewsComplianceModalCtaVisible(hasFailed);
+        if (!hasFailed) {
+          state.newsComplianceSummary = "";
+          setNewsComplianceModalOpen(false);
+        }
         const taskByField = new Map();
         state.newsRevisionTasks.forEach((task) => {
           const field = t(task?.field);
@@ -2265,6 +2696,45 @@
         });
       }
 
+      function hasNewsFieldValidationErrors() {
+        const failed =
+          state.newsFieldErrors && typeof state.newsFieldErrors === "object" ?
+            state.newsFieldErrors
+          : {};
+        return Object.keys(failed).length > 0;
+      }
+
+      function setNewsComplianceModalOpen(open) {
+        const shouldOpen = Boolean(open);
+        state.newsComplianceModalOpen = shouldOpen;
+        const modal = field("newsComplianceModal");
+        if (!modal) return;
+        modal.classList.toggle("hidden", !shouldOpen);
+        syncPortalModalBodyState();
+      }
+
+      function setNewsComplianceModalCtaVisible(visible) {
+        const button = field("openNewsComplianceModalBtn");
+        if (!(button instanceof HTMLButtonElement)) return;
+        const shouldShow = Boolean(visible);
+        button.classList.toggle("hidden", !shouldShow);
+        button.disabled = !shouldShow;
+      }
+
+      function renderNewsComplianceModalFromState(summaryText = "") {
+        const summary = field("newsComplianceModalSummary");
+        if (!summary) return;
+        if (!hasNewsFieldValidationErrors()) {
+          setNewsComplianceModalOpen(false);
+          return;
+        }
+        const defaultSummary = "Saved and marked for revision. Fix the listed fields and submit again.";
+        state.newsComplianceSummary = t(summaryText) || t(state.newsComplianceSummary) || defaultSummary;
+        summary.textContent = state.newsComplianceSummary;
+
+        setNewsComplianceModalOpen(true);
+      }
+
       function escapeHtml(value) {
         return t(value)
           .replace(/&/g, "&amp;")
@@ -2279,7 +2749,9 @@
       }
 
       function clampTextZoomPct(value) {
-        const parsed = Number(value);
+        const raw = t(value);
+        if (!raw) return TEXT_ZOOM_DEFAULT;
+        const parsed = Number(raw);
         if (!Number.isFinite(parsed)) return TEXT_ZOOM_DEFAULT;
         return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(parsed)));
       }
@@ -2449,6 +2921,16 @@
         return document.getElementById(id);
       }
 
+      function hoistPortalModals() {
+        const host = document.body;
+        if (!host) return;
+        ["pastDueHomeworkModal", "newsComplianceModal", "newsWeekSetModal"].forEach((id) => {
+          const modal = field(id);
+          if (!modal || modal.parentElement === host) return;
+          host.appendChild(modal);
+        });
+      }
+
       function setMenuOpen(open) {
         const shouldOpen = Boolean(open);
         field("sideNav")?.classList.toggle("open", shouldOpen);
@@ -2588,7 +3070,15 @@
         const modal = field("pastDueHomeworkModal");
         if (!modal) return;
         modal.classList.toggle("hidden", !shouldOpen);
-        document.body.classList.toggle("modal-open", shouldOpen);
+        syncPortalModalBodyState();
+      }
+
+      function syncPortalModalBodyState() {
+        const hasOpenModal =
+          state.pastDueModalOpen ||
+          state.newsComplianceModalOpen ||
+          state.newsWeekSetModalOpen;
+        document.body.classList.toggle("modal-open", hasOpenModal);
       }
 
       function renderCurrentHomeworkOverviewCard(child = {}, pendingHomework = 0) {
@@ -3184,6 +3674,8 @@
         state.activePage = normalizeStudentPage(page);
         state.activeView = "home";
         setPastDueHomeworkModalOpen(false);
+        setNewsComplianceModalOpen(false);
+        closeNewsWeekSetModal();
         syncStudentPortalView();
       }
 
@@ -3240,15 +3732,19 @@
         const overdueTone = overdueHomework > 0 ? "bad" : "";
         const scoreTone = Number.isFinite(averageScore) && averageScore < 70 ? "bad" : Number.isFinite(averageScore) && averageScore < 80 ? "warn" : "good";
         const newsSummary = news.statusSummary || {};
-        const newsTone = parseNumber(newsSummary.revisionRequested) > 0 ? "bad" : parseNumber(newsSummary.submitted) > 0 ? "warn" : "good";
+        const approvedNews = parseNumber(newsSummary.approved);
+        const waitingNews = parseNumber(newsSummary.submitted);
+        const reviseNews = parseNumber(newsSummary.revisionRequested);
 
-        identity.textContent = `${t(child.fullName || child.englishName || child.eaglesId)} | ${t(child.eaglesId)} | ${t(child.currentGrade || "No class")}`;
+        const displayEaglesId = t(child.eaglesId);
+        const displayName = t(child.englishName || child.fullName || child.eaglesId);
+        identity.textContent = `${displayName} | ${displayEaglesId} | ${t(child.currentGrade || "No class")}`;
         setSummary("studentEaglesIdValue", t(child.eaglesId) || "-");
         setSummary("studentNumberValue", t(child.studentNumber) || "-");
         setSummary("studentNameValue", t(child.fullName || child.englishName || child.eaglesId) || "-");
         setSummary("studentGradeValue", t(child.currentGrade) || "-");
         if (overview) {
-          overview.textContent = `${t(child.fullName || child.englishName || child.eaglesId)} (${t(child.eaglesId)})`;
+          overview.textContent = displayEaglesId ? `${displayName} (${displayEaglesId})` : displayName;
         }
 
         root.replaceChildren(
@@ -3258,11 +3754,9 @@
           metricCard("Homework Overdue", String(overdueHomework), overdueTone),
           metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", scoreTone),
           metricCard("Performance Reports", String(reportCount)),
-          metricCard(
-            "News Reports",
-            `${parseNumber(newsSummary.approved)}/${parseNumber(newsSummary.submitted)}/${parseNumber(newsSummary.revisionRequested)}`,
-            newsTone
-          ),
+          metricCard("News Approved", String(approvedNews), approvedNews ? "good" : ""),
+          metricCard("News Waiting", String(waitingNews), waitingNews ? "warn" : ""),
+          metricCard("News Revise", String(reviseNews), reviseNews ? "bad" : ""),
         );
 
         renderCurrentHomeworkOverviewCard(child, pendingHomework);
@@ -3428,249 +3922,120 @@
         return span.outerHTML;
       }
 
-      function buildNewsQueueItems(calendar = [], windowInfo = {}) {
-        const rows = (Array.isArray(calendar) ? calendar : [])
-          .map((entry) => {
-            const dateKey = t(entry?.date);
-            const status = resolveNewsCalendarStatus(entry);
-            if (!dateKey || !status) return null;
-            const reviewStatus = t(entry?.reviewStatus);
-            const awaitingReReview = entry?.awaitingReReview === true;
-            const submittedAt = t(entry?.submittedAt);
-            return {
-              dateKey,
-              status,
-              reviewStatus,
-              awaitingReReview,
-              submittedAt,
-            };
-          })
-          .filter(Boolean)
-          .sort((left, right) => right.dateKey.localeCompare(left.dateKey));
+      function normalizeNewsReportItem(entry = {}) {
+        const reportDate = t(entry?.reportDate || entry?.date).slice(0, 10);
+        if (!reportDate) return null;
+        return {
+          id: t(entry?.id) || `news-report:${reportDate}`,
+          reportDate,
+          sourceLink: t(entry?.sourceLink),
+          articleTitle: t(entry?.articleTitle),
+          byline: t(entry?.byline),
+          articleDateline: t(entry?.articleDateline),
+          leadSynopsis: t(entry?.leadSynopsis),
+          actionActor: t(entry?.actionActor),
+          actionAffected: t(entry?.actionAffected),
+          actionWhere: t(entry?.actionWhere),
+          actionWhat: t(entry?.actionWhat),
+          actionWhy: t(entry?.actionWhy),
+          biasAssessment: t(entry?.biasAssessment),
+          submittedAt: t(entry?.submittedAt),
+          reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
+          awaitingReReview: entry?.awaitingReReview === true,
+        };
+      }
 
-        const limited = rows.slice(0, 14);
-        const openDate = t(windowInfo?.reportDate);
-        if (openDate && !limited.find((row) => row.dateKey === openDate)) {
-          limited.unshift({
-            dateKey: openDate,
-            status: "open",
-            reviewStatus: "",
-            awaitingReReview: false,
-            submittedAt: "",
-          });
-        }
+      function newsWeekSetViewerSortValue(item = {}) {
+        return t(item?.submittedAt) || t(item?.reportDate);
+      }
 
-        return limited.map((row) => {
-          const statusLabel = newsStatusLabel(
-            row.status,
-            row.reviewStatus,
-            row.awaitingReReview === true,
+      function sortNewsWeekSetViewerItems(items = []) {
+        const source = Array.isArray(items) ? items : [];
+        return [...source].sort((left, right) => {
+          const submittedCompare = newsWeekSetViewerSortValue(right).localeCompare(
+            newsWeekSetViewerSortValue(left),
           );
-          const reviewLabel = newsReviewLabel(
-            row.status,
-            row.reviewStatus,
-            row.awaitingReReview === true,
-          );
-          const submittedLabel = row.submittedAt ? formatPortalDateTime(row.submittedAt) : "";
-          return {
-            ...row,
-            statusLabel,
-            reviewLabel,
-            submittedLabel,
-            title: formatPortalDate(row.dateKey),
-            meta: [statusLabel, submittedLabel].filter(Boolean).join(" • "),
-            note:
-              row.reviewStatus === "revision-requested" ?
-                "Follow revision guidance and resubmit."
-              : row.awaitingReReview === true ?
-                "Resubmitted and waiting for admin review."
-              : row.status === "open" ?
-                "Submit before the window closes."
-              : row.status === "missed" ?
-                "Missed window. Talk to your teacher if make-up is allowed."
-              : "Awaiting review or already approved.",
-            tone: newsStatusTone(
-              row.status,
-              row.reviewStatus,
-              row.awaitingReReview === true,
-            ),
-          };
+          if (submittedCompare !== 0) return submittedCompare;
+          const dateCompare = t(right?.reportDate).localeCompare(t(left?.reportDate));
+          if (dateCompare !== 0) return dateCompare;
+          return t(right?.id).localeCompare(t(left?.id));
         });
       }
 
-      function buildNewsWeekSets(calendar = [], windowInfo = {}) {
-        const rows = Array.isArray(calendar) ? calendar : [];
+      function newsWeekSetId(weekStart = "") {
+        const child = state.dashboard?.child || {};
+        const studentToken =
+          t(child?.eaglesId) || t(child?.studentNumber) || t(child?.fullName) || "student";
+        const weekToken = t(weekStart) || "week";
+        return `news-week-set:${studentToken}:${weekToken}`;
+      }
+
+      function buildNewsWeekSetsFromItems(items = []) {
         const grouped = new Map();
-        rows.forEach((entry) => {
-          const dateKey = t(entry?.date);
-          const status = resolveNewsCalendarStatus(entry);
-          if (!dateKey || !status) return;
-          const reviewStatus = t(entry?.reviewStatus);
-          const awaitingReReview = entry?.awaitingReReview === true;
-          const submittedAt = t(entry?.submittedAt);
-          const weekStart = isoWeekStart(dateKey);
+        (Array.isArray(items) ? items : []).forEach((entry) => {
+          const report = normalizeNewsReportItem(entry);
+          if (!report) return;
+          const weekStart = isoWeekStart(report.reportDate);
           if (!weekStart) return;
-          const weekEnd = isoWeekEndFromStart(weekStart);
-          const key = weekStart;
-          const existing = grouped.get(key) || {
+          const existing = grouped.get(weekStart) || {
+            id: newsWeekSetId(weekStart),
             weekStart,
-            weekEnd,
+            weekEnd: isoWeekEndFromStart(weekStart),
             reports: [],
             reportCount: 0,
-            submittedCount: 0,
             approvedCount: 0,
+            waitingCount: 0,
             revisionRequestedCount: 0,
-            awaitingReReviewCount: 0,
-            missedCount: 0,
-            openCount: 0,
             latestSubmittedAt: "",
-            latestDate: "",
-            latestStatus: "",
-            latestReviewStatus: "",
-            latestAwaitingReReview: false,
+            latestReportDate: "",
+            latestReportId: "",
+            _reportDates: new Set(),
           };
-          existing.reports.push({
-            dateKey,
-            status,
-            reviewStatus,
-            awaitingReReview,
-            submittedAt,
-          });
-          existing.reportCount += 1;
-          if (status === "missed") existing.missedCount += 1;
-          if (status === "open") existing.openCount += 1;
-          else if (reviewStatus === "approved") existing.approvedCount += 1;
-          else if (reviewStatus === "revision-requested")
+          existing.reports.push(report);
+          existing._reportDates.add(report.reportDate);
+          if (report.reviewStatus === "approved") existing.approvedCount += 1;
+          else if (report.reviewStatus === "revision-requested")
             existing.revisionRequestedCount += 1;
-          else {
-            existing.submittedCount += 1;
-            if (awaitingReReview) {
-              existing.awaitingReReviewCount =
-                Math.max(0, Number.parseInt(String(existing.awaitingReReviewCount || 0), 10) || 0)
-                + 1;
-            }
-          }
-          const latestKey = t(existing.latestSubmittedAt || existing.latestDate);
-          const candidateKey = submittedAt || dateKey;
+          else existing.waitingCount += 1;
+          const candidateKey = t(report.submittedAt) || t(report.reportDate);
+          const latestKey = t(existing.latestSubmittedAt) || t(existing.latestReportDate);
           if (!latestKey || candidateKey > latestKey) {
-            existing.latestSubmittedAt = submittedAt;
-            existing.latestDate = dateKey;
-            existing.latestStatus = status;
-            existing.latestReviewStatus = reviewStatus;
-            existing.latestAwaitingReReview = awaitingReReview === true;
+            existing.latestSubmittedAt = t(report.submittedAt);
+            existing.latestReportDate = t(report.reportDate);
+            existing.latestReportId = t(report.id);
           }
-          grouped.set(key, existing);
+          grouped.set(weekStart, existing);
         });
-
-        return Array.from(grouped.values()).sort((a, b) =>
-          t(b.weekStart).localeCompare(t(a.weekStart)),
-        );
-      }
-
-      function newsWeekSetStatusToken(weekSet = {}) {
-        const reportCount = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
-        );
-        const approved = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
-        );
-        const submitted = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.submittedCount || 0), 10) || 0,
-        );
-        const revisionRequested = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) || 0,
-        );
-        const awaiting = Math.max(
-          0,
-          Math.min(
-            submitted,
-            Number.parseInt(String(weekSet?.awaitingReReviewCount || 0), 10) || 0,
-          ),
-        );
-        const initialSubmitted = Math.max(0, submitted - awaiting);
-        const openCount = Math.max(
-          0,
-          Number.parseInt(String(weekSet?.openCount || 0), 10) || 0,
-        );
-        if (reportCount >= 7 && approved >= 7) return "approved";
-        if (awaiting > 0 && revisionRequested === 0 && initialSubmitted === 0)
-          return "waiting";
-        if (revisionRequested > 0) return "revise";
-        if (submitted > 0) return "submitted";
-        if (openCount > 0) return "open";
-        return "none-submitted";
-      }
-
-      function renderNewsQueueTable(bodyId, items = [], { readOnly = false, mode = "week" } = {}) {
-        const body = field(bodyId);
-        if (!body) {
-          console.warn("renderNewsQueueTable: missing tbody", bodyId);
-          return;
-        }
-        const safeItems = Array.isArray(items) ? items : [];
-        const colCount = mode === "week" ? 5 : readOnly ? 4 : 5;
-        if (!safeItems.length) {
-          body.innerHTML = `<tr><td colspan="${colCount}">No news reports yet.</td></tr>`;
-          return;
-        }
-
-        body.innerHTML = safeItems
-          .map((item) => {
-            if (mode === "week") {
-              const weekStatus = newsWeekSetStatusToken(item);
-              const statusChip = newsStatusChipHtml(
-                weekStatus,
-                item.latestReviewStatus || "",
-                item.latestAwaitingReReview === true,
-              );
-              const counts = `${Math.max(0, item.approvedCount || 0)}/${Math.max(0, item.submittedCount || 0)}/${Math.max(0, item.revisionRequestedCount || 0)}`;
-              const latestLabel = item.latestSubmittedAt ?
-                escapeHtml(formatPortalDateTime(item.latestSubmittedAt))
-              : escapeHtml(formatPortalDate(item.latestDate || item.weekStart));
-              const weekAttrs = `data-open-news-week="${escapeHtml(item.weekStart)}" data-news-date="${escapeHtml(item.latestDate || item.weekStart)}" data-open-news-date="${escapeHtml(item.latestDate || item.weekStart)}"`;
-              const actionCell = readOnly ?
-                ""
-              : `<td class="cell-actions"><button type="button" class="link-btn" data-open-news-week="${escapeHtml(item.weekStart)}" data-news-date="${escapeHtml(item.latestDate || item.weekStart)}" data-open-news-date="${escapeHtml(item.latestDate || item.weekStart)}">Open</button></td>`;
-              return `<tr>\n                <td>${escapeHtml(formatPortalDate(item.weekStart))} - ${escapeHtml(formatPortalDate(item.weekEnd))}</td>\n                <td><span class="chip-link" ${weekAttrs}>${statusChip}</span></td>\n                <td>${escapeHtml(counts)}</td>\n                <td>${latestLabel}</td>\n                ${actionCell}\n              </tr>`;
-            }
-            const dateCell = escapeHtml(formatPortalDate(item.dateKey));
-            const statusChip = newsStatusChipHtml(
-              item.status,
-              item.reviewStatus,
-              item.awaitingReReview === true,
-            );
-            const reviewChip = newsReviewChipHtml(
-              item.status,
-              item.reviewStatus,
-              item.awaitingReReview === true,
-            );
-            const submittedCell = item.submittedAt ?
-              escapeHtml(formatPortalDateTime(item.submittedAt))
-            : "—";
-            const actionCell = readOnly ?
-              ""
-            : `<td class="cell-actions"><button type="button" class="link-btn" data-open-news-date="${escapeHtml(item.dateKey)}">Open</button></td>`;
-            return `<tr>\n              <td>${dateCell}</td>\n              <td>${statusChip}</td>\n              <td>${reviewChip}</td>\n              <td>${submittedCell}</td>\n              ${actionCell}\n            </tr>`;
+        return Array.from(grouped.values())
+          .map((entry) => {
+            const reports = sortNewsWeekSetViewerItems(entry.reports);
+            return {
+              id: entry.id,
+              weekStart: t(entry.weekStart),
+              weekEnd: t(entry.weekEnd),
+              reports,
+              reportCount: Math.max(entry._reportDates?.size || 0, reports.length),
+              approvedCount: entry.approvedCount,
+              waitingCount: entry.waitingCount,
+              revisionRequestedCount: entry.revisionRequestedCount,
+              latestSubmittedAt:
+                t(entry.latestSubmittedAt) || t(reports[0]?.submittedAt),
+              latestReportDate:
+                t(entry.latestReportDate) || t(reports[0]?.reportDate),
+              latestReportId:
+                t(entry.latestReportId) || t(reports[0]?.id),
+            };
           })
-          .join("");
+          .sort((left, right) => {
+            const weekCompare = t(right?.weekStart).localeCompare(t(left?.weekStart));
+            if (weekCompare !== 0) return weekCompare;
+            return t(right?.latestSubmittedAt).localeCompare(t(left?.latestSubmittedAt));
+          });
       }
 
       function buildNewsWeekSetsFromState() {
-        const primaryCalendar = Array.isArray(state.calendarRows) && state.calendarRows.length ?
-          state.calendarRows
-          : [];
-        const fallbackCalendar = Array.isArray(state.dashboard?.newsReports?.calendar) ?
-          state.dashboard.newsReports.calendar
-          : [];
-        const calendarSource = primaryCalendar.length ? primaryCalendar : fallbackCalendar;
-        const windowSource =
-          state.window && Object.keys(state.window).length ? state.window
-          : state.dashboard?.newsReports?.window || {};
-        return buildNewsWeekSets(calendarSource, windowSource);
+        const source = Array.isArray(state.newsItems) ? state.newsItems : [];
+        return buildNewsWeekSetsFromItems(source);
       }
 
       function ensureNewsWeekSets() {
@@ -3685,45 +4050,331 @@
         return state.newsWeekSets;
       }
 
-      function renderNewsQueue() {
-        const news = state.dashboard?.newsReports || {};
-        const newsSummary = news.statusSummary || {};
-        const approved = parseNumber(newsSummary.approved);
-        const submitted = parseNumber(newsSummary.submitted);
-        const revisionRequested = parseNumber(newsSummary.revisionRequested);
-        const total = approved + submitted + revisionRequested;
+      function newsWeekSetStatusToken(weekSet = {}) {
+        const approvedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
+        );
+        const revisionRequestedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) || 0,
+        );
+        const reportCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
+        );
+        if (reportCount >= 7 && approvedCount >= 7) return "approved";
+        if (revisionRequestedCount > 0) return "revise";
+        return "waiting";
+      }
 
-        const badgeIds = ["newsQueueBadge", "newsPageQueueBadge"];
-        badgeIds.forEach((id) => {
-          const badge = field(id);
-          if (!badge) return;
-          const badgeTone =
-            revisionRequested > 0 ? "chip-bad"
-            : submitted > 0 ? "chip-warn"
-            : total > 0 ? "chip-ok"
-            : "chip-neutral";
-          badge.textContent = total ? `${approved}/${submitted}/${revisionRequested}` : "No reports";
-          badge.className = `chip ${badgeTone}`;
+      function newsWeekSetStatusLabel(token = "") {
+        const normalized = normalizeLower(token);
+        if (normalized === "approved") return "Approved";
+        if (normalized === "revise") return "Revise";
+        return "Waiting";
+      }
+
+      function newsWeekSetStatusChipHtml(token = "") {
+        const normalized = normalizeLower(token);
+        const tone =
+          normalized === "approved" ? "good"
+          : normalized === "revise" ? "revise"
+          : "warn";
+        const span = document.createElement("span");
+        span.className = `chip ${chipClassForTone(tone)}`;
+        span.textContent = newsWeekSetStatusLabel(normalized);
+        return span.outerHTML;
+      }
+
+      function summarizeNewsWeekSetStatuses(weekSets = []) {
+        const summary = {
+          approved: 0,
+          waiting: 0,
+          revise: 0,
+        };
+        (Array.isArray(weekSets) ? weekSets : []).forEach((entry) => {
+          const token = newsWeekSetStatusToken(entry);
+          if (token === "approved") summary.approved += 1;
+          else if (token === "revise") summary.revise += 1;
+          else summary.waiting += 1;
+        });
+        return summary;
+      }
+
+      function newsWeekSetById(weekSetId = "", weekSets = null) {
+        const id = t(weekSetId);
+        if (!id) return null;
+        const source =
+          Array.isArray(weekSets) ? weekSets
+          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
+          : [];
+        return source.find((entry) => t(entry?.id) === id) || null;
+      }
+
+      function newsWeekSetContainingReportDate(reportDate = "", weekSets = null) {
+        const dateKey = t(reportDate).slice(0, 10);
+        if (!dateKey) return null;
+        const source =
+          Array.isArray(weekSets) ? weekSets
+          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
+          : [];
+        return source.find((entry) =>
+          (Array.isArray(entry?.reports) ? entry.reports : []).some(
+            (report) => t(report?.reportDate) === dateKey,
+          ),
+        ) || null;
+      }
+
+      function newsViewerItemStatusChipModel(item = {}) {
+        const hasStatus = Boolean(t(item?.reviewStatus)) || item?.awaitingReReview === true;
+        if (!hasStatus) return { label: "-", tone: "neutral" };
+        const status = normalizeNewsReviewStatusToken(item?.reviewStatus);
+        if (status === "approved") return { label: "Approved", tone: "good" };
+        if (status === "revision-requested") return { label: "Revise", tone: "revise" };
+        return { label: "Waiting", tone: "warn" };
+      }
+
+      function setNewsViewerStatusChip(item = {}) {
+        const chip = field("newsViewerReviewStatusChip");
+        if (!chip) return;
+        const model = newsViewerItemStatusChipModel(item);
+        chip.className = `chip ${chipClassForTone(model.tone)}`;
+        chip.textContent = model.label;
+      }
+
+      function newsViewerFieldElement(fieldKey = "") {
+        const id = NEWS_VIEWER_MODAL_FIELD_IDS[t(fieldKey)];
+        return id ? field(id) : null;
+      }
+
+      function setNewsViewerFieldValue(fieldKey = "", value = "") {
+        const input = newsViewerFieldElement(fieldKey);
+        if (!input) return;
+        input.value = t(value);
+      }
+
+      function readNewsViewerFieldValue(fieldKey = "") {
+        const input = newsViewerFieldElement(fieldKey);
+        if (!input) return "";
+        return t(input.value);
+      }
+
+      function setNewsWeekSetModalStatus(message = "") {
+        const statusEl = field("newsWeekSetModalStatus");
+        if (!statusEl) return;
+        statusEl.textContent = t(message) || "Viewer is ready.";
+      }
+
+      function newsWeekSetViewerCurrentItem() {
+        const items = Array.isArray(state.newsWeekSetViewerItems)
+          ? state.newsWeekSetViewerItems
+          : [];
+        const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
+        if (!items.length || !Number.isFinite(index) || index < 0) return null;
+        return items[index] || null;
+      }
+
+      function syncNewsWeekSetViewerControls() {
+        const items = Array.isArray(state.newsWeekSetViewerItems)
+          ? state.newsWeekSetViewerItems
+          : [];
+        const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
+        const active = newsWeekSetViewerCurrentItem();
+        const total = items.length;
+        const isApproved =
+          normalizeNewsReviewStatusToken(active?.reviewStatus) === "approved";
+        const pending = state.newsWeekSetViewerPending === true;
+        const canEdit = Boolean(active) && !isApproved && !pending;
+
+        const indexEl = field("newsWeekSetModalIndex");
+        if (indexEl)
+          indexEl.textContent =
+            total > 0 && index >= 0 ? `${index + 1} / ${total}` : "0 / 0";
+
+        const prevBtn = field("newsWeekSetModalPrevBtn");
+        if (prevBtn instanceof HTMLButtonElement) {
+          prevBtn.disabled = total === 0 || index <= 0 || pending;
+        }
+        const nextBtn = field("newsWeekSetModalNextBtn");
+        if (nextBtn instanceof HTMLButtonElement) {
+          nextBtn.disabled = total === 0 || index >= total - 1 || pending;
+        }
+        const submitBtn = field("newsWeekSetModalSubmitBtn");
+        if (submitBtn instanceof HTMLButtonElement) {
+          submitBtn.disabled = !canEdit;
+          submitBtn.textContent = pending ? "Submitting..." : "Submit";
+        }
+        Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
+          const input = newsViewerFieldElement(fieldKey);
+          if (input) input.disabled = !canEdit;
+        });
+      }
+
+      function renderNewsWeekSetViewer() {
+        const weekSet = newsWeekSetById(state.newsWeekSetViewerWeekSetId);
+        const active = newsWeekSetViewerCurrentItem();
+        const metaEl = field("newsWeekSetModalMeta");
+        if (metaEl) {
+          if (!weekSet) {
+            metaEl.textContent = "Open a week set to review and resubmit reports.";
+          } else {
+            const child = state.dashboard?.child || {};
+            const studentLabel =
+              t(child?.fullName || child?.englishName || child?.eaglesId) || "Student";
+            const level = t(child?.currentGrade) || "-";
+            metaEl.textContent =
+              `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`;
+          }
+        }
+
+        setInputValue("newsViewerReportDate", active?.reportDate || "");
+        setNewsViewerStatusChip(active || {});
+        setInputValue(
+          "newsViewerSubmittedAt",
+          active?.submittedAt ? formatPortalDateTime(active.submittedAt) : "-",
+        );
+
+        Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
+          setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
         });
 
-        const summaryText = total ?
-          `Approved ${approved} • Submitted ${submitted} • Revise ${revisionRequested}` :
-          "No news reports are queued yet.";
+        syncNewsWeekSetViewerControls();
+      }
+
+      function setNewsWeekSetModalOpen(open) {
+        const shouldOpen = Boolean(open);
+        state.newsWeekSetModalOpen = shouldOpen;
+        const modal = field("newsWeekSetModal");
+        if (!modal) return;
+        modal.classList.toggle("hidden", !shouldOpen);
+        syncPortalModalBodyState();
+      }
+
+      function closeNewsWeekSetModal() {
+        setNewsWeekSetModalOpen(false);
+        state.newsWeekSetViewerWeekSetId = "";
+        state.newsWeekSetViewerItems = [];
+        state.newsWeekSetViewerIndex = -1;
+        state.newsWeekSetViewerPending = false;
+        renderNewsWeekSetViewer();
+        setNewsWeekSetModalStatus("");
+      }
+
+      function shiftNewsWeekSetViewer(offset = 0) {
+        const items = Array.isArray(state.newsWeekSetViewerItems)
+          ? state.newsWeekSetViewerItems
+          : [];
+        if (!items.length) return;
+        const parsedOffset = Number.parseInt(String(offset), 10);
+        if (!Number.isFinite(parsedOffset) || parsedOffset === 0) return;
+        const currentIndex = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
+        const baseIndex = Number.isFinite(currentIndex) ? currentIndex : 0;
+        const nextIndex = Math.max(0, Math.min(items.length - 1, baseIndex + parsedOffset));
+        if (nextIndex === baseIndex) return;
+        state.newsWeekSetViewerIndex = nextIndex;
+        renderNewsWeekSetViewer();
+        setNewsWeekSetModalStatus(`Viewing ${nextIndex + 1} / ${items.length} in selected week set.`);
+      }
+
+      function openNewsWeekSetModalByWeekSetId(weekSetId = "", options = {}) {
+        const id = t(weekSetId);
+        if (!id) return false;
+        const weekSet = newsWeekSetById(id, ensureNewsWeekSets());
+        if (!weekSet) return false;
+        const items = sortNewsWeekSetViewerItems(weekSet.reports);
+        const preferredDate = t(options?.reportDate).slice(0, 10);
+        const preferredIndex = preferredDate ?
+          items.findIndex((entry) => t(entry?.reportDate) === preferredDate)
+        : -1;
+        state.newsWeekSetViewerWeekSetId = id;
+        state.newsWeekSetViewerItems = items;
+        state.newsWeekSetViewerIndex = preferredIndex >= 0 ? preferredIndex : 0;
+        state.newsWeekSetViewerPending = false;
+        renderNewsWeekSetViewer();
+        setNewsWeekSetModalOpen(true);
+        if (!(options && options.silentStatus)) {
+          setNewsWeekSetModalStatus(
+            `Opened week set ${t(weekSet?.weekStart)} to ${t(weekSet?.weekEnd)}.`,
+          );
+        }
+        return true;
+      }
+
+      function openNewsWeekSetModalByReportDate(reportDate = "", options = {}) {
+        const dateKey = t(reportDate).slice(0, 10);
+        if (!dateKey) return false;
+        const weekSet = newsWeekSetContainingReportDate(dateKey, ensureNewsWeekSets());
+        if (!weekSet) return false;
+        return openNewsWeekSetModalByWeekSetId(weekSet.id, {
+          ...options,
+          reportDate: dateKey,
+        });
+      }
+
+      function renderNewsQueueTable(bodyId, items = []) {
+        const body = field(bodyId);
+        if (!body) return;
+        const source = Array.isArray(items) ? items : [];
+        if (!source.length) {
+          body.innerHTML = "<tr><td colspan=\"7\">No student week sets found.</td></tr>";
+          return;
+        }
+        const child = state.dashboard?.child || {};
+        const studentLabel = t(child?.fullName || child?.englishName || child?.eaglesId) || "-";
+        const levelLabel = t(child?.currentGrade) || "-";
+        body.innerHTML = source.map((item) => {
+          const weekSetId = escapeHtml(t(item?.id));
+          const statusToken = newsWeekSetStatusToken(item);
+          const reportCount = Math.max(
+            0,
+            Number.parseInt(String(item?.reportCount || 0), 10) || 0,
+          );
+          const latestDate = t(item?.latestReportDate || item?.reports?.[0]?.reportDate);
+          const latestSubmittedAt = t(item?.latestSubmittedAt);
+          const latestLabel = latestSubmittedAt ?
+            formatPortalDateTime(latestSubmittedAt)
+          : latestDate ? formatPortalDate(latestDate)
+          : "-";
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalDate(item?.weekStart))} to ${escapeHtml(formatPortalDate(item?.weekEnd))}</td>\n            <td>${escapeHtml(studentLabel)}</td>\n            <td>${escapeHtml(levelLabel)}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${escapeHtml(latestLabel)}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
+        }).join("");
+      }
+
+      function renderNewsQueue() {
+        let weekSets = [];
+        try {
+          weekSets = buildNewsWeekSetsFromState();
+          state.newsWeekSets = weekSets;
+        } catch (error) {
+          console.error("renderNewsQueue: failed to build student week sets", error);
+          weekSets = [];
+          state.newsWeekSets = [];
+        }
+        const summary = summarizeNewsWeekSetStatuses(weekSets);
+        const totalSets = weekSets.length;
+        const badgeTone =
+          summary.revise > 0 ? "chip-bad"
+          : summary.waiting > 0 ? "chip-warn"
+          : summary.approved > 0 ? "chip-ok"
+          : "chip-neutral";
+        const badgeText = totalSets ?
+          `${summary.approved}/${summary.waiting}/${summary.revise}`
+        : "No sets";
+        const summaryText = totalSets ?
+          `Approved ${summary.approved} • Waiting ${summary.waiting} • Revise ${summary.revise}`
+        : "No student week sets are queued yet.";
+        ["newsQueueBadge", "newsPageQueueBadge"].forEach((id) => {
+          const badge = field(id);
+          if (!badge) return;
+          badge.className = `chip ${badgeTone}`;
+          badge.textContent = badgeText;
+        });
         const summaryEl = field("newsQueueSummary");
         if (summaryEl) summaryEl.textContent = summaryText;
-        const pageSummaryEl = field("newsPageQueueSummary");
-        if (pageSummaryEl) pageSummaryEl.textContent = summaryText;
-
-        let items = [];
-        try {
-          items = buildNewsWeekSetsFromState();
-          state.newsWeekSets = items;
-        } catch (error) {
-          console.error("renderNewsQueue: failed to build news queue items", error);
-          items = [];
-        }
-        renderNewsQueueTable("newsQueueBody", items, { readOnly: false, mode: "week" });
-        renderNewsQueueTable("newsPageQueueBody", items, { readOnly: false, mode: "week" });
+        const summaryPageEl = field("newsPageQueueSummary");
+        if (summaryPageEl) summaryPageEl.textContent = summaryText;
+        renderNewsQueueTable("newsQueueBody", weekSets);
+        renderNewsQueueTable("newsPageQueueBody", weekSets);
       }
 
       function openNewsDate(dateKey) {
@@ -3743,57 +4394,6 @@
         const today =
           t(state.window?.todayDate) || new Date().toISOString().slice(0, 10);
         openNewsDate(today);
-      }
-
-      function openNewsWeekModal(weekStart = "", selectedDate = "") {
-        setActiveStudentView("news");
-        const modal = field("newsWeekModal");
-        const list = field("newsWeekModalList");
-        const summary = field("newsWeekModalSummary");
-        const editBtn = field("newsWeekModalEditBtn");
-        if (!modal || !list || !summary) return;
-        const weekKey = t(weekStart);
-        const weekSets = ensureNewsWeekSets();
-        const weekSet =
-          Array.isArray(weekSets) ?
-            weekSets.find((entry) => entry.weekStart === weekKey)
-          : null;
-        if (!weekSet) {
-          if (selectedDate) openNewsDate(selectedDate);
-          return;
-        }
-        const title = field("newsWeekModalTitle");
-        if (title)
-          title.textContent = `Week ${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)}`;
-        summary.textContent = `Reports this week: ${weekSet.reportCount}. Latest update ${weekSet.latestSubmittedAt ? formatPortalDateTime(weekSet.latestSubmittedAt) : formatPortalDate(weekSet.latestDate || weekSet.weekStart)}.`;
-        list.innerHTML = "";
-        const reports = Array.isArray(weekSet.reports) ? weekSet.reports : [];
-        const selectedDateKey = t(selectedDate);
-        reports
-          .slice()
-          .sort((a, b) => t(b.dateKey).localeCompare(t(a.dateKey)))
-          .forEach((report) => {
-            const li = document.createElement("li");
-            if (selectedDateKey && selectedDateKey === t(report.dateKey))
-              li.classList.add("selected");
-            li.innerHTML = `
-              <span>${escapeHtml(formatPortalDate(report.dateKey))}</span>
-              <span>${newsStatusChipHtml(report.status, report.reviewStatus, report.awaitingReReview === true)}</span>
-              <span>${escapeHtml(report.submittedAt ? formatPortalDateTime(report.submittedAt) : "Not submitted")}</span>
-            `;
-            li.dataset.newsDate = report.dateKey;
-            li.setAttribute("data-open-news-date", report.dateKey);
-            list.appendChild(li);
-          });
-        if (editBtn instanceof HTMLButtonElement) {
-          editBtn.dataset.newsDate = selectedDateKey || reports[0]?.dateKey || weekSet.latestDate || weekSet.weekStart;
-          editBtn.disabled = false;
-        }
-        modal.classList.remove("hidden");
-      }
-
-      function closeNewsWeekModal() {
-        field("newsWeekModal")?.classList.add("hidden");
       }
 
       async function api(path, options = {}) {
@@ -3826,9 +4426,15 @@
           state.activeView = "home";
           state.activePage = "home";
           setPastDueHomeworkModalOpen(false);
+          setNewsComplianceModalOpen(false);
+          closeNewsWeekSetModal();
+          setNewsComplianceModalCtaVisible(false);
+          state.newsComplianceSummary = "";
           state.calendarHasMounted = false;
           state.detailCalendarHasMounted = false;
           state.calendarRows = [];
+          state.newsItems = [];
+          state.newsWeekSets = [];
           state.calendarAlertDates = new Set();
           state.calendarStatusByDate = new Map();
           syncStudentPortalView();
@@ -3842,6 +4448,8 @@
         const nextView = normalizeLower(view) === "news" ? "news" : "home";
         state.activeView = nextView;
         setPastDueHomeworkModalOpen(false);
+        setNewsComplianceModalOpen(false);
+        closeNewsWeekSetModal();
         if (nextView === "home" && !STUDENT_PORTAL_PAGES.has(state.activePage)) {
           state.activePage = "home";
         }
@@ -3871,7 +4479,27 @@
         };
       }
 
-      function applyOpenReport(report = null) {
+      function reportPayloadFromViewerItem(item = null) {
+        const report = item && typeof item === "object" ? item : {};
+        return {
+          reportDate: t(report?.reportDate),
+          sourceLink: readNewsViewerFieldValue("sourceLink"),
+          articleTitle: readNewsViewerFieldValue("articleTitle"),
+          byline: readNewsViewerFieldValue("byline"),
+          articleDateline: readNewsViewerFieldValue("articleDateline"),
+          leadSynopsis: readNewsViewerFieldValue("leadSynopsis"),
+          actionActor: readNewsViewerFieldValue("actionActor"),
+          actionAffected: readNewsViewerFieldValue("actionAffected"),
+          actionWhere: readNewsViewerFieldValue("actionWhere"),
+          actionWhat: readNewsViewerFieldValue("actionWhat"),
+          actionWhy: readNewsViewerFieldValue("actionWhy"),
+          biasAssessment: readNewsViewerFieldValue("biasAssessment"),
+        };
+      }
+
+      function applyOpenReport(report = null, options = {}) {
+        const preserveExistingValidation =
+          options && options.preserveExistingValidation === true;
         setInputValue("sourceLink", report?.sourceLink);
         setInputValue("articleTitle", report?.articleTitle);
         setInputValue("byline", report?.byline);
@@ -3886,6 +4514,14 @@
         const failedFromIssues = pendingFailedFieldsFromIssues(
           report?.validationIssuesJson,
         );
+        if (
+          preserveExistingValidation &&
+          !Object.keys(failedFromIssues).length &&
+          hasNewsFieldValidationErrors()
+        ) {
+          setNewsComplianceModalCtaVisible(true);
+          return;
+        }
         applyNewsFieldValidationUi(failedFromIssues, []);
       }
 
@@ -4142,10 +4778,7 @@
           },
           eventClick(info) {
             const dateKey = t(info?.event?.startStr || info?.event?.start);
-            const weekStart = isoWeekStart(dateKey);
-            if (weekStart) {
-              openNewsWeekModal(weekStart, dateKey);
-            } else {
+            if (!openNewsWeekSetModalByReportDate(dateKey)) {
               openNewsDate(dateKey);
             }
           },
@@ -4194,13 +4827,17 @@
         renderCalendar(state.calendarRows);
       }
 
-      async function loadCalendar() {
+      async function loadCalendar(options = {}) {
         const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=60`);
         state.window = data?.window || null;
         state.calendarRows = Array.isArray(data?.calendar) ? data.calendar : [];
+        state.newsItems = Array.isArray(data?.items) ? data.items : [];
+        state.newsWeekSets = [];
         setInputValue("reportDate", t(data?.window?.reportDate));
         renderCalendar(state.calendarRows);
-        applyOpenReport(data?.openReport || null);
+        applyOpenReport(data?.openReport || null, {
+          preserveExistingValidation: options?.preserveValidation === true,
+        });
         const openDate = t(data?.window?.reportDate);
         const closesAt = t(data?.window?.closesAt);
         field("windowSummary").textContent = openDate
@@ -4209,38 +4846,114 @@
         updateSubmitAvailability();
       }
 
-      async function submitReport() {
-        const payload = reportPayload();
-        if (!payload.reportDate) throw new Error("Report date is locked.");
+      function isComplianceSoftSavePayload(payload = null) {
+        return (
+          payload &&
+          typeof payload === "object" &&
+          payload.saved === true &&
+          payload.complianceFailed === true
+        );
+      }
+
+      async function handleNewsComplianceSoftSave(payloadBody = {}, options = {}) {
+        const reopenReportDate = t(options?.reopenReportDate).slice(0, 10);
+        const summaryMessage =
+          t(payloadBody?.message) ||
+          t(options?.messageFallback) ||
+          "Saved with compliance guidance. Update flagged fields and submit again.";
+        const failedFieldMap = resolveFailedFieldMapFromCompliancePayload(payloadBody);
+        const revisionTasks = resolveRevisionTasksFromCompliancePayload(
+          payloadBody,
+          failedFieldMap,
+        );
+        if (payloadBody?.item) {
+          applyOpenReport(payloadBody.item, {
+            preserveExistingValidation: true,
+          });
+        }
+        applyNewsFieldValidationUi(
+          failedFieldMap,
+          revisionTasks,
+        );
+        setFormStatus(
+          summaryMessage,
+          false,
+        );
+        state.newsComplianceSummary = summaryMessage;
+        renderNewsComplianceModalFromState(summaryMessage);
+        await Promise.all([
+          loadDashboard(),
+          loadCalendar({ preserveValidation: true }),
+        ]);
+        if (reopenReportDate) {
+          openNewsWeekSetModalByReportDate(reopenReportDate, {
+            silentStatus: true,
+          });
+        }
+        if (hasNewsFieldValidationErrors()) {
+          renderNewsComplianceModalFromState(summaryMessage);
+        }
+      }
+
+      async function submitNewsPayload(payload = {}, options = {}) {
+        const reportDate = t(payload?.reportDate);
+        if (!reportDate) throw new Error("Report date is locked.");
+        const reopenReportDate = t(options?.reopenReportDate).slice(0, 10);
         try {
           const saved = await api(STUDENT_NEWS_REPORTS_PATH, {
             method: "POST",
             body: payload,
           });
+          if (isComplianceSoftSavePayload(saved)) {
+            await handleNewsComplianceSoftSave(saved, { reopenReportDate });
+            return;
+          }
           applyNewsFieldValidationUi({}, []);
-          setFormStatus("Report saved.", false, true);
+          setFormStatus(t(saved?.message) || "Report saved.", false, true);
           if (saved?.item) applyOpenReport(saved.item);
           await Promise.all([loadDashboard(), loadCalendar()]);
+          if (reopenReportDate) {
+            openNewsWeekSetModalByReportDate(reopenReportDate, {
+              silentStatus: true,
+            });
+          }
         } catch (error) {
           if (error?.status === 422 && error?.payload?.saved === true) {
             const payloadBody =
               error.payload && typeof error.payload === "object" ?
                 error.payload
               : {};
-            applyNewsFieldValidationUi(
-              payloadBody.failedFields || {},
-              payloadBody.revisionTasks || [],
-            );
-            if (payloadBody?.item) applyOpenReport(payloadBody.item);
-            setFormStatus(
-              error.message ||
-                "Saved and marked for revision. Follow field guidance and save again.",
-              true,
-            );
-            await Promise.all([loadDashboard(), loadCalendar()]);
+            await handleNewsComplianceSoftSave(payloadBody, {
+              reopenReportDate,
+              messageFallback: t(error.message),
+            });
             return;
           }
           throw error;
+        }
+      }
+
+      async function submitReport() {
+        await submitNewsPayload(reportPayload());
+      }
+
+      async function submitNewsWeekSetModalCurrentItem() {
+        const active = newsWeekSetViewerCurrentItem();
+        if (!active) throw new Error("Select a report in the week set viewer.");
+        const reviewStatus = normalizeNewsReviewStatusToken(active?.reviewStatus);
+        if (reviewStatus === "approved") {
+          throw new Error("Approved news reports cannot be edited");
+        }
+        state.newsWeekSetViewerPending = true;
+        syncNewsWeekSetViewerControls();
+        try {
+          const payload = reportPayloadFromViewerItem(active);
+          await submitNewsPayload(payload, {
+            reopenReportDate: payload.reportDate,
+          });
+        } finally {
+          state.newsWeekSetViewerPending = false;
+          syncNewsWeekSetViewerControls();
         }
       }
 
@@ -4286,6 +4999,8 @@
         setGlobalStatus(message, true);
         setFormStatus(message, true);
       }
+
+      hoistPortalModals();
 
       field("menuBtn")?.addEventListener("click", () => {
         setMenuOpen(!field("sideNav")?.classList.contains("open"));
@@ -4395,36 +5110,64 @@
       });
 
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && state.pastDueModalOpen) {
-          setPastDueHomeworkModalOpen(false);
+        if (event.key !== "Escape") return;
+        if (state.newsComplianceModalOpen) {
+          setNewsComplianceModalOpen(false);
+          return;
         }
+        if (state.newsWeekSetModalOpen) {
+          closeNewsWeekSetModal();
+          return;
+        }
+        if (state.pastDueModalOpen) setPastDueHomeworkModalOpen(false);
       });
 
       document.addEventListener("click", (event) => {
-        const dateTarget = event.target?.closest?.("[data-open-news-date]");
-        if (dateTarget) {
+        const openBtn = event.target?.closest?.("button[data-open-news-week-set]");
+        if (openBtn) {
           event.preventDefault();
-          const dateKey = dateTarget.getAttribute("data-open-news-date");
-          openNewsDate(dateKey);
-          const modal = field("newsWeekModal");
-          if (modal && modal.contains(dateTarget)) closeNewsWeekModal();
+          const weekSetId = openBtn.getAttribute("data-open-news-week-set");
+          const reportDate = openBtn.getAttribute("data-open-news-report-date");
+          openNewsWeekSetModalByWeekSetId(weekSetId, { reportDate });
           return;
         }
-        const weekTarget = event.target?.closest?.("[data-open-news-week]");
-        if (weekTarget) {
+        const rowTarget = event.target?.closest?.("tr[data-news-week-set-id]");
+        if (rowTarget && !event.target?.closest?.("button, a, input, textarea, select")) {
           event.preventDefault();
-          const weekStart = weekTarget.getAttribute("data-open-news-week");
-          const selectedDate = weekTarget.getAttribute("data-news-date") || "";
-          openNewsWeekModal(weekStart, selectedDate);
+          const weekSetId = rowTarget.getAttribute("data-news-week-set-id");
+          openNewsWeekSetModalByWeekSetId(weekSetId);
         }
       });
 
-      field("newsWeekModalBackdrop")?.addEventListener("click", closeNewsWeekModal);
-      field("closeNewsWeekModalBtn")?.addEventListener("click", closeNewsWeekModal);
-      field("newsWeekModalEditBtn")?.addEventListener("click", () => {
-        const dateKey = field("newsWeekModalEditBtn")?.getAttribute("data-news-date");
-        if (dateKey) openNewsDate(dateKey);
-        closeNewsWeekModal();
+      field("openNewsComplianceModalBtn")?.addEventListener("click", () => {
+        renderNewsComplianceModalFromState();
+      });
+      field("newsComplianceModalBackdrop")?.addEventListener("click", () => {
+        setNewsComplianceModalOpen(false);
+      });
+      field("closeNewsComplianceModalBtn")?.addEventListener("click", () => {
+        setNewsComplianceModalOpen(false);
+      });
+      field("newsComplianceModalCloseActionBtn")?.addEventListener("click", () => {
+        setNewsComplianceModalOpen(false);
+      });
+      field("newsWeekSetModalBackdrop")?.addEventListener("click", () => {
+        closeNewsWeekSetModal();
+      });
+      field("closeNewsWeekSetModalBtn")?.addEventListener("click", () => {
+        closeNewsWeekSetModal();
+      });
+      field("newsWeekSetModalCloseActionBtn")?.addEventListener("click", () => {
+        closeNewsWeekSetModal();
+      });
+      field("newsWeekSetModalPrevBtn")?.addEventListener("click", () => {
+        shiftNewsWeekSetViewer(-1);
+      });
+      field("newsWeekSetModalNextBtn")?.addEventListener("click", () => {
+        shiftNewsWeekSetViewer(1);
+      });
+      field("newsWeekSetModalSubmitBtn")?.addEventListener("click", () => {
+        submitNewsWeekSetModalCurrentItem().catch(handleError);
       });
 
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));

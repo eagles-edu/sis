@@ -666,7 +666,7 @@ test("parent portal menu opens a detailed homework page with calendar and histor
   dom.window.close()
 })
 
-test("parent portal news queue chips use canonical Approved/Submitted/Revise labels", async () => {
+test("parent portal news queue chips use canonical Approved/Waiting/Revise labels", async () => {
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
       const urlText = toUrlText(resource)
@@ -713,6 +713,21 @@ test("parent portal news queue chips use canonical Approved/Submitted/Revise lab
                   submitted: 1,
                   revisionRequested: 1,
                 },
+                items: [
+                  {
+                    id: "news-2026-03-17",
+                    reportDate: "2026-03-17",
+                    reviewStatus: "submitted",
+                    awaitingReReview: true,
+                    submittedAt: "2026-03-17T09:20:00.000Z",
+                  },
+                  {
+                    id: "news-2026-03-12",
+                    reportDate: "2026-03-12",
+                    reviewStatus: "revision-requested",
+                    submittedAt: "2026-03-12T09:20:00.000Z",
+                  },
+                ],
                 window: {
                   todayDate: "2026-03-13",
                   reportDate: "2026-03-16",
@@ -773,12 +788,300 @@ test("parent portal news queue chips use canonical Approved/Submitted/Revise lab
   })
 
   await waitFor(() => {
+    const overviewSummary = normalizeText(
+      document.getElementById("parentOverviewSummary")?.textContent
+    )
+    assert.match(overviewSummary, /Student One\s*\(vi001\)/i)
+    assert.equal(document.querySelector('label[for="childSelect"]'), null)
+    assert.equal(
+      normalizeText(document.getElementById("childSelect")?.getAttribute("aria-label")),
+      "Student selector"
+    )
+  })
+
+  await waitFor(() => {
+    const metricCards = Array.from(document.querySelectorAll("#dashboardMetrics .metric"))
+    assert.ok(metricCards.length >= 9)
+    const metricLabels = metricCards.map((node) =>
+      normalizeText(node.querySelector(".k")?.textContent)
+    )
+    const metricValues = metricCards.map((node) =>
+      normalizeText(node.querySelector(".v")?.textContent)
+    )
+    const metricsText = normalizeText(document.getElementById("dashboardMetrics")?.textContent)
+    assert.ok(metricLabels.includes("News Approved"))
+    assert.ok(metricLabels.includes("News Waiting"))
+    assert.ok(metricLabels.includes("News Revise"))
+    assert.ok(metricValues.includes("1"))
+    assert.doesNotMatch(metricsText, /\b\d+\s*\/\s*\d+\s*\/\s*\d+\b/)
+  })
+
+  await waitFor(() => {
+    const headers = Array.from(document.querySelectorAll("#newsQueueCard thead th")).map((node) =>
+      normalizeText(node.textContent)
+    )
+    assert.deepEqual(headers, [
+      "Week Set",
+      "Student",
+      "Level",
+      "Reports",
+      "Status",
+      "Latest Submission",
+      "Open",
+    ])
     const queueText = normalizeText(document.getElementById("newsQueueBody")?.textContent)
-    assert.match(queueText, /Approved|Submitted|Revise|Open|Incomplete/i)
+    assert.match(queueText, /Waiting|Revise/i)
     assert.match(queueText, /Revise/i)
+    assert.doesNotMatch(queueText, /Submitted|None Submitted/i)
     assert.doesNotMatch(queueText, /Cần sửa/i)
     const summaryText = normalizeText(document.getElementById("newsQueueSummary")?.textContent)
-    assert.match(summaryText, /Approved\s+1\s+•\s+Submitted\s+1\s+•\s+Revise\s+1/i)
+    assert.match(summaryText, /Approved\s+\d+\s+•\s+Waiting\s+\d+\s+•\s+Revise\s+\d+/i)
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("parent portal opens news detail directly from news queue when dashboard card is hidden", async () => {
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "A2 Flyers",
+            },
+          ],
+        })
+      }
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          children: [
+            {
+              eaglesId: "vi001",
+              attendance: { total: 20, present: 19, absent: 1, late: 0, excused: 0 },
+              assignments: { pending: 0, overdue: 0, completed: 2 },
+              grades: { averageScorePercent: 91 },
+              performance: { reportCount: 1 },
+              details: { reportArchive: [] },
+              newsReports: {
+                submittedCount: 2,
+                statusSummary: {
+                  approved: 1,
+                  submitted: 0,
+                  revisionRequested: 1,
+                },
+                items: [
+                  {
+                    id: "news-2026-03-30",
+                    reportDate: "2026-03-30",
+                    sourceLink: "https://www.bbc.com/news/articles/cx30",
+                    articleTitle: "Week report revise",
+                    byline: "Reporter One",
+                    articleDateline: "March 30, 2026",
+                    leadSynopsis: "Lead",
+                    actionActor: "Actor",
+                    actionAffected: "Affected",
+                    actionWhere: "Where",
+                    actionWhat: "What",
+                    actionWhy: "Why",
+                    biasAssessment: "Bias",
+                    reviewStatus: "revision-requested",
+                    submittedAt: "2026-03-30T09:20:00.000Z",
+                  },
+                  {
+                    id: "news-2026-03-29",
+                    reportDate: "2026-03-29",
+                    sourceLink: "https://www.bbc.com/news/articles/cx29",
+                    articleTitle: "Week report approved",
+                    byline: "Reporter Two",
+                    articleDateline: "March 29, 2026",
+                    leadSynopsis: "Lead",
+                    actionActor: "Actor",
+                    actionAffected: "Affected",
+                    actionWhere: "Where",
+                    actionWhat: "What",
+                    actionWhy: "Why",
+                    biasAssessment: "Bias",
+                    reviewStatus: "approved",
+                    submittedAt: "2026-03-29T09:20:00.000Z",
+                  },
+                ],
+                window: {
+                  todayDate: "2026-03-31",
+                  reportDate: "2026-04-01",
+                  closesAt: "2026-04-01T23:59:00.000Z",
+                },
+                calendar: [
+                  {
+                    date: "2026-03-30",
+                    status: "completed",
+                    reviewStatus: "revision-requested",
+                    submittedAt: "2026-03-30T09:20:00.000Z",
+                  },
+                  {
+                    date: "2026-03-29",
+                    status: "completed",
+                    reviewStatus: "approved",
+                    submittedAt: "2026-03-29T09:20:00.000Z",
+                  },
+                  {
+                    date: "2026-04-01",
+                    status: "open",
+                    canSubmit: true,
+                    submittedAt: "",
+                  },
+                ],
+              },
+            },
+          ],
+        })
+      }
+      if (
+        pathname === "/api/parent/children/vi001/news-reports/calendar" &&
+        method === "GET"
+      ) {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              id: "news-2026-03-30",
+              reportDate: "2026-03-30",
+              sourceLink: "https://www.bbc.com/news/articles/cx30",
+              articleTitle: "Week report revise",
+              byline: "Reporter One",
+              articleDateline: "March 30, 2026",
+              leadSynopsis: "Lead",
+              actionActor: "Actor",
+              actionAffected: "Affected",
+              actionWhere: "Where",
+              actionWhat: "What",
+              actionWhy: "Why",
+              biasAssessment: "Bias",
+              reviewStatus: "revision-requested",
+              submittedAt: "2026-03-30T09:20:00.000Z",
+            },
+            {
+              id: "news-2026-03-29",
+              reportDate: "2026-03-29",
+              sourceLink: "https://www.bbc.com/news/articles/cx29",
+              articleTitle: "Week report approved",
+              byline: "Reporter Two",
+              articleDateline: "March 29, 2026",
+              leadSynopsis: "Lead",
+              actionActor: "Actor",
+              actionAffected: "Affected",
+              actionWhere: "Where",
+              actionWhat: "What",
+              actionWhy: "Why",
+              biasAssessment: "Bias",
+              reviewStatus: "approved",
+              submittedAt: "2026-03-29T09:20:00.000Z",
+            },
+          ],
+          calendar: [
+            {
+              date: "2026-03-30",
+              status: "completed",
+              reviewStatus: "revision-requested",
+              submittedAt: "2026-03-30T09:20:00.000Z",
+            },
+            {
+              date: "2026-03-29",
+              status: "completed",
+              reviewStatus: "approved",
+              submittedAt: "2026-03-29T09:20:00.000Z",
+            },
+            {
+              date: "2026-04-01",
+              status: "open",
+              canSubmit: true,
+              submittedAt: "",
+            },
+          ],
+          window: {
+            todayDate: "2026-03-31",
+            reportDate: "2026-04-01",
+            closesAt: "2026-04-01T23:59:00.000Z",
+          },
+          statusSummary: {
+            approved: 1,
+            submitted: 0,
+            revisionRequested: 1,
+          },
+        })
+      }
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "A2 Flyers",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal"
+  )
+
+  const document = dom.window.document
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
+
+  document.querySelector('a[data-page-target="news-reports"]').click()
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), true)
+    assert.equal(document.getElementById("portalDetailCard").classList.contains("hidden"), false)
+  })
+
+  await waitFor(() => {
+    assert.ok(
+      document.querySelector("#portalDetailQueueBody [data-open-news-week-set]"),
+      "expected week-set trigger in detail queue"
+    )
+  })
+  const openWeekSetTrigger = document.querySelector("#portalDetailQueueBody [data-open-news-week-set]")
+  const targetWeekSet = normalizeText(openWeekSetTrigger?.getAttribute("data-open-news-week-set"))
+  assert.match(targetWeekSet, /news-week-set/i)
+  openWeekSetTrigger.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+
+  await waitFor(() => {
+    const modal = document.getElementById("newsWeekSetModal")
+    assert.equal(document.body.classList.contains("modal-open"), true)
+    assert.ok(modal && !modal.classList.contains("hidden"))
+    assert.equal(document.getElementById("newsWeekSetModalSubmitBtn"), null)
+    assert.ok(document.getElementById("newsWeekSetModalCloseActionBtn"))
+    const statusChip = document.getElementById("newsViewerReviewStatusChip")
+    assert.ok(statusChip)
+    assert.equal(document.getElementById("newsViewerReviewStatus"), null)
+    assert.match(normalizeText(statusChip?.textContent), /Revise/i)
+    assert.match(normalizeText(statusChip?.className), /chip-revise/i)
   })
 
   await settleDomAsync(dom)

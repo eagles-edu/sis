@@ -209,15 +209,18 @@ test("StudentNewsReport review fields exist in Prisma schema contract", () => {
   assert.match(modelChunk, /reviewedByUsername\s+String\?/)
 })
 
-test("student news compliance save path keeps soft-save 422 contract and schema-drift translation", () => {
+test("student news compliance save path returns soft-save success payload and keeps resubmission failures in waiting state", () => {
   const store = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
   const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
 
-  assert.match(store, /throw statusErrorWithPayload\(\s*422,/)
+  assert.doesNotMatch(store, /throw statusErrorWithPayload\(\s*422,/)
   assert.match(store, /saved:\s*true/)
-  assert.match(store, /const reviewStatus = hasFailures/)
+  assert.match(store, /complianceFailed:\s*hasFailures/)
+  assert.match(store, /const isResubmission = Boolean\(existing\)/)
+  assert.match(store, /const reviewStatus = hasFailures && !isResubmission/)
   assert.match(store, /STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED/)
   assert.match(store, /STUDENT_NEWS_REVIEW_STATUS_SUBMITTED/)
+  assert.match(store, /Status remains waiting for admin review\./)
   assert.match(store, /validationIssuesJson:\s*updatedIssues\.issues/)
   assert.match(store, /FIXED PER COMPLIANCE RESOLUTION ON SAVE/)
 
@@ -311,8 +314,7 @@ test("news review status/action rules and revise chip label keep locked admin ui
   assert.match(statusChunk, /if \(reportCount >= 7 && approved >= 7\) return "approved";/)
   assert.match(statusChunk, /return "waiting";/)
   assert.match(statusChunk, /if \(submitted === 0 && revisionRequested === 0\) return "checked";/)
-  assert.match(statusChunk, /if \(revisionRequested > 0\) return "revise";/)
-  assert.match(statusChunk, /if \(submitted > 0\) return "submitted";/)
+  assert.match(statusChunk, /if \(revisionRequested > 0 \|\| submitted > 0\) return "waiting";/)
   assert.match(html, /if \(normalized === "revise" \|\| normalized === "revision-requested"\)/)
 })
 
@@ -570,6 +572,19 @@ test("GET /admin/students/news-reports returns section page HTML with slug confi
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"news-reports"/i)
   assert.match(html, /__SIS_ADMIN_NEWS_REPORTS_PATH/i)
+  assert.match(html, /class="small global-text-label">Global Text</i)
+  assert.match(
+    html,
+    /@media\s*\(max-width:\s*560px\)\s*\{[\s\S]*\.text-zoom-controls\s+\.global-text-label\s*\{[\s\S]*display:\s*none;/i
+  )
+  assert.match(
+    html,
+    /@media\s*\(max-width:\s*820px\)\s*\{[\s\S]*\.page-section\[data-page="news-reports"\]\s+\.table-toolbar\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/i
+  )
+  assert.match(
+    html,
+    /@media\s*\(max-width:\s*560px\)\s*\{[\s\S]*\.page-section\[data-page="news-reports"\]\s+\.table-toolbar\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/i
+  )
 })
 
 test("GET /parent/portal returns parent portal HTML with runtime config", async () => {
@@ -635,9 +650,15 @@ test("GET /student/portal returns student portal HTML with runtime config", asyn
   assert.match(html, /id="openPastDueHomeworkModalBtn"/i)
   assert.match(html, /id="pastDueHomeworkModal"/i)
   assert.match(html, /id="pastDueHomeworkTableBody"/i)
+  assert.match(html, /id="openNewsComplianceModalBtn"/i)
+  assert.match(html, /id="newsComplianceModal"/i)
   assert.match(html, /function renderCurrentHomeworkOverviewCard\(/)
   assert.match(html, /function renderPastDueHomeworkOverviewCard\(/)
   assert.match(html, /function setPastDueHomeworkModalOpen\(/)
+  assert.match(html, /function setNewsComplianceModalOpen\(/)
+  assert.match(html, /function setNewsComplianceModalCtaVisible\(/)
+  assert.match(html, /function renderNewsComplianceModalFromState\(/)
+  assert.match(html, /renderNewsComplianceModalFromState\(summaryMessage\)/)
   assert.match(html, /id="portalStatus" class="status"/i)
   assert.match(html, /\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js/i)
   assert.match(html, /buttonText:\s*"Your View"/i)

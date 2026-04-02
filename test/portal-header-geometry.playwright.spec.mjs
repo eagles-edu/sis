@@ -126,7 +126,7 @@ async function measureMenuState(page, url, selectors) {
 const skipReason = resolvePlaywrightSkipReason();
 
 test(
-  "portal headers keep floating-hamburger geometry and admin-aligned header spacing",
+  "portal headers keep floating-hamburger geometry and mobile wrap-safe header spacing",
   { skip: skipReason },
   async () => {
     const server = createStaticServer(ROOT_DIR);
@@ -169,7 +169,8 @@ test(
         const rightOffset = geometry.viewport.w - (geometry.menu.x + geometry.menu.w);
         near(rightOffset, 12, 2, `${label} menu right offset`);
         near(geometry.header.x, 12, 2, `${label} header x`);
-        assert.ok(geometry.header.h <= 92, `${label} header should stay single-line height`);
+        near(geometry.header.w, geometry.viewport.w - 24, 4, `${label} header width`);
+        assert.ok(geometry.header.h <= 120, `${label} header should stay compact on mobile`);
         assert.ok(
           geometry.logo.x >= geometry.header.x + 8 && geometry.logo.x <= geometry.header.x + 96,
           `${label} logo should stay left-aligned inside the header`

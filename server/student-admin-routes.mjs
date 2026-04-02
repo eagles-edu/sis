@@ -329,6 +329,13 @@ function resolveNewsSetStatus({
   return "none-submitted"
 }
 
+function resolveAdminNewsSetStatus(set = {}) {
+  const normalized = normalizeLower(set?.setStatus || resolveNewsSetStatus(set))
+  if (normalized === "approved") return "approved"
+  if (normalized === "checked") return "checked"
+  return "waiting"
+}
+
 function resolveNewsSetAction({
   reportCount = 0,
   approvedCount = 0,
@@ -4536,6 +4543,7 @@ async function buildParentDashboardPayload(session = {}) {
             latestSubmittedAt,
             window: newsSnapshot?.window || null,
             openReport: newsSnapshot?.openReport || null,
+            items: Array.isArray(newsSnapshot?.items) ? newsSnapshot.items : [],
             calendar: Array.isArray(newsSnapshot?.calendar) ? newsSnapshot.calendar : [],
           },
         }
@@ -4795,7 +4803,7 @@ async function buildQueueHubPayload() {
           .map((entry) => {
             const reportDates = entry?._reportDates instanceof Set ? entry._reportDates : new Set()
             const reportCount = Math.max(0, reportDates.size)
-            const setStatus = resolveNewsSetStatus({
+            const setStatus = resolveAdminNewsSetStatus({
               reportCount,
               approvedCount: entry?.approvedCount,
               submittedCount: entry?.submittedCount,
@@ -4842,7 +4850,7 @@ async function buildQueueHubPayload() {
           items: items.map((entry) => ({
             ...entry,
             statusColor: resolveNewsStatusColor(entry.setStatus),
-            setStatus: normalizeText(entry?.setStatus) || resolveNewsSetStatus(entry),
+            setStatus: resolveAdminNewsSetStatus(entry),
             setAction: normalizeText(entry?.setAction) || resolveNewsSetAction(entry),
             setActionColor: normalizeText(entry?.setActionColor) || resolveNewsSetActionColor(entry?.setAction),
           })),

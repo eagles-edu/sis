@@ -231,6 +231,26 @@ test("student news save/list paths keep model-drift fallback guards", () => {
   assert.match(source, /upsertStudentNewsReportInFallbackStore\(/)
 })
 
+test("student news save keeps open-date restriction for new rows and allows historical non-approved resubmits", () => {
+  const source = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
+  assert.match(source, /if \(!existing\) \{\s*assertWithStatus\(reportDateText === window\.reportDate, 403, "News report for this date is locked"\)\s*\}/s)
+  assert.match(source, /if \(existing && normalizeStudentNewsReviewStatus\(existing\.reviewStatus\) === STUDENT_NEWS_REVIEW_STATUS_APPROVED\) \{\s*assertWithStatus\(false, 403, "Approved news reports cannot be edited"\)\s*\}/s)
+  assert.match(source, /const isResubmission = Boolean\(existing\)/)
+  assert.match(source, /const reviewStatus = hasFailures && !isResubmission/)
+  assert.match(source, /Status remains waiting for admin review\./)
+  assert.match(source, /hasPrismaDelegateMethod\(prisma, "studentNewsReport", "findFirst"\)/)
+  assert.match(source, /reportDate:\s*\{\s*gte:\s*reportDateRangeStart,\s*lt:\s*reportDateRangeEnd,\s*\}/s)
+  assert.match(source, /const fallbackExisting = listStudentNewsReportsFromFallbackStore\(id, \{\s*startDate: reportDateText,\s*endDate: reportDateText,\s*\}\)/s)
+  assert.match(source, /const existingId = normalizeText\(existing\?\.id\)/)
+  assert.match(source, /prisma\.studentNewsReport\.update\(\{\s*where:\s*\{\s*id:\s*existingId\s*\},\s*data:\s*reportData,\s*\}\)/s)
+})
+
+test("student news save refreshes submittedAt on each allowed submission", () => {
+  const source = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
+  assert.match(source, /const submittedAt = new Date\(\)/)
+  assert.match(source, /const reportData = \{[\s\S]*submittedAt,[\s\S]*reviewStatus,/)
+})
+
 test("student news review queue keeps DB-native review persistence guards", () => {
   const source = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
   assert.match(source, /buildStudentNewsReviewSelect\(/)
