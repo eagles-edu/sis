@@ -1114,10 +1114,9 @@
 
       .report-modal-ack {
         align-items: center;
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 8px;
-        justify-content: space-between;
       }
 
       .report-modal-ack button {
@@ -1125,8 +1124,16 @@
       }
 
       .report-modal-ack-status {
-        color: #3d5c80;
-        font-size: 12px;
+        color: #0f6d2a;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .report-modal-ack-status.is-reviewed {
+        background: #e6f7ee;
+        border: 1px solid #2f7d51;
+        border-radius: 8px;
+        padding: 8px 10px;
       }
 
       #performanceReportModal .portal-modal-dialog {
@@ -1208,7 +1215,7 @@
 
       .chip {
         --chip-height: 30px;
-        --chip-min-ar: 4.8;
+        --chip-min-ar: 4.5;
         align-items: center;
         justify-content: center;
         background: #e2edff;
@@ -2977,13 +2984,17 @@
                         id="acknowledgePerformanceReportBtn"
                         type="button"
                         class="primary">
-                        Xác nhận đã xem báo cáo
+                        Reviewed
                       </button>
                       <span
                         id="performanceReportAckStatus"
                         class="report-modal-ack-status"
                         >Chưa xác nhận.</span
                       >
+                      <div
+                        id="performanceReportStudentReviewStatus"
+                        class="report-modal-ack-status is-peer"
+                        >Waiting for student review.</div>
                     </div>
                   </div>
                 </div>
@@ -4727,18 +4738,20 @@
         }
       }
 
-      function resolveReportAcknowledgementEntry(reportId) {
+      function resolveReportAcknowledgementEntry(reportId, role = "parent") {
         const id = normalizeText(reportId);
         if (!id) return null;
         const entry = state.reportAcknowledgements?.[id];
         if (!entry || typeof entry !== "object") return null;
+        const scoped = entry[role];
+        if (!scoped || typeof scoped !== "object") return null;
         return {
-          acknowledgedAt: normalizeText(entry.acknowledgedAt),
-          acknowledgedBy: normalizeText(entry.acknowledgedBy),
+          acknowledgedAt: normalizeText(scoped.acknowledgedAt),
+          acknowledgedBy: normalizeText(scoped.acknowledgedBy),
         };
       }
 
-      function markReportAcknowledged(reportId) {
+      function markReportAcknowledged(reportId, role = "parent") {
         const id = normalizeText(reportId);
         if (!id) return null;
         const acknowledgedAt = new Date().toISOString();
@@ -4748,14 +4761,17 @@
           "Parent";
         state.reportAcknowledgements = {
           ...(state.reportAcknowledgements || {}),
-          [id]: { acknowledgedAt, acknowledgedBy },
+          [id]: {
+            ...(state.reportAcknowledgements?.[id] || {}),
+            [role]: { acknowledgedAt, acknowledgedBy },
+          },
         };
         persistReportAcknowledgements();
         return state.reportAcknowledgements[id];
       }
 
-      function isReportAcknowledged(row = {}) {
-        return Boolean(resolveReportAcknowledgementEntry(row?.id));
+      function isReportAcknowledged(row = {}, role = "parent") {
+        return Boolean(resolveReportAcknowledgementEntry(row?.id, role));
       }
 
       function sortedReportArchiveRows(rows = []) {
@@ -5487,20 +5503,36 @@
         }
         renderPerformanceReportGradesTable(active);
 
-        const entry = resolveReportAcknowledgementEntry(active?.id);
         const parentName =
           normalizeText(state?.me?.parentsId) ||
           normalizeText(state?.me?.username) ||
           "Parent";
+        const parentEntry = resolveReportAcknowledgementEntry(active?.id, "parent");
+        const studentEntry =
+          active?.studentReviewedAt && active?.studentReviewedBy ?
+            {
+              acknowledgedAt: normalizeText(active.studentReviewedAt),
+              acknowledgedBy: normalizeText(active.studentReviewedBy),
+            }
+          : resolveReportAcknowledgementEntry(active?.id, "student");
         if (ackButton) {
-          ackButton.disabled = Boolean(entry);
-          ackButton.textContent = `${parentName} acknowledges review of this report`;
+          ackButton.disabled = Boolean(parentEntry);
+          ackButton.textContent = parentEntry ? "Reviewed" : `${parentName} reviewed`;
         }
         if (ackStatus) {
           ackStatus.textContent =
-            entry ?
-              `${parentName} acknowledged on ${formatPortalWeekdayDateTime(entry.acknowledgedAt)}`
-            : "Báo cáo này đang chờ parent xác nhận đã xem.";
+            parentEntry ?
+              `Reviewed by ${parentEntry.acknowledgedBy || parentName} at ${formatPortalWeekdayDateTime(parentEntry.acknowledgedAt)}`
+            : "Waiting for parent review.";
+          ackStatus.className = "report-modal-ack-status" + (parentEntry ? " is-reviewed" : "");
+        }
+        const studentStatus = document.getElementById("performanceReportStudentReviewStatus");
+        if (studentStatus) {
+          studentStatus.textContent =
+            studentEntry && studentEntry.acknowledgedAt ?
+              `Reviewed by ${studentEntry.acknowledgedBy || "Student"} at ${formatPortalWeekdayDateTime(studentEntry.acknowledgedAt)}`
+            : "Waiting for student review.";
+          studentStatus.className = "report-modal-ack-status" + (studentEntry ? " is-reviewed" : "");
         }
         if (prevButton) prevButton.disabled = state.activeReportIndex <= 0;
         if (nextButton) nextButton.disabled = state.activeReportIndex >= total - 1;

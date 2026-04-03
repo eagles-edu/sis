@@ -2687,6 +2687,14 @@ function mapQueueRecord(record = {}) {
     attempts: Number.parseInt(String(record.attempts || 0), 10) || 0,
     lastError: normalizeText(record.lastError),
     payloadJson: record.payloadJson || null,
+    studentReviewedAt: normalizeText(record.studentReviewedAt || record?.payloadJson?.studentReviewedAt),
+    studentReviewedByUsername: normalizeText(
+      record.studentReviewedByUsername || record?.payloadJson?.studentReviewedByUsername,
+    ),
+    parentReviewedAt: normalizeText(record.parentReviewedAt || record?.payloadJson?.parentReviewedAt),
+    parentReviewedByUsername: normalizeText(
+      record.parentReviewedByUsername || record?.payloadJson?.parentReviewedByUsername,
+    ),
   }
 }
 
@@ -3044,11 +3052,23 @@ async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
     sentAt: updates.sentAt !== undefined ? parseIsoDateTime(updates.sentAt) : undefined,
     attempts:
       updates.attempts !== undefined ? Number.parseInt(String(updates.attempts), 10) || 0 : undefined,
+    studentReviewedAt:
+      updates.studentReviewedAt !== undefined ? parseIsoDateTime(updates.studentReviewedAt) : undefined,
+    studentReviewedByUsername:
+      updates.studentReviewedByUsername !== undefined ? normalizeText(updates.studentReviewedByUsername) : undefined,
+    parentReviewedAt:
+      updates.parentReviewedAt !== undefined ? parseIsoDateTime(updates.parentReviewedAt) : undefined,
+    parentReviewedByUsername:
+      updates.parentReviewedByUsername !== undefined ? normalizeText(updates.parentReviewedByUsername) : undefined,
+    payloadJson: updates.payloadJson && typeof updates.payloadJson === "object" ? updates.payloadJson : undefined,
   }
 
   return runQueueDbOperation(
     async (prisma) => {
       const patch = {}
+      const existing = await prisma.adminNotificationQueue.findUnique({ where: { id } })
+      const existingPayload =
+        existing?.payloadJson && typeof existing.payloadJson === "object" ? existing.payloadJson : {}
       if (normalized.status !== undefined) patch.status = normalized.status
       if (normalized.assignmentTitle !== undefined) patch.assignmentTitle = normalized.assignmentTitle
       if (normalized.exerciseTitle !== undefined) patch.exerciseTitle = normalized.exerciseTitle || null
@@ -3061,6 +3081,23 @@ async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
       if (normalized.lastError !== undefined) patch.lastError = normalized.lastError || null
       if (normalized.sentAt !== undefined) patch.sentAt = normalized.sentAt
       if (normalized.attempts !== undefined) patch.attempts = normalized.attempts
+      if (normalized.studentReviewedAt !== undefined) patch.studentReviewedAt = normalized.studentReviewedAt
+      if (normalized.studentReviewedByUsername !== undefined)
+        patch.studentReviewedByUsername = normalized.studentReviewedByUsername || null
+      if (normalized.parentReviewedAt !== undefined) patch.parentReviewedAt = normalized.parentReviewedAt
+      if (normalized.parentReviewedByUsername !== undefined)
+        patch.parentReviewedByUsername = normalized.parentReviewedByUsername || null
+      const payloadPatch = {}
+      if (normalized.studentReviewedAt !== undefined)
+        payloadPatch.studentReviewedAt = normalized.studentReviewedAt?.toISOString?.() || ""
+      if (normalized.studentReviewedByUsername !== undefined)
+        payloadPatch.studentReviewedByUsername = normalized.studentReviewedByUsername || ""
+      if (normalized.parentReviewedAt !== undefined)
+        payloadPatch.parentReviewedAt = normalized.parentReviewedAt?.toISOString?.() || ""
+      if (normalized.parentReviewedByUsername !== undefined)
+        payloadPatch.parentReviewedByUsername = normalized.parentReviewedByUsername || ""
+      if (normalized.payloadJson !== undefined) Object.assign(payloadPatch, normalized.payloadJson)
+      if (Object.keys(payloadPatch).length) patch.payloadJson = { ...existingPayload, ...payloadPatch }
       const updated = await prisma.adminNotificationQueue.update({
         where: { id },
         data: patch,
@@ -3080,6 +3117,7 @@ async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
         throw error
       }
       const current = mapQueueRecord(EMAIL_BATCH_QUEUE[index])
+      const payload = { ...(current.payloadJson || {}) }
       const updated = {
         ...current,
         ...(normalized.status !== undefined ? { status: normalized.status } : {}),
@@ -3098,7 +3136,26 @@ async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
           ? { sentAt: normalized.sentAt ? normalized.sentAt.toISOString() : "" }
           : {}),
         ...(normalized.attempts !== undefined ? { attempts: normalized.attempts } : {}),
+        ...(normalized.studentReviewedAt !== undefined ? { studentReviewedAt: normalized.studentReviewedAt } : {}),
+        ...(normalized.studentReviewedByUsername !== undefined
+          ? { studentReviewedByUsername: normalized.studentReviewedByUsername }
+          : {}),
+        ...(normalized.parentReviewedAt !== undefined ? { parentReviewedAt: normalized.parentReviewedAt } : {}),
+        ...(normalized.parentReviewedByUsername !== undefined
+          ? { parentReviewedByUsername: normalized.parentReviewedByUsername }
+          : {}),
       }
+      if (normalized.studentReviewedAt !== undefined) payload.studentReviewedAt = normalized.studentReviewedAt
+      if (normalized.studentReviewedByUsername !== undefined)
+        payload.studentReviewedByUsername = normalized.studentReviewedByUsername
+      if (normalized.parentReviewedAt !== undefined)
+        payload.parentReviewedAt = normalized.parentReviewedAt
+          ? normalized.parentReviewedAt.toISOString?.() || normalized.parentReviewedAt
+          : ""
+      if (normalized.parentReviewedByUsername !== undefined)
+        payload.parentReviewedByUsername = normalized.parentReviewedByUsername
+      if (normalized.payloadJson !== undefined) Object.assign(payload, normalized.payloadJson)
+      updated.payloadJson = payload
       EMAIL_BATCH_QUEUE[index] = updated
       return mapQueueRecord(updated)
     }

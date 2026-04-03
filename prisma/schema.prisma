@@ -370,6 +370,10 @@ model AdminNotificationQueue {
   senderName       String?
   queuedByUsername String?
   reviewedByUsername String?
+  studentReviewedAt DateTime?
+  studentReviewedByUsername String?
+  parentReviewedAt DateTime?
+  parentReviewedByUsername String?
   scheduledFor     DateTime?
   sentAt           DateTime?
   attempts         Int      @default(0)

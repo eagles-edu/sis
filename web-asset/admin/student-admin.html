@@ -2914,6 +2914,19 @@
       #performanceQueueDetails .table-scroll-wrap table {
         min-width: 760px;
       }
+      .hs-cm-cell {
+        white-space: nowrap;
+        font-weight: 700;
+      }
+      .hs-cm-flag {
+        padding: 0 2px;
+      }
+      .hs-cm-flag.is-yes {
+        color: #0f6d2a;
+      }
+      .hs-cm-flag.is-no {
+        color: #b3262d;
+      }
       #overviewClassRows td,
       #overviewIncomingExerciseRows td,
       #performanceQueueRows td {
@@ -5999,11 +6012,12 @@ Select an assignment link to inspect details.</pre
                               <th scope="col">Status</th>
                               <th scope="col">Scheduled</th>
                               <th scope="col">By</th>
+                              <th scope="col">HS/CM</th>
                             </tr>
                           </thead>
                           <tbody id="performanceQueueRows">
                             <tr>
-                              <td colspan="5">No queued performance reports.</td>
+                              <td colspan="6">No queued performance reports.</td>
                             </tr>
                           </tbody>
                         </table>
@@ -7540,6 +7554,22 @@ Select an assignment link to inspect details.</pre
             <div class="col-4">
               <label>Queued By</label
               ><input id="parentQueueItemQueuedBy" type="text" readonly>
+            </div>
+            <div class="col-3">
+              <label>HS Reviewed At</label
+              ><input id="parentQueueItemHsReviewedAt" type="text" placeholder="ISO timestamp or leave blank">
+            </div>
+            <div class="col-3">
+              <label>HS Reviewed By</label
+              ><input id="parentQueueItemHsReviewedBy" type="text" placeholder="username">
+            </div>
+            <div class="col-3">
+              <label>CM Reviewed At</label
+              ><input id="parentQueueItemCmReviewedAt" type="text" placeholder="ISO timestamp or leave blank">
+            </div>
+            <div class="col-3">
+              <label>CM Reviewed By</label
+              ><input id="parentQueueItemCmReviewedBy" type="text" placeholder="username">
             </div>
             <div class="col-12">
               <label>Recipients</label
@@ -19594,6 +19624,16 @@ Select an assignment link to inspect details.</pre
           payloadJson,
           linkedReportId: normalizeText(payloadJson?.reportId),
           linkedStudentRefId: normalizeText(payloadJson?.studentRefId),
+          studentReviewedAt:
+            normalizeText(item.studentReviewedAt || payloadJson?.studentReviewedAt),
+          studentReviewedByUsername: normalizeText(
+            item.studentReviewedByUsername || payloadJson?.studentReviewedByUsername,
+          ),
+          parentReviewedAt:
+            normalizeText(item.parentReviewedAt || payloadJson?.parentReviewedAt),
+          parentReviewedByUsername: normalizeText(
+            item.parentReviewedByUsername || payloadJson?.parentReviewedByUsername,
+          ),
         };
       }
 
@@ -19663,6 +19703,10 @@ Select an assignment link to inspect details.</pre
         setValue("parentQueueItemExercise", item.exerciseTitle);
         setValue("parentQueueItemDueAt", item.dueAt);
         setValue("parentQueueItemQueuedBy", item.queuedByUsername);
+        setValue("parentQueueItemHsReviewedAt", item.studentReviewedAt);
+        setValue("parentQueueItemHsReviewedBy", item.studentReviewedByUsername);
+        setValue("parentQueueItemCmReviewedAt", item.parentReviewedAt);
+        setValue("parentQueueItemCmReviewedBy", item.parentReviewedByUsername);
         setValue("parentQueueItemRecipients", item.recipients.join(", "));
         setValue("parentQueueItemMessage", item.message);
         setValue("parentQueueItemLastError", item.lastError);
@@ -19770,18 +19814,26 @@ Select an assignment link to inspect details.</pre
         rowsEl.innerHTML = "";
         if (!normalizedItems.length) {
           rowsEl.innerHTML =
-            '<tr><td colspan="5">No queued performance reports.</td></tr>';
+            '<tr><td colspan="6">No queued performance reports.</td></tr>';
           return;
         }
 
+        const flagHtml = (label, yes) =>
+          `<span class="hs-cm-flag ${yes ? "is-yes" : "is-no"}">${label}: ${
+            yes ? "Y" : "N"
+          }</span>`;
+
         normalizedItems.forEach((item, index) => {
           const tr = document.createElement("tr");
+          const hsYes = Boolean(normalizeText(item.studentReviewedAt));
+          const cmYes = Boolean(normalizeText(item.parentReviewedAt));
           tr.innerHTML = `
           <td>${escapeHtml(formatDateTime(item.queuedAt))}</td>
           <td><button type="button" class="queue-row-btn" data-queue-open="${escapeHtml(item.id)}">${escapeHtml(item.assignmentTitle || "(untitled)")}</button></td>
           <td>${escapeHtml(item.status || "-")}</td>
           <td>${escapeHtml(item.scheduledFor || "-")}</td>
           <td>${escapeHtml(item.queuedByUsername || "-")}</td>
+          <td class="hs-cm-cell">${flagHtml("HS", hsYes)} / ${flagHtml("CM", cmYes)}</td>
         `;
           tr.querySelector(`[data-queue-open="${item.id}"]`)?.addEventListener(
             "click",
@@ -20070,6 +20122,18 @@ Select an assignment link to inspect details.</pre
             ),
             recipients,
             status: "queued",
+            studentReviewedAt: normalizeText(
+              document.getElementById("parentQueueItemHsReviewedAt")?.value,
+            ),
+            studentReviewedByUsername: normalizeText(
+              document.getElementById("parentQueueItemHsReviewedBy")?.value,
+            ),
+            parentReviewedAt: normalizeText(
+              document.getElementById("parentQueueItemCmReviewedAt")?.value,
+            ),
+            parentReviewedByUsername: normalizeText(
+              document.getElementById("parentQueueItemCmReviewedBy")?.value,
+            ),
           },
         });
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
