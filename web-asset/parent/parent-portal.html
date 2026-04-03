@@ -5522,7 +5522,7 @@
         if (ackStatus) {
           ackStatus.textContent =
             parentEntry ?
-              `Reviewed by ${parentEntry.acknowledgedBy || parentName} at ${formatPortalWeekdayDateTime(parentEntry.acknowledgedAt)}`
+              `Acknowledged on ${formatPortalWeekdayDateTime(parentEntry.acknowledgedAt)} by ${parentEntry.acknowledgedBy || parentName}`
             : "Waiting for parent review.";
           ackStatus.className = "report-modal-ack-status" + (parentEntry ? " is-reviewed" : "");
         }
