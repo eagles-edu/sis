@@ -49,6 +49,16 @@ test("deploy-api-safe route matrices include admin/tabulator and parent/student 
   assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\/portal\|200/)
 })
 
+test("deploy-api-safe runs blocking modal chip and portal parity gates after sync", () => {
+  assert.match(deployScript, /run_blocking_portal_contract_gates\(\)/)
+  assert.match(deployScript, /node --test test\/portal-chip-contract\.spec\.mjs/)
+  assert.match(deployScript, /tools\/verify-portal-sync-proof\.sh/)
+  assert.match(
+    deployScript,
+    /perform_sync\s+restart_if_requested\s+run_blocking_portal_contract_gates\s+run_health_checks/
+  )
+})
+
 test("sis-runtime-resync uses delete-sync rsync and route matrices for all portals", () => {
   assert.match(runtimeResyncScript, /PINNED_MAILER_PORT=\"8787\"/)
   assert.doesNotMatch(runtimeResyncScript, /MAILER_PORT=\"\$\{MAILER_PORT:-/)

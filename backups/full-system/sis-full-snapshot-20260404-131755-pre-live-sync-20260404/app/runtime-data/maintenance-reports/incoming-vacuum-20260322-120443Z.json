@@ -1,0 +1,21 @@
+{
+  "runStartedAt": "2026-03-22T12:04:43.683Z",
+  "mode": "apply",
+  "options": {
+    "deleteUnmatched": true,
+    "deleteMalformed": true,
+    "purgeResolvedDays": 45,
+    "purgeArchivedDays": 45
+  },
+  "purgedResolvedCount": 0,
+  "purgedArchivedCount": 0,
+  "manualReview": [],
+  "reportItems": [],
+  "resolvedItems": [],
+  "deletedItems": [],
+  "orphanSignals": {
+    "danglingExerciseSubmissionStudentRefIds": [],
+    "danglingExerciseSubmissionExerciseRefIds": [],
+    "danglingGradeRecordStudentRefIds": []
+  }
+}

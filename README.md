@@ -259,6 +259,33 @@ cd /home/eagles/dockerz/sis
 tools/deploy-api-safe.sh
 ```
 
+Blocking gates (non-optional, enforced by `tools/deploy-api-safe.sh` after sync):
+
+```bash
+# Modal chip contract (student + parent)
+npm run test:portal-chip-contract
+
+# Source/runtime/public parity proof for student/parent portals
+npm run sync:proof:portal
+```
+
+Chip semantics SSOT must stay aligned across both:
+- `docs/chips.md`
+- `docs/chips.xlsx`
+
+Bidirectional portal mirror commands (when edits happen on the wrong side):
+
+```bash
+# Check dev/live/public parity for admin + parent + student portals
+npm run sync:portal:check
+
+# Push dev edits to live runtime + public mirror
+npm run sync:portal:dev-to-live
+
+# Pull live runtime edits back into dev + public mirror
+npm run sync:portal:live-to-dev
+```
+
 ### DB field changes + backfill (safe sequence)
 
 1. Create migration in source workspace.
@@ -393,9 +420,10 @@ This repo should follow a strict release gate even when deployed manually.
 
 1. Static checks (format/lint as configured)
 2. Unit/integration tests (`npm test`)
-3. Migration status check (`npx prisma migrate status`)
-4. Deploy dry-run checks (`tools/deploy-ui-safe.sh --check-only`, `tools/deploy-api-safe.sh --check-only`)
-5. Production deploy approval gate
+3. Modal chip contract gate (`npm run test:portal-chip-contract`)
+4. Migration status check (`npx prisma migrate status`)
+5. Deploy dry-run checks (`tools/deploy-ui-safe.sh --check-only`, `tools/deploy-api-safe.sh --check-only`)
+6. Production deploy approval gate
 
 ### Deployment policy
 

@@ -767,7 +767,7 @@ test(
       assert.equal(modalBeforeSubmit.hasStatusChip, true);
       assert.equal(modalBeforeSubmit.hasLegacyStatusInput, false);
       assert.match(modalBeforeSubmit.statusChipText, /Waiting/i);
-      assert.match(modalBeforeSubmit.statusChipClass, /\bchip-warn\b/i);
+      assert.match(modalBeforeSubmit.statusChipClass, /\bchip-revise\b/i);
       assert.match(modalBeforeSubmit.submittedAt, /2026|Mar|March/i);
 
       await page.fill("#newsViewerArticleTitle", "Waiting Report Updated");

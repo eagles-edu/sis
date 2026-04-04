@@ -1,0 +1,3303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
+  <title>Student Portal</title>
+
+  <style>
+    :root {
+      --primary-color: #B50010;
+      --secondary-color: #f9faff;
+      --tertiary-color: #002786;
+      --bg-0: var(--secondary-color);
+      --bg-1: #f9fcf6;
+      --ink: #212121;
+      --ink-soft: #414141;
+      --line: #7388a3;
+      --line-strong: #5f7391;
+      --card: #ffffff;
+      --card-soft: #f5f9ff;
+      --brand: var(--primary-color);
+      --brand-strong: #8f1620;
+      --ok-bg: #e8f8ef;
+      --ok-line: #90d3ad;
+      --bad-bg: #fdebec;
+      --bad-line: #f2b1b7;
+      --open-bg: #fff7e6;
+      --open-line: #f5cc85;
+      --menu-bg: #f7faff;
+      --menu-header-bg: #eef3ff;
+      --menu-link-bg: #fff;
+      --menu-link-active-bg: #edf4ff;
+      --menu-border: #d7dfea;
+      --shadow: 0 10px 26px rgba(19, 41, 68, 0.12);
+      --radius-base: 3.667px;
+      --radius-1: var(--radius-base);
+      --radius-2: calc(var(--radius-base) * 2);
+      --radius-3: calc(var(--radius-base) * 3);
+      --radius-pill: 999px;
+      --side-width: min(86vw, 320px);
+      --portal-text-zoom: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family:
+        system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(920px 420px at -15% -20%, #d9edff 0%, transparent 62%),
+        radial-gradient(980px 520px at 110% -25%, #dff8ea 0%, transparent 55%),
+        linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    }
+
+    .portal-shell {
+      display: block;
+    }
+
+    .side-nav {
+      position: fixed;
+      inset-block-start: 12px;
+      inset-inline-start: 12px;
+      width: var(--side-width);
+      max-height: calc(100dvh - 24px);
+      box-sizing: border-box;
+      border: 1px solid var(--menu-border);
+      border-radius: var(--radius-3);
+      box-shadow: 0 22px 48px rgba(12, 21, 40, 0.32);
+      background: var(--menu-bg);
+      padding: 12px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      transform: translateX(calc(-100% - 14px));
+      transition: transform 180ms ease;
+      z-index: 82;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .side-nav.open {
+      transform: translateX(0);
+    }
+
+    .side-brand {
+      display: grid;
+      gap: 7px;
+      padding: 10px;
+      border: 1px solid var(--menu-border);
+      border-radius: var(--radius-2);
+      background: var(--menu-header-bg);
+    }
+
+    .side-brand strong {
+      font-size: 0.97rem;
+    }
+
+    .side-brand span {
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+    }
+
+    .side-links {
+      display: grid;
+      gap: 6px;
+    }
+
+    .side-link {
+      align-items: center;
+      background: var(--menu-link-bg);
+      border: 1px solid var(--menu-border);
+      border-radius: var(--radius-2);
+      color: var(--ink);
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 700;
+      min-height: 36px;
+      padding: 8px 10px;
+      text-decoration: none;
+  }
+
+    .side-link:hover,
+    .side-link:focus-visible {
+      outline: none;
+      border-color: #b7cae3;
+      background: var(--menu-link-active-bg);
+    }
+
+    .side-link.active {
+      border-color: #90acd4;
+      background: var(--menu-link-active-bg);
+      color: #0f2545;
+    }
+
+    .nav-overlay {
+      position: fixed;
+      inset: 0;
+      border: none;
+      padding: 0;
+      margin: 0;
+      background: rgba(12, 22, 39, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+      z-index: 81;
+      cursor: pointer;
+      backdrop-filter: blur(1px);
+    }
+
+    body.menu-open .nav-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .main-col {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-3);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      display: grid;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 64px 10px 12px;
+      border-color: #98adca;
+      background: linear-gradient(180deg, #f4f8ff 0%, #eef3fb 100%);
+    }
+
+    .topbar-head {
+      display: grid;
+      align-items: center;
+      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .brand-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .floating-menu-btn {
+      position: fixed;
+      inset-block-start: 12px;
+      inset-inline-end: 12px;
+      z-index: 90;
+      inline-size: 44px;
+      block-size: 44px;
+      padding: 0;
+      border-radius: var(--radius-pill);
+      border: 1px solid #8d0010;
+      background: var(--primary-color);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(14, 24, 42, 0.32);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .floating-menu-btn:hover {
+      background: #92000d;
+      border-color: #76000a;
+    }
+
+    .floating-menu-btn:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    .floating-menu-icon,
+    .floating-menu-icon::before,
+    .floating-menu-icon::after {
+      content: "";
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 2px;
+      background: #fff;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    .floating-menu-icon {
+      position: relative;
+    }
+
+    .floating-menu-icon::before {
+      position: absolute;
+      top: -6px;
+      left: 0;
+    }
+
+    .floating-menu-icon::after {
+      position: absolute;
+      top: 6px;
+      left: 0;
+    }
+
+    body.menu-open .floating-menu-icon {
+      background: transparent;
+    }
+
+    body.menu-open .floating-menu-icon::before {
+      transform: translateY(6px) rotate(45deg);
+    }
+
+    body.menu-open .floating-menu-icon::after {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+
+    .brand-logo-wrap {
+      align-items: center;
+      background: #fff;
+      border: 1px solid #90a4c3;
+      border-radius: var(--radius-3);
+      box-sizing: border-box;
+      display: inline-flex;
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .brand-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.05rem, 2.6vw, 1.2rem);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    .text-zoom-controls {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+    }
+
+    .text-zoom-controls button:not(.floating-menu-btn) {
+      inline-size: auto;
+      min-width: 44px;
+      min-height: 36px;
+      padding: 6px 8px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .zoom-label {
+      font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+      font-size: 11px;
+      color: #244165;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .sub {
+      margin: 4px 0 0;
+      color: var(--ink-soft);
+      font-size: 0.91rem;
+      line-height: 1.35;
+    }
+
+    .status {
+      margin: 0;
+      min-height: 1.3em;
+      color: var(--ink-soft);
+      font-size: 0.91rem;
+    }
+
+    .status.bad { color: #b71f2f; }
+    .status.ok { color: #1c8050; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      padding: 5px 10px;
+      font-size: 11px;
+      line-height: 1;
+      color: #2f4f76;
+      background: #f4f8ff;
+      white-space: nowrap;
+    }
+
+    .chip-neutral {
+      border-color: #9ab0ce;
+      color: #3d567a;
+      background: #eef4ff;
+    }
+
+    .chip-ok {
+      border-color: #86b79e;
+      color: #195d3d;
+      background: #ecf9f1;
+    }
+
+    .chip-lock {
+      border-color: #d3aaaa;
+      color: #8a2f2f;
+      background: #fff0f0;
+    }
+
+    .status-strip {
+      padding: 10px 12px;
+    }
+
+    .row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .form-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .c3 { grid-column: span 3; }
+    .c4 { grid-column: span 4; }
+    .c6 { grid-column: span 6; }
+    .c12 { grid-column: span 12; }
+
+    input,
+    textarea,
+    button:not(.floating-menu-btn):not(.nav-overlay),
+    .link-btn {
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-2);
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 98px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    button:not(.floating-menu-btn):not(.nav-overlay),
+    .link-btn {
+      cursor: pointer;
+      background: #f8fbff;
+      text-decoration: none;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+    }
+
+    .primary {
+      background: linear-gradient(180deg, var(--brand), var(--brand-strong));
+      border-color: #7f1520;
+      color: #fff;
+    }
+
+    .alt {
+      background: linear-gradient(180deg, #2756ab, #173f89);
+      border-color: #163b80;
+      color: #fff;
+    }
+
+    .hidden { display: none !important; }
+
+    #loginPanel,
+    #appPanel {
+      zoom: var(--portal-text-zoom);
+    }
+
+    #appPanel {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .portal-grid {
+      display: grid;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .portal-col {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .toolbar-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-3);
+      background: #fff;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .section-head h2,
+    .section-head h3 {
+      margin: 0;
+      font-size: clamp(17px, 3.3vw, 21px);
+      line-height: 1.2;
+    }
+
+    .identity-list {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .identity-item {
+      border: 1px solid var(--line);
+      background: #f9fbff;
+      border-radius: var(--radius-2);
+      padding: 10px;
+      min-height: 70px;
+      display: grid;
+      align-content: start;
+      gap: 5px;
+    }
+
+    .identity-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--ink-soft);
+      font-weight: 700;
+    }
+
+    .identity-value {
+      font-size: 14px;
+      font-weight: 700;
+      word-break: break-word;
+      line-height: 1.25;
+    }
+
+    .metrics {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      min-height: 72px;
+      min-width: 0;
+      background: #fbfcff;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      gap: 4px;
+    }
+
+    .metric .k {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      font-weight: 700;
+      letter-spacing: 0.35px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      max-width: 100%;
+    }
+
+    .metric .v {
+      font-size: clamp(17px, 3.8vw, 22px);
+      font-weight: 700;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      max-width: 100%;
+    }
+
+    .metric.good { border-color: #8ccba9; background: #eefaf3; }
+    .metric.warn { border-color: #9dbde5; background: #eff5ff; }
+    .metric.bad { border-color: #e1a8a8; background: #fff1f1; }
+
+    .quick-links {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 1fr;
+      margin-top: 8px;
+    }
+
+    .hint {
+      margin: 0;
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+
+    .homework-card {
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+    }
+
+    .homework-card-label {
+      margin: 0 0 6px;
+      padding-left: 2px;
+      color: #284a72;
+      font-size: clamp(11px, 2.7vw, 13px);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+
+    .homework-card-shell {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-3);
+      background: #fff;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 96px minmax(0, 1fr);
+      align-items: stretch;
+      box-sizing: border-box;
+    }
+
+    .homework-square {
+      border: 1px solid #b7c8dd;
+      border-radius: 8px;
+      min-height: 96px;
+      box-sizing: border-box;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+      gap: 4px;
+      padding: 8px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #264868;
+      background: #eef4fb;
+    }
+
+    .homework-square.is-complete {
+      border-color: #8ccba9;
+      color: #1b5e3f;
+      background: #eaf8f0;
+    }
+
+    .homework-square.is-pending {
+      border-color: #b4a8df;
+      color: #47358d;
+      background: #f2eeff;
+    }
+
+    .homework-square.is-none {
+      border-color: #b6beca;
+      color: #5a6270;
+      background: #f1f3f6;
+    }
+
+    .homework-square.is-clear {
+      border-color: #8ccba9;
+      color: #1b5e3f;
+      background: #eaf8f0;
+    }
+
+    .homework-square.is-arrears {
+      border-color: #e1a8a8;
+      color: #8f2c2c;
+      background: #fff0f0;
+    }
+
+    .homework-square-k {
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.88;
+    }
+
+    .homework-square-v {
+      font-size: clamp(14px, 3.4vw, 18px);
+    }
+
+    .homework-square-v.is-count {
+      font-size: clamp(28px, 5.5vw, 36px);
+      line-height: 0.95;
+    }
+
+    .homework-card-content {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+      align-content: center;
+    }
+
+    .homework-content-title {
+      margin: 0;
+      font-size: clamp(14px, 3vw, 17px);
+      font-weight: 800;
+      line-height: 1.15;
+      color: #18395d;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .homework-link {
+      min-width: 0;
+      color: #174f92;
+      font-size: clamp(12px, 2.8vw, 14px);
+      font-weight: 700;
+      line-height: 1.35;
+      text-decoration: underline;
+      text-decoration-thickness: 1.2px;
+      text-underline-offset: 2px;
+      overflow-wrap: anywhere;
+    }
+
+    .homework-link:hover,
+    .homework-link:focus-visible {
+      color: #0f3c70;
+    }
+
+    .homework-modal-btn {
+      justify-self: start;
+      min-height: 36px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #b7c8df;
+      border-radius: 8px;
+      background: #f5f8fd;
+      color: #24466b;
+      cursor: pointer;
+    }
+
+    .homework-modal-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .portal-modal.hidden {
+      display: none;
+    }
+
+    .portal-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 95;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      box-sizing: border-box;
+    }
+
+    .portal-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgb(13 22 34 / 58%);
+    }
+
+    .portal-modal-dialog {
+      position: relative;
+      width: min(720px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      border: 1px solid #cad7ea;
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      box-sizing: border-box;
+      overflow: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .portal-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .portal-modal-head h4 {
+      margin: 0;
+      font-size: clamp(16px, 3.6vw, 19px);
+      line-height: 1.2;
+      color: #1f3f63;
+    }
+
+    .portal-modal-close {
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 1px solid #b7c8df;
+      border-radius: 8px;
+      background: #f6f9ff;
+      color: #24466b;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .homework-modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .homework-modal-table th,
+    .homework-modal-table td {
+      border-bottom: 1px solid #dde6f2;
+      text-align: left;
+      padding: 8px 6px;
+      vertical-align: top;
+    }
+
+    .homework-modal-table th {
+      color: #36577e;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .homework-modal-table td:first-child,
+    .homework-modal-table th:first-child {
+      width: 140px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      .homework-card-shell {
+        grid-template-columns: 86px minmax(0, 1fr);
+        gap: 8px;
+      }
+    }
+
+    .quick-link {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 9px 12px;
+      background: #f6f9ff;
+      color: var(--ink);
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .quick-link:hover,
+    .quick-link:focus-visible {
+      outline: none;
+      border-color: #6f97cb;
+      background: #edf4ff;
+    }
+
+    button.quick-link:hover:not(:disabled) {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .detail-copy {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .detail-layout {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .detail-metrics {
+      margin-top: 0;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-item {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-2);
+      padding: 10px;
+      background: #fbfcff;
+      display: grid;
+      gap: 6px;
+    }
+
+    .detail-item.warn {
+      border-color: #9dbde5;
+      background: #eff5ff;
+    }
+
+    .detail-item.bad {
+      border-color: #e1a8a8;
+      background: #fff1f1;
+    }
+
+    .detail-item.good {
+      border-color: #8ccba9;
+      background: #eefaf3;
+    }
+
+    .detail-item-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .detail-item-head strong {
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+
+    .detail-meta {
+      font-size: 12px;
+      color: var(--ink-soft);
+      line-height: 1.4;
+    }
+
+    .detail-note {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+
+    .detail-empty {
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-2);
+      padding: 12px;
+      color: var(--ink-soft);
+      background: #f8fbff;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .detail-calendar-shell {
+      min-height: 380px;
+    }
+
+    .news-layout {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .news-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .calendar-range {
+      margin: 6px 0 8px;
+      font-size: 0.84rem;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+      margin: 0 0 8px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .dot.good { background: #40b06c; }
+    .dot.bad { background: #d45a66; }
+    .dot.open { background: #d2912b; }
+
+    .calendar-shell {
+      min-height: 580px;
+    }
+
+    .fc {
+      --fc-border-color: #c9d6e6;
+      --fc-button-bg-color: #b50010;
+      --fc-button-border-color: #8d0010;
+      --fc-button-hover-bg-color: #92000d;
+      --fc-button-hover-border-color: #76000a;
+      --fc-button-active-bg-color: #7f1520;
+      --fc-button-active-border-color: #6b1019;
+      --fc-event-text-color: #132a45;
+      --fc-neutral-bg-color: #f6f9ff;
+      --fc-page-bg-color: #fff;
+      --fc-today-bg-color: rgba(24, 67, 135, 0.08);
+    }
+
+    .fc .fc-toolbar.fc-header-toolbar {
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .fc .fc-toolbar-title {
+      font-size: clamp(1.02rem, 2.8vw, 1.35rem) !important;
+      color: #163767;
+    }
+
+    .fc .fc-button-primary {
+      border-radius: var(--radius-2) !important;
+      box-shadow: none !important;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-transform: none;
+    }
+
+    .fc .fc-daygrid-day-number,
+    .fc .fc-col-header-cell-cushion {
+      color: #163767;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .fc .fc-daygrid-day-number {
+      font-size: clamp(1rem, 1.7vw, 1.14rem);
+      line-height: 1.1;
+      padding: 6px 8px 0;
+    }
+
+    .fc .fc-col-header-cell-cushion {
+      padding: 8px 4px;
+      font-size: clamp(0.82rem, 1.3vw, 0.94rem);
+      line-height: 1.15;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .fc .fc-daygrid-day-frame {
+      min-height: 108px;
+    }
+
+    .fc .fc-daygrid-day.fc-day-today {
+      background: rgba(20, 58, 129, 0.07);
+    }
+
+    .fc .fc-daygrid-day.calendar-day-completed {
+      background: linear-gradient(180deg, rgba(64, 176, 108, 0.12), rgba(64, 176, 108, 0.03));
+    }
+
+    .fc .fc-daygrid-day.calendar-day-open {
+      background: linear-gradient(180deg, rgba(210, 145, 43, 0.16), rgba(210, 145, 43, 0.04));
+    }
+
+    .fc .fc-daygrid-day.calendar-day-missed {
+      background: linear-gradient(180deg, rgba(212, 90, 102, 0.14), rgba(212, 90, 102, 0.04));
+    }
+
+    .fc .fc-daygrid-day.calendar-day-alert {
+      background: linear-gradient(180deg, rgba(255, 35, 56, 0.16), rgba(255, 35, 56, 0.03));
+      box-shadow: inset 0 0 0 2px rgba(255, 35, 56, 0.42);
+      animation: dayAlertPulse 1.15s ease-in-out infinite;
+    }
+
+    .fc .fc-daygrid-event {
+      margin-top: 3px;
+      border-radius: 9px;
+      padding: 2px 4px;
+      white-space: normal;
+    }
+
+    .fc .fc-event-main {
+      white-space: normal;
+      font-size: 0.72rem;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .fc .fc-event.fc-event-news-completed {
+      background: #eefaf3 !important;
+      border-color: #8ccba9 !important;
+      color: #195d3d !important;
+    }
+
+    .fc .fc-event.fc-event-news-open {
+      background: #fff1cf !important;
+      border-color: #e5ab34 !important;
+      color: #000 !important;
+    }
+
+    .fc .fc-event.fc-event-news-open .fc-event-main,
+    .fc .fc-event.fc-event-news-open .fc-event-title,
+    .fc .fc-event.fc-event-news-open .fc-event-time {
+      color: #000 !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-green {
+      background: #e7f8ef !important;
+      border-color: #36a66a !important;
+      color: #0f4f30 !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-amber {
+      background: #fff4da !important;
+      border-color: #d89d28 !important;
+      color: #5b3b00 !important;
+    }
+
+    .fc .fc-event.fc-event-news-status-red {
+      background: #ffe1e5 !important;
+      border-color: #d43b4e !important;
+      color: #6d0d1a !important;
+    }
+
+    .fc .fc-event.fc-event-news-missed {
+      color: #fff !important;
+    }
+
+    .fc .fc-event.fc-event-news-missed .fc-event-main,
+    .fc .fc-event.fc-event-news-missed .fc-event-title,
+    .fc .fc-event.fc-event-news-missed .fc-event-time {
+      color: #fff !important;
+    }
+
+    .fc .fc-event.fc-event-review-track {
+      background: #f1efff !important;
+      border-color: #9a8cdc !important;
+      color: #45317d !important;
+    }
+
+    .fc .fc-event.fc-event-homework-track {
+      background: #edf4ff !important;
+      border-color: #83a8de !important;
+      color: #173b78 !important;
+    }
+
+    .fc .fc-event.fc-event-homework-overdue {
+      background: #ffdbe0 !important;
+      border-color: #ff2338 !important;
+      color: #7d0010 !important;
+    }
+
+    .fc .fc-event.fc-event-attendance-present {
+      background: #eefaf3 !important;
+      border-color: #8ccba9 !important;
+      color: #195d3d !important;
+    }
+
+    .fc .fc-event.fc-event-attendance-absent {
+      background: #fff1f1 !important;
+      border-color: #e1a8a8 !important;
+      color: #ffffff !important;
+    }
+
+    .fc .fc-event.fc-event-attendance-late {
+      background: #fff5df !important;
+      border-color: #e5ab34 !important;
+      color: #8a5600 !important;
+    }
+
+    .fc .fc-event.fc-event-attendance-excused {
+      background: #eef3ff !important;
+      border-color: #91a3d5 !important;
+      color: #2b4278 !important;
+    }
+
+    .fc .fc-event.fc-event-report {
+      background: #edf4ff !important;
+      border-color: #83a8de !important;
+      color: #173b78 !important;
+    }
+
+    .fc .fc-event.fc-event-grade {
+      background: #f1efff !important;
+      border-color: #9a8cdc !important;
+      color: #45317d !important;
+    }
+
+    .fc .fc-event.fc-obtrusive-alert {
+      background: #ff2338 !important;
+      border-color: #b50010 !important;
+      color: #fff !important;
+      box-shadow: 0 0 0 1px rgba(125, 0, 16, 0.18), 0 0 22px rgba(255, 35, 56, 0.3);
+      animation: overdueBlink 0.95s steps(2, end) infinite;
+    }
+
+    .fc .fc-event.fc-obtrusive-alert .fc-event-main {
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .calendar-empty {
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      color: var(--ink-soft);
+      text-align: center;
+      font-size: 0.82rem;
+    }
+
+    @keyframes overdueBlink {
+      0%,
+      49% {
+        filter: saturate(1);
+        transform: scale(1);
+      }
+      50%,
+      100% {
+        filter: saturate(1.35) brightness(1.06);
+        transform: scale(1.015);
+      }
+    }
+
+    @keyframes dayAlertPulse {
+      0%,
+      100% {
+        box-shadow: inset 0 0 0 2px rgba(255, 35, 56, 0.32);
+      }
+      50% {
+        box-shadow: inset 0 0 0 3px rgba(255, 35, 56, 0.62);
+      }
+    }
+
+    @media (max-width: 959px) {
+      .c3,
+      .c4,
+      .c6 { grid-column: span 12; }
+    }
+
+    @media (max-width: 399px) {
+      .metrics,
+      .identity-list,
+      .toolbar-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 720px) {
+      .toolbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+      }
+
+      .toolbar-actions {
+        display: flex;
+      }
+
+      .identity-list {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fc .fc-daygrid-day-frame {
+        min-height: 124px;
+      }
+    }
+
+    @media (max-width: 719px) {
+      .fc .fc-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .fc .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+      }
+
+      .fc .fc-toolbar-title {
+        text-align: center;
+      }
+
+      .fc .fc-daygrid-day-frame {
+        min-height: 92px;
+      }
+    }
+
+    @media (min-width: 1000px) {
+      .quick-links {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metrics {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      .portal-col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #overviewPanel,
+      #quickLinksPanel {
+        grid-column: 1 / -1;
+      }
+
+      #identityPanel {
+        grid-column: 1;
+      }
+
+      #metricsPanel {
+        grid-column: 2;
+      }
+
+      #portalStatus {
+        grid-column: 1 / -1;
+      }
+
+      .news-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .detail-layout {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .detail-calendar-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (min-width: 1000px) and (max-width: 1280px) {
+      .metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 820px) {
+      .main-col {
+        padding: 12px;
+      }
+
+      .topbar {
+        padding: 8px 60px 8px 10px;
+      }
+
+      .brand-logo-wrap {
+        width: 34px;
+        height: 34px;
+      }
+
+      .floating-menu-btn {
+        inline-size: 40px;
+        block-size: 40px;
+      }
+
+    }
+
+    @media (max-width: 560px) {
+      .text-zoom-controls > span:first-child,
+      .text-zoom-controls .zoom-label {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-shell">
+    <aside id="sideNav" class="side-nav" aria-label="Student navigation">
+      <div class="side-brand">
+        <strong>Student Dashboard</strong>
+        <span>English learning and daily media reports</span>
+      </div>
+      <nav class="side-links">
+        <a class="side-link active" href="#studentHomeCard" data-view-target="home" data-page-target="home">Home</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="current-homework">Current Homework</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="past-due-homework">Past Due Homework</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="attendance-calendar">Attendance Calendar SYTD</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="performance-reports">Performance Reports SYTD Archive</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="grades-ytd">Grades YTD</a>
+        <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="recommendations">Recommendations for Success</a>
+      </nav>
+    </aside>
+
+    <button id="navOverlay" class="nav-overlay" type="button" aria-label="Close navigation"></button>
+
+    <main class="main-col">
+      <section class="card topbar">
+        <button id="menuBtn" class="floating-menu-btn" type="button" aria-label="Open navigation">
+          <span class="floating-menu-icon" aria-hidden="true"></span>
+        </button>
+        <div class="topbar-head">
+          <div class="brand-head">
+            <span class="brand-logo-wrap">
+              <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+            </span>
+            <h1>Student Portal Dashboard</h1>
+          </div>
+          <div class="header-actions">
+            <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+              <span>Text Size</span>
+              <button id="studentTextZoomDownBtn" type="button" aria-label="Decrease text size">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" aria-label="Increase text size">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" aria-label="Reset text size">Reset</button>
+              <span class="zoom-label" id="studentTextZoomLabel">100%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="loginPanel" class="card hidden">
+        <h2>Student Login</h2>
+        <form id="loginForm" class="row">
+          <div class="field c6">
+            <label for="loginEaglesId">Eagles ID</label>
+            <input type="text" id="loginEaglesId" autocomplete="username">
+          </div>
+          <div class="field c6">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" autocomplete="current-password">
+          </div>
+          <div class="field c12">
+            <button id="loginBtn" class="primary" type="submit">Sign In</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="appPanel" class="hidden">
+        <section id="studentHomeCard" class="card">
+          <div class="portal-grid">
+            <div id="studentHomeGrid" class="portal-col">
+              <div id="overviewPanel" class="toolbar">
+                <div class="form-row">
+                  <span class="identity-label">Học sinh</span>
+                  <p id="studentOverviewSummary" class="hint">Loading student dashboard...</p>
+                </div>
+                <div class="toolbar-actions">
+                  <button id="reloadBtn" type="button">Tải lại</button>
+                  <button id="logoutBtn" type="button" class="alt">Đăng xuất</button>
+                </div>
+              </div>
+
+              <section id="identityPanel" class="panel">
+                <div class="section-head">
+                  <h3>Thông tin định danh học sinh</h3>
+                  <span class="chip chip-lock">Chỉ xem</span>
+                </div>
+                <p id="studentIdentity" class="hint">Loading student metrics...</p>
+                <div class="identity-list">
+                  <div class="identity-item">
+                    <span class="identity-label">Eagles ID</span>
+                    <span id="studentEaglesIdValue" class="identity-value">-</span>
+                  </div>
+                  <div class="identity-item">
+                    <span class="identity-label">Mã học sinh</span>
+                    <span id="studentNumberValue" class="identity-value">-</span>
+                  </div>
+                  <div class="identity-item">
+                    <span class="identity-label">Họ và tên</span>
+                    <span id="studentNameValue" class="identity-value">-</span>
+                  </div>
+                  <div class="identity-item">
+                    <span class="identity-label">Lớp hiện tại</span>
+                    <span id="studentGradeValue" class="identity-value">-</span>
+                  </div>
+                </div>
+              </section>
+
+              <section id="metricsPanel" class="panel">
+                <div class="section-head">
+                  <h3>Tổng quan nhanh</h3>
+                  <span id="snapshotBadge" class="chip chip-neutral">Chưa có dữ liệu</span>
+                </div>
+                <div id="dashboardMetrics" class="metrics"></div>
+              </section>
+
+              <section id="currentHomeworkCard" class="panel homework-card">
+                <h3 class="homework-card-label">Current Homework</h3>
+                <div class="homework-card-shell">
+                  <div id="currentHomeworkBadge" class="homework-square is-none">
+                    <span class="homework-square-k">Trang thai</span>
+                    <strong id="currentHomeworkBadgeValue" class="homework-square-v">Không có</strong>
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 id="currentHomeworkHeader" class="homework-content-title">Bài tập hiện tại</h4>
+                    <a id="currentHomeworkAssignmentLink" class="homework-link hidden" href="#" target="_blank" rel="noopener noreferrer">Xem thông báo bài tập</a>
+                    <p id="currentHomeworkSummary" class="hint">No data yet.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="pastDueHomeworkCard" class="panel homework-card">
+                <h3 class="homework-card-label">Past Due Homework</h3>
+                <div class="homework-card-shell">
+                  <div id="pastDueHomeworkBadge" class="homework-square is-clear">
+                    <span class="homework-square-k">Arrears</span>
+                    <strong id="pastDueHomeworkBadgeValue" class="homework-square-v is-count">0</strong>
+                  </div>
+                  <div class="homework-card-content">
+                    <h4 class="homework-content-title">Nợ đọng quá hạn</h4>
+                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn" type="button">Mo danh sach chua hoan thanh</button>
+                    <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="pastDueHomeworkModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="pastDueHomeworkModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="pastDueHomeworkModalTitle">Bài tập chưa hoàn thành</h4>
+                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close" type="button">Dong</button>
+                  </div>
+                  <table class="homework-modal-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Due Date</th>
+                        <th scope="col">Assignment</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pastDueHomeworkTableBody"></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section id="attendanceCalendarCard" class="panel">
+                <div class="section-head">
+                  <h3>Attendance Calendar SYTD</h3>
+                </div>
+                <p id="attendanceCalendarSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="performanceReportsCard" class="panel">
+                <div class="section-head">
+                  <h3>Performance Reports SYTD Archive</h3>
+                </div>
+                <p id="performanceReportsSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="gradesYtdCard" class="panel">
+                <div class="section-head">
+                  <h3>Grades YTD</h3>
+                </div>
+                <p id="gradesYtdSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="recommendationsCard" class="panel">
+                <div class="section-head">
+                  <h3>Recommendations for Success</h3>
+                </div>
+                <p id="recommendationsSummary" class="hint">No data yet.</p>
+              </section>
+
+              <section id="quickLinksPanel" class="panel">
+                <div class="section-head">
+                  <h3>Liên kết nhanh</h3>
+                </div>
+                <div class="quick-links">
+                  <button id="openNewsPageBtn" class="quick-link" type="button">Open Daily News Report Page</button>
+                </div>
+              </section>
+
+              <p id="portalStatus" class="status"></p>
+            </div>
+          </div>
+        </section>
+
+        <section id="studentDetailPageCard" class="card hidden">
+          <div class="section-head">
+            <h2 id="studentDetailTitle">Student Detail</h2>
+          </div>
+          <p id="studentDetailLead" class="detail-copy">Loading student detail...</p>
+          <div id="studentDetailMetrics" class="metrics detail-metrics"></div>
+          <div class="detail-layout">
+            <section class="panel detail-calendar-panel">
+              <div class="section-head">
+                <h3 id="studentDetailCalendarTitle">Calendar</h3>
+              </div>
+              <p id="studentDetailCalendarSummary" class="hint">No data yet.</p>
+              <div id="studentDetailCalendarGrid" class="calendar-shell detail-calendar-shell" aria-live="polite"></div>
+            </section>
+
+            <section class="panel">
+              <div class="section-head">
+                <h3 id="studentDetailPrimaryTitle">Current Focus</h3>
+              </div>
+              <div id="studentDetailPrimaryList" class="detail-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="section-head">
+                <h3 id="studentDetailHistoryTitle">Recent History</h3>
+              </div>
+              <div id="studentDetailHistoryList" class="detail-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="newsPageCard" class="card hidden">
+          <div class="section-head">
+            <h2>Daily News Report</h2>
+            <div class="news-actions">
+              <button id="backToHomeBtn" type="button">Back to Home</button>
+              <button id="logoutBtnNews" type="button">Logout</button>
+            </div>
+          </div>
+          <div class="news-layout">
+            <section id="studentCalendar" class="panel">
+              <h2>Your View Month Calendar</h2>
+              <p id="calendarTitle" class="sub calendar-range">Your View timeline</p>
+              <div class="legend">
+                <span><span class="dot good"></span>Approved</span>
+                <span><span class="dot open"></span>Submitted / Pending Review</span>
+                <span><span class="dot bad"></span>Revision Requested / Missed</span>
+              </div>
+              <p id="windowSummary" class="sub">Loading calendar...</p>
+              <div id="calendarGrid" class="calendar-shell" aria-live="polite"></div>
+            </section>
+
+            <section id="newsReportFormCard" class="panel">
+              <h2>Media Report Form</h2>
+              <div class="row">
+                <div class="field c3">
+                  <label for="reportDate">Report Date</label>
+                  <input id="reportDate" type="date" readonly aria-readonly="true">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="field c12">
+                  <label for="sourceLink">I. Source: link to article</label>
+                  <input id="sourceLink" type="url" placeholder="https://...">
+                </div>
+
+                <div class="field c12">
+                  <label for="articleTitle">II.A. Title</label>
+                  <input type="text" id="articleTitle" maxlength="240">
+                </div>
+
+                <div class="field c6">
+                  <label for="byline">II.B. Byline (author)</label>
+                  <input type="text" id="byline" maxlength="240">
+                </div>
+
+                <div class="field c6">
+                  <label for="articleDateline">II.C. Article Dateline / Publication Date</label>
+                  <input type="text" id="articleDateline" placeholder="March 12, 2026">
+                </div>
+
+                <div class="field c12">
+                  <label for="leadSynopsis">II.D. Lead Synopsis</label>
+                  <textarea id="leadSynopsis"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionActor">II.E.i. Who/what was doing action/news</label>
+                  <textarea id="actionActor"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionAffected">II.E.ii. Who/what received/was affected</label>
+                  <textarea id="actionAffected"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionWhere">II.E.iii. Where is the action/news</label>
+                  <textarea id="actionWhere"></textarea>
+                </div>
+
+                <div class="field c6">
+                  <label for="actionWhat">II.E.iv. What action/news</label>
+                  <textarea id="actionWhat"></textarea>
+                </div>
+
+                <div class="field c12">
+                  <label for="actionWhy">II.E.v. Why was action/news happening</label>
+                  <textarea id="actionWhy"></textarea>
+                </div>
+
+                <div class="field c12">
+                  <label for="biasAssessment">II.F. Bias/agendum/spin/prevarication? Explain</label>
+                  <textarea id="biasAssessment"></textarea>
+                </div>
+
+                <div class="field c12">
+                  <button id="submitBtn" class="primary" type="button">Submit Report</button>
+                </div>
+              </div>
+              <p id="formStatus" class="status">Waiting for calendar window. </p>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <section class="card status-strip">
+        <p id="globalStatus" class="status">Checking student session...</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
+  <script>
+    (() => {
+      const STUDENT_AUTH_PREFIX = window.__SIS_STUDENT_AUTH_PREFIX || "/api/student/auth";
+      const STUDENT_DASHBOARD_PATH = window.__SIS_STUDENT_DASHBOARD_PATH || "/api/student/dashboard";
+      const STUDENT_NEWS_REPORTS_PATH = window.__SIS_STUDENT_NEWS_REPORTS_PATH || "/api/student/news-reports";
+      const STUDENT_NEWS_CALENDAR_PATH = window.__SIS_STUDENT_NEWS_CALENDAR_PATH || "/api/student/news-reports/calendar";
+      const PORTAL_TIME_ZONE = "Asia/Ho_Chi_Minh";
+      const STUDENT_API_ORIGIN = resolveStudentApiOrigin();
+      const TEXT_ZOOM_KEY = "sis.studentPortal.textZoomPct";
+      const TEXT_ZOOM_DEFAULT = 100;
+      const TEXT_ZOOM_MIN = 80;
+      const TEXT_ZOOM_MAX = 140;
+      const TEXT_ZOOM_STEP = 5;
+
+      const state = {
+        window: null,
+        dashboard: null,
+        overdueHomeworkRows: [],
+        pastDueModalOpen: false,
+        calendarRows: [],
+        calendarAlertDates: new Set(),
+        calendarStatusByDate: new Map(),
+        studentCalendar: null,
+        calendarHasMounted: false,
+        activeView: "home",
+        activePage: "home",
+        detailCalendar: null,
+        detailCalendarHasMounted: false,
+        textZoomPct: TEXT_ZOOM_DEFAULT,
+      };
+
+      const STUDENT_PORTAL_PAGES = new Set([
+        "home",
+        "current-homework",
+        "past-due-homework",
+        "attendance-calendar",
+        "performance-reports",
+        "grades-ytd",
+        "recommendations",
+      ]);
+
+      function t(v) {
+        return String(v == null ? "" : v).trim();
+      }
+
+      function escapeHtml(value) {
+        return t(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function normalizeLower(v) {
+        return t(v).toLowerCase();
+      }
+
+      function clampTextZoomPct(value) {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed)) return TEXT_ZOOM_DEFAULT;
+        return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(parsed)));
+      }
+
+      function readStoredTextZoomPct() {
+        try {
+          return clampTextZoomPct(window.localStorage?.getItem(TEXT_ZOOM_KEY));
+        } catch (error) {
+          void error;
+          return TEXT_ZOOM_DEFAULT;
+        }
+      }
+
+      function applyPortalTextZoom(percent) {
+        const next = clampTextZoomPct(percent);
+        state.textZoomPct = next;
+        document.documentElement.style.setProperty("--portal-text-zoom", String(next / 100));
+        const label = field("studentTextZoomLabel");
+        if (label) label.textContent = `${next}%`;
+        try {
+          window.localStorage?.setItem(TEXT_ZOOM_KEY, String(next));
+        } catch (error) {
+          void error;
+        }
+      }
+
+      function adjustPortalTextZoom(delta) {
+        applyPortalTextZoom(state.textZoomPct + delta);
+      }
+
+      function parseIsoDateKey(value) {
+        const match = t(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) return null;
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null;
+        const parsed = new Date(Date.UTC(year, month - 1, day));
+        if (
+          parsed.getUTCFullYear() !== year
+          || parsed.getUTCMonth() !== month - 1
+          || parsed.getUTCDate() !== day
+        ) {
+          return null;
+        }
+        return parsed;
+      }
+
+      function dateKeyFromUtc(value) {
+        const date = value instanceof Date ? value : null;
+        if (!date) return "";
+        const year = String(date.getUTCFullYear());
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(date.getUTCDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function addUtcDays(date, days) {
+        const next = new Date(date.getTime());
+        next.setUTCDate(next.getUTCDate() + days);
+        return next;
+      }
+
+      function addDateKeyDays(dateKey, days) {
+        const parsed = parseIsoDateKey(dateKey);
+        if (!parsed) return "";
+        return dateKeyFromUtc(addUtcDays(parsed, days));
+      }
+
+      function formatMonthViewLabel(startDate) {
+        const start = startDate instanceof Date ? startDate : parseIsoDateKey(startDate);
+        if (!start) return "Your View timeline";
+        return `Your View: ${new Intl.DateTimeFormat(undefined, {
+          month: "long",
+          year: "numeric",
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(start)}`;
+      }
+
+      function formatSubmittedClock(value) {
+        const raw = t(value);
+        if (!raw) return "";
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) return "";
+        return new Intl.DateTimeFormat(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(parsed);
+      }
+
+      function isLoopbackHostname(hostname) {
+        const normalized = normalizeLower(hostname);
+        return normalized === "127.0.0.1" || normalized === "localhost" || normalized === "::1";
+      }
+
+      function isStaticStudentPreviewPath(pathname) {
+        return t(pathname || window.location.pathname).endsWith("/web-asset/student/student-portal.html");
+      }
+
+      function resolveStudentApiOrigin() {
+        const params = new URLSearchParams(window.location.search || "");
+        const queryOrigin = t(params.get("apiOrigin"));
+        const injectedOrigin = t(window.__SIS_STUDENT_API_ORIGIN);
+        const selectedOrigin = queryOrigin || injectedOrigin;
+        if (!selectedOrigin) return "";
+        try {
+          return new URL(selectedOrigin, window.location.origin).origin;
+        } catch (error) {
+          void error;
+          return "";
+        }
+      }
+
+      function resolveApiUrl(pathname) {
+        const rawPath = t(pathname);
+        if (!rawPath) return rawPath;
+        if (/^https?:\/\//i.test(rawPath)) return rawPath;
+        const normalizedPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+        if (!STUDENT_API_ORIGIN) return normalizedPath;
+        try {
+          return new URL(normalizedPath, STUDENT_API_ORIGIN).toString();
+        } catch (error) {
+          void error;
+          return normalizedPath;
+        }
+      }
+
+      function isStaticStudentPreviewMode() {
+        return isStaticStudentPreviewPath(window.location.pathname);
+      }
+
+      function staticPreviewHelpMessage() {
+        return "Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening /student/portal.";
+      }
+
+      function assertApiOriginConfiguredForStaticPreview() {
+        if (!isStaticStudentPreviewMode() || STUDENT_API_ORIGIN) return;
+        const error = new Error(staticPreviewHelpMessage());
+        error.status = 400;
+        throw error;
+      }
+
+      function field(id) {
+        return document.getElementById(id);
+      }
+
+      function setMenuOpen(open) {
+        const shouldOpen = Boolean(open);
+        field("sideNav")?.classList.toggle("open", shouldOpen);
+        document.body.classList.toggle("menu-open", shouldOpen);
+      }
+
+      function setGlobalStatus(message, isError = false) {
+        const text = t(message);
+        ["globalStatus", "portalStatus"].forEach((id) => {
+          const el = field(id);
+          if (!el) return;
+          el.textContent = text;
+          el.className = isError ? "status bad" : "status";
+        });
+      }
+
+      function setFormStatus(message, isError = false, isOk = false) {
+        const el = field("formStatus");
+        if (!el) return;
+        el.textContent = t(message);
+        el.className = isError ? "status bad" : isOk ? "status ok" : "status";
+      }
+
+      function parseNumber(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+
+      function formatPercent(value) {
+        return `${parseNumber(value).toFixed(1)}%`;
+      }
+
+      function metricCard(label, value, tone = "") {
+        const article = document.createElement("article");
+        article.className = tone ? `metric ${t(tone)}` : "metric";
+
+        const key = document.createElement("div");
+        key.className = "k";
+        key.textContent = t(label);
+
+        const metricValue = document.createElement("div");
+        metricValue.className = "v";
+        metricValue.textContent = t(value);
+
+        article.append(key, metricValue);
+        return article;
+      }
+
+      function setSummary(id, textValue) {
+        const target = field(id);
+        if (!target) return;
+        target.textContent = t(textValue) || "No data yet.";
+      }
+
+      function normalizePortalLinkUrl(value) {
+        const raw = t(value);
+        if (!raw) return "";
+        if (/^\//.test(raw)) return raw;
+        try {
+          const parsed = new URL(raw, window.location.origin);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.toString();
+          return "";
+        } catch (error) {
+          void error;
+          return "";
+        }
+      }
+
+      function extractFirstHttpUrl(text) {
+        const match = t(text).match(/https?:\/\/[^\s<>"')]+/i);
+        return match ? match[0] : "";
+      }
+
+      function resolveHomeworkAnnouncementUrl(row = {}) {
+        const directCandidates = [
+          row?.assignmentAnnouncementUrl,
+          row?.announcementUrl,
+          row?.assignmentLink,
+          row?.exerciseUrl,
+          row?.url,
+          row?.link,
+          row?.href,
+        ];
+        for (const candidate of directCandidates) {
+          const normalized = normalizePortalLinkUrl(candidate);
+          if (normalized) return normalized;
+        }
+        return normalizePortalLinkUrl(extractFirstHttpUrl(row?.comments));
+      }
+
+      function parseHomeworkDueMs(row = {}) {
+        const dueAtRaw = t(row?.dueAt);
+        if (dueAtRaw) {
+          const dueAt = new Date(dueAtRaw);
+          if (!Number.isNaN(dueAt.getTime())) return dueAt.getTime();
+        }
+        const dueDateRaw = t(row?.dueDate);
+        if (dueDateRaw && /^\d{4}-\d{2}-\d{2}$/.test(dueDateRaw)) {
+          const dueDate = new Date(`${dueDateRaw}T00:00:00+07:00`);
+          if (!Number.isNaN(dueDate.getTime())) return dueDate.getTime();
+        }
+        return Number.MAX_SAFE_INTEGER;
+      }
+
+      function sortedHomeworkRows(rows = []) {
+        return (Array.isArray(rows) ? rows : [])
+          .slice()
+          .sort((left, right) => {
+            const byDue = parseHomeworkDueMs(left) - parseHomeworkDueMs(right);
+            if (byDue !== 0) return byDue;
+            return t(left?.assignmentName).localeCompare(t(right?.assignmentName));
+          });
+      }
+
+      function renderOverdueHomeworkTableRows(rows = []) {
+        const target = field("pastDueHomeworkTableBody");
+        if (!target) return;
+        const list = Array.isArray(rows) ? rows : [];
+        if (!list.length) {
+          target.innerHTML = "<tr><td colspan=\"2\">Không có bài tập quá hạn.</td></tr>";
+          return;
+        }
+        target.innerHTML = list.map((row) => {
+          const dueText = escapeHtml(formatPortalDate(row?.dueAt || row?.dueDate));
+          const assignmentText = escapeHtml(t(row?.assignmentName) || "Bài tập");
+          const announcementUrl = resolveHomeworkAnnouncementUrl(row);
+          const assignmentCell = announcementUrl
+            ? `<a class=\"homework-link\" href=\"${escapeHtml(announcementUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">${assignmentText}</a>`
+            : `<span>${assignmentText}</span>`;
+          return `<tr><td>${dueText}</td><td>${assignmentCell}</td></tr>`;
+        }).join("");
+      }
+
+      function setPastDueHomeworkModalOpen(open) {
+        const shouldOpen = Boolean(open);
+        state.pastDueModalOpen = shouldOpen;
+        const modal = field("pastDueHomeworkModal");
+        if (!modal) return;
+        modal.classList.toggle("hidden", !shouldOpen);
+        document.body.classList.toggle("modal-open", shouldOpen);
+      }
+
+      function renderCurrentHomeworkOverviewCard(child = {}, pendingHomework = 0) {
+        const currentRows = sortedHomeworkRows(child?.details?.currentHomework || []);
+        const assignmentsTotal = parseNumber(child?.assignments?.total);
+        const badge = field("currentHomeworkBadge");
+        const badgeValue = field("currentHomeworkBadgeValue");
+        const summary = field("currentHomeworkSummary");
+        const assignmentLink = field("currentHomeworkAssignmentLink");
+        const header = field("currentHomeworkHeader");
+
+        if (badge) badge.className = "homework-square is-none";
+        if (badgeValue) badgeValue.textContent = "Không có";
+        if (header) header.textContent = "Bài tập hiện tại";
+
+        if (assignmentLink) {
+          assignmentLink.classList.add("hidden");
+          assignmentLink.removeAttribute("href");
+          assignmentLink.textContent = "Xem thông báo bài tập";
+        }
+
+        if (pendingHomework > 0) {
+          if (badge) badge.className = "homework-square is-pending";
+          if (badgeValue) badgeValue.textContent = "Chưa xong";
+          if (summary) summary.textContent = `${pendingHomework} bài tập hiện tại chưa nộp.`;
+        } else if (assignmentsTotal > 0) {
+          if (badge) badge.className = "homework-square is-complete";
+          if (badgeValue) badgeValue.textContent = "Hoan thanh";
+          if (summary) summary.textContent = "Tất cả bài tập hiện tại đã hoàn thành.";
+        } else if (summary) {
+          summary.textContent = "Không có bài tập hiện tại.";
+        }
+
+        const currentTop = currentRows[0] || null;
+        if (!currentTop) return;
+        if (header) header.textContent = t(currentTop.assignmentName) || "Bài tập hiện tại";
+        if (assignmentLink) {
+          const url = resolveHomeworkAnnouncementUrl(currentTop);
+          if (url) {
+            assignmentLink.href = url;
+            assignmentLink.textContent = `Thông báo: ${t(currentTop.assignmentName) || "Bài tập"}`;
+            assignmentLink.classList.remove("hidden");
+          }
+        }
+      }
+
+      function renderPastDueHomeworkOverviewCard(child = {}, overdueHomework = 0) {
+        state.overdueHomeworkRows = sortedHomeworkRows(child?.details?.overdueHomework || []);
+        const badge = field("pastDueHomeworkBadge");
+        const badgeValue = field("pastDueHomeworkBadgeValue");
+        const summary = field("pastDueHomeworkSummary");
+        const openModalBtn = field("openPastDueHomeworkModalBtn");
+
+        if (badgeValue) badgeValue.textContent = String(Math.max(0, overdueHomework));
+        if (badge) badge.className = overdueHomework > 0 ? "homework-square is-arrears" : "homework-square is-clear";
+        if (summary) {
+          summary.textContent = overdueHomework > 0
+            ? `${overdueHomework} bài tập quá hạn cần xử lý ngay.`
+            : "Không có bài tập quá hạn.";
+        }
+        if (openModalBtn) openModalBtn.disabled = state.overdueHomeworkRows.length === 0;
+        renderOverdueHomeworkTableRows(state.overdueHomeworkRows);
+      }
+
+      function formatPortalDate(value) {
+        const raw = t(value);
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+          ? new Date(`${raw}T00:00:00+07:00`)
+          : (raw ? new Date(raw) : null);
+        if (!date || Number.isNaN(date.getTime())) return "Date unavailable";
+        return new Intl.DateTimeFormat(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(date);
+      }
+
+      function formatPortalDateTime(value) {
+        const date = value ? new Date(value) : null;
+        if (!date || Number.isNaN(date.getTime())) return "Time unavailable";
+        return new Intl.DateTimeFormat(undefined, {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone: PORTAL_TIME_ZONE,
+        }).format(date);
+      }
+
+      function normalizeStudentPage(page) {
+        const requested = normalizeLower(page);
+        return STUDENT_PORTAL_PAGES.has(requested) ? requested : "home";
+      }
+
+      function studentDashboardChild() {
+        return state.dashboard?.child || null;
+      }
+
+      function updateActiveStudentNav() {
+        document.querySelectorAll(".side-link").forEach((link) => {
+          const pageTarget = normalizeStudentPage(link.getAttribute("data-page-target"));
+          const shouldBeActive = state.activeView === "home"
+            ? pageTarget === state.activePage
+            : pageTarget === "home";
+          link.classList.toggle("active", shouldBeActive);
+        });
+      }
+
+      function buildDetailItemMarkup(item = {}) {
+        const article = document.createElement("article");
+        article.className = "detail-item";
+        if (item?.tone) {
+          article.classList.add(item.tone);
+        }
+
+        const head = document.createElement("div");
+        head.className = "detail-item-head";
+
+        const title = document.createElement("strong");
+        title.textContent = item.title || "Detail";
+
+        const meta = document.createElement("span");
+        meta.className = "detail-meta";
+        meta.textContent = item.meta || "";
+
+        const note = document.createElement("p");
+        note.className = "detail-note";
+        note.textContent = item.note || "No detail available.";
+
+        head.append(title, meta);
+        article.append(head, note);
+        return article.outerHTML;
+      }
+
+      function renderDetailList(targetId, items = [], emptyMessage = "No data yet.") {
+        const target = field(targetId);
+        if (!target) return;
+        if (!Array.isArray(items) || !items.length) {
+          target.innerHTML = `<div class="detail-empty">${escapeHtml(emptyMessage)}</div>`;
+          return;
+        }
+        target.innerHTML = items.map((item) => buildDetailItemMarkup(item)).join("");
+      }
+
+      function buildHomeworkEvent(row, overdue = false) {
+        const start = t(row?.dueDate || row?.submittedDate);
+        if (!start) return null;
+        return {
+          id: `detail-homework-${t(row?.id) || start}`,
+          title: t(row?.assignmentName) || "Homework",
+          start,
+          allDay: true,
+          classNames: overdue ? ["fc-event-homework-track", "fc-event-homework-overdue"] : ["fc-event-homework-track"],
+        };
+      }
+
+      function buildStudentDetailModel(page) {
+        const child = studentDashboardChild();
+        const news = state.dashboard?.newsReports || {};
+        if (!child) {
+          return {
+            title: "Student Detail",
+            lead: "Student detail is not available yet.",
+            metrics: [metricCard("Overview", "No data")],
+            calendarTitle: "Calendar",
+            calendarSummary: "No calendar entries are available.",
+            events: [],
+            primaryTitle: "Current Focus",
+            primaryItems: [],
+            primaryEmpty: "No detail is available yet.",
+            historyTitle: "Recent History",
+            historyItems: [],
+            historyEmpty: "No history is available yet.",
+          };
+        }
+
+        const details = child.details || {};
+        const attendanceHistory = Array.isArray(details.attendanceHistory) ? details.attendanceHistory : [];
+        const assignmentHistory = Array.isArray(details.assignmentHistory) ? details.assignmentHistory : [];
+        const currentHomework = Array.isArray(details.currentHomework) ? details.currentHomework : [];
+        const overdueHomework = Array.isArray(details.overdueHomework) ? details.overdueHomework : [];
+        const gradeHistory = Array.isArray(details.gradeHistory) ? details.gradeHistory : [];
+        const reportArchive = Array.isArray(details.reportArchive) ? details.reportArchive : [];
+        const attendance = child.attendance || {};
+        const assignments = child.assignments || {};
+        const grades = child.grades || {};
+        const performance = child.performance || {};
+        const totalAttendance = parseNumber(attendance.total);
+        const presentAttendance = parseNumber(attendance.present);
+        const absentAttendance = parseNumber(attendance.absent);
+        const lateAttendance = parseNumber(attendance.late);
+        const excusedAttendance = parseNumber(attendance.excused);
+        const attendancePercent = totalAttendance > 0 ? (presentAttendance / totalAttendance) * 100 : 0;
+        const averageScore = grades.averageScorePercent === null || grades.averageScorePercent === undefined
+          ? null
+          : Number(grades.averageScorePercent);
+        const recommendationItems = [];
+        if (parseNumber(assignments.overdue) > 0) {
+          recommendationItems.push({
+            title: "Clear past-due homework first",
+            meta: `${parseNumber(assignments.overdue)} overdue item(s)`,
+            note: "Finish the oldest overdue work before taking on new review tasks.",
+            tone: "bad",
+          });
+        }
+        if (parseNumber(assignments.pending) > 2) {
+          recommendationItems.push({
+            title: "Use a fixed homework block",
+            meta: `${parseNumber(assignments.pending)} current item(s)`,
+            note: "Protect one consistent homework block each day until the queue drops.",
+            tone: "warn",
+          });
+        }
+        if (totalAttendance > 0 && attendancePercent < 90) {
+          recommendationItems.push({
+            title: "Improve attendance consistency",
+            meta: `Attendance ${formatPercent(attendancePercent)}`,
+            note: "Attendance dips are now strong enough to affect pacing and review depth.",
+            tone: "warn",
+          });
+        }
+        if (Number.isFinite(averageScore) && averageScore < 75) {
+          recommendationItems.push({
+            title: "Prioritize low-scoring topics",
+            meta: `Average ${formatPercent(averageScore)}`,
+            note: "Use the recent grade history to review mistakes before the next assignment cycle.",
+            tone: "bad",
+          });
+        }
+        if (parseNumber(news.submittedCount) === 0) {
+          recommendationItems.push({
+            title: "Submit the daily news report",
+            meta: "News report streak inactive",
+            note: "Daily media analysis is still expected on each open report date.",
+            tone: "warn",
+          });
+        }
+        if (!recommendationItems.length) {
+          recommendationItems.push({
+            title: "Maintain the current routine",
+            meta: "No urgent blockers",
+            note: "Keep the current homework, attendance, and review rhythm in place this week.",
+            tone: "good",
+          });
+        }
+
+        if (page === "current-homework") {
+          return {
+            title: "Current Homework",
+            lead: `${currentHomework.length || 0} active homework item(s) are still open for ${t(child.fullName || child.eaglesId)}.`,
+            metrics: [
+              metricCard("Open", String(currentHomework.length), currentHomework.length ? "warn" : "good"),
+              metricCard("Overdue", String(parseNumber(assignments.overdue)), parseNumber(assignments.overdue) ? "bad" : "good"),
+              metricCard("Completed", String(parseNumber(assignments.completed)), "good"),
+              metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
+            ],
+            calendarTitle: "Current Homework Calendar",
+            calendarSummary: currentHomework.length
+              ? "Open homework is plotted on each due date."
+              : "No open homework is currently scheduled.",
+            events: currentHomework.map((row) => buildHomeworkEvent(row, false)).filter(Boolean),
+            primaryTitle: "Open Assignments",
+            primaryItems: currentHomework.map((row) => ({
+              title: t(row.assignmentName) || "Homework",
+              meta: `Due ${formatPortalDate(row.dueAt || row.dueDate)}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
+              note: t(row.comments) || "Still waiting for submission.",
+              tone: "warn",
+            })),
+            primaryEmpty: "No current homework is waiting for submission.",
+            historyTitle: "Recent Assignment History",
+            historyItems: assignmentHistory.slice(0, 10).map((row) => ({
+              title: t(row.assignmentName) || "Assignment",
+              meta: `${t(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
+              note: Number.isFinite(Number(row.scorePercent))
+                ? `Score ${formatPercent(row.scorePercent)}`
+                : (t(row.comments) || "No score has been recorded yet."),
+              tone: row.status === "completed" ? "good" : row.status === "overdue" ? "bad" : "warn",
+            })),
+            historyEmpty: "No assignment history is available yet.",
+          };
+        }
+
+        if (page === "past-due-homework") {
+          return {
+            title: "Past Due Homework",
+            lead: overdueHomework.length
+              ? `${overdueHomework.length} homework item(s) are already overdue.`
+              : "No past-due homework is currently flagged.",
+            metrics: [
+              metricCard("Overdue", String(overdueHomework.length), overdueHomework.length ? "bad" : "good"),
+              metricCard("Pending", String(parseNumber(assignments.pending)), parseNumber(assignments.pending) ? "warn" : "good"),
+              metricCard("Completed", String(parseNumber(assignments.completed)), "good"),
+              metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
+            ],
+            calendarTitle: "Past Due Calendar",
+            calendarSummary: overdueHomework.length
+              ? "Overdue homework is highlighted on the original due dates."
+              : "There are no overdue due dates to review.",
+            events: overdueHomework.map((row) => buildHomeworkEvent(row, true)).filter(Boolean),
+            primaryTitle: "Urgent Homework",
+            primaryItems: overdueHomework.map((row) => ({
+              title: t(row.assignmentName) || "Overdue homework",
+              meta: `Due ${formatPortalDate(row.dueAt || row.dueDate)}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
+              note: t(row.comments) || "Requires immediate completion and submission.",
+              tone: "bad",
+            })),
+            primaryEmpty: "No overdue homework requires action right now.",
+            historyTitle: "Recent Homework Timeline",
+            historyItems: assignmentHistory.slice(0, 10).map((row) => ({
+              title: t(row.assignmentName) || "Assignment",
+              meta: `${t(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
+              note: row.homeworkOnTime === true
+                ? "Completed on time."
+                : row.status === "completed"
+                  ? "Completed after the due date."
+                  : (t(row.comments) || "Still open."),
+              tone: row.status === "completed" ? "good" : row.status === "overdue" ? "bad" : "warn",
+            })),
+            historyEmpty: "No homework timeline is available yet.",
+          };
+        }
+
+        if (page === "attendance-calendar") {
+          const recentAlerts = attendanceHistory.filter((row) => row.status !== "present");
+          return {
+            title: "Attendance Calendar SYTD",
+            lead: totalAttendance
+              ? `Attendance history covers ${totalAttendance} recorded class day(s) so far this year.`
+              : "Attendance has not been recorded yet.",
+            metrics: [
+              metricCard("Present", String(presentAttendance), "good"),
+              metricCard("Absent", String(absentAttendance), absentAttendance ? "bad" : "good"),
+              metricCard("Late", String(lateAttendance), lateAttendance ? "warn" : "good"),
+              metricCard("Excused", String(excusedAttendance), excusedAttendance ? "warn" : "good"),
+            ],
+            calendarTitle: "Attendance Calendar",
+            calendarSummary: attendanceHistory.length
+              ? "Each recorded attendance entry is mapped to its class date."
+              : "No attendance entries are available.",
+            events: attendanceHistory.map((row) => ({
+              id: `attendance-${t(row.id)}`,
+              title: `${t(row.status) || "present"}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
+              start: t(row.attendanceDate),
+              allDay: true,
+              classNames: [`fc-event-attendance-${normalizeLower(row.status) || "present"}`],
+            })),
+            primaryTitle: "Attendance Alerts",
+            primaryItems: recentAlerts.slice(0, 10).map((row) => ({
+              title: `${t(row.status) || "Attendance"}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
+              meta: formatPortalDate(row.attendanceDate),
+              note: t(row.comments) || "Recorded as a non-present attendance status.",
+              tone: row.status === "absent" ? "bad" : "warn",
+            })),
+            primaryEmpty: "No absences, tardies, or excused notes are flagged in recent history.",
+            historyTitle: "Recent Attendance Log",
+            historyItems: attendanceHistory.slice(0, 12).map((row) => ({
+              title: `${t(row.className) || "Class attendance"} | ${t(row.status) || "present"}`,
+              meta: formatPortalDate(row.attendanceDate),
+              note: t(row.comments) || "No extra attendance note was recorded.",
+              tone: row.status === "present" ? "good" : row.status === "absent" ? "bad" : "warn",
+            })),
+            historyEmpty: "No attendance log is available yet.",
+          };
+        }
+
+        if (page === "performance-reports") {
+          return {
+            title: "Performance Reports SYTD Archive",
+            lead: reportArchive.length
+              ? `${reportArchive.length} performance report archive item(s) are available for review.`
+              : "No performance reports are available yet.",
+            metrics: [
+              metricCard("Reports", String(reportArchive.length), reportArchive.length ? "good" : ""),
+              metricCard("Average", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
+              metricCard("Pending", String(parseNumber(assignments.pending)), parseNumber(assignments.pending) ? "warn" : "good"),
+              metricCard("Overdue", String(parseNumber(assignments.overdue)), parseNumber(assignments.overdue) ? "bad" : "good"),
+            ],
+            calendarTitle: "Performance Report Calendar",
+            calendarSummary: reportArchive.length
+              ? "Report publication dates are pinned to the archive calendar."
+              : "There are no report dates to plot yet.",
+            events: reportArchive.map((row) => ({
+              id: `report-${t(row.id)}`,
+              title: `Report${t(row.className) ? ` | ${t(row.className)}` : ""}`,
+              start: t(row.generatedDate),
+              allDay: true,
+              classNames: ["fc-event-report"],
+            })),
+            primaryTitle: "Latest Reports",
+            primaryItems: reportArchive.slice(0, 8).map((row) => ({
+              title: `${t(row.className) || "Report"} | ${t(row.quarter || "").toUpperCase() || "Quarter"}`,
+              meta: formatPortalDateTime(row.generatedAt),
+              note: t(row.comments) || "No additional report comment was saved.",
+              tone: "good",
+            })),
+            primaryEmpty: "No performance report archive is available yet.",
+            historyTitle: "Report Context",
+            historyItems: gradeHistory.slice(0, 10).map((row) => ({
+              title: t(row.assignmentName) || "Assignment",
+              meta: Number.isFinite(Number(row.scorePercent)) ? `Score ${formatPercent(row.scorePercent)}` : t(row.status),
+              note: t(row.comments) || "Used as supporting evidence inside the report cycle.",
+              tone: Number.isFinite(Number(row.scorePercent)) && Number(row.scorePercent) < 75 ? "warn" : "good",
+            })),
+            historyEmpty: "No supporting grade context is available yet.",
+          };
+        }
+
+        if (page === "grades-ytd") {
+          return {
+            title: "Grades YTD",
+            lead: gradeHistory.length
+              ? `${gradeHistory.length} graded or completed assignment record(s) are available this year.`
+              : "No grade history is available yet.",
+            metrics: [
+              metricCard("Average", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
+              metricCard("Graded", String(gradeHistory.length), gradeHistory.length ? "good" : ""),
+              metricCard("Pending", String(parseNumber(assignments.pending)), parseNumber(assignments.pending) ? "warn" : "good"),
+              metricCard("Completed", String(parseNumber(assignments.completed)), "good"),
+            ],
+            calendarTitle: "Grade Timeline",
+            calendarSummary: gradeHistory.length
+              ? "Grade entries are mapped to the assignment due or submission date."
+              : "There are no grade dates to plot yet.",
+            events: gradeHistory.map((row) => ({
+              id: `grade-${t(row.id)}`,
+              title: Number.isFinite(Number(row.scorePercent))
+                ? `${t(row.assignmentName)} | ${formatPercent(row.scorePercent)}`
+                : t(row.assignmentName) || "Assignment",
+              start: t(row.submittedDate || row.dueDate),
+              allDay: true,
+              classNames: ["fc-event-grade"],
+            })).filter((row) => t(row.start)),
+            primaryTitle: "Recent Grade Records",
+            primaryItems: gradeHistory.slice(0, 10).map((row) => ({
+              title: t(row.assignmentName) || "Assignment",
+              meta: Number.isFinite(Number(row.scorePercent))
+                ? `${formatPercent(row.scorePercent)}${t(row.className) ? ` | ${t(row.className)}` : ""}`
+                : `${t(row.status)}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
+              note: t(row.comments) || "No grading comment was recorded.",
+              tone: Number.isFinite(Number(row.scorePercent)) && Number(row.scorePercent) < 75 ? "warn" : "good",
+            })),
+            primaryEmpty: "No recent grade records are available.",
+            historyTitle: "Assignment History",
+            historyItems: assignmentHistory.slice(0, 12).map((row) => ({
+              title: t(row.assignmentName) || "Assignment",
+              meta: `${t(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
+              note: Number.isFinite(Number(row.scorePercent))
+                ? `Score ${formatPercent(row.scorePercent)}`
+                : (t(row.comments) || "No score recorded."),
+              tone: row.status === "overdue" ? "bad" : row.status === "pending" ? "warn" : "good",
+            })),
+            historyEmpty: "No assignment history is available yet.",
+          };
+        }
+
+        const focusEvents = [
+          ...overdueHomework.map((row) => buildHomeworkEvent(row, true)),
+          ...currentHomework.map((row) => buildHomeworkEvent(row, false)),
+          ...reportArchive.slice(0, 10).map((row) => ({
+            id: `focus-report-${t(row.id)}`,
+            title: `Report | ${t(row.className) || "Class"}`,
+            start: t(row.generatedDate),
+            allDay: true,
+            classNames: ["fc-event-report"],
+          })),
+        ].filter(Boolean);
+
+        return {
+          title: "Recommendations for Success",
+          lead: recommendationItems.map((item) => item.title).join(". "),
+          metrics: [
+            metricCard("Attendance", formatPercent(attendancePercent), attendancePercent < 90 ? "warn" : "good"),
+            metricCard("Average", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
+            metricCard("Pending", String(parseNumber(assignments.pending)), parseNumber(assignments.pending) ? "warn" : "good"),
+            metricCard("Overdue", String(parseNumber(assignments.overdue)), parseNumber(assignments.overdue) ? "bad" : "good"),
+          ],
+          calendarTitle: "Priority Calendar",
+          calendarSummary: focusEvents.length
+            ? "The calendar combines urgent homework and recent report checkpoints."
+            : "No urgent priorities are currently plotted.",
+          events: focusEvents,
+          primaryTitle: "Priority Actions",
+          primaryItems: recommendationItems,
+          primaryEmpty: "No immediate recommendations are available.",
+          historyTitle: "Supporting Evidence",
+          historyItems: [...overdueHomework, ...gradeHistory.slice(0, 6)].slice(0, 10).map((row) => ({
+            title: t(row.assignmentName || row.className || "Supporting detail"),
+            meta: t(row.generatedAt)
+              ? formatPortalDateTime(row.generatedAt)
+              : formatPortalDate(row.dueAt || row.dueDate || row.submittedAt || row.submittedDate),
+            note: t(row.comments) || "Used to support the current recommendation set.",
+            tone: t(row.status) === "overdue" ? "bad" : "warn",
+          })),
+          historyEmpty: "No supporting evidence is available yet.",
+        };
+      }
+
+      function ensureStudentDetailCalendar() {
+        const grid = field("studentDetailCalendarGrid");
+        if (!grid) return null;
+        if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+          grid.innerHTML = "<div class='detail-empty'>FullCalendar could not be loaded.</div>";
+          return null;
+        }
+        if (!state.detailCalendar) {
+          state.detailCalendar = new window.FullCalendar.Calendar(grid, {
+            initialView: "dayGridMonth",
+            height: "auto",
+            headerToolbar: {
+              left: "prev,next today",
+              center: "title",
+              right: "",
+            },
+            buttonText: {
+              today: "Today",
+            },
+            events: [],
+          });
+        }
+        return state.detailCalendar;
+      }
+
+      function renderStudentDetailPage() {
+        if (state.activePage === "home" || state.activeView !== "home") return;
+        const model = buildStudentDetailModel(state.activePage);
+        field("studentDetailTitle").textContent = model.title;
+        field("studentDetailLead").textContent = model.lead;
+        field("studentDetailCalendarTitle").textContent = model.calendarTitle;
+        field("studentDetailCalendarSummary").textContent = model.calendarSummary;
+        field("studentDetailPrimaryTitle").textContent = model.primaryTitle;
+        field("studentDetailHistoryTitle").textContent = model.historyTitle;
+        field("studentDetailMetrics")?.replaceChildren(...model.metrics);
+        renderDetailList("studentDetailPrimaryList", model.primaryItems, model.primaryEmpty);
+        renderDetailList("studentDetailHistoryList", model.historyItems, model.historyEmpty);
+
+        const calendar = ensureStudentDetailCalendar();
+        if (!calendar) return;
+        calendar.removeAllEvents();
+        if (Array.isArray(model.events) && model.events.length) {
+          calendar.addEventSource(model.events);
+        }
+        const anchorDate = t(model.events?.[0]?.start);
+        if (anchorDate) {
+          calendar.gotoDate(anchorDate);
+        }
+        calendar.render();
+        state.detailCalendarHasMounted = true;
+      }
+
+      function syncStudentPortalView() {
+        const authenticated = field("loginPanel")?.classList.contains("hidden");
+        if (!authenticated) {
+          field("studentHomeCard")?.classList.add("hidden");
+          field("studentDetailPageCard")?.classList.add("hidden");
+          field("newsPageCard")?.classList.add("hidden");
+          updateActiveStudentNav();
+          return;
+        }
+
+        const showNews = state.activeView === "news";
+        const showHome = !showNews && state.activePage === "home";
+        const showDetail = !showNews && state.activePage !== "home";
+        field("studentHomeCard")?.classList.toggle("hidden", !showHome);
+        field("studentDetailPageCard")?.classList.toggle("hidden", !showDetail);
+        field("newsPageCard")?.classList.toggle("hidden", !showNews);
+        updateActiveStudentNav();
+        if (showNews) {
+          // Hidden-container first paint can collapse events into dot mode.
+          // Re-render after reveal so the month grid and event rows size correctly.
+          requestAnimationFrame(() => {
+            renderCalendar(state.calendarRows);
+            state.studentCalendar?.updateSize?.();
+            requestAnimationFrame(() => {
+              state.studentCalendar?.updateSize?.();
+              syncCalendarAlertDayCells();
+            });
+          });
+        }
+        if (showDetail) {
+          requestAnimationFrame(() => {
+            renderStudentDetailPage();
+            state.detailCalendar?.updateSize?.();
+          });
+        }
+      }
+
+      function setActiveStudentPage(page) {
+        state.activePage = normalizeStudentPage(page);
+        state.activeView = "home";
+        setPastDueHomeworkModalOpen(false);
+        syncStudentPortalView();
+      }
+
+      function renderDashboard() {
+        const root = field("dashboardMetrics");
+        const identity = field("studentIdentity");
+        const snapshotBadge = field("snapshotBadge");
+        const overview = field("studentOverviewSummary");
+        if (!root || !identity) return;
+
+        const child = state.dashboard?.child || null;
+        const news = state.dashboard?.newsReports || {};
+
+        if (!child) {
+          identity.textContent = "Student metrics are not available.";
+          root.replaceChildren(metricCard("Tổng quan", "Chưa có dữ liệu"));
+          renderCurrentHomeworkOverviewCard({}, 0);
+          renderPastDueHomeworkOverviewCard({}, 0);
+          setSummary("attendanceCalendarSummary", "No data yet.");
+          setSummary("performanceReportsSummary", "No data yet.");
+          setSummary("gradesYtdSummary", "No data yet.");
+          setSummary("recommendationsSummary", "No data yet.");
+          setSummary("studentEaglesIdValue", "-");
+          setSummary("studentNumberValue", "-");
+          setSummary("studentNameValue", "-");
+          setSummary("studentGradeValue", "-");
+          if (overview) overview.textContent = "Student dashboard is not available.";
+          if (snapshotBadge) {
+            snapshotBadge.textContent = "Chưa có dữ liệu";
+            snapshotBadge.className = "chip chip-neutral";
+          }
+          return;
+        }
+
+        const attendance = child.attendance || {};
+        const assignments = child.assignments || {};
+        const grades = child.grades || {};
+        const performance = child.performance || {};
+
+        const totalAttendance = parseNumber(attendance.total);
+        const presentAttendance = parseNumber(attendance.present);
+        const absentAttendance = parseNumber(attendance.absent);
+        const attendancePercent = totalAttendance > 0 ? (presentAttendance / totalAttendance) * 100 : 0;
+        const absencePercent = totalAttendance > 0 ? (absentAttendance / totalAttendance) * 100 : 0;
+        const pendingHomework = parseNumber(assignments.pending);
+        const overdueHomework = parseNumber(assignments.overdue);
+        const averageScore = grades.averageScorePercent === null || grades.averageScorePercent === undefined
+          ? null
+          : Number(grades.averageScorePercent);
+        const reportCount = parseNumber(performance.reportCount);
+
+        const absenceTone = absencePercent > 10 ? "bad" : absencePercent > 5 ? "warn" : "";
+        const pendingTone = pendingHomework > 0 ? "warn" : "";
+        const overdueTone = overdueHomework > 0 ? "bad" : "";
+        const scoreTone = Number.isFinite(averageScore) && averageScore < 70 ? "bad" : Number.isFinite(averageScore) && averageScore < 80 ? "warn" : "good";
+        const newsSummary = news.statusSummary || {};
+        const newsTone = parseNumber(newsSummary.revisionRequested) > 0 ? "bad" : parseNumber(newsSummary.submitted) > 0 ? "warn" : "good";
+
+        identity.textContent = `${t(child.fullName || child.englishName || child.eaglesId)} | ${t(child.eaglesId)} | ${t(child.currentGrade || "No class")}`;
+        setSummary("studentEaglesIdValue", t(child.eaglesId) || "-");
+        setSummary("studentNumberValue", t(child.studentNumber) || "-");
+        setSummary("studentNameValue", t(child.fullName || child.englishName || child.eaglesId) || "-");
+        setSummary("studentGradeValue", t(child.currentGrade) || "-");
+        if (overview) {
+          overview.textContent = `${t(child.fullName || child.englishName || child.eaglesId)} (${t(child.eaglesId)})`;
+        }
+
+        root.replaceChildren(
+          metricCard("Attendance SYTD", formatPercent(attendancePercent), "good"),
+          metricCard("Absent SYTD", formatPercent(absencePercent), absenceTone),
+          metricCard("Homework Pending", String(pendingHomework), pendingTone),
+          metricCard("Homework Overdue", String(overdueHomework), overdueTone),
+          metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", scoreTone),
+          metricCard("Performance Reports", String(reportCount)),
+          metricCard(
+            "News Reports",
+            `${parseNumber(newsSummary.approved)}/${parseNumber(newsSummary.submitted)}/${parseNumber(newsSummary.revisionRequested)}`,
+            newsTone
+          ),
+        );
+
+        renderCurrentHomeworkOverviewCard(child, pendingHomework);
+        renderPastDueHomeworkOverviewCard(child, overdueHomework);
+        setSummary(
+          "attendanceCalendarSummary",
+          totalAttendance > 0
+            ? `Attendance SYTD: ${presentAttendance}/${totalAttendance} present (${formatPercent(attendancePercent)}), absent ${absentAttendance}.`
+            : "Attendance SYTD has not been recorded yet."
+        );
+        setSummary(
+          "performanceReportsSummary",
+          `Performance reports SYTD: ${reportCount}. Archive access for prior school years is available through report exports.`
+        );
+        setSummary(
+          "gradesYtdSummary",
+          Number.isFinite(averageScore)
+            ? `Grade average YTD: ${formatPercent(averageScore)}.`
+            : "Grade average YTD is not available yet."
+        );
+        const recommendations = [];
+        if (overdueHomework > 0) recommendations.push("Clear past-due homework first.");
+        if (pendingHomework > 2) recommendations.push("Use a fixed daily homework block.");
+        if (totalAttendance > 0 && attendancePercent < 90) recommendations.push("Improve attendance consistency to protect outcomes.");
+        if (Number.isFinite(averageScore) && averageScore < 75) recommendations.push("Prioritize review on low-scoring topics this week.");
+        if (parseNumber(news.submittedCount) === 0) recommendations.push("Submit the daily news report every open day.");
+        if (!recommendations.length) recommendations.push("Maintain the current routine and run one weekly progress review.");
+        setSummary("recommendationsSummary", recommendations.join(" "));
+        if (snapshotBadge) {
+          snapshotBadge.textContent = `HS ${t(child.eaglesId)}`;
+          snapshotBadge.className = "chip chip-ok";
+        }
+      }
+
+      async function api(path, options = {}) {
+        assertApiOriginConfiguredForStaticPreview();
+        const init = {
+          method: options.method || "GET",
+          headers: {},
+          credentials: "include",
+        };
+        if (options.body !== undefined) {
+          init.headers["Content-Type"] = "application/json";
+          init.body = JSON.stringify(options.body);
+        }
+        const response = await fetch(resolveApiUrl(path), init);
+        if (response.status === 204) return null;
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const err = new Error(data.error || `HTTP ${response.status}`);
+          err.status = response.status;
+          throw err;
+        }
+        return data;
+      }
+
+      function setAuthenticatedView(authenticated) {
+        field("loginPanel")?.classList.toggle("hidden", authenticated);
+        field("appPanel")?.classList.toggle("hidden", !authenticated);
+        if (!authenticated) {
+          state.activeView = "home";
+          state.activePage = "home";
+          setPastDueHomeworkModalOpen(false);
+          state.calendarHasMounted = false;
+          state.detailCalendarHasMounted = false;
+          state.calendarRows = [];
+          state.calendarAlertDates = new Set();
+          state.calendarStatusByDate = new Map();
+          syncStudentPortalView();
+          return;
+        }
+        syncStudentPortalView();
+      }
+
+      function setActiveStudentView(view) {
+        const nextView = normalizeLower(view) === "news" ? "news" : "home";
+        state.activeView = nextView;
+        setPastDueHomeworkModalOpen(false);
+        if (nextView === "home" && !STUDENT_PORTAL_PAGES.has(state.activePage)) {
+          state.activePage = "home";
+        }
+        syncStudentPortalView();
+      }
+
+      function setInputValue(id, value) {
+        const el = field(id);
+        if (!el) return;
+        el.value = t(value);
+      }
+
+      function reportPayload() {
+        return {
+          reportDate: t(field("reportDate")?.value),
+          sourceLink: t(field("sourceLink")?.value),
+          articleTitle: t(field("articleTitle")?.value),
+          byline: t(field("byline")?.value),
+          articleDateline: t(field("articleDateline")?.value),
+          leadSynopsis: t(field("leadSynopsis")?.value),
+          actionActor: t(field("actionActor")?.value),
+          actionAffected: t(field("actionAffected")?.value),
+          actionWhere: t(field("actionWhere")?.value),
+          actionWhat: t(field("actionWhat")?.value),
+          actionWhy: t(field("actionWhy")?.value),
+          biasAssessment: t(field("biasAssessment")?.value),
+        };
+      }
+
+      function applyOpenReport(report = null) {
+        setInputValue("sourceLink", report?.sourceLink);
+        setInputValue("articleTitle", report?.articleTitle);
+        setInputValue("byline", report?.byline);
+        setInputValue("articleDateline", report?.articleDateline);
+        setInputValue("leadSynopsis", report?.leadSynopsis);
+        setInputValue("actionActor", report?.actionActor);
+        setInputValue("actionAffected", report?.actionAffected);
+        setInputValue("actionWhere", report?.actionWhere);
+        setInputValue("actionWhat", report?.actionWhat);
+        setInputValue("actionWhy", report?.actionWhy);
+        setInputValue("biasAssessment", report?.biasAssessment);
+      }
+
+      function buildStudentCalendarEvents(calendar = []) {
+        const rows = Array.isArray(calendar)
+          ? calendar
+            .map((row) => ({
+              date: t(row?.date),
+              status: resolveNewsCalendarStatus(row),
+              submittedAt: t(row?.submittedAt),
+              statusColor: t(row?.statusColor || row?.color),
+              reviewStatus: t(row?.reviewStatus),
+            }))
+            .filter((row) => Boolean(row.date) && Boolean(row.status))
+          : [];
+        const events = [];
+        const alertDates = new Set();
+        const statusByDate = new Map();
+        const reviewTracks = Array.isArray(state.dashboard?.calendarTracks?.review)
+          ? state.dashboard.calendarTracks.review
+          : [];
+        const homeworkTracks = Array.isArray(state.dashboard?.calendarTracks?.homework)
+          ? state.dashboard.calendarTracks.homework
+          : [];
+
+        rows.forEach((row) => {
+          const date = t(row.date);
+          if (!date) return;
+          const statusColor = normalizeLower(row.statusColor) || (row.status === "completed" ? "green" : row.status === "open" ? "amber" : "red");
+          statusByDate.set(date, { status: row.status, color: statusColor });
+          const submittedClock = formatSubmittedClock(row.submittedAt);
+          if (row.status === "completed") {
+            events.push({
+              id: `news-completed-${date}`,
+              title: submittedClock ? `News report submitted ${submittedClock}` : "News report submitted",
+              start: date,
+              end: addDateKeyDays(date, 1),
+              allDay: true,
+              classNames: ["fc-event-news-status", `fc-event-news-status-${statusColor}`],
+              extendedProps: {
+                detail: [
+                  submittedClock ? `Submitted at ${submittedClock}` : "Submitted",
+                  row.reviewStatus ? `Status: ${row.reviewStatus}` : "",
+                ].filter(Boolean).join(" | "),
+                displayOrder: 2,
+              },
+            });
+            return;
+          }
+          if (row.status === "open") {
+            events.push({
+              id: `news-open-${date}`,
+              title: "News report window open",
+              start: date,
+              end: addDateKeyDays(date, 1),
+              allDay: true,
+              classNames: ["fc-event-news-open"],
+              extendedProps: {
+                detail: "Submit the daily report before the window closes.",
+                displayOrder: 1,
+              },
+            });
+            return;
+          }
+          if (row.status === "missed") {
+            alertDates.add(date);
+            events.push({
+              id: `news-missed-${date}`,
+              title: "MISSED NEWS REPORT",
+              start: date,
+              end: addDateKeyDays(date, 1),
+              allDay: true,
+              classNames: ["fc-obtrusive-alert", "fc-event-news-missed"],
+              extendedProps: {
+                detail: "This report date was missed.",
+                displayOrder: 0,
+              },
+            });
+          }
+        });
+
+        reviewTracks.forEach((track) => {
+          if (!t(track?.startDate) || !t(track?.endDate)) return;
+          const reviewLabel = t(track?.title) || "Notes review track";
+          const quarter = t(track?.quarter);
+          const generatedDate = t(track?.generatedDate);
+          events.push({
+            id: `review-track-${t(track?.id) || generatedDate}`,
+            title: `Notes review track: ${reviewLabel}`,
+            start: track.startDate,
+            end: track.endDate,
+            allDay: true,
+            classNames: ["fc-event-review-track"],
+            extendedProps: {
+              detail: [quarter ? `Quarter ${quarter}` : "", generatedDate ? `Generated ${generatedDate}` : ""]
+                .filter(Boolean)
+                .join(" | "),
+              displayOrder: 4,
+            },
+          });
+        });
+
+        homeworkTracks.forEach((track) => {
+          const startDate = t(track?.startDate);
+          const endDate = t(track?.endDate);
+          const dueDate = t(track?.dueDate);
+          if (!startDate || !endDate || !dueDate) return;
+          const title = t(track?.title) || "Current homework track";
+          const detail = t(track?.className) ? `Class ${t(track.className)} | Due ${dueDate}` : `Due ${dueDate}`;
+          const classNames = ["fc-event-homework-track"];
+          if (track?.overdue) classNames.push("fc-event-homework-overdue");
+          events.push({
+            id: `homework-track-${t(track?.id) || dueDate}`,
+            title: `Current homework: ${title}`,
+            start: startDate,
+            end: endDate,
+            allDay: true,
+            classNames,
+            extendedProps: {
+              detail,
+              displayOrder: track?.overdue ? 3 : 5,
+            },
+          });
+          if (track?.overdue) {
+            alertDates.add(dueDate);
+            events.push({
+              id: `homework-alert-${t(track?.id) || dueDate}`,
+              title: "MISSED HOMEWORK DEADLINE",
+              start: dueDate,
+              end: addDateKeyDays(dueDate, 1),
+              allDay: true,
+              classNames: ["fc-obtrusive-alert", "fc-event-homework-alert"],
+              extendedProps: {
+                detail,
+                displayOrder: 0,
+              },
+            });
+          }
+        });
+
+        return { events, alertDates, statusByDate };
+      }
+
+      function resolveNewsCalendarStatus(row = {}) {
+        const status = normalizeLower(row?.status);
+        if (status === "completed" || status === "open" || status === "missed") return status;
+        const color = normalizeLower(row?.color);
+        if (color === "green") return "completed";
+        if (color === "amber" || color === "yellow" || color === "orange") return "open";
+        if (color === "red") return "missed";
+        if (row?.canSubmit === true) return "open";
+        if (t(row?.submittedAt)) return "completed";
+        return "missed";
+      }
+
+      function buildCalendarDayClassList(dateStr) {
+        const classes = [];
+        const statusEntry = state.calendarStatusByDate.get(dateStr);
+        const status = typeof statusEntry === "object" && statusEntry !== null ? statusEntry.status : statusEntry;
+        const color = typeof statusEntry === "object" && statusEntry !== null ? statusEntry.color : "";
+        if (status === "completed" || status === "open" || status === "missed") {
+          classes.push(`calendar-day-${status}`);
+          if (color) classes.push(`calendar-day-${color}`);
+        }
+        if (state.calendarAlertDates.has(dateStr)) {
+          classes.push("calendar-day-alert");
+        }
+        return classes;
+      }
+
+      function syncCalendarAlertDayCells() {
+        const grid = field("calendarGrid");
+        if (!grid) return;
+        Array.from(grid.querySelectorAll(".fc-daygrid-day")).forEach((dayEl) => {
+          const dateStr = t(dayEl.getAttribute("data-date"));
+          const classList = dateStr ? buildCalendarDayClassList(dateStr) : [];
+          dayEl.classList.toggle("calendar-day-completed", classList.includes("calendar-day-completed"));
+          dayEl.classList.toggle("calendar-day-open", classList.includes("calendar-day-open"));
+          dayEl.classList.toggle("calendar-day-missed", classList.includes("calendar-day-missed"));
+          dayEl.classList.toggle("calendar-day-green", classList.includes("calendar-day-green"));
+          dayEl.classList.toggle("calendar-day-amber", classList.includes("calendar-day-amber"));
+          dayEl.classList.toggle("calendar-day-red", classList.includes("calendar-day-red"));
+          dayEl.classList.toggle("calendar-day-alert", classList.includes("calendar-day-alert"));
+        });
+      }
+
+      function ensureStudentCalendar() {
+        const grid = field("calendarGrid");
+        const title = field("calendarTitle");
+        if (!grid) return null;
+        if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+          if (title) title.textContent = "Your View timeline";
+          grid.innerHTML = "<div class='calendar-empty'>FullCalendar could not be loaded.</div>";
+          return null;
+        }
+        if (state.studentCalendar) return state.studentCalendar;
+        grid.innerHTML = "";
+        state.studentCalendar = new window.FullCalendar.Calendar(grid, {
+          initialView: "yourView",
+          views: {
+            yourView: {
+              type: "dayGridMonth",
+              buttonText: "Your View",
+            },
+          },
+          headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "yourView",
+          },
+          fixedWeekCount: false,
+          showNonCurrentDates: true,
+          dayMaxEvents: 4,
+          eventDisplay: "block",
+          displayEventTime: false,
+          eventOrder(left, right) {
+            const leftOrder = Number(left.extendedProps?.displayOrder ?? 99);
+            const rightOrder = Number(right.extendedProps?.displayOrder ?? 99);
+            if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+            return String(left.title || "").localeCompare(String(right.title || ""));
+          },
+          dayCellClassNames(arg) {
+            return buildCalendarDayClassList(arg.dateStr);
+          },
+          datesSet(info) {
+            if (title) {
+              title.textContent = formatMonthViewLabel(info?.view?.currentStart || info?.start);
+            }
+            syncCalendarAlertDayCells();
+          },
+          eventDidMount(info) {
+            const detail = t(info.event.extendedProps?.detail);
+            const tooltip = [info.event.title, detail].filter(Boolean).join(" - ");
+            if (tooltip) info.el.setAttribute("title", tooltip);
+          },
+        });
+        state.studentCalendar.render();
+        return state.studentCalendar;
+      }
+
+      function renderCalendar(calendar = []) {
+        const calendarView = ensureStudentCalendar();
+        if (!calendarView) return;
+        const { events, alertDates, statusByDate } = buildStudentCalendarEvents(calendar);
+        state.calendarAlertDates = alertDates;
+        state.calendarStatusByDate = statusByDate;
+        calendarView.removeAllEvents();
+        calendarView.addEventSource(events);
+        if (!state.calendarHasMounted) {
+          const anchorDate = t(state.window?.todayDate) || t(state.window?.reportDate);
+          if (anchorDate) {
+            calendarView.gotoDate(anchorDate);
+            state.calendarHasMounted = true;
+          }
+        }
+        calendarView.render();
+        syncCalendarAlertDayCells();
+      }
+
+      function updateSubmitAvailability() {
+        const btn = field("submitBtn");
+        if (!btn) return;
+        const windowInfo = state.window || {};
+        const canSubmit = Boolean(t(windowInfo.reportDate));
+        btn.disabled = !canSubmit;
+      }
+
+      async function loadDashboard() {
+        state.dashboard = await api(STUDENT_DASHBOARD_PATH);
+        renderDashboard();
+        renderStudentDetailPage();
+        renderCalendar(state.calendarRows);
+      }
+
+      async function loadCalendar() {
+        const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=60`);
+        state.window = data?.window || null;
+        state.calendarRows = Array.isArray(data?.calendar) ? data.calendar : [];
+        setInputValue("reportDate", t(data?.window?.reportDate));
+        renderCalendar(state.calendarRows);
+        applyOpenReport(data?.openReport || null);
+        const openDate = t(data?.window?.reportDate);
+        const closesAt = t(data?.window?.closesAt);
+        field("windowSummary").textContent = openDate
+          ? `Open entry date: ${openDate} (window closes at ${closesAt || "today 23:59"}).`
+          : "No open date currently.";
+        updateSubmitAvailability();
+      }
+
+      async function submitReport() {
+        const payload = reportPayload();
+        if (!payload.reportDate) throw new Error("Report date is locked.");
+        await api(STUDENT_NEWS_REPORTS_PATH, { method: "POST", body: payload });
+        setFormStatus("Report saved.", false, true);
+        await Promise.all([loadDashboard(), loadCalendar()]);
+      }
+
+      async function login() {
+        const eaglesId = t(field("loginEaglesId")?.value);
+        const password = t(field("loginPassword")?.value);
+        if (!eaglesId || !password) throw new Error("Eagles ID and password are required.");
+        await api(`${STUDENT_AUTH_PREFIX}/login`, {
+          method: "POST",
+          body: { eaglesId, password },
+        });
+      }
+
+      async function logout() {
+        await api(`${STUDENT_AUTH_PREFIX}/logout`, { method: "POST" });
+      }
+
+      async function boot() {
+        assertApiOriginConfiguredForStaticPreview();
+        try {
+          await api(`${STUDENT_AUTH_PREFIX}/me`);
+          setAuthenticatedView(true);
+          setGlobalStatus("Student session active.");
+          await Promise.all([loadDashboard(), loadCalendar()]);
+          setFormStatus("Fill out all sections and submit once per open date.");
+        } catch (error) {
+          if (error && error.status === 401) {
+            setAuthenticatedView(false);
+            setGlobalStatus("Sign in to submit daily news reports.");
+            return;
+          }
+          throw error;
+        }
+      }
+
+      function handleError(error) {
+        const message = error?.message || String(error);
+        setGlobalStatus(message, true);
+        setFormStatus(message, true);
+      }
+
+      field("menuBtn")?.addEventListener("click", () => {
+        setMenuOpen(!field("sideNav")?.classList.contains("open"));
+      });
+
+      field("navOverlay")?.addEventListener("click", () => {
+        setMenuOpen(false);
+      });
+
+      document.querySelectorAll(".side-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const targetView = normalizeLower(link.getAttribute("data-view-target"));
+          const pageTarget = normalizeStudentPage(link.getAttribute("data-page-target"));
+          event.preventDefault();
+          if (targetView === "news") {
+            setActiveStudentView("news");
+          } else {
+            setActiveStudentPage(pageTarget);
+          }
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setMenuOpen(false);
+        });
+      });
+
+      field("loginForm")?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setGlobalStatus("Signing in...");
+        try {
+          await login();
+          await boot();
+        } catch (error) {
+          handleError(error);
+        }
+      });
+
+      field("logoutBtn")?.addEventListener("click", async () => {
+        try {
+          await logout();
+          setAuthenticatedView(false);
+          setGlobalStatus("Logged out.");
+        } catch (error) {
+          handleError(error);
+        }
+      });
+
+      field("logoutBtnNews")?.addEventListener("click", async () => {
+        try {
+          await logout();
+          setAuthenticatedView(false);
+          setGlobalStatus("Logged out.");
+        } catch (error) {
+          handleError(error);
+        }
+      });
+
+      field("reloadBtn")?.addEventListener("click", () => {
+        Promise.all([loadDashboard(), loadCalendar()]).then(() => {
+          setFormStatus("Window refreshed.");
+          setGlobalStatus("Student dashboard refreshed.");
+        }).catch(handleError);
+      });
+
+      field("openNewsPageBtn")?.addEventListener("click", () => {
+        setActiveStudentView("news");
+      });
+
+      field("backToHomeBtn")?.addEventListener("click", () => {
+        setActiveStudentPage("home");
+      });
+
+      field("openPastDueHomeworkModalBtn")?.addEventListener("click", () => {
+        renderOverdueHomeworkTableRows(state.overdueHomeworkRows);
+        setPastDueHomeworkModalOpen(true);
+      });
+
+      field("closePastDueHomeworkModalBtn")?.addEventListener("click", () => {
+        setPastDueHomeworkModalOpen(false);
+      });
+
+      field("pastDueHomeworkModalBackdrop")?.addEventListener("click", () => {
+        setPastDueHomeworkModalOpen(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && state.pastDueModalOpen) {
+          setPastDueHomeworkModalOpen(false);
+        }
+      });
+
+      field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));
+      field("studentTextZoomUpBtn")?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP));
+      field("studentTextZoomResetBtn")?.addEventListener("click", () => applyPortalTextZoom(TEXT_ZOOM_DEFAULT));
+
+      applyPortalTextZoom(readStoredTextZoomPct());
+
+      field("submitBtn")?.addEventListener("click", () => {
+        submitReport().catch(handleError);
+      });
+
+      boot().catch(handleError);
+    })();
+  </script>
+</body>
+</html>

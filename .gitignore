@@ -35,6 +35,8 @@ tmp/
 docs/
 docs/**
 !docs/
+!docs/chips.md
+!docs/chips.xlsx
 !docs/sis-admin-wiring-map.ascii.txt
 !docs/mapping/
 !docs/mapping/**

@@ -6130,7 +6130,10 @@
         const status = normalizeNewsReviewStatusToken(item?.reviewStatus);
         if (status === "approved") return { label: "Approved", tone: "good" };
         if (status === "revision-requested") return { label: "Revise", tone: "revise" };
-        return { label: "Waiting", tone: "warn" };
+        if (status === "submitted" && item?.awaitingReReview === true)
+          return { label: "Waiting", tone: "revise" };
+        if (status === "submitted") return { label: "Submitted", tone: "warn" };
+        return { label: "-", tone: "neutral" };
       }
 
       function setNewsViewerStatusChip(item = {}) {

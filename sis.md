@@ -7,6 +7,58 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-04 - sync-safe modal chip gates + portal parity proof)
+
+- Requirement:
+  - stop post-sync live chip regressions by making modal chip contract and portal parity checks blocking at deploy time.
+  - keep chip semantics SSOT aligned in both [docs/chips.md](docs/chips.md) and [docs/chips.xlsx](docs/chips.xlsx).
+- Runtime/deploy changes:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - modal mapper `newsViewerItemStatusChipModel(...)` now enforces:
+      - `approved => Approved/good`
+      - `revision-requested => Revise/revise`
+      - `submitted + awaitingReReview=true => Waiting/revise`
+      - `submitted => Submitted/warn`
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - same modal mapper contract as student portal.
+  - [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh):
+    - added blocking post-sync gate `run_blocking_portal_contract_gates()` (runs after sync + restart, before route matrix checks).
+    - gate runs:
+      - `node --test test/portal-chip-contract.spec.mjs`
+      - `tools/verify-portal-sync-proof.sh` with source/runtime/public roots.
+  - [tools/verify-portal-sync-proof.sh](tools/verify-portal-sync-proof.sh):
+    - added reusable hash proof command for student/parent portals across source/runtime/public.
+  - [tools/sync-portal-bidirectional.sh](tools/sync-portal-bidirectional.sh):
+    - added explicit two-way portal mirror workflow:
+      - `--apply --dev-to-live` mirrors admin/parent/student portal html from dev to live+public.
+      - `--apply --live-to-dev` pulls live runtime portal html back into dev and re-mirrors public.
+      - `--check-only` prints parity hashes for dev/live/public and exits nonzero on drift.
+- Test + docs updates:
+  - [test/portal-chip-contract.spec.mjs](test/portal-chip-contract.spec.mjs):
+    - added deterministic modal chip contract assertions for student + parent mappers.
+  - [test/deploy-sync-contract.spec.mjs](test/deploy-sync-contract.spec.mjs):
+    - added deploy-script contract assertions for mandatory modal/parity gate execution order.
+  - [package.json](package.json):
+    - added `test:portal-chip-contract`, `sync:proof:portal`, and bidirectional portal sync scripts.
+  - [test/portal-bidirectional-sync.spec.mjs](test/portal-bidirectional-sync.spec.mjs):
+    - added static contract assertions for bidirectional sync flags, tracked file map, and npm script wiring.
+  - [docs/chips.md](docs/chips.md):
+    - added explicit SSOT parity note with `docs/chips.xlsx`.
+    - added modal contract matrix and blocking gate reference.
+  - [README.md](README.md):
+    - added deploy runbook blocking gates section, CI stage for modal chip contract, and bidirectional portal mirror commands.
+  - [.gitignore](.gitignore):
+    - unignored `docs/chips.md` and `docs/chips.xlsx` so both SSOT files can be versioned.
+- Verification:
+  - `bash -n tools/sync-portal-bidirectional.sh` => pass.
+  - `tools/sync-portal-bidirectional.sh --check-only` => pass (admin/parent/student dev/live/public hashes aligned).
+  - `npm run sync:portal:check` => pass.
+  - `node --test test/portal-bidirectional-sync.spec.mjs test/deploy-sync-contract.spec.mjs test/portal-chip-contract.spec.mjs` => `9` pass, `0` fail.
+  - `node --test test/portal-chip-contract.spec.mjs test/deploy-sync-contract.spec.mjs` => `6` pass, `0` fail.
+  - `npm test` => `327` pass, `0` fail, `4` skipped (Playwright browser executable not installed).
+  - `tools/deploy-api-safe.sh` => sync + restart + blocking gates + route matrices passed.
+  - `npm run sync:proof:portal` => pass (`source == runtime == public` for student and parent portals).
+
 ## Update (2026-04-02 - student compliance soft-save status realignment)
 
 - Requirement:

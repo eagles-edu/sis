@@ -67,6 +67,10 @@ Fixed paths:
   RUNTIME_ROOT=/home/admin.eagles.edu.vn/sis
   PUBLIC_ROOT=/home/admin.eagles.edu.vn/public_html
   SERVICE_NAME=exercise-mailer.service
+
+Blocking gates (non-optional after sync):
+  1) modal chip contract: node --test test/portal-chip-contract.spec.mjs
+  2) portal hash parity proof: tools/verify-portal-sync-proof.sh
 USAGE
 }
 
@@ -602,6 +606,32 @@ run_health_checks() {
   fi
 }
 
+run_blocking_portal_contract_gates() {
+  local portal_chip_test_path="${SOURCE_ROOT}/test/portal-chip-contract.spec.mjs"
+  local portal_sync_proof_path="${SOURCE_ROOT}/tools/verify-portal-sync-proof.sh"
+
+  if [[ ! -f "${portal_chip_test_path}" ]]; then
+    echo "Missing portal chip contract test: ${portal_chip_test_path}" >&2
+    exit 1
+  fi
+  if [[ ! -f "${portal_sync_proof_path}" ]]; then
+    echo "Missing portal sync proof script: ${portal_sync_proof_path}" >&2
+    exit 1
+  fi
+
+  echo "[gate] modal chip contract checks"
+  (
+    cd "${SOURCE_ROOT}"
+    node --test test/portal-chip-contract.spec.mjs
+  )
+
+  echo "[gate] post-sync portal hash parity proof"
+  bash "${portal_sync_proof_path}" \
+    --source-root "${SOURCE_ROOT}" \
+    --runtime-root "${RUNTIME_ROOT}" \
+    --public-root "${PUBLIC_ROOT}"
+}
+
 echo "[deploy-api-safe] source=${SOURCE_ROOT}"
 echo "[deploy-api-safe] runtime=${RUNTIME_ROOT}"
 echo "[deploy-api-safe] public_root=${PUBLIC_ROOT}"
@@ -628,6 +658,7 @@ fi
 
 perform_sync
 restart_if_requested
+run_blocking_portal_contract_gates
 run_health_checks
 
 echo "[ok] API deploy sync complete"
