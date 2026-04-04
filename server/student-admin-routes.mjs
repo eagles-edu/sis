@@ -177,6 +177,11 @@ const ADMIN_UI_SETTINGS_MAX_BYTES = Math.max(
   1024,
   Number.parseInt(String(process.env.STUDENT_ADMIN_UI_SETTINGS_MAX_BYTES || 1024 * 1024), 10) || 1024 * 1024
 )
+const PORTAL_NO_CACHE_HEADERS = Object.freeze({
+  "Cache-Control": "no-cache, no-store, must-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+})
 const ADMIN_PAGE_SECTION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PAGE_PATH)}/([a-z0-9-]+)$`)
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE = new RegExp(
   `^${escapeRegex(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)}/([a-f0-9]{24})$`
@@ -898,9 +903,10 @@ function sendJson(response, statusCode, payload) {
   response.end(`${JSON.stringify(payload)}\n`)
 }
 
-function sendHtml(response, statusCode, html) {
+function sendHtml(response, statusCode, html, headers = {}) {
   response.writeHead(statusCode, {
     "Content-Type": "text/html; charset=utf-8",
+    ...headers,
   })
   response.end(html)
 }
@@ -6316,7 +6322,7 @@ export async function handleStudentAdminRequest(request, response) {
       return true
     }
     const html = injectParentRuntimeConfig(fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8"), requestOrigin)
-    sendHtml(response, 200, html)
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }
 
@@ -6326,7 +6332,7 @@ export async function handleStudentAdminRequest(request, response) {
       return true
     }
     const html = injectStudentPortalRuntimeConfig(fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8"), requestOrigin)
-    sendHtml(response, 200, html)
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }
 

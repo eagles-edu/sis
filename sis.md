@@ -7,6 +7,206 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-04 - student resubmit gate: current-week only for existing non-approved rows)
+
+- Requirement:
+  - open-date should be irrelevant for existing rows; allow resubmission for existing non-approved reports through Saturday `23:59` (UTC+7).
+- Runtime behavior change:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - save gate for existing rows no longer keys edits to only `window.reportDate`.
+    - existing row edit is now allowed when:
+      - current local time is before Sunday `00:00` (UTC+7), covering Saturday `23:59`, and
+      - report date is within current local week before the Sunday boundary, and
+      - existing row status is not `approved`.
+    - existing rows at/after Sunday `00:00` cutoff remain locked (`403`) until next week.
+    - existing rows outside current week remain locked (`403`).
+    - existing approved rows remain locked (`403`).
+    - new-row creation rule is unchanged: still only allowed for current open report date.
+- Test updates:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - updated static contract assertion to enforce `before Sunday 00:00 cutoff AND current week AND not approved` edit gate.
+- Verification:
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => pass.
+
+## Update (2026-04-04 - markdown docs sync for queue-chip parity)
+
+- Requirement:
+  - keep Markdown docs synchronized with live student/parent queue chip behavior and compact queue layout.
+- Documentation changes:
+  - [docs/chips.md](docs/chips.md):
+    - clarified report-chip precedence ordering so approved rows are not shadowed by waiting fallback logic.
+    - retained queue-chip SSOT: `APPROVED` / `SUBMITTED` / `WAITING` / `REVISE` with waiting reserved for re-review only.
+  - [docs/news-report-update.md](docs/news-report-update.md):
+    - updated queue columns to compact parity set: `Week Set`, `#`, `Status`, `Latest Submission`, `Open`.
+    - updated student/parent queue status set to include `Submitted`.
+    - saved that point-in-time save contract snapshot (later superseded by the current-week-only rule in the update above).
+  - [sis.md](sis.md):
+    - this entry records the docs sync so current contract is explicit at top of file.
+- Current portal chip contract (authoritative):
+  - initial submission => `Submitted` (amber/warn).
+  - resubmission awaiting admin re-review (`awaitingReReview=true`) => `Waiting` (purple/revise).
+- Verification:
+  - docs-only change; no runtime code paths changed.
+  - baseline suite snapshot before this docs sync: `npm test` => `328` pass, `1` fail, `4` skipped (failing case still expects old parent queue label set).
+
+## Update (2026-04-04 - student news submit unblock: allow same-day resubmission on approved rows)
+
+- Requirement:
+  - address live student complaints that news submits were being rejected with `403` while portal sessions/calendar remained healthy.
+- Investigation findings:
+  - live Nginx access log on `2026-04-04` showed `POST /api/student/news-reports` spikes with `403` (`82` total) while adjacent `GET /api/student/news-reports/calendar` and `GET /api/student/dashboard` calls stayed `200`.
+  - this matched save-path policy lock behavior, not runtime outage.
+- Runtime behavior change:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - adjusted approved-row edit gate:
+      - before: any `reviewStatus=approved` row was hard-blocked (`403`).
+      - now: approved rows are editable only when `reportDate === window.reportDate` (current open date).
+      - historical approved rows remain locked (`403`), preserving historical integrity.
+    - this keeps same-day correction/resubmission possible when a student has an approved row for the current open date.
+- Test updates:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - updated static contract assertion to enforce `isOpenReportDate` gate for approved rows.
+- Verification:
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => pass (`12` pass, `0` fail).
+  - `node --test test/student-admin.spec.mjs` => pass (`116` pass, `0` fail).
+  - `node --test test/portal-chip-contract.spec.mjs` => pass (`4` pass, `0` fail).
+  - `tools/deploy-api-safe.sh` => pass (sync + restart + modal/parity gates + route matrix).
+  - runtime confirm: `/home/admin.eagles.edu.vn/sis/server/student-admin-store.mjs` contains `isOpenReportDate = reportDateText === window.reportDate`.
+
+## Update (2026-04-04 - parent/student portal no-cache headers)
+
+- Requirement:
+  - force parent and student portal HTML routes to always revalidate so synced updates are picked up immediately.
+  - apply header control at Nginx (primary) with app-level fallback.
+- Runtime behavior change:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - added route-level `PORTAL_NO_CACHE_HEADERS` for:
+      - `GET /parent/portal`
+      - `GET /student/portal`
+    - header set:
+      - `Cache-Control: no-cache, no-store, must-revalidate`
+      - `Pragma: no-cache`
+      - `Expires: 0`
+    - updated `sendHtml(...)` to accept optional extra headers, keeping existing admin page behavior unchanged.
+  - [deploy/nginx/admin.eagles.edu.vn.conf](deploy/nginx/admin.eagles.edu.vn.conf):
+    - for `location = /parent/portal` and `location = /student/portal`:
+      - hide upstream cache headers (`proxy_hide_header Cache-Control|Pragma|Expires`).
+      - set enforced headers:
+        - `Cache-Control: no-cache, no-store, must-revalidate`
+        - `Pragma: no-cache`
+        - `Expires: 0`
+  - [deploy/nginx/sis-reverse-proxy.conf](deploy/nginx/sis-reverse-proxy.conf):
+    - mirrored the same portal no-cache enforcement blocks as above.
+- Test updates:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - `GET /parent/portal` now asserts `cache-control` includes `no-cache` and `no-store`.
+    - `GET /student/portal` now asserts `cache-control` includes `no-cache` and `no-store`.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => pass (`116` pass, `0` fail).
+  - `node --test test/portal-chip-contract.spec.mjs` => pass (`4` pass, `0` fail).
+  - `sudo nginx -t` => syntax ok.
+  - `sudo systemctl reload nginx` => success.
+  - loopback host-header checks:
+    - `curl -k -sS -D - -o /dev/null https://127.0.0.1/student/portal -H 'Host: admin.eagles.edu.vn' -H 'User-Agent: ...'`
+    - `curl -k -sS -D - -o /dev/null https://127.0.0.1/parent/portal -H 'Host: admin.eagles.edu.vn' -H 'User-Agent: ...'`
+    - both return `200` with `cache-control: no-cache, no-store, must-revalidate`, `pragma: no-cache`, `expires: 0`.
+
+## Update (2026-04-04 - student/parent queue parity hardening: `#` column + compact fit)
+
+- Requirement:
+  - rename queue `Reports` column to `#`.
+  - fit queue columns to data and reduce wasted horizontal space.
+  - fix student/parent parity regressions by applying paired changes and adding parity contract tests.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - queue header now uses `#` (instead of `Reports`) in both queue tables.
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - queue contract aligned to student:
+      - headers: `Week Set`, `#`, `Status`, `Latest Submission`, `Open`.
+      - removed queue `Student` and `Level` columns.
+      - `colspan` updated from `7` to `5`.
+      - queue table set to `table-layout:auto` with tighter cell padding.
+      - queue status chips and open buttons compacted to fit content.
+      - latest-submission cell now uses compact two-line UTC+7 format via:
+        - `formatQueueDateTimeTz7(...)`
+        - `formatQueueLatestSubmissionHtml(...)`
+        - output: `dd/mm/yy` then `hh:mm:ss +7`.
+  - [docs/chips.md](docs/chips.md):
+    - `Surface Matrix` updated to the compact student/parent queue columns (`Week Set`, `#`, `Status`, `Latest Submission`, `Open`).
+- Test updates:
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - queue header expectation updated to `#`.
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - queue header expectation updated to compact 5-column parity.
+    - added latest-submission compact format assertion (`dd/mm/yy hh:mm:ss +7`) + compact datetime markup assertion.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - parent portal static contract now also asserts compact queue datetime helpers and compact queue CSS hooks.
+    - student portal static contract asserts `#` queue header.
+  - [test/portal-chip-contract.spec.mjs](test/portal-chip-contract.spec.mjs):
+    - added explicit student/parent queue parity tests for:
+      - compact queue header contract (`Week Set`, `#`, `Status`, `Latest Submission`, `Open`).
+      - compact chip/button + UTC+7 queue datetime helper presence.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => pass.
+  - `node --test test/parent-portal-ui.spec.mjs` => pass.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `0` pass, `0` fail, `3` skipped (Playwright browser executable not installed).
+  - `node --test test/portal-chip-contract.spec.mjs` => pass.
+  - `tools/sync-portal-bidirectional.sh --apply --dev-to-live` => pass.
+  - `npm run sync:proof:portal` => pass.
+  - `npm run sync:portal:check` => pass.
+
+## Update (2026-04-04 - student news queue compact spacing + compact timestamp layout)
+
+- Requirement:
+  - reduce queue button/chip footprint and column spacing so row width fits data with less wasted space.
+  - render `Latest Submission` as compact two-line UTC+7 format: `dd/mm/yy` + `hh:mm:ss +7`.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - queue-only compact layout updates:
+      - `news-queue-table` switched to auto table layout.
+      - tighter queue cell padding (`4px 6px`) and no-wrap alignment for reports/status/open columns.
+      - status chip (`td:nth-child(3) .chip`) uses compact width/height settings (`min-inline-size: 0`, smaller height/padding/font).
+      - queue action button (`.queue-row-btn`) uses compact size (`min-height: 28px`, tighter padding/font).
+    - added compact queue timestamp render helpers:
+      - `formatQueueDateTimeTz7(...)`
+      - `formatQueueLatestSubmissionHtml(...)`
+    - `Latest Submission` queue cell now renders:
+      - date: `dd/mm/yy`
+      - line break
+      - time: `hh:mm:ss +7`
+      via `.queue-compact-datetime` markup.
+- Test updates:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added static contract assertions for compact timestamp helpers and queue compact CSS rules.
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - added queue assertion for compact latest-submission text pattern (`dd/mm/yy hh:mm:ss +7`) and compact markup class presence.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => pass.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `0` pass, `0` fail, `3` skipped (Playwright browser executable not installed).
+  - `node --test test/portal-chip-contract.spec.mjs` => pass.
+  - `tools/sync-portal-bidirectional.sh --apply --dev-to-live` => pass.
+  - `npm run sync:proof:portal` => pass.
+
+## Update (2026-04-04 - student portal queue compact columns for dashboard space)
+
+- Requirement:
+  - remove `Student` and `Level` columns from student portal news queue tables to free horizontal space.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - removed `Student` and `Level` headers from both queue tables (`newsQueueBody`, `newsPageQueueBody`).
+    - updated queue row renderer to output 5 columns: `Week Set`, `Reports`, `Status`, `Latest Submission`, `Open`.
+    - updated empty/loading row `colspan` from `7` to `5`.
+    - adjusted responsive `nth-child(...)` rules to match the 5-column layout.
+- Test updates:
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - queue header expectation now matches compact 5-column layout.
+- Verification:
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => `0` pass, `0` fail, `3` skipped (Playwright browser executable not installed).
+  - `node --test test/portal-chip-contract.spec.mjs` => `2` pass, `0` fail.
+  - `tools/sync-portal-bidirectional.sh --apply --dev-to-live` => student portal synced to live/public.
+  - `npm run sync:proof:portal` => pass.
+  - `npm run sync:portal:check` => pass.
+
 ## Update (2026-04-04 - sync-safe modal chip gates + portal parity proof)
 
 - Requirement:

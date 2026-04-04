@@ -699,6 +699,7 @@ test(
       const newsQueueState = await page.evaluate(() => {
         const body = globalThis.document.getElementById("newsQueueBody");
         const rows = Array.from(body?.querySelectorAll("tr") || []);
+        const firstLatestCell = rows[0]?.querySelector("td:nth-child(4)");
         const headers = Array.from(
           globalThis.document.querySelectorAll("#newsQueueCard thead th"),
         ).map((node) => (node.textContent || "").trim());
@@ -709,14 +710,14 @@ test(
           actionButtons: Array.from(
             body?.querySelectorAll("button[data-open-news-week-set]") || [],
           ).length,
+          latestSubmissionText: (firstLatestCell?.textContent || "").replace(/\s+/g, " ").trim(),
+          latestSubmissionHtml: firstLatestCell?.innerHTML || "",
         };
       });
 
       assert.deepEqual(newsQueueState.headers, [
         "Week Set",
-        "Student",
-        "Level",
-        "Reports",
+        "#",
         "Status",
         "Latest Submission",
         "Open",
@@ -725,6 +726,8 @@ test(
       assert.equal(newsQueueState.text.includes("Loading"), false);
       assert.ok(newsQueueState.rowCount >= 1);
       assert.ok(newsQueueState.actionButtons >= 1);
+      assert.match(newsQueueState.latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/);
+      assert.match(newsQueueState.latestSubmissionHtml, /queue-compact-datetime/);
       assert.match(newsQueueState.text, /Revise/i);
       assert.match(newsQueueState.text, /Waiting/i);
       assert.equal(/Needs Revision/i.test(newsQueueState.text), false);

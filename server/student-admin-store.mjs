@@ -5781,8 +5781,23 @@ export async function saveStudentNewsReport(
     assertWithStatus(reportDateText === window.reportDate, 403, "News report for this date is locked")
   }
 
-  if (existing && normalizeStudentNewsReviewStatus(existing.reviewStatus) === STUDENT_NEWS_REVIEW_STATUS_APPROVED) {
-    assertWithStatus(false, 403, "Approved news reports cannot be edited")
+  if (existing) {
+    const existingStatus = normalizeStudentNewsReviewStatus(
+      existing.reviewStatus,
+      STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+    )
+    const nowDate = parseDateOrNull(now) || new Date()
+    const currentWeekStart = startOfWeek(nowDate)
+    const weeklyResubmitCutoff = new Date(currentWeekStart.getTime() + (ONE_DAY_MS * 6))
+    const isBeforeWeeklyResubmitCutoff = nowDate < weeklyResubmitCutoff
+    const isCurrentWeekReportDate = reportDate >= currentWeekStart && reportDate < weeklyResubmitCutoff
+    const isApproved = existingStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED
+    assertWithStatus(
+      isBeforeWeeklyResubmitCutoff && isCurrentWeekReportDate,
+      403,
+      "News report for this date is locked"
+    )
+    assertWithStatus(!isApproved, 403, "Approved news reports cannot be edited")
   }
 
   const compliance = await evaluateStudentNewsCompliance({

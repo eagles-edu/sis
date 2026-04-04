@@ -1396,30 +1396,72 @@
         white-space: nowrap;
       }
 
+      .queue-table-wrap table.news-queue-table {
+        table-layout: auto;
+      }
+
+      .queue-table-wrap table.news-queue-table th,
+      .queue-table-wrap table.news-queue-table td {
+        padding: 4px 6px;
+      }
+
+      .queue-table-wrap table.news-queue-table th:nth-child(2),
+      .queue-table-wrap table.news-queue-table td:nth-child(2),
+      .queue-table-wrap table.news-queue-table th:nth-child(3),
+      .queue-table-wrap table.news-queue-table td:nth-child(3),
+      .queue-table-wrap table.news-queue-table th:nth-child(5),
+      .queue-table-wrap table.news-queue-table td:nth-child(5) {
+        white-space: nowrap;
+      }
+
+      .queue-table-wrap table.news-queue-table td:nth-child(3) .chip {
+        --chip-height: 24px;
+        --chip-min-ar: 0;
+        min-inline-size: 0;
+        padding: 0 8px;
+        border-width: 1px;
+        border-bottom-width: 2px;
+        font-size: 11px;
+      }
+
+      .queue-table-wrap table.news-queue-table .queue-row-btn {
+        min-height: 28px;
+        padding: 3px 8px;
+        font-size: 11px;
+        line-height: 1.1;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .queue-compact-datetime {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+        line-height: 1.1;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .queue-compact-datetime-date {
+        font-weight: 700;
+      }
+
+      .queue-compact-datetime-time {
+        font-size: 11px;
+        color: var(--ink-soft);
+      }
+
       @media (max-width: 920px) {
-        .queue-table-wrap table.news-queue-table th:nth-child(6),
-        .queue-table-wrap table.news-queue-table td:nth-child(6) {
-          display: none;
-        }
-      }
-
-      @media (max-width: 780px) {
-        .queue-table-wrap table.news-queue-table th:nth-child(3),
-        .queue-table-wrap table.news-queue-table td:nth-child(3) {
-          display: none;
-        }
-      }
-
-      @media (max-width: 700px) {
-        .queue-table-wrap table.news-queue-table th:nth-child(2),
-        .queue-table-wrap table.news-queue-table td:nth-child(2) {
+        .queue-table-wrap table.news-queue-table th:nth-child(4),
+        .queue-table-wrap table.news-queue-table td:nth-child(4) {
           display: none;
         }
       }
 
       @media (max-width: 620px) {
-        .queue-table-wrap table.news-queue-table th:nth-child(4),
-        .queue-table-wrap table.news-queue-table td:nth-child(4) {
+        .queue-table-wrap table.news-queue-table th:nth-child(2),
+        .queue-table-wrap table.news-queue-table td:nth-child(2) {
           display: none;
         }
       }
@@ -1438,9 +1480,7 @@
         .queue-table-wrap table.news-queue-table th:nth-child(3),
         .queue-table-wrap table.news-queue-table td:nth-child(3),
         .queue-table-wrap table.news-queue-table th:nth-child(4),
-        .queue-table-wrap table.news-queue-table td:nth-child(4),
-        .queue-table-wrap table.news-queue-table th:nth-child(6),
-        .queue-table-wrap table.news-queue-table td:nth-child(6) {
+        .queue-table-wrap table.news-queue-table td:nth-child(4) {
           display: none;
         }
 
@@ -1472,7 +1512,7 @@
           font-weight: 700;
         }
 
-        .queue-table-wrap table.news-queue-table tbody td:nth-child(7) .queue-row-btn {
+        .queue-table-wrap table.news-queue-table tbody td:nth-child(5) .queue-row-btn {
           width: 100%;
           box-sizing: border-box;
         }
@@ -2641,9 +2681,7 @@
                       <thead>
                         <tr>
                           <th scope="col">Week Set</th>
-                          <th scope="col">Student</th>
-                          <th scope="col">Level</th>
-                          <th scope="col">Reports</th>
+                          <th scope="col">#</th>
                           <th scope="col">Status</th>
                           <th scope="col">Latest Submission</th>
                           <th scope="col">Open</th>
@@ -2651,7 +2689,7 @@
                       </thead>
                       <tbody id="newsQueueBody">
                         <tr>
-                          <td colspan="7">Đang tải...</td>
+                          <td colspan="5">Đang tải...</td>
                         </tr>
                       </tbody>
                     </table>
@@ -3047,9 +3085,7 @@
                   <thead>
                     <tr>
                       <th scope="col">Week Set</th>
-                      <th scope="col">Student</th>
-                      <th scope="col">Level</th>
-                      <th scope="col">Reports</th>
+                      <th scope="col">#</th>
                       <th scope="col">Status</th>
                       <th scope="col">Latest Submission</th>
                       <th scope="col">Open</th>
@@ -3057,7 +3093,7 @@
                   </thead>
                   <tbody id="portalDetailQueueBody">
                     <tr>
-                      <td colspan="7">Chưa có báo cáo tin tức.</td>
+                      <td colspan="5">Chưa có báo cáo tin tức.</td>
                     </tr>
                   </tbody>
                 </table>
@@ -5656,6 +5692,42 @@
         }).format(date);
       }
 
+      function formatQueueDateTimeTz7(value) {
+        const raw = normalizeText(value);
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+          ? new Date(`${raw}T00:00:00+07:00`)
+          : (raw ? new Date(raw) : null);
+        if (!date || Number.isNaN(date.getTime())) return null;
+        const parts = new Intl.DateTimeFormat("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+          timeZone: PORTAL_TIME_ZONE,
+        }).formatToParts(date);
+        const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+        const day = pick("day");
+        const month = pick("month");
+        const year = pick("year");
+        const hour = pick("hour");
+        const minute = pick("minute");
+        const second = pick("second");
+        if (!day || !month || !year || !hour || !minute || !second) return null;
+        return {
+          dateLabel: `${day}/${month}/${year}`,
+          timeLabel: `${hour}:${minute}:${second} +7`,
+        };
+      }
+
+      function formatQueueLatestSubmissionHtml(submittedAt, reportDate) {
+        const compact = formatQueueDateTimeTz7(submittedAt || reportDate);
+        if (!compact) return "-";
+        return `<span class="queue-compact-datetime"><span class="queue-compact-datetime-date">${escapeHtml(compact.dateLabel)}</span><span class="queue-compact-datetime-time">${escapeHtml(compact.timeLabel)}</span></span>`;
+      }
+
       function formatPortalWeekdayDateTime(value) {
         const raw = normalizeText(value);
         if (!raw) return "Time unavailable";
@@ -5989,7 +6061,8 @@
             weekEnd: isoWeekEndFromStart(weekStart),
             reports: [],
             approvedCount: 0,
-            waitingCount: 0,
+            submittedCount: 0,
+            awaitingReReviewCount: 0,
             revisionRequestedCount: 0,
             latestSubmittedAt: "",
             latestReportDate: "",
@@ -6001,7 +6074,8 @@
           if (report.reviewStatus === "approved") existing.approvedCount += 1;
           else if (report.reviewStatus === "revision-requested")
             existing.revisionRequestedCount += 1;
-          else existing.waitingCount += 1;
+          else if (report.awaitingReReview === true) existing.awaitingReReviewCount += 1;
+          else existing.submittedCount += 1;
           const candidateKey =
             normalizeText(report.submittedAt) || normalizeText(report.reportDate);
           const latestKey =
@@ -6024,7 +6098,8 @@
               reports,
               reportCount: Math.max(entry._reportDates?.size || 0, reports.length),
               approvedCount: entry.approvedCount,
-              waitingCount: entry.waitingCount,
+              submittedCount: entry.submittedCount,
+              awaitingReReviewCount: entry.awaitingReReviewCount,
               revisionRequestedCount: entry.revisionRequestedCount,
               latestSubmittedAt:
                 normalizeText(entry.latestSubmittedAt) ||
@@ -6053,6 +6128,21 @@
           0,
           Number.parseInt(String(weekSet?.approvedCount || 0), 10) || 0,
         );
+        const submittedCount = Math.max(
+          0,
+          Number.parseInt(String(weekSet?.submittedCount || 0), 10) || 0,
+        );
+        const awaitingReReviewCount = Math.max(
+          0,
+          Number.parseInt(
+            String(
+              weekSet?.awaitingReReviewCount ||
+              weekSet?.waitingCount ||
+              0,
+            ),
+            10,
+          ) || 0,
+        );
         const revisionRequestedCount = Math.max(
           0,
           Number.parseInt(String(weekSet?.revisionRequestedCount || 0), 10) || 0,
@@ -6063,13 +6153,17 @@
         );
         if (reportCount >= 7 && approvedCount >= 7) return "approved";
         if (revisionRequestedCount > 0) return "revise";
-        return "waiting";
+        if (awaitingReReviewCount > 0) return "waiting";
+        if (submittedCount > 0) return "submitted";
+        return "submitted";
       }
 
       function newsWeekSetStatusLabel(token = "") {
         const normalized = normalizeText(token).toLowerCase();
         if (normalized === "approved") return "Approved";
         if (normalized === "revise") return "Revise";
+        if (normalized === "waiting") return "Waiting";
+        if (normalized === "submitted") return "Submitted";
         return "Waiting";
       }
 
@@ -6077,7 +6171,7 @@
         const normalized = normalizeText(token).toLowerCase();
         const tone =
           normalized === "approved" ? "good"
-          : normalized === "revise" ? "revise"
+          : normalized === "revise" || normalized === "waiting" ? "revise"
           : "warn";
         const span = document.createElement("span");
         span.className = "chip " + chipClassForTone(tone);
@@ -6088,6 +6182,7 @@
       function summarizeNewsWeekSetStatuses(weekSets = []) {
         const summary = {
           approved: 0,
+          submitted: 0,
           waiting: 0,
           revise: 0,
         };
@@ -6095,7 +6190,8 @@
           const token = newsWeekSetStatusToken(entry);
           if (token === "approved") summary.approved += 1;
           else if (token === "revise") summary.revise += 1;
-          else summary.waiting += 1;
+          else if (token === "waiting") summary.waiting += 1;
+          else summary.submitted += 1;
         });
         return summary;
       }
@@ -6301,13 +6397,9 @@
         if (!body) return;
         const source = Array.isArray(items) ? items : [];
         if (!source.length) {
-          body.innerHTML = '<tr><td colspan="7">Chưa có báo cáo tin tức.</td></tr>';
+          body.innerHTML = '<tr><td colspan="5">Chưa có báo cáo tin tức.</td></tr>';
           return;
         }
-        const child = selectedDashboardChild() || {};
-        const studentLabel =
-          normalizeText(child?.fullName || child?.englishName || child?.eaglesId) || "-";
-        const levelLabel = normalizeText(child?.currentGrade) || "-";
         body.innerHTML = source.map((item) => {
           const weekSetId = escapeHtml(normalizeText(item?.id));
           const statusToken = newsWeekSetStatusToken(item);
@@ -6316,12 +6408,8 @@
             Number.parseInt(String(item?.reportCount || 0), 10) || 0,
           );
           const latestDate = normalizeText(item?.latestReportDate || item?.reports?.[0]?.reportDate);
-          const latestSubmittedAt = normalizeText(item?.latestSubmittedAt);
-          const latestLabel = latestSubmittedAt ?
-            formatPortalDateTime(latestSubmittedAt)
-          : latestDate ? formatPortalDate(latestDate)
-          : "-";
-          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalDate(item?.weekStart))} to ${escapeHtml(formatPortalDate(item?.weekEnd))}</td>\n            <td>${escapeHtml(studentLabel)}</td>\n            <td>${escapeHtml(levelLabel)}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${escapeHtml(latestLabel)}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
+          const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalDate(item?.weekStart))} to ${escapeHtml(formatPortalDate(item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
         }).join("");
       }
 
@@ -7286,14 +7374,15 @@
         const total = items.length;
         const badgeTone =
           summary.revise > 0 ? "chip-bad"
-          : summary.waiting > 0 ? "chip-warn"
+          : summary.waiting > 0 ? "chip-revise"
+          : summary.submitted > 0 ? "chip-warn"
           : summary.approved > 0 ? "chip-ok"
           : "chip-neutral";
         badgeEl.className = `chip ${badgeTone}`;
-        badgeEl.textContent = total ? `${summary.approved}/${summary.waiting}/${summary.revise}` : "Không có";
+        badgeEl.textContent = total ? `${summary.approved}/${summary.submitted}/${summary.waiting}/${summary.revise}` : "Không có";
         const summaryText =
           total ?
-            `Approved ${summary.approved} • Waiting ${summary.waiting} • Revise ${summary.revise}`
+            `Approved ${summary.approved} • Submitted ${summary.submitted} • Waiting ${summary.waiting} • Revise ${summary.revise}`
           : "Chưa có báo cáo tin tức.";
         summaryEl.textContent = summaryText;
         renderNewsQueueTable("newsQueueBody", items);

@@ -50,3 +50,35 @@ test("parent modal chip mapper follows chips.md contract", () => {
   assert.match(chunk, /if \(status === "submitted"\) return \{ label: "Submitted", tone: "warn" \};/)
   assert.doesNotMatch(chunk, /return \{ label: "Waiting", tone: "warn" \};/)
 })
+
+test("student and parent queue headers follow compact parity contract", () => {
+  const studentHtml = readPortal("web-asset/student/student-portal.html")
+  const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+
+  const studentQueueTable = extractChunk(studentHtml, '<table class="news-queue-table">', "</table>")
+  const parentQueueTable = extractChunk(parentHtml, '<table class="news-queue-table">', "</table>")
+
+  for (const queueTable of [studentQueueTable, parentQueueTable]) {
+    assert.match(
+      queueTable,
+      /<th scope="col">Week Set<\/th>[\s\S]*?<th scope="col">#<\/th>[\s\S]*?<th scope="col">Status<\/th>[\s\S]*?<th scope="col">Latest Submission<\/th>[\s\S]*?<th scope="col">Open<\/th>/,
+    )
+    assert.doesNotMatch(queueTable, /<th scope="col">Student<\/th>/)
+    assert.doesNotMatch(queueTable, /<th scope="col">Level<\/th>/)
+    assert.doesNotMatch(queueTable, /<th scope="col">Reports<\/th>/)
+  }
+})
+
+test("student and parent queue compact chip/button and datetime helpers stay aligned", () => {
+  const studentHtml = readPortal("web-asset/student/student-portal.html")
+  const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+
+  for (const html of [studentHtml, parentHtml]) {
+    assert.match(html, /function formatQueueDateTimeTz7\(/)
+    assert.match(html, /function formatQueueLatestSubmissionHtml\(/)
+    assert.match(html, /queue-compact-datetime/)
+    assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+7/)
+    assert.match(html, /table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i)
+    assert.match(html, /table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i)
+  }
+})

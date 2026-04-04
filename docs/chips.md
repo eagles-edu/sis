@@ -21,8 +21,8 @@
 1. `REVISE` when `reviewStatus=revision-requested`.
 2. `OPEN` when date is open and no submission.
 3. `NONE SUBMITTED` when date is missed/no submission.
-4. `WAITING` when `reviewStatus=submitted` and `awaitingReReview=true`.
-5. `APPROVED` when `reviewStatus=approved`.
+4. `APPROVED` when `reviewStatus=approved`.
+5. `WAITING` when `reviewStatus=submitted` and `awaitingReReview=true`.
 6. Otherwise `SUBMITTED`.
 
 ## Week `Status` (condition)
@@ -38,13 +38,15 @@
 - Queue source is submitted `items` payload only (`listStudentNewsCalendar(...).items`), not full calendar rows.
 - `APPROVED`: `reportCount>=7` and `approvedCount>=7`.
 - `REVISE`: `revisionRequestedCount>0`.
-- `WAITING`: all remaining student/parent week sets with submitted items.
-- Student/parent week-set queue chips must only render `APPROVED`, `WAITING`, `REVISE`.
+- `WAITING`: `awaitingReReviewCount>0` and no revise entries in that week set.
+- `SUBMITTED`: all remaining non-approved, non-revise week sets with initial submissions.
+- Student/parent week-set queue chips must only render `APPROVED`, `SUBMITTED`, `WAITING`, `REVISE`.
 - Compliance failures during student re-submit do not auto-set `revision-requested`; they remain `WAITING` until admin review action.
 
 ### Waiting precedence note
 
-- `WAITING` covers all non-approved, non-revise submitted week sets in student/parent queues.
+- `WAITING` is reserved for re-review wait (`submitted + awaitingReReview=true`), not initial submit.
+- Initial submit must be rendered as `SUBMITTED` (amber/warn), never `WAITING`.
 
 ## Week `Action` (admin workflow)
 
@@ -55,7 +57,7 @@
 ## Surface Matrix
 
 - Admin queue surfaces: `Status` + `Action`.
-- Student and parent queue/set surfaces: admin-style columns minus `Action` (`Week Set`, `Student`, `Level`, `Reports`, `Status`, `Latest Submission`, `Open`) with week-set `Status` limited to `APPROVED`/`WAITING`/`REVISE`.
+- Student and parent queue/set surfaces: compact parity columns (`Week Set`, `#`, `Status`, `Latest Submission`, `Open`) with week-set `Status` limited to `APPROVED`/`SUBMITTED`/`WAITING`/`REVISE`.
 - Calendar event chips (student + parent): report-chip contract above.
 - Modal rows (all portals): report-chip contract above.
 

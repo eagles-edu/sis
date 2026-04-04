@@ -820,11 +820,12 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
     const headers = Array.from(document.querySelectorAll("#newsQueueCard thead th")).map((node) =>
       normalizeText(node.textContent)
     )
+    const firstLatestCell = document.querySelector("#newsQueueBody tr td:nth-child(4)")
+    const latestSubmissionText = normalizeText(firstLatestCell?.textContent)
+    const latestSubmissionHtml = normalizeText(firstLatestCell?.innerHTML)
     assert.deepEqual(headers, [
       "Week Set",
-      "Student",
-      "Level",
-      "Reports",
+      "#",
       "Status",
       "Latest Submission",
       "Open",
@@ -834,6 +835,8 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
     assert.match(queueText, /Revise/i)
     assert.doesNotMatch(queueText, /Submitted|None Submitted/i)
     assert.doesNotMatch(queueText, /Cần sửa/i)
+    assert.match(latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/)
+    assert.match(latestSubmissionHtml, /queue-compact-datetime/)
     const summaryText = normalizeText(document.getElementById("newsQueueSummary")?.textContent)
     assert.match(summaryText, /Approved\s+\d+\s+•\s+Waiting\s+\d+\s+•\s+Revise\s+\d+/i)
   })

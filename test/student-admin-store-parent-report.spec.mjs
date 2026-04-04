@@ -231,10 +231,17 @@ test("student news save/list paths keep model-drift fallback guards", () => {
   assert.match(source, /upsertStudentNewsReportInFallbackStore\(/)
 })
 
-test("student news save keeps open-date restriction for new rows and allows historical non-approved resubmits", () => {
+test("student news save keeps open-date restriction for new rows and allows non-approved resubmits through Saturday 23:59 (UTC+7)", () => {
   const source = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
   assert.match(source, /if \(!existing\) \{\s*assertWithStatus\(reportDateText === window\.reportDate, 403, "News report for this date is locked"\)\s*\}/s)
-  assert.match(source, /if \(existing && normalizeStudentNewsReviewStatus\(existing\.reviewStatus\) === STUDENT_NEWS_REVIEW_STATUS_APPROVED\) \{\s*assertWithStatus\(false, 403, "Approved news reports cannot be edited"\)\s*\}/s)
+  assert.match(source, /const nowDate = parseDateOrNull\(now\) \|\| new Date\(\)/)
+  assert.match(source, /const currentWeekStart = startOfWeek\(nowDate\)/)
+  assert.match(source, /const weeklyResubmitCutoff = new Date\(currentWeekStart\.getTime\(\) \+ \(ONE_DAY_MS \* 6\)\)/)
+  assert.match(source, /const isBeforeWeeklyResubmitCutoff = nowDate < weeklyResubmitCutoff/)
+  assert.match(source, /const isCurrentWeekReportDate = reportDate >= currentWeekStart && reportDate < weeklyResubmitCutoff/)
+  assert.match(source, /assertWithStatus\(\s*isBeforeWeeklyResubmitCutoff && isCurrentWeekReportDate,\s*403,\s*"News report for this date is locked"\s*\)/s)
+  assert.match(source, /const isApproved = existingStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED/)
+  assert.match(source, /assertWithStatus\(!isApproved, 403, "Approved news reports cannot be edited"\)/)
   assert.match(source, /const isResubmission = Boolean\(existing\)/)
   assert.match(source, /const reviewStatus = hasFailures && !isResubmission/)
   assert.match(source, /Status remains waiting for admin review\./)
