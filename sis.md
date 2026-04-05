@@ -7,6 +7,195 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-05 - parent news modal second-pass visual clone with no dead controls)
+
+- Requirement:
+  - make parent news week-set modal an exact visual clone of student modal spacing/controls.
+  - keep only working controls (no inert submit action on parent modal).
+- Runtime behavior change:
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - added student-clone, modal-scoped style contract under `#newsWeekSetModal` for:
+      - modal control button styling and spacing,
+      - input/textarea field chrome,
+      - modal body/action spacing,
+      - close-button styling parity with student modal.
+    - no new parent modal action buttons added.
+- Test updates:
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - added static contract test:
+      - parent modal keeps only wired controls (`prev`/`next`/`close`/`close-action`),
+      - parent modal has no `newsWeekSetModalSubmitBtn`,
+      - listener wiring for backdrop/close/prev/next remains present.
+- Verification:
+  - `node --test --test-name-pattern "parent news week-set modal keeps student-clone visuals with only wired controls|parent portal news queue chips use canonical Approved/Waiting/Revise labels|parent portal opens news detail directly from news queue when dashboard card is hidden" test/parent-portal-ui.spec.mjs` => pass (`3` pass, `0` fail).
+  - sync + parity:
+    - `npm run sync:portal:dev-to-live` => pass.
+    - `npm run sync:proof:portal` => pass.
+    - `npm run sync:portal:check` => pass.
+
+## Update (2026-04-05 - finalized UNAPPROVED-X contract + Playwright E2E execution)
+
+- Requirement:
+  - `UNAPPROVED-X` must count all yet-to-be-checked `submitted` rows:
+    - initial submissions,
+    - resubmissions (including awaiting re-review).
+  - `revision-requested` (returned for student revision) must not increase `UNAPPROVED-X`.
+- Runtime behavior change:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - `resolveNewsSetUnapprovedCount(...)` now uses `max(0, submittedCount)`.
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - `newsReviewWeekSetActionToken(...)` now uses `const unapproved = Math.max(0, submitted);`.
+  - [docs/chips.md](docs/chips.md):
+    - codified week-action rule:
+      - `unapprovedCount = max(0, submittedCount)`,
+      - `submittedCount` includes YTBC initial and YTBC resubmissions,
+      - `revision-requested` does not count toward `UNAPPROVED-X`.
+  - this supersedes older wording that subtracted awaiting re-review.
+- Test updates:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - static contract assertions now enforce `unapproved = submitted` semantics.
+  - Playwright E2E guard hardened to use installed system Chromium/Chrome when Playwright-managed browser cache is missing:
+    - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs)
+    - [test/portal-header-geometry.playwright.spec.mjs](test/portal-header-geometry.playwright.spec.mjs)
+- Verification:
+  - `node --test test/portal-header-geometry.playwright.spec.mjs` => pass (`1` pass, `0` fail, `0` skipped).
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` => pass (`3` pass, `0` fail, `0` skipped).
+  - `npm test` => pass (`342` pass, `0` fail, `0` skipped).
+- Coverage gaps:
+  - none for Playwright skip coverage in this environment (browser E2E now executes).
+
+## Update (2026-04-05 - chips contract wording hardened for admin action semantics)
+
+- Requirement:
+  - codify `INCOMPLETE` vs `UNAPPROVED-X` rules with zero ambiguity.
+- Documentation change:
+  - [docs/chips.md](docs/chips.md):
+    - removed ambiguous wording and stray text in report chip section.
+    - added strict derived counter and precedence rules for admin week-set `Action`:
+      - `uncheckedInitialCount = max(0, submittedCount - awaitingReReviewCount)`.
+      - `COMPLETED` > `INCOMPLETE` > `UNAPPROVED-X` mapping.
+      - explicit hard rule: never use `submittedCount + revisionRequestedCount` for `UNAPPROVED-X`.
+      - explicit note: `Status=WAITING` can still map to `Action=INCOMPLETE` when waiting is re-review only.
+- Runtime impact:
+  - no code-path change in this step; documentation contract only.
+
+## Update (2026-04-05 - i18n-safe parent portal assertions and green full test run)
+
+- Requirement:
+  - patch remaining locale-fragile assertions so full `npm test` is green.
+- Test behavior change:
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - made parent portal assertions bilingual (English/Vietnamese) for:
+      - current homework detail title,
+      - report modal meta date/day/time label,
+      - report modal section headings and acknowledgement status label.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - made `/parent/portal` HTML title assertion bilingual (`Parent Portal` or Vietnamese portal copy).
+- Verification:
+  - `node --test test/parent-portal-ui.spec.mjs` targeted failing paths => pass.
+  - `node --test test/student-admin.spec.mjs` => pass (`117` pass, `0` fail).
+  - `npm test` => pass (`338` pass, `0` fail, `4` skipped).
+- Coverage gaps:
+  - Playwright-dependent tests remain skipped in this environment (`4` skipped).
+
+## Update (2026-04-05 - admin news queue action chip counts unchecked initial submissions only)
+
+- Requirement:
+  - fix admin news-review queue rows that displayed `Unapproved-X` when no initial submissions were waiting for first review (for example, week sets in `Waiting` due to revision loops).
+  - move queue table column order so `Action` appears before `Status`.
+- Runtime behavior change:
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - `newsReviewWeekSetActionToken(...)` now computes `UNAPPROVED-X` from unchecked initial submissions only: `max(0, submittedCount - awaitingReReviewCount)`.
+    - week sets with only `revision-requested` items or only awaiting re-review now resolve to `INCOMPLETE` when not `COMPLETED`.
+    - admin news-review queue table column order changed to `Action` then `Status`.
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - queue-hub/news set action helper now uses the same unchecked-initial formula (`submitted - awaitingReReview`) so server payload chips stay aligned with admin UI behavior.
+- Test updates:
+  - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+    - updated mixed-status week expectation from `Unapproved-7` to `Unapproved-6`.
+    - updated incomplete-week scenario to `revision-requested` rows and assert `Waiting + Incomplete` with summary `incomplete=1` and `unapproved=0`.
+    - updated sort-column index assertions for `Action` before `Status`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added static contract assertions for unchecked-initial action formula in admin UI and server route helpers.
+    - added static contract assertions for `Action` header/cell appearing before `Status`.
+- Verification:
+  - `node --test --test-name-pattern "news review modal supports student-scoped navigation and modal review actions|news review queue includes incomplete student week sets and marks status|news review week-set table headers sort all visible columns" test/student-admin-ui.spec.mjs` => pass (`3` pass, `0` fail; `46` skipped by pattern).
+  - `node --test --test-name-pattern "queue hub source contract includes student-week news-set panel|news review status/action rules and revise chip label keep locked admin ui rules" test/student-admin.spec.mjs` => pass (`2` pass, `0` fail; `115` skipped by pattern).
+  - `node --test test/mission-critical-endpoints.spec.mjs` => pass (`8` pass, `0` fail).
+- Coverage gaps:
+  - no browser E2E run in this environment because Playwright browser binaries are not installed.
+
+## Update (2026-04-05 - student news submit unblock in week-set modal for same-day approved rows)
+
+- Requirement:
+  - fix student complaints that news submission remained blocked from the week-set modal even when same-day approved-row resubmission should be allowed.
+- Runtime behavior change:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - updated `submitNewsWeekSetModalCurrentItem()` guard logic:
+      - before: any `reviewStatus === "approved"` row was blocked client-side.
+      - now: approved rows are blocked only when `reportDate !== state.window.reportDate`.
+      - same-day approved row edits now pass through to backend policy checks.
+- Test updates:
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added static contract test `student week-set modal submit guard allows approved rows on the current open date only`.
+- Verification:
+  - `node --test --test-name-pattern "student week-set modal submit guard allows approved rows on the current open date only" test/student-admin.spec.mjs` => pass (`1` pass, `0` fail; `116` skipped by pattern).
+- Coverage gaps:
+  - no non-skipped browser integration test currently asserts end-to-end modal resubmit for approved same-day rows in this environment (Playwright binary not installed).
+- Prioritized next actions:
+  - add/enable browser-level regression for modal submit on approved same-day week-set item once Playwright runtime is available.
+
+## Update (2026-04-05 - mission-critical endpoint action regression suite)
+
+- Requirement:
+  - harden regression coverage after repeated student submission complaints by exercising all mission-critical user input/action endpoints through real HTTP handlers.
+- Test updates:
+  - added [test/mission-critical-endpoints.spec.mjs](test/mission-critical-endpoints.spec.mjs).
+  - suite coverage includes:
+    - public submit endpoints (`POST /api/exercise-submission`, `POST /api/student-intake-submission`);
+    - unauthenticated rejection (`401`) across protected write endpoints (admin, parent, student);
+    - teacher forbidden enforcement (`403`) for admin-only mutation endpoints;
+    - teacher-allowed mutation path reachability (expected `200` or store-disabled `503`);
+    - student/parent mission-critical submit paths (`POST /api/student/news-reports`, `PUT /api/parent/children/:eaglesId/profile-draft`, `POST /api/parent/children/:eaglesId/profile-submit`).
+- Verification:
+  - `node --test test/mission-critical-endpoints.spec.mjs` => pass (`8` pass, `0` fail).
+  - `npm test` => fail (`334` pass, `3` fail, `4` skipped).
+  - failing tests remain the pre-existing i18n-copy assertions:
+    - `test/parent-portal-ui.spec.mjs` (`Current Homework` vs Vietnamese copy),
+    - `test/parent-portal-ui.spec.mjs` (`Date|Day|Time` vs Vietnamese copy),
+    - `test/student-admin.spec.mjs` (`Parent Portal` text expectation).
+- Coverage gaps:
+  - DB-enabled happy-path integration for student news save/review remains limited because default suite runs with `STUDENT_ADMIN_STORE_ENABLED=false`.
+  - parent linked-child profile-draft/profile-submit happy paths remain DB-dependent and are not covered in this no-DB regression suite.
+- Prioritized next actions:
+  - add DB-backed integration coverage for `POST /api/student/news-reports` success + review transitions.
+  - add DB-backed parent linked-child draft/submit happy-path coverage.
+  - stabilize i18n assertions to match current Vietnamese portal copy so full `npm test` can go green.
+
+## Update (2026-04-04 - admin news review approve/revise 503 fallback hardening)
+
+- Requirement:
+  - fix live admin review actions that failed with `503 Service Unavailable` on `POST /api/admin/news-reports/:id` during approve/revise actions.
+  - incident evidence: [docs/admin.eagles.edu.vn-1775310959756HELP.log](docs/admin.eagles.edu.vn-1775310959756HELP.log) (multiple `503` responses at `20:55:34` to `20:55:43`).
+- Runtime behavior change:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - `reviewStudentNewsReport(...)` now falls back to `runtime-data/student-news-reports.json` persistence when Prisma review columns/delegate paths are unavailable at runtime (schema drift mode), instead of hard-failing with `503`.
+    - fallback review writes now preserve explicit report id (`payload.id`) so admin action targets stay stable.
+    - `listStudentNewsReportsForReview(...)` now overlays fallback review fields (status/note/review metadata) onto DB rows when only review columns are drifted, allowing approved/revise state to remain visible after action.
+- Test updates:
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - expanded static contract checks for review fallback overlay/index path and fallback write path in `reviewStudentNewsReport`.
+- Verification:
+  - baseline before edits: `npm test` => fail (`326` pass, `3` fail, `4` skipped; existing i18n-copy assertion failures unrelated to this fix).
+  - full suite after patch: `npm test` => fail (`326` pass, `3` fail, `4` skipped; unchanged from baseline).
+  - `node --test test/student-admin-store-parent-report.spec.mjs` => pass (`12` pass, `0` fail).
+  - `node --test test/student-admin-ui.spec.mjs` => pass (`49` pass, `0` fail).
+- Coverage gaps:
+  - no dedicated integration test yet that simulates Prisma review-column drift and asserts `POST /api/admin/news-reports/:id` returns `200` with fallback persistence.
+- Prioritized next actions:
+  - add a targeted integration test for the schema-drift review-action fallback path.
+  - stabilize unrelated i18n text assertions in `parent-portal-ui` and `student-admin` suites so full `npm test` baseline is green.
+
 ## Update (2026-04-04 - student resubmit gate: current-week only for existing non-approved rows)
 
 - Requirement:
@@ -16,7 +205,7 @@
     - save gate for existing rows no longer keys edits to only `window.reportDate`.
     - existing row edit is now allowed when:
       - current local time is before Sunday `00:00` (UTC+7), covering Saturday `23:59`, and
-      - report date is within current local week before the Sunday boundary, and
+      - report date is within current local week window (`Sun 00:00` to `Sat 23:59:59`, UTC+7), and
       - existing row status is not `approved`.
     - existing rows at/after Sunday `00:00` cutoff remain locked (`403`) until next week.
     - existing rows outside current week remain locked (`403`).
@@ -24,7 +213,7 @@
     - new-row creation rule is unchanged: still only allowed for current open report date.
 - Test updates:
   - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
-    - updated static contract assertion to enforce `before Sunday 00:00 cutoff AND current week AND not approved` edit gate.
+    - updated static contract assertion to enforce `before Sunday 00:00 cutoff AND Sun-Sat current week AND not approved` edit gate.
 - Verification:
   - `node --test test/student-admin-store-parent-report.spec.mjs` => pass.
 

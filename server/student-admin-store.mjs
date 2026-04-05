@@ -210,6 +210,15 @@ function startOfWeek(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+function startOfWeekSunday(value = new Date()) {
+  const date = startOfDay(value)
+  const shifted = shiftToFixedTimeZone(date)
+  const day = shifted.getUTCDay()
+  shifted.setUTCDate(shifted.getUTCDate() - day)
+  shifted.setUTCHours(0, 0, 0, 0)
+  return shiftFromFixedTimeZone(shifted)
+}
+
 function endOfWeek(value = new Date()) {
   const date = startOfWeek(value)
   return new Date(date.getTime() + (ONE_DAY_MS * 7) - 1)
@@ -5009,7 +5018,7 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
   const normalized = normalizeStudentNewsFallbackEntry({
     ...(existing || {}),
     ...payload,
-    id: normalizeText(existing?.id) || createStudentNewsFallbackId(),
+    id: normalizeText(existing?.id || payload?.id) || createStudentNewsFallbackId(),
     studentRefId: id,
     reportDate: dateKey,
     createdAt: normalizeText(existing?.createdAt) || now,
@@ -5025,6 +5034,39 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
   else source.push(normalized)
   writeStudentNewsFallbackEntries(source)
   return normalized
+}
+
+function buildStudentNewsFallbackOverlayIndex(entries = []) {
+  const byId = new Map()
+  const byStudentDate = new Map()
+  ;(Array.isArray(entries) ? entries : []).forEach((entry) => {
+    const normalized = normalizeStudentNewsFallbackEntry(entry)
+    if (!normalized) return
+    const id = normalizeText(normalized?.id)
+    if (id) byId.set(id, normalized)
+    const studentRefId = normalizeText(normalized?.studentRefId)
+    const reportDateKey = normalizeText(normalized?.reportDate)
+    if (studentRefId && reportDateKey) {
+      byStudentDate.set(`${studentRefId}::${reportDateKey}`, normalized)
+    }
+  })
+  return {
+    byId,
+    byStudentDate,
+  }
+}
+
+function resolveStudentNewsFallbackReviewOverlay(row = {}, overlayIndex = null) {
+  const index = overlayIndex && typeof overlayIndex === "object" ? overlayIndex : null
+  if (!index) return null
+  const id = normalizeText(row?.id)
+  if (id && index.byId instanceof Map && index.byId.has(id)) {
+    return index.byId.get(id) || null
+  }
+  const studentRefId = normalizeText(row?.studentRefId)
+  const reportDateKey = normalizeText(toLocalIsoDate(row?.reportDate))
+  if (!studentRefId || !reportDateKey || !(index.byStudentDate instanceof Map)) return null
+  return index.byStudentDate.get(`${studentRefId}::${reportDateKey}`) || null
 }
 
 function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) {
@@ -5787,8 +5829,8 @@ export async function saveStudentNewsReport(
       STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
     )
     const nowDate = parseDateOrNull(now) || new Date()
-    const currentWeekStart = startOfWeek(nowDate)
-    const weeklyResubmitCutoff = new Date(currentWeekStart.getTime() + (ONE_DAY_MS * 6))
+    const currentWeekStart = startOfWeekSunday(nowDate)
+    const weeklyResubmitCutoff = new Date(currentWeekStart.getTime() + (ONE_DAY_MS * 7))
     const isBeforeWeeklyResubmitCutoff = nowDate < weeklyResubmitCutoff
     const isCurrentWeekReportDate = reportDate >= currentWeekStart && reportDate < weeklyResubmitCutoff
     const isApproved = existingStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED
@@ -6069,23 +6111,32 @@ export async function listStudentNewsReportsForReview({
       })
   }
 
+  const fallbackReviewOverlayIndex =
+    reviewSchemaUnavailable && !requiresFallback
+      ? buildStudentNewsFallbackOverlayIndex(readStudentNewsFallbackEntries())
+      : null
+
   const studentByRefId = await loadStudentNewsReviewStudentMap(
     prisma,
     reportRows.map((entry) => normalizeText(entry?.studentRefId))
   )
-  const mapped = reportRows.map((row) =>
-    mapStudentNewsReviewItem(row, {
+  const mapped = reportRows.map((row) => {
+    const reviewOverlay = resolveStudentNewsFallbackReviewOverlay(row, fallbackReviewOverlayIndex)
+    const mappedRow = reviewOverlay
+      ? {
+          ...row,
+          reviewStatus: reviewOverlay.reviewStatus,
+          reviewNote: reviewOverlay.reviewNote,
+          validationIssuesJson: reviewOverlay.validationIssuesJson,
+          reviewedByUsername: reviewOverlay.reviewedByUsername,
+          reviewedAt: reviewOverlay.reviewedAt,
+        }
+      : row
+    return mapStudentNewsReviewItem(mappedRow, {
       studentByRefId,
     })
-  )
+  })
   const filtered = mapped.filter((entry) => {
-    if (
-      reviewSchemaUnavailable
-      && requestedStatus !== "all"
-      && requestedStatus !== STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
-    ) {
-      return false
-    }
     if (requestedStatus !== "all" && normalizeStudentNewsReviewStatus(entry?.reviewStatus, "") !== requestedStatus) return false
     if (requestedLevel) {
       const entryLevel = canonicalizeLevel(entry?.student?.level || "") || ""
@@ -6136,33 +6187,6 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   assertWithStatus(Boolean(id), 400, "reportId is required")
   const reviewStatus = resolveStudentNewsReviewActionStatus(payload)
   assertWithStatus(Boolean(reviewStatus), 400, "Unsupported news review action")
-  assertWithStatus(
-    hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")
-    && hasPrismaDelegateMethod(prisma, "studentNewsReport", "update"),
-    503,
-    "Student news review persistence is unavailable"
-  )
-
-  let existingReport
-  try {
-    existingReport = await prisma.studentNewsReport.findUnique({
-      where: { id },
-      select: buildStudentNewsReviewSelect({ includeReviewFields: false }),
-    })
-  } catch (error) {
-    if (isStudentNewsReportSchemaUnavailableError(error)) {
-      assertWithStatus(false, 503, "Student news review persistence is unavailable")
-    }
-    if (isStudentNewsReviewSchemaUnavailableError(error)) {
-      assertWithStatus(
-        false,
-        503,
-        "Student news review fields are unavailable. Run Prisma migration and regenerate the client."
-      )
-    }
-    throw error
-  }
-  assertWithStatus(Boolean(existingReport), 404, "Student news report not found")
 
   const now = new Date()
   const reviewNote = normalizeNullableText(
@@ -6182,29 +6206,84 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   if (normalizedValidationIssues && Object.keys(normalizedValidationIssues).length) {
     updateData.validationIssuesJson = normalizedValidationIssues
   }
-  let updatedReport
-  try {
-    updatedReport = await prisma.studentNewsReport.update({
-      where: { id },
-      data: updateData,
-      select: buildStudentNewsReviewSelect({ includeReviewFields: true }),
-    })
-  } catch (error) {
-    if (isStudentNewsReportSchemaUnavailableError(error)) {
-      assertWithStatus(false, 503, "Student news review persistence is unavailable")
+
+  let existingReport = null
+  let fallbackOnly = false
+  if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")) {
+    try {
+      existingReport = await prisma.studentNewsReport.findUnique({
+        where: { id },
+        select: buildStudentNewsReviewSelect({ includeReviewFields: false }),
+      })
+    } catch (error) {
+      if (
+        isStudentNewsReportSchemaUnavailableError(error)
+        || isStudentNewsReviewSchemaUnavailableError(error)
+      ) {
+        fallbackOnly = true
+      } else {
+        throw error
+      }
     }
-    if (isStudentNewsReviewSchemaUnavailableError(error)) {
-      assertWithStatus(
-        false,
-        503,
-        "Student news review fields are unavailable. Run Prisma migration and regenerate the client."
-      )
-    }
-    if (normalizeText(error?.code).toUpperCase() === "P2025") {
-      assertWithStatus(false, 404, "Student news report not found")
-    }
-    throw error
+  } else {
+    fallbackOnly = true
   }
+  if (!existingReport && fallbackOnly) {
+    existingReport =
+      readStudentNewsFallbackEntries().find((entry) => normalizeText(entry?.id) === id) || null
+  }
+  assertWithStatus(Boolean(existingReport), 404, "Student news report not found")
+
+  let updatedReport = null
+  if (!fallbackOnly && hasPrismaDelegateMethod(prisma, "studentNewsReport", "update")) {
+    try {
+      updatedReport = await prisma.studentNewsReport.update({
+        where: { id },
+        data: updateData,
+        select: buildStudentNewsReviewSelect({ includeReviewFields: true }),
+      })
+    } catch (error) {
+      if (
+        isStudentNewsReportSchemaUnavailableError(error)
+        || isStudentNewsReviewSchemaUnavailableError(error)
+      ) {
+        fallbackOnly = true
+      } else if (normalizeText(error?.code).toUpperCase() === "P2025") {
+        assertWithStatus(false, 404, "Student news report not found")
+      } else {
+        throw error
+      }
+    }
+  } else {
+    fallbackOnly = true
+  }
+
+  if (!updatedReport) {
+    const studentRefId = normalizeText(existingReport?.studentRefId)
+    const reportDateKey = normalizeText(toLocalIsoDate(existingReport?.reportDate))
+    assertWithStatus(Boolean(studentRefId), 404, "Student news report not found")
+    assertWithStatus(Boolean(reportDateKey), 404, "Student news report not found")
+    const fallbackSaved = upsertStudentNewsReportInFallbackStore(studentRefId, reportDateKey, {
+      ...existingReport,
+      id,
+      reviewStatus,
+      reviewNote,
+      validationIssuesJson:
+        updateData.validationIssuesJson
+        || existingReport?.validationIssuesJson
+        || null,
+      reviewedByUsername,
+      reviewedAt: now.toISOString(),
+    })
+    updatedReport = {
+      ...existingReport,
+      ...fallbackSaved,
+      id,
+      studentRefId,
+      reportDate: existingReport?.reportDate || parseLocalDateOnly(reportDateKey) || reportDateKey,
+    }
+  }
+
   const studentByRefId = await loadStudentNewsReviewStudentMap(prisma, [normalizeText(updatedReport?.studentRefId)])
   const item = mapStudentNewsReviewItem(updatedReport, {
     studentByRefId,

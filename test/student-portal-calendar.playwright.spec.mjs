@@ -19,18 +19,38 @@ try {
   void error;
 }
 
-function resolvePlaywrightSkipReason() {
-  if (!chromium) return "playwright package is not installed";
+const CHROMIUM_EXECUTABLE_CANDIDATES = [
+  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
+  process.env.CHROME_PATH,
+  "/usr/bin/google-chrome-stable",
+  "/usr/bin/google-chrome",
+  "/usr/bin/chromium-browser",
+  "/usr/bin/chromium",
+].filter(Boolean);
+
+function resolveChromiumExecutablePath() {
+  if (!chromium) return "";
   try {
-    const executablePath = chromium.executablePath();
-    if (!executablePath || !fs.existsSync(executablePath)) {
-      return "playwright browser executable is not installed";
-    }
-    return false;
+    const bundledPath = chromium.executablePath();
+    if (bundledPath && fs.existsSync(bundledPath)) return bundledPath;
   } catch (error) {
     void error;
-    return "playwright browser executable is not installed";
   }
+  for (const candidatePath of CHROMIUM_EXECUTABLE_CANDIDATES) {
+    if (fs.existsSync(candidatePath)) return candidatePath;
+  }
+  return "";
+}
+
+const CHROMIUM_EXECUTABLE_PATH = resolveChromiumExecutablePath();
+const CHROMIUM_LAUNCH_OPTIONS = CHROMIUM_EXECUTABLE_PATH
+  ? { headless: true, executablePath: CHROMIUM_EXECUTABLE_PATH }
+  : { headless: true };
+
+function resolvePlaywrightSkipReason() {
+  if (!chromium) return "playwright package is not installed";
+  if (!CHROMIUM_EXECUTABLE_PATH) return "playwright browser executable is not installed";
+  return false;
 }
 
 function readJsonBody(request) {
@@ -642,7 +662,7 @@ test(
       const address = server.address();
       const port = typeof address === "object" && address ? address.port : 0;
 
-      browser = await chromium.launch({ headless: true });
+      browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
       page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
 
       await page.goto(`http://127.0.0.1:${port}/student/portal`, { waitUntil: "domcontentloaded" });
@@ -913,7 +933,7 @@ test(
       const address = server.address();
       const port = typeof address === "object" && address ? address.port : 0;
 
-      browser = await chromium.launch({ headless: true });
+      browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
       page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
 
       await page.goto(`http://127.0.0.1:${port}/student/portal`, {
@@ -1022,7 +1042,7 @@ test(
       const address = server.address();
       const port = typeof address === "object" && address ? address.port : 0;
 
-      browser = await chromium.launch({ headless: true });
+      browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
       page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
 
       await page.goto(`http://127.0.0.1:${port}/student/portal`, { waitUntil: "domcontentloaded" });

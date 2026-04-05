@@ -3,9 +3,9 @@
 ## SSOT Scope
 
 - One codified chip contract for news-report chips across admin, student, and parent.
-- SSOT sources are both [docs/chips.md](docs/chips.md) and [docs/chips.xlsx](docs/chips.xlsx); they must stay in parity.
+- SSOT sources are both [chips.md](chips.md) and [docs/chips.xlsx](chips.xlsx); they must stay in parity.
 - Internal persistence keys remain unchanged (`submitted`, `approved`, `revision-requested`).
-- Admin keeps separate columns for `Status` (condition) and `Action` (workflow task).
+- Admin queue columns are `Action` then `Status` (separate semantics: workflow task vs condition).
 
 ## Report Chip Contract (calendar / modal / report rows)
 
@@ -50,13 +50,23 @@
 
 ## Week `Action` (admin workflow)
 
-- `COMPLETED`: `reportCount>=7` and `approvedCount>=7`.
-- `INCOMPLETE`: no unapproved submissions and `<7` approved (`submittedCount+revisionRequestedCount=0`).
-- `UNAPPROVED-X`: otherwise, where `X=submittedCount+revisionRequestedCount`.
+- Derived counter (required):
+  - `unapprovedCount = max(0, submittedCount)`
+  - `submittedCount` includes all yet-to-be-checked `submitted` rows:
+    - initial submissions (YTBC),
+    - resubmissions (YTBC, including awaiting re-review).
+  - `submittedCount` excludes `revision-requested` rows (returned/waiting for revision), so those do not increase `UNAPPROVED-X`.
+- Action mapping (strict precedence):
+  1. `COMPLETED` when `reportCount>=7` and `approvedCount>=7`.
+  2. `INCOMPLETE` when not completed and `unapprovedCount=0`.
+  3. `UNAPPROVED-X` when not completed and `unapprovedCount>0`, where `X=unapprovedCount`.
+- Hard rule:
+  - `UNAPPROVED-X` must include YTBC initial submissions and YTBC resubmissions.
+  - `revisionRequested` items are already reviewed/returned and must not increase `X`.
 
 ## Surface Matrix
 
-- Admin queue surfaces: `Status` + `Action`.
+- Admin queue surfaces: `Action` + `Status`.
 - Student and parent queue/set surfaces: compact parity columns (`Week Set`, `#`, `Status`, `Latest Submission`, `Open`) with week-set `Status` limited to `APPROVED`/`SUBMITTED`/`WAITING`/`REVISE`.
 - Calendar event chips (student + parent): report-chip contract above.
 - Modal rows (all portals): report-chip contract above.
@@ -67,4 +77,4 @@
 - `submitted + awaitingReReview=true` => `Waiting` (purple/revise).
 - `revision-requested` => `Revise` (purple/revise).
 - `approved` => `Approved` (green/good).
-- Enforced by [test/portal-chip-contract.spec.mjs](test/portal-chip-contract.spec.mjs) in CI and post-sync deploy gates.
+- Enforced by [test/portal-chip-contract.spec.mjs](../test/portal-chip-contract.spec.mjs) in CI and post-sync deploy gates.

@@ -306,11 +306,9 @@ function toNonNegativeInt(value) {
 
 function resolveNewsSetUnapprovedCount({
   submittedCount = 0,
-  revisionRequestedCount = 0,
 } = {}) {
   const submitted = toNonNegativeInt(submittedCount)
-  const revisionRequested = toNonNegativeInt(revisionRequestedCount)
-  return Math.max(0, submitted + revisionRequested)
+  return Math.max(0, submitted)
 }
 
 function resolveNewsSetStatus({
@@ -345,11 +343,10 @@ function resolveNewsSetAction({
   reportCount = 0,
   approvedCount = 0,
   submittedCount = 0,
-  revisionRequestedCount = 0,
 } = {}) {
   const totalReports = toNonNegativeInt(reportCount)
   const approved = toNonNegativeInt(approvedCount)
-  const unapproved = resolveNewsSetUnapprovedCount({ submittedCount, revisionRequestedCount })
+  const unapproved = resolveNewsSetUnapprovedCount({ submittedCount })
   if (totalReports >= 7 && approved >= 7) return "completed"
   if (unapproved === 0) return "incomplete"
   return `unapproved-${unapproved}`
@@ -4877,7 +4874,6 @@ async function buildQueueHubPayload() {
               reportCount,
               approvedCount: entry?.approvedCount,
               submittedCount: entry?.submittedCount,
-              revisionRequestedCount: entry?.revisionRequestedCount,
             })
             const { _reportDates, ...safeEntry } = entry || {}
             void _reportDates

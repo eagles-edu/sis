@@ -5034,8 +5034,13 @@
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
         const reviewStatus = normalizeNewsReviewStatusToken(active?.reviewStatus);
-        if (reviewStatus === "approved") {
-          throw new Error("Approved news reports cannot be edited");
+        const reportDate = t(active?.reportDate).slice(0, 10);
+        const openReportDate = t(state.window?.reportDate).slice(0, 10);
+        if (
+          reviewStatus === "approved"
+          && (!openReportDate || reportDate !== openReportDate)
+        ) {
+          throw new Error("Approved news reports can only be edited on the current open date.");
         }
         state.newsWeekSetViewerPending = true;
         syncNewsWeekSetViewerControls();

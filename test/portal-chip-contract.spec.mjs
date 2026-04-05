@@ -41,14 +41,14 @@ test("parent modal chip mapper follows chips.md contract", () => {
     "function setNewsViewerStatusChip(item = {}) {"
   )
 
-  assert.match(chunk, /if \(status === "approved"\) return \{ label: "Approved", tone: "good" \};/)
-  assert.match(chunk, /if \(status === "revision-requested"\) return \{ label: "Revise", tone: "revise" \};/)
+  assert.match(chunk, /if \(status === "approved"\) return \{ label: "Đã duyệt", tone: "good" \};/)
+  assert.match(chunk, /if \(status === "revision-requested"\) return \{ label: "Cần sửa", tone: "revise" \};/)
   assert.match(
     chunk,
-    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{ label: "Waiting", tone: "revise" \};/
+    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{ label: "Chờ duyệt", tone: "revise" \};/
   )
-  assert.match(chunk, /if \(status === "submitted"\) return \{ label: "Submitted", tone: "warn" \};/)
-  assert.doesNotMatch(chunk, /return \{ label: "Waiting", tone: "warn" \};/)
+  assert.match(chunk, /if \(status === "submitted"\) return \{ label: "Đã nộp", tone: "warn" \};/)
+  assert.doesNotMatch(chunk, /return \{ label: "Chờ duyệt", tone: "warn" \};/)
 })
 
 test("student and parent queue headers follow compact parity contract", () => {
@@ -58,11 +58,15 @@ test("student and parent queue headers follow compact parity contract", () => {
   const studentQueueTable = extractChunk(studentHtml, '<table class="news-queue-table">', "</table>")
   const parentQueueTable = extractChunk(parentHtml, '<table class="news-queue-table">', "</table>")
 
+  assert.match(
+    studentQueueTable,
+    /<th scope="col">Week Set<\/th>[\s\S]*?<th scope="col">#<\/th>[\s\S]*?<th scope="col">Status<\/th>[\s\S]*?<th scope="col">Latest Submission<\/th>[\s\S]*?<th scope="col">Open<\/th>/,
+  )
+  assert.match(
+    parentQueueTable,
+    /<th scope="col">Tuần báo cáo<\/th>[\s\S]*?<th scope="col">#<\/th>[\s\S]*?<th scope="col">Trạng thái<\/th>[\s\S]*?<th scope="col">Nộp gần nhất<\/th>[\s\S]*?<th scope="col">Mở<\/th>/,
+  )
   for (const queueTable of [studentQueueTable, parentQueueTable]) {
-    assert.match(
-      queueTable,
-      /<th scope="col">Week Set<\/th>[\s\S]*?<th scope="col">#<\/th>[\s\S]*?<th scope="col">Status<\/th>[\s\S]*?<th scope="col">Latest Submission<\/th>[\s\S]*?<th scope="col">Open<\/th>/,
-    )
     assert.doesNotMatch(queueTable, /<th scope="col">Student<\/th>/)
     assert.doesNotMatch(queueTable, /<th scope="col">Level<\/th>/)
     assert.doesNotMatch(queueTable, /<th scope="col">Reports<\/th>/)

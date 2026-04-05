@@ -1,0 +1,149 @@
+{
+  "items": [
+    {
+      "id": "news-mnloolek-67e9043e21cf",
+      "studentRefId": "cmnlool0z0000rhg06sml0m61",
+      "reportDate": "2026-04-05",
+      "sourceLink": "https://example.com/abs/LIVE_ABS_IMPORT_1775388851231",
+      "articleTitle": "LIVE_ABS_IMPORT_1775388851231",
+      "byline": "BBC News",
+      "articleDateline": "Apr 5, 2026 (GMT+7)",
+      "leadSynopsis": "Lead summary text for validation requirements.",
+      "actionActor": "Actor",
+      "actionAffected": "Affected group",
+      "actionWhere": "Where",
+      "actionWhat": "What happened",
+      "actionWhy": "Why it happened",
+      "biasAssessment": "Neutral tone",
+      "reviewStatus": "revision-requested",
+      "reviewNote": "[[SIS-COMPLIANCE-V1]]\n- [PENDING][actionWhat] What Action Occurred?: Action description must be at least one sentence. (score 0.00 < 1.00) | Criteria: Must be at least one sentence. | Step 1: Describe the action in one complete sentence. Step 2: Keep the sentence factual and source-aligned. Step 3: Save again after updating the action sentence.\n- [PENDING][actionWhy] Why did Action happen?: Action reason must be at least one sentence. (score 0.00 < 1.00) | Criteria: Must be at least one sentence. | Step 1: Explain why the event happened in one complete sentence. Step 2: Use source-supported reasons only. Step 3: Save again after updating the why sentence.\n- [PENDING][articleDateline] Dateline: Dateline must reflect visible publish/updated time and timezone requirements. (score 0.00 < 0.70) | Criteria: Dateline text similarity must be at least 0.70 and include required updated/timezone tokens. | Step 1: Enter the visible publish timestamp from the source page. Step 2: If the page shows Updated timestamp, include it in the dateline text. Step 3: If timezone text is used, include full timezone text and GMT offset (example: GMT+7).\n- [PENDING][articleTitle] Article Title: Article title does not closely match source title. (score 0.00 < 0.70) | Criteria: Headline similarity must be at least 0.70. | Step 1: Copy the article headline exactly as displayed on the source page. Step 2: Remove extra words that are not in the headline. Step 3: Save again after title text matches the source.\n- [PENDING][biasAssessment] Bias Assessment: Bias assessment must be at least one sentence. (score 0.00 < 1.00) | Criteria: Must be at least one sentence. | Step 1: Write one clear sentence evaluating bias/spin in the report. Step 2: Reference wording, framing, or omitted context. Step 3: Save again after adding the bias sentence.\n- [PENDING][byline] Byline (Author): Byline must match fetched author or source organization. (score 0.00 < 0.70) | Criteria: Byline similarity must be at least 0.70. | Step 1: Use the article author name as shown on the source page. Step 2: If author is not listed, use the source organization/domain name (for example: bbc or cnn). Step 3: Save again after byline matches author/organization.\n- [PENDING][leadSynopsis] Lead Synopsis: Lead synopsis must align with the first paragraph of the source article. (score 0.00 < 0.50) | Criteria: Lead synopsis similarity must be at least 0.50. | Step 1: Summarize only the first paragraph of the source article. Step 2: Keep key facts and wording aligned with the source lead paragraph. Step 3: Save again after synopsis reflects the source lead.\n- [PENDING][sourceLink] Source Full Web Address (url): Source domain is not allowed. Approved sources: cnn.com, bbc.com. (score 0.00 < 1.00) | Criteria: Hostname must match approved sources (cnn.com, bbc.com). | Step 1: Use a full story URL (http/https) from an approved source: cnn.com, bbc.com. Step 2: Open the URL and confirm it loads the specific article (not homepage). Step 3: Paste the exact URL including its path and save again.\n[[/SIS-COMPLIANCE-V1]]",
+      "validationIssuesJson": {
+        "sourceLink": {
+          "field": "sourceLink",
+          "label": "Source Full Web Address (url)",
+          "status": "pending",
+          "message": "Source domain is not allowed. Approved sources: cnn.com, bbc.com.",
+          "criterion": "Hostname must match approved sources (cnn.com, bbc.com).",
+          "steps": [
+            "Use a full story URL (http/https) from an approved source: cnn.com, bbc.com.",
+            "Open the URL and confirm it loads the specific article (not homepage).",
+            "Paste the exact URL including its path and save again."
+          ],
+          "score": 0,
+          "threshold": 1,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        },
+        "articleTitle": {
+          "field": "articleTitle",
+          "label": "Article Title",
+          "status": "pending",
+          "message": "Article title does not closely match source title.",
+          "criterion": "Headline similarity must be at least 0.70.",
+          "steps": [
+            "Copy the article headline exactly as displayed on the source page.",
+            "Remove extra words that are not in the headline.",
+            "Save again after title text matches the source."
+          ],
+          "score": 0,
+          "threshold": 0.7,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        },
+        "byline": {
+          "field": "byline",
+          "label": "Byline (Author)",
+          "status": "pending",
+          "message": "Byline must match fetched author or source organization.",
+          "criterion": "Byline similarity must be at least 0.70.",
+          "steps": [
+            "Use the article author name as shown on the source page.",
+            "If author is not listed, use the source organization/domain name (for example: bbc or cnn).",
+            "Save again after byline matches author/organization."
+          ],
+          "score": 0,
+          "threshold": 0.7,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        },
+        "articleDateline": {
+          "field": "articleDateline",
+          "label": "Dateline",
+          "status": "pending",
+          "message": "Dateline must reflect visible publish/updated time and timezone requirements.",
+          "criterion": "Dateline text similarity must be at least 0.70 and include required updated/timezone tokens.",
+          "steps": [
+            "Enter the visible publish timestamp from the source page.",
+            "If the page shows Updated timestamp, include it in the dateline text.",
+            "If timezone text is used, include full timezone text and GMT offset (example: GMT+7)."
+          ],
+          "score": 0,
+          "threshold": 0.7,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        },
+        "leadSynopsis": {
+          "field": "leadSynopsis",
+          "label": "Lead Synopsis",
+          "status": "pending",
+          "message": "Lead synopsis must align with the first paragraph of the source article.",
+          "criterion": "Lead synopsis similarity must be at least 0.50.",
+          "steps": [
+            "Summarize only the first paragraph of the source article.",
+            "Keep key facts and wording aligned with the source lead paragraph.",
+            "Save again after synopsis reflects the source lead."
+          ],
+          "score": 0,
+          "threshold": 0.5,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        },
+        "actionWhat": {
+          "field": "actionWhat",
+          "label": "What Action Occurred?",
+          "status": "pending",
+          "message": "Action description must be at least one sentence.",
+          "criterion": "Must be at least one sentence.",
+          "steps": [
+            "Describe the action in one complete sentence.",
+            "Keep the sentence factual and source-aligned.",
+            "Save again after updating the action sentence."
+          ],
+          "score": 0,
+          "threshold": 1,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        },
+        "actionWhy": {
+          "field": "actionWhy",
+          "label": "Why did Action happen?",
+          "status": "pending",
+          "message": "Action reason must be at least one sentence.",
+          "criterion": "Must be at least one sentence.",
+          "steps": [
+            "Explain why the event happened in one complete sentence.",
+            "Use source-supported reasons only.",
+            "Save again after updating the why sentence."
+          ],
+          "score": 0,
+          "threshold": 1,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        },
+        "biasAssessment": {
+          "field": "biasAssessment",
+          "label": "Bias Assessment",
+          "status": "pending",
+          "message": "Bias assessment must be at least one sentence.",
+          "criterion": "Must be at least one sentence.",
+          "steps": [
+            "Write one clear sentence evaluating bias/spin in the report.",
+            "Reference wording, framing, or omitted context.",
+            "Save again after adding the bias sentence."
+          ],
+          "score": 0,
+          "threshold": 1,
+          "updatedAt": "2026-04-05T11:34:11.782Z"
+        }
+      },
+      "reviewedAt": "",
+      "reviewedByUsername": null,
+      "submittedAt": "2026-04-05T11:34:11.803Z",
+      "createdAt": "2026-04-05T11:34:11.804Z",
+      "updatedAt": "2026-04-05T11:34:11.804Z"
+    }
+  ]
+}

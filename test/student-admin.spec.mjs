@@ -292,6 +292,18 @@ test("student dashboard/news paths guard missing optional Prisma delegates", () 
   assert.match(routes, /ADMIN_REPORTS_PATH_RE\.test\(pathname\)/)
 })
 
+test("student week-set modal submit guard allows approved rows on the current open date only", () => {
+  const studentPortalHtml = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
+  assert.match(studentPortalHtml, /const reportDate = t\(active\?\.reportDate\)\.slice\(0,\s*10\);/)
+  assert.match(studentPortalHtml, /const openReportDate = t\(state\.window\?\.reportDate\)\.slice\(0,\s*10\);/)
+  assert.match(studentPortalHtml, /reviewStatus === "approved"[\s\S]*reportDate !== openReportDate/)
+  assert.match(studentPortalHtml, /Approved news reports can only be edited on the current open date\./)
+  assert.doesNotMatch(
+    studentPortalHtml,
+    /if \(reviewStatus === "approved"\)\s*\{\s*throw new Error\("Approved news reports cannot be edited"\);?\s*\}/
+  )
+})
+
 test("queue hub source contract includes student-week news-set panel", () => {
   const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
   assert.match(routes, /"news-report-review"/)
@@ -304,6 +316,8 @@ test("queue hub source contract includes student-week news-set panel", () => {
   assert.match(routes, /setActionColor/)
   assert.match(routes, /"incomplete"/)
   assert.match(routes, /"waiting"/)
+  assert.match(routes, /function resolveNewsSetUnapprovedCount\(\{[\s\S]*submittedCount = 0/)
+  assert.match(routes, /return Math\.max\(0,\s*submitted\)/)
 })
 
 test("news review status/action rules and revise chip label keep locked admin ui rules", () => {
@@ -316,6 +330,20 @@ test("news review status/action rules and revise chip label keep locked admin ui
   assert.match(statusChunk, /if \(submitted === 0 && revisionRequested === 0\) return "checked";/)
   assert.match(statusChunk, /if \(revisionRequested > 0 \|\| submitted > 0\) return "waiting";/)
   assert.match(html, /if \(normalized === "revise" \|\| normalized === "revision-requested"\)/)
+  const actionStart = html.indexOf("function newsReviewWeekSetActionToken(")
+  assert.ok(actionStart >= 0, "newsReviewWeekSetActionToken is present")
+  const actionChunk = html.slice(actionStart, actionStart + 1100)
+  assert.match(actionChunk, /const unapproved = Math\.max\(0, submitted\);/)
+  assert.doesNotMatch(actionChunk, /awaitingReReview/)
+  assert.doesNotMatch(actionChunk, /submitted \+ revisionRequested/)
+  assert.match(
+    html,
+    /data-sort-field="setAction"[\s\S]*Action[\s\S]*data-sort-field="setStatus"[\s\S]*Status/
+  )
+  assert.match(
+    html,
+    /data-label="Action">[\s\S]*data-label="Status">/
+  )
 })
 
 test("generateStudentReportCardPdf returns a PDF buffer", async () => {
@@ -594,7 +622,7 @@ test("GET /parent/portal returns parent portal HTML with runtime config", async 
   assert.match(res.headers.get("cache-control") || "", /no-cache/i)
   assert.match(res.headers.get("cache-control") || "", /no-store/i)
   const html = await res.text()
-  assert.match(html, /Parent Portal/i)
+  assert.match(html, /Parent Portal|cổng thông tin dành cho phụ huynh/i)
   assert.match(html, /__SIS_PARENT_API_PREFIX/i)
   assert.match(html, /__SIS_PARENT_AUTH_PREFIX/i)
   assert.match(html, /id="portalDetailCard"/i)

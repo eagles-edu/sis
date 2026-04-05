@@ -102,6 +102,24 @@ async function createParentPortalDom(fetchHandler, url) {
   return dom
 }
 
+test("parent news week-set modal keeps student-clone visuals with only wired controls", () => {
+  assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalPrevBtn"/)
+  assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalNextBtn"/)
+  assert.match(PARENT_PORTAL_HTML, /id="closeNewsWeekSetModalBtn"/)
+  assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalCloseActionBtn"/)
+  assert.doesNotMatch(PARENT_PORTAL_HTML, /id="newsWeekSetModalSubmitBtn"/)
+
+  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalBackdrop"\)[\s\S]*closeNewsWeekSetModal\(\)/)
+  assert.match(PARENT_PORTAL_HTML, /getElementById\("closeNewsWeekSetModalBtn"\)[\s\S]*closeNewsWeekSetModal\(\)/)
+  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalCloseActionBtn"\)[\s\S]*closeNewsWeekSetModal\(\)/)
+  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalPrevBtn"\)[\s\S]*shiftNewsWeekSetViewer\(-1\)/)
+  assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalNextBtn"\)[\s\S]*shiftNewsWeekSetViewer\(1\)/)
+
+  assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal \.portal-modal-close/)
+  assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal button/)
+  assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal input,\s*#newsWeekSetModal textarea/)
+})
+
 test("parent portal static preview over http requires explicit apiOrigin", async () => {
   const calls = []
 
@@ -657,7 +675,7 @@ test("parent portal menu opens a detailed homework page with calendar and histor
   await waitFor(() => {
     assert.equal(document.getElementById("portalCard").classList.contains("hidden"), true)
     assert.equal(document.getElementById("portalDetailCard").classList.contains("hidden"), false)
-    assert.match(document.getElementById("portalDetailTitle").textContent, /Current Homework/i)
+    assert.match(document.getElementById("portalDetailTitle").textContent, /Current Homework|Bài tập về nhà hiện tại/i)
     assert.match(document.getElementById("portalDetailPrimaryList").textContent, /Essay Draft/i)
     assert.match(document.getElementById("portalDetailCalendarGrid").textContent, /Essay Draft/i)
   })
@@ -795,7 +813,7 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
     assert.equal(document.querySelector('label[for="childSelect"]'), null)
     assert.equal(
       normalizeText(document.getElementById("childSelect")?.getAttribute("aria-label")),
-      "Student selector"
+      "Chọn học sinh"
     )
   })
 
@@ -809,9 +827,9 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
       normalizeText(node.querySelector(".v")?.textContent)
     )
     const metricsText = normalizeText(document.getElementById("dashboardMetrics")?.textContent)
-    assert.ok(metricLabels.includes("News Approved"))
-    assert.ok(metricLabels.includes("News Waiting"))
-    assert.ok(metricLabels.includes("News Revise"))
+    assert.ok(metricLabels.includes("Tin tức đã duyệt"))
+    assert.ok(metricLabels.includes("Tin tức đã nộp"))
+    assert.ok(metricLabels.includes("Tin tức cần sửa"))
     assert.ok(metricValues.includes("1"))
     assert.doesNotMatch(metricsText, /\b\d+\s*\/\s*\d+\s*\/\s*\d+\b/)
   })
@@ -824,21 +842,22 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
     const latestSubmissionText = normalizeText(firstLatestCell?.textContent)
     const latestSubmissionHtml = normalizeText(firstLatestCell?.innerHTML)
     assert.deepEqual(headers, [
-      "Week Set",
+      "Tuần báo cáo",
       "#",
-      "Status",
-      "Latest Submission",
-      "Open",
+      "Trạng thái",
+      "Nộp gần nhất",
+      "Mở",
     ])
     const queueText = normalizeText(document.getElementById("newsQueueBody")?.textContent)
-    assert.match(queueText, /Waiting|Revise/i)
-    assert.match(queueText, /Revise/i)
-    assert.doesNotMatch(queueText, /Submitted|None Submitted/i)
-    assert.doesNotMatch(queueText, /Cần sửa/i)
+    assert.match(queueText, /Cần sửa/i)
+    assert.doesNotMatch(queueText, /Submitted|None Submitted|Waiting|Revise/i)
     assert.match(latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/)
     assert.match(latestSubmissionHtml, /queue-compact-datetime/)
     const summaryText = normalizeText(document.getElementById("newsQueueSummary")?.textContent)
-    assert.match(summaryText, /Approved\s+\d+\s+•\s+Waiting\s+\d+\s+•\s+Revise\s+\d+/i)
+    assert.match(
+      summaryText,
+      /Đã duyệt\s+\d+\s+•\s+Đã nộp\s+\d+\s+•\s+Chờ duyệt\s+\d+\s+•\s+Cần sửa\s+\d+/i
+    )
   })
 
   await settleDomAsync(dom)
@@ -1083,7 +1102,7 @@ test("parent portal opens news detail directly from news queue when dashboard ca
     const statusChip = document.getElementById("newsViewerReviewStatusChip")
     assert.ok(statusChip)
     assert.equal(document.getElementById("newsViewerReviewStatus"), null)
-    assert.match(normalizeText(statusChip?.textContent), /Revise/i)
+    assert.match(normalizeText(statusChip?.textContent), /Cần sửa/i)
     assert.match(normalizeText(statusChip?.className), /chip-revise/i)
   })
 
@@ -1309,7 +1328,10 @@ test("parent portal report archive sorts newest first and clears outstanding aft
   await waitFor(() => {
     assert.equal(document.getElementById("performanceReportModal").classList.contains("hidden"), false)
     assert.match(normalizeText(document.getElementById("performanceReportModalTitle")?.textContent), /1\/2/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalMeta")?.textContent), /Date:.*\| Day:.*\| Time:/i)
+    assert.match(
+      normalizeText(document.getElementById("performanceReportModalMeta")?.textContent),
+      /Date:.*\| Day:.*\| Time:|Ngày:.*\| Thứ:.*\| Giờ:/i
+    )
     assert.match(normalizeText(document.getElementById("performanceReportIdentity")?.textContent), /A2 Flyers \| 101 \| Student One \| vi001/i)
     assert.match(normalizeText(document.getElementById("reportCurrentHomeworkHeader")?.textContent), /Homework Past Due/i)
     assert.match(normalizeText(document.getElementById("reportCurrentHomeworkBadgeValue")?.textContent), /theo dõi|theo doi/i)
@@ -1319,16 +1341,17 @@ test("parent portal report archive sorts newest first and clears outstanding aft
     assert.match(normalizeText(document.getElementById("performanceReportAttendanceMetrics")?.textContent), /Hồ sơ điểm danh lớp học|Chuyên cần|Lớp đã học/i)
     assert.equal(document.getElementById("performanceReportGradesHint")?.classList.contains("hidden"), true)
     assert.match(normalizeText(document.getElementById("performanceReportGradesTable")?.textContent), /Q2|68%/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Class Focus/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Lesson Summary/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Needs eye check/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Ms\. Nguyen/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Performance Snapshot/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Basic Student Skills/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Conduct During Class/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Prose/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /Comments/i)
-    assert.match(normalizeText(document.getElementById("performanceReportModalSections")?.textContent), /clarifying question/i)
+    const sectionsText = normalizeText(document.getElementById("performanceReportModalSections")?.textContent)
+    assert.match(sectionsText, /Class Focus|Trọng tâm lớp học/i)
+    assert.match(sectionsText, /Lesson Summary|Tóm tắt buổi học/i)
+    assert.match(sectionsText, /Needs eye check|Cần kiểm tra mắt/i)
+    assert.match(sectionsText, /Ms\. Nguyen/i)
+    assert.match(sectionsText, /Performance Snapshot|Tổng hợp kết quả/i)
+    assert.match(sectionsText, /Basic Student Skills|Kỹ năng cơ bản của học sinh/i)
+    assert.match(sectionsText, /Conduct During Class|Tác phong trong lớp/i)
+    assert.match(sectionsText, /Prose|Tóm tắt của giáo viên/i)
+    assert.match(sectionsText, /Comments|Nhận xét gửi phụ huynh/i)
+    assert.match(sectionsText, /clarifying question/i)
   })
 
   document
@@ -1361,7 +1384,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
   document.getElementById("acknowledgePerformanceReportBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
 
   await waitFor(() => {
-    assert.match(normalizeText(document.getElementById("performanceReportAckStatus")?.textContent), /acknowledged on/i)
+    assert.match(normalizeText(document.getElementById("performanceReportAckStatus")?.textContent), /acknowledged on|Đã xác nhận lúc/i)
     assert.equal(document.querySelector('#performanceReportsList [data-report-id="report-new"]')?.classList.contains("is-outstanding"), false)
   })
 

@@ -1215,7 +1215,7 @@
 
       .chip {
         --chip-height: 30px;
-        --chip-min-ar: 4.5;
+        --chip-min-ar: 0;
         align-items: center;
         justify-content: center;
         background: #e2edff;
@@ -1226,7 +1226,7 @@
         color: #173962;
         display: inline-flex;
         inline-size: auto;
-        min-inline-size: calc(var(--chip-height) * var(--chip-min-ar));
+        min-inline-size: 0;
         max-inline-size: 100%;
         font-size: 12px;
         font-weight: 800;
@@ -1236,9 +1236,11 @@
         height: var(--chip-height);
         padding: 0 10px;
         text-align: center;
-        text-transform: uppercase;
+        text-transform: none;
         box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         flex: 0 0 auto;
       }
 
@@ -1380,6 +1382,10 @@
 
       .actions-2 > * {
         flex: 1 1 45%;
+      }
+
+      .queue-panel .actions-2 > * {
+        flex: 0 0 auto;
       }
 
       .actions-3 > * {
@@ -1527,6 +1533,33 @@
         display: none !important;
       }
 
+      .row {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .c3 {
+        grid-column: span 3;
+      }
+
+      .c4 {
+        grid-column: span 4;
+      }
+
+      .c6 {
+        grid-column: span 6;
+      }
+
+      .c12 {
+        grid-column: span 12;
+      }
+
       .form-row {
         display: grid;
         gap: 6px;
@@ -1549,6 +1582,14 @@
         letter-spacing: 0.2px;
         margin: 0;
         text-transform: uppercase;
+      }
+
+      .field label {
+        color: var(--ink-soft);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: none;
       }
 
       input,
@@ -1636,6 +1677,86 @@
         background: linear-gradient(180deg, var(--brand-2), #143a81);
         border-color: #13346f;
         color: #fff;
+      }
+
+      /* Keep parent news week-set modal controls visually aligned with student modal. */
+      #newsWeekSetModal .actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      #newsWeekSetModal .portal-modal-body {
+        display: grid;
+        gap: 10px;
+      }
+
+      #newsWeekSetModal .portal-modal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      #newsWeekSetModal input,
+      #newsWeekSetModal textarea,
+      #newsWeekSetModal button {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-2);
+        box-sizing: border-box;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      #newsWeekSetModal input,
+      #newsWeekSetModal textarea {
+        padding: 10px 12px;
+        width: 100%;
+      }
+
+      #newsWeekSetModal textarea {
+        line-height: 1.35;
+        min-height: 98px;
+        resize: vertical;
+      }
+
+      #newsWeekSetModal button {
+        align-items: center;
+        background: #f8fbff;
+        cursor: pointer;
+        display: inline-flex;
+        justify-content: center;
+        min-height: 42px;
+        padding: 10px 12px;
+        text-align: center;
+        text-decoration: none;
+        transition: none;
+      }
+
+      #newsWeekSetModal button:hover:not(:disabled) {
+        box-shadow: none;
+        transform: none;
+      }
+
+      #newsWeekSetModal button:disabled {
+        box-shadow: none;
+        cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+      }
+
+      #newsWeekSetModal .portal-modal-close {
+        background: #f6f9ff;
+        border: 1px solid #b7c8df;
+        border-radius: 8px;
+        color: #24466b;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        min-height: 34px;
+        padding: 6px 10px;
       }
 
       .login-form {
@@ -2298,6 +2419,14 @@
         }
       }
 
+      @media (max-width: 959px) {
+        .c3,
+        .c4,
+        .c6 {
+          grid-column: span 12;
+        }
+      }
+
       @media (min-width: 720px) {
         .login-form {
           align-items: end;
@@ -2433,10 +2562,10 @@
   </head>
   <body>
     <div class="portal-layout">
-      <aside id="parentSideNav" class="side-nav" aria-label="Parent portal navigation">
+      <aside id="parentSideNav" class="side-nav" aria-label="Điều hướng cổng phụ huynh">
         <div class="side-brand">
           <strong>Bảng điều khiển dành cho phụ huynh</strong>
-          <span>Tổng quan về kết quả học tập của sinh viên</span>
+          <span>Tổng quan kết quả học tập của học sinh</span>
         </div>
         <nav class="side-links">
           <a
@@ -2479,7 +2608,7 @@
             href="#portalDetailCard"
             data-view-target="dashboard"
             data-page-target="attendance-calendar"
-            >Attendance Calendar SYTD</a
+            >Điểm danh lớp học (SYTD)</a
           >
           <a
             class="side-link"
@@ -2512,7 +2641,7 @@
         id="parentNavScrim"
         class="nav-scrim"
         type="button"
-        aria-label="Close navigation"></button>
+        aria-label="Đóng điều hướng"></button>
 
       <main class="shell">
         <section class="card hero">
@@ -2520,7 +2649,7 @@
             id="parentMenuBtn"
             class="floating-menu-btn"
             type="button"
-            aria-label="Open navigation">
+            aria-label="Mở điều hướng">
             <span class="floating-menu-icon" aria-hidden="true"></span>
           </button>
           <div class="hero-line">
@@ -2531,31 +2660,31 @@
                   src="/web-asset/images/logo.svg"
                   alt="The Eagles Club logo">
               </span>
-              <h1>Cổng phụ huynh (Parents' Dashboard)</h1>
+              <h1>Cổng phụ huynh</h1>
             </div>
             <div class="hero-actions">
               <span id="envBadgeParent" class="env-badge" aria-live="polite"></span>
               <div
                 class="text-zoom-controls"
                 role="toolbar"
-                aria-label="Global text size controls">
+                aria-label="Điều khiển cỡ chữ">
                 <span>Kích thước chữ</span>
                 <button
                   id="parentTextZoomDownBtn"
                   type="button"
-                  aria-label="Decrease text size">
+                  aria-label="Giảm cỡ chữ">
                   A-
                 </button>
                 <button
                   id="parentTextZoomUpBtn"
                   type="button"
-                  aria-label="Increase text size">
+                  aria-label="Tăng cỡ chữ">
                   A+
                 </button>
                 <button
                   id="parentTextZoomResetBtn"
                   type="button"
-                  aria-label="Reset text size">
+                  aria-label="Đặt lại cỡ chữ">
                   Đặt lại
                 </button>
                 <span class="zoom-label" id="parentTextZoomLabel">100&percnt;</span>
@@ -2571,7 +2700,7 @@
           </div>
           <form id="loginForm" class="login-form" novalidate>
             <div class="form-row">
-              <label for="parentsId">ID người dùng cha (parentsId)</label>
+              <label for="parentsId">Mã phụ huynh (parentsId)</label>
               <input
                 id="parentsId"
                 type="text"
@@ -2598,8 +2727,8 @@
             <div class="portal-col">
               <div class="toolbar" id="overviewPanel">
                 <div class="form-row">
-                  <p id="parentOverviewSummary" class="parent-overview-title">Loading student dashboard...</p>
-                  <select id="childSelect" aria-label="Student selector"></select>
+                  <p id="parentOverviewSummary" class="parent-overview-title">Đang tải bảng điều khiển học sinh...</p>
+                  <select id="childSelect" aria-label="Chọn học sinh"></select>
                 </div>
                 <div class="toolbar-actions">
                   <button id="reloadBtn" type="button">Tải lại</button>
@@ -2619,7 +2748,7 @@
                     <span id="immutableEaglesId" class="identity-value">-</span>
                   </div>
                   <div class="identity-item">
-                    <span class="identity-label">Số sinh viên</span>
+                    <span class="identity-label">Mã số học sinh</span>
                     <span id="immutableStudentNumber" class="identity-value">-</span>
                   </div>
                   <div class="identity-item">
@@ -2680,11 +2809,11 @@
                     <table class="news-queue-table">
                       <thead>
                         <tr>
-                          <th scope="col">Week Set</th>
+                          <th scope="col">Tuần báo cáo</th>
                           <th scope="col">#</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">Latest Submission</th>
-                          <th scope="col">Open</th>
+                          <th scope="col">Trạng thái</th>
+                          <th scope="col">Nộp gần nhất</th>
+                          <th scope="col">Mở</th>
                         </tr>
                       </thead>
                       <tbody id="newsQueueBody">
@@ -2709,7 +2838,7 @@
                 <h3 class="homework-card-label">Bài tập về nhà hiện tại</h3>
                 <div class="homework-card-shell">
                   <div id="currentHomeworkBadge" class="homework-square is-none">
-                    <span class="homework-square-k">Sự có thai</span>
+                    <span class="homework-square-k">Tình trạng</span>
                     <strong
                       id="currentHomeworkBadgeValue"
                       class="homework-square-v is-status"
@@ -2771,81 +2900,81 @@
                   aria-modal="true"
                   aria-labelledby="newsWeekSetModalTitle">
                   <div class="portal-modal-head">
-                    <h4 id="newsWeekSetModalTitle">Student News Report Viewer</h4>
+                    <h4 id="newsWeekSetModalTitle">Trình xem báo cáo tin tức học sinh</h4>
                     <div class="actions">
-                      <button id="newsWeekSetModalPrevBtn" type="button" aria-label="Previous report">←</button>
+                      <button id="newsWeekSetModalPrevBtn" type="button" aria-label="Báo cáo trước">←</button>
                       <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                      <button id="newsWeekSetModalNextBtn" type="button" aria-label="Next report">→</button>
-                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close" type="button">Close</button>
+                      <button id="newsWeekSetModalNextBtn" type="button" aria-label="Báo cáo kế tiếp">→</button>
+                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close" type="button">Đóng</button>
                     </div>
                   </div>
                   <div class="portal-modal-body">
-                    <p id="newsWeekSetModalMeta" class="hint">Open a week set to review submitted reports.</p>
+                    <p id="newsWeekSetModalMeta" class="hint">Mở một tuần báo cáo để xem các bài đã nộp.</p>
                     <div class="row">
                       <div class="field c4">
-                        <label for="newsViewerReportDate">Report Date</label>
+                        <label for="newsViewerReportDate">Ngày báo cáo</label>
                         <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
                       </div>
                       <div class="field c4">
-                        <label>Status</label>
+                        <label>Trạng thái</label>
                         <span id="newsViewerReviewStatusChip" class="chip chip-neutral">-</span>
                       </div>
                       <div class="field c4">
-                        <label for="newsViewerSubmittedAt">Submitted At</label>
+                        <label for="newsViewerSubmittedAt">Thời gian nộp</label>
                         <input id="newsViewerSubmittedAt" type="text" readonly aria-readonly="true">
                       </div>
                     </div>
                     <div class="row">
                       <div class="field c12">
-                        <label for="newsViewerSourceLink">I. Source: link to article</label>
+                        <label for="newsViewerSourceLink">I. Nguồn: liên kết bài báo</label>
                         <input id="newsViewerSourceLink" type="url" readonly aria-readonly="true">
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerArticleTitle">II.A. Title</label>
+                        <label for="newsViewerArticleTitle">II.A. Tiêu đề</label>
                         <input id="newsViewerArticleTitle" type="text" readonly aria-readonly="true">
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerByline">II.B. Byline (author)</label>
+                        <label for="newsViewerByline">II.B. Tác giả (byline)</label>
                         <input id="newsViewerByline" type="text" readonly aria-readonly="true">
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerArticleDateline">II.C. Article Dateline / Publication Date</label>
+                        <label for="newsViewerArticleDateline">II.C. Mốc thời gian (dateline) / Ngày đăng</label>
                         <input id="newsViewerArticleDateline" type="text" readonly aria-readonly="true">
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerLeadSynopsis">II.D. Lead Synopsis</label>
+                        <label for="newsViewerLeadSynopsis">II.D. Tóm tắt mở bài</label>
                         <textarea id="newsViewerLeadSynopsis" readonly aria-readonly="true"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionActor">II.E.i. Who/what was doing action/news</label>
+                        <label for="newsViewerActionActor">II.E.i. Ai/cái gì thực hiện hành động/tin tức</label>
                         <textarea id="newsViewerActionActor" readonly aria-readonly="true"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionAffected">II.E.ii. Who/what received/was affected</label>
+                        <label for="newsViewerActionAffected">II.E.ii. Ai/cái gì bị tác động</label>
                         <textarea id="newsViewerActionAffected" readonly aria-readonly="true"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionWhere">II.E.iii. Where is the action/news</label>
+                        <label for="newsViewerActionWhere">II.E.iii. Hành động/tin tức xảy ra ở đâu</label>
                         <textarea id="newsViewerActionWhere" readonly aria-readonly="true"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionWhat">II.E.iv. What action/news</label>
+                        <label for="newsViewerActionWhat">II.E.iv. Hành động/tin tức là gì</label>
                         <textarea id="newsViewerActionWhat" readonly aria-readonly="true"></textarea>
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerActionWhy">II.E.v. Why was action/news happening</label>
+                        <label for="newsViewerActionWhy">II.E.v. Vì sao hành động/tin tức xảy ra</label>
                         <textarea id="newsViewerActionWhy" readonly aria-readonly="true"></textarea>
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerBiasAssessment">II.F. Bias/agendum/spin/prevarication? Explain</label>
+                        <label for="newsViewerBiasAssessment">II.F. Thiên kiến/chủ đích/định hướng? Giải thích</label>
                         <textarea id="newsViewerBiasAssessment" readonly aria-readonly="true"></textarea>
                       </div>
                     </div>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newsWeekSetModalCloseActionBtn" type="button">Close</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button">Đóng</button>
                   </div>
-                  <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
+                  <p id="newsWeekSetModalStatus" class="hint">Trình xem đã sẵn sàng.</p>
                 </div>
               </section>
 
@@ -2907,7 +3036,7 @@
 
               <section id="performanceReportsCard" class="panel homework-card">
                 <h3 class="homework-card-label">
-                  Lưu trữ báo cáo kết quả học tập của sinh viên
+                  Lưu trữ báo cáo kết quả học tập của học sinh
                 </h3>
                 <div class="dashboard-surface-shell">
                   <div id="performanceReportsList" class="report-archive-list"></div>
@@ -2940,11 +3069,11 @@
                   <div class="report-modal-body">
                     <section id="performanceReportHeader" class="report-head-grid">
                       <article class="report-head-card">
-                        <h5>Date | Day | Time</h5>
+                        <h5>Ngày | Thứ | Giờ</h5>
                         <p id="performanceReportModalMeta" class="report-head-value">-</p>
                       </article>
                       <article class="report-head-card">
-                        <h5>Class | StudentNumber | StudentFullName | StudentId</h5>
+                        <h5>Lớp | Mã số HS | Họ tên học sinh | Eagles ID</h5>
                         <p id="performanceReportIdentity" class="report-head-value">-</p>
                       </article>
                     </section>
@@ -2955,7 +3084,7 @@
                           <h3 class="homework-card-label">Bài tập về nhà hiện tại</h3>
                           <div class="homework-card-shell">
                             <div id="reportCurrentHomeworkBadge" class="homework-square is-none">
-                              <span class="homework-square-k">Sự có thai</span>
+                              <span class="homework-square-k">Tình trạng</span>
                               <strong
                                 id="reportCurrentHomeworkBadgeValue"
                                 class="homework-square-v is-status"
@@ -3003,7 +3132,7 @@
                     </section>
                     <div id="performanceReportModalSections" class="report-bands"></div>
                     <section class="report-grade-block">
-                      <h5>Grades YTD</h5>
+                      <h5>Điểm YTD</h5>
                       <div class="report-grade-card">
                         <div id="performanceReportGradesTable" class="report-grades-table"></div>
                       </div>
@@ -3022,7 +3151,7 @@
                         id="acknowledgePerformanceReportBtn"
                         type="button"
                         class="primary">
-                        Reviewed
+                        Đã xem
                       </button>
                       <span
                         id="performanceReportAckStatus"
@@ -3032,7 +3161,7 @@
                       <div
                         id="performanceReportStudentReviewStatus"
                         class="report-modal-ack-status is-peer"
-                        >Waiting for student review.</div>
+                        >Chờ học sinh xác nhận.</div>
                     </div>
                   </div>
                 </div>
@@ -3040,14 +3169,14 @@
 
               <section id="gradesYtdCard" class="panel">
                 <div class="section-head">
-                  <h3>Grades YTD</h3>
+                  <h3>Điểm YTD</h3>
                 </div>
                 <p class="hint" id="gradesYtdSummary">Chưa có dữ liệu.</p>
               </section>
 
               <section id="recommendationsCard" class="panel">
                 <div class="section-head">
-                  <h3>Recommendations for Success</h3>
+                  <h3>Khuyến nghị học tập</h3>
                 </div>
                 <p class="hint" id="recommendationsSummary">Chưa có dữ liệu.</p>
               </section>
@@ -3059,14 +3188,14 @@
 
         <section class="card hidden" id="portalDetailCard">
           <div class="section-head">
-            <h2 id="portalDetailTitle">Student Detail</h2>
+            <h2 id="portalDetailTitle">Chi tiết học sinh</h2>
           </div>
-          <p id="portalDetailLead" class="detail-copy">Loading child detail...</p>
+          <p id="portalDetailLead" class="detail-copy">Đang tải chi tiết học sinh...</p>
           <div class="metrics" id="portalDetailMetrics"></div>
           <div class="detail-layout">
             <section class="panel detail-calendar-panel">
               <div class="section-head">
-                <h3 id="portalDetailCalendarTitle">Calendar</h3>
+                <h3 id="portalDetailCalendarTitle">Lịch</h3>
               </div>
               <p id="portalDetailCalendarSummary" class="hint">Chưa có dữ liệu.</p>
               <div
@@ -3077,18 +3206,18 @@
 
             <section class="panel">
               <div class="section-head">
-                <h3 id="portalDetailPrimaryTitle">Current Focus</h3>
+                <h3 id="portalDetailPrimaryTitle">Trọng tâm hiện tại</h3>
               </div>
               <div id="portalDetailPrimaryList" class="detail-list"></div>
               <div id="portalDetailPrimaryTable" class="queue-table-wrap hidden">
                 <table class="news-queue-table">
                   <thead>
                     <tr>
-                      <th scope="col">Week Set</th>
+                      <th scope="col">Tuần báo cáo</th>
                       <th scope="col">#</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Latest Submission</th>
-                      <th scope="col">Open</th>
+                      <th scope="col">Trạng thái</th>
+                      <th scope="col">Nộp gần nhất</th>
+                      <th scope="col">Mở</th>
                     </tr>
                   </thead>
                   <tbody id="portalDetailQueueBody">
@@ -3102,7 +3231,7 @@
 
             <section class="panel">
               <div class="section-head">
-                <h3 id="portalDetailHistoryTitle">Recent History</h3>
+                <h3 id="portalDetailHistoryTitle">Lịch sử gần đây</h3>
               </div>
               <div id="portalDetailHistoryList" class="detail-list"></div>
             </section>
@@ -3119,7 +3248,7 @@
             </div>
           </div>
           <p id="childPageBadge" class="hint">
-            Chọn học sinh từ Dashboard để chỉnh sửa hồ sơ.
+            Chọn học sinh từ Bảng điều khiển để chỉnh sửa hồ sơ.
           </p>
           <section class="panel" id="profilePanel">
             <div class="section-head">
@@ -4885,10 +5014,10 @@
         root.replaceChildren();
         state.reportArchiveRows.forEach((row, index) => {
           const entry = resolveReportAcknowledgementEntry(row?.id);
-          const reportLabel = `${normalizeText(row?.className) || "Lop hoc"} | ${normalizeText(row?.quarter).toUpperCase() || "Ky hoc"}`;
+          const reportLabel = `${normalizeText(row?.className) || "Lớp học"} | ${normalizeText(row?.quarter).toUpperCase() || "Kỳ học"}`;
           const statusLabel =
             entry ?
-              `Đã xác nhận lúc ${formatPortalDateTime(entry.acknowledgedAt)} (${entry.acknowledgedBy || "Parent"})`
+              `Đã xác nhận lúc ${formatPortalDateTime(entry.acknowledgedAt)} (${entry.acknowledgedBy || "Phụ huynh"})`
             : "Chưa xác nhận xem báo cáo.";
 
           const article = document.createElement("article");
@@ -5005,32 +5134,32 @@
 
       function formatReportGeneratedMeta(value) {
         const raw = normalizeText(value);
-        if (!raw) return "Date: - | Day: - | Time: -";
+        if (!raw) return "Ngày: - | Thứ: - | Giờ: -";
         const date = new Date(raw);
-        if (Number.isNaN(date.getTime())) return "Date: - | Day: - | Time: -";
-        const datePart = new Intl.DateTimeFormat(undefined, {
+        if (Number.isNaN(date.getTime())) return "Ngày: - | Thứ: - | Giờ: -";
+        const datePart = new Intl.DateTimeFormat("vi-VN", {
           month: "short",
           day: "numeric",
           year: "numeric",
           timeZone: PORTAL_TIME_ZONE,
         }).format(date);
-        const dayPart = new Intl.DateTimeFormat(undefined, {
+        const dayPart = new Intl.DateTimeFormat("vi-VN", {
           weekday: "long",
           timeZone: PORTAL_TIME_ZONE,
         }).format(date);
-        const timePart = new Intl.DateTimeFormat(undefined, {
+        const timePart = new Intl.DateTimeFormat("vi-VN", {
           hour: "numeric",
           minute: "2-digit",
           timeZone: PORTAL_TIME_ZONE,
         }).format(date);
-        return `Date: ${datePart} | Day: ${dayPart} | Time: ${timePart}`;
+        return `Ngày: ${datePart} | Thứ: ${dayPart} | Giờ: ${timePart}`;
       }
 
       function reportVisionStatusLabel(value = "") {
         const normalized = normalizeText(value);
-        if (normalized === "no-issues") return "No current issues";
-        if (normalized === "needs-check") return "Needs eye check";
-        if (normalized === "monitor") return "Monitor in class";
+        if (normalized === "no-issues") return "Không có vấn đề";
+        if (normalized === "needs-check") return "Cần kiểm tra mắt";
+        if (normalized === "monitor") return "Theo dõi trên lớp";
         return "";
       }
 
@@ -5063,7 +5192,7 @@
         table.className = "homework-modal-table";
         const head = document.createElement("thead");
         head.innerHTML =
-          "<tr><th>Class</th><th>Quarter</th><th>HW %</th><th>On-Time %</th><th>Behavior</th><th>Skills</th><th>In Class</th></tr>";
+          "<tr><th>Lớp</th><th>Kỳ</th><th>BT %</th><th>Đúng hạn %</th><th>Hành vi</th><th>Kỹ năng</th><th>Trên lớp</th></tr>";
         const body = document.createElement("tbody");
         rows.forEach((row) => {
           const tr = document.createElement("tr");
@@ -5248,7 +5377,7 @@
 
       function lookupReportRubricFieldLabel(rawKey) {
         const key = normalizeText(rawKey);
-        if (!key) return "Prose";
+        if (!key) return "Nội dung";
         const normalized =
           key.startsWith("pt_skill_") ? key.slice("pt_skill_".length)
           : key.startsWith("pt_conduct_") ? key.slice("pt_conduct_".length)
@@ -5300,34 +5429,34 @@
         );
         return [
           {
-            prose: "Behavior (0-5)",
+            prose: "Hành vi (0-5)",
             score: formatReportTenPoint(active?.behaviorScore),
-            comment: "Auto from rubric.",
+            comment: "Tự động từ rubric.",
           },
           {
-            prose: "Skills (0-5)",
+            prose: "Kỹ năng (0-5)",
             score: formatReportTenPoint(active?.participationScore),
-            comment: "Auto from rubric.",
+            comment: "Tự động từ rubric.",
           },
           {
-            prose: "Academic (0-5)",
+            prose: "Học thuật (0-5)",
             score: formatReportTenPoint(active?.inClassScore),
-            comment: "Auto from records.",
+            comment: "Tự động từ dữ liệu.",
           },
           {
-            prose: "Homework Timeliness %",
+            prose: "BTVN đúng hạn %",
             score: formatMetricPercent(active?.homeworkOnTimeRate) || "-",
-            comment: "Auto from tracked assignments (current quarter).",
+            comment: "Tự động từ bài tập đã theo dõi (kỳ hiện tại).",
           },
           {
-            prose: "Assignment Completion %",
+            prose: "Hoàn thành bài tập %",
             score: formatMetricPercent(active?.homeworkCompletionRate) || "-",
-            comment: "Auto from tracked assignments (current quarter).",
+            comment: "Tự động từ bài tập đã theo dõi (kỳ hiện tại).",
           },
           {
-            prose: "Participation Points (0-32)",
+            prose: "Điểm tham gia (0-32)",
             score: Number.isFinite(participationPoints) ? String(participationPoints) : "-",
-            comment: "Teacher-set points for this report.",
+            comment: "Điểm do giáo viên nhập cho báo cáo này.",
           },
         ];
       }
@@ -5340,7 +5469,7 @@
         const table = document.createElement("table");
         table.className = "report-band-table";
         table.innerHTML =
-          "<thead><tr><th>Prose</th><th>Score</th><th>Comments</th></tr></thead>";
+          "<thead><tr><th>Nội dung</th><th>Điểm</th><th>Nhận xét</th></tr></thead>";
         const body = document.createElement("tbody");
         const normalizedRows =
           Array.isArray(rows) && rows.length ?
@@ -5369,17 +5498,17 @@
         const visionLabel = reportVisionStatusLabel(visionStatus);
         const classFocusRows = [
           {
-            prose: "Lesson Summary",
-            score: lessonSummary ? "Provided" : "-",
+            prose: "Tóm tắt buổi học",
+            score: lessonSummary ? "Có" : "-",
             comment: lessonSummary || "Chưa có nội dung bài học.",
           },
           {
-            prose: "Vision / board visibility status",
+            prose: "Tình trạng mắt / khả năng nhìn bảng",
             score: visionLabel || "-",
-            comment: teacherName ? `Teacher: ${teacherName}` : "Teacher: -",
+            comment: teacherName ? `Giáo viên: ${teacherName}` : "Giáo viên: -",
           },
           {
-            prose: "Class Date / Day",
+            prose: "Ngày học / Thứ",
             score: classDate || "-",
             comment:
               [classDay, classDate].filter(Boolean).join(" | ") || "Chưa có ngày học.",
@@ -5434,31 +5563,31 @@
 
         return [
           createReportBand(
-            "Class Focus",
+            "Trọng tâm lớp học",
             classFocusRows,
             classFocusTone,
           ),
           createReportBand(
-            "Performance Snapshot (Auto from records)",
+            "Tổng hợp kết quả (tự động)",
             snapshotRows,
             snapshotTone,
           ),
           createReportBand(
-            "Basic Student Skills",
+            "Kỹ năng cơ bản của học sinh",
             skillRows,
             skillTone,
           ),
           createReportBand(
-            "Conduct During Class",
+            "Tác phong trong lớp",
             conductRows,
             conductTone,
           ),
           createReportBand(
-            "Parent-facing Comment (Vietnamese)",
+            "Nhận xét gửi phụ huynh",
             [
               {
-                prose: "Teacher summary",
-                score: comments ? "Provided" : "-",
+                prose: "Tóm tắt của giáo viên",
+                score: comments ? "Có" : "-",
                 comment: comments || "Chưa có nhận xét từ giáo viên.",
               },
             ],
@@ -5542,7 +5671,7 @@
         const parentName =
           normalizeText(state?.me?.parentsId) ||
           normalizeText(state?.me?.username) ||
-          "Parent";
+          "Phụ huynh";
         const parentEntry = resolveReportAcknowledgementEntry(active?.id, "parent");
         const studentEntry =
           active?.studentReviewedAt && active?.studentReviewedBy ?
@@ -5553,21 +5682,21 @@
           : resolveReportAcknowledgementEntry(active?.id, "student");
         if (ackButton) {
           ackButton.disabled = Boolean(parentEntry);
-          ackButton.textContent = parentEntry ? "Reviewed" : `${parentName} reviewed`;
+          ackButton.textContent = parentEntry ? "Đã xem" : `${parentName} đã xem`;
         }
         if (ackStatus) {
           ackStatus.textContent =
             parentEntry ?
-              `Acknowledged on ${formatPortalWeekdayDateTime(parentEntry.acknowledgedAt)} by ${parentEntry.acknowledgedBy || parentName}`
-            : "Waiting for parent review.";
+              `Đã xác nhận lúc ${formatPortalWeekdayDateTime(parentEntry.acknowledgedAt)} bởi ${parentEntry.acknowledgedBy || parentName}`
+            : "Chờ phụ huynh xác nhận.";
           ackStatus.className = "report-modal-ack-status" + (parentEntry ? " is-reviewed" : "");
         }
         const studentStatus = document.getElementById("performanceReportStudentReviewStatus");
         if (studentStatus) {
           studentStatus.textContent =
             studentEntry && studentEntry.acknowledgedAt ?
-              `Reviewed by ${studentEntry.acknowledgedBy || "Student"} at ${formatPortalWeekdayDateTime(studentEntry.acknowledgedAt)}`
-            : "Waiting for student review.";
+              `Đã xem bởi ${studentEntry.acknowledgedBy || "Học sinh"} lúc ${formatPortalWeekdayDateTime(studentEntry.acknowledgedAt)}`
+            : "Chờ học sinh xác nhận.";
           studentStatus.className = "report-modal-ack-status" + (studentEntry ? " is-reviewed" : "");
         }
         if (prevButton) prevButton.disabled = state.activeReportIndex <= 0;
@@ -5664,13 +5793,13 @@
 
       function formatPortalDate(value) {
         const raw = normalizeText(value);
-        if (!raw) return "Date unavailable";
+        if (!raw) return "Không có ngày";
         const date =
           /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
             new Date(`${raw}T00:00:00+07:00`)
           : new Date(raw);
-        if (Number.isNaN(date.getTime())) return "Date unavailable";
-        return new Intl.DateTimeFormat(undefined, {
+        if (Number.isNaN(date.getTime())) return "Không có ngày";
+        return new Intl.DateTimeFormat("vi-VN", {
           month: "short",
           day: "numeric",
           year: "numeric",
@@ -5680,10 +5809,10 @@
 
       function formatPortalDateTime(value) {
         const raw = normalizeText(value);
-        if (!raw) return "Time unavailable";
+        if (!raw) return "Không có thời gian";
         const date = new Date(raw);
-        if (Number.isNaN(date.getTime())) return "Time unavailable";
-        return new Intl.DateTimeFormat(undefined, {
+        if (Number.isNaN(date.getTime())) return "Không có thời gian";
+        return new Intl.DateTimeFormat("vi-VN", {
           month: "short",
           day: "numeric",
           hour: "numeric",
@@ -5730,10 +5859,10 @@
 
       function formatPortalWeekdayDateTime(value) {
         const raw = normalizeText(value);
-        if (!raw) return "Time unavailable";
+        if (!raw) return "Không có thời gian";
         const date = new Date(raw);
-        if (Number.isNaN(date.getTime())) return "Time unavailable";
-        return new Intl.DateTimeFormat(undefined, {
+        if (Number.isNaN(date.getTime())) return "Không có thời gian";
+        return new Intl.DateTimeFormat("vi-VN", {
           weekday: "short",
           month: "short",
           day: "numeric",
@@ -5780,7 +5909,7 @@
         head.className = "detail-item-head";
 
         const title = document.createElement("strong");
-        title.textContent = item.title || "Detail";
+        title.textContent = item.title || "Chi tiết";
 
         const meta = document.createElement("span");
         meta.className = "detail-meta";
@@ -5788,7 +5917,7 @@
 
         const note = document.createElement("p");
         note.className = "detail-note";
-        note.textContent = item.note || "No detail available.";
+        note.textContent = item.note || "Chưa có chi tiết.";
 
         head.append(title, meta);
         article.append(head, note);
@@ -5865,12 +5994,12 @@
 
       function newsStatusLabel(status = "", reviewStatus = "", awaitingReReview = false) {
         const token = resolveNewsChipToken(status, reviewStatus, awaitingReReview);
-        if (token === "approved") return "Approved";
-        if (token === "waiting") return "Waiting";
-        if (token === "revise") return "Revise";
-        if (token === "submitted") return "Submitted";
-        if (token === "open") return "Open";
-        return "None Submitted";
+        if (token === "approved") return "Đã duyệt";
+        if (token === "waiting") return "Chờ duyệt";
+        if (token === "revise") return "Cần sửa";
+        if (token === "submitted") return "Đã nộp";
+        if (token === "open") return "Đang mở";
+        return "Chưa nộp";
       }
 
       function newsStatusColorToken(status = "", reviewStatus = "", awaitingReReview = false) {
@@ -5929,12 +6058,32 @@
       function newsReviewLabel(status = "", reviewStatus = "", awaitingReReview = false) {
         const normalizedStatus = normalizeText(status).toLowerCase();
         const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
-        if (normalizedReview === "approved") return "Approved";
-        if (awaitingReReview === true) return "Waiting";
-        if (normalizedReview === "revision-requested") return "Revise";
-        if (normalizedStatus === "completed") return "Submitted";
-        if (normalizedStatus === "open") return "Open";
-        return "None Submitted";
+        if (normalizedReview === "approved") return "Đã duyệt";
+        if (awaitingReReview === true) return "Chờ duyệt";
+        if (normalizedReview === "revision-requested") return "Cần sửa";
+        if (normalizedStatus === "completed") return "Đã nộp";
+        if (normalizedStatus === "open") return "Đang mở";
+        return "Chưa nộp";
+      }
+
+      function refreshChipTooltips(root = document) {
+        const scope =
+          root && typeof root.querySelectorAll === "function" ? root : document;
+        const chips = Array.from(scope.querySelectorAll(".chip"));
+        chips.forEach((chip) => {
+          const label = normalizeText(chip.textContent);
+          if (!label || label === "-") {
+            chip.removeAttribute("title");
+            return;
+          }
+          const isTruncated = chip.scrollWidth > chip.clientWidth + 1;
+          if (isTruncated) chip.setAttribute("title", label);
+          else chip.removeAttribute("title");
+        });
+      }
+
+      function scheduleChipTooltipRefresh(root = document) {
+        window.requestAnimationFrame(() => refreshChipTooltips(root));
       }
 
       function chipClassForTone(tone = "") {
@@ -6036,11 +6185,11 @@
             .filter(Boolean),
         ).map((entry) => ({
           title: formatPortalDate(entry.reportDate),
-          meta: entry.submittedAt ? formatPortalDateTime(entry.submittedAt) : "No submission time",
+          meta: entry.submittedAt ? formatPortalDateTime(entry.submittedAt) : "Không có thời gian nộp",
           note:
-            normalizeText(entry.reviewStatus) === "approved" ? "Approved."
-            : normalizeText(entry.reviewStatus) === "revision-requested" ? "Revise requested."
-            : "Waiting for admin review.",
+            normalizeText(entry.reviewStatus) === "approved" ? "Đã duyệt."
+            : normalizeText(entry.reviewStatus) === "revision-requested" ? "Được yêu cầu chỉnh sửa."
+            : "Đang chờ giáo viên duyệt.",
           tone:
             normalizeText(entry.reviewStatus) === "approved" ? "good"
             : normalizeText(entry.reviewStatus) === "revision-requested" ? "warn"
@@ -6160,11 +6309,11 @@
 
       function newsWeekSetStatusLabel(token = "") {
         const normalized = normalizeText(token).toLowerCase();
-        if (normalized === "approved") return "Approved";
-        if (normalized === "revise") return "Revise";
-        if (normalized === "waiting") return "Waiting";
-        if (normalized === "submitted") return "Submitted";
-        return "Waiting";
+        if (normalized === "approved") return "Đã duyệt";
+        if (normalized === "revise") return "Cần sửa";
+        if (normalized === "waiting") return "Chờ duyệt";
+        if (normalized === "submitted") return "Đã nộp";
+        return "Đã nộp";
       }
 
       function newsWeekSetStatusChipHtml(token = "") {
@@ -6224,11 +6373,11 @@
         const hasStatus = Boolean(normalizeText(item?.reviewStatus)) || item?.awaitingReReview === true;
         if (!hasStatus) return { label: "-", tone: "neutral" };
         const status = normalizeNewsReviewStatusToken(item?.reviewStatus);
-        if (status === "approved") return { label: "Approved", tone: "good" };
-        if (status === "revision-requested") return { label: "Revise", tone: "revise" };
+        if (status === "approved") return { label: "Đã duyệt", tone: "good" };
+        if (status === "revision-requested") return { label: "Cần sửa", tone: "revise" };
         if (status === "submitted" && item?.awaitingReReview === true)
-          return { label: "Waiting", tone: "revise" };
-        if (status === "submitted") return { label: "Submitted", tone: "warn" };
+          return { label: "Chờ duyệt", tone: "revise" };
+        if (status === "submitted") return { label: "Đã nộp", tone: "warn" };
         return { label: "-", tone: "neutral" };
       }
 
@@ -6254,7 +6403,7 @@
       function setNewsWeekSetModalStatus(message = "") {
         const statusEl = document.getElementById("newsWeekSetModalStatus");
         if (!statusEl) return;
-        statusEl.textContent = normalizeText(message) || "Viewer is ready.";
+        statusEl.textContent = normalizeText(message) || "Trình xem đã sẵn sàng.";
       }
 
       function newsWeekSetViewerCurrentItem() {
@@ -6293,12 +6442,12 @@
         const metaEl = document.getElementById("newsWeekSetModalMeta");
         if (metaEl) {
           if (!weekSet) {
-            metaEl.textContent = "Open a week set to review submitted reports.";
+            metaEl.textContent = "Mở một tuần báo cáo để xem các bài đã nộp.";
           } else {
             const child = selectedDashboardChild() || {};
             const studentLabel =
               normalizeText(child?.fullName || child?.englishName || child?.eaglesId) ||
-              "Student";
+              "Học sinh";
             const level = normalizeText(child?.currentGrade) || "-";
             metaEl.textContent =
               `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`;
@@ -6319,6 +6468,7 @@
           setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
         });
         syncNewsWeekSetViewerControls();
+        scheduleChipTooltipRefresh(document.getElementById("newsWeekSetModal") || document);
       }
 
       function setNewsWeekSetModalOpen(open) {
@@ -6352,7 +6502,7 @@
         if (nextIndex === baseIndex) return;
         state.newsWeekSetViewerIndex = nextIndex;
         renderNewsWeekSetViewer();
-        setNewsWeekSetModalStatus(`Viewing ${nextIndex + 1} / ${items.length} in selected week set.`);
+        setNewsWeekSetModalStatus(`Đang xem ${nextIndex + 1} / ${items.length} trong tuần đã chọn.`);
       }
 
       function openNewsWeekSetModalByWeekSetId(weekSetId = "", options = {}) {
@@ -6372,7 +6522,7 @@
         setNewsWeekSetModalOpen(true);
         if (!(options && options.silentStatus)) {
           setNewsWeekSetModalStatus(
-            `Opened week set ${normalizeText(weekSet?.weekStart)} to ${normalizeText(weekSet?.weekEnd)}.`,
+            `Đã mở tuần ${normalizeText(weekSet?.weekStart)} đến ${normalizeText(weekSet?.weekEnd)}.`,
           );
         }
         return true;
@@ -6409,8 +6559,9 @@
           );
           const latestDate = normalizeText(item?.latestReportDate || item?.reports?.[0]?.reportDate);
           const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
-          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalDate(item?.weekStart))} to ${escapeHtml(formatPortalDate(item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalDate(item?.weekStart))} đến ${escapeHtml(formatPortalDate(item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
         }).join("");
+        scheduleChipTooltipRefresh(body);
       }
 
       function newsCalendarEvents(calendar = []) {
@@ -6450,7 +6601,7 @@
         if (!start) return null;
         return {
           id: `detail-homework-${normalizeText(row?.id) || start}`,
-          title: normalizeText(row?.assignmentName) || "Homework",
+          title: normalizeText(row?.assignmentName) || "Bài tập",
           start,
           allDay: true,
           classNames:
@@ -6460,22 +6611,31 @@
         };
       }
 
+      function attendanceStatusLabel(status = "") {
+        const normalized = normalizeText(status).toLowerCase();
+        if (normalized === "present") return "Có mặt";
+        if (normalized === "absent") return "Vắng";
+        if (normalized === "late" || normalized === "tardy") return "Đi trễ";
+        if (normalized === "excused") return "Có phép";
+        return normalizeText(status) || "Điểm danh";
+      }
+
       function buildParentDetailModel(page) {
         const child = selectedDashboardChild();
         if (!child) {
           return {
-            title: "Student Detail",
+            title: "Chi tiết học sinh",
             lead: "Chưa có dữ liệu học sinh để hiển thị.",
             metrics: [metricCard("Tổng quan", "Chưa có dữ liệu")],
-            calendarTitle: "Calendar",
-            calendarSummary: "No calendar entries are available.",
+            calendarTitle: "Lịch",
+            calendarSummary: "Chưa có dữ liệu lịch.",
             events: [],
-            primaryTitle: "Current Focus",
+            primaryTitle: "Trọng tâm hiện tại",
             primaryItems: [],
-            primaryEmpty: "No detail is available yet.",
-            historyTitle: "Recent History",
+            primaryEmpty: "Chưa có chi tiết.",
+            historyTitle: "Lịch sử gần đây",
             historyItems: [],
-            historyEmpty: "No history is available yet.",
+            historyEmpty: "Chưa có lịch sử.",
           };
         }
 
@@ -6513,41 +6673,41 @@
 
         if (parseNumber(assignments.overdue) > 0) {
           recommendationItems.push({
-            title: "Clear past-due homework first",
-            meta: `${parseNumber(assignments.overdue)} overdue item(s)`,
-            note: "Finish the oldest overdue work before taking on new review tasks.",
+            title: "Ưu tiên xử lý bài tập quá hạn",
+            meta: `${parseNumber(assignments.overdue)} mục quá hạn`,
+            note: "Hoàn thành các bài quá hạn cũ nhất trước khi nhận thêm nhiệm vụ ôn tập mới.",
             tone: "bad",
           });
         }
         if (parseNumber(assignments.pending) > 2) {
           recommendationItems.push({
-            title: "Use a fixed homework block",
-            meta: `${parseNumber(assignments.pending)} current item(s)`,
-            note: "Protect one consistent homework block each day until the queue drops.",
+            title: "Giữ khung giờ làm bài cố định",
+            meta: `${parseNumber(assignments.pending)} mục đang chờ`,
+            note: "Duy trì một khung giờ cố định mỗi ngày cho đến khi hàng chờ giảm.",
             tone: "warn",
           });
         }
         if (totalAttendance > 0 && attendancePercent < 90) {
           recommendationItems.push({
-            title: "Improve attendance consistency",
-            meta: `Attendance ${formatPercent(attendancePercent)}`,
-            note: "Attendance dips are strong enough to affect current pacing and outcomes.",
+            title: "Cải thiện độ ổn định chuyên cần",
+            meta: `Chuyên cần ${formatPercent(attendancePercent)}`,
+            note: "Tỷ lệ chuyên cần giảm đang ảnh hưởng đáng kể đến tiến độ và kết quả học tập.",
             tone: "warn",
           });
         }
         if (Number.isFinite(averageScore) && averageScore < 75) {
           recommendationItems.push({
-            title: "Prioritize low-scoring topics",
-            meta: `Average ${formatPercent(averageScore)}`,
-            note: "Use the recent grade history below to choose the next review set.",
+            title: "Ưu tiên ôn tập chủ đề điểm thấp",
+            meta: `Điểm TB ${formatPercent(averageScore)}`,
+            note: "Dùng lịch sử điểm gần đây bên dưới để chọn bộ chủ đề ôn tập tiếp theo.",
             tone: "bad",
           });
         }
         if (!recommendationItems.length) {
           recommendationItems.push({
-            title: "Maintain the current routine",
-            meta: "No urgent blockers",
-            note: "Keep the current homework, attendance, and review rhythm in place this week.",
+            title: "Duy trì nhịp học hiện tại",
+            meta: "Không có điểm nghẽn khẩn cấp",
+            note: "Giữ nhịp bài tập, điểm danh và ôn tập như hiện tại trong tuần này.",
             tone: "good",
           });
         }
@@ -6571,10 +6731,10 @@
                 `${total} báo cáo tin tức gần đây cho ${normalizeText(child.fullName || child.eaglesId)}.`
               : "Chưa có báo cáo tin tức nào.",
             metrics: [
-              metricCard("Approved", String(setSummary.approved), setSummary.approved ? "green" : ""),
-              metricCard("Waiting", String(setSummary.waiting), setSummary.waiting ? "blue" : ""),
-              metricCard("Revise", String(setSummary.revise), setSummary.revise ? "purple" : ""),
-              metricCard("Reports", String(total)),
+              metricCard("Đã duyệt", String(setSummary.approved), setSummary.approved ? "green" : ""),
+              metricCard("Chờ duyệt", String(setSummary.waiting), setSummary.waiting ? "blue" : ""),
+              metricCard("Cần sửa", String(setSummary.revise), setSummary.revise ? "purple" : ""),
+              metricCard("Số báo cáo", String(total)),
             ],
             calendarTitle: "Lịch báo cáo tin tức",
             calendarSummary:
@@ -6593,124 +6753,124 @@
 
         if (page === "current-homework") {
           return {
-            title: "Current Homework",
-            lead: `${currentHomework.length || 0} active homework item(s) are still open for ${normalizeText(child.fullName || child.eaglesId)}.`,
+            title: "Bài tập về nhà hiện tại",
+            lead: `${currentHomework.length || 0} bài tập hiện tại vẫn đang mở cho ${normalizeText(child.fullName || child.eaglesId)}.`,
             metrics: [
               metricCard(
-                "Open",
+                "Đang mở",
                 String(currentHomework.length),
                 currentHomework.length ? "blue" : "green",
               ),
               metricCard(
-                "Overdue",
+                "Quá hạn",
                 String(parseNumber(assignments.overdue)),
                 parseNumber(assignments.overdue) ? "red" : "green",
               ),
               metricCard(
-                "Completed",
+                "Đã hoàn thành",
                 String(parseNumber(assignments.completed)),
                 "green",
               ),
               metricCard(
-                "Average",
+                "Điểm TB",
                 Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
                 Number.isFinite(averageScore) && averageScore < 75 ? "purple" : "green",
               ),
             ],
-            calendarTitle: "Current Homework Calendar",
+            calendarTitle: "Lịch bài tập hiện tại",
             calendarSummary:
               currentHomework.length ?
-                "Open homework is plotted on each due date."
-              : "No open homework is currently scheduled.",
+                "Các bài tập đang mở được gắn vào từng ngày đến hạn."
+              : "Hiện chưa có bài tập đang mở.",
             events: currentHomework
               .map((row) => buildHomeworkEvent(row, false))
               .filter(Boolean),
-            primaryTitle: "Open Assignments",
+            primaryTitle: "Bài tập đang mở",
             primaryItems: currentHomework.map((row) => ({
-              title: normalizeText(row.assignmentName) || "Homework",
-              meta: `Due ${formatPortalDate(row.dueAt || row.dueDate)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
-              note: normalizeText(row.comments) || "Still waiting for submission.",
+              title: normalizeText(row.assignmentName) || "Bài tập",
+              meta: `Hạn nộp ${formatPortalDate(row.dueAt || row.dueDate)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              note: normalizeText(row.comments) || "Đang chờ nộp bài.",
               tone: "warn",
             })),
-            primaryEmpty: "No current homework is waiting for submission.",
-            historyTitle: "Recent Assignment History",
+            primaryEmpty: "Chưa có bài tập hiện tại chờ nộp.",
+            historyTitle: "Lịch sử bài tập gần đây",
             historyItems: assignmentHistory.slice(0, 10).map((row) => ({
-              title: normalizeText(row.assignmentName) || "Assignment",
+              title: normalizeText(row.assignmentName) || "Bài tập",
               meta: `${normalizeText(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
               note:
                 Number.isFinite(Number(row.scorePercent)) ?
-                  `Score ${formatPercent(row.scorePercent)}`
-                : normalizeText(row.comments) || "No score has been recorded yet.",
+                  `Điểm ${formatPercent(row.scorePercent)}`
+                : normalizeText(row.comments) || "Chưa có điểm.",
               tone:
                 row.status === "completed" ? "good"
                 : row.status === "overdue" ? "bad"
                 : "warn",
             })),
-            historyEmpty: "No assignment history is available yet.",
+            historyEmpty: "Chưa có lịch sử bài tập.",
           };
         }
 
         if (page === "past-due-homework") {
           return {
-            title: "Past Due Homework",
+            title: "Bài tập về nhà quá hạn",
             lead:
               overdueHomework.length ?
-                `${overdueHomework.length} homework item(s) are already overdue.`
-              : "No past-due homework is currently flagged.",
+                `${overdueHomework.length} bài tập đã quá hạn.`
+              : "Hiện không có bài tập quá hạn.",
             metrics: [
               metricCard(
-                "Overdue",
+                "Quá hạn",
                 String(overdueHomework.length),
                 overdueHomework.length ? "red" : "green",
               ),
               metricCard(
-                "Pending",
+                "Chờ nộp",
                 String(parseNumber(assignments.pending)),
                 parseNumber(assignments.pending) ? "blue" : "green",
               ),
               metricCard(
-                "Completed",
+                "Đã hoàn thành",
                 String(parseNumber(assignments.completed)),
                 "green",
               ),
               metricCard(
-                "Average",
+                "Điểm TB",
                 Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
                 Number.isFinite(averageScore) && averageScore < 75 ? "purple" : "green",
               ),
             ],
-            calendarTitle: "Past Due Calendar",
+            calendarTitle: "Lịch bài tập quá hạn",
             calendarSummary:
               overdueHomework.length ?
-                "Overdue homework is highlighted on the original due dates."
-              : "There are no overdue due dates to review.",
+                "Bài tập quá hạn được tô nổi bật theo ngày đến hạn gốc."
+              : "Không có mốc quá hạn để xem.",
             events: overdueHomework
               .map((row) => buildHomeworkEvent(row, true))
               .filter(Boolean),
-            primaryTitle: "Urgent Homework",
+            primaryTitle: "Bài tập cần xử lý gấp",
             primaryItems: overdueHomework.map((row) => ({
-              title: normalizeText(row.assignmentName) || "Overdue homework",
-              meta: `Due ${formatPortalDate(row.dueAt || row.dueDate)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              title: normalizeText(row.assignmentName) || "Bài tập quá hạn",
+              meta: `Hạn nộp ${formatPortalDate(row.dueAt || row.dueDate)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
               note:
                 normalizeText(row.comments) ||
-                "Requires immediate completion and submission.",
+                "Cần hoàn thành và nộp ngay.",
               tone: "bad",
             })),
-            primaryEmpty: "No overdue homework requires action right now.",
-            historyTitle: "Recent Homework Timeline",
+            primaryEmpty: "Hiện không có bài tập quá hạn cần xử lý.",
+            historyTitle: "Tiến trình bài tập gần đây",
             historyItems: assignmentHistory.slice(0, 10).map((row) => ({
-              title: normalizeText(row.assignmentName) || "Assignment",
+              title: normalizeText(row.assignmentName) || "Bài tập",
               meta: `${normalizeText(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
               note:
-                row.homeworkOnTime === true ? "Completed on time."
-                : row.status === "completed" ? "Completed after the due date."
-                : normalizeText(row.comments) || "Still open.",
+                row.homeworkOnTime === true ? "Hoàn thành đúng hạn."
+                : row.status === "completed" ? "Hoàn thành sau hạn."
+                : normalizeText(row.comments) || "Vẫn đang mở.",
               tone:
                 row.status === "completed" ? "good"
                 : row.status === "overdue" ? "bad"
                 : "warn",
             })),
-            historyEmpty: "No homework timeline is available yet.",
+            historyEmpty: "Chưa có tiến trình bài tập.",
           };
         }
 
@@ -6719,130 +6879,130 @@
             (row) => row.status !== "present",
           );
           return {
-            title: "Attendance Calendar SYTD",
+            title: "Điểm danh lớp học (SYTD)",
             lead:
               totalAttendance ?
-                `Attendance history covers ${totalAttendance} recorded class day(s) so far this year.`
-              : "Attendance has not been recorded yet.",
+                `Lịch sử điểm danh bao gồm ${totalAttendance} buổi học đã ghi nhận trong năm học này.`
+              : "Chưa có dữ liệu điểm danh.",
             metrics: [
-              metricCard("Present", String(presentAttendance), "green"),
+              metricCard("Có mặt", String(presentAttendance), "green"),
               metricCard(
-                "Absent",
+                "Vắng",
                 String(absentAttendance),
                 absentAttendance ? "red" : "green",
               ),
               metricCard(
-                "Late",
+                "Đi trễ",
                 String(lateAttendance),
                 lateAttendance ? "purple" : "green",
               ),
               metricCard(
-                "Excused",
+                "Có phép",
                 String(excusedAttendance),
                 excusedAttendance ? "blue" : "green",
               ),
             ],
-            calendarTitle: "Attendance Calendar",
+            calendarTitle: "Lịch điểm danh",
             calendarSummary:
               attendanceHistory.length ?
-                "Each recorded attendance entry is mapped to its class date."
-              : "No attendance entries are available.",
+                "Mỗi bản ghi điểm danh được gắn vào ngày học tương ứng."
+              : "Chưa có bản ghi điểm danh.",
             events: attendanceHistory.map((row) => ({
               id: `attendance-${normalizeText(row.id)}`,
-              title: `${normalizeText(row.status) || "present"}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              title: `${attendanceStatusLabel(row.status)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
               start: normalizeText(row.attendanceDate),
               allDay: true,
               classNames: [
                 `fc-event-attendance-${normalizeText(row.status).toLowerCase() || "present"}`,
               ],
             })),
-            primaryTitle: "Attendance Alerts",
+            primaryTitle: "Cảnh báo điểm danh",
             primaryItems: recentAlerts.slice(0, 10).map((row) => ({
-              title: `${normalizeText(row.status) || "Attendance"}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              title: `${attendanceStatusLabel(row.status)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
               meta: formatPortalDate(row.attendanceDate),
               note:
                 normalizeText(row.comments) ||
-                "Recorded as a non-present attendance status.",
+                "Được ghi nhận là trạng thái không có mặt.",
               tone: row.status === "absent" ? "bad" : "warn",
             })),
             primaryEmpty:
-              "No absences, tardies, or excused notes are flagged in recent history.",
-            historyTitle: "Recent Attendance Log",
+              "Không có cảnh báo vắng, trễ hoặc có phép trong lịch sử gần đây.",
+            historyTitle: "Nhật ký điểm danh gần đây",
             historyItems: attendanceHistory.slice(0, 12).map((row) => ({
-              title: `${normalizeText(row.className) || "Class attendance"} | ${normalizeText(row.status) || "present"}`,
+              title: `${normalizeText(row.className) || "Điểm danh lớp"} | ${attendanceStatusLabel(row.status)}`,
               meta: formatPortalDate(row.attendanceDate),
               note:
-                normalizeText(row.comments) || "No extra attendance note was recorded.",
+                normalizeText(row.comments) || "Không có ghi chú thêm.",
               tone:
                 row.status === "present" ? "good"
                 : row.status === "absent" ? "bad"
                 : "warn",
             })),
-            historyEmpty: "No attendance log is available yet.",
+            historyEmpty: "Chưa có nhật ký điểm danh.",
           };
         }
 
         if (page === "performance-reports") {
           return {
-            title: "Performance Reports SYTD Archive",
+            title: "Lưu trữ báo cáo kết quả học tập (SYTD)",
             lead:
               reportArchive.length ?
-                `${reportArchive.length} performance report archive item(s) are available for review.`
-              : "No performance reports are available yet.",
+                `${reportArchive.length} báo cáo kết quả học tập đang có trong kho lưu trữ để xem.`
+              : "Chưa có báo cáo kết quả học tập.",
             metrics: [
               metricCard(
-                "Reports",
+                "Báo cáo",
                 String(reportArchive.length),
                 reportArchive.length ? "green" : "",
               ),
               metricCard(
-                "Average",
+                "Điểm TB",
                 Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
                 Number.isFinite(averageScore) && averageScore < 75 ? "purple" : "green",
               ),
               metricCard(
-                "Pending",
+                "Chờ nộp",
                 String(parseNumber(assignments.pending)),
                 parseNumber(assignments.pending) ? "blue" : "green",
               ),
               metricCard(
-                "Overdue",
+                "Quá hạn",
                 String(parseNumber(assignments.overdue)),
                 parseNumber(assignments.overdue) ? "red" : "green",
               ),
             ],
-            calendarTitle: "Performance Report Calendar",
+            calendarTitle: "Lịch báo cáo kết quả học tập",
             calendarSummary:
               reportArchive.length ?
-                "Report publication dates are pinned to the archive calendar."
-              : "There are no report dates to plot yet.",
+                "Ngày phát hành báo cáo được gắn trên lịch lưu trữ."
+              : "Chưa có ngày báo cáo để hiển thị.",
             events: reportArchive.map((row) => ({
               id: `report-${normalizeText(row.id)}`,
-              title: `Report${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
+              title: `Báo cáo${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
               start: normalizeText(row.generatedDate),
               allDay: true,
               classNames: ["fc-event-report"],
             })),
-            primaryTitle: "Latest Reports",
+            primaryTitle: "Báo cáo mới nhất",
             primaryItems: reportArchive.slice(0, 8).map((row) => ({
-              title: `${normalizeText(row.className) || "Report"} | ${normalizeText(row.quarter || "").toUpperCase() || "Quarter"}`,
+              title: `${normalizeText(row.className) || "Báo cáo"} | ${normalizeText(row.quarter || "").toUpperCase() || "Kỳ"}`,
               meta: formatPortalDateTime(row.generatedAt),
               note:
                 normalizeText(row.comments) ||
-                "No additional report comment was saved.",
+                "Không có nhận xét bổ sung.",
               tone: "good",
             })),
-            primaryEmpty: "No performance report archive is available yet.",
-            historyTitle: "Report Context",
+            primaryEmpty: "Chưa có báo cáo trong kho lưu trữ.",
+            historyTitle: "Ngữ cảnh báo cáo",
             historyItems: gradeHistory.slice(0, 10).map((row) => ({
-              title: normalizeText(row.assignmentName) || "Assignment",
+              title: normalizeText(row.assignmentName) || "Bài tập",
               meta:
                 Number.isFinite(Number(row.scorePercent)) ?
-                  `Score ${formatPercent(row.scorePercent)}`
+                  `Điểm ${formatPercent(row.scorePercent)}`
                 : normalizeText(row.status),
               note:
                 normalizeText(row.comments) ||
-                "Used as supporting evidence inside the report cycle.",
+                "Dùng làm dữ liệu tham chiếu cho chu kỳ báo cáo.",
               tone:
                 (
                   Number.isFinite(Number(row.scorePercent)) &&
@@ -6851,64 +7011,64 @@
                   "warn"
                 : "good",
             })),
-            historyEmpty: "No supporting grade context is available yet.",
+            historyEmpty: "Chưa có dữ liệu điểm tham chiếu.",
           };
         }
 
         if (page === "grades-ytd") {
           return {
-            title: "Grades YTD",
+            title: "Điểm số YTD",
             lead:
               gradeHistory.length ?
-                `${gradeHistory.length} graded or completed assignment record(s) are available this year.`
-              : "No grade history is available yet.",
+                `${gradeHistory.length} bản ghi bài tập đã chấm/đã hoàn thành có trong năm học này.`
+              : "Chưa có lịch sử điểm.",
             metrics: [
               metricCard(
-                "Average",
+                "Điểm TB",
                 Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
                 Number.isFinite(averageScore) && averageScore < 75 ? "purple" : "green",
               ),
               metricCard(
-                "Graded",
+                "Đã chấm",
                 String(gradeHistory.length),
                 gradeHistory.length ? "green" : "",
               ),
               metricCard(
-                "Pending",
+                "Chờ nộp",
                 String(parseNumber(assignments.pending)),
                 parseNumber(assignments.pending) ? "blue" : "green",
               ),
               metricCard(
-                "Completed",
+                "Đã hoàn thành",
                 String(parseNumber(assignments.completed)),
                 "green",
               ),
             ],
-            calendarTitle: "Grade Timeline",
+            calendarTitle: "Tiến trình điểm số",
             calendarSummary:
               gradeHistory.length ?
-                "Grade entries are mapped to the assignment due or submission date."
-              : "There are no grade dates to plot yet.",
+                "Bản ghi điểm được gắn theo ngày đến hạn hoặc ngày nộp bài."
+              : "Chưa có mốc điểm để hiển thị.",
             events: gradeHistory
               .map((row) => ({
                 id: `grade-${normalizeText(row.id)}`,
                 title:
                   Number.isFinite(Number(row.scorePercent)) ?
                     `${normalizeText(row.assignmentName)} | ${formatPercent(row.scorePercent)}`
-                  : normalizeText(row.assignmentName) || "Assignment",
+                  : normalizeText(row.assignmentName) || "Bài tập",
                 start: normalizeText(row.submittedDate || row.dueDate),
                 allDay: true,
                 classNames: ["fc-event-grade"],
               }))
               .filter((row) => normalizeText(row.start)),
-            primaryTitle: "Recent Grade Records",
+            primaryTitle: "Điểm số gần đây",
             primaryItems: gradeHistory.slice(0, 10).map((row) => ({
-              title: normalizeText(row.assignmentName) || "Assignment",
+              title: normalizeText(row.assignmentName) || "Bài tập",
               meta:
                 Number.isFinite(Number(row.scorePercent)) ?
                   `${formatPercent(row.scorePercent)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`
                 : `${normalizeText(row.status)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
-              note: normalizeText(row.comments) || "No grading comment was recorded.",
+              note: normalizeText(row.comments) || "Không có ghi chú chấm điểm.",
               tone:
                 (
                   Number.isFinite(Number(row.scorePercent)) &&
@@ -6917,21 +7077,21 @@
                   "warn"
                 : "good",
             })),
-            primaryEmpty: "No recent grade records are available.",
-            historyTitle: "Assignment History",
+            primaryEmpty: "Chưa có bản ghi điểm gần đây.",
+            historyTitle: "Lịch sử bài tập",
             historyItems: assignmentHistory.slice(0, 12).map((row) => ({
-              title: normalizeText(row.assignmentName) || "Assignment",
+              title: normalizeText(row.assignmentName) || "Bài tập",
               meta: `${normalizeText(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
               note:
                 Number.isFinite(Number(row.scorePercent)) ?
-                  `Score ${formatPercent(row.scorePercent)}`
-                : normalizeText(row.comments) || "No score recorded.",
+                  `Điểm ${formatPercent(row.scorePercent)}`
+                : normalizeText(row.comments) || "Chưa ghi điểm.",
               tone:
                 row.status === "overdue" ? "bad"
                 : row.status === "pending" ? "warn"
                 : "good",
             })),
-            historyEmpty: "No assignment history is available yet.",
+            historyEmpty: "Chưa có lịch sử bài tập.",
           };
         }
 
@@ -6940,7 +7100,7 @@
           ...currentHomework.map((row) => buildHomeworkEvent(row, false)),
           ...reportArchive.slice(0, 10).map((row) => ({
             id: `focus-report-${normalizeText(row.id)}`,
-            title: `Report | ${normalizeText(row.className) || "Class"}`,
+            title: `Báo cáo | ${normalizeText(row.className) || "Lớp"}`,
             start: normalizeText(row.generatedDate),
             allDay: true,
             classNames: ["fc-event-report"],
@@ -6948,45 +7108,45 @@
         ].filter(Boolean);
 
         return {
-          title: "RLời khuyên để đạt được thành công trong học tập",
+          title: "Khuyến nghị để đạt kết quả học tập tốt",
           lead: recommendationItems.map((item) => item.title).join(". "),
           metrics: [
             metricCard(
-              "Attendance",
+              "Chuyên cần",
               formatPercent(attendancePercent),
               attendancePercent < 90 ? "purple" : "green",
             ),
             metricCard(
-              "Average",
+              "Điểm TB",
               Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
               Number.isFinite(averageScore) && averageScore < 75 ? "purple" : "green",
             ),
             metricCard(
-              "Pending",
+              "Chờ nộp",
               String(parseNumber(assignments.pending)),
               parseNumber(assignments.pending) ? "blue" : "green",
             ),
             metricCard(
-              "Overdue",
+              "Quá hạn",
               String(parseNumber(assignments.overdue)),
               parseNumber(assignments.overdue) ? "red" : "green",
             ),
           ],
-          calendarTitle: "Priority Calendar",
+          calendarTitle: "Lịch ưu tiên",
           calendarSummary:
             focusEvents.length ?
-              "The calendar combines urgent homework and recent report checkpoints."
-            : "No urgent priorities are currently plotted.",
+              "Lịch tổng hợp bài tập cấp bách và các mốc báo cáo gần đây."
+            : "Hiện chưa có ưu tiên khẩn cấp trên lịch.",
           events: focusEvents,
-          primaryTitle: "Priority Actions",
+          primaryTitle: "Hành động ưu tiên",
           primaryItems: recommendationItems,
-          primaryEmpty: "No immediate recommendations are available.",
-          historyTitle: "Supporting Evidence",
+          primaryEmpty: "Chưa có khuyến nghị cần làm ngay.",
+          historyTitle: "Dữ liệu tham chiếu",
           historyItems: [...overdueHomework, ...gradeHistory.slice(0, 6)]
             .slice(0, 10)
             .map((row) => ({
               title: normalizeText(
-                row.assignmentName || row.className || "Supporting detail",
+                row.assignmentName || row.className || "Chi tiết tham chiếu",
               ),
               meta:
                 normalizeText(row.generatedAt) ?
@@ -6996,10 +7156,10 @@
                   ),
               note:
                 normalizeText(row.comments) ||
-                "Used to support the current recommendation set.",
+                "Dùng để hỗ trợ bộ khuyến nghị hiện tại.",
               tone: normalizeText(row.status) === "overdue" ? "bad" : "warn",
             })),
-          historyEmpty: "No supporting evidence is available yet.",
+          historyEmpty: "Chưa có dữ liệu tham chiếu.",
         };
       }
 
@@ -7008,7 +7168,7 @@
         if (!grid) return null;
         if (!window.FullCalendar || !window.FullCalendar.Calendar) {
           grid.innerHTML =
-            "<div class='detail-empty'>FullCalendar could not be loaded.</div>";
+            "<div class='detail-empty'>Không tải được FullCalendar.</div>";
           return null;
         }
         if (!state.detailCalendar) {
@@ -7021,7 +7181,7 @@
               right: "",
             },
             buttonText: {
-              today: "Today",
+              today: "Hôm nay",
             },
             eventClick(info) {
               const dateKey =
@@ -7099,6 +7259,7 @@
           calendar.gotoDate(anchorDate);
         }
         calendar.render();
+        scheduleChipTooltipRefresh(document.getElementById("portalDetailCard") || document);
       }
 
       function syncDashboardPageVisibility() {
@@ -7165,7 +7326,7 @@
             snapshotBadge.textContent = "Chưa có dữ liệu";
             snapshotBadge.className = "chip chip-neutral";
           }
-          if (overview) overview.textContent = "Student dashboard is not available.";
+          if (overview) overview.textContent = "Bảng điều khiển học sinh chưa sẵn sàng.";
           renderNewsQueueHome();
           return;
         }
@@ -7237,9 +7398,9 @@
             averageTone,
           ),
           metricCard("Báo cáo", String(reportCount)),
-          metricCard("News Approved", String(approvedNews), approvedNews ? "green" : ""),
-          metricCard("News Waiting", String(submittedNews), submittedNews ? "blue" : ""),
-          metricCard("News Revise", String(revisionNews), revisionNews ? "red" : ""),
+          metricCard("Tin tức đã duyệt", String(approvedNews), approvedNews ? "green" : ""),
+          metricCard("Tin tức đã nộp", String(submittedNews), submittedNews ? "blue" : ""),
+          metricCard("Tin tức cần sửa", String(revisionNews), revisionNews ? "red" : ""),
         );
         if (overview) {
           overview.textContent = displayEaglesId ?
@@ -7270,22 +7431,22 @@
         setSummary(
           "gradesYtdSummary",
           Number.isFinite(averageScore) ?
-            `Grade average YTD: ${formatPercent(averageScore)}.`
-          : "Grade average YTD is not available yet.",
+            `Điểm trung bình YTD: ${formatPercent(averageScore)}.`
+          : "Chưa có điểm trung bình YTD.",
         );
         const recommendations = [];
-        if (overdueHomework > 0) recommendations.push("Clear past-due homework first.");
+        if (overdueHomework > 0) recommendations.push("Ưu tiên xử lý bài tập quá hạn trước.");
         if (pendingHomework > 2)
-          recommendations.push("Use a fixed daily homework block.");
+          recommendations.push("Duy trì khung giờ làm bài cố định mỗi ngày.");
         if (totalAttendance > 0 && attendancePercent < 90)
-          recommendations.push("Improve attendance consistency to protect outcomes.");
+          recommendations.push("Cải thiện chuyên cần để bảo toàn kết quả học tập.");
         if (Number.isFinite(averageScore) && averageScore < 75)
-          recommendations.push("Prioritize review on low-scoring topics this week.");
+          recommendations.push("Ưu tiên ôn lại các chủ đề có điểm thấp trong tuần này.");
         if (totalNews === 0)
           recommendations.push("Khuyến khích học sinh gửi báo cáo tin tức hôm nay.");
         if (!recommendations.length)
           recommendations.push(
-            "Maintain the current routine and run one weekly progress review.",
+            "Duy trì nhịp học hiện tại và thực hiện một lần rà soát tiến độ mỗi tuần.",
           );
         setSummary("recommendationsSummary", recommendations.join(" "));
 
@@ -7295,6 +7456,7 @@
         }
         renderPortalDetailPage();
         renderNewsQueueHome();
+        scheduleChipTooltipRefresh(document.getElementById("portalCard") || document);
       }
 
       function buildParentNewsWeekSetsFromState() {
@@ -7382,10 +7544,11 @@
         badgeEl.textContent = total ? `${summary.approved}/${summary.submitted}/${summary.waiting}/${summary.revise}` : "Không có";
         const summaryText =
           total ?
-            `Approved ${summary.approved} • Submitted ${summary.submitted} • Waiting ${summary.waiting} • Revise ${summary.revise}`
+            `Đã duyệt ${summary.approved} • Đã nộp ${summary.submitted} • Chờ duyệt ${summary.waiting} • Cần sửa ${summary.revise}`
           : "Chưa có báo cáo tin tức.";
         summaryEl.textContent = summaryText;
         renderNewsQueueTable("newsQueueBody", items);
+        scheduleChipTooltipRefresh(document.getElementById("newsQueueCard") || document);
       }
 
       function applyPatchToProfileState() {
@@ -7600,8 +7763,9 @@
           await hydratePortal();
           document.getElementById("loginCard").classList.add("hidden");
           setActivePortalView("dashboard");
+          scheduleChipTooltipRefresh(document);
         } catch (error) {
-          setStatus(error?.message || "Unable to initialize parent portal.", "err");
+          setStatus(error?.message || "Không thể khởi tạo cổng phụ huynh.", "err");
           updateSessionBadge("Chưa đăng nhập", false);
           document.getElementById("portalCard").classList.add("hidden");
           document.getElementById("portalDetailCard").classList.add("hidden");

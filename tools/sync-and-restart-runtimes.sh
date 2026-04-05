@@ -13,6 +13,7 @@ esac
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEV_ROOT="${SIS_DEV_ROOT:-$REPO_ROOT}"
+LIVE_ROOT="${SIS_LIVE_ROOT:-/home/admin.eagles.edu.vn/sis}"
 LIVE_PORT="${SIS_LIVE_PORT:-8787}"
 DEV_PORT="${SIS_DEV_PORT:-8788}"
 DEV_PID_FILE="${SIS_DEV_PID_FILE:-$DEV_ROOT/runtime-data/dev-runtime.pid}"
@@ -57,6 +58,19 @@ run_sync() {
       log "skip sync (restart-only mode)"
       ;;
   esac
+}
+
+refresh_live_prisma_client() {
+  if [[ ! -d "$LIVE_ROOT" ]]; then
+    log "skip Prisma generate (live root missing): ${LIVE_ROOT}"
+    return 0
+  fi
+  if [[ ! -f "$LIVE_ROOT/package.json" ]]; then
+    log "skip Prisma generate (package.json missing): ${LIVE_ROOT}"
+    return 0
+  fi
+  log "refreshing live Prisma client in ${LIVE_ROOT}"
+  (cd "$LIVE_ROOT" && npm run db:generate)
 }
 
 restart_live_runtime() {
@@ -174,6 +188,7 @@ NODE
 
 main() {
   run_sync
+  refresh_live_prisma_client
   restart_live_runtime
   stop_dev_runtime
   start_dev_runtime

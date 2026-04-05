@@ -6149,18 +6149,18 @@ Select an assignment link to inspect details.</pre
                           <th
                             scope="col"
                             data-table-sort="newsReview"
-                            data-sort-field="setStatus"
-                            tabindex="0"
-                            aria-sort="none">
-                            Status
-                          </th>
-                          <th
-                            scope="col"
-                            data-table-sort="newsReview"
                             data-sort-field="setAction"
                             tabindex="0"
                             aria-sort="none">
                             Action
+                          </th>
+                          <th
+                            scope="col"
+                            data-table-sort="newsReview"
+                            data-sort-field="setStatus"
+                            tabindex="0"
+                            aria-sort="none">
+                            Status
                           </th>
                           <th
                             scope="col"
@@ -13415,11 +13415,7 @@ Select an assignment link to inspect details.</pre
           0,
           Number.parseInt(String(set?.submittedCount || 0), 10) || 0,
         );
-        const revisionRequested = Math.max(
-          0,
-          Number.parseInt(String(set?.revisionRequestedCount || 0), 10) || 0,
-        );
-        const unapproved = Math.max(0, submitted + revisionRequested);
+        const unapproved = Math.max(0, submitted);
         if (reportCount >= 7 && approved >= 7) return "completed";
         if (unapproved === 0) return "incomplete";
         return `unapproved-${unapproved}`;
@@ -13784,8 +13780,8 @@ Select an assignment link to inspect details.</pre
           <td data-label="Student">${escapeHtml(studentLabel)}</td>
           <td data-label="Level">${escapeHtml(fullLevelLabel(student?.level || ""))}</td>
           <td data-label="Reports">${escapeHtml(`${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`)}</td>
-          <td data-label="Status">${newsReviewStatusChipHtml(rowStatus)}</td>
           <td data-label="Action">${newsReviewSetActionChipHtml(setAction)}</td>
+          <td data-label="Status">${newsReviewStatusChipHtml(rowStatus)}</td>
           <td data-label="Latest Submission">${escapeHtml(formatDateTime(item?.latestSubmittedAt || ""))}<br><span class="small">${escapeHtml(normalizeText(item?.latestReviewedByUsername || "-"))}</span></td>
           <td data-label="Open"><button type="button" class="queue-row-btn" data-news-review-open-week-set="${escapeHtml(weekSetId)}" data-news-review-open-report="${escapeHtml(normalizeText(item?.latestReportId))}">Open Week Set</button></td>
         `;
