@@ -7,6 +7,49 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-08 - test.eagles.edu.vn staging wiring completion + sis-test restore path)
+
+- Requirement:
+  - finish test staging wiring for `test.eagles.edu.vn` before live rollout.
+  - use `.sto/sis-live.dump` as canonical restore source for the test environment.
+  - align test host wiring with live admin route/security patterns.
+- Runtime + tooling changes:
+  - [tools/sync-and-restart-test-runtime.sh](tools/sync-and-restart-test-runtime.sh):
+    - default health probe now uses loopback `http://127.0.0.1:8786/healthz` (compatible with nginx loopback-only `/healthz` policy).
+    - fixed test env export contract to pass separate `SIS_ENV_FILE=.env.test` and `NODE_ENV=test` values.
+    - mode behavior now explicit:
+      - `full`: sync + prisma refresh + restart + loopback health.
+      - `public`: public sync + restart + loopback health (no prisma refresh).
+      - `restart-only`: prisma refresh + restart + loopback health.
+  - added [tools/restore-test-db-from-live-dump.sh](tools/restore-test-db-from-live-dump.sh):
+    - verifies dump archive first,
+    - requires `--yes` for real restore,
+    - restores with `--clean --single-transaction`,
+    - refreshes Prisma artifacts/migrations in test root,
+    - restarts `exercise-mailer-test.service` and probes loopback health.
+  - [package.json](package.json):
+    - added `db:test:restore:verify`,
+    - added `db:test:restore`,
+    - added `test:runtime:sync-restart`.
+  - [deploy/nginx/test.eagles.edu.vn.conf](deploy/nginx/test.eagles.edu.vn.conf):
+    - synchronized to active host config that mirrors live admin shape with test substitutions (`:8086` web upstream, `:8786` API upstream, loopback-only `/healthz`).
+  - docs and env example aligned:
+    - [README.md](README.md),
+    - [docs/Live portal links.md](docs/Live portal links.md),
+    - [docs/cmds.envtest.txt](docs/cmds.envtest.txt),
+    - [docs/NOTES TEST-1.md](docs/NOTES TEST-1.md),
+    - [.env.test.example](.env.test.example) now documents `sis-test`.
+- Test updates:
+  - added static script-contract tests:
+    - [test/sync-and-restart-test-runtime.spec.mjs](test/sync-and-restart-test-runtime.spec.mjs),
+    - [test/restore-test-db-from-live-dump.spec.mjs](test/restore-test-db-from-live-dump.spec.mjs).
+- Verification:
+  - targeted lint + script tests are run in this task after patching.
+- Coverage gaps:
+  - full-suite `npm test` remains sensitive to existing Redis auth/session environment conditions; unrelated to this staging wiring patch.
+- Prioritized next actions:
+  - run a full dry-run promotion from restored `sis-test` data using the new commands and capture a staging smoke checklist artifact.
+
 ## Update (2026-04-05 - parent news modal second-pass visual clone with no dead controls)
 
 - Requirement:

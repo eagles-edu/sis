@@ -6244,18 +6244,16 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
       })
     } catch (error) {
       if (
-        isStudentNewsReportSchemaUnavailableError(error)
-        || isStudentNewsReviewSchemaUnavailableError(error)
+        !isStudentNewsReportSchemaUnavailableError(error)
+        && !isStudentNewsReviewSchemaUnavailableError(error)
       ) {
-        fallbackOnly = true
-      } else if (normalizeText(error?.code).toUpperCase() === "P2025") {
-        assertWithStatus(false, 404, "Student news report not found")
-      } else {
-        throw error
+        if (normalizeText(error?.code).toUpperCase() === "P2025") {
+          assertWithStatus(false, 404, "Student news report not found")
+        } else {
+          throw error
+        }
       }
     }
-  } else {
-    fallbackOnly = true
   }
 
   if (!updatedReport) {

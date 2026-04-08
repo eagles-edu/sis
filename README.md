@@ -392,6 +392,24 @@ tools/sis-full-restore-snapshot.sh \
   --yes
 ```
 
+### Runbook: Test staging restore + restart (`test.eagles.edu.vn`)
+
+Canonical test DB is `sis-test` (hyphen). Restore from `.sto/sis-live.dump` with the dedicated helper:
+
+```bash
+cd /home/eagles/dockerz/sis
+npm run db:test:restore:verify
+npm run db:test:restore
+tools/sync-and-restart-test-runtime.sh full
+curl -fsS http://127.0.0.1:8786/healthz
+```
+
+Notes:
+
+1. `test.eagles.edu.vn` follows live admin wiring patterns, but `/healthz` remains loopback-only by nginx policy.
+2. `tools/sync-and-restart-test-runtime.sh public` skips Prisma refresh and only syncs public portal files + restart.
+3. `tools/sync-and-restart-test-runtime.sh restart-only` skips sync and performs Prisma refresh + restart.
+
 ## Backup and Restore Strategy
 
 ### Database-only

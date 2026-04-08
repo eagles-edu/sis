@@ -72,18 +72,20 @@ async function measurePage(page, url) {
   await page.goto(abs(url), { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(350);
   const result = await page.evaluate(() => {
-    const viewportMeta = document.querySelector('meta[name="viewport"]')?.getAttribute('content') || '';
-    const docEl = document.documentElement;
-    const body = document.body;
+    const doc = globalThis.document;
+    const win = globalThis.window;
+    const viewportMeta = doc.querySelector('meta[name="viewport"]')?.getAttribute('content') || '';
+    const docEl = doc.documentElement;
+    const body = doc.body;
     const rootOverflow = Math.max(docEl.scrollWidth - docEl.clientWidth, body ? body.scrollWidth - body.clientWidth : 0);
 
     const outside = [];
-    const interactive = Array.from(document.querySelectorAll('a, button, input, select, textarea, [role="button"], [tabindex]'));
+    const interactive = Array.from(doc.querySelectorAll('a, button, input, select, textarea, [role="button"], [tabindex]'));
     for (const el of interactive) {
       const rect = el.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) continue;
       const parentScroller = el.closest('[style*="overflow"], .table-scroll-wrap, .portal-table-wrap, .table-container, .table-wrap, [class*="scroll"]');
-      if (!parentScroller && (rect.right > window.innerWidth + 1 || rect.left < -1)) {
+      if (!parentScroller && (rect.right > win.innerWidth + 1 || rect.left < -1)) {
         outside.push({
           tag: el.tagName.toLowerCase(),
           id: el.id || null,
