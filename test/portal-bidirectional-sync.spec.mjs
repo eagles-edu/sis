@@ -16,14 +16,18 @@ test("bidirectional portal sync script supports both sync directions", () => {
   assert.match(scriptSource, /if \[\[ "\$\{DIRECTION\}" == "dev-to-live" \]\]/)
 })
 
-test("bidirectional portal sync script tracks admin parent and student portal files", () => {
-  assert.match(scriptSource, /DEV_REL\[admin\]="web-asset\/admin\/student-admin\.html"/)
-  assert.match(scriptSource, /DEV_REL\[parent\]="web-asset\/parent\/parent-portal\.html"/)
-  assert.match(scriptSource, /DEV_REL\[student\]="web-asset\/student\/student-portal\.html"/)
+test("bidirectional portal sync script tracks admin html/css/js plus parent and student portal files", () => {
+  assert.match(scriptSource, /DEV_REL\[admin_html\]="web-asset\/admin\/student-admin\.html"/)
+  assert.match(scriptSource, /DEV_REL\[admin_css\]="web-asset\/admin\/student-admin\.css"/)
+  assert.match(scriptSource, /DEV_REL\[admin_js\]="web-asset\/admin\/student-admin\.js"/)
+  assert.match(scriptSource, /DEV_REL\[parent_html\]="web-asset\/parent\/parent-portal\.html"/)
+  assert.match(scriptSource, /DEV_REL\[student_html\]="web-asset\/student\/student-portal\.html"/)
 
-  assert.match(scriptSource, /PUBLIC_REL\[admin\]="sis-admin\/student-admin\.html"/)
-  assert.match(scriptSource, /PUBLIC_REL\[parent\]="sis-parent\/parent-portal\.html"/)
-  assert.match(scriptSource, /PUBLIC_REL\[student\]="sis-student\/student-portal\.html"/)
+  assert.match(scriptSource, /PUBLIC_REL\[admin_html\]="sis-admin\/student-admin\.html"/)
+  assert.match(scriptSource, /PUBLIC_REL\[admin_css\]="web-asset\/admin\/student-admin\.css"/)
+  assert.match(scriptSource, /PUBLIC_REL\[admin_js\]="web-asset\/admin\/student-admin\.js"/)
+  assert.match(scriptSource, /PUBLIC_REL\[parent_html\]="sis-parent\/parent-portal\.html"/)
+  assert.match(scriptSource, /PUBLIC_REL\[student_html\]="sis-student\/student-portal\.html"/)
 })
 
 test("package scripts expose bidirectional portal sync commands", () => {

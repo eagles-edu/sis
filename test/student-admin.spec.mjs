@@ -11,6 +11,13 @@ import {
 import { generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
 
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
+const ADMIN_HTML_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
+const ADMIN_CSS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.css", import.meta.url), "utf8")
+const ADMIN_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+
+function withAdminAssets(html = "") {
+  return `${String(html || "")}\n${ADMIN_CSS_SOURCE}\n${ADMIN_JS_SOURCE}`
+}
 
 process.env.NODE_ENV = "test"
 process.env.EXERCISE_MAILER_ORIGIN = "*"
@@ -324,27 +331,27 @@ test("queue hub source contract includes student-week news-set panel", () => {
 })
 
 test("news review status/action rules and revise chip label keep locked admin ui rules", () => {
-  const html = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
-  const statusStart = html.indexOf("function newsReviewWeekSetStatusToken(")
+  const adminUiSource = withAdminAssets(ADMIN_HTML_SOURCE)
+  const statusStart = ADMIN_JS_SOURCE.indexOf("function newsReviewWeekSetStatusToken(")
   assert.ok(statusStart >= 0, "newsReviewWeekSetStatusToken is present")
-  const statusChunk = html.slice(statusStart, statusStart + 1400)
+  const statusChunk = ADMIN_JS_SOURCE.slice(statusStart, statusStart + 1400)
   assert.match(statusChunk, /if \(reportCount >= 7 && approved >= 7\) return "approved";/)
   assert.match(statusChunk, /return "waiting";/)
   assert.match(statusChunk, /if \(submitted === 0 && revisionRequested === 0\) return "checked";/)
   assert.match(statusChunk, /if \(revisionRequested > 0 \|\| submitted > 0\) return "waiting";/)
-  assert.match(html, /if \(normalized === "revise" \|\| normalized === "revision-requested"\)/)
-  const actionStart = html.indexOf("function newsReviewWeekSetActionToken(")
+  assert.match(ADMIN_JS_SOURCE, /if \(normalized === "revise" \|\| normalized === "revision-requested"\)/)
+  const actionStart = ADMIN_JS_SOURCE.indexOf("function newsReviewWeekSetActionToken(")
   assert.ok(actionStart >= 0, "newsReviewWeekSetActionToken is present")
-  const actionChunk = html.slice(actionStart, actionStart + 1100)
+  const actionChunk = ADMIN_JS_SOURCE.slice(actionStart, actionStart + 1100)
   assert.match(actionChunk, /const unapproved = Math\.max\(0, submitted\);/)
   assert.doesNotMatch(actionChunk, /awaitingReReview/)
   assert.doesNotMatch(actionChunk, /submitted \+ revisionRequested/)
   assert.match(
-    html,
+    adminUiSource,
     /data-sort-field="setAction"[\s\S]*Action[\s\S]*data-sort-field="setStatus"[\s\S]*Status/
   )
   assert.match(
-    html,
+    adminUiSource,
     /data-label="Action">[\s\S]*data-label="Status">/
   )
 })
@@ -491,9 +498,24 @@ test("GET /admin/students returns HTML UI", async () => {
   const res = await fetchLocal(port, "/admin/students")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = await res.text()
+  const responseHtml = await res.text()
+  const html = withAdminAssets(responseHtml)
+  const inlineStyleBlocks = responseHtml.match(/<style>[\s\S]*?<\/style>/gi) || []
   assert.match(html, /Student Admin/i)
   assert.match(html, /id="loginForm"/i)
+  assert.equal(inlineStyleBlocks.length, 1)
+  assert.match(inlineStyleBlocks[0], /\.app-shell/i)
+  assert.doesNotMatch(inlineStyleBlocks[0], /\.grade-chart-lanes/i)
+  assert.doesNotMatch(responseHtml, /function setActivePage\(/i)
+  assert.match(responseHtml, /href="\/web-asset\/admin\/student-admin\.css"/i)
+  assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin\.css"[\s\S]*as="style"/i)
+  assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin\.js"\s+defer/i)
+  assert.match(responseHtml, /href="\/admin\/students"[^>]*data-page-link="overview"/i)
+  assert.match(responseHtml, /href="\/admin\/students\/queue-hub"[^>]*data-page-link="queue-hub"/i)
+  assert.match(responseHtml, /href="\/admin\/students\/attendance"[^>]*data-page-link="attendance"/i)
+  assert.match(responseHtml, /href="\/admin\/students\/assignments"[^>]*data-page-link="assignments"/i)
+  assert.match(responseHtml, /href="\/admin\/students\/grades-data"[^>]*data-page-link="grades-data"/i)
+  assert.doesNotMatch(responseHtml, /data-page-link="(?:overview|queue-hub|attendance|assignments|grades-data)"[^>]*href="#"/i)
   assert.match(html, /__SIS_ADMIN_API_PREFIX/i)
   assert.match(html, /"\/api\/admin"/i)
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
@@ -561,7 +583,7 @@ test("GET /admin/students?page=grades-data resolves query deep-link route", asyn
   const res = await fetchLocal(port, "/admin/students?page=grades-data")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = await res.text()
+  const html = withAdminAssets(await res.text())
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"grades-data"/i)
   assert.match(html, /pageSlugFromLocationSearch/i)
@@ -571,7 +593,7 @@ test("GET /admin/students/attendance returns section page HTML with slug config"
   const res = await fetchLocal(port, "/admin/students/attendance")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = await res.text()
+  const html = withAdminAssets(await res.text())
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"attendance"/i)
 })
@@ -580,7 +602,7 @@ test("GET /admin/students/parent-tracking returns section page HTML with slug co
   const res = await fetchLocal(port, "/admin/students/parent-tracking")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = await res.text()
+  const html = withAdminAssets(await res.text())
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"parent-tracking"/i)
 })
@@ -589,7 +611,7 @@ test("GET /admin/students/queue-hub returns section page HTML with slug config",
   const res = await fetchLocal(port, "/admin/students/queue-hub")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = await res.text()
+  const html = withAdminAssets(await res.text())
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"queue-hub"/i)
   assert.match(html, /__SIS_ADMIN_QUEUE_HUB_PATH/i)
@@ -599,7 +621,7 @@ test("GET /admin/students/news-reports returns section page HTML with slug confi
   const res = await fetchLocal(port, "/admin/students/news-reports")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = await res.text()
+  const html = withAdminAssets(await res.text())
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"news-reports"/i)
   assert.match(html, /__SIS_ADMIN_NEWS_REPORTS_PATH/i)
@@ -730,6 +752,24 @@ test("GET /web-asset/vendor/fullcalendar/index.global.min.js returns runtime sta
   assert.match(res.headers.get("content-type") || "", /javascript/i)
   const js = await res.text()
   assert.match(js, /FullCalendar Standard Bundle v6\.1\.20/i)
+})
+
+test("GET /web-asset/admin/student-admin.css returns externalized admin styles", async () => {
+  const res = await fetchLocal(port, "/web-asset/admin/student-admin.css")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/css/i)
+  const css = await res.text()
+  assert.match(css, /\.page-section\[data-page="news-reports"\]\s+\.table-toolbar/i)
+  assert.match(css, /\.grade-chart-lanes/i)
+})
+
+test("GET /web-asset/admin/student-admin.js returns externalized admin app script", async () => {
+  const res = await fetchLocal(port, "/web-asset/admin/student-admin.js")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /javascript/i)
+  const js = await res.text()
+  assert.match(js, /function setActivePage\(/)
+  assert.match(js, /function refreshMenuLinkTargets\(/)
 })
 
 test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async () => {

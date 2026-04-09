@@ -7,15 +7,17 @@ import { mapImportRowToStudentPayload } from "../server/student-admin-store.mjs"
 
 function readProfileFormRows() {
   const html = fs.readFileSync("web-asset/admin/student-admin.html", "utf8")
+  const js = fs.readFileSync("web-asset/admin/student-admin.js", "utf8")
+  const source = `${html}\n${js}`
   const marker = "const PROFILE_FORM_FIELD_ROWS = ["
-  const markerIndex = html.indexOf(marker)
+  const markerIndex = source.indexOf(marker)
   assert.ok(markerIndex >= 0, "PROFILE_FORM_FIELD_ROWS marker must exist")
 
-  const openIndex = html.indexOf("[", markerIndex)
+  const openIndex = source.indexOf("[", markerIndex)
   let depth = 0
   let closeIndex = -1
-  for (let i = openIndex; i < html.length; i += 1) {
-    const ch = html[i]
+  for (let i = openIndex; i < source.length; i += 1) {
+    const ch = source[i]
     if (ch === "[") depth += 1
     if (ch === "]") {
       depth -= 1
@@ -27,7 +29,7 @@ function readProfileFormRows() {
   }
   assert.ok(closeIndex > openIndex, "PROFILE_FORM_FIELD_ROWS array must close")
 
-  const rows = vm.runInNewContext(html.slice(openIndex, closeIndex + 1))
+  const rows = vm.runInNewContext(source.slice(openIndex, closeIndex + 1))
   return Array.from(rows, (row) => ({
     key: String(row[0] || "").trim(),
     profileKey: String(row[9] || "").trim(),

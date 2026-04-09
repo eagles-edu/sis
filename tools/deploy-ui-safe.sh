@@ -76,15 +76,19 @@ if [[ ! -x "${RESYNC_SCRIPT}" ]]; then
   exit 1
 fi
 
-if [[ ! -f "${SOURCE_ROOT}/web-asset/admin/student-admin.html" ]]; then
-  echo "Missing source UI file: ${SOURCE_ROOT}/web-asset/admin/student-admin.html" >&2
-  exit 1
-fi
-
-if [[ ! -f "${RUNTIME_ROOT}/web-asset/admin/student-admin.html" ]]; then
-  echo "Missing runtime UI file: ${RUNTIME_ROOT}/web-asset/admin/student-admin.html" >&2
-  exit 1
-fi
+for required_ui_file in \
+  "web-asset/admin/student-admin.html" \
+  "web-asset/admin/student-admin.css" \
+  "web-asset/admin/student-admin.js"; do
+  if [[ ! -f "${SOURCE_ROOT}/${required_ui_file}" ]]; then
+    echo "Missing source UI file: ${SOURCE_ROOT}/${required_ui_file}" >&2
+    exit 1
+  fi
+  if [[ ! -f "${RUNTIME_ROOT}/${required_ui_file}" ]]; then
+    echo "Missing runtime UI file: ${RUNTIME_ROOT}/${required_ui_file}" >&2
+    exit 1
+  fi
+done
 
 cmd=(
   "${RESYNC_SCRIPT}"

@@ -7,6 +7,65 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-09 - admin UI phase-1 offload + path-first navigation + lighthouse gate)
+
+- Requirement:
+  - implement admin-phase migration step 1:
+    - externalize non-critical admin CSS/JS,
+    - keep conservative critical CSS inline,
+    - switch menu links to real `/admin/students...` URLs while preserving query compatibility,
+    - include admin css/js in portal parity/deploy contracts,
+    - add scripted lighthouse gate for core admin routes.
+- Changes:
+  - externalized admin assets:
+    - added [web-asset/admin/student-admin.css](web-asset/admin/student-admin.css),
+    - added [web-asset/admin/student-admin.js](web-asset/admin/student-admin.js),
+    - slimmed [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html) to critical inline CSS + external css/js links.
+  - menu navigation now uses concrete path-first links (`/admin/students`, `/admin/students/<slug>`); static preview behavior remains supported.
+  - compatibility preserved for query mode (`/admin/students?page=<slug>`) and injected initial slug resolution.
+  - sync/parity/deploy contract coverage expanded for admin css/js:
+    - [tools/sync-portal-bidirectional.sh](tools/sync-portal-bidirectional.sh),
+    - [tools/deploy-ui-safe.sh](tools/deploy-ui-safe.sh),
+    - [tools/verify-portal-sync-proof.sh](tools/verify-portal-sync-proof.sh),
+    - [test/portal-bidirectional-sync.spec.mjs](test/portal-bidirectional-sync.spec.mjs).
+  - added lighthouse gate script:
+    - [tools/lighthouse-admin-audit.mjs](tools/lighthouse-admin-audit.mjs),
+    - [package.json](package.json) script `audit:lighthouse:admin`.
+    - default preset is now `desktop` (override via `LIGHTHOUSE_PRESET`).
+  - admin route/UI tests updated for external asset and navigation contracts:
+    - [test/student-admin.spec.mjs](test/student-admin.spec.mjs),
+    - [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs),
+    - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs),
+    - [test/student-admin-import-row-map.spec.mjs](test/student-admin-import-row-map.spec.mjs).
+- Verification:
+  - `npm test` => `351` pass, `0` fail.
+  - `npm run audit:lighthouse:admin` (origin `http://127.0.0.1:8788`, threshold `90`) => pass:
+    - `/admin/students` `95.0`,
+    - `/admin/students/queue-hub` `94.0`,
+    - `/admin/students/attendance` `95.0`,
+    - `/admin/students/assignments` `94.0`,
+    - `/admin/students/grades-data` `94.0`.
+  - parity/proof checks currently report runtime drift (expected until deploy propagation):
+    - `npm run sync:portal:check` => drift,
+    - `npm run sync:proof:portal` => drift.
+- Drift status (dev canonical vs live/public mirrors):
+  - `web-asset/admin/student-admin.html`:
+    - dev `677fc7863f0b82ca73e0d8b49f83bd6058c821e46baa54bac387e9c2ce131f6f`,
+    - live/public `946a1b14b74018f97a480f29d8fceffd40068055a4fe5d25848e7900cb7868a6`.
+    - newest copy: dev canonical.
+  - `web-asset/admin/student-admin.css`:
+    - dev present `d0d10155fbfd6615021ac06c59aa278bf8e4960170389e4174241ab723534485`,
+    - live/public missing.
+    - newest copy: dev canonical.
+  - `web-asset/admin/student-admin.js`:
+    - dev present `06c7caaa3e2485cd53b7573333375894758f7e486369345b6eee18947d94f731`,
+    - live/public missing.
+    - newest copy: dev canonical.
+- Coverage gaps:
+  - none for phase-1 code/test scope in canonical dev workspace.
+- Prioritized next actions:
+  - if rollout is approved, propagate canonical admin html/css/js to live/test mirrors, then re-run portal parity checks to zero drift.
+
 ## Update (2026-04-09 - SheetJS upgraded to 0.20.3 with ESM fs compatibility fix)
 
 - Requirement:

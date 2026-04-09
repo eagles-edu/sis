@@ -36,7 +36,8 @@ Production runtime root:
 - API service entrypoint: `server/exercise-mailer.mjs`
 - Database: PostgreSQL (via Prisma)
 - Optional session backend: Redis
-- Admin UI: `web-asset/admin/student-admin.html`
+- Admin UI shell: `web-asset/admin/student-admin.html`
+- Admin UI assets: `web-asset/admin/student-admin.css`, `web-asset/admin/student-admin.js`
 
 ## Directory Map
 
@@ -71,6 +72,7 @@ npm run map:all
 cd /home/eagles/dockerz/sis
 npm install
 npm test
+npm run audit:lighthouse:admin
 cp -n .env.dev.example .env.dev
 npm run dev
 # production-mode boot (uses .env and fixed live port contract)

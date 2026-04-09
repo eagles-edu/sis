@@ -35,6 +35,8 @@ Options:
 
 Tracked files:
   - web-asset/admin/student-admin.html
+  - web-asset/admin/student-admin.css
+  - web-asset/admin/student-admin.js
   - web-asset/parent/parent-portal.html
   - web-asset/student/student-portal.html
 USAGE
@@ -102,19 +104,25 @@ fi
 declare -A DEV_REL=()
 declare -A LIVE_REL=()
 declare -A PUBLIC_REL=()
-PORTAL_KEYS=(admin parent student)
+PORTAL_KEYS=(admin_html admin_css admin_js parent_html student_html)
 
-DEV_REL[admin]="web-asset/admin/student-admin.html"
-DEV_REL[parent]="web-asset/parent/parent-portal.html"
-DEV_REL[student]="web-asset/student/student-portal.html"
+DEV_REL[admin_html]="web-asset/admin/student-admin.html"
+DEV_REL[admin_css]="web-asset/admin/student-admin.css"
+DEV_REL[admin_js]="web-asset/admin/student-admin.js"
+DEV_REL[parent_html]="web-asset/parent/parent-portal.html"
+DEV_REL[student_html]="web-asset/student/student-portal.html"
 
-LIVE_REL[admin]="web-asset/admin/student-admin.html"
-LIVE_REL[parent]="web-asset/parent/parent-portal.html"
-LIVE_REL[student]="web-asset/student/student-portal.html"
+LIVE_REL[admin_html]="web-asset/admin/student-admin.html"
+LIVE_REL[admin_css]="web-asset/admin/student-admin.css"
+LIVE_REL[admin_js]="web-asset/admin/student-admin.js"
+LIVE_REL[parent_html]="web-asset/parent/parent-portal.html"
+LIVE_REL[student_html]="web-asset/student/student-portal.html"
 
-PUBLIC_REL[admin]="sis-admin/student-admin.html"
-PUBLIC_REL[parent]="sis-parent/parent-portal.html"
-PUBLIC_REL[student]="sis-student/student-portal.html"
+PUBLIC_REL[admin_html]="sis-admin/student-admin.html"
+PUBLIC_REL[admin_css]="web-asset/admin/student-admin.css"
+PUBLIC_REL[admin_js]="web-asset/admin/student-admin.js"
+PUBLIC_REL[parent_html]="sis-parent/parent-portal.html"
+PUBLIC_REL[student_html]="sis-student/student-portal.html"
 
 sha256_or_missing() {
   local file_path="$1"

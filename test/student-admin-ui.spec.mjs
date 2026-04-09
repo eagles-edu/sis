@@ -5,7 +5,16 @@ import test from "node:test"
 import { JSDOM } from "jsdom"
 
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
+const ADMIN_JS_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.js")
 const ADMIN_HTML = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
+const ADMIN_JS = fs.readFileSync(ADMIN_JS_PATH, "utf8")
+const ADMIN_HTML_STRIPPED_FOR_TEST = ADMIN_HTML
+  .replace(/<link[\s\S]*?href="\/web-asset\/admin\/student-admin\.css"[\s\S]*?>/gi, "")
+  .replace(/<script\s+src="\/web-asset\/admin\/student-admin\.js"\s+defer><\/script>/gi, "")
+const ADMIN_HTML_FOR_TEST = ADMIN_HTML_STRIPPED_FOR_TEST.replace(
+  "</body>",
+  `<script>\n${ADMIN_JS.replace(/<\/script>/gi, "<\\\\/script>")}\n</script>\n</body>`
+)
 
 function jsonResponse(status, payload = {}) {
   return {
@@ -54,7 +63,7 @@ function nextSundayIsoDate(value = new Date()) {
 }
 
 async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin/students", options = {}) {
-  const dom = new JSDOM(ADMIN_HTML, {
+  const dom = new JSDOM(ADMIN_HTML_FOR_TEST, {
     runScripts: "dangerously",
     resources: "usable",
     pretendToBeVisual: true,
