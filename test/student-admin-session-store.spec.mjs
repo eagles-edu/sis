@@ -141,6 +141,57 @@ test("session store falls back to memory when redis auto-connect fails", async (
   await store.close()
 })
 
+test("session store falls back to memory when redis auth fails and disconnects client", async () => {
+  const listeners = new Map()
+  let connected = false
+  let disconnectCalls = 0
+
+  const store = createStudentAdminSessionStore({
+    driver: "auto",
+    redisUrl: "redis://mock.local:6379/0",
+    ttlSeconds: 120,
+    createRedisClient: async () => ({
+      get isReady() {
+        return connected
+      },
+      get isOpen() {
+        return connected
+      },
+      on(eventName, listener) {
+        listeners.set(eventName, listener)
+      },
+      async connect() {
+        connected = true
+        const ready = listeners.get("ready")
+        if (typeof ready === "function") ready()
+      },
+      async set() {
+        throw new Error("NOAUTH Authentication required.")
+      },
+      async get() {
+        throw new Error("NOAUTH Authentication required.")
+      },
+      async del() {
+        throw new Error("NOAUTH Authentication required.")
+      },
+      disconnect() {
+        connected = false
+        disconnectCalls += 1
+        const end = listeners.get("end")
+        if (typeof end === "function") end()
+      },
+    }),
+  })
+
+  const created = await store.createSession({ username: "auth-fallback-user", role: "teacher" })
+  assert.equal(store.driver, "memory")
+  const loaded = await store.getSession(created.id)
+  assert.equal(loaded?.username, "auth-fallback-user")
+  assert.ok(disconnectCalls >= 1)
+
+  await store.close()
+})
+
 test("session store uses redis-backed driver when redis client is available", async () => {
   const redisClient = createMockRedisClient()
   const store = createStudentAdminSessionStore({

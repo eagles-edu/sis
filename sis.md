@@ -7,6 +7,101 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-09 - live runtime sync/restart reliability hardening)
+
+- Requirement:
+  - ensure live sync/restart path runs end-to-end without FreeFileSync conflict stops.
+- Changes:
+  - added [tools/sync-and-restart-live-runtime.sh](tools/sync-and-restart-live-runtime.sh) as explicit live wrapper (`full|public|restart-only`) over `sync-and-restart-runtimes.sh`.
+  - updated live FreeFileSync profiles:
+    - `/home/eagles/Documents/sync-settings/SyncSettings-sis.ffs_batch`
+    - `/home/eagles/Documents/sync-settings/SyncSettings-sis.ffs_gui`
+  - profile hardening mirrors test fix:
+    - include narrowed from `*\server\` to `\server\` (root-only),
+    - excluded `\node_modules\` and `*\node_modules\`.
+  - updated `/usr/local/bin/ffs-sis-root`:
+    - warning-only FreeFileSync status `1` now continues when no log-level errors/stopped markers are present.
+- Verification:
+  - `tools/sync-and-restart-live-runtime.sh full` => pass end-to-end:
+    - no FreeFileSync conflict stop,
+    - Prisma generate pass in live root,
+    - live service restart + `:8787` health pass,
+    - dev runtime restart + `:8788` health pass.
+- Coverage gaps:
+  - none for this reliability path; full live wrapper flow now executes cleanly in this environment.
+
+## Update (2026-04-09 - fixed test FreeFileSync profile conflict for reliable full sync/restart)
+
+- Requirement:
+  - make `tools/sync-and-restart-test-runtime.sh full` reliable after repeated FreeFileSync conflict stops.
+- Root cause:
+  - test profile include rule used wildcard `*\server\`, which matched nested paths like `node_modules/playwright-core/lib/server/*`.
+  - dual-side `node_modules` drift then produced unresolved-conflict stops in FreeFileSync batch mode.
+- Changes:
+  - updated test sync profile files:
+    - `/home/eagles/Documents/sync-settings/SyncSettings-sis-test.ffs_batch`
+    - `/home/eagles/Documents/sync-settings/SyncSettings-sis-test.ffs_gui`
+  - include scope tightened from `*\server\` to `\server\` (root server only).
+  - added explicit excludes:
+    - `\node_modules\`
+    - `*\node_modules\`
+  - reset stale FFS sync databases:
+    - `/home/eagles/dockerz/sis/.sync.ffs_db` (backed up then recreated)
+    - `/home/test.eagles.edu.vn/sis/.sync.ffs_db` (backed up then recreated)
+- Verification:
+  - `ffs-sis-root-test --batch` => pass (`status 0`, no changes, no conflict stop).
+  - `tools/sync-and-restart-test-runtime.sh full` => pass end-to-end:
+    - root sync pass,
+    - public sync pass,
+    - Prisma generate pass,
+    - Prisma migrate deploy pass (`No pending migrations`),
+    - `exercise-mailer-test.service` restart pass,
+    - health check pass on `http://127.0.0.1:8786/healthz`.
+- Coverage gaps:
+  - none for this workflow fix; full sync path now executes without manual conflict intervention.
+
+## Update (2026-04-09 - canonical drift propagation across dev/live/test server paths)
+
+- Requirement:
+  - enforce canonical source-of-truth workflow (`dev` canonical, `live/test` mirrors),
+  - merge pertinent live-only server deltas back to canonical before propagation,
+  - then propagate aligned server files to live and test with post-sync parity checks.
+- Canonical code changes:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - `resolveNewsSetUnapprovedCount(...)` now includes `revisionRequestedCount`,
+    - `resolveNewsSetAction(...)` now forwards `revisionRequestedCount`,
+    - `resolveStudentNewsValidationConfigFromSettings()` now exposes `enabled` and respects `STUDENT_NEWS_VALIDATION_DISABLED`/settings disable flag,
+    - week-set action derivation now passes `revisionRequestedCount`.
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - `normalizeStudentNewsValidationConfig(...)` now carries `enabled`,
+    - `evaluateStudentNewsCompliance(...)` short-circuits with `{ skipped: true, reason: "validation-disabled" }` when validation disabled,
+    - news-review update fallback now flips `fallbackOnly` on schema-unavailable update paths and when Prisma update delegate is absent.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - queue-hub source contract assertion updated to match `submitted + revisionRequested` unapproved derivation.
+- Runtime propagation:
+  - live:
+    - `tools/deploy-api-safe.sh` completed (sync + restart + blocking gates + local/edge route matrix).
+  - test:
+    - `tools/sync-and-restart-test-runtime.sh full` stopped with FreeFileSync conflict status (`node_modules/playwright-core` unresolved dual-side edits).
+    - performed targeted server-file propagation instead:
+      - synced `student-admin-session-store.mjs`, `student-admin-routes.mjs`, `student-admin-store.mjs` from canonical to `/home/test.eagles.edu.vn/sis/server/`,
+      - restarted `exercise-mailer-test.service`,
+      - verified `http://127.0.0.1:8786/healthz`.
+- Verification:
+  - tests:
+    - `node --test test/news-compliance.spec.mjs test/student-admin-store-parent-report.spec.mjs test/student-admin-session-store.spec.mjs` => `30` pass, `0` fail.
+    - `npm test` => `349` pass, `0` fail, `0` skipped.
+  - parity/drift:
+    - `npm run sync:portal:check` => pass.
+    - `npm run sync:proof:portal` => pass.
+    - `tools/deploy-api-safe.sh --check-only` => no mismatch.
+    - `tools/sis-runtime-resync.sh --check-only --scope full --runtime-root /home/admin.eagles.edu.vn/sis` => no mismatch.
+    - checksum drift check (`dev -> /home/test.eagles.edu.vn/sis`, full scope) => `0` content drift.
+- Coverage gaps:
+  - test-runtime full FreeFileSync path remains blocked by existing `node_modules/playwright-core` conflict state in the FFS database profile.
+- Prioritized next actions:
+  - clear test FreeFileSync profile conflict set (or exclude `node_modules/`) so `tools/sync-and-restart-test-runtime.sh full` can be restored as the default end-to-end test-runtime propagation path.
+
 ## Update (2026-04-08 - test.eagles.edu.vn staging wiring completion + sis-test restore path)
 
 - Requirement:

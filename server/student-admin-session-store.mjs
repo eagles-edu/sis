@@ -42,7 +42,20 @@ function isRedisClientReady(client) {
   return true
 }
 
+function isRedisAuthError(error) {
+  const message = normalizeLower(error?.message || error)
+  if (!message) return false
+  return (
+    message.includes("noauth") ||
+    message.includes("wrongpass") ||
+    message.includes("authentication required") ||
+    message.includes("auth failed") ||
+    message.includes("invalid username-password pair")
+  )
+}
+
 function isRedisAvailabilityError(error) {
+  if (isRedisAuthError(error)) return true
   const message = normalizeLower(error?.message || error)
   if (!message) return false
   return (
@@ -209,10 +222,38 @@ function createRedisBackedStore({
     return createStatusError(message, 503, error)
   }
 
+  async function disposeRedisClient(client) {
+    if (!client) return
+    try {
+      if (typeof client.disconnect === "function") {
+        client.disconnect()
+        return
+      }
+      if (typeof client.quit === "function") {
+        await client.quit()
+      }
+    } catch (error) {
+      void error
+      if (typeof client.disconnect === "function") {
+        try {
+          client.disconnect()
+        } catch (disconnectError) {
+          void disconnectError
+        }
+      }
+    }
+  }
+
   function bindRedisClientEvents(client) {
     if (!client || typeof client.on !== "function") return
     client.on("error", (error) => {
       markRedisError(error)
+      if (!required && isRedisAuthError(error)) {
+        usingFallback = true
+        if (redisClient === client) redisClient = null
+        void disposeRedisClient(client)
+        return
+      }
       if (!required) {
         console.warn(`student-admin session redis error: ${stringifyError(error)}`)
       }
@@ -239,11 +280,12 @@ function createRedisBackedStore({
     if (redisConnectPromise) return redisConnectPromise
 
     redisConnectPromise = (async () => {
+      let client = null
       try {
         if (required) {
           markRedisReconnectAttempt()
         }
-        const client = await createRedisClient(redisUrl, redisConnectTimeoutMs)
+        client = await createRedisClient(redisUrl, redisConnectTimeoutMs)
         if (!client || typeof client.connect !== "function") {
           throw new Error("Redis client factory returned an invalid client")
         }
@@ -254,6 +296,7 @@ function createRedisBackedStore({
         return client
       } catch (error) {
         markRedisError(error)
+        await disposeRedisClient(client)
         if (required) {
           throw createStatusError(
             `Redis session store unavailable during connect: ${stringifyError(error)}`,
@@ -326,13 +369,21 @@ function createRedisBackedStore({
     } catch (error) {
       if (!isRedisAvailabilityError(error)) throw error
       markRedisError(error)
+      const failedClient = redisClient
       redisClient = null
+      await disposeRedisClient(failedClient)
+      if (!required && useFallback && isRedisAuthError(error)) {
+        usingFallback = true
+        return fallbackOperation()
+      }
 
       try {
         return await run()
       } catch (retryError) {
         markRedisError(retryError)
+        const retryFailedClient = redisClient
         redisClient = null
+        await disposeRedisClient(retryFailedClient)
         if (!required && useFallback) {
           usingFallback = true
           return fallbackOperation()

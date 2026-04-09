@@ -38,6 +38,24 @@ Run this checklist at the start of every session:
 4. Never assume auth model details: inspect route code first.
 5. Keep all edits ASCII unless target files already require Unicode.
 
+## Environment Canonicality and Propagation (Critical)
+
+1. Canonical source of truth is always `/home/eagles/dockerz/sis` (dev workspace).
+2. Live and test paths are deployment mirrors, not canonical:
+   - `/home/admin.eagles.edu.vn/sis` (live)
+   - `/home/test.eagles.edu.vn/sis` (test)
+3. If direct edits are made on live/test for incident response, treat them as temporary hotfixes and record:
+   - exact changed paths,
+   - `sha256` and `mtime` for dev/live/test copies,
+   - reason the direct edit was required.
+4. Do not propagate runtime mirror edits without explicit user approval.
+5. After user approval, propagate pertinent edits in the same task:
+   - merge hotfix deltas back into canonical source first,
+   - run targeted tests,
+   - run parity checks (`npm run sync:portal:check`, `npm run sync:proof:portal`, `tools/deploy-api-safe.sh --check-only`, and runtime drift checks),
+   - then sync canonical changes back to affected runtime mirrors.
+6. Every status report must explicitly call out drift and identify which copy is newest per drifted file.
+
 ## Frontend A11y and Box Model SOP
 
 1. When a CSS rule uses `width`/`height` (or min/max variants) together with `padding` and/or `border`, include `box-sizing: border-box;` in that same rule block.

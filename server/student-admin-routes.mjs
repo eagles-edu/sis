@@ -306,9 +306,11 @@ function toNonNegativeInt(value) {
 
 function resolveNewsSetUnapprovedCount({
   submittedCount = 0,
+  revisionRequestedCount = 0,
 } = {}) {
   const submitted = toNonNegativeInt(submittedCount)
-  return Math.max(0, submitted)
+  const revisionRequested = toNonNegativeInt(revisionRequestedCount)
+  return Math.max(0, submitted + revisionRequested)
 }
 
 function resolveNewsSetStatus({
@@ -343,10 +345,11 @@ function resolveNewsSetAction({
   reportCount = 0,
   approvedCount = 0,
   submittedCount = 0,
+  revisionRequestedCount = 0,
 } = {}) {
   const totalReports = toNonNegativeInt(reportCount)
   const approved = toNonNegativeInt(approvedCount)
-  const unapproved = resolveNewsSetUnapprovedCount({ submittedCount })
+  const unapproved = resolveNewsSetUnapprovedCount({ submittedCount, revisionRequestedCount })
   if (totalReports >= 7 && approved >= 7) return "completed"
   if (unapproved === 0) return "incomplete"
   return `unapproved-${unapproved}`
@@ -410,7 +413,12 @@ function resolveStudentNewsValidationConfigFromSettings() {
     allowedDomains.push(domain)
   })
   const uniqueDomains = Array.from(new Set(allowedDomains.map((entry) => normalizeNewsSourceDomain(entry)).filter(Boolean)))
+  const envValidationDisabled = ["1", "true", "yes", "on"].includes(
+    normalizeLower(process.env.STUDENT_NEWS_VALIDATION_DISABLED)
+  )
+  const settingsValidationDisabled = rawValidation?.enabled === false
   return {
+    enabled: !(envValidationDisabled || settingsValidationDisabled),
     allowedDomains: uniqueDomains.length
       ? uniqueDomains
       : [
@@ -4874,6 +4882,7 @@ async function buildQueueHubPayload() {
               reportCount,
               approvedCount: entry?.approvedCount,
               submittedCount: entry?.submittedCount,
+              revisionRequestedCount: entry?.revisionRequestedCount,
             })
             const { _reportDates, ...safeEntry } = entry || {}
             void _reportDates

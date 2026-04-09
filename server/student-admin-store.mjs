@@ -3172,6 +3172,7 @@ function sourceDomainMatches(hostname, allowedDomain) {
 
 function normalizeStudentNewsValidationConfig(config = {}) {
   const source = config && typeof config === "object" ? config : {}
+  const enabled = source?.enabled !== false
   const incomingDomains = Array.isArray(source.allowedDomains)
     ? source.allowedDomains
     : []
@@ -3189,6 +3190,7 @@ function normalizeStudentNewsValidationConfig(config = {}) {
     leadSynopsis: Number(source?.thresholds?.leadSynopsis),
   }
   return {
+    enabled,
     allowedDomains,
     thresholds: {
       articleTitle: Number.isFinite(thresholds.articleTitle)
@@ -4290,6 +4292,18 @@ function datelineHasExplicitUpdatedCue(value = "") {
 
 export async function evaluateStudentNewsCompliance(payload = {}, options = {}) {
   const config = normalizeStudentNewsValidationConfig(options?.validationConfig || {})
+  if (config.enabled === false) {
+    return {
+      passed: true,
+      failedFields: {},
+      revisionTasks: [],
+      details: {
+        skipped: true,
+        reason: "validation-disabled",
+      },
+      config,
+    }
+  }
   const normalizedSourceLink = normalizeHttpUrl(payload?.sourceLink)
   const rawSourceLink = normalizeText(payload?.sourceLink)
   const articleTitle = normalizeText(payload?.articleTitle)
@@ -6244,16 +6258,18 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
       })
     } catch (error) {
       if (
-        !isStudentNewsReportSchemaUnavailableError(error)
-        && !isStudentNewsReviewSchemaUnavailableError(error)
+        isStudentNewsReportSchemaUnavailableError(error)
+        || isStudentNewsReviewSchemaUnavailableError(error)
       ) {
-        if (normalizeText(error?.code).toUpperCase() === "P2025") {
-          assertWithStatus(false, 404, "Student news report not found")
-        } else {
-          throw error
-        }
+        fallbackOnly = true
+      } else if (normalizeText(error?.code).toUpperCase() === "P2025") {
+        assertWithStatus(false, 404, "Student news report not found")
+      } else {
+        throw error
       }
     }
+  } else {
+    fallbackOnly = true
   }
 
   if (!updatedReport) {

@@ -316,8 +316,11 @@ test("queue hub source contract includes student-week news-set panel", () => {
   assert.match(routes, /setActionColor/)
   assert.match(routes, /"incomplete"/)
   assert.match(routes, /"waiting"/)
-  assert.match(routes, /function resolveNewsSetUnapprovedCount\(\{[\s\S]*submittedCount = 0/)
-  assert.match(routes, /return Math\.max\(0,\s*submitted\)/)
+  assert.match(
+    routes,
+    /function resolveNewsSetUnapprovedCount\(\{[\s\S]*submittedCount = 0,[\s\S]*revisionRequestedCount = 0/
+  )
+  assert.match(routes, /return Math\.max\(0,\s*submitted \+ revisionRequested\)/)
 })
 
 test("news review status/action rules and revise chip label keep locked admin ui rules", () => {
