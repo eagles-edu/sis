@@ -4,10 +4,20 @@ import test from "node:test"
 import vm from "node:vm"
 import xlsx from "xlsx"
 
+if (typeof xlsx.set_fs === "function") {
+  xlsx.set_fs(fs)
+}
+
 const PROFILE_TAB_IDS = new Set(["profile", "medical", "covid", "submission"])
 const LIST_INPUT_TYPES = new Set(["select", "radio", "checkbox"])
 const ALLOWED_TOP_LEVEL_KEYS = new Set(["eaglesId", "studentNumber", "email"])
-const CANONICAL_WORKBOOK_FILE = "docs/students/eaglesclub-students-import-ready.xlsx"
+const CANONICAL_WORKBOOK_FILES = [
+  "docs/students/eaglesclub-students-import-ready.xlsx",
+  "docs/students/eaglesclub-students-import-ready-single.xlsx",
+  "schemas/student-import-template.xlsx",
+  "../../../../docs/students/eaglesclub-students-import-ready.xlsx",
+  "../../../../docs/students/eaglesclub-students-import-ready-single.xlsx",
+]
 const FORM_UNMAPPED_PROFILE_KEYS = new Set([
   "sourceFormId",
   "sourceUrl",
@@ -88,8 +98,9 @@ function readWorkbookKeysFrom(filePath) {
 }
 
 function readWorkbookKeys() {
-  assert.equal(fs.existsSync(CANONICAL_WORKBOOK_FILE), true, `canonical workbook must exist: ${CANONICAL_WORKBOOK_FILE}`)
-  return readWorkbookKeysFrom(CANONICAL_WORKBOOK_FILE)
+  const workbookFile = CANONICAL_WORKBOOK_FILES.find((filePath) => fs.existsSync(filePath))
+  assert.ok(workbookFile, `canonical workbook must exist: ${CANONICAL_WORKBOOK_FILES.join(" or ")}`)
+  return readWorkbookKeysFrom(workbookFile)
 }
 
 function readPrismaModelFieldNames(modelName) {

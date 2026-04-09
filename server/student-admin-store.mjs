@@ -6261,15 +6261,13 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
         isStudentNewsReportSchemaUnavailableError(error)
         || isStudentNewsReviewSchemaUnavailableError(error)
       ) {
-        fallbackOnly = true
+        // Fall back to file-backed persistence when review schema delegates are unavailable.
       } else if (normalizeText(error?.code).toUpperCase() === "P2025") {
         assertWithStatus(false, 404, "Student news report not found")
       } else {
         throw error
       }
     }
-  } else {
-    fallbackOnly = true
   }
 
   if (!updatedReport) {

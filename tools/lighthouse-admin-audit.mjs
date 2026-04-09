@@ -72,7 +72,7 @@ function parseLighthouseJson(rawOutput = "") {
     const start = trimmed.indexOf("{")
     const end = trimmed.lastIndexOf("}")
     if (start < 0 || end <= start) {
-      throw new Error(`unable to parse lighthouse JSON output: ${error.message}`)
+      throw new Error(`unable to parse lighthouse JSON output: ${error.message}`, { cause: error })
     }
     return JSON.parse(trimmed.slice(start, end + 1))
   }

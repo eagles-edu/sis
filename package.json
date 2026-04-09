@@ -1,7 +1,7 @@
 {
   "name": "sis",
-  "version": "0.1.0",
-  "description": "SIS backend service workspace",
+  "version": "0.2.0",
+  "description": "SIS service workspace",
   "private": true,
   "type": "module",
   "main": "index.js",

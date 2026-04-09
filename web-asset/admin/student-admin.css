@@ -1,12 +1,9 @@
       :root {
         --font-base:
-          system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI",
-          roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans",
-          "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+          system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans","Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 
         /* prettier-ignore  */
-        --font-header:
-    system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        --font-header: system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 
         --radius-base: 3.667px;
         --radius-1: var(--radius-base);
@@ -1312,6 +1309,10 @@
         border-bottom: 1px solid #e9eef7;
         vertical-align: top;
         text-align: left;
+      }
+      .school-col,
+      .school-col-cell {
+        min-width: 160px;
       }
       tr.active {
         background: #edf4ff;
@@ -3335,4 +3336,4 @@
       *::after {
         box-sizing: border-box;
       }
-    
+

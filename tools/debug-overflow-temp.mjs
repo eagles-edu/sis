@@ -54,15 +54,15 @@ await page.goto(abs(target), { waitUntil: 'domcontentloaded' });
 await page.waitForTimeout(800);
 
 const result = await page.evaluate(() => {
-  const doc = document.documentElement;
-  const body = document.body;
+  const doc = globalThis.document.documentElement;
+  const body = globalThis.document.body;
   const entries = [];
-  const all = Array.from(document.querySelectorAll('*'));
+  const all = Array.from(globalThis.document.querySelectorAll('*'));
   for (const el of all) {
-    const cs = getComputedStyle(el);
+    const cs = globalThis.getComputedStyle(el);
     const rect = el.getBoundingClientRect();
     if ((rect.width <= 0 && rect.height <= 0) || cs.display === 'none' || cs.visibility === 'hidden') continue;
-    const rightOverflow = rect.right - window.innerWidth;
+    const rightOverflow = rect.right - globalThis.window.innerWidth;
     const leftOverflow = 0 - rect.left;
     if (rightOverflow > 1 || leftOverflow > 1 || el.scrollWidth > el.clientWidth + 1) {
       entries.push({
@@ -82,7 +82,7 @@ const result = await page.evaluate(() => {
   }
   entries.sort((a, b) => (b.right - a.right) || (b.scrollWidth - a.scrollWidth));
   return {
-    viewport: window.innerWidth,
+    viewport: globalThis.window.innerWidth,
     docClient: doc.clientWidth,
     docScroll: doc.scrollWidth,
     bodyClient: body?.clientWidth || 0,
