@@ -2,6 +2,10 @@ import fs from "node:fs"
 import path from "node:path"
 import xlsx from "xlsx"
 
+if (typeof xlsx.set_fs === "function") {
+  xlsx.set_fs(fs)
+}
+
 const FORMFIELDS_SCHEMA_FILE = "docs/students/eaglesclub-students-import-ready.xlsx"
 const SOURCE_UPLOAD_FILE = "docs/students/current_matches_amalgamated.xlsx"
 const ORDERED_OUTPUT_FILE = "docs/students/current_matches_amalgamated.canonical-ready.xlsx"

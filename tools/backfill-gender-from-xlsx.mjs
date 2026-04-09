@@ -7,6 +7,10 @@ import xlsx from "xlsx"
 
 import { getSharedPrismaClient } from "../server/prisma-client-factory.mjs"
 
+if (typeof xlsx.set_fs === "function") {
+  xlsx.set_fs(fs)
+}
+
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()

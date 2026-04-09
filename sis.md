@@ -7,6 +7,31 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-09 - SheetJS upgraded to 0.20.3 with ESM fs compatibility fix)
+
+- Requirement:
+  - analyze Dependabot logs and upgrade SheetJS to `0.20.3`.
+- Log analysis:
+  - reviewed `/home/eagles/Downloads/logs_63911904460.zip` (Dependabot run timestamped `2026-04-09`).
+  - this run targeted only `fast-xml-parser` and `nodemailer` security advisories in historical backup directories, not current root `xlsx`.
+  - workflow also reports a separate GitHub Actions deprecation warning for Node 20 based actions (`github/dependabot-action@main`) with Node 24 migration timeline.
+- Changes:
+  - upgraded dependency to SheetJS `0.20.3` using CDN tarball in:
+    - [package.json](package.json)
+    - [package-lock.json](package-lock.json)
+  - fixed ESM filesystem wiring required by `xlsx@0.20.3` for `readFile(...)` callers:
+    - [test/profile-form-contract.spec.mjs](test/profile-form-contract.spec.mjs)
+    - [tools/backfill-gender-from-xlsx.mjs](tools/backfill-gender-from-xlsx.mjs)
+    - [tools/prepare-student-import-workbooks.mjs](tools/prepare-student-import-workbooks.mjs)
+- Verification:
+  - baseline before change: `npm test` => `349` pass, `0` fail.
+  - post-upgrade:
+    - `npm ls xlsx --depth=0` => `xlsx@0.20.3`
+    - `node --test test/profile-form-contract.spec.mjs` => `10` pass, `0` fail.
+    - `npm test` => `349` pass, `0` fail, `0` skipped.
+- Coverage gaps:
+  - none identified for this dependency upgrade path after compatibility patch.
+
 ## Update (2026-04-09 - live runtime sync/restart reliability hardening)
 
 - Requirement:

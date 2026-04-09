@@ -4,6 +4,10 @@ import test from "node:test"
 import vm from "node:vm"
 import xlsx from "xlsx"
 
+if (typeof xlsx.set_fs === "function") {
+  xlsx.set_fs(fs)
+}
+
 const PROFILE_TAB_IDS = new Set(["profile", "medical", "covid", "submission"])
 const LIST_INPUT_TYPES = new Set(["select", "radio", "checkbox"])
 const ALLOWED_TOP_LEVEL_KEYS = new Set(["eaglesId", "studentNumber", "email"])
