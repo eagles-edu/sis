@@ -916,6 +916,61 @@ function sendHtml(response, statusCode, html, headers = {}) {
   response.end(html)
 }
 
+function findMatchingDivBlockEnd(html, openTagStartIndex) {
+  const tokenRe = /<\/?div\b[^>]*>/gi
+  tokenRe.lastIndex = Math.max(0, openTagStartIndex)
+  let depth = 0
+  let opened = false
+  for (let tokenMatch = tokenRe.exec(html); tokenMatch; tokenMatch = tokenRe.exec(html)) {
+    const token = normalizeLower(tokenMatch[0])
+    const isClosing = token.startsWith("</div")
+    if (!isClosing) {
+      depth += 1
+      opened = true
+      continue
+    }
+    if (!opened) continue
+    depth -= 1
+    if (depth === 0) return tokenRe.lastIndex
+  }
+  return openTagStartIndex
+}
+
+function collectAdminPageSectionRanges(html) {
+  const ranges = []
+  const sectionStartRe = /<div\b[^>]*\bclass="[^"]*\bpage-section\b[^"]*"[^>]*\bdata-page="([a-z0-9-]+)"[^>]*>/gi
+  for (
+    let sectionMatch = sectionStartRe.exec(html);
+    sectionMatch;
+    sectionMatch = sectionStartRe.exec(html)
+  ) {
+    const slug = normalizeLower(sectionMatch[1])
+    const start = sectionMatch.index
+    const end = findMatchingDivBlockEnd(html, start)
+    if (!slug || end <= start) continue
+    ranges.push({ slug, start, end })
+    sectionStartRe.lastIndex = end
+  }
+  return ranges
+}
+
+function renderDiscreteAdminPageHtml(html, pageSlug) {
+  const normalizedSlug = normalizeLower(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)
+  const ranges = collectAdminPageSectionRanges(html)
+  if (!ranges.length) return html
+  if (!ranges.some((range) => range.slug === normalizedSlug)) return html
+
+  let cursor = 0
+  let output = ""
+  ranges.forEach((range) => {
+    output += html.slice(cursor, range.start)
+    if (range.slug === normalizedSlug) output += html.slice(range.start, range.end)
+    cursor = range.end
+  })
+  output += html.slice(cursor)
+  return output
+}
+
 function injectAdminRuntimeConfig(html, pageSlug, origin) {
   const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
   if (html.includes("</head>")) {
@@ -955,6 +1010,14 @@ function resolveAdminPageSlug(pathname) {
   const slug = normalizeLower(match[1])
   if (!ADMIN_PAGE_SECTION_SET.has(slug)) return ""
   return slug
+}
+
+function resolveAdminPageSlugFromQuery(searchParams) {
+  if (!(searchParams instanceof URLSearchParams)) return ""
+  const querySlug = normalizeLower(searchParams.get("page") || searchParams.get("pageSlug"))
+  if (!querySlug) return ""
+  if (!ADMIN_PAGE_SECTION_SET.has(querySlug)) return ""
+  return querySlug
 }
 
 export function getStudentAdminRuntimeStatus() {
@@ -6304,9 +6367,18 @@ export async function handleStudentAdminRequest(request, response) {
     return true
   }
 
-  const pageSlug = resolveAdminPageSlug(pathname)
-  if (method === "GET" && pageSlug) {
-    const html = injectAdminRuntimeConfig(fs.readFileSync(ADMIN_HTML_PATH, "utf8"), pageSlug, requestOrigin)
+  const pageSlugFromPath = resolveAdminPageSlug(pathname)
+  const pageSlugFromQuery =
+    pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
+  const pageSlug = pageSlugFromQuery || pageSlugFromPath
+  if (method === "GET" && pageSlugFromPath) {
+    if (!fs.existsSync(ADMIN_HTML_PATH)) {
+      sendJson(response, 404, { error: "Student admin page not found" })
+      return true
+    }
+    const htmlSource = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
+    const pageHtml = renderDiscreteAdminPageHtml(htmlSource, pageSlug)
+    const html = injectAdminRuntimeConfig(pageHtml, pageSlug, requestOrigin)
     sendHtml(response, 200, html)
     return true
   }

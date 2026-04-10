@@ -219,6 +219,12 @@
       const statusEl = document.getElementById("status");
       const authStatusEl = document.getElementById("authStatus");
       const loginBtnEl = document.getElementById("loginBtn");
+      function bindById(id, eventName, listener, options) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        el.addEventListener(eventName, listener, options);
+        return el;
+      }
       function setAuthBootstrapping(isBooting) {
         document.body?.classList.toggle("admin-auth-booting", Boolean(isBooting));
       }
@@ -15887,6 +15893,7 @@
 
       function renderStudents() {
         const tbody = document.getElementById("studentRows");
+        if (!(tbody instanceof HTMLElement)) return;
         tbody.innerHTML = "";
 
         const searchTerm = normalizeSearchComparable(
@@ -15912,8 +15919,8 @@
           tbody.appendChild(tr);
         });
 
-        document.getElementById("studentCount").textContent =
-          `${visibleStudents.length} students`;
+        const studentCountEl = document.getElementById("studentCount");
+        if (studentCountEl) studentCountEl.textContent = `${visibleStudents.length} students`;
         state.topSearch.rows = visibleStudents;
         renderTopSearchResults(visibleStudents);
         applyUiSettings();
@@ -16891,12 +16898,18 @@
           handleError(error);
         });
         applyLevelThemeToSections("");
-        document.getElementById("a_id").value = "";
-        document.getElementById("g_id").value = "";
-        document.getElementById("r_id").value = "";
-        document.getElementById("attendanceRows").innerHTML = "";
-        document.getElementById("gradeRows").innerHTML = "";
-        document.getElementById("reportRows").innerHTML = "";
+        const attendanceIdEl = document.getElementById("a_id");
+        const gradeIdEl = document.getElementById("g_id");
+        const reportIdEl = document.getElementById("r_id");
+        const attendanceRowsEl = document.getElementById("attendanceRows");
+        const gradeRowsEl = document.getElementById("gradeRows");
+        const reportRowsEl = document.getElementById("reportRows");
+        if (attendanceIdEl) attendanceIdEl.value = "";
+        if (gradeIdEl) gradeIdEl.value = "";
+        if (reportIdEl) reportIdEl.value = "";
+        if (attendanceRowsEl) attendanceRowsEl.innerHTML = "";
+        if (gradeRowsEl) gradeRowsEl.innerHTML = "";
+        if (reportRowsEl) reportRowsEl.innerHTML = "";
         renderGradePulseChart([]);
         renderProfileInfoLayout(null);
         setProfileMode(state.profileMode);
@@ -17005,11 +17018,11 @@
         const data = await api("/api/admin/filters");
         const levelSelect = document.getElementById("filterLevel");
         const schoolSelect = document.getElementById("filterSchool");
-        const currentLevel = resolveSystemLevelName(levelSelect.value);
-        const currentSchool = normalizeText(schoolSelect.value);
+        const currentLevel = resolveSystemLevelName(levelSelect?.value);
+        const currentSchool = normalizeText(schoolSelect?.value);
 
-        levelSelect.innerHTML = '<option value="">All levels</option>';
-        schoolSelect.innerHTML = '<option value="">All schools</option>';
+        if (levelSelect) levelSelect.innerHTML = '<option value="">All levels</option>';
+        if (schoolSelect) schoolSelect.innerHTML = '<option value="">All schools</option>';
 
         const filterLevels = (data.levels || []).map((entry) =>
           normalizeLevelName(entry),
@@ -17022,7 +17035,7 @@
           option.value = resolveSystemLevelName(level);
           option.textContent = shortLevelLabel(level);
           if (levelNamesMatch(option.value, currentLevel)) option.selected = true;
-          levelSelect.appendChild(option);
+          if (levelSelect) levelSelect.appendChild(option);
         });
         (data.schools || []).forEach((school) => {
           const option = document.createElement("option");
@@ -17030,7 +17043,7 @@
           option.textContent = school;
           if (normalizeLower(option.value) === normalizeLower(currentSchool))
             option.selected = true;
-          schoolSelect.appendChild(option);
+          if (schoolSelect) schoolSelect.appendChild(option);
         });
 
         populateProfileLevelOptions();
@@ -17050,13 +17063,13 @@
       }
 
       async function loadStudents() {
-        const qInput = normalizeText(document.getElementById("searchQ").value || "");
+        const qInput = normalizeText(document.getElementById("searchQ")?.value || "");
         const qRaw = normalizeTopSearchQuery(qInput);
         const levelRaw = resolveSystemLevelName(
-          document.getElementById("filterLevel").value || "",
+          document.getElementById("filterLevel")?.value || "",
         );
         const schoolRaw = normalizeText(
-          document.getElementById("filterSchool").value || "",
+          document.getElementById("filterSchool")?.value || "",
         );
 
         const q = encodeURIComponent(qRaw);
@@ -18922,16 +18935,14 @@
         setActivePage(pageFromPath, { syncUrl: false });
       });
 
-      document.getElementById("loginForm").addEventListener("submit", (event) => {
+      bindById("loginForm", "submit", (event) => {
         event.preventDefault();
         login().catch(handleError);
       });
       document
         .getElementById("loginClearBtn")
         ?.addEventListener("click", () => clearLoginForm());
-      document
-        .getElementById("logoutBtn")
-        .addEventListener("click", () => logout().catch(handleError));
+      bindById("logoutBtn", "click", () => logout().catch(handleError));
       document
         .getElementById("sidebarLogoutBtn")
         ?.addEventListener("click", () => logout().catch(handleError));
@@ -18946,21 +18957,11 @@
           }, SEARCH_INPUT_DEBOUNCE_MS);
         };
       })();
-      document
-        .getElementById("searchQ")
-        .addEventListener("input", () => liveNameSearch());
-      document
-        .getElementById("searchBtn")
-        .addEventListener("click", () => loadStudents().catch(handleError));
-      document
-        .getElementById("clearFiltersBtn")
-        .addEventListener("click", () => clearTopControls().catch(handleError));
-      document
-        .getElementById("filterLevel")
-        .addEventListener("change", () => loadStudents().catch(handleError));
-      document
-        .getElementById("filterSchool")
-        .addEventListener("change", () => loadStudents().catch(handleError));
+      bindById("searchQ", "input", () => liveNameSearch());
+      bindById("searchBtn", "click", () => loadStudents().catch(handleError));
+      bindById("clearFiltersBtn", "click", () => clearTopControls().catch(handleError));
+      bindById("filterLevel", "change", () => loadStudents().catch(handleError));
+      bindById("filterSchool", "change", () => loadStudents().catch(handleError));
       DATA_TABLE_KEYS.forEach((tableKey) => {
         const config = tableFilterFieldConfig(tableKey);
         if (!config) return;
@@ -19173,7 +19174,7 @@
         ?.addEventListener("click", () => {
           restartServiceControl().catch(handleError);
         });
-      document.getElementById("refreshBtn").addEventListener("click", async () => {
+      bindById("refreshBtn", "click", async () => {
         try {
           await loadFilters();
           await loadStudents();
@@ -19194,60 +19195,46 @@
           handleError(error);
         }
       });
-      document
-        .getElementById("familyBtn")
-        .addEventListener("click", () => lookupFamilyPhone().catch(handleError));
-      document
-        .getElementById("familyClearResultBtn")
-        .addEventListener("click", () => clearFamilyLookupResult());
-      document.getElementById("userNewBtn").addEventListener("click", () => {
+      bindById("familyBtn", "click", () => lookupFamilyPhone().catch(handleError));
+      bindById("familyClearResultBtn", "click", () => clearFamilyLookupResult());
+      bindById("userNewBtn", "click", () => {
         clearUserForm();
         setStatus("New user form ready.");
       });
-      document.getElementById("userClearBtn").addEventListener("click", () => {
+      bindById("userClearBtn", "click", () => {
         clearUserForm();
         setStatus("User form cleared.");
       });
-      document.getElementById("userForm").addEventListener("submit", (event) => {
+      bindById("userForm", "submit", (event) => {
         event.preventDefault();
         saveAdminUser().catch(handleError);
       });
-      document.getElementById("userRefreshBtn").addEventListener("click", () => {
+      bindById("userRefreshBtn", "click", () => {
         loadUsers()
           .then(() => setStatus("User list refreshed."))
           .catch(handleError);
       });
-      document
-        .getElementById("userDeleteBtn")
-        .addEventListener("click", () => deleteAdminUser().catch(handleError));
-      document.getElementById("permissionsReloadBtn").addEventListener("click", () => {
+      bindById("userDeleteBtn", "click", () => deleteAdminUser().catch(handleError));
+      bindById("permissionsReloadBtn", "click", () => {
         loadRolePermissions()
           .then(() => setStatus("Role permissions reloaded."))
           .catch(handleError);
       });
-      document
-        .getElementById("permissionsSaveBtn")
-        .addEventListener("click", () => saveRolePermissions().catch(handleError));
-      document
-        .getElementById("permissionsResetBtn")
-        .addEventListener("click", () => resetRolePermissionsEditor());
+      bindById("permissionsSaveBtn", "click", () => saveRolePermissions().catch(handleError));
+      bindById("permissionsResetBtn", "click", () => resetRolePermissionsEditor());
 
-      document.getElementById("newBtn").addEventListener("click", () => {
+      bindById("newBtn", "click", () => {
         clearStudentForm();
         setProfileMode("edit");
         setStatus("New student form ready.");
       });
-      document.getElementById("studentClearBtn").addEventListener("click", () => {
+      bindById("studentClearBtn", "click", () => {
         clearStudentForm();
         setProfileMode("edit");
         setStatus("Student form cleared.");
       });
-      document
-        .getElementById("saveBtn")
-        .addEventListener("click", () => saveStudent().catch(handleError));
-      document
-        .getElementById("deleteBtn")
-        .addEventListener("click", () => deleteCurrentStudent().catch(handleError));
+      bindById("saveBtn", "click", () => saveStudent().catch(handleError));
+      bindById("deleteBtn", "click", () => deleteCurrentStudent().catch(handleError));
       document.getElementById("profileEditInfoBtn")?.addEventListener("click", () => {
         if (!state.currentStudent?.id) {
           setStatus("Select a student first to edit.", true);
@@ -19292,18 +19279,10 @@
           event.preventDefault();
         });
 
-      document
-        .getElementById("importBtn")
-        .addEventListener("click", () => importSpreadsheet().catch(handleError));
-      document
-        .getElementById("importTemplateBtn")
-        .addEventListener("click", () => downloadImportTemplate().catch(handleError));
-      document
-        .getElementById("settingsSaveBtn")
-        .addEventListener("click", () => saveUiSettings().catch(handleError));
-      document
-        .getElementById("settingsResetBtn")
-        .addEventListener("click", () => resetUiSettings().catch(handleError));
+      bindById("importBtn", "click", () => importSpreadsheet().catch(handleError));
+      bindById("importTemplateBtn", "click", () => downloadImportTemplate().catch(handleError));
+      bindById("settingsSaveBtn", "click", () => saveUiSettings().catch(handleError));
+      bindById("settingsResetBtn", "click", () => resetUiSettings().catch(handleError));
       const previewSchoolSetupFromInputs = () => {
         try {
           const draftSetup = draftSchoolSetupFromInputs();
@@ -19460,11 +19439,11 @@
           deleteProfileFieldFromLayout(row.dataset.profileFieldKey || "");
         });
 
-      document.getElementById("assignLevel").addEventListener("change", () => {
+      bindById("assignLevel", "change", () => {
         refreshAssignmentStudentOptions();
         renderAssignmentLevelTiles();
       });
-      document.getElementById("assignAssignedAt").addEventListener("change", () => {
+      bindById("assignAssignedAt", "change", () => {
         const dueEl = document.getElementById("assignDueAt");
         if (!normalizeText(dueEl?.value)) {
           if (dueEl)
@@ -19473,9 +19452,7 @@
             );
         }
       });
-      document
-        .getElementById("assignmentExerciseSelect")
-        .addEventListener("change", () => {
+      bindById("assignmentExerciseSelect", "change", () => {
           const selectEl = document.getElementById("assignmentExerciseSelect");
           const urlEl = document.getElementById("assignmentExerciseUrl");
           if (!selectEl || !urlEl) return;
@@ -19483,29 +19460,25 @@
           const suggestedUrl = normalizeText(selectedOption?.dataset?.url);
           if (suggestedUrl) urlEl.value = suggestedUrl;
         });
-      document.getElementById("assignmentAddItemBtn").addEventListener("click", () => {
+      bindById("assignmentAddItemBtn", "click", () => {
         try {
           addAssignmentDraftItem();
         } catch (error) {
           handleError(error);
         }
       });
-      document
-        .getElementById("assignmentLoadTitlesBtn")
-        .addEventListener("click", () => {
+      bindById("assignmentLoadTitlesBtn", "click", () => {
           const q = normalizeText(
             document.getElementById("assignmentExerciseSelect").value,
           );
           loadExerciseTitles(q).catch(handleError);
         });
-      document
-        .getElementById("assignmentReloadTemplatesBtn")
-        .addEventListener("click", () => {
+      bindById("assignmentReloadTemplatesBtn", "click", () => {
           state.assignmentTemplates = loadAssignmentTemplatesFromStorage();
           renderAssignmentTemplates();
           setAssignmentStatus("Assignments reloaded.");
         });
-      document.getElementById("assignmentSortField").addEventListener("change", () => {
+      bindById("assignmentSortField", "change", () => {
         applySortState(
           "assignments",
           normalizeText(document.getElementById("assignmentSortField").value) ||
@@ -19514,7 +19487,7 @@
         );
         rerenderSortedTable("assignments");
       });
-      document.getElementById("assignmentSortDirBtn").addEventListener("click", () => {
+      bindById("assignmentSortDirBtn", "click", () => {
         const currentField =
           normalizeText(state.tableSort?.assignments?.field) || "dueAt";
         applySortState("assignments", currentField, {
@@ -19530,78 +19503,56 @@
         );
         rerenderSortedTable("assignments");
       };
-      document
-        .getElementById("assignmentDataSearch")
-        .addEventListener("input", applyAssignmentDataSearch);
-      document
-        .getElementById("assignmentArchiveToggleBtn")
-        .addEventListener("click", () => {
+      bindById("assignmentDataSearch", "input", applyAssignmentDataSearch);
+      bindById("assignmentArchiveToggleBtn", "click", () => {
           try {
             toggleTableArchivedView("assignments");
           } catch (error) {
             handleError(error);
           }
         });
-      document
-        .getElementById("assignmentExportXlsxBtn")
-        .addEventListener("click", () => {
+      bindById("assignmentExportXlsxBtn", "click", () => {
           exportVisibleTableRowsToXlsx("assignments").catch(handleError);
         });
-      document.getElementById("assignmentPrintPdfBtn").addEventListener("click", () => {
+      bindById("assignmentPrintPdfBtn", "click", () => {
         try {
           printVisibleTableRowsPdf("assignments");
         } catch (error) {
           handleError(error);
         }
       });
-      document
-        .getElementById("assignmentSaveTemplateBtn")
-        .addEventListener("click", () => saveAssignmentTemplate().catch(handleError));
-      document
-        .getElementById("assignmentDeleteTemplateBtn")
-        .addEventListener("click", () => deleteAssignmentTemplate().catch(handleError));
-      document
-        .getElementById("assignmentSendBtn")
-        .addEventListener("click", () =>
+      bindById("assignmentSaveTemplateBtn", "click", () => saveAssignmentTemplate().catch(handleError));
+      bindById("assignmentDeleteTemplateBtn", "click", () => deleteAssignmentTemplate().catch(handleError));
+      bindById("assignmentSendBtn", "click", () =>
           sendAssignmentAnnouncement().catch(handleError),
         );
-      document
-        .getElementById("assignmentResetBtn")
-        .addEventListener("click", () => resetAssignmentForm());
-      document
-        .getElementById("levelReminderSendBtn")
-        .addEventListener("click", () =>
+      bindById("assignmentResetBtn", "click", () => resetAssignmentForm());
+      bindById("levelReminderSendBtn", "click", () =>
           sendLevelReminders(
             normalizeText(
               document.getElementById("levelReminderMode").value || "selected",
             ),
           ).catch(handleError),
         );
-      document
-        .getElementById("levelReminderSendAllBtn")
-        .addEventListener("click", () => sendLevelReminders("all").catch(handleError));
-      document
-        .getElementById("levelReminderClearBtn")
-        .addEventListener("click", () => clearLevelReminderForm());
-      document
-        .getElementById("levelDetailCloseBtn")
-        .addEventListener("click", () => closeLevelDetailPanel());
+      bindById("levelReminderSendAllBtn", "click", () => sendLevelReminders("all").catch(handleError));
+      bindById("levelReminderClearBtn", "click", () => clearLevelReminderForm());
+      bindById("levelDetailCloseBtn", "click", () => closeLevelDetailPanel());
 
-      document.getElementById("pt_classDate").addEventListener("change", () => {
+      bindById("pt_classDate", "change", () => {
         const classDate = normalizeText(document.getElementById("pt_classDate").value);
         parentTrackingFieldSetValue("pt_classDay", dayLabelFromIsoDate(classDate));
         resetParentTrackingManualMetricsTouched();
         applyParentTrackingLessonSummaryFromMemory({ force: true });
         syncParentTrackingForSelection({}).catch(handleError);
       });
-      document.getElementById("pt_studentRefId").addEventListener("change", () => {
+      bindById("pt_studentRefId", "change", () => {
         resetParentTrackingManualMetricsTouched();
         syncParentTrackingForSelection({}).catch(handleError);
       });
-      document.getElementById("pt_teacherName").addEventListener("change", () => {
+      bindById("pt_teacherName", "change", () => {
         rememberParentTrackingTeacherName();
       });
-      document.getElementById("pt_lessonSummary").addEventListener("input", () => {
+      bindById("pt_lessonSummary", "input", () => {
         rememberParentTrackingLessonSummary();
       });
       const parentTrackingSectionEl = document.querySelector(
@@ -19638,13 +19589,9 @@
       document
         .getElementById("pt_actionClearBtn")
         ?.addEventListener("click", () => clearParentTrackingActionShortcutInputs());
-      document
-        .getElementById("pt_saveBtn")
-        .addEventListener("click", () => saveParentTrackingReport().catch(handleError));
-      document
-        .getElementById("pt_queueSendBtn")
-        .addEventListener("click", () => queueParentTrackingEmail().catch(handleError));
-      document.getElementById("pt_clearBtn").addEventListener("click", () => {
+      bindById("pt_saveBtn", "click", () => saveParentTrackingReport().catch(handleError));
+      bindById("pt_queueSendBtn", "click", () => queueParentTrackingEmail().catch(handleError));
+      bindById("pt_clearBtn", "click", () => {
         clearParentTrackingForm();
         refreshParentTracking({ preserveStudentSelection: true }).catch(handleError);
       });
@@ -19654,15 +19601,11 @@
           const nextShowAll = !state.parentReportQueue.showAll;
           loadParentReportQueue({ showAll: nextShowAll }).catch(handleError);
         });
-      document
-        .getElementById("overviewIncomingExerciseExpandBtn")
-        .addEventListener("click", () => {
+      bindById("overviewIncomingExerciseExpandBtn", "click", () => {
           const nextShowAll = !state.incomingExerciseQueue.showAll;
           loadIncomingExerciseResults({ showAll: nextShowAll }).catch(handleError);
         });
-      document
-        .getElementById("overviewIncomingExerciseRefreshBtn")
-        .addEventListener("click", () => {
+      bindById("overviewIncomingExerciseRefreshBtn", "click", () => {
           loadIncomingExerciseResults({
             showAll: state.incomingExerciseQueue.showAll,
           }).catch(handleError);
@@ -19719,15 +19662,13 @@
             })
             .catch(handleError);
         });
-      document
-        .getElementById("parentQueueCloseBtn")
-        .addEventListener("click", () => closeParentQueueModal());
-      document.getElementById("parentQueuePrevBtn").addEventListener("click", () => {
+      bindById("parentQueueCloseBtn", "click", () => closeParentQueueModal());
+      bindById("parentQueuePrevBtn", "click", () => {
         if (state.parentReportQueue.modalIndex <= 0) return;
         state.parentReportQueue.modalIndex -= 1;
         renderParentQueueModal();
       });
-      document.getElementById("parentQueueNextBtn").addEventListener("click", () => {
+      bindById("parentQueueNextBtn", "click", () => {
         const total =
           Array.isArray(state.parentReportQueue?.items) ?
             state.parentReportQueue.items.length
@@ -19736,23 +19677,15 @@
         state.parentReportQueue.modalIndex += 1;
         renderParentQueueModal();
       });
-      document
-        .getElementById("parentQueueHoldBtn")
-        .addEventListener("click", () => holdParentQueueModalItem().catch(handleError));
-      document
-        .getElementById("parentQueueEditBtn")
-        .addEventListener("click", () => editParentQueueModalItem().catch(handleError));
-      document
-        .getElementById("parentQueueRequeueBtn")
-        .addEventListener("click", () =>
+      bindById("parentQueueHoldBtn", "click", () => holdParentQueueModalItem().catch(handleError));
+      bindById("parentQueueEditBtn", "click", () => editParentQueueModalItem().catch(handleError));
+      bindById("parentQueueRequeueBtn", "click", () =>
           requeueParentQueueModalItem().catch(handleError),
         );
-      document
-        .getElementById("parentQueueSendAllBtn")
-        .addEventListener("click", () =>
+      bindById("parentQueueSendAllBtn", "click", () =>
           sendAllQueuedParentReports().catch(handleError),
         );
-      document.getElementById("parentQueueModal").addEventListener("click", (event) => {
+      bindById("parentQueueModal", "click", (event) => {
         const target = event.target;
         if (!(target instanceof Element)) return;
         if (target.id !== "parentQueueModal") return;
@@ -19765,65 +19698,51 @@
           state.levelTileStyleEditor.pendingImageDataUrl = "";
           syncAttendanceLevelEditorInputs();
         });
-      document
-        .getElementById("attendanceSaveBtn")
-        .addEventListener("click", () => saveAttendance().catch(handleError));
-      document
-        .getElementById("attendanceLandingSaveAllBtn")
-        .addEventListener("click", () =>
+      bindById("attendanceSaveBtn", "click", () => saveAttendance().catch(handleError));
+      bindById("attendanceLandingSaveAllBtn", "click", () =>
           saveAttendanceLandingForSelectedLevel().catch(handleError),
         );
-      document
-        .getElementById("attendanceLandingReloadBtn")
-        .addEventListener("click", () =>
+      bindById("attendanceLandingReloadBtn", "click", () =>
           refreshAttendanceLanding({ reloadRows: true }).catch(handleError),
         );
-      document
-        .getElementById("attendanceLevelApplyBtn")
-        .addEventListener("click", () => {
+      bindById("attendanceLevelApplyBtn", "click", () => {
           try {
             applyAttendanceLevelTileStyle();
           } catch (error) {
             handleError(error);
           }
         });
-      document
-        .getElementById("attendanceLevelClearImageBtn")
-        .addEventListener("click", () => {
+      bindById("attendanceLevelClearImageBtn", "click", () => {
           try {
             clearAttendanceLevelTileImage();
           } catch (error) {
             handleError(error);
           }
         });
-      document
-        .getElementById("attendanceLevelResetBtn")
-        .addEventListener("click", () => {
+      bindById("attendanceLevelResetBtn", "click", () => {
           try {
             resetAttendanceLevelTileStyle();
           } catch (error) {
             handleError(error);
           }
         });
-      document
-        .getElementById("attendanceLevelImage")
-        .addEventListener("change", (event) => {
+      bindById("attendanceLevelImage", "change", (event) => {
           try {
             handleAttendanceLevelImageUpload(event);
           } catch (error) {
             handleError(error);
           }
         });
-      document.getElementById("a_date").addEventListener("change", () => {
+      bindById("a_date", "change", () => {
         syncAttendanceDateDerivedFields();
         state.attendanceLanding.selectionsByStudentId = {};
         refreshAttendanceLandingRows({ hydrate: false }).catch(handleError);
       });
-      document.getElementById("attendanceClearBtn").addEventListener("click", () => {
+      bindById("attendanceClearBtn", "click", () => {
         clearAttendanceForm();
         setStatus("Attendance form cleared.");
       });
-      document.getElementById("attendanceSortField").addEventListener("change", () => {
+      bindById("attendanceSortField", "change", () => {
         applySortState(
           "attendance",
           normalizeText(document.getElementById("attendanceSortField").value) ||
@@ -19832,7 +19751,7 @@
         );
         rerenderSortedTable("attendance");
       });
-      document.getElementById("attendanceSortDirBtn").addEventListener("click", () => {
+      bindById("attendanceSortDirBtn", "click", () => {
         const currentField =
           normalizeText(state.tableSort?.attendance?.field) || "attendanceDate";
         applySortState("attendance", currentField, {
@@ -19848,31 +19767,25 @@
         );
         rerenderSortedTable("attendance");
       };
-      document
-        .getElementById("attendanceDataSearch")
-        .addEventListener("input", applyAttendanceDataSearch);
-      document
-        .getElementById("attendanceArchiveToggleBtn")
-        .addEventListener("click", () => {
+      bindById("attendanceDataSearch", "input", applyAttendanceDataSearch);
+      bindById("attendanceArchiveToggleBtn", "click", () => {
           try {
             toggleTableArchivedView("attendance");
           } catch (error) {
             handleError(error);
           }
         });
-      document
-        .getElementById("attendanceExportXlsxBtn")
-        .addEventListener("click", () => {
+      bindById("attendanceExportXlsxBtn", "click", () => {
           exportVisibleTableRowsToXlsx("attendance").catch(handleError);
         });
-      document.getElementById("attendancePrintPdfBtn").addEventListener("click", () => {
+      bindById("attendancePrintPdfBtn", "click", () => {
         try {
           printVisibleTableRowsPdf("attendance");
         } catch (error) {
           handleError(error);
         }
       });
-      document.getElementById("performanceSortField").addEventListener("change", () => {
+      bindById("performanceSortField", "change", () => {
         applySortState(
           "performance",
           normalizeText(document.getElementById("performanceSortField").value) ||
@@ -19881,7 +19794,7 @@
         );
         rerenderSortedTable("performance");
       });
-      document.getElementById("performanceSortDirBtn").addEventListener("click", () => {
+      bindById("performanceSortDirBtn", "click", () => {
         const currentField =
           normalizeText(state.tableSort?.performance?.field) || "generatedAt";
         applySortState("performance", currentField, {
@@ -19897,40 +19810,30 @@
         );
         rerenderSortedTable("performance");
       };
-      document
-        .getElementById("performanceDataSearch")
-        .addEventListener("input", applyPerformanceDataSearch);
-      document
-        .getElementById("performanceArchiveToggleBtn")
-        .addEventListener("click", () => {
+      bindById("performanceDataSearch", "input", applyPerformanceDataSearch);
+      bindById("performanceArchiveToggleBtn", "click", () => {
           try {
             toggleTableArchivedView("performance");
           } catch (error) {
             handleError(error);
           }
         });
-      document
-        .getElementById("performanceExportXlsxBtn")
-        .addEventListener("click", () => {
+      bindById("performanceExportXlsxBtn", "click", () => {
           exportVisibleTableRowsToXlsx("performance").catch(handleError);
         });
-      document
-        .getElementById("performancePrintPdfBtn")
-        .addEventListener("click", () => {
+      bindById("performancePrintPdfBtn", "click", () => {
           try {
             printVisibleTableRowsPdf("performance");
           } catch (error) {
             handleError(error);
           }
         });
-      document
-        .getElementById("gradeSaveBtn")
-        .addEventListener("click", () => saveGrade().catch(handleError));
-      document.getElementById("gradeClearBtn").addEventListener("click", () => {
+      bindById("gradeSaveBtn", "click", () => saveGrade().catch(handleError));
+      bindById("gradeClearBtn", "click", () => {
         clearGradeForm();
         setStatus("Grade form cleared.");
       });
-      document.getElementById("gradeSortField").addEventListener("change", () => {
+      bindById("gradeSortField", "change", () => {
         applySortState(
           "grades",
           normalizeText(document.getElementById("gradeSortField").value) || "dueAt",
@@ -19938,7 +19841,7 @@
         );
         rerenderSortedTable("grades");
       });
-      document.getElementById("gradeSortDirBtn").addEventListener("click", () => {
+      bindById("gradeSortDirBtn", "click", () => {
         const currentField = normalizeText(state.tableSort?.grades?.field) || "dueAt";
         applySortState("grades", currentField, {
           toggleIfSame: true,
@@ -19950,20 +19853,18 @@
         setTableSearchTerm("grades", document.getElementById("gradeDataSearch").value);
         rerenderSortedTable("grades");
       };
-      document
-        .getElementById("gradeDataSearch")
-        .addEventListener("input", applyGradeDataSearch);
-      document.getElementById("gradeArchiveToggleBtn").addEventListener("click", () => {
+      bindById("gradeDataSearch", "input", applyGradeDataSearch);
+      bindById("gradeArchiveToggleBtn", "click", () => {
         try {
           toggleTableArchivedView("grades");
         } catch (error) {
           handleError(error);
         }
       });
-      document.getElementById("gradeExportXlsxBtn").addEventListener("click", () => {
+      bindById("gradeExportXlsxBtn", "click", () => {
         exportVisibleTableRowsToXlsx("grades").catch(handleError);
       });
-      document.getElementById("gradePrintPdfBtn").addEventListener("click", () => {
+      bindById("gradePrintPdfBtn", "click", () => {
         try {
           printVisibleTableRowsPdf("grades");
         } catch (error) {
@@ -20089,20 +19990,14 @@
       document
         .getElementById("gradeChartCustomTo")
         ?.addEventListener("change", applyGradeChartCustomRange);
-      document
-        .getElementById("reportSaveBtn")
-        .addEventListener("click", () => saveReport().catch(handleError));
-      document
-        .getElementById("reportGenerateBtn")
-        .addEventListener("click", () => generateReport().catch(handleError));
-      document
-        .getElementById("reportCardBtn")
-        .addEventListener("click", () => downloadReportCard().catch(handleError));
-      document.getElementById("reportClearBtn").addEventListener("click", () => {
+      bindById("reportSaveBtn", "click", () => saveReport().catch(handleError));
+      bindById("reportGenerateBtn", "click", () => generateReport().catch(handleError));
+      bindById("reportCardBtn", "click", () => downloadReportCard().catch(handleError));
+      bindById("reportClearBtn", "click", () => {
         clearReportForm();
         setStatus("Report form cleared.");
       });
-      document.getElementById("reportSortField").addEventListener("change", () => {
+      bindById("reportSortField", "change", () => {
         applySortState(
           "reports",
           normalizeText(document.getElementById("reportSortField").value) ||
@@ -20111,7 +20006,7 @@
         );
         rerenderSortedTable("reports");
       });
-      document.getElementById("reportSortDirBtn").addEventListener("click", () => {
+      bindById("reportSortDirBtn", "click", () => {
         const currentField =
           normalizeText(state.tableSort?.reports?.field) || "generatedAt";
         applySortState("reports", currentField, {
@@ -20127,22 +20022,18 @@
         );
         rerenderSortedTable("reports");
       };
-      document
-        .getElementById("reportDataSearch")
-        .addEventListener("input", applyReportDataSearch);
-      document
-        .getElementById("reportArchiveToggleBtn")
-        .addEventListener("click", () => {
+      bindById("reportDataSearch", "input", applyReportDataSearch);
+      bindById("reportArchiveToggleBtn", "click", () => {
           try {
             toggleTableArchivedView("reports");
           } catch (error) {
             handleError(error);
           }
         });
-      document.getElementById("reportExportXlsxBtn").addEventListener("click", () => {
+      bindById("reportExportXlsxBtn", "click", () => {
         exportVisibleTableRowsToXlsx("reports").catch(handleError);
       });
-      document.getElementById("reportPrintPdfBtn").addEventListener("click", () => {
+      bindById("reportPrintPdfBtn", "click", () => {
         try {
           printVisibleTableRowsPdf("reports");
         } catch (error) {

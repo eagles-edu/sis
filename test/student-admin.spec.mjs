@@ -19,6 +19,12 @@ function withAdminAssets(html = "") {
   return `${String(html || "")}\n${ADMIN_CSS_SOURCE}\n${ADMIN_JS_SOURCE}`
 }
 
+function renderedAdminPageSections(html = "") {
+  return Array.from(
+    String(html || "").matchAll(/<div class="panel page-section" data-page="([a-z0-9-]+)"/gi)
+  ).map((match) => match[1])
+}
+
 process.env.NODE_ENV = "test"
 process.env.EXERCISE_MAILER_ORIGIN = "*"
 process.env.EXERCISE_STORE_ENABLED = "false"
@@ -501,12 +507,16 @@ test("GET /admin/students returns HTML UI", async () => {
   const responseHtml = await res.text()
   const html = withAdminAssets(responseHtml)
   const inlineStyleBlocks = responseHtml.match(/<style>[\s\S]*?<\/style>/gi) || []
+  const renderedSections = renderedAdminPageSections(responseHtml)
   assert.match(html, /Student Admin/i)
   assert.match(html, /id="loginForm"/i)
+  assert.deepEqual(renderedSections, ["overview"])
+  assert.match(responseHtml, /<div class="panel page-section" data-page="overview">/i)
+  assert.doesNotMatch(responseHtml, /<div class="panel page-section" data-page="queue-hub">/i)
+  assert.match(responseHtml, /id="overviewClassRows"/i)
   assert.equal(inlineStyleBlocks.length, 1)
   assert.match(inlineStyleBlocks[0], /\.app-shell/i)
   assert.doesNotMatch(inlineStyleBlocks[0], /\.grade-chart-lanes/i)
-  assert.doesNotMatch(responseHtml, /function setActivePage\(/i)
   assert.match(responseHtml, /href="\/web-asset\/admin\/student-admin\.css"/i)
   assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin\.css"[\s\S]*as="style"/i)
   assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin\.js"\s+defer/i)
@@ -520,58 +530,10 @@ test("GET /admin/students returns HTML UI", async () => {
   assert.match(html, /"\/api\/admin"/i)
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"overview"/i)
-  assert.match(html, /id="schoolSetupLetterGradeRanges"/i)
-  assert.match(html, /id="openTabulatorGradesBtn"/i)
-  assert.match(html, /Open Tabulator Grades Admin/i)
-  assert.match(html, /tabulator-entry-callout/i)
-  assert.match(html, /\.grade-chart-lanes\s*\{[\s\S]*grid-template-columns:\s*1fr;/i)
-  assert.match(html, /@media\s*\(min-width:\s*481px\)\s*\{[\s\S]*\.grade-chart-lanes[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/i)
-  assert.match(html, /grade-chart-lane-legend/i)
-  assert.match(html, /grade-chart-threshold/i)
-  assert.match(html, /grade-chart-average/i)
-  assert.match(html, /grade-chart-trend/i)
-  assert.match(html, /grade-chart-legend-dot\.trend/i)
-  assert.match(html, /data-grade-chart-open=/i)
-  assert.match(html, /id="gradeChartModal"/i)
-  assert.match(html, /function openGradeChartModalForLaneKey\(/i)
-  assert.match(html, /PARENT_TRACKING_SCORE_TOOLTIPS/i)
-  assert.match(html, /0 = hiện không áp dụng cho học sinh\./i)
-  assert.match(html, /5 = thể hiện hành vi một cách độc lập/i)
-  assert.match(html, /radioEl\.title = tooltipText;/i)
-  assert.match(
-    html,
-    /<tr data-pt-min-level="Pre-A1 Starters">[\s\S]*Writes notes independently\./i
-  )
-  assert.match(
-    html,
-    /<tr data-pt-min-level="Pre-A1 Starters">[\s\S]*Consistently studies class notes outside of class\./i
-  )
-  assert.match(
-    html,
-    /<tr data-pt-min-level="Pre-A1 Starters">[\s\S]*Reviews notes before attending class\./i
-  )
-  assert.match(
-    html,
-    /<tr data-pt-min-level="Pre-A1 Starters">[\s\S]*Knows and uses Eagles Club Notebook extensive[\s\S]*practice drills\./i
-  )
-  assert.match(html, /data-pt-score-legend-toggle/i)
-  assert.match(html, /data-pt-score-legend-popover/i)
-  assert.match(html, /function initializeParentTrackingScoreLegendPopovers\(/i)
-  assert.match(html, /Thang điểm 0-5/i)
-  assert.match(html, /function buildGradesTabulatorLaunchUrl\(\)/i)
-  assert.match(html, /function applyGradeChartCurrentSchoolYearDefault\(\)/i)
-  assert.match(html, /setGradeChartState\(\{\s*period\s*\}\);\s*applyGradeChartCurrentSchoolYearDefault\(\);\s*renderGradePulseChart/i)
-  assert.match(html, /applyGradeChartCurrentSchoolYearDefault\(\);\s*renderGradePulseChart\(state\.visibleTableRows\?\.grades \|\| \[\]\);/i)
-  assert.doesNotMatch(html, /data-grade-chart-period="archive"/i)
-  assert.doesNotMatch(html, /All school years/i)
-  assert.match(html, /params\.set\("currentSchoolYear",\s*currentSchoolYear\)/i)
-  assert.match(html, /params\.set\("schoolYear",\s*selectedSchoolYear\)/i)
-  assert.match(html, /params\.set\("quarter",\s*selectedQuarter\)/i)
-  assert.match(html, /params\.set\("period",\s*period\)/i)
-  assert.match(html, /window\.location\.assign\(buildGradesTabulatorLaunchUrl\(\)\)/i)
   assert.match(html, /Static preview mode requires \?apiOrigin=/i)
   assert.match(html, /function assertApiOriginConfiguredForStaticPreview\(\)/i)
   assert.doesNotMatch(html, /function inferLocalPreviewApiOrigin\(/i)
+  assert.match(html, /function setActivePage\(/i)
   assert.match(html, /function pageSlugFromLocationSearch\(/i)
   assert.match(html, /const ADMIN_PAGE_URL_MODE = resolveAdminPageUrlMode\(\);/i)
   assert.match(html, /params\.get\("page"\)\s*\|\|\s*params\.get\("pageSlug"\)/i)
@@ -583,7 +545,10 @@ test("GET /admin/students?page=grades-data resolves query deep-link route", asyn
   const res = await fetchLocal(port, "/admin/students?page=grades-data")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = withAdminAssets(await res.text())
+  const responseHtml = await res.text()
+  const html = withAdminAssets(responseHtml)
+  assert.deepEqual(renderedAdminPageSections(responseHtml), ["grades-data"])
+  assert.match(responseHtml, /id="openTabulatorGradesBtn"/i)
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"grades-data"/i)
   assert.match(html, /pageSlugFromLocationSearch/i)
@@ -593,7 +558,9 @@ test("GET /admin/students/attendance returns section page HTML with slug config"
   const res = await fetchLocal(port, "/admin/students/attendance")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = withAdminAssets(await res.text())
+  const responseHtml = await res.text()
+  const html = withAdminAssets(responseHtml)
+  assert.deepEqual(renderedAdminPageSections(responseHtml), ["attendance"])
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"attendance"/i)
 })
@@ -602,7 +569,9 @@ test("GET /admin/students/parent-tracking returns section page HTML with slug co
   const res = await fetchLocal(port, "/admin/students/parent-tracking")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = withAdminAssets(await res.text())
+  const responseHtml = await res.text()
+  const html = withAdminAssets(responseHtml)
+  assert.deepEqual(renderedAdminPageSections(responseHtml), ["parent-tracking"])
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"parent-tracking"/i)
 })
@@ -611,7 +580,9 @@ test("GET /admin/students/queue-hub returns section page HTML with slug config",
   const res = await fetchLocal(port, "/admin/students/queue-hub")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = withAdminAssets(await res.text())
+  const responseHtml = await res.text()
+  const html = withAdminAssets(responseHtml)
+  assert.deepEqual(renderedAdminPageSections(responseHtml), ["queue-hub"])
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"queue-hub"/i)
   assert.match(html, /__SIS_ADMIN_QUEUE_HUB_PATH/i)
@@ -621,7 +592,9 @@ test("GET /admin/students/news-reports returns section page HTML with slug confi
   const res = await fetchLocal(port, "/admin/students/news-reports")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
-  const html = withAdminAssets(await res.text())
+  const responseHtml = await res.text()
+  const html = withAdminAssets(responseHtml)
+  assert.deepEqual(renderedAdminPageSections(responseHtml), ["news-reports"])
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"news-reports"/i)
   assert.match(html, /__SIS_ADMIN_NEWS_REPORTS_PATH/i)

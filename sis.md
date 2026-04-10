@@ -7,6 +7,31 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-10 - admin UI phase-2 discrete route rendering foundation)
+
+- Requirement:
+  - continue admin UI migration with Phase 2 foundation:
+    - serve only the requested admin page section per `/admin/students` route,
+    - preserve query-mode compatibility (`?page=` / `?pageSlug=`),
+    - harden admin JS bindings so missing section DOM does not crash boot.
+- Changes:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - added server-side section extraction/pruning for `.page-section[data-page="..."]` so each admin route response contains only the active section panel.
+    - added query deep-link slug resolver (`page` / `pageSlug`) for `/admin/students` base path while preserving path-first behavior.
+    - added explicit 404 handling when admin HTML is missing.
+  - [web-asset/admin/student-admin.js](web-asset/admin/student-admin.js):
+    - added `bindById(...)` safe binder and replaced direct `document.getElementById(...).addEventListener(...)` bindings in the bootstrap area.
+    - hardened core boot functions (`renderStudents`, `clearStudentForm`, `loadFilters`, `loadStudents`) for section-missing DOM compatibility.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added route contract assertions that each admin page response renders only one `.page-section` matching the requested slug.
+    - updated `/admin/students` and deep-link checks for discrete-page output.
+- Verification:
+  - `node --test test/student-admin.spec.mjs` => pass (`119` pass, `0` fail).
+  - `node --test test/student-admin-ui.spec.mjs` => pass (`49` pass, `0` fail).
+  - `npm test` => pass (`351` pass, `0` fail).
+- Coverage gaps:
+  - none identified for the Phase 2 discrete-rendering foundation in canonical dev workspace.
+
 ## Update (2026-04-09 - admin UI phase-1 offload + path-first navigation + lighthouse gate)
 
 - Requirement:
