@@ -4264,7 +4264,7 @@
 - Coverage gap:
   - lint workflow behavior is validated locally only; remote GitHub Actions execution has not been observed yet after this wiring change.
 - Prioritized next action:
-  - push and validate the next `Lint Code Base` workflow run on `preproduction`.
+  - push and validate the next `Lint Code Base` workflow run on `split`.
 
 ## Update (2026-03-10 - tracking data filter-summary readability with pipe format)
 
