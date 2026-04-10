@@ -13,8 +13,7 @@
 name: "CodeQL Advanced"
 
 on:
-  # Default CodeQL setup is enabled for this repository.
-  # Keep the advanced workflow manual-only to avoid duplicate SARIF upload failures.
+  push:
   workflow_dispatch:
 
 concurrency:

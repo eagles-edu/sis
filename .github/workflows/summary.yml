@@ -2,15 +2,17 @@
 name: Summarize new issues
 
 on:
+  push:
   issues:
     types: [opened]
 
 concurrency:
-  group: issue-summary-${{ github.event.issue.number }}
+  group: issue-summary-${{ github.event.issue.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   summary:
+    if: github.event_name == 'issues'
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     permissions:
@@ -35,3 +37,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           RESPONSE: ${{ steps.inference.outputs.response }}
+
+  push-status:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 1
+    permissions:
+      contents: read
+    steps:
+      - name: Push trigger marker
+        run: echo "Summary workflow push run is enabled; issue summarization remains issues-only."

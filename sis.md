@@ -7,6 +7,108 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-11 - workflow scope expanded across codacy/codeql/summary on push)
+
+- Requirement:
+  - extend GitHub workflow coverage so key workflows run after every push.
+- Changes:
+  - [.github/workflows/codacy.yml](.github/workflows/codacy.yml):
+    - already configured to run on every push (all branches) and `workflow_dispatch`.
+  - [.github/workflows/codeql.yml](.github/workflows/codeql.yml):
+    - changed from manual-only to `push` + `workflow_dispatch`.
+  - [.github/workflows/summary.yml](.github/workflows/summary.yml):
+    - added `push` trigger while preserving issue summarization logic for `issues` events only,
+    - updated concurrency group to be safe when issue context is absent on push,
+    - added lightweight push marker job so push runs succeed without issue payload requirements.
+- Verification:
+  - YAML parse check: `codacy.yml`, `codeql.yml`, `summary.yml` => pass.
+  - `npm test` => pass (`351` pass, `0` fail).
+- Coverage gaps / risk:
+  - CodeQL push runs can overlap with any repository-level default CodeQL setup and may generate duplicate scanning noise depending on repository security settings.
+  - final confirmation requires observing one real GitHub push run across all workflows.
+
+## Update (2026-04-11 - Codacy workflow set to run on every push)
+
+- Requirement:
+  - ensure Codacy runs in GitHub Actions after every push.
+- Changes:
+  - [.github/workflows/codacy.yml](.github/workflows/codacy.yml):
+    - changed `on.push` from branch-limited (`split`) to all branches (every push),
+    - kept `workflow_dispatch` for manual runs.
+- Verification:
+  - YAML parse check: `.github/workflows/codacy.yml` => pass.
+  - `npm test` => pass (`351` pass, `0` fail).
+- Coverage gaps:
+  - one GitHub-hosted push run is still required to confirm expected Actions UI behavior with repository secrets.
+
+## Update (2026-04-11 - Codacy workflow manual trigger + push-only scope, log re-analysis)
+
+- Requirement:
+  - add manual trigger for Codacy,
+  - run Codacy only on push/manual (not pull_request),
+  - re-check prior failure log against current workflow behavior.
+- Changes:
+  - [.github/workflows/codacy.yml](.github/workflows/codacy.yml):
+    - added `workflow_dispatch`,
+    - removed `pull_request` and `schedule` triggers,
+    - removed obsolete pull-request fork guard at job level.
+- Re-analysis (`/home/eagles/Downloads/logs_64082820510.zip`):
+  - run command showed blank project token (`--project-token` empty in workflow command).
+  - failures were tied to fallback/default scanning scope and tool defaults:
+    - ESLint config-missing in backup/vendor trees,
+    - PMD "No rules found",
+    - final exit code `1`.
+  - with current workflow:
+    - no-token path now exits cleanly via explicit skip step,
+    - token path prunes `backups`, `artifacts`, `web-asset/vendor` before scan.
+- Confirmation status:
+  - failures in that specific log are addressed by current guards/scope changes.
+  - residual risk: PMD/ruleset failures could still occur if Codacy remote project configuration itself is invalid; this requires an actual GitHub run with your configured token to fully confirm.
+- Verification:
+  - YAML parse check: `.github/workflows/codacy.yml` => pass.
+  - `npm test` baseline in this session => pass (`351` pass, `0` fail).
+
+## Update (2026-04-11 - Codacy workflow expression fix for GitHub `if` context rules)
+
+- Requirement:
+  - resolve workflow validation errors in `.github/workflows/codacy.yml` (`Unrecognized named-value: 'secrets'` on `job.if`).
+- Root cause:
+  - `secrets` context was referenced directly in `jobs.<job_id>.if`, which is not a valid context there.
+- Changes:
+  - [.github/workflows/codacy.yml](.github/workflows/codacy.yml):
+    - narrowed `job.if` to fork gating only (`github.event_name` / fork check).
+    - added job-level `env.CODACY_PROJECT_TOKEN` from `secrets.CODACY_PROJECT_TOKEN`.
+    - moved token gating to step-level conditions (`if: env.CODACY_PROJECT_TOKEN != ''`) for prune/analyze/upload steps.
+    - added explicit no-token informational step so the job exits cleanly when token is absent.
+- Verification:
+  - YAML parse check: `.github/workflows/codacy.yml` => pass.
+  - `npm test` => pass (`351` pass, `0` fail).
+- Coverage gaps:
+  - GitHub-hosted workflow run is still required to confirm final check-state behavior in repository Actions UI.
+
+## Update (2026-04-10 - CI workflow hardening for `split` branch secret-aware scans)
+
+- Requirement:
+  - fix failing CI checks after moving workflow targeting to the `split` branch.
+  - prevent branch checks from hard-failing when third-party scan secrets are not configured.
+- Root cause:
+  - reviewed GitHub Actions log bundle `/home/eagles/Downloads/logs_64082820510.zip`.
+  - `Codacy Security Scan` ran without `CODACY_PROJECT_TOKEN` (`--project-token` was blank in the job command), fell back to default analyzers, and failed on backup/vendor trees (ESLint config missing in snapshot/vendor paths; PMD tool failures).
+- Changes:
+  - [.github/workflows/codacy.yml](.github/workflows/codacy.yml):
+    - initially gated execution with `secrets.CODACY_PROJECT_TOKEN` plus fork guard.
+    - note: this was later revised on 2026-04-11 because `secrets` is not valid in `job.if`; token gating moved to step-level `env` checks.
+    - added pre-scan pruning for non-source trees (`backups`, `artifacts`, `web-asset/vendor`) to keep analysis scope aligned with maintained source.
+- Verification:
+  - YAML parse check: `.github/workflows/codacy.yml` => pass.
+  - `npm test` => pass (`351` pass, `0` fail).
+- Coverage gaps:
+  - GitHub-hosted workflow re-run is still required to validate skip/execute behavior under actual repository secret availability.
+- Prioritized next actions:
+  - re-run Actions on branch `split` and verify:
+    - Codacy is `skipped` when `CODACY_PROJECT_TOKEN` is absent,
+    - Codacy executes normally when `CODACY_PROJECT_TOKEN` is configured.
+
 ## Update (2026-04-10 - admin UI phase-2 discrete route rendering foundation)
 
 - Requirement:

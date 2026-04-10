@@ -16,12 +16,7 @@ name: Codacy Security Scan
 
 on:
   push:
-    branches: [ "split" ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "split" ]
-  schedule:
-    - cron: '35 19 * * 5'
+  workflow_dispatch:
 
 concurrency:
   group: codacy-${{ github.workflow }}-${{ github.ref }}
@@ -32,7 +27,6 @@ permissions:
 
 jobs:
   codacy-security-scan:
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork }}
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
@@ -40,18 +34,33 @@ jobs:
     name: Codacy Security Scan
     runs-on: ubuntu-22.04
     timeout-minutes: 20
+    env:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Skip scan when Codacy token is not configured
+        if: env.CODACY_PROJECT_TOKEN == ''
+        run: echo "CODACY_PROJECT_TOKEN is not configured; skipping Codacy scan."
+
+      # Exclude repository snapshots and vendored bundles from analysis scope.
+      - name: Prune non-source trees from scan scope
+        if: env.CODACY_PROJECT_TOKEN != ''
+        run: |
+          rm -rf backups
+          rm -rf artifacts
+          rm -rf web-asset/vendor
+
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
+        if: env.CODACY_PROJECT_TOKEN != ''
         uses: codacy/codacy-analysis-cli-action@d840f886c4bd4edc059706d09c6a1586111c540b
         with:
           # Check https://github.com/codacy/codacy-analysis-cli#project-token to get your project token from your Codacy repository
           # You can also omit the token and run the tools that support default configurations
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          project-token: ${{ env.CODACY_PROJECT_TOKEN }}
           verbose: true
           output: results.sarif
           format: sarif
@@ -63,6 +72,7 @@ jobs:
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
+        if: env.CODACY_PROJECT_TOKEN != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
