@@ -40,9 +40,13 @@ jobs:
         env:
           SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
         run: |
-          npx eslint .
-            --config eslint.config.mjs
-            --format @microsoft/eslint-formatter-sarif
+          npx eslint \
+            --config eslint.config.mjs \
+            server \
+            test \
+            tools \
+            web-asset/admin \
+            --format @microsoft/eslint-formatter-sarif \
             --output-file eslint-results.sarif
         continue-on-error: true
 

@@ -15,6 +15,7 @@ const ignores = [
   "backups/",
   "docs/logs/",
   "docs/mapping/out/",
+  "web-asset/vendor/",
 ]
 
 export default [

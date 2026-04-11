@@ -7,6 +7,23 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-11 - ESLint workflow now ignores vendored browser bundles)
+
+- Requirement:
+  - keep the GitHub ESLint scan focused on repository source files instead of vendored or generated bundles.
+- Changes:
+  - [.github/workflows/eslint.yml](.github/workflows/eslint.yml):
+    - narrowed the `Run ESLint` step to the maintained source roots (`server`, `test`, `tools`, `web-asset/admin`) instead of `eslint .`.
+  - [eslint.config.mjs](eslint.config.mjs):
+    - added `web-asset/vendor/` to the shared ignore list so `npx eslint .` skips third-party bundles that are not maintained as lint-clean source.
+  - [test/eslint-workflow.spec.mjs](test/eslint-workflow.spec.mjs):
+    - added regression assertions for the explicit ESLint source roots and the vendor ignore rule.
+- Verification:
+  - `node --test test/eslint-workflow.spec.mjs` => pass (`1` pass, `0` fail).
+  - `npx eslint --config eslint.config.mjs server test tools web-asset/admin --max-warnings=0` => pass.
+- Coverage gaps / risk:
+  - any new vendored or generated JS directories added outside the explicit source roots will need a workflow update or ignore rule.
+
 ## Update (2026-04-11 - Beautify HTML formatter now keeps compact menu-group tags)
 
 - Requirement:
