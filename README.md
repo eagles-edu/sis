@@ -105,7 +105,9 @@ npm start
 - Attendance tracking workflows
 - Grade/performance tracking workflows
 - Parent report queueing and review actions
-- Parent portal session APIs (`/api/parent/auth/*`, `/api/parent/children`, `/api/parent/dashboard`) and public portal route (`/parent/portal`)
+- Public portal hub at `/`
+- Parent portal session APIs (`/api/parent/auth/*`, `/api/parent/children`, `/api/parent/dashboard`) and public portal route (`/parent`)
+- Student portal session APIs (`/api/student/auth/*`, `/api/student/dashboard`, `/api/student/news-reports`) and public portal route (`/student`)
 - Exercise incoming queue review/match/create-account flows
 - Runtime health + service control endpoints
 - XLSX export endpoint
@@ -199,7 +201,7 @@ Admins own full tracking oversight and correction loops.
 
 ### 8) Parent Portal Contract
 
-- Public portal page: `GET /parent/portal`
+- Public portal page: `GET /parent`
 - Parent auth/session endpoints:
   - `POST /api/parent/auth/login`
   - `POST /api/parent/auth/logout`
@@ -216,7 +218,7 @@ Admins own full tracking oversight and correction loops.
 
 ### 9) Student Portal Contract
 
-- Public portal page: `GET /student/portal`
+- Public portal page: `GET /student`
 - Student auth/session endpoints:
   - `POST /api/student/auth/login`
   - `POST /api/student/auth/logout`

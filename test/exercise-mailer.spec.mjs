@@ -66,7 +66,7 @@ test("GET /healthz returns ok + endpoint", async () => {
   assert.equal(body.status, "ok")
   assert.equal(body.endpoint, "/api/exercise-submission")
   assert.equal(body.intakeEndpoint, "/api/student-intake-submission")
-  assert.equal(body.studentAdminRuntime?.pagePath, "/admin/students")
+  assert.equal(body.studentAdminRuntime?.pagePath, "/admin")
   assert.equal(body.studentAdminRuntime?.apiPrefix, "/api/admin")
   assert.ok(Array.isArray(body.studentAdminRuntime?.pageSections))
   assert.ok(body.studentAdminRuntime.pageSections.includes("overview"))

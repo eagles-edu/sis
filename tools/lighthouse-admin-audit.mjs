@@ -11,11 +11,11 @@ const CHROME_FLAGS =
 const LIGHTHOUSE_PRESET = String(process.env.LIGHTHOUSE_PRESET || "desktop").trim() || "desktop"
 
 const ROUTES = [
-  "/admin/students",
-  "/admin/students/queue-hub",
-  "/admin/students/attendance",
-  "/admin/students/assignments",
-  "/admin/students/grades-data",
+  "/admin",
+  "/admin/queue-hub",
+  "/admin/attendance",
+  "/admin/assignments",
+  "/admin/grades-data",
 ]
 
 function runCommand(args = [], timeoutMs = LIGHTHOUSE_TIMEOUT_MS) {

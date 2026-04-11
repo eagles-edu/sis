@@ -63,13 +63,16 @@ import {
 import { createStudentAdminSessionStore } from "./student-admin-session-store.mjs"
 import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
 
-const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin/students")
+const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin")
 const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
   process.env.STUDENT_POINTS_PAGE_PATH,
-  "/admin/students/points-management"
+  "/admin/points-management"
 )
-const PARENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_PARENT_PORTAL_PAGE_PATH, "/parent/portal")
-const STUDENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_STUDENT_PORTAL_PAGE_PATH, "/student/portal")
+const PARENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_PARENT_PORTAL_PAGE_PATH, "/parent")
+const STUDENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_STUDENT_PORTAL_PAGE_PATH, "/student")
+const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
+const LEGACY_PARENT_PORTAL_PAGE_PATH = "/parent/portal"
+const LEGACY_STUDENT_PORTAL_PAGE_PATH = "/student/portal"
 const ADMIN_PAGE_DEFAULT_SLUG = "overview"
 const ADMIN_PAGE_SECTIONS = [
   "overview",
@@ -153,6 +156,7 @@ const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
 const ADMIN_PROFILE_SUBMISSION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PROFILE_SUBMISSIONS_PATH)}/([^/]+)$`)
 const ADMIN_NEWS_REPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_NEWS_REPORTS_PATH)}/([^/]+)$`)
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
+const ADMIN_HUB_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/portal-hub.html")
 const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
@@ -586,6 +590,29 @@ function normalizePathPrefix(value, fallback) {
   return normalized
 }
 
+function resolveCanonicalPagePathname(pathname) {
+  const rawPathname = normalizeText(pathname)
+  if (!rawPathname || rawPathname === "/") return ""
+
+  let canonicalPathname = rawPathname
+  if (canonicalPathname === LEGACY_ADMIN_PAGE_PATH || canonicalPathname.startsWith(`${LEGACY_ADMIN_PAGE_PATH}/`)) {
+    canonicalPathname = `${ADMIN_PAGE_PATH}${canonicalPathname.slice(LEGACY_ADMIN_PAGE_PATH.length)}`
+  } else if (
+    canonicalPathname === LEGACY_PARENT_PORTAL_PAGE_PATH ||
+    canonicalPathname.startsWith(`${LEGACY_PARENT_PORTAL_PAGE_PATH}/`)
+  ) {
+    canonicalPathname = `${PARENT_PORTAL_PAGE_PATH}${canonicalPathname.slice(LEGACY_PARENT_PORTAL_PAGE_PATH.length)}`
+  } else if (
+    canonicalPathname === LEGACY_STUDENT_PORTAL_PAGE_PATH ||
+    canonicalPathname.startsWith(`${LEGACY_STUDENT_PORTAL_PAGE_PATH}/`)
+  ) {
+    canonicalPathname = `${STUDENT_PORTAL_PAGE_PATH}${canonicalPathname.slice(LEGACY_STUDENT_PORTAL_PAGE_PATH.length)}`
+  }
+
+  if (canonicalPathname.length > 1) canonicalPathname = canonicalPathname.replace(/\/+$/, "")
+  return canonicalPathname === rawPathname ? "" : canonicalPathname
+}
+
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
@@ -914,6 +941,13 @@ function sendHtml(response, statusCode, html, headers = {}) {
     ...headers,
   })
   response.end(html)
+}
+
+function sendRedirect(response, statusCode, location) {
+  response.writeHead(statusCode, {
+    Location: location,
+  })
+  response.end()
 }
 
 function findMatchingDivBlockEnd(html, openTagStartIndex) {
@@ -6364,6 +6398,26 @@ export async function handleStudentAdminRequest(request, response) {
       return true
     }
     sendAssignmentAnnouncementPreview(response, preview)
+    return true
+  }
+
+  if (method === "GET") {
+    const redirectLocation = resolveCanonicalPagePathname(pathname)
+    if (redirectLocation) {
+      sendRedirect(response, 308, `${redirectLocation}${url.search}`)
+      return true
+    }
+  }
+
+  if (method === "GET" && pathname === "/") {
+    if (!fs.existsSync(ADMIN_HUB_HTML_PATH)) {
+      sendJson(response, 404, { error: "Public portal hub not found" })
+      return true
+    }
+    const html = fs.readFileSync(ADMIN_HUB_HTML_PATH, "utf8")
+    sendHtml(response, 200, html, {
+      "Cache-Control": "no-cache, must-revalidate",
+    })
     return true
   }
 

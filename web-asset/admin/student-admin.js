@@ -6578,7 +6578,7 @@
       }
 
       const DEFAULT_ADMIN_API_PREFIX = "/api/admin";
-      const DEFAULT_ADMIN_PAGE_PATH = "/admin/students";
+      const DEFAULT_ADMIN_PAGE_PATH = "/admin";
       const DEFAULT_ADMIN_PAGE_SLUG = "overview";
 
       function normalizePathPrefix(value, fallback = DEFAULT_ADMIN_API_PREFIX) {

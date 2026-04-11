@@ -40,16 +40,16 @@ test("start server for custom admin prefix", async () => {
   assert.ok(Number.isInteger(port) && port > 0)
 })
 
-test("GET /admin/students injects custom API prefix into HTML", async () => {
-  const res = await fetchLocal(port, "/admin/students")
+test("GET /admin injects custom API prefix into HTML", async () => {
+  const res = await fetchLocal(port, "/admin")
   assert.equal(res.status, 200)
   const html = await res.text()
   assert.match(html, /__SIS_ADMIN_API_PREFIX/i)
   assert.match(html, /"\/api\/sis-admin"/i)
 })
 
-test("GET /admin/students/reports includes page slug config", async () => {
-  const res = await fetchLocal(port, "/admin/students/reports")
+test("GET /admin/reports includes page slug config", async () => {
+  const res = await fetchLocal(port, "/admin/reports")
   assert.equal(res.status, 200)
   const html = await res.text()
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)

@@ -55,3 +55,6 @@ jobs:
         with:
           sarif_file: eslint-results.sarif
           wait-for-processing: true
+
+      - name: Run HTML validation
+        run: npm run lint:html

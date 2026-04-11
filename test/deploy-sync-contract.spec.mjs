@@ -38,15 +38,15 @@ test("deploy-api-safe route matrices include admin/tabulator and parent/student 
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/admin\/auth\/me\|401/)
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/parent\/auth\/me\|401/)
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/student\/auth\/me\|401/)
-  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/admin\/students\?page=grades-data\|200/)
+  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/admin\?page=grades-data\|200/)
   assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
-  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\/portal\|200/)
-  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\/portal\|200/)
+  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\|200/)
+  assert.match(deployScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\|200/)
 
-  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/admin\/students\?page=grades-data\|200/)
+  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/admin\?page=grades-data\|200/)
   assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
-  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\/portal\|200/)
-  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\/portal\|200/)
+  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\|200/)
+  assert.match(deployScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\|200/)
 })
 
 test("deploy-api-safe runs blocking modal chip and portal parity gates after sync", () => {
@@ -66,15 +66,15 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
 
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/parent\/auth\/me\|401/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/api\/student\/auth\/me\|401/)
-  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/admin\/students\?page=grades-data\|200/)
+  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/admin\?page=grades-data\|200/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
-  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\/portal\|200/)
-  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\/portal\|200/)
+  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\|200/)
+  assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\|200/)
 
-  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/admin\/students\?page=grades-data\|200/)
+  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/admin\?page=grades-data\|200/)
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
-  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\/portal\|200/)
-  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\/portal\|200/)
+  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/parent\|200/)
+  assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/student\|200/)
 
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/server\/\" \"\$\{RUNTIME_ROOT\}\/server\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/schemas\/\" \"\$\{RUNTIME_ROOT\}\/schemas\/\"/)

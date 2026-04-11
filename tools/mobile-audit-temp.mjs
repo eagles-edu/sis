@@ -4,27 +4,27 @@ const ORIGIN = 'http://127.0.0.1:8788';
 const VIEWPORT = { width: 390, height: 844 };
 
 const adminPages = [
-  '/admin/students?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/attendance?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/assignments?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/assignments-data?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/performance-data?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/grades-data?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/reports?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/queue-hub?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/news-reports?apiOrigin=http://127.0.0.1:8788',
-  '/admin/students/points-management?apiOrigin=http://127.0.0.1:8788',
+  '/admin?apiOrigin=http://127.0.0.1:8788',
+  '/admin/attendance?apiOrigin=http://127.0.0.1:8788',
+  '/admin/assignments?apiOrigin=http://127.0.0.1:8788',
+  '/admin/assignments-data?apiOrigin=http://127.0.0.1:8788',
+  '/admin/performance-data?apiOrigin=http://127.0.0.1:8788',
+  '/admin/grades-data?apiOrigin=http://127.0.0.1:8788',
+  '/admin/reports?apiOrigin=http://127.0.0.1:8788',
+  '/admin/queue-hub?apiOrigin=http://127.0.0.1:8788',
+  '/admin/news-reports?apiOrigin=http://127.0.0.1:8788',
+  '/admin/points-management?apiOrigin=http://127.0.0.1:8788',
   '/web-asset/admin/student-admin.html?apiOrigin=http://127.0.0.1:8788&page=news-reports',
   '/web-asset/admin/student-points.html?apiOrigin=http://127.0.0.1:8788'
 ];
 
 const parentPages = [
-  '/parent/portal?apiOrigin=http://127.0.0.1:8788',
+  '/parent?apiOrigin=http://127.0.0.1:8788',
   '/web-asset/parent/parent-portal.html?apiOrigin=http://127.0.0.1:8788'
 ];
 
 const studentPages = [
-  '/student/portal?apiOrigin=http://127.0.0.1:8788',
+  '/student?apiOrigin=http://127.0.0.1:8788',
   '/web-asset/student/student-portal.html?apiOrigin=http://127.0.0.1:8788'
 ];
 
@@ -33,7 +33,7 @@ function abs(path) {
 }
 
 async function loginAdmin(page) {
-  await page.goto(abs('/admin/students?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
+  await page.goto(abs('/admin?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
   await page.fill('#loginUser', 'admin');
   await page.fill('#loginPass', '3825u2z');
@@ -45,7 +45,7 @@ async function loginAdmin(page) {
 }
 
 async function loginParent(page) {
-  await page.goto(abs('/parent/portal?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
+  await page.goto(abs('/parent?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
   await page.fill('#parentsId', 'cmkramer001');
   await page.fill('#parentPassword', 'P1k@ch00');
@@ -57,7 +57,7 @@ async function loginParent(page) {
 }
 
 async function loginStudent(page) {
-  await page.goto(abs('/student/portal?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
+  await page.goto(abs('/student?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
   await page.fill('#loginEaglesId', 'kramer001');
   await page.fill('#loginPassword', 'P1k@ch00');

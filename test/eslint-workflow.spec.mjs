@@ -30,4 +30,5 @@ test("eslint workflow uses the repo ESLint toolchain and flat config", () => {
   assert.match(steps[3].run, /--format @microsoft\/eslint-formatter-sarif/)
   assert.equal(steps[3]["continue-on-error"], true)
   assert.equal(steps[4].uses, "github/codeql-action/upload-sarif@v3")
+  assert.match(steps[5].run, /npm run lint:html/)
 })

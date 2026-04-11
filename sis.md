@@ -7,6 +7,54 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-12 - canonical portal roots moved to `/admin`, `/parent`, and `/student`)
+
+- Requirement:
+  - keep the public hub at `/`, move the staff portal root to `/admin`, and make the parent/student portal roots canonical at `/parent` and `/student`.
+- Changes:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - serves the public hub only at `/`.
+    - serves the admin portal at `/admin` and canonical section routes like `/admin/attendance`, `/admin/queue-hub`, and `/admin/grades-data`.
+    - redirects legacy aliases (`/admin/students`, `/admin/students/<slug>`, `/parent/portal`, `/student/portal`, and trailing-slash variants) to the canonical paths with 308 responses while preserving the query string.
+    - keeps the points page at `/admin/points-management`.
+  - [web-asset/admin/portal-hub.html](web-asset/admin/portal-hub.html):
+    - the portal cards now point to `/admin`, `/parent`, and `/student`.
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - menu links now use the `/admin/...` base path.
+  - [web-asset/admin/student-admin.js](web-asset/admin/student-admin.js):
+    - the default page path is now `/admin`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - covers the canonical portal roots and the legacy redirect matrix.
+  - [test/student-admin-prefix.spec.mjs](test/student-admin-prefix.spec.mjs), [test/exercise-mailer.spec.mjs](test/exercise-mailer.spec.mjs), [tools/lighthouse-admin-audit.mjs](tools/lighthouse-admin-audit.mjs):
+    - updated to the canonical page paths.
+- Verification:
+  - pending in this session after the route and contract patch.
+- Coverage gaps / risk:
+  - historical notes below still mention the old `/admin/students` and `/parent/portal` URLs because they document earlier phases of the migration; the live contract is now the canonical paths above.
+
+## Update (2026-04-11 - public portal hub route wired at `/` and `/admin`)
+
+- Requirement:
+  - add a compact Vietnamese landing page with direct access to the admin, parent, and student portals plus a main-site link.
+- Changes:
+  - [web-asset/admin/portal-hub.html](web-asset/admin/portal-hub.html):
+    - new mobile-first hub page with the Eagles logo linked to `https://admin.eagles.edu.vn`.
+    - adds `Xem trang chủ` for `https://eagles.edu.vn`.
+    - keeps the primary cards dense and touch-friendly, with links to the existing admin, parent, and student portal routes.
+    - shows the first two Moodle entries as live links and reserves the future slots as disabled cards.
+  - [package.json](package.json):
+    - expands `lint:html` to include the new hub page.
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - serves the hub for `GET /`, `GET /admin`, and `GET /admin/`.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - added a regression test for the public hub response and branding links.
+  - [test/html-lint-contract.spec.mjs](test/html-lint-contract.spec.mjs):
+    - locks the HTML lint script to the admin page, hub page, and the parent/student portal pages.
+- Verification:
+  - pending in this session after the route and HTML patch.
+- Coverage gaps / risk:
+  - the hub points to the current admin/parent/student URLs; the broader slug cleanup to `/admin`, `/parent`, and `/student` is still a follow-up.
+
 ## Update (2026-04-11 - ESLint workflow now ignores vendored browser bundles)
 
 - Requirement:
@@ -23,6 +71,24 @@
   - `npx eslint --config eslint.config.mjs server test tools web-asset/admin --max-warnings=0` => pass.
 - Coverage gaps / risk:
   - any new vendored or generated JS directories added outside the explicit source roots will need a workflow update or ignore rule.
+
+## Update (2026-04-11 - HTML lint now covers parent and student portals)
+
+- Requirement:
+  - keep the HTML validation step aligned with the portal surfaces that ship to users.
+- Changes:
+  - [package.json](package.json):
+    - expanded `lint:html` to validate `web-asset/admin/student-admin.html`, `web-asset/parent/parent-portal.html`, `web-asset/student/student-portal.html`, and `web-asset/student/fi.html`.
+  - [.github/workflows/eslint.yml](.github/workflows/eslint.yml):
+    - added a trailing `Run HTML validation` step so the workflow checks parent and student portal HTML in addition to the JS scan.
+  - [test/eslint-workflow.spec.mjs](test/eslint-workflow.spec.mjs):
+    - now asserts the HTML validation step is present in the workflow.
+  - [test/html-lint-contract.spec.mjs](test/html-lint-contract.spec.mjs):
+    - locks the `lint:html` file list to the admin, parent, and student portal pages.
+- Verification:
+  - pending in this session after applying the workflow and script patch.
+- Coverage gaps / risk:
+  - any new portal HTML page will need to be added to `lint:html` and the workflow contract test.
 
 ## Update (2026-04-11 - Beautify HTML formatter now keeps compact menu-group tags)
 

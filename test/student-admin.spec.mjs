@@ -500,8 +500,28 @@ test("student auth CORS echoes loopback origin and credentials when wildcard ori
   }
 })
 
-test("GET /admin/students returns HTML UI", async () => {
-  const res = await fetchLocal(port, "/admin/students")
+test("GET / returns the public portal hub with branded navigation", async () => {
+  const res = await fetchLocal(port, "/")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  assert.match(res.headers.get("cache-control") || "", /no-cache/i)
+  const html = await res.text()
+  assert.match(html, /<html lang="vi">/i)
+  assert.match(html, /<title>Eagles Portal<\/title>/i)
+  assert.match(html, /href="https:\/\/admin\.eagles\.edu\.vn"/i)
+  assert.match(html, /Xem trang chủ/i)
+  assert.match(html, /href="https:\/\/eagles\.edu\.vn"/i)
+  assert.match(html, /href="\/admin"/i)
+  assert.match(html, /href="\/parent"/i)
+  assert.match(html, /href="\/student"/i)
+  assert.match(html, /href="https:\/\/anhngu\.eagles\.edu\.vn"/i)
+  assert.match(html, /href="https:\/\/ielts\.eagles\.edu\.vn"/i)
+  assert.match(html, /Future 1/i)
+  assert.match(html, /Future 2/i)
+})
+
+test("GET /admin returns HTML UI", async () => {
+  const res = await fetchLocal(port, "/admin")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const responseHtml = await res.text()
@@ -520,14 +540,16 @@ test("GET /admin/students returns HTML UI", async () => {
   assert.match(responseHtml, /href="\/web-asset\/admin\/student-admin\.css"/i)
   assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin\.css"[\s\S]*as="style"/i)
   assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin\.js"\s+defer/i)
-  assert.match(responseHtml, /href="\/admin\/students"[^>]*data-page-link="overview"/i)
-  assert.match(responseHtml, /href="\/admin\/students\/queue-hub"[^>]*data-page-link="queue-hub"/i)
-  assert.match(responseHtml, /href="\/admin\/students\/attendance"[^>]*data-page-link="attendance"/i)
-  assert.match(responseHtml, /href="\/admin\/students\/assignments"[^>]*data-page-link="assignments"/i)
-  assert.match(responseHtml, /href="\/admin\/students\/grades-data"[^>]*data-page-link="grades-data"/i)
+  assert.match(responseHtml, /href="\/admin"[^>]*data-page-link="overview"/i)
+  assert.match(responseHtml, /href="\/admin\/queue-hub"[^>]*data-page-link="queue-hub"/i)
+  assert.match(responseHtml, /href="\/admin\/attendance"[^>]*data-page-link="attendance"/i)
+  assert.match(responseHtml, /href="\/admin\/assignments"[^>]*data-page-link="assignments"/i)
+  assert.match(responseHtml, /href="\/admin\/grades-data"[^>]*data-page-link="grades-data"/i)
   assert.doesNotMatch(responseHtml, /data-page-link="(?:overview|queue-hub|attendance|assignments|grades-data)"[^>]*href="#"/i)
   assert.match(html, /__SIS_ADMIN_API_PREFIX/i)
   assert.match(html, /"\/api\/admin"/i)
+  assert.match(html, /__SIS_ADMIN_PAGE_PATH/i)
+  assert.match(html, /"\/admin"/i)
   assert.match(html, /__SIS_ADMIN_PAGE_SLUG/i)
   assert.match(html, /"overview"/i)
   assert.match(html, /Static preview mode requires \?apiOrigin=/i)
@@ -541,8 +563,26 @@ test("GET /admin/students returns HTML UI", async () => {
   assert.match(html, /urlMode === "query" \? buildPageQueryPath\(pageSlug\)/i)
 })
 
-test("GET /admin/students?page=grades-data resolves query deep-link route", async () => {
-  const res = await fetchLocal(port, "/admin/students?page=grades-data")
+test("legacy portal routes redirect to canonical routes", async () => {
+  const cases = [
+    ["/admin/", "/admin"],
+    ["/admin/students", "/admin"],
+    ["/admin/students?page=grades-data", "/admin?page=grades-data"],
+    ["/admin/students/attendance", "/admin/attendance"],
+    ["/admin/students/points-management", "/admin/points-management"],
+    ["/parent/portal", "/parent"],
+    ["/student/portal", "/student"],
+  ]
+
+  for (const [pathname, location] of cases) {
+    const res = await fetchLocal(port, pathname, { redirect: "manual" })
+    assert.equal(res.status, 308)
+    assert.equal(res.headers.get("location"), location)
+  }
+})
+
+test("GET /admin?page=grades-data resolves query deep-link route", async () => {
+  const res = await fetchLocal(port, "/admin?page=grades-data")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const responseHtml = await res.text()
@@ -554,8 +594,8 @@ test("GET /admin/students?page=grades-data resolves query deep-link route", asyn
   assert.match(html, /pageSlugFromLocationSearch/i)
 })
 
-test("GET /admin/students/attendance returns section page HTML with slug config", async () => {
-  const res = await fetchLocal(port, "/admin/students/attendance")
+test("GET /admin/attendance returns section page HTML with slug config", async () => {
+  const res = await fetchLocal(port, "/admin/attendance")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const responseHtml = await res.text()
@@ -565,8 +605,8 @@ test("GET /admin/students/attendance returns section page HTML with slug config"
   assert.match(html, /"attendance"/i)
 })
 
-test("GET /admin/students/parent-tracking returns section page HTML with slug config", async () => {
-  const res = await fetchLocal(port, "/admin/students/parent-tracking")
+test("GET /admin/parent-tracking returns section page HTML with slug config", async () => {
+  const res = await fetchLocal(port, "/admin/parent-tracking")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const responseHtml = await res.text()
@@ -576,8 +616,8 @@ test("GET /admin/students/parent-tracking returns section page HTML with slug co
   assert.match(html, /"parent-tracking"/i)
 })
 
-test("GET /admin/students/queue-hub returns section page HTML with slug config", async () => {
-  const res = await fetchLocal(port, "/admin/students/queue-hub")
+test("GET /admin/queue-hub returns section page HTML with slug config", async () => {
+  const res = await fetchLocal(port, "/admin/queue-hub")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const responseHtml = await res.text()
@@ -588,8 +628,8 @@ test("GET /admin/students/queue-hub returns section page HTML with slug config",
   assert.match(html, /__SIS_ADMIN_QUEUE_HUB_PATH/i)
 })
 
-test("GET /admin/students/news-reports returns section page HTML with slug config", async () => {
-  const res = await fetchLocal(port, "/admin/students/news-reports")
+test("GET /admin/news-reports returns section page HTML with slug config", async () => {
+  const res = await fetchLocal(port, "/admin/news-reports")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const responseHtml = await res.text()
@@ -613,8 +653,8 @@ test("GET /admin/students/news-reports returns section page HTML with slug confi
   )
 })
 
-test("GET /parent/portal returns parent portal HTML with runtime config", async () => {
-  const res = await fetchLocal(port, "/parent/portal")
+test("GET /parent returns parent portal HTML with runtime config", async () => {
+  const res = await fetchLocal(port, "/parent")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   assert.match(res.headers.get("cache-control") || "", /no-cache/i)
@@ -651,8 +691,8 @@ test("GET /parent/portal returns parent portal HTML with runtime config", async 
   assert.doesNotMatch(html, /fonts\\.gstatic\\.com/i)
 })
 
-test("GET /admin/students/points-management returns points page HTML with runtime config", async () => {
-  const res = await fetchLocal(port, "/admin/students/points-management")
+test("GET /admin/points-management returns points page HTML with runtime config", async () => {
+  const res = await fetchLocal(port, "/admin/points-management")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const html = await res.text()
@@ -663,8 +703,8 @@ test("GET /admin/students/points-management returns points page HTML with runtim
   assert.match(html, /__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH/i)
 })
 
-test("GET /student/portal returns student portal HTML with runtime config", async () => {
-  const res = await fetchLocal(port, "/student/portal")
+test("GET /student returns student portal HTML with runtime config", async () => {
+  const res = await fetchLocal(port, "/student")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   assert.match(res.headers.get("cache-control") || "", /no-cache/i)
@@ -893,8 +933,8 @@ test("GET /web-asset/images/logo.svg returns runtime image asset", async () => {
   assert.match(body, /<svg/i)
 })
 
-test("GET /admin/students/unknown-section returns 404", async () => {
-  const res = await fetchLocal(port, "/admin/students/unknown-section")
+test("GET /admin/unknown-section returns 404", async () => {
+  const res = await fetchLocal(port, "/admin/unknown-section")
   assert.equal(res.status, 404)
 })
 

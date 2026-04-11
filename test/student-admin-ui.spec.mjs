@@ -62,7 +62,7 @@ function nextSundayIsoDate(value = new Date()) {
   return localIsoDate(date)
 }
 
-async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin/students", options = {}) {
+async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin", options = {}) {
   const dom = new JSDOM(ADMIN_HTML_FOR_TEST, {
     runScripts: "dangerously",
     resources: "usable",
@@ -99,7 +99,7 @@ function openPage(dom, pageSlug) {
     menuLink.click()
     return
   }
-  const targetPath = `/admin/students/${encodeURIComponent(pageSlug)}`
+  const targetPath = `/admin/${encodeURIComponent(pageSlug)}`
   dom.window.history.pushState({ page: pageSlug }, "", targetPath)
   dom.window.dispatchEvent(new dom.window.PopStateEvent("popstate"))
 }
@@ -392,13 +392,13 @@ test("admin ui preserves queue-hub deep link after login bootstrap", async () =>
       }
       return jsonResponse(200, {})
     },
-    "http://127.0.0.1/admin/students/queue-hub"
+    "http://127.0.0.1/admin/queue-hub"
   )
 
   submitLogin(dom)
 
   await waitFor(() => {
-    assert.equal(dom.window.location.pathname, "/admin/students/queue-hub")
+    assert.equal(dom.window.location.pathname, "/admin/queue-hub")
     const active = dom.window.document.querySelector(".page-section.active")
     assert.equal(active?.getAttribute("data-page"), "queue-hub")
   })
@@ -478,13 +478,13 @@ test("admin ui resolves query deep link and keeps ?page routing after login boot
       }
       return jsonResponse(200, {})
     },
-    "http://127.0.0.1/admin/students?page=grades-data"
+    "http://127.0.0.1/admin?page=grades-data"
   )
 
   submitLogin(dom)
 
   await waitFor(() => {
-    assert.equal(dom.window.location.pathname, "/admin/students")
+    assert.equal(dom.window.location.pathname, "/admin")
     assert.equal(dom.window.location.search, "?page=grades-data")
     const active = dom.window.document.querySelector(".page-section.active")
     assert.equal(active?.getAttribute("data-page"), "grades-data")
@@ -1438,7 +1438,7 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
     .click()
 
   await waitFor(() => {
-    assert.equal(dom.window.location.pathname, "/admin/students/news-reports")
+    assert.equal(dom.window.location.pathname, "/admin/news-reports")
     const active = dom.window.document.querySelector(".page-section.active")
     assert.equal(active?.getAttribute("data-page"), "news-reports")
     assert.match(latestNewsReportsSearch, /status=all/i)
@@ -2848,7 +2848,7 @@ test("static preview path over http supports login when apiOrigin is explicit", 
           status: "ok",
           lastVerifyOk: true,
           studentAdminRuntime: {
-            pagePath: "/admin/students",
+            pagePath: "/admin",
             apiPrefix: "/api/admin",
             sessionDriver: "redis",
             sessionTtlSeconds: 28800,
@@ -2963,7 +2963,7 @@ test("floating menu toggle opens and closes slide-over navigation", async () => 
       if (url.includes("/healthz")) return jsonResponse(200, { status: "ok", lastVerifyOk: true })
       return jsonResponse(200, {})
     },
-    "http://127.0.0.1/admin/students",
+    "http://127.0.0.1/admin",
     {
       beforeParse(window) {
         Object.defineProperty(window, "innerWidth", { value: 1366, configurable: true, writable: true })
@@ -3099,7 +3099,7 @@ test("hosted sis-admin path hydrates runtime diagnostics from admin runtime heal
           lastIntakeStoreOk: true,
           lastSendOk: true,
           studentAdminRuntime: {
-            pagePath: "/admin/students",
+            pagePath: "/admin",
             apiPrefix: "/api/sis-admin",
             sessionDriver: "redis",
             sessionTtlSeconds: 28800,
@@ -3199,7 +3199,7 @@ test("hosted sis-admin path hydrates runtime diagnostics from admin runtime heal
     assert.equal(filterCache?.classList.contains("error"), false)
     assert.ok(selfHeal?.classList.contains("ok"))
     assert.ok(pipeline?.classList.contains("ok"))
-    assert.match(adminRuntime?.textContent || "", /page=\/admin\/students/i)
+    assert.match(adminRuntime?.textContent || "", /page=\/admin/i)
     assert.match(sessionStore?.textContent || "", /driver=redis/i)
     assert.match(filterCache?.textContent || "", /backend=redis/i)
     assert.match(selfHeal?.textContent || "", /result=in-sync/i)
@@ -3255,7 +3255,7 @@ test("recent pipeline check is pending when runtime flags are n/a", async () => 
         return jsonResponse(200, {
           status: "ok",
           studentAdminRuntime: {
-            pagePath: "/admin/students",
+            pagePath: "/admin",
             apiPrefix: "/api/sis-admin",
             sessionDriver: "redis",
             sessionTtlSeconds: 28800,
@@ -5069,7 +5069,7 @@ test("legacy alias level-tile config still applies to assignments input tiles", 
       if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
       return jsonResponse(200, {})
     },
-    "http://127.0.0.1/admin/students",
+    "http://127.0.0.1/admin",
     {
       beforeParse(window) {
         window.localStorage.setItem(
@@ -5632,7 +5632,7 @@ test("overview assignment charts fall back to current templates when dashboard l
 
     if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
     return jsonResponse(200, {})
-  }, "http://127.0.0.1/admin/students", {
+  }, "http://127.0.0.1/admin", {
     beforeParse(window) {
       window.localStorage.setItem(
         "sis.admin.assignmentTemplates",
@@ -5809,7 +5809,7 @@ test("overview level detail autofills assignment and announcement link from curr
     }
 
     return jsonResponse(200, {})
-  }, "http://127.0.0.1/admin/students", {
+  }, "http://127.0.0.1/admin", {
     beforeParse(window) {
       window.localStorage.setItem("sis.admin.assignmentTemplates", "[]")
     },
@@ -6094,7 +6094,7 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
     }
 
     return jsonResponse(200, {})
-  }, "http://127.0.0.1/admin/students", {
+  }, "http://127.0.0.1/admin", {
     beforeParse(window) {
       const today = localIsoDate()
       window.matchMedia = (query) => ({
