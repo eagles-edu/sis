@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +21,9 @@
       --shadow: 0 10px 28px rgba(24, 49, 79, 0.1);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -38,7 +41,7 @@
       gap: 16px;
     }
 
-    .app > * {
+    .app>* {
       min-width: 0;
     }
 
@@ -68,13 +71,35 @@
       grid-template-columns: repeat(12, minmax(0, 1fr));
     }
 
-    .field { display: grid; gap: 6px; }
-    .field label { font-size: 0.8rem; color: var(--muted); }
-    .c2 { grid-column: span 2; }
-    .c3 { grid-column: span 3; }
-    .c4 { grid-column: span 4; }
-    .c6 { grid-column: span 6; }
-    .c12 { grid-column: span 12; }
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .c2 {
+      grid-column: span 2;
+    }
+
+    .c3 {
+      grid-column: span 3;
+    }
+
+    .c4 {
+      grid-column: span 4;
+    }
+
+    .c6 {
+      grid-column: span 6;
+    }
+
+    .c12 {
+      grid-column: span 12;
+    }
 
     input,
     select,
@@ -111,8 +136,13 @@
       min-height: 1.4em;
     }
 
-    .status.bad { color: var(--bad); }
-    .status.ok { color: var(--ok); }
+    .status.bad {
+      color: var(--bad);
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
 
     .chart-wrap {
       width: 100%;
@@ -167,16 +197,22 @@
       margin-top: 8px;
     }
 
-    .hidden { display: none; }
+    .hidden {
+      display: none;
+    }
 
     @media (max-width: 920px) {
+
       .c2,
       .c3,
       .c4,
-      .c6 { grid-column: span 12; }
+      .c6 {
+        grid-column: span 12;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <section class="card">
@@ -186,11 +222,11 @@
     </section>
 
     <section id="loginPanel" class="card hidden" aria-label="Admin login">
-        <div class="row">
-          <div class="field c4">
-            <label for="loginUsername">Username</label>
-            <input id="loginUsername" type="text" autocomplete="username">
-          </div>
+      <div class="row">
+        <div class="field c4">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" type="text" autocomplete="username">
+        </div>
         <div class="field c4">
           <label for="loginPassword">Password</label>
           <input id="loginPassword" type="password" autocomplete="current-password">
@@ -236,7 +272,9 @@
           </div>
           <div class="field c3">
             <label for="studentLevel">Level</label>
-            <select id="studentLevel"><option value="">Any</option></select>
+            <select id="studentLevel">
+              <option value="">Any</option>
+            </select>
           </div>
           <div class="field c3">
             <label for="sortField">Sort</label>
@@ -271,7 +309,11 @@
                 <th scope="col">Action</th>
               </tr>
             </thead>
-            <tbody id="studentRows"><tr><td colspan="7">No rows.</td></tr></tbody>
+            <tbody id="studentRows">
+              <tr>
+                <td colspan="7">No rows.</td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p id="studentSummary" class="mini">No data loaded.</p>
@@ -290,7 +332,11 @@
                 <th scope="col">Detail</th>
               </tr>
             </thead>
-            <tbody id="ledgerRows"><tr><td colspan="4">No ledger loaded.</td></tr></tbody>
+            <tbody id="ledgerRows">
+              <tr>
+                <td colspan="4">No ledger loaded.</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
@@ -304,7 +350,6 @@
       const POINTS_STUDENTS_PATH = window.__SIS_ADMIN_POINTS_STUDENTS_PATH || "/api/admin/points/students";
       const POINTS_LEDGER_PATH = window.__SIS_ADMIN_POINTS_LEDGER_PATH || "/api/admin/points/ledger";
       const POINTS_ADJUSTMENTS_PATH = window.__SIS_ADMIN_POINTS_ADJUSTMENTS_PATH || "/api/admin/points/adjustments";
-
       const state = {
         students: [],
         selectedStudentRefId: "",
@@ -320,7 +365,6 @@
         el.textContent = t(message);
         el.className = isError ? "status bad" : "status";
       }
-
       async function api(path, options = {}) {
         const init = {
           method: options.method || "GET",
@@ -368,17 +412,14 @@
         const bottom = 36;
         const chartW = width - left - right;
         const chartH = height - top - bottom;
-
         if (!rows.length) {
           svg.innerHTML = "";
           document.getElementById("chartSummary").textContent = "No YTD data in selected window.";
           return;
         }
-
         const maxY = Math.max(1, ...rows.map((r) => Number(r.cumulativePoints || 0)));
         const xAt = (i) => left + (rows.length > 1 ? (chartW * i) / (rows.length - 1) : 0);
         const yAt = (v) => top + chartH - (Number(v || 0) / maxY) * chartH;
-
         const points = rows.map((r, i) => `${xAt(i)},${yAt(r.cumulativePoints)}`).join(" ");
         const xLabels = rows
           .filter((_, i) => i === 0 || i === rows.length - 1 || i % Math.max(1, Math.floor(rows.length / 6)) === 0)
@@ -387,7 +428,6 @@
             return `<text x="${xAt(idx)}" y="${height - 12}" text-anchor="middle" font-size="11" fill="#5f7088">${isoDate(r.date)}</text>`;
           })
           .join("");
-
         const yTicks = [0, 0.25, 0.5, 0.75, 1]
           .map((ratio) => {
             const v = Math.round(maxY * ratio);
@@ -395,7 +435,6 @@
             return `<line x1="${left}" y1="${y}" x2="${left + chartW}" y2="${y}" stroke="#e1ebf8"/><text x="${left - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#5f7088">${v}</text>`;
           })
           .join("");
-
         svg.innerHTML = `
           <rect x="${left}" y="${top}" width="${chartW}" height="${chartH}" fill="none" stroke="#cfe0f3"/>
           ${yTicks}
@@ -403,7 +442,6 @@
           ${rows.map((r, i) => `<circle cx="${xAt(i)}" cy="${yAt(r.cumulativePoints)}" r="3" fill="#0d66c2"/>`).join("")}
           ${xLabels}
         `;
-
         document.getElementById("chartSummary").textContent =
           `YTD total points: ${Number(summary.totalPoints || 0)} | range: ${t(summary.startDate)} -> ${t(summary.endDate)}`;
       }
@@ -417,7 +455,6 @@
           document.getElementById("studentSummary").textContent = "0 students";
           return;
         }
-
         tbody.innerHTML = "";
         source.forEach((row) => {
           const tr = document.createElement("tr");
@@ -433,19 +470,15 @@
               <button type="button" class="primary" data-edit-total="${t(row.studentRefId)}">Set Total</button>
             </td>
           `;
-
           tr.querySelector(`[data-open-ledger="${row.studentRefId}"]`)?.addEventListener("click", () => {
             state.selectedStudentRefId = t(row.studentRefId);
             loadLedger().catch(handleError);
           });
-
           tr.querySelector(`[data-edit-total="${row.studentRefId}"]`)?.addEventListener("click", () => {
             editStudentTotal(row).catch(handleError);
           });
-
           tbody.appendChild(tr);
         });
-
         document.getElementById("studentSummary").textContent = `${source.length} students loaded.`;
       }
 
@@ -459,13 +492,11 @@
           summaryEl.textContent = "Select a student to view recent points events.";
           return;
         }
-
         summaryEl.textContent = `${t(payload?.student?.fullName)} (${t(payload?.student?.eaglesId)}) total=${Number(payload?.summary?.totalPoints || 0)} points`;
         if (!items.length) {
           tbody.innerHTML = '<tr><td colspan="4">No events for selected range.</td></tr>';
           return;
         }
-
         tbody.innerHTML = items
           .map((item) => `
             <tr>
@@ -477,7 +508,6 @@
           `)
           .join("");
       }
-
       async function loadChart() {
         const params = new URLSearchParams();
         const start = t(document.getElementById("startDate")?.value);
@@ -487,7 +517,6 @@
         const data = await api(`${POINTS_SUMMARY_PATH}?${params.toString()}`);
         renderChart(data);
       }
-
       async function loadStudents() {
         const params = new URLSearchParams();
         const q = t(document.getElementById("studentSearch")?.value);
@@ -502,7 +531,6 @@
         const data = await api(`${POINTS_STUDENTS_PATH}?${params.toString()}`);
         state.students = Array.isArray(data.items) ? data.items : [];
         renderStudents(state.students);
-
         const levelEl = document.getElementById("studentLevel");
         if (levelEl && !levelEl.dataset.loaded) {
           const levels = Array.from(new Set(state.students.map((r) => t(r.level)).filter(Boolean))).sort();
@@ -515,7 +543,6 @@
           levelEl.dataset.loaded = "1";
         }
       }
-
       async function loadLedger() {
         const id = t(state.selectedStudentRefId);
         if (!id) {
@@ -528,7 +555,6 @@
         const data = await api(`${POINTS_LEDGER_PATH}?${params.toString()}`);
         renderLedger(data);
       }
-
       async function editStudentTotal(row) {
         const studentRefId = t(row?.studentRefId);
         if (!studentRefId) return;
@@ -540,28 +566,33 @@
         const reason = prompt("Reason for points edit", `Manual total override to ${target}`) || "Manual total override";
         await api(`${POINTS_STUDENTS_PATH}/${encodeURIComponent(studentRefId)}/points`, {
           method: "PUT",
-          body: { targetPoints: target, reason },
+          body: {
+            targetPoints: target,
+            reason
+          },
         });
         setStatus("Student points updated.");
         await loadStudents();
         state.selectedStudentRefId = studentRefId;
         await loadLedger();
       }
-
       async function login() {
         const username = t(document.getElementById("loginUsername")?.value);
         const password = t(document.getElementById("loginPassword")?.value);
         if (!username || !password) throw new Error("Username and password are required.");
         await api(`${ADMIN_AUTH_PREFIX}/login`, {
           method: "POST",
-          body: { username, password },
+          body: {
+            username,
+            password
+          },
         });
       }
-
       async function logout() {
-        await api(`${ADMIN_AUTH_PREFIX}/logout`, { method: "POST" });
+        await api(`${ADMIN_AUTH_PREFIX}/logout`, {
+          method: "POST"
+        });
       }
-
       async function boot() {
         try {
           await api(`${ADMIN_AUTH_PREFIX}/me`);
@@ -581,7 +612,6 @@
       function handleError(error) {
         setStatus(error?.message || String(error), true);
       }
-
       document.getElementById("loginBtn")?.addEventListener("click", async () => {
         setStatus("Signing in...");
         try {
@@ -591,7 +621,6 @@
           handleError(error);
         }
       });
-
       document.getElementById("logoutBtn")?.addEventListener("click", async () => {
         try {
           await logout();
@@ -601,17 +630,14 @@
           handleError(error);
         }
       });
-
       document.getElementById("refreshChartBtn")?.addEventListener("click", () => {
         loadChart().catch(handleError);
       });
-
       ["studentSearch", "studentLevel", "sortField", "sortDir"].forEach((id) => {
         document.getElementById(id)?.addEventListener("change", () => {
           loadStudents().catch(handleError);
         });
       });
-
       document.querySelectorAll("[data-sort]").forEach((button) => {
         button.addEventListener("click", () => {
           const sortFieldEl = document.getElementById("sortField");
@@ -623,9 +649,9 @@
           loadStudents().catch(handleError);
         });
       });
-
       boot().catch(handleError);
     })();
   </script>
 </body>
+
 </html>

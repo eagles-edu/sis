@@ -7,6 +7,54 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-11 - Beautify HTML formatter now keeps compact menu-group tags)
+
+- Requirement:
+  - stop the HTML beautifier from forcing short admin opening tags across multiple lines.
+- Changes:
+  - [.jsbeautifyrc](.jsbeautifyrc):
+    - changed `html.wrap_attributes` from `force-expand-multiline` to `auto`.
+  - [web-asset/admin/student-admin.html](web-asset/admin/student-admin.html):
+    - normalized the `tracking`, `support`, and `admin` menu-group opening tags to compact single-line form.
+    - normalized the discrete admin page-section opening tags to compact single-line form so route tests can match the rendered section markers.
+  - [test/jsbeautify-config.spec.mjs](test/jsbeautify-config.spec.mjs):
+    - locks the beautify config and the compact admin menu-group/page-section tag contract.
+- Verification:
+  - `node --test test/jsbeautify-config.spec.mjs` => pass (`2` pass, `0` fail).
+  - `node --test --test-concurrency=1 test/student-admin.spec.mjs` => pass (`119` pass, `0` fail).
+
+## Update (2026-04-11 - ESLint workflow fixed to use repo toolchain and flat config)
+
+- Requirement:
+  - fix `.github/workflows/eslint.yml` so it does not fail installing a conflicting legacy ESLint version.
+- Changes:
+  - [.github/workflows/eslint.yml](.github/workflows/eslint.yml):
+    - upgraded checkout to `actions/checkout@v5`,
+    - switched the job to `npm ci` for the repo-pinned dependency tree,
+    - installs `@microsoft/eslint-formatter-sarif` without saving it to the repo,
+    - runs ESLint against `eslint.config.mjs` instead of the missing `.eslintrc.js`.
+  - [test/eslint-workflow.spec.mjs](test/eslint-workflow.spec.mjs):
+    - asserts the workflow uses the repo toolchain and the flat config path.
+- Verification:
+  - pending in this session after the workflow patch.
+
+## Update (2026-04-11 - HTML self-closing formatter script for admin lint cleanup)
+
+- Requirement:
+  - add a reusable npm script to normalize spaced self-closing HTML tags (`" />"` -> `">"`).
+- Changes:
+  - [package.json](package.json):
+    - added `html:normalize-self-closing` -> `node tools/normalize-html-self-closing.mjs`.
+  - [tools/normalize-html-self-closing.mjs](tools/normalize-html-self-closing.mjs):
+    - walks HTML files from supplied paths or the source HTML roots by default,
+    - prints the resolved roots it scans before rewriting files,
+    - rewrites spaced self-closing tags in place,
+    - prints each changed file.
+  - [test/normalize-html-self-closing.spec.mjs](test/normalize-html-self-closing.spec.mjs):
+    - covers the script entrypoint contract and the in-place normalization behavior.
+- Verification:
+  - pending in this session after applying the formatter to the active admin HTML file.
+
 ## Update (2026-04-11 - workflow scope expanded across codacy/codeql/summary on push)
 
 - Requirement:

@@ -12,6 +12,7 @@
     "node": "20.19.4"
   },
   "scripts": {
+    "html:normalize-self-closing": "node tools/normalize-html-self-closing.mjs",
     "start": "NODE_ENV=production SIS_ENV_FILE=.env node server/exercise-mailer.mjs",
     "dev": "NODE_ENV=development SIS_ENV_FILE=.env.dev node server/exercise-mailer.mjs",
     "db:generate": "prisma generate",

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -42,7 +43,9 @@
       --portal-text-zoom: 1;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     html,
     body {
@@ -399,8 +402,13 @@
       font-size: 0.91rem;
     }
 
-    .status.bad { color: #b71f2f; }
-    .status.ok { color: #1c8050; }
+    .status.bad {
+      color: #b71f2f;
+    }
+
+    .status.ok {
+      color: #1c8050;
+    }
 
     .chip {
       --chip-height: 30px;
@@ -625,6 +633,7 @@
     }
 
     @media (max-width: 920px) {
+
       .queue-table-wrap table.news-queue-table th:nth-child(4),
       .queue-table-wrap table.news-queue-table td:nth-child(4) {
         display: none;
@@ -632,6 +641,7 @@
     }
 
     @media (max-width: 620px) {
+
       .queue-table-wrap table.news-queue-table th:nth-child(2),
       .queue-table-wrap table.news-queue-table td:nth-child(2) {
         display: none;
@@ -720,15 +730,18 @@
       font-weight: 700;
       letter-spacing: 0.02em;
     }
+
     .field.is-invalid label {
       color: #9a1424;
     }
+
     .field.is-invalid input,
     .field.is-invalid textarea {
       border-color: #d43b4e;
       box-shadow: 0 0 0 1px rgba(212, 59, 78, 0.22);
       background: #fff6f7;
     }
+
     .field-validation-message {
       margin: 2px 0 0;
       font-size: 12px;
@@ -736,10 +749,21 @@
       color: #9a1424;
     }
 
-    .c3 { grid-column: span 3; }
-    .c4 { grid-column: span 4; }
-    .c6 { grid-column: span 6; }
-    .c12 { grid-column: span 12; }
+    .c3 {
+      grid-column: span 3;
+    }
+
+    .c4 {
+      grid-column: span 4;
+    }
+
+    .c6 {
+      grid-column: span 6;
+    }
+
+    .c12 {
+      grid-column: span 12;
+    }
 
     input,
     textarea,
@@ -778,11 +802,11 @@
       align-items: center;
     }
 
-    .actions-2 > * {
+    .actions-2>* {
       flex: 1 1 45%;
     }
 
-    .actions-3 > * {
+    .actions-3>* {
       flex: 1 1 30%;
     }
 
@@ -813,7 +837,9 @@
       color: #fff;
     }
 
-    .hidden { display: none !important; }
+    .hidden {
+      display: none !important;
+    }
 
     #loginPanel,
     #appPanel {
@@ -958,6 +984,7 @@
       border-color: #1f7a4a;
       background: #d7f2e1;
     }
+
     .metric.good .k,
     .metric.good .v {
       color: #0f4129;
@@ -967,6 +994,7 @@
       border-color: #265f9f;
       background: #d9eaff;
     }
+
     .metric.warn .k,
     .metric.warn .v {
       color: #103d70;
@@ -976,6 +1004,7 @@
       border-color: #b3263a;
       background: #ffd9de;
     }
+
     .metric.bad .k,
     .metric.bad .v {
       color: #5f0f1c;
@@ -1400,12 +1429,29 @@
       vertical-align: middle;
     }
 
-    .dot.good { background: #40b06c; }
-    .dot.bad { background: #d45a66; }
-    .dot.open { background: #4093d2; }
-    .dot.submitted { background: #d2912b; }
-    .dot.waiting { background: #7a59cc; }
-    .dot.revise { background: #7a59cc; }
+    .dot.good {
+      background: #40b06c;
+    }
+
+    .dot.bad {
+      background: #d45a66;
+    }
+
+    .dot.open {
+      background: #4093d2;
+    }
+
+    .dot.submitted {
+      background: #d2912b;
+    }
+
+    .dot.waiting {
+      background: #7a59cc;
+    }
+
+    .dot.revise {
+      background: #7a59cc;
+    }
 
     .calendar-shell {
       min-height: 520px;
@@ -1665,11 +1711,13 @@
     }
 
     @keyframes overdueBlink {
+
       0%,
       49% {
         filter: saturate(1);
         transform: scale(1);
       }
+
       50%,
       100% {
         filter: saturate(1.35) brightness(1.06);
@@ -1678,22 +1726,28 @@
     }
 
     @keyframes dayAlertPulse {
+
       0%,
       100% {
         box-shadow: inset 0 0 0 2px rgba(255, 35, 56, 0.32);
       }
+
       50% {
         box-shadow: inset 0 0 0 3px rgba(255, 35, 56, 0.62);
       }
     }
 
     @media (max-width: 959px) {
+
       .c3,
       .c4,
-      .c6 { grid-column: span 12; }
+      .c6 {
+        grid-column: span 12;
+      }
     }
 
     @media (max-width: 399px) {
+
       .metrics,
       .identity-list,
       .toolbar-actions {
@@ -1725,14 +1779,15 @@
     }
 
     @media (max-width: 560px) {
+
       .section-head,
       .queue-summary-head {
         justify-content: center;
         text-align: center;
       }
 
-      .section-head > *,
-      .queue-summary-head > * {
+      .section-head>*,
+      .queue-summary-head>* {
         margin-inline: auto;
         text-align: center;
       }
@@ -1848,17 +1903,18 @@
         inline-size: 40px;
         block-size: 40px;
       }
-
     }
 
     @media (max-width: 560px) {
-      .text-zoom-controls > span:first-child,
+
+      .text-zoom-controls>span:first-child,
       .text-zoom-controls .zoom-label {
         display: none;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="portal-shell">
     <aside id="sideNav" class="side-nav" aria-label="Student navigation">
@@ -2377,7 +2433,6 @@
       const TEXT_ZOOM_MIN = 80;
       const TEXT_ZOOM_MAX = 140;
       const TEXT_ZOOM_STEP = 5;
-
       const state = {
         window: null,
         dashboard: null,
@@ -2413,7 +2468,6 @@
         badge.dataset.env = RUNTIME_ENV === "development" ? "development" : "production";
         badge.textContent = `${envLabel} • ${STUDENT_API_ORIGIN || "(missing apiOrigin)"}`;
       }
-
       const STUDENT_PORTAL_PAGES = new Set([
         "home",
         "current-homework",
@@ -2427,7 +2481,6 @@
       function t(v) {
         return String(v == null ? "" : v).trim();
       }
-
       const NEWS_FORM_FIELD_IDS = [
         "sourceLink",
         "articleTitle",
@@ -2459,14 +2512,11 @@
         sourceLink: "Source URL could not be validated from the fetched article.",
         articleTitle: "Article title does not closely match source title.",
         byline: "Byline must match fetched author or source organization.",
-        articleDateline:
-          "Dateline must reflect visible publish/updated time and timezone requirements.",
-        leadSynopsis:
-          "Lead synopsis must align with the first paragraph of the source article.",
+        articleDateline: "Dateline must reflect visible publish/updated time and timezone requirements.",
+        leadSynopsis: "Lead synopsis must align with the first paragraph of the source article.",
         actionActor: "Action actor must include a noun or noun phrase.",
         actionAffected: "Action affected must include a noun or noun phrase.",
-        actionWhere:
-          "Action location must include a place (city/country/location phrase).",
+        actionWhere: "Action location must include a place (city/country/location phrase).",
         actionWhat: "Action description must be at least one sentence.",
         actionWhy: "Action reason must be at least one sentence.",
         biasAssessment: "Bias assessment must be at least one sentence.",
@@ -2490,16 +2540,14 @@
           if (!normalizedKey) return;
           const entry =
             source[fieldKey] && typeof source[fieldKey] === "object" ?
-              source[fieldKey]
-            : {};
+            source[fieldKey] :
+            {};
           map[normalizedKey] = {
             message: t(entry.message),
-            score:
-              Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
-            threshold:
-              Number.isFinite(Number(entry.threshold)) ?
-                Number(entry.threshold)
-              : null,
+            score: Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
+            threshold: Number.isFinite(Number(entry.threshold)) ?
+              Number(entry.threshold) :
+              null,
           };
         });
         return map;
@@ -2511,17 +2559,15 @@
         Object.keys(source).forEach((fieldKey) => {
           const entry =
             source[fieldKey] && typeof source[fieldKey] === "object" ?
-              source[fieldKey]
-            : {};
+            source[fieldKey] :
+            {};
           if (normalizeLower(entry.status) === "fixed") return;
           failed[fieldKey] = {
             message: t(entry.message) || "This field still needs revision.",
-            score:
-              Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
-            threshold:
-              Number.isFinite(Number(entry.threshold)) ?
-                Number(entry.threshold)
-              : null,
+            score: Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
+            threshold: Number.isFinite(Number(entry.threshold)) ?
+              Number(entry.threshold) :
+              null,
           };
         });
         return failed;
@@ -2530,8 +2576,8 @@
       function extractValidationDetailsObject(payloadBody = {}) {
         const validation =
           payloadBody && typeof payloadBody === "object" && payloadBody.validation && typeof payloadBody.validation === "object" ?
-            payloadBody.validation
-          : {};
+          payloadBody.validation :
+          {};
         if (validation.details && typeof validation.details === "object") {
           return validation.details;
         }
@@ -2544,8 +2590,8 @@
         NEWS_FORM_FIELD_IDS.forEach((fieldId) => {
           const detail =
             source[fieldId] && typeof source[fieldId] === "object" ?
-              source[fieldId]
-            : {};
+            source[fieldId] :
+            {};
           const score = Number(detail.score);
           const threshold = Number(detail.threshold);
           const hasScore = Number.isFinite(score) && Number.isFinite(threshold);
@@ -2554,8 +2600,7 @@
             fieldId === "sourceLink" && detail.sourceAllowed === false;
           if (!scoreFailed && !sourceBlocked) return;
           failed[fieldId] = {
-            message:
-              t(detail.message) ||
+            message: t(detail.message) ||
               NEWS_FIELD_DEFAULT_FAILURE_MESSAGES[fieldId] ||
               "This field still needs revision.",
             score: hasScore ? score : null,
@@ -2564,12 +2609,11 @@
         });
         const metadata =
           source.metadata && typeof source.metadata === "object" ?
-            source.metadata
-          : {};
+          source.metadata :
+          {};
         if (!failed.sourceLink && metadata.ok === false) {
           failed.sourceLink = {
-            message:
-              t(metadata.error) ||
+            message: t(metadata.error) ||
               NEWS_FIELD_DEFAULT_FAILURE_MESSAGES.sourceLink,
             score: 0,
             threshold: 1,
@@ -2585,8 +2629,7 @@
           const id = t(fieldKey);
           if (!id || failed[id]) return;
           failed[id] = {
-            message:
-              NEWS_FIELD_DEFAULT_FAILURE_MESSAGES[id] ||
+            message: NEWS_FIELD_DEFAULT_FAILURE_MESSAGES[id] ||
               "This field still needs revision.",
             score: null,
             threshold: null,
@@ -2598,19 +2641,19 @@
       function revisionTasksFromIssueMap(issueMap = {}) {
         const source =
           issueMap && typeof issueMap === "object" && !Array.isArray(issueMap) ?
-            issueMap
-          : {};
+          issueMap :
+          {};
         const tasks = [];
         Object.keys(source).forEach((fieldKey) => {
           const field = t(fieldKey);
           if (!field) return;
           const issue =
             source[fieldKey] && typeof source[fieldKey] === "object" ?
-              source[fieldKey]
-            : {};
-          const steps = Array.isArray(issue.steps)
-            ? issue.steps.map((step) => t(step)).filter(Boolean)
-            : [];
+            source[fieldKey] :
+            {};
+          const steps = Array.isArray(issue.steps) ?
+            issue.steps.map((step) => t(step)).filter(Boolean) :
+            [];
           tasks.push({
             field,
             label: t(issue.label),
@@ -2639,13 +2682,12 @@
         if (Object.keys(fromItemFailedArray).length) return fromItemFailedArray;
         const taskFields = failedFieldMapFromFieldKeys(
           (Array.isArray(payloadBody?.revisionTasks) ? payloadBody.revisionTasks : [])
-            .map((task) => task?.field),
+          .map((task) => task?.field),
         );
         if (Object.keys(taskFields).length) return taskFields;
         return {
           [NEWS_GENERIC_COMPLIANCE_FIELD_ID]: {
-            message:
-              "Saved and marked for revision, but field-level details were not returned. Update source, title, byline, dateline, and lead, then submit again.",
+            message: "Saved and marked for revision, but field-level details were not returned. Update source, title, byline, dateline, and lead, then submit again.",
             score: null,
             threshold: null,
           },
@@ -2656,15 +2698,15 @@
         payloadBody = {},
         failedFieldMap = {},
       ) {
-        const direct = Array.isArray(payloadBody?.revisionTasks)
-          ? payloadBody.revisionTasks
-            .filter((task) => t(task?.field))
-            .map((task) => ({
-              ...task,
-              field: t(task.field),
-              steps: Array.isArray(task.steps) ? task.steps : [],
-            }))
-          : [];
+        const direct = Array.isArray(payloadBody?.revisionTasks) ?
+          payloadBody.revisionTasks
+          .filter((task) => t(task?.field))
+          .map((task) => ({
+            ...task,
+            field: t(task.field),
+            steps: Array.isArray(task.steps) ? task.steps : [],
+          })) :
+          [];
         if (direct.length) return direct;
         const fromItemIssues = revisionTasksFromIssueMap(
           payloadBody?.item?.validationIssuesJson,
@@ -2672,9 +2714,12 @@
         if (fromItemIssues.length) return fromItemIssues;
         return Object.keys(
           failedFieldMap && typeof failedFieldMap === "object" ?
-            failedFieldMap
-          : {},
-        ).map((field) => ({ field, steps: [] }));
+          failedFieldMap :
+          {},
+        ).map((field) => ({
+          field,
+          steps: []
+        }));
       }
 
       function clearNewsFieldValidationUi() {
@@ -2735,8 +2780,8 @@
       function hasNewsFieldValidationErrors() {
         const failed =
           state.newsFieldErrors && typeof state.newsFieldErrors === "object" ?
-            state.newsFieldErrors
-          : {};
+          state.newsFieldErrors :
+          {};
         return Object.keys(failed).length > 0;
       }
 
@@ -2767,7 +2812,6 @@
         const defaultSummary = "Saved and marked for revision. Fix the listed fields and submit again.";
         state.newsComplianceSummary = t(summaryText) || t(state.newsComplianceSummary) || defaultSummary;
         summary.textContent = state.newsComplianceSummary;
-
         setNewsComplianceModalOpen(true);
       }
 
@@ -2827,9 +2871,9 @@
         if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null;
         const parsed = new Date(Date.UTC(year, month - 1, day));
         if (
-          parsed.getUTCFullYear() !== year
-          || parsed.getUTCMonth() !== month - 1
-          || parsed.getUTCDate() !== day
+          parsed.getUTCFullYear() !== year ||
+          parsed.getUTCMonth() !== month - 1 ||
+          parsed.getUTCDate() !== day
         ) {
           return null;
         }
@@ -2932,7 +2976,7 @@
         throw error;
       }
 
-       function assertApiOriginSafe(origin) {
+      function assertApiOriginSafe(origin) {
         const text = t(origin);
         if (!text) throw new Error("Missing API origin. Set ?apiOrigin or use runtime-served portal.");
         let parsed;
@@ -3002,15 +3046,12 @@
       function metricCard(label, value, tone = "") {
         const article = document.createElement("article");
         article.className = tone ? `metric ${t(tone)}` : "metric";
-
         const key = document.createElement("div");
         key.className = "k";
         key.textContent = t(label);
-
         const metricValue = document.createElement("div");
         metricValue.className = "v";
         metricValue.textContent = t(value);
-
         article.append(key, metricValue);
         return article;
       }
@@ -3093,9 +3134,9 @@
           const dueText = escapeHtml(formatPortalDate(row?.dueAt || row?.dueDate));
           const assignmentText = escapeHtml(t(row?.assignmentName) || "Bài tập");
           const announcementUrl = resolveHomeworkAnnouncementUrl(row);
-          const assignmentCell = announcementUrl
-            ? `<a class=\"homework-link\" href=\"${escapeHtml(announcementUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">${assignmentText}</a>`
-            : `<span>${assignmentText}</span>`;
+          const assignmentCell = announcementUrl ?
+            `<a class=\"homework-link\" href=\"${escapeHtml(announcementUrl)}\" target=\"_blank\" rel=\"noopener noreferrer\">${assignmentText}</a>` :
+            `<span>${assignmentText}</span>`;
           return `<tr><td>${dueText}</td><td>${assignmentCell}</td></tr>`;
         }).join("");
       }
@@ -3125,17 +3166,14 @@
         const summary = field("currentHomeworkSummary");
         const assignmentLink = field("currentHomeworkAssignmentLink");
         const header = field("currentHomeworkHeader");
-
         if (badge) badge.className = "homework-square is-none";
         if (badgeValue) badgeValue.textContent = "Không có";
         if (header) header.textContent = "Bài tập hiện tại";
-
         if (assignmentLink) {
           assignmentLink.classList.add("hidden");
           assignmentLink.removeAttribute("href");
           assignmentLink.textContent = "Xem thông báo bài tập";
         }
-
         if (pendingHomework > 0) {
           if (badge) badge.className = "homework-square is-pending";
           if (badgeValue) badgeValue.textContent = "Chưa xong";
@@ -3147,7 +3185,6 @@
         } else if (summary) {
           summary.textContent = "Không có bài tập hiện tại.";
         }
-
         const currentTop = currentRows[0] || null;
         if (!currentTop) return;
         if (header) header.textContent = t(currentTop.assignmentName) || "Bài tập hiện tại";
@@ -3167,13 +3204,12 @@
         const badgeValue = field("pastDueHomeworkBadgeValue");
         const summary = field("pastDueHomeworkSummary");
         const openModalBtn = field("openPastDueHomeworkModalBtn");
-
         if (badgeValue) badgeValue.textContent = String(Math.max(0, overdueHomework));
         if (badge) badge.className = overdueHomework > 0 ? "homework-square is-arrears" : "homework-square is-clear";
         if (summary) {
-          summary.textContent = overdueHomework > 0
-            ? `${overdueHomework} bài tập quá hạn cần xử lý ngay.`
-            : "Không có bài tập quá hạn.";
+          summary.textContent = overdueHomework > 0 ?
+            `${overdueHomework} bài tập quá hạn cần xử lý ngay.` :
+            "Không có bài tập quá hạn.";
         }
         if (openModalBtn) openModalBtn.disabled = state.overdueHomeworkRows.length === 0;
         renderOverdueHomeworkTableRows(state.overdueHomeworkRows);
@@ -3181,9 +3217,9 @@
 
       function formatPortalDate(value) {
         const raw = t(value);
-        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw)
-          ? new Date(`${raw}T00:00:00+07:00`)
-          : (raw ? new Date(raw) : null);
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
+          new Date(`${raw}T00:00:00+07:00`) :
+          (raw ? new Date(raw) : null);
         if (!date || Number.isNaN(date.getTime())) return "Date unavailable";
         return new Intl.DateTimeFormat(undefined, {
           month: "short",
@@ -3207,9 +3243,9 @@
 
       function formatQueueDateTimeTz7(value) {
         const raw = t(value);
-        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw)
-          ? new Date(`${raw}T00:00:00+07:00`)
-          : (raw ? new Date(raw) : null);
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
+          new Date(`${raw}T00:00:00+07:00`) :
+          (raw ? new Date(raw) : null);
         if (!date || Number.isNaN(date.getTime())) return null;
         const parts = new Intl.DateTimeFormat("en-GB", {
           day: "2-digit",
@@ -3256,10 +3292,10 @@
           const pageTarget = normalizeStudentPage(link.getAttribute("data-page-target"));
           const shouldBeActive =
             viewTarget === "news" ?
-              state.activeView === "news"
-            : state.activeView === "home" ?
-              pageTarget === state.activePage
-            : pageTarget === "home";
+            state.activeView === "news" :
+            state.activeView === "home" ?
+            pageTarget === state.activePage :
+            pageTarget === "home";
           link.classList.toggle("active", shouldBeActive);
         });
       }
@@ -3270,21 +3306,16 @@
         if (item?.tone) {
           article.classList.add(item.tone);
         }
-
         const head = document.createElement("div");
         head.className = "detail-item-head";
-
         const title = document.createElement("strong");
         title.textContent = item.title || "Detail";
-
         const meta = document.createElement("span");
         meta.className = "detail-meta";
         meta.textContent = item.meta || "";
-
         const note = document.createElement("p");
         note.className = "detail-note";
         note.textContent = item.note || "No detail available.";
-
         head.append(title, meta);
         article.append(head, note);
         return article.outerHTML;
@@ -3331,7 +3362,6 @@
             historyEmpty: "No history is available yet.",
           };
         }
-
         const details = child.details || {};
         const attendanceHistory = Array.isArray(details.attendanceHistory) ? details.attendanceHistory : [];
         const assignmentHistory = Array.isArray(details.assignmentHistory) ? details.assignmentHistory : [];
@@ -3349,9 +3379,9 @@
         const lateAttendance = parseNumber(attendance.late);
         const excusedAttendance = parseNumber(attendance.excused);
         const attendancePercent = totalAttendance > 0 ? (presentAttendance / totalAttendance) * 100 : 0;
-        const averageScore = grades.averageScorePercent === null || grades.averageScorePercent === undefined
-          ? null
-          : Number(grades.averageScorePercent);
+        const averageScore = grades.averageScorePercent === null || grades.averageScorePercent === undefined ?
+          null :
+          Number(grades.averageScorePercent);
         const recommendationItems = [];
         if (parseNumber(assignments.overdue) > 0) {
           recommendationItems.push({
@@ -3401,7 +3431,6 @@
             tone: "good",
           });
         }
-
         if (page === "current-homework") {
           return {
             title: "Current Homework",
@@ -3413,9 +3442,9 @@
               metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
             ],
             calendarTitle: "Current Homework Calendar",
-            calendarSummary: currentHomework.length
-              ? "Open homework is plotted on each due date."
-              : "No open homework is currently scheduled.",
+            calendarSummary: currentHomework.length ?
+              "Open homework is plotted on each due date." :
+              "No open homework is currently scheduled.",
             events: currentHomework.map((row) => buildHomeworkEvent(row, false)).filter(Boolean),
             primaryTitle: "Open Assignments",
             primaryItems: currentHomework.map((row) => ({
@@ -3429,21 +3458,20 @@
             historyItems: assignmentHistory.slice(0, 10).map((row) => ({
               title: t(row.assignmentName) || "Assignment",
               meta: `${t(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
-              note: Number.isFinite(Number(row.scorePercent))
-                ? `Score ${formatPercent(row.scorePercent)}`
-                : (t(row.comments) || "No score has been recorded yet."),
+              note: Number.isFinite(Number(row.scorePercent)) ?
+                `Score ${formatPercent(row.scorePercent)}` :
+                (t(row.comments) || "No score has been recorded yet."),
               tone: row.status === "completed" ? "good" : row.status === "overdue" ? "bad" : "warn",
             })),
             historyEmpty: "No assignment history is available yet.",
           };
         }
-
         if (page === "past-due-homework") {
           return {
             title: "Past Due Homework",
-            lead: overdueHomework.length
-              ? `${overdueHomework.length} homework item(s) are already overdue.`
-              : "No past-due homework is currently flagged.",
+            lead: overdueHomework.length ?
+              `${overdueHomework.length} homework item(s) are already overdue.` :
+              "No past-due homework is currently flagged.",
             metrics: [
               metricCard("Overdue", String(overdueHomework.length), overdueHomework.length ? "bad" : "good"),
               metricCard("Pending", String(parseNumber(assignments.pending)), parseNumber(assignments.pending) ? "warn" : "good"),
@@ -3451,9 +3479,9 @@
               metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
             ],
             calendarTitle: "Past Due Calendar",
-            calendarSummary: overdueHomework.length
-              ? "Overdue homework is highlighted on the original due dates."
-              : "There are no overdue due dates to review.",
+            calendarSummary: overdueHomework.length ?
+              "Overdue homework is highlighted on the original due dates." :
+              "There are no overdue due dates to review.",
             events: overdueHomework.map((row) => buildHomeworkEvent(row, true)).filter(Boolean),
             primaryTitle: "Urgent Homework",
             primaryItems: overdueHomework.map((row) => ({
@@ -3467,24 +3495,23 @@
             historyItems: assignmentHistory.slice(0, 10).map((row) => ({
               title: t(row.assignmentName) || "Assignment",
               meta: `${t(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
-              note: row.homeworkOnTime === true
-                ? "Completed on time."
-                : row.status === "completed"
-                  ? "Completed after the due date."
-                  : (t(row.comments) || "Still open."),
+              note: row.homeworkOnTime === true ?
+                "Completed on time." :
+                row.status === "completed" ?
+                "Completed after the due date." :
+                (t(row.comments) || "Still open."),
               tone: row.status === "completed" ? "good" : row.status === "overdue" ? "bad" : "warn",
             })),
             historyEmpty: "No homework timeline is available yet.",
           };
         }
-
         if (page === "attendance-calendar") {
           const recentAlerts = attendanceHistory.filter((row) => row.status !== "present");
           return {
             title: "Attendance Calendar SYTD",
-            lead: totalAttendance
-              ? `Attendance history covers ${totalAttendance} recorded class day(s) so far this year.`
-              : "Attendance has not been recorded yet.",
+            lead: totalAttendance ?
+              `Attendance history covers ${totalAttendance} recorded class day(s) so far this year.` :
+              "Attendance has not been recorded yet.",
             metrics: [
               metricCard("Present", String(presentAttendance), "good"),
               metricCard("Absent", String(absentAttendance), absentAttendance ? "bad" : "good"),
@@ -3492,9 +3519,9 @@
               metricCard("Excused", String(excusedAttendance), excusedAttendance ? "warn" : "good"),
             ],
             calendarTitle: "Attendance Calendar",
-            calendarSummary: attendanceHistory.length
-              ? "Each recorded attendance entry is mapped to its class date."
-              : "No attendance entries are available.",
+            calendarSummary: attendanceHistory.length ?
+              "Each recorded attendance entry is mapped to its class date." :
+              "No attendance entries are available.",
             events: attendanceHistory.map((row) => ({
               id: `attendance-${t(row.id)}`,
               title: `${t(row.status) || "present"}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
@@ -3520,13 +3547,12 @@
             historyEmpty: "No attendance log is available yet.",
           };
         }
-
         if (page === "performance-reports") {
           return {
             title: "Performance Reports SYTD Archive",
-            lead: reportArchive.length
-              ? `${reportArchive.length} performance report archive item(s) are available for review.`
-              : "No performance reports are available yet.",
+            lead: reportArchive.length ?
+              `${reportArchive.length} performance report archive item(s) are available for review.` :
+              "No performance reports are available yet.",
             metrics: [
               metricCard("Reports", String(reportArchive.length), reportArchive.length ? "good" : ""),
               metricCard("Average", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
@@ -3534,9 +3560,9 @@
               metricCard("Overdue", String(parseNumber(assignments.overdue)), parseNumber(assignments.overdue) ? "bad" : "good"),
             ],
             calendarTitle: "Performance Report Calendar",
-            calendarSummary: reportArchive.length
-              ? "Report publication dates are pinned to the archive calendar."
-              : "There are no report dates to plot yet.",
+            calendarSummary: reportArchive.length ?
+              "Report publication dates are pinned to the archive calendar." :
+              "There are no report dates to plot yet.",
             events: reportArchive.map((row) => ({
               id: `report-${t(row.id)}`,
               title: `Report${t(row.className) ? ` | ${t(row.className)}` : ""}`,
@@ -3562,13 +3588,12 @@
             historyEmpty: "No supporting grade context is available yet.",
           };
         }
-
         if (page === "grades-ytd") {
           return {
             title: "Grades YTD",
-            lead: gradeHistory.length
-              ? `${gradeHistory.length} graded or completed assignment record(s) are available this year.`
-              : "No grade history is available yet.",
+            lead: gradeHistory.length ?
+              `${gradeHistory.length} graded or completed assignment record(s) are available this year.` :
+              "No grade history is available yet.",
             metrics: [
               metricCard("Average", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
               metricCard("Graded", String(gradeHistory.length), gradeHistory.length ? "good" : ""),
@@ -3576,14 +3601,14 @@
               metricCard("Completed", String(parseNumber(assignments.completed)), "good"),
             ],
             calendarTitle: "Grade Timeline",
-            calendarSummary: gradeHistory.length
-              ? "Grade entries are mapped to the assignment due or submission date."
-              : "There are no grade dates to plot yet.",
+            calendarSummary: gradeHistory.length ?
+              "Grade entries are mapped to the assignment due or submission date." :
+              "There are no grade dates to plot yet.",
             events: gradeHistory.map((row) => ({
               id: `grade-${t(row.id)}`,
-              title: Number.isFinite(Number(row.scorePercent))
-                ? `${t(row.assignmentName)} | ${formatPercent(row.scorePercent)}`
-                : t(row.assignmentName) || "Assignment",
+              title: Number.isFinite(Number(row.scorePercent)) ?
+                `${t(row.assignmentName)} | ${formatPercent(row.scorePercent)}` :
+                t(row.assignmentName) || "Assignment",
               start: t(row.submittedDate || row.dueDate),
               allDay: true,
               classNames: ["fc-event-grade"],
@@ -3591,9 +3616,9 @@
             primaryTitle: "Recent Grade Records",
             primaryItems: gradeHistory.slice(0, 10).map((row) => ({
               title: t(row.assignmentName) || "Assignment",
-              meta: Number.isFinite(Number(row.scorePercent))
-                ? `${formatPercent(row.scorePercent)}${t(row.className) ? ` | ${t(row.className)}` : ""}`
-                : `${t(row.status)}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
+              meta: Number.isFinite(Number(row.scorePercent)) ?
+                `${formatPercent(row.scorePercent)}${t(row.className) ? ` | ${t(row.className)}` : ""}` :
+                `${t(row.status)}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
               note: t(row.comments) || "No grading comment was recorded.",
               tone: Number.isFinite(Number(row.scorePercent)) && Number(row.scorePercent) < 75 ? "warn" : "good",
             })),
@@ -3602,15 +3627,14 @@
             historyItems: assignmentHistory.slice(0, 12).map((row) => ({
               title: t(row.assignmentName) || "Assignment",
               meta: `${t(row.status)} | ${formatPortalDate(row.dueAt || row.dueDate)}`,
-              note: Number.isFinite(Number(row.scorePercent))
-                ? `Score ${formatPercent(row.scorePercent)}`
-                : (t(row.comments) || "No score recorded."),
+              note: Number.isFinite(Number(row.scorePercent)) ?
+                `Score ${formatPercent(row.scorePercent)}` :
+                (t(row.comments) || "No score recorded."),
               tone: row.status === "overdue" ? "bad" : row.status === "pending" ? "warn" : "good",
             })),
             historyEmpty: "No assignment history is available yet.",
           };
         }
-
         const focusEvents = [
           ...overdueHomework.map((row) => buildHomeworkEvent(row, true)),
           ...currentHomework.map((row) => buildHomeworkEvent(row, false)),
@@ -3622,7 +3646,6 @@
             classNames: ["fc-event-report"],
           })),
         ].filter(Boolean);
-
         return {
           title: "Recommendations for Success",
           lead: recommendationItems.map((item) => item.title).join(". "),
@@ -3633,9 +3656,9 @@
             metricCard("Overdue", String(parseNumber(assignments.overdue)), parseNumber(assignments.overdue) ? "bad" : "good"),
           ],
           calendarTitle: "Priority Calendar",
-          calendarSummary: focusEvents.length
-            ? "The calendar combines urgent homework and recent report checkpoints."
-            : "No urgent priorities are currently plotted.",
+          calendarSummary: focusEvents.length ?
+            "The calendar combines urgent homework and recent report checkpoints." :
+            "No urgent priorities are currently plotted.",
           events: focusEvents,
           primaryTitle: "Priority Actions",
           primaryItems: recommendationItems,
@@ -3643,9 +3666,9 @@
           historyTitle: "Supporting Evidence",
           historyItems: [...overdueHomework, ...gradeHistory.slice(0, 6)].slice(0, 10).map((row) => ({
             title: t(row.assignmentName || row.className || "Supporting detail"),
-            meta: t(row.generatedAt)
-              ? formatPortalDateTime(row.generatedAt)
-              : formatPortalDate(row.dueAt || row.dueDate || row.submittedAt || row.submittedDate),
+            meta: t(row.generatedAt) ?
+              formatPortalDateTime(row.generatedAt) :
+              formatPortalDate(row.dueAt || row.dueDate || row.submittedAt || row.submittedDate),
             note: t(row.comments) || "Used to support the current recommendation set.",
             tone: t(row.status) === "overdue" ? "bad" : "warn",
           })),
@@ -3690,7 +3713,6 @@
         field("studentDetailMetrics")?.replaceChildren(...model.metrics);
         renderDetailList("studentDetailPrimaryList", model.primaryItems, model.primaryEmpty);
         renderDetailList("studentDetailHistoryList", model.historyItems, model.historyEmpty);
-
         const calendar = ensureStudentDetailCalendar();
         if (!calendar) return;
         calendar.removeAllEvents();
@@ -3714,7 +3736,6 @@
           updateActiveStudentNav();
           return;
         }
-
         const showNews = state.activeView === "news";
         const showHome = !showNews && state.activePage === "home";
         const showDetail = !showNews && state.activePage !== "home";
@@ -3757,10 +3778,8 @@
         const snapshotBadge = field("snapshotBadge");
         const overview = field("studentOverviewSummary");
         if (!root || !identity) return;
-
         const child = state.dashboard?.child || null;
         const news = state.dashboard?.newsReports || {};
-
         if (!child) {
           identity.textContent = "Student metrics are not available.";
           root.replaceChildren(metricCard("Tổng quan", "Chưa có dữ liệu"));
@@ -3781,12 +3800,10 @@
           }
           return;
         }
-
         const attendance = child.attendance || {};
         const assignments = child.assignments || {};
         const grades = child.grades || {};
         const performance = child.performance || {};
-
         const totalAttendance = parseNumber(attendance.total);
         const presentAttendance = parseNumber(attendance.present);
         const absentAttendance = parseNumber(attendance.absent);
@@ -3794,11 +3811,10 @@
         const absencePercent = totalAttendance > 0 ? (absentAttendance / totalAttendance) * 100 : 0;
         const pendingHomework = parseNumber(assignments.pending);
         const overdueHomework = parseNumber(assignments.overdue);
-        const averageScore = grades.averageScorePercent === null || grades.averageScorePercent === undefined
-          ? null
-          : Number(grades.averageScorePercent);
+        const averageScore = grades.averageScorePercent === null || grades.averageScorePercent === undefined ?
+          null :
+          Number(grades.averageScorePercent);
         const reportCount = parseNumber(performance.reportCount);
-
         const absenceTone = absencePercent > 10 ? "bad" : absencePercent > 5 ? "warn" : "";
         const pendingTone = pendingHomework > 0 ? "warn" : "";
         const overdueTone = overdueHomework > 0 ? "bad" : "";
@@ -3807,7 +3823,6 @@
         const approvedNews = parseNumber(newsSummary.approved);
         const waitingNews = parseNumber(newsSummary.submitted);
         const reviseNews = parseNumber(newsSummary.revisionRequested);
-
         const displayEaglesId = t(child.eaglesId);
         const displayName = t(child.englishName || child.fullName || child.eaglesId);
         identity.textContent = `${displayName} | ${displayEaglesId} | ${t(child.currentGrade || "No class")}`;
@@ -3818,7 +3833,6 @@
         if (overview) {
           overview.textContent = displayEaglesId ? `${displayName} (${displayEaglesId})` : displayName;
         }
-
         root.replaceChildren(
           metricCard("Attendance SYTD", formatPercent(attendancePercent), "good"),
           metricCard("Absent SYTD", formatPercent(absencePercent), absenceTone),
@@ -3830,14 +3844,13 @@
           metricCard("News Waiting", String(waitingNews), waitingNews ? "warn" : ""),
           metricCard("News Revise", String(reviseNews), reviseNews ? "bad" : ""),
         );
-
         renderCurrentHomeworkOverviewCard(child, pendingHomework);
         renderPastDueHomeworkOverviewCard(child, overdueHomework);
         setSummary(
           "attendanceCalendarSummary",
-          totalAttendance > 0
-            ? `Attendance SYTD: ${presentAttendance}/${totalAttendance} present (${formatPercent(attendancePercent)}), absent ${absentAttendance}.`
-            : "Attendance SYTD has not been recorded yet."
+          totalAttendance > 0 ?
+          `Attendance SYTD: ${presentAttendance}/${totalAttendance} present (${formatPercent(attendancePercent)}), absent ${absentAttendance}.` :
+          "Attendance SYTD has not been recorded yet."
         );
         setSummary(
           "performanceReportsSummary",
@@ -3845,9 +3858,9 @@
         );
         setSummary(
           "gradesYtdSummary",
-          Number.isFinite(averageScore)
-            ? `Grade average YTD: ${formatPercent(averageScore)}.`
-            : "Grade average YTD is not available yet."
+          Number.isFinite(averageScore) ?
+          `Grade average YTD: ${formatPercent(averageScore)}.` :
+          "Grade average YTD is not available yet."
         );
         const recommendations = [];
         if (overdueHomework > 0) recommendations.push("Clear past-due homework first.");
@@ -3861,7 +3874,6 @@
           snapshotBadge.textContent = `HS ${t(child.eaglesId)}`;
           snapshotBadge.className = "chip chip-ok";
         }
-
         renderNewsQueue();
       }
 
@@ -3981,12 +3993,12 @@
         const label = newsReviewLabel(status, reviewStatus, awaitingReReview);
         const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
         const tone =
-          normalizedReview === "approved" ? "good"
-          : awaitingReReview === true ? "revise"
-          : normalizedReview === "revision-requested" ? "revise"
-          : normalizeLower(status) === "completed" ? "warn"
-          : normalizeLower(status) === "open" ? "open"
-          : "bad";
+          normalizedReview === "approved" ? "good" :
+          awaitingReReview === true ? "revise" :
+          normalizedReview === "revision-requested" ? "revise" :
+          normalizeLower(status) === "completed" ? "warn" :
+          normalizeLower(status) === "open" ? "open" :
+          "bad";
         const cls = chipClassForTone(tone);
         const span = document.createElement("span");
         span.className = "chip " + cls;
@@ -4093,12 +4105,9 @@
               submittedCount: entry.submittedCount,
               awaitingReReviewCount: entry.awaitingReReviewCount,
               revisionRequestedCount: entry.revisionRequestedCount,
-              latestSubmittedAt:
-                t(entry.latestSubmittedAt) || t(reports[0]?.submittedAt),
-              latestReportDate:
-                t(entry.latestReportDate) || t(reports[0]?.reportDate),
-              latestReportId:
-                t(entry.latestReportId) || t(reports[0]?.id),
+              latestSubmittedAt: t(entry.latestSubmittedAt) || t(reports[0]?.submittedAt),
+              latestReportDate: t(entry.latestReportDate) || t(reports[0]?.reportDate),
+              latestReportId: t(entry.latestReportId) || t(reports[0]?.id),
             };
           })
           .sort((left, right) => {
@@ -4172,9 +4181,9 @@
       function newsWeekSetStatusChipHtml(token = "") {
         const normalized = normalizeLower(token);
         const tone =
-          normalized === "approved" ? "good"
-          : normalized === "revise" || normalized === "waiting" ? "revise"
-          : "warn";
+          normalized === "approved" ? "good" :
+          normalized === "revise" || normalized === "waiting" ? "revise" :
+          "warn";
         const span = document.createElement("span");
         span.className = `chip ${chipClassForTone(tone)}`;
         span.textContent = newsWeekSetStatusLabel(normalized);
@@ -4202,9 +4211,9 @@
         const id = t(weekSetId);
         if (!id) return null;
         const source =
-          Array.isArray(weekSets) ? weekSets
-          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
-          : [];
+          Array.isArray(weekSets) ? weekSets :
+          Array.isArray(state.newsWeekSets) ? state.newsWeekSets :
+          [];
         return source.find((entry) => t(entry?.id) === id) || null;
       }
 
@@ -4212,9 +4221,9 @@
         const dateKey = t(reportDate).slice(0, 10);
         if (!dateKey) return null;
         const source =
-          Array.isArray(weekSets) ? weekSets
-          : Array.isArray(state.newsWeekSets) ? state.newsWeekSets
-          : [];
+          Array.isArray(weekSets) ? weekSets :
+          Array.isArray(state.newsWeekSets) ? state.newsWeekSets :
+          [];
         return source.find((entry) =>
           (Array.isArray(entry?.reports) ? entry.reports : []).some(
             (report) => t(report?.reportDate) === dateKey,
@@ -4224,14 +4233,32 @@
 
       function newsViewerItemStatusChipModel(item = {}) {
         const hasStatus = Boolean(t(item?.reviewStatus)) || item?.awaitingReReview === true;
-        if (!hasStatus) return { label: "-", tone: "neutral" };
+        if (!hasStatus) return {
+          label: "-",
+          tone: "neutral"
+        };
         const status = normalizeNewsReviewStatusToken(item?.reviewStatus);
-        if (status === "approved") return { label: "Approved", tone: "good" };
-        if (status === "revision-requested") return { label: "Revise", tone: "revise" };
+        if (status === "approved") return {
+          label: "Approved",
+          tone: "good"
+        };
+        if (status === "revision-requested") return {
+          label: "Revise",
+          tone: "revise"
+        };
         if (status === "submitted" && item?.awaitingReReview === true)
-          return { label: "Waiting", tone: "revise" };
-        if (status === "submitted") return { label: "Submitted", tone: "warn" };
-        return { label: "-", tone: "neutral" };
+          return {
+            label: "Waiting",
+            tone: "revise"
+          };
+        if (status === "submitted") return {
+          label: "Submitted",
+          tone: "warn"
+        };
+        return {
+          label: "-",
+          tone: "neutral"
+        };
       }
 
       function setNewsViewerStatusChip(item = {}) {
@@ -4266,18 +4293,18 @@
       }
 
       function newsWeekSetViewerCurrentItem() {
-        const items = Array.isArray(state.newsWeekSetViewerItems)
-          ? state.newsWeekSetViewerItems
-          : [];
+        const items = Array.isArray(state.newsWeekSetViewerItems) ?
+          state.newsWeekSetViewerItems :
+          [];
         const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
         if (!items.length || !Number.isFinite(index) || index < 0) return null;
         return items[index] || null;
       }
 
       function syncNewsWeekSetViewerControls() {
-        const items = Array.isArray(state.newsWeekSetViewerItems)
-          ? state.newsWeekSetViewerItems
-          : [];
+        const items = Array.isArray(state.newsWeekSetViewerItems) ?
+          state.newsWeekSetViewerItems :
+          [];
         const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
         const active = newsWeekSetViewerCurrentItem();
         const total = items.length;
@@ -4285,12 +4312,10 @@
           normalizeNewsReviewStatusToken(active?.reviewStatus) === "approved";
         const pending = state.newsWeekSetViewerPending === true;
         const canEdit = Boolean(active) && !isApproved && !pending;
-
         const indexEl = field("newsWeekSetModalIndex");
         if (indexEl)
           indexEl.textContent =
-            total > 0 && index >= 0 ? `${index + 1} / ${total}` : "0 / 0";
-
+          total > 0 && index >= 0 ? `${index + 1} / ${total}` : "0 / 0";
         const prevBtn = field("newsWeekSetModalPrevBtn");
         if (prevBtn instanceof HTMLButtonElement) {
           prevBtn.disabled = total === 0 || index <= 0 || pending;
@@ -4326,18 +4351,15 @@
               `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`;
           }
         }
-
         setInputValue("newsViewerReportDate", active?.reportDate || "");
         setNewsViewerStatusChip(active || {});
         setInputValue(
           "newsViewerSubmittedAt",
           active?.submittedAt ? formatPortalDateTime(active.submittedAt) : "-",
         );
-
         Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
           setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
         });
-
         syncNewsWeekSetViewerControls();
       }
 
@@ -4361,9 +4383,9 @@
       }
 
       function shiftNewsWeekSetViewer(offset = 0) {
-        const items = Array.isArray(state.newsWeekSetViewerItems)
-          ? state.newsWeekSetViewerItems
-          : [];
+        const items = Array.isArray(state.newsWeekSetViewerItems) ?
+          state.newsWeekSetViewerItems :
+          [];
         if (!items.length) return;
         const parsedOffset = Number.parseInt(String(offset), 10);
         if (!Number.isFinite(parsedOffset) || parsedOffset === 0) return;
@@ -4384,8 +4406,8 @@
         const items = sortNewsWeekSetViewerItems(weekSet.reports);
         const preferredDate = t(options?.reportDate).slice(0, 10);
         const preferredIndex = preferredDate ?
-          items.findIndex((entry) => t(entry?.reportDate) === preferredDate)
-        : -1;
+          items.findIndex((entry) => t(entry?.reportDate) === preferredDate) :
+          -1;
         state.newsWeekSetViewerWeekSetId = id;
         state.newsWeekSetViewerItems = items;
         state.newsWeekSetViewerIndex = preferredIndex >= 0 ? preferredIndex : 0;
@@ -4445,17 +4467,17 @@
         const summary = summarizeNewsWeekSetStatuses(weekSets);
         const totalSets = weekSets.length;
         const badgeTone =
-          summary.revise > 0 ? "chip-bad"
-          : summary.waiting > 0 ? "chip-revise"
-          : summary.submitted > 0 ? "chip-warn"
-          : summary.approved > 0 ? "chip-ok"
-          : "chip-neutral";
+          summary.revise > 0 ? "chip-bad" :
+          summary.waiting > 0 ? "chip-revise" :
+          summary.submitted > 0 ? "chip-warn" :
+          summary.approved > 0 ? "chip-ok" :
+          "chip-neutral";
         const badgeText = totalSets ?
-          `${summary.approved}/${summary.submitted}/${summary.waiting}/${summary.revise}`
-        : "No sets";
+          `${summary.approved}/${summary.submitted}/${summary.waiting}/${summary.revise}` :
+          "No sets";
         const summaryText = totalSets ?
-          `Approved ${summary.approved} • Submitted ${summary.submitted} • Waiting ${summary.waiting} • Revise ${summary.revise}`
-        : "No student week sets are queued yet.";
+          `Approved ${summary.approved} • Submitted ${summary.submitted} • Waiting ${summary.waiting} • Revise ${summary.revise}` :
+          "No student week sets are queued yet.";
         ["newsQueueBadge", "newsPageQueueBadge"].forEach((id) => {
           const badge = field(id);
           if (!badge) return;
@@ -4488,7 +4510,6 @@
           t(state.window?.todayDate) || new Date().toISOString().slice(0, 10);
         openNewsDate(today);
       }
-
       async function api(path, options = {}) {
         assertApiOriginConfiguredForStaticPreview();
         const init = {
@@ -4619,28 +4640,27 @@
       }
 
       function buildStudentCalendarEvents(calendar = []) {
-        const rows = Array.isArray(calendar)
-          ? calendar
-            .map((row) => ({
-              date: t(row?.date),
-              status: resolveNewsCalendarStatus(row),
-              submittedAt: t(row?.submittedAt),
-              statusColor: t(row?.statusColor || row?.color),
-              reviewStatus: t(row?.reviewStatus),
-              awaitingReReview: row?.awaitingReReview === true,
-            }))
-            .filter((row) => Boolean(row.date) && Boolean(row.status))
-          : [];
+        const rows = Array.isArray(calendar) ?
+          calendar
+          .map((row) => ({
+            date: t(row?.date),
+            status: resolveNewsCalendarStatus(row),
+            submittedAt: t(row?.submittedAt),
+            statusColor: t(row?.statusColor || row?.color),
+            reviewStatus: t(row?.reviewStatus),
+            awaitingReReview: row?.awaitingReReview === true,
+          }))
+          .filter((row) => Boolean(row.date) && Boolean(row.status)) :
+          [];
         const events = [];
         const alertDates = new Set();
         const statusByDate = new Map();
-        const reviewTracks = Array.isArray(state.dashboard?.calendarTracks?.review)
-          ? state.dashboard.calendarTracks.review
-          : [];
-        const homeworkTracks = Array.isArray(state.dashboard?.calendarTracks?.homework)
-          ? state.dashboard.calendarTracks.homework
-          : [];
-
+        const reviewTracks = Array.isArray(state.dashboard?.calendarTracks?.review) ?
+          state.dashboard.calendarTracks.review :
+          [];
+        const homeworkTracks = Array.isArray(state.dashboard?.calendarTracks?.homework) ?
+          state.dashboard.calendarTracks.homework :
+          [];
         rows.forEach((row) => {
           const date = t(row.date);
           if (!date) return;
@@ -4659,7 +4679,10 @@
             row.reviewStatus,
             row.awaitingReReview === true,
           );
-          statusByDate.set(date, { status: row.status, color: statusColor });
+          statusByDate.set(date, {
+            status: row.status,
+            color: statusColor
+          });
           const submittedClock = formatSubmittedClock(row.submittedAt);
           const classNames = [
             "fc-event-news-status",
@@ -4672,19 +4695,19 @@
             classNames.push("fc-obtrusive-alert", "fc-event-news-missed");
           }
           const detail =
-            token === "open" ? "Submission window is open."
-            : token === "none-submitted" ? "No submission was recorded for this date."
-            : token === "revise" ? "Revision requested."
-            : token === "waiting" ? "Resubmitted and waiting for admin review."
-            : token === "approved" ? "Approved."
-            : "Submitted and awaiting review.";
+            token === "open" ? "Submission window is open." :
+            token === "none-submitted" ? "No submission was recorded for this date." :
+            token === "revise" ? "Revision requested." :
+            token === "waiting" ? "Resubmitted and waiting for admin review." :
+            token === "approved" ? "Approved." :
+            "Submitted and awaiting review.";
           const displayOrder =
-            token === "none-submitted" ? 0
-            : token === "revise" ? 1
-            : token === "open" ? 2
-            : token === "waiting" ? 3
-            : token === "submitted" ? 4
-            : 5;
+            token === "none-submitted" ? 0 :
+            token === "revise" ? 1 :
+            token === "open" ? 2 :
+            token === "waiting" ? 3 :
+            token === "submitted" ? 4 :
+            5;
           events.push({
             id: `news-${token}-${date}`,
             title: label,
@@ -4700,7 +4723,6 @@
             },
           });
         });
-
         reviewTracks.forEach((track) => {
           if (!t(track?.startDate) || !t(track?.endDate)) return;
           const reviewLabel = t(track?.title) || "Notes review track";
@@ -4721,7 +4743,6 @@
             },
           });
         });
-
         homeworkTracks.forEach((track) => {
           const startDate = t(track?.startDate);
           const endDate = t(track?.endDate);
@@ -4759,8 +4780,11 @@
             });
           }
         });
-
-        return { events, alertDates, statusByDate };
+        return {
+          events,
+          alertDates,
+          statusByDate
+        };
       }
 
       function resolveNewsCalendarStatus(row = {}) {
@@ -4888,7 +4912,11 @@
       function renderCalendar(calendar = []) {
         const calendarView = ensureStudentCalendar();
         if (!calendarView) return;
-        const { events, alertDates, statusByDate } = buildStudentCalendarEvents(calendar);
+        const {
+          events,
+          alertDates,
+          statusByDate
+        } = buildStudentCalendarEvents(calendar);
         state.calendarAlertDates = alertDates;
         state.calendarStatusByDate = statusByDate;
         calendarView.removeAllEvents();
@@ -4912,14 +4940,12 @@
         const canSubmit = Boolean(t(windowInfo.reportDate));
         btn.disabled = !canSubmit;
       }
-
       async function loadDashboard() {
         state.dashboard = await api(STUDENT_DASHBOARD_PATH);
         renderDashboard();
         renderStudentDetailPage();
         renderCalendar(state.calendarRows);
       }
-
       async function loadCalendar(options = {}) {
         const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=60`);
         state.window = data?.window || null;
@@ -4933,9 +4959,9 @@
         });
         const openDate = t(data?.window?.reportDate);
         const closesAt = t(data?.window?.closesAt);
-        field("windowSummary").textContent = openDate
-          ? `Open entry date: ${openDate} (window closes at ${closesAt || "today 23:59"}).`
-          : "No open date currently.";
+        field("windowSummary").textContent = openDate ?
+          `Open entry date: ${openDate} (window closes at ${closesAt || "today 23:59"}).` :
+          "No open date currently.";
         updateSubmitAvailability();
       }
 
@@ -4947,7 +4973,6 @@
           payload.complianceFailed === true
         );
       }
-
       async function handleNewsComplianceSoftSave(payloadBody = {}, options = {}) {
         const reopenReportDate = t(options?.reopenReportDate).slice(0, 10);
         const summaryMessage =
@@ -4976,7 +5001,9 @@
         renderNewsComplianceModalFromState(summaryMessage);
         await Promise.all([
           loadDashboard(),
-          loadCalendar({ preserveValidation: true }),
+          loadCalendar({
+            preserveValidation: true
+          }),
         ]);
         if (reopenReportDate) {
           openNewsWeekSetModalByReportDate(reopenReportDate, {
@@ -4987,7 +5014,6 @@
           renderNewsComplianceModalFromState(summaryMessage);
         }
       }
-
       async function submitNewsPayload(payload = {}, options = {}) {
         const reportDate = t(payload?.reportDate);
         if (!reportDate) throw new Error("Report date is locked.");
@@ -4998,7 +5024,9 @@
             body: payload,
           });
           if (isComplianceSoftSavePayload(saved)) {
-            await handleNewsComplianceSoftSave(saved, { reopenReportDate });
+            await handleNewsComplianceSoftSave(saved, {
+              reopenReportDate
+            });
             return;
           }
           applyNewsFieldValidationUi({}, []);
@@ -5014,8 +5042,8 @@
           if (error?.status === 422 && error?.payload?.saved === true) {
             const payloadBody =
               error.payload && typeof error.payload === "object" ?
-                error.payload
-              : {};
+              error.payload :
+              {};
             await handleNewsComplianceSoftSave(payloadBody, {
               reopenReportDate,
               messageFallback: t(error.message),
@@ -5025,11 +5053,9 @@
           throw error;
         }
       }
-
       async function submitReport() {
         await submitNewsPayload(reportPayload());
       }
-
       async function submitNewsWeekSetModalCurrentItem() {
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
@@ -5037,8 +5063,8 @@
         const reportDate = t(active?.reportDate).slice(0, 10);
         const openReportDate = t(state.window?.reportDate).slice(0, 10);
         if (
-          reviewStatus === "approved"
-          && (!openReportDate || reportDate !== openReportDate)
+          reviewStatus === "approved" &&
+          (!openReportDate || reportDate !== openReportDate)
         ) {
           throw new Error("Approved news reports can only be edited on the current open date.");
         }
@@ -5054,21 +5080,23 @@
           syncNewsWeekSetViewerControls();
         }
       }
-
       async function login() {
         const eaglesId = t(field("loginEaglesId")?.value);
         const password = t(field("loginPassword")?.value);
         if (!eaglesId || !password) throw new Error("Eagles ID and password are required.");
         await api(`${STUDENT_AUTH_PREFIX}/login`, {
           method: "POST",
-          body: { eaglesId, password },
+          body: {
+            eaglesId,
+            password
+          },
         });
       }
-
       async function logout() {
-        await api(`${STUDENT_AUTH_PREFIX}/logout`, { method: "POST" });
+        await api(`${STUDENT_AUTH_PREFIX}/logout`, {
+          method: "POST"
+        });
       }
-
       async function boot() {
         setAuthenticatedView(false);
         assertApiOriginConfiguredForStaticPreview();
@@ -5097,17 +5125,13 @@
         setGlobalStatus(message, true);
         setFormStatus(message, true);
       }
-
       hoistPortalModals();
-
       field("menuBtn")?.addEventListener("click", () => {
         setMenuOpen(!field("sideNav")?.classList.contains("open"));
       });
-
       field("navOverlay")?.addEventListener("click", () => {
         setMenuOpen(false);
       });
-
       document.querySelectorAll(".side-link").forEach((link) => {
         link.addEventListener("click", (event) => {
           const targetView = normalizeLower(link.getAttribute("data-view-target"));
@@ -5118,11 +5142,13 @@
           } else {
             setActiveStudentPage(pageTarget);
           }
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+          });
           setMenuOpen(false);
         });
       });
-
       field("loginForm")?.addEventListener("submit", async (event) => {
         event.preventDefault();
         setGlobalStatus("Signing in...");
@@ -5136,7 +5162,6 @@
           handleError(error);
         }
       });
-
       field("logoutBtn")?.addEventListener("click", async () => {
         try {
           await logout();
@@ -5146,7 +5171,6 @@
           handleError(error);
         }
       });
-
       field("studentNavLogoutBtn")?.addEventListener("click", async () => {
         try {
           await logout();
@@ -5156,7 +5180,6 @@
           handleError(error);
         }
       });
-
       field("logoutBtnNews")?.addEventListener("click", async () => {
         try {
           await logout();
@@ -5166,47 +5189,37 @@
           handleError(error);
         }
       });
-
       field("reloadBtn")?.addEventListener("click", () => {
         Promise.all([loadDashboard(), loadCalendar()]).then(() => {
           setFormStatus("Window refreshed.");
           setGlobalStatus("Student dashboard refreshed.");
         }).catch(handleError);
       });
-
       (field("openNewsPageBtn") || field("newsQueueOpenBtn"))?.addEventListener("click", () => {
         openNewsDate(state.window?.reportDate || state.window?.todayDate);
       });
-
       field("newsQueueRefreshBtn")?.addEventListener("click", () => {
         Promise.all([loadDashboard(), loadCalendar()]).catch(handleError);
       });
-
       field("newsQueueScrollTodayBtn")?.addEventListener("click", () => {
         jumpToToday();
       });
-
       field("openNewsPageBtn")?.addEventListener("click", () => {
         setActiveStudentView("news");
       });
-
       field("backToHomeBtn")?.addEventListener("click", () => {
         setActiveStudentPage("home");
       });
-
       field("openPastDueHomeworkModalBtn")?.addEventListener("click", () => {
         renderOverdueHomeworkTableRows(state.overdueHomeworkRows);
         setPastDueHomeworkModalOpen(true);
       });
-
       field("closePastDueHomeworkModalBtn")?.addEventListener("click", () => {
         setPastDueHomeworkModalOpen(false);
       });
-
       field("pastDueHomeworkModalBackdrop")?.addEventListener("click", () => {
         setPastDueHomeworkModalOpen(false);
       });
-
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
         if (state.newsComplianceModalOpen) {
@@ -5219,14 +5232,15 @@
         }
         if (state.pastDueModalOpen) setPastDueHomeworkModalOpen(false);
       });
-
       document.addEventListener("click", (event) => {
         const openBtn = event.target?.closest?.("button[data-open-news-week-set]");
         if (openBtn) {
           event.preventDefault();
           const weekSetId = openBtn.getAttribute("data-open-news-week-set");
           const reportDate = openBtn.getAttribute("data-open-news-report-date");
-          openNewsWeekSetModalByWeekSetId(weekSetId, { reportDate });
+          openNewsWeekSetModalByWeekSetId(weekSetId, {
+            reportDate
+          });
           return;
         }
         const rowTarget = event.target?.closest?.("tr[data-news-week-set-id]");
@@ -5236,7 +5250,6 @@
           openNewsWeekSetModalByWeekSetId(weekSetId);
         }
       });
-
       field("openNewsComplianceModalBtn")?.addEventListener("click", () => {
         renderNewsComplianceModalFromState();
       });
@@ -5267,19 +5280,16 @@
       field("newsWeekSetModalSubmitBtn")?.addEventListener("click", () => {
         submitNewsWeekSetModalCurrentItem().catch(handleError);
       });
-
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));
       field("studentTextZoomUpBtn")?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP));
       field("studentTextZoomResetBtn")?.addEventListener("click", () => applyPortalTextZoom(TEXT_ZOOM_DEFAULT));
-
       applyPortalTextZoom(readStoredTextZoomPct());
-
       field("submitBtn")?.addEventListener("click", () => {
         submitReport().catch(handleError);
       });
-
       boot().catch(handleError);
     })();
   </script>
 </body>
+
 </html>

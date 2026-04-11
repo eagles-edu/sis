@@ -32,7 +32,7 @@
       line-height: 1.4;
       margin: 0;
       min-height: 100vh;
-  }
+    }
 
     .page-shell {
       box-sizing: border-box;
@@ -41,11 +41,11 @@
       margin: 24px auto;
       padding: 16px;
       width: min(1460px, calc(100% - 32px));
-  }
+    }
 
-    .page-shell > * {
+    .page-shell>* {
       min-width: 0;
-  }
+    }
 
     .top-stack {
       display: grid;
@@ -53,7 +53,7 @@
       margin: 0 auto;
       min-width: 0;
       width: min(1040px, 100%);
-  }
+    }
 
     .hero,
     .control-card,
@@ -63,26 +63,25 @@
       border-radius: 14px;
       box-shadow: 0 8px 22px rgb(17 38 63 / 8%);
       padding: 0.8rem;
-  }
+    }
 
     .grid-card {
-
       background:
         linear-gradient(180deg, rgb(255 255 255 / 96%) 0%, rgb(248 251 255 / 96%) 100%),
         #fff;
       min-width: 0;
-  }
+    }
 
     .hero h1 {
       font-size: 1.35rem;
       margin: 0;
-  }
+    }
 
     .hero p {
       color: var(--ink-soft);
       font-size: 1rem;
       margin: 0.25rem 0 0;
-  }
+    }
 
     .hero-actions {
       align-items: center;
@@ -90,7 +89,7 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-top: 0.65rem;
-  }
+    }
 
     .btn,
     .chip-link {
@@ -107,43 +106,43 @@
       min-height: 2rem;
       padding: 0.3rem 0.8rem;
       text-decoration: none;
-  }
+    }
 
     .chip-link:hover,
     .chip-link:focus-visible {
       cursor: pointer;
-  }
+    }
 
     .btn.primary {
       background: var(--accent);
       border-color: #0a4ea5;
       color: #fff;
-  }
+    }
 
     .btn.subtle {
       background: #f5f9ff;
       border-color: #bed1ea;
       color: #14385e;
       font-weight: 600;
-  }
+    }
 
     .status {
       color: var(--ink-soft);
       font-size: 1rem;
       margin: 0.55rem 0 0;
       min-height: 1.2rem;
-  }
+    }
 
     .status.is-error {
       color: var(--bad);
-  }
+    }
 
     .periods {
       display: flex;
       flex-wrap: wrap;
       gap: 0.45rem;
       margin-bottom: 0.65rem;
-  }
+    }
 
     .period-btn {
       background: #fff;
@@ -155,25 +154,25 @@
       font: inherit;
       min-height: 2rem;
       padding: 0.25rem 0.75rem;
-  }
+    }
 
     .period-btn.is-active {
       background: var(--accent-soft);
       border-color: var(--accent);
       color: #09346d;
       font-weight: 700;
-  }
+    }
 
     .control-grid {
       display: grid;
       gap: 0.55rem;
       grid-template-columns: 1fr;
-  }
+    }
 
     .field {
       display: grid;
       gap: 0.3rem;
-  }
+    }
 
     .field label {
       color: #28405e;
@@ -181,7 +180,7 @@
       font-weight: 700;
       letter-spacing: 0.01em;
       text-transform: uppercase;
-  }
+    }
 
     .field select,
     .field input {
@@ -194,20 +193,20 @@
       min-height: 2.15rem;
       padding: 0.38rem 0.55rem;
       width: 100%;
-  }
+    }
 
     .field select:disabled,
     .field input:disabled {
       background: #f5f7fa;
       cursor: not-allowed;
       opacity: 0.6;
-  }
+    }
 
     .metrics {
       display: grid;
       gap: 0.5rem;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+    }
 
     .metric-card {
       background: #fff;
@@ -215,7 +214,7 @@
       border-radius: 12px;
       box-sizing: border-box;
       padding: 0.45rem 0.6rem;
-  }
+    }
 
     .metric-card h2 {
       color: var(--ink-soft);
@@ -224,14 +223,14 @@
       letter-spacing: 0.02em;
       margin: 0;
       text-transform: uppercase;
-  }
+    }
 
     .metric-card p {
       color: #0f3059;
       font-size: 1.08rem;
       font-weight: 700;
       margin: 0.18rem 0 0;
-  }
+    }
 
     #gradeGrid {
       background: #fff;
@@ -244,7 +243,7 @@
       overflow-y: hidden;
       resize: vertical;
       width: 100%;
-  }
+    }
 
     .grid-head {
       align-items: center;
@@ -253,7 +252,7 @@
       gap: 0.5rem;
       justify-content: space-between;
       margin-bottom: 0.55rem;
-  }
+    }
 
     .grid-title {
       color: #173b62;
@@ -261,23 +260,23 @@
       font-weight: 700;
       letter-spacing: 0.01em;
       margin: 0;
-  }
+    }
 
     .grid-actions {
       align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 0.45rem;
-  }
+    }
 
     .grid-actions .btn:disabled {
       cursor: not-allowed;
       opacity: 0.62;
-  }
+    }
 
     .table-modal-backdrop[hidden] {
       display: none;
-  }
+    }
 
     .table-modal-backdrop {
       background: rgb(8 22 40 / 56%);
@@ -286,7 +285,7 @@
       inset: 0;
       position: fixed;
       z-index: 2700;
-  }
+    }
 
     .grid-card.is-table-modal {
       box-sizing: border-box;
@@ -300,18 +299,18 @@
       position: fixed;
       width: auto;
       z-index: 2800;
-  }
+    }
 
     .grid-card.is-table-modal #gradeGrid {
       height: 100%;
       max-height: none;
       min-height: 0;
       resize: none;
-  }
+    }
 
     body.table-modal-open {
       overflow: hidden;
-  }
+    }
 
     .tabulator {
       background: transparent;
@@ -320,24 +319,24 @@
       max-width: 100%;
       min-width: 0;
       width: 100%;
-  }
+    }
 
     .tabulator .tabulator-tableholder {
       max-width: 100%;
       overflow-x: auto !important;
       width: 100%;
-  }
+    }
 
     .tabulator .tabulator-col {
       background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
       border-bottom: 1px solid #cfdced;
       border-right-color: #d6e2f0;
       box-sizing: border-box;
-  }
+    }
 
     .tabulator .tabulator-col:last-child {
       border-right-color: #c8d8ed;
-  }
+    }
 
     .tabulator .tabulator-col .tabulator-col-content {
       align-items: stretch;
@@ -348,7 +347,7 @@
       justify-content: flex-start;
       min-height: 100%;
       padding: 0.12rem 0.24rem 0.16rem;
-  }
+    }
 
     .tabulator .tabulator-col-title-holder {
       box-sizing: border-box;
@@ -356,7 +355,7 @@
       flex: 1 1 auto;
       height: 100%;
       width: 100%;
-  }
+    }
 
     .tabulator .tabulator-col .tabulator-col-title {
       box-sizing: border-box;
@@ -364,7 +363,7 @@
       font-size: 1rem;
       font-weight: 700;
       line-height: 1.2;
-  }
+    }
 
     .tabulator-tooltip {
       box-sizing: border-box;
@@ -373,7 +372,7 @@
       max-width: min(32rem, 84vw);
       padding: 0.35rem 0.52rem;
       white-space: normal;
-  }
+    }
 
     .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-content .tabulator-col-sorter {
       align-items: flex-end;
@@ -390,15 +389,15 @@
       right: auto;
       top: auto;
       width: 100%;
-  }
+    }
 
     .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable.tabulator-col-sorter-element .tabulator-col-content .tabulator-col-sorter {
       pointer-events: auto;
-  }
+    }
 
     .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-title {
       padding-right: 0;
-  }
+    }
 
     .tabulator .tabulator-row {
       border-bottom: 1px solid #e4e9f1;
@@ -411,20 +410,20 @@
 
     .tabulator .tabulator-row.tabulator-row-even {
       background: #f1f4f8;
-  }
+    }
 
     .group-meta {
       color: var(--ink-soft);
       font-size: 0.9rem;
       margin-left: 0.45rem;
-  }
+    }
 
     .score-chip {
       align-items: center;
       display: inline-flex;
       gap: 0.4rem;
       min-width: 6.6rem;
-  }
+    }
 
     .score-bar {
       background: #dfebff;
@@ -435,14 +434,14 @@
       height: 0.38rem;
       overflow: hidden;
       width: 3.3rem;
-  }
+    }
 
     .score-bar-fill {
       background: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
       display: block;
       height: 100%;
       width: 0;
-  }
+    }
 
     .assignment-sub {
       color: #4d627c;
@@ -458,14 +457,14 @@
       text-overflow: ellipsis;
       text-transform: none;
       white-space: nowrap;
-  }
+    }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-content,
     .tabulator .tabulator-col.assignment-col .tabulator-col-title-holder,
     .tabulator .tabulator-col.core-col .tabulator-col-content,
     .tabulator .tabulator-col.core-col .tabulator-col-title-holder {
       height: 100%;
-  }
+    }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-title,
     .tabulator .tabulator-col.core-col .tabulator-col-title {
@@ -478,7 +477,7 @@
       justify-content: stretch;
       min-height: 5.45rem;
       padding: 0.06rem 0;
-  }
+    }
 
     .header-action-row {
       box-sizing: border-box;
@@ -487,7 +486,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       margin-bottom: 0.14rem;
       width: 100%;
-  }
+    }
 
     .header-action-btn {
       appearance: none;
@@ -502,37 +501,37 @@
       min-height: 1.05rem;
       padding: 0.08rem 0;
       width: 100%;
-  }
+    }
 
     .header-action-btn.plus {
       background: #1f9d51;
       border-color: #14743a;
-  }
+    }
 
     .header-action-btn.minus {
       background: #3e4652;
       border-color: #2e3440;
-  }
+    }
 
     .header-action-btn:hover {
       filter: brightness(1.05);
-  }
+    }
 
     .header-action-btn:focus-visible {
       outline: 2px solid #2f6fb5;
       outline-offset: 1px;
-  }
+    }
 
     .tabulator .tabulator-col.assignment-col,
     .tabulator .tabulator-col.core-col {
       background: linear-gradient(180deg, #f7f8fb 0%, #edf1f8 100%);
-  }
+    }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-content,
     .tabulator .tabulator-col.core-col .tabulator-col-content {
       box-sizing: border-box;
       padding: 0.1rem 0.16rem 0.08rem;
-  }
+    }
 
     .assignment-head {
       align-items: center;
@@ -548,7 +547,7 @@
       justify-content: space-between;
       padding: 0.2rem 0.22rem;
       width: 100%;
-  }
+    }
 
     .assignment-head.elective {
       background: linear-gradient(180deg, #d9ecff 0%, #c4dfff 100%);
@@ -558,13 +557,13 @@
     .assignment-head.megs {
       background: linear-gradient(180deg, #f8ecd4 0%, #f2e2c0 100%);
       border: 1px solid #e2d1ab;
-  }
+    }
 
     .assignment-head.core {
       background: linear-gradient(180deg, #f7fbff 0%, #e9f1fc 100%);
       border: 1px solid #c9d9ee;
       justify-content: space-between;
-  }
+    }
 
     .assignment-title-text {
       align-self: center;
@@ -578,13 +577,13 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       width: 100%;
-  }
+    }
 
     .assignment-head.core .assignment-title-text {
       font-size: 0.98rem;
       font-weight: 700;
       line-height: 1.15;
-  }
+    }
 
     .assignment-col.elective-col .assignment-title-text {
       color: #0c4f8b;
@@ -594,14 +593,14 @@
       box-sizing: border-box;
       line-height: 1.1;
       white-space: normal;
-  }
+    }
 
     .student-number-wrap {
       display: block;
       overflow-wrap: anywhere;
       white-space: normal;
       word-break: break-word;
-  }
+    }
 
     .exercise-cell {
       border: 1px solid transparent;
@@ -615,25 +614,25 @@
       min-width: 0;
       padding: 0.2rem 0.35rem;
       width: 100%;
-  }
+    }
 
     .exercise-cell.ontime {
       background: #dcf6e7;
       border-color: #92d2aa;
       color: #0f5a34;
-  }
+    }
 
     .exercise-cell.late {
       background: #fff3c9;
       border-color: #e5cb66;
       color: #6a4a00;
-  }
+    }
 
     .exercise-cell.notdone {
       background: #fde4e2;
       border-color: #e7b6b2;
       color: #8a1f1c;
-  }
+    }
 
     .stat-chip {
       color: #173a61;
@@ -641,13 +640,13 @@
       font-size: 0.96rem;
       font-weight: 600;
       line-height: 1.2;
-  }
+    }
 
     .assignment-sub.core-sub {
       color: #345777;
       font-size: 0.92rem;
       font-weight: 700;
-  }
+    }
 
     .distribution-mini {
       background: linear-gradient(180deg, #f9fbff 0%, #eef4ff 100%);
@@ -660,30 +659,30 @@
       gap: 0.14rem;
       padding: 0.14rem 0.2rem;
       width: 100%;
-  }
+    }
 
     .distribution-mini:hover {
       background: linear-gradient(180deg, #f5f9ff 0%, #e8f1ff 100%);
       border-color: #9fbce4;
-  }
+    }
 
     .distribution-mini:focus-visible {
       outline: 2px solid #2f6fb5;
       outline-offset: 1px;
-  }
+    }
 
     .distribution-mini-chart {
       box-sizing: border-box;
       display: block;
       height: 1.18rem;
       width: 100%;
-  }
+    }
 
     .distribution-mini-chart svg {
       display: block;
       height: 100%;
       width: 100%;
-  }
+    }
 
     .distribution-mini-meta {
       color: #345a87;
@@ -694,11 +693,11 @@
       line-height: 1.1;
       text-align: center;
       text-transform: uppercase;
-  }
+    }
 
     .distribution-modal[hidden] {
       display: none;
-  }
+    }
 
     .distribution-modal {
       align-items: center;
@@ -709,13 +708,13 @@
       padding: 0.65rem;
       position: fixed;
       z-index: 3000;
-  }
+    }
 
     .distribution-modal-backdrop {
       background: rgb(8 22 40 / 52%);
       inset: 0;
       position: absolute;
-  }
+    }
 
     .distribution-dialog {
       background: #fff;
@@ -732,7 +731,7 @@
       padding: 0.9rem;
       position: relative;
       width: min(96vw, 1640px);
-  }
+    }
 
     .distribution-dialog.is-fullscreen {
       border-radius: 0;
@@ -742,27 +741,27 @@
       max-width: 100vw;
       padding: 0.75rem 0.85rem;
       width: 100vw;
-  }
+    }
 
     .distribution-dialog-head {
       align-items: center;
       display: flex;
       gap: 0.5rem;
       justify-content: space-between;
-  }
+    }
 
     .distribution-dialog-head h2 {
       color: #12365c;
       font-size: 1.12rem;
       letter-spacing: 0.01em;
       margin: 0;
-  }
+    }
 
     .distribution-dialog-actions {
       align-items: center;
       display: inline-flex;
       gap: 0.4rem;
-  }
+    }
 
     .distribution-close {
       background: #f4f8ff;
@@ -774,12 +773,12 @@
       font-size: 0.78rem;
       font-weight: 700;
       padding: 0.3rem 0.56rem;
-  }
+    }
 
     .distribution-close:hover {
       background: #eaf2ff;
       border-color: #9ab9e0;
-  }
+    }
 
     .distribution-expand {
       background: #f4f8ff;
@@ -791,26 +790,26 @@
       font-size: 0.78rem;
       font-weight: 700;
       padding: 0.3rem 0.56rem;
-  }
+    }
 
     .distribution-expand:hover {
       background: #eaf2ff;
       border-color: #9ab9e0;
-  }
+    }
 
     .distribution-dialog-meta {
       color: #345777;
       font-size: 0.92rem;
       line-height: 1.3;
       margin: 0;
-  }
+    }
 
     .distribution-toolbar {
       align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 0.42rem;
-  }
+    }
 
     .distribution-zoom-btn {
       background: #f4f8ff;
@@ -824,19 +823,19 @@
       min-height: 2rem;
       min-width: 2rem;
       padding: 0.2rem 0.45rem;
-  }
+    }
 
     .distribution-zoom-btn:hover {
       background: #eaf2ff;
       border-color: #9ab9e0;
-  }
+    }
 
     .distribution-zoom-range {
       accent-color: #2f75bc;
       flex: 1 1 220px;
       max-width: 420px;
       min-width: 180px;
-  }
+    }
 
     .distribution-zoom-label {
       color: #234d78;
@@ -844,7 +843,7 @@
       font-weight: 700;
       min-width: 3.2rem;
       text-align: right;
-  }
+    }
 
     .distribution-chart-shell {
       background: linear-gradient(180deg, #fafdff 0%, #eef4ff 100%);
@@ -855,14 +854,14 @@
       overflow: hidden;
       padding: 0.32rem;
       position: relative;
-  }
+    }
 
     .distribution-chart-scroll {
       box-sizing: border-box;
       height: 100%;
       overflow: auto;
       width: 100%;
-  }
+    }
 
     .distribution-modal-chart {
       display: block;
@@ -870,21 +869,21 @@
       min-height: 100%;
       min-width: 100%;
       width: 960px;
-  }
+    }
 
     .distribution-modal-chart .dist-grid {
       stroke: #dce7f8;
       stroke-width: 1;
-  }
+    }
 
     .distribution-modal-chart .dist-axis {
       stroke: #9db5d7;
       stroke-width: 1.4;
-  }
+    }
 
     .distribution-modal-chart .dist-area {
       fill: rgb(62 123 192 / 15%);
-  }
+    }
 
     .distribution-modal-chart .dist-line {
       fill: none;
@@ -892,39 +891,39 @@
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 2.2;
-  }
+    }
 
     .distribution-modal-chart .dist-point {
       cursor: pointer;
       fill: #1d5ea0;
       stroke: #fff;
       stroke-width: 1.5;
-  }
+    }
 
     .distribution-modal-chart .dist-point.is-active {
       fill: #f0950f;
       stroke: #143f69;
       stroke-width: 1.8;
-  }
+    }
 
     .distribution-modal-chart .dist-point:focus-visible {
       outline: 2px solid #2f6fb5;
       outline-offset: 1px;
-  }
+    }
 
     .distribution-modal-chart .dist-label {
       fill: #31587f;
       font-size: 1rem;
       font-weight: 700;
       text-anchor: middle;
-  }
+    }
 
     .distribution-modal-chart .dist-y-label {
       fill: #466487;
       font-size: 1rem;
       font-weight: 600;
       text-anchor: end;
-  }
+    }
 
     .distribution-hover {
       background: #fff;
@@ -942,17 +941,17 @@
       top: 0;
       transform: translate(-50%, -108%);
       white-space: nowrap;
-  }
+    }
 
     .distribution-dialog-hint {
       color: #4a6282;
       font-size: 0.88rem;
       margin: 0;
-  }
+    }
 
     body.distribution-modal-open {
       overflow: hidden;
-  }
+    }
 
     .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
       background: #f1f6ff;
@@ -960,19 +959,19 @@
       box-sizing: border-box;
       color: #1f4f81;
       text-align: center;
-  }
+    }
 
     .tabulator-responsive-collapse {
       background: #f9fbff;
       border-top: 1px dashed #d9e6f6;
       box-sizing: border-box;
       padding: 0.42rem 0.5rem;
-  }
+    }
 
     .collapse-list {
       display: grid;
       gap: 0.28rem;
-  }
+    }
 
     .collapse-item {
       background: #fff;
@@ -984,72 +983,72 @@
       gap: 0.42rem;
       grid-template-columns: minmax(5.8rem, auto) 1fr;
       padding: 0.28rem 0.4rem;
-  }
+    }
 
     .collapse-label {
       color: #2b4c72;
       font-weight: 700;
-  }
+    }
 
     .collapse-value {
       color: #12395f;
       min-width: 0;
       overflow-wrap: anywhere;
-  }
+    }
 
     .tabulator-row.is-stat-row .tabulator-cell {
       background: #eef5ff !important;
       color: #173a61;
       font-weight: 600;
-  }
+    }
 
     body.is-compact .tabulator {
       font-size: 1rem;
-  }
+    }
 
     body.is-compact .tabulator .tabulator-col.assignment-col .tabulator-col-title {
       min-height: 5.25rem;
-  }
+    }
 
     body.is-compact .exercise-cell {
       font-size: 1rem;
       padding: 0.16rem 0.28rem;
-  }
+    }
 
     .dim {
       color: var(--ink-soft);
       font-size: 1rem;
-  }
+    }
 
     @media (min-width: 760px) {
       .page-shell {
         margin: 24px auto;
         padding: 16px;
-    }
+      }
 
       .control-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+      }
 
       .metrics {
         grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
     }
-  }
 
     @media (max-width: 1080px) {
       .tabulator .tabulator-col.assignment-col .tabulator-col-title {
         min-height: 5rem;
-    }
+      }
 
       .assignment-title-text {
         font-size: 1rem;
-    }
+      }
 
       .grid-actions .btn {
         min-height: 1.9rem;
         padding: 0.26rem 0.66rem;
+      }
     }
-  }
 
     @media (max-width: 760px) {
       .page-shell {
@@ -1057,51 +1056,51 @@
         margin: 24px auto;
         padding: 16px;
         width: min(100%, calc(100% - 32px));
-    }
+      }
 
       .top-stack {
         width: 100%;
-    }
+      }
 
       .grid-head {
         gap: 0.4rem;
-    }
+      }
 
       .grid-title {
         font-size: 1rem;
-    }
+      }
 
       .grid-actions {
         width: 100%;
-    }
+      }
 
       .grid-actions .btn {
         flex: 1 1 auto;
-    }
+      }
 
       .grid-card.is-table-modal {
         inset: 0.3rem;
         max-height: calc(100vh - 0.6rem);
-    }
+      }
 
       .tabulator .tabulator-col.assignment-col .tabulator-col-title {
         align-items: stretch;
         min-height: 4.8rem;
         padding: 0.04rem 0;
-    }
+      }
 
       .assignment-head {
         padding: 0.16rem 0.18rem;
-    }
+      }
 
       .exercise-cell {
         font-size: 1rem;
-    }
+      }
 
       .collapse-item {
         gap: 0.18rem;
         grid-template-columns: 1fr;
-    }
+      }
 
       .distribution-dialog {
         box-sizing: border-box;
@@ -1109,35 +1108,35 @@
         max-height: 95vh;
         padding: 0.6rem;
         width: 100%;
-    }
+      }
 
       .distribution-dialog.is-fullscreen {
         padding: 0.45rem 0.5rem;
-    }
+      }
 
       .distribution-dialog-head h2 {
         font-size: 1rem;
-    }
+      }
 
       .distribution-toolbar {
         gap: 0.3rem;
-    }
+      }
 
       .distribution-zoom-range {
         flex: 1 1 100%;
         max-width: none;
         order: 2;
-    }
+      }
 
       .distribution-chart-shell {
         min-height: 260px;
-    }
+      }
 
       .distribution-modal-chart {
         height: 360px;
         width: 760px;
+      }
     }
-  }
 
     @media (max-width: 480px) {
       .metric-card h2 {
@@ -1147,14 +1146,15 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
+      }
 
       .metric-card p {
         font-size: clamp(0.92rem, 4.2vw, 1rem);
+      }
     }
-  }
   </style>
 </head>
+
 <body>
   <main class="page-shell">
     <div class="top-stack">
@@ -1227,11 +1227,26 @@
       </section>
 
       <section class="metrics" aria-label="Grade data snapshot">
-        <article class="metric-card"><h2>Rows</h2><p id="metricRows">0</p></article>
-        <article class="metric-card"><h2>Students</h2><p id="metricStudents">0</p></article>
-        <article class="metric-card"><h2>Classes</h2><p id="metricClasses">0</p></article>
-        <article class="metric-card"><h2>Avg Score %</h2><p id="metricAvgPercent">n/a</p></article>
-        <article class="metric-card"><h2>HW Completion</h2><p id="metricCompletion">n/a</p></article>
+        <article class="metric-card">
+          <h2>Rows</h2>
+          <p id="metricRows">0</p>
+        </article>
+        <article class="metric-card">
+          <h2>Students</h2>
+          <p id="metricStudents">0</p>
+        </article>
+        <article class="metric-card">
+          <h2>Classes</h2>
+          <p id="metricClasses">0</p>
+        </article>
+        <article class="metric-card">
+          <h2>Avg Score %</h2>
+          <p id="metricAvgPercent">n/a</p>
+        </article>
+        <article class="metric-card">
+          <h2>HW Completion</h2>
+          <p id="metricCompletion">n/a</p>
+        </article>
       </section>
     </div>
 
@@ -1283,7 +1298,6 @@
   <script>
     (() => {
       "use strict"
-
       const state = {
         allRows: [],
         filteredRows: [],
@@ -1323,14 +1337,33 @@
           search: "",
         },
       }
-
       const DEFAULT_SYSTEM_SCHOOL_YEAR = "2026-2027"
       const DEFAULT_LETTER_GRADE_RANGES = Object.freeze([
-        Object.freeze({ letter: "A", minPercent: 90, maxPercent: 100 }),
-        Object.freeze({ letter: "B", minPercent: 80, maxPercent: 89.99 }),
-        Object.freeze({ letter: "C", minPercent: 70, maxPercent: 79.99 }),
-        Object.freeze({ letter: "D", minPercent: 60, maxPercent: 69.99 }),
-        Object.freeze({ letter: "F", minPercent: 0, maxPercent: 59.99 }),
+        Object.freeze({
+          letter: "A",
+          minPercent: 90,
+          maxPercent: 100
+        }),
+        Object.freeze({
+          letter: "B",
+          minPercent: 80,
+          maxPercent: 89.99
+        }),
+        Object.freeze({
+          letter: "C",
+          minPercent: 70,
+          maxPercent: 79.99
+        }),
+        Object.freeze({
+          letter: "D",
+          minPercent: 60,
+          maxPercent: 69.99
+        }),
+        Object.freeze({
+          letter: "F",
+          minPercent: 0,
+          maxPercent: 59.99
+        }),
       ])
       const API_ORIGIN = resolveApiOrigin()
       const TODAY_ISO = localIsoDate(new Date())
@@ -1371,9 +1404,9 @@
       function normalizeGradeRecordSource(value) {
         const source = normalizeLower(value)
         if (
-          source === GRADE_RECORD_SOURCE_ASSIGNMENT
-          || source === GRADE_RECORD_SOURCE_MANUAL
-          || source === GRADE_RECORD_SOURCE_AUTO_IMPORT
+          source === GRADE_RECORD_SOURCE_ASSIGNMENT ||
+          source === GRADE_RECORD_SOURCE_MANUAL ||
+          source === GRADE_RECORD_SOURCE_AUTO_IMPORT
         ) {
           return source
         }
@@ -1395,11 +1428,11 @@
         const hasFallback = fallback !== null && fallback !== undefined && fallback !== ""
         const raw = hasValue ? Number(value) : Number.NaN
         const fallbackRaw = hasFallback ? Number(fallback) : Number.NaN
-        const candidate = Number.isFinite(raw)
-          ? raw
-          : Number.isFinite(fallbackRaw)
-            ? fallbackRaw
-            : null
+        const candidate = Number.isFinite(raw) ?
+          raw :
+          Number.isFinite(fallbackRaw) ?
+          fallbackRaw :
+          null
         if (!Number.isFinite(candidate)) return null
         return Math.max(TABLE_HEIGHT_MIN_PX, Math.min(TABLE_HEIGHT_MAX_PX, Math.round(candidate)))
       }
@@ -1427,10 +1460,10 @@
         const normalizedLabel = normalizeText(label) || "Column"
         const safeLabel = escapeHtml(normalizedLabel)
         return (
-          `<span class=\"header-action-row\" role=\"group\" aria-label=\"${safeLabel} column controls\" data-header-label=\"${safeLabel}\">`
-          + `<button class=\"header-action-btn plus\" type=\"button\" data-header-action=\"pin\" aria-label=\"Pin or unpin ${safeLabel} column\">+</button>`
-          + `<button class=\"header-action-btn minus\" type=\"button\" data-header-action=\"hide\" aria-label=\"Hide ${safeLabel} column\">-</button>`
-          + `</span>`
+          `<span class=\"header-action-row\" role=\"group\" aria-label=\"${safeLabel} column controls\" data-header-label=\"${safeLabel}\">` +
+          `<button class=\"header-action-btn plus\" type=\"button\" data-header-action=\"pin\" aria-label=\"Pin or unpin ${safeLabel} column\">+</button>` +
+          `<button class=\"header-action-btn minus\" type=\"button\" data-header-action=\"hide\" aria-label=\"Hide ${safeLabel} column\">-</button>` +
+          `</span>`
         )
       }
 
@@ -1440,14 +1473,14 @@
         const normalizedBottomSubline = normalizeText(bottomSubline)
         const shortTitle = truncateHeaderTitle(normalizedTitle, maxLength)
         return (
-          `<span class=\"assignment-head core\">`
-          + `${buildHeaderActionButtons(normalizedTitle)}`
-          + `<span class=\"assignment-title-text\">${escapeHtml(shortTitle)}</span>`
-          + `<span class=\"assignment-sub core-sub\">${escapeHtml(normalizedTopSubline)}</span>`
-          + (normalizedBottomSubline
-            ? `<span class=\"assignment-sub core-sub\">${escapeHtml(normalizedBottomSubline)}</span>`
-            : "")
-          + `</span>`
+          `<span class=\"assignment-head core\">` +
+          `${buildHeaderActionButtons(normalizedTitle)}` +
+          `<span class=\"assignment-title-text\">${escapeHtml(shortTitle)}</span>` +
+          `<span class=\"assignment-sub core-sub\">${escapeHtml(normalizedTopSubline)}</span>` +
+          (normalizedBottomSubline ?
+            `<span class=\"assignment-sub core-sub\">${escapeHtml(normalizedBottomSubline)}</span>` :
+            "") +
+          `</span>`
         )
       }
 
@@ -1483,9 +1516,9 @@
 
       function coreColumnDataWidth(rows, field, options = {}) {
         const sourceRows = Array.isArray(rows) ? rows : []
-        const projectedText = typeof options.getText === "function"
-          ? options.getText
-          : (value) => normalizeText(value)
+        const projectedText = typeof options.getText === "function" ?
+          options.getText :
+          (value) => normalizeText(value)
         let maxChars = Math.max(0, Number.parseInt(String(options.minChars || 0), 10) || 0)
         sourceRows.forEach((row) => {
           const text = normalizeText(projectedText(row?.[field], row))
@@ -1497,17 +1530,17 @@
       function assignmentCellSummaryForWidth(value, rowData = {}) {
         if (rowData?.rowType === "stat") {
           if (normalizeText(rowData?.id) === "stat-distribution") return "Distribution"
-          const summaryText = value && typeof value === "object"
-            ? normalizeText(value.summaryText)
-            : normalizeText(value)
+          const summaryText = value && typeof value === "object" ?
+            normalizeText(value.summaryText) :
+            normalizeText(value)
           return summaryText || "n/a"
         }
         if (!value || typeof value !== "object") return "-/- Not done"
-        const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0
-          ? `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}`
-          : Number.isFinite(value.score)
-            ? `${formatShortNumber(value.score)}`
-            : "-/-"
+        const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0 ?
+          `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}` :
+          Number.isFinite(value.score) ?
+          `${formatShortNumber(value.score)}` :
+          "-/-"
         const percentLabel = Number.isFinite(value.percent) ? `${Math.round(value.percent)}%` : "n/a"
         return `${scoreLabel} ${percentLabel}`.trim()
       }
@@ -1564,24 +1597,25 @@
           })
           .filter((entry) => entry && typeof entry === "object")
           .sort((left, right) => right.minPercent - left.minPercent)
-
         if (!normalized.length) {
-          return DEFAULT_LETTER_GRADE_RANGES.map((entry) => ({ ...entry }))
+          return DEFAULT_LETTER_GRADE_RANGES.map((entry) => ({
+            ...entry
+          }))
         }
         return normalized
       }
 
       function letterGradeRangesFromUiSettings(settings) {
-        const candidate = settings && typeof settings === "object"
-          ? settings?.schoolSetup?.letterGradeRanges
-          : null
+        const candidate = settings && typeof settings === "object" ?
+          settings?.schoolSetup?.letterGradeRanges :
+          null
         return normalizeLetterGradeRanges(candidate)
       }
 
       function schoolYearFromUiSettings(settings) {
-        const candidate = settings && typeof settings === "object"
-          ? normalizeText(settings?.schoolSetup?.schoolYear)
-          : ""
+        const candidate = settings && typeof settings === "object" ?
+          normalizeText(settings?.schoolSetup?.schoolYear) :
+          ""
         return isSchoolYearKey(candidate) ? candidate : ""
       }
 
@@ -1593,17 +1627,23 @@
             const endDate = normalizeText(entry?.endDate).slice(0, 10)
             if (!quarter || !parseIsoDate(startDate) || !parseIsoDate(endDate)) return null
             if (compareIsoDate(startDate, endDate) > 0) return null
-            return { quarter, startDate, endDate }
+            return {
+              quarter,
+              startDate,
+              endDate
+            }
           })
           .filter((entry) => entry && typeof entry === "object")
           .sort((left, right) => quarterSortKey(left?.quarter) - quarterSortKey(right?.quarter))
       }
 
       function syncSchoolSetupFromUiSettings(settings) {
-        const setup = settings && typeof settings === "object" && settings.schoolSetup && typeof settings.schoolSetup === "object"
-          ? settings.schoolSetup
-          : {}
-        const schoolYear = schoolYearFromUiSettings({ schoolSetup: setup })
+        const setup = settings && typeof settings === "object" && settings.schoolSetup && typeof settings.schoolSetup === "object" ?
+          settings.schoolSetup :
+          {}
+        const schoolYear = schoolYearFromUiSettings({
+          schoolSetup: setup
+        })
         const startDate = normalizeText(setup?.startDate).slice(0, 10)
         const endDate = normalizeText(setup?.endDate).slice(0, 10)
         state.schoolSetup = {
@@ -1722,7 +1762,10 @@
         const startYear = Number.parseInt(match[1], 10)
         const endYear = Number.parseInt(match[2], 10)
         if (!Number.isFinite(startYear) || !Number.isFinite(endYear) || endYear < startYear) return null
-        return { startYear, endYear }
+        return {
+          startYear,
+          endYear
+        }
       }
 
       function schoolSetupQuarterForIsoDate(value = "") {
@@ -1740,10 +1783,10 @@
           }
         }
         if (
-          parseIsoDate(setup?.startDate)
-          && parseIsoDate(setup?.endDate)
-          && compareIsoDate(isoDate, setup.startDate) >= 0
-          && compareIsoDate(isoDate, setup.endDate) <= 0
+          parseIsoDate(setup?.startDate) &&
+          parseIsoDate(setup?.endDate) &&
+          compareIsoDate(isoDate, setup.startDate) >= 0 &&
+          compareIsoDate(isoDate, setup.endDate) <= 0
         ) {
           const lastQuarter = quarters.length ? quarters[quarters.length - 1] : null
           return normalizeQuarterCode(lastQuarter?.quarter)
@@ -1789,9 +1832,9 @@
         SYSTEM_CURRENT_SCHOOL_YEAR = normalizedNext
         const activeYear = normalizeText(state.filters.schoolYear)
         const shouldPromoteFilter =
-          activeYear === "all"
-          || !isSchoolYearKey(activeYear)
-          || (isSchoolYearKey(previousYear) && activeYear === previousYear)
+          activeYear === "all" ||
+          !isSchoolYearKey(activeYear) ||
+          (isSchoolYearKey(previousYear) && activeYear === previousYear)
         if (shouldPromoteFilter) {
           state.filters.schoolYear = normalizedNext
         }
@@ -1801,7 +1844,10 @@
       function parseCorrectTotalFromComments(value) {
         const text = normalizeText(value)
         const match = text.match(/\(\s*(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*correct\s*\)/i)
-        if (!match) return { correctCount: null, totalQuestions: null }
+        if (!match) return {
+          correctCount: null,
+          totalQuestions: null
+        }
         const correctCount = toNumber(match[1])
         const totalQuestions = toNumber(match[2])
         return {
@@ -1839,10 +1885,10 @@
         const valueText = score === null ? "-" : maxScore === null ? `${score}` : `${score}/${maxScore}`
         if (percent === null) return `<span>${escapeHtml(valueText)}</span>`
         return (
-          `<span class="score-chip">`
-          + `<span>${escapeHtml(valueText)}</span>`
-          + `<span class="score-bar"><span class="score-bar-fill" style="width:${Math.round(percent)}%"></span></span>`
-          + `</span>`
+          `<span class="score-chip">` +
+          `<span>${escapeHtml(valueText)}</span>` +
+          `<span class="score-bar"><span class="score-bar-fill" style="width:${Math.round(percent)}%"></span></span>` +
+          `</span>`
         )
       }
 
@@ -1885,8 +1931,8 @@
           const item = document.createElement("div")
           item.className = "collapse-item"
           item.innerHTML =
-            `<span class=\"collapse-label\">${escapeHtml(titleText)}</span>`
-            + `<span class=\"collapse-value\">${escapeHtml(valueText)}</span>`
+            `<span class=\"collapse-label\">${escapeHtml(titleText)}</span>` +
+            `<span class=\"collapse-value\">${escapeHtml(valueText)}</span>`
           wrapper.appendChild(item)
         })
         return wrapper
@@ -1963,17 +2009,15 @@
           entries = parseDistributionEntriesFromText(summaryText)
         }
         if (!entries.length) return null
-
         const totalFromPayload = toNumber(input.totalCount)
-        const totalCount = Number.isFinite(totalFromPayload)
-          ? Math.max(0, Math.round(totalFromPayload))
-          : entries.reduce((sum, entry) => sum + entry.count, 0)
+        const totalCount = Number.isFinite(totalFromPayload) ?
+          Math.max(0, Math.round(totalFromPayload)) :
+          entries.reduce((sum, entry) => sum + entry.count, 0)
         const assignmentTitle = normalizeText(input.assignmentTitle) || normalizeAssignmentHeaderTitle(metaInput.title)
         const dueLabel = normalizeText(input.dueLabel) || normalizeText(metaInput.dueAt) || "-"
         const questionTotalRaw = toNumber(input.questionTotal ?? metaInput.totalQuestions)
         const questionTotal = Number.isFinite(questionTotalRaw) ? questionTotalRaw : null
         const normalizedSummaryText = summaryText || entries.map((entry) => `${entry.label}:${entry.count}`).join(" ")
-
         return {
           entries,
           summaryText: normalizedSummaryText || "-",
@@ -2011,9 +2055,9 @@
         const plotHeight = Math.max(4, height - marginTop - marginBottom)
         const lastIndex = Math.max(1, safeEntries.length - 1)
         const points = safeEntries.map((entry, index) => {
-          const x = safeEntries.length === 1
-            ? marginLeft + (plotWidth / 2)
-            : marginLeft + ((plotWidth * index) / lastIndex)
+          const x = safeEntries.length === 1 ?
+            marginLeft + (plotWidth / 2) :
+            marginLeft + ((plotWidth * index) / lastIndex)
           const y = marginTop + plotHeight - ((entry.count / maxCount) * plotHeight)
           return {
             index,
@@ -2061,11 +2105,11 @@
           ))
           .join("")
         return (
-          `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\" aria-hidden=\"true\">`
-          + `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"#d7e3f6\" stroke-width=\"1\"></line>`
-          + `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"#2f75bc\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>`
-          + `${circles}`
-          + `</svg>`
+          `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\" aria-hidden=\"true\">` +
+          `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"#d7e3f6\" stroke-width=\"1\"></line>` +
+          `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"#2f75bc\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>` +
+          `${circles}` +
+          `</svg>`
         )
       }
 
@@ -2162,18 +2206,15 @@
           hideDistributionHover()
           return
         }
-
         const elements = distributionModalElements()
         if (!elements.chartShell || !elements.chart || !elements.hover) return
         const total = Number.isFinite(payload.totalCount) && payload.totalCount > 0 ? payload.totalCount : 0
         const percent = total > 0 ? ((point.count / total) * 100) : 0
         elements.hover.textContent = `${point.label}: ${point.count} (${Math.round(percent)}%)`
         elements.hover.hidden = false
-
         elements.chart.querySelectorAll(".dist-point").forEach((node) => {
           node.classList.toggle("is-active", Number.parseInt(node.getAttribute("data-point-index"), 10) === pointIndex)
         })
-
         const viewBox = elements.chart.viewBox?.baseVal
         const chartRect = elements.chart.getBoundingClientRect()
         const shellRect = elements.chartShell.getBoundingClientRect()
@@ -2221,7 +2262,6 @@
           hideDistributionHover()
           return
         }
-
         const width = Math.max(980, (normalized.entries.length * 128) + 220)
         const height = 480
         const series = buildDistributionPointSeries(normalized.entries, {
@@ -2239,22 +2279,21 @@
           const y = series.marginTop + ((series.plotHeight * tick) / tickCount)
           const value = Math.round(maxCount - ((maxCount * tick) / tickCount))
           gridLines.push(
-            `<line class=\"dist-grid\" x1=\"${series.marginLeft}\" y1=\"${y.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${y.toFixed(2)}\"></line>`
-            + `<text class=\"dist-y-label\" x=\"${(series.marginLeft - 8).toFixed(2)}\" y=\"${(y + 4).toFixed(2)}\">${escapeHtml(formatShortNumber(value))}</text>`
+            `<line class=\"dist-grid\" x1=\"${series.marginLeft}\" y1=\"${y.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${y.toFixed(2)}\"></line>` +
+            `<text class=\"dist-y-label\" x=\"${(series.marginLeft - 8).toFixed(2)}\" y=\"${(y + 4).toFixed(2)}\">${escapeHtml(formatShortNumber(value))}</text>`
           )
         }
-
         const linePoints = series.points
           .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
           .join(" ")
         const plotBottom = height - series.marginBottom
-        const areaPath = series.points.length
-          ? (
-            `M ${series.points[0].x.toFixed(2)} ${plotBottom.toFixed(2)}`
-            + ` L ${series.points.map((point) => `${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" L ")}`
-            + ` L ${series.points[series.points.length - 1].x.toFixed(2)} ${plotBottom.toFixed(2)} Z`
-          )
-          : ""
+        const areaPath = series.points.length ?
+          (
+            `M ${series.points[0].x.toFixed(2)} ${plotBottom.toFixed(2)}` +
+            ` L ${series.points.map((point) => `${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" L ")}` +
+            ` L ${series.points[series.points.length - 1].x.toFixed(2)} ${plotBottom.toFixed(2)} Z`
+          ) :
+          ""
         const xLabels = series.points
           .map((point) => (
             `<text class=\"dist-label\" x=\"${point.x.toFixed(2)}\" y=\"${(height - 22).toFixed(2)}\">${escapeHtml(point.label)}</text>`
@@ -2265,23 +2304,23 @@
             `<circle class=\"dist-point\" data-point-index=\"${point.index}\" cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"6\" tabindex=\"0\" aria-label=\"${escapeHtml(point.label)} ${escapeHtml(String(point.count))}\"></circle>`
           ))
           .join("")
-
         elements.chart.setAttribute("viewBox", `0 0 ${width} ${height}`)
         elements.chart.innerHTML =
-          `<g>${gridLines.join("")}</g>`
-          + `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${plotBottom.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${plotBottom.toFixed(2)}\"></line>`
-          + `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${series.marginTop}\" x2=\"${series.marginLeft}\" y2=\"${plotBottom.toFixed(2)}\"></line>`
-          + `<path class=\"dist-area\" d=\"${areaPath}\"></path>`
-          + `<polyline class=\"dist-line\" points=\"${linePoints}\"></polyline>`
-          + `${circles}`
-          + `${xLabels}`
-
+          `<g>${gridLines.join("")}</g>` +
+          `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${plotBottom.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${plotBottom.toFixed(2)}\"></line>` +
+          `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${series.marginTop}\" x2=\"${series.marginLeft}\" y2=\"${plotBottom.toFixed(2)}\"></line>` +
+          `<path class=\"dist-area\" d=\"${areaPath}\"></path>` +
+          `<polyline class=\"dist-line\" points=\"${linePoints}\"></polyline>` +
+          `${circles}` +
+          `${xLabels}`
         state.distributionModalBaseWidth = width
         state.distributionModalBaseHeight = height
         state.distributionModalPoints = series.points
         state.distributionModalActiveIndex = -1
         bindDistributionHoverHandlers()
-        applyDistributionChartZoom(state.distributionModalZoom, { refreshHover: false })
+        applyDistributionChartZoom(state.distributionModalZoom, {
+          refreshHover: false
+        })
         if (elements.chartScroll) {
           elements.chartScroll.scrollLeft = 0
           elements.chartScroll.scrollTop = 0
@@ -2305,7 +2344,6 @@
         if (!normalized) return
         const elements = distributionModalElements()
         if (!elements.modal) return
-
         state.distributionModalZoom = DISTRIBUTION_ZOOM_MIN
         setDistributionDialogFullscreen(true)
         updateDistributionZoomUi()
@@ -2314,9 +2352,9 @@
           elements.title.textContent = `${normalized.assignmentTitle} Distribution`
         }
         if (elements.meta) {
-          const questionText = Number.isFinite(normalized.questionTotal)
-            ? ` | Q ${formatShortNumber(normalized.questionTotal)}`
-            : ""
+          const questionText = Number.isFinite(normalized.questionTotal) ?
+            ` | Q ${formatShortNumber(normalized.questionTotal)}` :
+            ""
           elements.meta.textContent =
             `${normalized.assignmentTitle} | Due ${normalized.dueLabel} | Total ${formatShortNumber(normalized.totalCount)}${questionText}`
         }
@@ -2397,22 +2435,30 @@
         }
         if (elements.zoomOut) {
           elements.zoomOut.addEventListener("click", () => {
-            applyDistributionChartZoom(state.distributionModalZoom - DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+            applyDistributionChartZoom(state.distributionModalZoom - DISTRIBUTION_ZOOM_STEP, {
+              refreshHover: true
+            })
           })
         }
         if (elements.zoomIn) {
           elements.zoomIn.addEventListener("click", () => {
-            applyDistributionChartZoom(state.distributionModalZoom + DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+            applyDistributionChartZoom(state.distributionModalZoom + DISTRIBUTION_ZOOM_STEP, {
+              refreshHover: true
+            })
           })
         }
         if (elements.zoomReset) {
           elements.zoomReset.addEventListener("click", () => {
-            applyDistributionChartZoom(DISTRIBUTION_ZOOM_MIN, { refreshHover: true })
+            applyDistributionChartZoom(DISTRIBUTION_ZOOM_MIN, {
+              refreshHover: true
+            })
           })
         }
         if (elements.zoomRange) {
           elements.zoomRange.addEventListener("input", () => {
-            applyDistributionChartZoom(elements.zoomRange?.value, { refreshHover: true })
+            applyDistributionChartZoom(elements.zoomRange?.value, {
+              refreshHover: true
+            })
           })
         }
         if (elements.chartScroll) {
@@ -2425,9 +2471,12 @@
               if (elements.modal?.hidden) return
               event.preventDefault()
               const delta = event.deltaY < 0 ? DISTRIBUTION_ZOOM_STEP : -DISTRIBUTION_ZOOM_STEP
-              applyDistributionChartZoom(state.distributionModalZoom + delta, { refreshHover: true })
-            },
-            { passive: false }
+              applyDistributionChartZoom(state.distributionModalZoom + delta, {
+                refreshHover: true
+              })
+            }, {
+              passive: false
+            }
           )
         }
         elements.modal.addEventListener("click", (event) => {
@@ -2445,17 +2494,23 @@
           }
           if (event.key === "+" || event.key === "=") {
             event.preventDefault()
-            applyDistributionChartZoom(state.distributionModalZoom + DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+            applyDistributionChartZoom(state.distributionModalZoom + DISTRIBUTION_ZOOM_STEP, {
+              refreshHover: true
+            })
             return
           }
           if (event.key === "-" || event.key === "_") {
             event.preventDefault()
-            applyDistributionChartZoom(state.distributionModalZoom - DISTRIBUTION_ZOOM_STEP, { refreshHover: true })
+            applyDistributionChartZoom(state.distributionModalZoom - DISTRIBUTION_ZOOM_STEP, {
+              refreshHover: true
+            })
             return
           }
           if (event.key === "0") {
             event.preventDefault()
-            applyDistributionChartZoom(DISTRIBUTION_ZOOM_MIN, { refreshHover: true })
+            applyDistributionChartZoom(DISTRIBUTION_ZOOM_MIN, {
+              refreshHover: true
+            })
           }
         })
       }
@@ -2474,8 +2529,8 @@
         button.title = `${payload.summaryText} | Click for detail chart`
         button.setAttribute("aria-label", `Open distribution chart for ${payload.assignmentTitle}`)
         button.innerHTML =
-          `<span class=\"distribution-mini-chart\" aria-hidden=\"true\">${buildDistributionSparklineSvg(payload.entries)}</span>`
-          + `<span class=\"distribution-mini-meta\">View chart</span>`
+          `<span class=\"distribution-mini-chart\" aria-hidden=\"true\">${buildDistributionSparklineSvg(payload.entries)}</span>` +
+          `<span class=\"distribution-mini-meta\">View chart</span>`
         button.addEventListener("click", () => {
           openDistributionModal(payload)
         })
@@ -2522,14 +2577,14 @@
           }, Math.max(0, Number(delay) || 0))
         }
       }
-
       const persistTableUiStateSoon = debounce(() => {
         persistTableUiStateFromTable()
       }, 140)
-
       const persistTableHeightSoon = debounce(() => {
         if (!Number.isFinite(state.tableHeightPx)) return
-        writeTableUiState({ tableHeight: state.tableHeightPx })
+        writeTableUiState({
+          tableHeight: state.tableHeightPx
+        })
       }, 140)
 
       function applyTableHeight(nextHeight, options = {}) {
@@ -2565,13 +2620,16 @@
         state.tableResizeObserver = new window.ResizeObserver((entries) => {
           const firstEntry = Array.isArray(entries) && entries.length ? entries[0] : null
           const entryTarget = firstEntry?.target
-          const rawHeight = entryTarget instanceof HTMLElement
-            ? entryTarget.getBoundingClientRect().height
-            : firstEntry?.contentRect?.height
+          const rawHeight = entryTarget instanceof HTMLElement ?
+            entryTarget.getBoundingClientRect().height :
+            firstEntry?.contentRect?.height
           const normalizedHeight = normalizeTableHeightPx(rawHeight)
           if (!Number.isFinite(normalizedHeight)) return
           if (Math.abs(normalizedHeight - state.tableHeightPx) <= 1) return
-          applyTableHeight(normalizedHeight, { persist: true, redraw: true })
+          applyTableHeight(normalizedHeight, {
+            persist: true,
+            redraw: true
+          })
         })
         state.tableResizeObserver.observe(host)
       }
@@ -2630,8 +2688,8 @@
       function restoreUiPreferences() {
         try {
           const raw =
-            window.localStorage.getItem(UI_PREFS_KEY)
-            || window.localStorage.getItem(LEGACY_UI_PREFS_KEY)
+            window.localStorage.getItem(UI_PREFS_KEY) ||
+            window.localStorage.getItem(LEGACY_UI_PREFS_KEY)
           if (!raw) return
           const parsed = JSON.parse(raw)
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return
@@ -2651,21 +2709,17 @@
       function filterQueryOverridesFromLocation() {
         const params = new URLSearchParams(window.location.search || "")
         const overrides = {}
-
         if (params.has("period")) {
           overrides.period = normalizePeriodCode(params.get("period"))
         }
-
         if (params.has("schoolYear")) {
           const schoolYear = normalizeText(params.get("schoolYear"))
           overrides.schoolYear = normalizeLower(schoolYear) === "all" ? "all" : schoolYear
         }
-
         if (params.has("quarter")) {
           const quarter = normalizeQuarterCode(params.get("quarter"))
           overrides.quarter = quarter || "q1"
         }
-
         if (params.has("classKey")) {
           overrides.classKey = normalizeText(params.get("classKey")) || "all"
         }
@@ -2675,7 +2729,6 @@
         if (params.has("schoolKey")) {
           overrides.schoolKey = normalizeText(params.get("schoolKey")) || "all"
         }
-
         if (params.has("customFrom")) {
           overrides.customFrom = normalizeText(params.get("customFrom")).slice(0, 10)
         }
@@ -2685,15 +2738,13 @@
         if (params.has("search")) {
           overrides.search = normalizeText(params.get("search"))
         }
-
         const requestedSchoolYearAll =
-          params.has("schoolYear")
-          && normalizeLower(params.get("schoolYear")) === "all"
+          params.has("schoolYear") &&
+          normalizeLower(params.get("schoolYear")) === "all"
         const requestedPeriod = normalizePeriodCode(overrides.period || state.filters.period)
         if (requestedSchoolYearAll && (requestedPeriod === "quarter" || requestedPeriod === "qtd")) {
           overrides.quarter = quarterForSchoolYear(SYSTEM_CURRENT_SCHOOL_YEAR, TODAY_ISO)
         }
-
         return overrides
       }
 
@@ -2711,7 +2762,6 @@
         const force = config.force === true
         const currentYear = currentOperationalSchoolYear()
         if (!isSchoolYearKey(currentYear)) return
-
         const activeYear = normalizeText(state.filters.schoolYear)
         const activePeriod = normalizePeriodCode(state.filters.period)
         if (activePeriod === "archive") {
@@ -2723,10 +2773,8 @@
         } else if (force || activeYear === "all" || !isSchoolYearKey(activeYear)) {
           state.filters.schoolYear = currentYear
         }
-
         const schoolYearSelect = document.getElementById("schoolYear")
         if (!(schoolYearSelect instanceof HTMLSelectElement)) return
-
         const hasCurrentOption = Array.from(schoolYearSelect.options || [])
           .some((option) => normalizeText(option?.value) === currentYear)
         if (!hasCurrentOption) {
@@ -2735,7 +2783,6 @@
           option.textContent = currentYear
           schoolYearSelect.appendChild(option)
         }
-
         const selectedYear = normalizeText(state.filters.schoolYear)
         schoolYearSelect.value = selectedYear === "all" || isSchoolYearKey(selectedYear) ? selectedYear : currentYear
       }
@@ -2776,7 +2823,9 @@
             const field = normalizeText(entry.field)
             if (!field) return null
             const width = Number(entry.width)
-            const normalized = { field }
+            const normalized = {
+              field
+            }
             if (includeWidth && Number.isFinite(width) && width >= 30) normalized.width = Math.round(width)
             if (typeof entry.visible === "boolean") normalized.visible = entry.visible
             if (typeof entry.frozen === "boolean") normalized.frozen = entry.frozen
@@ -2796,8 +2845,8 @@
           const sourceIsLegacy = !rawCurrent && Boolean(rawLegacy)
           const storedSchemaVersion = Number(parsed.schemaVersion) || 0
           const shouldResetPersistedWidths =
-            sourceIsLegacy
-            || storedSchemaVersion < TABLE_UI_STATE_SCHEMA_VERSION
+            sourceIsLegacy ||
+            storedSchemaVersion < TABLE_UI_STATE_SCHEMA_VERSION
           const columnLayout = normalizeTableColumnLayoutSnapshot(parsed.columnLayout, {
             includeWidth: !shouldResetPersistedWidths,
           })
@@ -2828,13 +2877,17 @@
 
       function writeTableUiState(payload = {}) {
         const input = payload && typeof payload === "object" ? payload : {}
-        const existing = readTableUiState() || { columnLayout: [], sorters: [], tableHeight: null }
-        const nextColumnLayout = Array.isArray(input.columnLayout)
-          ? normalizeTableColumnLayoutSnapshot(input.columnLayout)
-          : existing.columnLayout
-        const nextSorters = Array.isArray(input.sorters)
-          ? normalizeTableSortersSnapshot(input.sorters)
-          : existing.sorters
+        const existing = readTableUiState() || {
+          columnLayout: [],
+          sorters: [],
+          tableHeight: null
+        }
+        const nextColumnLayout = Array.isArray(input.columnLayout) ?
+          normalizeTableColumnLayoutSnapshot(input.columnLayout) :
+          existing.columnLayout
+        const nextSorters = Array.isArray(input.sorters) ?
+          normalizeTableSortersSnapshot(input.sorters) :
+          existing.sorters
         const nextTableHeight = normalizeTableHeightPx(input.tableHeight, existing.tableHeight)
         const nextPayload = {
           schemaVersion: TABLE_UI_STATE_SCHEMA_VERSION,
@@ -2872,9 +2925,9 @@
         const startedAt = Date.now()
         return new Promise((resolve) => {
           const check = () => {
-            const columns = state.table && typeof state.table.getColumns === "function"
-              ? state.table.getColumns()
-              : []
+            const columns = state.table && typeof state.table.getColumns === "function" ?
+              state.table.getColumns() :
+              []
             const currentCount = Array.isArray(columns) ? columns.length : 0
             if (currentCount >= expected) {
               resolve(true)
@@ -2936,11 +2989,12 @@
           Number.parseInt(String(config.requiredAssignmentColumns || 0), 10) || 0
         )
         const stored = readTableUiState()
-        if (!stored || !state.table) return { layoutApplied: false, sortApplied: false }
-
+        if (!stored || !state.table) return {
+          layoutApplied: false,
+          sortApplied: false
+        }
         let layoutApplied = false
         let sortApplied = false
-
         if (applyLayout && stored.columnLayout.length && typeof state.table.setColumnLayout === "function") {
           const availableFields = tableColumnFieldSet()
           const filteredLayout = stored.columnLayout
@@ -2958,10 +3012,10 @@
           const layoutKeepsAssignmentsVisible = requiredAssignmentColumns <= 0 || visibleLayoutAssignmentCount > 0
           try {
             if (
-              filteredLayout.length
-              && layoutHasExpectedAssignments
-              && layoutKeepsAssignmentsVisible
-              && (!currentAssignmentCount || layoutAssignmentCount > 0)
+              filteredLayout.length &&
+              layoutHasExpectedAssignments &&
+              layoutKeepsAssignmentsVisible &&
+              (!currentAssignmentCount || layoutAssignmentCount > 0)
             ) {
               state.table.setColumnLayout(filteredLayout)
               layoutApplied = true
@@ -2970,7 +3024,6 @@
             void error
           }
         }
-
         if (applySort && stored.sorters.length && typeof state.table.setSort === "function") {
           const availableFields = tableColumnFieldSet()
           const sortable = stored.sorters
@@ -2984,8 +3037,10 @@
             void error
           }
         }
-
-        return { layoutApplied, sortApplied }
+        return {
+          layoutApplied,
+          sortApplied
+        }
       }
 
       function clearStoredTableUiState() {
@@ -3009,7 +3064,11 @@
             window.localStorage.removeItem(key)
           })
           if (Number.isFinite(preservedHeight)) {
-            writeTableUiState({ tableHeight: preservedHeight, columnLayout: [], sorters: [] })
+            writeTableUiState({
+              tableHeight: preservedHeight,
+              columnLayout: [],
+              sorters: []
+            })
           }
         } catch (error) {
           void error
@@ -3044,7 +3103,6 @@
         el.textContent = normalizeText(message)
         el.classList.toggle("is-error", Boolean(isError))
       }
-
       async function apiJson(path, options = {}) {
         const requestInit = {
           method: normalizeText(options.method || "GET") || "GET",
@@ -3057,7 +3115,6 @@
           requestInit.headers["content-type"] = "application/json"
           requestInit.body = JSON.stringify(options.body)
         }
-
         const response = await fetch(resolveApiUrl(path), requestInit)
         const payload = await response.json().catch(() => ({}))
         if (!response.ok) {
@@ -3068,7 +3125,6 @@
         }
         return payload
       }
-
       async function ensureAuthenticated() {
         const payload = await apiJson("/api/admin/auth/me")
         if (!payload || payload.authenticated === false) {
@@ -3091,7 +3147,6 @@
           return null
         }
       }
-
       async function hydrateLetterGradeRanges() {
         const localSettings = loadUiSettingsFromLocalStorage()
         state.letterGradeRanges = letterGradeRangesFromUiSettings(localSettings)
@@ -3124,16 +3179,15 @@
         const gradeRecords = Array.isArray(source.gradeRecords) ? source.gradeRecords : []
         const studentRefId = normalizeText(source.id)
         const eaglesId = normalizeText(source.eaglesId)
-        const studentNumber = source.studentNumber === undefined || source.studentNumber === null
-          ? ""
-          : String(source.studentNumber)
+        const studentNumber = source.studentNumber === undefined || source.studentNumber === null ?
+          "" :
+          String(source.studentNumber)
         const fullName = normalizeText(profile.fullName)
         const englishName = normalizeText(profile.englishName)
         const schoolName = normalizeText(profile.schoolName) || "Unspecified"
         const level = normalizeText(profile.currentGrade)
         const studentLabel = formatStudentDisplay(eaglesId, englishName, fullName) || studentRefId
         const studentDisplayCompact = formatStudentDisplayCompact(eaglesId, englishName, fullName) || studentLabel
-
         return gradeRecords.map((record, index) => {
           const dueAt = localIsoDate(record?.dueAt)
           const submittedAt = localIsoDate(record?.submittedAt)
@@ -3144,53 +3198,52 @@
           const rawScorePercent = toNumber(record?.scorePercent)
           const effectiveScore = rawScore
           const rawMaxScore = toNumber(record?.maxScore)
-          const questionCount = Number.isFinite(parsedCorrectTotal.totalQuestions) && parsedCorrectTotal.totalQuestions > 0
-            ? parsedCorrectTotal.totalQuestions
-            : rawMaxScore && rawMaxScore > 0
-              ? rawMaxScore
-              : null
+          const questionCount = Number.isFinite(parsedCorrectTotal.totalQuestions) && parsedCorrectTotal.totalQuestions > 0 ?
+            parsedCorrectTotal.totalQuestions :
+            rawMaxScore && rawMaxScore > 0 ?
+            rawMaxScore :
+            null
           const usesParsedCorrectCount = Number.isFinite(parsedCorrectTotal.correctCount)
-          let correctCount = usesParsedCorrectCount
-            ? parsedCorrectTotal.correctCount
-            : effectiveScore
+          let correctCount = usesParsedCorrectCount ?
+            parsedCorrectTotal.correctCount :
+            effectiveScore
           if (
-            !usesParsedCorrectCount
-            && Number.isFinite(correctCount)
-            && correctCount !== null
-            && Number.isFinite(rawMaxScore)
-            && rawMaxScore > 0
-            && Number.isFinite(questionCount)
-            && questionCount > 0
-            && rawMaxScore !== questionCount
+            !usesParsedCorrectCount &&
+            Number.isFinite(correctCount) &&
+            correctCount !== null &&
+            Number.isFinite(rawMaxScore) &&
+            rawMaxScore > 0 &&
+            Number.isFinite(questionCount) &&
+            questionCount > 0 &&
+            rawMaxScore !== questionCount
           ) {
             correctCount = Number(((correctCount / rawMaxScore) * questionCount).toFixed(2))
           }
-          const scorePercent = Number.isFinite(correctCount) && Number.isFinite(questionCount) && questionCount > 0
-            ? percentValue(correctCount, questionCount)
-            : rawScorePercent !== null
-              ? rawScorePercent
-            : rawMaxScore && rawMaxScore > 0 && effectiveScore !== null
-              ? percentValue(effectiveScore, rawMaxScore)
-              : null
+          const scorePercent = Number.isFinite(correctCount) && Number.isFinite(questionCount) && questionCount > 0 ?
+            percentValue(correctCount, questionCount) :
+            rawScorePercent !== null ?
+            rawScorePercent :
+            rawMaxScore && rawMaxScore > 0 && effectiveScore !== null ?
+            percentValue(effectiveScore, rawMaxScore) :
+            null
           const quarter = normalizeLower(record?.quarter) || quarterFromIsoDate(dateKey)
           const schoolYear = normalizeText(record?.schoolYear) || schoolYearForIsoDate(dateKey)
           const className = normalizeText(record?.className)
           const assignmentName = normalizeText(record?.assignmentName)
           const sourceFromApi = normalizeGradeRecordSource(record?.source)
           const isStandaloneAutoImport =
-            normalizeLower(commentText).startsWith(AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX)
-            && assignmentName
-            && className
-            && normalizeLower(assignmentName) === normalizeLower(className)
-            && dueAt
-            && submittedAt
-            && dueAt === submittedAt
-            && record?.homeworkCompleted === true
-            && record?.homeworkOnTime === true
+            normalizeLower(commentText).startsWith(AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX) &&
+            assignmentName &&
+            className &&
+            normalizeLower(assignmentName) === normalizeLower(className) &&
+            dueAt &&
+            submittedAt &&
+            dueAt === submittedAt &&
+            record?.homeworkCompleted === true &&
+            record?.homeworkOnTime === true
           const rowSource =
-            sourceFromApi
-            || (isStandaloneAutoImport ? GRADE_RECORD_SOURCE_AUTO_IMPORT : GRADE_RECORD_SOURCE_ASSIGNMENT)
-
+            sourceFromApi ||
+            (isStandaloneAutoImport ? GRADE_RECORD_SOURCE_AUTO_IMPORT : GRADE_RECORD_SOURCE_ASSIGNMENT)
           return {
             id: normalizeText(record?.id) || `${studentRefId}-${index + 1}`,
             studentRefId,
@@ -3300,9 +3353,9 @@
       function assignmentKeyFromRow(row = {}) {
         const title = normalizedAssignmentTitleForRow(row)
         const isStandaloneAutoImport = isStandaloneAutoImportedExerciseRow(row)
-        const rowSource = isStandaloneAutoImport
-          ? GRADE_RECORD_SOURCE_AUTO_IMPORT
-          : normalizeGradeRecordSource(row?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
+        const rowSource = isStandaloneAutoImport ?
+          GRADE_RECORD_SOURCE_AUTO_IMPORT :
+          normalizeGradeRecordSource(row?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
         const dueAt = isStandaloneAutoImport ? "" : normalizeText(row?.dueAt)
         const schoolYear = normalizeText(row?.schoolYear)
         const quarter = normalizeQuarterCode(row?.quarter)
@@ -3321,9 +3374,9 @@
       }
 
       function modeOfNumbers(values = [], precision = 2) {
-        const counts = new Map()
-        ;(Array.isArray(values) ? values : [])
-          .map((entry) => Number(entry))
+        const counts = new Map();
+        (Array.isArray(values) ? values : [])
+        .map((entry) => Number(entry))
           .filter((entry) => Number.isFinite(entry))
           .forEach((entry) => {
             const key = Number(entry.toFixed(Math.max(0, Math.min(6, precision))))
@@ -3358,32 +3411,27 @@
         if (!base) return `Manual score update ${detail}`
         return `${base.replace(/[.\s]+$/g, "")} ${detail}`
       }
-
       async function editExerciseCellScore(cell, meta = {}) {
         const rowData = cell?.getRow?.().getData?.() || {}
         if (rowData?.rowType === "stat") return
-
         const studentRefId = normalizeText(rowData?.studentRefId)
         if (!studentRefId) {
           setStatus("Cannot edit score: missing student id.", true)
           return
         }
-
         const currentValue = cell.getValue()
         const current = currentValue && typeof currentValue === "object" ? currentValue : {}
         const fallbackQuestions = Number.isFinite(meta?.totalQuestions) && meta.totalQuestions > 0 ? meta.totalQuestions : 10
         const totalQuestions =
           Number.isFinite(current?.maxScore) && current.maxScore > 0 ? current.maxScore : fallbackQuestions
         const currentScore = Number.isFinite(current?.score) ? current.score : null
-
         const promptValue = currentScore === null ? "" : formatShortNumber(currentScore)
         const promptLabel =
-          `Correct answers for ${normalizeText(rowData.studentDisplay) || "student"}\n`
-          + `${normalizeText(meta.title) || "Exercise"}\n`
-          + `Enter a value between 0 and ${formatShortNumber(totalQuestions)}`
+          `Correct answers for ${normalizeText(rowData.studentDisplay) || "student"}\n` +
+          `${normalizeText(meta.title) || "Exercise"}\n` +
+          `Enter a value between 0 and ${formatShortNumber(totalQuestions)}`
         const rawInput = window.prompt(promptLabel, promptValue)
         if (rawInput === null) return
-
         const parsedScore = toNumber(rawInput)
         if (!Number.isFinite(parsedScore) || parsedScore < 0) {
           setStatus("Invalid score. Enter a non-negative number.", true)
@@ -3393,23 +3441,21 @@
           setStatus(`Invalid score. Max allowed is ${formatShortNumber(totalQuestions)}.`, true)
           return
         }
-
         const dueAt = normalizeText(current?.dueAt) || normalizeText(meta?.dueAt)
         const effectiveSchoolYear =
-          normalizeText(current?.schoolYear)
-          || (state.filters.schoolYear !== "all" ? normalizeText(state.filters.schoolYear) : "")
-          || SYSTEM_CURRENT_SCHOOL_YEAR
-          || schoolYearForIsoDate(dueAt || TODAY_ISO)
+          normalizeText(current?.schoolYear) ||
+          (state.filters.schoolYear !== "all" ? normalizeText(state.filters.schoolYear) : "") ||
+          SYSTEM_CURRENT_SCHOOL_YEAR ||
+          schoolYearForIsoDate(dueAt || TODAY_ISO)
         const effectiveQuarter =
-          normalizeQuarterCode(current?.quarter)
-          || normalizeQuarterCode(rowData?.quarter)
-          || normalizeQuarterCode(meta?.quarter)
-          || normalizeQuarterCode(state.filters.quarter)
-          || quarterFromIsoDate(dueAt || TODAY_ISO)
-          || "q1"
+          normalizeQuarterCode(current?.quarter) ||
+          normalizeQuarterCode(rowData?.quarter) ||
+          normalizeQuarterCode(meta?.quarter) ||
+          normalizeQuarterCode(state.filters.quarter) ||
+          quarterFromIsoDate(dueAt || TODAY_ISO) ||
+          "q1"
         const todayIso = localIsoDate(new Date())
         const homeworkOnTime = dueAt ? compareIsoDate(todayIso, dueAt) <= 0 : true
-
         const payload = {
           id: normalizeText(current?.recordId) || undefined,
           className: normalizeText(current?.className) || normalizeText(rowData?.level) || "Unassigned class",
@@ -3426,7 +3472,6 @@
           homeworkOnTime,
           comments: withCorrectCountComment(current?.comments, parsedScore, totalQuestions),
         }
-
         setStatus("Saving score edit...")
         try {
           await apiJson(`/api/admin/students/${encodeURIComponent(studentRefId)}/grades`, {
@@ -3435,8 +3480,8 @@
           })
           await bootstrapRows()
           setStatus(
-            `Saved ${normalizeText(rowData.studentDisplay)} ${normalizeText(meta.title)} `
-            + `(${formatShortNumber(parsedScore)}/${formatShortNumber(totalQuestions)}).`
+            `Saved ${normalizeText(rowData.studentDisplay)} ${normalizeText(meta.title)} ` +
+            `(${formatShortNumber(parsedScore)}/${formatShortNumber(totalQuestions)}).`
           )
         } catch (error) {
           setStatus(normalizeText(error?.message) || "Failed to save score edit.", true)
@@ -3447,8 +3492,8 @@
         const headerEl = column?.getElement?.()
         if (headerEl instanceof HTMLElement) {
           const actionRow = headerEl.querySelector(".header-action-row")
-          const dataLabel = normalizeText(actionRow?.getAttribute("data-header-label"))
-            || normalizeText(actionRow?.getAttribute("aria-label"))
+          const dataLabel = normalizeText(actionRow?.getAttribute("data-header-label")) ||
+            normalizeText(actionRow?.getAttribute("aria-label"))
           if (dataLabel) return dataLabel.replace(/\\s*column controls$/i, "") || "Column"
           const titleNode = headerEl.querySelector(".assignment-title-text")
           const titleText = normalizeText(titleNode?.textContent)
@@ -3470,7 +3515,9 @@
         const safeLabel = resolveHeaderActionLabel(column)
         const definition = column?.getDefinition?.() || {}
         const nextFrozen = !Boolean(definition?.frozen)
-        const updateResult = column?.updateDefinition?.({ frozen: nextFrozen })
+        const updateResult = column?.updateDefinition?.({
+          frozen: nextFrozen
+        })
         if (updateResult && typeof updateResult.then === "function") {
           updateResult
             .then(() => {
@@ -3558,9 +3605,9 @@
         const existingTimestamp = scoreCellTimestampValue(existingCell)
         const nextTimestamp = scoreCellTimestampValue(nextCell)
         if (
-          Number.isFinite(nextTimestamp)
-          && Number.isFinite(existingTimestamp)
-          && nextTimestamp !== existingTimestamp
+          Number.isFinite(nextTimestamp) &&
+          Number.isFinite(existingTimestamp) &&
+          nextTimestamp !== existingTimestamp
         ) {
           return nextTimestamp > existingTimestamp
         }
@@ -3574,34 +3621,32 @@
       function buildMatrixModel(rows = []) {
         const sourceRows = Array.isArray(rows) ? rows : []
         const assignmentMetaMap = new Map()
-
         sourceRows.forEach((entry) => {
-        const key = assignmentKeyFromRow(entry)
-        const rowSource = normalizeGradeRecordSource(entry?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
-        if (!assignmentMetaMap.has(key)) {
-          assignmentMetaMap.set(key, {
-            key,
-            title: normalizedAssignmentTitleForRow(entry),
-            dueAt: normalizeText(entry?.dueAt),
-            quarter: normalizeUpper(entry?.quarter),
-            totalQuestions: Number.isFinite(entry?.maxScore) ? entry.maxScore : null,
-            type: rowSource === GRADE_RECORD_SOURCE_ASSIGNMENT ? "assignment" : "elective",
-          })
-          return
-        }
-        const existing = assignmentMetaMap.get(key)
-        if (existing && existing.type !== "elective" && rowSource !== GRADE_RECORD_SOURCE_ASSIGNMENT) {
-          existing.type = "elective"
-        }
+          const key = assignmentKeyFromRow(entry)
+          const rowSource = normalizeGradeRecordSource(entry?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
+          if (!assignmentMetaMap.has(key)) {
+            assignmentMetaMap.set(key, {
+              key,
+              title: normalizedAssignmentTitleForRow(entry),
+              dueAt: normalizeText(entry?.dueAt),
+              quarter: normalizeUpper(entry?.quarter),
+              totalQuestions: Number.isFinite(entry?.maxScore) ? entry.maxScore : null,
+              type: rowSource === GRADE_RECORD_SOURCE_ASSIGNMENT ? "assignment" : "elective",
+            })
+            return
+          }
+          const existing = assignmentMetaMap.get(key)
+          if (existing && existing.type !== "elective" && rowSource !== GRADE_RECORD_SOURCE_ASSIGNMENT) {
+            existing.type = "elective"
+          }
           if (!existing.dueAt && normalizeText(entry?.dueAt)) existing.dueAt = normalizeText(entry?.dueAt)
           if (
-            Number.isFinite(entry?.maxScore)
-            && (!Number.isFinite(existing.totalQuestions) || entry.maxScore > existing.totalQuestions)
+            Number.isFinite(entry?.maxScore) &&
+            (!Number.isFinite(existing.totalQuestions) || entry.maxScore > existing.totalQuestions)
           ) {
             existing.totalQuestions = entry.maxScore
           }
         })
-
         const assignmentMeta = Array.from(assignmentMetaMap.values()).sort((left, right) => {
           const leftDue = normalizeText(left.dueAt)
           const rightDue = normalizeText(right.dueAt)
@@ -3610,7 +3655,6 @@
           if (rightDue) return 1
           return normalizeText(left.title).localeCompare(normalizeText(right.title))
         })
-
         const byStudent = new Map()
         sourceRows.forEach((entry) => {
           const studentRefId = normalizeText(entry?.studentRefId)
@@ -3632,11 +3676,11 @@
           const assignmentKey = assignmentKeyFromRow(entry)
           const scoreValue = toNumber(entry?.score)
           const maxScoreValue = toNumber(entry?.maxScore)
-          const scorePercent = Number.isFinite(entry?.scorePercent)
-            ? entry.scorePercent
-            : scoreValue !== null && maxScoreValue !== null && maxScoreValue > 0
-              ? percentValue(scoreValue, maxScoreValue)
-              : null
+          const scorePercent = Number.isFinite(entry?.scorePercent) ?
+            entry.scorePercent :
+            scoreValue !== null && maxScoreValue !== null && maxScoreValue > 0 ?
+            percentValue(scoreValue, maxScoreValue) :
+            null
           const nextCell = {
             score: scoreValue,
             maxScore: maxScoreValue,
@@ -3658,7 +3702,6 @@
             row[assignmentKey] = nextCell
           }
         })
-
         const studentRows = Array.from(byStudent.values())
           .sort((left, right) => {
             const levelCompare = normalizeText(left.level).localeCompare(normalizeText(right.level))
@@ -3668,16 +3711,13 @@
         studentRows.forEach((row, index) => {
           row.rowOrder = index + 1
         })
-
         assignmentMeta.forEach((meta) => {
           studentRows.forEach((row) => {
             if (!row[meta.key]) row[meta.key] = null
           })
         })
-
         const classSize = studentRows.length || 1
-        const statRows = [
-          {
+        const statRows = [{
             id: "stat-mean",
             rowType: "stat",
             rowOrder: studentRows.length + 1,
@@ -3723,7 +3763,6 @@
             quarter: "",
           },
         ]
-
         assignmentMeta.forEach((meta) => {
           const cells = studentRows.map((row) => row[meta.key]).filter((entry) => entry && typeof entry === "object")
           const scoreValues = cells
@@ -3732,14 +3771,13 @@
           const percents = cells
             .map((entry) => Number(entry?.percent))
             .filter((entry) => Number.isFinite(entry))
-          const mean = scoreValues.length
-            ? scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length
-            : null
+          const mean = scoreValues.length ?
+            scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length :
+            null
           const median = medianOfNumbers(scoreValues)
           const mode = modeOfNumbers(scoreValues)
           const completionCount = cells.filter((entry) => entry?.completed === true).length
           const completionPercent = percentValue(completionCount, classSize)
-
           const distribution = new Map()
           normalizeLetterGradeRanges(state.letterGradeRanges).forEach((entry) => {
             distribution.set(entry.letter, 0)
@@ -3749,7 +3787,6 @@
             if (band === "N/A") return
             distribution.set(band, (distribution.get(band) || 0) + 1)
           })
-
           const questionTotal = Number.isFinite(meta.totalQuestions) ? meta.totalQuestions : null
           const formatQRightStat = (value) => {
             if (!Number.isFinite(value)) return "n/a"
@@ -3757,7 +3794,6 @@
             if (!Number.isFinite(questionTotal) || questionTotal <= 0) return rightText
             return `${rightText}/${formatShortNumber(questionTotal)}`
           }
-
           const distributionEntries = Array.from(distribution.entries())
             .filter(([, count]) => Number.isFinite(count))
             .map(([letter, count]) => ({
@@ -3767,7 +3803,6 @@
           const distributionText = distributionEntries
             .map((entry) => `${entry.label}:${entry.count}`)
             .join(" ")
-
           statRows[0][meta.key] = formatQRightStat(mean)
           statRows[1][meta.key] = formatQRightStat(median)
           statRows[2][meta.key] = formatQRightStat(mode)
@@ -3782,7 +3817,6 @@
             questionTotal,
           }
         })
-
         const viewportWidth = Number(window.innerWidth) || 1280
         const assignmentTitleMaxChars =
           viewportWidth <= 560 ? 7 : viewportWidth <= 880 ? 9 : viewportWidth <= 1180 ? 10 : 12
@@ -3819,9 +3853,12 @@
           charWidth: 7.2,
           cellPadding: 24,
         })
-
-        const baseColumns = [
-          { title: "Order", field: "rowOrder", visible: false, headerSort: false },
+        const baseColumns = [{
+            title: "Order",
+            field: "rowOrder",
+            visible: false,
+            headerSort: false
+          },
           {
             title: buildCoreHeaderCard("Class Level", "Class", "Grouping", coreTitleMaxChars),
             field: "level",
@@ -3870,7 +3907,6 @@
             headerTooltip: () => "Quarter | Term bucket",
           },
         ]
-
         const assignmentColumns = assignmentMeta.map((meta, index) => {
           const rawTitle = normalizeText(meta.title) || "Untitled"
           const fullTitle = normalizeAssignmentHeaderTitle(rawTitle)
@@ -3878,9 +3914,9 @@
           const isMegsTitle = isMegsAssignmentTitle(rawTitle)
           const isElective = normalizeText(meta.type) === "elective"
           const headerClass = [
-            isElective ? ASSIGNMENT_HEAD_ELECTIVE_CLASS : ASSIGNMENT_HEAD_CLASS,
-            isMegsTitle ? "megs" : "",
-          ]
+              isElective ? ASSIGNMENT_HEAD_ELECTIVE_CLASS : ASSIGNMENT_HEAD_CLASS,
+              isMegsTitle ? "megs" : "",
+            ]
             .filter(Boolean)
             .join(" ")
           const dueLabel = normalizeText(meta.dueAt) || "-"
@@ -3895,13 +3931,12 @@
             cellPadding: 24,
           })
           return {
-            title:
-              `<span class=\"${headerClass}\">`
-              + `${buildHeaderActionButtons(fullTitle)}`
-              + `<span class=\"assignment-title-text\">${escapeHtml(headerTitle)}</span>`
-              + `<span class=\"assignment-sub\">Q: ${escapeHtml(questionLabel)}</span>`
-              + `<span class=\"assignment-sub\">${escapeHtml(dueLabel)}</span>`
-              + `</span>`,
+            title: `<span class=\"${headerClass}\">` +
+              `${buildHeaderActionButtons(fullTitle)}` +
+              `<span class=\"assignment-title-text\">${escapeHtml(headerTitle)}</span>` +
+              `<span class=\"assignment-sub\">Q: ${escapeHtml(questionLabel)}</span>` +
+              `<span class=\"assignment-sub\">${escapeHtml(dueLabel)}</span>` +
+              `</span>`,
             field: meta.key,
             minWidth: assignmentColumnMinWidth,
             width: assignmentColumnWidth,
@@ -3926,40 +3961,39 @@
                 if (normalizeText(rowData?.id) === "stat-distribution") {
                   return renderDistributionMiniCell(value, meta)
                 }
-                const statText = value && typeof value === "object"
-                  ? normalizeText(value.summaryText)
-                  : normalizeText(value)
+                const statText = value && typeof value === "object" ?
+                  normalizeText(value.summaryText) :
+                  normalizeText(value)
                 return `<span class=\"stat-chip\">${escapeHtml(statText || "n/a")}</span>`
               }
               if (!value || typeof value !== "object") {
                 return `<span class=\"exercise-cell\"><span></span><span></span></span>`
               }
-              const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0
-                ? `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}`
-                : Number.isFinite(value.score)
-                  ? `${formatShortNumber(value.score)}`
-                  : "-/-"
+              const scoreLabel = Number.isFinite(value.score) && Number.isFinite(value.maxScore) && value.maxScore > 0 ?
+                `${formatShortNumber(value.score)}/${formatShortNumber(value.maxScore)}` :
+                Number.isFinite(value.score) ?
+                `${formatShortNumber(value.score)}` :
+                "-/-"
               const percentLabel = Number.isFinite(value.percent) ? `${Math.round(value.percent)}%` : "n/a"
               const isCompleted =
-                value?.completed === true
-                || Boolean(value?.submittedAt)
-                || Number.isFinite(value?.score)
-              const status = ["ontime", "late"].includes(value.status)
-                ? value.status
-                : (isCompleted ? "ontime" : "")
+                value?.completed === true ||
+                Boolean(value?.submittedAt) ||
+                Number.isFinite(value?.score)
+              const status = ["ontime", "late"].includes(value.status) ?
+                value.status :
+                (isCompleted ? "ontime" : "")
               if (!isCompleted) {
                 return `<span class=\"exercise-cell\"><span></span><span></span></span>`
               }
               return (
-                `<span class=\"exercise-cell ${status}\">`
-                + `<span>${escapeHtml(scoreLabel)}</span>`
-                + `<span>${escapeHtml(percentLabel)}</span>`
-                + `</span>`
+                `<span class=\"exercise-cell ${status}\">` +
+                `<span>${escapeHtml(scoreLabel)}</span>` +
+                `<span>${escapeHtml(percentLabel)}</span>` +
+                `</span>`
               )
             },
           }
         })
-
         return {
           columns: [...baseColumns, ...assignmentColumns],
           rows: rowsWithStats,
@@ -3976,11 +4010,9 @@
         }
         return chunks
       }
-
       async function loadGradeRows() {
         state.loading = true
         setStatus("Loading student roster...")
-
         const roster = await apiJson("/api/admin/students?take=1000")
         const students = Array.isArray(roster?.items) ? roster.items : []
         const withGradeCounts = students.filter((entry) => {
@@ -3988,7 +4020,6 @@
           return Number.isFinite(gradeCount) && gradeCount > 0
         })
         const targetStudents = withGradeCounts.length ? withGradeCounts : students
-
         const allRows = []
         const chunks = chunkArray(targetStudents, 10)
         for (let index = 0; index < chunks.length; index += 1) {
@@ -4009,13 +4040,11 @@
               }
             })
           )
-
           details.forEach((entry) => {
             if (!entry) return
             allRows.push(...flattenGradeRowsFromStudent(entry))
           })
         }
-
         state.allRows = allRows
         state.loading = false
       }
@@ -4024,7 +4053,9 @@
         const values = Array.from(new Set((Array.isArray(rows) ? rows : [])
           .map((entry) => normalizeText(entry?.[key]))
           .filter(Boolean)))
-        values.sort((left, right) => left.localeCompare(right, undefined, { sensitivity: "base" }))
+        values.sort((left, right) => left.localeCompare(right, undefined, {
+          sensitivity: "base"
+        }))
         return values
       }
 
@@ -4055,17 +4086,16 @@
         const yearValues = uniqueSortedValues(rows, "schoolYear")
         if (currentYear && !yearValues.includes(currentYear)) yearValues.push(currentYear)
         yearValues.sort((left, right) => right.localeCompare(left))
-
         const studentValues = Array.from(new Map(
-          rows.map((row) => [normalizeText(row.studentRefId), normalizeText(row.studentLabel)])
+            rows.map((row) => [normalizeText(row.studentRefId), normalizeText(row.studentLabel)])
             .filter(([key, value]) => key && value)
-        ))
-          .sort((left, right) => left[1].localeCompare(right[1], undefined, { sensitivity: "base" }))
-
+          ))
+          .sort((left, right) => left[1].localeCompare(right[1], undefined, {
+            sensitivity: "base"
+          }))
         replaceSelectOptions(document.getElementById("classFilter"), classValues, state.filters.classKey, "All class levels")
         replaceSelectOptions(document.getElementById("schoolFilter"), schoolValues, state.filters.schoolKey, "All schools")
         replaceSelectOptions(document.getElementById("schoolYear"), yearValues, state.filters.schoolYear, "All school years")
-
         const studentFilter = document.getElementById("studentFilter")
         if (studentFilter instanceof HTMLSelectElement) {
           const options = ["<option value=\"all\">All students</option>"]
@@ -4076,7 +4106,6 @@
           const current = normalizeText(state.filters.studentKey) || "all"
           studentFilter.value = studentValues.some(([studentRefId]) => studentRefId === current) ? current : "all"
         }
-
         const periodCode = normalizePeriodCode(state.filters.period)
         const activeSchoolYear = normalizeText(state.filters.schoolYear)
         if (periodCode === "archive") {
@@ -4088,18 +4117,16 @@
           const yearSelect = document.getElementById("schoolYear")
           if (yearSelect instanceof HTMLSelectElement) yearSelect.value = state.filters.schoolYear
         }
-
         const selectedSchoolYear =
-          normalizeText(state.filters.schoolYear) === "all"
-            ? currentYear
-            : normalizeOperationalSchoolYear(state.filters.schoolYear)
+          normalizeText(state.filters.schoolYear) === "all" ?
+          currentYear :
+          normalizeOperationalSchoolYear(state.filters.schoolYear)
         const availableQuarters = Array.from(new Set(
           rows
-            .filter((entry) => normalizeText(entry?.schoolYear) === normalizeText(selectedSchoolYear))
-            .map((entry) => normalizeQuarterCode(entry?.quarter))
-            .filter(Boolean)
+          .filter((entry) => normalizeText(entry?.schoolYear) === normalizeText(selectedSchoolYear))
+          .map((entry) => normalizeQuarterCode(entry?.quarter))
+          .filter(Boolean)
         )).sort((left, right) => quarterSortKey(left) - quarterSortKey(right))
-
         const currentQuarter = normalizeQuarterCode(quarterFromIsoDate(TODAY_ISO)) || "q1"
         const ssotQuarter = quarterForSchoolYear(selectedSchoolYear || currentYear, TODAY_ISO)
         const currentQuarterFromSsot = normalizeQuarterCode(ssotQuarter) || currentQuarter
@@ -4138,13 +4165,12 @@
         const requestedSchoolYear = normalizeSchoolYearFilter(filters.schoolYear)
         const currentSchoolYear = currentOperationalSchoolYear()
         const selectedSchoolYear =
-          requestedSchoolYear === "all"
-            ? "all"
-            : normalizeOperationalSchoolYear(requestedSchoolYear)
+          requestedSchoolYear === "all" ?
+          "all" :
+          normalizeOperationalSchoolYear(requestedSchoolYear)
         const dateDerivedCurrentSchoolYear = schoolYearForIsoDate(TODAY_ISO)
         let rangeStart = ""
         let rangeEnd = ""
-
         if (filters.period === "week") {
           rangeStart = startOfWeekIso(TODAY_ISO)
           rangeEnd = isoDateOffset(rangeStart, 6)
@@ -4152,21 +4178,17 @@
           rangeStart = normalizeText(filters.customFrom).slice(0, 10)
           rangeEnd = normalizeText(filters.customTo).slice(0, 10)
         }
-
         if (rangeStart && rangeEnd && compareIsoDate(rangeStart, rangeEnd) > 0) {
           const swap = rangeStart
           rangeStart = rangeEnd
           rangeEnd = swap
         }
-
         const filtered = rows.filter((row) => {
           const rowDate = normalizeText(row?.dateKey)
           const rowQuarter = normalizeLower(row?.quarter)
           const rowSchoolYear = normalizeText(row?.schoolYear)
           const rowSource = normalizeGradeRecordSource(row?.source) || GRADE_RECORD_SOURCE_ASSIGNMENT
-
           if (!GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX.has(rowSource)) return false
-
           if (filters.period === "archive") {
             if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false
             if (selectedSchoolYear !== "all" && rowSchoolYear !== selectedSchoolYear) return false
@@ -4174,7 +4196,6 @@
             const targetSchoolYear = selectedSchoolYear === "all" ? currentSchoolYear : selectedSchoolYear
             if (rowSchoolYear && rowSchoolYear !== targetSchoolYear) return false
           }
-
           if (filters.period === "quarter" || filters.period === "qtd") {
             if (!rowQuarter || rowQuarter !== normalizeLower(filters.quarter)) return false
             if (filters.period === "qtd") {
@@ -4184,7 +4205,6 @@
               }
             }
           }
-
           if (filters.period === "sytd") {
             const targetYear = selectedSchoolYear !== "all" ? selectedSchoolYear : currentSchoolYear
             if (rowSchoolYear && rowSchoolYear !== targetYear) return false
@@ -4192,7 +4212,6 @@
               return false
             }
           }
-
           if (filters.period === "week" || filters.period === "custom") {
             if (rangeStart || rangeEnd) {
               if (!rowDate) return false
@@ -4200,17 +4219,13 @@
               if (rangeEnd && compareIsoDate(rowDate, rangeEnd) > 0) return false
             }
           }
-
           if (filters.classKey !== "all" && normalizeText(row?.level) !== filters.classKey) return false
           if (filters.studentKey !== "all" && normalizeText(row?.studentRefId) !== filters.studentKey) return false
           if (filters.schoolKey !== "all" && normalizeText(row?.schoolName) !== filters.schoolKey) return false
-
           const needle = normalizeSearch(filters.search)
           if (needle && !normalizeSearch(row?.searchText).includes(needle)) return false
-
           return true
         })
-
         return {
           rows: filtered,
           rangeStart,
@@ -4226,10 +4241,12 @@
           setStatus("Tabulator assets are missing. Run: tools/sync-tabulatorz-assets.sh", true)
           return
         }
-
         const storedTableUiState = readTableUiState()
         const tableHeight = normalizeTableHeightPx(state.tableHeightPx, storedTableUiState?.tableHeight ?? defaultTableHeightPx())
-        applyTableHeight(tableHeight, { persist: false, redraw: false })
+        applyTableHeight(tableHeight, {
+          persist: false,
+          redraw: false
+        })
         const viewportWidth = Number(window.innerWidth) || 1280
         const useResponsiveCollapse = false
         const coreTitleMaxChars =
@@ -4237,7 +4254,6 @@
         const studentColumnMinWidth = studentColumnMinWidthForResize()
         const studentColumnDefaultWidth = studentColumnDefaultWidthForViewport(viewportWidth)
         state.responsiveCollapseEnabled = useResponsiveCollapse
-
         state.table = new window.Tabulator("#gradeGrid", {
           data: [],
           layout: "fitDataTable",
@@ -4261,11 +4277,16 @@
           resizableColumns: true,
           resizableColumnGuide: true,
           tooltipDelay: 120,
-          initialSort: [
-            { column: "rowOrder", dir: "asc" },
-          ],
-          columns: [
-            { title: "Order", field: "rowOrder", visible: false, headerSort: false },
+          initialSort: [{
+            column: "rowOrder",
+            dir: "asc"
+          }, ],
+          columns: [{
+              title: "Order",
+              field: "rowOrder",
+              visible: false,
+              headerSort: false
+            },
             {
               title: buildCoreHeaderCard("Class Level", "Class", "Grouping", coreTitleMaxChars),
               field: "level",
@@ -4359,9 +4380,13 @@
         if (!state.table || typeof state.table.getColumns !== "function") return ""
         const columns = state.table.getColumns().map((column) => {
           const field = normalizeText(column?.getField?.())
-          if (field) return { field }
+          if (field) return {
+            field
+          }
           const definition = column?.getDefinition?.() || {}
-          return { title: definition.title }
+          return {
+            title: definition.title
+          }
         })
         return matrixColumnSchemaKey(columns)
       }
@@ -4373,14 +4398,12 @@
         const scoreValues = source
           .map((entry) => Number(entry?.scorePercent))
           .filter((entry) => Number.isFinite(entry))
-        const averagePercent = scoreValues.length
-          ? scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length
-          : null
-
+        const averagePercent = scoreValues.length ?
+          scoreValues.reduce((sum, entry) => sum + entry, 0) / scoreValues.length :
+          null
         const homeworkRows = source.filter((entry) => typeof entry?.homeworkCompleted === "boolean")
         const completedRows = homeworkRows.filter((entry) => entry.homeworkCompleted === true).length
         const completionRate = homeworkRows.length ? percentValue(completedRows, homeworkRows.length) : null
-
         const rowEl = document.getElementById("metricRows")
         const studentEl = document.getElementById("metricStudents")
         const classEl = document.getElementById("metricClasses")
@@ -4416,7 +4439,6 @@
         state.filteredRows = outcome.rows
         const matrix = buildMatrixModel(state.filteredRows)
         state.matrixRows = matrix.rows
-
         ensureTable()
         if (state.table && state.tableBuilt) {
           try {
@@ -4425,20 +4447,26 @@
             const liveFieldSet = tableColumnFieldSet()
             const tableHasAssignmentColumns = Array.from(liveFieldSet.values()).some((field) => field.includes("|"))
             const shouldResetColumns =
-              nextSchemaKey !== state.columnSchemaKey
-              || (liveSchemaKey && liveSchemaKey !== nextSchemaKey)
-              || (matrix.assignmentCount > 0 && !tableHasAssignmentColumns)
+              nextSchemaKey !== state.columnSchemaKey ||
+              (liveSchemaKey && liveSchemaKey !== nextSchemaKey) ||
+              (matrix.assignmentCount > 0 && !tableHasAssignmentColumns)
             const applySortAndPersistState = () => {
               if (shouldResetColumns) {
-                const applied = applyStoredTableUiState({ applyLayout: false, applySort: true })
+                const applied = applyStoredTableUiState({
+                  applyLayout: false,
+                  applySort: true
+                })
                 if (
-                  !applied.sortApplied
-                  && typeof state.table?.setSort === "function"
-                  && typeof state.table?.getSorters === "function"
+                  !applied.sortApplied &&
+                  typeof state.table?.setSort === "function" &&
+                  typeof state.table?.getSorters === "function"
                 ) {
                   const activeSorters = normalizeTableSortersSnapshot(state.table.getSorters())
                   if (!activeSorters.length) {
-                    state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+                    state.table.setSort([{
+                      column: "rowOrder",
+                      dir: "asc"
+                    }])
                   }
                 }
               }
@@ -4449,7 +4477,6 @@
                 }, 0)
               }
             }
-
             const replaceRows = () => {
               const replaceResult = state.table.replaceData(matrix.rows)
               if (replaceResult && typeof replaceResult.then === "function") {
@@ -4462,7 +4489,6 @@
               }
               applySortAndPersistState()
             }
-
             if (shouldResetColumns) {
               const setColumnsResult = state.table.setColumns(matrix.columns)
               state.columnSchemaKey = nextSchemaKey
@@ -4506,17 +4532,15 @@
             void error
           }
         }
-
         updateMetrics(state.filteredRows)
         const rangeHint = document.getElementById("rangeHint")
         if (rangeHint) {
           const periodLabel = state.filters.period.toUpperCase()
           const viewportHint = "Use horizontal scroll for full matrix and sticky identity columns."
           rangeHint.textContent =
-            `Period ${periodLabel} | Range ${outcome.rangeLabel} | Students ${matrix.studentCount} | Exercises ${matrix.assignmentCount}`
-            + ` | ${viewportHint}`
+            `Period ${periodLabel} | Range ${outcome.rangeLabel} | Students ${matrix.studentCount} | Exercises ${matrix.assignmentCount}` +
+            ` | ${viewportHint}`
         }
-
         if (!state.loading) {
           setStatus(`Loaded ${state.filteredRows.length} grade rows into ${matrix.studentCount} students x ${matrix.assignmentCount} exercise columns.`)
         }
@@ -4531,7 +4555,6 @@
         const customFrom = document.getElementById("customFrom")
         const customTo = document.getElementById("customTo")
         const searchInput = document.getElementById("searchInput")
-
         if (schoolYear instanceof HTMLSelectElement) {
           state.filters.schoolYear = normalizeSchoolYearFilter(schoolYear.value)
         }
@@ -4555,7 +4578,6 @@
           "customFrom",
           "customTo",
         ]
-
         controls.forEach((id) => {
           const el = document.getElementById(id)
           if (!el) return
@@ -4565,7 +4587,6 @@
             renderTable()
           })
         })
-
         const searchInput = document.getElementById("searchInput")
         if (searchInput) {
           searchInput.addEventListener("input", () => {
@@ -4573,7 +4594,6 @@
             renderTable()
           })
         }
-
         document.querySelectorAll("[data-period]").forEach((button) => {
           button.addEventListener("click", () => {
             const nextPeriod = normalizePeriodCode(button.getAttribute("data-period"))
@@ -4586,7 +4606,6 @@
             renderTable()
           })
         })
-
         const reloadBtn = document.getElementById("reloadBtn")
         if (reloadBtn) {
           reloadBtn.addEventListener("click", async () => {
@@ -4597,14 +4616,12 @@
             }
           })
         }
-
         const toggleCompactBtn = document.getElementById("toggleCompactBtn")
         if (toggleCompactBtn) {
           toggleCompactBtn.addEventListener("click", () => {
             toggleCompactMode()
           })
         }
-
         const resetColumnsBtn = document.getElementById("resetColumnsBtn")
         if (resetColumnsBtn) {
           resetColumnsBtn.addEventListener("click", () => {
@@ -4612,19 +4629,20 @@
             state.columnSchemaKey = ""
             renderTable()
             if (state.table && typeof state.table.setSort === "function") {
-              state.table.setSort([{ column: "rowOrder", dir: "asc" }])
+              state.table.setSort([{
+                column: "rowOrder",
+                dir: "asc"
+              }])
             }
             setStatus("Saved column layout and sort reset to default.")
           })
         }
-
         const handleResize = debounce(() => {
           if (state.loading) return
           renderTable()
         }, 190)
         window.addEventListener("resize", handleResize)
       }
-
       async function bootstrapRows() {
         if (state.loading) return
         state.loading = true
@@ -4642,15 +4660,15 @@
           state.loading = false
         }
       }
-
       async function init() {
         if (!API_ORIGIN) {
           setStatus("Missing API origin. Open with ?apiOrigin=http://127.0.0.1:8788", true)
           return
         }
-
         restoreUiPreferences()
-        applyCurrentSchoolYearDefault({ force: true })
+        applyCurrentSchoolYearDefault({
+          force: true
+        })
         applyFilterQueryOverrides()
         applyCurrentSchoolYearDefault()
         bindControls()
@@ -4659,7 +4677,6 @@
         syncCompactModeUi()
         syncPeriodButtons()
         applyFilterControlState()
-
         try {
           await ensureAuthenticated()
         } catch (error) {
@@ -4669,14 +4686,13 @@
           }
           throw error
         }
-
         await bootstrapRows()
       }
-
       init().catch((error) => {
         setStatus(normalizeText(error?.message) || "Failed to initialize tabulator page.", true)
       })
     })()
   </script>
 </body>
+
 </html>
