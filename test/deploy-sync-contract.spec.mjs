@@ -13,22 +13,26 @@ test("deploy-api-safe mirrors runtime and public portal assets with delete seman
   assert.match(deployScript, /PUBLIC_ADMIN_DIR=\"\$\{PUBLIC_ADMIN_DIR:-\$\{PUBLIC_ROOT\}\/sis-admin\}\"/)
   assert.match(deployScript, /PUBLIC_PARENT_DIR=\"\$\{PUBLIC_PARENT_DIR:-\$\{PUBLIC_ROOT\}\/sis-parent\}\"/)
   assert.match(deployScript, /PUBLIC_STUDENT_DIR=\"\$\{PUBLIC_STUDENT_DIR:-\$\{PUBLIC_ROOT\}\/sis-student\}\"/)
+  assert.match(deployScript, /PUBLIC_SHARED_DIR=\"\$\{PUBLIC_SHARED_DIR:-\$\{PUBLIC_ROOT\}\/web-asset\/shared\}\"/)
 
   assert.match(deployScript, /collect_public_dir_drift \"\$\{SOURCE_ROOT\}\/web-asset\/admin\" \"\$\{PUBLIC_ADMIN_DIR\}\" \"public-admin-assets\"/)
   assert.match(deployScript, /collect_public_dir_drift \"\$\{SOURCE_ROOT\}\/web-asset\/parent\" \"\$\{PUBLIC_PARENT_DIR\}\" \"public-parent-assets\"/)
   assert.match(deployScript, /collect_public_dir_drift \"\$\{SOURCE_ROOT\}\/web-asset\/student\" \"\$\{PUBLIC_STUDENT_DIR\}\" \"public-student-assets\"/)
+  assert.match(deployScript, /collect_public_dir_drift \"\$\{SOURCE_ROOT\}\/web-asset\/shared\" \"\$\{PUBLIC_SHARED_DIR\}\" \"public-shared-assets\"/)
 
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/server\/\" \"\$\{RUNTIME_ROOT\}\/server\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/schemas\/\" \"\$\{RUNTIME_ROOT\}\/schemas\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/admin\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/admin\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/parent\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/parent\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/student\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/student\/\"/)
+  assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/shared\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/shared\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/vendor\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/vendor\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/images\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/images\/\"/)
 
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/admin\/\" \"\$\{PUBLIC_ADMIN_DIR\}\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/parent\/\" \"\$\{PUBLIC_PARENT_DIR\}\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/student\/\" \"\$\{PUBLIC_STUDENT_DIR\}\/\"/)
+  assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/shared\/\" \"\$\{PUBLIC_SHARED_DIR\}\/\"/)
 })
 
 test("deploy-api-safe route matrices include admin/tabulator and parent/student routes", () => {
@@ -70,6 +74,7 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\|200/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\|200/)
+  assert.match(runtimeResyncScript, /collect_dir_drift \"\$\{REPO_ROOT\}\/web-asset\/shared\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/shared\/\" \"shared-assets\"/)
 
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/admin\?page=grades-data\|200/)
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
@@ -80,6 +85,7 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/schemas\/\" \"\$\{RUNTIME_ROOT\}\/schemas\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/parent\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/parent\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/student\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/student\/\"/)
+  assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/shared\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/shared\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/vendor\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/vendor\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/images\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/images\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/admin\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/admin\/\"/)

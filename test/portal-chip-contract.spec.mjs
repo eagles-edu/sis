@@ -23,13 +23,13 @@ test("student modal chip mapper follows chips.md contract", () => {
     "function setNewsViewerStatusChip(item = {}) {"
   )
 
-  assert.match(chunk, /if \(status === "approved"\) return \{ label: "Approved", tone: "good" \};/)
-  assert.match(chunk, /if \(status === "revision-requested"\) return \{ label: "Revise", tone: "revise" \};/)
+  assert.match(chunk, /if \(status === "approved"\) return \{\s*label: "Approved",\s*tone: "good"\s*\};/)
+  assert.match(chunk, /if \(status === "revision-requested"\) return \{\s*label: "Revise",\s*tone: "revise"\s*\};/)
   assert.match(
     chunk,
-    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{ label: "Waiting", tone: "revise" \};/
+    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{\s*label: "Waiting",\s*tone: "revise"\s*\};/
   )
-  assert.match(chunk, /if \(status === "submitted"\) return \{ label: "Submitted", tone: "warn" \};/)
+  assert.match(chunk, /if \(status === "submitted"\) return \{\s*label: "Submitted",\s*tone: "warn"\s*\};/)
   assert.doesNotMatch(chunk, /return \{ label: "Waiting", tone: "warn" \};/)
 })
 
@@ -41,13 +41,13 @@ test("parent modal chip mapper follows chips.md contract", () => {
     "function setNewsViewerStatusChip(item = {}) {"
   )
 
-  assert.match(chunk, /if \(status === "approved"\) return \{ label: "Đã duyệt", tone: "good" \};/)
-  assert.match(chunk, /if \(status === "revision-requested"\) return \{ label: "Cần sửa", tone: "revise" \};/)
+  assert.match(chunk, /if \(status === "approved"\) return \{\s*label: "Đã duyệt",\s*tone: "good"\s*\};/)
+  assert.match(chunk, /if \(status === "revision-requested"\) return \{\s*label: "Cần sửa",\s*tone: "revise"\s*\};/)
   assert.match(
     chunk,
-    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{ label: "Chờ duyệt", tone: "revise" \};/
+    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{\s*label: "Chờ duyệt",\s*tone: "revise"\s*\};/
   )
-  assert.match(chunk, /if \(status === "submitted"\) return \{ label: "Đã nộp", tone: "warn" \};/)
+  assert.match(chunk, /if \(status === "submitted"\) return \{\s*label: "Đã nộp",\s*tone: "warn"\s*\};/)
   assert.doesNotMatch(chunk, /return \{ label: "Chờ duyệt", tone: "warn" \};/)
 })
 

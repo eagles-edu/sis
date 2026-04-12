@@ -39,7 +39,7 @@ Modes:
   --sync-on-mismatch   Detect drift first, sync only when mismatch exists.
 
 Scopes:
-  --scope full         Compare/sync server/, schemas/, admin assets, and parent/student/vendor/image assets (default).
+  --scope full         Compare/sync server/, schemas/, admin/shared assets, and parent/student/vendor/image assets (default).
   --scope html         Compare/sync only web-asset/admin/ assets.
 
 Options:
@@ -320,6 +320,7 @@ collect_drift() {
     collect_dir_drift "${REPO_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas/" "schemas"
     collect_dir_drift "${REPO_ROOT}/web-asset/parent/" "${RUNTIME_ROOT}/web-asset/parent/" "parent-assets"
     collect_dir_drift "${REPO_ROOT}/web-asset/student/" "${RUNTIME_ROOT}/web-asset/student/" "student-assets"
+    collect_dir_drift "${REPO_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared/" "shared-assets"
     collect_dir_drift "${REPO_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor/" "vendor-assets"
     collect_dir_drift "${REPO_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images/" "images-assets"
   fi
@@ -347,13 +348,14 @@ perform_sync() {
   mkdir -p "${RUNTIME_ROOT}/web-asset/admin"
 
   if [[ "${SCOPE}" == "full" ]]; then
-    mkdir -p "${RUNTIME_ROOT}/server" "${RUNTIME_ROOT}/schemas" "${RUNTIME_ROOT}/web-asset/parent" "${RUNTIME_ROOT}/web-asset/student" "${RUNTIME_ROOT}/web-asset/vendor" "${RUNTIME_ROOT}/web-asset/images"
+    mkdir -p "${RUNTIME_ROOT}/server" "${RUNTIME_ROOT}/schemas" "${RUNTIME_ROOT}/web-asset/parent" "${RUNTIME_ROOT}/web-asset/student" "${RUNTIME_ROOT}/web-asset/shared" "${RUNTIME_ROOT}/web-asset/vendor" "${RUNTIME_ROOT}/web-asset/images"
     mkdir -p \
       "${RUNTIME_ROOT}/server.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/schemas.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/web-asset/admin.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/web-asset/parent.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/web-asset/student.BAK-${timestamp}" \
+      "${RUNTIME_ROOT}/web-asset/shared.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/web-asset/vendor.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/web-asset/images.BAK-${timestamp}"
 
@@ -362,6 +364,7 @@ perform_sync() {
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/admin/" "${RUNTIME_ROOT}/web-asset/admin.BAK-${timestamp}/"
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/parent/" "${RUNTIME_ROOT}/web-asset/parent.BAK-${timestamp}/"
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/student/" "${RUNTIME_ROOT}/web-asset/student.BAK-${timestamp}/"
+    rsync -a --delete "${RUNTIME_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared.BAK-${timestamp}/"
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor.BAK-${timestamp}/"
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images.BAK-${timestamp}/"
 
@@ -369,6 +372,7 @@ perform_sync() {
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas/"
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/parent/" "${RUNTIME_ROOT}/web-asset/parent/"
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/student/" "${RUNTIME_ROOT}/web-asset/student/"
+    rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared/"
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor/"
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images/"
   else

@@ -8,6 +8,7 @@ PUBLIC_ROOT="${PUBLIC_ROOT:-/home/admin.eagles.edu.vn/public_html}"
 PUBLIC_ADMIN_DIR="${PUBLIC_ADMIN_DIR:-${PUBLIC_ROOT}/sis-admin}"
 PUBLIC_PARENT_DIR="${PUBLIC_PARENT_DIR:-${PUBLIC_ROOT}/sis-parent}"
 PUBLIC_STUDENT_DIR="${PUBLIC_STUDENT_DIR:-${PUBLIC_ROOT}/sis-student}"
+PUBLIC_SHARED_DIR="${PUBLIC_SHARED_DIR:-${PUBLIC_ROOT}/web-asset/shared}"
 SERVICE_NAME="${SERVICE_NAME:-exercise-mailer.service}"
 MODE="sync-on-mismatch"
 RESTART=1
@@ -37,8 +38,8 @@ usage() {
   cat <<'USAGE'
 Usage: deploy-api-safe.sh [options]
 
-Deploys API runtime code scope only (server/, schemas/, admin/parent/student/vendor/image assets).
-Also mirrors full admin/parent/student portal assets into public_html portal mirrors.
+Deploys API runtime code scope only (server/, schemas/, admin/parent/student/shared/vendor/image assets).
+Also mirrors full admin/parent/student/shared portal assets into public_html portal mirrors.
 This script does not run DB migrations and does not restore DB.
 
 Options:
@@ -128,7 +129,7 @@ if [[ ! -f "${RUNTIME_ROOT}/.env" ]]; then
   exit 1
 fi
 
-for required_dir in server schemas web-asset/admin web-asset/parent web-asset/student web-asset/vendor web-asset/images; do
+for required_dir in server schemas web-asset/admin web-asset/parent web-asset/student web-asset/shared web-asset/vendor web-asset/images; do
   if [[ ! -e "${SOURCE_ROOT}/${required_dir}" ]]; then
     echo "Missing source path: ${SOURCE_ROOT}/${required_dir}" >&2
     exit 1
@@ -378,6 +379,7 @@ collect_public_portal_assets_drift() {
   collect_public_dir_drift "${SOURCE_ROOT}/web-asset/admin" "${PUBLIC_ADMIN_DIR}" "public-admin-assets"
   collect_public_dir_drift "${SOURCE_ROOT}/web-asset/parent" "${PUBLIC_PARENT_DIR}" "public-parent-assets"
   collect_public_dir_drift "${SOURCE_ROOT}/web-asset/student" "${PUBLIC_STUDENT_DIR}" "public-student-assets"
+  collect_public_dir_drift "${SOURCE_ROOT}/web-asset/shared" "${PUBLIC_SHARED_DIR}" "public-shared-assets"
 }
 
 collect_parent_assets_drift() {
@@ -456,12 +458,14 @@ perform_sync() {
     "${RUNTIME_ROOT}/web-asset/admin.BAK-${timestamp}" \
     "${RUNTIME_ROOT}/web-asset/parent.BAK-${timestamp}" \
     "${RUNTIME_ROOT}/web-asset/student.BAK-${timestamp}" \
+    "${RUNTIME_ROOT}/web-asset/shared.BAK-${timestamp}" \
     "${RUNTIME_ROOT}/web-asset/vendor.BAK-${timestamp}" \
     "${RUNTIME_ROOT}/web-asset/images.BAK-${timestamp}"
   "${PUBLIC_WRITE_PREFIX[@]}" mkdir -p \
     "${PUBLIC_ADMIN_DIR}.BAK-${timestamp}" \
     "${PUBLIC_PARENT_DIR}.BAK-${timestamp}" \
-    "${PUBLIC_STUDENT_DIR}.BAK-${timestamp}"
+    "${PUBLIC_STUDENT_DIR}.BAK-${timestamp}" \
+    "${PUBLIC_SHARED_DIR}.BAK-${timestamp}"
 
   rsync -a --delete "${RUNTIME_ROOT}/server/" "${RUNTIME_ROOT}/server.BAK-${timestamp}/"
   rsync -a --delete "${RUNTIME_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas.BAK-${timestamp}/"
@@ -471,6 +475,9 @@ perform_sync() {
   fi
   if [[ -d "${RUNTIME_ROOT}/web-asset/student" ]]; then
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/student/" "${RUNTIME_ROOT}/web-asset/student.BAK-${timestamp}/"
+  fi
+  if [[ -d "${RUNTIME_ROOT}/web-asset/shared" ]]; then
+    rsync -a --delete "${RUNTIME_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared.BAK-${timestamp}/"
   fi
   if [[ -d "${RUNTIME_ROOT}/web-asset/vendor" ]]; then
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor.BAK-${timestamp}/"
@@ -487,6 +494,9 @@ perform_sync() {
   if [[ -d "${PUBLIC_STUDENT_DIR}" ]]; then
     "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${PUBLIC_STUDENT_DIR}/" "${PUBLIC_STUDENT_DIR}.BAK-${timestamp}/"
   fi
+  if [[ -d "${PUBLIC_SHARED_DIR}" ]]; then
+    "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${PUBLIC_SHARED_DIR}/" "${PUBLIC_SHARED_DIR}.BAK-${timestamp}/"
+  fi
 
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/server/" "${RUNTIME_ROOT}/server/"
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas/"
@@ -495,18 +505,22 @@ perform_sync() {
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/parent/" "${RUNTIME_ROOT}/web-asset/parent/"
   mkdir -p "${RUNTIME_ROOT}/web-asset/student"
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/student/" "${RUNTIME_ROOT}/web-asset/student/"
+  mkdir -p "${RUNTIME_ROOT}/web-asset/shared"
+  rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared/"
   mkdir -p "${RUNTIME_ROOT}/web-asset/vendor"
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor/"
   mkdir -p "${RUNTIME_ROOT}/web-asset/images"
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images/"
-  "${PUBLIC_WRITE_PREFIX[@]}" mkdir -p "${PUBLIC_ADMIN_DIR}" "${PUBLIC_PARENT_DIR}" "${PUBLIC_STUDENT_DIR}"
+  "${PUBLIC_WRITE_PREFIX[@]}" mkdir -p "${PUBLIC_ADMIN_DIR}" "${PUBLIC_PARENT_DIR}" "${PUBLIC_STUDENT_DIR}" "${PUBLIC_SHARED_DIR}"
   "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/admin/" "${PUBLIC_ADMIN_DIR}/"
   "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/parent/" "${PUBLIC_PARENT_DIR}/"
   "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/student/" "${PUBLIC_STUDENT_DIR}/"
+  "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/shared/" "${PUBLIC_SHARED_DIR}/"
   sync_runtime_env_contract
   echo "[sync] mirrored public admin assets: ${PUBLIC_ADMIN_DIR}"
   echo "[sync] mirrored public parent assets: ${PUBLIC_PARENT_DIR}"
   echo "[sync] mirrored public student assets: ${PUBLIC_STUDENT_DIR}"
+  echo "[sync] mirrored public shared assets: ${PUBLIC_SHARED_DIR}"
 }
 
 restart_if_requested() {

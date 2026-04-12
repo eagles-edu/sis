@@ -5,401 +5,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
   <title>Student Portal</title>
 
   <style>
-    :root {
-      --primary-color: #B50010;
-      --secondary-color: #f9faff;
-      --tertiary-color: #002786;
-      --bg-0: var(--secondary-color);
-      --bg-1: #f9fcf6;
-      --ink: #212121;
-      --ink-soft: #414141;
-      --line: #7388a3;
-      --line-strong: #5f7391;
-      --card: #ffffff;
-      --card-soft: #f5f9ff;
-      --brand: var(--primary-color);
-      --brand-strong: #8f1620;
-      --ok-bg: #e8f8ef;
-      --ok-line: #90d3ad;
-      --bad-bg: #fdebec;
-      --bad-line: #f2b1b7;
-      --open-bg: #fff7e6;
-      --open-line: #f5cc85;
-      --menu-bg: #f7faff;
-      --menu-header-bg: #eef3ff;
-      --menu-link-bg: #fff;
-      --menu-link-active-bg: #edf4ff;
-      --menu-border: #d7dfea;
-      --shadow: 0 10px 26px rgba(19, 41, 68, 0.12);
-      --radius-base: 3.667px;
-      --radius-1: var(--radius-base);
-      --radius-2: calc(var(--radius-base) * 2);
-      --radius-3: calc(var(--radius-base) * 3);
-      --radius-pill: 999px;
-      --side-width: min(86vw, 320px);
-      --portal-text-zoom: 1;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      min-height: 100%;
-      font-family:
-        system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(920px 420px at -15% -20%, #d9edff 0%, transparent 62%),
-        radial-gradient(980px 520px at 110% -25%, #dff8ea 0%, transparent 55%),
-        linear-gradient(180deg, var(--bg-0), var(--bg-1));
-    }
-
-    .portal-shell {
-      display: block;
-    }
-
-    .side-nav {
-      position: fixed;
-      inset-block-start: 12px;
-      inset-inline-start: 12px;
-      width: var(--side-width);
-      max-height: calc(100dvh - 24px);
-      box-sizing: border-box;
-      border: 1px solid var(--menu-border);
-      border-radius: var(--radius-3);
-      box-shadow: 0 22px 48px rgba(12, 21, 40, 0.32);
-      background: var(--menu-bg);
-      padding: 12px;
-      display: grid;
-      gap: 14px;
-      align-content: start;
-      transform: translateX(calc(-100% - 14px));
-      transition: transform 180ms ease;
-      z-index: 82;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-
-    .side-nav.open {
-      transform: translateX(0);
-    }
-
-    .side-brand {
-      display: grid;
-      gap: 7px;
-      padding: 10px;
-      border: 1px solid var(--menu-border);
-      border-radius: var(--radius-2);
-      background: var(--menu-header-bg);
-    }
-
-    .side-brand strong {
-      font-size: 0.97rem;
-    }
-
-    .side-brand span {
-      font-size: 0.8rem;
-      color: var(--ink-soft);
-    }
-
-    .side-links {
-      display: grid;
-      gap: 6px;
-    }
-
-    .side-actions {
-      border-top: 1px solid var(--menu-border);
-      margin-top: 4px;
-      padding: 8px 4px 0;
-    }
-
-    .side-actions button {
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .side-link {
-      align-items: center;
-      background: var(--menu-link-bg);
-      border: 1px solid var(--menu-border);
-      border-radius: var(--radius-2);
-      color: var(--ink);
-      display: inline-flex;
-      font-size: 12px;
-      font-weight: 700;
-      min-height: 36px;
-      padding: 8px 10px;
-      text-decoration: none;
-    }
-
-    .side-link:hover,
-    .side-link:focus-visible {
-      outline: none;
-      border-color: #b7cae3;
-      background: var(--menu-link-active-bg);
-    }
-
-    .side-link.active {
-      border-color: #90acd4;
-      background: var(--menu-link-active-bg);
-      color: #0f2545;
-    }
-
-    .nav-overlay {
-      position: fixed;
-      inset: 0;
-      border: none;
-      padding: 0;
-      margin: 0;
-      background: rgba(12, 22, 39, 0.4);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 180ms ease;
-      z-index: 81;
-      cursor: pointer;
-      backdrop-filter: blur(1px);
-    }
-
-    body.menu-open .nav-overlay {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    body.menu-open {
-      overflow: hidden;
-    }
-
-    body.modal-open {
-      overflow: hidden;
-    }
-
-    .main-col {
-      box-sizing: border-box;
-      width: 100%;
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 16px;
-      display: grid;
-      gap: 12px;
-      align-content: start;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-3);
-      min-width: 0;
-      padding: 14px;
-      box-shadow: var(--shadow);
-    }
-
-    .topbar {
-      display: grid;
-      gap: 8px;
-      align-items: center;
-      padding: 10px 64px 10px 12px;
-      border-color: #98adca;
-      background: linear-gradient(180deg, #f4f8ff 0%, #eef3fb 100%);
-    }
-
-    .topbar-head {
-      display: grid;
-      align-items: center;
-      gap: 10px;
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .env-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      border: 1px solid #b7cae3;
-      background: #eef3ff;
-      color: #1d2e4f;
-      max-width: 360px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .env-badge[data-env="development"] {
-      background: #e8f8ef;
-      border-color: #9dd5b3;
-      color: #0f4f30;
-    }
-
-    .env-badge[data-env="production"] {
-      background: #fff4da;
-      border-color: #d8b228;
-      color: #5b3b00;
-    }
-
-    .brand-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    .floating-menu-btn {
-      position: fixed;
-      inset-block-start: 12px;
-      inset-inline-end: 12px;
-      z-index: 90;
-      inline-size: 44px;
-      block-size: 44px;
-      padding: 0;
-      border-radius: var(--radius-pill);
-      border: 1px solid #8d0010;
-      background: var(--primary-color);
-      color: #fff;
-      box-shadow: 0 12px 24px rgba(14, 24, 42, 0.32);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .floating-menu-btn:hover {
-      background: #92000d;
-      border-color: #76000a;
-    }
-
-    .floating-menu-btn:focus-visible {
-      outline: 2px solid #fff;
-      outline-offset: 2px;
-    }
-
-    .floating-menu-icon,
-    .floating-menu-icon::before,
-    .floating-menu-icon::after {
-      content: "";
-      display: block;
-      width: 18px;
-      height: 2px;
-      border-radius: 2px;
-      background: #fff;
-      transition: transform 160ms ease, opacity 160ms ease;
-    }
-
-    .floating-menu-icon {
-      position: relative;
-    }
-
-    .floating-menu-icon::before {
-      position: absolute;
-      top: -6px;
-      left: 0;
-    }
-
-    .floating-menu-icon::after {
-      position: absolute;
-      top: 6px;
-      left: 0;
-    }
-
-    body.menu-open .floating-menu-icon {
-      background: transparent;
-    }
-
-    body.menu-open .floating-menu-icon::before {
-      transform: translateY(6px) rotate(45deg);
-    }
-
-    body.menu-open .floating-menu-icon::after {
-      transform: translateY(-6px) rotate(-45deg);
-    }
-
-    .brand-logo-wrap {
-      align-items: center;
-      background: #fff;
-      border: 1px solid #90a4c3;
-      border-radius: var(--radius-3);
-      box-sizing: border-box;
-      display: inline-flex;
-      flex: 0 0 auto;
-      width: 38px;
-      height: 38px;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .brand-logo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(1.05rem, 2.6vw, 1.2rem);
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .header-actions {
-      display: inline-flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-      flex-wrap: nowrap;
-    }
-
-    .text-zoom-controls {
-      margin: 0;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: nowrap;
-      justify-content: flex-end;
-    }
-
-    .text-zoom-controls button:not(.floating-menu-btn) {
-      inline-size: auto;
-      min-width: 44px;
-      min-height: 36px;
-      padding: 6px 8px;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .zoom-label {
-      font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
-      font-size: 11px;
-      color: #244165;
-    }
-
     h2 {
       margin: 0;
       font-size: 1rem;
       line-height: 1.2;
-    }
-
-    .sub {
-      margin: 4px 0 0;
-      color: var(--ink-soft);
-      font-size: 0.91rem;
-      line-height: 1.35;
-    }
-
-    .status {
-      margin: 0;
-      min-height: 1.3em;
-      color: var(--ink-soft);
-      font-size: 0.91rem;
     }
 
     .status.bad {
@@ -837,10 +450,6 @@
       color: #fff;
     }
 
-    .hidden {
-      display: none !important;
-    }
-
     #loginPanel,
     #appPanel {
       zoom: var(--portal-text-zoom);
@@ -854,16 +463,15 @@
     }
 
     .portal-grid {
-      display: grid;
-      gap: 12px;
       align-items: start;
+      gap: 12px;
+      grid-template-columns: minmax(0, 1fr);
       min-width: 0;
     }
 
     .portal-col {
-      display: grid;
-      gap: 10px;
       align-content: start;
+      gap: 10px;
       grid-template-columns: minmax(0, 1fr);
       min-width: 0;
     }
@@ -882,28 +490,7 @@
     }
 
     .panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-3);
-      background: #fff;
-      min-width: 0;
-      padding: 12px;
       margin-top: 10px;
-    }
-
-    .section-head {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .section-head h2,
-    .section-head h3 {
-      margin: 0;
-      font-size: clamp(17px, 3.3vw, 21px);
-      line-height: 1.2;
     }
 
     .identity-list {
@@ -1893,25 +1480,8 @@
       .topbar {
         padding: 8px 60px 8px 10px;
       }
-
-      .brand-logo-wrap {
-        width: 34px;
-        height: 34px;
-      }
-
-      .floating-menu-btn {
-        inline-size: 40px;
-        block-size: 40px;
-      }
     }
 
-    @media (max-width: 560px) {
-
-      .text-zoom-controls>span:first-child,
-      .text-zoom-controls .zoom-label {
-        display: none;
-      }
-    }
   </style>
 </head>
 
@@ -1946,7 +1516,7 @@
         </button>
         <div class="topbar-head">
           <div class="brand-head">
-            <span class="brand-logo-wrap">
+            <span class="brand-logo-wrap brand-logo-wrap--sm">
               <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
             </span>
             <h1>Student Portal Dashboard</h1>

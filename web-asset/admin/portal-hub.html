@@ -6,311 +6,111 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cổng truy cập công khai cho admin, phụ huynh, học sinh và tài nguyên thành viên.">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
   <title>Eagles Portal</title>
-  <style>
-    :root {
-      --bg: #f3f7fb;
-      --surface: #ffffff;
-      --surface-soft: #eef4f8;
-      --line: #d8e1e9;
-      --text: #102233;
-      --muted: #596876;
-      --accent: #0d6c8d;
-      --accent-strong: #0a5670;
-      --radius-lg: 16px;
-      --radius-md: 14px;
-      --shell-pad: 12px;
-      --font-base: system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      min-height: 100%;
-    }
-
-    body {
-      color: var(--text);
-      font-family: var(--font-base);
-      background: linear-gradient(180deg, #f8fbfd 0%, var(--bg) 100%);
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    .hub-shell {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: var(--shell-pad);
-    }
-
-    .hub-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 4px 0 12px;
-    }
-
-    .hub-logo {
-      width: 48px;
-      height: 48px;
-      flex: 0 0 auto;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--surface);
-      text-decoration: none;
-    }
-
-    .hub-logo img {
-      display: block;
-      width: 32px;
-      height: 32px;
-    }
-
-    .hub-kicker {
-      margin: 0 0 2px;
-      font-size: 0.76rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-
-    .hub-title {
-      margin: 0;
-      font-size: 1.25rem;
-      line-height: 1.1;
-    }
-
-    .hub-lede {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.35;
-    }
-
-    .hub-main-site {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .hub-main-site:hover,
-    .hub-main-site:focus-visible {
-      text-decoration: underline;
-    }
-
-    .section {
-      margin-top: 12px;
-    }
-
-    .section-title {
-      margin: 0 0 8px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .portal-grid,
-    .resource-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .portal-grid {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-
-    .portal-card,
-    .resource-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 72px;
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
-      background: var(--surface);
-      text-decoration: none;
-    }
-
-    .portal-card {
-      transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
-    }
-
-    .portal-card:hover,
-    .portal-card:focus-visible {
-      border-color: #b9c9d6;
-      background: #fbfdff;
-      transform: translateY(-1px);
-    }
-
-    .portal-card__body,
-    .resource-card__body {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .portal-card__title,
-    .resource-card__title {
-      font-size: 1rem;
-      font-weight: 800;
-      line-height: 1.15;
-    }
-
-    .portal-card__subtitle,
-    .resource-card__subtitle {
-      color: var(--muted);
-      font-size: 0.88rem;
-      line-height: 1.3;
-    }
-
-    .portal-card__chev {
-      margin-left: auto;
-      color: var(--accent);
-      font-size: 1.4rem;
-      line-height: 1;
-    }
-
-    .resource-card {
-      min-height: 52px;
-      padding: 11px 14px;
-      border-radius: var(--radius-md);
-      background: var(--surface-soft);
-    }
-
-    .resource-card[href]:hover,
-    .resource-card[href]:focus-visible {
-      border-color: #c2d2dd;
-      background: #f8fbfd;
-    }
-
-    .resource-card--disabled {
-      opacity: 0.72;
-    }
-
-    .resource-card__meta {
-      margin-left: auto;
-      color: var(--muted);
-      font-size: 0.82rem;
-      white-space: nowrap;
-    }
-
-    .hub-logo:focus-visible,
-    .hub-main-site:focus-visible,
-    .portal-card:focus-visible,
-    .resource-card:focus-visible {
-      outline: 3px solid rgba(13, 108, 141, 0.18);
-      outline-offset: 2px;
-    }
-
-    @media (min-width: 640px) {
-      .hub-shell {
-        padding: 16px;
-      }
-    }
-  </style>
 </head>
 <body>
-  <main class="hub-shell">
-    <header class="hub-brand">
-      <a class="hub-logo" href="https://admin.eagles.edu.vn" aria-label="Eagles admin home">
-        <img src="/web-asset/images/logo.svg" alt="" aria-hidden="true">
-      </a>
+  <div class="portal-layout">
+    <main class="shell">
+      <section class="card hero" aria-labelledby="hub-title">
+        <div class="hero-line">
+          <div class="hero-brand">
+            <a class="brand-logo-wrap brand-logo-wrap--lg" href="https://admin.eagles.edu.vn" aria-label="Eagles admin home">
+              <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+            </a>
 
-      <div class="hub-brand-copy">
-        <p class="hub-kicker">Cổng truy cập công khai</p>
-        <h1 class="hub-title">Eagles Portal</h1>
-        <p class="hub-lede">Chọn cổng phù hợp. Nhanh. Gọn. Tối ưu cho điện thoại.</p>
-        <a class="hub-main-site" href="https://eagles.edu.vn">Xem trang chủ</a>
-      </div>
-    </header>
+            <div class="hero-copy">
+              <p class="hero-kicker">Cổng truy cập công khai</p>
+              <h1 id="hub-title">Eagles Portal</h1>
+              <p>Chọn cổng phù hợp. Giao diện đồng bộ với các portal khác trong hệ thống.</p>
+            </div>
+          </div>
 
-    <section class="section" aria-labelledby="primary-portals">
-      <h2 class="section-title" id="primary-portals">Lối vào chính</h2>
+          <div class="hero-actions">
+            <a class="hero-link" href="https://eagles.edu.vn">Xem trang chủ</a>
+          </div>
+        </div>
+      </section>
 
-      <div class="portal-grid">
-        <a class="portal-card" href="/admin">
-          <span class="portal-card__body">
-            <span class="portal-card__title">Admin</span>
-            <span class="portal-card__subtitle">Quản trị, dữ liệu, báo cáo</span>
-          </span>
-          <span class="portal-card__chev" aria-hidden="true">›</span>
-        </a>
-
-        <a class="portal-card" href="/parent">
-          <span class="portal-card__body">
-            <span class="portal-card__title">Phụ huynh</span>
-            <span class="portal-card__subtitle">Thông tin học tập, liên hệ</span>
-          </span>
-          <span class="portal-card__chev" aria-hidden="true">›</span>
-        </a>
-
-        <a class="portal-card" href="/student">
-          <span class="portal-card__body">
-            <span class="portal-card__title">Học sinh</span>
-            <span class="portal-card__subtitle">Bài học, điểm, tiến độ</span>
-          </span>
-          <span class="portal-card__chev" aria-hidden="true">›</span>
-        </a>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="member-resources">
-      <h2 class="section-title" id="member-resources">Tài nguyên thành viên</h2>
-
-      <div class="resource-list">
-        <a class="resource-card" href="https://anhngu.eagles.edu.vn">
-          <span class="resource-card__body">
-            <span class="resource-card__title">Anh ngữ</span>
-            <span class="resource-card__subtitle">Moodle</span>
-          </span>
-          <span class="resource-card__meta" aria-hidden="true">›</span>
-        </a>
-
-        <a class="resource-card" href="https://ielts.eagles.edu.vn">
-          <span class="resource-card__body">
-            <span class="resource-card__title">IELTS</span>
-            <span class="resource-card__subtitle">Moodle</span>
-          </span>
-          <span class="resource-card__meta" aria-hidden="true">›</span>
-        </a>
-
-        <div class="resource-card resource-card--disabled" aria-disabled="true">
-          <span class="resource-card__body">
-            <span class="resource-card__title">Future 1</span>
-            <span class="resource-card__subtitle">Sắp ra mắt</span>
-          </span>
-          <span class="resource-card__meta" aria-hidden="true">Soon</span>
+      <section class="card section-card" aria-labelledby="primary-portals">
+        <div class="section-head">
+          <p class="section-kicker">Lối vào chính</p>
+          <h2 class="section-title" id="primary-portals">Các portal chính</h2>
+          <p class="section-lede">Ba lối vào bên dưới dùng cùng nền và cùng kiểu thẻ để giữ trải nghiệm nhất quán.</p>
         </div>
 
-        <div class="resource-card resource-card--disabled" aria-disabled="true">
-          <span class="resource-card__body">
-            <span class="resource-card__title">Future 2</span>
-            <span class="resource-card__subtitle">Sắp ra mắt</span>
-          </span>
-          <span class="resource-card__meta" aria-hidden="true">Soon</span>
+        <div class="portal-grid">
+          <a class="portal-card" href="/admin">
+            <span class="portal-card__body">
+              <span class="portal-card__eyebrow">Staff</span>
+              <span class="portal-card__title">Admin</span>
+              <span class="portal-card__subtitle">Quản trị, dữ liệu, báo cáo</span>
+            </span>
+            <span class="portal-card__chev" aria-hidden="true">›</span>
+          </a>
+
+          <a class="portal-card" href="/parent">
+            <span class="portal-card__body">
+              <span class="portal-card__eyebrow">Family</span>
+              <span class="portal-card__title">Phụ huynh</span>
+              <span class="portal-card__subtitle">Thông tin học tập, liên hệ</span>
+            </span>
+            <span class="portal-card__chev" aria-hidden="true">›</span>
+          </a>
+
+          <a class="portal-card" href="/student">
+            <span class="portal-card__body">
+              <span class="portal-card__eyebrow">Student</span>
+              <span class="portal-card__title">Học sinh</span>
+              <span class="portal-card__subtitle">Bài học, điểm, tiến độ</span>
+            </span>
+            <span class="portal-card__chev" aria-hidden="true">›</span>
+          </a>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
+
+      <section class="card section-card" aria-labelledby="member-resources">
+        <div class="section-head">
+          <p class="section-kicker">Tài nguyên</p>
+          <h2 class="section-title" id="member-resources">Tài nguyên thành viên</h2>
+          <p class="section-lede">Các liên kết bên dưới giữ cùng panel treatment để không lệch khỏi ngôn ngữ thiết kế chính.</p>
+        </div>
+
+        <div class="resource-list">
+          <a class="resource-card" href="https://anhngu.eagles.edu.vn">
+            <span class="resource-card__body">
+              <span class="resource-card__title">Anh ngữ</span>
+              <span class="resource-card__subtitle">Moodle</span>
+            </span>
+            <span class="resource-card__meta" aria-hidden="true">›</span>
+          </a>
+
+          <a class="resource-card" href="https://ielts.eagles.edu.vn">
+            <span class="resource-card__body">
+              <span class="resource-card__title">IELTS</span>
+              <span class="resource-card__subtitle">Moodle</span>
+            </span>
+            <span class="resource-card__meta" aria-hidden="true">›</span>
+          </a>
+
+          <div class="resource-card resource-card--disabled" aria-disabled="true">
+            <span class="resource-card__body">
+              <span class="resource-card__title">Future 1</span>
+              <span class="resource-card__subtitle">Sắp ra mắt</span>
+            </span>
+            <span class="resource-card__meta" aria-hidden="true">Soon</span>
+          </div>
+
+          <div class="resource-card resource-card--disabled" aria-disabled="true">
+            <span class="resource-card__body">
+              <span class="resource-card__title">Future 2</span>
+              <span class="resource-card__subtitle">Sắp ra mắt</span>
+            </span>
+            <span class="resource-card__meta" aria-hidden="true">Soon</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 </body>
 </html>

@@ -7,6 +7,32 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-12 - shared portal theme extracted to `/web-asset/shared/portal-theme.css`)
+
+- Requirement:
+  - stop duplicating the common portal visual system across the admin, parent, and student portal pages.
+- Changes:
+  - [web-asset/shared/portal-theme.css](web-asset/shared/portal-theme.css):
+    - new shared stylesheet for the portal shell, background treatment, panel/card styling, hero/header treatment, side-nav, floating menu button, logo badges, and responsive breakpoints.
+  - [web-asset/admin/portal-hub.html](web-asset/admin/portal-hub.html):
+    - now consumes the shared stylesheet and relies on the shared panel treatment for the hub layout.
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - now loads the shared stylesheet and keeps only parent-specific layout and data presentation rules inline.
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - now loads the shared stylesheet and keeps only student-specific layout and widget rules inline.
+  - [tools/deploy-api-safe.sh](tools/deploy-api-safe.sh), [tools/sis-runtime-resync.sh](tools/sis-runtime-resync.sh), [tools/sync-portal-bidirectional.sh](tools/sync-portal-bidirectional.sh), [tools/verify-portal-sync-proof.sh](tools/verify-portal-sync-proof.sh):
+    - now include `web-asset/shared/portal-theme.css` in sync and proof flows so runtime mirrors and portal parity checks cover the shared asset.
+  - [test/portal-theme-contract.spec.mjs](test/portal-theme-contract.spec.mjs), [test/portal-bidirectional-sync.spec.mjs](test/portal-bidirectional-sync.spec.mjs), [test/deploy-sync-contract.spec.mjs](test/deploy-sync-contract.spec.mjs), [test/portal-chip-contract.spec.mjs](test/portal-chip-contract.spec.mjs):
+    - contract coverage now locks the shared stylesheet, portal references, and sync/deploy expectations.
+- Verification:
+  - `npm run lint:html` => pass.
+  - `node --test test/portal-theme-contract.spec.mjs test/portal-bidirectional-sync.spec.mjs test/deploy-sync-contract.spec.mjs test/html-lint-contract.spec.mjs` => pass.
+  - `node --test test/portal-chip-contract.spec.mjs` => pass.
+  - `npm test` => pass (`363` pass, `0` fail).
+- Coverage gaps / risk:
+  - the parent and student portals still have page-specific inline rules for their unique widgets and charts; only the shared shell/theme layer is now centralized.
+  - future portal pages should link the shared stylesheet and be added to the sync/proof contracts.
+
 ## Update (2026-04-12 - canonical portal roots moved to `/admin`, `/parent`, and `/student`)
 
 - Requirement:
