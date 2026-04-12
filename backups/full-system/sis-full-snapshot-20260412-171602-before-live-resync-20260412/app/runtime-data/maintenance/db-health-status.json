@@ -1,0 +1,41 @@
+{
+  "status": "ok",
+  "checkedAt": "2026-04-12T10:15:01.073Z",
+  "thresholds": {
+    "backupStaleMinutes": 1560,
+    "maxQueryLatencyMs": 500,
+    "maxIncomingUnmatched": 0,
+    "maxOrphanCount": 0
+  },
+  "db": {
+    "status": "ok",
+    "connected": true,
+    "queryLatencyMs": 73,
+    "error": ""
+  },
+  "backup": {
+    "status": "ok",
+    "latestMetadataPath": "/home/admin.eagles.edu.vn/sis/backups/postgres/latest.json",
+    "latestBackupPath": "/home/admin.eagles.edu.vn/sis/backups/postgres/postgres-20260411-193000Z.dump",
+    "lastBackupAt": "2026-04-11T19:30:00.889Z",
+    "ageMinutes": 885,
+    "staleThresholdMinutes": 1560,
+    "isStale": false
+  },
+  "incoming": {
+    "status": "ok",
+    "queuedCount": 0,
+    "temporaryCount": 0,
+    "unmatchedCount": 0,
+    "latestVacuumReportPath": "/home/admin.eagles.edu.vn/sis/runtime-data/maintenance-reports/incoming-vacuum-20260325-201701Z.json",
+    "lastIncomingVacuumAt": "2026-03-25T20:17:01.437Z",
+    "manualReviewCount": 0
+  },
+  "orphans": {
+    "status": "ok",
+    "exerciseSubmissionMissingStudent": 0,
+    "exerciseSubmissionMissingExercise": 0,
+    "studentGradeRecordMissingStudent": 0,
+    "total": 0
+  }
+}

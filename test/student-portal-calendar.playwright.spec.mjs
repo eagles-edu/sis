@@ -134,6 +134,7 @@ function createStudentPortalFixtureServer(rootDir) {
       actionWhat: "Action A",
       actionWhy: "Reason A",
       biasAssessment: "Bias A",
+      reviewNote: "Please tighten the lead and add the source citation.",
       reviewStatus: "submitted",
       awaitingReReview: true,
       submittedAt: "2026-03-17T09:05:00.000Z",
@@ -152,6 +153,7 @@ function createStudentPortalFixtureServer(rootDir) {
       actionWhat: "Action B",
       actionWhy: "Reason B",
       biasAssessment: "Bias B",
+      reviewNote: "Please update the dateline and add one clearer source citation.",
       reviewStatus: "revision-requested",
       awaitingReReview: false,
       submittedAt: "2026-03-13T11:30:00.000Z",
@@ -259,9 +261,11 @@ function createStudentPortalFixtureServer(rootDir) {
             currentGrade: "A2 Flyers",
             attendance: {
               total: 18,
-              present: 16,
+              present: 17,
               absent: 1,
               late: 1,
+              tardy10: 1,
+              tardy30: 0,
               excused: 0,
             },
             assignments: {
@@ -466,6 +470,7 @@ function createStudentPortalFixtureServer(rootDir) {
           const submittedAt = `2026-03-17T12:0${Math.min(submitCounter, 9)}:00.000Z`;
           const reportDate = String(payload?.reportDate || "");
           const existingIndex = studentNewsItems.findIndex((entry) => entry.reportDate === reportDate);
+          const existingItem = existingIndex >= 0 ? studentNewsItems[existingIndex] : null;
           const nextItem = {
             id: `news-${reportDate}`,
             reportDate,
@@ -480,6 +485,7 @@ function createStudentPortalFixtureServer(rootDir) {
             actionWhat: String(payload?.actionWhat || ""),
             actionWhy: String(payload?.actionWhy || ""),
             biasAssessment: String(payload?.biasAssessment || ""),
+            reviewNote: String(existingItem?.reviewNote || ""),
             reviewStatus: "submitted",
             awaitingReReview: false,
             submittedAt,
@@ -783,6 +789,7 @@ test(
           statusChipClass: statusChip?.className || "",
           statusChipText: statusChip?.textContent || "",
           submittedAt: globalThis.document.getElementById("newsViewerSubmittedAt")?.value || "",
+          reviewNote: globalThis.document.getElementById("newsViewerReviewNote")?.value || "",
         };
       });
       assert.equal(modalBeforeSubmit.hasSubmit, true);
@@ -792,6 +799,7 @@ test(
       assert.match(modalBeforeSubmit.statusChipText, /Waiting/i);
       assert.match(modalBeforeSubmit.statusChipClass, /\bchip-revise\b/i);
       assert.match(modalBeforeSubmit.submittedAt, /2026|Mar|March/i);
+      assert.match(modalBeforeSubmit.reviewNote, /tighten the lead/i);
 
       await page.fill("#newsViewerArticleTitle", "Waiting Report Updated");
       await page.click("#newsWeekSetModalSubmitBtn");

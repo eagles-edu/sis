@@ -7,6 +7,65 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-12 - tardy rows now count as present while staying separate for lateness reporting)
+
+- Requirement:
+  - treat tardy rows as attended for presence totals.
+  - keep tardy lateness counts separate so they can still be reported by period and student.
+- Changes:
+  - [server/attendance-summary.mjs](server/attendance-summary.mjs):
+    - added a shared attendance summarizer that counts tardy rows as present and splits tardy10/tardy30 buckets.
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - parent/student dashboard snapshots now use the shared attendance summarizer.
+  - [server/student-report-card-pdf.mjs](server/student-report-card-pdf.mjs):
+    - report-card attendance summary now uses the shared attendance summarizer and labels present as inclusive of tardy.
+  - [test/attendance-summary.spec.mjs](test/attendance-summary.spec.mjs):
+    - added direct coverage for present-inclusive tardy counts and lateness buckets.
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - updated the parent dashboard contract fixture to reflect present-inclusive tardy totals.
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - updated the student dashboard fixture to use the same present-inclusive tardy contract.
+- Verification:
+  - pending after patch.
+- Coverage gaps / risk:
+  - attendance row coverage remains in record-level tests rather than dashboard payload fixtures.
+
+## Update (2026-04-12 - revise-mode student news edits now stay open through the current quarter)
+
+- Requirement:
+  - when a news report is in `revision-requested`, keep it student-editable until the end of the current quarter instead of only during the current week.
+- Changes:
+  - [server/student-admin-store.mjs](server/student-admin-store.mjs):
+    - added runtime School Setup quarter-window resolution from `STUDENT_ADMIN_UI_SETTINGS_FILE`.
+    - revise-mode saves now use the current-quarter window instead of the same-week-only lock.
+    - approved reports remain locked.
+  - [test/student-news-timezone.spec.mjs](test/student-news-timezone.spec.mjs):
+    - added quarter-window coverage against a temporary School Setup settings file.
+  - [test/student-admin-store-parent-report.spec.mjs](test/student-admin-store-parent-report.spec.mjs):
+    - updated the save-path contract assertions for the revise-mode quarter window.
+- Verification:
+  - `git diff --check` passed.
+  - `node --test test/student-news-timezone.spec.mjs test/student-admin-store-parent-report.spec.mjs` passed.
+- Coverage gaps / risk:
+  - non-`revision-requested` existing reports still follow the same-week resubmission rule.
+
+## Update (2026-04-12 - student news viewer now surfaces saved admin review notes)
+
+- Requirement:
+  - show the saved admin review note on the student news week-set viewer so students can see revision comments.
+- Changes:
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - added a read-only review-note field to the news week-set modal.
+    - now maps `reviewNote` from student-news API items into the viewer.
+  - [test/student-portal-calendar.playwright.spec.mjs](test/student-portal-calendar.playwright.spec.mjs):
+    - fixture items now carry review notes.
+    - regression coverage now asserts the waiting item exposes the saved note in the viewer.
+- Verification:
+  - `git diff --check` passed.
+  - `node --test test/student-portal-calendar.playwright.spec.mjs` passed.
+- Coverage gaps / risk:
+  - the revise-mode quarter-end edit gate is enforced separately in `saveStudentNewsReport`; the viewer change only exposes the saved note.
+
 ## Update (2026-04-09 - SheetJS upgraded to 0.20.3 with ESM fs compatibility fix)
 
 - Requirement:

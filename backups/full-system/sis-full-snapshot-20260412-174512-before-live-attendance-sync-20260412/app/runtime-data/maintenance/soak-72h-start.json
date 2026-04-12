@@ -1,0 +1,49 @@
+{
+  "soakWindowHours": 72,
+  "startedAtUtc": "2026-03-22T12:06:00Z",
+  "expectedEndAtUtc": "2026-03-25T12:06:00Z",
+  "startedBy": "codex",
+  "baseline": {
+    "dbHealthStatus": "ok",
+    "backupStatus": "ok",
+    "incomingStatus": "ok",
+    "orphanStatus": "ok",
+    "healthSnapshotPath": "/home/admin.eagles.edu.vn/sis/runtime-data/maintenance/db-health-status.json",
+    "timers": [
+      "Sun 2026-03-22 19:15:00 +07 8min left          n/a                         n/a          sis-db-health.timer            sis-db-health.service",
+      "Mon 2026-03-23 02:30:00 +07 7h left            n/a                         n/a          sis-db-backup.timer            sis-db-backup.service",
+      "Mon 2026-03-23 03:17:00 +07 8h left            n/a                         n/a          sis-incoming-vacuum.timer      sis-incoming-vacuum.service"
+    ],
+    "serviceStateSnapshot": [
+      "Result=success",
+      "ExecMainStartTimestamp=Sun 2026-03-22 19:05:27 +07",
+      "ExecMainExitTimestamp=Sun 2026-03-22 19:05:27 +07",
+      "ExecMainStatus=0",
+      "Id=sis-db-backup.service",
+      "ActiveState=inactive",
+      "SubState=dead",
+      "",
+      "Result=success",
+      "ExecMainStartTimestamp=Sun 2026-03-22 19:05:27 +07",
+      "ExecMainExitTimestamp=Sun 2026-03-22 19:05:28 +07",
+      "ExecMainStatus=0",
+      "Id=sis-incoming-vacuum.service",
+      "ActiveState=inactive",
+      "SubState=dead",
+      "",
+      "Result=success",
+      "ExecMainStartTimestamp=Sun 2026-03-22 19:05:27 +07",
+      "ExecMainExitTimestamp=Sun 2026-03-22 19:05:37 +07",
+      "ExecMainStatus=0",
+      "Id=sis-db-health.service",
+      "ActiveState=inactive",
+      "SubState=dead"
+    ]
+  },
+  "reviewChecklist": [
+    "No failed units: systemctl --failed | grep sis- should return empty",
+    "Timer schedule intact: systemctl list-timers --all | grep sis-",
+    "Recent logs clean: journalctl -u sis-db-backup.service -u sis-incoming-vacuum.service -u sis-db-health.service --since \"24 hours ago\"",
+    "Health JSON remains status=ok: /home/admin.eagles.edu.vn/sis/runtime-data/maintenance/db-health-status.json"
+  ]
+}
