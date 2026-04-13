@@ -7,6 +7,9 @@ import {
   selectAtRiskStudentsFromSignals,
   summarizeTodayAttendanceForDashboard,
 } from "../server/student-admin-store.mjs"
+import {
+  buildAssignmentDashboardSlices,
+} from "../server/student-admin-assignment-template-store.mjs"
 
 function buildProfileMap(total = 0, level = "A1 Movers") {
   const map = new Map()
@@ -366,4 +369,41 @@ test("selectAttendanceRiskStudentsFromSignals sorts by attendance risk score the
     result.map((entry) => entry.fullName),
     ["Alpha", "Bravo", "Zulu"]
   )
+})
+
+test("buildAssignmentDashboardSlices returns backend-owned currentAssignmentMeta and enrollmentOnlyLevels", () => {
+  const slices = buildAssignmentDashboardSlices({
+    now: new Date("2026-03-10T09:00:00.000Z"),
+    assignmentTemplates: [
+      {
+        id: "slice-1",
+        level: "A1 Movers",
+        assignmentTitle: "Movers Current",
+        assignedAt: "2026-03-09",
+        dueAt: "2026-03-12",
+        items: [{ title: "Read", url: "https://example.com/read" }],
+        updatedAt: "2026-03-10T08:00:00.000Z",
+      },
+      {
+        id: "slice-2",
+        level: "A2 Flyers",
+        assignmentTitle: "Flyers Current",
+        assignedAt: "2026-03-10",
+        dueAt: "2026-03-14",
+        items: [{ title: "Write", url: "https://example.com/write" }],
+        updatedAt: "2026-03-10T08:30:00.000Z",
+      },
+    ],
+    classEnrollmentAttendance: [
+      { level: "A1 Movers", enrolled: 8 },
+      { level: "A2 Flyers", enrolled: 6 },
+      { level: "A2 KET", enrolled: 4 },
+    ],
+  })
+
+  assert.deepEqual(
+    slices.currentAssignmentMeta.map((entry) => entry.level),
+    ["A1 Movers", "A2 Flyers"]
+  )
+  assert.deepEqual(slices.enrollmentOnlyLevels, ["A2 KET"])
 })

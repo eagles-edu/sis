@@ -3050,7 +3050,7 @@
         };
       }
 
-      function loadAssignmentTemplatesFromStorage() {
+      function loadLegacyAssignmentTemplatesFromStorage() {
         let stored = "";
         try {
           stored = normalizeText(
@@ -3072,8 +3072,16 @@
         }
       }
 
-      function persistAssignmentTemplates(templates = []) {
-        const normalized = Array.from(
+      function clearLegacyAssignmentTemplateStorage() {
+        try {
+          window.localStorage.removeItem(ASSIGNMENT_TEMPLATE_STORAGE_KEY);
+        } catch (error) {
+          void error;
+        }
+      }
+
+      function normalizeAssignmentTemplateList(templates = []) {
+        return Array.from(
           new Map(
             (Array.isArray(templates) ? templates : [])
               .map((entry) => normalizeAssignmentTemplate(entry))
@@ -3089,16 +3097,48 @@
             normalizeText(left.updatedAt || left.assignedAt || left.dueAt),
           ),
         );
-        state.assignmentTemplates = normalized;
-        try {
-          window.localStorage.setItem(
-            ASSIGNMENT_TEMPLATE_STORAGE_KEY,
-            JSON.stringify(normalized),
-          );
-        } catch (error) {
-          void error;
+      }
+
+      async function migrateLegacyAssignmentTemplatesToServer() {
+        const legacyTemplates = loadLegacyAssignmentTemplatesFromStorage();
+        if (!legacyTemplates.length) return { total: 0, saved: 0, items: [] };
+        const result = await api(ADMIN_ASSIGNMENT_TEMPLATES_IMPORT_PATH, {
+          method: "POST",
+          body: {
+            templates: legacyTemplates,
+          },
+        });
+        clearLegacyAssignmentTemplateStorage();
+        return result;
+      }
+
+      async function loadAssignmentTemplatesFromServer({
+        migrateLegacy = false,
+      } = {}) {
+        if (migrateLegacy) {
+          try {
+            await migrateLegacyAssignmentTemplatesToServer();
+          } catch (error) {
+            if (!(error && (error.status === 404 || error.status === 503))) {
+              throw error;
+            }
+          }
         }
-        return normalized;
+
+        try {
+          const result = await api(ADMIN_ASSIGNMENT_TEMPLATES_PATH);
+          const normalized = normalizeAssignmentTemplateList(
+            Array.isArray(result?.items) ? result.items : [],
+          );
+          state.assignmentTemplates = normalized;
+          return normalized;
+        } catch (error) {
+          if (error && (error.status === 404 || error.status === 503)) {
+            state.assignmentTemplates = [];
+            return [];
+          }
+          throw error;
+        }
       }
 
       function normalizeTeacherNameList(values = []) {
@@ -7128,7 +7168,6 @@
 
       state.uiSettings = loadUiSettingsFromStorage();
       state.profileFormConfig = loadProfileFormConfigFromStorage();
-      state.assignmentTemplates = loadAssignmentTemplatesFromStorage();
       state.tableArchiveIndex = loadTableArchiveIndexFromStorage();
       state.tableColumnVisibility = loadAllTableColumnVisibilityFromStorage();
       state.attendanceColumnVisibility = state.tableColumnVisibility.attendance;
@@ -7627,6 +7666,12 @@
       const ADMIN_INCOMING_EXERCISE_RESULTS_PATH =
         normalizeText(window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH) ||
         "/api/admin/exercise-results/incoming";
+      const ADMIN_ASSIGNMENT_TEMPLATES_PATH =
+        normalizeText(window.__SIS_ADMIN_ASSIGNMENT_TEMPLATES_PATH) ||
+        "/api/admin/assignment-templates";
+      const ADMIN_ASSIGNMENT_TEMPLATES_IMPORT_PATH =
+        normalizeText(window.__SIS_ADMIN_ASSIGNMENT_TEMPLATES_IMPORT_PATH) ||
+        `${ADMIN_ASSIGNMENT_TEMPLATES_PATH}/import`;
       const ADMIN_RUNTIME_HEALTH_PATH =
         normalizeText(window.__SIS_ADMIN_RUNTIME_HEALTH_PATH) ||
         "/api/admin/runtime/health";
@@ -8566,6 +8611,11 @@
           defaultRolePermissionsConfig(),
         );
         state.adminUsers = [];
+        state.assignmentTemplates = [];
+        state.assignmentDraft = {
+          id: "",
+          items: [],
+        };
         state.parentReportQueue = {
           items: [],
           total: 0,
@@ -9487,7 +9537,6 @@
         const assignmentTitle =
           form.assignmentTitle || `${fullLevelLabel(form.level)} Assignment`;
         const completion = assignmentCompletionFromItems(form.items);
-        const nowIso = new Date().toISOString();
         const existing = state.assignmentTemplates.find(
           (entry) => entry.id === form.id,
         );
@@ -9507,33 +9556,36 @@
             completion.completed ?
               normalizeText(existing?.completedAt) || localIsoDate()
             : "",
-          createdAt: normalizeText(existing?.createdAt) || nowIso,
-          updatedAt: nowIso,
         });
-        const nextTemplates = [
-          template,
-          ...state.assignmentTemplates.filter((entry) => entry.id !== template.id),
-        ];
-        persistAssignmentTemplates(nextTemplates);
-        fillAssignmentForm(template);
+        const templateId = normalizeText(existing?.id || template.id);
+        const requestPath = templateId ?
+          `${ADMIN_ASSIGNMENT_TEMPLATES_PATH}/${encodeURIComponent(templateId)}`
+        : ADMIN_ASSIGNMENT_TEMPLATES_PATH;
+        const result = await api(requestPath, {
+          method: templateId ? "PUT" : "POST",
+          body: template,
+        });
+        const savedTemplate = normalizeAssignmentTemplate(result?.item || template);
+        await loadAssignmentTemplatesFromServer();
+        fillAssignmentForm(savedTemplate);
         renderAssignmentTemplates();
         if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
-        setAssignmentStatus(`Assignment saved: ${template.assignmentTitle}`);
+        setAssignmentStatus(`Assignment saved: ${savedTemplate.assignmentTitle}`);
       }
 
       async function deleteAssignmentTemplate(templateId = "") {
         const targetId = normalizeText(templateId || state.assignmentDraft?.id);
         if (!targetId) throw new Error("Select or load an assignment first.");
-        state.assignmentTemplates = state.assignmentTemplates.filter(
-          (entry) => entry.id !== targetId,
-        );
+        await api(`${ADMIN_ASSIGNMENT_TEMPLATES_PATH}/${encodeURIComponent(targetId)}`, {
+          method: "DELETE",
+        });
         setTableRecordArchived("assignments", targetId, false);
-        persistAssignmentTemplates(state.assignmentTemplates);
         if (normalizeText(state.assignmentDraft?.id) === targetId) {
           resetAssignmentForm();
         } else {
           renderAssignmentTemplates();
         }
+        await loadAssignmentTemplatesFromServer();
         if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
         setAssignmentStatus("Assignment deleted.");
       }
@@ -18806,6 +18858,9 @@
         initializeParentTrackingScoreLegendPopovers();
         await loadRolePermissions();
         await hydrateUiSettingsFromServer();
+        await loadAssignmentTemplatesFromServer({
+          migrateLegacy: true,
+        });
         showUserPanel();
         applyUiSettings();
         renderAssignmentTemplates();
@@ -19474,9 +19529,12 @@
           loadExerciseTitles(q).catch(handleError);
         });
       bindById("assignmentReloadTemplatesBtn", "click", () => {
-          state.assignmentTemplates = loadAssignmentTemplatesFromStorage();
-          renderAssignmentTemplates();
-          setAssignmentStatus("Assignments reloaded.");
+          loadAssignmentTemplatesFromServer()
+            .then(() => {
+              renderAssignmentTemplates();
+              setAssignmentStatus("Assignments reloaded.");
+            })
+            .catch(handleError);
         });
       bindById("assignmentSortField", "change", () => {
         applySortState(

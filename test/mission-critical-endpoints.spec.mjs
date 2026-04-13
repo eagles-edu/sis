@@ -245,6 +245,11 @@ test("teacher cannot execute admin-only write actions", async () => {
       path: "/api/admin/assignment-announcements/volatile",
       body: { assignmentTitle: "x", level: "Pre-A1 Starters", items: [] },
     },
+    {
+      method: "POST",
+      path: "/api/admin/assignment-templates",
+      body: { assignmentTitle: "x", level: "Pre-A1 Starters", items: [] },
+    },
     { method: "POST", path: "/api/admin/exercise-results/incoming", body: { action: "archive", incomingResultId: "x" } },
     { method: "POST", path: "/api/admin/notifications/batch-status", body: { action: "send-all", queueType: "parent-report" } },
     { method: "PUT", path: "/api/admin/profile-submissions/sub-1", body: { patch: { fullName: "x" } } },

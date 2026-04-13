@@ -222,6 +222,18 @@ test("StudentNewsReport review fields exist in Prisma schema contract", () => {
   assert.match(modelChunk, /reviewedByUsername\s+String\?/)
 })
 
+test("AssignmentTemplate Prisma model and admin route surface exist in the contract", () => {
+  const schema = fs.readFileSync(new URL("../prisma/schema.prisma", import.meta.url), "utf8")
+  assert.match(schema, /model\s+AssignmentTemplate\s*{/)
+  assert.match(schema, /itemsJson\s+Json\?/)
+  assert.match(schema, /completed\s+Boolean\s+@default\(false\)/)
+
+  const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+  assert.match(routes, /ADMIN_ASSIGNMENT_TEMPLATES_PATH/)
+  assert.match(routes, /ADMIN_ASSIGNMENT_TEMPLATES_IMPORT_PATH/)
+  assert.match(routes, /ADMIN_ASSIGNMENT_TEMPLATE_PATH_RE/)
+})
+
 test("student news compliance save path returns soft-save success payload and keeps resubmission failures in waiting state", () => {
   const store = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
   const routes = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")

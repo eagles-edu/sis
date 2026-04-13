@@ -49,6 +49,13 @@ import {
   saveStudent,
 } from "./student-admin-store.mjs"
 import {
+  deleteAssignmentTemplateById,
+  importAssignmentTemplates,
+  getAssignmentTemplateById,
+  listAssignmentTemplates,
+  saveAssignmentTemplate,
+} from "./student-admin-assignment-template-store.mjs"
+import {
   createAdminUser,
   deleteAdminUserById,
   findAdminUserForLogin,
@@ -118,6 +125,8 @@ const ADMIN_POINTS_SUMMARY_PATH = `${ADMIN_API_PREFIX}/points/summary`
 const ADMIN_POINTS_STUDENTS_PATH = `${ADMIN_API_PREFIX}/points/students`
 const ADMIN_POINTS_LEDGER_PATH = `${ADMIN_API_PREFIX}/points/ledger`
 const ADMIN_POINTS_ADJUSTMENTS_PATH = `${ADMIN_API_PREFIX}/points/adjustments`
+const ADMIN_ASSIGNMENT_TEMPLATES_PATH = `${ADMIN_API_PREFIX}/assignment-templates`
+const ADMIN_ASSIGNMENT_TEMPLATES_IMPORT_PATH = `${ADMIN_ASSIGNMENT_TEMPLATES_PATH}/import`
 const ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH =
   `${ADMIN_API_PREFIX}/assignment-announcements/volatile`
 const PARENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_PARENT_API_PREFIX, "/api/parent")
@@ -155,6 +164,9 @@ const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
 )
 const ADMIN_PROFILE_SUBMISSION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PROFILE_SUBMISSIONS_PATH)}/([^/]+)$`)
 const ADMIN_NEWS_REPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_NEWS_REPORTS_PATH)}/([^/]+)$`)
+const ADMIN_ASSIGNMENT_TEMPLATE_PATH_RE = new RegExp(
+  `^${escapeRegex(ADMIN_ASSIGNMENT_TEMPLATES_PATH)}/([^/]+)$`
+)
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_HUB_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/portal-hub.html")
 const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
@@ -5265,6 +5277,98 @@ async function handleApiRequest(request, response, pathname, url) {
     }
     sendJson(response, 200, data)
     return true
+  }
+
+  if (pathname === ADMIN_ASSIGNMENT_TEMPLATES_PATH) {
+    assertStoreEnabled()
+
+    if (method === "GET") {
+      const items = await listAssignmentTemplates({
+        query: url.searchParams.get("q") || "",
+        level: url.searchParams.get("level") || "",
+        take: url.searchParams.get("take") || "250",
+        currentWeek: resolveBoolean(url.searchParams.get("currentWeek"), false),
+      })
+      sendJson(response, 200, {
+        ok: true,
+        total: items.length,
+        items,
+      })
+      return true
+    }
+
+    if (method === "POST") {
+      const payload = await parseBody(request)
+      const result = await saveAssignmentTemplate(payload, {
+        updatedByUsername: normalizeText(session?.username),
+      })
+      sendJson(response, 200, {
+        ok: true,
+        ...result,
+      })
+      return true
+    }
+  }
+
+  if (method === "POST" && pathname === ADMIN_ASSIGNMENT_TEMPLATES_IMPORT_PATH) {
+    assertStoreEnabled()
+    const payload = await parseBody(request)
+    const result = await importAssignmentTemplates(payload, {
+      updatedByUsername: normalizeText(session?.username),
+    })
+    sendJson(response, 200, {
+      ok: true,
+      ...result,
+    })
+    return true
+  }
+
+  const assignmentTemplateMatch = pathname.match(ADMIN_ASSIGNMENT_TEMPLATE_PATH_RE)
+  if (assignmentTemplateMatch) {
+    assertStoreEnabled()
+    const templateId = decodeURIComponent(assignmentTemplateMatch[1])
+
+    if (method === "GET") {
+      const item = await getAssignmentTemplateById(templateId)
+      if (!item) {
+        const error = new Error("Assignment template not found")
+        error.statusCode = 404
+        throw error
+      }
+      sendJson(response, 200, {
+        ok: true,
+        item,
+      })
+      return true
+    }
+
+    if (method === "PUT") {
+      const payload = await parseBody(request)
+      const result = await saveAssignmentTemplate(
+        {
+          ...payload,
+          id: templateId,
+        },
+        {
+          templateId,
+          updatedByUsername: normalizeText(session?.username),
+        }
+      )
+      sendJson(response, 200, {
+        ok: true,
+        ...result,
+      })
+      return true
+    }
+
+    if (method === "DELETE") {
+      const result = await deleteAssignmentTemplateById(templateId)
+      sendJson(response, 200, {
+        ok: true,
+        ...result,
+      })
+      return true
+    }
   }
 
   if (method === "GET" && pathname === ADMIN_POINTS_SUMMARY_PATH) {

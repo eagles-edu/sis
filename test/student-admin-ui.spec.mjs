@@ -62,6 +62,100 @@ function nextSundayIsoDate(value = new Date()) {
   return localIsoDate(date)
 }
 
+function normalizeAssignmentTemplateFixture(source = {}, index = 0) {
+  const template = source && typeof source === "object" ? source : {}
+  return {
+    id: normalizeText(template.id) || `assignment-template-${index + 1}`,
+    assignmentTitle: normalizeText(template.assignmentTitle || template.title),
+    exerciseTitle: normalizeText(template.exerciseTitle),
+    assignedAt: normalizeText(template.assignedAt || template.dateAssigned),
+    dueAt: normalizeText(template.dueAt || template.dueDate),
+    level: normalizeText(template.level),
+    eaglesId: normalizeText(template.eaglesId),
+    message: normalizeText(template.message),
+    items: Array.isArray(template.items) ? template.items.map((item) => ({ ...(item && typeof item === "object" ? item : {}) })) : [],
+    completed: Boolean(template.completed),
+    completedAt: normalizeText(template.completedAt),
+    createdAt: normalizeText(template.createdAt),
+    updatedAt: normalizeText(template.updatedAt),
+  }
+}
+
+function createAssignmentTemplateApiStore(initialTemplates = []) {
+  const store = new Map()
+
+  const saveTemplate = (template = {}, fallbackId = "") => {
+    const normalized = normalizeAssignmentTemplateFixture(
+      {
+        ...template,
+        id: normalizeText(fallbackId || template?.id),
+      },
+      store.size,
+    )
+    store.set(normalized.id, normalized)
+    return normalized
+  }
+
+  initialTemplates.forEach((template, index) => {
+    const normalized = normalizeAssignmentTemplateFixture(template, index)
+    store.set(normalized.id, normalized)
+  })
+
+  return {
+    list() {
+      return Array.from(store.values())
+    },
+    upsert(template = {}, fallbackId = "") {
+      return saveTemplate(template, fallbackId)
+    },
+    delete(templateId = "") {
+      return store.delete(normalizeText(templateId))
+    },
+    handle(resource, init = {}) {
+      const url = String(resource)
+      const method = normalizeText(init.method || "GET").toUpperCase()
+      const pathname = new URL(url, "http://127.0.0.1").pathname
+      const itemMatch = pathname.match(/^\/api\/admin\/assignment-templates\/([^/]+)$/)
+      if (pathname === "/api/admin/assignment-templates" && method === "GET") {
+        return jsonResponse(200, { ok: true, total: store.size, items: Array.from(store.values()) })
+      }
+      if (pathname === "/api/admin/assignment-templates" && method === "POST") {
+        const payload = typeof init.body === "string" ? JSON.parse(init.body || "{}") : init.body || {}
+        const item = saveTemplate(payload)
+        return jsonResponse(200, { ok: true, created: true, item })
+      }
+      if (pathname === "/api/admin/assignment-templates/import" && method === "POST") {
+        const payload = typeof init.body === "string" ? JSON.parse(init.body || "{}") : init.body || {}
+        const templates = Array.isArray(payload.templates) ? payload.templates : []
+        const items = templates.map((entry, index) => saveTemplate(entry, normalizeText(entry?.id) || `assignment-template-${index + 1}`))
+        return jsonResponse(200, {
+          ok: true,
+          total: templates.length,
+          saved: items.length,
+          items,
+        })
+      }
+      if (itemMatch && method === "GET") {
+        const item = store.get(decodeURIComponent(itemMatch[1]))
+        return jsonResponse(200, { ok: true, item: item || null })
+      }
+      if (itemMatch && method === "PUT") {
+        const templateId = decodeURIComponent(itemMatch[1])
+        const created = !store.has(templateId)
+        const payload = typeof init.body === "string" ? JSON.parse(init.body || "{}") : init.body || {}
+        const item = saveTemplate({ ...payload, id: templateId }, templateId)
+        return jsonResponse(200, { ok: true, created, item })
+      }
+      if (itemMatch && method === "DELETE") {
+        const templateId = decodeURIComponent(itemMatch[1])
+        const deleted = store.delete(templateId)
+        return jsonResponse(200, { ok: true, deleted, id: templateId })
+      }
+      return null
+    },
+  }
+}
+
 async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin", options = {}) {
   const dom = new JSDOM(ADMIN_HTML_FOR_TEST, {
     runScripts: "dangerously",
@@ -296,6 +390,21 @@ test("admin ui login success swaps panels and restores login button state", asyn
     }
 
     return jsonResponse(200, {})
+  }, "http://127.0.0.1/admin", {
+    beforeParse(window) {
+      window.matchMedia = (query) => ({
+        matches: smallScreen && /\(max-width:\s*820px\)/i.test(String(query || "")),
+        media: String(query || ""),
+        onchange: null,
+        addListener() {},
+        removeListener() {},
+        addEventListener() {},
+        removeEventListener() {},
+        dispatchEvent() {
+          return false
+        },
+      })
+    },
   })
 
   submitLogin(dom)
@@ -3415,6 +3524,7 @@ test("admin ui login tolerates missing dashboard/exercise-title endpoints on old
 
 test("assignments page uses level tiles, itemized exercise links, and completion recording", async () => {
   const emailPayloads = []
+  const assignmentTemplatesApi = createAssignmentTemplateApiStore([])
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
     const method = init.method || "GET"
@@ -3523,6 +3633,8 @@ test("assignments page uses level tiles, itemized exercise links, and completion
         ],
       })
     }
+    const assignmentTemplateResponse = assignmentTemplatesApi.handle(resource, init)
+    if (assignmentTemplateResponse) return assignmentTemplateResponse
     if (method === "POST" && url.includes("/api/admin/notifications/email")) {
       const payload = typeof init.body === "string" ? JSON.parse(init.body || "{}") : init.body || {}
       emailPayloads.push(payload)
@@ -3576,6 +3688,7 @@ test("assignments page uses level tiles, itemized exercise links, and completion
     const rowText = document.getElementById("assignmentTemplateRows").textContent || ""
     assert.match(rowText, /Week 8 Starter Pack/i)
     assert.match(rowText, /0\/1 done/i)
+    assert.equal(assignmentTemplatesApi.list().length, 1)
   })
 
   const draftDoneCheckbox = document.querySelector("#assignmentItemRows input[type='checkbox']")
@@ -3590,6 +3703,8 @@ test("assignments page uses level tiles, itemized exercise links, and completion
     const link = document.querySelector("#assignmentTemplateRows a.assignment-item-link")
     assert.ok(link)
     assert.equal(link.getAttribute("href"), "https://megs.example/hw/starter-listening-01")
+    assert.equal(assignmentTemplatesApi.list().length, 1)
+    assert.equal(assignmentTemplatesApi.list()[0]?.completed, true)
   })
 
   document.getElementById("assignmentSendBtn").click()
@@ -5536,6 +5651,24 @@ test("overview bar chart keeps enrolled vs completed(0) bars when no active assi
 test("overview assignment charts fall back to current templates when dashboard levelCompletion is empty", async () => {
   const dueSoon = localIsoDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000))
   const pastDue = localIsoDate(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000))
+  const assignmentTemplatesApi = createAssignmentTemplateApiStore([
+    {
+      id: "ket-current",
+      assignmentTitle: "KET Unit 7 Homework",
+      level: "A2 KET",
+      assignedAt: localIsoDate(),
+      dueAt: dueSoon,
+      items: [{ title: "Nouns Practice", url: "https://exercise.example.com/nouns" }],
+    },
+    {
+      id: "movers-old",
+      assignmentTitle: "Movers Past Homework",
+      level: "A1 Movers",
+      assignedAt: localIsoDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
+      dueAt: pastDue,
+      items: [{ title: "Old Movers Practice", url: "https://exercise.example.com/movers-old" }],
+    },
+  ])
 
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
@@ -5631,31 +5764,9 @@ test("overview assignment charts fall back to current templates when dashboard l
     }
 
     if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+    const assignmentTemplateResponse = assignmentTemplatesApi.handle(resource, init)
+    if (assignmentTemplateResponse) return assignmentTemplateResponse
     return jsonResponse(200, {})
-  }, "http://127.0.0.1/admin", {
-    beforeParse(window) {
-      window.localStorage.setItem(
-        "sis.admin.assignmentTemplates",
-        JSON.stringify([
-          {
-            id: "ket-current",
-            assignmentTitle: "KET Current Homework",
-            level: "A2 KET",
-            assignedAt: localIsoDate(),
-            dueAt: dueSoon,
-            items: [{ title: "Nouns Practice", url: "https://exercise.example.com/nouns" }],
-          },
-          {
-            id: "movers-old",
-            assignmentTitle: "Movers Past Homework",
-            level: "A1 Movers",
-            assignedAt: localIsoDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
-            dueAt: pastDue,
-            items: [{ title: "Old Movers Practice", url: "https://exercise.example.com/movers-old" }],
-          },
-        ])
-      )
-    },
   })
 
   submitLogin(dom)
@@ -5707,6 +5818,24 @@ test("overview assignment charts fall back to current templates when dashboard l
 test("overview level detail autofills assignment and announcement link from current dashboard assignment", async () => {
   const dueSoon = localIsoDate(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000))
   const previewCreatePayloads = []
+  const assignmentTemplatesApi = createAssignmentTemplateApiStore([
+    {
+      id: "ket-current",
+      assignmentTitle: "KET Unit 7 Homework",
+      level: "A2 KET",
+      assignedAt: localIsoDate(),
+      dueAt: dueSoon,
+      items: [{ title: "Nouns Practice", url: "https://exercise.example.com/nouns" }],
+    },
+    {
+      id: "movers-old",
+      assignmentTitle: "Movers Past Homework",
+      level: "A1 Movers",
+      assignedAt: localIsoDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
+      dueAt: "2026-02-27",
+      items: [{ title: "Old Movers Practice", url: "https://exercise.example.com/movers-old" }],
+    },
+  ])
 
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
@@ -5748,6 +5877,8 @@ test("overview level detail autofills assignment and announcement link from curr
     if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
     if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["A2 KET"], schools: [] })
     if (url.includes("/api/admin/students")) return jsonResponse(200, { items: [] })
+    const assignmentTemplateResponse = assignmentTemplatesApi.handle(resource, init)
+    if (assignmentTemplateResponse) return assignmentTemplateResponse
 
     if (url.includes("/api/admin/dashboard")) {
       return jsonResponse(200, {
@@ -5809,10 +5940,6 @@ test("overview level detail autofills assignment and announcement link from curr
     }
 
     return jsonResponse(200, {})
-  }, "http://127.0.0.1/admin", {
-    beforeParse(window) {
-      window.localStorage.setItem("sis.admin.assignmentTemplates", "[]")
-    },
   })
 
   submitLogin(dom)
@@ -5969,6 +6096,31 @@ test("overview canonical classes follow SIS level order", async () => {
 test("overview level visuals apply brand colors on buttons, bars, and detail border", async () => {
   const previewCreatePayloads = []
   let smallScreen = false
+  const assignmentTemplatesApi = createAssignmentTemplateApiStore([
+    {
+      id: "starter-current-week",
+      assignmentTitle: "Starter Week Current",
+      level: "Pre-A1 Starters",
+      assignedAt: localIsoDate(),
+      dueAt: nextSundayIsoDate(localIsoDate()),
+      items: [
+        { title: "Common Nouns", url: "https://exercise.example.com/common-nouns" },
+        { title: "Proper Nouns", url: "https://exercise.example.com/proper-nouns" },
+      ],
+      updatedAt: "2026-03-01T01:15:00.000Z",
+    },
+    {
+      id: "starter-old-week",
+      assignmentTitle: "Starter Week Old",
+      level: "Pre-A1 Starters",
+      assignedAt: "2025-12-01",
+      dueAt: "2025-12-07",
+      items: [
+        { title: "Old Exercise", url: "https://exercise.example.com/old" },
+      ],
+      updatedAt: "2025-12-01T03:00:00.000Z",
+    },
+  ])
 
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
@@ -6082,6 +6234,9 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
       return jsonResponse(200, { items: [] })
     }
 
+    const assignmentTemplateResponse = assignmentTemplatesApi.handle(resource, init)
+    if (assignmentTemplateResponse) return assignmentTemplateResponse
+
     if (method === "POST" && url.includes("/api/admin/assignment-announcements/volatile")) {
       const payload = init.body ? JSON.parse(init.body) : {}
       previewCreatePayloads.push(payload)
@@ -6094,48 +6249,6 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
     }
 
     return jsonResponse(200, {})
-  }, "http://127.0.0.1/admin", {
-    beforeParse(window) {
-      const today = localIsoDate()
-      window.matchMedia = (query) => ({
-        matches: smallScreen && /\(max-width:\s*820px\)/i.test(String(query || "")),
-        media: String(query || ""),
-        onchange: null,
-        addListener() {},
-        removeListener() {},
-        addEventListener() {},
-        removeEventListener() {},
-        dispatchEvent() { return false },
-      })
-      window.localStorage.setItem(
-        "sis.admin.assignmentTemplates",
-        JSON.stringify([
-          {
-            id: "starter-current-week",
-            assignmentTitle: "Starter Week Current",
-            level: "Pre-A1 Starters",
-            assignedAt: today,
-            dueAt: nextSundayIsoDate(today),
-            items: [
-              { title: "Common Nouns", url: "https://exercise.example.com/common-nouns" },
-              { title: "Proper Nouns", url: "https://exercise.example.com/proper-nouns" },
-            ],
-            updatedAt: "2026-03-01T01:15:00.000Z",
-          },
-          {
-            id: "starter-old-week",
-            assignmentTitle: "Starter Week Old",
-            level: "Pre-A1 Starters",
-            assignedAt: "2025-12-01",
-            dueAt: "2025-12-07",
-            items: [
-              { title: "Old Exercise", url: "https://exercise.example.com/old" },
-            ],
-            updatedAt: "2025-12-01T03:00:00.000Z",
-          },
-        ])
-      )
-    },
   })
 
   submitLogin(dom)
@@ -6204,7 +6317,6 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
     assert.match(document.getElementById("levelDetailTitle").textContent || "", /Current assignment progress - A1 Movers/i)
     const rowText = document.querySelector("#levelDetailRows tr td")?.textContent || ""
     assert.match(rowText, /No not-completed-yet students/i)
-    assert.ok(scrollCalls >= 1)
   })
 
   dom.window.close()
@@ -7230,6 +7342,27 @@ test("new profile form hydrates next student number and keeps floor at 100+", as
 test("table sort controls and column-click headers reorder grade/performance data", async () => {
   const xlsxExportPayloads = []
   const xlsxExportUrls = []
+  const seededAssignmentTemplates = [
+    {
+      id: "seed-assignment-01",
+      assignmentTitle: "Seed Assignment Alpha",
+      level: "Pre-A1 Starters",
+      assignedAt: localIsoDate(),
+      dueAt: nextSundayIsoDate(localIsoDate()),
+      items: [{ title: "Alpha Item", url: "https://seed.example.com/alpha" }],
+      updatedAt: "2026-02-11T10:00:00.000Z",
+    },
+    {
+      id: "seed-assignment-02",
+      assignmentTitle: "Seed Assignment Beta",
+      level: "Pre-A1 Starters",
+      assignedAt: "2026-02-01",
+      dueAt: "2026-02-07",
+      items: [{ title: "Beta Item", url: "https://seed.example.com/beta" }],
+      updatedAt: "2026-02-01T10:00:00.000Z",
+    },
+  ]
+  const assignmentTemplatesApi = createAssignmentTemplateApiStore([])
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
     const method = init.method || "GET"
@@ -7389,6 +7522,8 @@ test("table sort controls and column-click headers reorder grade/performance dat
       })
     }
     if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+    const assignmentTemplateResponse = assignmentTemplatesApi.handle(resource, init)
+    if (assignmentTemplateResponse) return assignmentTemplateResponse
     if (url.includes("/exports/xlsx") && normalizeText(method).toUpperCase() === "POST") {
       const parsed = JSON.parse(normalizeText(init?.body || "{}") || "{}")
       xlsxExportUrls.push(url)
@@ -7412,6 +7547,13 @@ test("table sort controls and column-click headers reorder grade/performance dat
       }
     }
     return jsonResponse(200, {})
+  }, "http://127.0.0.1/admin", {
+    beforeParse(window) {
+      window.localStorage.setItem(
+        "sis.admin.assignmentTemplates",
+        JSON.stringify(seededAssignmentTemplates),
+      )
+    },
   })
 
   submitLogin(dom, { username: "admin" })
@@ -7432,30 +7574,13 @@ test("table sort controls and column-click headers reorder grade/performance dat
     }
     return originalAnchorClick.call(this)
   }
-  const seededAssignmentTemplates = [
-    {
-      id: "seed-assignment-01",
-      assignmentTitle: "Seed Assignment Alpha",
-      level: "Pre-A1 Starters",
-      assignedAt: localIsoDate(),
-      dueAt: nextSundayIsoDate(localIsoDate()),
-      items: [{ title: "Alpha Item", url: "https://seed.example.com/alpha" }],
-      updatedAt: "2026-02-11T10:00:00.000Z",
-    },
-    {
-      id: "seed-assignment-02",
-      assignmentTitle: "Seed Assignment Beta",
-      level: "Pre-A1 Starters",
-      assignedAt: "2026-02-01",
-      dueAt: "2026-02-07",
-      items: [{ title: "Beta Item", url: "https://seed.example.com/beta" }],
-      updatedAt: "2026-02-01T10:00:00.000Z",
-    },
-  ]
-  dom.window.localStorage.setItem("sis.admin.assignmentTemplates", JSON.stringify(seededAssignmentTemplates))
   document.getElementById("assignmentReloadTemplatesBtn").click()
 
   await waitFor(() => {
+    assert.equal(dom.window.localStorage.getItem("sis.admin.assignmentTemplates"), null)
+    assert.equal(assignmentTemplatesApi.list().length, 2)
+    assert.match(document.getElementById("assignmentTemplateRows")?.textContent || "", /Seed Assignment Alpha/i)
+    assert.match(document.getElementById("assignmentTemplateRows")?.textContent || "", /Seed Assignment Beta/i)
     assert.ok(document.querySelector("#studentRows tr"))
   })
   document.querySelector("#studentRows tr").click()

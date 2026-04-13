@@ -7,6 +7,39 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-13 - phase 1 assignment-template backend + frontend migration complete)
+
+- Added [server/student-admin-assignment-template-store.mjs](server/student-admin-assignment-template-store.mjs):
+  - canonical assignment-template normalization plus memory fallback for store-disabled test runs.
+  - CRUD helpers for list/get/save/delete/import, with row mapping that preserves the full `items` array on round-trip.
+  - dashboard slice builder for `currentAssignmentMeta` and `enrollmentOnlyLevels`.
+- Updated [server/student-admin-store.mjs](server/student-admin-store.mjs):
+  - `getAdminDashboardSummary()` now loads assignment templates from the new backend store and returns `currentAssignmentMeta` plus `enrollmentOnlyLevels` in the dashboard payload.
+- Updated [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+  - added `/api/admin/assignment-templates` CRUD and `/api/admin/assignment-templates/import` routes.
+- Updated [prisma/schema.prisma](prisma/schema.prisma) and [prisma/migrations/20260413165530_add_assignment_templates/migration.sql](prisma/migrations/20260413165530_add_assignment_templates/migration.sql):
+  - added the canonical `AssignmentTemplate` model and migration.
+- Updated docs/contracts:
+  - [docs/mapping/admin-route-trace.md](docs/mapping/admin-route-trace.md)
+  - [docs/mapping/openapi/sis-admin.openapi.yaml](docs/mapping/openapi/sis-admin.openapi.yaml)
+- Updated tests:
+  - [test/student-admin-assignment-template-store.spec.mjs](test/student-admin-assignment-template-store.spec.mjs)
+  - [test/student-admin-dashboard-summary.spec.mjs](test/student-admin-dashboard-summary.spec.mjs)
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs)
+  - [test/mission-critical-endpoints.spec.mjs](test/mission-critical-endpoints.spec.mjs)
+  - [test/student-admin-prefix.spec.mjs](test/student-admin-prefix.spec.mjs)
+- Updated [web-asset/admin/student-admin.js](web-asset/admin/student-admin.js):
+  - assignment templates now load/save/delete through the backend API instead of browser `localStorage`.
+  - legacy `sis.admin.assignmentTemplates` is imported once on first bootstrap and cleared after migration.
+- Updated [test/student-admin-ui.spec.mjs](test/student-admin-ui.spec.mjs):
+  - covers backend-backed assignment templates, bootstrap migration from legacy browser storage, and the overview fallback flows.
+- Verification:
+  - `node --test test/student-admin-assignment-template-store.spec.mjs test/student-admin-dashboard-summary.spec.mjs test/student-admin.spec.mjs test/mission-critical-endpoints.spec.mjs test/student-admin-prefix.spec.mjs` => pass.
+  - `node --test test/student-admin-ui.spec.mjs` => pass (`49` pass, `0` fail).
+  - `npm test` => pass (`372` pass, `0` fail).
+- Coverage note:
+  - assignment templates are backend-owned; `localStorage` remains only for UX preferences and legacy migration input.
+
 ## Update (2026-04-13 - loopback static preview now falls back to the dev runtime origin)
 
 - Requirement:
@@ -6107,7 +6140,7 @@ Result: `61` tests total, `61` pass, `0` fail.
 
 1. No backend integration test yet proving dashboard `levelCompletion` emits canonical announcement-link metadata (currently UI synthesizes volatile links when needed).
 2. No end-to-end browser test for reminder-send flow after auto-filled volatile links across restart cycles.
-3. Assignment template persistence is still localStorage-based; API-backed canonicalization remains a refactor item.
+3. No Playwright smoke yet proves the reminder-send flow survives a hard reload after auto-filled volatile links.
 
 ### Prioritized Next Actions (Post-2026-03-09)
 

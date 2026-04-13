@@ -78,6 +78,15 @@ test("custom-prefix regex route matches report-card path", async () => {
   assert.match(body.error, /store is disabled/i)
 })
 
+test("custom-prefix regex route matches assignment-template path", async () => {
+  const res = await fetchLocal(port, "/api/sis-admin/assignment-templates", {
+    headers: { Cookie: sessionCookie },
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
+})
+
 test("old /api/admin path is not treated as admin when prefix changed", async () => {
   const res = await fetchLocal(port, "/api/admin/students", {
     headers: { Cookie: sessionCookie },

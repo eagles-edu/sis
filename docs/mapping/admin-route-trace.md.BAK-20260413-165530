@@ -43,13 +43,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/admin/runtime/service-control` | Yes | `canManageUsers` | No | `getExerciseMailerServiceControlStatus` |
 | POST | `/api/admin/runtime/service-control` | Yes | `canManageUsers` | No | `restartExerciseMailerServiceControl` |
 | POST | `/api/admin/assignment-announcements/volatile` | Yes | write role | No | `createAssignmentAnnouncementPreview` |
-| GET | `/api/admin/dashboard` | Yes | any readable role | Yes | `getAdminDashboardSummary` (`currentAssignmentMeta`, `enrollmentOnlyLevels`, + queue snippet for managers) |
-| GET | `/api/admin/assignment-templates` | Yes | any readable role | Yes | `listAssignmentTemplates` |
-| POST | `/api/admin/assignment-templates` | Yes | write role | Yes | `saveAssignmentTemplate` |
-| GET | `/api/admin/assignment-templates/{templateId}` | Yes | any readable role | Yes | `getAssignmentTemplateById` |
-| PUT | `/api/admin/assignment-templates/{templateId}` | Yes | write role | Yes | `saveAssignmentTemplate` |
-| DELETE | `/api/admin/assignment-templates/{templateId}` | Yes | write role | Yes | `deleteAssignmentTemplateById` |
-| POST | `/api/admin/assignment-templates/import` | Yes | write role | Yes | `importAssignmentTemplates` |
+| GET | `/api/admin/dashboard` | Yes | any readable role | Yes | `getAdminDashboardSummary` (+ queue snippet for managers) |
 | GET | `/api/admin/queue-hub` | Yes | `canManageUsers` | No | `buildQueueHubPayload` |
 | GET | `/api/admin/exercise-titles` | Yes | any readable role | Yes | `listExerciseTitles` |
 | GET | `/api/admin/exercise-results/incoming` | Yes | any readable role | No | `listIncomingExerciseResults` |

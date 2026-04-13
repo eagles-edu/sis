@@ -3,6 +3,10 @@
 import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
+import {
+  buildAssignmentDashboardSlices,
+  listAssignmentTemplates,
+} from "./student-admin-assignment-template-store.mjs"
 import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
 
 function normalizeText(value) {
@@ -2644,6 +2648,22 @@ export async function getAdminDashboardSummary() {
     if (daysUntilDue < 0 || daysUntilDue > 2) return sum
     return sum + (Number.parseInt(String(row?.outstandingAssignments || 0), 10) || 0)
   }, 0)
+  const classEnrollmentAttendance = levels.map((level) => ({
+    level,
+    enrolled: enrolledByLevel.get(level) || 0,
+    attendanceToday: attendanceByLevel.get(level) || 0,
+  }))
+  let assignmentTemplates = []
+  try {
+    assignmentTemplates = await listAssignmentTemplates({ take: 1000 })
+  } catch (error) {
+    void error
+  }
+  const { currentAssignmentMeta, enrollmentOnlyLevels } = buildAssignmentDashboardSlices({
+    assignmentTemplates,
+    classEnrollmentAttendance,
+    now,
+  })
 
   return {
     generatedAt: now.toISOString(),
@@ -2659,11 +2679,7 @@ export async function getAdminDashboardSummary() {
       tardy30PlusPercent: percentage(tardy30PlusCount, totalTodayTracked) || 0,
     },
     weeklyAssignmentCompletion,
-    classEnrollmentAttendance: levels.map((level) => ({
-      level,
-      enrolled: enrolledByLevel.get(level) || 0,
-      attendanceToday: attendanceByLevel.get(level) || 0,
-    })),
+    classEnrollmentAttendance,
     assignments: {
       total: assignmentTrackingGradeRecords.length,
       completedOnTime: onTimeCompletions,
@@ -2678,6 +2694,8 @@ export async function getAdminDashboardSummary() {
       currentDueSoonLevels,
       currentDueSoonPendingStudents,
     },
+    currentAssignmentMeta,
+    enrollmentOnlyLevels,
     atRiskWeek: {
       total: atRiskStudents.length,
       students: atRiskStudents,

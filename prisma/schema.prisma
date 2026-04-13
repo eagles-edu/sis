@@ -91,6 +91,26 @@ model IncomingExerciseResult {
   @@index([matchedStudentRefId, createdAt])
 }
 
+model AssignmentTemplate {
+  id             String   @id
+  assignmentTitle String
+  exerciseTitle  String?
+  assignedAt     String?
+  dueAt          String?
+  level          String?
+  eaglesId       String?
+  message        String?
+  itemsJson      Json?
+  completed      Boolean  @default(false)
+  completedAt    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([level, dueAt])
+  @@index([assignedAt, dueAt])
+  @@index([updatedAt])
+}
+
 enum IntakeControlType {
   text
   textarea

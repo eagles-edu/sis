@@ -5,8 +5,9 @@ import test from "node:test"
 import { JSDOM } from "jsdom"
 
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
-const PARENT_PORTAL_HTML = fs
-  .readFileSync(PARENT_PORTAL_HTML_PATH, "utf8")
+const PARENT_PORTAL_HTML = fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8")
+const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
+  .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.css">\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
 
 function jsonTextResponse(status, payload = {}) {
@@ -57,7 +58,7 @@ function normalizeText(value) {
 }
 
 async function createParentPortalDom(fetchHandler, url) {
-  const dom = new JSDOM(PARENT_PORTAL_HTML, {
+  const dom = new JSDOM(PARENT_PORTAL_HTML_FOR_TEST, {
     runScripts: "dangerously",
     resources: "usable",
     pretendToBeVisual: true,
