@@ -1037,6 +1037,14 @@ function injectStudentPortalRuntimeConfig(html, origin) {
   return `${runtimeConfig}\n${html}`
 }
 
+function injectPortalHubRuntimeConfig(html) {
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_PARENT_PORTAL_PAGE_PATH=${JSON.stringify(PARENT_PORTAL_PAGE_PATH)};window.__SIS_STUDENT_PORTAL_PAGE_PATH=${JSON.stringify(STUDENT_PORTAL_PAGE_PATH)};</script>`
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${html}`
+}
+
 function resolveAdminPageSlug(pathname) {
   if (pathname === ADMIN_PAGE_PATH) return ADMIN_PAGE_DEFAULT_SLUG
   const match = pathname.match(ADMIN_PAGE_SECTION_PATH_RE)
@@ -6414,7 +6422,7 @@ export async function handleStudentAdminRequest(request, response) {
       sendJson(response, 404, { error: "Public portal hub not found" })
       return true
     }
-    const html = fs.readFileSync(ADMIN_HUB_HTML_PATH, "utf8")
+    const html = injectPortalHubRuntimeConfig(fs.readFileSync(ADMIN_HUB_HTML_PATH, "utf8"))
     sendHtml(response, 200, html, {
       "Cache-Control": "no-cache, must-revalidate",
     })

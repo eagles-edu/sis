@@ -2498,6 +2498,31 @@
         return normalized === "127.0.0.1" || normalized === "localhost" || normalized === "::1";
       }
 
+      function inferLoopbackPreviewApiOrigin() {
+        const currentOriginUrl = new URL(window.location.origin);
+        const knownRuntimePorts = new Set(["8787", "8788"]);
+        if (!isLoopbackHostname(currentOriginUrl.hostname)) return "";
+        if (knownRuntimePorts.has(currentOriginUrl.port)) return "";
+        return "http://127.0.0.1:8788";
+      }
+
+      function normalizePreviewApiOrigin(rawOrigin) {
+        const text = t(rawOrigin);
+        if (!text) return "";
+        const knownRuntimePorts = new Set(["8787", "8788"]);
+        let parsed;
+        try {
+          parsed = new URL(text, window.location.origin);
+        } catch (error) {
+          void error;
+          return inferLoopbackPreviewApiOrigin();
+        }
+        if (isLoopbackHostname(parsed.hostname) && !knownRuntimePorts.has(parsed.port)) {
+          return "http://127.0.0.1:8788";
+        }
+        return parsed.origin;
+      }
+
       function isStaticStudentPreviewPath(pathname) {
         return t(pathname || window.location.pathname).endsWith("/web-asset/student/student-portal.html");
       }
@@ -2507,14 +2532,16 @@
         const queryOrigin = t(params.get("apiOrigin"));
         const injectedOrigin = t(window.__SIS_STUDENT_API_ORIGIN);
         const selectedOrigin = queryOrigin || injectedOrigin;
-        if (!selectedOrigin) return "";
-        try {
-          const origin = new URL(selectedOrigin, window.location.origin).origin;
-          return assertApiOriginSafe(origin);
-        } catch (error) {
-          void error;
-          return "";
+        if (selectedOrigin) {
+          const origin = normalizePreviewApiOrigin(selectedOrigin);
+          return origin ? assertApiOriginSafe(origin) : "";
         }
+        const currentPath = t(window.location.pathname);
+        if (isStaticStudentPreviewPath(currentPath) || currentPath === "/student") {
+          const inferredOrigin = inferLoopbackPreviewApiOrigin();
+          if (inferredOrigin) return assertApiOriginSafe(inferredOrigin);
+        }
+        return "";
       }
 
       function resolveApiUrl(pathname) {

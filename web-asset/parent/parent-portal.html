@@ -3531,6 +3531,31 @@
       );
     }
 
+    function inferLoopbackPreviewApiOrigin() {
+      const currentOriginUrl = new URL(window.location.origin);
+      const knownRuntimePorts = new Set(["8787", "8788"]);
+      if (!isLoopbackHostname(currentOriginUrl.hostname)) return "";
+      if (knownRuntimePorts.has(currentOriginUrl.port)) return "";
+      return "http://127.0.0.1:8788";
+    }
+
+    function normalizePreviewApiOrigin(rawOrigin) {
+      const text = normalizeText(rawOrigin);
+      if (!text) return "";
+      const knownRuntimePorts = new Set(["8787", "8788"]);
+      let parsed;
+      try {
+        parsed = new URL(text, window.location.origin);
+      } catch (error) {
+        void error;
+        return inferLoopbackPreviewApiOrigin();
+      }
+      if (isLoopbackHostname(parsed.hostname) && !knownRuntimePorts.has(parsed.port)) {
+        return "http://127.0.0.1:8788";
+      }
+      return parsed.origin;
+    }
+
     function isStaticParentPreviewPath(pathname) {
       return normalizeText(pathname || window.location.pathname).endsWith(
         "/web-asset/parent/parent-portal.html",
@@ -3543,15 +3568,15 @@
       const injectedOrigin = normalizeText(window.__SIS_PARENT_API_ORIGIN);
       const selectedOrigin = queryOrigin || injectedOrigin;
       if (selectedOrigin) {
-        try {
-          const origin = new URL(selectedOrigin, window.location.origin).origin;
-          return assertApiOriginSafe(origin);
-        } catch (error) {
-          void error;
-          return "";
-        }
+        const origin = normalizePreviewApiOrigin(selectedOrigin);
+        return origin ? assertApiOriginSafe(origin) : "";
       }
-      if (!isStaticParentPreviewPath(window.location.pathname)) {
+      const currentPath = normalizeText(window.location.pathname);
+      if (isStaticParentPreviewPath(currentPath) || currentPath === "/parent") {
+        const inferredOrigin = inferLoopbackPreviewApiOrigin();
+        if (inferredOrigin) return assertApiOriginSafe(inferredOrigin);
+      }
+      if (!isStaticParentPreviewPath(currentPath)) {
         try {
           return assertApiOriginSafe(window.location.origin);
         } catch (error) {

@@ -7,6 +7,36 @@
 - Service entrypoint: [server/exercise-mailer.mjs](server/exercise-mailer.mjs)
 - Admin routing module: [server/student-admin-routes.mjs](server/student-admin-routes.mjs)
 
+## Update (2026-04-13 - loopback static preview now falls back to the dev runtime origin)
+
+- Requirement:
+  - keep the public hub on runtime-configured portal roots, but stop loopback preview hosts like `127.0.0.1:8789` from treating themselves as the API origin.
+- Changes:
+  - [server/student-admin-routes.mjs](server/student-admin-routes.mjs):
+    - the public hub response at `/` still injects `window.__SIS_ADMIN_PAGE_PATH`, `window.__SIS_PARENT_PORTAL_PAGE_PATH`, and `window.__SIS_STUDENT_PORTAL_PAGE_PATH`.
+  - [web-asset/admin/portal-hub.html](web-asset/admin/portal-hub.html):
+    - the admin, parent, and student cards still rewrite their `href` values from the injected runtime paths when available.
+    - when runtime paths are unavailable, the hub now sanitizes loopback preview origins and defaults the fallback links to the dev runtime API origin `http://127.0.0.1:8788` instead of the preview server origin.
+  - [web-asset/parent/parent-portal.html](web-asset/parent/parent-portal.html):
+    - loopback static previews now infer the dev runtime API origin when no explicit `apiOrigin` is provided or when a loopback preview host is passed through.
+  - [web-asset/student/student-portal.html](web-asset/student/student-portal.html):
+    - loopback static previews now infer the dev runtime API origin when no explicit `apiOrigin` is provided or when a loopback preview host is passed through.
+  - [web-asset/shared/portal-theme.css](web-asset/shared/portal-theme.css):
+    - added a narrow mobile override so the shared header controls stay compact enough for the portal geometry contract on small viewports.
+  - [test/parent-portal-ui.spec.mjs](test/parent-portal-ui.spec.mjs):
+    - now verifies that static preview login falls back to `http://127.0.0.1:8788` when `apiOrigin` is omitted.
+  - [test/portal-hub-fallback.spec.mjs](test/portal-hub-fallback.spec.mjs):
+    - locks the sanitized loopback fallback contract for the hub links and `apiOrigin` propagation.
+  - [test/student-admin.spec.mjs](test/student-admin.spec.mjs):
+    - updated the parent/student runtime HTML contract checks to require the dev fallback origin helper.
+- Verification:
+  - `npm run lint:html` => pass.
+  - `node --test test/portal-hub-fallback.spec.mjs test/parent-portal-ui.spec.mjs test/portal-header-geometry.playwright.spec.mjs test/student-admin.spec.mjs test/portal-theme-contract.spec.mjs` => pass.
+  - `npm test` => pass (`365` pass, `0` fail).
+- Coverage gaps / risk:
+  - the fallback is intentionally pinned to the dev runtime origin `http://127.0.0.1:8788`; if the local dev port changes, the hub and static preview pages will need a matching update.
+  - runtime-served pages still rely on the server injecting the canonical origin for `/parent` and `/student`.
+
 ## Update (2026-04-12 - shared portal theme extracted to `/web-asset/shared/portal-theme.css`)
 
 - Requirement:

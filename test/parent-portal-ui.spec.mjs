@@ -120,22 +120,90 @@ test("parent news week-set modal keeps student-clone visuals with only wired con
   assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal input,\s*#newsWeekSetModal textarea/)
 })
 
-test("parent portal static preview over http requires explicit apiOrigin", async () => {
+test("parent portal static preview over http falls back to dev apiOrigin when omitted", async () => {
   const calls = []
+  let authenticated = false
 
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
       const urlText = toUrlText(resource)
       const method = String(init.method || "GET").toUpperCase()
       calls.push(`${method} ${urlText}`)
-      return jsonTextResponse(200, {})
+
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/login" && method === "POST") {
+        authenticated = true
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        if (!authenticated) return jsonTextResponse(401, { error: "Unauthorized" })
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "egg-chicks",
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          children: [
+            {
+              eaglesId: "vi001",
+              attendance: { total: 20, present: 19, absent: 1 },
+              assignments: { pending: 0, overdue: 0 },
+              grades: { averageScorePercent: 92 },
+              performance: { reportCount: 1 },
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "Pre-A1 Starters",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+
+      return jsonTextResponse(404, { error: "Not found" })
     },
     "http://127.0.0.1:5500/web-asset/parent/parent-portal.html"
   )
 
   const document = dom.window.document
   await waitFor(() => {
-    assert.match(document.getElementById("loginStatus").textContent || "", /Static preview mode requires \?apiOrigin=/i)
+    assert.doesNotMatch(document.getElementById("loginStatus").textContent || "", /Static preview mode requires \?apiOrigin=/i)
+  })
+  await waitFor(() => {
+    assert.ok(calls.includes("GET http://127.0.0.1:8788/api/parent/auth/me"))
   })
 
   document.getElementById("parentsId").value = "cmkramer001"
@@ -143,12 +211,15 @@ test("parent portal static preview over http requires explicit apiOrigin", async
   document.getElementById("loginForm").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
-    assert.match(document.getElementById("loginStatus").textContent || "", /Static preview mode requires \?apiOrigin=/i)
+    assert.ok(calls.includes("POST http://127.0.0.1:8788/api/parent/auth/login"))
   })
 
-  assert.ok(!calls.some((entry) => entry.includes("/api/parent/auth/login")))
-  assert.equal(document.getElementById("loginCard").classList.contains("hidden"), false)
-  assert.equal(document.getElementById("portalCard").classList.contains("hidden"), true)
+  assert.ok(!calls.includes("POST /api/parent/auth/login"))
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("loginCard").classList.contains("hidden"), true)
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
 
   await settleDomAsync(dom)
   dom.window.close()

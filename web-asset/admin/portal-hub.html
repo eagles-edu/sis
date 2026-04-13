@@ -2,6 +2,7 @@
 
 <!doctype html>
 <html lang="vi">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
   <title>Eagles Portal</title>
 </head>
+
 <body>
   <div class="portal-layout">
     <main class="shell">
@@ -40,7 +42,7 @@
         </div>
 
         <div class="portal-grid">
-          <a class="portal-card" href="/admin">
+          <a class="portal-card" href="/admin" data-portal-target="admin">
             <span class="portal-card__body">
               <span class="portal-card__eyebrow">Staff</span>
               <span class="portal-card__title">Admin</span>
@@ -49,7 +51,7 @@
             <span class="portal-card__chev" aria-hidden="true">›</span>
           </a>
 
-          <a class="portal-card" href="/parent">
+          <a class="portal-card" href="/parent" data-portal-target="parent">
             <span class="portal-card__body">
               <span class="portal-card__eyebrow">Family</span>
               <span class="portal-card__title">Phụ huynh</span>
@@ -58,7 +60,7 @@
             <span class="portal-card__chev" aria-hidden="true">›</span>
           </a>
 
-          <a class="portal-card" href="/student">
+          <a class="portal-card" href="/student" data-portal-target="student">
             <span class="portal-card__body">
               <span class="portal-card__eyebrow">Student</span>
               <span class="portal-card__title">Học sinh</span>
@@ -112,5 +114,74 @@
       </section>
     </main>
   </div>
+
+  <script>
+    (() => {
+      const currentOrigin = window.location.origin;
+      const query = new URLSearchParams(window.location.search || "");
+
+      function isLoopbackHostname(hostname) {
+        const normalized = String(hostname || "").toLowerCase();
+        return normalized === "127.0.0.1" || normalized === "localhost" || normalized === "::1";
+      }
+
+      function inferLoopbackPreviewApiOrigin() {
+        const currentOriginUrl = new URL(currentOrigin);
+        const knownRuntimePorts = new Set(["8787", "8788"]);
+        if (!isLoopbackHostname(currentOriginUrl.hostname)) return "";
+        if (knownRuntimePorts.has(currentOriginUrl.port)) return "";
+        return "http://127.0.0.1:8788";
+      }
+
+      function resolvePreviewApiOrigin() {
+        const rawApiOrigin = query.get("apiOrigin");
+        if (rawApiOrigin) {
+          const knownRuntimePorts = new Set(["8787", "8788"]);
+          try {
+            const parsed = new URL(rawApiOrigin, currentOrigin);
+            if (isLoopbackHostname(parsed.hostname) && !knownRuntimePorts.has(parsed.port)) {
+              return "http://127.0.0.1:8788";
+            }
+            return parsed.origin;
+          } catch {
+            return inferLoopbackPreviewApiOrigin();
+          }
+        }
+        return inferLoopbackPreviewApiOrigin();
+      }
+
+      const portalPaths = {
+        admin: typeof window.__SIS_ADMIN_PAGE_PATH === "string" ? window.__SIS_ADMIN_PAGE_PATH : "",
+        parent: typeof window.__SIS_PARENT_PORTAL_PAGE_PATH === "string" ? window.__SIS_PARENT_PORTAL_PAGE_PATH : "",
+        student: typeof window.__SIS_STUDENT_PORTAL_PAGE_PATH === "string" ? window.__SIS_STUDENT_PORTAL_PAGE_PATH : "",
+      };
+      const portalFiles = {
+        admin: "/web-asset/admin/student-admin.html",
+        parent: "/web-asset/parent/parent-portal.html",
+        student: "/web-asset/student/student-portal.html",
+      };
+
+      function resolveFallbackHref(target) {
+        const filePath = portalFiles[target];
+        if (!filePath) return "";
+        const fallbackUrl = new URL(filePath, currentOrigin);
+        const apiOrigin = resolvePreviewApiOrigin();
+        if (apiOrigin && !fallbackUrl.searchParams.has("apiOrigin")) {
+          fallbackUrl.searchParams.set("apiOrigin", apiOrigin);
+        }
+        return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
+      }
+
+      document.querySelectorAll("[data-portal-target]").forEach((link) => {
+        const target = link.getAttribute("data-portal-target");
+        if (target && portalPaths[target]) {
+          link.href = portalPaths[target];
+        } else if (target) {
+          link.href = resolveFallbackHref(target);
+        }
+      });
+    })();
+  </script>
 </body>
+
 </html>
