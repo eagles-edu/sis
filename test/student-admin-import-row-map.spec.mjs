@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import vm from "node:vm"
 
-import { mapImportRowToStudentPayload } from "../server/student-admin-store.mjs"
+import { mapImportRowToStudentPayload } from "../src/modules/admin/student-write-import.mjs"
 
 function readProfileFormRows() {
   const html = fs.readFileSync("web-asset/admin/student-admin.html", "utf8")

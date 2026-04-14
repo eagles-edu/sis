@@ -43,7 +43,9 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | GET | `/api/admin/runtime/service-control` | Yes | `canManageUsers` | No | `getExerciseMailerServiceControlStatus` |
 | POST | `/api/admin/runtime/service-control` | Yes | `canManageUsers` | No | `restartExerciseMailerServiceControl` |
 | POST | `/api/admin/assignment-announcements/volatile` | Yes | write role | No | `createAssignmentAnnouncementPreview` |
-| GET | `/api/admin/dashboard` | Yes | any readable role | Yes | `getAdminDashboardSummary` (`currentAssignmentMeta`, `enrollmentOnlyLevels`, + queue snippet for managers) |
+| GET | `/api/admin/dashboard` | Yes | any readable role | Yes | `getAdminDashboardSummary` (`src/modules/admin/dashboard-summary.mjs`, `currentAssignmentMeta`, `enrollmentOnlyLevels`, + queue snippet for managers) |
+| GET | `/api/admin/news-reports` | Yes | any readable role | Yes | `listStudentNewsReportsForReview` (`src/modules/admin/student-news-review.mjs`) |
+| POST | `/api/admin/news-reports/{reportId}` | Yes | `canManageUsers` | Yes | `reviewStudentNewsReport` (`src/modules/admin/student-news-review.mjs`) |
 | GET | `/api/admin/assignment-templates` | Yes | any readable role | Yes | `listAssignmentTemplates` |
 | POST | `/api/admin/assignment-templates` | Yes | write role | Yes | `saveAssignmentTemplate` |
 | GET | `/api/admin/assignment-templates/{templateId}` | Yes | any readable role | Yes | `getAssignmentTemplateById` |
@@ -51,7 +53,7 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | DELETE | `/api/admin/assignment-templates/{templateId}` | Yes | write role | Yes | `deleteAssignmentTemplateById` |
 | POST | `/api/admin/assignment-templates/import` | Yes | write role | Yes | `importAssignmentTemplates` |
 | GET | `/api/admin/queue-hub` | Yes | `canManageUsers` | No | `buildQueueHubPayload` |
-| GET | `/api/admin/exercise-titles` | Yes | any readable role | Yes | `listExerciseTitles` |
+| GET | `/api/admin/exercise-titles` | Yes | any readable role | Yes | `listExerciseTitles` (`src/modules/admin/student-admin-queries.mjs`) |
 | GET | `/api/admin/exercise-results/incoming` | Yes | any readable role | No | `listIncomingExerciseResults` |
 | POST | `/api/admin/exercise-results/incoming` | Yes | `canManageUsers` | No | queue triage actions (`set...`, `resolve...`, `delete...`) |
 | GET | `/api/admin/profile-submissions` | Yes | `canManageUsers` | No | `listParentProfileSubmissions` |
@@ -62,24 +64,24 @@ Source of truth: `server/student-admin-routes.mjs` (`handleApiRequest` + preview
 | POST | `/api/admin/notifications/email` | Yes | write role (teacher restricted exception) | No | `queueAnnouncementEmail` or `sendAnnouncementEmail` |
 | POST | `/api/admin/exports/xlsx` | Yes | write role | No | `buildXlsxFromPayload` |
 | GET | `/api/admin/students/import-template.xlsx` | Yes | any readable role | No | template file streaming |
-| GET | `/api/admin/filters` | Yes | any readable role | Yes | `listLevelAndSchoolFilters` |
-| GET | `/api/admin/students/next-student-number` | Yes | any readable role | Yes | `getNextStudentNumber` |
-| GET | `/api/admin/students` | Yes | any readable role | Yes | `listStudents` |
-| POST | `/api/admin/students` | Yes | write role | Yes | `saveStudent` (create) |
+| GET | `/api/admin/filters` | Yes | any readable role | Yes | `listLevelAndSchoolFilters` (`src/modules/admin/student-admin-queries.mjs`) |
+| GET | `/api/admin/students/next-student-number` | Yes | any readable role | Yes | `getNextStudentNumber` (`src/modules/admin/student-roster.mjs`) |
+| GET | `/api/admin/students` | Yes | any readable role | Yes | `listStudents` (`src/modules/admin/student-roster.mjs`) |
+| POST | `/api/admin/students` | Yes | write role | Yes | `saveStudent` |
 | POST | `/api/admin/students/import` | Yes | write role | Yes | `importStudentsFromRows` |
-| GET | `/api/admin/family` | Yes | any readable role | Yes | `findFamilyByEmergencyPhone` (`phone` query parameter) |
+| GET | `/api/admin/family` | Yes | any readable role | Yes | `findFamilyByEmergencyPhone` (`phone` query parameter) in `src/modules/admin/student-records.mjs` |
 | GET | `/api/admin/users` | Yes | `canManageUsers` | Yes | `listAdminUsers` |
 | POST | `/api/admin/users` | Yes | `canManageUsers` | Yes | `createAdminUser` |
 | PUT | `/api/admin/users/{userId}` | Yes | `canManageUsers` | Yes | `updateAdminUserById` |
 | DELETE | `/api/admin/users/{userId}` | Yes | `canManageUsers` | Yes | `deleteAdminUserById` |
-| GET | `/api/admin/students/{studentRefId}` | Yes | any readable role | Yes | `getStudentById` |
+| GET | `/api/admin/students/{studentRefId}` | Yes | any readable role | Yes | `getStudentById` (`src/modules/admin/student-roster.mjs`) |
 | PUT | `/api/admin/students/{studentRefId}` | Yes | write role | Yes | `saveStudent` (update) |
 | DELETE | `/api/admin/students/{studentRefId}` | Yes | write role | Yes | `deleteStudent` |
 | GET | `/api/admin/students/{studentRefId}/report-card.pdf` | Yes | any readable role | Yes | `generateStudentReportCardPdf` |
-| POST | `/api/admin/students/{studentRefId}/attendance` | Yes | write role | Yes | `saveAttendanceRecord` |
-| DELETE | `/api/admin/students/{studentRefId}/attendance/{recordId}` | Yes | write role | Yes | `deleteAttendanceRecord` |
-| POST | `/api/admin/students/{studentRefId}/grades` | Yes | write role | Yes | `saveGradeRecord` |
-| DELETE | `/api/admin/students/{studentRefId}/grades/{recordId}` | Yes | write role | Yes | `deleteGradeRecord` |
+| POST | `/api/admin/students/{studentRefId}/attendance` | Yes | write role | Yes | `saveAttendanceRecord` in `src/modules/admin/student-records.mjs` |
+| DELETE | `/api/admin/students/{studentRefId}/attendance/{recordId}` | Yes | write role | Yes | `deleteAttendanceRecord` in `src/modules/admin/student-records.mjs` |
+| POST | `/api/admin/students/{studentRefId}/grades` | Yes | write role | Yes | `saveGradeRecord` in `src/modules/admin/student-records.mjs` |
+| DELETE | `/api/admin/students/{studentRefId}/grades/{recordId}` | Yes | write role | Yes | `deleteGradeRecord` in `src/modules/admin/student-records.mjs` |
 | POST | `/api/admin/students/{studentRefId}/reports` | Yes | write role (teacher exception allowed) | Yes | `saveParentClassReport` |
 | POST | `/api/admin/students/{studentRefId}/reports/generate` | Yes | write role | Yes | `generateParentClassReportFromGrades` |
 | DELETE | `/api/admin/students/{studentRefId}/reports/{reportId}` | Yes | write role | Yes | `deleteParentClassReport` |

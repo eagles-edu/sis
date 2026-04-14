@@ -57,8 +57,8 @@ loadEnvironmentFile()
 
 // Load SIS route/store modules after env hydration so their module-level config reads
 // the intended env file values instead of shell defaults.
-const { isExerciseStoreRequired, persistExerciseSubmission } = await import("./exercise-store.mjs")
-const { persistStudentIntakeSubmission } = await import("./student-intake-store.mjs")
+const { isExerciseStoreRequired, persistExerciseSubmission } = await import("../src/modules/exercises/exercise-store.mjs")
+const { persistStudentIntakeSubmission } = await import("../src/modules/intake/student-intake-store.mjs")
 const {
   getStudentAdminRuntimeStatus,
   handleStudentAdminRequest,

@@ -6,7 +6,7 @@ import {
   selectAttendanceRiskStudentsFromSignals,
   selectAtRiskStudentsFromSignals,
   summarizeTodayAttendanceForDashboard,
-} from "../server/student-admin-store.mjs"
+} from "../src/modules/admin/dashboard-summary.mjs"
 import {
   buildAssignmentDashboardSlices,
 } from "../server/student-admin-assignment-template-store.mjs"

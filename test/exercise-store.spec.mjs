@@ -8,7 +8,7 @@ import {
   INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
   persistExerciseSubmission,
   resolveIncomingExerciseResultToStudent,
-} from "../server/exercise-store.mjs"
+} from "../src/modules/exercises/exercise-store.mjs"
 
 function toDateMs(value) {
   const parsed = new Date(value)

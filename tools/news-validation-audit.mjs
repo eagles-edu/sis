@@ -6,11 +6,13 @@ import process from "node:process"
 
 import {
   evaluateStudentNewsCompliance,
-  listStudentNewsReportsForReview,
   mergeStudentNewsReviewNoteWithCompliance,
-  reviewStudentNewsReport,
   updateStudentNewsValidationIssues,
-} from "../server/student-admin-store.mjs"
+} from "../src/modules/admin/student-news-compliance.mjs"
+import {
+  listStudentNewsReportsForReview,
+  reviewStudentNewsReport,
+} from "../src/modules/admin/student-news-review.mjs"
 
 const DEFAULT_TAKE = 200
 const DEFAULT_REVIEWED_BY = "system:news-validation-audit"

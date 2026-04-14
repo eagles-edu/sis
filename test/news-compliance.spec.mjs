@@ -1,11 +1,13 @@
 import test from "node:test"
 import assert from "node:assert/strict"
+import fs from "node:fs"
 
 import {
   evaluateStudentNewsCompliance,
   mergeStudentNewsReviewNoteWithCompliance,
+  normalizeValidationIssueMap,
   updateStudentNewsValidationIssues,
-} from "../server/student-admin-store.mjs"
+} from "../src/modules/admin/student-news-compliance.mjs"
 
 const ARTICLE_HTML = `
 <!doctype html>
@@ -104,6 +106,17 @@ test(
     assert.equal(Boolean(result.failedFields.articleDateline), true)
   }
 )
+
+test("student news compliance module exposes the compliance API surface", () => {
+  const source = fs.readFileSync(new URL("../src/modules/admin/student-news-compliance.mjs", import.meta.url), "utf8")
+  assert.match(source, /export function studentNewsTextSimilarityScore\(/)
+  assert.match(source, /export function normalizeValidationIssueMap\(/)
+  assert.match(source, /export function buildStudentNewsComplianceBlock\(/)
+  assert.match(source, /export function mergeStudentNewsReviewNoteWithCompliance\(/)
+  assert.match(source, /export async function evaluateStudentNewsCompliance\(/)
+  assert.match(source, /export function updateStudentNewsValidationIssues\(/)
+  assert.equal(typeof normalizeValidationIssueMap, "function")
+})
 
 test(
   "evaluateStudentNewsCompliance applies lead synopsis threshold at 0.50",

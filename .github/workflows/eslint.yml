@@ -11,10 +11,10 @@ name: ESLint
 
 on:
   push:
-    branches: [ "split" ]
+    branches: [ "server-side-refactor" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "split" ]
+    branches: [ "server-side-refactor" ]
   schedule:
     - cron: '28 9 * * 4'
 

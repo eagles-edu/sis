@@ -13,7 +13,7 @@ import {
   listAssignmentTemplates,
   resetAssignmentTemplateStoreForTests,
   saveAssignmentTemplate,
-} from "../server/student-admin-assignment-template-store.mjs"
+} from "../src/modules/admin/assignment-templates.mjs"
 
 test.beforeEach(() => {
   resetAssignmentTemplateStoreForTests()

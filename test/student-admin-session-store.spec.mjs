@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 
-import { createStudentAdminSessionStore } from "../server/student-admin-session-store.mjs"
+import { createStudentAdminSessionStore } from "../src/modules/admin/session-store.mjs"
 
 function createMockRedisClient(sharedCache = new Map()) {
   const cache = sharedCache

@@ -75,7 +75,7 @@ body {
 
 body::before {
   background-repeat: no-repeat, no-repeat, no-repeat;
-  background-size: 1200px 500px, 800px 420px, 100% 100%;
+  background-size: 1080px 500px, 800px 420px, 100% 100%;
   content: "";
   inset: 0;
   pointer-events: none;

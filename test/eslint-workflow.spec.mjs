@@ -14,8 +14,8 @@ const eslintConfig = (await import(pathToFileURL(eslintConfigPath).href)).defaul
 
 test("eslint workflow uses the repo ESLint toolchain and flat config", () => {
   assert.equal(workflow.name, "ESLint")
-  assert.deepEqual(workflow.on.push.branches, ["split"])
-  assert.deepEqual(workflow.on.pull_request.branches, ["split"])
+  assert.deepEqual(workflow.on.push.branches, ["server-side-refactor"])
+  assert.deepEqual(workflow.on.pull_request.branches, ["server-side-refactor"])
   assert.ok(eslintConfig[0].ignores.includes("web-asset/vendor/"))
 
   const steps = workflow.jobs.eslint.steps

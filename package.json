@@ -47,6 +47,7 @@
     "sync:full:sis-root:restart-runtimes": "tools/sync-and-restart-runtimes.sh full",
     "sync:full:sis-public-root:restart-runtimes": "tools/sync-and-restart-runtimes.sh public",
     "runtimes:restart": "tools/sync-and-restart-runtimes.sh restart-only",
+    "worker:async-side-effects": "node tools/async-side-effects-worker.mjs",
     "test:runtime:sync-restart": "tools/sync-and-restart-test-runtime.sh full",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "audit:lighthouse:admin": "node tools/lighthouse-admin-audit.mjs",

@@ -1,10 +1,11 @@
 import test from "node:test"
 import assert from "node:assert/strict"
+import fs from "node:fs"
 
 import {
   buildStudentNewsCalendarRows,
   resolveStudentNewsSubmissionWindow,
-} from "../server/student-admin-store.mjs"
+} from "../src/modules/admin/student-news-submissions.mjs"
 
 test("resolveStudentNewsSubmissionWindow normalizes day boundaries to UTC+7", () => {
   const now = new Date("2026-03-13T17:10:00.000Z") // 2026-03-14 00:10 in UTC+7
@@ -50,4 +51,12 @@ test("buildStudentNewsCalendarRows resolves open/completed states in UTC+7", () 
   assert.equal(rows[2]?.date, "2026-03-12")
   assert.equal(rows[2]?.status, "completed")
   assert.equal(rows[2]?.canSubmit, false)
+})
+
+test("student news submissions module exposes the calendar/save API surface", () => {
+  const source = fs.readFileSync(new URL("../src/modules/admin/student-news-submissions.mjs", import.meta.url), "utf8")
+  assert.match(source, /export function resolveStudentNewsSubmissionWindow\(/)
+  assert.match(source, /export function buildStudentNewsCalendarRows\(/)
+  assert.match(source, /export async function listStudentNewsCalendar\(/)
+  assert.match(source, /export async function saveStudentNewsReport\(/)
 })

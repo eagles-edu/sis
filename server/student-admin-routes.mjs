@@ -14,47 +14,74 @@ import {
   listIncomingExerciseResults,
   resolveIncomingExerciseResultToStudent,
   setIncomingExerciseResultStatus,
-} from "./exercise-store.mjs"
+} from "../src/modules/exercises/exercise-store.mjs"
 import {
-  approveParentClassReport,
-  encodeParentReportCommentBundle,
-  createStudentPointsAdjustment,
-  decodeParentReportCommentBundle,
-  deleteAttendanceRecord,
-  deleteGradeRecord,
-  deleteParentClassReport,
-  deleteStudent,
-  findFamilyByEmergencyPhone,
-  generateParentClassReportFromGrades,
-  getAdminDashboardSummary,
-  getNextStudentNumber,
-  getSchoolPointsYtdSummary,
-  getStudentAdminFilterCacheStatus,
-  getStudentById,
-  importStudentsFromRows,
   isStudentAdminStoreEnabled,
   listStudentNewsCalendar,
-  listStudentNewsReportsForReview,
-  listStudentPointsLedger,
-  listStudentPointsSnapshots,
+  saveStudentNewsReport,
+} from "./student-admin-store.mjs"
+import {
+  deleteStudent,
+  importStudentsFromRows,
+  saveStudent,
+} from "../src/modules/admin/student-write-import.mjs"
+import {
+  ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+  enqueueAsyncSideEffectJob,
+} from "../src/modules/async/side-effect-jobs.mjs"
+import {
+  getEmailBatchQueueRuntimeStatus,
+  getEmailBatchQueueStatus,
+  listQueuedAnnouncements,
+  nowIso,
+  nextWeekendBatchDispatchAt,
+  parseIsoDateTime,
+  normalizeDeliveryMode,
+  normalizeQueueType,
+  shiftFromFixedTimeZone,
+  shiftToFixedTimeZone,
+  createQueueId,
+  NOTIFICATION_QUEUE_STATUS_HOLD,
+  NOTIFICATION_QUEUE_STATUS_QUEUED,
+  NOTIFICATION_QUEUE_STATUS_SENT,
+  NOTIFICATION_QUEUE_TYPE_ANNOUNCEMENT,
+  NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
+  queueAnnouncementEmail,
+  sendAllQueuedAnnouncements,
+  updateQueuedAnnouncement,
+} from "../src/modules/admin/notification-queue.mjs"
+import {
+  getNextStudentNumber,
+  getStudentById,
+  listStudents,
+} from "../src/modules/admin/student-roster.mjs"
+import {
+  getStudentAdminFilterCacheStatus,
   listExerciseTitles,
   listLevelAndSchoolFilters,
-  listStudents,
-  reviewStudentNewsReport,
-  saveAttendanceRecord,
-  saveGradeRecord,
+} from "../src/modules/admin/student-admin-queries.mjs"
+import {
+  getAdminDashboardSummary,
+} from "../src/modules/admin/dashboard-summary.mjs"
+import {
+  approveParentClassReport,
+  decodeParentReportCommentBundle,
+  deleteParentClassReport,
+  generateParentClassReportFromGrades,
+  encodeParentReportCommentBundle,
   saveParentClassReport,
-  saveStudentNewsReport,
-  setStudentPointsTotal,
-  saveStudent,
-} from "./student-admin-store.mjs"
+} from "../src/modules/admin/parent-reports.mjs"
 import {
   deleteAssignmentTemplateById,
   importAssignmentTemplates,
   getAssignmentTemplateById,
   listAssignmentTemplates,
   saveAssignmentTemplate,
-} from "./student-admin-assignment-template-store.mjs"
+} from "../src/modules/admin/assignment-templates.mjs"
+import {
+  listStudentNewsReportsForReview,
+  reviewStudentNewsReport,
+} from "../src/modules/admin/student-news-review.mjs"
 import {
   createAdminUser,
   deleteAdminUserById,
@@ -62,13 +89,27 @@ import {
   hasAdminUsersConfigured,
   listAdminUsers,
   updateAdminUserById,
-} from "./student-admin-user-store.mjs"
+} from "../src/modules/admin/users.mjs"
+import {
+  createStudentPointsAdjustment,
+  getSchoolPointsYtdSummary,
+  listStudentPointsLedger,
+  listStudentPointsSnapshots,
+  setStudentPointsTotal,
+} from "../src/modules/admin/points.mjs"
+import {
+  deleteAttendanceRecord,
+  deleteGradeRecord,
+  findFamilyByEmergencyPhone,
+  saveAttendanceRecord,
+  saveGradeRecord,
+} from "../src/modules/admin/student-records.mjs"
 import {
   buildReportCardFilename,
   generateStudentReportCardPdf,
 } from "./student-report-card-pdf.mjs"
-import { createStudentAdminSessionStore } from "./student-admin-session-store.mjs"
-import { getSharedPrismaClient } from "./prisma-client-factory.mjs"
+import { createStudentAdminSessionStore } from "../src/modules/admin/session-store.mjs"
+import { getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
 
 const ADMIN_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_ADMIN_PAGE_PATH, "/admin")
 const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
@@ -2647,6 +2688,7 @@ function resolveSmtpAuthMode(value) {
   return ""
 }
 
+{
 const WEEKEND_BATCH_WINDOWS = Object.freeze([
   { day: 6, hour: 12, minute: 0, label: "Sat 12:00" },
   { day: 6, hour: 15, minute: 30, label: "Sat 15:30" },
@@ -2708,662 +2750,7 @@ function weekendBatchScheduleLabel() {
 
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
-const PORTAL_FIXED_TIME_ZONE = "Asia/Ho_Chi_Minh"
-
-function shiftToFixedTimeZone(value) {
-  return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
-
-function shiftFromFixedTimeZone(value) {
-  return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
-}
-
-function parseIsoDateTime(value) {
-  const text = normalizeText(value)
-  if (!text) return null
-  const parsed = new Date(text)
-  if (Number.isNaN(parsed.valueOf())) return null
-  return parsed
-}
-
-function nextWeekendBatchDispatchAt(value = new Date()) {
-  const now = value instanceof Date ? new Date(value.getTime()) : new Date(value)
-  if (Number.isNaN(now.valueOf())) return null
-  const shiftedNow = shiftToFixedTimeZone(now)
-
-  for (let offset = 0; offset < 14; offset += 1) {
-    const dayStart = new Date(
-      Date.UTC(
-        shiftedNow.getUTCFullYear(),
-        shiftedNow.getUTCMonth(),
-        shiftedNow.getUTCDate() + offset,
-        0,
-        0,
-        0,
-        0
-      )
-    )
-    const dayOfWeek = dayStart.getUTCDay()
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) continue
-
-    for (let i = 0; i < WEEKEND_BATCH_WINDOWS.length; i += 1) {
-      const slot = WEEKEND_BATCH_WINDOWS[i]
-      if (slot.day !== dayOfWeek) continue
-      const candidateShifted = new Date(
-        Date.UTC(
-          dayStart.getUTCFullYear(),
-          dayStart.getUTCMonth(),
-          dayStart.getUTCDate(),
-          slot.hour,
-          slot.minute,
-          0,
-          0
-        )
-      )
-      const candidate = shiftFromFixedTimeZone(candidateShifted)
-      if (candidate > now) return candidate
-    }
-  }
-
-  return null
-}
-
-function normalizeDeliveryMode(value) {
-  const mode = normalizeLower(value)
-  if (mode === "weekend-batch" || mode === "batch") return "weekend-batch"
-  return "immediate"
-}
-
-function normalizeAnnouncementPayload(payload = {}, options = {}) {
-  const allowEmptyRecipients = Boolean(options.allowEmptyRecipients)
-  const recipients = normalizeRecipientList(payload.recipients)
-  if (!recipients.length && !allowEmptyRecipients) {
-    const error = new Error("At least one valid recipient email is required")
-    error.statusCode = 400
-    throw error
-  }
-
-  return {
-    recipients,
-    assignmentTitle: normalizeText(payload.assignmentTitle) || "Assignment update",
-    exerciseTitle: normalizeText(payload.exerciseTitle),
-    dueAt: normalizeText(payload.dueAt),
-    level: normalizeText(payload.level),
-    message: normalizeText(payload.message),
-    senderName: normalizeText(payload.senderName) || "Eagles Student Admin",
-  }
-}
-
-function mapQueueRecord(record = {}) {
-  return {
-    id: normalizeText(record.id),
-    queueType: normalizeQueueType(record.queueType),
-    status: normalizeQueueStatus(record.status),
-    deliveryMode: normalizeDeliveryMode(record.deliveryMode),
-    recipients: normalizeRecipientList(record.recipients),
-    assignmentTitle: normalizeText(record.assignmentTitle) || "Assignment update",
-    exerciseTitle: normalizeText(record.exerciseTitle),
-    dueAt: normalizeText(record.dueAt),
-    level: normalizeText(record.level),
-    message: normalizeText(record.message),
-    senderName: normalizeText(record.senderName) || "Eagles Student Admin",
-    queuedByUsername: normalizeText(record.queuedByUsername),
-    reviewedByUsername: normalizeText(record.reviewedByUsername),
-    queuedAt: normalizeText(record.queuedAt || record.createdAt),
-    scheduledFor: normalizeText(record.scheduledFor),
-    sentAt: normalizeText(record.sentAt),
-    attempts: Number.parseInt(String(record.attempts || 0), 10) || 0,
-    lastError: normalizeText(record.lastError),
-    payloadJson: record.payloadJson || null,
-    studentReviewedAt: normalizeText(record.studentReviewedAt || record?.payloadJson?.studentReviewedAt),
-    studentReviewedByUsername: normalizeText(
-      record.studentReviewedByUsername || record?.payloadJson?.studentReviewedByUsername,
-    ),
-    parentReviewedAt: normalizeText(record.parentReviewedAt || record?.payloadJson?.parentReviewedAt),
-    parentReviewedByUsername: normalizeText(
-      record.parentReviewedByUsername || record?.payloadJson?.parentReviewedByUsername,
-    ),
-  }
-}
-
-function queueStatusFilter(statuses = []) {
-  const normalized = Array.from(
-    new Set((Array.isArray(statuses) ? statuses : []).map((entry) => normalizeQueueStatus(entry)))
-  )
-  return normalized
-}
-
-async function getNotificationQueuePrismaClient() {
-  if (EMAIL_QUEUE_DB_DISABLED) return null
-  try {
-    const prisma = await getSharedPrismaClient()
-    if (!prisma || !prisma.adminNotificationQueue) {
-      EMAIL_QUEUE_DB_DISABLED = true
-      if (!EMAIL_QUEUE_DB_WARNED) {
-        EMAIL_QUEUE_DB_WARNED = true
-        console.warn("admin notification queue falling back to memory: prisma model unavailable")
-      }
-      return null
-    }
-    return prisma
-  } catch (error) {
-    EMAIL_QUEUE_DB_DISABLED = true
-    if (!EMAIL_QUEUE_DB_WARNED) {
-      EMAIL_QUEUE_DB_WARNED = true
-      console.warn(`admin notification queue falling back to memory: ${error.message}`)
-    }
-    return null
-  }
-}
-
-function isQueueTableMissingError(error) {
-  const code = normalizeUpper(error?.code)
-  if (code === "P2021") return true
-  const message = normalizeLower(error?.message || error)
-  return message.includes("adminnotificationqueue")
-}
-
-function markQueueDatabaseFallback(error) {
-  EMAIL_QUEUE_DB_DISABLED = true
-  EMAIL_BATCH_LAST_ERROR = normalizeText(error?.message || error)
-  if (!EMAIL_QUEUE_DB_WARNED) {
-    EMAIL_QUEUE_DB_WARNED = true
-    console.warn(`admin notification queue falling back to memory: ${EMAIL_BATCH_LAST_ERROR}`)
-  }
-}
-
-async function runQueueDbOperation(handler, fallbackHandler) {
-  const prisma = await getNotificationQueuePrismaClient()
-  if (!prisma) return fallbackHandler()
-  try {
-    return await handler(prisma)
-  } catch (error) {
-    if (isQueueTableMissingError(error)) {
-      markQueueDatabaseFallback(error)
-      return fallbackHandler()
-    }
-    throw error
-  }
-}
-
-function buildQueuedAnnouncementEntry(payload = {}, options = {}) {
-  const queueType = normalizeQueueType(payload.queueType)
-  const normalizedPayload = normalizeAnnouncementPayload(payload, {
-    allowEmptyRecipients: queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
-  })
-  const now = new Date()
-  const scheduledAt = nextWeekendBatchDispatchAt(now)
-  if (!scheduledAt) {
-    const error = new Error("Unable to compute next weekend batch time")
-    error.statusCode = 503
-    throw error
-  }
-  return {
-    id: createQueueId("notify"),
-    queueType,
-    status: NOTIFICATION_QUEUE_STATUS_QUEUED,
-    deliveryMode: normalizeDeliveryMode(payload.deliveryMode),
-    recipients: normalizedPayload.recipients,
-    assignmentTitle: normalizedPayload.assignmentTitle,
-    exerciseTitle: normalizedPayload.exerciseTitle,
-    level: normalizedPayload.level,
-    dueAt: normalizedPayload.dueAt,
-    message: normalizedPayload.message,
-    senderName: normalizedPayload.senderName,
-    queuedByUsername: normalizeText(options.queuedByUsername || payload.queuedByUsername),
-    reviewedByUsername: "",
-    queuedAt: now.toISOString(),
-    scheduledFor: scheduledAt.toISOString(),
-    sentAt: "",
-    attempts: 0,
-    lastError: "",
-    payloadJson: payload && typeof payload === "object" ? payload : {},
-  }
-}
-
-function memoryQueueFilteredItems({ queueType = "", includeSent = false, statuses = [] } = {}) {
-  const normalizedQueueType = normalizeQueueType(queueType)
-  const statusFilter = queueStatusFilter(statuses)
-  return EMAIL_BATCH_QUEUE.filter((entry) => {
-    if (queueType && normalizeQueueType(entry.queueType) !== normalizedQueueType) return false
-    const status = normalizeQueueStatus(entry.status)
-    if (statusFilter.length) return statusFilter.includes(status)
-    if (!includeSent && status === NOTIFICATION_QUEUE_STATUS_SENT) return false
-    return true
-  })
-}
-
-async function countQueuedAnnouncements({ queueType = "", includeSent = false, statuses = [] } = {}) {
-  return runQueueDbOperation(
-    async (prisma) => {
-      const where = {}
-      if (queueType) where.queueType = normalizeQueueType(queueType)
-      const statusFilter = queueStatusFilter(statuses)
-      if (statusFilter.length) where.status = { in: statusFilter }
-      else if (!includeSent) where.status = { not: NOTIFICATION_QUEUE_STATUS_SENT }
-      return prisma.adminNotificationQueue.count({ where })
-    },
-    async () => memoryQueueFilteredItems({ queueType, includeSent, statuses }).length
-  )
-}
-
-async function listQueuedAnnouncements({ queueType = "", take = 10, includeSent = false, statuses = [] } = {}) {
-  const limit = Math.max(1, Math.min(Number.parseInt(String(take || 10), 10) || 10, 1000))
-  const total = await countQueuedAnnouncements({ queueType, includeSent, statuses })
-  const items = await runQueueDbOperation(
-    async (prisma) => {
-      const where = {}
-      if (queueType) where.queueType = normalizeQueueType(queueType)
-      const statusFilter = queueStatusFilter(statuses)
-      if (statusFilter.length) where.status = { in: statusFilter }
-      else if (!includeSent) where.status = { not: NOTIFICATION_QUEUE_STATUS_SENT }
-      const rows = await prisma.adminNotificationQueue.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        take: limit,
-      })
-      return rows.map((row) =>
-        mapQueueRecord({
-          ...row,
-          queuedAt: row.createdAt?.toISOString?.() || "",
-          scheduledFor: row.scheduledFor?.toISOString?.() || "",
-          sentAt: row.sentAt?.toISOString?.() || "",
-        })
-      )
-    },
-    async () =>
-      memoryQueueFilteredItems({ queueType, includeSent, statuses })
-        .slice()
-        .sort((left, right) => normalizeText(right.queuedAt).localeCompare(normalizeText(left.queuedAt)))
-        .slice(0, limit)
-        .map((entry) => mapQueueRecord(entry))
-  )
-
-  EMAIL_BATCH_LAST_KNOWN_SIZE = total
-  return {
-    total,
-    items,
-    hasMore: total > items.length,
-  }
-}
-
-function buildAnnouncementEmailContent(payload = {}) {
-  const assignmentTitle = normalizeText(payload.assignmentTitle) || "Assignment update"
-  const exerciseTitle = normalizeText(payload.exerciseTitle)
-  const dueAt = normalizeText(payload.dueAt)
-  const level = normalizeText(payload.level)
-  const customMessage = normalizeText(payload.message)
-  const sender = normalizeText(payload.senderName) || "Eagles Student Admin"
-
-  const subjectParts = [assignmentTitle]
-  if (exerciseTitle) subjectParts.push(`(${exerciseTitle})`)
-  const subject = subjectParts.join(" ").trim()
-
-  const lines = [
-    `${sender} announcement`,
-    "",
-    `Assignment: ${assignmentTitle}`,
-    exerciseTitle ? `Exercise: ${exerciseTitle}` : "",
-    level ? `Level/Class: ${level}` : "",
-    dueAt ? `Due: ${dueAt}` : "",
-    "",
-    customMessage || "Please review and complete this assignment.",
-  ].filter(Boolean)
-
-  const htmlLines = lines
-    .map((line) => line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))
-    .join("<br>")
-
-  return {
-    subject,
-    lines,
-    htmlLines,
-  }
-}
-
-async function sendAnnouncementEmail(payload = {}) {
-  const normalizedPayload = normalizeAnnouncementPayload(payload)
-  const emailContent = buildAnnouncementEmailContent(normalizedPayload)
-
-  const nodemailer = await getNodemailer()
-  const smtp = smtpConfigFromEnv()
-  const transportOptions = {
-    host: smtp.host,
-    port: smtp.port,
-    secure: smtp.secure,
-  }
-  if (smtp.useAuth) {
-    transportOptions.auth = {
-      user: smtp.user,
-      pass: smtp.pass,
-    }
-  }
-  const transporter = nodemailer.createTransport(transportOptions)
-
-  await transporter.sendMail({
-    from: smtp.from,
-    to: smtp.from,
-    bcc: normalizedPayload.recipients,
-    subject: emailContent.subject,
-    text: emailContent.lines.join("\n"),
-    html: `<p>${emailContent.htmlLines}</p>`,
-  })
-
-  return {
-    ok: true,
-    sent: normalizedPayload.recipients.length,
-    subject: emailContent.subject,
-    deliveryMode: "immediate",
-  }
-}
-
-async function queueAnnouncementEmail(payload = {}, options = {}) {
-  const totalUnsent = await countQueuedAnnouncements()
-  if (totalUnsent >= EMAIL_BATCH_QUEUE_LIMIT) {
-    const error = new Error("Weekend email batch queue is full")
-    error.statusCode = 503
-    throw error
-  }
-
-  const entry = buildQueuedAnnouncementEntry(payload, options)
-  const saved = await runQueueDbOperation(
-    async (prisma) => {
-      const created = await prisma.adminNotificationQueue.create({
-        data: {
-          id: entry.id,
-          queueType: entry.queueType,
-          status: entry.status,
-          deliveryMode: entry.deliveryMode,
-          recipients: entry.recipients,
-          assignmentTitle: entry.assignmentTitle,
-          exerciseTitle: entry.exerciseTitle || null,
-          level: entry.level || null,
-          dueAt: entry.dueAt || null,
-          message: entry.message || null,
-          senderName: entry.senderName || null,
-          queuedByUsername: entry.queuedByUsername || null,
-          reviewedByUsername: null,
-          scheduledFor: parseIsoDateTime(entry.scheduledFor),
-          sentAt: null,
-          attempts: 0,
-          lastError: null,
-          payloadJson: entry.payloadJson || null,
-        },
-      })
-      return mapQueueRecord({
-        ...created,
-        queuedAt: created.createdAt?.toISOString?.() || entry.queuedAt,
-        scheduledFor: created.scheduledFor?.toISOString?.() || entry.scheduledFor,
-      })
-    },
-    async () => {
-      EMAIL_BATCH_QUEUE.push(entry)
-      return mapQueueRecord(entry)
-    }
-  )
-  EMAIL_BATCH_LAST_KNOWN_SIZE = totalUnsent + 1
-
-  return {
-    ok: true,
-    queued: true,
-    deliveryMode: "weekend-batch",
-    queueId: saved.id,
-    queuedAt: saved.queuedAt,
-    scheduledFor: saved.scheduledFor,
-    queueSize: EMAIL_BATCH_LAST_KNOWN_SIZE,
-    schedule: weekendBatchScheduleLabel(),
-  }
-}
-
-async function getEmailBatchQueueStatus(queueType = "") {
-  const listed = await listQueuedAnnouncements({
-    queueType,
-    take: 500,
-    includeSent: false,
-  })
-  const nextScheduledFor = listed.items.reduce((earliest, entry) => {
-    const candidate = parseIsoDateTime(entry.scheduledFor)
-    if (!candidate) return earliest
-    if (!earliest || candidate < earliest) return candidate
-    return earliest
-  }, null)
-
-  return {
-    queueSize: listed.total,
-    nextScheduledFor: nextScheduledFor ? nextScheduledFor.toISOString() : "",
-    schedule: weekendBatchScheduleLabel(),
-    backend: EMAIL_QUEUE_DB_DISABLED ? "memory" : EMAIL_QUEUE_BACKEND_MODE,
-    lastRunAt: EMAIL_BATCH_LAST_RUN_AT,
-    lastResult: EMAIL_BATCH_LAST_RESULT,
-    lastError: EMAIL_BATCH_LAST_ERROR,
-    processing: false,
-  }
-}
-
-function getEmailBatchQueueRuntimeStatus() {
-  return {
-    queueSize: EMAIL_BATCH_LAST_KNOWN_SIZE,
-    nextScheduledFor: "",
-    schedule: weekendBatchScheduleLabel(),
-    backend: EMAIL_QUEUE_DB_DISABLED ? "memory" : EMAIL_QUEUE_BACKEND_MODE,
-    lastRunAt: EMAIL_BATCH_LAST_RUN_AT,
-    lastResult: EMAIL_BATCH_LAST_RESULT,
-    lastError: EMAIL_BATCH_LAST_ERROR,
-    processing: false,
-  }
-}
-
-async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
-  const id = normalizeText(queueId)
-  if (!id) {
-    const error = new Error("queueId is required")
-    error.statusCode = 400
-    throw error
-  }
-  const normalized = {
-    status: updates.status !== undefined ? normalizeQueueStatus(updates.status) : undefined,
-    assignmentTitle:
-      updates.assignmentTitle !== undefined
-        ? normalizeText(updates.assignmentTitle) || "Assignment update"
-        : undefined,
-    exerciseTitle: updates.exerciseTitle !== undefined ? normalizeText(updates.exerciseTitle) : undefined,
-    level: updates.level !== undefined ? normalizeText(updates.level) : undefined,
-    dueAt: updates.dueAt !== undefined ? normalizeText(updates.dueAt) : undefined,
-    message: updates.message !== undefined ? normalizeText(updates.message) : undefined,
-    recipients: updates.recipients !== undefined ? normalizeRecipientList(updates.recipients) : undefined,
-    reviewedByUsername:
-      updates.reviewedByUsername !== undefined
-        ? normalizeText(updates.reviewedByUsername)
-        : normalizeText(options.reviewedByUsername),
-    scheduledFor: updates.scheduledFor !== undefined ? parseIsoDateTime(updates.scheduledFor) : undefined,
-    lastError: updates.lastError !== undefined ? normalizeText(updates.lastError) : undefined,
-    sentAt: updates.sentAt !== undefined ? parseIsoDateTime(updates.sentAt) : undefined,
-    attempts:
-      updates.attempts !== undefined ? Number.parseInt(String(updates.attempts), 10) || 0 : undefined,
-    studentReviewedAt:
-      updates.studentReviewedAt !== undefined ? parseIsoDateTime(updates.studentReviewedAt) : undefined,
-    studentReviewedByUsername:
-      updates.studentReviewedByUsername !== undefined ? normalizeText(updates.studentReviewedByUsername) : undefined,
-    parentReviewedAt:
-      updates.parentReviewedAt !== undefined ? parseIsoDateTime(updates.parentReviewedAt) : undefined,
-    parentReviewedByUsername:
-      updates.parentReviewedByUsername !== undefined ? normalizeText(updates.parentReviewedByUsername) : undefined,
-    payloadJson: updates.payloadJson && typeof updates.payloadJson === "object" ? updates.payloadJson : undefined,
-  }
-
-  return runQueueDbOperation(
-    async (prisma) => {
-      const patch = {}
-      const existing = await prisma.adminNotificationQueue.findUnique({ where: { id } })
-      const existingPayload =
-        existing?.payloadJson && typeof existing.payloadJson === "object" ? existing.payloadJson : {}
-      if (normalized.status !== undefined) patch.status = normalized.status
-      if (normalized.assignmentTitle !== undefined) patch.assignmentTitle = normalized.assignmentTitle
-      if (normalized.exerciseTitle !== undefined) patch.exerciseTitle = normalized.exerciseTitle || null
-      if (normalized.level !== undefined) patch.level = normalized.level || null
-      if (normalized.dueAt !== undefined) patch.dueAt = normalized.dueAt || null
-      if (normalized.message !== undefined) patch.message = normalized.message || null
-      if (normalized.recipients !== undefined) patch.recipients = normalized.recipients
-      if (normalized.reviewedByUsername !== undefined) patch.reviewedByUsername = normalized.reviewedByUsername || null
-      if (normalized.scheduledFor !== undefined) patch.scheduledFor = normalized.scheduledFor
-      if (normalized.lastError !== undefined) patch.lastError = normalized.lastError || null
-      if (normalized.sentAt !== undefined) patch.sentAt = normalized.sentAt
-      if (normalized.attempts !== undefined) patch.attempts = normalized.attempts
-      if (normalized.studentReviewedAt !== undefined) patch.studentReviewedAt = normalized.studentReviewedAt
-      if (normalized.studentReviewedByUsername !== undefined)
-        patch.studentReviewedByUsername = normalized.studentReviewedByUsername || null
-      if (normalized.parentReviewedAt !== undefined) patch.parentReviewedAt = normalized.parentReviewedAt
-      if (normalized.parentReviewedByUsername !== undefined)
-        patch.parentReviewedByUsername = normalized.parentReviewedByUsername || null
-      const payloadPatch = {}
-      if (normalized.studentReviewedAt !== undefined)
-        payloadPatch.studentReviewedAt = normalized.studentReviewedAt?.toISOString?.() || ""
-      if (normalized.studentReviewedByUsername !== undefined)
-        payloadPatch.studentReviewedByUsername = normalized.studentReviewedByUsername || ""
-      if (normalized.parentReviewedAt !== undefined)
-        payloadPatch.parentReviewedAt = normalized.parentReviewedAt?.toISOString?.() || ""
-      if (normalized.parentReviewedByUsername !== undefined)
-        payloadPatch.parentReviewedByUsername = normalized.parentReviewedByUsername || ""
-      if (normalized.payloadJson !== undefined) Object.assign(payloadPatch, normalized.payloadJson)
-      if (Object.keys(payloadPatch).length) patch.payloadJson = { ...existingPayload, ...payloadPatch }
-      const updated = await prisma.adminNotificationQueue.update({
-        where: { id },
-        data: patch,
-      })
-      return mapQueueRecord({
-        ...updated,
-        queuedAt: updated.createdAt?.toISOString?.() || "",
-        scheduledFor: updated.scheduledFor?.toISOString?.() || "",
-        sentAt: updated.sentAt?.toISOString?.() || "",
-      })
-    },
-    async () => {
-      const index = EMAIL_BATCH_QUEUE.findIndex((entry) => normalizeText(entry.id) === id)
-      if (index < 0) {
-        const error = new Error("Queue item not found")
-        error.statusCode = 404
-        throw error
-      }
-      const current = mapQueueRecord(EMAIL_BATCH_QUEUE[index])
-      const payload = { ...(current.payloadJson || {}) }
-      const updated = {
-        ...current,
-        ...(normalized.status !== undefined ? { status: normalized.status } : {}),
-        ...(normalized.assignmentTitle !== undefined ? { assignmentTitle: normalized.assignmentTitle } : {}),
-        ...(normalized.exerciseTitle !== undefined ? { exerciseTitle: normalized.exerciseTitle } : {}),
-        ...(normalized.level !== undefined ? { level: normalized.level } : {}),
-        ...(normalized.dueAt !== undefined ? { dueAt: normalized.dueAt } : {}),
-        ...(normalized.message !== undefined ? { message: normalized.message } : {}),
-        ...(normalized.recipients !== undefined ? { recipients: normalized.recipients } : {}),
-        ...(normalized.reviewedByUsername !== undefined ? { reviewedByUsername: normalized.reviewedByUsername } : {}),
-        ...(normalized.scheduledFor !== undefined
-          ? { scheduledFor: normalized.scheduledFor ? normalized.scheduledFor.toISOString() : "" }
-          : {}),
-        ...(normalized.lastError !== undefined ? { lastError: normalized.lastError } : {}),
-        ...(normalized.sentAt !== undefined
-          ? { sentAt: normalized.sentAt ? normalized.sentAt.toISOString() : "" }
-          : {}),
-        ...(normalized.attempts !== undefined ? { attempts: normalized.attempts } : {}),
-        ...(normalized.studentReviewedAt !== undefined ? { studentReviewedAt: normalized.studentReviewedAt } : {}),
-        ...(normalized.studentReviewedByUsername !== undefined
-          ? { studentReviewedByUsername: normalized.studentReviewedByUsername }
-          : {}),
-        ...(normalized.parentReviewedAt !== undefined ? { parentReviewedAt: normalized.parentReviewedAt } : {}),
-        ...(normalized.parentReviewedByUsername !== undefined
-          ? { parentReviewedByUsername: normalized.parentReviewedByUsername }
-          : {}),
-      }
-      if (normalized.studentReviewedAt !== undefined) payload.studentReviewedAt = normalized.studentReviewedAt
-      if (normalized.studentReviewedByUsername !== undefined)
-        payload.studentReviewedByUsername = normalized.studentReviewedByUsername
-      if (normalized.parentReviewedAt !== undefined)
-        payload.parentReviewedAt = normalized.parentReviewedAt
-          ? normalized.parentReviewedAt.toISOString?.() || normalized.parentReviewedAt
-          : ""
-      if (normalized.parentReviewedByUsername !== undefined)
-        payload.parentReviewedByUsername = normalized.parentReviewedByUsername
-      if (normalized.payloadJson !== undefined) Object.assign(payload, normalized.payloadJson)
-      updated.payloadJson = payload
-      EMAIL_BATCH_QUEUE[index] = updated
-      return mapQueueRecord(updated)
-    }
-  )
-}
-
-async function approveQueuedParentReportIfPresent(item = {}, reviewedByUsername = "") {
-  const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {}
-  const reportId = normalizeText(payload?.reportId || item?.reportId)
-  if (!reportId) return null
-  return approveParentClassReport(reportId, {
-    approvedByUsername: normalizeText(reviewedByUsername),
-    participationPointsAward: payload?.participationPointsAward,
-  })
-}
-
-async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername = "" } = {}) {
-  const source = await listQueuedAnnouncements({
-    queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
-    includeSent: false,
-    statuses: [NOTIFICATION_QUEUE_STATUS_QUEUED],
-    take: 1000,
-  })
-
-  let sent = 0
-  let failed = 0
-
-  for (let i = 0; i < source.items.length; i += 1) {
-    const item = source.items[i]
-    try {
-      await sendAnnouncementEmail({
-        recipients: item.recipients,
-        assignmentTitle: item.assignmentTitle,
-        exerciseTitle: item.exerciseTitle,
-        dueAt: item.dueAt,
-        level: item.level,
-        message: item.message,
-        senderName: item.senderName,
-      })
-      if (normalizeQueueType(item.queueType) === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT) {
-        await approveQueuedParentReportIfPresent(item, reviewedByUsername)
-      }
-      await updateQueuedAnnouncement(
-        item.id,
-        {
-          status: NOTIFICATION_QUEUE_STATUS_SENT,
-          sentAt: nowIso(),
-          lastError: "",
-          attempts: (Number.parseInt(String(item.attempts || 0), 10) || 0) + 1,
-        },
-        { reviewedByUsername }
-      )
-      sent += 1
-    } catch (error) {
-      await updateQueuedAnnouncement(
-        item.id,
-        {
-          status: NOTIFICATION_QUEUE_STATUS_QUEUED,
-          lastError: normalizeText(error?.message || error),
-          attempts: (Number.parseInt(String(item.attempts || 0), 10) || 0) + 1,
-        },
-        { reviewedByUsername }
-      )
-      failed += 1
-    }
-  }
-
-  EMAIL_BATCH_LAST_RUN_AT = nowIso()
-  EMAIL_BATCH_LAST_RESULT = `manual-send sent=${sent} failed=${failed}`
-  EMAIL_BATCH_LAST_ERROR = failed ? "Some queued parent reports failed to send." : ""
-
-  return {
-    ok: true,
-    queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
-    processed: source.items.length,
-    sent,
-    failed,
-  }
-}
-
 function buildEaglesRefId(studentRefId = "") {
   const normalized = normalizeText(studentRefId)
   if (!normalized) return ""
@@ -5917,7 +5304,22 @@ async function handleApiRequest(request, response, pathname, url) {
     const result =
       deliveryMode === "weekend-batch"
         ? await queueAnnouncementEmail(payload, { queuedByUsername: normalizeText(session?.username) })
-        : await sendAnnouncementEmail(payload)
+        : await enqueueAsyncSideEffectJob(
+            ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
+            {
+              queueType,
+              reviewedByUsername: normalizeText(session?.username),
+              announcementPayload: payload,
+            },
+            { dedupeKey: "" }
+          ).then((job) => ({
+            ok: true,
+            queued: true,
+            deliveryMode: "immediate",
+            queueId: job.id,
+            scheduledFor: job.availableAt,
+            queueSize: 1,
+          }))
     sendJson(response, 200, result)
     return true
   }

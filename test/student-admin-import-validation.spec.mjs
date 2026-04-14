@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 
-import { validateImportRowsForIdentity } from "../server/student-admin-store.mjs"
+import { validateImportRowsForIdentity } from "../src/modules/admin/student-write-import.mjs"
 
 test("validateImportRowsForIdentity strict mode rejects blank, duplicate, and immutable identity conflicts", () => {
   const result = validateImportRowsForIdentity(

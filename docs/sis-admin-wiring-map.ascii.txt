@@ -64,10 +64,15 @@ API call flow:
       -> store/module subroutine
       -> JSON/PDF/XLSX response
 
+[POST /api/student-intake-submission]
+  -> server/exercise-mailer.mjs
+  -> src/modules/intake/student-intake-store.mjs
+  -> PostgreSQL via Prisma
+
 Storage layers used:
   - PostgreSQL via Prisma: student/admin/grade/attendance/report/dashboard data
   - Redis: session store + filter cache runtime stats
-  - Browser localStorage: assignment templates, column visibility, zoom, UI prefs
+  - Browser localStorage: column visibility, zoom, UI prefs, legacy assignment-template import seed
 
 ======================================================================
 2) ROUTE PREFIXES + CORE FILES
@@ -79,12 +84,39 @@ Frontend entry:
 Backend API/router:
   server/student-admin-routes.mjs
 
+Domain modules:
+  src/modules/admin/assignment-templates.mjs
+  src/modules/admin/dashboard-summary.mjs
+  src/modules/admin/parent-reports.mjs
+  src/modules/admin/points.mjs
+  src/modules/admin/student-admin-queries.mjs
+  src/modules/admin/student-news-compliance.mjs
+  src/modules/admin/student-news-fallback.mjs
+  src/modules/admin/student-news-submissions.mjs
+  src/modules/admin/student-news-review.mjs
+  src/modules/admin/student-records.mjs
+  src/modules/admin/student-roster.mjs
+  src/modules/exercises/exercise-store.mjs
+  src/modules/intake/student-intake-store.mjs
+  src/modules/admin/session-store.mjs
+
+Infrastructure bootstrap:
+  src/infra/db/prisma-client.mjs
+
 Main backend stores/modules called by router:
   server/student-admin-store.mjs
-  server/exercise-store.mjs
-  server/student-admin-user-store.mjs
+  src/modules/admin/dashboard-summary.mjs
+  src/modules/admin/student-admin-queries.mjs
+  src/modules/admin/student-news-compliance.mjs
+  src/modules/exercises/exercise-store.mjs
+  src/modules/admin/users.mjs
+  src/modules/admin/session-store.mjs
+  src/modules/admin/parent-reports.mjs
+  src/modules/admin/points.mjs
+  src/modules/admin/student-news-submissions.mjs
+  src/modules/admin/student-news-review.mjs
+  src/modules/admin/student-roster.mjs
   server/student-report-card-pdf.mjs
-  server/student-admin-session-store.mjs
 
 Key prefixes:
   ADMIN_PAGE_PATH            = /admin/students
@@ -114,33 +146,33 @@ Backend endpoints called:
   - GET  /api/admin/exercise-results/incoming (incoming panel)
 
 Backend subroutines:
-  - getAdminDashboardSummary()                          [student-admin-store.mjs]
+  - getAdminDashboardSummary()                          [src/modules/admin/dashboard-summary.mjs]
+  - buildAssignmentDashboardSlices(...)                 [student-admin-assignment-template-store.mjs]
   - listQueuedAnnouncements(...)                        [student-admin-routes helper + store]
   - queueAnnouncementEmail(...) / sendAnnouncementEmail(...)
-  - listIncomingExerciseResults(...)                    [exercise-store.mjs]
+  - listIncomingExerciseResults(...)                    [src/modules/exercises/exercise-store.mjs]
 
 Overview info-production conditional paths:
   A) Dashboard provides levelCompletion rows:
      - use backend rows as source of truth for chart/buttons/snapshot
 
-  B) Dashboard levelCompletion empty, templates exist (frontend localStorage):
-     - buildTemplateLevelCompletionRows():
-       * selects not-overdue template per level (due today/future)
-       * maps level -> enrolled students from dashboard students
-       * computes completed vs pending and uncompleted student list
+  B) Dashboard levelCompletion empty, backend enrollment fallback is present:
+     - render backend enrollment-only rows from enrollmentOnlyLevels
+     - chart still renders Enrolled vs Completed(0)
+     - buttons still render, pending list empty
 
-  C) Dashboard levelCompletion empty, no template rows:
-     - buildEnrollmentOnlyLevelCompletionRows():
-       * derives per-level enrolled counts from classEnrollmentAttendance
-         (fallback: student source by level)
-       * chart still renders Enrolled vs Completed(0)
-       * buttons still render, pending list empty
+  C) Reminder detail panel has assignment metadata but no preview link:
+     - use currentAssignmentMeta for reminder autofill
+     - POST /api/admin/assignment-announcements/volatile to create a preview URL
 
   D) Line chart with no weekly assignment activity:
      - renders zero baseline from Monday to current day (no vanish)
 
+  Legacy browser storage is no longer a live overview input. It is import-only
+  for old assignment templates and otherwise remains UX preference storage.
+
 Input/Output sketch:
-  IN  GET /dashboard -> { today, weeklyAssignmentCompletion, classEnrollmentAttendance, levelCompletion, ... }
+  IN  GET /dashboard -> { today, weeklyAssignmentCompletion, classEnrollmentAttendance, levelCompletion, enrollmentOnlyLevels, currentAssignmentMeta, ... }
   OUT UI cards/charts/buttons/detail-table/reminder payload
 
 
@@ -162,11 +194,11 @@ Backend endpoints:
   - GET    /api/admin/students/next-student-number
 
 Backend subroutines:
-  - listStudents(...)
-  - getStudentById(...)
+  - listStudents(...)                              [src/modules/admin/student-roster.mjs]
+  - getStudentById(...)                            [src/modules/admin/student-roster.mjs]
   - saveStudent(...)
   - deleteStudent(...)
-  - getNextStudentNumber()
+  - getNextStudentNumber()                         [src/modules/admin/student-roster.mjs]
 
 IO notes:
   - list endpoint feeds main student table + global student source
@@ -184,7 +216,7 @@ Backend endpoints:
 
 Backend subroutines:
   - saveStudent(...)
-  - getStudentById(...)
+  - getStudentById(...)                            [src/modules/admin/student-roster.mjs]
 
 Conditional path:
   - create/update path selected by presence of current student id
@@ -203,9 +235,9 @@ Backend endpoints:
   - GET    /api/admin/students/:studentRefId (for refreshed rows)
 
 Backend subroutines:
-  - saveAttendanceRecord(...)
-  - deleteAttendanceRecord(...)
-  - getStudentById(...)
+  - saveAttendanceRecord(...) [src/modules/admin/student-records.mjs]
+  - deleteAttendanceRecord(...) [src/modules/admin/student-records.mjs]
+  - getStudentById(...)                            [src/modules/admin/student-roster.mjs]
 
 IO notes:
   - writes attendance rows per student/day/status/comments
@@ -230,24 +262,38 @@ Info paths:
 PAGE: assignments (slug: assignments)
 ----------------------------------------------------------------------
 Frontend functions:
-  - saveAssignmentTemplate()          (localStorage only)
-  - deleteAssignmentTemplate()        (localStorage only)
+  - loadAssignmentTemplates()
+  - saveAssignmentTemplate()
+  - deleteAssignmentTemplate()
+  - importLegacyAssignmentTemplatesOnce()
   - sendAssignmentAnnouncement()
   - createVolatileAssignmentAnnouncementPreview(...)
 
 Backend endpoints:
+  - GET  /api/admin/assignment-templates
+  - POST /api/admin/assignment-templates
+  - POST /api/admin/assignment-templates/import
+  - DELETE /api/admin/assignment-templates/:id
   - POST /api/admin/notifications/email
   - POST /api/admin/assignment-announcements/volatile
   - GET  /assignment-announcements/volatile/:token (public preview page)
 
 Backend subroutines:
+  - listAssignmentTemplates(...)
+  - saveAssignmentTemplate(...)
+  - deleteAssignmentTemplateById(...)
+  - importAssignmentTemplates(...)
   - sendAnnouncementEmail(...) / queueAnnouncementEmail(...)
   - createAssignmentAnnouncementPreview(...)
   - readAssignmentAnnouncementPreview(...)
 
 Conditional paths:
-  - template save/delete updates localStorage + dashboard rerender
+  - template save/delete updates backend + dashboard rerender
+  - legacy browser templates are imported once and then cleared
   - send path targets either selected student or whole selected level
+
+IO notes:
+  - assignment rows are backend template records, not DB grade rows or browser-local records
 
 
 PAGE: assignments-data (slug: assignments-data)
@@ -257,11 +303,13 @@ Frontend functions:
   - table sort/filter/archive/column visibility
 
 Backend endpoints:
-  - none required for template rows (localStorage source)
+  - GET  /api/admin/assignment-templates
+  - POST /api/admin/assignment-templates/import
+  - DELETE /api/admin/assignment-templates/:id
   - optional exports through /api/admin/exports/xlsx
 
 IO notes:
-  - assignment rows are local template records, not DB grade rows
+  - assignment rows are backend template records, not DB grade rows
 
 
 PAGE: grades (slug: grades)
@@ -276,9 +324,9 @@ Backend endpoints:
   - GET    /api/admin/students/:studentRefId
 
 Backend subroutines:
-  - saveGradeRecord(...)
-  - deleteGradeRecord(...)
-  - getStudentById(...)
+  - saveGradeRecord(...) [src/modules/admin/student-records.mjs]
+  - deleteGradeRecord(...) [src/modules/admin/student-records.mjs]
+  - getStudentById(...)                            [src/modules/admin/student-roster.mjs]
 
 
 PAGE: grades-data (slug: grades-data)
@@ -293,6 +341,24 @@ Backend endpoints:
 
 Backend subroutine:
   - buildXlsxFromPayload(...) on export route
+
+
+PAGE: news-reports (slug: news-reports)
+----------------------------------------------------------------------
+Frontend functions:
+  - queue review modal operations
+  - list/filter/review student news reports
+
+Backend endpoints:
+  - GET  /api/admin/news-reports
+  - POST /api/admin/news-reports/:reportId
+
+Backend subroutines:
+  - listStudentNewsReportsForReview(...) [src/modules/admin/student-news-review.mjs]
+  - reviewStudentNewsReport(...)         [src/modules/admin/student-news-review.mjs]
+
+Conditional path:
+  - teacher can read the queue; review actions are admin-only
 
 
 PAGE: parent-tracking (slug: parent-tracking)
@@ -349,6 +415,33 @@ Backend subroutines:
   - buildReportCardFilename(...)
 
 
+PAGE: points (slug: points-management)
+----------------------------------------------------------------------
+Frontend functions:
+  - points summary dashboard
+  - points student list / ledger / adjustment controls
+
+Backend endpoints:
+  - GET  /api/admin/points/summary
+  - GET  /api/admin/points/students
+  - GET  /api/admin/points/ledger
+  - POST /api/admin/points/adjustments
+  - PUT  /api/admin/points/students/:studentRefId/points
+
+Backend subroutines:
+  - getSchoolPointsYtdSummary(...)     [src/modules/admin/points.mjs]
+  - listStudentPointsSnapshots(...)    [src/modules/admin/points.mjs]
+  - listStudentPointsLedger(...)       [src/modules/admin/points.mjs]
+  - createStudentPointsAdjustment(...) [src/modules/admin/points.mjs]
+  - setStudentPointsTotal(...)         [src/modules/admin/points.mjs]
+
+Conditional path:
+  - points data combines grade records, approved parent reports, and manual adjustments
+
+IO notes:
+  - points page renders backend summary/ledger data; browser storage is not canonical
+
+
 PAGE: family (slug: family)
 ----------------------------------------------------------------------
 Frontend function:
@@ -358,7 +451,7 @@ Backend endpoint:
   - GET /api/admin/family?phone=
 
 Backend subroutine:
-  - findFamilyByEmergencyPhone(...)
+  - findFamilyByEmergencyPhone(...) [src/modules/admin/student-records.mjs]
 
 
 PAGE: users (slug: users)
@@ -373,10 +466,10 @@ Backend endpoints:
   - DELETE /api/admin/users/:id
 
 Backend subroutines:
-  - listAdminUsers(...)
-  - createAdminUser(...)
-  - updateAdminUserById(...)
-  - deleteAdminUserById(...)
+  - listAdminUsers(...)         [src/modules/admin/users.mjs]
+  - createAdminUser(...)        [src/modules/admin/users.mjs]
+  - updateAdminUserById(...)    [src/modules/admin/users.mjs]
+  - deleteAdminUserById(...)    [src/modules/admin/users.mjs]
 
 
 PAGE: permissions (slug: permissions)
@@ -436,8 +529,8 @@ Session mechanism:
 
 Bar chart source priority:
   1) summary.levelCompletion (backend)
-  2) template-derived rows from assignment templates (frontend localStorage)
-  3) enrollment-only rows (summary.classEnrollmentAttendance, fallback student source)
+  2) summary.enrollmentOnlyLevels (backend)
+  3) no frontend localStorage fallback
 
 Bar semantics with no active assignments:
   - enrolledStudents > 0
@@ -452,23 +545,27 @@ Line chart with no active assignments:
 
 
 ======================================================================
-6) CANDIDATE REFACTOR PLAN (WHY + HOW)
+6) BACKEND-OWNED ASSIGNMENT FLOW
 ======================================================================
 
-Problem observed:
-  - Overview combines backend data + local template fallback + enrollment fallback,
-    which mixes persistence domains and can feel ad-hoc.
-
-Recommended refactor target:
-  - move assignment schedule/templates from localStorage to backend canonical table/API
-  - make dashboard endpoint the single source for:
+Current posture:
+  - assignment templates and schedule ownership live in the backend canonical
+    store/API.
+  - /api/admin/dashboard emits:
       { levelCompletion, enrollmentOnlyLevels, currentAssignmentMeta }
+  - the overview page renders API payloads and uses browser storage only for
+    legacy import input and UX preferences.
 
-Suggested staged approach:
-  - Stage 1: add backend assignment-template store + CRUD endpoints
-  - Stage 2: dashboard summary computes fallback rows server-side
-  - Stage 3: frontend removes local derivation logic and only renders API payload
-  - Stage 4: add integration tests for all overview branches
+Why this shape:
+  - route/store responsibilities are now explicit.
+  - the overview renderer is no longer a derivation engine for canonical rows.
+  - reminder autofill can rely on currentAssignmentMeta without touching browser
+    template state.
+
+Remaining maintenance rule:
+  - keep assignment-template API routes and dashboard payloads synchronized with
+    the overview UI contract before expanding related reporting or reminder
+    workflows.
 
 
 ======================================================================

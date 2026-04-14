@@ -406,6 +406,28 @@ model AdminNotificationQueue {
   @@index([status, scheduledFor, createdAt])
 }
 
+model AsyncSideEffectJob {
+  id           String   @id
+  jobType      String
+  status       String   @default("queued")
+  dedupeKey    String?
+  payloadJson  Json?
+  resultJson   Json?
+  lastError    String?
+  attempts     Int      @default(0)
+  availableAt  DateTime?
+  lockedAt     DateTime?
+  lockedBy     String?
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([jobType, dedupeKey])
+  @@index([status, availableAt, createdAt])
+  @@index([jobType, status, availableAt, createdAt])
+  @@index([lockedAt])
+}
+
 model ParentPortalAccount {
   id               String   @id @default(cuid())
   parentsId        String   @unique

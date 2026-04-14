@@ -19144,24 +19144,6 @@
           openNewsReviewViewerByWeekSetId(weekSetId).catch(handleError);
         }
       });
-      const queueHubPanelsEl = document.getElementById("queueHubPanels");
-      queueHubPanelsEl?.addEventListener("click", (event) => {
-        const target = event?.target;
-        if (!(target instanceof Element)) return;
-        const openBtn = target.closest(
-          "button[data-queue-hub-open-panel][data-queue-hub-open-index]",
-        );
-        if (!(openBtn instanceof HTMLButtonElement)) return;
-        const panelId = normalizeText(
-          openBtn.getAttribute("data-queue-hub-open-panel"),
-        );
-        const rowIndex =
-          Number.parseInt(
-            normalizeText(openBtn.getAttribute("data-queue-hub-open-index")),
-            10,
-          ) || 0;
-        openQueueHubItem(panelId, rowIndex).catch(handleError);
-      });
       document
         .getElementById("newsReviewViewerCloseBtn")
         ?.addEventListener("click", () => closeNewsReviewViewer());
@@ -19669,41 +19651,11 @@
           }).catch(handleError);
         });
       document
-        .getElementById("overviewNewsQueueRefreshBtn")
-        ?.addEventListener("click", () => {
-          loadQueueHub({ notify: true }).catch(handleError);
-        });
-      document
-        .getElementById("overviewNewsQueueOpenBtn")
-        ?.addEventListener("click", () => {
-          setActivePage("news-reports");
-        });
-      document
-        .getElementById("overviewNewsQueueQueueHubBtn")
-        ?.addEventListener("click", () => {
-          setActivePage("queue-hub");
-        });
-      document
         .getElementById("performanceQueueRefreshBtn")
         ?.addEventListener("click", () => {
           loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(
             handleError,
           );
-        });
-      document.getElementById("queueHubRefreshBtn")?.addEventListener("click", () => {
-        loadQueueHub({ notify: true }).catch(handleError);
-      });
-      document.getElementById("queueHubSaveOrderBtn")?.addEventListener("click", () => {
-        saveQueueHubPanelOrder().catch(handleError);
-      });
-      document
-        .getElementById("queueHubResetOrderBtn")
-        ?.addEventListener("click", () => {
-          try {
-            resetQueueHubPanelOrder();
-          } catch (error) {
-            handleError(error);
-          }
         });
       document
         .getElementById("performanceQueueSendAllBtn")
@@ -20098,6 +20050,117 @@
           handleError(error);
         }
       });
+
+      function bindQueueHubIslandFallback() {
+        const queueHubPanelsEl = document.getElementById("queueHubPanels");
+        queueHubPanelsEl?.addEventListener("click", (event) => {
+          const target = event?.target;
+          if (!(target instanceof Element)) return;
+          const openBtn = target.closest(
+            "button[data-queue-hub-open-panel][data-queue-hub-open-index]",
+          );
+          if (!(openBtn instanceof HTMLButtonElement)) return;
+          const panelId = normalizeText(
+            openBtn.getAttribute("data-queue-hub-open-panel"),
+          );
+          const rowIndex =
+            Number.parseInt(
+              normalizeText(openBtn.getAttribute("data-queue-hub-open-index")),
+              10,
+            ) || 0;
+          openQueueHubItem(panelId, rowIndex).catch(handleError);
+        });
+        document
+          .getElementById("queueHubRefreshBtn")
+          ?.addEventListener("click", () => {
+            loadQueueHub({ notify: true }).catch(handleError);
+          });
+        document
+          .getElementById("queueHubSaveOrderBtn")
+          ?.addEventListener("click", () => {
+            saveQueueHubPanelOrder().catch(handleError);
+          });
+        document
+          .getElementById("queueHubResetOrderBtn")
+          ?.addEventListener("click", () => {
+            try {
+              resetQueueHubPanelOrder();
+            } catch (error) {
+              handleError(error);
+            }
+          });
+      }
+
+      function bindOverviewNewsQueueIslandFallback() {
+        document
+          .getElementById("overviewNewsQueueRefreshBtn")
+          ?.addEventListener("click", () => {
+            loadQueueHub({ notify: true }).catch(handleError);
+          });
+        document
+          .getElementById("overviewNewsQueueOpenBtn")
+          ?.addEventListener("click", () => {
+            setActivePage("news-reports");
+          });
+        document
+          .getElementById("overviewNewsQueueQueueHubBtn")
+          ?.addEventListener("click", () => {
+            setActivePage("queue-hub");
+          });
+      }
+
+      if (IS_JSDOM_ENV) {
+        bindQueueHubIslandFallback();
+        bindOverviewNewsQueueIslandFallback();
+      } else {
+        void import("/web-asset/admin/queue-hub-island.mjs")
+          .then((mod) =>
+            mod.initQueueHubIsland({
+              document,
+              onQueueHubItemOpen(panelId, rowIndex) {
+                openQueueHubItem(panelId, rowIndex).catch(handleError);
+              },
+              onQueueHubRefresh() {
+                loadQueueHub({ notify: true }).catch(handleError);
+              },
+              onQueueHubSaveOrder() {
+                saveQueueHubPanelOrder().catch(handleError);
+              },
+              onQueueHubResetOrder() {
+                try {
+                  resetQueueHubPanelOrder();
+                } catch (error) {
+                  handleError(error);
+                }
+              },
+            }),
+          )
+          .catch((error) => {
+            handleError(error);
+            bindQueueHubIslandFallback();
+            return null;
+          });
+        void import("/web-asset/admin/overview-news-queue-island.mjs")
+          .then((mod) =>
+            mod.initOverviewNewsQueueIsland({
+              document,
+              onOverviewNewsQueueRefresh() {
+                loadQueueHub({ notify: true }).catch(handleError);
+              },
+              onOverviewNewsQueueOpen() {
+                setActivePage("news-reports");
+              },
+              onOverviewNewsQueueQueueHub() {
+                setActivePage("queue-hub");
+              },
+            }),
+          )
+          .catch((error) => {
+            handleError(error);
+            bindOverviewNewsQueueIslandFallback();
+            return null;
+          });
+      }
 
       state.rolePermissions = normalizeRolePermissionsMap(
         defaultRolePermissionsConfig(),

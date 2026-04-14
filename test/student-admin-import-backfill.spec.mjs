@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 
-import { mergeImportPayloadForBackfill } from "../server/student-admin-store.mjs"
+import { mergeImportPayloadForBackfill } from "../src/modules/admin/student-write-import.mjs"
 
 test("mergeImportPayloadForBackfill preserves existing values when import row is blank", () => {
   const existing = {

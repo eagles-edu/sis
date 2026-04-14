@@ -79,6 +79,12 @@ npm run dev
 npm start
 ```
 
+Async side-effects worker:
+
+```bash
+npm run worker:async-side-effects
+```
+
 ## Dev/Live Separation
 
 - Dedicated port contract is now strict and fail-fast:

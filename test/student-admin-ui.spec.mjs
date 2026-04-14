@@ -1564,6 +1564,202 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
   dom.window.close()
 })
 
+test("overview news queue buttons route and refresh through the island", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: [...SCHOOL_SETUP_ADMIN_ALLOWED_PAGES, "queue-hub"],
+  }
+  let authenticated = false
+  let queueHubRequestCount = 0
+
+  const queuePayload = {
+    generatedAt: "2026-03-15T01:45:00.000Z",
+    panelOrder: [
+      "news-report-review",
+      "queued-performance-reports",
+      "unmatched-exercise-submissions",
+      "current-assignments-pending",
+      "overdue-homework",
+      "attendance-risk",
+      "pending-profile-submissions",
+    ],
+    panels: [
+      {
+        id: "news-report-review",
+        title: "News Report Week Sets",
+        total: 1,
+        items: [
+          {
+            id: "news-week-set:student-001:2026-03-09",
+            studentRefId: "student-001",
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            englishName: "Student One",
+            level: "Pre-A1 Starters",
+            weekStart: "2026-03-09",
+            weekEnd: "2026-03-15",
+            reportCount: 7,
+            submittedCount: 7,
+            approvedCount: 0,
+            revisionRequestedCount: 0,
+            setStatus: "submitted",
+            setAction: "unapproved-7",
+            setActionColor: "turquoise",
+            latestReportId: "news-007",
+            latestReportDate: "2026-03-15",
+            latestSubmittedAt: "2026-03-15T08:00:00.000Z",
+            latestReviewStatus: "submitted",
+            latestArticleTitle: "Market week wrap-up",
+            latestSourceLink: "https://example.com/news/week-7",
+          },
+        ],
+      },
+    ],
+  }
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const urlText = String(resource)
+    const method = String(init.method || "GET").toUpperCase()
+    const parsed = new URL(urlText, "http://127.0.0.1")
+    const pathname = parsed.pathname
+
+    if (pathname === "/api/admin/auth/me" && method === "GET") {
+      if (!authenticated) return jsonResponse(401, { error: "Unauthorized" })
+      return jsonResponse(200, {
+        authenticated: true,
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/auth/login" && method === "POST") {
+      authenticated = true
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+    if (pathname === "/api/admin/permissions" && method === "GET") {
+      return jsonResponse(200, {
+        roles: {
+          admin: { ...rolePolicy, allowedPages: [...rolePolicy.allowedPages] },
+        },
+      })
+    }
+    if (pathname === "/api/admin/users" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/filters" && method === "GET") {
+      return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main"] })
+    }
+    if (pathname === "/api/admin/students" && method === "GET") {
+      return jsonResponse(200, {
+        items: [
+          {
+            id: "student-001",
+            eaglesId: "vi001",
+            studentNumber: 101,
+            profile: { fullName: "Student One", englishName: "Student One", currentGrade: "Pre-A1 Starters" },
+          },
+        ],
+      })
+    }
+    if (pathname === "/api/admin/dashboard" && method === "GET") {
+      return jsonResponse(200, {
+        levelCompletion: [],
+        classEnrollmentAttendance: [],
+        weeklyAssignmentCompletion: [],
+        today: {},
+      })
+    }
+    if (pathname === "/api/admin/queue-hub" && method === "GET") {
+      queueHubRequestCount += 1
+      return jsonResponse(200, queuePayload)
+    }
+    if (pathname === "/api/admin/notifications/batch-status" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false })
+    }
+    if (pathname === "/api/admin/exercise-results/incoming" && method === "GET") {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    }
+    if (pathname === "/api/admin/exercise-titles" && method === "GET") return jsonResponse(200, { items: [] })
+    if (pathname === "/api/admin/runtime/service-control" && method === "GET") {
+      return jsonResponse(200, {
+        available: false,
+        enabled: false,
+        service: "exercise-mailer.service",
+        status: "inactive",
+        detail: "n/a",
+      })
+    }
+    if (pathname === "/api/admin/news-reports" && method === "GET") {
+      return jsonResponse(200, {
+        total: 0,
+        hasMore: false,
+        filters: {
+          status: parsed.searchParams.get("status") || "submitted",
+          level: parsed.searchParams.get("level") || "",
+          studentRefId: parsed.searchParams.get("studentRefId") || "",
+          dateFrom: parsed.searchParams.get("dateFrom") || "",
+          dateTo: parsed.searchParams.get("dateTo") || "",
+          query: parsed.searchParams.get("q") || "",
+          take: Number.parseInt(String(parsed.searchParams.get("take") || "200"), 10) || 200,
+        },
+        statusSummary: {
+          submitted: 0,
+          approved: 0,
+          revisionRequested: 0,
+        },
+        items: [],
+      })
+    }
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    const app = dom.window.document.getElementById("app")
+    assert.equal(app.classList.contains("hidden"), false)
+  })
+
+  await waitFor(() => {
+    assert.ok(queueHubRequestCount >= 1)
+    assert.match(
+      normalizeText(dom.window.document.getElementById("overviewNewsQueueSummary").textContent),
+      /total=1/i,
+    )
+  })
+
+  dom.window.document.getElementById("overviewNewsQueueRefreshBtn").click()
+
+  await waitFor(() => {
+    assert.ok(queueHubRequestCount >= 2)
+  })
+
+  dom.window.document.getElementById("overviewNewsQueueOpenBtn").click()
+
+  await waitFor(() => {
+    assert.equal(dom.window.location.pathname, "/admin/news-reports")
+    const active = dom.window.document.querySelector(".page-section.active")
+    assert.equal(active?.getAttribute("data-page"), "news-reports")
+  })
+
+  dom.window.document.getElementById("overviewNewsQueueQueueHubBtn").click()
+
+  await waitFor(() => {
+    assert.equal(dom.window.location.pathname, "/admin/queue-hub")
+    const active = dom.window.document.querySelector(".page-section.active")
+    assert.equal(active?.getAttribute("data-page"), "queue-hub")
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
 test("tracking data submenus are visible for admin and hidden for teacher", async () => {
   const buildDomForRole = async (roleName) =>
     createAdminUiDom(async (resource, init = {}) => {

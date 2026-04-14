@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 
-import { applyImportIdentityDefaults } from "../server/student-admin-store.mjs"
+import { applyImportIdentityDefaults } from "../src/modules/admin/student-write-import.mjs"
 
 test("applyImportIdentityDefaults auto-fills blank eaglesId and studentNumber for new rows", () => {
   const result = applyImportIdentityDefaults(

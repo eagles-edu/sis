@@ -250,12 +250,12 @@ test("Student.eaglesId is non-null in Prisma schema contract", () => {
 
 test("legacy student-number fallback paths are removed", () => {
   const { html } = readProfileFormRows()
-  const storeSource = fs.readFileSync("server/student-admin-store.mjs", "utf8")
+  const writeImportSource = fs.readFileSync("src/modules/admin/student-write-import.mjs", "utf8")
 
   assert.equal(html.includes("entry?.profile?.studentNumber"), false)
   assert.equal(html.includes("parsePositiveInteger(student.studentId)"), false)
-  assert.equal(storeSource.includes("parseNumericStudentId"), false)
-  assert.equal(storeSource.includes("payload?.profile?.studentNumber"), false)
+  assert.equal(writeImportSource.includes("parseNumericStudentId"), false)
+  assert.equal(writeImportSource.includes("payload?.profile?.studentNumber"), false)
 })
 
 test("student name wiring stays discrete (no cross-field fallback or legacy sort alias)", () => {
@@ -269,25 +269,25 @@ test("student name wiring stays discrete (no cross-field fallback or legacy sort
 })
 
 test("import mapping excludes legacy fuzzy alias keys", () => {
-  const storeSource = fs.readFileSync("server/student-admin-store.mjs", "utf8")
+  const writeImportSource = fs.readFileSync("src/modules/admin/student-write-import.mjs", "utf8")
   BANNED_IMPORT_ALIAS_SNIPPETS.forEach((snippet) => {
-    assert.equal(storeSource.includes(snippet), false, `legacy alias should not appear: ${snippet}`)
+    assert.equal(writeImportSource.includes(snippet), false, `legacy alias should not appear: ${snippet}`)
   })
 })
 
 test("student identity collisions are rejected for create and conflicting import rows", () => {
-  const storeSource = fs.readFileSync("server/student-admin-store.mjs", "utf8")
-  assert.equal(storeSource.includes('assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")'), true)
-  assert.equal(storeSource.includes('"studentNumber does not match existing eaglesId"'), true)
-  assert.equal(storeSource.includes('"studentNumber already exists in database"'), true)
+  const writeImportSource = fs.readFileSync("src/modules/admin/student-write-import.mjs", "utf8")
+  assert.equal(writeImportSource.includes('assertWithStatus(!existingByEaglesId, 409, "eaglesId already exists")'), true)
+  assert.equal(writeImportSource.includes('"studentNumber does not match existing eaglesId"'), true)
+  assert.equal(writeImportSource.includes('"studentNumber already exists in database"'), true)
 })
 
 test("student identity is immutable on update", () => {
   const { html } = readProfileFormRows()
-  const storeSource = fs.readFileSync("server/student-admin-store.mjs", "utf8")
+  const writeImportSource = fs.readFileSync("src/modules/admin/student-write-import.mjs", "utf8")
   assert.equal(html.includes('if (!parsePositiveInteger(payload.studentNumber)) throw new Error("studentNumber is required")'), false)
-  assert.equal(storeSource.includes('assertWithStatus(Boolean(requestedStudentNumber), 400, "studentNumber is required")'), false)
-  assert.equal(storeSource.includes("await resolveNextStudentNumberForClient(client, STUDENT_NUMBER_START)"), true)
-  assert.equal(storeSource.includes('"eaglesId is immutable and cannot be changed"'), true)
-  assert.equal(storeSource.includes('"studentNumber is immutable and cannot be changed"'), true)
+  assert.equal(writeImportSource.includes('assertWithStatus(Boolean(requestedStudentNumber), 400, "studentNumber is required")'), false)
+  assert.equal(writeImportSource.includes("await resolveNextStudentNumberForClient(client, STUDENT_NUMBER_START)"), true)
+  assert.equal(writeImportSource.includes('"eaglesId is immutable and cannot be changed"'), true)
+  assert.equal(writeImportSource.includes('"studentNumber is immutable and cannot be changed"'), true)
 })
