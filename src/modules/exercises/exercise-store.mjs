@@ -1,9 +1,33 @@
+// @ts-check
 // src/modules/exercises/exercise-store.mjs
 
 import fs from "node:fs"
 import path from "node:path"
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+
+/**
+ * @typedef {{
+ *   prisma?: unknown,
+ * }} ExerciseStoreOptions
+ *
+ * @typedef {{
+ *   take?: unknown,
+ *   showAll?: unknown,
+ *   statuses?: Array<unknown>,
+ *   query?: unknown,
+ * }} ListIncomingExerciseResultsParams
+ *
+ * @typedef {{
+ *   notes?: unknown,
+ *   reviewedByUsername?: unknown,
+ * }} IncomingResultStatusOptions
+ *
+ * @typedef {{
+ *   deleted: true,
+ *   id: string,
+ * }} DeletedIncomingResult
+ */
 
 export const INCOMING_EXERCISE_RESULT_STATUS_QUEUED = "queued"
 export const INCOMING_EXERCISE_RESULT_STATUS_TEMPORARY = "temporary"
@@ -111,16 +135,26 @@ function isStoreEnabled() {
   return resolveBoolean(process.env.EXERCISE_STORE_ENABLED, hasDatabaseUrl)
 }
 
+/**
+ * @returns {boolean}
+ */
 export function isExerciseStoreEnabled() {
   return isStoreEnabled()
 }
 
+/**
+ * @returns {boolean}
+ */
 export function isExerciseStoreRequired() {
   return resolveBoolean(process.env.EXERCISE_STORE_REQUIRED, false)
 }
 
 let prismaClientPromise = null
 
+/**
+ * @param {ExerciseStoreOptions} [options]
+ * @returns {Promise<unknown>}
+ */
 async function getPrismaClient(options = {}) {
   if (options && typeof options.prisma === "object" && options.prisma) {
     return options.prisma
@@ -139,6 +173,10 @@ async function getPrismaClient(options = {}) {
   }
 }
 
+/**
+ * @param {ExerciseStoreOptions} [options]
+ * @returns {Promise<unknown>}
+ */
 async function requirePrismaClient(options = {}) {
   const prisma = await getPrismaClient(options)
   if (!prisma) throw createStatusError("Exercise store is disabled", 503)
@@ -844,6 +882,11 @@ function mapIncomingExerciseResult(item) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} payload
+ * @param {ExerciseStoreOptions} [options]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function persistExerciseSubmission(payload, options = {}) {
   const prisma = await getPrismaClient(options)
   if (!prisma) return { saved: false, reason: "disabled" }
@@ -986,6 +1029,17 @@ export async function persistExerciseSubmission(payload, options = {}) {
   }
 }
 
+/**
+ * @param {ListIncomingExerciseResultsParams} [params]
+ * @param {ExerciseStoreOptions} [options]
+ * @returns {Promise<{
+ *   total: number,
+ *   take: number,
+ *   hasMore: boolean,
+ *   statuses: Array<string>,
+ *   items: Array<Record<string, unknown>>,
+ * }>}
+ */
 export async function listIncomingExerciseResults(params = {}, options = {}) {
   const prisma = await requirePrismaClient(options)
   const take = normalizeTake(params.take, 50, 500)
@@ -1026,6 +1080,11 @@ export async function listIncomingExerciseResults(params = {}, options = {}) {
   }
 }
 
+/**
+ * @param {unknown} incomingResultId
+ * @param {ExerciseStoreOptions} [options]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function getIncomingExerciseResultById(incomingResultId, options = {}) {
   const prisma = await requirePrismaClient(options)
   const id = normalizeString(incomingResultId)
@@ -1047,6 +1106,12 @@ export async function getIncomingExerciseResultById(incomingResultId, options = 
   return mapIncomingExerciseResult(row)
 }
 
+/**
+ * @param {unknown} incomingResultId
+ * @param {unknown} status
+ * @param {IncomingResultStatusOptions} [options]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function setIncomingExerciseResultStatus(
   incomingResultId,
   status,
@@ -1102,6 +1167,11 @@ export async function setIncomingExerciseResultStatus(
   return mapIncomingExerciseResult(updated)
 }
 
+/**
+ * @param {unknown} incomingResultId
+ * @param {ExerciseStoreOptions} [options]
+ * @returns {Promise<DeletedIncomingResult>}
+ */
 export async function deleteIncomingExerciseResultById(incomingResultId, options = {}) {
   const prisma = await requirePrismaClient(options)
   const id = normalizeString(incomingResultId)
@@ -1138,6 +1208,12 @@ function incomingResultToSummary(row) {
   }
 }
 
+/**
+ * @param {unknown} incomingResultId
+ * @param {unknown} studentRefId
+ * @param {ExerciseStoreOptions} [options]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function resolveIncomingExerciseResultToStudent(
   incomingResultId,
   studentRefId,

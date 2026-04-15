@@ -1,7 +1,9 @@
+// @ts-check
 // src/modules/intake/student-intake-store.mjs
 
 import fs from "node:fs"
 import path from "node:path"
+import process from "node:process"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
 const DEFAULT_SCHEMA_PATH = path.resolve(process.cwd(), "schemas/member-intake-cf3.schema.json")
@@ -61,6 +63,10 @@ function buildStudentExternalKey(studentEmail, fullName, dobText) {
   return `member:${composite}`
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} payload
+ * @returns {Array<Record<string, unknown>>}
+ */
 function buildSourceMaps(payload) {
   const maps = []
   if (payload && typeof payload === "object") maps.push(payload)
@@ -71,6 +77,12 @@ function buildSourceMaps(payload) {
   return maps
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} maps
+ * @param {string} dataName
+ * @param {string} [name]
+ * @returns {unknown}
+ */
 function readFieldValue(maps, dataName, name) {
   const candidates = new Set([
     dataName,
@@ -99,6 +111,7 @@ function hasRequiredValue(field, value) {
   return normalizeText(value).length > 0
 }
 
+/** @type {Array<{ dataName: string, name: string, control: string, required?: boolean }> | null} */
 let schemaCache = null
 
 function loadIntakeSchema() {
@@ -111,6 +124,14 @@ function loadIntakeSchema() {
   return schemaCache
 }
 
+/**
+ * @param {Record<string, unknown>} values
+ * @param {string} sourceFormId
+ * @param {string} sourceUrl
+ * @param {boolean} requiredValidationOk
+ * @param {Record<string, unknown>} rawPayload
+ * @returns {Record<string, unknown>}
+ */
 function mapToProfile(values, sourceFormId, sourceUrl, requiredValidationOk, rawPayload) {
   const scalar = (key) => {
     const value = values[key]
@@ -177,6 +198,10 @@ function mapToProfile(values, sourceFormId, sourceUrl, requiredValidationOk, raw
   }
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date}
+ */
 function parseSubmittedAt(value) {
   const text = normalizeText(value)
   if (!text) return new Date()
@@ -185,6 +210,7 @@ function parseSubmittedAt(value) {
   return parsed
 }
 
+/** @type {Promise<import("@prisma/client").PrismaClient> | null} */
 let prismaClientPromise = null
 
 function isStoreEnabled() {
@@ -206,6 +232,18 @@ async function getPrismaClient() {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [payload]
+ * @returns {Promise<{
+ *   saved: boolean,
+ *   reason?: string,
+ *   studentId?: string,
+ *   profileId?: string,
+ *   intakeSubmissionId?: string,
+ *   missingRequired?: string[],
+ *   requiredValidationOk?: boolean,
+ * }>}
+ */
 export async function persistStudentIntakeSubmission(payload = {}) {
   if (!isStoreEnabled()) return { saved: false, reason: "disabled" }
 
@@ -214,7 +252,9 @@ export async function persistStudentIntakeSubmission(payload = {}) {
 
   const schema = loadIntakeSchema()
   const maps = buildSourceMaps(payload)
+  /** @type {Record<string, string | string[] | null>} */
   const values = {}
+  /** @type {string[]} */
   const missingRequired = []
 
   for (let i = 0; i < schema.length; i += 1) {
@@ -258,7 +298,7 @@ export async function persistStudentIntakeSubmission(payload = {}) {
     const profileData = mapToProfile(
       values,
       sourceFormId,
-      sourceUrl || payload?.sourcePageUrl || "",
+      sourceUrl || normalizeText(payload?.sourcePageUrl) || "",
       requiredValidationOk,
       payload
     )
@@ -278,7 +318,7 @@ export async function persistStudentIntakeSubmission(payload = {}) {
         sourceFormId,
         sourceUrl: sourceUrl || null,
         submittedAt,
-        fieldsJson: values,
+        fieldsJson: /** @type {Record<string, unknown>} */ (values),
         missingRequiredJson: missingRequired.length ? missingRequired : null,
         requiredValidationOk,
       },

@@ -1,26 +1,66 @@
+// @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { invalidateLevelAndSchoolFiltersCache } from "./student-admin-queries.mjs"
 import { getStudentById as getStudentRosterById } from "./student-roster.mjs"
 
+/**
+ * @typedef {{
+ *   eaglesId?: unknown,
+ *   studentNumber?: unknown,
+ *   email?: unknown,
+ *   profile?: Record<string, unknown>,
+ * }} ImportStudentPayload
+ *
+ * @typedef {{
+ *   existingRows?: Array<Record<string, unknown>>,
+ *   studentNumberStart?: number,
+ *   requireExplicitIdentity?: boolean,
+ * }} ImportIdentityValidationOptions
+ *
+ * @typedef {{
+ *   skipFilterCacheInvalidation?: boolean,
+ * }} SaveStudentOptions
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableEmail(value) {
   const text = normalizeLower(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Array<string>}
+ */
 function normalizeTextArray(value) {
   if (Array.isArray(value)) {
     return value
@@ -35,6 +75,10 @@ function normalizeTextArray(value) {
     .filter(Boolean)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeGenderSelection(value) {
   const raw = normalizeText(value)
   const token = normalizeLower(raw)
@@ -46,6 +90,10 @@ function canonicalizeGenderSelection(value) {
   return raw
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Array<string>}
+ */
 function normalizeGenderSelections(value) {
   const selections = normalizeTextArray(value).map((entry) => canonicalizeGenderSelection(entry))
   const seen = new Set()
@@ -59,6 +107,10 @@ function normalizeGenderSelections(value) {
   return deduped
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -66,12 +118,20 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizePositiveInteger(value) {
   const parsed = normalizeInteger(value)
   if (!Number.isFinite(parsed) || parsed < 1) return null
   return parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {boolean | null}
+ */
 function normalizeBoolean(value) {
   if (value === undefined || value === null || value === "") return null
   if (typeof value === "boolean") return value
@@ -83,13 +143,25 @@ function normalizeBoolean(value) {
   return null
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {asserts condition}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
 }
 
+/**
+ * @param {unknown} value
+ * @param {boolean} [fallback]
+ * @returns {boolean}
+ */
 function resolveBooleanFlag(value, fallback = false) {
   if (value === undefined || value === null || value === "") return fallback
   if (typeof value === "boolean") return value
@@ -161,6 +233,10 @@ const LEVEL_DEFINITIONS = [
   },
 ]
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
@@ -177,6 +253,10 @@ const LEVEL_ALIAS_MAP = (() => {
   return map
 })()
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -184,16 +264,29 @@ function canonicalizeLevel(value) {
   return LEVEL_ALIAS_MAP.get(key) || text
 }
 
+/**
+ * @param {unknown} eaglesId
+ * @returns {string}
+ */
 function buildExternalKey(eaglesId) {
   return `sid:${normalizeLower(eaglesId)}`
 }
 
+/**
+ * @param {unknown} studentNumber
+ * @returns {string}
+ */
 function buildEaglesIdFromNumber(studentNumber) {
   const normalized = normalizePositiveInteger(studentNumber)
   if (!normalized) return ""
   return `SIS-${String(normalized).padStart(6, "0")}`
 }
 
+/**
+ * @param {unknown} baseEaglesId
+ * @param {Set<string>} reservedEaglesIdKeys
+ * @returns {string}
+ */
 function buildUniqueEaglesIdCandidate(baseEaglesId, reservedEaglesIdKeys) {
   const base = normalizeText(baseEaglesId)
   if (!base) return ""
@@ -206,6 +299,10 @@ function buildUniqueEaglesIdCandidate(baseEaglesId, reservedEaglesIdKeys) {
   return candidate
 }
 
+/**
+ * @param {ImportStudentPayload} [payload]
+ * @returns {Record<string, unknown>}
+ */
 function normalizeProfilePayload(payload = {}) {
   const sourceFormId = normalizeText(payload.sourceFormId) || "admin-manual"
 
@@ -277,6 +374,9 @@ function normalizeProfilePayload(payload = {}) {
   }
 }
 
+/**
+ * @returns {Promise<unknown>}
+ */
 async function getPrismaClient() {
   if (!isStudentAdminStoreEnabled()) {
     const error = new Error("Student admin store is disabled")
@@ -295,10 +395,19 @@ async function getPrismaClient() {
   }
 }
 
+/**
+ * @param {ImportStudentPayload} [payload]
+ * @returns {number | null}
+ */
 function requestedStudentNumberFromPayload(payload = {}) {
   return normalizePositiveInteger(payload?.studentNumber)
 }
 
+/**
+ * @param {Record<string, unknown>} row
+ * @param {Array<string>} aliases
+ * @returns {unknown}
+ */
 function getImportValue(row, aliases) {
   const aliasSet = new Set(aliases.map((entry) => normalizeLower(entry)))
   const entries = Object.entries(row || {})
@@ -309,6 +418,15 @@ function getImportValue(row, aliases) {
   return ""
 }
 
+/**
+ * @param {Record<string, unknown>} row
+ * @returns {{
+ *   eaglesId: string,
+ *   studentNumber: number | null,
+ *   email: string,
+ *   profile: Record<string, unknown>,
+ * }}
+ */
 export function mapImportRowToStudentPayload(row) {
   const eaglesId = normalizeText(getImportValue(row, ["eaglesId"]))
   const studentNumber = normalizePositiveInteger(getImportValue(row, ["studentNumber"]))
@@ -405,6 +523,10 @@ export function mapImportRowToStudentPayload(row) {
   }
 }
 
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
 function hasBackfillImportValue(value) {
   if (Array.isArray(value)) return value.length > 0
   if (typeof value === "number") return Number.isFinite(value)
@@ -413,6 +535,11 @@ function hasBackfillImportValue(value) {
   return Boolean(normalizeText(value))
 }
 
+/**
+ * @param {ImportStudentPayload} [importPayload]
+ * @param {Record<string, unknown>} [existingStudent]
+ * @returns {ImportStudentPayload}
+ */
 export function mergeImportPayloadForBackfill(importPayload = {}, existingStudent = {}) {
   const incoming = importPayload && typeof importPayload === "object" ? importPayload : {}
   const existing = existingStudent && typeof existingStudent === "object" ? existingStudent : {}
@@ -443,6 +570,11 @@ export function mergeImportPayloadForBackfill(importPayload = {}, existingStuden
   }
 }
 
+/**
+ * @param {unknown} leftValue
+ * @param {unknown} rightValue
+ * @returns {boolean}
+ */
 function valuesEqualForImportDiff(leftValue, rightValue) {
   if (Array.isArray(leftValue) || Array.isArray(rightValue)) {
     const left = Array.isArray(leftValue) ? leftValue.map((entry) => normalizeText(entry)).filter(Boolean) : []
@@ -464,6 +596,11 @@ function valuesEqualForImportDiff(leftValue, rightValue) {
   return normalizeText(leftValue) === normalizeText(rightValue)
 }
 
+/**
+ * @param {Record<string, unknown>} [beforeState]
+ * @param {Record<string, unknown>} [afterState]
+ * @returns {Array<string>}
+ */
 function collectImportChangedFieldNames(beforeState = {}, afterState = {}) {
   const changed = []
   const scalarKeys = ["email", "studentNumber"]
@@ -483,6 +620,16 @@ function collectImportChangedFieldNames(beforeState = {}, afterState = {}) {
   return changed
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @returns {{
+ *   eaglesId: string | null,
+ *   studentNumber: number | null,
+ *   fullName: string | null,
+ *   englishName: string | null,
+ *   email: string | null,
+ * }}
+ */
 function summarizeImportRowFields(row = {}) {
   const profile = row?.profile && typeof row.profile === "object" ? row.profile : {}
   return {
@@ -494,6 +641,15 @@ function summarizeImportRowFields(row = {}) {
   }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [mappedRows]
+ * @param {ImportIdentityValidationOptions} [options]
+ * @returns {{
+ *   rows: Array<Record<string, unknown>>,
+ *   autoFilledEaglesIds: number,
+ *   autoFilledStudentNumbers: number,
+ * }}
+ */
 export function applyImportIdentityDefaults(
   mappedRows = [],
   {
@@ -578,6 +734,17 @@ export function applyImportIdentityDefaults(
   }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [mappedRows]
+ * @param {ImportIdentityValidationOptions} [options]
+ * @returns {{
+ *   rows: Array<Record<string, unknown>>,
+ *   autoFilledEaglesIds: number,
+ *   autoFilledStudentNumbers: number,
+ *   requireExplicitIdentity: boolean,
+ *   errors: Array<{ rowNumber: number, message: string }>,
+ * }}
+ */
 export function validateImportRowsForIdentity(
   mappedRows = [],
   {
@@ -682,6 +849,12 @@ export function validateImportRowsForIdentity(
   }
 }
 
+/**
+ * @param {unknown} client
+ * @param {unknown} studentNumber
+ * @param {string} [excludedStudentId]
+ * @returns {Promise<void>}
+ */
 async function assertStudentNumberIsUniqueForClient(client, studentNumber, excludedStudentId = "") {
   const normalizedNumber = normalizePositiveInteger(studentNumber)
   if (!normalizedNumber) return
@@ -700,6 +873,12 @@ async function assertStudentNumberIsUniqueForClient(client, studentNumber, exclu
   assertWithStatus(!duplicate, 409, "studentNumber already exists")
 }
 
+/**
+ * @param {unknown} client
+ * @param {ImportStudentPayload} [payload]
+ * @param {string} [studentRefId]
+ * @returns {Promise<{ action: string, studentRefId: string }>}
+ */
 async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   const eaglesId = normalizeText(payload.eaglesId)
   assertWithStatus(Boolean(eaglesId), 400, "eaglesId is required")
@@ -793,6 +972,11 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   }
 }
 
+/**
+ * @param {unknown} client
+ * @param {unknown} floor
+ * @returns {Promise<number>}
+ */
 async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_START) {
   const minimum = Math.max(100, normalizePositiveInteger(floor) || STUDENT_NUMBER_START)
   const rows = await client.student.findMany({
@@ -807,6 +991,12 @@ async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_
   return Math.max(minimum, highest + 1)
 }
 
+/**
+ * @param {ImportStudentPayload} [payload]
+ * @param {string} [studentRefId]
+ * @param {SaveStudentOptions} [options]
+ * @returns {Promise<{ action: string, student: unknown }>}
+ */
 export async function saveStudent(payload = {}, studentRefId = "", options = {}) {
   const prisma = await getPrismaClient()
   const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
@@ -822,6 +1012,10 @@ export async function saveStudent(payload = {}, studentRefId = "", options = {})
   }
 }
 
+/**
+ * @param {string} studentRefId
+ * @returns {Promise<{ deleted: true, studentRefId: string }>}
+ */
 export async function deleteStudent(studentRefId) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
@@ -842,6 +1036,19 @@ export async function deleteStudent(studentRefId) {
   return { deleted: true, studentRefId: id }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [rows]
+ * @returns {Promise<{
+ *   created: number,
+ *   updated: number,
+ *   errors: Array<Record<string, unknown>>,
+ *   rowResults: Array<Record<string, unknown>>,
+ *   rowLogs: Array<Record<string, unknown>>,
+ *   autoFilledEaglesIds: number,
+ *   autoFilledStudentNumbers: number,
+ *   requireExplicitIdentity: boolean,
+ * }>}
+ */
 export async function importStudentsFromRows(rows = []) {
   assertWithStatus(Array.isArray(rows), 400, "rows must be an array")
   assertWithStatus(rows.length > 0, 400, "rows cannot be empty")

@@ -63,8 +63,26 @@ function resolveSmtpAuthMode(value) {
   return ""
 }
 
+// @ts-check
+/**
+ * @typedef {{
+ *   assignmentTitle?: unknown,
+ *   exerciseTitle?: unknown,
+ *   dueAt?: unknown,
+ *   level?: unknown,
+ *   message?: unknown,
+ *   senderName?: unknown,
+ *   recipients?: unknown,
+ *   allowEmptyRecipients?: unknown,
+ * }} AnnouncementEmailPayload
+ */
+
+/** @type {Promise<{ createTransport: Function }> | null} */
 let nodemailerModule = null
 
+/**
+ * @returns {Promise<{ createTransport: Function }>}
+ */
 async function getNodemailer() {
   if (nodemailerModule) return nodemailerModule
   try {
@@ -100,6 +118,14 @@ function smtpConfigFromEnv() {
   return { host, port, secure, user, pass, from, useAuth, authMode: authMode || (useAuth ? "auth" : "none") }
 }
 
+/**
+ * @param {AnnouncementEmailPayload} [payload]
+ * @returns {{
+ *   subject: string,
+ *   lines: Array<string>,
+ *   htmlLines: string,
+ * }}
+ */
 function buildAnnouncementEmailContent(payload = {}) {
   const assignmentTitle = normalizeText(payload.assignmentTitle) || "Assignment update"
   const exerciseTitle = normalizeText(payload.exerciseTitle)
@@ -134,6 +160,19 @@ function buildAnnouncementEmailContent(payload = {}) {
   }
 }
 
+/**
+ * @param {AnnouncementEmailPayload} [payload]
+ * @param {{ allowEmptyRecipients?: boolean }} [options]
+ * @returns {{
+ *   recipients: Array<string>,
+ *   assignmentTitle: string,
+ *   exerciseTitle: string,
+ *   dueAt: string,
+ *   level: string,
+ *   message: string,
+ *   senderName: string,
+ * }}
+ */
 function normalizeAnnouncementPayload(payload = {}, options = {}) {
   const allowEmptyRecipients = Boolean(options.allowEmptyRecipients)
   const recipients = normalizeRecipientList(payload.recipients)
@@ -154,6 +193,15 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
   }
 }
 
+/**
+ * @param {AnnouncementEmailPayload} [payload]
+ * @returns {Promise<{
+ *   ok: true,
+ *   sent: number,
+ *   subject: string,
+ *   deliveryMode: "immediate",
+ * }>}
+ */
 export async function sendAnnouncementEmail(payload = {}) {
   const normalizedPayload = normalizeAnnouncementPayload(payload)
   const emailContent = buildAnnouncementEmailContent(normalizedPayload)

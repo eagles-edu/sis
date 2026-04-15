@@ -1,36 +1,62 @@
+// @ts-check
+
 import { drainAsyncSideEffectJobs } from "../src/modules/async/side-effect-worker.mjs"
 import {
   ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
   ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF,
 } from "../src/modules/async/side-effect-jobs.mjs"
 import { updateQueuedAnnouncement, nowIso } from "../src/modules/admin/notification-queue.mjs"
+import path from "node:path"
+import process from "node:process"
 import { fileURLToPath } from "node:url"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @returns {string}
+ */
 function resolveWorkerId() {
   return normalizeText(process.env.ASYNC_SIDE_EFFECTS_WORKER_ID) || `side-effects-${process.pid}`
 }
 
+/**
+ * @returns {number}
+ */
 function resolvePollIntervalMs() {
   const raw = Number.parseInt(String(process.env.ASYNC_SIDE_EFFECTS_WORKER_POLL_MS || "5000"), 10)
   return Number.isFinite(raw) && raw >= 500 ? raw : 5000
 }
 
+/**
+ * @returns {number}
+ */
 function resolveTake() {
   const raw = Number.parseInt(String(process.env.ASYNC_SIDE_EFFECTS_WORKER_TAKE || "10"), 10)
   return Number.isFinite(raw) && raw >= 1 ? raw : 10
 }
 
+/**
+ * @returns {boolean}
+ */
 function shouldRunOnce() {
   return String(process.env.ASYNC_SIDE_EFFECTS_WORKER_ONCE || "").trim().toLowerCase() === "true"
 }
 
+/**
+ * @param {Record<string, unknown>} job
+ * @param {Record<string, unknown> | null} result
+ * @param {unknown} [failure]
+ * @returns {Promise<void>}
+ */
 async function updateAnnouncementQueueItem(job, result, failure = null) {
-  const payload = job?.payloadJson && typeof job.payloadJson === "object" ? job.payloadJson : {}
+  const payload = job?.payloadJson && typeof job.payloadJson === "object" ? /** @type {Record<string, unknown>} */ (job.payloadJson) : {}
   const queueId = normalizeText(payload.queueId)
   if (!queueId) return
   if (failure) {
@@ -56,13 +82,22 @@ async function updateAnnouncementQueueItem(job, result, failure = null) {
       lastError: "",
       attempts: (Number.parseInt(String(job.attempts || 0), 10) || 0),
     },
-    {
-      reviewedByUsername: normalizeText(payload.reviewedByUsername),
-    }
-  )
+      {
+        reviewedByUsername: normalizeText(payload.reviewedByUsername),
+      }
+    )
   void result
 }
 
+/**
+ * @returns {Promise<{
+ *   claimed: number,
+ *   succeeded: number,
+ *   failed: number,
+ *   remaining: number,
+ *   processing: number,
+ * }>}
+ */
 async function runWorkerOnce() {
   return drainAsyncSideEffectJobs({
     workerId: resolveWorkerId(),

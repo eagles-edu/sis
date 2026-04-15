@@ -11,7 +11,12 @@
   <title>Cổng Thông Tin Sinh Viên The Eagles American English Club Ltd</title>
 </head>
 
-<body>
+<body class="portal-hub-page">
+  <div class="portal-hub-bg" aria-hidden="true">
+    <span class="portal-hub-bg__layer portal-hub-bg__layer--a"></span>
+    <span class="portal-hub-bg__layer portal-hub-bg__layer--b"></span>
+    <span class="portal-hub-bg__wash"></span>
+  </div>
   <div class="portal-layout">
     <main class="shell">
       <section class="card hero" aria-labelledby="hub-title">
@@ -34,7 +39,7 @@
         </div>
       </section>
 
-      <section class="card section-card" aria-labelledby="primary-portals">
+      <section class="card section-card section-card--primary" aria-labelledby="primary-portals">
         <div class="section-head">
           <p class="section-kicker">Lối vào chính</p>
           <h2 class="section-title" id="primary-portals">Các portal chính</h2>
@@ -42,36 +47,45 @@
         </div>
 
         <div class="portal-grid">
-          <a class="portal-card" href="/admin" data-portal-target="admin">
-            <span class="portal-card__body">
+          <a class="portal-card portal-card--admin" href="/admin" data-portal-target="admin">
+            <span class="portal-card__icon" aria-hidden="true">
+              <span class="portal-card__icon-mark">A</span>
+            </span>
+            <div class="portal-card__body">
+              <h3 class="portal-card__title">Admin</h3>
               <span class="portal-card__eyebrow">Staff</span>
-              <span class="portal-card__title">Admin</span>
               <span class="portal-card__subtitle">Quản trị, dữ liệu, báo cáo</span>
-            </span>
-            <span class="portal-card__chev" aria-hidden="true">›</span>
+            </div>
+            <span class="portal-card__chev" aria-hidden="true">↗</span>
           </a>
 
-          <a class="portal-card" href="/parent" data-portal-target="parent">
-            <span class="portal-card__body">
+          <a class="portal-card portal-card--parent" href="/parent" data-portal-target="parent">
+            <span class="portal-card__icon" aria-hidden="true">
+              <span class="portal-card__icon-mark">P</span>
+            </span>
+            <div class="portal-card__body">
+              <h3 class="portal-card__title">Phụ huynh</h3>
               <span class="portal-card__eyebrow">Family</span>
-              <span class="portal-card__title">Phụ huynh</span>
               <span class="portal-card__subtitle">Thông tin học tập, liên hệ</span>
-            </span>
-            <span class="portal-card__chev" aria-hidden="true">›</span>
+            </div>
+            <span class="portal-card__chev" aria-hidden="true">↗</span>
           </a>
 
-          <a class="portal-card" href="/student" data-portal-target="student">
-            <span class="portal-card__body">
-              <span class="portal-card__eyebrow">Student</span>
-              <span class="portal-card__title">Học sinh</span>
-              <span class="portal-card__subtitle">Bài học, điểm, tiến độ</span>
+          <a class="portal-card portal-card--student" href="/student" data-portal-target="student">
+            <span class="portal-card__icon" aria-hidden="true">
+              <span class="portal-card__icon-mark">S</span>
             </span>
-            <span class="portal-card__chev" aria-hidden="true">›</span>
+            <div class="portal-card__body">
+              <h3 class="portal-card__title">Học sinh</h3>
+              <span class="portal-card__eyebrow">Student</span>
+              <span class="portal-card__subtitle">Bài học, điểm, tiến độ</span>
+            </div>
+            <span class="portal-card__chev" aria-hidden="true">↗</span>
           </a>
         </div>
       </section>
 
-      <section class="card section-card" aria-labelledby="member-resources">
+      <section class="card section-card section-card--resources" aria-labelledby="member-resources">
         <div class="section-head">
           <p class="section-kicker">Tài nguyên</p>
           <h2 class="section-title" id="member-resources">Tài nguyên thành viên</h2>
@@ -79,37 +93,27 @@
         </div>
 
         <div class="resource-list">
-          <a class="resource-card" href="https://anhngu.eagles.edu.vn">
-            <span class="resource-card__body">
-              <span class="resource-card__title">Anh ngữ</span>
-              <span class="resource-card__subtitle">Moodle</span>
+          <a class="resource-card resource-card--english" href="https://anhngu.eagles.edu.vn">
+            <span class="resource-card__icon" aria-hidden="true">
+              <span class="resource-card__icon-mark">AN</span>
             </span>
-            <span class="resource-card__meta" aria-hidden="true">›</span>
+            <div class="resource-card__body">
+              <h3 class="resource-card__title">Anh ngữ</h3>
+              <span class="resource-card__subtitle">Moodle</span>
+            </div>
+            <span class="resource-card__meta" aria-hidden="true">↗</span>
           </a>
 
-          <a class="resource-card" href="https://ielts.eagles.edu.vn">
-            <span class="resource-card__body">
-              <span class="resource-card__title">IELTS</span>
+          <a class="resource-card resource-card--ielts" href="https://ielts.eagles.edu.vn">
+            <span class="resource-card__icon" aria-hidden="true">
+              <span class="resource-card__icon-mark">IEL</span>
+            </span>
+            <div class="resource-card__body">
+              <h3 class="resource-card__title">IELTS</h3>
               <span class="resource-card__subtitle">Moodle</span>
-            </span>
-            <span class="resource-card__meta" aria-hidden="true">›</span>
+            </div>
+            <span class="resource-card__meta" aria-hidden="true">↗</span>
           </a>
-
-          <div class="resource-card resource-card--disabled" aria-disabled="true">
-            <span class="resource-card__body">
-              <span class="resource-card__title">Future 1</span>
-              <span class="resource-card__subtitle">Sắp ra mắt</span>
-            </span>
-            <span class="resource-card__meta" aria-hidden="true">Soon</span>
-          </div>
-
-          <div class="resource-card resource-card--disabled" aria-disabled="true">
-            <span class="resource-card__body">
-              <span class="resource-card__title">Future 2</span>
-              <span class="resource-card__subtitle">Sắp ra mắt</span>
-            </span>
-            <span class="resource-card__meta" aria-hidden="true">Soon</span>
-          </div>
         </div>
       </section>
     </main>
@@ -161,6 +165,17 @@
         student: "/web-asset/student/student-portal.html",
       };
 
+      const hubTheme = {
+        src: "/web-asset/admin/portal-backgrounds/hub-mesh-05.svg",
+        accent: "#2f5be3",
+        accentSoft: "rgba(47, 91, 227, 0.10)",
+        accentStrong: "#17329a",
+        panelBg: "rgba(251, 253, 255, 0.90)",
+        panelBorder: "rgba(140, 159, 202, 0.42)",
+        panelShadow: "0 22px 54px rgba(22, 36, 64, 0.12)",
+        wash: "radial-gradient(860px 400px at 12% 8%, rgba(255, 255, 255, 0.68), transparent 58%), radial-gradient(640px 320px at 92% 0%, rgba(255, 244, 211, 0.18), transparent 56%), linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(237, 243, 252, 0.48))",
+      };
+
       function resolveFallbackHref(target) {
         const filePath = portalFiles[target];
         if (!filePath) return "";
@@ -172,6 +187,18 @@
         return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
       }
 
+      const backgroundLayers = Array.from(document.querySelectorAll(".portal-hub-bg__layer"));
+
+      function applyHubTheme(theme) {
+        document.body.style.setProperty("--hub-accent", theme.accent);
+        document.body.style.setProperty("--hub-accent-soft", theme.accentSoft);
+        document.body.style.setProperty("--hub-accent-strong", theme.accentStrong);
+        document.body.style.setProperty("--hub-panel-bg", theme.panelBg);
+        document.body.style.setProperty("--hub-panel-border", theme.panelBorder);
+        document.body.style.setProperty("--hub-panel-shadow", theme.panelShadow);
+        document.body.style.setProperty("--hub-wash", theme.wash);
+      }
+
       document.querySelectorAll("[data-portal-target]").forEach((link) => {
         const target = link.getAttribute("data-portal-target");
         if (target && portalPaths[target]) {
@@ -180,6 +207,15 @@
           link.href = resolveFallbackHref(target);
         }
       });
+
+      if (backgroundLayers.length) {
+        const [firstLayer] = backgroundLayers;
+        if (firstLayer) {
+          firstLayer.style.backgroundImage = `url("${hubTheme.src}")`;
+          firstLayer.classList.add("is-active");
+        }
+        applyHubTheme(hubTheme);
+      }
     })();
   </script>
 </body>

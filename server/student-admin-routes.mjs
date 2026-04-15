@@ -296,12 +296,52 @@ const EXERCISE_MAILER_SERVICE_NAME =
   normalizeText(process.env.EXERCISE_MAILER_SYSTEMD_SERVICE) || "exercise-mailer.service"
 const SERVICE_CONTROL_STATUS_TIMEOUT_MS = 5000
 const SERVICE_CONTROL_RESTART_TIMEOUT_MS = 12000
+const SELF_HEAL_SYNC_PATHS = [
+  "server",
+  "src",
+  "web-asset/admin",
+  "web-asset/shared",
+  "web-asset/parent",
+  "web-asset/student",
+  "web-asset/images",
+]
+const SELF_HEAL_SOURCE_ROOT = normalizeText(process.env.SIS_RUNTIME_SELF_HEAL_SOURCE_ROOT)
+const SELF_HEAL_RUNTIME_ROOT = path.resolve(
+  normalizeText(process.env.SIS_RUNTIME_SELF_HEAL_RUNTIME_ROOT) || process.cwd()
+)
+const SELF_HEAL_ALLOW_DEV_LIVE_ROOT = resolveBoolean(
+  process.env.SIS_ALLOW_DEV_SELF_HEAL_LIVE_ROOT,
+  false
+)
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES = Math.max(
   1,
   Number.parseInt(String(process.env.STUDENT_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES || "480"), 10) || 480
 )
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MS = ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES * 60 * 1000
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE = new Map()
+/**
+ * @typedef {{
+ *   role: "admin" | "teacher" | "student" | "parent",
+ *   canRead: boolean,
+ *   canWrite: boolean,
+ *   canManageUsers: boolean,
+ *   canManagePermissions: boolean,
+ *   startPage: string,
+ *   allowedPages: Array<string>,
+ * }} RolePermission
+ *
+ * @typedef {{
+ *   admin: RolePermission,
+ *   teacher: RolePermission,
+ *   student: RolePermission,
+ *   parent: RolePermission,
+ * }} RolePermissionsMap
+ *
+ * @typedef {(() => unknown | Promise<unknown>) | null} RuntimeHealthProvider
+ *
+ * @typedef {{ createTransport: Function }} NodemailerModule
+ */
+/** @type {RolePermissionsMap | null} */
 let ROLE_PERMISSIONS = null
 const SESSION_STORE = createStudentAdminSessionStore({
   ttlSeconds: SESSION_TTL_SECONDS,
@@ -584,6 +624,7 @@ let PARENT_PORTAL_DB_DISABLED = false
 let PARENT_PORTAL_DB_WARNED = false
 let STUDENT_PORTAL_DB_DISABLED = false
 let STUDENT_PORTAL_DB_WARNED = false
+/** @type {RuntimeHealthProvider} */
 let runtimeHealthProvider = null
 
 function normalizeText(value) {
@@ -2173,6 +2214,158 @@ function runCommand(command, args = [], timeoutMs = 5000) {
   })
 }
 
+function resolveRuntimeSelfHealConfig() {
+  const sourceRoot = normalizeText(SELF_HEAL_SOURCE_ROOT)
+  const runtimeRoot = SELF_HEAL_RUNTIME_ROOT
+  if (!sourceRoot) {
+    return {
+      enabled: false,
+      reason: "missing-source-root",
+      sourceRoot,
+      runtimeRoot,
+      syncPaths: [...SELF_HEAL_SYNC_PATHS],
+    }
+  }
+
+  const resolvedSourceRoot = path.resolve(sourceRoot)
+  const nodeEnv = normalizeText(process.env.NODE_ENV).toLowerCase()
+  if (nodeEnv === "development" && !SELF_HEAL_ALLOW_DEV_LIVE_ROOT) {
+    const liveRoot = path.resolve("/home/admin.eagles.edu.vn/sis")
+    const sourceInLiveRoot = isPathWithinRoot(resolvedSourceRoot, liveRoot)
+    const runtimeInLiveRoot = isPathWithinRoot(runtimeRoot, liveRoot)
+    if (sourceInLiveRoot || runtimeInLiveRoot) {
+      return {
+        enabled: false,
+        reason: "blocked-live-root-in-dev",
+        sourceRoot: resolvedSourceRoot,
+        runtimeRoot,
+        syncPaths: [...SELF_HEAL_SYNC_PATHS],
+      }
+    }
+  }
+
+  return {
+    enabled: true,
+    reason: "",
+    sourceRoot: resolvedSourceRoot,
+    runtimeRoot,
+    syncPaths: [...SELF_HEAL_SYNC_PATHS],
+  }
+}
+
+async function syncRuntimeSelfHealPaths() {
+  const config = resolveRuntimeSelfHealConfig()
+  if (!config.enabled) {
+    return {
+      ok: false,
+      action: "sync-and-restart",
+      enabled: false,
+      sourceRoot: config.sourceRoot,
+      runtimeRoot: config.runtimeRoot,
+      syncedPaths: [],
+      alreadyLatest: false,
+      detail:
+        config.reason === "missing-source-root" ?
+          "Self-heal source root is not configured." :
+          "Self-heal is blocked in this environment.",
+    }
+  }
+
+  if (config.sourceRoot === config.runtimeRoot) {
+    return {
+      ok: true,
+      action: "sync-and-restart",
+      enabled: true,
+      sourceRoot: config.sourceRoot,
+      runtimeRoot: config.runtimeRoot,
+      syncedPaths: [],
+      alreadyLatest: true,
+      detail: "Runtime source and runtime roots match; already latest.",
+    }
+  }
+
+  const syncedPaths = []
+  const alreadyLatestPaths = []
+  for (let i = 0; i < config.syncPaths.length; i += 1) {
+    const relativePath = config.syncPaths[i]
+    const sourcePath = path.resolve(config.sourceRoot, relativePath)
+    const runtimePath = path.resolve(config.runtimeRoot, relativePath)
+
+    if (!fs.existsSync(sourcePath)) {
+      return {
+        ok: false,
+        action: "sync-and-restart",
+        enabled: true,
+        sourceRoot: config.sourceRoot,
+        runtimeRoot: config.runtimeRoot,
+        syncedPaths,
+        alreadyLatest: false,
+        detail: `Missing source path: ${relativePath}`,
+      }
+    }
+
+    fs.mkdirSync(runtimePath, { recursive: true })
+    const diffResult = await runCommand(
+      "rsync",
+      ["-nrc", "--delete", "--itemize-changes", `${sourcePath}/`, `${runtimePath}/`],
+      8000
+    )
+    if (!diffResult.ok && diffResult.errorCode !== "ENOENT") {
+      return {
+        ok: false,
+        action: "sync-and-restart",
+        enabled: true,
+        sourceRoot: config.sourceRoot,
+        runtimeRoot: config.runtimeRoot,
+        syncedPaths,
+        alreadyLatest: false,
+        detail: diffResult.stderr || diffResult.stdout || `Unable to diff ${relativePath}`,
+      }
+    }
+
+    const diffText = firstOutputLine(diffResult.stdout, diffResult.stderr)
+    if (!diffText) {
+      alreadyLatestPaths.push(relativePath)
+      continue
+    }
+
+    const syncResult = await runCommand(
+      "rsync",
+      ["-a", "--delete", `${sourcePath}/`, `${runtimePath}/`],
+      12000
+    )
+    if (!syncResult.ok) {
+      return {
+        ok: false,
+        action: "sync-and-restart",
+        enabled: true,
+        sourceRoot: config.sourceRoot,
+        runtimeRoot: config.runtimeRoot,
+        syncedPaths,
+        alreadyLatest: false,
+        detail: syncResult.stderr || syncResult.stdout || `Unable to sync ${relativePath}`,
+      }
+    }
+
+    syncedPaths.push(relativePath)
+  }
+
+  const alreadyLatest = syncedPaths.length === 0
+  return {
+    ok: true,
+    action: "sync-and-restart",
+    enabled: true,
+    sourceRoot: config.sourceRoot,
+    runtimeRoot: config.runtimeRoot,
+    syncedPaths,
+    alreadyLatest,
+    alreadyLatestPaths,
+    detail: alreadyLatest ?
+      "Runtime already matched the latest source tree." :
+      `Synced ${syncedPaths.length} runtime path(s) from source.`,
+  }
+}
+
 function normalizeHttpUrl(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -2185,6 +2378,13 @@ function normalizeHttpUrl(value) {
     void error
     return ""
   }
+}
+
+function isPathWithinRoot(candidatePath, rootPath) {
+  const candidate = path.resolve(candidatePath)
+  const root = path.resolve(rootPath)
+  const relative = path.relative(root, candidate)
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative))
 }
 
 function normalizeAssignmentAnnouncementPreviewItems(value) {
@@ -2472,6 +2672,56 @@ async function restartExerciseMailerServiceControl() {
   }
 }
 
+async function syncAndRestartExerciseMailerServiceControl() {
+  const syncResult = await syncRuntimeSelfHealPaths()
+  if (!syncResult.ok) {
+    return syncResult
+  }
+
+  if (!SERVICE_CONTROL_ENABLED) {
+    const status = await getExerciseMailerServiceControlStatus()
+    return {
+      ok: false,
+      action: "sync-and-restart",
+      ...status,
+      selfHeal: syncResult,
+      detail: "Service control disabled by env.",
+    }
+  }
+
+  const restartResult = await runCommand(
+    "sudo",
+    ["-n", "systemctl", "restart", EXERCISE_MAILER_SERVICE_NAME],
+    SERVICE_CONTROL_RESTART_TIMEOUT_MS
+  )
+
+  const status = await getExerciseMailerServiceControlStatus()
+  const restartLine = firstOutputLine(restartResult.stderr, restartResult.stdout)
+  const restartOk = restartResult.ok && status.status === "active"
+  const detail = restartOk
+    ? syncResult.alreadyLatest ?
+      `Runtime already latest; restarted ${EXERCISE_MAILER_SERVICE_NAME}; status=${status.status}.`
+      : `Synced latest runtime files and restarted ${EXERCISE_MAILER_SERVICE_NAME}; status=${status.status}.`
+    : restartLine ||
+      status.detail ||
+      `Failed to restart ${EXERCISE_MAILER_SERVICE_NAME}.`
+
+  return {
+    ok: restartOk,
+    action: "sync-and-restart",
+    ...status,
+    selfHeal: syncResult,
+    detail,
+    restart: {
+      exitCode: restartResult.exitCode,
+      timedOut: restartResult.timedOut,
+      stdout: restartResult.stdout,
+      stderr: restartResult.stderr,
+      errorCode: restartResult.errorCode,
+    },
+  }
+}
+
 function withError(response, request, error) {
   let statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500
   let message = normalizeText(error?.message) || "Request failed"
@@ -2625,8 +2875,12 @@ function normalizeRecipientList(value) {
   )
 }
 
+/** @type {Promise<NodemailerModule> | NodemailerModule | null} */
 let nodemailerModule = null
 
+/**
+ * @returns {Promise<NodemailerModule>}
+ */
 async function getNodemailer() {
   if (nodemailerModule) return nodemailerModule
   try {
@@ -3674,7 +3928,7 @@ function weekdayLabelFromDateKey(value = "") {
   if (!date) return ""
   return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
-    timeZone: PORTAL_FIXED_TIME_ZONE,
+    timeZone: "Asia/Ho_Chi_Minh",
   }).format(date)
 }
 
@@ -4619,12 +4873,20 @@ async function handleApiRequest(request, response, pathname, url) {
     if (method === "POST") {
       const payload = await parseBody(request)
       const action = normalizeLower(payload?.action || "restart")
-      if (action !== "restart" && action !== "restart-exercise-mailer") {
+      if (
+        action !== "restart" &&
+        action !== "restart-exercise-mailer" &&
+        action !== "sync-and-restart" &&
+        action !== "self-heal"
+      ) {
         const error = new Error("Unsupported service-control action")
         error.statusCode = 400
         throw error
       }
-      const result = await restartExerciseMailerServiceControl()
+      const result =
+        action === "sync-and-restart" || action === "self-heal" ?
+          await syncAndRestartExerciseMailerServiceControl()
+        : await restartExerciseMailerServiceControl()
       sendJson(response, 200, result)
       return true
     }

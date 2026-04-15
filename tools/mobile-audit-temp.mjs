@@ -1,3 +1,5 @@
+// @ts-check
+
 import { chromium } from 'playwright';
 
 const ORIGIN = 'http://127.0.0.1:8788';
@@ -28,10 +30,18 @@ const studentPages = [
   '/web-asset/student/student-portal.html?apiOrigin=http://127.0.0.1:8788'
 ];
 
+/**
+ * @param {string} path
+ * @returns {string}
+ */
 function abs(path) {
   return path.startsWith('http') ? path : `${ORIGIN}${path}`;
 }
 
+/**
+ * @param {import('playwright').Page} page
+ * @returns {Promise<void>}
+ */
 async function loginAdmin(page) {
   await page.goto(abs('/admin?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
@@ -44,6 +54,10 @@ async function loginAdmin(page) {
   await page.waitForTimeout(1000);
 }
 
+/**
+ * @param {import('playwright').Page} page
+ * @returns {Promise<void>}
+ */
 async function loginParent(page) {
   await page.goto(abs('/parent?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
@@ -56,6 +70,10 @@ async function loginParent(page) {
   await page.waitForTimeout(1000);
 }
 
+/**
+ * @param {import('playwright').Page} page
+ * @returns {Promise<void>}
+ */
 async function loginStudent(page) {
   await page.goto(abs('/student?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#loginForm', { timeout: 15000 });
@@ -68,6 +86,11 @@ async function loginStudent(page) {
   await page.waitForTimeout(1000);
 }
 
+/**
+ * @param {import('playwright').Page} page
+ * @param {string} url
+ * @returns {Promise<Record<string, unknown> & { url: string, pass: boolean }>}
+ */
 async function measurePage(page, url) {
   await page.goto(abs(url), { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(350);
@@ -110,9 +133,14 @@ async function measurePage(page, url) {
   return { url: abs(url), pass, ...result };
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function run() {
   const browser = await chromium.launch({ headless: true });
+  /** @type {Array<Record<string, unknown>>} */
   const failures = [];
+  /** @type {Array<Record<string, unknown>>} */
   const passes = [];
   try {
     const adminCtx = await browser.newContext({ viewport: VIEWPORT });

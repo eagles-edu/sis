@@ -1,9 +1,58 @@
+// @ts-check
 import crypto from "node:crypto"
 import {
   ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
   enqueueAsyncSideEffectJob,
 } from "../async/side-effect-jobs.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+
+/**
+ * @typedef {{
+ *   queueType?: unknown,
+ *   deliveryMode?: unknown,
+ *   recipients?: unknown,
+ *   assignmentTitle?: unknown,
+ *   exerciseTitle?: unknown,
+ *   dueAt?: unknown,
+ *   level?: unknown,
+ *   message?: unknown,
+ *   senderName?: unknown,
+ *   queuedByUsername?: unknown,
+ *   reviewedByUsername?: unknown,
+ *   scheduledFor?: unknown,
+ *   sentAt?: unknown,
+ *   attempts?: unknown,
+ *   lastError?: unknown,
+ *   payloadJson?: unknown,
+ *   studentReviewedAt?: unknown,
+ *   studentReviewedByUsername?: unknown,
+ *   parentReviewedAt?: unknown,
+ *   parentReviewedByUsername?: unknown,
+ * }} QueueRecordLike
+ *
+ * @typedef {{
+ *   queueType?: unknown,
+ *   deliveryMode?: unknown,
+ *   recipients?: unknown,
+ *   assignmentTitle?: unknown,
+ *   exerciseTitle?: unknown,
+ *   dueAt?: unknown,
+ *   level?: unknown,
+ *   message?: unknown,
+ *   senderName?: unknown,
+ *   queuedByUsername?: unknown,
+ *   reviewedByUsername?: unknown,
+ *   scheduledFor?: unknown,
+ *   sentAt?: unknown,
+ *   attempts?: unknown,
+ *   lastError?: unknown,
+ *   payloadJson?: unknown,
+ *   studentReviewedAt?: unknown,
+ *   studentReviewedByUsername?: unknown,
+ *   parentReviewedAt?: unknown,
+ *   parentReviewedByUsername?: unknown,
+ * }} QueueUpdatePayload
+ */
 
 export { sendAnnouncementEmail } from "./announcement-email.mjs"
 
@@ -70,15 +119,26 @@ let EMAIL_BATCH_LAST_KNOWN_SIZE = 0
 let EMAIL_QUEUE_DB_DISABLED = EMAIL_QUEUE_BACKEND_MODE !== "database"
 let EMAIL_QUEUE_DB_WARNED = false
 
+/**
+ * @returns {string}
+ */
 export function nowIso() {
   return new Date().toISOString()
 }
 
+/**
+ * @param {unknown} [prefix]
+ * @returns {string}
+ */
 export function createQueueId(prefix = "notify") {
   const head = normalizeLower(prefix).replace(/[^a-z0-9]/g, "") || "notify"
   return `${head}-${Date.now().toString(36)}-${crypto.randomBytes(4).toString("hex")}`
 }
 
+/**
+ * @param {unknown} value
+ * @returns {"parent-report" | "announcement"}
+ */
 export function normalizeQueueType(value) {
   const queueType = normalizeLower(value)
   if (queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT) return NOTIFICATION_QUEUE_TYPE_PARENT_REPORT
@@ -99,14 +159,26 @@ function weekendBatchScheduleLabel() {
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 export function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 export function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 export function parseIsoDateTime(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -115,6 +187,10 @@ export function parseIsoDateTime(value) {
   return parsed
 }
 
+/**
+ * @param {Date | string | number} [value]
+ * @returns {Date | null}
+ */
 export function nextWeekendBatchDispatchAt(value = new Date()) {
   const now = value instanceof Date ? new Date(value.getTime()) : new Date(value)
   if (Number.isNaN(now.valueOf())) return null
@@ -157,6 +233,10 @@ export function nextWeekendBatchDispatchAt(value = new Date()) {
   return null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {"immediate" | "weekend-batch"}
+ */
 export function normalizeDeliveryMode(value) {
   const mode = normalizeLower(value)
   if (mode === "weekend-batch" || mode === "batch") return "weekend-batch"
@@ -183,6 +263,34 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
   }
 }
 
+/**
+ * @param {QueueRecordLike} [record]
+ * @returns {{
+ *   id: string,
+ *   queueType: string,
+ *   status: string,
+ *   deliveryMode: string,
+ *   recipients: Array<string>,
+ *   assignmentTitle: string,
+ *   exerciseTitle: string,
+ *   dueAt: string,
+ *   level: string,
+ *   message: string,
+ *   senderName: string,
+ *   queuedByUsername: string,
+ *   reviewedByUsername: string,
+ *   queuedAt: string,
+ *   scheduledFor: string,
+ *   sentAt: string,
+ *   attempts: number,
+ *   lastError: string,
+ *   payloadJson: Record<string, unknown> | null,
+ *   studentReviewedAt: string,
+ *   studentReviewedByUsername: string,
+ *   parentReviewedAt: string,
+ *   parentReviewedByUsername: string,
+ * }}
+ */
 function mapQueueRecord(record = {}) {
   return {
     id: normalizeText(record.id),
@@ -336,6 +444,14 @@ async function countQueuedAnnouncements({ queueType = "", includeSent = false, s
   )
 }
 
+/**
+ * @param {{ queueType?: unknown, take?: unknown, includeSent?: boolean, statuses?: Array<unknown> }} [options]
+ * @returns {Promise<{
+ *   total: number,
+ *   items: Array<ReturnType<typeof mapQueueRecord>>,
+ *   hasMore: boolean,
+ * }>}
+ */
 export async function listQueuedAnnouncements({ queueType = "", take = 10, includeSent = false, statuses = [] } = {}) {
   const limit = Math.max(1, Math.min(Number.parseInt(String(take || 10), 10) || 10, 1000))
   const total = await countQueuedAnnouncements({ queueType, includeSent, statuses })
@@ -376,6 +492,20 @@ export async function listQueuedAnnouncements({ queueType = "", take = 10, inclu
   }
 }
 
+/**
+ * @param {QueueUpdatePayload} [payload]
+ * @param {{ queuedByUsername?: unknown }} [options]
+ * @returns {Promise<{
+ *   ok: true,
+ *   queued: true,
+ *   deliveryMode: "weekend-batch",
+ *   queueId: string,
+ *   queuedAt: string,
+ *   scheduledFor: string,
+ *   queueSize: number,
+ *   schedule: string,
+ * }>}
+ */
 export async function queueAnnouncementEmail(payload = {}, options = {}) {
   const totalUnsent = await countQueuedAnnouncements()
   if (totalUnsent >= EMAIL_BATCH_QUEUE_LIMIT) {
@@ -434,6 +564,19 @@ export async function queueAnnouncementEmail(payload = {}, options = {}) {
   }
 }
 
+/**
+ * @param {unknown} queueType
+ * @returns {Promise<{
+ *   queueSize: number,
+ *   nextScheduledFor: string,
+ *   schedule: string,
+ *   backend: string,
+ *   lastRunAt: string,
+ *   lastResult: string,
+ *   lastError: string,
+ *   processing: boolean,
+ * }>}
+ */
 export async function getEmailBatchQueueStatus(queueType = "") {
   const listed = await listQueuedAnnouncements({
     queueType,
@@ -459,6 +602,18 @@ export async function getEmailBatchQueueStatus(queueType = "") {
   }
 }
 
+/**
+ * @returns {{
+ *   queueSize: number,
+ *   nextScheduledFor: string,
+ *   schedule: string,
+ *   backend: string,
+ *   lastRunAt: string,
+ *   lastResult: string,
+ *   lastError: string,
+ *   processing: boolean,
+ * }}
+ */
 export function getEmailBatchQueueRuntimeStatus() {
   return {
     queueSize: EMAIL_BATCH_LAST_KNOWN_SIZE,
@@ -472,6 +627,12 @@ export function getEmailBatchQueueRuntimeStatus() {
   }
 }
 
+/**
+ * @param {unknown} queueId
+ * @param {QueueUpdatePayload} [updates]
+ * @param {{ reviewedByUsername?: unknown }} [options]
+ * @returns {Promise<ReturnType<typeof mapQueueRecord>>}
+ */
 export async function updateQueuedAnnouncement(queueId, updates = {}, options = {}) {
   const id = normalizeText(queueId)
   if (!id) {
@@ -609,6 +770,17 @@ export async function updateQueuedAnnouncement(queueId, updates = {}, options = 
   )
 }
 
+/**
+ * @param {{ queueType?: unknown, reviewedByUsername?: unknown }} [options]
+ * @returns {Promise<{
+ *   ok: true,
+ *   queueType: string,
+ *   processed: number,
+ *   sent: number,
+ *   failed: number,
+ *   queued?: number,
+ * }>}
+ */
 export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername = "" } = {}) {
   const source = await listQueuedAnnouncements({
     queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,

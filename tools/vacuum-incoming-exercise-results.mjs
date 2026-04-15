@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import fs from "node:fs"
 import path from "node:path"
@@ -21,20 +22,47 @@ const DEFAULT_REVIEWED_BY = "system:incoming-vacuum"
 const DEFAULT_PURGE_DAYS = 45
 const DEFAULT_REPORT_RETENTION_DAYS = 30
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @param {number} [fallback]
+ * @returns {number}
+ */
 function normalizeInteger(value, fallback = 0) {
   const parsed = Number.parseInt(String(value), 10)
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   apply: boolean,
+ *   deleteUnmatched: boolean,
+ *   deleteMalformed: boolean,
+ *   purgeResolvedDays: number,
+ *   purgeArchivedDays: number,
+ *   reportRetentionDays: number,
+ *   reportDir: string,
+ *   reviewedByUsername: string,
+ *   help: boolean,
+ * }}
+ */
 function parseArgs(argv = []) {
   const args = {
     apply: false,
@@ -134,12 +162,20 @@ Examples:
 `)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toIso(value) {
   const date = new Date(value)
   if (!Number.isFinite(date.valueOf())) return ""
   return date.toISOString()
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @returns {string}
+ */
 function incomingFingerprint(row = {}) {
   return [
     normalizeLower(row.submittedEaglesId),
@@ -149,6 +185,10 @@ function incomingFingerprint(row = {}) {
   ].join("|")
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @returns {boolean}
+ */
 export function isIncomingMalformed(row = {}) {
   const submittedEaglesId = normalizeText(row.submittedEaglesId)
   const submittedEmail = normalizeText(row.submittedEmail)
@@ -169,6 +209,11 @@ export function isIncomingMalformed(row = {}) {
   return false
 }
 
+/**
+ * @param {import("@prisma/client").PrismaClient} prisma
+ * @param {Record<string, unknown>} [row]
+ * @returns {Promise<{ student: Record<string, unknown> | null, reason: string }>}
+ */
 async function resolveStudentCandidate(prisma, row = {}) {
   const submittedEaglesId = normalizeText(row.submittedEaglesId)
   const submittedEmail = normalizeLower(row.submittedEmail)
@@ -271,6 +316,10 @@ async function resolveStudentCandidate(prisma, row = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @returns {Record<string, unknown>}
+ */
 function resultSnapshot(row = {}) {
   return {
     id: normalizeText(row.id),
@@ -287,6 +336,21 @@ function resultSnapshot(row = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} row
+ * @param {{
+ *   isDuplicate?: boolean,
+ *   studentCandidate?: Record<string, unknown> | null,
+ *   candidateReason?: string,
+ *   deleteUnmatched?: boolean,
+ *   deleteMalformed?: boolean,
+ * }} [context]
+ * @returns {{
+ *   action: "delete" | "manual" | "resolve",
+ *   reason: string,
+ *   malformed: boolean,
+ * }}
+ */
 function classifyAction(row, context = {}) {
   const malformed = isIncomingMalformed(row)
   if (context.isDuplicate) {
@@ -324,6 +388,9 @@ function classifyAction(row, context = {}) {
   }
 }
 
+/**
+ * @returns {string}
+ */
 function timestampLabel() {
   const date = new Date()
   const pad2 = (value) => String(value).padStart(2, "0")
@@ -339,20 +406,39 @@ function timestampLabel() {
   ].join("")
 }
 
+/**
+ * @param {string} targetPath
+ * @returns {void}
+ */
 function ensureDirectory(targetPath) {
   fs.mkdirSync(targetPath, { recursive: true })
 }
 
+/**
+ * @param {string} filePath
+ * @param {unknown} value
+ * @returns {void}
+ */
 function writeJsonFile(filePath, value) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8")
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [rows]
+ * @returns {Array<Record<string, unknown>>}
+ */
 function sortRowsById(rows = []) {
   return (Array.isArray(rows) ? rows : [])
     .slice()
     .sort((left, right) => normalizeText(left?.id).localeCompare(normalizeText(right?.id)))
 }
 
+/**
+ * @param {string} reportDir
+ * @param {number} retentionDays
+ * @param {string} [keepFilePath]
+ * @returns {number}
+ */
 function pruneOldReports(reportDir, retentionDays, keepFilePath = "") {
   const days = Math.max(0, Number.parseInt(String(retentionDays), 10) || 0)
   if (days < 1) return 0
@@ -389,6 +475,14 @@ function pruneOldReports(reportDir, retentionDays, keepFilePath = "") {
   return deleted
 }
 
+/**
+ * @param {import("@prisma/client").PrismaClient} prisma
+ * @returns {Promise<{
+ *   danglingExerciseSubmissionStudentRefIds: string[],
+ *   danglingExerciseSubmissionExerciseRefIds: string[],
+ *   danglingGradeRecordStudentRefIds: string[],
+ * }>}
+ */
 async function collectOrphanSignals(prisma) {
   const [
     danglingSubmissionStudent,
@@ -413,16 +507,55 @@ async function collectOrphanSignals(prisma) {
   }
 }
 
+/**
+ * @param {{
+ *   apply: boolean,
+ *   deleteUnmatched: boolean,
+ *   deleteMalformed: boolean,
+ *   purgeResolvedDays: number,
+ *   purgeArchivedDays: number,
+ *   reportRetentionDays: number,
+ *   reportDir: string,
+ *   reviewedByUsername: string,
+ *   help: boolean,
+ * }} args
+ * @returns {Promise<{
+ *   runStartedAt: string,
+ *   mode: string,
+ *   options: {
+ *     deleteUnmatched: boolean,
+ *     deleteMalformed: boolean,
+ *     purgeResolvedDays: number,
+ *     purgeArchivedDays: number,
+ *   },
+ *   purgedResolvedCount: number,
+ *   purgedArchivedCount: number,
+ *   manualReview: Array<Record<string, unknown>>,
+ *   reportItems: Array<Record<string, unknown>>,
+ *   resolvedItems: Array<Record<string, unknown>>,
+ *   deletedItems: Array<Record<string, unknown>>,
+ *   orphanSignals: {
+ *     danglingExerciseSubmissionStudentRefIds: string[],
+ *     danglingExerciseSubmissionExerciseRefIds: string[],
+ *     danglingGradeRecordStudentRefIds: string[],
+ *   },
+ * }>}
+ */
 async function runVacuum(args) {
   const prisma = await getSharedPrismaClient()
   const now = new Date()
+  /** @type {Array<Record<string, unknown>>} */
   const reportItems = []
+  /** @type {Array<Record<string, unknown>>} */
   const manualReview = []
+  /** @type {Array<Record<string, unknown>>} */
   const resolvedItems = []
+  /** @type {Array<Record<string, unknown>>} */
   const deletedItems = []
   let mode = "dry-run"
   let purgedResolvedCount = 0
   let purgedArchivedCount = 0
+  /** @type {{ danglingExerciseSubmissionStudentRefIds: string[], danglingExerciseSubmissionExerciseRefIds: string[], danglingGradeRecordStudentRefIds: string[] } | undefined} */
   let orphanSignals
 
   try {
@@ -449,10 +582,12 @@ async function runVacuum(args) {
       },
     })
 
+    /** @type {Map<string, string>} */
     const keepByFingerprint = new Map()
+    /** @type {Set<string>} */
     const duplicateIds = new Set()
     for (let index = 0; index < activeRows.length; index += 1) {
-      const row = activeRows[index]
+      const row = /** @type {Record<string, unknown>} */ (activeRows[index])
       const key = incomingFingerprint(row)
       if (!keepByFingerprint.has(key)) {
         keepByFingerprint.set(key, row.id)
@@ -462,7 +597,7 @@ async function runVacuum(args) {
     }
 
     for (let index = 0; index < activeRows.length; index += 1) {
-      const row = activeRows[index]
+      const row = /** @type {Record<string, unknown>} */ (activeRows[index])
       const id = normalizeText(row.id)
       const isDuplicate = duplicateIds.has(id)
       const candidate = isDuplicate ? { student: null, reason: "duplicate-incoming" } : await resolveStudentCandidate(prisma, row)
@@ -591,6 +726,9 @@ async function runVacuum(args) {
   }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function run() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) {

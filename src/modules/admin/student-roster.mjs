@@ -1,18 +1,31 @@
 // src/modules/admin/student-roster.mjs
+// @ts-check
 
 import { mapParentClassReport } from "./parent-reports.mjs"
 import { mapGradeRecordForApi } from "./student-records.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -20,14 +33,25 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizePositiveInteger(value) {
   const parsed = normalizeInteger(value)
   if (!Number.isFinite(parsed) || parsed < 1) return null
   return parsed
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {void}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
@@ -47,11 +71,16 @@ const LEVEL_DEFINITIONS = [
   { canonical: "Private", aliases: ["Private Class", "1:1 Private"] },
 ]
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
 
 const LEVEL_ALIAS_MAP = (() => {
+  /** @type {Map<string, string>} */
   const map = new Map()
   LEVEL_DEFINITIONS.forEach((entry) => {
     const variants = [entry.canonical, ...(entry.aliases || [])]
@@ -63,6 +92,10 @@ const LEVEL_ALIAS_MAP = (() => {
   return map
 })()
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -70,6 +103,10 @@ function canonicalizeLevel(value) {
   return LEVEL_ALIAS_MAP.get(key) || text
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
 function resolveLevelVariants(value) {
   const text = normalizeText(value)
   if (!text) return []
@@ -81,6 +118,10 @@ function resolveLevelVariants(value) {
   return Array.from(new Set([definition.canonical, ...(definition.aliases || [])]))
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeSearchComparable(value) {
   const folded = normalizeText(value)
     .normalize("NFD")
@@ -91,6 +132,10 @@ function normalizeSearchComparable(value) {
   return folded.replace(/[^a-z0-9]+/g, " ").trim()
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [student]
+ * @returns {string}
+ */
 function studentSearchComparableHaystack(student = {}) {
   const profile = student?.profile || {}
   return [
@@ -109,16 +154,30 @@ function studentSearchComparableHaystack(student = {}) {
     .join(" ")
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [student]
+ * @param {string} [searchComparable]
+ * @returns {boolean}
+ */
 function studentMatchesSearchComparable(student = {}, searchComparable = "") {
   const needle = normalizeSearchComparable(searchComparable)
   if (!needle) return true
   return studentSearchComparableHaystack(student).includes(needle)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {number}
+ */
 function normalizeStudentNumberFloor(value = STUDENT_NUMBER_START) {
   return Math.max(100, normalizePositiveInteger(value) || STUDENT_NUMBER_START)
 }
 
+/**
+ * @param {Array<{ studentNumber?: unknown }>} [rows]
+ * @param {unknown} [floor]
+ * @returns {number}
+ */
 function maxStudentNumberFromRows(rows = [], floor = STUDENT_NUMBER_START) {
   const minimum = normalizeStudentNumberFloor(floor)
   return rows.reduce((highest, row) => {
@@ -127,6 +186,11 @@ function maxStudentNumberFromRows(rows = [], floor = STUDENT_NUMBER_START) {
   }, minimum - 1)
 }
 
+/**
+ * @param {Record<string, unknown> & { student: { findMany: Function } }} client
+ * @param {unknown} [floor]
+ * @returns {Promise<number>}
+ */
 async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_START) {
   const minimum = normalizeStudentNumberFloor(floor)
   const rows = await client.student.findMany({
@@ -138,6 +202,11 @@ async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_
   return Math.max(minimum, highest + 1)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [student]
+ * @param {string} [context]
+ * @returns {{ eaglesId: string, studentNumber: number }}
+ */
 function assertStudentIdentityIntegrity(student = {}, context = "student") {
   const eaglesId = normalizeText(student?.eaglesId)
   const studentNumber = normalizePositiveInteger(student?.studentNumber)
@@ -149,6 +218,29 @@ function assertStudentIdentityIntegrity(student = {}, context = "student") {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} student
+ * @returns {{
+ *   id: string,
+ *   externalKey: string | null | undefined,
+ *   studentNumber: number,
+ *   eaglesId: string,
+ *   email: string | null | undefined,
+ *   createdAt: unknown,
+ *   updatedAt: unknown,
+ *   profile: unknown,
+ *   counts: {
+ *     submissions: number,
+ *     intakeSubmissions: number,
+ *     attendanceRecords: number,
+ *     gradeRecords: number,
+ *     parentReports: number,
+ *   },
+ *   attendanceRecords?: unknown[],
+ *   gradeRecords?: unknown[],
+ *   parentReports?: unknown[],
+ * } | null}
+ */
 function mapStudent(student) {
   if (!student) return null
   const identity = assertStudentIdentityIntegrity(student, `student ${normalizeText(student?.id)}`)
@@ -202,6 +294,10 @@ const STUDENT_LIST_QUERY_ORDER_BY = [
 
 const STUDENT_SEARCH_FALLBACK_SCAN_BATCH = 250
 
+/**
+ * @param {{ levelFilter?: string, schoolFilter?: string, levelVariants?: string[] }} [options]
+ * @returns {Record<string, unknown>}
+ */
 function listStudentsBaseWhere({ levelFilter = "", schoolFilter = "", levelVariants = [] } = {}) {
   return {
     AND: [
@@ -242,6 +338,10 @@ function listStudentsBaseWhere({ levelFilter = "", schoolFilter = "", levelVaria
   }
 }
 
+/**
+ * @param {string} [searchQuery]
+ * @returns {Record<string, unknown> | null}
+ */
 function listStudentsSearchClause(searchQuery = "") {
   const queryText = normalizeText(searchQuery)
   if (!queryText) return null
@@ -257,6 +357,15 @@ function listStudentsSearchClause(searchQuery = "") {
   }
 }
 
+/**
+ * @param {{
+ *   prisma: Record<string, unknown> & { student: { findMany: Function } },
+ *   baseWhere?: Record<string, unknown>,
+ *   searchComparable?: string,
+ *   limit?: number,
+ * }} options
+ * @returns {Promise<string[]>}
+ */
 async function findAccentInsensitiveStudentIds({ prisma, baseWhere = {}, searchComparable = "", limit = 250 } = {}) {
   const needle = normalizeSearchComparable(searchComparable)
   if (!needle || !Number.isFinite(limit) || limit <= 0) return []
@@ -307,6 +416,10 @@ async function findAccentInsensitiveStudentIds({ prisma, baseWhere = {}, searchC
   return matchedIds
 }
 
+/**
+ * @param {{ query?: string, level?: string, school?: string, take?: number }} [options]
+ * @returns {Promise<{ total: number, items: Array<ReturnType<typeof mapStudent>> }>}
+ */
 export async function listStudents({ query = "", level = "", school = "", take = 250 } = {}) {
   const prisma = await getSharedPrismaClient()
   const searchQuery = normalizeText(query)
@@ -352,6 +465,10 @@ export async function listStudents({ query = "", level = "", school = "", take =
   }
 }
 
+/**
+ * @param {string} studentRefId
+ * @returns {Promise<ReturnType<typeof mapStudent>>}
+ */
 export async function getStudentById(studentRefId) {
   const prisma = await getSharedPrismaClient()
   const id = normalizeText(studentRefId)
@@ -389,6 +506,10 @@ export async function getStudentById(studentRefId) {
   return mapStudent(student)
 }
 
+/**
+ * @param {{ floor?: number }} [options]
+ * @returns {Promise<{ startAt: number, nextStudentNumber: number }>}
+ */
 export async function getNextStudentNumber({ floor = STUDENT_NUMBER_START } = {}) {
   const prisma = await getSharedPrismaClient()
   const startAt = normalizeStudentNumberFloor(floor)

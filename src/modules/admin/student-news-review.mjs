@@ -1,3 +1,4 @@
+// @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import {
   buildStudentNewsFallbackOverlayIndex,
@@ -13,20 +14,36 @@ import {
   updateStudentNewsValidationIssues,
 } from "./student-news-compliance.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -34,6 +51,10 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   const text = normalizeText(value)
@@ -42,6 +63,10 @@ function parseDateOrNull(value) {
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseLocalDateOnly(value) {
   const text = normalizeText(value)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null
@@ -57,6 +82,10 @@ function parseLocalDateOnly(value) {
   return date
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
@@ -71,20 +100,37 @@ const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
+/**
+ * @param {unknown} value
+ * @param {Date} [fallback]
+ * @returns {Date}
+ */
 function normalizeDateValue(value, fallback = new Date()) {
   const parsed = value instanceof Date ? new Date(value.getTime()) : parseDateOrNull(value)
   if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) return parsed
   return fallback instanceof Date ? new Date(fallback.getTime()) : new Date()
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfDay(value = new Date()) {
   const source = normalizeDateValue(value)
   const shifted = shiftToFixedTimeZone(source)
@@ -92,22 +138,55 @@ function startOfDay(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function endOfDay(value = new Date()) {
   const date = startOfDay(value)
   return new Date(date.getTime() + ONE_DAY_MS - 1)
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {true}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return true
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
 }
 
+/**
+ * @param {unknown} prisma
+ * @param {string} delegateName
+ * @param {string} methodName
+ * @returns {boolean}
+ */
 function hasPrismaDelegateMethod(prisma, delegateName, methodName) {
-  return Boolean(prisma?.[delegateName] && typeof prisma[delegateName][methodName] === "function")
+  const delegate = prisma && typeof prisma === "object" ? prisma[delegateName] : null
+  return Boolean(delegate && typeof delegate[methodName] === "function")
 }
 
+/**
+ * @param {string} [fieldKey]
+ * @param {Record<string, unknown> | null | undefined} [entry]
+ * @returns {{
+ *   field: string,
+ *   label: string,
+ *   status: string,
+ *   message: string,
+ *   criterion: string,
+ *   steps: string[],
+ *   score: number | null,
+ *   threshold: number | null,
+ *   updatedAt: string,
+ * } | null}
+ */
 function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
   const key = normalizeText(fieldKey)
   if (!key) return null
@@ -129,6 +208,10 @@ function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [value]
+ * @returns {Record<string, ReturnType<typeof normalizeValidationIssueEntry>>}
+ */
 function normalizeValidationIssueMap(value = {}) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {}
   const normalized = {}
@@ -139,16 +222,28 @@ function normalizeValidationIssueMap(value = {}) {
   return normalized
 }
 
+/**
+ * @param {unknown} [note]
+ * @returns {string}
+ */
 function stripAwaitingReReviewMarker(note = "") {
   return normalizeText(String(note || "").replaceAll("[[SIS-AWAITING-RE-REVIEW]]", ""))
 }
 
+/**
+ * @param {unknown} [note]
+ * @returns {string}
+ */
 function addAwaitingReReviewMarker(note = "") {
   const clean = stripAwaitingReReviewMarker(note)
   if (!clean) return "[[SIS-AWAITING-RE-REVIEW]]"
   return `${clean}\n[[SIS-AWAITING-RE-REVIEW]]`
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [row]
+ * @returns {boolean}
+ */
 function resolveStudentNewsAwaitingReReview(row = {}) {
   if (normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) !== STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) {
     return false
@@ -196,11 +291,16 @@ const LEVEL_DEFINITIONS = [
   },
 ]
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
 
 const LEVEL_ALIAS_MAP = (() => {
+  /** @type {Map<string, string>} */
   const map = new Map()
   LEVEL_DEFINITIONS.forEach((entry) => {
     const variants = [entry.canonical, ...(entry.aliases || [])]
@@ -212,6 +312,10 @@ const LEVEL_ALIAS_MAP = (() => {
   return map
 })()
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -228,6 +332,11 @@ const STUDENT_NEWS_REVIEW_STATUS_COLOR = {
   [STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED]: "red",
 }
 
+/**
+ * @param {unknown} value
+ * @param {string} [fallback]
+ * @returns {string}
+ */
 function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) {
   const token = normalizeLower(value)
   if (!token) return fallback
@@ -255,11 +364,27 @@ function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_
   return fallback
 }
 
+/**
+ * @param {unknown} status
+ * @returns {string}
+ */
 function resolveStudentNewsStatusColor(status) {
   const normalized = normalizeStudentNewsReviewStatus(status, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
   return STUDENT_NEWS_REVIEW_STATUS_COLOR[normalized] || "amber"
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [student]
+ * @param {string} [fallbackStudentRefId]
+ * @returns {{
+ *   studentRefId: string,
+ *   eaglesId: string,
+ *   studentNumber: number | null,
+ *   fullName: string,
+ *   englishName: string,
+ *   level: string,
+ * }}
+ */
 function mapStudentNewsReviewStudentSummary(student = {}, fallbackStudentRefId = "") {
   const profile = student?.profile && typeof student.profile === "object" ? student.profile : {}
   return {
@@ -272,6 +397,35 @@ function mapStudentNewsReviewStudentSummary(student = {}, fallbackStudentRefId =
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [row]
+ * @returns {{
+ *   id: string,
+ *   studentRefId: string,
+ *   reportDate: string,
+ *   sourceLink: string,
+ *   articleTitle: string,
+ *   byline: string,
+ *   articleDateline: string,
+ *   leadSynopsis: string,
+ *   actionActor: string,
+ *   actionAffected: string,
+ *   actionWhere: string,
+ *   actionWhat: string,
+ *   actionWhy: string,
+ *   biasAssessment: string,
+ *   submittedAt: string,
+ *   reviewStatus: string,
+ *   awaitingReReview: boolean,
+ *   statusColor: string,
+ *   reviewNote: string,
+ *   validationIssuesJson: Record<string, ReturnType<typeof normalizeValidationIssueEntry>>,
+ *   failedFields: string[],
+ *   fixedFields: string[],
+ *   reviewedByUsername: string,
+ *   reviewedAt: string,
+ * }}
+ */
 function mapStudentNewsReportRow(row = {}) {
   const sourceLink = normalizeText(row?.sourceLink || row?.sourceUrl)
   const articleTitle = normalizeText(row?.articleTitle || row?.headline)
@@ -279,7 +433,7 @@ function mapStudentNewsReportRow(row = {}) {
   const biasAssessment = normalizeText(row?.biasAssessment || row?.reflection)
   const reviewStatus = normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
   const awaitingReReview = resolveStudentNewsAwaitingReReview(row)
-  const validationIssues = normalizeValidationIssueMap(row?.validationIssuesJson)
+  const validationIssues = normalizeValidationIssueMap(/** @type {Record<string, unknown> | null | undefined} */ (row?.validationIssuesJson))
   const pendingFieldKeys = Object.keys(validationIssues).filter(
     (fieldKey) => normalizeLower(validationIssues?.[fieldKey]?.status) !== "fixed"
   )
@@ -305,7 +459,7 @@ function mapStudentNewsReportRow(row = {}) {
     reviewStatus,
     awaitingReReview,
     statusColor: resolveStudentNewsStatusColor(reviewStatus),
-    reviewNote: stripAwaitingReReviewMarker(row?.reviewNote),
+    reviewNote: stripAwaitingReReviewMarker(/** @type {unknown} */ (row?.reviewNote)),
     validationIssuesJson: validationIssues,
     failedFields: pendingFieldKeys,
     fixedFields: fixedFieldKeys,
@@ -314,6 +468,10 @@ function mapStudentNewsReportRow(row = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [item]
+ * @returns {number}
+ */
 function studentNewsReviewSortValue(item = {}) {
   const submittedAt = parseDateOrNull(item?.submittedAt)
   if (submittedAt instanceof Date && !Number.isNaN(submittedAt.valueOf())) return submittedAt.valueOf()
@@ -322,6 +480,10 @@ function studentNewsReviewSortValue(item = {}) {
   return 0
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [item]
+ * @returns {string}
+ */
 function studentNewsReviewSearchText(item = {}) {
   const student = item?.student && typeof item.student === "object" ? item.student : {}
   return normalizeLower([
@@ -340,12 +502,21 @@ function studentNewsReviewSearchText(item = {}) {
   ].map((entry) => normalizeText(entry)).filter(Boolean).join(" "))
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number}
+ */
 function normalizeStudentNewsReviewTake(value) {
   const parsed = Number.parseInt(String(value), 10)
   if (!Number.isFinite(parsed)) return 200
   return Math.max(1, Math.min(parsed, 500))
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} prisma
+ * @param {string[]} [studentRefIds]
+ * @returns {Promise<Map<string, Record<string, unknown>>>}
+ */
 async function loadStudentNewsReviewStudentMap(prisma, studentRefIds = []) {
   const ids = Array.isArray(studentRefIds)
     ? Array.from(new Set(studentRefIds.map((entry) => normalizeText(entry)).filter(Boolean)))
@@ -360,9 +531,13 @@ async function loadStudentNewsReviewStudentMap(prisma, studentRefIds = []) {
       profile: true,
     },
   })
-  return new Map(rows.map((row) => [normalizeText(row?.id), row]))
+  return new Map(rows.map((row) => [normalizeText(row?.id), /** @type {Record<string, unknown>} */ (row)]))
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [payload]
+ * @returns {string}
+ */
 function resolveStudentNewsReviewActionStatus(payload = {}) {
   const action = normalizeLower(payload?.action || payload?.status)
   if (!action) return ""
@@ -381,11 +556,19 @@ function resolveStudentNewsReviewActionStatus(payload = {}) {
   return ""
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function normalizeStudentNewsReviewDateFilter(value) {
   const date = parseLocalDateOnly(value)
   return date instanceof Date && !Number.isNaN(date.valueOf()) ? date : null
 }
 
+/**
+ * @param {{ includeReviewFields?: boolean }} [options]
+ * @returns {Record<string, unknown>}
+ */
 function buildStudentNewsReviewSelect({ includeReviewFields = true } = {}) {
   const select = {
     id: true,
@@ -422,6 +605,11 @@ function buildStudentNewsReviewSelect({ includeReviewFields = true } = {}) {
   return select
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [row]
+ * @param {{ studentByRefId?: Map<string, Record<string, unknown>> }} [options]
+ * @returns {Record<string, unknown>}
+ */
 function mapStudentNewsReviewItem(row = {}, options = {}) {
   const studentByRefId = options?.studentByRefId instanceof Map ? options.studentByRefId : new Map()
   const report = mapStudentNewsReportRow(row)
@@ -436,6 +624,37 @@ function mapStudentNewsReviewItem(row = {}, options = {}) {
   }
 }
 
+/**
+ * @param {{
+ *   status?: string,
+ *   level?: string,
+ *   studentRefId?: string,
+ *   dateFrom?: string,
+ *   dateTo?: string,
+ *   query?: string,
+ *   take?: string | number,
+ * }} [options]
+ * @returns {Promise<{
+ *   generatedAt: string,
+ *   filters: {
+ *     status: string,
+ *     level: string,
+ *     studentRefId: string,
+ *     dateFrom: string,
+ *     dateTo: string,
+ *     query: string,
+ *     take: number,
+ *   },
+ *   total: number,
+ *   hasMore: boolean,
+ *   statusSummary: {
+ *     submitted: number,
+ *     approved: number,
+ *     revisionRequested: number,
+ *   },
+ *   items: Array<Record<string, unknown>>,
+ * }>}
+ */
 export async function listStudentNewsReportsForReview({
   status = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED,
   level = "",
@@ -587,6 +806,12 @@ export async function listStudentNewsReportsForReview({
   }
 }
 
+/**
+ * @param {string} reportId
+ * @param {Record<string, unknown>} [payload]
+ * @param {Record<string, unknown>} [options]
+ * @returns {Promise<{ generatedAt: string, item: Record<string, unknown> | null }>}
+ */
 export async function reviewStudentNewsReport(reportId, payload = {}, options = {}) {
   const prisma = await getSharedPrismaClient()
   const id = normalizeText(reportId)
@@ -601,7 +826,7 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   const reviewedByUsername = normalizeNullableText(options?.reviewedByUsername || payload?.reviewedByUsername)
   const normalizedValidationIssues =
     payload?.validationIssuesJson && typeof payload.validationIssuesJson === "object" && !Array.isArray(payload.validationIssuesJson)
-      ? normalizeValidationIssueMap(payload.validationIssuesJson)
+      ? normalizeValidationIssueMap(/** @type {Record<string, unknown>} */ (payload.validationIssuesJson))
       : null
   const updateData = {
     reviewStatus,
@@ -613,6 +838,7 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
     updateData.validationIssuesJson = normalizedValidationIssues
   }
 
+  /** @type {Record<string, unknown> | null} */
   let existingReport = null
   let fallbackOnly = false
   if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")) {
@@ -640,6 +866,7 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   }
   assertWithStatus(Boolean(existingReport), 404, "Student news report not found")
 
+  /** @type {Record<string, unknown> | null} */
   let updatedReport = null
   if (!fallbackOnly && hasPrismaDelegateMethod(prisma, "studentNewsReport", "update")) {
     try {
@@ -667,6 +894,10 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
     const reportDateKey = normalizeText(toLocalIsoDate(existingReport?.reportDate))
     assertWithStatus(Boolean(studentRefId), 404, "Student news report not found")
     assertWithStatus(Boolean(reportDateKey), 404, "Student news report not found")
+    const existingValidationIssues =
+      existingReport?.validationIssuesJson && typeof existingReport.validationIssuesJson === "object" && !Array.isArray(existingReport.validationIssuesJson)
+        ? /** @type {Record<string, unknown>} */ (existingReport.validationIssuesJson)
+        : null
     const fallbackSaved = upsertStudentNewsReportInFallbackStore(studentRefId, reportDateKey, {
       ...existingReport,
       id,
@@ -674,7 +905,7 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
       reviewNote,
       validationIssuesJson:
         updateData.validationIssuesJson
-        || existingReport?.validationIssuesJson
+        || existingValidationIssues
         || null,
       reviewedByUsername,
       reviewedAt: now.toISOString(),
@@ -684,7 +915,7 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
       ...fallbackSaved,
       id,
       studentRefId,
-      reportDate: existingReport?.reportDate || parseLocalDateOnly(reportDateKey) || reportDateKey,
+      reportDate: existingReport?.reportDate || parseLocalDateOnly(reportDateKey) || new Date(reportDateKey),
     }
   }
 
@@ -699,10 +930,4 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   }
 }
 
-export {
-  buildStudentNewsReviewSelect,
-  normalizeStudentNewsReviewStatus,
-  normalizeStudentNewsReviewTake,
-  resolveStudentNewsReviewActionStatus,
-  resolveStudentNewsStatusColor,
-}
+export { buildStudentNewsReviewSelect, normalizeStudentNewsReviewStatus, normalizeStudentNewsReviewTake, resolveStudentNewsReviewActionStatus, resolveStudentNewsStatusColor }

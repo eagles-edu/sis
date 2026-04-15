@@ -1,21 +1,38 @@
+// @ts-check
 import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   const text = normalizeText(value)
@@ -24,6 +41,10 @@ function parseDateOrNull(value) {
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeHttpUrl(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -41,33 +62,63 @@ function normalizeHttpUrl(value) {
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {true}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return true
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
 }
 
+/**
+ * @param {unknown} error
+ * @param {string} [argumentName]
+ * @returns {boolean}
+ */
 function isUnknownPrismaArgumentError(error, argumentName = "") {
   const message = normalizeLower(error?.message || error)
   const normalizedArgument = normalizeLower(argumentName)
   return message.includes("unknown argument") && message.includes(`\`${normalizedArgument}\``)
 }
 
+/**
+ * @param {unknown} error
+ * @param {string} [fieldName]
+ * @returns {boolean}
+ */
 function isUnknownPrismaFieldError(error, fieldName = "") {
   const message = normalizeLower(error?.message || error)
   const normalizedField = normalizeLower(fieldName)
   return message.includes("unknown field") && message.includes(`\`${normalizedField}\``)
 }
 
+/**
+ * @param {unknown} error
+ * @param {string} [columnName]
+ * @returns {boolean}
+ */
 function isMissingPrismaColumnError(error, columnName = "") {
   const message = normalizeLower(error?.message || error)
   const normalizedColumn = normalizeLower(columnName)
@@ -75,6 +126,11 @@ function isMissingPrismaColumnError(error, columnName = "") {
   return message.includes("column") && message.includes(normalizedColumn) && message.includes("does not exist")
 }
 
+/**
+ * @param {unknown} value
+ * @param {string} [fallback]
+ * @returns {string}
+ */
 function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) {
   const token = normalizeLower(value)
   if (!token) return fallback
@@ -102,6 +158,10 @@ function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_
   return fallback
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
@@ -112,6 +172,10 @@ function toLocalIsoDate(value) {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseLocalDateOnly(value) {
   const text = normalizeText(value)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null
@@ -138,6 +202,10 @@ const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"
 const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"
 const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 function isStudentNewsReportSchemaUnavailableError(error) {
   const code = normalizeText(error?.code).toUpperCase()
   if (code === "P2021") return true
@@ -154,6 +222,10 @@ function isStudentNewsReportSchemaUnavailableError(error) {
   )
 }
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 function isStudentNewsReviewSchemaUnavailableError(error) {
   return (
     isStudentNewsReportSchemaUnavailableError(error)
@@ -172,10 +244,17 @@ function isStudentNewsReviewSchemaUnavailableError(error) {
   )
 }
 
+/**
+ * @returns {string}
+ */
 function createStudentNewsFallbackId() {
   return `news-${Date.now().toString(36)}-${crypto.randomBytes(6).toString("hex")}`
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [entry]
+ * @returns {Record<string, unknown> | null}
+ */
 function normalizeStudentNewsFallbackEntry(entry = {}) {
   const studentRefId = normalizeText(entry?.studentRefId)
   const reportDate = normalizeText(entry?.reportDate)
@@ -227,6 +306,9 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
   }
 }
 
+/**
+ * @returns {Array<Record<string, unknown>>}
+ */
 function readStudentNewsFallbackEntries() {
   if (!fs.existsSync(STUDENT_NEWS_FALLBACK_FILE_PATH)) return []
   try {
@@ -245,6 +327,10 @@ function readStudentNewsFallbackEntries() {
   }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [entries]
+ * @returns {Array<Record<string, unknown>>}
+ */
 function writeStudentNewsFallbackEntries(entries = []) {
   const normalized = (Array.isArray(entries) ? entries : [])
     .map((entry) => normalizeStudentNewsFallbackEntry(entry))
@@ -258,6 +344,11 @@ function writeStudentNewsFallbackEntries(entries = []) {
   return normalized
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {{ startDate?: string, endDate?: string }} [options]
+ * @returns {Array<Record<string, unknown>>}
+ */
 function listStudentNewsReportsFromFallbackStore(studentRefId, { startDate = "", endDate = "" } = {}) {
   const id = normalizeText(studentRefId)
   const start = normalizeText(startDate)
@@ -274,6 +365,12 @@ function listStudentNewsReportsFromFallbackStore(studentRefId, { startDate = "",
     }))
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {string} reportDate
+ * @param {Record<string, unknown>} [payload]
+ * @returns {Record<string, unknown>}
+ */
 function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payload = {}) {
   const id = normalizeText(studentRefId)
   const dateKey = normalizeText(reportDate)
@@ -306,7 +403,24 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
   return normalized
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [entries]
+ * @returns {Map<string, {
+ *   reviewStatus: string,
+ *   reviewNote: string | null,
+ *   validationIssuesJson: Record<string, unknown> | null,
+ *   reviewedByUsername: string | null,
+ *   reviewedAt: string,
+ * }>}
+ */
 function buildStudentNewsFallbackOverlayIndex(entries = []) {
+  /** @type {Map<string, {
+   *   reviewStatus: string,
+   *   reviewNote: string | null,
+   *   validationIssuesJson: Record<string, unknown> | null,
+   *   reviewedByUsername: string | null,
+   *   reviewedAt: string,
+   * }>} */
   const index = new Map()
   const source = Array.isArray(entries) ? entries : []
   source.forEach((entry) => {
@@ -329,6 +443,23 @@ function buildStudentNewsFallbackOverlayIndex(entries = []) {
   return index
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [row]
+ * @param {Map<string, {
+ *   reviewStatus: string,
+ *   reviewNote: string | null,
+ *   validationIssuesJson: Record<string, unknown> | null,
+ *   reviewedByUsername: string | null,
+ *   reviewedAt: string,
+ * }>} [overlayIndex]
+ * @returns {{
+ *   reviewStatus: string,
+ *   reviewNote: string | null,
+ *   validationIssuesJson: Record<string, unknown> | null,
+ *   reviewedByUsername: string | null,
+ *   reviewedAt: string,
+ * } | null}
+ */
 function resolveStudentNewsFallbackReviewOverlay(row = {}, overlayIndex = null) {
   const index = overlayIndex instanceof Map ? overlayIndex : new Map()
   const rowId = normalizeText(row?.id)

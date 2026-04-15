@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import process from "node:process"
 
@@ -11,6 +12,16 @@ function normalizeText(value) {
   return String(value).trim()
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   apply: boolean,
+ *   deleteDuplicates: boolean,
+ *   deleteAllAutoImport: boolean,
+ *   limit: number,
+ *   help: boolean,
+ * }}
+ */
 function parseArgs(argv = []) {
   const args = {
     apply: false,
@@ -73,6 +84,10 @@ Examples:
 `)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeExerciseTitle(value) {
   let title = normalizeText(value)
   if (!title) return ""
@@ -111,6 +126,10 @@ function canonicalizeExerciseTitle(value) {
   return normalizeText(title)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function isoKey(value) {
   if (!(value instanceof Date)) {
     const parsed = new Date(value)
@@ -121,6 +140,11 @@ function isoKey(value) {
   return value.toISOString()
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @param {string} canonicalName
+ * @returns {string}
+ */
 function recordGroupKey(row, canonicalName) {
   return [
     normalizeText(row?.studentRefId),
@@ -132,6 +156,10 @@ function recordGroupKey(row, canonicalName) {
   ].join("|")
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @returns {number[]}
+ */
 function scoreRecordRank(row) {
   const score = Number(row?.score)
   const maxScore = Number(row?.maxScore)
@@ -155,6 +183,11 @@ function scoreRecordRank(row) {
   ]
 }
 
+/**
+ * @param {Record<string, unknown>} [leftRow]
+ * @param {Record<string, unknown>} [rightRow]
+ * @returns {number}
+ */
 function compareRanksDesc(leftRow, rightRow) {
   const left = scoreRecordRank(leftRow)
   const right = scoreRecordRank(rightRow)
@@ -165,6 +198,10 @@ function compareRanksDesc(leftRow, rightRow) {
   return normalizeText(rightRow?.id).localeCompare(normalizeText(leftRow?.id))
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [rows]
+ * @returns {string[]}
+ */
 function selectDuplicateDeletes(rows = []) {
   const groups = new Map()
   rows.forEach((row) => {
@@ -187,6 +224,9 @@ function selectDuplicateDeletes(rows = []) {
   return deleteIds
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function run() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) {
@@ -224,6 +264,7 @@ async function run() {
     },
   })
 
+  /** @type {Array<{ id: string, assignmentName: string, className: string }>} */
   const updates = []
   rows.forEach((row) => {
     const originalAssignment = normalizeText(row?.assignmentName)

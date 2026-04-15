@@ -1,3 +1,4 @@
+// @ts-check
 import { buildAssignmentDashboardSlices, listAssignmentTemplates } from "./assignment-templates.mjs"
 import {
   isAssignmentTrackingGradeRecord,
@@ -8,15 +9,27 @@ import {
 } from "./student-records.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizePositiveInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -24,6 +37,10 @@ function normalizePositiveInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function normalizeDate(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -32,12 +49,22 @@ function normalizeDate(value) {
   return parsed
 }
 
+/**
+ * @param {unknown} value
+ * @param {Date} [fallback]
+ * @returns {Date}
+ */
 function normalizeDateValue(value, fallback = new Date()) {
   const parsed = value instanceof Date ? new Date(value.getTime()) : normalizeDate(value)
   if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) return parsed
   return fallback instanceof Date ? new Date(fallback.getTime()) : new Date()
 }
 
+/**
+ * @param {number} numerator
+ * @param {number} denominator
+ * @returns {number | null}
+ */
 function percentage(numerator, denominator) {
   if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return null
   return Number(((numerator / denominator) * 100).toFixed(2))
@@ -47,14 +74,26 @@ const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfDay(value = new Date()) {
   const source = normalizeDateValue(value)
   const shifted = shiftToFixedTimeZone(source)
@@ -62,11 +101,20 @@ function startOfDay(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function endOfDay(value = new Date()) {
   const date = startOfDay(value)
   return new Date(date.getTime() + ONE_DAY_MS - 1)
 }
 
+/**
+ * @param {unknown} dateValue
+ * @param {unknown} [days]
+ * @returns {Date}
+ */
 function addDays(dateValue, days = 0) {
   const date = startOfDay(dateValue)
   const shifted = shiftToFixedTimeZone(date)
@@ -74,6 +122,10 @@ function addDays(dateValue, days = 0) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfWeek(value = new Date()) {
   const date = startOfDay(value)
   const shifted = shiftToFixedTimeZone(date)
@@ -84,11 +136,19 @@ function startOfWeek(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function endOfWeek(value = new Date()) {
   const date = startOfWeek(value)
   return new Date(date.getTime() + (ONE_DAY_MS * 7) - 1)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfYear(value = new Date()) {
   const source = normalizeDateValue(value)
   const shifted = shiftToFixedTimeZone(source)
@@ -96,6 +156,10 @@ function startOfYear(value = new Date()) {
   return shiftFromFixedTimeZone(new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0)))
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : normalizeDate(value)
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
@@ -106,6 +170,10 @@ function toLocalIsoDate(value) {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * @param {unknown} comments
+ * @returns {number}
+ */
 function parseTardyMinutes(comments) {
   const text = normalizeLower(comments)
   if (!text) return 0
@@ -116,12 +184,20 @@ function parseTardyMinutes(comments) {
   return 0
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number}
+ */
 function normalizeOutstandingWeekCount(value) {
   const parsed = Number.parseInt(String(value), 10)
   if (!Number.isFinite(parsed)) return 0
   return Math.max(0, parsed)
 }
 
+/**
+ * @param {{ absences?: unknown, late30Plus?: unknown }} [options]
+ * @returns {number}
+ */
 function normalizeAttendanceRiskScore({ absences = 0, late30Plus = 0 } = {}) {
   const normalizedAbsences = Math.max(0, Number.parseInt(String(absences), 10) || 0)
   const normalizedLate30Plus = Math.max(0, Number.parseInt(String(late30Plus), 10) || 0)
@@ -167,6 +243,10 @@ const LEVEL_DEFINITIONS = [
   },
 ]
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
@@ -183,6 +263,10 @@ const LEVEL_ALIAS_MAP = (() => {
   return map
 })()
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -190,6 +274,11 @@ function canonicalizeLevel(value) {
   return LEVEL_ALIAS_MAP.get(key) || text
 }
 
+/**
+ * @param {unknown} left
+ * @param {unknown} right
+ * @returns {number}
+ */
 function compareKnownLevelOrder(left, right) {
   const leftCanonical = canonicalizeLevel(left)
   const rightCanonical = canonicalizeLevel(right)
@@ -205,6 +294,10 @@ function compareKnownLevelOrder(left, right) {
   return leftCanonical.localeCompare(rightCanonical)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (!value) return null
   const date = new Date(value)
@@ -212,6 +305,11 @@ function parseDateOrNull(value) {
   return date
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [student]
+ * @param {string} [context]
+ * @returns {{ eaglesId: string, studentNumber: number }}
+ */
 function assertStudentIdentityIntegrity(student = {}, context = "student") {
   const eaglesId = normalizeText(student?.eaglesId)
   const studentNumber = normalizePositiveInteger(student?.studentNumber)
@@ -231,6 +329,10 @@ function assertStudentIdentityIntegrity(student = {}, context = "student") {
   }
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toIsoDateText(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
   if (!(date instanceof Date)) return ""
@@ -238,6 +340,11 @@ function toIsoDateText(value) {
   return toLocalIsoDate(date)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [left]
+ * @param {Record<string, unknown> | null | undefined} [right]
+ * @returns {number}
+ */
 function compareByDueAtThenCoverageThenName(left = {}, right = {}) {
   const leftDueAt = parseDateOrNull(left.dueAt)
   const rightDueAt = parseDateOrNull(right.dueAt)
@@ -250,6 +357,11 @@ function compareByDueAtThenCoverageThenName(left = {}, right = {}) {
   return normalizeText(left.assignmentName).localeCompare(normalizeText(right.assignmentName))
 }
 
+/**
+ * @param {unknown} targetDate
+ * @param {unknown} [now]
+ * @returns {number | null}
+ */
 function daysUntilDateFloor(targetDate, now = new Date()) {
   const dueAt = parseDateOrNull(targetDate)
   if (!(dueAt instanceof Date)) return null
@@ -259,6 +371,10 @@ function daysUntilDateFloor(targetDate, now = new Date()) {
   return Math.round((dueDay.valueOf() - today.valueOf()) / msPerDay)
 }
 
+/**
+ * @param {Array<{ outstandingWeek?: unknown, fullName?: unknown }>} [entries]
+ * @returns {Array<{ outstandingWeek?: unknown, fullName?: unknown }>}
+ */
 export function selectAtRiskStudentsFromSignals(entries = []) {
   const rows = Array.isArray(entries) ? entries.slice() : []
   return rows
@@ -271,6 +387,10 @@ export function selectAtRiskStudentsFromSignals(entries = []) {
     })
 }
 
+/**
+ * @param {Array<{ absences?: unknown, late30Plus?: unknown, fullName?: unknown }>} [entries]
+ * @returns {Array<{ absences?: unknown, late30Plus?: unknown, fullName?: unknown }>}
+ */
 export function selectAttendanceRiskStudentsFromSignals(entries = []) {
   const rows = Array.isArray(entries) ? entries.slice() : []
   return rows
@@ -287,6 +407,27 @@ export function selectAttendanceRiskStudentsFromSignals(entries = []) {
     })
 }
 
+/**
+ * @param {Array<{
+ *   studentRefId?: unknown,
+ *   level?: unknown,
+ *   assignmentName?: unknown,
+ *   dueAt?: unknown,
+ *   submittedAt?: unknown,
+ *   homeworkCompleted?: unknown,
+ * }>} [entries]
+ * @param {unknown} [now]
+ * @returns {Array<{
+ *   level: string,
+ *   assignmentName: string,
+ *   dueAt: string,
+ *   students: Array<{
+ *     studentRefId: string,
+ *     completed: boolean,
+ *     submittedAt: string,
+ *   }>,
+ * }>}
+ */
 export function selectCurrentNotYetDueAssignmentsByLevel(entries = [], now = new Date()) {
   const rows = Array.isArray(entries) ? entries : []
   const asOf = parseDateOrNull(now) || new Date()
@@ -352,6 +493,22 @@ export function selectCurrentNotYetDueAssignmentsByLevel(entries = [], now = new
     .sort((left, right) => compareKnownLevelOrder(left.level, right.level))
 }
 
+/**
+ * @param {{
+ *   rows?: Array<{ studentRefId?: unknown, level?: unknown, status?: unknown, comments?: unknown }>,
+ *   profileByStudentRefId?: Map<string, Record<string, unknown>>,
+ *   totalEnrollment?: number,
+ *   asOfDate?: unknown,
+ * }} [options]
+ * @returns {{
+ *   todayAttendanceCount: number,
+ *   todayAbsences: number,
+ *   tardy10PlusCount: number,
+ *   tardy30PlusCount: number,
+ *   totalTodayTracked: number,
+ *   attendanceByLevel: Map<string, number>,
+ * }}
+ */
 export function summarizeTodayAttendanceForDashboard({
   rows = [],
   profileByStudentRefId = new Map(),
@@ -443,6 +600,74 @@ export function summarizeTodayAttendanceForDashboard({
   }
 }
 
+/**
+ * @returns {Promise<{
+ *   generatedAt: string,
+ *   today: {
+ *     date: string,
+ *     totalStudents: number,
+ *     totalEnrollment: number,
+ *     attendancePercentOfEnrollment: number,
+ *     unenrolledYtd: number,
+ *     attendance: number,
+ *     absences: number,
+ *     tardy10PlusPercent: number,
+ *     tardy30PlusPercent: number,
+ *   },
+ *   weeklyAssignmentCompletion: Array<{
+ *     index: number,
+ *     day: string,
+ *     date: string,
+ *     studentsWithAssignments: number,
+ *     studentsCompletedAll: number,
+ *   }>,
+ *   classEnrollmentAttendance: Array<{
+ *     level: string,
+ *     enrolled: number,
+ *     attendanceToday: number,
+ *   }>,
+ *   assignments: {
+ *     total: number,
+ *     completedOnTime: number,
+ *     completedLate: number,
+ *     outstanding: number,
+ *     outstandingYtd: number,
+ *     currentActiveLevels: number,
+ *     currentTargetedStudents: number,
+ *     currentCompletedStudents: number,
+ *     currentPendingStudents: number,
+ *     currentCompletionPercent: number,
+ *     currentDueSoonLevels: number,
+ *     currentDueSoonPendingStudents: number,
+ *   },
+ *   currentAssignmentMeta: unknown[],
+ *   enrollmentOnlyLevels: string[],
+ *   atRiskWeek: {
+ *     total: number,
+ *     students: unknown[],
+ *   },
+ *   attendanceRiskWeek: {
+ *     total: number,
+ *     students: unknown[],
+ *   },
+ *   levelCompletion: Array<{
+ *     level: string,
+ *     enrolledStudents: number,
+ *     totalAssignments: number,
+ *     completedAssignments: number,
+ *     outstandingAssignments: number,
+ *     completedStudents: number,
+ *     completionPercent: number,
+ *     assignmentName: string,
+ *     dueAt: string,
+ *     daysUntilDue: number | null,
+ *     uncompletedStudents: unknown[],
+ *   }>,
+ *   parentReports: {
+ *     total: number,
+ *   },
+ * }>}
+ */
 export async function getAdminDashboardSummary() {
   const prisma = await getSharedPrismaClient()
   const now = new Date()

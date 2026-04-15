@@ -1,5 +1,35 @@
+// @ts-check
 import crypto from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+
+/**
+ * @typedef {{
+ *   jobType?: unknown,
+ *   status?: unknown,
+ *   dedupeKey?: unknown,
+ *   payloadJson?: unknown,
+ *   resultJson?: unknown,
+ *   lastError?: unknown,
+ *   attempts?: unknown,
+ *   availableAt?: unknown,
+ *   lockedAt?: unknown,
+ *   lockedBy?: unknown,
+ *   completedAt?: unknown,
+ *   createdAt?: unknown,
+ *   updatedAt?: unknown,
+ * }} JobRecordLike
+ *
+ * @typedef {{
+ *   jobTypes?: Array<unknown>,
+ *   take?: unknown,
+ *   workerId?: unknown,
+ * }} ClaimJobOptions
+ *
+ * @typedef {{
+ *   maxAttempts?: unknown,
+ *   retryDelayMs?: unknown,
+ * }} FailJobOptions
+ */
 
 export const ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL = "announcement-email"
 export const ASYNC_SIDE_EFFECT_JOB_TYPE_REPORT_CARD_PDF = "report-card-pdf"
@@ -55,6 +85,25 @@ function createJobId() {
   return `job-${crypto.randomUUID()}`
 }
 
+/**
+ * @param {JobRecordLike} [record]
+ * @returns {{
+ *   id: string,
+ *   jobType: string,
+ *   status: string,
+ *   dedupeKey: string,
+ *   payloadJson: Record<string, unknown>,
+ *   resultJson: Record<string, unknown>,
+ *   lastError: string,
+ *   attempts: number,
+ *   availableAt: string,
+ *   lockedAt: string,
+ *   lockedBy: string,
+ *   completedAt: string,
+ *   createdAt: string,
+ *   updatedAt: string,
+ * }}
+ */
 function mapJobRecord(record = {}) {
   return {
     id: normalizeText(record.id),
@@ -118,6 +167,12 @@ function cloneMemoryJob(job) {
   return mapJobRecord({ ...job, payloadJson: normalizePayload(job.payloadJson), resultJson: normalizeResult(job.resultJson) })
 }
 
+/**
+ * @param {unknown} jobType
+ * @param {Record<string, unknown>} [payload]
+ * @param {{ dedupeKey?: unknown, availableAt?: unknown }} [options]
+ * @returns {Promise<ReturnType<typeof mapJobRecord>>}
+ */
 export async function enqueueAsyncSideEffectJob(jobType, payload = {}, options = {}) {
   const normalizedJobType = normalizeJobType(jobType)
   const normalizedPayload = normalizePayload(payload)
@@ -241,6 +296,10 @@ export async function enqueueAsyncSideEffectJob(jobType, payload = {}, options =
   }
 }
 
+/**
+ * @param {ClaimJobOptions} [options]
+ * @returns {Promise<Array<ReturnType<typeof mapJobRecord>>>}
+ */
 export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, workerId = "" } = {}) {
   const limit = Math.max(1, Math.min(Number.parseInt(String(take || 10), 10) || 10, 100))
   const normalizedJobTypes = Array.from(
@@ -320,6 +379,11 @@ export async function claimAsyncSideEffectJobs({ jobTypes = [], take = 10, worke
   return claimed
 }
 
+/**
+ * @param {unknown} jobId
+ * @param {Record<string, unknown>} [resultJson]
+ * @returns {Promise<ReturnType<typeof mapJobRecord> | null>}
+ */
 export async function completeAsyncSideEffectJob(jobId, resultJson = {}) {
   const id = normalizeText(jobId)
   const result = normalizeResult(resultJson)
@@ -356,6 +420,12 @@ export async function completeAsyncSideEffectJob(jobId, resultJson = {}) {
   return mapJobRecord(updated)
 }
 
+/**
+ * @param {unknown} jobId
+ * @param {unknown} error
+ * @param {FailJobOptions} [options]
+ * @returns {Promise<ReturnType<typeof mapJobRecord> | null>}
+ */
 export async function failAsyncSideEffectJob(jobId, error, options = {}) {
   const id = normalizeText(jobId)
   if (!id) return null

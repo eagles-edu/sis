@@ -1,3 +1,5 @@
+// @ts-check
+
 import fs from "node:fs"
 import path from "node:path"
 import xlsx from "xlsx"
@@ -15,32 +17,60 @@ const BLANK_TEMPLATE_OUTPUT = "schemas/student-import-template.xlsx"
 const FILLED_TEMPLATE_OUTPUT = "docs/students/student-import-template.filled-example.xlsx"
 const STUDENT_NUMBER_FLOOR = 100
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeHeader(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizePositiveInteger(value) {
   const parsed = Number.parseInt(normalizeText(value), 10)
   if (!Number.isFinite(parsed) || parsed < 1) return null
   return parsed
 }
 
+/**
+ * @param {string} filePath
+ * @returns {void}
+ */
 function ensureDirectoryForFile(filePath) {
   const dir = path.dirname(filePath)
   fs.mkdirSync(dir, { recursive: true })
 }
 
+/**
+ * @param {unknown} studentNumber
+ * @returns {string}
+ */
 function buildEaglesIdFromNumber(studentNumber) {
   const parsed = normalizePositiveInteger(studentNumber)
   if (!parsed) return ""
   return `SIS-${String(parsed).padStart(6, "0")}`
 }
 
+/**
+ * @param {string} filePath
+ * @returns {{
+ *   firstSheetName: string,
+ *   headerRow: string[],
+ *   rows: Array<Record<string, unknown>>,
+ * }}
+ */
 function readWorkbookRows(filePath) {
   const workbook = xlsx.readFile(filePath)
   const firstSheetName = workbook.SheetNames[0]
@@ -61,6 +91,10 @@ function readWorkbookRows(filePath) {
   }
 }
 
+/**
+ * @param {string} schemaFile
+ * @returns {string[]}
+ */
 function readSchemaHeaders(schemaFile) {
   const { headerRow } = readWorkbookRows(schemaFile)
   const cleaned = headerRow.map((entry) => normalizeText(entry)).filter(Boolean)
@@ -69,6 +103,10 @@ function readSchemaHeaders(schemaFile) {
   return cleaned
 }
 
+/**
+ * @param {string[]} schemaHeaders
+ * @returns {Record<string, string[]>}
+ */
 function buildHeaderAliasMap(schemaHeaders) {
   const map = Object.fromEntries(
     schemaHeaders.map((header) => [header, [header]])
@@ -88,6 +126,11 @@ function buildHeaderAliasMap(schemaHeaders) {
   return map
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @param {string[]} [aliases]
+ * @returns {unknown}
+ */
 function rowValueByAliases(row, aliases = []) {
   const aliasSet = new Set(aliases.map((entry) => normalizeHeader(entry)))
   for (const [key, value] of Object.entries(row || {})) {
@@ -98,6 +141,12 @@ function rowValueByAliases(row, aliases = []) {
   return ""
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} rows
+ * @param {string[]} schemaHeaders
+ * @param {Record<string, string[]>} aliasMap
+ * @returns {Array<Record<string, unknown>>}
+ */
 function buildOrderedRows(rows, schemaHeaders, aliasMap) {
   return (Array.isArray(rows) ? rows : [])
     .map((row) => {
@@ -110,6 +159,11 @@ function buildOrderedRows(rows, schemaHeaders, aliasMap) {
     .filter((row) => schemaHeaders.some((header) => normalizeText(row[header])))
 }
 
+/**
+ * @param {string} baseId
+ * @param {Set<string>} usedKeys
+ * @returns {string}
+ */
 function ensureUniqueEaglesId(baseId, usedKeys) {
   const normalizedBase = normalizeText(baseId)
   if (!normalizedBase) return ""
@@ -122,6 +176,20 @@ function ensureUniqueEaglesId(baseId, usedKeys) {
   return candidate
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} rows
+ * @param {number} [floor]
+ * @returns {{
+ *   rows: Array<Record<string, unknown>>,
+ *   rowsMissingEaglesIdBefore: number[],
+ *   rowsMissingStudentNumberBefore: number[],
+ *   rowsMissingEaglesIdAfter: number[],
+ *   rowsMissingStudentNumberAfter: number[],
+ *   rowsMovedLegacyIdFromStudentNumber: number[],
+ *   rowsWithAutoFilledEaglesId: number[],
+ *   rowsWithAutoFilledStudentNumber: number[],
+ * }}
+ */
 function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
   const dataRows = Array.isArray(rows) ? rows.map((row) => ({ ...row })) : []
 
@@ -203,6 +271,13 @@ function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
   }
 }
 
+/**
+ * @param {string} filePath
+ * @param {string} sheetName
+ * @param {Array<Record<string, unknown>>} rows
+ * @param {string[]} headers
+ * @returns {void}
+ */
 function writeWorkbookFromRows(filePath, sheetName, rows, headers) {
   ensureDirectoryForFile(filePath)
   const workbook = xlsx.utils.book_new()
@@ -211,6 +286,11 @@ function writeWorkbookFromRows(filePath, sheetName, rows, headers) {
   xlsx.writeFile(workbook, filePath)
 }
 
+/**
+ * @param {string} filePath
+ * @param {string[]} schemaHeaders
+ * @returns {void}
+ */
 function writeBlankTemplate(filePath, schemaHeaders) {
   ensureDirectoryForFile(filePath)
   const workbook = xlsx.utils.book_new()
@@ -219,6 +299,11 @@ function writeBlankTemplate(filePath, schemaHeaders) {
   xlsx.writeFile(workbook, filePath)
 }
 
+/**
+ * @param {string} filePath
+ * @param {string[]} schemaHeaders
+ * @returns {void}
+ */
 function writeFilledExampleTemplate(filePath, schemaHeaders) {
   const baseRows = [
     {
@@ -272,6 +357,27 @@ function writeFilledExampleTemplate(filePath, schemaHeaders) {
   writeWorkbookFromRows(filePath, "Students_Example", rows, schemaHeaders)
 }
 
+/**
+ * @param {{
+ *   sourceFile: string,
+ *   sourceSheet: string,
+ *   sourceHeaderRow: string[],
+ *   schemaHeaders: string[],
+ *   aliasMap: Record<string, string[]>,
+ *   orderedRows: Array<Record<string, unknown>>,
+ *   identityFixed: {
+ *     rows: Array<Record<string, unknown>>,
+ *     rowsMissingEaglesIdBefore: number[],
+ *     rowsMissingStudentNumberBefore: number[],
+ *     rowsMissingEaglesIdAfter: number[],
+ *     rowsMissingStudentNumberAfter: number[],
+ *     rowsMovedLegacyIdFromStudentNumber: number[],
+ *     rowsWithAutoFilledEaglesId: number[],
+ *     rowsWithAutoFilledStudentNumber: number[],
+ *   },
+ * }} input
+ * @returns {Record<string, unknown>}
+ */
 function buildAudit({
   sourceFile,
   sourceSheet,

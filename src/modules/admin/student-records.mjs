@@ -1,19 +1,36 @@
+// @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -21,12 +38,20 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeFloat(value) {
   if (value === undefined || value === null || value === "") return null
   const parsed = Number.parseFloat(String(value))
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {boolean | null}
+ */
 function normalizeBoolean(value) {
   if (value === undefined || value === null || value === "") return null
   if (typeof value === "boolean") return value
@@ -38,6 +63,10 @@ function normalizeBoolean(value) {
   return null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -45,10 +74,18 @@ function parseDateOrNull(value) {
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function normalizeDate(value) {
   return parseDateOrNull(value)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeQuarter(value) {
   const text = normalizeLower(value)
   if (!text) return null
@@ -59,6 +96,10 @@ function normalizeQuarter(value) {
   return null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeAttendanceStatus(value) {
   const text = normalizeLower(value)
   if (!text) return "present"
@@ -69,17 +110,31 @@ function normalizeAttendanceStatus(value) {
   return "present"
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizePhoneDigits(value) {
   return normalizeText(value).replace(/[^0-9]/g, "")
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {void}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
 }
 
+/**
+ * @returns {Promise<import("@prisma/client").PrismaClient>}
+ */
 async function getPrismaClient() {
   return getSharedPrismaClient()
 }
@@ -89,12 +144,21 @@ const GRADE_RECORD_SOURCE_ASSIGNMENT = "assignment"
 const GRADE_RECORD_SOURCE_MANUAL = "manual"
 const GRADE_RECORD_SOURCE_AUTO_IMPORT = "auto-import"
 
+/**
+ * @param {Record<string, unknown> | null | undefined} record
+ * @returns {boolean}
+ */
 function isCompletedGradeRecord(record) {
   if (record?.homeworkCompleted === true) return true
   if (record?.submittedAt) return true
   return false
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} record
+ * @param {Date} [asOfDate]
+ * @returns {boolean}
+ */
 function isOutstandingGradeRecord(record, asOfDate = new Date()) {
   if (isCompletedGradeRecord(record)) return false
   if (!record?.dueAt) return true
@@ -103,6 +167,10 @@ function isOutstandingGradeRecord(record, asOfDate = new Date()) {
   return dueAt <= asOfDate
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} record
+ * @returns {boolean}
+ */
 function isLateCompletedGradeRecord(record) {
   if (!isCompletedGradeRecord(record)) return false
   if (record?.homeworkOnTime === false) return true
@@ -117,6 +185,10 @@ function isLateCompletedGradeRecord(record) {
   return false
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} record
+ * @returns {boolean}
+ */
 function isOnTimeCompletedGradeRecord(record) {
   if (!isCompletedGradeRecord(record)) return false
   if (record?.homeworkOnTime === true) return true
@@ -131,6 +203,10 @@ function isOnTimeCompletedGradeRecord(record) {
   return Boolean(record?.submittedAt && !record?.dueAt)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeGradeRecordSource(value) {
   const source = normalizeLower(value)
   if (
@@ -143,6 +219,11 @@ function normalizeGradeRecordSource(value) {
   return ""
 }
 
+/**
+ * @param {unknown} left
+ * @param {unknown} right
+ * @returns {boolean}
+ */
 function datesShareExactTimestamp(left, right) {
   const leftDate = parseDateOrNull(left)
   const rightDate = parseDateOrNull(right)
@@ -150,6 +231,10 @@ function datesShareExactTimestamp(left, right) {
   return leftDate.valueOf() === rightDate.valueOf()
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [record]
+ * @returns {boolean}
+ */
 function isAutoImportedExerciseGradeRecord(record = {}) {
   const assignmentName = normalizeLower(record?.assignmentName)
   const className = normalizeLower(record?.className)
@@ -164,11 +249,19 @@ function isAutoImportedExerciseGradeRecord(record = {}) {
   return Boolean(isStandaloneCompletedImport && (hasImportComment || hasExerciseScore))
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [record]
+ * @returns {boolean}
+ */
 function isAssignmentTrackingGradeRecord(record = {}) {
   if (!record || typeof record !== "object") return false
   return !isAutoImportedExerciseGradeRecord(record)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [record]
+ * @returns {string}
+ */
 function inferGradeRecordSource(record = {}) {
   const explicitSource = normalizeGradeRecordSource(record?.source)
   if (explicitSource) return explicitSource
@@ -185,6 +278,10 @@ function inferGradeRecordSource(record = {}) {
   return GRADE_RECORD_SOURCE_MANUAL
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [record]
+ * @returns {Record<string, unknown> | null}
+ */
 export function mapGradeRecordForApi(record = {}) {
   if (!record || typeof record !== "object") return record
   return {
@@ -195,6 +292,10 @@ export function mapGradeRecordForApi(record = {}) {
 
 export { isCompletedGradeRecord, isOutstandingGradeRecord, isLateCompletedGradeRecord, isOnTimeCompletedGradeRecord, isAssignmentTrackingGradeRecord }
 
+/**
+ * @param {string} phoneNumber
+ * @returns {Promise<{ phoneDigits: string, total: number, items: unknown[] }>}
+ */
 export async function findFamilyByEmergencyPhone(phoneNumber) {
   const prisma = await getPrismaClient()
   const digits = normalizePhoneDigits(phoneNumber)
@@ -231,6 +332,20 @@ export async function findFamilyByEmergencyPhone(phoneNumber) {
   }
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {{
+ *   id?: string,
+ *   className?: string,
+ *   schoolYear?: string,
+ *   quarter?: string,
+ *   attendanceDate?: string | Date,
+ *   level?: string,
+ *   status?: string,
+ *   comments?: string,
+ * }} [payload]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function saveAttendanceRecord(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)
@@ -277,6 +392,11 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
   })
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {string} attendanceId
+ * @returns {Promise<{ deleted: true, id: string }>}
+ */
 export async function deleteAttendanceRecord(studentRefId, attendanceId) {
   const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)
@@ -292,6 +412,28 @@ export async function deleteAttendanceRecord(studentRefId, attendanceId) {
   return { deleted: true, id }
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {{
+ *   id?: string,
+ *   className?: string,
+ *   schoolYear?: string,
+ *   quarter?: string,
+ *   assignmentName?: string,
+ *   level?: string,
+ *   dueAt?: string | Date,
+ *   submittedAt?: string | Date,
+ *   score?: number,
+ *   maxScore?: number,
+ *   homeworkCompleted?: boolean,
+ *   homeworkOnTime?: boolean,
+ *   behaviorScore?: number,
+ *   participationScore?: number,
+ *   inClassScore?: number,
+ *   comments?: string,
+ * }} [payload]
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
 export async function saveGradeRecord(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)
@@ -348,6 +490,11 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
   return mapGradeRecordForApi(created)
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {string} gradeRecordId
+ * @returns {Promise<{ deleted: true, id: string }>}
+ */
 export async function deleteGradeRecord(studentRefId, gradeRecordId) {
   const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)

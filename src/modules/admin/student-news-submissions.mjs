@@ -1,3 +1,6 @@
+// @ts-check
+import process from "node:process"
+import { URL } from "node:url"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import {
   addAwaitingReReviewMarker,
@@ -15,22 +18,39 @@ import {
   upsertStudentNewsReportInFallbackStore,
 } from "./student-news-fallback.mjs"
 
+/** @type {Promise<import("@prisma/client").PrismaClient> | null} */
 let prismaClientPromise = null
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   const text = normalizeText(value)
@@ -39,6 +59,11 @@ function parseDateOrNull(value) {
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
+/**
+ * @param {unknown} value
+ * @param {Date} [fallback]
+ * @returns {Date}
+ */
 function normalizeDateValue(value, fallback = new Date()) {
   const parsed = value instanceof Date ? new Date(value.getTime()) : parseDateOrNull(value)
   if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) return parsed
@@ -49,14 +74,26 @@ const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfDay(value = new Date()) {
   const source = normalizeDateValue(value)
   const shifted = shiftToFixedTimeZone(source)
@@ -64,11 +101,19 @@ function startOfDay(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function endOfDay(value = new Date()) {
   const date = startOfDay(value)
   return new Date(date.getTime() + ONE_DAY_MS - 1)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfWeekSunday(value = new Date()) {
   const date = startOfDay(value)
   const shifted = shiftToFixedTimeZone(date)
@@ -77,6 +122,10 @@ function startOfWeekSunday(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
@@ -87,6 +136,10 @@ function toLocalIsoDate(value) {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseLocalDateOnly(value) {
   const text = normalizeText(value)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null
@@ -102,6 +155,11 @@ function parseLocalDateOnly(value) {
   return date
 }
 
+/**
+ * @param {unknown} dateValue
+ * @param {unknown} [days]
+ * @returns {Date}
+ */
 function addDays(dateValue, days = 0) {
   const date = startOfDay(dateValue)
   const shifted = shiftToFixedTimeZone(date)
@@ -109,6 +167,10 @@ function addDays(dateValue, days = 0) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeHttpUrl(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -123,6 +185,11 @@ function normalizeHttpUrl(value) {
   }
 }
 
+/**
+ * @param {unknown} value
+ * @param {unknown} [maxLength]
+ * @returns {{ value: string, truncated: boolean }}
+ */
 function clampText(value, maxLength = 0) {
   const text = normalizeText(value)
   const max = Number.parseInt(String(maxLength), 10) || 0
@@ -134,17 +201,35 @@ function clampText(value, maxLength = 0) {
   }
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {true}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return true
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
 }
 
+/**
+ * @param {unknown} prisma
+ * @param {string} delegateName
+ * @param {string} methodName
+ * @returns {boolean}
+ */
 function hasPrismaDelegateMethod(prisma, delegateName, methodName) {
-  return Boolean(prisma?.[delegateName] && typeof prisma[delegateName][methodName] === "function")
+  const typedPrisma = /** @type {Record<string, Record<string, unknown>> | null | undefined} */ (prisma)
+  const delegate = typedPrisma?.[delegateName]
+  return Boolean(delegate && typeof delegate[methodName] === "function")
 }
 
+/**
+ * @returns {boolean}
+ */
 function isStudentAdminStoreEnabled() {
   const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
   const envFlag = normalizeLower(process.env.STUDENT_ADMIN_STORE_ENABLED)
@@ -154,8 +239,12 @@ function isStudentAdminStoreEnabled() {
   return hasDatabaseUrl
 }
 
+/**
+ * @returns {Promise<import("@prisma/client").PrismaClient>}
+ */
 async function getPrismaClient() {
   if (!isStudentAdminStoreEnabled()) {
+    /** @type {Error & { statusCode?: number }} */
     const error = new Error("Student admin store is disabled")
     error.statusCode = 503
     throw error
@@ -175,6 +264,7 @@ async function getPrismaClient() {
 const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"
 const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"
 const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"
+/** @type {Record<string, string>} */
 const STUDENT_NEWS_REVIEW_STATUS_COLOR = {
   [STUDENT_NEWS_REVIEW_STATUS_APPROVED]: "green",
   [STUDENT_NEWS_REVIEW_STATUS_SUBMITTED]: "amber",
@@ -197,6 +287,11 @@ const STUDENT_NEWS_FIELD_MAX_LENGTHS = Object.freeze({
   biasAssessment: 5000,
 })
 
+/**
+ * @param {unknown} value
+ * @param {string} [fallback]
+ * @returns {string}
+ */
 function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) {
   const token = normalizeLower(value)
   if (!token) return fallback
@@ -224,17 +319,36 @@ function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_
   return fallback
 }
 
+/**
+ * @param {unknown} status
+ * @returns {string}
+ */
 function resolveStudentNewsStatusColor(status) {
   const normalized = normalizeStudentNewsReviewStatus(status, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
   return STUDENT_NEWS_REVIEW_STATUS_COLOR[normalized] || "amber"
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number}
+ */
 function normalizeStudentNewsDays(value) {
   const parsed = Number.parseInt(String(value), 10)
   if (!Number.isFinite(parsed)) return STUDENT_NEWS_DEFAULT_DAYS
   return Math.max(7, Math.min(parsed, STUDENT_NEWS_MAX_DAYS))
 }
 
+/**
+ * @param {unknown} [now]
+ * @returns {{
+ *   opensAt: string,
+ *   closesAt: string,
+ *   reportDate: string,
+ *   todayDate: string,
+ *   isOpen: boolean,
+ *   closedReason: string,
+ * }}
+ */
 export function resolveStudentNewsSubmissionWindow(now = new Date()) {
   const currentDayStart = startOfDay(parseDateOrNull(now) || new Date())
   const todayDate = toLocalIsoDate(currentDayStart)
@@ -248,6 +362,35 @@ export function resolveStudentNewsSubmissionWindow(now = new Date()) {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [row]
+ * @returns {{
+ *   id: string,
+ *   studentRefId: string,
+ *   reportDate: string,
+ *   sourceLink: string,
+ *   articleTitle: string,
+ *   byline: string,
+ *   articleDateline: string,
+ *   leadSynopsis: string,
+ *   actionActor: string,
+ *   actionAffected: string,
+ *   actionWhere: string,
+ *   actionWhat: string,
+ *   actionWhy: string,
+ *   biasAssessment: string,
+ *   submittedAt: string,
+ *   reviewStatus: string,
+ *   awaitingReReview: boolean,
+ *   statusColor: string,
+ *   reviewNote: string,
+ *   validationIssuesJson: Record<string, unknown>,
+ *   failedFields: string[],
+ *   fixedFields: string[],
+ *   reviewedByUsername: string,
+ *   reviewedAt: string,
+ * }}
+ */
 export function mapStudentNewsReportRow(row = {}) {
   const sourceLink = normalizeText(row?.sourceLink || row?.sourceUrl)
   const articleTitle = normalizeText(row?.articleTitle || row?.headline)
@@ -255,7 +398,9 @@ export function mapStudentNewsReportRow(row = {}) {
   const biasAssessment = normalizeText(row?.biasAssessment || row?.reflection)
   const reviewStatus = normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
   const awaitingReReview = resolveStudentNewsAwaitingReReview(row)
-  const validationIssues = normalizeValidationIssueMap(row?.validationIssuesJson)
+  const validationIssues = normalizeValidationIssueMap(
+    /** @type {Record<string, unknown> | null | undefined} */ (row?.validationIssuesJson)
+  )
   const pendingFieldKeys = Object.keys(validationIssues).filter(
     (fieldKey) => normalizeLower(validationIssues?.[fieldKey]?.status) !== "fixed"
   )
@@ -281,7 +426,7 @@ export function mapStudentNewsReportRow(row = {}) {
     reviewStatus,
     awaitingReReview,
     statusColor: resolveStudentNewsStatusColor(reviewStatus),
-    reviewNote: stripAwaitingReReviewMarker(row?.reviewNote),
+    reviewNote: stripAwaitingReReviewMarker(/** @type {string | undefined} */ (row?.reviewNote)),
     validationIssuesJson: validationIssues,
     failedFields: pendingFieldKeys,
     fixedFields: fixedFieldKeys,
@@ -290,12 +435,31 @@ export function mapStudentNewsReportRow(row = {}) {
   }
 }
 
+/**
+ * @param {{
+ *   now?: unknown,
+ *   reports?: unknown[],
+ *   days?: number,
+ * }} [options]
+ * @returns {Array<{
+ *   date: string,
+ *   status: string,
+ *   color: string,
+ *   statusColor: string,
+ *   reviewStatus: string,
+ *   awaitingReReview: boolean,
+ *   canSubmit: boolean,
+ *   submittedAt: string,
+ * }>}
+ */
 export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], days = STUDENT_NEWS_DEFAULT_DAYS } = {}) {
   const targetDays = normalizeStudentNewsDays(days)
   const window = resolveStudentNewsSubmissionWindow(now)
   const byDate = new Map(
     (Array.isArray(reports) ? reports : [])
-      .map((entry) => mapStudentNewsReportRow(entry))
+      .map((entry) =>
+        mapStudentNewsReportRow(/** @type {Record<string, unknown> | null | undefined} */ (entry))
+      )
       .filter((entry) => normalizeText(entry?.reportDate))
       .map((entry) => [entry.reportDate, entry])
   )
@@ -326,6 +490,20 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
   return rows
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {{ now?: unknown, days?: number }} [options]
+ * @returns {Promise<{
+ *   generatedAt: string,
+ *   studentRefId: string,
+ *   days: number,
+ *   window: ReturnType<typeof resolveStudentNewsSubmissionWindow>,
+ *   openReport: ReturnType<typeof mapStudentNewsReportRow> | null,
+ *   statusSummary: { submitted: number, approved: number, revisionRequested: number },
+ *   items: Array<ReturnType<typeof mapStudentNewsReportRow>>,
+ *   calendar: Array<ReturnType<typeof buildStudentNewsCalendarRows>[number]>,
+ * }>}
+ */
 export async function listStudentNewsCalendar(studentRefId, { now = new Date(), days = STUDENT_NEWS_DEFAULT_DAYS } = {}) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
@@ -340,6 +518,7 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
     startDate: toLocalIsoDate(reportStart),
     endDate: toLocalIsoDate(reportEnd),
   }
+  /** @type {Array<Record<string, unknown>>} */
   let reports
   if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findMany")) {
     try {
@@ -392,6 +571,12 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
   }
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {Record<string, unknown>} [payload]
+ * @param {{ now?: unknown, validationConfig?: Record<string, unknown> }} [options]
+ * @returns {Promise<{ generatedAt: string, item: ReturnType<typeof mapStudentNewsReportRow> }>}
+ */
 export async function saveStudentNewsReport(
   studentRefId,
   payload = {},
@@ -419,9 +604,11 @@ export async function saveStudentNewsReport(
   assertWithStatus(Boolean(reportDateText), 400, "reportDate is required")
   const reportDate = parseLocalDateOnly(reportDateText)
   assertWithStatus(reportDate instanceof Date && !Number.isNaN(reportDate.valueOf()), 400, "Invalid reportDate")
-  const reportDateRangeStart = new Date(reportDate.getTime())
+  const reportDateDate = /** @type {Date} */ (reportDate)
+  const reportDateRangeStart = new Date(reportDateDate.getTime())
   const reportDateRangeEnd = new Date(reportDateRangeStart.getTime() + 24 * 60 * 60 * 1000)
 
+  /** @type {Record<string, unknown> | null} */
   let existing = null
   let fallbackOnly = false
   if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")) {
@@ -430,7 +617,7 @@ export async function saveStudentNewsReport(
         where: {
           studentRefId_reportDate: {
             studentRefId: id,
-            reportDate,
+            reportDate: reportDateDate,
           },
         },
         select: {
@@ -510,7 +697,8 @@ export async function saveStudentNewsReport(
     const currentWeekStart = startOfWeekSunday(nowDate)
     const weeklyResubmitCutoff = new Date(currentWeekStart.getTime() + (ONE_DAY_MS * 7))
     const isBeforeWeeklyResubmitCutoff = nowDate < weeklyResubmitCutoff
-    const isCurrentWeekReportDate = reportDate >= currentWeekStart && reportDate < weeklyResubmitCutoff
+    // const isCurrentWeekReportDate = reportDate >= currentWeekStart && reportDate < weeklyResubmitCutoff
+    const isCurrentWeekReportDate = reportDateDate >= currentWeekStart && reportDateDate < weeklyResubmitCutoff
     const isApproved = existingStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED
     assertWithStatus(
       isBeforeWeeklyResubmitCutoff && isCurrentWeekReportDate,
@@ -535,9 +723,14 @@ export async function saveStudentNewsReport(
   }, {
     validationConfig,
   })
-  const previousIssues = normalizeValidationIssueMap(existing?.validationIssuesJson)
+  const previousIssues = normalizeValidationIssueMap(
+    /** @type {Record<string, unknown> | null | undefined} */ (existing?.validationIssuesJson)
+  )
   const updatedIssues = updateStudentNewsValidationIssues(previousIssues, compliance)
-  const mergedReviewNote = mergeStudentNewsReviewNoteWithCompliance(existing?.reviewNote, updatedIssues.issues)
+  const mergedReviewNote = mergeStudentNewsReviewNoteWithCompliance(
+    /** @type {string | undefined} */ (existing?.reviewNote),
+    updatedIssues.issues
+  )
   const hasFailures = Object.keys(compliance.failedFields || {}).length > 0
   const isResubmission = Boolean(existing)
   const existingStatus = normalizeStudentNewsReviewStatus(
@@ -572,6 +765,7 @@ export async function saveStudentNewsReport(
     reviewedByUsername: null,
   }
 
+  /** @type {Record<string, unknown> | null} */
   let saved = null
   const existingId = normalizeText(existing?.id)
   if (
@@ -585,7 +779,7 @@ export async function saveStudentNewsReport(
         data: reportData,
       })
     } catch (error) {
-      const code = normalizeText(error?.code).toUpperCase()
+      const code = normalizeText(/** @type {{ code?: unknown }} */ (error)?.code).toUpperCase()
       if (
         isStudentNewsReportSchemaUnavailableError(error)
         || isStudentNewsReviewSchemaUnavailableError(error)
@@ -607,13 +801,13 @@ export async function saveStudentNewsReport(
         where: {
           studentRefId_reportDate: {
             studentRefId: id,
-            reportDate,
+            reportDate: reportDateDate,
           },
         },
         update: reportData,
         create: {
           studentRefId: id,
-          reportDate,
+          reportDate: reportDateDate,
           ...reportData,
         },
       })

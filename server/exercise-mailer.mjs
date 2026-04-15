@@ -1,3 +1,4 @@
+// @ts-check
 // server/exercise-mailer.mjs
 import { createRequire } from "node:module"
 import fs from "node:fs"
@@ -65,6 +66,7 @@ const {
   setStudentAdminRuntimeHealthProvider,
 } = await import("./student-admin-routes.mjs")
 
+/** @type {import("nodemailer") | null} */
 let nodemailer = null
 
 try {

@@ -1,33 +1,80 @@
-// src/modules/admin/users.mjs
-
+// @ts-check
 import crypto from "node:crypto"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
+/**
+ * @typedef {{
+ *   username?: unknown,
+ *   role?: unknown,
+ *   password?: unknown,
+ *   passwordHash?: unknown,
+ * }} AdminUserPayload
+ *
+ * @typedef {{
+ *   currentUsername?: unknown,
+ * }} DeleteAdminUserOptions
+ *
+ * @typedef {{
+ *   id: string,
+ *   username: string,
+ *   role: string,
+ *   createdAt?: unknown,
+ *   updatedAt?: unknown,
+ * }} AdminUserEntity
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} statusCode
+ * @param {string} message
+ * @returns {asserts condition}
+ */
 function assertWithStatus(condition, statusCode, message) {
   if (condition) return
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = statusCode
   throw error
 }
 
+/**
+ * @param {unknown} value
+ * @returns {"admin" | "teacher"}
+ */
 function normalizeRole(value) {
   const role = normalizeLower(value)
   return role === "admin" ? "admin" : "teacher"
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeUsername(value) {
   return normalizeLower(value)
 }
 
+/**
+ * @param {unknown} hashValue
+ * @returns {{ saltHex: string, digestHex: string } | null}
+ */
 function parseScryptHash(hashValue) {
   const hashText = normalizeText(hashValue)
   const parts = hashText.split("$")
@@ -45,6 +92,10 @@ function parseScryptHash(hashValue) {
   }
 }
 
+/**
+ * @param {unknown} password
+ * @returns {string}
+ */
 function hashScryptPassword(password) {
   const normalizedPassword = normalizeText(password)
   assertWithStatus(normalizedPassword.length >= 8, 400, "password must be at least 8 characters")
@@ -56,6 +107,11 @@ function hashScryptPassword(password) {
   return `scrypt$${saltHex}$${digestHex}`
 }
 
+/**
+ * @param {AdminUserPayload} [payload]
+ * @param {{ required?: boolean }} [options]
+ * @returns {string}
+ */
 function resolvePasswordHash(payload = {}, { required = false } = {}) {
   const providedHash = normalizeText(payload.passwordHash)
   if (providedHash) {
@@ -76,6 +132,11 @@ function resolvePasswordHash(payload = {}, { required = false } = {}) {
   return hashScryptPassword(password)
 }
 
+/**
+ * @param {unknown} password
+ * @param {unknown} hashValue
+ * @returns {boolean}
+ */
 export function verifyScryptPassword(password, hashValue) {
   const parsed = parseScryptHash(hashValue)
   if (!parsed) return false
@@ -87,6 +148,16 @@ export function verifyScryptPassword(password, hashValue) {
   return crypto.timingSafeEqual(expected, derived)
 }
 
+/**
+ * @param {AdminUserEntity | null | undefined} user
+ * @returns {{
+ *   id: string,
+ *   username: string,
+ *   role: string,
+ *   createdAt?: unknown,
+ *   updatedAt?: unknown,
+ * } | null}
+ */
 function mapAdminUser(user) {
   if (!user) return null
   return {
@@ -100,6 +171,9 @@ function mapAdminUser(user) {
 
 let prismaClientPromise = null
 
+/**
+ * @returns {boolean}
+ */
 function isStudentAdminStoreEnabled() {
   const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
   const envFlag = normalizeLower(process.env.STUDENT_ADMIN_STORE_ENABLED)
@@ -109,6 +183,9 @@ function isStudentAdminStoreEnabled() {
   return hasDatabaseUrl
 }
 
+/**
+ * @returns {Promise<unknown>}
+ */
 async function getPrismaClient() {
   if (!isStudentAdminStoreEnabled()) {
     const error = new Error("Student admin store is disabled")
@@ -128,6 +205,11 @@ async function getPrismaClient() {
   }
 }
 
+/**
+ * @param {unknown} prisma
+ * @param {string} [excludedUserId]
+ * @returns {Promise<void>}
+ */
 async function ensureAdminRoleRemains(prisma, excludedUserId = "") {
   const count = await prisma.adminUser.count({
     where: {
@@ -144,12 +226,24 @@ async function ensureAdminRoleRemains(prisma, excludedUserId = "") {
   assertWithStatus(count > 0, 409, "At least one admin account is required")
 }
 
+/**
+ * @returns {Promise<boolean>}
+ */
 export async function hasAdminUsersConfigured() {
   const prisma = await getPrismaClient()
   const count = await prisma.adminUser.count()
   return count > 0
 }
 
+/**
+ * @param {unknown} username
+ * @returns {Promise<{
+ *   id: string,
+ *   username: string,
+ *   role: string,
+ *   passwordHash: string,
+ * } | null>}
+ */
 export async function findAdminUserForLogin(username) {
   const prisma = await getPrismaClient()
   const requestedUsername = normalizeUsername(username)
@@ -171,6 +265,19 @@ export async function findAdminUserForLogin(username) {
   }
 }
 
+/**
+ * @param {{ query?: unknown, role?: unknown }} [filters]
+ * @returns {Promise<{
+ *   total: number,
+ *   items: Array<{
+ *     id: string,
+ *     username: string,
+ *     role: string,
+ *     createdAt?: unknown,
+ *     updatedAt?: unknown,
+ *   } | null>,
+ * }>}
+ */
 export async function listAdminUsers({ query = "", role = "" } = {}) {
   const prisma = await getPrismaClient()
   const queryText = normalizeText(query)
@@ -204,6 +311,10 @@ export async function listAdminUsers({ query = "", role = "" } = {}) {
   }
 }
 
+/**
+ * @param {AdminUserPayload} [payload]
+ * @returns {Promise<{ user: ReturnType<typeof mapAdminUser> }>}
+ */
 export async function createAdminUser(payload = {}) {
   const prisma = await getPrismaClient()
 
@@ -235,6 +346,11 @@ export async function createAdminUser(payload = {}) {
   }
 }
 
+/**
+ * @param {unknown} userId
+ * @param {AdminUserPayload} [payload]
+ * @returns {Promise<{ user: ReturnType<typeof mapAdminUser> }>}
+ */
 export async function updateAdminUserById(userId, payload = {}) {
   const prisma = await getPrismaClient()
   const id = normalizeText(userId)
@@ -293,6 +409,11 @@ export async function updateAdminUserById(userId, payload = {}) {
   }
 }
 
+/**
+ * @param {unknown} userId
+ * @param {DeleteAdminUserOptions} [options]
+ * @returns {Promise<{ deleted: true, id: string }>}
+ */
 export async function deleteAdminUserById(userId, options = {}) {
   const prisma = await getPrismaClient()
   const id = normalizeText(userId)

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
@@ -20,6 +21,12 @@ if (depsOnly && openapiOnly) {
 
 mkdirSync(outDir, { recursive: true })
 
+/**
+ * @param {string} command
+ * @param {string[]} commandArgs
+ * @param {boolean} [captureStdout]
+ * @returns {string}
+ */
 function runOrThrow(command, commandArgs, captureStdout = false) {
   const result = spawnSync(command, commandArgs, {
     cwd: repoRoot,
@@ -36,6 +43,12 @@ function runOrThrow(command, commandArgs, captureStdout = false) {
   return captureStdout ? result.stdout || "" : ""
 }
 
+/**
+ * @param {string} command
+ * @param {string[]} commandArgs
+ * @param {string} input
+ * @returns {string}
+ */
 function runWithInputOrThrow(command, commandArgs, input) {
   const result = spawnSync(command, commandArgs, {
     cwd: repoRoot,
@@ -53,16 +66,29 @@ function runWithInputOrThrow(command, commandArgs, input) {
   return result.stdout || ""
 }
 
+/**
+ * @param {string} svg
+ * @returns {string}
+ */
 function rewriteDependencySvgLinks(svg) {
   return svg.replace(/(xlink:href|href)="(server|tools)\//g, '$1="./$2/')
 }
 
+/**
+ * @param {string} filename
+ * @param {string} content
+ * @returns {void}
+ */
 function writeArtifact(filename, content) {
   const target = path.join(outDir, filename)
   writeFileSync(target, content, "utf8")
   console.log(`[map] wrote ${path.relative(repoRoot, target)}`)
 }
 
+/**
+ * @param {string} relativePath
+ * @returns {void}
+ */
 function sanitizeOpenApiHtmlOutput(relativePath) {
   const target = path.join(repoRoot, relativePath)
   if (!existsSync(target)) return
@@ -74,6 +100,10 @@ function sanitizeOpenApiHtmlOutput(relativePath) {
   }
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -83,6 +113,9 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;")
 }
 
+/**
+ * @returns {Array<{ id: string, label: string, path: string, summary: string }>}
+ */
 function getWorkflowDefinitions() {
   return [
     {
@@ -112,6 +145,10 @@ function getWorkflowDefinitions() {
   ]
 }
 
+/**
+ * @param {{ generatedAtIso: string }} input
+ * @returns {string}
+ */
 function buildMappingPortalHtml({ generatedAtIso }) {
   const generatedAt = escapeHtml(generatedAtIso)
   const workflows = getWorkflowDefinitions()

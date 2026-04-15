@@ -21,7 +21,7 @@
 - Assignment templates are backend-owned.
 - Admin, parent, and student portals are all active.
 - The current extraction focus is the UI decomposition boundary in Phase 6 after the async side-effects outbox/worker cutover.
-- The first Phase 6 islands are the queue-hub page wiring in `web-asset/admin/queue-hub-island.mjs` and the overview news queue wiring in `web-asset/admin/overview-news-queue-island.mjs`.
+- Phase 6 now includes the queue-hub page wiring in `web-asset/admin/queue-hub-island.mjs`, the overview news queue wiring in `web-asset/admin/overview-news-queue-island.mjs`, the news review wiring in `web-asset/admin/news-review-island.mjs`, the profile wiring in `web-asset/admin/profile-island.mjs`, the parent-tracking wiring in `web-asset/admin/parent-tracking-island.mjs`, the attendance/grade controls in `web-asset/admin/attendance-grade-controls-island.mjs`, the assignment/level-reminder controls in `web-asset/admin/assignment-controls-island.mjs`, the school setup/profile-field layout controls in `web-asset/admin/school-setup-branding-island.mjs`, and the import/settings/report controls in `web-asset/admin/report-settings-island.mjs`.
 
 ## Test Status
 

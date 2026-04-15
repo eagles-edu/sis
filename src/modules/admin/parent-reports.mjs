@@ -1,21 +1,38 @@
 // src/modules/admin/parent-reports.mjs
+// @ts-check
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -23,12 +40,20 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeFloat(value) {
   if (value === undefined || value === null || value === "") return null
   const parsed = Number.parseFloat(String(value))
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function normalizeDate(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -37,11 +62,19 @@ function normalizeDate(value) {
   return parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   return normalizeDate(value)
 }
 
+/**
+ * @param {unknown[]} values
+ * @returns {number | null}
+ */
 function average(values) {
   const numeric = values.filter((entry) => Number.isFinite(entry))
   if (!numeric.length) return null
@@ -49,11 +82,20 @@ function average(values) {
   return Number((total / numeric.length).toFixed(2))
 }
 
+/**
+ * @param {number} numerator
+ * @param {number} denominator
+ * @returns {number | null}
+ */
 function percentage(numerator, denominator) {
   if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return null
   return Number(((numerator / denominator) * 100).toFixed(2))
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeQuarter(value) {
   const text = normalizeLower(value)
   if (!text) return null
@@ -64,8 +106,15 @@ function normalizeQuarter(value) {
   return null
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {true}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return true
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
@@ -110,11 +159,16 @@ const LEVEL_DEFINITIONS = [
   },
 ]
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
 
 const LEVEL_ALIAS_MAP = (() => {
+  /** @type {Map<string, string>} */
   const map = new Map()
   LEVEL_DEFINITIONS.forEach((entry) => {
     const variants = [entry.canonical, ...(entry.aliases || [])]
@@ -140,6 +194,10 @@ const PARENT_REPORT_BUNDLE_MARKER_RE = /\[\[SIS-REPORT-BUNDLE-V2:([A-Za-z0-9_-]+
 const PARENT_REPORT_VISION_STATUS_ALLOWED = new Set(["no-issues", "needs-check", "monitor"])
 const PARENT_REPORT_PARTICIPATION_POINTS_MAX = 32
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -147,6 +205,10 @@ function canonicalizeLevel(value) {
   return LEVEL_ALIAS_MAP.get(key) || text
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number}
+ */
 function knownLevelIndex(value) {
   const canonical = canonicalizeLevel(value)
   return LEVEL_DEFINITIONS.findIndex(
@@ -154,6 +216,10 @@ function knownLevelIndex(value) {
   )
 }
 
+/**
+ * @param {unknown} [levelName]
+ * @returns {boolean}
+ */
 function shouldRestrictParentReportDigitalSkills(levelName = "") {
   const currentIndex = knownLevelIndex(levelName)
   const minimumIndex = knownLevelIndex(PARENT_REPORT_DIGITAL_SKILL_MIN_LEVEL)
@@ -167,6 +233,12 @@ export function normalizeReportParticipationPoints(value) {
   return Math.max(0, Math.min(PARENT_REPORT_PARTICIPATION_POINTS_MAX, parsed))
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [value]
+ * @param {string} [requiredPrefix]
+ * @param {Set<string> | null} [blockedKeys]
+ * @returns {Record<string, string>}
+ */
 function normalizeParentReportScoreMap(value = {}, requiredPrefix = "", blockedKeys = null) {
   if (!value || typeof value !== "object") return {}
   return Object.entries(value).reduce((acc, [key, rawValue]) => {
@@ -181,6 +253,11 @@ function normalizeParentReportScoreMap(value = {}, requiredPrefix = "", blockedK
   }, {})
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [value]
+ * @param {Set<string> | null} [blockedKeys]
+ * @returns {Record<string, string>}
+ */
 function normalizeParentReportRecommendationMap(value = {}, blockedKeys = null) {
   if (!value || typeof value !== "object") return {}
   return Object.entries(value).reduce((acc, [key, rawValue]) => {
@@ -194,6 +271,15 @@ function normalizeParentReportRecommendationMap(value = {}, blockedKeys = null) 
   }, {})
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [value]
+ * @param {{ level?: string, className?: string }} [options]
+ * @returns {{
+ *   skillScores: Record<string, string>,
+ *   conductScores: Record<string, string>,
+ *   recommendations: Record<string, string>,
+ * } | null}
+ */
 export function normalizeParentReportRubricPayload(value = {}, options = {}) {
   if (!value || typeof value !== "object") return null
   const currentLevel = canonicalizeLevel(options?.level || options?.className || "")
@@ -213,11 +299,19 @@ export function normalizeParentReportRubricPayload(value = {}, options = {}) {
   }
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {string | null}
+ */
 function normalizeParentReportVisionStatus(value = "") {
   const normalized = normalizeText(value)
   return PARENT_REPORT_VISION_STATUS_ALLOWED.has(normalized) ? normalized : null
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [value]
+ * @returns {Record<string, unknown> | null}
+ */
 function normalizeParentReportMetaPayload(value = {}) {
   if (!value || typeof value !== "object") return null
   const pastDueHomeworkCountValue =
@@ -274,6 +368,12 @@ function normalizeParentReportMetaPayload(value = {}) {
   return normalized
 }
 
+/**
+ * @param {string} [comment]
+ * @param {Record<string, unknown> | null} [rubricPayload]
+ * @param {Record<string, unknown> | null} [metaPayload]
+ * @returns {string}
+ */
 export function encodeParentReportCommentBundle(comment = "", rubricPayload = null, metaPayload = null) {
   const normalizedComment = normalizeNullableText(comment)
   const normalizedRubricPayload = normalizeParentReportRubricPayload(rubricPayload)
@@ -297,6 +397,18 @@ export function encodeParentReportCommentBundle(comment = "", rubricPayload = nu
   return normalizedComment ? `${normalizedComment}\n${marker}` : marker
 }
 
+/**
+ * @param {string} [value]
+ * @returns {{
+ *   comment: string | null,
+ *   rubricPayload: {
+ *     skillScores: Record<string, string>,
+ *     conductScores: Record<string, string>,
+ *     recommendations: Record<string, string>,
+ *   } | null,
+ *   metaPayload: Record<string, unknown> | null,
+ * }}
+ */
 export function decodeParentReportCommentBundle(value = "") {
   const rawText = normalizeText(value)
   if (!rawText) return { comment: null, rubricPayload: null, metaPayload: null }
@@ -349,6 +461,10 @@ export function decodeParentReportCommentBundle(value = "") {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} report
+ * @returns {Record<string, unknown> | null | undefined}
+ */
 export function mapParentClassReport(report) {
   if (!report) return report
   const decoded = decodeParentReportCommentBundle(report.comments)
@@ -362,18 +478,33 @@ export function mapParentClassReport(report) {
   }
 }
 
+/**
+ * @param {unknown} error
+ * @param {string} [argumentName]
+ * @returns {boolean}
+ */
 function isUnknownPrismaArgumentError(error, argumentName = "") {
   const message = normalizeLower(error?.message || error)
   const normalizedArgument = normalizeLower(argumentName)
   return message.includes("unknown argument") && message.includes(`\`${normalizedArgument}\``)
 }
 
+/**
+ * @param {unknown} error
+ * @param {string} [fieldName]
+ * @returns {boolean}
+ */
 function isUnknownPrismaFieldError(error, fieldName = "") {
   const message = normalizeLower(error?.message || error)
   const normalizedField = normalizeLower(fieldName)
   return message.includes("unknown field") && message.includes(`\`${normalizedField}\``)
 }
 
+/**
+ * @param {unknown} error
+ * @param {string} [columnName]
+ * @returns {boolean}
+ */
 function isMissingPrismaColumnError(error, columnName = "") {
   const message = normalizeLower(error?.message || error)
   const normalizedColumn = normalizeLower(columnName)
@@ -381,6 +512,10 @@ function isMissingPrismaColumnError(error, columnName = "") {
   return message.includes("column") && message.includes(normalizedColumn) && message.includes("does not exist")
 }
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 export function isLegacyParentReportApprovedAtSchemaError(error) {
   return (
     isUnknownPrismaArgumentError(error, "approvedAt")
@@ -388,6 +523,10 @@ export function isLegacyParentReportApprovedAtSchemaError(error) {
   )
 }
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 export function isLegacyParentReportParticipationPointsSchemaError(error) {
   return (
     isUnknownPrismaArgumentError(error, "participationPointsAward")
@@ -396,6 +535,10 @@ export function isLegacyParentReportParticipationPointsSchemaError(error) {
   )
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [data]
+ * @returns {Record<string, unknown>}
+ */
 function stripLegacyParentReportFields(data = {}) {
   if (!data || typeof data !== "object") return {}
   const next = { ...data }
@@ -403,10 +546,18 @@ function stripLegacyParentReportFields(data = {}) {
   return next
 }
 
+/**
+ * @returns {Promise<import("@prisma/client").PrismaClient>}
+ */
 async function getPrismaClient() {
   return getSharedPrismaClient()
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {Record<string, unknown>} [payload]
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
 export async function saveParentClassReport(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)
@@ -521,6 +672,11 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
   return mapParentClassReport(upsertedReport)
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {string} reportId
+ * @returns {Promise<{ deleted: true, id: string }>}
+ */
 export async function deleteParentClassReport(studentRefId, reportId) {
   const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)
@@ -536,6 +692,11 @@ export async function deleteParentClassReport(studentRefId, reportId) {
   return { deleted: true, id }
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {Record<string, unknown>} [payload]
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
 export async function generateParentClassReportFromGrades(studentRefId, payload = {}) {
   const prisma = await getPrismaClient()
   const studentRef = normalizeText(studentRefId)
@@ -588,6 +749,11 @@ export async function generateParentClassReportFromGrades(studentRefId, payload 
   return saveParentClassReport(studentRef, reportPayload)
 }
 
+/**
+ * @param {string} reportId
+ * @param {Record<string, unknown>} [payload]
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
 export async function approveParentClassReport(reportId, payload = {}) {
   const prisma = await getPrismaClient()
   const id = normalizeText(reportId)

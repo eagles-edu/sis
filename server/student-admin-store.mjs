@@ -1,3 +1,4 @@
+// @ts-check
 // server/student-admin-store.mjs
 
 import crypto from "node:crypto"
@@ -436,6 +437,9 @@ function normalizeProfilePayload(payload = {}) {
 
 let prismaClientPromise = null
 
+/**
+ * @returns {boolean}
+ */
 export function isStudentAdminStoreEnabled() {
   const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
   const envFlag = normalizeLower(process.env.STUDENT_ADMIN_STORE_ENABLED)
@@ -984,6 +988,12 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [payload]
+ * @param {string} [studentRefId]
+ * @param {{ skipFilterCacheInvalidation?: boolean }} [options]
+ * @returns {Promise<{ action: string, student: unknown }>}
+ */
 async function saveStudent(payload = {}, studentRefId = "", options = {}) {
   const prisma = await getPrismaClient()
   const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
@@ -999,6 +1009,10 @@ async function saveStudent(payload = {}, studentRefId = "", options = {}) {
   }
 }
 
+/**
+ * @param {string} studentRefId
+ * @returns {Promise<{ deleted: true, studentRefId: string }>}
+ */
 async function deleteStudent(studentRefId) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
@@ -1019,6 +1033,24 @@ async function deleteStudent(studentRefId) {
   return { deleted: true, studentRefId: id }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [rows]
+ * @returns {Promise<{
+ *   processed: number,
+ *   created: number,
+ *   updated: number,
+ *   failed: number,
+ *   autoFilledEaglesIds: number,
+ *   autoFilledStudentNumbers: number,
+ *   strictIdentity: boolean,
+ *   committed: boolean,
+ *   partiallyCommitted: boolean,
+ *   errors: Array<Record<string, unknown>>,
+ *   rowResults: Array<Record<string, unknown>>,
+ *   logFields: Array<string>,
+ *   logs: Array<Record<string, unknown>>,
+ * }>}
+ */
 async function importStudentsFromRows(rows = []) {
   assertWithStatus(Array.isArray(rows), 400, "rows must be an array")
   assertWithStatus(rows.length > 0, 400, "rows cannot be empty")

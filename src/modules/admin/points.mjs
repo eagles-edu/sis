@@ -1,4 +1,5 @@
 // src/modules/admin/points.mjs
+// @ts-check
 
 import {
   isLegacyParentReportApprovedAtSchemaError,
@@ -8,15 +9,27 @@ import {
 import { listStudents } from "./student-roster.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -24,11 +37,19 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function normalizeDate(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -37,18 +58,32 @@ function normalizeDate(value) {
   return parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   return normalizeDate(value)
 }
 
+/**
+ * @param {boolean} condition
+ * @param {number} status
+ * @param {string} message
+ * @returns {true}
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return true
+  /** @type {Error & { statusCode?: number }} */
   const error = new Error(message)
   error.statusCode = status
   throw error
 }
 
+/**
+ * @returns {string}
+ */
 function nowIso() {
   return new Date().toISOString()
 }
@@ -57,20 +92,37 @@ const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
+/**
+ * @param {unknown} value
+ * @param {Date} [fallback]
+ * @returns {Date}
+ */
 function normalizeDateValue(value, fallback = new Date()) {
   const parsed = value instanceof Date ? new Date(value.getTime()) : parseDateOrNull(value)
   if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) return parsed
   return fallback instanceof Date ? new Date(fallback.getTime()) : new Date()
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfDay(value = new Date()) {
   const source = normalizeDateValue(value)
   const shifted = shiftToFixedTimeZone(source)
@@ -78,11 +130,19 @@ function startOfDay(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function endOfDay(value = new Date()) {
   const date = startOfDay(value)
   return new Date(date.getTime() + ONE_DAY_MS - 1)
 }
 
+/**
+ * @param {unknown} [value]
+ * @returns {Date}
+ */
 function startOfAcademicYear(value = new Date()) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
   const now = date instanceof Date && !Number.isNaN(date.valueOf()) ? date : new Date()
@@ -92,6 +152,11 @@ function startOfAcademicYear(value = new Date()) {
   return shiftFromFixedTimeZone(new Date(Date.UTC(year, 7, 1, 0, 0, 0, 0)))
 }
 
+/**
+ * @param {unknown} dateValue
+ * @param {unknown} [days]
+ * @returns {Date}
+ */
 function addDays(dateValue, days = 0) {
   const date = startOfDay(dateValue)
   const shifted = shiftToFixedTimeZone(date)
@@ -99,6 +164,10 @@ function addDays(dateValue, days = 0) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
@@ -109,6 +178,10 @@ function toLocalIsoDate(value) {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * @param {unknown} dateValue
+ * @returns {number}
+ */
 function pointsEventDateValue(dateValue) {
   const parsed = parseDateOrNull(dateValue)
   return parsed instanceof Date ? parsed.valueOf() : 0
@@ -153,11 +226,16 @@ const LEVEL_DEFINITIONS = [
   },
 ]
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
 
 const LEVEL_ALIAS_MAP = (() => {
+  /** @type {Map<string, string>} */
   const map = new Map()
   LEVEL_DEFINITIONS.forEach((entry) => {
     const variants = [entry.canonical, ...(entry.aliases || [])]
@@ -169,6 +247,10 @@ const LEVEL_ALIAS_MAP = (() => {
   return map
 })()
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -176,6 +258,11 @@ function canonicalizeLevel(value) {
   return LEVEL_ALIAS_MAP.get(key) || text
 }
 
+/**
+ * @param {unknown} left
+ * @param {unknown} right
+ * @returns {number}
+ */
 function compareKnownLevelOrder(left, right) {
   const leftCanonical = canonicalizeLevel(left)
   const rightCanonical = canonicalizeLevel(right)
@@ -212,12 +299,20 @@ const STUDENT_POINTS_SORT_FIELDS = new Set([
 
 const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"
 
+/**
+ * @param {Record<string, unknown> | null | undefined} record
+ * @returns {boolean}
+ */
 function isCompletedGradeRecord(record) {
   if (record?.homeworkCompleted === true) return true
   if (record?.submittedAt) return true
   return false
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} record
+ * @returns {boolean}
+ */
 function isOnTimeCompletedGradeRecord(record) {
   if (!isCompletedGradeRecord(record)) return false
   if (record?.homeworkOnTime === true) return true
@@ -232,6 +327,11 @@ function isOnTimeCompletedGradeRecord(record) {
   return Boolean(record?.submittedAt && !record?.dueAt)
 }
 
+/**
+ * @param {unknown} left
+ * @param {unknown} right
+ * @returns {boolean}
+ */
 function datesShareExactTimestamp(left, right) {
   const leftDate = parseDateOrNull(left)
   const rightDate = parseDateOrNull(right)
@@ -239,6 +339,10 @@ function datesShareExactTimestamp(left, right) {
   return leftDate.valueOf() === rightDate.valueOf()
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [record]
+ * @returns {boolean}
+ */
 function isAutoImportedExerciseGradeRecord(record = {}) {
   const assignmentName = normalizeLower(record?.assignmentName)
   const className = normalizeLower(record?.className)
@@ -253,15 +357,41 @@ function isAutoImportedExerciseGradeRecord(record = {}) {
   return Boolean(isStandaloneCompletedImport && (hasImportComment || hasExerciseScore))
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} prisma
+ * @param {string} delegateName
+ * @param {string} methodName
+ * @returns {boolean}
+ */
 function hasPrismaDelegateMethod(prisma, delegateName, methodName) {
   return Boolean(prisma?.[delegateName] && typeof prisma[delegateName][methodName] === "function")
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} prisma
+ * @param {string} delegateName
+ * @param {unknown} query
+ * @returns {Promise<unknown[]>}
+ */
 function findManyOrEmpty(prisma, delegateName, query) {
   if (!hasPrismaDelegateMethod(prisma, delegateName, "findMany")) return Promise.resolve([])
   return prisma[delegateName].findMany(query)
 }
 
+/**
+ * @param {unknown[]} [rows]
+ * @returns {Array<{
+ *   id: string,
+ *   studentRefId: string,
+ *   eventType: string,
+ *   points: number,
+ *   occurredAt: string,
+ *   sourceType: string,
+ *   sourceId: string,
+ *   title: string,
+ *   details: string,
+ * }>}
+ */
 function mapStudentPointsEventsForGradeRecords(rows = []) {
   const source = Array.isArray(rows) ? rows : []
   return source
@@ -303,6 +433,20 @@ function mapStudentPointsEventsForGradeRecords(rows = []) {
     .filter(Boolean)
 }
 
+/**
+ * @param {unknown[]} [rows]
+ * @returns {Array<{
+ *   id: string,
+ *   studentRefId: string,
+ *   eventType: string,
+ *   points: number,
+ *   occurredAt: string,
+ *   sourceType: string,
+ *   sourceId: string,
+ *   title: string,
+ *   details: string,
+ * }>}
+ */
 function mapStudentPointsEventsForApprovedReports(rows = []) {
   const source = Array.isArray(rows) ? rows : []
   return source
@@ -326,6 +470,21 @@ function mapStudentPointsEventsForApprovedReports(rows = []) {
     .filter(Boolean)
 }
 
+/**
+ * @param {unknown[]} [rows]
+ * @returns {Array<{
+ *   id: string,
+ *   studentRefId: string,
+ *   eventType: string,
+ *   points: number,
+ *   occurredAt: string,
+ *   sourceType: string,
+ *   sourceId: string,
+ *   title: string,
+ *   details: string,
+ *   adjustedByUsername: string,
+ * }>}
+ */
 function mapStudentPointsEventsForAdjustments(rows = []) {
   const source = Array.isArray(rows) ? rows : []
   return source
@@ -354,6 +513,25 @@ function mapStudentPointsEventsForAdjustments(rows = []) {
     .filter(Boolean)
 }
 
+/**
+ * @param {{
+ *   gradeRecords?: unknown[],
+ *   approvedReports?: unknown[],
+ *   adjustments?: unknown[],
+ * }} [options]
+ * @returns {Array<{
+ *   id: string,
+ *   studentRefId: string,
+ *   eventType: string,
+ *   points: number,
+ *   occurredAt: string,
+ *   sourceType: string,
+ *   sourceId: string,
+ *   title: string,
+ *   details: string,
+ *   adjustedByUsername?: string,
+ * }>}
+ */
 export function buildStudentPointsEvents({
   gradeRecords = [],
   approvedReports = [],
@@ -372,11 +550,26 @@ export function buildStudentPointsEvents({
   return events
 }
 
+/**
+ * @param {unknown[]} [events]
+ * @returns {number}
+ */
 export function sumStudentPointsEvents(events = []) {
   const source = Array.isArray(events) ? events : []
   return source.reduce((sum, entry) => sum + (normalizeInteger(entry?.points) || 0), 0)
 }
 
+/**
+ * @param {Array<{ eventType?: string, points?: unknown, occurredAt?: unknown }>} [events]
+ * @returns {{
+ *   totalPoints: number,
+ *   scheduledOnTimeCount: number,
+ *   electiveCount: number,
+ *   approvedReportCount: number,
+ *   adjustmentTotal: number,
+ *   lastActivityAt: string,
+ * }}
+ */
 function studentPointsSummaryFromEvents(events = []) {
   const source = Array.isArray(events) ? events : []
   const totals = {
@@ -402,24 +595,70 @@ function studentPointsSummaryFromEvents(events = []) {
   return totals
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [student]
+ * @returns {string}
+ */
 function studentFullName(student = {}) {
   return normalizeText(student?.profile?.fullName || student?.profile?.englishName || student?.eaglesId)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [student]
+ * @returns {string}
+ */
 function studentLevelName(student = {}) {
   return canonicalizeLevel(student?.profile?.currentGrade || "") || ""
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeStudentPointsSortField(value) {
   const field = normalizeText(value)
   if (!field || !STUDENT_POINTS_SORT_FIELDS.has(field)) return "totalPoints"
   return field
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeStudentPointsSortDir(value) {
   return normalizeLower(value) === "asc" ? "asc" : "desc"
 }
 
+/**
+ * @param {Array<{
+ *   studentNumber?: unknown,
+ *   eaglesId?: unknown,
+ *   fullName?: unknown,
+ *   level?: unknown,
+ *   lastActivityAt?: unknown,
+ *   totalPoints?: unknown,
+ *   scheduledOnTimeCount?: unknown,
+ *   electiveCount?: unknown,
+ *   approvedReportCount?: unknown,
+ *   adjustmentTotal?: unknown,
+ * }>} [rows]
+ * @param {unknown} [sortField]
+ * @param {unknown} [sortDir]
+ * @returns {Array<{
+ *   studentRefId: string,
+ *   studentNumber: number | null,
+ *   eaglesId: string,
+ *   fullName: string,
+ *   englishName: string,
+ *   level: string,
+ *   totalPoints: number,
+ *   scheduledOnTimeCount: number,
+ *   electiveCount: number,
+ *   approvedReportCount: number,
+ *   adjustmentTotal: number,
+ *   lastActivityAt: string,
+ * }>}
+ */
 function sortStudentPointsRows(rows = [], sortField = "totalPoints", sortDir = "desc") {
   const source = Array.isArray(rows) ? rows.slice() : []
   const direction = normalizeStudentPointsSortDir(sortDir) === "asc" ? 1 : -1
@@ -445,6 +684,10 @@ function sortStudentPointsRows(rows = [], sortField = "totalPoints", sortDir = "
   return source
 }
 
+/**
+ * @param {{ startDate?: unknown, endDate?: unknown, now?: unknown }} [options]
+ * @returns {{ start: Date, end: Date, startDate: string, endDate: string }}
+ */
 function normalizePointsRange({ startDate = "", endDate = "", now = new Date() } = {}) {
   const fallbackNow = parseDateOrNull(now) || new Date()
   const parsedStart = parseDateOrNull(startDate) || startOfAcademicYear(fallbackNow)
@@ -464,6 +707,11 @@ function normalizePointsRange({ startDate = "", endDate = "", now = new Date() }
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} prisma
+ * @param {Record<string, unknown>} [idFilter]
+ * @returns {Promise<unknown[]>}
+ */
 async function loadApprovedParentReportRowsForPoints(prisma, idFilter = {}) {
   if (!hasPrismaDelegateMethod(prisma, "parentClassReport", "findMany")) return []
   try {
@@ -491,6 +739,11 @@ async function loadApprovedParentReportRowsForPoints(prisma, idFilter = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} prisma
+ * @param {string[]} [studentRefIds]
+ * @returns {Promise<{ gradeRecords: unknown[], approvedReports: unknown[], adjustments: unknown[] }>}
+ */
 async function loadPointsSourceRows(prisma, studentRefIds = []) {
   const ids = Array.isArray(studentRefIds) ? studentRefIds.map((entry) => normalizeText(entry)).filter(Boolean) : []
   const idFilter = ids.length ? { studentRefId: { in: ids } } : {}
@@ -529,7 +782,12 @@ async function loadPointsSourceRows(prisma, studentRefIds = []) {
   return { gradeRecords, approvedReports, adjustments }
 }
 
+/**
+ * @param {Array<{ studentRefId?: unknown }>} [events]
+ * @returns {Map<string, Array<ReturnType<typeof buildStudentPointsEvents>[number]>>}
+ */
 function groupStudentPointsEventsByStudentRefId(events = []) {
+  /** @type {Map<string, Array<ReturnType<typeof buildStudentPointsEvents>[number]>>} */
   const map = new Map()
   const source = Array.isArray(events) ? events : []
   source.forEach((event) => {
@@ -541,6 +799,11 @@ function groupStudentPointsEventsByStudentRefId(events = []) {
   return map
 }
 
+/**
+ * @param {Array<{ occurredAt?: unknown }>} [events]
+ * @param {{ start?: unknown, end?: unknown }} [range]
+ * @returns {Array<{ occurredAt?: unknown }>}
+ */
 function pointsEventsWithinRange(events = [], range = {}) {
   const startValue = pointsEventDateValue(range?.start)
   const endValue = pointsEventDateValue(range?.end)
@@ -552,12 +815,46 @@ function pointsEventsWithinRange(events = [], range = {}) {
   })
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} prisma
+ * @param {string} studentRefId
+ * @returns {Promise<number>}
+ */
 async function resolveStudentPointsTotal(prisma, studentRefId) {
   const sourceRows = await loadPointsSourceRows(prisma, [studentRefId])
   const events = buildStudentPointsEvents(sourceRows)
   return sumStudentPointsEvents(events)
 }
 
+/**
+ * @param {{
+ *   query?: string,
+ *   level?: string,
+ *   take?: number,
+ *   sortField?: string,
+ *   sortDir?: string,
+ * }} [options]
+ * @returns {Promise<{
+ *   generatedAt: string,
+ *   total: number,
+ *   sortField: string,
+ *   sortDir: string,
+ *   items: Array<{
+ *     studentRefId: string,
+ *     studentNumber: number | null,
+ *     eaglesId: string,
+ *     fullName: string,
+ *     englishName: string,
+ *     level: string,
+ *     totalPoints: number,
+ *     scheduledOnTimeCount: number,
+ *     electiveCount: number,
+ *     approvedReportCount: number,
+ *     adjustmentTotal: number,
+ *     lastActivityAt: string,
+ *   }>,
+ * }>}
+ */
 export async function listStudentPointsSnapshots({
   query = "",
   level = "",
@@ -611,6 +908,24 @@ export async function listStudentPointsSnapshots({
   }
 }
 
+/**
+ * @param {{ startDate?: string, endDate?: string }} [options]
+ * @returns {Promise<{
+ *   generatedAt: string,
+ *   startDate: string,
+ *   endDate: string,
+ *   totalPoints: number,
+ *   series: Array<{
+ *     date: string,
+ *     totalPoints: number,
+ *     scheduledOnTimePoints: number,
+ *     electivePoints: number,
+ *     reportParticipationPoints: number,
+ *     adjustmentPoints: number,
+ *     cumulativePoints: number,
+ *   }>,
+ * }>}
+ */
 export async function getSchoolPointsYtdSummary({ startDate = "", endDate = "" } = {}) {
   const prisma = await getSharedPrismaClient()
   const range = normalizePointsRange({ startDate, endDate, now: new Date() })
@@ -669,6 +984,35 @@ export async function getSchoolPointsYtdSummary({ startDate = "", endDate = "" }
   }
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {{ take?: number, startDate?: string, endDate?: string }} [options]
+ * @returns {Promise<{
+ *   generatedAt: string,
+ *   startDate: string,
+ *   endDate: string,
+ *   student: {
+ *     id: string,
+ *     eaglesId: string,
+ *     studentNumber: number | null,
+ *     fullName: string,
+ *     level: string,
+ *   },
+ *   summary: ReturnType<typeof studentPointsSummaryFromEvents>,
+ *   total: number,
+ *   items: Array<{
+ *     id: string,
+ *     studentRefId: string,
+ *     eventType: string,
+ *     points: number,
+ *     occurredAt: string,
+ *     sourceType: string,
+ *     sourceId: string,
+ *     title: string,
+ *     details: string,
+ *   }>,
+ * }>}
+ */
 export async function listStudentPointsLedger(studentRefId, { take = 200, startDate = "", endDate = "" } = {}) {
   const prisma = await getSharedPrismaClient()
   const id = normalizeText(studentRefId)
@@ -708,6 +1052,12 @@ export async function listStudentPointsLedger(studentRefId, { take = 200, startD
   }
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {{ pointsDelta?: number, reason?: string, appliedAt?: string | Date, adjustedByUsername?: string }} [payload]
+ * @param {{ adjustedByUsername?: string }} [options]
+ * @returns {Promise<ReturnType<typeof mapStudentPointsEventsForAdjustments>[number]>}
+ */
 export async function createStudentPointsAdjustment(studentRefId, payload = {}, options = {}) {
   const prisma = await getSharedPrismaClient()
   const id = normalizeText(studentRefId)
@@ -738,6 +1088,19 @@ export async function createStudentPointsAdjustment(studentRefId, payload = {}, 
   return mapStudentPointsEventsForAdjustments([created])[0]
 }
 
+/**
+ * @param {string} studentRefId
+ * @param {{ targetPoints?: number, reason?: string, adjustedByUsername?: string }} [payload]
+ * @param {{ adjustedByUsername?: string }} [options]
+ * @returns {Promise<{
+ *   changed: boolean,
+ *   studentRefId: string,
+ *   currentPoints: number,
+ *   targetPoints: number,
+ *   delta: number,
+ *   adjustment: ReturnType<typeof createStudentPointsAdjustment> extends Promise<infer T> ? T : never,
+ * }>}
+ */
 export async function setStudentPointsTotal(studentRefId, payload = {}, options = {}) {
   const prisma = await getSharedPrismaClient()
   const id = normalizeText(studentRefId)

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import crypto from "node:crypto"
 import fs from "node:fs"
@@ -23,11 +24,48 @@ Options:
 `)
 }
 
+/**
+ * @typedef {{
+ *   file: string,
+ *   outputDir: string,
+ *   databaseUrl: string,
+ *   verifyOnly: boolean,
+ *   dryRun: boolean,
+ *   yes: boolean,
+ *   clean: boolean,
+ *   singleTransaction: boolean,
+ * }} RestoreCliArgs
+ *
+ * @typedef {{
+ *   fileArg: string,
+ *   outputDir: string,
+ *   databaseUrl: string,
+ *   verifyOnly: boolean,
+ *   dryRun: boolean,
+ *   clean: boolean,
+ *   singleTransaction: boolean,
+ * }} RestoreConfig
+ *
+ * @typedef {{
+ *   backupPath?: string,
+ *   backupFile?: string,
+ *   backupFilename?: string,
+ * }} LatestBackupPointer
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {string} url
+ * @returns {string}
+ */
 function redactDatabaseUrl(url) {
   try {
     const parsed = new URL(url)
@@ -39,6 +77,10 @@ function redactDatabaseUrl(url) {
   }
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {RestoreCliArgs}
+ */
 function parseArgs(argv) {
   const args = {
     file: "latest",
@@ -112,6 +154,12 @@ function parseArgs(argv) {
   return args
 }
 
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {Promise<{ stdout: string, stderr: string }>}
+ */
 function runCommand(command, args, env = process.env) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -150,6 +198,10 @@ function runCommand(command, args, env = process.env) {
   })
 }
 
+/**
+ * @param {string} filePath
+ * @returns {Promise<string>}
+ */
 async function sha256File(filePath) {
   return new Promise((resolve, reject) => {
     const hash = crypto.createHash("sha256")
@@ -165,6 +217,11 @@ async function sha256File(filePath) {
   })
 }
 
+/**
+ * @param {string} fileArg
+ * @param {string} outputDir
+ * @returns {Promise<string>}
+ */
 async function resolveBackupPath(fileArg, outputDir) {
   if (fileArg !== "latest") {
     return path.isAbsolute(fileArg) ? fileArg : path.resolve(fileArg)
@@ -172,6 +229,7 @@ async function resolveBackupPath(fileArg, outputDir) {
 
   const latestPath = path.join(outputDir, "latest.json")
   const latestRaw = await fsp.readFile(latestPath, "utf8")
+  /** @type {LatestBackupPointer} */
   const latest = JSON.parse(latestRaw)
   const candidate = normalizeText(latest.backupPath || latest.backupFile || latest.backupFilename)
   if (!candidate) {
@@ -180,6 +238,10 @@ async function resolveBackupPath(fileArg, outputDir) {
   return path.isAbsolute(candidate) ? candidate : path.resolve(outputDir, candidate)
 }
 
+/**
+ * @param {string} backupPath
+ * @returns {Promise<string | null>}
+ */
 async function readExpectedChecksum(backupPath) {
   const checksumPath = backupPath.replace(/\.dump$/u, ".sha256")
   const exists = await fsp
@@ -197,6 +259,10 @@ async function readExpectedChecksum(backupPath) {
   return match[1].toLowerCase()
 }
 
+/**
+ * @param {RestoreCliArgs} args
+ * @returns {RestoreConfig}
+ */
 function resolveConfig(args) {
   const outputDir = path.resolve(normalizeText(args.outputDir || process.env.DB_BACKUP_DIR || "backups/postgres"))
   const databaseUrl = normalizeText(args.databaseUrl || process.env.DATABASE_URL)
@@ -220,6 +286,9 @@ function resolveConfig(args) {
   }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function main() {
   const parsedArgs = parseArgs(process.argv.slice(2))
   const config = resolveConfig(parsedArgs)
@@ -254,6 +323,7 @@ async function main() {
     return
   }
 
+  /** @type {string[]} */
   const restoreArgs = []
   if (config.clean) {
     restoreArgs.push("--clean", "--if-exists")

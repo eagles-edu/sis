@@ -1,19 +1,32 @@
 // src/modules/admin/assignment-templates.mjs
+// @ts-check
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
 const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeDateOrText(value) {
   if (value instanceof Date) {
     if (Number.isNaN(value.valueOf())) return ""
@@ -26,6 +39,10 @@ function normalizeDateOrText(value) {
   return parsed.toISOString()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (value instanceof Date) {
     if (Number.isNaN(value.valueOf())) return null
@@ -50,14 +67,26 @@ function parseDateOrNull(value) {
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date} value
+ * @returns {Date}
+ */
 function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/**
+ * @param {Date | string | number | undefined} [value]
+ * @returns {Date}
+ */
 function startOfDay(value = new Date()) {
   const parsed = parseDateOrNull(value) || new Date()
   const shifted = shiftToFixedTimeZone(parsed)
@@ -65,6 +94,10 @@ function startOfDay(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {Date | string | number | undefined} [value]
+ * @returns {Date}
+ */
 function startOfWeek(value = new Date()) {
   const date = startOfDay(value)
   const shifted = shiftToFixedTimeZone(date)
@@ -75,11 +108,20 @@ function startOfWeek(value = new Date()) {
   return shiftFromFixedTimeZone(shifted)
 }
 
+/**
+ * @param {Date | string | number | undefined} [value]
+ * @returns {Date}
+ */
 function endOfWeek(value = new Date()) {
   const date = startOfWeek(value)
   return new Date(date.getTime() + (24 * 60 * 60 * 1000 * 7) - 1)
 }
 
+/**
+ * @param {unknown} left
+ * @param {unknown} right
+ * @returns {number}
+ */
 function compareKnownLevelOrder(left = "", right = "") {
   return normalizeText(left).localeCompare(normalizeText(right), undefined, {
     numeric: true,
@@ -87,6 +129,71 @@ function compareKnownLevelOrder(left = "", right = "") {
   })
 }
 
+/**
+ * @typedef {{
+ *   id: string,
+ *   title: string,
+ *   url: string,
+ *   done: boolean,
+ * }} AssignmentItem
+ * @typedef {{
+ *   id: string,
+ *   assignmentTitle: string,
+ *   exerciseTitle: string,
+ *   assignedAt: string,
+ *   dueAt: string,
+ *   level: string,
+ *   eaglesId: string,
+ *   message: string,
+ *   items: AssignmentItem[],
+ *   completed: boolean,
+ *   completedAt: string,
+ *   createdAt: string,
+ *   updatedAt: string,
+ * }} NormalizedAssignmentTemplate
+ * @typedef {{
+ *   id?: string,
+ *   assignmentTitle?: string,
+ *   title?: string,
+ *   assignedAt?: string | Date,
+ *   dateAssigned?: string | Date,
+ *   dueAt?: string | Date,
+ *   dueDate?: string | Date,
+ *   level?: string,
+ *   eaglesId?: string,
+ *   message?: string,
+ *   exerciseTitle?: string,
+ *   exerciseUrl?: string,
+ *   link?: string,
+ *   href?: string,
+ *   items?: unknown[],
+ *   itemsJson?: unknown[],
+ *   completed?: boolean,
+ *   completedAt?: string | Date,
+ *   completedDate?: string | Date,
+ *   createdAt?: string | Date,
+ *   updatedAt?: string | Date,
+ * }} AssignmentTemplateSource
+ * @typedef {{ templateId?: string }} AssignmentTemplateSaveOptions
+ * @typedef {{
+ *   query?: string,
+ *   level?: string,
+ *   take?: number,
+ *   currentWeek?: boolean,
+ *   now?: Date,
+ * }} AssignmentTemplateListOptions
+ * @typedef {{
+ *   templates?: unknown[],
+ *   items?: unknown[],
+ *   assignmentTemplates?: unknown[],
+ * } | unknown[]} AssignmentTemplateImportPayload
+ */
+
+/**
+ * @param {AssignmentTemplateSource | Record<string, unknown>} [source]
+ * @param {number} [index]
+ * @returns {AssignmentItem | null}
+ */
 function normalizeAssignmentItem(source = {}, index = 0) {
   const item = source && typeof source === "object" ? source : {}
   const title = normalizeText(item.title || item.exerciseTitle || item.name || item.label)
@@ -102,6 +209,10 @@ function normalizeAssignmentItem(source = {}, index = 0) {
   }
 }
 
+/**
+ * @param {unknown[]} [value]
+ * @returns {AssignmentItem[]}
+ */
 function normalizeAssignmentItems(value = []) {
   const source = Array.isArray(value) ? value : []
   return source
@@ -109,6 +220,10 @@ function normalizeAssignmentItems(value = []) {
     .filter(Boolean)
 }
 
+/**
+ * @param {AssignmentItem[]} [items]
+ * @returns {{ total: number, done: number, completed: boolean }}
+ */
 function assignmentCompletionFromItems(items = []) {
   const normalized = Array.isArray(items) ? items : []
   const total = normalized.length
@@ -120,6 +235,10 @@ function assignmentCompletionFromItems(items = []) {
   }
 }
 
+/**
+ * @param {Partial<AssignmentTemplateSource> & { items?: AssignmentItem[] }} [template]
+ * @returns {string}
+ */
 function assignmentTemplateIdFromFields(template = {}) {
   const level = normalizeLower(template.level || "")
   const assignmentTitle = normalizeLower(template.assignmentTitle || template.title || "")
@@ -135,6 +254,10 @@ function assignmentTemplateIdFromFields(template = {}) {
   return [level, assignmentTitle || exerciseTitle, assignedAt, dueAt].join("|")
 }
 
+/**
+ * @param {AssignmentTemplateSource | Record<string, unknown>} [source]
+ * @returns {NormalizedAssignmentTemplate}
+ */
 function normalizeAssignmentTemplate(source = {}) {
   const template = source && typeof source === "object" ? source : {}
   const rawItems =
@@ -195,6 +318,10 @@ function normalizeAssignmentTemplate(source = {}) {
   }
 }
 
+/**
+ * @param {Partial<NormalizedAssignmentTemplate> & Record<string, unknown>} [template]
+ * @returns {number}
+ */
 function templateSortStamp(template = {}) {
   return (
     parseDateOrNull(template.updatedAt)?.valueOf() ||
@@ -205,14 +332,26 @@ function templateSortStamp(template = {}) {
   )
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function parseAssignmentTemplateFilterLevel(value = "") {
   return normalizeText(value)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function parseAssignmentTemplateQuery(value = "") {
   return normalizeText(value)
 }
 
+/**
+ * @param {AssignmentTemplateImportPayload | Record<string, unknown>} [payload]
+ * @returns {unknown[]}
+ */
 function parseAssignmentTemplateImportPayload(payload = {}) {
   if (Array.isArray(payload)) return payload
   if (payload && typeof payload === "object") {
@@ -223,6 +362,9 @@ function parseAssignmentTemplateImportPayload(payload = {}) {
   return []
 }
 
+/**
+ * @returns {boolean}
+ */
 function isAssignmentTemplateStoreEnabled() {
   const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
   const envFlag = normalizeLower(process.env.STUDENT_ADMIN_STORE_ENABLED)
@@ -232,22 +374,35 @@ function isAssignmentTemplateStoreEnabled() {
   return hasDatabaseUrl
 }
 
+/** @type {Promise<import("@prisma/client").PrismaClient | null> | null} */
 let prismaClientPromise = null
 let assignmentTemplateDbDisabled = false
 let assignmentTemplateDbWarned = false
+/** @type {Map<string, NormalizedAssignmentTemplate>} */
 const assignmentTemplateMemoryStore = new Map()
 
+/**
+ * @returns {void}
+ */
 function resetMemoryStore() {
   assignmentTemplateMemoryStore.clear()
 }
 
+/**
+ * @param {unknown} error
+ * @returns {void}
+ */
 function markAssignmentTemplateDbFallback(error) {
   assignmentTemplateDbDisabled = true
   if (assignmentTemplateDbWarned) return
   assignmentTemplateDbWarned = true
-  console.warn(`assignment template store falling back to memory: ${normalizeText(error?.message || error)}`)
+  const maybeError = /** @type {{ message?: unknown } | null | undefined} */ (error)
+  console.warn(`assignment template store falling back to memory: ${normalizeText(maybeError?.message || error)}`)
 }
 
+/**
+ * @returns {Promise<import("@prisma/client").PrismaClient | null>}
+ */
 async function getAssignmentTemplatePrismaClient() {
   if (assignmentTemplateDbDisabled || !isAssignmentTemplateStoreEnabled()) return null
   if (prismaClientPromise) return prismaClientPromise
@@ -281,8 +436,9 @@ async function runAssignmentTemplateDbOperation(handler, fallbackHandler) {
   try {
     return await handler(prisma)
   } catch (error) {
-    const code = normalizeText(error?.code)
-    const message = normalizeLower(error?.message || error)
+    const maybeError = /** @type {{ code?: unknown, message?: unknown } | null | undefined} */ (error)
+    const code = normalizeText(maybeError?.code)
+    const message = normalizeLower(maybeError?.message || error)
     if (
       code === "P2021" ||
       code === "P2022" ||
@@ -296,6 +452,10 @@ async function runAssignmentTemplateDbOperation(handler, fallbackHandler) {
   }
 }
 
+/**
+ * @param {Partial<NormalizedAssignmentTemplate> & Record<string, unknown>} [row]
+ * @returns {NormalizedAssignmentTemplate}
+ */
 function mapAssignmentTemplateRow(row = {}) {
   return normalizeAssignmentTemplate({
     id: row.id,
@@ -315,6 +475,10 @@ function mapAssignmentTemplateRow(row = {}) {
   })
 }
 
+/**
+ * @param {NormalizedAssignmentTemplate[]} [items]
+ * @returns {NormalizedAssignmentTemplate[]}
+ */
 function normalizeAssignmentTemplateListOrder(items = []) {
   return [...items].sort((left, right) => {
     const stampCompare = templateSortStamp(right) - templateSortStamp(left)
@@ -323,6 +487,10 @@ function normalizeAssignmentTemplateListOrder(items = []) {
   })
 }
 
+/**
+ * @param {NormalizedAssignmentTemplate[]} [items]
+ * @returns {NormalizedAssignmentTemplate[]}
+ */
 function normalizeAssignmentTemplateLevelOrder(items = []) {
   return [...items].sort((left, right) => {
     const levelCompare = compareKnownLevelOrder(left.level, right.level)
@@ -331,6 +499,11 @@ function normalizeAssignmentTemplateLevelOrder(items = []) {
   })
 }
 
+/**
+ * @param {Partial<NormalizedAssignmentTemplate> & Record<string, unknown>} [template]
+ * @param {Date} [now]
+ * @returns {boolean}
+ */
 function currentWeekTemplateTouchesWeek(template = {}, now = new Date()) {
   const weekStart = startOfWeek(now)
   const weekEnd = endOfWeek(now)
@@ -341,6 +514,14 @@ function currentWeekTemplateTouchesWeek(template = {}, now = new Date()) {
   return Boolean(assignedHits || dueHits)
 }
 
+/**
+ * @param {{
+ *   assignmentTemplates?: unknown[],
+ *   classEnrollmentAttendance?: unknown[],
+ *   now?: Date,
+ * }} [options]
+ * @returns {{ currentAssignmentMeta: NormalizedAssignmentTemplate[], enrollmentOnlyLevels: string[] }}
+ */
 export function buildAssignmentDashboardSlices({
   assignmentTemplates = [],
   classEnrollmentAttendance = [],
@@ -381,6 +562,10 @@ export function buildAssignmentDashboardSlices({
   }
 }
 
+/**
+ * @param {AssignmentTemplateListOptions} [options]
+ * @returns {Promise<NormalizedAssignmentTemplate[]>}
+ */
 export async function listAssignmentTemplates({
   query = "",
   level = "",
@@ -428,6 +613,10 @@ export async function listAssignmentTemplates({
   return normalizeAssignmentTemplateListOrder(filtered).slice(0, limit)
 }
 
+/**
+ * @param {string} [templateId]
+ * @returns {Promise<NormalizedAssignmentTemplate | null>}
+ */
 export async function getAssignmentTemplateById(templateId = "") {
   const id = normalizeText(templateId)
   if (!id) return null
@@ -444,10 +633,16 @@ export async function getAssignmentTemplateById(templateId = "") {
   )
 }
 
+/**
+ * @param {AssignmentTemplateSource | Record<string, unknown>} [payload]
+ * @param {AssignmentTemplateSaveOptions} [options]
+ * @returns {Promise<{ created: boolean, item: NormalizedAssignmentTemplate }>}
+ */
 export async function saveAssignmentTemplate(payload = {}, options = {}) {
   const normalized = normalizeAssignmentTemplate(payload)
   const id = normalizeText(options?.templateId || normalized.id)
   if (!id) {
+    /** @type {Error & { statusCode?: number }} */
     const error = new Error("assignmentTemplate id is required")
     error.statusCode = 400
     throw error
@@ -516,9 +711,14 @@ export async function saveAssignmentTemplate(payload = {}, options = {}) {
   )
 }
 
+/**
+ * @param {string} [templateId]
+ * @returns {Promise<{ deleted: true, id: string }>}
+ */
 export async function deleteAssignmentTemplateById(templateId = "") {
   const id = normalizeText(templateId)
   if (!id) {
+    /** @type {Error & { statusCode?: number }} */
     const error = new Error("templateId is required")
     error.statusCode = 400
     throw error
@@ -553,6 +753,11 @@ export async function deleteAssignmentTemplateById(templateId = "") {
   )
 }
 
+/**
+ * @param {AssignmentTemplateImportPayload | Record<string, unknown>} [payload]
+ * @param {AssignmentTemplateSaveOptions} [options]
+ * @returns {Promise<{ total: number, saved: number, items: NormalizedAssignmentTemplate[] }>}
+ */
 export async function importAssignmentTemplates(payload = {}, options = {}) {
   const templates = parseAssignmentTemplateImportPayload(payload)
   const items = []
@@ -571,6 +776,9 @@ export async function importAssignmentTemplates(payload = {}, options = {}) {
   }
 }
 
+/**
+ * @returns {void}
+ */
 export function resetAssignmentTemplateStoreForTests() {
   prismaClientPromise = null
   assignmentTemplateDbDisabled = false

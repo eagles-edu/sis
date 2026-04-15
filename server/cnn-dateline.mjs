@@ -1,3 +1,4 @@
+// @ts-check
 // CNN article dateline validator.
 // Mirrors the BBC helper: fetch once, pull canonical datePublished/dateModified,
 // and compare to an expected ISO timestamp within a tolerance.
@@ -7,7 +8,7 @@ const DEFAULT_TOLERANCE_SECONDS = 1;
 /**
  * Validate CNN article dateline fields.
  *
- * @param {object} opts
+ * @param {{ url: string, expectedIso: string, toleranceSeconds?: number, signal?: AbortSignal }} opts
  * @param {string} opts.url - Full CNN article URL.
  * @param {string} opts.expectedIso - ISO timestamp to compare against.
  * @param {number} [opts.toleranceSeconds=1] - Allowed difference in seconds.
@@ -57,12 +58,22 @@ export async function validateCnnDateline({
   };
 }
 
+/**
+ * @param {number} targetMs
+ * @param {number} candidateMs
+ * @param {number} toleranceSeconds
+ * @returns {boolean}
+ */
 function withinTolerance(targetMs, candidateMs, toleranceSeconds) {
   if (Number.isNaN(candidateMs)) return false;
   const delta = Math.abs(candidateMs - targetMs) / 1000;
   return delta <= toleranceSeconds;
 }
 
+/**
+ * @param {string} html
+ * @returns {{ datePublished?: string, dateModified?: string }}
+ */
 function extractDates(html) {
   const jsonDates = findJsonLdDates(html);
   if (jsonDates.datePublished || jsonDates.dateModified) {
@@ -90,6 +101,10 @@ function extractDates(html) {
   };
 }
 
+/**
+ * @param {string} html
+ * @returns {{ datePublished?: string, dateModified?: string }}
+ */
 function findJsonLdDates(html) {
   const scripts = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   for (const [, raw] of scripts) {

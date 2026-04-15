@@ -659,6 +659,26 @@ test("GET / returns the public portal hub with branded navigation", async () => 
   assert.match(html, /Future 2/i)
 })
 
+test("GET / renders hub links to canonical portal routes", async () => {
+  const res = await fetchLocal(port, "/")
+  assert.equal(res.status, 200)
+  const html = await res.text()
+
+  const portalLinks = [
+    ["/admin", /data-portal-target="admin"/i],
+    ["/parent", /data-portal-target="parent"/i],
+    ["/student", /data-portal-target="student"/i],
+  ]
+  for (const [href, targetPattern] of portalLinks) {
+    assert.match(html, new RegExp(`href="${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*${targetPattern.source}`, "i"))
+  }
+
+  assert.match(html, /href="https:\/\/anhngu\.eagles\.edu\.vn"[\s\S]*>[\s\S]*Anh ngữ/i)
+  assert.match(html, /href="https:\/\/ielts\.eagles\.edu\.vn"[\s\S]*>[\s\S]*IELTS/i)
+  assert.match(html, /resource-card--future/i)
+  assert.match(html, /resource-card--future-alt/i)
+})
+
 test("GET /admin returns HTML UI", async () => {
   const res = await fetchLocal(port, "/admin")
   assert.equal(res.status, 200)

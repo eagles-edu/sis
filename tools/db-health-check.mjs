@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import fs from "node:fs"
 import path from "node:path"
@@ -15,16 +16,29 @@ const DEFAULT_MAX_QUERY_LATENCY_MS = 500
 const DEFAULT_MAX_INCOMING_UNMATCHED = 0
 const DEFAULT_MAX_ORPHAN_COUNT = 0
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @param {number} [fallback]
+ * @returns {number}
+ */
 function normalizeInteger(value, fallback = 0) {
   const parsed = Number.parseInt(String(value), 10)
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function safeIsoDate(value) {
   if (value === undefined || value === null || value === "") return ""
   const date = new Date(value)
@@ -32,6 +46,10 @@ function safeIsoDate(value) {
   return date.toISOString()
 }
 
+/**
+ * @param {string} filePath
+ * @returns {Record<string, unknown> | null}
+ */
 function readJsonFileSafe(filePath) {
   const resolvedPath = normalizeText(filePath)
   if (!resolvedPath || !fs.existsSync(resolvedPath)) return null
@@ -43,6 +61,11 @@ function readJsonFileSafe(filePath) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [backupPayload]
+ * @param {string} [backupPath]
+ * @returns {string}
+ */
 function resolveBackupTimestamp(backupPayload = {}, backupPath = "") {
   return (
     safeIsoDate(
@@ -67,6 +90,19 @@ function resolveBackupTimestamp(backupPayload = {}, backupPath = "") {
   )
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   outputPath: string,
+ *   backupLatestPath: string,
+ *   vacuumReportDir: string,
+ *   backupStaleMinutes: number,
+ *   maxQueryLatencyMs: number,
+ *   maxIncomingUnmatched: number,
+ *   maxOrphanCount: number,
+ *   help: boolean,
+ * }}
+ */
 function parseArgs(argv = []) {
   const args = {
     outputPath: DEFAULT_OUTPUT_PATH,
@@ -142,11 +178,23 @@ Options:
 `)
 }
 
+/**
+ * @param {Array<Record<string, unknown>> | null | undefined} rows
+ * @returns {number}
+ */
 function normalizeCountRow(rows) {
   if (!Array.isArray(rows) || !rows[0]) return 0
   return Number.parseInt(String(rows[0].count || 0), 10) || 0
 }
 
+/**
+ * @param {string} reportDirPath
+ * @returns {{
+ *   reportPath: string,
+ *   lastIncomingVacuumAt: string,
+ *   manualReviewCount: number,
+ * }}
+ */
 function readLatestIncomingVacuumSummary(reportDirPath) {
   const reportDir = path.resolve(process.cwd(), normalizeText(reportDirPath) || DEFAULT_VACUUM_REPORT_DIR)
   let latestReportPath = ""
@@ -176,6 +224,11 @@ function readLatestIncomingVacuumSummary(reportDirPath) {
   }
 }
 
+/**
+ * @param {string} outputPath
+ * @param {unknown} payload
+ * @returns {string}
+ */
 function writeOutputFile(outputPath, payload) {
   const resolved = path.resolve(process.cwd(), outputPath)
   fs.mkdirSync(path.dirname(resolved), { recursive: true })
@@ -183,6 +236,19 @@ function writeOutputFile(outputPath, payload) {
   return resolved
 }
 
+/**
+ * @param {{
+ *   outputPath: string,
+ *   backupLatestPath: string,
+ *   vacuumReportDir: string,
+ *   backupStaleMinutes: number,
+ *   maxQueryLatencyMs: number,
+ *   maxIncomingUnmatched: number,
+ *   maxOrphanCount: number,
+ *   help: boolean,
+ * }} args
+ * @returns {Promise<Record<string, unknown>>}
+ */
 async function runHealthCheck(args) {
   const prisma = await getSharedPrismaClient()
   const checkedAt = new Date().toISOString()
@@ -196,11 +262,13 @@ async function runHealthCheck(args) {
   let dbConnected = false
   let dbError = ""
   let queryLatencyMs = -1
+  /** @type {{ queued: number, temporary: number, unmatched: number }} */
   let incomingCounts = {
     queued: 0,
     temporary: 0,
     unmatched: 0,
   }
+  /** @type {{ exerciseSubmissionMissingStudent: number, exerciseSubmissionMissingExercise: number, studentGradeRecordMissingStudent: number }} */
   let orphanCounts = {
     exerciseSubmissionMissingStudent: 0,
     exerciseSubmissionMissingExercise: 0,
@@ -304,6 +372,9 @@ async function runHealthCheck(args) {
   }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function run() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) {

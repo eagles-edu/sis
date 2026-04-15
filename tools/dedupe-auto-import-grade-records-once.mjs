@@ -1,17 +1,31 @@
+// @ts-check
+
 import { getSharedPrismaClient } from "../server/prisma-client-factory.mjs"
 
 const DUPLICATE_WINDOW_MS = 1500
 const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "Auto-imported exercise score"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function toDate(value) {
   if (value instanceof Date && !Number.isNaN(value.valueOf())) return value
   const parsed = new Date(value)
@@ -19,12 +33,22 @@ function toDate(value) {
   return parsed
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   apply: boolean,
+ * }}
+ */
 function parseArgs(argv = []) {
   return {
     apply: argv.includes("--apply"),
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [row]
+ * @returns {boolean}
+ */
 function isAutoImportFingerprintRow(row) {
   const assignmentName = normalizeLower(row?.assignmentName)
   const className = normalizeLower(row?.className)
@@ -44,6 +68,11 @@ function isAutoImportFingerprintRow(row) {
   return comments.startsWith(normalizeLower(AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX))
 }
 
+/**
+ * @param {Record<string, unknown>} [left]
+ * @param {Record<string, unknown>} [right]
+ * @returns {number}
+ */
 function compareRowsByQuality(left, right) {
   const leftScore = Number.isFinite(Number(left?.score)) ? Number(left.score) : -1
   const rightScore = Number.isFinite(Number(right?.score)) ? Number(right.score) : -1
@@ -60,6 +89,10 @@ function compareRowsByQuality(left, right) {
   return normalizeText(right?.id).localeCompare(normalizeText(left?.id))
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [rows]
+ * @returns {Array<Array<Record<string, unknown>>>}
+ */
 function splitByDuplicateWindow(rows = []) {
   const sorted = [...rows].sort((left, right) => {
     const leftDueAt = toDate(left?.dueAt)?.valueOf() || 0
@@ -100,6 +133,9 @@ function splitByDuplicateWindow(rows = []) {
   return groups
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function main() {
   const { apply } = parseArgs(process.argv.slice(2))
   const prisma = await getSharedPrismaClient()
@@ -139,6 +175,7 @@ async function main() {
     })
 
     const fingerprintRows = rows.filter((row) => isAutoImportFingerprintRow(row))
+    /** @type {Map<string, Array<Record<string, unknown>>>} */
     const grouped = new Map()
     for (const row of fingerprintRows) {
       const key = [
@@ -153,6 +190,7 @@ async function main() {
 
     const winnerIds = new Set()
     const loserIds = new Set()
+    /** @type {Array<Record<string, unknown>>} */
     const sample = []
     let duplicateGroups = 0
     for (const rowsByKey of grouped.values()) {

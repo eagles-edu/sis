@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import fs from "node:fs"
 import path from "node:path"
@@ -11,15 +12,27 @@ if (typeof xlsx.set_fs === "function") {
   xlsx.set_fs(fs)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizePositiveInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -42,6 +55,11 @@ function normalizeTextArray(value) {
     .filter(Boolean)
 }
 
+/**
+ * @template T
+ * @param {T[]} values
+ * @returns {T[]}
+ */
 function dedupeStable(values = []) {
   const seen = new Set()
   const output = []
@@ -54,6 +72,11 @@ function dedupeStable(values = []) {
   return output
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} row
+ * @param {string[]} [aliases]
+ * @returns {unknown}
+ */
 function getValueByAliases(row, aliases = []) {
   const rows = row && typeof row === "object" ? row : {}
   const entries = Object.entries(rows)
@@ -64,6 +87,15 @@ function getValueByAliases(row, aliases = []) {
   return ""
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   file: string,
+ *   sheet: string,
+ *   apply: boolean,
+ *   limit: number,
+ * }}
+ */
 function parseArgs(argv = []) {
   const args = {
     file: "docs/students/eaglesclub-students-import-ready-single.xlsx",
@@ -100,12 +132,21 @@ function parseArgs(argv = []) {
   return args
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} rows
+ * @param {string} fieldName
+ * @returns {number}
+ */
 function countRowsWithValue(rows = [], fieldName = "") {
   const key = normalizeText(fieldName)
   if (!key) return 0
   return rows.reduce((total, row) => (normalizeText(row?.[key]) ? total + 1 : total), 0)
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} rows
+ * @returns {number}
+ */
 function countRowsWithIdentityPair(rows = []) {
   return rows.reduce((total, row) => {
     const eaglesId = normalizeText(getValueByAliases(row, ["eaglesId"]))
@@ -114,6 +155,10 @@ function countRowsWithIdentityPair(rows = []) {
   }, 0)
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} rows
+ * @returns {Array<Record<string, unknown>>}
+ */
 function normalizeWorkbookRows(rows = []) {
   if (!Array.isArray(rows)) return []
   return rows.filter((row) => {
@@ -122,6 +167,11 @@ function normalizeWorkbookRows(rows = []) {
   })
 }
 
+/**
+ * @param {Record<string, unknown> & { SheetNames?: string[], Sheets?: Record<string, unknown> }} workbook
+ * @param {string} [preferredSheet]
+ * @returns {{ sheetName: string, rows: Array<Record<string, unknown>> }}
+ */
 function chooseSheet(workbook, preferredSheet = "") {
   const sheetNames = Array.isArray(workbook?.SheetNames) ? workbook.SheetNames : []
   if (!sheetNames.length) return { sheetName: "", rows: [] }
@@ -174,10 +224,19 @@ function chooseSheet(workbook, preferredSheet = "") {
   return { sheetName: ranked[0].sheetName, rows: ranked[0].rows }
 }
 
+/**
+ * @param {string[]} [values]
+ * @returns {string[]}
+ */
 function normalizeGenderForCompare(values = []) {
   return dedupeStable(values).map((entry) => normalizeLower(entry)).sort()
 }
 
+/**
+ * @param {string[]} [left]
+ * @param {string[]} [right]
+ * @returns {boolean}
+ */
 function sameGender(left = [], right = []) {
   const leftNormalized = normalizeGenderForCompare(left)
   const rightNormalized = normalizeGenderForCompare(right)
@@ -204,6 +263,7 @@ async function main() {
   const sourceRows = Array.isArray(selected.rows) ? selected.rows : []
   const effectiveRows = args.limit > 0 ? sourceRows.slice(0, args.limit) : sourceRows
 
+  /** @type {Array<{ rowNumber: number, eaglesId: string, studentNumber: number | null, genderSelections: string[] }>} */
   const parsedRows = effectiveRows.map((row, index) => {
     const eaglesId = normalizeText(getValueByAliases(row, ["eaglesId"]))
     const studentNumber = normalizePositiveInteger(getValueByAliases(row, ["studentNumber"]))
@@ -237,10 +297,25 @@ async function main() {
     },
   })
 
+  /** @type {Map<string, Record<string, unknown>>} */
   const studentByEaglesId = new Map(
     students.map((student) => [normalizeLower(student.eaglesId), student])
   )
 
+  /** @type {{
+   *   filePath: string,
+   *   sheetName: string,
+   *   scannedRows: number,
+   *   applyMode: boolean,
+   *   missingIdentity: number,
+   *   missingGender: number,
+   *   studentNotFound: number,
+   *   identityMismatch: number,
+   *   profileMissing: number,
+   *   unchanged: number,
+   *   updatesPrepared: number,
+   *   updatesApplied: number,
+   * }} */
   const summary = {
     filePath,
     sheetName: selected.sheetName,
@@ -256,7 +331,15 @@ async function main() {
     updatesApplied: 0,
   }
 
+  /** @type {Array<{
+   *   studentRefId: string,
+   *   eaglesId: string,
+   *   studentNumber: number | null,
+   *   currentGender: string[],
+   *   nextGender: string[],
+   * }>} */
   const updates = []
+  /** @type {string[]} */
   const mismatchSamples = []
   for (const row of parsedRows) {
     if (!row.eaglesId || !row.studentNumber) {

@@ -1,16 +1,29 @@
 // src/modules/admin/student-admin-queries.mjs
+// @ts-check
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
 function normalizePositiveInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -18,10 +31,34 @@ function normalizePositiveInteger(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
 
+/**
+ * @typedef {{ canonical: string, aliases?: string[] }} LevelDefinition
+ * @typedef {{ levels: string[], schools: string[] }} FilterPayload
+ * @typedef {{
+ *   backend: "redis" | "memory",
+ *   configuredRedisUrl: boolean,
+ *   hits: number,
+ *   misses: number,
+ *   writes: number,
+ *   invalidations: number,
+ *   lastHitAt: string | null,
+ *   lastMissAt: string | null,
+ *   lastWriteAt: string | null,
+ *   lastInvalidateAt: string | null,
+ *   lastError: string | null,
+ * }} FilterCacheState
+ * @typedef {{ value: FilterPayload, expiresAtMs: number }} FilterCacheEntry
+ */
+
+/** @type {LevelDefinition[]} */
 const LEVEL_DEFINITIONS = [
   {
     canonical: "Eggs & Chicks",
@@ -62,6 +99,7 @@ const LEVEL_DEFINITIONS = [
 ]
 
 const LEVEL_ALIAS_MAP = (() => {
+  /** @type {Map<string, string>} */
   const map = new Map()
   LEVEL_DEFINITIONS.forEach((entry) => {
     const variants = [entry.canonical, ...(entry.aliases || [])]
@@ -73,6 +111,10 @@ const LEVEL_ALIAS_MAP = (() => {
   return map
 })()
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -80,6 +122,10 @@ function canonicalizeLevel(value) {
   return LEVEL_ALIAS_MAP.get(key) || text
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
 function resolveLevelVariants(value) {
   const text = normalizeText(value)
   if (!text) return []
@@ -91,6 +137,10 @@ function resolveLevelVariants(value) {
   return Array.from(new Set([definition.canonical, ...(definition.aliases || [])]))
 }
 
+/**
+ * @param {unknown[]} values
+ * @returns {string[]}
+ */
 function normalizeFilterList(values) {
   if (!Array.isArray(values)) return []
   return Array.from(new Set(values.map((entry) => normalizeText(entry)).filter(Boolean))).sort((a, b) =>
@@ -98,10 +148,14 @@ function normalizeFilterList(values) {
   )
 }
 
+/**
+ * @param {Partial<FilterPayload> | Record<string, unknown>} [payload]
+ * @returns {FilterPayload}
+ */
 function normalizeFilterPayload(payload = {}) {
   return {
-    levels: normalizeFilterList(payload.levels),
-    schools: normalizeFilterList(payload.schools),
+    levels: normalizeFilterList(/** @type {unknown[]} */ (payload.levels || [])),
+    schools: normalizeFilterList(/** @type {unknown[]} */ (payload.schools || [])),
   }
 }
 
@@ -113,11 +167,15 @@ const FILTER_CACHE_KEY =
   normalizeText(process.env.STUDENT_ADMIN_FILTER_CACHE_KEY) || "sis:admin:filters:v1"
 const FILTER_CACHE_URL = normalizeText(process.env.REDIS_CACHE_URL) || normalizeText(process.env.REDIS_URL)
 
+/** @type {import("redis").RedisClientType | null} */
 let filterCacheRedisClient = null
+/** @type {Promise<import("redis").RedisClientType | null> | null} */
 let filterCacheRedisConnectPromise = null
 let filterCacheRedisDisabled = false
+/** @type {FilterCacheEntry | null} */
 let memoryFilterCacheEntry = null
 
+/** @type {FilterCacheState} */
 const FILTER_CACHE_STATE = {
   backend: FILTER_CACHE_URL ? "redis" : "memory",
   configuredRedisUrl: Boolean(FILTER_CACHE_URL),
@@ -132,10 +190,16 @@ const FILTER_CACHE_STATE = {
   lastError: null,
 }
 
+/**
+ * @returns {string}
+ */
 function nowIso() {
   return new Date().toISOString()
 }
 
+/**
+ * @returns {boolean}
+ */
 function isStudentAdminQueriesEnabled() {
   const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
   const envFlag = normalizeLower(process.env.STUDENT_ADMIN_STORE_ENABLED)
@@ -145,8 +209,12 @@ function isStudentAdminQueriesEnabled() {
   return hasDatabaseUrl
 }
 
+/**
+ * @returns {Promise<import("@prisma/client").PrismaClient>}
+ */
 async function getPrismaClient() {
   if (!isStudentAdminQueriesEnabled()) {
+    /** @type {Error & { statusCode?: number }} */
     const error = new Error("Student admin store is disabled")
     error.statusCode = 503
     throw error
@@ -154,6 +222,9 @@ async function getPrismaClient() {
   return getSharedPrismaClient()
 }
 
+/**
+ * @returns {Promise<import("redis").RedisClientType | null>}
+ */
 async function getFilterCacheRedisClient() {
   if (!FILTER_CACHE_URL || filterCacheRedisDisabled) return null
   if (filterCacheRedisClient) return filterCacheRedisClient
@@ -164,7 +235,8 @@ async function getFilterCacheRedisClient() {
       const { createClient } = await import("redis")
       const client = createClient({ url: FILTER_CACHE_URL })
       client.on("error", (error) => {
-        FILTER_CACHE_STATE.lastError = String(error?.message || error)
+        const maybeError = /** @type {{ message?: unknown } | null | undefined} */ (error)
+        FILTER_CACHE_STATE.lastError = String(maybeError?.message || error)
       })
       await client.connect()
       filterCacheRedisClient = client
@@ -174,8 +246,9 @@ async function getFilterCacheRedisClient() {
     } catch (error) {
       filterCacheRedisDisabled = true
       FILTER_CACHE_STATE.backend = "memory"
-      FILTER_CACHE_STATE.lastError = String(error?.message || error)
-      console.warn(`student-admin filter cache falling back to memory: ${error.message}`)
+      const maybeError = /** @type {{ message?: unknown } | null | undefined} */ (error)
+      FILTER_CACHE_STATE.lastError = String(maybeError?.message || error)
+      console.warn(`student-admin filter cache falling back to memory: ${maybeError?.message || error}`)
       return null
     } finally {
       filterCacheRedisConnectPromise = null
@@ -185,6 +258,9 @@ async function getFilterCacheRedisClient() {
   return filterCacheRedisConnectPromise
 }
 
+/**
+ * @returns {Promise<FilterPayload | null>}
+ */
 async function readCachedLevelAndSchoolFilters() {
   const now = Date.now()
   if (memoryFilterCacheEntry && memoryFilterCacheEntry.expiresAtMs > now) {
@@ -218,6 +294,10 @@ async function readCachedLevelAndSchoolFilters() {
   return null
 }
 
+/**
+ * @param {Partial<FilterPayload> | Record<string, unknown>} [payload]
+ * @returns {Promise<void>}
+ */
 async function writeCachedLevelAndSchoolFilters(payload = {}) {
   const normalized = normalizeFilterPayload(payload)
   memoryFilterCacheEntry = {
@@ -234,10 +314,14 @@ async function writeCachedLevelAndSchoolFilters(payload = {}) {
     await client.set(FILTER_CACHE_KEY, JSON.stringify(normalized), { EX: FILTER_CACHE_TTL_SECONDS })
     FILTER_CACHE_STATE.lastError = null
   } catch (error) {
-    FILTER_CACHE_STATE.lastError = String(error?.message || error)
+    const maybeError = /** @type {{ message?: unknown } | null | undefined} */ (error)
+    FILTER_CACHE_STATE.lastError = String(maybeError?.message || error)
   }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 export async function invalidateLevelAndSchoolFiltersCache() {
   memoryFilterCacheEntry = null
   FILTER_CACHE_STATE.invalidations += 1
@@ -250,10 +334,14 @@ export async function invalidateLevelAndSchoolFiltersCache() {
     await client.del(FILTER_CACHE_KEY)
     FILTER_CACHE_STATE.lastError = null
   } catch (error) {
-    FILTER_CACHE_STATE.lastError = String(error?.message || error)
+    const maybeError = /** @type {{ message?: unknown } | null | undefined} */ (error)
+    FILTER_CACHE_STATE.lastError = String(maybeError?.message || error)
   }
 }
 
+/**
+ * @returns {Promise<FilterPayload>}
+ */
 export async function listLevelAndSchoolFilters() {
   const cached = await readCachedLevelAndSchoolFilters()
   if (cached) return cached
@@ -290,6 +378,10 @@ export async function listLevelAndSchoolFilters() {
   return payload
 }
 
+/**
+ * @param {{ query?: string, take?: number }} [options]
+ * @returns {Promise<{ total: number, items: string[] }>}
+ */
 export async function listExerciseTitles({ query = "", take = 200 } = {}) {
   const prisma = await getPrismaClient()
   const search = normalizeText(query)
@@ -324,6 +416,9 @@ export async function listExerciseTitles({ query = "", take = 200 } = {}) {
   }
 }
 
+/**
+ * @returns {FilterCacheState & { key: string, ttlSeconds: number }}
+ */
 export function getStudentAdminFilterCacheStatus() {
   return {
     backend: FILTER_CACHE_STATE.backend,

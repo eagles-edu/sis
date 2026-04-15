@@ -3,6 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
 import { JSDOM } from "jsdom"
+import { runStudentAdminAuthBootstrap } from "../web-asset/admin/student-admin-bootstrap.mjs"
 
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_JS_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.js")
@@ -337,6 +338,7 @@ test("admin ui login shows invalid credentials errors on the login panel", async
 
 test("admin ui login success swaps panels and restores login button state", async () => {
   const calls = []
+  const smallScreen = false
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
     const method = init.method || "GET"
@@ -3332,7 +3334,12 @@ test("hosted sis-admin path probes auth endpoint instead of healthz", async () =
 
       return jsonResponse(200, {})
     },
-    "https://admin.eagles.edu.vn/sis-admin/student-admin.html"
+    "https://admin.eagles.edu.vn/sis-admin/student-admin.html",
+    {
+      beforeParse(window) {
+        window.__SIS_ADMIN_AUTH_BOOTSTRAP__ = runStudentAdminAuthBootstrap
+      },
+    }
   )
 
   await waitFor(() => {
@@ -3484,13 +3491,18 @@ test("hosted sis-admin path hydrates runtime diagnostics from admin runtime heal
 
       return jsonResponse(200, {})
     },
-    "https://admin.eagles.edu.vn/sis-admin/student-admin.html"
+    "https://admin.eagles.edu.vn/sis-admin/student-admin.html",
+    {
+      beforeParse(window) {
+        window.__SIS_ADMIN_AUTH_BOOTSTRAP__ = runStudentAdminAuthBootstrap
+      },
+    }
   )
 
   await waitFor(() => {
     assert.equal(dom.window.document.getElementById("authPanel").classList.contains("hidden"), true)
     assert.equal(dom.window.document.getElementById("app").classList.contains("hidden"), false)
-  })
+  }, 5000)
 
   await waitFor(() => {
     const adminRuntime = dom.window.document.querySelector('[data-system-key="adminRuntime"]')
@@ -3507,11 +3519,109 @@ test("hosted sis-admin path hydrates runtime diagnostics from admin runtime heal
     assert.match(adminRuntime?.textContent || "", /page=\/admin/i)
     assert.match(sessionStore?.textContent || "", /driver=redis/i)
     assert.match(filterCache?.textContent || "", /backend=redis/i)
-    assert.match(selfHeal?.textContent || "", /result=in-sync/i)
+    assert.match(selfHeal?.textContent || "", /configured=yes/i)
+    assert.match(selfHeal?.textContent || "", /state=already latest/i)
     assert.match(pipeline?.textContent || "", /exercise=ok/i)
-  })
+  }, 5000)
 
   assert.ok(calls.some((entry) => entry.includes("/api/sis-admin/runtime/health")))
+
+  dom.window.close()
+})
+
+test("self-heal dashboard link appears when runtime health reports out-of-date state", async () => {
+  const adminRolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: ["overview", "profile", "attendance", "assignments", "grades", "reports", "family", "users", "permissions", "settings"],
+  }
+  const dom = await createAdminUiDom(
+    async (resource) => {
+      const url = String(resource)
+      if (url.includes("/healthz")) return jsonResponse(403, { error: "Forbidden" })
+      if (url.includes("/api/sis-admin/auth/me")) {
+        return jsonResponse(200, {
+          authenticated: true,
+          user: { username: "admin", role: "admin" },
+          rolePolicy: adminRolePolicy,
+        })
+      }
+      if (url.includes("/api/sis-admin/runtime/health")) {
+        return jsonResponse(200, {
+          status: "ok",
+          lastVerifyOk: true,
+          lastStoreOk: true,
+          lastIntakeStoreOk: true,
+          lastSendOk: true,
+          studentAdminRuntime: {
+            pagePath: "/admin",
+            apiPrefix: "/api/sis-admin",
+            sessionDriver: "redis",
+            sessionTtlSeconds: 28800,
+            filterCache: { backend: "redis", hits: 11, misses: 2 },
+          },
+          runtimeSelfHeal: {
+            enabled: true,
+            lastResult: "pending",
+            syncCount: 1,
+          },
+        })
+      }
+      if (url.includes("/api/sis-admin/permissions")) return jsonResponse(200, { role: "admin", roles: { admin: adminRolePolicy } })
+      if (url.includes("/api/sis-admin/users")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/sis-admin/filters")) return jsonResponse(200, { levels: [], schools: [] })
+      if (url.includes("/api/sis-admin/students")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/sis-admin/dashboard")) {
+        return jsonResponse(200, {
+          today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+          assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+          weeklyAssignmentCompletion: [],
+          atRiskWeek: { total: 0, students: [] },
+          classEnrollmentAttendance: [],
+          levelCompletion: [],
+        })
+      }
+      if (url.includes("/api/sis-admin/runtime/service-control")) {
+        return jsonResponse(200, {
+          ok: true,
+          enabled: true,
+          available: true,
+          service: "exercise-mailer.service",
+          status: "active",
+          detail: "active",
+          checkedAt: "2026-03-01T13:00:00.000Z",
+          selfHeal: { enabled: true, lastResult: "pending", syncCount: 1 },
+        })
+      }
+      if (url.includes("/api/sis-admin/exercise-results/incoming")) {
+        return jsonResponse(200, { total: 0, hasMore: false, statuses: [], items: [] })
+      }
+      if (url.includes("/api/sis-admin/exercise-titles")) return jsonResponse(200, { items: [] })
+      if (url.includes("/api/sis-admin/notifications/batch-status")) {
+        return jsonResponse(200, { ok: true, queueType: "parent-report", total: 0, hasMore: false, items: [] })
+      }
+      return jsonResponse(200, {})
+    },
+    "https://admin.eagles.edu.vn/sis-admin/student-admin.html",
+    {
+      beforeParse(window) {
+        window.__SIS_ADMIN_AUTH_BOOTSTRAP__ = runStudentAdminAuthBootstrap
+      },
+    }
+  )
+
+  await waitFor(() => {
+    const selfHeal = dom.window.document.querySelector('[data-system-key="selfHeal"]')
+    assert.ok(selfHeal)
+    assert.match(selfHeal.textContent || "", /state=out of date/i)
+    const actionButton = selfHeal.querySelector('button[data-system-action="selfHeal"]')
+    assert.ok(actionButton)
+    assert.match(actionButton.textContent || "", /Open Self-Heal/i)
+  }, 5000)
 
   dom.window.close()
 })
@@ -5088,6 +5198,11 @@ test("overview anonymous exercise submissions panel renders and supports show-al
         status: "active",
         detail: "service=exercise-mailer.service is active",
         checkedAt: "10:00:00 AM",
+        selfHeal: {
+          enabled: true,
+          alreadyLatest: true,
+          syncedPaths: [],
+        },
       })
     }
     if (method === "POST" && pathname === "/api/admin/runtime/service-control") {
@@ -5095,13 +5210,21 @@ test("overview anonymous exercise submissions panel renders and supports show-al
       serviceControlCalls.push(payload.action || "restart")
       return jsonResponse(200, {
         ok: true,
-        action: "restart",
+        action: payload.action || "restart",
         enabled: true,
         available: true,
         service: "exercise-mailer.service",
         status: "active",
-        detail: "Restarted exercise-mailer.service; status=active.",
+        detail:
+          payload.action === "sync-and-restart" ?
+            "Runtime already latest; restarted exercise-mailer.service; status=active."
+          : "Restarted exercise-mailer.service; status=active.",
         checkedAt: "10:01:00 AM",
+        selfHeal: {
+          enabled: true,
+          alreadyLatest: true,
+          syncedPaths: [],
+        },
       })
     }
 
@@ -5130,6 +5253,10 @@ test("overview anonymous exercise submissions panel renders and supports show-al
     assert.ok(serviceCard)
     assert.equal(serviceCard.classList.contains("hidden"), false)
     assert.match(document.getElementById("exerciseMailerServiceMeta").textContent || "", /status=ACTIVE/i)
+    const dashboardRestartBtn = document.getElementById("overviewRuntimeRestartBtn")
+    assert.ok(dashboardRestartBtn)
+    assert.equal(dashboardRestartBtn.classList.contains("hidden"), false)
+    assert.match(dashboardRestartBtn.textContent || "", /Self-Heal Runtime/i)
   })
 
   const addToStudentBtn = document.querySelector(
@@ -5195,10 +5322,10 @@ test("overview anonymous exercise submissions panel renders and supports show-al
     assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /archived/i)
   })
 
-  document.getElementById("exerciseMailerRestartBtn").click()
+  document.getElementById("overviewRuntimeRestartBtn").click()
   await waitFor(() => {
-    assert.ok(serviceControlCalls.includes("restart"))
-    assert.match(document.getElementById("status").textContent || "", /Restart command completed/i)
+    assert.ok(serviceControlCalls.includes("sync-and-restart"))
+    assert.match(document.getElementById("status").textContent || "", /Restart completed/i)
   })
 
   dom.window.close()

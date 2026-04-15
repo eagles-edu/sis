@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import crypto from "node:crypto"
 import fs from "node:fs"
@@ -26,11 +27,65 @@ Options:
 `)
 }
 
+/**
+ * @typedef {{
+ *   outputDir: string,
+ *   databaseUrl: string,
+ *   retentionDays: string,
+ *   keepMin: string,
+ *   staleLockMinutes: string,
+ *   dryRun: boolean,
+ *   verify: boolean,
+ *   prune: boolean,
+ *   verbose: boolean,
+ * }} BackupCliArgs
+ *
+ * @typedef {{
+ *   outputDir: string,
+ *   databaseUrl: string,
+ *   retentionDays: number,
+ *   keepMin: number,
+ *   staleLockMinutes: number,
+ *   dryRun: boolean,
+ *   verify: boolean,
+ *   prune: boolean,
+ *   verbose: boolean,
+ * }} BackupConfig
+ *
+ * @typedef {{
+ *   path: string,
+ *   mtimeMs: number,
+ * }} BackupDumpEntry
+ *
+ * @typedef {{
+ *   createdAt: string,
+ *   backupFile: string,
+ *   backupPath: string,
+ *   outputDir: string,
+ *   checksumSha256: string,
+ *   sizeBytes: number,
+ *   verified: boolean,
+ *   databaseUrlRedacted: string,
+ *   retentionDays: number,
+ *   keepMin: number,
+ *   toolVersion: string,
+ * }} BackupMetadata
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @param {number} fallback
+ * @returns {number}
+ */
 function toPositiveInt(value, fallback) {
   const text = normalizeText(value)
   if (!text) return fallback
@@ -39,6 +94,10 @@ function toPositiveInt(value, fallback) {
   return fallback
 }
 
+/**
+ * @param {Date} date
+ * @returns {string}
+ */
 function formatTimestamp(date) {
   const yyyy = String(date.getUTCFullYear())
   const mm = String(date.getUTCMonth() + 1).padStart(2, "0")
@@ -49,6 +108,10 @@ function formatTimestamp(date) {
   return `${yyyy}${mm}${dd}-${hh}${min}${ss}Z`
 }
 
+/**
+ * @param {string} url
+ * @returns {string}
+ */
 function redactDatabaseUrl(url) {
   try {
     const parsed = new URL(url)
@@ -76,6 +139,10 @@ const LIBPQ_URL_PARAM_ALLOWLIST = new Set([
   "target_session_attrs",
 ])
 
+/**
+ * @param {string} databaseUrl
+ * @returns {string}
+ */
 function sanitizeDatabaseUrlForPgTools(databaseUrl) {
   try {
     const parsed = new URL(databaseUrl)
@@ -92,6 +159,10 @@ function sanitizeDatabaseUrlForPgTools(databaseUrl) {
   }
 }
 
+/**
+ * @param {string[]} argv
+ * @returns {BackupCliArgs}
+ */
 function parseArgs(argv) {
   const args = {
     outputDir: "",
@@ -175,6 +246,12 @@ function parseArgs(argv) {
   return args
 }
 
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {Promise<{ stdout: string, stderr: string }>}
+ */
 function runCommand(command, args, env = process.env) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -213,10 +290,18 @@ function runCommand(command, args, env = process.env) {
   })
 }
 
+/**
+ * @param {string} command
+ * @returns {Promise<void>}
+ */
 async function ensureBinary(command) {
   await runCommand(command, ["--version"])
 }
 
+/**
+ * @param {string} filePath
+ * @returns {Promise<string>}
+ */
 async function sha256File(filePath) {
   return new Promise((resolve, reject) => {
     const hash = crypto.createHash("sha256")
@@ -232,12 +317,22 @@ async function sha256File(filePath) {
   })
 }
 
+/**
+ * @param {string} filePath
+ * @param {string} text
+ * @returns {Promise<void>}
+ */
 async function writeTextAtomic(filePath, text) {
   const tmpPath = `${filePath}.tmp-${process.pid}`
   await fsp.writeFile(tmpPath, text, "utf8")
   await fsp.rename(tmpPath, filePath)
 }
 
+/**
+ * @param {string} lockPath
+ * @param {number} staleMinutes
+ * @returns {Promise<import("node:fs/promises").FileHandle>}
+ */
 async function acquireLock(lockPath, staleMinutes) {
   const lockPayload = `${JSON.stringify(
     {
@@ -270,6 +365,11 @@ async function acquireLock(lockPath, staleMinutes) {
   }
 }
 
+/**
+ * @param {import("node:fs/promises").FileHandle | null} lockHandle
+ * @param {string} lockPath
+ * @returns {Promise<void>}
+ */
 async function releaseLock(lockHandle, lockPath) {
   if (lockHandle) {
     await lockHandle.close().catch(() => {})
@@ -277,14 +377,26 @@ async function releaseLock(lockHandle, lockPath) {
   await fsp.unlink(lockPath).catch(() => {})
 }
 
+/**
+ * @param {string} fileName
+ * @returns {boolean}
+ */
 function dumpNamePattern(fileName) {
   return /^postgres-\d{8}-\d{6}Z\.dump$/u.test(fileName)
 }
 
+/**
+ * @param {string} outputDir
+ * @param {number} retentionDays
+ * @param {number} keepMin
+ * @param {boolean} dryRun
+ * @returns {Promise<string[]>}
+ */
 async function pruneBackups(outputDir, retentionDays, keepMin, dryRun) {
   const cutoffMs = Date.now() - retentionDays * DAY_MS
   const entries = await fsp.readdir(outputDir, { withFileTypes: true })
 
+  /** @type {BackupDumpEntry[]} */
   const dumps = []
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -300,6 +412,7 @@ async function pruneBackups(outputDir, retentionDays, keepMin, dryRun) {
 
   dumps.sort((a, b) => b.mtimeMs - a.mtimeMs)
 
+  /** @type {string[]} */
   const removed = []
 
   for (let i = 0; i < dumps.length; i += 1) {
@@ -323,6 +436,10 @@ async function pruneBackups(outputDir, retentionDays, keepMin, dryRun) {
   return removed
 }
 
+/**
+ * @param {string} dumpPath
+ * @returns {Promise<void>}
+ */
 async function verifyDump(dumpPath) {
   const { stdout } = await runCommand("pg_restore", ["--list", dumpPath])
   if (!stdout.trim()) {
@@ -330,6 +447,10 @@ async function verifyDump(dumpPath) {
   }
 }
 
+/**
+ * @param {BackupCliArgs} parsedArgs
+ * @returns {BackupConfig}
+ */
 function resolveConfig(parsedArgs) {
   const databaseUrl = normalizeText(parsedArgs.databaseUrl || process.env.DATABASE_URL)
   if (!databaseUrl) {
@@ -357,6 +478,9 @@ function resolveConfig(parsedArgs) {
   }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function main() {
   const parsedArgs = parseArgs(process.argv.slice(2))
   const config = resolveConfig(parsedArgs)
@@ -428,6 +552,7 @@ async function main() {
       console.log(`[dry-run] pg_restore --list ${dumpPath}`)
     }
 
+    /** @type {BackupMetadata} */
     const metadata = {
       createdAt: createdAt.toISOString(),
       backupFile: path.basename(dumpPath),

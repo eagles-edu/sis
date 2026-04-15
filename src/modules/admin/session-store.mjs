@@ -1,29 +1,84 @@
-// src/modules/admin/session-store.mjs
-
+// @ts-check
 import crypto from "node:crypto"
 
+/**
+ * @typedef {{
+ *   username?: unknown,
+ *   role?: unknown,
+ * }} SessionPrincipal
+ *
+ * @typedef {{
+ *   ttlSeconds?: unknown,
+ *   driver?: unknown,
+ *   redisUrl?: unknown,
+ *   keyPrefix?: unknown,
+ *   redisConnectTimeoutMs?: unknown,
+ *   createRedisClient?: (redisUrl: string, connectTimeoutMs: number) => Promise<unknown>,
+ * }} StudentAdminSessionStoreOptions
+ *
+ * @typedef {{
+ *   driver: "memory" | "redis",
+ *   getRuntimeStatus: () => {
+ *     redisConnected: boolean,
+ *     redisReady: boolean,
+ *     lastRedisError: string,
+ *     lastReconnectAt: string,
+ *     reconnectAttempts: number,
+ *   },
+ *   createSession: (principal: SessionPrincipal) => Promise<Record<string, unknown>>,
+ *   getSession: (id: string) => Promise<Record<string, unknown> | null>,
+ *   touchSession: (id: string) => Promise<Record<string, unknown> | null>,
+ *   deleteSession: (id: string) => Promise<boolean>,
+ *   close: () => Promise<void>,
+ * }} StudentAdminSessionStore
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @param {number} fallback
+ * @returns {number}
+ */
 function toPositiveInt(value, fallback) {
   const parsed = Number.parseInt(normalizeText(value), 10)
   if (Number.isInteger(parsed) && parsed > 0) return parsed
   return fallback
 }
 
+/**
+ * @param {string} message
+ * @param {number} [statusCode]
+ * @param {unknown} [cause]
+ * @returns {Error & { statusCode?: number, cause?: unknown }}
+ */
 function createStatusError(message, statusCode = 500, cause = null) {
+  /** @type {Error & { statusCode?: number, cause?: unknown }} */
   const error = new Error(message)
   error.statusCode = statusCode
   if (cause) error.cause = cause
   return error
 }
 
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
 function stringifyError(error) {
   if (!error) return ""
   const message = normalizeText(error?.message || error)
@@ -31,10 +86,17 @@ function stringifyError(error) {
   return "unknown-error"
 }
 
+/**
+ * @returns {string}
+ */
 function nowIsoString() {
   return new Date().toISOString()
 }
 
+/**
+ * @param {unknown} client
+ * @returns {boolean}
+ */
 function isRedisClientReady(client) {
   if (!client || typeof client !== "object") return false
   if (typeof client.isReady === "boolean") return client.isReady
@@ -42,6 +104,10 @@ function isRedisClientReady(client) {
   return true
 }
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 function isRedisAuthError(error) {
   const message = normalizeLower(error?.message || error)
   if (!message) return false
@@ -54,6 +120,10 @@ function isRedisAuthError(error) {
   )
 }
 
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
 function isRedisAvailabilityError(error) {
   if (isRedisAuthError(error)) return true
   const message = normalizeLower(error?.message || error)
@@ -71,6 +141,19 @@ function isRedisAvailabilityError(error) {
   )
 }
 
+/**
+ * @param {string} id
+ * @param {SessionPrincipal} [principal]
+ * @param {number} ttlSeconds
+ * @returns {{
+ *   id: string,
+ *   username: string,
+ *   role: string,
+ *   createdAt: number,
+ *   updatedAt: number,
+ *   expiresAt: number,
+ * }}
+ */
 function makeSessionPayload(id, principal, ttlSeconds) {
   const now = Math.floor(Date.now() / 1000)
   const expiresAt = now + ttlSeconds
@@ -84,6 +167,10 @@ function makeSessionPayload(id, principal, ttlSeconds) {
   }
 }
 
+/**
+ * @param {string} raw
+ * @returns {Record<string, unknown> | null}
+ */
 function parseSessionJson(raw) {
   if (!raw) return null
   try {
@@ -100,6 +187,10 @@ function parseSessionJson(raw) {
   }
 }
 
+/**
+ * @param {number} ttlSeconds
+ * @returns {StudentAdminSessionStore}
+ */
 function createMemoryStore(ttlSeconds) {
   const sessions = new Map()
 
@@ -176,6 +267,18 @@ function createMemoryStore(ttlSeconds) {
   }
 }
 
+/**
+ * @param {{
+ *   redisUrl: string,
+ *   ttlSeconds: number,
+ *   keyPrefix: string,
+ *   required: boolean,
+ *   fallbackStore: StudentAdminSessionStore,
+ *   createRedisClient: (redisUrl: string, connectTimeoutMs: number) => Promise<unknown>,
+ *   redisConnectTimeoutMs: number,
+ * }} options
+ * @returns {StudentAdminSessionStore}
+ */
 function createRedisBackedStore({
   redisUrl,
   ttlSeconds,
@@ -475,6 +578,11 @@ function createRedisBackedStore({
   }
 }
 
+/**
+ * @param {unknown} redisUrl
+ * @param {number} connectTimeoutMs
+ * @returns {Promise<unknown>}
+ */
 function defaultCreateRedisClient(redisUrl, connectTimeoutMs) {
   return import("redis").then(({ createClient }) =>
     createClient({
@@ -491,6 +599,10 @@ function defaultCreateRedisClient(redisUrl, connectTimeoutMs) {
   )
 }
 
+/**
+ * @param {StudentAdminSessionStoreOptions} [options]
+ * @returns {StudentAdminSessionStore}
+ */
 export function createStudentAdminSessionStore(options = {}) {
   const ttlSeconds = toPositiveInt(
     options.ttlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,

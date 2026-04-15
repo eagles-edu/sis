@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+// @ts-check
 
 import { spawn } from "node:child_process"
+import process from "node:process"
 
 const DEFAULT_ORIGIN = process.env.LIGHTHOUSE_ORIGIN || "http://127.0.0.1:8788"
 const SCORE_THRESHOLD = Number.parseInt(String(process.env.LIGHTHOUSE_MIN_PERF_SCORE || "90"), 10) || 90
@@ -18,6 +20,11 @@ const ROUTES = [
   "/admin/grades-data",
 ]
 
+/**
+ * @param {string[]} [args]
+ * @param {number} [timeoutMs]
+ * @returns {Promise<{ stdout: string, stderr: string }>}
+ */
 function runCommand(args = [], timeoutMs = LIGHTHOUSE_TIMEOUT_MS) {
   return new Promise((resolve, reject) => {
     const child = spawn("npx", args, {
@@ -62,6 +69,10 @@ function runCommand(args = [], timeoutMs = LIGHTHOUSE_TIMEOUT_MS) {
   })
 }
 
+/**
+ * @param {string} [rawOutput]
+ * @returns {Record<string, unknown>}
+ */
 function parseLighthouseJson(rawOutput = "") {
   const trimmed = String(rawOutput || "").trim()
   if (!trimmed) throw new Error("lighthouse output is empty")
@@ -78,10 +89,18 @@ function parseLighthouseJson(rawOutput = "") {
   }
 }
 
+/**
+ * @param {number} [score]
+ * @returns {string}
+ */
 function formatScore(score = 0) {
   return Number(score || 0).toFixed(1)
 }
 
+/**
+ * @param {string} [routePath]
+ * @returns {Promise<{ url: string, score: number }>}
+ */
 async function auditRoute(routePath = "") {
   const path = String(routePath || "")
   const url = new URL(path, DEFAULT_ORIGIN).toString()
@@ -105,11 +124,15 @@ async function auditRoute(routePath = "") {
   }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function main() {
   console.log(
     `[lighthouse-admin] origin=${DEFAULT_ORIGIN} threshold=${SCORE_THRESHOLD} preset=${LIGHTHOUSE_PRESET} routes=${ROUTES.length}`,
   )
 
+  /** @type {Array<{ url: string, score: number }>} */
   const failures = []
 
   for (const route of ROUTES) {

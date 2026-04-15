@@ -18,6 +18,8 @@ TEST_SERVICE="${SIS_TEST_SERVICE:-exercise-mailer-test.service}"
 TEST_HEALTH_URL="${SIS_TEST_HEALTH_URL:-http://127.0.0.1:${TEST_PORT}/healthz}"
 TEST_PUBLIC_HEALTH_URL="${SIS_TEST_PUBLIC_HEALTH_URL:-}"
 TEST_HEALTH_DELAY="${SIS_TEST_HEALTH_DELAY:-5}"
+TEST_NODE_BIN="${SIS_TEST_NODE_BIN:-/home/eagles/node-v20.19.4-linux-x64/bin/node}"
+TEST_ROUTE_MATRIX="${SIS_TEST_ROUTE_MATRIX:-http://127.0.0.1:${TEST_PORT}/|200|window.__SIS_RUNTIME_ENV=\"test\";http://127.0.0.1:${TEST_PORT}/admin/students|200|Student Admin Login;http://127.0.0.1:${TEST_PORT}/parent|200|dành cho phụ huynh;http://127.0.0.1:${TEST_PORT}/student|200|Student Portal;http://127.0.0.1:${TEST_PORT}/parent/portal|308||/parent;http://127.0.0.1:${TEST_PORT}/student/portal|308||/student}"
 if [[ -n "${SIS_TEST_VERBOSE_ENV:-}" ]]; then
   # shellcheck disable=SC2206
   TEST_VERBOSE_ENV=(${SIS_TEST_VERBOSE_ENV})
@@ -48,12 +50,12 @@ upsert_env_value() {
   local env_file="$1"
   local key="$2"
   local value="$3"
-  ENV_FILE="$env_file" ENV_KEY="$key" ENV_VALUE="$value" node --input-type=module <<'EOF'
+  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" ENV_FILE="$env_file" ENV_KEY="$key" ENV_VALUE="$value" "$TEST_NODE_BIN" --input-type=module <<'EOF'
 import fs from "node:fs"
 
 const envFile = process.env.ENV_FILE
 const envKey = process.env.ENV_KEY
-const envValue = process.env.ENV_VALUE ?? ""
+const envValue = process.env.ENV_VALUE || ""
 const raw = fs.readFileSync(envFile, "utf8")
 const lines = raw.split(/\r?\n/u)
 const trailingNewline = raw.endsWith("\n")
@@ -151,6 +153,141 @@ run_sync() {
   esac
 }
 
+sync_test_src_tree() {
+  if [[ ! -d "${REPO_ROOT}/src" ]]; then
+    log "skip src tree sync (repo src missing)"
+    return 0
+  fi
+
+  mkdir -p "${TEST_ROOT}/src"
+  log "syncing repo src tree into ${TEST_ROOT}/src"
+  rsync -a --delete "${REPO_ROOT}/src/" "${TEST_ROOT}/src/"
+
+  if [[ ! -f "${TEST_ROOT}/src/modules/exercises/exercise-store.mjs" ]]; then
+    echo "src tree sync failed: ${TEST_ROOT}/src/modules/exercises/exercise-store.mjs missing" >&2
+    return 1
+  fi
+}
+
+cleanup_test_backup_artifacts() {
+  if [[ ! -d "$TEST_ROOT" ]]; then
+    log "skip backup artifact cleanup (test root missing)"
+    return 0
+  fi
+
+  log "removing backup artifacts from ${TEST_ROOT}"
+  find "$TEST_ROOT" -type f -name '*.BAK-*' -delete
+}
+
+sync_test_public_html_index() {
+  local source_hub_html="${REPO_ROOT}/web-asset/admin/portal-hub.html"
+  local target_public_root="/home/test.eagles.edu.vn/public_html"
+  local target_index_path="${target_public_root}/index.html"
+
+  if [[ ! -f "$source_hub_html" ]]; then
+    log "skip public_html index sync (portal hub source missing)"
+    return 0
+  fi
+
+  mkdir -p "$target_public_root"
+  log "syncing portal hub into ${target_index_path}"
+  cp "$source_hub_html" "$target_index_path"
+
+  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" TARGET_INDEX_PATH="$target_index_path" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+import fs from "node:fs"
+
+const targetIndexPath = process.env.TARGET_INDEX_PATH
+const raw = fs.readFileSync(targetIndexPath, "utf8")
+const replacements = [
+  ["https://admin.eagles.edu.vn", "https://test.eagles.edu.vn"],
+  ["https://eagles.edu.vn", "https://test.eagles.edu.vn"],
+]
+
+const injectedRuntimeConfig =
+  `<script>window.__SIS_RUNTIME_ENV="test";window.__SIS_ADMIN_PAGE_PATH="/admin/students";window.__SIS_PARENT_PORTAL_PAGE_PATH="/parent/portal";window.__SIS_STUDENT_PORTAL_PAGE_PATH="/student/portal";</script>`
+
+let next = raw
+if (next.includes("</head>")) {
+  next = next.replace("</head>", `  ${injectedRuntimeConfig}\n</head>`)
+}
+for (const [from, to] of replacements) {
+  next = next.split(from).join(to)
+}
+
+if (next !== raw) {
+  fs.writeFileSync(targetIndexPath, next)
+}
+EOF
+}
+
+verify_test_public_html_index() {
+  local target_index_path="/home/test.eagles.edu.vn/public_html/index.html"
+  if [[ ! -f "$target_index_path" ]]; then
+    echo "test public index missing: $target_index_path" >&2
+    return 1
+  fi
+
+  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" TARGET_INDEX_PATH="$target_index_path" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+import fs from "node:fs"
+
+const targetIndexPath = process.env.TARGET_INDEX_PATH
+const html = fs.readFileSync(targetIndexPath, "utf8")
+
+const requiredSnippets = [
+  "https://test.eagles.edu.vn",
+  'window.__SIS_ADMIN_PAGE_PATH="/admin/students"',
+  'window.__SIS_PARENT_PORTAL_PAGE_PATH="/parent/portal"',
+  'window.__SIS_STUDENT_PORTAL_PAGE_PATH="/student/portal"',
+  'data-portal-target="admin"',
+  'data-portal-target="parent"',
+  'data-portal-target="student"',
+]
+
+for (const snippet of requiredSnippets) {
+  if (!html.includes(snippet)) {
+    throw new Error(`test public index missing required snippet: ${snippet}`)
+  }
+}
+EOF
+}
+
+verify_test_runtime_routes() {
+  local route_matrix="$1"
+  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" TEST_ROUTE_MATRIX="$route_matrix" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+const matrix = String(process.env.TEST_ROUTE_MATRIX || "")
+  .split(";")
+  .map((entry) => entry.trim())
+  .filter(Boolean)
+
+if (!matrix.length) {
+  console.log("no test route matrix configured")
+  process.exit(0)
+}
+
+for (const entry of matrix) {
+  const [url, statusText, needle = "", locationNeedle = ""] = entry.split("|")
+  const expectedStatus = Number(statusText)
+  const response = await fetch(url, { redirect: "manual" })
+  const body = await response.text()
+  if (response.status !== expectedStatus) {
+    throw new Error(`route ${url} expected ${expectedStatus}, got ${response.status}`)
+  }
+  if (needle && !body.includes(needle)) {
+    throw new Error(`route ${url} missing expected text: ${needle}`)
+  }
+  if (locationNeedle) {
+    const actualLocation = response.headers.get("location") || ""
+    if (actualLocation !== locationNeedle) {
+      throw new Error(`route ${url} expected Location ${locationNeedle}, got ${actualLocation || "(empty)"}`)
+    }
+  }
+  if (body.includes("Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening /admin/students.")) {
+    throw new Error(`route ${url} still shows static preview guidance`)
+  }
+}
+EOF
+}
+
 refresh_test_prisma() {
   if [[ ! -d "$TEST_ROOT" ]]; then
     log "skip Prisma generate (test root missing): ${TEST_ROOT}"
@@ -164,12 +301,16 @@ refresh_test_prisma() {
     log "skip Prisma commands (missing .env.test)"
     return 0
   fi
+  if [[ ! -x "$TEST_NODE_BIN" ]]; then
+    echo "test Node runtime missing or not executable: $TEST_NODE_BIN" >&2
+    return 1
+  fi
 
   log "refreshing test Prisma client in ${TEST_ROOT}"
-  (cd "$TEST_ROOT" && env "${TEST_VERBOSE_ENV[@]}" npm run db:generate)
+  (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm run db:generate)
 
   log "running Prisma migrations against test database"
-  (cd "$TEST_ROOT" && env "${TEST_VERBOSE_ENV[@]}" npm run db:migrate:deploy)
+  (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm run db:migrate:deploy)
 }
 
 should_refresh_prisma() {
@@ -222,6 +363,9 @@ restart_test_runtime() {
 
 main() {
   run_sync
+  sync_test_src_tree
+  cleanup_test_backup_artifacts
+  sync_test_public_html_index
   ensure_test_redis_env
   if should_refresh_prisma; then
     refresh_test_prisma
@@ -229,6 +373,8 @@ main() {
     log "skip Prisma refresh for mode=${MODE}"
   fi
   restart_test_runtime
+  verify_test_public_html_index
+  verify_test_runtime_routes "$TEST_ROUTE_MATRIX"
   log "completed mode=${MODE}"
 }
 

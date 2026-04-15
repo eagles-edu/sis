@@ -1,19 +1,36 @@
 // src/modules/admin/student-news-compliance.mjs
+// @ts-check
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseDateOrNull(value) {
   if (value instanceof Date) return Number.isNaN(value.valueOf()) ? null : value
   const text = normalizeText(value)
@@ -22,6 +39,10 @@ function parseDateOrNull(value) {
   return Number.isNaN(parsed.valueOf()) ? null : parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeHttpUrl(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -36,6 +57,9 @@ function normalizeHttpUrl(value) {
   }
 }
 
+/**
+ * @returns {string}
+ */
 function nowIso() {
   return new Date().toISOString()
 }
@@ -49,6 +73,11 @@ const STUDENT_NEWS_REVIEW_STATUS_COLOR = {
   [STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED]: "red",
 }
 
+/**
+ * @param {unknown} value
+ * @param {string} [fallback]
+ * @returns {string}
+ */
 function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) {
   const token = normalizeLower(value)
   if (!token) return fallback
@@ -76,6 +105,10 @@ function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_
   return fallback
 }
 
+/**
+ * @param {unknown} status
+ * @returns {string}
+ */
 function resolveStudentNewsStatusColor(status) {
   const normalized = normalizeStudentNewsReviewStatus(status, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
   return STUDENT_NEWS_REVIEW_STATUS_COLOR[normalized] || "amber"
@@ -122,6 +155,10 @@ const STUDENT_NEWS_DEFAULT_THRESHOLDS = Object.freeze({
   leadSynopsis: 0.5,
 })
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeDomainToken(value) {
   const raw = normalizeLower(value)
     .replace(/^https?:\/\//, "")
@@ -136,6 +173,10 @@ function normalizeDomainToken(value) {
   return raw
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function hostnameFromUrl(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -150,6 +191,11 @@ function hostnameFromUrl(value) {
   }
 }
 
+/**
+ * @param {unknown} hostname
+ * @param {unknown} allowedDomain
+ * @returns {boolean}
+ */
 function sourceDomainMatches(hostname, allowedDomain) {
   const host = normalizeDomainToken(hostname)
   const domain = normalizeDomainToken(allowedDomain)
@@ -157,6 +203,19 @@ function sourceDomainMatches(hostname, allowedDomain) {
   return host === domain || host.endsWith(`.${domain}`)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [config]
+ * @returns {{
+ *   enabled: boolean,
+ *   allowedDomains: string[],
+ *   thresholds: {
+ *     articleTitle: number,
+ *     byline: number,
+ *     articleDateline: number,
+ *     leadSynopsis: number,
+ *   },
+ * }}
+ */
 function normalizeStudentNewsValidationConfig(config = {}) {
   const source = config && typeof config === "object" ? config : {}
   const enabled = source?.enabled !== false
@@ -196,6 +255,11 @@ function normalizeStudentNewsValidationConfig(config = {}) {
   }
 }
 
+/**
+ * @param {unknown} value
+ * @param {unknown} [maxLength]
+ * @returns {{ value: string, truncated: boolean }}
+ */
 function clampText(value, maxLength = 0) {
   const text = normalizeText(value)
   const max = Number.parseInt(String(maxLength), 10) || 0
@@ -207,6 +271,10 @@ function clampText(value, maxLength = 0) {
   }
 }
 
+/**
+ * @param {string} [text]
+ * @returns {string}
+ */
 function decodeHtmlEntities(text = "") {
   return normalizeText(text)
     .replace(/&nbsp;/gi, " ")
@@ -217,6 +285,10 @@ function decodeHtmlEntities(text = "") {
     .replace(/&gt;/gi, ">")
 }
 
+/**
+ * @param {string} [text]
+ * @returns {string}
+ */
 function stripTags(text = "") {
   return decodeHtmlEntities(
     normalizeText(text)
@@ -227,6 +299,11 @@ function stripTags(text = "") {
   )
 }
 
+/**
+ * @param {string} [html]
+ * @param {string} [selectorPattern]
+ * @returns {string}
+ */
 function extractMetaContent(html = "", selectorPattern = "") {
   const pattern = normalizeText(selectorPattern)
   if (!pattern) return ""
@@ -242,6 +319,10 @@ function extractMetaContent(html = "", selectorPattern = "") {
   return ""
 }
 
+/**
+ * @param {string} [html]
+ * @returns {string}
+ */
 function extractTitleFromHtml(html = "") {
   const h1TitleMatch = normalizeText(html).match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)
   const h1Title = h1TitleMatch && h1TitleMatch[1] ? stripTags(h1TitleMatch[1]) : ""
@@ -253,6 +334,10 @@ function extractTitleFromHtml(html = "") {
   return chooseMoreSpecificTitle(h1Title, mergedMeta)
 }
 
+/**
+ * @param {string} [html]
+ * @returns {string}
+ */
 function extractFirstParagraphFromHtml(html = "") {
   const body = normalizeText(html)
   const paragraphRegex = /<p\b[^>]*>([\s\S]*?)<\/p>/gi
@@ -264,6 +349,11 @@ function extractFirstParagraphFromHtml(html = "") {
   return ""
 }
 
+/**
+ * @param {string} [html]
+ * @param {string} [plainText]
+ * @returns {string}
+ */
 function extractBylineFromHtml(html = "", plainText = "") {
   const metaByline = extractMetaContent(html, "author")
     || extractMetaContent(html, "article:author")
@@ -297,6 +387,11 @@ function extractBylineFromHtml(html = "", plainText = "") {
   return ""
 }
 
+/**
+ * @param {string} [html]
+ * @param {string} [plainText]
+ * @returns {{ publish: string, updated: string, combined: string }}
+ */
 function extractDatelineSnippets(html = "", plainText = "") {
   const publishedMeta = extractMetaContent(html, "article:published_time")
     || extractMetaContent(html, "og:published_time")
@@ -316,6 +411,10 @@ function extractDatelineSnippets(html = "", plainText = "") {
   }
 }
 
+/**
+ * @param {string} [link]
+ * @returns {boolean}
+ */
 function isBbcLiveUrl(link = "") {
   const host = hostnameFromUrl(link)
   if (!host || !host.endsWith("bbc.com")) return false
@@ -328,11 +427,19 @@ function isBbcLiveUrl(link = "") {
   }
 }
 
+/**
+ * @param {string} [link]
+ * @returns {boolean}
+ */
 function isCnnUrl(link = "") {
   const host = hostnameFromUrl(link)
   return Boolean(host) && host.endsWith("cnn.com")
 }
 
+/**
+ * @param {string} [link]
+ * @returns {string}
+ */
 function resolveBbcAmpUrl(link = "") {
   try {
     const url = new URL(link)
@@ -346,6 +453,10 @@ function resolveBbcAmpUrl(link = "") {
   }
 }
 
+/**
+ * @param {string} [link]
+ * @returns {string}
+ */
 function resolveCnnAmpUrl(link = "") {
   try {
     const url = new URL(link)
@@ -357,6 +468,10 @@ function resolveCnnAmpUrl(link = "") {
   }
 }
 
+/**
+ * @param {string} [line]
+ * @returns {boolean}
+ */
 function isLikelyJinaMetadataLine(line = "") {
   const text = normalizeText(line)
   if (!text) return true
@@ -378,10 +493,18 @@ function isLikelyJinaMetadataLine(line = "") {
   return false
 }
 
+/**
+ * @param {string} [value]
+ * @returns {boolean}
+ */
 function isRelativeDatelineToken(value = "") {
   return /^\d+\s+(?:minutes?|hours?|days?|weeks?|months?|years?)\s+ago$/i.test(normalizeText(value))
 }
 
+/**
+ * @param {string} [value]
+ * @returns {string}
+ */
 function extractRelativeDatelineFragment(value = "") {
   const text = normalizeText(value)
   if (!text) return ""
@@ -389,6 +512,10 @@ function extractRelativeDatelineFragment(value = "") {
   return match && match[0] ? normalizeText(match[0]) : ""
 }
 
+/**
+ * @param {string} [line]
+ * @returns {string}
+ */
 function parseJinaBylineCandidate(line = "") {
   const text = normalizeText(line)
   if (!text || isLikelyJinaMetadataLine(text) || isRelativeDatelineToken(text)) return ""
@@ -415,6 +542,10 @@ function parseJinaBylineCandidate(line = "") {
   return normalizeText(match[1])
 }
 
+/**
+ * @param {Array<{ level?: unknown, text?: unknown }>} [candidates]
+ * @returns {string}
+ */
 function chooseBestJinaHeading(candidates = []) {
   const normalized = Array.isArray(candidates)
     ? candidates
@@ -436,6 +567,11 @@ function chooseBestJinaHeading(candidates = []) {
   return pool[0]?.text || ""
 }
 
+/**
+ * @param {string} [preferred]
+ * @param {string} [fallback]
+ * @returns {string}
+ */
 function chooseMoreSpecificTitle(preferred = "", fallback = "") {
   const a = normalizeText(preferred)
   const b = normalizeText(fallback)
@@ -447,6 +583,10 @@ function chooseMoreSpecificTitle(preferred = "", fallback = "") {
   return a.length >= b.length ? a : b
 }
 
+/**
+ * @param {string} [line]
+ * @returns {boolean}
+ */
 function isLikelyJinaParagraph(line = "") {
   const text = normalizeText(line)
   if (!text || text.length < 40) return false
@@ -462,6 +602,10 @@ function isLikelyJinaParagraph(line = "") {
   return words.length >= 8
 }
 
+/**
+ * @param {string} [markdownText]
+ * @returns {{ title: string, dateline: string, byline: string, firstParagraph: string }}
+ */
 function parseGenericJinaMarkdown(markdownText = "") {
   const allLines = normalizeText(markdownText)
     .split(/\r?\n/)
@@ -550,6 +694,10 @@ function parseGenericJinaMarkdown(markdownText = "") {
   return { title, dateline, byline, firstParagraph }
 }
 
+/**
+ * @param {string} [link]
+ * @returns {Promise<string>}
+ */
 async function fetchViaJinaProxy(link = "") {
   const target = normalizeHttpUrl(link)
   if (!target) throw new Error("Source link is not a valid http/https URL.")
@@ -569,6 +717,10 @@ async function fetchViaJinaProxy(link = "") {
   }
 }
 
+/**
+ * @param {string} [markdownText]
+ * @returns {{ ok: boolean, title: string, firstParagraph: string, dateline?: { publish: string, updated: string, combined: string } }}
+ */
 function parseBbcLiveMarkdown(markdownText = "") {
   const lines = normalizeText(markdownText).split(/\r?\n/)
   let title = ""
@@ -616,6 +768,10 @@ function parseBbcLiveMarkdown(markdownText = "") {
   }
 }
 
+/**
+ * @param {string} [value]
+ * @returns {Set<string>}
+ */
 function tokenizeForSimilarity(value = "") {
   return new Set(
     normalizeLower(value)
@@ -626,6 +782,11 @@ function tokenizeForSimilarity(value = "") {
   )
 }
 
+/**
+ * @param {string} [left]
+ * @param {string} [right]
+ * @returns {number}
+ */
 export function studentNewsTextSimilarityScore(left = "", right = "") {
   const a = normalizeLower(left)
   const b = normalizeLower(right)
@@ -646,6 +807,10 @@ export function studentNewsTextSimilarityScore(left = "", right = "") {
   return intersection / union
 }
 
+/**
+ * @param {string} [sourceLink]
+ * @returns {string}
+ */
 function inferSourceOrganization(sourceLink = "") {
   const host = hostnameFromUrl(sourceLink)
   if (!host) return ""
@@ -655,7 +820,14 @@ function inferSourceOrganization(sourceLink = "") {
   return parts[parts.length - 2]
 }
 
+/**
+ * @param {number} [statusCode]
+ * @param {string} [message]
+ * @param {Record<string, unknown>} [payload]
+ * @returns {Error & { statusCode?: number, payload?: Record<string, unknown> }}
+ */
 function statusErrorWithPayload(statusCode = 500, message = "Request failed", payload = {}) {
+  /** @type {Error & { statusCode?: number, payload?: Record<string, unknown> }} */
   const error = new Error(normalizeText(message) || "Request failed")
   error.statusCode = statusCode
   if (payload && typeof payload === "object" && !Array.isArray(payload)) {
@@ -664,6 +836,21 @@ function statusErrorWithPayload(statusCode = 500, message = "Request failed", pa
   return error
 }
 
+/**
+ * @param {string} [fieldKey]
+ * @param {Record<string, unknown> | null | undefined} [entry]
+ * @returns {{
+ *   field: string,
+ *   label: string,
+ *   status: string,
+ *   message: string,
+ *   criterion: string,
+ *   steps: string[],
+ *   score: number | null,
+ *   threshold: number | null,
+ *   updatedAt: string,
+ * } | null}
+ */
 function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
   const key = normalizeText(fieldKey)
   if (!key) return null
@@ -685,6 +872,10 @@ function normalizeValidationIssueEntry(fieldKey = "", entry = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [value]
+ * @returns {Record<string, ReturnType<typeof normalizeValidationIssueEntry>>}
+ */
 export function normalizeValidationIssueMap(value = {}) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {}
   const normalized = {}
@@ -695,20 +886,36 @@ export function normalizeValidationIssueMap(value = {}) {
   return normalized
 }
 
+/**
+ * @param {string} [note]
+ * @returns {string}
+ */
 export function stripAwaitingReReviewMarker(note = "") {
   return normalizeText(String(note || "").replaceAll(STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER, ""))
 }
 
+/**
+ * @param {string} [note]
+ * @returns {string}
+ */
 export function addAwaitingReReviewMarker(note = "") {
   const clean = stripAwaitingReReviewMarker(note)
   if (!clean) return STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER
   return `${clean}\n${STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER}`
 }
 
+/**
+ * @param {string} [note]
+ * @returns {boolean}
+ */
 function hasAwaitingReReviewMarker(note = "") {
   return normalizeText(note).includes(STUDENT_NEWS_AWAITING_RE_REVIEW_MARKER)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [row]
+ * @returns {boolean}
+ */
 export function resolveStudentNewsAwaitingReReview(row = {}) {
   if (
     normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
@@ -720,6 +927,10 @@ export function resolveStudentNewsAwaitingReReview(row = {}) {
   return hasAwaitingReReviewMarker(row?.reviewNote)
 }
 
+/**
+ * @param {string} [note]
+ * @returns {string}
+ */
 function stripComplianceBlockFromReviewNote(note = "") {
   const text = stripAwaitingReReviewMarker(note)
   if (!text) return ""
@@ -729,6 +940,10 @@ function stripComplianceBlockFromReviewNote(note = "") {
   return normalizeText(text.replace(blockRegex, " ").replace(/\n{3,}/g, "\n\n"))
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [issueMap]
+ * @returns {string}
+ */
 export function buildStudentNewsComplianceBlock(issueMap = {}) {
   const normalized = normalizeValidationIssueMap(issueMap)
   const fields = Object.keys(normalized)
@@ -753,6 +968,11 @@ export function buildStudentNewsComplianceBlock(issueMap = {}) {
   return [STUDENT_NEWS_COMPLIANCE_NOTE_START, ...lines, STUDENT_NEWS_COMPLIANCE_NOTE_END].join("\n")
 }
 
+/**
+ * @param {string} [existingReviewNote]
+ * @param {Record<string, unknown> | null | undefined} [issueMap]
+ * @returns {string}
+ */
 export function mergeStudentNewsReviewNoteWithCompliance(existingReviewNote = "", issueMap = {}) {
   const manual = stripComplianceBlockFromReviewNote(existingReviewNote)
   const complianceBlock = buildStudentNewsComplianceBlock(issueMap)
@@ -1277,6 +1497,17 @@ function datelineHasExplicitUpdatedCue(value = "") {
   return /\b(?:updated|last updated)\b/i.test(text)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [payload]
+ * @param {Record<string, unknown> | null | undefined} [options]
+ * @returns {Promise<{
+ *   passed: boolean,
+ *   failedFields: Record<string, Record<string, unknown>>,
+ *   revisionTasks: Array<Record<string, unknown>>,
+ *   details: Record<string, unknown>,
+ *   config: ReturnType<typeof normalizeStudentNewsValidationConfig>,
+ * }>}
+ */
 export async function evaluateStudentNewsCompliance(payload = {}, options = {}) {
   const config = normalizeStudentNewsValidationConfig(options?.validationConfig || {})
   if (config.enabled === false) {
@@ -1528,6 +1759,10 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [revisionTasks]
+ * @returns {Map<string, Record<string, unknown>>}
+ */
 function revisionTasksByField(revisionTasks = []) {
   const source = Array.isArray(revisionTasks) ? revisionTasks : []
   const map = new Map()
@@ -1539,6 +1774,11 @@ function revisionTasksByField(revisionTasks = []) {
   return map
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} [previousIssues]
+ * @param {Record<string, unknown> | null | undefined} [compliance]
+ * @returns {{ issues: Record<string, ReturnType<typeof normalizeValidationIssueEntry>>, newlyFixed: string[] }}
+ */
 export function updateStudentNewsValidationIssues(previousIssues = {}, compliance = {}) {
   const previous = normalizeValidationIssueMap(previousIssues)
   const failedFields = compliance?.failedFields && typeof compliance.failedFields === "object"

@@ -1,3 +1,4 @@
+// @ts-check
 // Lightweight BBC article dateline validator.
 // Fetches a BBC page once and compares its canonical datePublished/dateModified
 // against the expected ISO timestamp provided by the caller.
@@ -7,7 +8,7 @@ const DEFAULT_TOLERANCE_SECONDS = 1;
 /**
  * Validate BBC article dateline fields.
  *
- * @param {object} opts
+ * @param {{ url: string, expectedIso: string, toleranceSeconds?: number, signal?: AbortSignal }} opts
  * @param {string} opts.url - Full BBC article URL.
  * @param {string} opts.expectedIso - ISO timestamp to compare against.
  * @param {number} [opts.toleranceSeconds=1] - Allowed difference in seconds.
@@ -57,12 +58,22 @@ export async function validateBbcDateline({
   };
 }
 
+/**
+ * @param {number} targetMs
+ * @param {number} candidateMs
+ * @param {number} toleranceSeconds
+ * @returns {boolean}
+ */
 function withinTolerance(targetMs, candidateMs, toleranceSeconds) {
   if (Number.isNaN(candidateMs)) return false;
   const delta = Math.abs(candidateMs - targetMs) / 1000;
   return delta <= toleranceSeconds;
 }
 
+/**
+ * @param {string} html
+ * @returns {{ datePublished?: string, dateModified?: string }}
+ */
 function extractDates(html) {
   const jsonLdMatch = html.match(
     /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i,

@@ -417,8 +417,9 @@ curl -fsS http://127.0.0.1:8786/healthz
 Notes:
 
 1. `test.eagles.edu.vn` follows live admin wiring patterns, but `/healthz` remains loopback-only by nginx policy.
-2. `tools/sync-and-restart-test-runtime.sh public` skips Prisma refresh and only syncs public portal files + restart.
-3. `tools/sync-and-restart-test-runtime.sh restart-only` skips sync and performs Prisma refresh + restart.
+2. `tools/sync-and-restart-test-runtime.sh` always re-syncs the repo `src/` tree into `/home/test.eagles.edu.vn/sis/src/` before Prisma or restart, so the runtime cannot drift without the wrapper correcting it.
+3. `tools/sync-and-restart-test-runtime.sh public` skips Prisma refresh and still enforces the `src/` safety sync before syncing public portal files + restart.
+4. `tools/sync-and-restart-test-runtime.sh restart-only` skips the FreeFileSync pass but still enforces the `src/` safety sync before Prisma refresh + restart.
 
 ## Backup and Restore Strategy
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// @ts-check
+// @ts-check
 
 const baseUrl = (process.env.SIS_BASE_URL || "http://127.0.0.1:8787").replace(/\/+$/, "")
 const username = String(process.env.STUDENT_ADMIN_USER || "admin").trim()
@@ -23,21 +25,37 @@ const LEVEL_FIXTURES = [
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function toDateText(value) {
   return new Date(value).toISOString().slice(0, 10)
 }
 
+/**
+ * @param {Date | string | number} [value]
+ * @returns {Date}
+ */
 function startOfDay(value = new Date()) {
   const date = new Date(value)
   date.setHours(0, 0, 0, 0)
   return date
 }
 
+/**
+ * @param {Date | string | number} [value]
+ * @returns {Date}
+ */
 function startOfWeekMonday(value = new Date()) {
   const date = startOfDay(value)
   const day = date.getDay()
@@ -46,22 +64,41 @@ function startOfWeekMonday(value = new Date()) {
   return date
 }
 
+/**
+ * @param {number} value
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
 function clampInt(value, min, max) {
   if (!Number.isFinite(value)) return min
   return Math.min(max, Math.max(min, Math.trunc(value)))
 }
 
+/**
+ * @param {Date | string | number} value
+ * @returns {string}
+ */
 function toMiddayIso(value) {
   const date = new Date(value)
   date.setHours(12, 0, 0, 0)
   return date.toISOString()
 }
 
+/**
+ * @param {Date} [now]
+ * @returns {string}
+ */
 function buildSchoolYear(now = new Date()) {
   const year = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1
   return `${year}-${year + 1}`
 }
 
+/**
+ * @template T
+ * @param {T[]} [values]
+ * @returns {T[]}
+ */
 function uniqueValues(values = []) {
   const out = []
   const seen = new Set()
@@ -74,6 +111,19 @@ function uniqueValues(values = []) {
   return out
 }
 
+/**
+ * @param {Date} [now]
+ * @returns {{
+ *   now: Date,
+ *   today: Date,
+ *   weekStart: Date,
+ *   todayIndex: number,
+ *   days: Date[],
+ *   dateAt(index: number): Date,
+ *   isoAt(index: number): string,
+ *   isoMiddayAt(index: number): string,
+ * }}
+ */
 function buildWeekContext(now = new Date()) {
   const today = startOfDay(now)
   const weekStart = startOfWeekMonday(today)
@@ -103,11 +153,31 @@ function buildWeekContext(now = new Date()) {
   }
 }
 
+/**
+ * @param {string} basePrefix
+ * @param {number} number
+ * @returns {string}
+ */
 function phoneWith(basePrefix, number) {
   const suffix = String(number).padStart(7, "0")
   return `${basePrefix}${suffix.slice(-7)}`
 }
 
+/**
+ * @param {{ level: string, short: string, classCode: string }} levelEntry
+ * @param {number} levelIndex
+ * @param {{
+ *   now: Date,
+ *   today: Date,
+ *   weekStart: Date,
+ *   todayIndex: number,
+ *   days: Date[],
+ *   dateAt(index: number): Date,
+ *   isoAt(index: number): string,
+ *   isoMiddayAt(index: number): string,
+ * }} weekContext
+ * @returns {Array<Record<string, unknown>>}
+ */
 function buildPairFixtures(levelEntry, levelIndex, weekContext) {
   const now = weekContext.now
   const schoolYear = buildSchoolYear(now)
@@ -334,6 +404,22 @@ function buildPairFixtures(levelEntry, levelIndex, weekContext) {
   return [positiveFixture, riskFixture]
 }
 
+/**
+ * @param {Date} [now]
+ * @returns {{
+ *   weekContext: {
+ *     now: Date,
+ *     today: Date,
+ *     weekStart: Date,
+ *     todayIndex: number,
+ *     days: Date[],
+ *     dateAt(index: number): Date,
+ *     isoAt(index: number): string,
+ *     isoMiddayAt(index: number): string,
+ *   },
+ *   fixtures: Array<Record<string, unknown>>,
+ * }}
+ */
 function buildFixtures(now = new Date()) {
   const weekContext = buildWeekContext(now)
   const fixtures = LEVEL_FIXTURES.flatMap((entry, index) =>
@@ -346,11 +432,21 @@ function buildFixtures(now = new Date()) {
   }
 }
 
+/**
+ * @param {string} setCookie
+ * @returns {string}
+ */
 function parseSetCookie(setCookie) {
   if (!setCookie) return ""
   return String(setCookie).split(";")[0].trim()
 }
 
+/**
+ * @param {string} path
+ * @param {RequestInit} [init]
+ * @param {string} [cookie]
+ * @returns {Promise<{ response: Response, body: Record<string, unknown>, text: string }>}
+ */
 async function request(path, init = {}, cookie = "") {
   const headers = { ...(init.headers || {}) }
   if (cookie) headers.Cookie = cookie
@@ -365,6 +461,12 @@ async function request(path, init = {}, cookie = "") {
   return { response, body, text }
 }
 
+/**
+ * @param {string} path
+ * @param {RequestInit} [init]
+ * @param {string} [cookie]
+ * @returns {Promise<{ response: Response, body: Record<string, unknown>, text: string }>}
+ */
 async function mustRequest(path, init = {}, cookie = "") {
   const result = await request(path, init, cookie)
   if (!result.response.ok) {
@@ -374,6 +476,9 @@ async function mustRequest(path, init = {}, cookie = "") {
   return result
 }
 
+/**
+ * @returns {Promise<string>}
+ */
 async function loginAndGetCookie() {
   const login = await mustRequest("/api/admin/auth/login", {
     method: "POST",
@@ -385,6 +490,12 @@ async function loginAndGetCookie() {
   return cookie
 }
 
+/**
+ * @param {string} cookie
+ * @param {Record<string, unknown>} fixture
+ * @param {Map<string, { id?: string }>} byStudentId
+ * @returns {Promise<{ id: string | undefined, action: string }>}
+ */
 async function upsertStudent(cookie, fixture, byStudentId) {
   const payload = {
     studentId: fixture.studentId,
@@ -421,11 +532,21 @@ async function upsertStudent(cookie, fixture, byStudentId) {
   return { id: created.body?.student?.id, action: "created" }
 }
 
+/**
+ * @param {string} cookie
+ * @param {string} studentId
+ * @returns {Promise<Record<string, unknown>>}
+ */
 async function refreshStudent(cookie, studentId) {
   const detail = await mustRequest(`/api/admin/students/${encodeURIComponent(studentId)}`, { method: "GET" }, cookie)
   return detail.body
 }
 
+/**
+ * @param {string} cookie
+ * @param {Record<string, unknown>} student
+ * @returns {Promise<{ deletedAttendance: number, deletedGrades: number, deletedReports: number }>}
+ */
 async function clearStudentRecords(cookie, student) {
   const id = student.id
   let deletedAttendance = 0
@@ -468,6 +589,12 @@ async function clearStudentRecords(cookie, student) {
   return { deletedAttendance, deletedGrades, deletedReports }
 }
 
+/**
+ * @param {string} cookie
+ * @param {string} studentId
+ * @param {Record<string, unknown>} fixture
+ * @returns {Promise<{ createdAttendance: number, createdGrades: number, createdReports: number }>}
+ */
 async function createStudentRecords(cookie, studentId, fixture) {
   let createdAttendance = 0
   let createdGrades = 0
@@ -515,6 +642,9 @@ async function createStudentRecords(cookie, studentId, fixture) {
   return { createdAttendance, createdGrades, createdReports }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function main() {
   const { weekContext, fixtures } = buildFixtures(new Date())
 

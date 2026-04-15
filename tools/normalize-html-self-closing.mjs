@@ -1,5 +1,8 @@
+// @ts-check
+
 import fs from "node:fs/promises"
 import path from "node:path"
+import process from "node:process"
 import { fileURLToPath } from "node:url"
 
 const IGNORED_DIRECTORIES = new Set([
@@ -12,10 +15,19 @@ const IGNORED_DIRECTORIES = new Set([
 
 const DEFAULT_TARGETS = ["web-asset", path.join("dev", "tabulatorz", "test", "e2e")]
 
+/**
+ * @param {string} source
+ * @returns {string}
+ */
 export function normalizeHtmlSelfClosingMarkup(source) {
   return source.replace(/ \/>/g, ">")
 }
 
+/**
+ * @param {string} targetPath
+ * @param {Set<string>} htmlFiles
+ * @returns {Promise<void>}
+ */
 async function collectHtmlFilesFromTarget(targetPath, htmlFiles) {
   const stat = await fs.stat(targetPath).catch(() => null)
   if (!stat) {
@@ -49,7 +61,13 @@ async function collectHtmlFilesFromTarget(targetPath, htmlFiles) {
   }
 }
 
+/**
+ * @param {string[]} targets
+ * @param {string} cwd
+ * @returns {Promise<string[]>}
+ */
 async function collectHtmlFiles(targets, cwd) {
+  /** @type {Set<string>} */
   const htmlFiles = new Set()
   const searchTargets = targets.length > 0 ? targets : DEFAULT_TARGETS
 
@@ -61,11 +79,21 @@ async function collectHtmlFiles(targets, cwd) {
   return [...htmlFiles].sort()
 }
 
+/**
+ * @param {string[]} targets
+ * @param {string} cwd
+ * @returns {string[]}
+ */
 function formatScanRoots(targets, cwd) {
   const searchTargets = targets.length > 0 ? targets : DEFAULT_TARGETS
   return searchTargets.map((target) => path.resolve(cwd, target))
 }
 
+/**
+ * @param {string[]} [targets]
+ * @param {{ cwd?: string }} [options]
+ * @returns {Promise<string[]>}
+ */
 export async function normalizeHtmlSelfClosingFiles(targets = [], options = {}) {
   const cwd = path.resolve(options.cwd ?? process.cwd())
   const htmlFiles = await collectHtmlFiles(targets, cwd)
@@ -84,6 +112,9 @@ export async function normalizeHtmlSelfClosingFiles(targets = [], options = {}) 
   return changedFiles
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function main() {
   const args = process.argv.slice(2).filter((arg) => !arg.startsWith("--"))
   const cwd = process.cwd()

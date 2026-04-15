@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import fs from "node:fs"
 import path from "node:path"
@@ -18,15 +19,27 @@ const DEFAULT_TAKE = 200
 const DEFAULT_REVIEWED_BY = "system:news-validation-audit"
 const DEFAULT_STATUSES = ["submitted", "revision-requested"]
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeDomain(value) {
   const token = normalizeLower(value)
     .replace(/^https?:\/\//, "")
@@ -40,6 +53,16 @@ function normalizeDomain(value) {
   return token
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   apply: boolean,
+ *   take: number,
+ *   reviewedBy: string,
+ *   statuses: string[],
+ *   help: boolean,
+ * }}
+ */
 function parseArgs(argv = []) {
   const args = {
     apply: false,
@@ -114,6 +137,9 @@ function uiSettingsFilePath() {
   )
 }
 
+/**
+ * @returns {Record<string, unknown>}
+ */
 function readUiSettings() {
   const filePath = uiSettingsFilePath()
   if (!fs.existsSync(filePath)) return {}
@@ -123,21 +149,32 @@ function readUiSettings() {
     const parsed = JSON.parse(raw)
     const wrapped =
       parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, "uiSettings")
-    const settings = wrapped ? parsed.uiSettings : parsed
-    return settings && typeof settings === "object" && !Array.isArray(settings) ? settings : {}
+    const settings = wrapped ? /** @type {Record<string, unknown>} */ (parsed).uiSettings : parsed
+    return settings && typeof settings === "object" && !Array.isArray(settings) ? /** @type {Record<string, unknown>} */ (settings) : {}
   } catch (error) {
     void error
     return {}
   }
 }
 
+/**
+ * @returns {{
+ *   allowedDomains: string[],
+ *   thresholds: {
+ *     articleTitle: number,
+ *     byline: number,
+ *     articleDateline: number,
+ *     leadSynopsis: number,
+ *   },
+ * }}
+ */
 function resolveValidationConfigFromUiSettings() {
   const settings = readUiSettings()
   const validation = settings?.newsReportValidation && typeof settings.newsReportValidation === "object"
-    ? settings.newsReportValidation
+    ? /** @type {Record<string, unknown>} */ (settings.newsReportValidation)
     : {}
   const defaults = validation?.defaultSources && typeof validation.defaultSources === "object"
-    ? validation.defaultSources
+    ? /** @type {Record<string, unknown>} */ (validation.defaultSources)
     : {}
   const allowedDomains = []
   if (defaults.cnn !== false) allowedDomains.push("cnn.com")
@@ -145,8 +182,9 @@ function resolveValidationConfigFromUiSettings() {
   const custom = Array.isArray(validation?.customSources) ? validation.customSources : []
   custom.slice(0, 8).forEach((entry) => {
     if (!entry || typeof entry !== "object") return
-    if (entry.enabled !== true) return
-    const domain = normalizeDomain(entry.domain)
+    const customSource = /** @type {Record<string, unknown>} */ (entry)
+    if (customSource.enabled !== true) return
+    const domain = normalizeDomain(customSource.domain)
     if (!domain) return
     allowedDomains.push(domain)
   })

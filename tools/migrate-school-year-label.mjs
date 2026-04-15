@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import fs from "node:fs"
 import path from "node:path"
@@ -14,10 +15,24 @@ function normalizeText(value) {
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
 function isSchoolYearLabel(value) {
   return /^[0-9]{4}-[0-9]{4}$/u.test(normalizeText(value))
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   from: string,
+ *   to: string,
+ *   apply: boolean,
+ *   settingsFile: string,
+ *   help?: boolean,
+ * }}
+ */
 function parseArgs(argv = []) {
   const args = {
     from: DEFAULT_FROM_SCHOOL_YEAR,
@@ -77,12 +92,20 @@ Examples:
 `)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function resolveSettingsFilePath(value) {
   const text = normalizeText(value)
   if (!text) return ""
   return path.resolve(process.cwd(), text)
 }
 
+/**
+ * @param {string} pathname
+ * @returns {Record<string, unknown> | null}
+ */
 function readUiSettings(pathname) {
   try {
     if (!fs.existsSync(pathname)) return null
@@ -96,6 +119,10 @@ function readUiSettings(pathname) {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} payload
+ * @returns {Record<string, unknown> | null}
+ */
 function resolveUiSettingsContainer(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null
   if (payload.uiSettings && typeof payload.uiSettings === "object" && !Array.isArray(payload.uiSettings)) {
@@ -104,6 +131,12 @@ function resolveUiSettingsContainer(payload) {
   return payload
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} payload
+ * @param {string} from
+ * @param {string} to
+ * @returns {{ updated: boolean, payload: Record<string, unknown> | null | undefined }}
+ */
 function migrateUiSettingsSchoolYear(payload, from, to) {
   const source = payload && typeof payload === "object" ? payload : null
   if (!source) return { updated: false, payload }
@@ -127,6 +160,9 @@ function migrateUiSettingsSchoolYear(payload, from, to) {
   }
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function run() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) {
@@ -142,6 +178,7 @@ async function run() {
 
   const prisma = await getSharedPrismaClient()
 
+  /** @type {Array<Record<string, unknown>>} */
   const reportRows = await prisma.parentClassReport.findMany({
     where: { schoolYear: from },
     select: {
@@ -153,6 +190,7 @@ async function run() {
     orderBy: [{ generatedAt: "desc" }, { createdAt: "desc" }],
   })
 
+  /** @type {Array<Record<string, unknown>>} */
   const reportConflictRows = []
   for (let index = 0; index < reportRows.length; index += 1) {
     const row = reportRows[index]

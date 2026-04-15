@@ -1,3 +1,5 @@
+// @ts-check
+
 import { chromium } from 'playwright';
 
 const target = process.argv[2];
@@ -6,8 +8,17 @@ if (!target) {
   process.exit(1);
 }
 const ORIGIN = 'http://127.0.0.1:8788';
+/**
+ * @param {string} url
+ * @returns {string}
+ */
 function abs(url) { return url.startsWith('http') ? url : `${ORIGIN}${url}`; }
 
+/**
+ * @param {import('playwright').Page} page
+ * @param {string} url
+ * @returns {Promise<void>}
+ */
 async function loginFor(page, url) {
   if (url.includes('/admin/students') || url.includes('/web-asset/admin/student-admin.html') || url.includes('/student-points.html')) {
     await page.goto(abs('/admin/students?apiOrigin=http://127.0.0.1:8788'), { waitUntil: 'domcontentloaded' });

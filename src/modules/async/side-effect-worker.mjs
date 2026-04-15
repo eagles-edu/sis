@@ -1,3 +1,5 @@
+// @ts-check
+
 import fs from "node:fs/promises"
 import path from "node:path"
 import {
@@ -15,21 +17,37 @@ import {
   generateStudentReportCardPdf,
 } from "../../../server/student-report-card-pdf.mjs"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} value
+ * @returns {Record<string, unknown>}
+ */
 function normalizePayload(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {}
   return { ...value }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} value
+ * @returns {Record<string, unknown>}
+ */
 function normalizeFilters(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {}
   return { ...value }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} job
+ * @returns {Record<string, unknown>}
+ */
 function resolveAnnouncementPayload(job) {
   const payload = normalizePayload(job?.payloadJson)
   if (payload.announcementPayload && typeof payload.announcementPayload === "object") {
@@ -41,6 +59,10 @@ function resolveAnnouncementPayload(job) {
   return payload
 }
 
+/**
+ * @param {Record<string, unknown>} [job]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function processAnnouncementEmailSideEffectJob(job = {}) {
   const payload = normalizePayload(job.payloadJson)
   const announcementPayload = resolveAnnouncementPayload(job)
@@ -72,6 +94,10 @@ export async function processAnnouncementEmailSideEffectJob(job = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [job]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function processReportCardPdfSideEffectJob(job = {}) {
   const payload = normalizePayload(job.payloadJson)
   const student = payload.student || {}
@@ -100,6 +126,10 @@ export async function processReportCardPdfSideEffectJob(job = {}) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} [job]
+ * @returns {Promise<Record<string, unknown>>}
+ */
 export async function processAsyncSideEffectJob(job = {}) {
   const jobType = normalizeText(job.jobType)
   if (jobType === ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL) {
@@ -114,6 +144,24 @@ export async function processAsyncSideEffectJob(job = {}) {
   throw error
 }
 
+/**
+ * @param {{
+ *   jobTypes?: string[],
+ *   take?: number,
+ *   workerId?: string,
+ *   maxAttempts?: number,
+ *   retryDelayMs?: number,
+ *   onJobComplete?: ((job: Record<string, unknown>, result: Record<string, unknown>, completed: Record<string, unknown>) => unknown) | null,
+ *   onJobFailed?: ((job: Record<string, unknown>, error: unknown, updated: Record<string, unknown>) => unknown) | null,
+ * }} [options]
+ * @returns {Promise<{
+ *   claimed: number,
+ *   succeeded: number,
+ *   failed: number,
+ *   remaining: number,
+ *   processing: number,
+ * }>}
+ */
 export async function drainAsyncSideEffectJobs({
   jobTypes = [],
   take = 10,
@@ -154,6 +202,6 @@ export async function drainAsyncSideEffectJobs({
     succeeded,
     failed,
     remaining: Math.max(0, claimed.length - succeeded - failed),
-    processing: claimed.filter((job) => job.status === ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED).length,
+    processing: claimed.filter((entry) => entry.status === ASYNC_SIDE_EFFECT_JOB_STATUS_QUEUED).length,
   }
 }

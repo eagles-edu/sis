@@ -1,3 +1,4 @@
+// @ts-check
 // server/student-report-card-pdf.mjs
 
 import fs from "node:fs"
@@ -5,6 +6,24 @@ import path from "node:path"
 import PDFDocument from "pdfkit"
 
 const FIXED_TIME_ZONE_OFFSET_MS = 7 * 60 * 60 * 1000
+
+/**
+ * @typedef {Record<string, unknown> & {
+ *   eaglesId?: unknown,
+ *   studentNumber?: unknown,
+ *   profile?: Record<string, unknown> | null,
+ *   attendanceRecords?: Array<Record<string, unknown>> | null,
+ *   gradeRecords?: Array<Record<string, unknown>> | null,
+ *   parentReports?: Array<Record<string, unknown>> | null,
+ *   email?: unknown,
+ * }} StudentReportCardEntity
+ *
+ * @typedef {Record<string, unknown> & {
+ *   className?: unknown,
+ *   schoolYear?: unknown,
+ *   quarter?: unknown,
+ * }} ReportCardFilters
+ */
 
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
@@ -206,6 +225,11 @@ function assertStudentIdentity(student, context = "student") {
   }
 }
 
+/**
+ * @param {StudentReportCardEntity} student
+ * @param {ReportCardFilters} [filters]
+ * @returns {string}
+ */
 export function buildReportCardFilename(student, filters = {}) {
   const identity = assertStudentIdentity(student, "report-card filename")
   const studentPart = sanitizeFilePart(`${identity.eaglesId}-${identity.studentNumber}`, "student")
@@ -215,9 +239,14 @@ export function buildReportCardFilename(student, filters = {}) {
   return `report-card-${studentPart}-${classPart}-${yearPart}-${quarterPart}.pdf`
 }
 
+/**
+ * @param {StudentReportCardEntity} student
+ * @param {ReportCardFilters} [filters]
+ * @returns {Promise<Buffer>}
+ */
 export async function generateStudentReportCardPdf(student, filters = {}) {
   const identity = assertStudentIdentity(student, "report-card PDF")
-  const profile = student?.profile || {}
+  const profile = /** @type {Record<string, unknown>} */ (student?.profile || {})
   const selected = selectRecords(student, filters)
   const attendanceSummary = summarizeAttendance(selected.attendanceRecords)
   const gradeSummary = summarizeGrades(selected.gradeRecords)

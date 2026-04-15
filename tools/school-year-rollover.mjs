@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 
 import crypto from "node:crypto"
 import fs from "node:fs"
@@ -50,21 +51,38 @@ Examples:
 `)
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/**
+ * @param {unknown} value
+ * @param {number} fallback
+ * @returns {number}
+ */
 function toPositiveInt(value, fallback) {
   const parsed = Number.parseInt(normalizeText(value), 10)
   if (!Number.isFinite(parsed) || parsed < 1) return fallback
   return parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 export function parseSchoolYearLabel(value) {
   const match = /^([0-9]{4})\s*-\s*([0-9]{4})$/u.exec(normalizeText(value))
   if (!match) return null
@@ -74,6 +92,10 @@ export function parseSchoolYearLabel(value) {
   return `${startYear}-${endYear}`
 }
 
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
 function parseIsoDate(value) {
   const text = normalizeText(value)
   if (!/^\d{4}-\d{2}-\d{2}$/u.test(text)) return null
@@ -82,6 +104,10 @@ function parseIsoDate(value) {
   return parsed
 }
 
+/**
+ * @param {Date} date
+ * @returns {string}
+ */
 function toIsoDate(date) {
   const year = String(date.getUTCFullYear())
   const month = String(date.getUTCMonth() + 1).padStart(2, "0")
@@ -89,6 +115,10 @@ function toIsoDate(date) {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * @param {Date} [date]
+ * @returns {string}
+ */
 function toRunId(date = new Date()) {
   const year = String(date.getUTCFullYear())
   const month = String(date.getUTCMonth() + 1).padStart(2, "0")
@@ -99,10 +129,25 @@ function toRunId(date = new Date()) {
   return `${year}${month}${day}-${hour}${minute}${second}Z`
 }
 
+/**
+ * @returns {string}
+ */
 function nowIso() {
   return new Date().toISOString()
 }
 
+/**
+ * @param {string} startDateText
+ * @param {string} endDateText
+ * @returns {{
+ *   startDate: Date,
+ *   endDate: Date,
+ *   endExclusive: Date,
+ *   startDateText: string,
+ *   endDateText: string,
+ *   endExclusiveDateText: string,
+ * }}
+ */
 export function buildArchiveDateRange(startDateText, endDateText) {
   const startDate = parseIsoDate(startDateText)
   if (!startDate) throw new Error("Invalid --start-date. Expected YYYY-MM-DD")
@@ -126,6 +171,14 @@ export function buildArchiveDateRange(startDateText, endDateText) {
   }
 }
 
+/**
+ * @param {{
+ *   excludePoints?: boolean,
+ *   excludeNotifications?: boolean,
+ *   excludeParentProfile?: boolean,
+ * }} [options]
+ * @returns {DatasetDefinition[]}
+ */
 function datasetDefinitions(options = {}) {
   const definitions = [
     {
@@ -220,6 +273,11 @@ function datasetDefinitions(options = {}) {
   return definitions
 }
 
+/**
+ * @param {DatasetDefinition} dataset
+ * @param {RolloverDateRange} context
+ * @returns {Record<string, unknown>}
+ */
 function buildDatasetWhere(dataset, context) {
   if (dataset.filterMode === "schoolYear") {
     return { schoolYear: context.schoolYear }
@@ -261,16 +319,112 @@ function buildDatasetWhere(dataset, context) {
   throw new Error(`Unsupported dataset filter mode: ${dataset.filterMode}`)
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} left
+ * @param {Record<string, unknown> | null | undefined} right
+ * @returns {Record<string, unknown>}
+ */
 function combineWhere(left, right) {
   const leftValue = left && typeof left === "object" ? left : {}
   const rightValue = right && typeof right === "object" ? right : {}
   return { AND: [leftValue, rightValue] }
 }
 
+/**
+ * @typedef {{
+ *   key: string,
+ *   model: string,
+ *   description: string,
+ *   whereDescription: string,
+ *   where: Record<string, unknown>,
+ *   rowCount: number,
+ *   archivedFile: string,
+ *   archivedFileSizeBytes: number,
+ *   lineSha256: string,
+ *   firstId: string,
+ *   lastId: string,
+ *   purgedCount: number,
+ *   remainingCount: number,
+ * }} DatasetSummary
+ *
+ * @typedef {{
+ *   version?: number,
+ *   command?: string,
+ *   status?: string,
+ *   createdAt?: string,
+ *   completedAt?: string,
+ *   schoolYear?: string,
+ *   dateWindow?: {
+ *     startDate?: string,
+ *     endDate?: string,
+ *     endExclusiveDate?: string,
+ *   },
+ *   options?: Record<string, unknown>,
+ *   runId?: string,
+ *   datasets?: DatasetSummary[],
+ *   studentSnapshot?: Record<string, unknown>,
+ *   errors?: string[],
+ *   archivePath?: string,
+ *   manifestPath?: string,
+ * }} ArchiveManifest
+ *
+ * @typedef {{
+ *   key: string,
+ *   model: string,
+ *   filterMode: "schoolYear" | "dateRange" | "submittedOrCreatedRange",
+ *   dateField?: string,
+ *   description: string,
+ *   whereDescription: string,
+ *   studentRefFields: string[],
+ * }} DatasetDefinition
+ *
+ * @typedef {{
+ *   schoolYear: string,
+ *   startDate: Date,
+ *   endDate: Date,
+ *   endExclusive: Date,
+ *   startDateText: string,
+ *   endDateText: string,
+ *   endExclusiveDateText: string,
+ * }} RolloverDateRange
+ *
+ * @typedef {{
+ *   command: "help" | "archive" | "inspect",
+ *   schoolYear: string,
+ *   startDate: string,
+ *   endDate: string,
+ *   archiveRoot: string,
+ *   batchSize: number,
+ *   apply: boolean,
+ *   excludePoints: boolean,
+ *   excludeNotifications: boolean,
+ *   excludeParentProfile: boolean,
+ *   run: string,
+ *   dataset: string,
+ *   limit: number,
+ *   match: string,
+ *   json: boolean,
+ * }} RolloverArgs
+ *
+ * @typedef {ArchiveManifest & {
+ *   archivePath: string,
+ *   manifestPath: string,
+ * }} ArchiveManifestRow
+ */
+
+/**
+ * @param {string} dirPath
+ * @returns {Promise<void>}
+ */
 async function ensureDirectory(dirPath) {
   await fsp.mkdir(dirPath, { recursive: true })
 }
 
+/**
+ * @param {string} filePath
+ * @param {Record<string, unknown>} payload
+ * @returns {Promise<void>}
+ */
 function writeManifestAtomic(filePath, payload) {
   const tmpPath = `${filePath}.tmp-${process.pid}-${Date.now()}`
   const json = `${JSON.stringify(payload, null, 2)}\n`
@@ -283,6 +437,11 @@ function writeManifestAtomic(filePath, payload) {
     })
 }
 
+/**
+ * @param {string} filePath
+ * @param {Array<Record<string, unknown>>} rows
+ * @returns {Promise<{ lineSha256: string, fileSizeBytes: number }>}
+ */
 async function streamRowsToGzipNdjson(filePath, rows) {
   await ensureDirectory(path.dirname(filePath))
 
@@ -316,6 +475,12 @@ async function streamRowsToGzipNdjson(filePath, rows) {
   }
 }
 
+/**
+ * @param {{ findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>> }} prismaModel
+ * @param {Record<string, unknown>} where
+ * @param {number} batchSize
+ * @returns {Promise<Array<Record<string, unknown>>>}
+ */
 async function readDatasetRows(prismaModel, where, batchSize) {
   const rows = []
   let lastId = ""
@@ -339,6 +504,11 @@ async function readDatasetRows(prismaModel, where, batchSize) {
   return rows
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} rows
+ * @param {string[]} [studentRefFields]
+ * @returns {Set<string>}
+ */
 function collectStudentRefs(rows, studentRefFields = []) {
   const refs = new Set()
   if (!Array.isArray(studentRefFields) || !studentRefFields.length) return refs
@@ -355,11 +525,25 @@ function collectStudentRefs(rows, studentRefFields = []) {
   return refs
 }
 
+/**
+ * @param {{
+ *   prisma: Record<string, unknown>,
+ *   datasets: Array<Record<string, unknown>>,
+ *   context: Record<string, unknown>,
+ *   archiveDir: string,
+ *   batchSize: number,
+ *   apply: boolean,
+ * }} input
+ * @returns {Promise<{ datasetSummaries: DatasetSummary[], allStudentRefs: Set<string> }>}
+ */
 async function archiveDatasets({ prisma, datasets, context, archiveDir, batchSize, apply }) {
+  /** @type {DatasetSummary[]} */
   const datasetSummaries = []
+  /** @type {Set<string>} */
   const allStudentRefs = new Set()
 
   for (let index = 0; index < datasets.length; index += 1) {
+    /** @type {DatasetDefinition} */
     const dataset = datasets[index]
     const prismaModel = prisma?.[dataset.model]
     if (!prismaModel?.count || !prismaModel?.findMany) {
@@ -368,6 +552,7 @@ async function archiveDatasets({ prisma, datasets, context, archiveDir, batchSiz
 
     const where = buildDatasetWhere(dataset, context)
     const totalRows = await prismaModel.count({ where })
+    /** @type {DatasetSummary} */
     const summary = {
       key: dataset.key,
       model: dataset.model,
@@ -418,6 +603,14 @@ async function archiveDatasets({ prisma, datasets, context, archiveDir, batchSiz
   }
 }
 
+/**
+ * @param {{
+ *   prisma: { student: { findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>> } },
+ *   archiveDir: string,
+ *   studentRefIds: Set<string>,
+ * }} input
+ * @returns {Promise<DatasetSummary>}
+ */
 async function archiveStudentSnapshot({ prisma, archiveDir, studentRefIds }) {
   const refIds = Array.from(studentRefIds)
   if (!refIds.length) {
@@ -472,6 +665,12 @@ async function archiveStudentSnapshot({ prisma, archiveDir, studentRefIds }) {
   }
 }
 
+/**
+ * @param {{ findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>>, deleteMany(options: Record<string, unknown>): Promise<{ count?: number }> }} prismaModel
+ * @param {Record<string, unknown>} where
+ * @param {number} batchSize
+ * @returns {Promise<number>}
+ */
 async function purgeDatasetRows(prismaModel, where, batchSize) {
   let deletedCount = 0
 
@@ -506,8 +705,19 @@ async function purgeDatasetRows(prismaModel, where, batchSize) {
   return deletedCount
 }
 
+/**
+ * @param {{
+ *   prisma: Record<string, unknown>,
+ *   datasets: Array<Record<string, unknown>>,
+ *   context: Record<string, unknown>,
+ *   batchSize: number,
+ *   datasetSummaries: DatasetSummary[],
+ * }} input
+ * @returns {Promise<void>}
+ */
 async function purgeArchivedDatasets({ prisma, datasets, context, batchSize, datasetSummaries }) {
   for (let index = 0; index < datasets.length; index += 1) {
+    /** @type {DatasetDefinition} */
     const dataset = datasets[index]
     const summary = datasetSummaries[index]
     if (!summary || summary.rowCount < 1) continue
@@ -526,6 +736,11 @@ async function purgeArchivedDatasets({ prisma, datasets, context, batchSize, dat
   }
 }
 
+/**
+ * @param {ArchiveManifest[]} rows
+ * @param {{ schoolYear?: string, run?: string }} [filters]
+ * @returns {ArchiveManifest[]}
+ */
 function filterManifestRows(rows, { schoolYear = "", run = "" } = {}) {
   const targetYear = parseSchoolYearLabel(schoolYear) || ""
   const targetRun = normalizeText(run)
@@ -538,8 +753,17 @@ function filterManifestRows(rows, { schoolYear = "", run = "" } = {}) {
   })
 }
 
+/**
+ * @param {string} archiveRoot
+ * @returns {Promise<ArchiveManifest[]>}
+ */
+/**
+ * @param {string} archiveRoot
+ * @returns {Promise<ArchiveManifestRow[]>}
+ */
 async function listArchiveManifests(archiveRoot) {
   const root = path.resolve(archiveRoot)
+  /** @type {ArchiveManifestRow[]} */
   const manifests = []
 
   const years = await fsp.readdir(root, { withFileTypes: true }).catch((error) => {
@@ -564,6 +788,7 @@ async function listArchiveManifests(archiveRoot) {
       if (!manifestText) continue
 
       try {
+        /** @type {ArchiveManifest} */
         const manifest = JSON.parse(manifestText)
         manifests.push({
           ...manifest,
@@ -571,7 +796,8 @@ async function listArchiveManifests(archiveRoot) {
           manifestPath,
         })
       } catch {
-        manifests.push({
+        /** @type {ArchiveManifestRow} */
+        const invalidManifest = {
           schoolYear: yearDir.name,
           runId: runDir.name,
           createdAt: "",
@@ -579,7 +805,8 @@ async function listArchiveManifests(archiveRoot) {
           datasets: [],
           archivePath: runPath,
           manifestPath,
-        })
+        }
+        manifests.push(invalidManifest)
       }
     }
   }
@@ -594,7 +821,13 @@ async function listArchiveManifests(archiveRoot) {
   return manifests
 }
 
+/**
+ * @param {string} datasetPath
+ * @param {{ limit: number, match: string }} input
+ * @returns {Promise<Array<Record<string, unknown>>>}
+ */
 async function previewArchivedDatasetRows(datasetPath, { limit, match }) {
+  /** @type {Array<Record<string, unknown>>} */
   const rows = []
   const needle = normalizeText(match)
 
@@ -621,6 +854,30 @@ async function previewArchivedDatasetRows(datasetPath, { limit, match }) {
   return rows
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {{
+ *   command: "help" | "archive" | "inspect",
+ *   schoolYear: string,
+ *   startDate: string,
+ *   endDate: string,
+ *   archiveRoot: string,
+ *   batchSize: number,
+ *   apply: boolean,
+ *   excludePoints: boolean,
+ *   excludeNotifications: boolean,
+ *   excludeParentProfile: boolean,
+ *   run: string,
+ *   dataset: string,
+ *   limit: number,
+ *   match: string,
+ *   json: boolean,
+ * }}
+ */
+/**
+ * @param {string[]} [argv]
+ * @returns {RolloverArgs}
+ */
 export function parseCliArgs(argv = []) {
   const tokens = Array.isArray(argv) ? [...argv] : []
   const firstToken = normalizeLower(tokens[0])
@@ -771,6 +1028,14 @@ export function parseCliArgs(argv = []) {
   return parsed
 }
 
+/**
+ * @param {{ schoolYear: string, startDate: string, endDate: string }} args
+ * @returns {{ schoolYear: string, startDate: Date, endDate: Date, endExclusive: Date, startDateText: string, endDateText: string, endExclusiveDateText: string }}
+ */
+/**
+ * @param {Pick<RolloverArgs, "schoolYear" | "startDate" | "endDate">} args
+ * @returns {RolloverDateRange}
+ */
 function assertArchiveArgs(args) {
   const schoolYear = parseSchoolYearLabel(args.schoolYear)
   if (!schoolYear) throw new Error("--school-year must be formatted as YYYY-YYYY and span exactly one year")
@@ -783,6 +1048,14 @@ function assertArchiveArgs(args) {
   }
 }
 
+/**
+ * @param {ArchiveManifest} [manifest]
+ * @returns {Record<string, unknown>}
+ */
+/**
+ * @param {ArchiveManifest | undefined} [manifest]
+ * @returns {Record<string, unknown>}
+ */
 function toCompactSummary(manifest = {}) {
   const datasets = Array.isArray(manifest?.datasets) ? manifest.datasets : []
   return {
@@ -801,11 +1074,36 @@ function toCompactSummary(manifest = {}) {
   }
 }
 
+/**
+ * @param {{
+ *   command: "archive",
+ *   schoolYear: string,
+ *   startDate: string,
+ *   endDate: string,
+ *   archiveRoot: string,
+ *   batchSize: number,
+ *   apply: boolean,
+ *   excludePoints: boolean,
+ *   excludeNotifications: boolean,
+ *   excludeParentProfile: boolean,
+ *   run: string,
+ *   dataset: string,
+ *   limit: number,
+ *   match: string,
+ *   json: boolean,
+ * }} args
+ * @returns {Promise<Record<string, unknown>>}
+ */
+/**
+ * @param {Extract<RolloverArgs, { command: "archive" }>} args
+ * @returns {Promise<Record<string, unknown>>}
+ */
 async function runArchiveCommand(args) {
   const archiveRoot = path.resolve(normalizeText(args.archiveRoot) || DEFAULT_ARCHIVE_ROOT)
   const validated = assertArchiveArgs(args)
   const datasets = datasetDefinitions(args)
 
+  /** @type {RolloverDateRange} */
   const context = {
     schoolYear: validated.schoolYear,
     startDate: validated.startDate,
@@ -929,6 +1227,30 @@ async function runArchiveCommand(args) {
   }
 }
 
+/**
+ * @param {{
+ *   command: "inspect",
+ *   schoolYear: string,
+ *   startDate: string,
+ *   endDate: string,
+ *   archiveRoot: string,
+ *   batchSize: number,
+ *   apply: boolean,
+ *   excludePoints: boolean,
+ *   excludeNotifications: boolean,
+ *   excludeParentProfile: boolean,
+ *   run: string,
+ *   dataset: string,
+ *   limit: number,
+ *   match: string,
+ *   json: boolean,
+ * }} args
+ * @returns {Promise<Record<string, unknown>>}
+ */
+/**
+ * @param {Extract<RolloverArgs, { command: "inspect" }>} args
+ * @returns {Promise<Record<string, unknown>>}
+ */
 async function runInspectCommand(args) {
   const archiveRoot = path.resolve(normalizeText(args.archiveRoot) || DEFAULT_ARCHIVE_ROOT)
   const manifests = await listArchiveManifests(archiveRoot)
@@ -987,6 +1309,14 @@ async function runInspectCommand(args) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} result
+ * @returns {void}
+ */
+/**
+ * @param {Record<string, unknown>} result
+ * @returns {void}
+ */
 function renderHumanReadable(result) {
   if (!result || typeof result !== "object") {
     console.log(JSON.stringify(result, null, 2))
@@ -1029,6 +1359,10 @@ function renderHumanReadable(result) {
   console.log(JSON.stringify(result, null, 2))
 }
 
+/**
+ * @param {string[]} [argv]
+ * @returns {Promise<void>}
+ */
 async function main(argv = process.argv.slice(2)) {
   const args = parseCliArgs(argv)
 
