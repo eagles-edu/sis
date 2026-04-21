@@ -1,6 +1,9 @@
+/** @format */
+
 :root {
   --bad-bg: #fdebec;
   --bad-line: #f2b1b7;
+  --border-dg: #727272;
   --brand: var(--primary-color);
   --brand-strong: #8f1620;
   --card: #ffffff;
@@ -49,7 +52,7 @@ body {
   margin: 0;
   min-height: 100%;
 
-font-family:
+  font-family:
     system-ui,
     -apple-system,
     blinkmacsystemfont,
@@ -80,16 +83,20 @@ body.portal-hub-page {
   --hub-accent-strong: #17329a;
   --hub-accent-soft: rgba(47, 91, 227, 0.12);
   --hub-panel-bg: rgba(250, 252, 255, 0.84);
-  --hub-panel-border: rgba(135, 158, 198, 0.46);
+  --hub-panel-border: rgb(80, 80, 80);
   --hub-panel-shadow: 0 26px 64px rgba(24, 40, 72, 0.16);
-  --hub-wash: radial-gradient(900px 440px at 10% 8%, rgba(255, 255, 255, 0.62), transparent 60%),
+  --hub-wash:
+    radial-gradient(900px 440px at 10% 8%, rgba(255, 255, 255, 0.62), transparent 60%),
     radial-gradient(680px 360px at 90% 0%, rgba(255, 244, 211, 0.26), transparent 58%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(235, 242, 250, 0.52));
 }
 
 body::before {
   background-repeat: no-repeat, no-repeat, no-repeat;
-  background-size: 1080px 500px, 800px 420px, 100% 100%;
+  background-size:
+    1080px 500px,
+    800px 420px,
+    100% 100%;
   content: "";
   inset: 0;
   pointer-events: none;
@@ -114,7 +121,6 @@ a {
 .portal-shell {
   display: block;
 }
-
 
 .shell {
   box-sizing: border-box;
@@ -315,7 +321,7 @@ body.modal-open {
 .topbar {
   align-items: center;
   background: linear-gradient(180deg, #f4f8ff 0%, #eef3fb 100%);
-  border-color: #98adca;
+  border-color: var(--border-dg);
   display: grid;
   gap: 8px;
   padding: 10px 64px 10px 12px;
@@ -323,8 +329,11 @@ body.modal-open {
 
 body.portal-hub-page .hero,
 body.portal-hub-page .section-card {
-  background:
-    linear-gradient(180deg, var(--hub-panel-bg) 0%, rgba(247, 250, 255, 0.74) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--hub-panel-bg) 0%,
+    rgba(247, 250, 255, 0.74) 100%
+  );
   border-color: var(--hub-panel-border);
   box-shadow: var(--hub-panel-shadow);
   overflow: hidden;
@@ -430,7 +439,11 @@ h1 {
 
 .hero-link {
   align-items: center;
-  background: linear-gradient(180deg, rgba(240, 245, 255, 0.95) 0%, rgba(227, 236, 255, 0.86) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(240, 245, 255, 0.95) 0%,
+    rgba(227, 236, 255, 0.86) 100%
+  );
   border: 1px solid var(--hub-panel-border);
   border-radius: var(--radius-2);
   color: var(--hub-accent-strong);
@@ -444,7 +457,11 @@ h1 {
 
 .hero-link:hover,
 .hero-link:focus-visible {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 243, 255, 0.92) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(236, 243, 255, 0.92) 100%
+  );
   border-color: #8ea7c9;
   outline: none;
 }
@@ -530,7 +547,7 @@ h1 {
   height: 2px;
   width: 18px;
 
-transition:
+  transition:
     transform 160ms ease,
     opacity 160ms ease;
 }
@@ -634,7 +651,11 @@ body.menu-open .floating-menu-icon::after {
 .portal-card,
 .resource-card {
   align-items: center;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(247, 250, 255, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(247, 250, 255, 0.98) 100%
+  );
   border: 1px solid var(--card-border, rgba(128, 152, 190, 0.7));
   border-radius: var(--radius-3);
   color: inherit;
@@ -662,7 +683,11 @@ body.menu-open .floating-menu-icon::after {
 
 .portal-card:hover,
 .portal-card:focus-visible {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 247, 255, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(244, 247, 255, 0.98) 100%
+  );
   border-color: rgba(111, 134, 173, 0.92);
   outline: none;
   transform: translateY(-1px);
@@ -684,8 +709,17 @@ body.menu-open .floating-menu-icon::after {
 .portal-card::before,
 .resource-card::before {
   background:
-    linear-gradient(135deg, var(--tone-soft, rgba(94, 118, 171, 0.12)), transparent 70%),
-    linear-gradient(90deg, transparent, var(--card-border-soft, rgba(255, 255, 255, 0.2)), transparent);
+    linear-gradient(
+      135deg,
+      var(--tone-soft, rgba(94, 118, 171, 0.12)),
+      transparent 70%
+    ),
+    linear-gradient(
+      90deg,
+      transparent,
+      var(--card-border-soft, rgba(255, 255, 255, 0.2)),
+      transparent
+    );
   content: "";
   inset: 0;
   pointer-events: none;
@@ -718,7 +752,11 @@ body.menu-open .floating-menu-icon::after {
 .resource-card__icon {
   align-items: center;
   aspect-ratio: 1 / 1;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(247, 250, 255, 0.82) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(247, 250, 255, 0.82) 100%
+  );
   border: 1px solid var(--tone-border, rgba(128, 152, 190, 0.35));
   border-radius: calc(var(--radius-3) + 2px);
   box-shadow:
@@ -745,12 +783,20 @@ body.menu-open .floating-menu-icon::after {
   --tone-border: rgba(137, 19, 31, 0.94);
   --card-border: rgba(137, 19, 31, 0.94);
   --card-border-soft: rgba(255, 219, 223, 0.9);
-  background: linear-gradient(180deg, rgba(255, 222, 226, 1) 0%, rgba(255, 247, 248, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 222, 226, 1) 0%,
+    rgba(255, 247, 248, 1) 100%
+  );
   border-color: rgba(137, 19, 31, 0.94);
 }
 
 .portal-card--admin .portal-card__icon {
-  background: linear-gradient(180deg, rgba(255, 223, 227, 1) 0%, rgba(255, 248, 249, 0.92) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 223, 227, 1) 0%,
+    rgba(255, 248, 249, 0.92) 100%
+  );
 }
 
 .portal-card--admin .portal-card__icon-mark {
@@ -775,7 +821,11 @@ body.menu-open .floating-menu-icon::after {
   --tone-border: rgba(111, 89, 58, 0.94);
   --card-border: rgba(111, 89, 58, 0.94);
   --card-border-soft: rgba(248, 240, 225, 0.92);
-  background: linear-gradient(180deg, rgba(255, 252, 245, 1) 0%, rgba(252, 248, 239, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 245, 1) 0%,
+    rgba(252, 248, 239, 1) 100%
+  );
   border-color: rgba(111, 89, 58, 0.94);
 }
 
@@ -785,7 +835,11 @@ body.menu-open .floating-menu-icon::after {
   --tone-border: rgba(18, 49, 140, 0.94);
   --card-border: rgba(18, 49, 140, 0.94);
   --card-border-soft: rgba(226, 233, 255, 0.9);
-  background: linear-gradient(180deg, rgba(226, 235, 255, 1) 0%, rgba(248, 251, 255, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(226, 235, 255, 1) 0%,
+    rgba(248, 251, 255, 1) 100%
+  );
   border-color: rgba(18, 49, 140, 0.94);
 }
 
@@ -797,7 +851,11 @@ body.menu-open .floating-menu-icon::after {
 }
 
 .resource-card {
-  background: linear-gradient(180deg, rgba(249, 251, 255, 0.96) 0%, rgba(241, 245, 252, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(249, 251, 255, 0.96) 0%,
+    rgba(241, 245, 252, 0.98) 100%
+  );
   border-radius: var(--radius-2);
   min-height: 60px;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -807,7 +865,11 @@ body.menu-open .floating-menu-icon::after {
 
 .resource-card[href]:hover,
 .resource-card[href]:focus-visible {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 247, 255, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(243, 247, 255, 0.98) 100%
+  );
   border-color: rgba(120, 144, 186, 0.92);
   outline: none;
 }
@@ -860,7 +922,11 @@ body.portal-hub-page .portal-card--admin {
   --tone-border: rgba(137, 19, 31, 0.94);
   --card-border: rgba(137, 19, 31, 0.94);
   --card-border-soft: rgba(255, 219, 223, 0.9);
-  background: linear-gradient(180deg, rgba(255, 222, 226, 1) 0%, rgba(255, 247, 248, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 222, 226, 1) 0%,
+    rgba(255, 247, 248, 1) 100%
+  );
   border-color: rgba(137, 19, 31, 0.94);
 }
 
@@ -870,7 +936,11 @@ body.portal-hub-page .portal-card--parent {
   --tone-border: rgba(111, 89, 58, 0.94);
   --card-border: rgba(111, 89, 58, 0.94);
   --card-border-soft: rgba(248, 240, 225, 0.92);
-  background: linear-gradient(180deg, rgba(255, 252, 245, 1) 0%, rgba(252, 248, 239, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 245, 1) 0%,
+    rgba(252, 248, 239, 1) 100%
+  );
   border-color: rgba(111, 89, 58, 0.94);
 }
 
@@ -880,7 +950,11 @@ body.portal-hub-page .portal-card--student {
   --tone-border: rgba(18, 49, 140, 0.94);
   --card-border: rgba(18, 49, 140, 0.94);
   --card-border-soft: rgba(226, 233, 255, 0.9);
-  background: linear-gradient(180deg, rgba(226, 235, 255, 1) 0%, rgba(248, 251, 255, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(226, 235, 255, 1) 0%,
+    rgba(248, 251, 255, 1) 100%
+  );
   border-color: rgba(18, 49, 140, 0.94);
 }
 
@@ -890,12 +964,20 @@ body.portal-hub-page .resource-card--english {
   --tone-border: rgba(115, 200, 197, 0.58);
   --card-border: rgba(128, 210, 206, 0.68);
   --card-border-soft: rgba(235, 251, 250, 0.84);
-  background: linear-gradient(180deg, rgba(231, 249, 248, 0.98) 0%, rgba(255, 255, 255, 0.99) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(231, 249, 248, 0.98) 0%,
+    rgba(255, 255, 255, 0.99) 100%
+  );
   border-color: rgba(115, 200, 197, 0.58);
 }
 
 body.portal-hub-page .resource-card--english .resource-card__icon {
-  background: linear-gradient(180deg, rgba(239, 255, 254, 0.98) 0%, rgba(255, 255, 255, 0.88) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(239, 255, 254, 0.98) 0%,
+    rgba(255, 255, 255, 0.88) 100%
+  );
 }
 
 body.portal-hub-page .resource-card--ielts {
@@ -904,12 +986,20 @@ body.portal-hub-page .resource-card--ielts {
   --tone-border: rgba(225, 129, 138, 0.6);
   --card-border: rgba(232, 141, 149, 0.68);
   --card-border-soft: rgba(255, 236, 238, 0.84);
-  background: linear-gradient(180deg, rgba(255, 236, 238, 0.98) 0%, rgba(255, 255, 255, 0.99) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 236, 238, 0.98) 0%,
+    rgba(255, 255, 255, 0.99) 100%
+  );
   border-color: rgba(225, 129, 138, 0.6);
 }
 
 body.portal-hub-page .resource-card--ielts .resource-card__icon {
-  background: linear-gradient(180deg, rgba(255, 241, 243, 0.98) 0%, rgba(255, 255, 255, 0.88) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 241, 243, 0.98) 0%,
+    rgba(255, 255, 255, 0.88) 100%
+  );
 }
 
 @media (min-width: 960px) {
@@ -1048,7 +1138,6 @@ body.portal-hub-page .resource-card--ielts .resource-card__icon {
 }
 
 @media (max-width: 560px) {
-
   .text-zoom-controls > span:first-child,
   .text-zoom-controls .zoom-label {
     display: none;
@@ -1076,4 +1165,96 @@ body.portal-hub-page .resource-card--ielts .resource-card__icon {
     min-width: 40px;
     padding: 3px 6px;
   }
+}
+
+/* ================================
+    Footer
+   ================================ */
+
+.footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--paper-border);
+  padding: 20px;
+  text-align: center;
+  margin-top: auto;
+  z-index: 50;
+  position: relative;
+}
+
+.footer-text {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-tertiary);
+}
+
+.footer-tagline {
+  font-family: var(--font-brand);
+  font-size: 0.95rem;
+  color: var(--phoenix-orange);
+  font-weight: 500;
+}
+
+.footer-separator {
+  margin: 0 12px;
+  color: var(--paper-border);
+}
+
+.footer-copyright {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Container */
+.container2 {
+  margin: 0 auto;
+  max-width: 1085px;
+  padding: 0 18px;
+}
+
+/* Footer */
+.footer {
+  min-height: 80px;
+}
+
+.footer .inner-footer {
+  background-color: var(--footer-background);
+  border-radius: 6px;
+  color: var(--secondary-color);
+  min-height: inherit;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.footer .inner-footer a,
+.footer .inner-footer a:visited,
+.footer .inner-footer a:hover,
+.footer .inner-footer a:focus,
+.footer .inner-footer a:active {
+  color: inherit;
+}
+
+.mar10 {
+  margin: 0.625rem;
+}
+
+.prefooter {
+  background-color: var(--info-bg);
+  height: 60px;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+/* Preload footer height to prevent footer jump */
+.footer {
+  min-height: 80px;
+}
+
+/* Legacy float utilities still used in markup */
+.pull-left {
+  float: left;
+}
+
+.pull-right {
+  float: right;
 }

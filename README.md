@@ -416,10 +416,15 @@ curl -fsS http://127.0.0.1:8786/healthz
 
 Notes:
 
-1. `test.eagles.edu.vn` follows live admin wiring patterns, but `/healthz` remains loopback-only by nginx policy.
-2. `tools/sync-and-restart-test-runtime.sh` always re-syncs the repo `src/` tree into `/home/test.eagles.edu.vn/sis/src/` before Prisma or restart, so the runtime cannot drift without the wrapper correcting it.
-3. `tools/sync-and-restart-test-runtime.sh public` skips Prisma refresh and still enforces the `src/` safety sync before syncing public portal files + restart.
-4. `tools/sync-and-restart-test-runtime.sh restart-only` skips the FreeFileSync pass but still enforces the `src/` safety sync before Prisma refresh + restart.
+1. `test.eagles.edu.vn` uses Nginx for TLS on `:443` and proxies to OLSWS on `8088`.
+2. Before changing edge docs or cert paths, verify the active listener and certificate on the host; do not infer ownership from templates, backups, or old notes.
+3. `moodle.eagles.edu.vn` is a separate direct-serve path and must not be generalized from the test-host reverse-proxy contract.
+4. `tools/sync-and-restart-test-runtime.sh` is a file mirror only; it does not rely on git commit matching.
+5. The route contract is tracked in `config/test-route-contract.json`; update that file first if the admin or portal paths change.
+6. Writes to `/home/test.eagles.edu.vn/public_html` require `sudo`; the wrapper uses `sudo install` for that webroot.
+7. `tools/sync-and-restart-test-runtime.sh` always re-syncs the repo `src/` tree into `/home/test.eagles.edu.vn/sis/src/` before Prisma or restart, so the runtime cannot drift without the wrapper correcting it.
+8. `tools/sync-and-restart-test-runtime.sh public` skips Prisma refresh and still enforces the `src/` safety sync before syncing public portal files + restart.
+9. `tools/sync-and-restart-test-runtime.sh restart-only` skips the FreeFileSync pass but still enforces the `src/` safety sync before Prisma refresh + restart.
 
 ## Backup and Restore Strategy
 

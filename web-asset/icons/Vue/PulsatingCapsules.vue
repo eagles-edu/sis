@@ -1,0 +1,41 @@
+<template>
+    <svg viewBox="0 0 24 24" stroke-width="4" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <g>
+            <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" type="rotate" values="360 12 12; 0 12 12" />
+            <g>
+                <animateTransform attributeName="transform" calcMode="discrete" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12; 45 12 12; 90 12 12; 135 12 12; 180 12 12; 225 12 12; 270 12 12; 315 12 12" />
+                <line x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+                <line opacity="0.3" transform="rotate(45 12 12)" x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+                <line opacity="0.4" transform="rotate(90 12 12)" x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+                <line opacity="0.5" transform="rotate(135 12 12)" x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+                <line opacity="0.6" transform="rotate(180 12 12)" x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+                <line opacity="0.7" transform="rotate(-135 12 12)" x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+                <line opacity="0.8" transform="rotate(-90 12 12)" x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+                <line opacity="0.9" transform="rotate(-45 12 12)" x1="12" x2="12" y1="2" y2="2">
+                    <animate attributeName="y1" dur="2s" repeatCount="indefinite" values="2; 5; 2" />
+                </line>
+            </g>
+        </g>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

@@ -1,0 +1,25 @@
+<svg viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <g>
+        <animateTransform attributeName="transform" dur="5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+        <path opacity="0.3" d="M12 11.9528c-8.0476 13.9389-16.0953 0 0 0s8.0476 13.9389 0 0c-8.0476-13.939 8.0476-13.939 0 0" />
+        <circle stroke="none" fill="currentColor" cx="12" cy="1.5" r="1.5">
+            <animateMotion dur="3s" path="M0 10.4528c-8.0476 13.9389-16.0953 0 0 0s8.0476 13.9389 0 0c-8.0476-13.939 8.0476-13.939 0 0" repeatCount="indefinite" />
+        </circle>
+        <g transform="rotate(120 12 12)">
+            <circle stroke="none" fill="currentColor" cx="12" cy="1.5" r="1.5">
+                <animateMotion dur="3s" path="M0 10.4528c-8.0476 13.9389-16.0953 0 0 0s8.0476 13.9389 0 0c-8.0476-13.939 8.0476-13.939 0 0" repeatCount="indefinite" />
+            </circle>
+        </g>
+        <g transform="rotate(-120 12 12)">
+            <circle stroke="none" fill="currentColor" cx="12" cy="1.5" r="1.5">
+                <animateMotion dur="3s" path="M0 10.4528c-8.0476 13.9389-16.0953 0 0 0s8.0476 13.9389 0 0c-8.0476-13.939 8.0476-13.939 0 0" repeatCount="indefinite" />
+            </circle>
+        </g>
+    </g>
+</svg>

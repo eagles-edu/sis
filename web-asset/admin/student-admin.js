@@ -2351,6 +2351,7 @@
           businessTaxId: "",
           timeFormat: "",
           timeZone: "",
+          googleMapsEmbedIframe: "",
           logoDataUrl: "",
         };
       }
@@ -7012,6 +7013,9 @@
           ),
           timeFormat: normalizeText(normalizedSource.timeFormat || fallback.timeFormat),
           timeZone: normalizeText(normalizedSource.timeZone || fallback.timeZone),
+          googleMapsEmbedIframe: normalizeText(
+            normalizedSource.googleMapsEmbedIframe || fallback.googleMapsEmbedIframe,
+          ),
           logoDataUrl: normalizeText(
             normalizedSource.logoDataUrl || fallback.logoDataUrl,
           ),
@@ -7332,6 +7336,10 @@
             fallback.timeFormat,
           ),
           timeZone: schoolSetupInputValue("schoolSetupTimeZone", fallback.timeZone),
+          googleMapsEmbedIframe: schoolSetupInputValue(
+            "schoolSetupGoogleMapsEmbedIframe",
+            fallback.googleMapsEmbedIframe,
+          ),
           logoDataUrl: schoolSetupInputValue(
             "schoolSetupLogoDataUrl",
             fallback.logoDataUrl,
@@ -7386,6 +7394,31 @@
           imgEl.src = hasLogo ? dataUrl : "data:,";
         }
         if (fallbackEl) fallbackEl.classList.toggle("hidden", hasLogo);
+      }
+
+      function extractGoogleMapsEmbedSrc(value = "") {
+        const text = normalizeText(value);
+        if (!text) return "";
+        if (/^https:\/\/www\.google\.com\/maps\/embed/i.test(text)) {
+          return text;
+        }
+        const iframeMatch = text.match(/src\s*=\s*["']([^"']+)["']/i);
+        const candidate = normalizeText(iframeMatch?.[1]);
+        if (/^https:\/\/www\.google\.com\/maps\/embed/i.test(candidate)) {
+          return candidate;
+        }
+        return "";
+      }
+
+      function renderSchoolSetupGoogleMapsPreview(embedValue = "") {
+        const previewEl = document.getElementById("schoolSetupGoogleMapsPreview");
+        if (!(previewEl instanceof HTMLIFrameElement)) return;
+        const src = extractGoogleMapsEmbedSrc(embedValue);
+        if (!src) {
+          previewEl.removeAttribute("src");
+          return;
+        }
+        previewEl.src = src;
       }
 
       function schoolSetupLogoFileAllowed(file = null) {
@@ -7515,6 +7548,9 @@
         const businessTaxIdEl = document.getElementById("schoolSetupBusinessTaxId");
         const timeFormatEl = document.getElementById("schoolSetupTimeFormat");
         const timeZoneEl = document.getElementById("schoolSetupTimeZone");
+        const googleMapsEmbedIframeEl = document.getElementById(
+          "schoolSetupGoogleMapsEmbedIframe",
+        );
         const logoDataUrlEl = document.getElementById("schoolSetupLogoDataUrl");
         const letterGradeRangesEl = document.getElementById(
           "schoolSetupLetterGradeRanges",
@@ -7537,6 +7573,8 @@
         if (businessTaxIdEl) businessTaxIdEl.value = normalizedProfile.businessTaxId;
         if (timeFormatEl) timeFormatEl.value = normalizedProfile.timeFormat;
         if (timeZoneEl) timeZoneEl.value = normalizedProfile.timeZone;
+        if (googleMapsEmbedIframeEl)
+          googleMapsEmbedIframeEl.value = normalizedProfile.googleMapsEmbedIframe;
         if (logoDataUrlEl) logoDataUrlEl.value = normalizedProfile.logoDataUrl;
         if (letterGradeRangesEl)
           letterGradeRangesEl.value = schoolLetterGradeRangesText(
@@ -7571,6 +7609,7 @@
           }
         });
         renderSchoolSetupLogoPreview(normalizedProfile.logoDataUrl);
+        renderSchoolSetupGoogleMapsPreview(normalizedProfile.googleMapsEmbedIframe);
         if (rowsEl) rowsEl.innerHTML = schoolSetupQuarterRowsHtml(normalizedSetup);
         if (statusEl) {
           statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
@@ -8641,8 +8680,8 @@
 
       function showApp() {
         setAuthBootstrapping(false);
-        document.getElementById("authPanel").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
+        document.getElementById("authPanel")?.classList.add("hidden");
+        document.getElementById("app")?.classList.remove("hidden");
         if (authStatusEl) authStatusEl.textContent = "";
         startHubPolling();
         setActivePage(state.activePage || INITIAL_PAGE_SLUG, {
@@ -8653,8 +8692,8 @@
 
       function showLogin() {
         setAuthBootstrapping(false);
-        document.getElementById("authPanel").classList.remove("hidden");
-        document.getElementById("app").classList.add("hidden");
+        document.getElementById("authPanel")?.classList.remove("hidden");
+        document.getElementById("app")?.classList.add("hidden");
         stopHubPolling();
         setLoginPending(false);
       }
@@ -18919,21 +18958,10 @@
       }
 
       function handleError(error) {
-        if (!error?.status) {
-          const hubProbeConfig = resolveHubProbeConfig();
-          state.hubConnection = {
-            state: "disconnected",
-            endpoint: resolveApiUrl(hubProbeConfig.path),
-            checkedAt: nowClockStamp(),
-            latencyMs: null,
-            detail: normalizeText(error?.name || error?.message) || "network error",
-          };
-          renderHubConnectionStatus();
-        }
         if (error && error.status === 401) {
           const loginVisible = !document
             .getElementById("authPanel")
-            .classList.contains("hidden");
+            ?.classList.contains("hidden");
           if (loginVisible) {
             setStatus(error.message || "Invalid username or password.", true);
             return;

@@ -1,0 +1,8 @@
+<svg color="#272727" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect height="1.333333" opacity="0.3" width="5.333333" x="5.333333" y="0.666667"><animate attributeName="opacity" dur="1.2s" id="a0" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <polygon opacity="0.3" points="13.017533 2.023933 15.6842 6.642733 14.529467 7.3094 11.8628 2.6906"><animate attributeName="opacity" begin="a0.begin+0.2s" dur="1.2s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></polygon>
+  <polygon opacity="0.3" points="15.6842 9.357267 13.017533 13.976067 11.8628 13.3094 14.529467 8.6906"><animate attributeName="opacity" begin="a0.begin+0.4s" dur="1.2s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></polygon>
+  <rect height="1.333333" opacity="0.3" width="5.333333" x="5.333333" y="14"><animate attributeName="opacity" begin="a0.begin+0.6s" dur="1.2s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <polygon opacity="0.3" points="2.982467 13.976067 0.3158 9.357267 1.470533 8.6906 4.1372 13.3094"><animate attributeName="opacity" begin="a0.begin+0.8s" dur="1.2s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></polygon>
+  <polygon opacity="0.3" points="0.3158 6.642733 2.982467 2.023933 4.1372 2.6906 1.470533 7.3094"><animate attributeName="opacity" begin="a0.begin+1s" dur="1.2s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></polygon>
+</svg>

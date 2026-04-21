@@ -15,7 +15,10 @@ test("sync-and-restart-test-runtime defaults to loopback health and split env ex
 })
 
 test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", () => {
-  assert.match(script, /should_refresh_prisma\(\) \{\s+\[\[ "\$MODE" == "full" \|\| "\$MODE" == "restart-only" \]\]/)
+  assert.match(
+    script,
+    /should_refresh_prisma\(\) \{\s+\[\[ "\$MODE" == "full" \|\| "\$MODE" == "restart-only" \|\| "\$MODE" == "boot-prep" \]\]/
+  )
   assert.match(script, /if should_refresh_prisma; then\s+refresh_test_prisma\s+else\s+log "skip Prisma refresh for mode=\$\{MODE\}"/)
   assert.match(script, /public\)\s+log "running ffs-sis-public-root-test --batch"/)
 })

@@ -1,0 +1,4 @@
+<svg color="#dadada" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <path d="M3.0503 3.0503C5.7839 0.3166 10.2161 0.3166 12.9497 3.0503" stroke-linecap="round"><animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform></path>
+  <circle cx="8" cy="8" fill="currentColor" r="2" stroke="none"><animate attributeName="r" dur="1s" repeatCount="indefinite" values="3; 9"></animate><animate attributeName="opacity" dur="1s" repeatCount="indefinite" values="0; 0.5; 0"></animate></circle>
+</svg>

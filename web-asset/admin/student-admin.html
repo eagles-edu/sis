@@ -62,6 +62,20 @@
         grid-template-columns: 1fr;
       }
     }
+
+    .school-map-preview-shell {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-2);
+      overflow: hidden;
+    }
+
+    .school-map-preview-shell iframe {
+      border: 0;
+      display: block;
+      min-height: 320px;
+      width: 100%;
+    }
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.css" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.css">
@@ -2728,6 +2742,23 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="col-4">
                     <label for="schoolSetupTimeZone">Time zone</label><textarea id="schoolSetupTimeZone" placeholder="e.g. Asia/Ho_Chi_Minh"></textarea>
+                  </div>
+                  <div class="col-12">
+                    <label for="schoolSetupGoogleMapsEmbedIframe">Google Maps embed iframe</label>
+                    <textarea id="schoolSetupGoogleMapsEmbedIframe" placeholder="Paste the full Google Maps iframe snippet here"></textarea>
+                    <p class="small">
+                      Paste the full iframe from Google Maps. The preview below extracts its <code>src</code> value and renders it with the standard frame settings.
+                    </p>
+                    <div class="school-map-preview-shell">
+                      <iframe
+                        id="schoolSetupGoogleMapsPreview"
+                        class="noborder"
+                        title="Google Maps preview"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen
+                      ></iframe>
+                    </div>
                   </div>
                 </div>
                 <table>

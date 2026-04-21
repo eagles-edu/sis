@@ -1,0 +1,15 @@
+<svg color="#272727" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs><radialGradient id="gradient1"><stop offset="39%" stop-color="#fff"></stop><stop offset="83%" stop-color="currentColor" stop-opacity="0"></stop></radialGradient>
+    
+    <mask color="#000" id="m">
+      <rect fill="url(#gradient1)" height="10.666667" stroke="none" width="10.666667" x="0" y="0"></rect>
+    </mask>
+  </defs>
+  <g mask="url(#m)">
+    <path class="st0" d="M7.9605 7.8391C7.5673 8.5201 8.1167 9.5242 9.2969 9.577C10.4721 9.6385 11.9371 8.6334 12.2071 6.6939C12.4757 4.7769 11.3896 2.4037 8.8187 1.2919C6.2738 0.1951 2.7915 0.7223 0.3436 3.4299"></path>
+    <path class="st0" d="M7.9605 7.8392C7.5673 7.1582 6.423 7.132 5.7872 8.1277C5.1463 9.1147 5.2843 10.8859 6.829 12.0895C8.3548 13.2807 10.9531 13.5267 13.2015 11.8561C15.4237 10.2005 16.7083 6.9212 15.5874 3.4475"></path>
+    <path class="st0" d="M7.9604 7.8392C8.7467 7.8392 9.3416 6.8613 8.7972 5.8128C8.2629 4.7643 6.6599 3.9981 4.8453 4.7341C3.0508 5.4599 1.5386 7.5871 1.8612 10.3696C2.1838 13.1219 4.3815 15.8741 7.9503 16.6402"></path>
+    <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform>
+  </g>
+ 
+</svg>

@@ -66,6 +66,18 @@ function makePersistPrisma({
       },
     },
     exerciseSubmission: {
+      async findUnique(args) {
+        const where = args?.where || {}
+        const identity = where?.sourceSystem_sourceAttemptId
+        if (!identity) return null
+        return (
+          state.matchedSubmissionRows.find(
+            (row) =>
+              row?.sourceSystem === identity.sourceSystem &&
+              row?.sourceAttemptId === identity.sourceAttemptId
+          ) || null
+        )
+      },
       async findFirst(args) {
         state.submissionFindFirstCalls.push(args)
         const where = args?.where || {}
@@ -97,6 +109,18 @@ function makePersistPrisma({
       },
     },
     studentGradeRecord: {
+      async findUnique(args) {
+        const where = args?.where || {}
+        const identity = where?.sourceSystem_sourceAttemptId
+        if (!identity) return null
+        return (
+          state.matchedGradeRows.find(
+            (row) =>
+              row?.sourceSystem === identity.sourceSystem &&
+              row?.sourceAttemptId === identity.sourceAttemptId
+          ) || null
+        )
+      },
       async findFirst(args) {
         state.gradeRecordFindFirstCalls.push(args)
         const where = args?.where || {}
@@ -140,6 +164,18 @@ function makePersistPrisma({
       },
     },
     incomingExerciseResult: {
+      async findUnique(args) {
+        const where = args?.where || {}
+        const identity = where?.sourceSystem_sourceAttemptId
+        if (!identity) return null
+        return (
+          state.queueRows.find(
+            (row) =>
+              row?.sourceSystem === identity.sourceSystem &&
+              row?.sourceAttemptId === identity.sourceAttemptId
+          ) || null
+        )
+      },
       async findFirst(args) {
         state.incomingFindFirstCalls.push(args)
         return state.queueRows.length ? state.queueRows[state.queueRows.length - 1] : null
@@ -524,6 +560,83 @@ test("persistExerciseSubmission de-duplicates matched records and updates existi
   assert.equal(prisma.state.matchedGradeRows[0].score, 100)
 })
 
+test("persistExerciseSubmission de-duplicates Moodle source identity records without relying on timestamp windows", async () => {
+  const prisma = makePersistPrisma({
+    matchedStudent: {
+      id: "student-1",
+      eaglesId: "moodle-user-1",
+      email: "student@example.com",
+      profile: {
+        currentGrade: "Movers",
+      },
+    },
+    matchedSubmissionRows: [
+      {
+        id: "submission-moodle-existing",
+        studentRefId: "student-1",
+        exerciseRefId: "exercise-1",
+        submittedEaglesId: "moodle-user-1",
+        submittedEmail: "student@example.com",
+        sourceSystem: "moodle",
+        sourceAttemptId: "attempt-77",
+        completedAt: new Date("2026-03-01T07:34:04.862Z"),
+        totalQuestions: 10,
+        correctCount: 7,
+        pendingCount: 1,
+        incorrectCount: 2,
+        scorePercent: 70,
+        recipientsJson: [],
+        createdAt: new Date("2026-02-01T07:34:04.862Z"),
+      },
+    ],
+    matchedGradeRows: [
+      {
+        id: "grade-moodle-existing",
+        studentRefId: "student-1",
+        className: "Moodle Quiz",
+        assignmentName: "Moodle Quiz",
+        dueAt: new Date("2026-03-01T07:34:04.862Z"),
+        submittedAt: new Date("2026-03-01T07:34:04.862Z"),
+        score: 70,
+        maxScore: 100,
+        homeworkCompleted: true,
+        homeworkOnTime: true,
+        comments: "Auto-imported exercise score.",
+        sourceSystem: "moodle",
+        sourceAttemptId: "attempt-77",
+        createdAt: new Date("2026-02-01T07:34:04.862Z"),
+      },
+    ],
+  })
+
+  const result = await persistExerciseSubmission(
+    nativeExercisePayload({
+      eaglesId: "moodle-user-1",
+      email: "",
+      pageTitle: "Moodle Quiz",
+      completedAt: "2026-03-01T07:34:05.100Z",
+      correctCount: 9,
+      pendingCount: 0,
+      incorrectCount: 1,
+      totalQuestions: 10,
+      scorePercent: 90,
+      sourceSystem: "moodle",
+      sourceAttemptId: "attempt-77",
+    }),
+    { prisma }
+  )
+
+  assert.equal(result.saved, true)
+  assert.equal(result.matched, true)
+  assert.equal(result.deduplicated, true)
+  assert.equal(result.updatedExisting, true)
+  assert.equal(result.shouldNotify, false)
+  assert.equal(result.submissionId, "submission-moodle-existing")
+  assert.equal(result.gradeRecordId, "grade-moodle-existing")
+  assert.equal(prisma.state.submissionUpdateCalls.length, 1)
+  assert.equal(prisma.state.gradeRecordUpdateCalls.length, 1)
+})
+
 test("persistExerciseSubmission de-duplicates matched records using canonical fingerprint despite submitted identity mismatch and stale createdAt", async () => {
   const staleCreatedAt = new Date(Date.now() - 90 * 60 * 1000)
   const prisma = makePersistPrisma({
@@ -678,12 +791,24 @@ function makeResolvePrisma() {
       },
     },
     exerciseSubmission: {
+      async findUnique() {
+        return null
+      },
+      async findFirst() {
+        return null
+      },
       async create(args) {
         state.submissionCreateCalls.push(args)
         return { id: "submission-200" }
       },
     },
     studentGradeRecord: {
+      async findUnique() {
+        return null
+      },
+      async findFirst() {
+        return null
+      },
       async create(args) {
         state.gradeRecordCreateCalls.push(args)
         return { id: "grade-200" }

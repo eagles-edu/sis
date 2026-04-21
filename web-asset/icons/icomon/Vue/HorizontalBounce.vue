@@ -1,0 +1,16 @@
+<template>
+    <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <ellipse cx="12" cy="12" rx="6" ry="3">
+            <animate attributeName="cx" dur="1s" repeatCount="indefinite" values="3; 21; 3" />
+            <animate attributeName="rx" dur="0.5s" repeatCount="indefinite" values="3; 6; 6; 3" />
+            <animate attributeName="ry" dur="0.5s" repeatCount="indefinite" values="6; 3; 3; 3; 6" />
+        </ellipse>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

@@ -1,0 +1,9 @@
+<svg color="#272727" fill="currentColor" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+
+    <circle cx="8" cy="2" r="1.333333"><animateTransform attributeName="transform" dur="1s" keyTimes="0; 0.4; 1" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12; 360 12 12"></animateTransform></circle>
+    <circle cx="8" cy="6" r="1.333333"><animateTransform attributeName="transform" dur="1s" keyTimes="0; 0.5; 1" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12; 360 12 12"></animateTransform></circle>
+    <circle cx="8" cy="10" r="1.333333"><animateTransform attributeName="transform" dur="1s" keyTimes="0; 0.6; 1" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12; 360 12 12"></animateTransform></circle>
+    <circle cx="8" cy="14" r="1.333333"><animateTransform attributeName="transform" dur="1s" keyTimes="0; 0.7; 1" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12; 360 12 12"></animateTransform></circle>
+  </g>
+</svg>

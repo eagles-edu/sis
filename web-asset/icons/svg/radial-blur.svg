@@ -1,0 +1,17 @@
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <circle fill="url(#radial_blur_pending_gradient0)" cx="12" cy="12" r="12" />
+    <defs>
+        <radialGradient id="radial_blur_pending_gradient0">
+            <stop offset="20%" stop-color="currentColor" />
+            <stop offset="100%" stop-color="currentColor" stop-opacity="0">
+                <animate attributeName="offset" dur="1s" repeatCount="indefinite" values="0.2; 1; 0.2" />
+            </stop>
+        </radialGradient>
+    </defs>
+</svg>

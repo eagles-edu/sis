@@ -8394,6 +8394,8 @@ test("school setup profile fields persist and reset from saved values", async ()
     schoolSetupBusinessTaxId: "TAX-7788",
     schoolSetupTimeFormat: "24h",
     schoolSetupTimeZone: "Asia/Ho_Chi_Minh",
+    schoolSetupGoogleMapsEmbedIframe:
+      '<iframe class="noborder" src="https://www.google.com/maps/embed/v1/place?key=TEST-KEY&q=The+Eagles+American+English+Club+Ltd&center=10.744830261859247,106.61192371046724&zoom=19&language=vi&maptype=roadmap" loading="lazy" title="Bản đồ Câu lạc bộ tiếng Anh Mỹ Eagles, Ltd" aria-label="Bản đồ Câu lạc bộ tiếng Anh Mỹ Eagles" width="650" height="970" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>',
     schoolSetupLetterGradeRanges: "A:92-100\nB:84-91.99\nC:76-83.99\nD:60-75.99\nF:0-59.99",
   }
   for (const [id, value] of Object.entries(fieldValuesById)) {
@@ -8434,6 +8436,10 @@ test("school setup profile fields persist and reset from saved values", async ()
   assert.equal(saved.schoolProfile.businessTaxId, fieldValuesById.schoolSetupBusinessTaxId)
   assert.equal(saved.schoolProfile.timeFormat, fieldValuesById.schoolSetupTimeFormat)
   assert.equal(saved.schoolProfile.timeZone, fieldValuesById.schoolSetupTimeZone)
+  assert.equal(
+    saved.schoolProfile.googleMapsEmbedIframe,
+    fieldValuesById.schoolSetupGoogleMapsEmbedIframe,
+  )
 
   document.getElementById("schoolSetupName").value = "Unsaved temp name"
   document.getElementById("schoolSetupMission").value = "Unsaved temp mission"

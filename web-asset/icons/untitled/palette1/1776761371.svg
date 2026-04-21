@@ -1,0 +1,11 @@
+<svg color="#dadada" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <circle cx="8" cy="8" fill="url(#pending_gradient0)" r="8"></circle>
+  <defs>
+    <radialGradient id="pending_gradient0">
+      <stop offset="20%" stop-color="currentColor"></stop>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0">
+        <animate attributeName="offset" dur="1s" repeatCount="indefinite" values="0.2; 1; 0.2"></animate>
+      </stop>
+    </radialGradient>
+  </defs>
+</svg>

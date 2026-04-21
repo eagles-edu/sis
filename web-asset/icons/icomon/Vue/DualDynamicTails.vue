@@ -1,0 +1,26 @@
+<template>
+    <svg viewBox="0 0 24 24" stroke-width="3" stroke="url(#dual_dynamic_tails_gradient1)" stroke-linecap="round" fill="none" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs stroke-width="1" stroke="none" stroke-linecap="butt" fill="currentColor">
+            <linearGradient id="dual_dynamic_tails_gradient0" gradientTransform="rotate(90 0.25 0.25)">
+                <stop offset="0%" stop-color="currentColor" />
+                <stop offset="61%" stop-color="currentColor" stop-opacity="0">
+                    <animate attributeName="offset" dur="1.5s" repeatCount="indefinite" values="1.5; 0.25; 0.25; 1.5" />
+                </stop>
+            </linearGradient>
+            <linearGradient id="dual_dynamic_tails_gradient1" gradientTransform="rotate(120 0.355662 0.25)" xlink:href="#dual_dynamic_tails_gradient0" />
+        </defs>
+        <path d="M12 22.5C6.201 22.5 1.5 17.799 1.5 12S6.201 1.5 12 1.5">
+            <animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+        </path>
+        <path transform="rotate(180 12 12)" d="M12 22.5C6.201 22.5 1.5 17.799 1.5 12S6.201 1.5 12 1.5">
+            <animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="180 12 12; 540 12 12" />
+        </path>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

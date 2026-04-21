@@ -49,6 +49,8 @@ model ExerciseSubmission {
   exercise           Exercise @relation(fields: [exerciseRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   submittedEaglesId  String
   submittedEmail     String?
+  sourceSystem       String?
+  sourceAttemptId    String?
   completedAt        DateTime
   totalQuestions     Int
   correctCount       Int
@@ -58,6 +60,7 @@ model ExerciseSubmission {
   recipientsJson     Json?
   createdAt          DateTime @default(now())
 
+  @@unique([sourceSystem, sourceAttemptId])
   @@index([studentRefId, completedAt])
   @@index([exerciseRefId, completedAt])
   @@index([submittedEaglesId, completedAt])
@@ -68,6 +71,8 @@ model IncomingExerciseResult {
   status             String
   submittedEaglesId  String
   submittedEmail     String?
+  sourceSystem       String?
+  sourceAttemptId    String?
   pageTitle          String
   completedAt        DateTime
   totalQuestions     Int
@@ -85,6 +90,7 @@ model IncomingExerciseResult {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  @@unique([sourceSystem, sourceAttemptId])
   @@index([status, createdAt])
   @@index([submittedEaglesId, createdAt])
   @@index([submittedEmail, createdAt])
@@ -286,9 +292,12 @@ model StudentGradeRecord {
   participationScore Int?
   inClassScore      Int?
   comments          String?
+  sourceSystem      String?
+  sourceAttemptId   String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
+  @@unique([sourceSystem, sourceAttemptId])
   @@index([studentRefId, schoolYear, quarter])
   @@index([className, schoolYear, quarter])
   @@index([dueAt])

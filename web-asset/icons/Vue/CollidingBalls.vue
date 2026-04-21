@@ -1,0 +1,21 @@
+<template>
+    <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <g>
+            <circle cx="21" cy="12" r="3">
+                <animate attributeName="cx" dur="1s" repeatCount="indefinite" values="21; 12; 21" />
+                <animate attributeName="r" dur="1s" keyTimes="0; 0.3; 0.5; 0.7; 1" repeatCount="indefinite" values="3; 3; 5; 3; 3" />
+            </circle>
+            <circle cx="3" cy="12" r="3">
+                <animate attributeName="cx" dur="1s" repeatCount="indefinite" values="3; 12; 3" />
+                <animate attributeName="r" dur="1s" keyTimes="0; 0.3; 0.5; 0.7; 1" repeatCount="indefinite" values="3; 3; 5; 3; 3" />
+            </circle>
+        </g>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

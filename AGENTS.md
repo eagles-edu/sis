@@ -19,6 +19,12 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 4. Inspect route code before assuming auth behavior.
 5. Keep edits ASCII unless the target file already needs Unicode.
 
+## OpenAI Docs
+
+- When working with OpenAI API, Codex, ChatGPT Apps SDK, or related OpenAI developer docs, use the `openaiDeveloperDocs` MCP server first and pair it with the `openai-docs` skill when available.
+- If the docs MCP server is unavailable, fall back only to official OpenAI domains.
+- For OpenAI product/API questions, ask for citations and keep answers tied to official docs sources.
+
 ## Authentication Contract
 
 Admin API auth is cookie-session based, not bearer-token based.

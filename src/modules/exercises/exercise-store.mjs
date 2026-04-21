@@ -9,6 +9,7 @@ import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 /**
  * @typedef {{
  *   prisma?: unknown,
+ *   suppressNotifications?: boolean,
  * }} ExerciseStoreOptions
  *
  * @typedef {{
@@ -428,6 +429,16 @@ function buildSubmissionQuality(summary, completedAtValue) {
   }
 }
 
+function buildSourceIdentity(submission = {}) {
+  const sourceSystem = normalizeSourceSystem(submission?.sourceSystem)
+  const sourceAttemptId = normalizeSourceAttemptId(submission?.sourceAttemptId)
+  if (!sourceSystem || !sourceAttemptId) return null
+  return {
+    sourceSystem,
+    sourceAttemptId,
+  }
+}
+
 function isSubmissionQualityBetter(candidate, baseline) {
   if (candidate.scorePercent !== baseline.scorePercent) {
     return candidate.scorePercent > baseline.scorePercent
@@ -450,6 +461,16 @@ function normalizeRecipients(value) {
     .map((entry) => normalizeString(entry))
     .filter(Boolean)
   return cleaned.length ? cleaned : null
+}
+
+function normalizeSourceSystem(value) {
+  const source = normalizeLower(value)
+  return source || null
+}
+
+function normalizeSourceAttemptId(value) {
+  const attemptId = normalizeString(value)
+  return attemptId || null
 }
 
 function canonicalizeExercisePageTitle(value) {
@@ -499,11 +520,13 @@ function normalizeSubmissionPayload(payload = {}) {
     throw createStatusError("Unsupported field: answers", 400)
   }
   const submittedEaglesId = parseRequiredString(payload?.eaglesId, "eaglesId")
-  const submittedEmail = parseRequiredString(payload?.email, "email").toLowerCase()
+  const submittedEmail = normalizeLower(payload?.email) || null
   const pageTitle = canonicalizeExercisePageTitle(parseRequiredString(payload?.pageTitle, "pageTitle")) || "Untitled exercise"
   const completedAt = parseRequiredCompletedAt(payload?.completedAt)
   const summary = buildSubmissionSummaryFromPayload(payload)
   const recipientsJson = normalizeRecipients(payload?.recipients)
+  const sourceSystem = normalizeSourceSystem(payload?.sourceSystem)
+  const sourceAttemptId = normalizeSourceAttemptId(payload?.sourceAttemptId)
 
   return {
     submittedEaglesId,
@@ -512,6 +535,8 @@ function normalizeSubmissionPayload(payload = {}) {
     completedAt,
     recipientsJson,
     summary,
+    sourceSystem,
+    sourceAttemptId,
   }
 }
 
@@ -690,6 +715,8 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
     exerciseRefId,
     submittedEaglesId: submission.submittedEaglesId,
     submittedEmail: submission.submittedEmail || null,
+    sourceSystem: normalizeSourceSystem(submission.sourceSystem),
+    sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     completedAt: submission.completedAt,
     totalQuestions: summary.totalQuestions,
     correctCount: summary.correctCount,
@@ -726,6 +753,8 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     homeworkCompleted: true,
     homeworkOnTime: true,
     comments,
+    sourceSystem: normalizeSourceSystem(submission.sourceSystem),
+    sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
   }
 }
 
@@ -734,6 +763,8 @@ function buildIncomingQueueRecordData(submission, summary, options = {}) {
     status: INCOMING_EXERCISE_RESULT_STATUS_QUEUED,
     submittedEaglesId: submission.submittedEaglesId,
     submittedEmail: submission.submittedEmail || null,
+    sourceSystem: normalizeSourceSystem(submission.sourceSystem),
+    sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     pageTitle: submission.pageTitle,
     completedAt: submission.completedAt,
     totalQuestions: summary.totalQuestions,
@@ -775,6 +806,8 @@ function buildIncomingDuplicateUpdateData(submission, summary, options = {}) {
   return {
     submittedEaglesId: submission.submittedEaglesId,
     submittedEmail: submission.submittedEmail || null,
+    sourceSystem: normalizeSourceSystem(submission.sourceSystem),
+    sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     pageTitle: submission.pageTitle,
     completedAt: submission.completedAt,
     totalQuestions: summary.totalQuestions,
@@ -798,6 +831,16 @@ function buildCompletedAtRange(completedAt) {
 }
 
 async function findIncomingDuplicate(prisma, submission) {
+  const sourceIdentity = buildSourceIdentity(submission)
+  if (sourceIdentity) {
+    const existingBySource = await prisma.incomingExerciseResult.findUnique({
+      where: {
+        sourceSystem_sourceAttemptId: sourceIdentity,
+      },
+    })
+    if (existingBySource) return existingBySource
+  }
+
   const completedAtRange = buildCompletedAtRange(submission?.completedAt)
   if (!completedAtRange) return null
 
@@ -822,6 +865,16 @@ async function findIncomingDuplicate(prisma, submission) {
 }
 
 async function findMatchedSubmissionDuplicate(prisma, studentRefId, exerciseRefId, submission) {
+  const sourceIdentity = buildSourceIdentity(submission)
+  if (sourceIdentity) {
+    const existingBySource = await prisma.exerciseSubmission.findUnique({
+      where: {
+        sourceSystem_sourceAttemptId: sourceIdentity,
+      },
+    })
+    if (existingBySource) return existingBySource
+  }
+
   const completedAtRange = buildCompletedAtRange(submission?.completedAt)
   if (!completedAtRange) return null
 
@@ -835,7 +888,17 @@ async function findMatchedSubmissionDuplicate(prisma, studentRefId, exerciseRefI
   })
 }
 
-async function findMatchedGradeDuplicate(prisma, studentRefId, pageTitle, completedAt) {
+async function findMatchedGradeDuplicate(prisma, studentRefId, pageTitle, completedAt, submission = {}) {
+  const sourceIdentity = buildSourceIdentity(submission)
+  if (sourceIdentity) {
+    const existingBySource = await prisma.studentGradeRecord.findUnique({
+      where: {
+        sourceSystem_sourceAttemptId: sourceIdentity,
+      },
+    })
+    if (existingBySource) return existingBySource
+  }
+
   const completedAtRange = buildCompletedAtRange(completedAt)
   if (!completedAtRange) return null
 
@@ -863,6 +926,8 @@ function mapIncomingExerciseResult(item) {
     status: normalizeStatus(item.status),
     submittedEaglesId: normalizeString(item.submittedEaglesId),
     submittedEmail: normalizeString(item.submittedEmail),
+    sourceSystem: normalizeString(item.sourceSystem),
+    sourceAttemptId: normalizeString(item.sourceAttemptId),
     pageTitle: normalizeString(item.pageTitle),
     completedAt: item.completedAt ? new Date(item.completedAt).toISOString() : "",
     totalQuestions: Number.parseInt(String(item.totalQuestions || 0), 10) || 0,
@@ -892,6 +957,8 @@ export async function persistExerciseSubmission(payload, options = {}) {
   if (!prisma) return { saved: false, reason: "disabled" }
 
   const submission = normalizeSubmissionPayload(payload)
+  const sourceIdentity = buildSourceIdentity(submission)
+  const suppressNotifications = resolveBoolean(options.suppressNotifications, false)
   const summary = submission.summary
   const matchedStudent = await findMatchedStudent(prisma, submission)
 
@@ -905,7 +972,13 @@ export async function persistExerciseSubmission(payload, options = {}) {
         existingIncoming.completedAt
       )
 
-      const shouldReplaceExisting = isSubmissionQualityBetter(incomingQuality, existingQuality)
+      const existingSourceIdentity = buildSourceIdentity(existingIncoming)
+      const shouldReplaceExisting = sourceIdentity
+        ? !existingSourceIdentity
+          || existingSourceIdentity.sourceSystem !== sourceIdentity.sourceSystem
+          || existingSourceIdentity.sourceAttemptId !== sourceIdentity.sourceAttemptId
+          || isSubmissionQualityBetter(incomingQuality, existingQuality)
+        : isSubmissionQualityBetter(incomingQuality, existingQuality)
 
       if (shouldReplaceExisting) {
         await prisma.incomingExerciseResult.update({
@@ -962,7 +1035,13 @@ export async function persistExerciseSubmission(payload, options = {}) {
         existingSummary,
         existingSubmission.completedAt
       )
-      const shouldReplaceExisting = isSubmissionQualityBetter(incomingQuality, existingQuality)
+      const existingSourceIdentity = buildSourceIdentity(existingSubmission)
+      const shouldReplaceExisting = sourceIdentity
+        ? !existingSourceIdentity
+          || existingSourceIdentity.sourceSystem !== sourceIdentity.sourceSystem
+          || existingSourceIdentity.sourceAttemptId !== sourceIdentity.sourceAttemptId
+          || isSubmissionQualityBetter(incomingQuality, existingQuality)
+        : isSubmissionQualityBetter(incomingQuality, existingQuality)
 
       const submissionRecord = shouldReplaceExisting
         ? await tx.exerciseSubmission.update({
@@ -975,7 +1054,8 @@ export async function persistExerciseSubmission(payload, options = {}) {
         tx,
         matchedStudent.id,
         submission.pageTitle,
-        submission.completedAt
+        submission.completedAt,
+        submission
       )
 
       const gradeRecord = existingGradeRecord
@@ -1010,7 +1090,7 @@ export async function persistExerciseSubmission(payload, options = {}) {
       gradeRecord,
       deduplicated: false,
       updatedExisting: false,
-      shouldNotify: true,
+      shouldNotify: !suppressNotifications,
       summary,
     }
   })
@@ -1021,7 +1101,7 @@ export async function persistExerciseSubmission(payload, options = {}) {
     queued: false,
     deduplicated: persisted.deduplicated,
     updatedExisting: persisted.updatedExisting,
-    shouldNotify: persisted.shouldNotify,
+    shouldNotify: suppressNotifications ? false : persisted.shouldNotify,
     studentRefId: matchedStudent.id,
     submissionId: persisted.submissionRecord.id,
     gradeRecordId: persisted.gradeRecord.id,
@@ -1192,6 +1272,8 @@ function incomingResultToSubmissionPayload(row) {
   return {
     submittedEaglesId: normalizeString(row.submittedEaglesId),
     submittedEmail: normalizeLower(row.submittedEmail),
+    sourceSystem: normalizeSourceSystem(row.sourceSystem),
+    sourceAttemptId: normalizeSourceAttemptId(row.sourceAttemptId),
     pageTitle: normalizeString(row.pageTitle) || "Untitled exercise",
     completedAt: row.completedAt ? new Date(row.completedAt) : new Date(),
     recipientsJson: Array.isArray(row.recipientsJson) ? row.recipientsJson : null,
@@ -1251,11 +1333,24 @@ export async function resolveIncomingExerciseResultToStudent(
     const submission = incomingResultToSubmissionPayload(incoming)
     const summary = incomingResultToSummary(incoming)
     const exercise = await ensureExerciseRecord(tx, submission.pageTitle)
+    const existingSubmission = await findMatchedSubmissionDuplicate(
+      tx,
+      student.id,
+      exercise.id,
+      submission
+    )
+    const existingGradeRecord = await findMatchedGradeDuplicate(
+      tx,
+      student.id,
+      submission.pageTitle,
+      submission.completedAt,
+      submission
+    )
 
-    const createdSubmission = await tx.exerciseSubmission.create({
+    const createdSubmission = existingSubmission || await tx.exerciseSubmission.create({
       data: buildExerciseSubmissionRecordData(student.id, exercise.id, submission, summary),
     })
-    const createdGradeRecord = await tx.studentGradeRecord.create({
+    const createdGradeRecord = existingGradeRecord || await tx.studentGradeRecord.create({
       data: buildExerciseGradeRecordData(student, submission, summary),
     })
 

@@ -1,0 +1,20 @@
+<svg color="#dadada" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <radialGradient id="gradient0">
+      <stop offset="20%"></stop>
+      <stop offset="50%" stop-color="#fff">
+<animate attributeName="offset" dur="3s" repeatCount="indefinite" values="0.4; 1.5; 0.4"></animate>
+</stop>
+    </radialGradient>
+    <mask color="#000" id="m">
+      <rect fill="url(#gradient0)" height="18.666667" width="18.666667" x="-1.333333" y="-1.333333"></rect>
+    </mask>
+  </defs>
+  <g mask="url(#m)" transform="scale(0.666667)">
+    <path class="st0" d="M12.0073 12.0553C12.966 12.0553 13.6912 10.8631 13.0275 9.5848C12.3761 8.3065 10.4218 7.3724 8.2094 8.2697C6.0216 9.1546 4.178 11.748 4.5713 15.1403C4.9646 18.4958 7.644 21.8512 11.995 22.7853" transform="rotate(120 12.019632 12.025527)"></path>
+    <path class="st0" d="M12.0073 12.0553C12.966 12.0553 13.6912 10.8631 13.0275 9.5848C12.3761 8.3065 10.4218 7.3724 8.2094 8.2697C6.0216 9.1546 4.178 11.748 4.5713 15.1403C4.9646 18.4958 7.644 21.8512 11.995 22.7853" transform="rotate(-120 11.987709 12.029765)"></path>
+    <path class="st0" d="M12.0073 12.0553C12.966 12.0553 13.6912 10.8631 13.0275 9.5848C12.3761 8.3065 10.4218 7.3724 8.2094 8.2697C6.0216 9.1546 4.178 11.748 4.5713 15.1403C4.9646 18.4958 7.644 21.8512 11.995 22.7853" transform="translate(-7341e-6 -0.055292)"></path>
+    <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform>
+
+  </g>
+</svg>

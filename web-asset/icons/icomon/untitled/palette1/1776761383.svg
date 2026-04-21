@@ -1,0 +1,5 @@
+<svg color="#dadada" fill="none" stroke="currentColor" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <circle cx="8" cy="8" r="0.666667"><animate attributeName="r" dur="3s" id="one" repeatCount="indefinite" values="1; 11"></animate><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0"></animate></circle>
+  <circle cx="8" cy="8" r="0.666667"><animate attributeName="r" begin="one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11"></animate><animate attributeName="opacity" begin="one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0"></animate></circle>
+  <circle cx="8" cy="8" r="0.666667"><animate attributeName="r" begin="one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"></animate><animate attributeName="opacity" begin="one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></animate></circle>
+</svg>

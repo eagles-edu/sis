@@ -1,0 +1,29 @@
+<svg viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <g stroke-linecap="butt" stroke-linejoin="miter">
+        <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12" />
+        <ellipse cx="12" cy="4" rx="0.1" ry="3">
+            <animate attributeName="rx" dur="1.5s" repeatCount="indefinite" values="0.1; 3; 0.1" />
+        </ellipse>
+        <ellipse transform="rotate(60 12 12)" cx="12" cy="4" rx="0.1" ry="3">
+            <animate attributeName="rx" dur="1.5s" repeatCount="indefinite" values="0.1; 3; 0.1" />
+        </ellipse>
+        <ellipse transform="rotate(120 12 12)" cx="12" cy="4" rx="0.1" ry="3">
+            <animate attributeName="rx" dur="1.5s" repeatCount="indefinite" values="0.1; 3; 0.1" />
+        </ellipse>
+        <ellipse transform="rotate(180 12 12)" cx="12" cy="4" rx="0.1" ry="3">
+            <animate attributeName="rx" dur="1.5s" repeatCount="indefinite" values="0.1; 3; 0.1" />
+        </ellipse>
+        <ellipse transform="rotate(-120 12 12)" cx="12" cy="4" rx="0.1" ry="3">
+            <animate attributeName="rx" dur="1.5s" repeatCount="indefinite" values="0.1; 3; 0.1" />
+        </ellipse>
+        <ellipse transform="rotate(-60 12 12)" cx="12" cy="4" rx="0.11" ry="3">
+            <animate attributeName="rx" dur="1.5s" repeatCount="indefinite" values="0.1; 3; 0.1" />
+        </ellipse>
+    </g>
+</svg>

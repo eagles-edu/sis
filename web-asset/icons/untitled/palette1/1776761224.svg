@@ -1,0 +1,11 @@
+<svg color="#dadada" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="6.666667" y="2"><animate attributeName="opacity" dur="0.8s" id="a0" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="11.333333" y="2"><animate attributeName="opacity" begin="a0.begin+0.1s" dur="0.8s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="11.333333" y="6.666667"><animate attributeName="opacity" begin="a0.begin+0.2s" dur="0.8s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="6.666667" y="6.666667"><animate attributeName="opacity" dur="0.4s" repeatCount="indefinite" values="0.3; 1; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="11.333333" y="11.333333"><animate attributeName="opacity" begin="a0.begin+0.3s" dur="0.8s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="6.666667" y="11.333333"><animate attributeName="opacity" begin="a0.begin+0.4s" dur="0.8s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="2" y="11.333333"><animate attributeName="opacity" begin="a0.begin+0.5s" dur="0.8s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="2" y="6.666667"><animate attributeName="opacity" begin="a0.begin+0.6s" dur="0.8s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+  <rect height="2.666667" opacity="0.3" width="2.666667" x="2" y="2"><animate attributeName="opacity" begin="a0.begin+0.7s" dur="0.8s" repeatCount="indefinite" values="0.3; 0.3; 1; 0.3; 0.3"></animate></rect>
+</svg>

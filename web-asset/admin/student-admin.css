@@ -40,7 +40,7 @@
 
         /* Layout surfaces */
         --background-color: #798ea4; /* page background behind light content */
-        --footer-background: #3e4b5b;
+        --footer-background: #366db1;
         --blkquot-background: #f0f2f5;
         --body-bgcolor: var(--secondary-color); /* body background */
         --surface-color: #eee; /* menu/content surface */

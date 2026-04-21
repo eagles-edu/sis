@@ -12,9 +12,18 @@ const isDebugEnabled = () =>
     .trim()
     .toLowerCase() === "true"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeEnvText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
+}
+
+/** @param {unknown} value @returns {string} */
+function normalizeLower(value) {
+  return normalizeEnvText(value).toLowerCase()
 }
 
 function resolveDefaultEnvFilePath() {
@@ -30,9 +39,10 @@ function loadEnvironmentFile() {
   let dotenv
   try {
     const mod = require("dotenv")
-    dotenv = mod?.default || mod
+    dotenv = mod
   } catch (error) {
-    if (error && error.code !== "MODULE_NOT_FOUND") throw error
+    const err = /** @type {StatusError} */ (error)
+    if (err && err.code !== "MODULE_NOT_FOUND") throw error
     if (isDebugEnabled()) {
       console.warn("ℹ️  Optional dependency 'dotenv' not found; continuing without loading env file")
     }
@@ -48,17 +58,137 @@ function loadEnvironmentFile() {
   }
 
   const result = dotenv.config({ path: envFilePath })
-  if (result?.error && result.error.code !== "ENOENT") {
-    throw result.error
+  const loadResult = /** @type {{ error?: StatusError }} */ (result)
+  if (loadResult?.error && loadResult.error.code !== "ENOENT") {
+    throw loadResult.error
   }
   return envFilePath
 }
 
 loadEnvironmentFile()
 
+/**
+ * @typedef {import("node:http").IncomingMessage & {
+ *   headers: Record<string, string | string[] | undefined>
+ *   method?: string | null
+ *   url?: string | null
+ *   destroy: () => void
+ * }} MailerRequest
+ *
+ * @typedef {import("node:http").ServerResponse} MailerResponse
+ *
+ * @typedef {{
+ *   code?: string
+ *   message?: string
+ *   statusCode?: number
+ * }} StatusError
+ *
+ * @typedef {{
+ *   sourceSystem?: string
+ *   sourceAttemptId?: string
+ *   attemptId?: string
+ *   quizAttemptId?: string
+ *   moodleAttemptId?: string
+ *   eaglesId?: string
+ *   email?: string
+ *   pageTitle?: string
+ *   completedAt?: string
+ *   correctCount?: number | string
+ *   pendingCount?: number | string
+ *   incorrectCount?: number | string
+ *   totalQuestions?: number | string
+ *   scorePercent?: number | string
+ *   recipients?: unknown[]
+ *   fields?: Record<string, unknown>
+ *   cf?: Record<string, unknown>
+ *   form?: Record<string, unknown>
+ *   data?: Record<string, unknown>
+ *   sourceFormId?: string
+ *   sourceUrl?: string
+ *   submittedAt?: string
+ *   [key: string]: unknown
+ * }} SubmissionPayload
+ *
+ * @typedef {{
+ *   eaglesId: string
+ *   email: string
+ *   pageTitle: string
+ *   completedAt: string
+ *   recipients: string[]
+ *   correctCount: number
+ *   pendingCount: number
+ *   incorrectCount: number
+ *   totalQuestions: number
+ *   scorePercent: number
+ * }} ValidatedPayload
+ *
+ * @typedef {{
+ *   allowMissingEmail?: boolean
+ * }} ValidatePayloadOptions
+ *
+ * @typedef {{
+ *   to: string[]
+ *   subject: string
+ *   text: string
+ *   html: string
+ * }} EmailContent
+ *
+ * @typedef {{
+ *   raw: string
+ *   parsed: unknown
+ * }} ParsedBodyResult
+ *
+ * @typedef {{
+ *   enabled: boolean
+ *   reason: string
+ *   sourceRoot: string
+ *   runtimeRoot: string
+ *   sourceHtmlPath: string
+ *   runtimeHtmlPath: string
+ *   intervalMs: number | null
+ *   lastCheckedAt: string | null
+ *   lastMismatchAt: string | null
+ *   lastSyncAt: string | null
+ *   syncCount: number
+ *   lastResult: string
+ *   lastError: string
+ * }} SelfHealStatus
+ *
+ * @typedef {{
+ *   enabled: boolean
+ *   reason: string
+ *   sourceRoot: string
+ *   runtimeRoot: string
+ *   sourceHtmlPath?: string
+ *   runtimeHtmlPath?: string
+ *   intervalMs?: number | null
+ * }} SelfHealConfig
+ *
+ * @typedef {{
+ *   saved?: boolean
+ *   shouldNotify?: boolean
+ *   submissionId?: string
+ *   incomingResultId?: string
+ *   deduplicated?: boolean
+ *   summary?: { scorePercent?: number }
+ *   reason?: string
+ * }} ExerciseStoreResult
+ */
+
 // Load SIS route/store modules after env hydration so their module-level config reads
 // the intended env file values instead of shell defaults.
-const { isExerciseStoreRequired, persistExerciseSubmission } = await import("../src/modules/exercises/exercise-store.mjs")
+const {
+  isExerciseStoreRequired,
+  persistExerciseSubmission,
+} = await import("../src/modules/exercises/exercise-store.mjs")
+const {
+  MOODLE_INTEGRATION_SOURCE,
+  MOODLE_REQUEST_HEADER_SIGNATURE,
+  MOODLE_REQUEST_HEADER_SOURCE,
+  MOODLE_REQUEST_HEADER_TIMESTAMP,
+  MOODLE_SIGNATURE_MAX_AGE_MS,
+  verifyMoodleRequestSignature,
+} = await import("../src/modules/exercises/moodle-sync.mjs")
 const { persistStudentIntakeSubmission } = await import("../src/modules/intake/student-intake-store.mjs")
 const {
   getStudentAdminRuntimeStatus,
@@ -66,14 +196,15 @@ const {
   setStudentAdminRuntimeHealthProvider,
 } = await import("./student-admin-routes.mjs")
 
-/** @type {import("nodemailer") | null} */
+/** @type {{ createTransport: (options: object) => import("nodemailer").Transporter } | null} */
 let nodemailer = null
 
 try {
   const mod = require("nodemailer")
-  nodemailer = mod?.default || mod
+  nodemailer = mod
 } catch (error) {
-  if (error && error.code !== "MODULE_NOT_FOUND") throw error
+  const err = /** @type {StatusError} */ (error)
+  if (err && err.code !== "MODULE_NOT_FOUND") throw error
   if (isDebugEnabled()) {
     console.warn(
       "ℹ️  Optional dependency 'nodemailer' not found; provide a transporter or install it"
@@ -95,6 +226,7 @@ const DOCS_URL_PREFIX = "/docs"
 const DOCS_PUBLIC_ROOT = path.resolve(process.cwd(), "docs")
 const WEB_ASSET_URL_PREFIX = "/web-asset"
 const WEB_ASSET_PUBLIC_ROOT = path.resolve(process.cwd(), "web-asset")
+/** @type {Readonly<Record<string, string>>} */
 const STATIC_MIME_TYPES = Object.freeze({
   ".css": "text/css; charset=utf-8",
   ".dsl": "text/plain; charset=utf-8",
@@ -118,6 +250,7 @@ const STATIC_MIME_TYPES = Object.freeze({
 })
 
 // Multiple origins supported: comma separated string, exact match with scheme+host[:port]
+/** @returns {string[]} */
 function getOriginList() {
   return (process.env.EXERCISE_MAILER_ORIGIN || process.env.EXERCISE_MAILER_ORIGINS || "*")
     .split(",")
@@ -125,6 +258,7 @@ function getOriginList() {
     .filter(Boolean)
 }
 
+/** @param {string} origin @returns {boolean} */
 function isLoopbackOrigin(origin) {
   const text = String(origin || "").trim()
   if (!text) return false
@@ -140,6 +274,7 @@ function isLoopbackOrigin(origin) {
   }
 }
 
+/** @param {string} origin @returns {boolean} */
 function isEaglesEduVnOrigin(origin) {
   const text = String(origin || "").trim()
   if (!text) return false
@@ -155,6 +290,7 @@ function isEaglesEduVnOrigin(origin) {
   }
 }
 
+/** @param {string[]} [origins=[]] @returns {boolean} */
 function configuredOriginIncludesEaglesDomain(origins = []) {
   if (!Array.isArray(origins) || !origins.length) return false
   for (let i = 0; i < origins.length; i += 1) {
@@ -171,11 +307,26 @@ const DEFAULT_RECIPIENTS = (process.env.EXERCISE_MAILER_RECIPIENTS || "")
   .split(",")
   .map((v) => v.trim())
   .filter(Boolean)
+const MOODLE_QUIZ_SYNC_SHARED_SECRET =
+  normalizeEnvText(process.env.MOODLE_QUIZ_SYNC_SHARED_SECRET) ||
+  normalizeEnvText(process.env.MOODLE_SIS_QUIZ_SYNC_SECRET)
 
 /* =========================
   Runtime Status (healthz)
    ========================= */
 
+/** @type {{
+ *   startedAt: string
+ *   lastVerifyOk: boolean | null
+ *   lastVerifyAt: string | null
+ *   lastStoreOk: boolean | null
+ *   lastStoreAt: string | null
+ *   lastIntakeStoreOk: boolean | null
+ *   lastIntakeStoreAt: string | null
+ *   lastSendOk: boolean | null
+ *   lastSendAt: string | null
+ *   lastError: string | null
+ * }} */
 const STATUS = {
   startedAt: new Date().toISOString(),
   lastVerifyOk: null,
@@ -190,8 +341,10 @@ const STATUS = {
 }
 
 const SELF_HEAL_RELATIVE_ADMIN_HTML = path.join("web-asset", "admin", "student-admin.html")
+/** @type {SelfHealStatus} */
 const SELF_HEAL_STATUS = {
   enabled: false,
+  reason: "",
   sourceRoot: "",
   runtimeRoot: "",
   sourceHtmlPath: "",
@@ -204,7 +357,9 @@ const SELF_HEAL_STATUS = {
   lastResult: "disabled",
   lastError: "",
 }
+/** @type {Map<string, Promise<void>>} */
 const SUBMISSION_LOCKS = new Map()
+/** @type {Map<string, number>} */
 const RECENT_SUBMISSION_NOTIFICATIONS = new Map()
 const SUBMISSION_NOTIFICATION_DEDUP_WINDOW_MS = 30 * 1000
 
@@ -212,6 +367,7 @@ const SUBMISSION_NOTIFICATION_DEDUP_WINDOW_MS = 30 * 1000
     Helpers
    ========================= */
 
+/** @param {unknown} value @param {boolean} fallback @returns {boolean} */
 function resolveBoolean(value, fallback) {
   if (value === undefined || value === null || value === "") return fallback
   if (typeof value === "boolean") return value
@@ -225,11 +381,13 @@ function resolveBoolean(value, fallback) {
   return fallback
 }
 
+/** @param {unknown} value @returns {string} */
 function normalizeString(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/** @param {unknown} value @returns {string} */
 function normalizeExerciseSectionNotation(value) {
   const text = normalizeString(value)
   if (!text) return ""
@@ -239,6 +397,7 @@ function normalizeExerciseSectionNotation(value) {
     .trim()
 }
 
+/** @param {string} candidatePath @param {string} rootPath @returns {boolean} */
 function isPathWithinRoot(candidatePath, rootPath) {
   const candidate = path.resolve(candidatePath)
   const root = path.resolve(rootPath)
@@ -246,11 +405,13 @@ function isPathWithinRoot(candidatePath, rootPath) {
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative))
 }
 
+/** @param {string} filePath @returns {string} */
 function resolveStaticContentType(filePath) {
   const ext = String(path.extname(filePath || "") || "").toLowerCase()
   return STATIC_MIME_TYPES[ext] || "application/octet-stream"
 }
 
+/** @param {string} pathname @param {string} urlPrefix @param {string} publicRoot @returns {string} */
 function resolveScopedStaticFilePath(pathname, urlPrefix, publicRoot) {
   const normalizedPathname = normalizeString(pathname)
   if (!normalizedPathname.startsWith(urlPrefix)) return ""
@@ -271,14 +432,17 @@ function resolveScopedStaticFilePath(pathname, urlPrefix, publicRoot) {
   return targetPath
 }
 
+/** @param {string} pathname @returns {string} */
 function resolveDocsFilePath(pathname) {
   return resolveScopedStaticFilePath(pathname, DOCS_URL_PREFIX, DOCS_PUBLIC_ROOT)
 }
 
+/** @param {string} pathname @returns {string} */
 function resolveWebAssetFilePath(pathname) {
   return resolveScopedStaticFilePath(pathname, WEB_ASSET_URL_PREFIX, WEB_ASSET_PUBLIC_ROOT)
 }
 
+/** @param {MailerRequest} request @param {MailerResponse} response @param {string} filePath @returns {boolean} */
 function trySendStaticFile(request, response, filePath) {
   if (!filePath || !fs.existsSync(filePath)) return false
 
@@ -326,6 +490,7 @@ function trySendStaticFile(request, response, filePath) {
   return true
 }
 
+/** @param {MailerRequest} request @param {MailerResponse} response @param {string} pathname @returns {boolean} */
 function handleDocsStaticRequest(request, response, pathname) {
   const method = normalizeString(request.method).toUpperCase()
   if (method !== "GET" && method !== "HEAD") return false
@@ -353,6 +518,7 @@ function handleDocsStaticRequest(request, response, pathname) {
   return true
 }
 
+/** @param {MailerRequest} request @param {MailerResponse} response @param {string} pathname @returns {boolean} */
 function handleWebAssetStaticRequest(request, response, pathname) {
   const method = normalizeString(request.method).toUpperCase()
   if (method !== "GET" && method !== "HEAD") return false
@@ -374,6 +540,7 @@ function handleWebAssetStaticRequest(request, response, pathname) {
   return true
 }
 
+/** @returns {string[]} */
 function resolveLiveRuntimeRoots() {
   const configuredRoots = [
     normalizeString(process.env.SIS_LIVE_ROOTS),
@@ -389,6 +556,7 @@ function resolveLiveRuntimeRoots() {
   return Array.from(new Set(configuredRoots.map((entry) => path.resolve(entry))))
 }
 
+/** @returns {string[]} */
 function resolveDevRuntimeRoots() {
   const configuredRoots = [
     normalizeString(process.env.SIS_DEV_ROOTS),
@@ -404,6 +572,7 @@ function resolveDevRuntimeRoots() {
   return Array.from(new Set(configuredRoots.map((entry) => path.resolve(entry))))
 }
 
+/** @param {string} candidatePath @param {string[]} [roots=[]] @returns {boolean} */
 function isPathWithinAnyRoot(candidatePath, roots = []) {
   for (let i = 0; i < roots.length; i += 1) {
     if (isPathWithinRoot(candidatePath, roots[i])) return true
@@ -470,13 +639,20 @@ function resolveRuntimeMailerPort() {
   return configuredPort
 }
 
+/** @param {SubmissionPayload & { sourceSystem?: string; sourceAttemptId?: string }} payload @returns {string} */
 function buildSubmissionActorKey(payload) {
+  const sourceSystem = normalizeLower(payload?.sourceSystem)
+  const sourceAttemptId = normalizeString(payload?.sourceAttemptId)
+  if (sourceAttemptId) {
+    return `${sourceSystem || "source"}|${sourceAttemptId}`
+  }
   const eaglesId = normalizeString(payload?.eaglesId || "(not provided)").toLowerCase()
   const email = normalizeString(payload?.email).toLowerCase() || "-"
   const pageTitle = normalizeExerciseSectionNotation(payload?.pageTitle || "Untitled exercise").toLowerCase()
   return `${eaglesId}|${email}|${pageTitle}`
 }
 
+/** @param {SubmissionPayload | ValidatedPayload} payload @returns {string} */
 function buildSubmissionNotificationKey(payload) {
   const actorKey = buildSubmissionActorKey(payload)
   const completedAtMs = Date.parse(normalizeString(payload?.completedAt))
@@ -496,14 +672,17 @@ function pruneExpiredSubmissionNotificationKeys(now = Date.now()) {
   }
 }
 
+/** @param {string} notificationKey @param {number} [now=Date.now()] @returns {boolean} */
 function hasRecentSubmissionNotification(notificationKey, now = Date.now()) {
   pruneExpiredSubmissionNotificationKeys(now)
   const key = normalizeString(notificationKey)
   if (!key) return false
   const expiresAt = RECENT_SUBMISSION_NOTIFICATIONS.get(key)
+  if (expiresAt === undefined) return false
   return Number.isFinite(expiresAt) && expiresAt > now
 }
 
+/** @param {string} notificationKey @param {number} [now=Date.now()] */
 function markSubmissionNotificationSent(notificationKey, now = Date.now()) {
   const key = normalizeString(notificationKey)
   if (!key) return
@@ -511,12 +690,14 @@ function markSubmissionNotificationSent(notificationKey, now = Date.now()) {
   RECENT_SUBMISSION_NOTIFICATIONS.set(key, now + SUBMISSION_NOTIFICATION_DEDUP_WINDOW_MS)
 }
 
+/** @param {string} lockKey @param {() => Promise<unknown>} task */
 async function withSubmissionLock(lockKey, task) {
   const key = normalizeString(lockKey) || "submission-lock"
   const prior = SUBMISSION_LOCKS.get(key) || Promise.resolve()
-  let releaseCurrent
+  /** @type {() => void} */
+  let releaseCurrent = () => {}
   const current = new Promise((resolve) => {
-    releaseCurrent = resolve
+    releaseCurrent = () => resolve(undefined)
   })
   SUBMISSION_LOCKS.set(key, current)
 
@@ -529,6 +710,7 @@ async function withSubmissionLock(lockKey, task) {
   }
 }
 
+/** @returns {SelfHealConfig & { reason: string }} */
 function resolveRuntimeSelfHealConfig() {
   // Opt-in only: avoid implicit cross-runtime coupling unless explicitly configured.
   const enabled = resolveBoolean(process.env.SIS_RUNTIME_SELF_HEAL_ENABLED, false)
@@ -594,8 +776,10 @@ function resolveRuntimeSelfHealConfig() {
   }
 }
 
+/** @param {SelfHealConfig & { reason?: string }} config */
 function applyRuntimeSelfHealStatus(config) {
   SELF_HEAL_STATUS.enabled = Boolean(config?.enabled)
+  SELF_HEAL_STATUS.reason = config?.reason || ""
   SELF_HEAL_STATUS.sourceRoot = config?.sourceRoot || ""
   SELF_HEAL_STATUS.runtimeRoot = config?.runtimeRoot || ""
   SELF_HEAL_STATUS.sourceHtmlPath = config?.sourceHtmlPath || ""
@@ -609,18 +793,22 @@ function applyRuntimeSelfHealStatus(config) {
   SELF_HEAL_STATUS.lastError = ""
 }
 
+/** @param {SelfHealConfig & { reason?: string }} config */
 function runRuntimeSelfHealCheck(config) {
   const checkedAt = new Date().toISOString()
   SELF_HEAL_STATUS.lastCheckedAt = checkedAt
   if (!config?.enabled) return
 
   try {
-    const sourceBuffer = fs.readFileSync(config.sourceHtmlPath)
+    const sourceHtmlPath = config.sourceHtmlPath || ""
+    const runtimeHtmlPath = config.runtimeHtmlPath || ""
+    const sourceBuffer = fs.readFileSync(sourceHtmlPath)
     let runtimeBuffer = null
     try {
-      runtimeBuffer = fs.readFileSync(config.runtimeHtmlPath)
+      runtimeBuffer = fs.readFileSync(runtimeHtmlPath)
     } catch (error) {
-      if (!error || error.code !== "ENOENT") throw error
+      const err = /** @type {StatusError} */ (error)
+      if (!err || err.code !== "ENOENT") throw error
     }
 
     const mismatch = !runtimeBuffer || !sourceBuffer.equals(runtimeBuffer)
@@ -631,25 +819,27 @@ function runRuntimeSelfHealCheck(config) {
     }
 
     SELF_HEAL_STATUS.lastMismatchAt = checkedAt
-    fs.mkdirSync(path.dirname(config.runtimeHtmlPath), { recursive: true })
-    fs.writeFileSync(config.runtimeHtmlPath, sourceBuffer)
+    fs.mkdirSync(path.dirname(runtimeHtmlPath), { recursive: true })
+    fs.writeFileSync(runtimeHtmlPath, sourceBuffer)
     SELF_HEAL_STATUS.lastSyncAt = new Date().toISOString()
     SELF_HEAL_STATUS.syncCount += 1
     SELF_HEAL_STATUS.lastResult = "synced"
     SELF_HEAL_STATUS.lastError = ""
 
     console.log(
-      `[self-heal] synced ${config.runtimeHtmlPath} from ${config.sourceHtmlPath}`
+      `[self-heal] synced ${runtimeHtmlPath} from ${sourceHtmlPath}`
     )
   } catch (error) {
     SELF_HEAL_STATUS.lastResult = "error"
-    SELF_HEAL_STATUS.lastError = String(error?.message || error)
+    const err = error instanceof Error ? error : new Error(String(error))
+    SELF_HEAL_STATUS.lastError = String(err.message || error)
     if (MAILER_DEBUG) {
       console.warn(`[self-heal] check failed: ${SELF_HEAL_STATUS.lastError}`)
     }
   }
 }
 
+/** @returns {{ stop: () => void }} */
 function startRuntimeSelfHealLoop() {
   const config = resolveRuntimeSelfHealConfig()
   applyRuntimeSelfHealStatus(config)
@@ -659,9 +849,10 @@ function startRuntimeSelfHealLoop() {
   }
 
   runRuntimeSelfHealCheck(config)
+  const intervalMs = config.intervalMs || 15000
   const timer = setInterval(() => {
     runRuntimeSelfHealCheck(config)
-  }, config.intervalMs)
+  }, intervalMs)
   if (typeof timer.unref === "function") timer.unref()
 
   return {
@@ -671,9 +862,11 @@ function startRuntimeSelfHealLoop() {
   }
 }
 
+/** @returns {SelfHealStatus} */
 function getRuntimeSelfHealStatus() {
   return {
     enabled: SELF_HEAL_STATUS.enabled,
+    reason: SELF_HEAL_STATUS.reason,
     sourceRoot: SELF_HEAL_STATUS.sourceRoot,
     runtimeRoot: SELF_HEAL_STATUS.runtimeRoot,
     sourceHtmlPath: SELF_HEAL_STATUS.sourceHtmlPath,
@@ -688,6 +881,7 @@ function getRuntimeSelfHealStatus() {
   }
 }
 
+/** @returns {Record<string, unknown>} */
 function buildRuntimeHealthPayload() {
   const studentAdminRuntime = getStudentAdminRuntimeStatus()
   const maintenance = studentAdminRuntime?.maintenance || null
@@ -713,12 +907,19 @@ function buildRuntimeHealthPayload() {
   }
 }
 
+/** @param {unknown} value @returns {string[]} */
 function coerceArray(value) {
   if (!value) return []
-  if (Array.isArray(value)) return value.filter(Boolean)
-  return [value].filter(Boolean)
+  const list = Array.isArray(value) ? value : [value]
+  const result = []
+  for (let i = 0; i < list.length; i += 1) {
+    const entry = normalizeString(list[i])
+    if (entry) result.push(entry)
+  }
+  return result
 }
 
+/** @param {number} code @returns {string} */
 function fromCodePointSafe(code) {
   if (typeof code !== "number" || !Number.isFinite(code)) return ""
   try {
@@ -733,6 +934,7 @@ function fromCodePointSafe(code) {
   }
 }
 
+/** @param {unknown} value @returns {string} */
 function decodeCodePoints(value) {
   if (value === undefined || value === null) return ""
   let list
@@ -750,6 +952,7 @@ function decodeCodePoints(value) {
   return result.trim()
 }
 
+/** @param {unknown} hex @returns {string} */
 function decodeUtf8Hex(hex) {
   if (!hex) return ""
   const normalized = String(hex)
@@ -765,34 +968,37 @@ function decodeUtf8Hex(hex) {
   }
 }
 
+/** @param {unknown} token @returns {string} */
 function decodeRecipientToken(token) {
   if (token === undefined || token === null) return ""
   if (typeof token === "string") return token.trim()
   if (typeof token === "number") return fromCodePointSafe(token)
   if (Array.isArray(token)) return decodeCodePoints(token)
   if (typeof token === "object") {
-    if (typeof token.email === "string") return token.email.trim()
-    if (typeof token.value === "string") return token.value.trim()
-    if (typeof token.utf8 === "string") return decodeUtf8Hex(token.utf8)
-    if (Array.isArray(token.utf8)) return decodeCodePoints(token.utf8)
+    const entry = /** @type {Record<string, unknown>} */ (token)
+    if (typeof entry.email === "string") return entry.email.trim()
+    if (typeof entry.value === "string") return entry.value.trim()
+    if (typeof entry.utf8 === "string") return decodeUtf8Hex(entry.utf8)
+    if (Array.isArray(entry.utf8)) return decodeCodePoints(entry.utf8)
     const codePoints =
-      token.codePoints ||
-      token.codepoints ||
-      token.code_point ||
-      token.codepoint ||
-      token.cp ||
-      token.points ||
-      token.codes
+      entry.codePoints ||
+      entry.codepoints ||
+      entry.code_point ||
+      entry.codepoint ||
+      entry.cp ||
+      entry.points ||
+      entry.codes
     if (codePoints != null) {
       const decoded = decodeCodePoints(codePoints)
       if (decoded) return decoded
     }
-    if (typeof token.bytes === "string") return decodeUtf8Hex(token.bytes)
-    if (Array.isArray(token.bytes)) return decodeCodePoints(token.bytes)
+    if (typeof entry.bytes === "string") return decodeUtf8Hex(entry.bytes)
+    if (Array.isArray(entry.bytes)) return decodeCodePoints(entry.bytes)
   }
   return ""
 }
 
+/** @param {unknown[]} list @returns {string[]} */
 function decodeRecipients(list) {
   if (!Array.isArray(list)) return []
   const decoded = []
@@ -806,6 +1012,7 @@ function decodeRecipients(list) {
   return decoded
 }
 
+/** @param {string} value @returns {boolean} */
 function isEmailLike(value) {
   if (typeof value !== "string") return false
   const trimmed = value.trim()
@@ -813,6 +1020,16 @@ function isEmailLike(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
 }
 
+/**
+ * @param {{
+ *   correctCount: number
+ *   pendingCount: number
+ *   incorrectCount: number
+ *   totalQuestions: number
+ *   scorePercent: number
+ * }} metrics
+ * @returns {string}
+ */
 function formatMetricSummary({ correctCount, pendingCount, incorrectCount, totalQuestions, scorePercent }) {
   const total = Number.parseInt(String(totalQuestions || 0), 10) || 0
   const correct = Number.parseInt(String(correctCount || 0), 10) || 0
@@ -822,6 +1039,10 @@ function formatMetricSummary({ correctCount, pendingCount, incorrectCount, total
   return `${correct}/${total} (${percent}%) | pending=${pending} | incorrect=${incorrect}`
 }
 
+/**
+ * @param {ValidatedPayload} payload
+ * @returns {{ teacherEmail: EmailContent, learnerEmail: EmailContent | null }}
+ */
 function createEmail({
   email,
   eaglesId,
@@ -937,34 +1158,50 @@ function createEmail({
   return { teacherEmail, learnerEmail }
 }
 
-function parseBody(request) {
+/** @param {MailerRequest} request @returns {Promise<string>} */
+function readRequestBody(request) {
   return new Promise((resolve, reject) => {
-    let raw = ""
+    /** @type {Buffer[]} */
+    const chunks = []
     request.on("data", (chunk) => {
-      raw += chunk
-      if (raw.length > 1e6) {
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk))
+      chunks.push(buffer)
+      const size = chunks.reduce((total, entry) => total + entry.length, 0)
+      if (size > 1e6) {
         request.destroy()
         reject(new Error("Payload too large"))
       }
     })
     request.on("end", () => {
-      try {
-        const parsed = raw ? JSON.parse(raw) : {}
-        resolve(parsed)
-      } catch (error) {
-        reject(error)
-      }
+      resolve(chunks.length ? Buffer.concat(chunks).toString("utf8") : "")
     })
     request.on("error", reject)
   })
 }
 
+/** @param {MailerRequest} request @returns {Promise<unknown>} */
+async function parseBody(request) {
+  const raw = await readRequestBody(request)
+  return raw ? JSON.parse(raw) : {}
+}
+
+/** @param {MailerRequest} request @returns {Promise<ParsedBodyResult>} */
+async function parseBodyWithRaw(request) {
+  const raw = await readRequestBody(request)
+  return {
+    raw,
+    parsed: raw ? JSON.parse(raw) : {},
+  }
+}
+
+/** @param {string} message @returns {StatusError & Error} */
 function createBadRequestError(message) {
-  const error = new Error(message)
+  const error = /** @type {StatusError & Error} */ (new Error(message))
   error.statusCode = 400
   return error
 }
 
+/** @param {unknown} value @param {string} fieldName @returns {number} */
 function parseRequiredNonNegativeInteger(value, fieldName) {
   const parsed = Number.parseInt(String(value), 10)
   if (!Number.isFinite(parsed) || parsed < 0) {
@@ -973,6 +1210,7 @@ function parseRequiredNonNegativeInteger(value, fieldName) {
   return parsed
 }
 
+/** @param {unknown} value @param {string} fieldName @returns {number} */
 function parseRequiredPercent(value, fieldName) {
   const parsed = Number(value)
   if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
@@ -981,12 +1219,14 @@ function parseRequiredPercent(value, fieldName) {
   return Number(parsed.toFixed(2))
 }
 
+/** @param {number} correctCount @param {number} totalQuestions @returns {number} */
 function expectedScorePercent(correctCount, totalQuestions) {
   if (!Number.isFinite(totalQuestions) || totalQuestions <= 0) return 0
   return Number(((correctCount / totalQuestions) * 100).toFixed(2))
 }
 
-function validatePayload(payload) {
+/** @param {SubmissionPayload} payload @param {ValidatePayloadOptions} [options={}] @returns {ValidatedPayload} */
+function validatePayload(payload, options = {}) {
   if (!payload || typeof payload !== "object") throw createBadRequestError("Invalid payload")
   if (Object.prototype.hasOwnProperty.call(payload, "studentId")) {
     throw createBadRequestError("Unsupported field: studentId")
@@ -999,7 +1239,8 @@ function validatePayload(payload) {
   if (!eaglesId) throw createBadRequestError("Missing eaglesId")
 
   const email = normalizeString(payload?.email)
-  if (!isEmailLike(email)) throw createBadRequestError("Invalid email")
+  const allowMissingEmail = Boolean(options?.allowMissingEmail)
+  if (!allowMissingEmail && !isEmailLike(email)) throw createBadRequestError("Invalid email")
 
   const rawPageTitle = normalizeString(payload?.pageTitle)
   if (!rawPageTitle) throw createBadRequestError("Missing pageTitle")
@@ -1028,7 +1269,7 @@ function validatePayload(payload) {
 
   return {
     eaglesId,
-    email,
+    email: isEmailLike(email) ? email : "",
     pageTitle,
     completedAt,
     recipients: decodeRecipients(Array.isArray(payload.recipients) ? payload.recipients : []),
@@ -1040,6 +1281,25 @@ function validatePayload(payload) {
   }
 }
 
+/** @param {MailerRequest} request @returns {boolean} */
+function isMoodleSourceRequest(request) {
+  const source = normalizeLower(request?.headers?.[MOODLE_REQUEST_HEADER_SOURCE])
+  return source === MOODLE_INTEGRATION_SOURCE
+}
+
+/** @param {SubmissionPayload} [payload={}] @returns {SubmissionPayload & { sourceSystem: string; sourceAttemptId: string }} */
+function normalizeMoodlePayload(payload = {}) {
+  const sourceAttemptId = normalizeString(
+    payload?.sourceAttemptId || payload?.attemptId || payload?.quizAttemptId || payload?.moodleAttemptId
+  )
+  return {
+    ...payload,
+    sourceSystem: MOODLE_INTEGRATION_SOURCE,
+    sourceAttemptId,
+  }
+}
+
+/** @param {SubmissionPayload} payload @returns {boolean} */
 function hasIntakeFields(payload) {
   const skippedRootKeys = new Set([
     "sourceFormId",
@@ -1050,6 +1310,7 @@ function hasIntakeFields(payload) {
     "formId",
     "wrapperId",
   ])
+  /** @param {Record<string, unknown>} map @returns {boolean} */
   const mapHasData = (map) => {
     const entries = Object.entries(map)
     for (let i = 0; i < entries.length; i += 1) {
@@ -1065,18 +1326,30 @@ function hasIntakeFields(payload) {
     return false
   }
 
+  /** @type {Record<string, unknown>[]} */
   const maps = []
-  if (payload && typeof payload === "object") maps.push(payload)
-  if (payload?.fields && typeof payload.fields === "object") maps.push(payload.fields)
-  if (payload?.cf && typeof payload.cf === "object") maps.push(payload.cf)
-  if (payload?.form && typeof payload.form === "object") maps.push(payload.form)
-  if (payload?.data && typeof payload.data === "object") maps.push(payload.data)
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    maps.push(/** @type {Record<string, unknown>} */ (payload))
+  }
+  if (payload?.fields && typeof payload.fields === "object") {
+    maps.push(/** @type {Record<string, unknown>} */ (payload.fields))
+  }
+  if (payload?.cf && typeof payload.cf === "object") {
+    maps.push(/** @type {Record<string, unknown>} */ (payload.cf))
+  }
+  if (payload?.form && typeof payload.form === "object") {
+    maps.push(/** @type {Record<string, unknown>} */ (payload.form))
+  }
+  if (payload?.data && typeof payload.data === "object") {
+    maps.push(/** @type {Record<string, unknown>} */ (payload.data))
+  }
   for (let i = 0; i < maps.length; i += 1) {
     if (mapHasData(maps[i])) return true
   }
   return false
 }
 
+/** @param {SubmissionPayload} payload @returns {SubmissionPayload} */
 function validateIntakePayload(payload) {
   if (!payload || typeof payload !== "object") throw new Error("Invalid intake payload")
   if (!hasIntakeFields(payload)) throw new Error("Missing intake form fields")
@@ -1106,6 +1379,7 @@ function validateIntakePayload(payload) {
     CORS
    ========================= */
 
+/** @param {MailerRequest} request @param {MailerResponse} response */
 function allowCors(request, response) {
   const reqOrigin = String(request.headers.origin || "").trim()
   const origins = getOriginList()
@@ -1135,6 +1409,7 @@ function allowCors(request, response) {
     SMTP Transport
    ========================= */
 
+/** @param {unknown} value @returns {"" | "none" | "auth"} */
 function resolveSmtpAuthMode(value) {
   const mode = normalizeEnvText(value).toLowerCase()
   if (!mode) return ""
@@ -1161,6 +1436,7 @@ function resolveSmtpAuthMode(value) {
   return ""
 }
 
+/** @returns {import("nodemailer").Transporter} */
 function createTransport() {
   if (!nodemailer) {
     throw new Error(
@@ -1195,6 +1471,14 @@ function createTransport() {
     })
   }
 
+  /** @type {{
+   *   host: string
+   *   port: number
+   *   secure: boolean
+   *   logger: boolean
+   *   debug: boolean
+   *   auth?: { user: string, pass: string }
+   * }} */
   const transportOptions = {
     host,
     port,
@@ -1219,7 +1503,8 @@ function createTransport() {
     .catch((err) => {
       STATUS.lastVerifyOk = false
       STATUS.lastVerifyAt = new Date().toISOString()
-      STATUS.lastError = String(err?.message || err)
+      const error = err instanceof Error ? err : new Error(String(err))
+      STATUS.lastError = String(error.message || err)
       console.error("❌ SMTP verify failed:", STATUS.lastError)
     })
 
@@ -1230,6 +1515,7 @@ function createTransport() {
     Request Handler
    ========================= */
 
+/** @param {MailerRequest} request @param {MailerResponse} response @param {import("nodemailer").Transporter} transporter */
 async function handleRequest(request, response, transporter) {
   const { method } = request
   const url = new URL(request.url || "", `http://${request.headers.host || "localhost"}`)
@@ -1274,7 +1560,9 @@ async function handleRequest(request, response, transporter) {
   }
 
   try {
-    const payload = await parseBody(request)
+    const moodleRequest = isMoodleSourceRequest(request)
+    const payloadResult = moodleRequest ? await parseBodyWithRaw(request) : { raw: "", parsed: await parseBody(request) }
+    const payload = /** @type {SubmissionPayload} */ (payloadResult.parsed)
 
     if (url.pathname === DEFAULT_INTAKE_PATH) {
       const validated = validateIntakePayload(payload)
@@ -1298,15 +1586,57 @@ async function handleRequest(request, response, transporter) {
       return
     }
 
-    const validated = validatePayload(payload)
+    if (moodleRequest) {
+      if (!MOODLE_QUIZ_SYNC_SHARED_SECRET) {
+        const error = /** @type {StatusError & Error} */ (new Error("Moodle quiz sync is not configured"))
+        error.statusCode = 503
+        throw error
+      }
+
+      const signatureCheck = verifyMoodleRequestSignature({
+        source: request.headers[MOODLE_REQUEST_HEADER_SOURCE],
+        timestamp: request.headers[MOODLE_REQUEST_HEADER_TIMESTAMP],
+        signature: request.headers[MOODLE_REQUEST_HEADER_SIGNATURE],
+        rawBody: payloadResult.raw,
+        sharedSecret: MOODLE_QUIZ_SYNC_SHARED_SECRET,
+        maxAgeMs: MOODLE_SIGNATURE_MAX_AGE_MS,
+      })
+
+      if (!signatureCheck.ok) {
+        const error = /** @type {StatusError & Error} */ (new Error(
+          signatureCheck.reason === "stale-request"
+            ? "Moodle request is stale"
+            : signatureCheck.reason === "missing-secret"
+              ? "Moodle quiz sync is not configured"
+              : "Moodle request signature is invalid"
+        ))
+        error.statusCode =
+          signatureCheck.reason === "stale-request"
+            ? 401
+            : signatureCheck.reason === "missing-secret"
+              ? 503
+              : signatureCheck.reason === "invalid-timestamp"
+                ? 400
+                : 403
+        throw error
+      }
+    }
+
+    const normalizedPayload = moodleRequest ? normalizeMoodlePayload(payload) : payload
+    const validated = validatePayload(normalizedPayload, {
+      allowMissingEmail: moodleRequest,
+    })
     const submissionActorKey = buildSubmissionActorKey(validated)
 
     await withSubmissionLock(submissionActorKey, async () => {
+      /** @type {ExerciseStoreResult | null} */
       let storeResult = null
-      let shouldNotify = true
+      let shouldNotify = !moodleRequest
 
       try {
-        storeResult = await persistExerciseSubmission(validated)
+        storeResult = await persistExerciseSubmission(validated, {
+          suppressNotifications: moodleRequest,
+        })
         if (storeResult?.saved) {
           STATUS.lastStoreOk = true
           STATUS.lastStoreAt = new Date().toISOString()
@@ -1323,7 +1653,8 @@ async function handleRequest(request, response, transporter) {
       } catch (storeError) {
         STATUS.lastStoreOk = false
         STATUS.lastStoreAt = new Date().toISOString()
-        STATUS.lastError = String(storeError?.message || storeError)
+        const error = storeError instanceof Error ? storeError : new Error(String(storeError))
+        STATUS.lastError = String(error.message || storeError)
         if (isExerciseStoreRequired()) throw storeError
         console.warn("⚠️ Submission persisted to email only (database write failed):", STATUS.lastError)
       }
@@ -1408,11 +1739,12 @@ async function handleRequest(request, response, transporter) {
   } catch (error) {
     STATUS.lastSendOk = false
     STATUS.lastSendAt = new Date().toISOString()
-    STATUS.lastError = String(error?.message || error)
+    const err = error instanceof Error ? error : new Error(String(error))
+    STATUS.lastError = String(err.message || error)
     const status =
-      error?.statusCode === 400 ||
-      error.message === "Missing intake form fields" ||
-      error.message === "Invalid intake payload"
+      ((/** @type {StatusError} */ (err)).statusCode === 400) ||
+      err.message === "Missing intake form fields" ||
+      err.message === "Invalid intake payload"
         ? 400
         : 500
     if (MAILER_DEBUG) console.error("❌ Send failed:", STATUS.lastError)
@@ -1420,7 +1752,7 @@ async function handleRequest(request, response, transporter) {
     // CORS + JSON error
     allowCors(request, response)
     response.writeHead(status, { "Content-Type": "application/json" })
-    response.end(JSON.stringify({ error: error.message || "Submission failed" }))
+    response.end(JSON.stringify({ error: err.message || "Submission failed" }))
   }
 }
 
@@ -1428,6 +1760,13 @@ async function handleRequest(request, response, transporter) {
     Server Bootstrap
    ========================= */
 
+/**
+ * @param {{
+ *   transporter?: import("nodemailer").Transporter
+ *   port?: number | string | null
+ *   host?: string | null
+ * }} [options={}]
+ */
 export function startExerciseMailer(options = {}) {
   assertRuntimeEnvironmentSeparation()
   const transporter = options.transporter || createTransport()
@@ -1443,7 +1782,8 @@ export function startExerciseMailer(options = {}) {
       // Ensure CORS even on unexpected errors
       allowCors(request, response)
       response.writeHead(500, { "Content-Type": "application/json" })
-      response.end(JSON.stringify({ error: error.message || "Submission failed" }))
+      const err = error instanceof Error ? error : new Error(String(error))
+      response.end(JSON.stringify({ error: err.message || "Submission failed" }))
     })
   })
 

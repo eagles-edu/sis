@@ -1,0 +1,23 @@
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <defs>
+        <radialGradient id="star_gradient0">
+            <stop offset="10%" stop-color="var(--color0, #fff)" />
+            <stop offset="80%">
+                <animate attributeName="offset" dur="3s" repeatCount="indefinite" values="0.1; 2; 0.1;" />
+            </stop>
+        </radialGradient>
+        <mask id="star_m" color="#000">
+            <rect fill="url(#star_gradient0)" width="28" height="28" x="-2" y="-2" />
+        </mask>
+    </defs>
+    <g mask="url(#star_m)">
+        <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12" />
+        <polygon stroke-width="1.5" stroke="currentColor" fill="none" points="12 1 12 12 6.5 2.473725 12 12 2.473725 6.5 12 12 1 12 12 12 2.473725 17.5 12 12 6.5 21.526275 12 12 12 23 12 12 17.5 21.526275 12 12 21.526275 17.5 12 12 23 12 12 12 21.526275 6.5 12 12 17.5 2.473725 12 12" />
+    </g>
+</svg>

@@ -4,9 +4,9 @@ set -euo pipefail
 MODE="${1:-full}"
 
 case "$MODE" in
-  full|public|restart-only) ;;
+  full|public|restart-only|boot-prep) ;;
   *)
-    echo "Usage: $(basename "$0") [full|public|restart-only]" >&2
+    echo "Usage: $(basename "$0") [full|public|restart-only|boot-prep]" >&2
     exit 2
     ;;
 esac
@@ -19,7 +19,41 @@ TEST_HEALTH_URL="${SIS_TEST_HEALTH_URL:-http://127.0.0.1:${TEST_PORT}/healthz}"
 TEST_PUBLIC_HEALTH_URL="${SIS_TEST_PUBLIC_HEALTH_URL:-}"
 TEST_HEALTH_DELAY="${SIS_TEST_HEALTH_DELAY:-5}"
 TEST_NODE_BIN="${SIS_TEST_NODE_BIN:-/home/eagles/node-v20.19.4-linux-x64/bin/node}"
-TEST_ROUTE_MATRIX="${SIS_TEST_ROUTE_MATRIX:-http://127.0.0.1:${TEST_PORT}/|200|window.__SIS_RUNTIME_ENV=\"test\";http://127.0.0.1:${TEST_PORT}/admin/students|200|Student Admin Login;http://127.0.0.1:${TEST_PORT}/parent|200|dành cho phụ huynh;http://127.0.0.1:${TEST_PORT}/student|200|Student Portal;http://127.0.0.1:${TEST_PORT}/parent/portal|308||/parent;http://127.0.0.1:${TEST_PORT}/student/portal|308||/student}"
+TEST_PRIMARY_ORIGIN="${SIS_TEST_PRIMARY_ORIGIN:-https://test.eagles.edu.vn}"
+LIVE_ROOT_CANONICAL="${SIS_LIVE_ROOT_CANONICAL:-/home/admin.eagles.edu.vn/sis}"
+DEV_ROOT_CANONICAL="${SIS_DEV_ROOT_CANONICAL:-/home/eagles/dockerz/sis}"
+ROUTE_CONTRACT_FILE="${SIS_TEST_ROUTE_CONTRACT_FILE:-${REPO_ROOT}/config/test-route-contract.json}"
+if [[ ! -f "$ROUTE_CONTRACT_FILE" ]]; then
+  echo "missing test route contract file: $ROUTE_CONTRACT_FILE" >&2
+  exit 1
+fi
+ROUTE_CONTRACT_JSON="$(<"$ROUTE_CONTRACT_FILE")"
+export ROUTE_CONTRACT_JSON
+
+build_test_route_matrix() {
+  env ROUTE_CONTRACT_JSON="$ROUTE_CONTRACT_JSON" TEST_PORT="$TEST_PORT" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+const contract = JSON.parse(process.env.ROUTE_CONTRACT_JSON || "{}")
+const port = String(process.env.TEST_PORT || "8786")
+const runtimeEnv = contract.runtimeEnv || "test"
+const adminPagePath = contract.adminPagePath || "/admin"
+const parentPortalPagePath = contract.parentPortalPagePath || "/parent"
+const studentPortalPagePath = contract.studentPortalPagePath || "/student"
+const entries = [
+  [`http://127.0.0.1:${port}/`, 200, `window.__SIS_RUNTIME_ENV=${JSON.stringify(runtimeEnv)}`, ""],
+  [`http://127.0.0.1:${port}${adminPagePath}`, 200, "Student Admin Login", ""],
+  [`http://127.0.0.1:${port}${parentPortalPagePath}`, 200, "dành cho phụ huynh", ""],
+  [`http://127.0.0.1:${port}${studentPortalPagePath}`, 200, "Student Portal", ""],
+  [`http://127.0.0.1:${port}${contract.adminLegacyPagePath || "/admin/students"}`, 308, "", adminPagePath],
+  [`http://127.0.0.1:${port}${contract.parentLegacyPagePath || "/parent/portal"}`, 308, "", parentPortalPagePath],
+  [`http://127.0.0.1:${port}${contract.studentLegacyPagePath || "/student/portal"}`, 308, "", studentPortalPagePath],
+]
+process.stdout.write(entries.map((entry) => entry.join("|")).join(";"))
+EOF
+}
+
+TEST_ROUTE_MATRIX="${SIS_TEST_ROUTE_MATRIX:-$(build_test_route_matrix)}"
+# File mirror only: this wrapper syncs content into the test host and does not
+# use git commit ancestry as part of the sync contract.
 if [[ -n "${SIS_TEST_VERBOSE_ENV:-}" ]]; then
   # shellcheck disable=SC2206
   TEST_VERBOSE_ENV=(${SIS_TEST_VERBOSE_ENV})
@@ -30,6 +64,28 @@ fi
 log() {
   printf '[sync-test] %s\n' "$*"
 }
+
+TEST_ENV_DEV_MIRROR_KEYS=(
+  "STUDENT_ADMIN_API_PREFIX"
+  "STUDENT_ADMIN_PAGE_PATH"
+  "STUDENT_ADMIN_USER"
+  "STUDENT_ADMIN_PASS"
+  "STUDENT_ADMIN_STORE_ENABLED"
+  "SMTP_HOST"
+  "SMTP_PORT"
+  "SMTP_SECURE"
+  "SMTP_USER"
+  "SMTP_PASS"
+  "SMTP_FROM"
+  "MOODLE_QUIZ_SYNC_SHARED_SECRET"
+  "MOODLE_SIS_QUIZ_SYNC_SECRET"
+  "STUDENT_TEACHER_ACCOUNTS_JSON"
+  "STUDENT_PARENT_USER"
+  "STUDENT_PARENT_PASS"
+  "STUDENT_PARENT_PORTAL_ACCOUNTS_JSON"
+  "STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON"
+  "STUDENT_NEWS_VALIDATION_DISABLED"
+)
 
 read_env_value() {
   local env_file="$1"
@@ -59,26 +115,82 @@ const envValue = process.env.ENV_VALUE || ""
 const raw = fs.readFileSync(envFile, "utf8")
 const lines = raw.split(/\r?\n/u)
 const trailingNewline = raw.endsWith("\n")
+const nextLines = []
 let replaced = false
 
-for (let i = 0; i < lines.length; i += 1) {
-  if (lines[i].startsWith(`${envKey}=`)) {
-    lines[i] = `${envKey}=${envValue}`
-    replaced = true
-    break
+for (const line of lines) {
+  if (line.startsWith(`${envKey}=`)) {
+    if (!replaced) {
+      nextLines.push(`${envKey}=${envValue}`)
+      replaced = true
+    }
+    continue
   }
+  nextLines.push(line)
 }
 
 if (!replaced) {
-  lines.push(`${envKey}=${envValue}`)
+  nextLines.push(`${envKey}=${envValue}`)
 }
 
-let next = lines.join("\n")
-if (trailingNewline && !next.endsWith("\n")) {
+let next = nextLines.join("\n")
+if (!trailingNewline) {
+  while (next.endsWith("\n")) {
+    next = next.slice(0, -1)
+  }
+} else if (!next.endsWith("\n")) {
   next += "\n"
 }
-fs.writeFileSync(envFile, next)
+
+if (next !== raw) {
+  fs.writeFileSync(envFile, next)
+}
 EOF
+}
+
+sync_env_keys_between_files() {
+  local source_env_path="$1"
+  local target_env_path="$2"
+  shift 2
+
+  if [[ ! -f "$source_env_path" ]]; then
+    log "skip env alignment (missing source env: ${source_env_path})"
+    return 0
+  fi
+  if [[ ! -f "$target_env_path" ]]; then
+    log "skip env alignment (missing target env: ${target_env_path})"
+    return 0
+  fi
+
+  local mirrored=0
+  local key=""
+  local value=""
+  for key in "$@"; do
+    value="$(read_env_value "$source_env_path" "$key")"
+    if [[ -z "$value" ]]; then
+      continue
+    fi
+    upsert_env_value "$target_env_path" "$key" "$value"
+    mirrored=$((mirrored + 1))
+  done
+
+  log "aligned ${mirrored} env keys from $(basename "$source_env_path") to $(basename "$target_env_path")"
+}
+
+align_test_env_from_dev_source() {
+  local test_env_path="${TEST_ROOT}/.env.test"
+  local source_env_path="${REPO_ROOT}/.env.dev"
+
+  if [[ ! -f "$test_env_path" ]]; then
+    log "skip dev->test env alignment (missing .env.test in ${TEST_ROOT})"
+    return 0
+  fi
+  if [[ ! -f "$source_env_path" ]]; then
+    log "skip dev->test env alignment (missing ${source_env_path})"
+    return 0
+  fi
+
+  sync_env_keys_between_files "$source_env_path" "$test_env_path" "${TEST_ENV_DEV_MIRROR_KEYS[@]}"
 }
 
 ensure_test_redis_env() {
@@ -135,6 +247,58 @@ ensure_test_redis_env() {
   log "ensured test Redis wiring in ${test_env_path}"
 }
 
+ensure_test_runtime_env_contract() {
+  local test_env_path="${TEST_ROOT}/.env.test"
+  local default_env_path="${TEST_ROOT}/.env"
+
+  if [[ ! -f "$test_env_path" ]]; then
+    log "skip test env contract pinning (missing .env.test in ${TEST_ROOT})"
+    return 0
+  fi
+
+  local test_dev_roots="${DEV_ROOT_CANONICAL},${TEST_ROOT}"
+  local source_env_path=""
+  local moodle_secret=""
+
+  if [[ -f "${REPO_ROOT}/.env.dev" ]]; then
+    source_env_path="${REPO_ROOT}/.env.dev"
+  elif [[ -f "${REPO_ROOT}/.env" ]]; then
+    source_env_path="${REPO_ROOT}/.env"
+  fi
+
+  if [[ -n "$source_env_path" ]]; then
+    moodle_secret="$(read_env_value "$source_env_path" "MOODLE_QUIZ_SYNC_SHARED_SECRET")"
+    if [[ -z "$moodle_secret" ]]; then
+      moodle_secret="$(read_env_value "$source_env_path" "MOODLE_SIS_QUIZ_SYNC_SECRET")"
+    fi
+  fi
+
+  upsert_env_value "$test_env_path" "EXERCISE_MAILER_HOST" "127.0.0.1"
+  upsert_env_value "$test_env_path" "EXERCISE_MAILER_PORT" "$TEST_PORT"
+  upsert_env_value "$test_env_path" "EXERCISE_MAILER_ORIGIN" "$TEST_PRIMARY_ORIGIN"
+  upsert_env_value "$test_env_path" "NODE_ENV" "test"
+  upsert_env_value "$test_env_path" "SIS_LIVE_ROOT" "$LIVE_ROOT_CANONICAL"
+  upsert_env_value "$test_env_path" "SIS_DEV_ROOT" "$test_dev_roots"
+  upsert_env_value "$test_env_path" "SIS_RUNTIME_SELF_HEAL_ENABLED" "false"
+  if [[ -n "$moodle_secret" ]]; then
+    upsert_env_value "$test_env_path" "MOODLE_QUIZ_SYNC_SHARED_SECRET" "$moodle_secret"
+  fi
+
+  if [[ -f "$default_env_path" ]]; then
+    upsert_env_value "$default_env_path" "EXERCISE_MAILER_HOST" "127.0.0.1"
+    upsert_env_value "$default_env_path" "EXERCISE_MAILER_PORT" "$TEST_PORT"
+    upsert_env_value "$default_env_path" "EXERCISE_MAILER_ORIGIN" "$TEST_PRIMARY_ORIGIN"
+    upsert_env_value "$default_env_path" "SIS_LIVE_ROOT" "$LIVE_ROOT_CANONICAL"
+    upsert_env_value "$default_env_path" "SIS_DEV_ROOT" "$test_dev_roots"
+    upsert_env_value "$default_env_path" "SIS_RUNTIME_SELF_HEAL_ENABLED" "false"
+    if [[ -n "$moodle_secret" ]]; then
+      upsert_env_value "$default_env_path" "MOODLE_QUIZ_SYNC_SHARED_SECRET" "$moodle_secret"
+    fi
+  fi
+
+  log "pinned test env contract in ${test_env_path}"
+}
+
 run_sync() {
   case "$MODE" in
     full)
@@ -183,17 +347,27 @@ sync_test_public_html_index() {
   local source_hub_html="${REPO_ROOT}/web-asset/admin/portal-hub.html"
   local target_public_root="/home/test.eagles.edu.vn/public_html"
   local target_index_path="${target_public_root}/index.html"
+  local target_owner
+  local target_group
+  local install_prefix=()
+
+  target_owner="$(id -un)"
+  target_group="$(id -gn)"
 
   if [[ ! -f "$source_hub_html" ]]; then
     log "skip public_html index sync (portal hub source missing)"
     return 0
   fi
 
-  mkdir -p "$target_public_root"
-  log "syncing portal hub into ${target_index_path}"
-  cp "$source_hub_html" "$target_index_path"
+  if [[ ! -d "$target_public_root" || ! -w "$target_public_root" ]]; then
+    install_prefix=(sudo)
+  fi
 
-  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" TARGET_INDEX_PATH="$target_index_path" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+  "${install_prefix[@]}" install -d -o "$target_owner" -g "$target_group" "$target_public_root"
+  log "syncing portal hub into ${target_index_path}"
+  "${install_prefix[@]}" install -o "$target_owner" -g "$target_group" -m 644 "$source_hub_html" "$target_index_path"
+
+  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" ROUTE_CONTRACT_JSON="$ROUTE_CONTRACT_JSON" TARGET_INDEX_PATH="$target_index_path" "$TEST_NODE_BIN" --input-type=module <<'EOF'
 import fs from "node:fs"
 
 const targetIndexPath = process.env.TARGET_INDEX_PATH
@@ -203,8 +377,9 @@ const replacements = [
   ["https://eagles.edu.vn", "https://test.eagles.edu.vn"],
 ]
 
+const contract = JSON.parse(process.env.ROUTE_CONTRACT_JSON || "{}")
 const injectedRuntimeConfig =
-  `<script>window.__SIS_RUNTIME_ENV="test";window.__SIS_ADMIN_PAGE_PATH="/admin/students";window.__SIS_PARENT_PORTAL_PAGE_PATH="/parent/portal";window.__SIS_STUDENT_PORTAL_PAGE_PATH="/student/portal";</script>`
+  `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(contract.runtimeEnv || "test")};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(contract.adminPagePath || "/admin")};window.__SIS_PARENT_PORTAL_PAGE_PATH=${JSON.stringify(contract.parentPortalPagePath || "/parent/portal")};window.__SIS_STUDENT_PORTAL_PAGE_PATH=${JSON.stringify(contract.studentPortalPagePath || "/student/portal")};</script>`
 
 let next = raw
 if (next.includes("</head>")) {
@@ -220,6 +395,33 @@ if (next !== raw) {
 EOF
 }
 
+sync_test_public_assets() {
+  local target_public_root="/home/test.eagles.edu.vn/public_html"
+  local target_web_asset_root="${target_public_root}/web-asset"
+  local target_owner
+  local target_group
+  local install_prefix=()
+
+  target_owner="$(id -un)"
+  target_group="$(id -gn)"
+
+  if [[ ! -d "$target_public_root" || ! -w "$target_public_root" ]]; then
+    install_prefix=(sudo)
+  fi
+
+  "${install_prefix[@]}" install -d -o "$target_owner" -g "$target_group" \
+    "$target_web_asset_root" \
+    "${target_web_asset_root}/shared" \
+    "${target_web_asset_root}/images" \
+    "${target_web_asset_root}/admin" \
+    "${target_web_asset_root}/admin/portal-backgrounds"
+
+  log "syncing public web assets into ${target_web_asset_root}"
+  "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${target_web_asset_root}/shared/"
+  "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/images/" "${target_web_asset_root}/images/"
+  "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/admin/portal-backgrounds/" "${target_web_asset_root}/admin/portal-backgrounds/"
+}
+
 verify_test_public_html_index() {
   local target_index_path="/home/test.eagles.edu.vn/public_html/index.html"
   if [[ ! -f "$target_index_path" ]]; then
@@ -227,17 +429,18 @@ verify_test_public_html_index() {
     return 1
   fi
 
-  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" TARGET_INDEX_PATH="$target_index_path" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" ROUTE_CONTRACT_JSON="$ROUTE_CONTRACT_JSON" TARGET_INDEX_PATH="$target_index_path" "$TEST_NODE_BIN" --input-type=module <<'EOF'
 import fs from "node:fs"
 
 const targetIndexPath = process.env.TARGET_INDEX_PATH
 const html = fs.readFileSync(targetIndexPath, "utf8")
 
+const contract = JSON.parse(process.env.ROUTE_CONTRACT_JSON || "{}")
 const requiredSnippets = [
   "https://test.eagles.edu.vn",
-  'window.__SIS_ADMIN_PAGE_PATH="/admin/students"',
-  'window.__SIS_PARENT_PORTAL_PAGE_PATH="/parent/portal"',
-  'window.__SIS_STUDENT_PORTAL_PAGE_PATH="/student/portal"',
+  `window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(contract.adminPagePath || "/admin")}`,
+  `window.__SIS_PARENT_PORTAL_PAGE_PATH=${JSON.stringify(contract.parentPortalPagePath || "/parent/portal")}`,
+  `window.__SIS_STUDENT_PORTAL_PAGE_PATH=${JSON.stringify(contract.studentPortalPagePath || "/student/portal")}`,
   'data-portal-target="admin"',
   'data-portal-target="parent"',
   'data-portal-target="student"',
@@ -249,6 +452,23 @@ for (const snippet of requiredSnippets) {
   }
 }
 EOF
+}
+
+verify_test_public_assets() {
+  local target_public_root="/home/test.eagles.edu.vn/public_html"
+  local required_assets=(
+    "${target_public_root}/web-asset/shared/portal-theme.css"
+    "${target_public_root}/web-asset/images/logo.svg"
+    "${target_public_root}/web-asset/admin/portal-backgrounds/hub-mesh-05.svg"
+  )
+
+  local asset_path=""
+  for asset_path in "${required_assets[@]}"; do
+    if [[ ! -f "$asset_path" ]]; then
+      echo "test public asset missing: $asset_path" >&2
+      return 1
+    fi
+  done
 }
 
 verify_test_runtime_routes() {
@@ -281,7 +501,7 @@ for (const entry of matrix) {
       throw new Error(`route ${url} expected Location ${locationNeedle}, got ${actualLocation || "(empty)"}`)
     }
   }
-  if (body.includes("Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening /admin/students.")) {
+  if (body.includes("Static preview mode requires ?apiOrigin=http://127.0.0.1:<mailer-port> or opening /admin.")) {
     throw new Error(`route ${url} still shows static preview guidance`)
   }
 }
@@ -314,7 +534,11 @@ refresh_test_prisma() {
 }
 
 should_refresh_prisma() {
-  [[ "$MODE" == "full" || "$MODE" == "restart-only" ]]
+  [[ "$MODE" == "full" || "$MODE" == "restart-only" || "$MODE" == "boot-prep" ]]
+}
+
+should_restart_runtime() {
+  [[ "$MODE" != "boot-prep" ]]
 }
 
 wait_for_port_release() {
@@ -362,19 +586,28 @@ restart_test_runtime() {
 }
 
 main() {
+  log "file mirror only; git commit matching is not part of the test sync contract"
   run_sync
   sync_test_src_tree
   cleanup_test_backup_artifacts
   sync_test_public_html_index
+  sync_test_public_assets
+  align_test_env_from_dev_source
+  ensure_test_runtime_env_contract
   ensure_test_redis_env
   if should_refresh_prisma; then
     refresh_test_prisma
   else
     log "skip Prisma refresh for mode=${MODE}"
   fi
-  restart_test_runtime
-  verify_test_public_html_index
-  verify_test_runtime_routes "$TEST_ROUTE_MATRIX"
+  if should_restart_runtime; then
+    restart_test_runtime
+    verify_test_public_html_index
+    verify_test_public_assets
+    verify_test_runtime_routes "$TEST_ROUTE_MATRIX"
+  else
+    log "skip runtime restart and route probes for mode=${MODE}"
+  fi
   log "completed mode=${MODE}"
 }
 

@@ -18,8 +18,14 @@
 
 - Single-service Node.js + Prisma workspace.
 - Cookie-session auth remains the admin contract.
+- Version split is explicit:
+  - dev/test route and UI line: `v2.0`
+  - live `admin.eagles.edu.vn` route: `v1.0`
+- Edge contract: Nginx terminates TLS and proxies to OLSWS on `8088`; verify the active listener and cert on the host before updating docs.
+- `moodle.eagles.edu.vn` is a separate direct-serve alternative; do not derive its edge behavior from the test host.
 - Assignment templates are backend-owned.
 - Admin, parent, and student portals are all active.
+- Moodle quiz sync now lives in `integrations/moodle/local/sisquizsync` and posts signed quiz results into the existing exercise submission pipeline.
 - The current extraction focus is the UI decomposition boundary in Phase 6 after the async side-effects outbox/worker cutover.
 - Phase 6 now includes the queue-hub page wiring in `web-asset/admin/queue-hub-island.mjs`, the overview news queue wiring in `web-asset/admin/overview-news-queue-island.mjs`, the news review wiring in `web-asset/admin/news-review-island.mjs`, the profile wiring in `web-asset/admin/profile-island.mjs`, the parent-tracking wiring in `web-asset/admin/parent-tracking-island.mjs`, the attendance/grade controls in `web-asset/admin/attendance-grade-controls-island.mjs`, the assignment/level-reminder controls in `web-asset/admin/assignment-controls-island.mjs`, the school setup/profile-field layout controls in `web-asset/admin/school-setup-branding-island.mjs`, and the import/settings/report controls in `web-asset/admin/report-settings-island.mjs`.
 

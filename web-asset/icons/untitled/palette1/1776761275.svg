@@ -1,0 +1,13 @@
+<svg color="#dadada" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs fill="currentColor">
+    <linearGradient gradientTransform="rotate(-70 0.857037 0.25)" id="one_gradient1">
+      <stop offset="10%" stop-color="currentColor" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="currentColor"></stop>
+    </linearGradient>
+  </defs>
+  <g fill="url(#one_gradient1)" transform="scale(0.666667)">
+    <path d="M12 23C8 22.5 4.475 18.7252 4 13.5C3.5 8 7.5817 4 12 4C12.5459 4 13.0919 4 13.5312 3.5607C13.8125 3.2794 13.9706 2.8978 13.9706 2.5C13.9706 2.1022 13.8125 1.7206 13.5312 1.4393C13.0919 1 12.5459 1 12 1C5.9249 1 1 5.9249 1 12C1 18.0751 5.9249 23 12 23"></path>
+    <path d="M12 23C8 22.5 4.475 18.7252 4 13.5C3.5 8 7.5817 4 12 4C12.5459 4 13.0919 4 13.5312 3.5607C13.8125 3.2794 13.9706 2.8978 13.9706 2.5C13.9706 2.1022 13.8125 1.7206 13.5312 1.4393C13.0919 1 12.5459 1 12 1C5.9249 1 1 5.9249 1 12C1 18.0751 5.9249 23 12 23" transform="rotate(180 12 12)"></path>
+    <animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform>
+  </g>
+</svg>

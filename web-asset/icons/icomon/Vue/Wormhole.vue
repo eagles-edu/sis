@@ -1,0 +1,28 @@
+<template>
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" stroke-linecap="round" fill="none" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs>
+            <radialGradient id="wormhole_gradient0">
+                <stop offset="20%" />
+                <stop offset="50%" stop-color="var(--color0, #fff)">
+                    <animate attributeName="offset" dur="3s" repeatCount="indefinite" values="0.4; 1.5; 0.4" />
+                </stop>
+            </radialGradient>
+            <mask id="wormhole_m" color="#000">
+                <rect fill="url(#wormhole_gradient0)" width="28" height="28" x="-2" y="-2" />
+            </mask>
+        </defs>
+        <g mask="url(#wormhole_m)">
+            <path transform="rotate(120 12.019632 12.025527)" class="st0" d="M12.0073 12.0553c0.9587 0 1.6839-1.1922 1.0202-2.4705-0.6514-1.2783-2.6057-2.2124-4.8181-1.3151-2.1878 0.8849-4.0314 3.4783-3.6381 6.8706 0.3933 3.3555 3.0727 6.7109 7.4237 7.645" />
+            <path transform="rotate(-120 11.987709 12.029765)" class="st0" d="M12.0073 12.0553c0.9587 0 1.6839-1.1922 1.0202-2.4705-0.6514-1.2783-2.6057-2.2124-4.8181-1.3151-2.1878 0.8849-4.0314 3.4783-3.6381 6.8706 0.3933 3.3555 3.0727 6.7109 7.4237 7.645" />
+            <path transform="translate(-7341e-6 -0.055292)" class="st0" d="M12.0073 12.0553c0.9587 0 1.6839-1.1922 1.0202-2.4705-0.6514-1.2783-2.6057-2.2124-4.8181-1.3151-2.1878 0.8849-4.0314 3.4783-3.6381 6.8706 0.3933 3.3555 3.0727 6.7109 7.4237 7.645" />
+            <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+        </g>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

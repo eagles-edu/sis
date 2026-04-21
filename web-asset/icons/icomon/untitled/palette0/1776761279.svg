@@ -1,0 +1,13 @@
+<svg color="#272727" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <animateTransform attributeName="transform" calcMode="discrete" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12; 45 12 12; 90 12 12; 135 12 12; 180 12 12; 225 12 12; 270 12 12; 315 12 12"></animateTransform>
+    <circle cx="8" cy="2" r="2"></circle>
+    <circle cx="12.242667" cy="3.75736" opacity="0.5" r="1.333333"></circle>
+    <circle cx="14" cy="8" opacity="0.5" r="1.333333"></circle>
+    <circle cx="12.242667" cy="12.242667" opacity="0.5" r="1.333333"></circle>
+    <circle cx="8" cy="14" opacity="0.5" r="1.333333"></circle>
+    <circle cx="3.75736" cy="12.242667" opacity="0.5" r="1.333333"></circle>
+    <circle cx="2" cy="8" opacity="0.5" r="1.333333"></circle>
+    <circle cx="3.75736" cy="3.75736" opacity="0.5" r="1.333333"></circle>
+  </g>
+</svg>

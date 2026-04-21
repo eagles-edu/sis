@@ -1,0 +1,9 @@
+<svg viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <path stroke-linecap="round" d="M4.5754 4.5754c4.1005-4.1005 10.7487-4.1005 14.8492 0">
+        <animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+    </path>
+    <circle stroke="none" fill="currentColor" cx="12" cy="12" r="3">
+        <animate attributeName="r" dur="1s" repeatCount="indefinite" values="3; 9" />
+        <animate attributeName="opacity" dur="1s" repeatCount="indefinite" values="0; 0.5; 0" />
+    </circle>
+</svg>

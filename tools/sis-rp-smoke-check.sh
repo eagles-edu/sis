@@ -18,11 +18,12 @@ done
 
 echo "[check] external reverse-proxy"
 for url in \
-  "https://${DOMAIN}/sis-admin/student-admin.html" \
-  "https://${DOMAIN}/api/sis-admin/auth/me" \
-  "https://${DOMAIN}/api/admin/auth/me"
+  "https://${DOMAIN}/admin/students" \
+  "https://${DOMAIN}/api/admin/auth/me" \
+  "https://${DOMAIN}/parent/portal" \
+  "https://${DOMAIN}/student/portal"
 do
-  code="$(curl -A "${USER_AGENT}" -ksS -o /tmp/sis-rp-ext.out -w '%{http_code}' "${url}")"
+  code="$(curl -A "${USER_AGENT}" -sS -o /tmp/sis-rp-ext.out -w '%{http_code}' "${url}")"
   echo "  ${code} ${url}"
 done
 

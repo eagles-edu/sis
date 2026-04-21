@@ -5,12 +5,21 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 
+import {
+  MOODLE_INTEGRATION_SOURCE,
+  MOODLE_REQUEST_HEADER_SIGNATURE,
+  MOODLE_REQUEST_HEADER_SOURCE,
+  MOODLE_REQUEST_HEADER_TIMESTAMP,
+  buildMoodleRequestSignature,
+} from "../src/modules/exercises/moodle-sync.mjs"
+
 process.env.NODE_ENV = "test"
 // allow any origin during test, then override in a CORS test
 process.env.EXERCISE_MAILER_ORIGIN = "*"
 process.env.EXERCISE_STORE_ENABLED = "false"
 process.env.EXERCISE_STORE_REQUIRED = "false"
 process.env.STUDENT_INTAKE_STORE_ENABLED = "false"
+process.env.MOODLE_QUIZ_SYNC_SHARED_SECRET = "test-shared-secret-for-moodle"
 // Keep logs quiet for tests
 process.env.MAILER_DEBUG = "false"
 
@@ -213,6 +222,45 @@ test("POST /api/exercise-submission decodes obfuscated recipients", async () => 
   const [teacherMail, learnerMail] = newHistory
   assert.deepEqual(teacherMail.to, ["teacher2@example.com", "admin@example.com"])
   assert.equal(learnerMail.to[0], "student2@example.com")
+})
+
+test("POST /api/exercise-submission accepts signed Moodle-origin payloads without sending mail", async () => {
+  const beforeCount = transport.calls.sendMail
+  const payload = {
+    email: "",
+    eaglesId: "moodle-user-9",
+    pageTitle: "Moodle Quiz",
+    completedAt: "2026-03-01T08:10:00.000Z",
+    correctCount: 8,
+    pendingCount: 1,
+    incorrectCount: 1,
+    totalQuestions: 10,
+    scorePercent: 80,
+    recipients: [],
+    sourceSystem: MOODLE_INTEGRATION_SOURCE,
+    sourceAttemptId: "attempt-9001",
+  }
+  const rawBody = JSON.stringify(payload)
+  const timestamp = String(Math.floor(Date.now() / 1000))
+  const signature = buildMoodleRequestSignature(
+    timestamp,
+    rawBody,
+    "test-shared-secret-for-moodle"
+  )
+
+  const res = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      [MOODLE_REQUEST_HEADER_SOURCE]: MOODLE_INTEGRATION_SOURCE,
+      [MOODLE_REQUEST_HEADER_TIMESTAMP]: timestamp,
+      [MOODLE_REQUEST_HEADER_SIGNATURE]: signature,
+    },
+    body: rawBody,
+  })
+
+  assert.equal(res.status, 204)
+  assert.equal(transport.calls.sendMail, beforeCount)
 })
 
 test("POST /api/exercise-submission rejects unsupported answers field", async () => {

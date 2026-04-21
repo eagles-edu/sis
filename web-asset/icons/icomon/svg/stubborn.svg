@@ -1,0 +1,12 @@
+<svg viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" stroke-linecap="round" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <circle cx="12" cy="12" r="10.5" stroke-dasharray="66 8" stroke-dashoffset="40">
+        <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12" />
+        <animate attributeName="stroke-dashoffset" dur="1.25s" repeatCount="indefinite" values="40; 10; 40" />
+    </circle>
+</svg>

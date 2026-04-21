@@ -1,0 +1,10 @@
+<svg color="#272727" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0.833333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient gradientTransform="rotate(90 0.25 0.25)" id="gradient0">
+      <stop offset="0%" stop-color="currentColor"></stop>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+  <path d="M0.6667 8L2.6667 8M8 15.3333L8 13.3333M15.3333 8L13.3333 8M8 0.6667L8 2.6667M1.6492 4.3333L3.3812 5.3333M1.6492 11.6667L3.3812 10.6667M4.3333 14.3509L5.3333 12.6188M11.6667 14.3509L10.6667 12.6188M14.3509 11.6667L12.6188 10.6667M14.3509 4.3333L12.6188 5.3333M4.3333 1.6491L5.3333 3.3812M11.6667 1.6491L10.6667 3.3812" opacity="0.4" stroke-width="1.333333"></path>
+  <path d="M8.6667 9.3333L8.6667 0.6667C8.6667 0.2985 8.3682 0 8 0C7.6318 0 7.3333 0.2985 7.3333 0.6667L7.3333 9.3333L8.6667 9.3333Z" fill="url(#gradient0)" stroke="none"><animateTransform attributeName="transform" calcMode="discrete" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;30 12 12; 60 12 12; 90 12 12; 120 12 12; 150 12 12; 180 12 12; 210 12 12; 240 12 12; 270 12 12; 300 12 12; 330 12 12;"></animateTransform></path>
+</svg>

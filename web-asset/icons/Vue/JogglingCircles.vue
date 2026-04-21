@@ -1,0 +1,22 @@
+<template>
+    <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <circle cx="12" cy="5" r="3">
+            <animate attributeName="cx" dur="1s" repeatCount="indefinite" values="12; 19.7942" />
+            <animate attributeName="cy" dur="1s" repeatCount="indefinite" values="5; 18.5" />
+        </circle>
+        <circle cx="19.794201" cy="18.5" r="3">
+            <animate attributeName="cx" dur="1s" repeatCount="indefinite" values="19.7942; 4.20577" />
+        </circle>
+        <circle cx="4.20577" cy="18.5" r="3">
+            <animate attributeName="cx" dur="1s" repeatCount="indefinite" values="4.20577; 12" />
+            <animate attributeName="cy" dur="1s" repeatCount="indefinite" values="18.5; 5" />
+        </circle>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>
