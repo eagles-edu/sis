@@ -907,8 +907,8 @@ body.menu-open .floating-menu-icon::after {
 }
 
 body.portal-hub-page .section-card--primary {
-  --hub-accent: #b50010;
-  --hub-accent-soft: rgba(181, 0, 16, 0.12);
+  --hub-accent: var(--secondary-color);
+  --hub-accent-soft: rgba(255, 255, 255, 1);
 }
 
 body.portal-hub-page .section-card--resources {
