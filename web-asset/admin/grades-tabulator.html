@@ -7,6 +7,17 @@
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <title>The Eagles Club SIS Grades Table</title>
   <link rel="stylesheet" href="../vendor/tabulatorz/tabulator.min.css">
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem("sis-theme");
+        document.documentElement.dataset.theme =
+          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
   <style>
     :root {
       --bg: #f3f7fb;
@@ -19,6 +30,21 @@
       --ok: #0c8f5c;
       --warn: #b45309;
       --bad: #b42318;
+      color-scheme: light;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #111215;
+      --panel: #31343a;
+      --ink: #f2f4f7;
+      --ink-soft: #c9ced4;
+      --accent: #6aa4ff;
+      --accent-soft: rgba(106, 164, 255, 0.16);
+      --line: rgba(255, 255, 255, 0.2);
+      --ok: #7cd6a4;
+      --warn: #f0b05f;
+      --bad: #f28a95;
+      color-scheme: dark;
     }
 
     * {
@@ -32,6 +58,10 @@
       line-height: 1.4;
       margin: 0;
       min-height: 100vh;
+    }
+
+    html[data-theme="dark"] body {
+      background: linear-gradient(180deg, #1a1d22 0%, var(--bg) 38%, #090a0c 100%);
     }
 
     .page-shell {
@@ -72,6 +102,12 @@
       min-width: 0;
     }
 
+    html[data-theme="dark"] .grid-card {
+      background:
+        linear-gradient(180deg, rgba(58, 61, 68, 0.96) 0%, rgba(49, 52, 58, 0.96) 100%),
+        var(--panel);
+    }
+
     .hero h1 {
       font-size: 1.35rem;
       margin: 0;
@@ -108,6 +144,18 @@
       text-decoration: none;
     }
 
+    html[data-theme="dark"] .btn,
+    html[data-theme="dark"] .chip-link,
+    html[data-theme="dark"] .period-btn,
+    html[data-theme="dark"] .field select,
+    html[data-theme="dark"] .field input,
+    html[data-theme="dark"] .metric-card,
+    html[data-theme="dark"] #gradeGrid {
+      background: #3a3d44;
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--ink);
+    }
+
     .chip-link:hover,
     .chip-link:focus-visible {
       cursor: pointer;
@@ -119,11 +167,22 @@
       color: #fff;
     }
 
+    html[data-theme="dark"] .btn.primary {
+      border-color: rgba(106, 164, 255, 0.5);
+      color: #10131a;
+    }
+
     .btn.subtle {
       background: #f5f9ff;
       border-color: #bed1ea;
       color: #14385e;
       font-weight: 600;
+    }
+
+    html[data-theme="dark"] .btn.subtle {
+      background: #2d3036;
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--ink);
     }
 
     .status {
@@ -163,6 +222,10 @@
       font-weight: 700;
     }
 
+    html[data-theme="dark"] .period-btn.is-active {
+      color: #eaf2ff;
+    }
+
     .control-grid {
       display: grid;
       gap: 0.55rem;
@@ -180,6 +243,12 @@
       font-weight: 700;
       letter-spacing: 0.01em;
       text-transform: uppercase;
+    }
+
+    html[data-theme="dark"] .field label,
+    html[data-theme="dark"] .hero p,
+    html[data-theme="dark"] .status {
+      color: var(--ink-soft);
     }
 
     .field select,
@@ -232,6 +301,11 @@
       margin: 0.18rem 0 0;
     }
 
+    html[data-theme="dark"] .metric-card p,
+    html[data-theme="dark"] .grid-title {
+      color: var(--ink);
+    }
+
     #gradeGrid {
       background: #fff;
       border: 1px solid var(--line);
@@ -243,6 +317,10 @@
       overflow-y: hidden;
       resize: vertical;
       width: 100%;
+    }
+
+    html[data-theme="dark"] #gradeGrid {
+      background: #2d3036;
     }
 
     .grid-head {

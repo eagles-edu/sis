@@ -300,16 +300,33 @@ ensure_test_runtime_env_contract() {
 }
 
 run_sync() {
+  run_ffs() {
+    local label="$1"
+    shift
+
+    if "$@"; then
+      return 0
+    else
+      local status=$?
+      if [[ "$status" == "3" ]]; then
+        log "${label} reported no changes; continuing"
+        return 0
+      fi
+
+      return "$status"
+    fi
+  }
+
   case "$MODE" in
     full)
       log "running ffs-sis-root-test --batch"
-      (cd "$REPO_ROOT" && ffs-sis-root-test --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-root-test" ffs-sis-root-test --batch)
       log "running ffs-sis-public-root-test --batch"
-      (cd "$REPO_ROOT" && ffs-sis-public-root-test --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" ffs-sis-public-root-test --batch)
       ;;
     public)
       log "running ffs-sis-public-root-test --batch"
-      (cd "$REPO_ROOT" && ffs-sis-public-root-test --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" ffs-sis-public-root-test --batch)
       ;;
     restart-only)
       log "skip sync (restart-only mode)"
@@ -420,6 +437,20 @@ sync_test_public_assets() {
   "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${target_web_asset_root}/shared/"
   "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/images/" "${target_web_asset_root}/images/"
   "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/admin/portal-backgrounds/" "${target_web_asset_root}/admin/portal-backgrounds/"
+}
+
+sync_test_icons_assets() {
+  local target_runtime_root="${TEST_ROOT}"
+  local target_icons_root="${target_runtime_root}/web-asset/icons"
+
+  if [[ ! -d "${REPO_ROOT}/web-asset/icons" ]]; then
+    log "skip icons sync (source icons missing)"
+    return 0
+  fi
+
+  mkdir -p "${target_icons_root}"
+  log "syncing icon web component assets into ${target_icons_root}"
+  rsync -a --delete "${REPO_ROOT}/web-asset/icons/" "${target_icons_root}/"
 }
 
 verify_test_public_html_index() {
@@ -592,6 +623,7 @@ main() {
   cleanup_test_backup_artifacts
   sync_test_public_html_index
   sync_test_public_assets
+  sync_test_icons_assets
   align_test_env_from_dev_source
   ensure_test_runtime_env_contract
   ensure_test_redis_env

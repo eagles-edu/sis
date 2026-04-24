@@ -36,10 +36,100 @@
   --bg-0: var(--secondary-color);
   --bg-1: #ebedf7;
   --brand-2: var(--tertiary-color);
+  --hub-theme-accent: #2f5be3;
+  --hub-theme-accent-soft: rgba(47, 91, 227, 0.1);
+  --hub-theme-accent-strong: #17329a;
+  --hub-theme-banner-bg: var(--primary-color);
+  --hub-theme-banner-border: rgba(255, 255, 255, 0.18);
+  --hub-theme-banner-text: var(--secondary-color);
+  --hub-theme-card-admin-border: rgba(181, 0, 16, 1);
+  --hub-theme-card-admin-border-soft: rgba(255, 219, 223, 0.9);
+  --hub-theme-card-admin-icon: #b50010;
+  --hub-theme-card-admin-tone: var(--primary-color);
+  --hub-theme-card-admin-tone-border: rgba(181, 0, 16, 0.96);
+  --hub-theme-card-admin-tone-soft: rgba(181, 0, 16, 0.22);
+  --hub-theme-card-parent-border: rgb(48, 48, 48);
+  --hub-theme-card-parent-border-soft: rgba(237, 237, 237, 1);
+  --hub-theme-card-parent-icon: #404040;
+  --hub-theme-card-parent-tone: rgba(113, 113, 113, 0.95);
+  --hub-theme-card-parent-tone-border: rgba(50, 50, 50, 0.92);
+  --hub-theme-card-parent-tone-soft: rgba(95, 94, 93, 0.16);
+  --hub-theme-card-student-border: rgba(0, 39, 134, 1);
+  --hub-theme-card-student-border-soft: rgba(220, 228, 245, 0.9);
+  --hub-theme-card-student-icon: rgba(0, 39, 134, 0.8);
+  --hub-theme-card-student-tone: rgba(0, 39, 134, 0.6);
+  --hub-theme-card-student-tone-border: rgba(0, 39, 134, 0.96);
+  --hub-theme-card-student-tone-soft: rgba(0, 39, 134, 0.16);
+  --hub-theme-card-subtitle: #3f4f66;
+  --hub-theme-card-title: #152033;
+  --hub-theme-footer-bg: var(--tertiary-color);
+  --hub-theme-footer-text: var(--secondary-color);
+  --hub-theme-link: var(--brand-2);
+  --hub-theme-page-bg-body: #edf4fb;
+  --hub-theme-page-bg-end: #bac5d8;
+  --hub-theme-page-bg-glow: #dff8ea;
+  --hub-theme-page-bg-mid: #90a3c0;
+  --hub-theme-page-bg-start: #d4dcec;
+  --hub-theme-panel-bg: var(--secondary-color);
+  --hub-theme-panel-bg-footer: var(--secondary-color);
+  --hub-theme-panel-bg-hero: var(--secondary-color);
+  --hub-theme-panel-bg-section: var(--secondary-color);
+  --hub-theme-panel-bg-soft: #f7faff;
+  --hub-theme-panel-bg-support: #edf3fa;
+  --hub-theme-panel-border: rgba(6, 11, 20, 0.67);
+  --hub-theme-panel-shadow: none;
+  --hub-theme-text: #212121;
+  --hub-theme-text-soft: #414141;
+  --hub-theme-wash:
+    radial-gradient(860px 400px at 12% 8%, rgba(255, 255, 255, 0.68), transparent 58%),
+    radial-gradient(640px 320px at 92% 0%, rgba(255, 244, 211, 0.18), transparent 56%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(237, 243, 252, 0.48));
+  --portal-dark-bg: #111215;
+  --portal-dark-panel: #31343a;
+  --portal-dark-panel-soft: #3a3d44;
+  --portal-dark-border: rgba(255, 255, 255, 0.2);
+  --portal-dark-text: #f2f4f7;
+  --portal-dark-text-soft: #c9ced4;
+  --portal-dark-radius: var(--radius-3);
   --surface-2: #f7f9fc;
   --radius-1: var(--radius-base);
   --radius-2: calc(var(--radius-base) * 2);
   --radius-3: calc(var(--radius-base) * 3);
+}
+
+/* Hub dark theme root
+   Edit these tokens first when tuning dark mode. */
+html[data-theme="dark"] body.portal-hub-page {
+  --hub-theme-banner-border: rgba(255, 255, 255, 0.1);
+  --hub-theme-banner-text: var(--secondary-color);
+  --hub-theme-card-admin-border-soft: rgba(181, 0, 16, 0.26);
+  --hub-theme-card-parent-border-soft: rgba(249, 250, 255, 0.34);
+  --hub-theme-card-student-border-soft: rgba(123, 153, 214, 0.6);
+  --hub-theme-card-subtitle: #c4c8ce;
+  --hub-theme-card-title: #f7f8fa;
+  --hub-theme-footer-bg: inherit;
+  --hub-theme-footer-text: #eef1f5;
+  --hub-theme-link: #b4c4ea;
+  --hub-theme-page-bg-body: #111215;
+  --hub-theme-page-bg-end: #090a0c;
+  --hub-theme-page-bg-glow: rgba(109, 135, 191, 0.18);
+  --hub-theme-page-bg-mid: #30343b;
+  --hub-theme-page-bg-start: #1c1f24;
+  --hub-theme-panel-bg: #3a3d44;
+  --hub-theme-panel-bg-footer: #2d3036;
+  --hub-theme-panel-bg-hero: #383b42;
+  --hub-theme-panel-bg-section: #31343a;
+  --hub-theme-panel-bg-soft: #45494f;
+  --hub-theme-panel-bg-support: #34373d;
+  --hub-theme-panel-border: rgba(255, 255, 255, 0.2);
+  --hub-theme-panel-shadow: none;
+  --hub-theme-text: #f2f4f7;
+  --hub-theme-text-soft: #c9ced4;
+  --hub-theme-wash:
+    radial-gradient(860px 400px at 12% 8%, rgba(181, 0, 16, 0.14), transparent 58%),
+    radial-gradient(640px 320px at 92% 0%, rgba(109, 135, 191, 0.18), transparent 56%),
+    radial-gradient(520px 240px at 56% 100%, rgba(255, 255, 255, 0.08), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(16, 18, 22, 0.24));
 }
 
 * {
@@ -77,18 +167,16 @@ body {
 }
 
 body.portal-hub-page {
-  background: #edf4fb;
+  background: var(--hub-theme-page-bg-body);
   isolation: isolate;
-  --hub-accent: #2f5be3;
-  --hub-accent-strong: #17329a;
-  --hub-accent-soft: rgba(47, 91, 227, 0.12);
-  --hub-panel-bg: rgba(250, 252, 255, 0.84);
-  --hub-panel-border: rgb(80, 80, 80);
-  --hub-panel-shadow: 0 26px 64px rgba(24, 40, 72, 0.16);
-  --hub-wash:
-    radial-gradient(900px 440px at 10% 8%, rgba(255, 255, 255, 0.62), transparent 60%),
-    radial-gradient(680px 360px at 90% 0%, rgba(255, 244, 211, 0.26), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(235, 242, 250, 0.52));
+  --hub-accent: var(--hub-theme-accent);
+  --hub-accent-strong: var(--hub-theme-accent-strong);
+  --hub-accent-soft: var(--hub-theme-accent-soft);
+  --hub-panel-bg: var(--hub-theme-panel-bg);
+  --hub-panel-bg-soft: var(--hub-theme-panel-bg-soft);
+  --hub-panel-border: var(--hub-theme-panel-border);
+  --hub-panel-shadow: var(--hub-theme-panel-shadow);
+  --hub-wash: var(--hub-theme-wash);
 }
 
 body::before {
@@ -155,6 +243,106 @@ a {
 body.portal-hub-page .portal-layout {
   position: relative;
   z-index: 1;
+}
+
+body.portal-hub-page .theme-toggle {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: transparent;
+  border-radius: 999px;
+  color: #172033;
+  cursor: pointer;
+  display: inline-flex;
+  justify-self: end;
+  justify-content: center;
+  min-height: 44px;
+  padding: 7px;
+  position: relative;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+body.portal-hub-page .theme-toggle:hover {
+  border-color: rgba(15, 22, 41, 1);
+  transform: translateY(-1px);
+}
+
+body.portal-hub-page .theme-toggle:focus-visible {
+  box-shadow: 0 0 0 3px rgba(47, 91, 227, 0.2);
+  outline: none;
+}
+
+body.portal-hub-page .theme-toggle__icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  color: #172033;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+body.portal-hub-page .theme-toggle__icon svg-icon {
+  color: inherit;
+}
+
+body.portal-hub-page .theme-toggle__label {
+  display: none;
+}
+
+body.portal-hub-page .theme-toggle::after {
+  background: rgba(20, 24, 34, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: #f4f7ff;
+  content: attr(data-tooltip);
+  font-size: 0.76rem;
+  font-weight: 700;
+  right: calc(100% + 8px);
+  opacity: 0;
+  padding: 6px 10px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(4px, -50%);
+  transition:
+    opacity 120ms ease 400ms,
+    transform 120ms ease 400ms;
+  white-space: nowrap;
+  z-index: 50;
+}
+
+body.portal-hub-page .theme-toggle:hover::after,
+body.portal-hub-page .theme-toggle:focus-visible::after {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+html[data-theme="dark"] body.portal-hub-page .theme-toggle {
+  background: transparent;
+  border-color: transparent;
+  color: #edf3ff;
+}
+
+html[data-theme="dark"] body.portal-hub-page .theme-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+}
+
+html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] body.portal-hub-page .theme-toggle::after {
+  background: rgba(9, 12, 18, 0.98);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #eef3ff;
 }
 
 body.portal-hub-page .portal-hub-bg {
@@ -332,7 +520,7 @@ body.portal-hub-page .section-card {
   background: linear-gradient(
     180deg,
     var(--hub-panel-bg) 0%,
-    rgba(247, 250, 255, 0.74) 100%
+    var(--hub-panel-bg-soft) 100%
   );
   border-color: var(--hub-panel-border);
   box-shadow: var(--hub-panel-shadow);
@@ -726,6 +914,23 @@ body.menu-open .floating-menu-icon::after {
   position: absolute;
 }
 
+html[data-theme="dark"] body.portal-hub-page .portal-card::before,
+html[data-theme="dark"] body.portal-hub-page .resource-card::before {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 58%,
+      rgba(249, 250, 255, 0.14) 82%,
+      rgba(249, 250, 255, 0.28) 100%
+    ),
+    radial-gradient(
+      120% 96% at 100% 50%,
+      rgba(249, 250, 255, 0.16) 0%,
+      transparent 60%
+    );
+}
+
 .portal-card__body,
 .resource-card__body {
   display: grid;
@@ -906,99 +1111,144 @@ body.menu-open .floating-menu-icon::after {
   gap: 12px;
 }
 
-body.portal-hub-page .section-card--primary {
+html:not([data-theme="dark"]) body.portal-hub-page .section-card--primary {
   --hub-accent: var(--secondary-color);
   --hub-accent-soft: rgba(255, 255, 255, 1);
 }
 
-body.portal-hub-page .section-card--resources {
+html:not([data-theme="dark"]) body.portal-hub-page .section-card--resources {
   --hub-accent: #256a7b;
   --hub-accent-soft: rgba(37, 106, 123, 0.11);
 }
 
-body.portal-hub-page .portal-card--admin {
+/* Hub dark theme text and card surface overrides */
+html[data-theme="dark"] body.portal-hub-page .portal-card__title,
+html[data-theme="dark"] body.portal-hub-page .portal-card__subtitle,
+html[data-theme="dark"] body.portal-hub-page .portal-card__eyebrow,
+html[data-theme="dark"] body.portal-hub-page .portal-card__chev,
+html[data-theme="dark"] body.portal-hub-page .resource-card__title,
+html[data-theme="dark"] body.portal-hub-page .resource-card__subtitle,
+html[data-theme="dark"] body.portal-hub-page .resource-card__meta {
+  color: var(--secondary-color);
+}
+
+html[data-theme="dark"] body.portal-hub-page .portal-card__icon,
+html[data-theme="dark"] body.portal-hub-page .resource-card__icon {
+  color: var(--tone, var(--hub-accent-strong));
+}
+
+html[data-theme="dark"] body.portal-hub-page .portal-card--admin {
+  --admin-card-bg-start: rgba(74, 32, 38, 0.98);
+  --admin-card-bg-end: rgba(57, 22, 27, 0.98);
   --tone: #b50010;
-  --tone-soft: rgba(181, 0, 16, 0.18);
-  --tone-border: rgba(137, 19, 31, 0.94);
-  --card-border: rgba(137, 19, 31, 0.94);
-  --card-border-soft: rgba(255, 219, 223, 0.9);
+  --tone-soft: rgba(181, 0, 16, 0.22);
+  --tone-border: rgba(181, 0, 16, 0.96);
+  --card-border: rgba(181, 0, 16, 0.96);
+  --card-border-soft: rgba(181, 0, 16, 0.3);
   background: linear-gradient(
     180deg,
-    rgba(255, 222, 226, 1) 0%,
-    rgba(255, 247, 248, 1) 100%
+    var(--admin-card-bg-start),
+    var(--admin-card-bg-end)
   );
-  border-color: rgba(137, 19, 31, 0.94);
+  border-color: rgba(181, 0, 16, 0.96);
 }
 
-body.portal-hub-page .portal-card--parent {
-  --tone: #7b6240;
-  --tone-soft: rgba(123, 98, 64, 0.15);
-  --tone-border: rgba(111, 89, 58, 0.94);
-  --card-border: rgba(111, 89, 58, 0.94);
-  --card-border-soft: rgba(248, 240, 225, 0.92);
+html[data-theme="dark"] body.portal-hub-page .portal-card.portal-card--parent {
+  /* Edit these two values to tune the parent card surface. */
+  --parent-card-bg-start: rgba(67, 70, 76, 0.98);
+  --parent-card-bg-end: rgba(57, 60, 66, 0.98);
+  --tone: var(--hub-theme-card-parent-icon);
+  --tone-soft: rgba(158, 161, 72, 0.22);
+  --tone-border: var(--secondary-color);
+  --card-border: var(--secondary-color);
+  --card-border-soft: rgba(249, 250, 255, 0.32);
   background: linear-gradient(
     180deg,
-    rgba(255, 252, 245, 1) 0%,
-    rgba(252, 248, 239, 1) 100%
+    var(--parent-card-bg-start),
+    var(--parent-card-bg-end)
   );
-  border-color: rgba(111, 89, 58, 0.94);
+  border: 2px solid var(--secondary-color);
+  border-bottom-width: 6px;
+  box-shadow:
+    inset 0 0 0 1px rgba(249, 250, 255, 0.28),
+    0 12px 24px rgba(0, 0, 0, 0.32);
 }
 
-body.portal-hub-page .portal-card--student {
-  --tone: #002786;
-  --tone-soft: rgba(0, 39, 134, 0.17);
-  --tone-border: rgba(18, 49, 140, 0.94);
-  --card-border: rgba(18, 49, 140, 0.94);
-  --card-border-soft: rgba(226, 233, 255, 0.9);
-  background: linear-gradient(
-    180deg,
-    rgba(226, 235, 255, 1) 0%,
-    rgba(248, 251, 255, 1) 100%
-  );
-  border-color: rgba(18, 49, 140, 0.94);
+html[data-theme="dark"] body.portal-hub-page .portal-card.portal-card--parent::before {
+  background:
+    radial-gradient(120% 96% at 100% 52%, rgba(249, 250, 255, 0.18) 0%, transparent 60%),
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 60%,
+      rgba(249, 250, 255, 0.22) 84%,
+      transparent 100%
+    );
+  opacity: 0.75;
 }
 
-body.portal-hub-page .resource-card--english {
-  --tone: #1b9e9a;
-  --tone-soft: rgba(27, 158, 154, 0.14);
-  --tone-border: rgba(115, 200, 197, 0.58);
-  --card-border: rgba(128, 210, 206, 0.68);
-  --card-border-soft: rgba(235, 251, 250, 0.84);
+html[data-theme="dark"] body.portal-hub-page .portal-card--student {
+  /* Student card dark mode: keep one border color token for quick edits. */
+  --student-border:	#0066ff;
+  /* --student-border-soft: rgba(115, 149, 255, 0.42); */
+  --tone: var(--tertiary-color);
+  /* --tone-soft: rgba(0, 39, 134, 0.17); */
+  /* --tone-border: var(--student-border); */
+  /* --card-border: var(--student-border); */
+  /* --card-border-soft: var(--student-border-soft); */
   background: linear-gradient(
     180deg,
-    rgba(231, 249, 248, 0.98) 0%,
-    rgba(255, 255, 255, 0.99) 100%
+    #4a5877 0%,
+    #384864 100%
   );
-  border-color: rgba(115, 200, 197, 0.58);
+  border: 2px solid var(--student-border);
+  border-bottom-width: 6px;
+  box-shadow:
+    inset 0 0 0 1px var(--student-border),
+    0 12px 24px rgba(0, 0, 0, 0.32);
 }
 
-body.portal-hub-page .resource-card--english .resource-card__icon {
+html:not([data-theme="dark"]) body.portal-hub-page .resource-card--english {
+  --tone: #7f9ee0;
+  --tone-soft: rgba(127, 158, 224, 0.22);
+  --tone-border: rgba(127, 158, 224, 0.84);
+  --card-border: rgba(127, 158, 224, 0.88);
+  --card-border-soft: rgba(127, 158, 224, 0.28);
   background: linear-gradient(
     180deg,
-    rgba(239, 255, 254, 0.98) 0%,
-    rgba(255, 255, 255, 0.88) 100%
+    #46536f 0%,
+    #35415a 100%
+  );
+  border-color: rgba(127, 158, 224, 0.88);
+}
+
+html:not([data-theme="dark"]) body.portal-hub-page .resource-card--english .resource-card__icon {
+  background: linear-gradient(
+    180deg,
+    #8aa7e4 0%,
+    #2a3243 100%
   );
 }
 
-body.portal-hub-page .resource-card--ielts {
-  --tone: #d61f2d;
-  --tone-soft: rgba(214, 31, 45, 0.14);
-  --tone-border: rgba(225, 129, 138, 0.6);
-  --card-border: rgba(232, 141, 149, 0.68);
-  --card-border-soft: rgba(255, 236, 238, 0.84);
+html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts {
+  --tone: #b50010;
+  --tone-soft: rgba(181, 0, 16, 0.22);
+  --tone-border: rgba(181, 0, 16, 0.84);
+  --card-border: rgba(181, 0, 16, 0.88);
+  --card-border-soft: rgba(181, 0, 16, 0.28);
   background: linear-gradient(
     180deg,
-    rgba(255, 236, 238, 0.98) 0%,
-    rgba(255, 255, 255, 0.99) 100%
+    #4c3c40 0%,
+    #382b2e 100%
   );
-  border-color: rgba(225, 129, 138, 0.6);
+  border-color: rgba(181, 0, 16, 0.88);
 }
 
-body.portal-hub-page .resource-card--ielts .resource-card__icon {
+html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resource-card__icon {
   background: linear-gradient(
     180deg,
-    rgba(255, 241, 243, 0.98) 0%,
-    rgba(255, 255, 255, 0.88) 100%
+    #df6a76 0%,
+    #3b2227 100%
   );
 }
 
@@ -1251,10 +1501,30 @@ body.portal-hub-page .resource-card--ielts .resource-card__icon {
 }
 
 /* Legacy float utilities still used in markup */
+.pull-left,
+.pull-right {
+  /* Prefer flex alignment when available; fall back to inline-block.
+     These replace legacy floats to avoid fragile float-based layouts. */
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .pull-left {
-  float: left;
+  /* Align to start/left in most layouts. In a flex container this
+     will push the element to the start via auto margin. */
+  margin-right: auto;
+  text-align: left;
 }
 
 .pull-right {
-  float: right;
+  /* Align to end/right in most layouts. In a flex container this
+     will push the element to the end via auto margin. */
+  margin-left: auto;
+  text-align: right;
+}
+
+@supports (display: flex) {
+  /* Ensure auto margins behave as expected inside flex containers */
+  .pull-left { margin-right: auto; }
+  .pull-right { margin-left: auto; }
 }

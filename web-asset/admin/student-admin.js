@@ -30,6 +30,10 @@
           checkedAt: "",
           busy: false,
         },
+        systemHealthReady: {
+          hub: false,
+          service: false,
+        },
         hubPollTimer: null,
         globalTextZoomPercent: 100,
         currentStudent: null,
@@ -1667,17 +1671,28 @@
 
       function renderSystemHealthPanel() {
         if (!hasLiveDom()) return;
+        const sectionEl = document.getElementById("systemHealthSection");
+        const shellEl = document.getElementById("systemHealthShell");
+        const loadingEl = document.getElementById("systemHealthLoading");
         const rowsEl = document.getElementById("systemHealthRows");
         const summaryEl = document.getElementById("systemHealthSummary");
-        if (!rowsEl || !summaryEl) return;
+        if (!sectionEl || !shellEl || !loadingEl || !rowsEl || !summaryEl) return;
+
+        const serviceReady = !canManageUsers() || Boolean(state.systemHealthReady.service);
+        const ready = Boolean(state.systemHealthReady.hub) && serviceReady;
+        sectionEl.setAttribute("aria-busy", ready ? "false" : "true");
+        shellEl.classList.toggle("is-loading", !ready);
+        loadingEl.classList.toggle("hidden", ready);
+        if (!ready) {
+          summaryEl.textContent = "Waiting for hub and service status.";
+          return;
+        }
 
         const checks = buildSystemHealthChecks();
         const counts = { ok: 0, warn: 0, error: 0, pending: 0 };
-        rowsEl.innerHTML = "";
-
-        checks.forEach((check) => {
+        const gridEl = rowsEl.parentElement;
+        const buildCheckCard = (check) => {
           const stateClass = normalizeSystemState(check.state);
-          counts[stateClass] = Number(counts[stateClass] || 0) + 1;
 
           const item = document.createElement("div");
           item.className = `system-health-item ${stateClass}`;
@@ -1700,7 +1715,8 @@
           item.appendChild(labelEl);
           item.appendChild(detailEl);
 
-          const action = check.action && typeof check.action === "object" ? check.action : null;
+          const action =
+            check.action && typeof check.action === "object" ? check.action : null;
           if (action?.label && action?.targetId) {
             const actionBtn = document.createElement("button");
             actionBtn.type = "button";
@@ -1718,7 +1734,33 @@
             });
             item.appendChild(actionBtn);
           }
-          rowsEl.appendChild(item);
+
+          return item;
+        };
+
+        if (gridEl) {
+          const measureGrid = document.createElement("div");
+          measureGrid.className = gridEl.className;
+          measureGrid.style.position = "absolute";
+          measureGrid.style.visibility = "hidden";
+          measureGrid.style.pointerEvents = "none";
+          measureGrid.style.left = "-99999px";
+          measureGrid.style.top = "0";
+          measureGrid.style.width = `${Math.ceil(gridEl.getBoundingClientRect().width)}px`;
+          checks.forEach((check) => {
+            measureGrid.appendChild(buildCheckCard(check));
+          });
+          document.body.appendChild(measureGrid);
+          gridEl.style.minHeight = `${Math.ceil(measureGrid.getBoundingClientRect().height)}px`;
+          measureGrid.remove();
+        }
+
+        rowsEl.innerHTML = "";
+
+        checks.forEach((check) => {
+          const stateClass = normalizeSystemState(check.state);
+          counts[stateClass] = Number(counts[stateClass] || 0) + 1;
+          rowsEl.appendChild(buildCheckCard(check));
         });
 
         summaryEl.textContent = `OK ${counts.ok} | Warning ${counts.warn} | Error ${counts.error} | Pending ${counts.pending}`;
@@ -1755,6 +1797,7 @@
           status.detail ? `detail=${status.detail}` : "",
         ].filter(Boolean);
         meta.textContent = parts.join(" | ") || "waiting for first probe...";
+        state.systemHealthReady.hub = Boolean(state.hubConnection.checkedAt);
         renderSystemHealthPanel();
       }
 
@@ -1835,6 +1878,7 @@
         const nextState = serviceControlCardState(state.serviceControl.status);
         card.className = `system-health-item system-health-service-card ${nextState}`;
         led.className = `led ${nextState}`;
+        state.systemHealthReady.service = Boolean(state.serviceControl.checkedAt);
         renderOverviewRuntimeRestartButton();
 
         const detailParts = [
@@ -1855,11 +1899,12 @@
         refreshBtn.disabled = state.serviceControl.busy;
         restartBtn.textContent =
           state.serviceControl.busy ? "Restarting..." : "Restart";
+        renderSystemHealthPanel();
       }
 
-      async function loadServiceControlStatus({ notify = false } = {}) {
+      async function loadServiceControlStatus({ notify = false, paint = true } = {}) {
         if (!canManageUsers()) {
-          renderServiceControlCard();
+          if (paint) renderServiceControlCard();
           return;
         }
         let payload = null;
@@ -1877,14 +1922,14 @@
               checkedAt: nowClockStamp(),
               busy: false,
             };
-            renderServiceControlCard();
+            if (paint) renderServiceControlCard();
             if (notify) setStatus(state.serviceControl.detail, true);
             return;
           }
           throw error;
         }
         setServiceControlFromPayload(payload || {});
-        renderServiceControlCard();
+        if (paint) renderServiceControlCard();
         if (notify) {
           setStatus(`Service status: ${state.serviceControl.status}.`);
         }
@@ -2010,10 +2055,10 @@
         return true;
       }
 
-      async function probeHubConnection({ notify = false } = {}) {
+      async function probeHubConnection({ notify = false, paint = true } = {}) {
         let probeConfig = resolveHubProbeConfig();
         state.hubConnection.endpoint = resolveApiUrl(probeConfig.path);
-        renderHubConnectionStatus();
+        if (paint) renderHubConnectionStatus();
         const startedAt = monotonicNowMs();
         const controller =
           typeof AbortController !== "undefined" ? new AbortController() : null;
@@ -2055,7 +2100,7 @@
             latencyMs,
             detail,
           };
-          renderHubConnectionStatus();
+          if (paint) renderHubConnectionStatus();
           if (notify) {
             setStatus(
               connected ?
@@ -2073,7 +2118,7 @@
             latencyMs: null,
             detail: normalizeText(error?.name || error?.message) || "network error",
           };
-          renderHubConnectionStatus();
+          if (paint) renderHubConnectionStatus();
           if (notify)
             setStatus(`Hub probe failed: ${state.hubConnection.detail}`, true);
         } finally {
@@ -5186,8 +5231,30 @@
       function preferredContrastText(hexColor) {
         const rgb = parseHexRgb(hexColor);
         if (!rgb) return "#f5f8ff";
-        const luminance = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
-        return luminance >= 160 ? "#1a2235" : "#f5f8ff";
+        const contrastRatio = (left, right) => {
+          const normalize = (value) => {
+            const channel = value / 255;
+            return channel <= 0.03928 ?
+                channel / 12.92
+              : ((channel + 0.055) / 1.055) ** 2.4;
+          };
+          const luminance =
+            0.2126 * normalize(left.r) +
+            0.7152 * normalize(left.g) +
+            0.0722 * normalize(left.b);
+          const reference =
+            0.2126 * normalize(right.r) +
+            0.7152 * normalize(right.g) +
+            0.0722 * normalize(right.b);
+          const light = Math.max(luminance, reference);
+          const dark = Math.min(luminance, reference);
+          return (light + 0.05) / (dark + 0.05);
+        };
+        const darkText = { r: 11, g: 18, b: 32 };
+        const lightText = { r: 245, g: 248, b: 255 };
+        return contrastRatio(rgb, darkText) >= contrastRatio(rgb, lightText) ?
+            "#0b1220"
+          : "#f5f8ff";
       }
 
       function getLevelTheme(levelName) {
@@ -8718,8 +8785,8 @@
             result?.rolePolicy,
             getCurrentRolePolicy(),
           );
-          showApp();
           await bootAfterLogin();
+          showApp();
           setStatus(
             `Authenticated as ${state.authUser?.username || "admin"}. Student admin loaded.`,
           );
@@ -18999,7 +19066,12 @@
           await loadDashboardStudents();
           await loadDashboardSummary();
           await loadQueueHub({ notify: false });
-          await loadServiceControlStatus({ notify: false });
+          await Promise.all([
+            probeHubConnection({ notify: false, paint: false }),
+            loadServiceControlStatus({ notify: false, paint: false }),
+          ]);
+          renderHubConnectionStatus();
+          renderServiceControlCard();
           await loadIncomingExerciseResults({
             showAll: state.incomingExerciseQueue.showAll,
           });

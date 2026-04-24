@@ -323,6 +323,7 @@ collect_drift() {
     collect_dir_drift "${REPO_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared/" "shared-assets"
     collect_dir_drift "${REPO_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor/" "vendor-assets"
     collect_dir_drift "${REPO_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images/" "images-assets"
+    collect_dir_drift "${REPO_ROOT}/web-asset/icons/" "${RUNTIME_ROOT}/web-asset/icons/" "icons-assets"
   fi
   collect_admin_assets_drift
   collect_env_contract_drift
@@ -348,7 +349,7 @@ perform_sync() {
   mkdir -p "${RUNTIME_ROOT}/web-asset/admin"
 
   if [[ "${SCOPE}" == "full" ]]; then
-    mkdir -p "${RUNTIME_ROOT}/server" "${RUNTIME_ROOT}/schemas" "${RUNTIME_ROOT}/web-asset/parent" "${RUNTIME_ROOT}/web-asset/student" "${RUNTIME_ROOT}/web-asset/shared" "${RUNTIME_ROOT}/web-asset/vendor" "${RUNTIME_ROOT}/web-asset/images"
+    mkdir -p "${RUNTIME_ROOT}/server" "${RUNTIME_ROOT}/schemas" "${RUNTIME_ROOT}/web-asset/parent" "${RUNTIME_ROOT}/web-asset/student" "${RUNTIME_ROOT}/web-asset/shared" "${RUNTIME_ROOT}/web-asset/vendor" "${RUNTIME_ROOT}/web-asset/images" "${RUNTIME_ROOT}/web-asset/icons"
     mkdir -p \
       "${RUNTIME_ROOT}/server.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/schemas.BAK-${timestamp}" \
@@ -357,7 +358,8 @@ perform_sync() {
       "${RUNTIME_ROOT}/web-asset/student.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/web-asset/shared.BAK-${timestamp}" \
       "${RUNTIME_ROOT}/web-asset/vendor.BAK-${timestamp}" \
-      "${RUNTIME_ROOT}/web-asset/images.BAK-${timestamp}"
+      "${RUNTIME_ROOT}/web-asset/images.BAK-${timestamp}" \
+      "${RUNTIME_ROOT}/web-asset/icons.BAK-${timestamp}"
 
     rsync -a --delete "${RUNTIME_ROOT}/server/" "${RUNTIME_ROOT}/server.BAK-${timestamp}/"
     rsync -a --delete "${RUNTIME_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas.BAK-${timestamp}/"
@@ -367,6 +369,7 @@ perform_sync() {
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared.BAK-${timestamp}/"
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor.BAK-${timestamp}/"
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images.BAK-${timestamp}/"
+    rsync -a --delete "${RUNTIME_ROOT}/web-asset/icons/" "${RUNTIME_ROOT}/web-asset/icons.BAK-${timestamp}/"
 
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/server/" "${RUNTIME_ROOT}/server/"
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/schemas/" "${RUNTIME_ROOT}/schemas/"
@@ -375,6 +378,7 @@ perform_sync() {
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/shared/" "${RUNTIME_ROOT}/web-asset/shared/"
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor/"
     rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images/"
+    rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${REPO_ROOT}/web-asset/icons/" "${RUNTIME_ROOT}/web-asset/icons/"
   else
     mkdir -p "${RUNTIME_ROOT}/web-asset/admin.BAK-${timestamp}"
     if [[ -d "${RUNTIME_ROOT}/web-asset/admin" ]]; then

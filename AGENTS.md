@@ -18,6 +18,23 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 3. Keep code and tests aligned to runtime contracts.
 4. Inspect route code before assuming auth behavior.
 5. Keep edits ASCII unless the target file already needs Unicode.
+6. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
+
+## UI Guardrails
+
+- Do not recolor buttons unless the user explicitly asks for button recoloring.
+- Do not recolor chips or button-like controls in dark mode unless the user explicitly asks for recoloring.
+- Do not recolor buttons in dark mode.
+- Do not recolor chips or button-like controls in dark mode.
+- Do not recolor icons in dark mode.
+- Do not change theme selector styling in dark mode unless the user explicitly asks for it.
+- Preserve the established UI unless the user explicitly asks otherwise.
+- For dark-mode work, preserve the established component palette and visual language unless the user explicitly requests a redesign.
+- Treat dark-mode coverage and accessibility fixes as scope-limited work: fix missing dark styling and illegible text, but do not make unrelated visual changes.
+- In dark mode, normalize element grouping to the established hierarchy: panel background darker, cards lighter.
+- If that panel/card hierarchy is ambiguous for a given surface, ask the user before choosing a direction.
+- Before making any out-of-scope UI or design change, stop and ask the user first.
+- Avoid regression-by-cleanup: do not rewrite or replace settled styling rules unless the current task requires it.
 
 ## OpenAI Docs
 

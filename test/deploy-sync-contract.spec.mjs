@@ -32,6 +32,7 @@ test("deploy-api-safe mirrors runtime and public portal assets with delete seman
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/shared\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/shared\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/vendor\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/vendor\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/images\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/images\/\"/)
+  assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/icons\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/icons\/\"/)
 
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/admin\/\" \"\$\{PUBLIC_ADMIN_DIR\}\/\"/)
   assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/web-asset\/parent\/\" \"\$\{PUBLIC_PARENT_DIR\}\/\"/)
@@ -79,6 +80,7 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/parent\|200/)
   assert.match(runtimeResyncScript, /LOCAL_ROUTE_CHECK_MATRIX=.*\/student\|200/)
   assert.match(runtimeResyncScript, /collect_dir_drift \"\$\{REPO_ROOT\}\/web-asset\/shared\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/shared\/\" \"shared-assets\"/)
+  assert.match(runtimeResyncScript, /collect_dir_drift \"\$\{REPO_ROOT\}\/web-asset\/icons\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/icons\/\" \"icons-assets\"/)
 
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/admin\?page=grades-data\|200/)
   assert.match(runtimeResyncScript, /EDGE_HTTPS_CHECK_MATRIX=.*\/web-asset\/admin\/grades-tabulator\.html\|200/)
@@ -92,6 +94,7 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/shared\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/shared\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/vendor\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/vendor\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/images\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/images\/\"/)
+  assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/icons\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/icons\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/admin\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/admin\/\"/)
 })
 
@@ -117,6 +120,7 @@ test("sync-and-restart-test-runtime pins the test env contract and mirrors the p
   assert.match(testRuntimeSyncScript, /"STUDENT_PARENT_PORTAL_ACCOUNTS_JSON"/)
   assert.match(testRuntimeSyncScript, /"STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON"/)
   assert.match(testRuntimeSyncScript, /align_test_env_from_dev_source\(\)/)
+  assert.match(testRuntimeSyncScript, /sync_test_icons_assets\(\)/)
   assert.match(testRuntimeSyncScript, /sync_env_keys_between_files "\$source_env_path" "\$test_env_path" "\$\{TEST_ENV_DEV_MIRROR_KEYS\[@\]\}"/)
   assert.match(testRuntimeSyncScript, /log "aligned \$\{mirrored\} env keys from \$\(basename "\$source_env_path"\) to \$\(basename "\$target_env_path"\)"/)
   assert.match(testRuntimeSyncScript, /TEST_PRIMARY_ORIGIN="\$\{SIS_TEST_PRIMARY_ORIGIN:-https:\/\/test\.eagles\.edu\.vn\}"/)
@@ -139,4 +143,5 @@ test("sync-and-restart-test-runtime pins the test env contract and mirrors the p
   assert.match(testRuntimeSyncScript, /if \[\[ ! -d "\$target_public_root" \|\| ! -w "\$target_public_root" \]\]; then\s+install_prefix=\(sudo\)/s)
   assert.match(testRuntimeSyncScript, /"\$\{install_prefix\[@\]\}" install -d -o "\$target_owner" -g "\$target_group" "\$target_public_root"/)
   assert.match(testRuntimeSyncScript, /"\$\{install_prefix\[@\]\}" install -o "\$target_owner" -g "\$target_group" -m 644 "\$source_hub_html" "\$target_index_path"/)
+  assert.match(testRuntimeSyncScript, /rsync -a --delete "\$\{REPO_ROOT\}\/web-asset\/icons\/" "\$\{target_icons_root\}\/"/)
 })

@@ -5,6 +5,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Student Points Management</title>
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem("sis-theme");
+        document.documentElement.dataset.theme =
+          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
   <style>
     :root {
       --bg: #f7fbff;
@@ -19,6 +30,23 @@
       --warn: #b25012;
       --bad: #bf1e2e;
       --shadow: 0 10px 28px rgba(24, 49, 79, 0.1);
+      color-scheme: light;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #111215;
+      --bg-accent: linear-gradient(140deg, #1a1d22 0%, #111215 100%);
+      --card: #31343a;
+      --ink: #f2f4f7;
+      --muted: #c9ced4;
+      --line: rgba(255, 255, 255, 0.2);
+      --primary: #6aa4ff;
+      --primary-strong: #2f75bc;
+      --ok: #7cd6a4;
+      --warn: #f0b05f;
+      --bad: #f28a95;
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      color-scheme: dark;
     }
 
     * {
@@ -123,10 +151,26 @@
       border-color: #7fa4d4;
     }
 
+    html[data-theme="dark"] button,
+    html[data-theme="dark"] input,
+    html[data-theme="dark"] select {
+      background: #3a3d44;
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--ink);
+    }
+
+    html[data-theme="dark"] button:hover {
+      border-color: rgba(255, 255, 255, 0.34);
+    }
+
     .primary {
       background: linear-gradient(160deg, var(--primary), var(--primary-strong));
       color: #fff;
       border-color: transparent;
+    }
+
+    html[data-theme="dark"] .primary {
+      color: #10131a;
     }
 
     .status {
@@ -154,6 +198,10 @@
       background: #fbfdff;
     }
 
+    html[data-theme="dark"] .chart-wrap {
+      background: #2d3036;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -165,6 +213,11 @@
       border-bottom: 1px solid #e3ebf6;
       padding: 9px 8px;
       font-size: 0.92rem;
+    }
+
+    html[data-theme="dark"] th,
+    html[data-theme="dark"] td {
+      border-bottom-color: rgba(255, 255, 255, 0.14);
     }
 
     th button {
@@ -189,6 +242,12 @@
       border: 1px solid #cde0fb;
       font-size: 0.78rem;
       color: #184372;
+    }
+
+    html[data-theme="dark"] .pill {
+      background: rgba(106, 164, 255, 0.14);
+      border-color: rgba(106, 164, 255, 0.28);
+      color: #dce9ff;
     }
 
     .mini {

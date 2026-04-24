@@ -5,6 +5,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
+  <script>
+    (() => {
+      try {
+        const savedTheme =
+          localStorage.getItem("sis-theme-student") || localStorage.getItem("sis-theme");
+        document.documentElement.dataset.theme =
+          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
   <title>Student Portal</title>
 
@@ -74,6 +96,35 @@
       border-color: #2d78b4;
       color: #093a63;
       background: #d8edff;
+    }
+
+    .portal-theme-toggle {
+      align-items: center;
+      appearance: none;
+      background: transparent;
+      border: 0;
+      border-radius: 999px;
+      color: #172033;
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: center;
+      min-height: 38px;
+      padding: 4px;
+    }
+
+    .portal-theme-toggle__icon {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: 999px;
+      color: #172033;
+      display: inline-flex;
+      height: 34px;
+      justify-content: center;
+      width: 34px;
+    }
+
+    .portal-theme-toggle__icon svg-icon {
+      color: inherit;
     }
 
     .chip-link {
@@ -386,7 +437,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius-2);
       padding: 10px 12px;
-      color: var(--ink);
+      color: #172033;
       background: #fff;
     }
 
@@ -691,6 +742,7 @@
     .homework-square-k {
       font-size: 10px;
       letter-spacing: 0.04em;
+      color: #3d4b5f;
       text-transform: uppercase;
       opacity: 0.88;
     }
@@ -1482,10 +1534,70 @@
       }
     }
 
+    html[data-theme="dark"] body.student-portal-page {
+      --ink: var(--portal-dark-text);
+      --ink-soft: var(--portal-dark-text-soft);
+      --line: var(--portal-dark-border);
+      --card: var(--portal-dark-panel);
+      --card-soft: var(--portal-dark-panel-soft);
+      --surface-2: var(--portal-dark-panel-soft);
+      background: var(--portal-dark-bg);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(.portal-shell, .panel, .card, .topbar, .hero, .side-nav, .side-brand, .side-link, .portal-modal-dialog, .portal-modal-body, .queue-panel, .queue-table-wrap, .detail-calendar-panel, .detail-calendar-shell, .detail-item, .calendar-shell) {
+      background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
+      border-color: var(--portal-dark-border);
+      border-radius: var(--portal-dark-radius);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(.sub, .small, .muted, .page-note, .section-lede, .detail-copy, .detail-meta, .detail-note, .detail-empty, .side-brand span, .portal-modal-body, .summary-title) {
+      color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(input, select, textarea) {
+      background: #3a3d44;
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(input, select, textarea)::placeholder {
+      color: #58657a;
+    }
+
+    html[data-theme="dark"] body.student-portal-page #loginPanel {
+      background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
+      border-color: var(--portal-dark-border);
+      margin: 0 auto;
+      max-width: 550px;
+      width: 100%;
+    }
+
+    html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm {
+      grid-template-columns: 1fr;
+      margin-inline: auto;
+      max-width: 430px;
+      width: 100%;
+    }
+
+    html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm > .field {
+      grid-column: 1;
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(h1, h2, h3, h4, strong, label, summary, th, td) {
+      color: inherit;
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(table, thead, tbody, tr, th, td, .queue-table-wrap table, .news-queue-table) {
+      background: transparent;
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
   </style>
 </head>
 
-<body>
+<body class="student-portal-page">
   <div class="portal-shell">
     <aside id="sideNav" class="side-nav" aria-label="Student navigation">
       <div class="side-brand">
@@ -1523,6 +1635,11 @@
           </div>
           <div class="header-actions">
             <span id="envBadge" class="env-badge" aria-live="polite"></span>
+            <button class="portal-theme-toggle" id="studentThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch theme">
+              <span class="portal-theme-toggle__icon" aria-hidden="true">
+                <svg-icon name="theme-moon" size="28" id="studentThemeToggleIcon"></svg-icon>
+              </span>
+            </button>
             <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
               <span>Text Size</span>
               <button id="studentTextZoomDownBtn" type="button" aria-label="Decrease text size">A-</button>
@@ -4885,6 +5002,42 @@
         submitReport().catch(handleError);
       });
       boot().catch(handleError);
+    })();
+  </script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById("studentThemeToggle");
+      const icon = document.getElementById("studentThemeToggleIcon");
+      const storageKey = "sis-theme-student";
+
+      function validTheme(theme) {
+        return theme === "dark" || theme === "light";
+      }
+
+      function sync(theme) {
+        if (!button || !icon) return;
+        const isDark = theme === "dark";
+        const label = isDark ? "Switch to light theme" : "Switch to dark theme";
+        button.setAttribute("aria-pressed", String(isDark));
+        button.setAttribute("aria-label", label);
+        button.setAttribute("title", label);
+        icon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
+      }
+
+      function apply(theme) {
+        const next = validTheme(theme) ? theme : "light";
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem(storageKey, next);
+        } catch {}
+        sync(next);
+      }
+
+      button?.addEventListener("click", () => {
+        apply(root.dataset.theme === "dark" ? "light" : "dark");
+      });
+      apply(validTheme(root.dataset.theme) ? root.dataset.theme : "light");
     })();
   </script>
 </body>

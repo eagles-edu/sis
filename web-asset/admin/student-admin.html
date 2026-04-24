@@ -8,6 +8,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Eagles Club Student Information System</title>
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
+  <script>
+    (() => {
+      try {
+        const savedTheme =
+          localStorage.getItem("sis-theme-admin") || localStorage.getItem("sis-theme");
+        document.documentElement.dataset.theme =
+          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
 
   <style>
     :root {
@@ -77,11 +99,11 @@
       width: 100%;
     }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.css" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.css">
+  <link rel="preload" href="/web-asset/admin/student-admin.css?v=20260424f" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.css?v=20260424f">
 </head>
 
-<body class="admin-auth-booting">
+<body class="admin-portal-page admin-auth-booting">
   <div class="wrap">
     <div class="panel" id="authPanel">
       <h1>Student Admin Login</h1>
@@ -220,7 +242,7 @@
           </div>
         </aside>
 
-        <div class="section-stack">
+        <main class="section-stack" id="appMain">
           <div class="panel app-page-header" id="appPageHeader">
             <div class="app-brand-strip">
               <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
@@ -234,6 +256,11 @@
                 </button>
                 <button id="overviewRuntimeRestartBtn" type="button" class="primary hidden">
                   Self-Heal Runtime
+                </button>
+                <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch theme">
+                  <span class="portal-theme-toggle__icon" aria-hidden="true">
+                    <svg-icon name="theme-moon" size="28" id="adminThemeToggleIcon"></svg-icon>
+                  </span>
                 </button>
                 <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
                   <span class="small global-text-label">Global Text</span>
@@ -389,46 +416,60 @@
                 <h2>Overview</h2>
                 <p class="small" id="overviewStudent">No student selected.</p>
                 <div class="overview-layout">
-                  <section class="overview-group">
+                  <section id="systemHealthSection" class="overview-group">
                     <h3>Systems Health</h3>
-                    <div class="system-health-grid" aria-live="polite">
-                      <div id="hubConnectionCard" class="system-health-item system-health-hub-card pending">
-                        <div class="system-health-label">
-                          <span id="hubStatusLed" class="led pending" aria-hidden="true"></span>
-                          <span>SIS Hub Connection</span>
+                    <div id="systemHealthShell" class="system-health-shell is-loading">
+                      <div id="systemHealthLoading" class="system-health-loading" aria-live="polite" aria-busy="true">
+                        <img
+                          src="/web-asset/icons/svg/lazy.svg"
+                          alt=""
+                          aria-hidden="true"
+                          class="system-health-loading-icon"
+                        >
+                        <div class="system-health-loading-copy">
+                          <strong>Checking systems...</strong>
+                          <span>Waiting for hub and service status.</span>
                         </div>
-                        <div class="hub-status-wrap">
-                          <span id="hubStatusBadge" class="hub-pill pending">Checking...</span>
-                          <button id="hubPingBtn" type="button" class="btn-refresh">
-                            Ping Hub
-                          </button>
-                        </div>
-                        <p class="system-health-detail" id="hubStatusMeta">
-                          waiting for first probe...
-                        </p>
                       </div>
-                      <div id="exerciseMailerServiceCard" class="system-health-item system-health-service-card pending hidden">
-                        <div class="system-health-label">
-                          <span id="exerciseMailerServiceLed" class="led pending" aria-hidden="true"></span>
-                          <span>Service Control</span>
+                      <div class="system-health-grid" aria-live="polite">
+                        <div id="hubConnectionCard" class="system-health-item system-health-hub-card pending">
+                          <div class="system-health-label">
+                            <span id="hubStatusLed" class="led pending" aria-hidden="true"></span>
+                            <span>SIS Hub Connection</span>
+                          </div>
+                          <div class="hub-status-wrap">
+                            <span id="hubStatusBadge" class="hub-pill pending">Checking...</span>
+                            <button id="hubPingBtn" type="button" class="btn-refresh">
+                              Ping Hub
+                            </button>
+                          </div>
+                          <p class="system-health-detail" id="hubStatusMeta">
+                            waiting for first probe...
+                          </p>
                         </div>
-                        <div class="service-control-actions">
-                          <button id="exerciseMailerServiceRefreshBtn" type="button" class="btn-refresh">
-                            Refresh
-                          </button>
-                          <button id="exerciseMailerRestartBtn" type="button" class="primary">
-                            Restart
-                          </button>
+                        <div id="exerciseMailerServiceCard" class="system-health-item system-health-service-card pending">
+                          <div class="system-health-label">
+                            <span id="exerciseMailerServiceLed" class="led pending" aria-hidden="true"></span>
+                            <span>Service Control</span>
+                          </div>
+                          <div class="service-control-actions">
+                            <button id="exerciseMailerServiceRefreshBtn" type="button" class="btn-refresh">
+                              Refresh
+                            </button>
+                            <button id="exerciseMailerRestartBtn" type="button" class="primary">
+                              Restart
+                            </button>
+                          </div>
+                          <p class="system-health-detail" id="exerciseMailerServiceMeta">
+                            Waiting for service status.
+                          </p>
                         </div>
-                        <p class="system-health-detail" id="exerciseMailerServiceMeta">
-                          Waiting for service status.
-                        </p>
+                        <div id="systemHealthRows" class="system-health-grid-content"></div>
                       </div>
-                      <div id="systemHealthRows" class="system-health-grid-content"></div>
+                      <p class="small system-health-summary" id="systemHealthSummary">
+                        Checking systems...
+                      </p>
                     </div>
-                    <p class="small system-health-summary" id="systemHealthSummary">
-                      Checking systems...
-                    </p>
                   </section>
                   <section class="overview-group">
                     <h3>Today Snapshot</h3>
@@ -517,16 +558,16 @@
                         <label>Assignment link</label><input id="levelReminderLink" type="url" placeholder="https://...">
                       </div>
                       <div class="col-2">
-                        <label>Due date</label><input id="levelReminderDueAt" type="date">
+                        <label for="levelReminderDueAt">Due date</label><input id="levelReminderDueAt" type="date">
                       </div>
                       <div class="col-2">
-                        <label>Target</label><select id="levelReminderMode">
+                        <label for="levelReminderMode">Target</label><select id="levelReminderMode">
                           <option value="selected">Selected only</option>
                           <option value="all">All in list</option>
                         </select>
                       </div>
                       <div class="col-12">
-                        <label>Reminder message template</label><textarea id="levelReminderTemplate">
+                        <label for="levelReminderTemplate">Reminder message template</label><textarea id="levelReminderTemplate">
 Chào {{name}}, đây là lời nhắc nhở rằng bài tập {{assignment}} đến hạn vào ngày {{dueDate}}. Vui lòng hoàn thành bài tập tại đây: {{link}}.
 
 Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Please complete it here: {{link}}.</textarea>
@@ -2950,7 +2991,7 @@ Select an assignment link to inspect details.</pre>
 
           <datalist id="exerciseTitleList"></datalist>
           <div class="panel" id="status"></div>
-        </div>
+        </main>
       </div>
     </div>
   </div>
@@ -3096,7 +3137,43 @@ Select an assignment link to inspect details.</pre>
     </div>
   </div>
 
-  <script src="/web-asset/admin/student-admin.js" defer></script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById("adminThemeToggle");
+      const icon = document.getElementById("adminThemeToggleIcon");
+      const storageKey = "sis-theme-admin";
+
+      function validTheme(theme) {
+        return theme === "dark" || theme === "light";
+      }
+
+      function sync(theme) {
+        if (!button || !icon) return;
+        const isDark = theme === "dark";
+        const label = isDark ? "Switch to light theme" : "Switch to dark theme";
+        button.setAttribute("aria-pressed", String(isDark));
+        button.setAttribute("aria-label", label);
+        button.setAttribute("title", label);
+        icon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
+      }
+
+      function apply(theme) {
+        const next = validTheme(theme) ? theme : "light";
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem(storageKey, next);
+        } catch {}
+        sync(next);
+      }
+
+      button?.addEventListener("click", () => {
+        apply(root.dataset.theme === "dark" ? "light" : "dark");
+      });
+      apply(validTheme(root.dataset.theme) ? root.dataset.theme : "light");
+    })();
+  </script>
+  <script src="/web-asset/admin/student-admin.js?v=20260424d" defer></script>
 </body>
 
 </html>

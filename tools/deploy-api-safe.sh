@@ -129,7 +129,7 @@ if [[ ! -f "${RUNTIME_ROOT}/.env" ]]; then
   exit 1
 fi
 
-for required_dir in server schemas web-asset/admin web-asset/parent web-asset/student web-asset/shared web-asset/vendor web-asset/images; do
+for required_dir in server schemas web-asset/admin web-asset/parent web-asset/student web-asset/shared web-asset/vendor web-asset/images web-asset/icons; do
   if [[ ! -e "${SOURCE_ROOT}/${required_dir}" ]]; then
     echo "Missing source path: ${SOURCE_ROOT}/${required_dir}" >&2
     exit 1
@@ -422,6 +422,16 @@ collect_images_assets_drift() {
   collect_dir_drift "${source_dir}" "${runtime_dir}" "images-assets"
 }
 
+collect_icons_assets_drift() {
+  local source_dir="${SOURCE_ROOT}/web-asset/icons"
+  local runtime_dir="${RUNTIME_ROOT}/web-asset/icons"
+  if [[ ! -d "${runtime_dir}" ]]; then
+    record_drift "[icons-assets] missing runtime path: ${runtime_dir}"
+    return
+  fi
+  collect_dir_drift "${source_dir}" "${runtime_dir}" "icons-assets"
+}
+
 collect_drift() {
   DRIFT_FOUND=0
   DRIFT_LINES=()
@@ -433,6 +443,7 @@ collect_drift() {
   collect_student_assets_drift
   collect_vendor_assets_drift
   collect_images_assets_drift
+  collect_icons_assets_drift
   collect_env_contract_drift
 }
 
@@ -485,6 +496,9 @@ perform_sync() {
   if [[ -d "${RUNTIME_ROOT}/web-asset/images" ]]; then
     rsync -a --delete "${RUNTIME_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images.BAK-${timestamp}/"
   fi
+  if [[ -d "${RUNTIME_ROOT}/web-asset/icons" ]]; then
+    rsync -a --delete "${RUNTIME_ROOT}/web-asset/icons/" "${RUNTIME_ROOT}/web-asset/icons.BAK-${timestamp}/"
+  fi
   if [[ -d "${PUBLIC_ADMIN_DIR}" ]]; then
     "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${PUBLIC_ADMIN_DIR}/" "${PUBLIC_ADMIN_DIR}.BAK-${timestamp}/"
   fi
@@ -511,6 +525,8 @@ perform_sync() {
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/vendor/" "${RUNTIME_ROOT}/web-asset/vendor/"
   mkdir -p "${RUNTIME_ROOT}/web-asset/images"
   rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/images/" "${RUNTIME_ROOT}/web-asset/images/"
+  mkdir -p "${RUNTIME_ROOT}/web-asset/icons"
+  rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/icons/" "${RUNTIME_ROOT}/web-asset/icons/"
   "${PUBLIC_WRITE_PREFIX[@]}" mkdir -p "${PUBLIC_ADMIN_DIR}" "${PUBLIC_PARENT_DIR}" "${PUBLIC_STUDENT_DIR}" "${PUBLIC_SHARED_DIR}"
   "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/admin/" "${PUBLIC_ADMIN_DIR}/"
   "${PUBLIC_WRITE_PREFIX[@]}" rsync -a --delete "${RSYNC_EXCLUDES[@]}" "${SOURCE_ROOT}/web-asset/parent/" "${PUBLIC_PARENT_DIR}/"
