@@ -25,7 +25,7 @@
 
     if (!customElements.get("svg-icon")) {
       svgIcon({
-        defaultSize: 28,
+        defaultSize: 2,
         path: "/web-asset/icons/web-component/svgs/",
       });
     }
@@ -98,9 +98,21 @@
       min-height: 320px;
       width: 100%;
     }
+
+    /* Keep the loader class locally declared so editor diagnostics resolve it. */
+    .system-health-loading-pulse {
+      color: var(--primary-color);
+      height: 105.6px;
+      position: relative;
+      width: 105.6px;
+    }
+
+    html[data-theme="dark"] body.admin-portal-page .system-health-loading-pulse {
+      color: #ffd76a;
+    }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.css?v=20260424f" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.css?v=20260424f">
+  <link rel="preload" href="/web-asset/admin/student-admin.css?v=20260424h" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.css?v=20260424h">
 </head>
 
 <body class="admin-portal-page admin-auth-booting">
@@ -420,12 +432,7 @@
                     <h3>Systems Health</h3>
                     <div id="systemHealthShell" class="system-health-shell is-loading">
                       <div id="systemHealthLoading" class="system-health-loading" aria-live="polite" aria-busy="true">
-                        <img
-                          src="/web-asset/icons/svg/lazy.svg"
-                          alt=""
-                          aria-hidden="true"
-                          class="system-health-loading-icon"
-                        >
+                        <div class="system-health-loading-pulse" aria-hidden="true"></div>
                         <div class="system-health-loading-copy">
                           <strong>Checking systems...</strong>
                           <span>Waiting for hub and service status.</span>

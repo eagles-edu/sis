@@ -1528,3 +1528,7 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   .pull-left { margin-right: auto; }
   .pull-right { margin-left: auto; }
 }
+
+.noborder {
+  border: none;
+}

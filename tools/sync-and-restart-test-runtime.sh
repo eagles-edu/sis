@@ -621,8 +621,13 @@ main() {
   run_sync
   sync_test_src_tree
   cleanup_test_backup_artifacts
-  sync_test_public_html_index
-  sync_test_public_assets
+  if [[ "$MODE" != "boot-prep" ]]; then
+    sync_test_public_html_index
+    sync_test_public_assets
+  else
+    log "skip public_html sync for mode=boot-prep"
+    log "skip public web asset sync for mode=boot-prep"
+  fi
   sync_test_icons_assets
   align_test_env_from_dev_source
   ensure_test_runtime_env_contract
