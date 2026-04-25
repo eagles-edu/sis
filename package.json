@@ -111,7 +111,7 @@
     "nodemailer": "^8.0.5",
     "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
-    "postcss": "^8.5.9",
+    "postcss": "^8.5.10",
     "redis": "^5.11.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
