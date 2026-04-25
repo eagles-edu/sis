@@ -122,14 +122,14 @@
     "nodemailer": "^8.0.5",
     "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
-    "postcss": "^8.5.9",
+    "postcss": "^8.5.10",
     "redis": "^5.11.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "overrides": {
     "@hono/node-server": "1.19.13",
     "brace-expansion@^2.0.0": "2.0.3",
-    "hono": "4.12.12",
+    "hono": "4.12.14",
     "lodash": "4.18.0"
   }
 }
