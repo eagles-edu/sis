@@ -8785,8 +8785,9 @@
             result?.rolePolicy,
             getCurrentRolePolicy(),
           );
-          await bootAfterLogin();
           showApp();
+          setStatus("Loading dashboard...");
+          await bootAfterLogin();
           setStatus(
             `Authenticated as ${state.authUser?.username || "admin"}. Student admin loaded.`,
           );
@@ -19041,6 +19042,9 @@
       }
 
       async function bootAfterLogin() {
+        // Keep the first paint focused on the overview shell.
+        // Background-heavy data for tables and selectors loads after the
+        // critical top-of-page summary and health cards are visible.
         initializeParentTrackingScoreSelects();
         initializeParentTrackingScoreLegendPopovers();
         await loadRolePermissions();
@@ -19055,27 +19059,33 @@
         renderAssignmentExerciseOptions();
         clearUserForm();
         if (canManageUsers()) {
-          await loadUsers();
+          void loadUsers().catch(handleError);
         } else {
           state.adminUsers = [];
           renderUserRows();
         }
         if (canReadData()) {
-          await loadFilters();
-          await loadStudents();
-          await loadDashboardStudents();
           await loadDashboardSummary();
-          await loadQueueHub({ notify: false });
           await Promise.all([
             probeHubConnection({ notify: false, paint: false }),
             loadServiceControlStatus({ notify: false, paint: false }),
           ]);
           renderHubConnectionStatus();
           renderServiceControlCard();
-          await loadIncomingExerciseResults({
-            showAll: state.incomingExerciseQueue.showAll,
+          void Promise.allSettled([
+            loadFilters(),
+            loadStudents(),
+            loadDashboardStudents(),
+            loadQueueHub({ notify: false }),
+            loadIncomingExerciseResults({
+              showAll: state.incomingExerciseQueue.showAll,
+            }),
+            loadExerciseTitles(),
+          ]).then((results) => {
+            results.forEach((result) => {
+              if (result.status === "rejected") handleError(result.reason);
+            });
           });
-          await loadExerciseTitles();
         } else {
           state.students = [];
           renderStudents();

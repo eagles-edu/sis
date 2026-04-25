@@ -111,8 +111,8 @@
       color: #ffd76a;
     }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.css?v=20260424h" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.css?v=20260424h">
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260425b" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260425b">
 </head>
 
 <body class="admin-portal-page admin-auth-booting">
@@ -269,9 +269,9 @@
                 <button id="overviewRuntimeRestartBtn" type="button" class="primary hidden">
                   Self-Heal Runtime
                 </button>
-                <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch theme">
+                <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch to dark theme" data-tooltip="Switch to dark theme">
                   <span class="portal-theme-toggle__icon" aria-hidden="true">
-                    <svg-icon name="theme-moon" size="28" id="adminThemeToggleIcon"></svg-icon>
+                    <svg-icon name="theme-moon" size="110%" id="adminThemeToggleIcon"></svg-icon>
                   </span>
                 </button>
                 <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
@@ -3162,6 +3162,7 @@ Select an assignment link to inspect details.</pre>
         button.setAttribute("aria-pressed", String(isDark));
         button.setAttribute("aria-label", label);
         button.setAttribute("title", label);
+        button.setAttribute("data-tooltip", label);
         icon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
       }
 
@@ -3180,7 +3181,7 @@ Select an assignment link to inspect details.</pre>
       apply(validTheme(root.dataset.theme) ? root.dataset.theme : "light");
     })();
   </script>
-  <script src="/web-asset/admin/student-admin.js?v=20260424d" defer></script>
+  <script src="/web-asset/admin/student-admin.min.js?v=20260425b" defer></script>
 </body>
 
 </html>

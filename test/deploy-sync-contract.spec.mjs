@@ -7,11 +7,13 @@ const deployScriptPath = path.resolve(process.cwd(), "tools/deploy-api-safe.sh")
 const runtimeResyncScriptPath = path.resolve(process.cwd(), "tools/sis-runtime-resync.sh")
 const moodleDeployScriptPath = path.resolve(process.cwd(), "tools/deploy-moodle-plugin.sh")
 const testRuntimeSyncScriptPath = path.resolve(process.cwd(), "tools/sync-and-restart-test-runtime.sh")
+const testNginxConfigPath = path.resolve(process.cwd(), "deploy/nginx/test.eagles.edu.vn.conf")
 
 const deployScript = fs.readFileSync(deployScriptPath, "utf8")
 const runtimeResyncScript = fs.readFileSync(runtimeResyncScriptPath, "utf8")
 const moodleDeployScript = fs.readFileSync(moodleDeployScriptPath, "utf8")
 const testRuntimeSyncScript = fs.readFileSync(testRuntimeSyncScriptPath, "utf8")
+const testNginxConfig = fs.readFileSync(testNginxConfigPath, "utf8")
 
 test("deploy-api-safe mirrors runtime and public portal assets with delete semantics", () => {
   assert.match(deployScript, /PUBLIC_ADMIN_DIR=\"\$\{PUBLIC_ADMIN_DIR:-\$\{PUBLIC_ROOT\}\/sis-admin\}\"/)
@@ -144,4 +146,38 @@ test("sync-and-restart-test-runtime pins the test env contract and mirrors the p
   assert.match(testRuntimeSyncScript, /"\$\{install_prefix\[@\]\}" install -d -o "\$target_owner" -g "\$target_group" "\$target_public_root"/)
   assert.match(testRuntimeSyncScript, /"\$\{install_prefix\[@\]\}" install -o "\$target_owner" -g "\$target_group" -m 644 "\$source_hub_html" "\$target_index_path"/)
   assert.match(testRuntimeSyncScript, /rsync -a --delete "\$\{REPO_ROOT\}\/web-asset\/icons\/" "\$\{target_icons_root\}\/"/)
+})
+
+test("test nginx enables strong gzip compression for HTML and static assets", () => {
+  assert.match(testNginxConfig, /gzip on;/)
+  assert.match(testNginxConfig, /gzip_static on;/)
+  assert.match(testNginxConfig, /gzip_min_length 128;/)
+  assert.match(testNginxConfig, /gzip_comp_level 9;/)
+  assert.match(testNginxConfig, /gzip_proxied any;/)
+  assert.match(
+    testNginxConfig,
+    /gzip_types[\s\S]*text\/javascript[\s\S]*application\/xml\+rss[\s\S]*application\/manifest\+json/,
+  )
+  assert.doesNotMatch(testNginxConfig, /gzip_types[\s\S]*text\/html/)
+  assert.doesNotMatch(testNginxConfig, /gzip_comp_level 5;/)
+})
+
+test("test nginx enables brotli compression at maximum quality", () => {
+  assert.match(testNginxConfig, /brotli on;/)
+  assert.match(testNginxConfig, /brotli_static on;/)
+  assert.match(testNginxConfig, /brotli_comp_level 11;/)
+  assert.match(
+    testNginxConfig,
+    /brotli_types[\s\S]*text\/javascript[\s\S]*application\/xml\+rss[\s\S]*application\/manifest\+json/,
+  )
+  assert.doesNotMatch(testNginxConfig, /brotli_types[\s\S]*text\/html/)
+  assert.doesNotMatch(testNginxConfig, /brotli_comp_level 5;/)
+})
+
+test("admin asset payloads stay below the Lighthouse reduction gates", () => {
+  const adminJsStat = fs.statSync(path.resolve(process.cwd(), "web-asset/admin/student-admin.min.js"))
+  const adminCssStat = fs.statSync(path.resolve(process.cwd(), "web-asset/admin/student-admin.min.css"))
+
+  assert.ok(adminJsStat.size < 600_000, `student-admin.min.js should stay below 600 KB, got ${adminJsStat.size}`)
+  assert.ok(adminCssStat.size < 80_000, `student-admin.min.css should stay below 80 KB, got ${adminCssStat.size}`)
 })

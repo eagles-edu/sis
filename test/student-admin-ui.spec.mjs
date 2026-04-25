@@ -10,8 +10,8 @@ const ADMIN_JS_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin
 const ADMIN_HTML = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
 const ADMIN_JS = fs.readFileSync(ADMIN_JS_PATH, "utf8")
 const ADMIN_HTML_STRIPPED_FOR_TEST = ADMIN_HTML
-  .replace(/<link[\s\S]*?href="\/web-asset\/admin\/student-admin\.css"[\s\S]*?>/gi, "")
-  .replace(/<script\s+src="\/web-asset\/admin\/student-admin\.js"\s+defer><\/script>/gi, "")
+  .replace(/<link[\s\S]*?href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?[^"]*)?"[\s\S]*?>/gi, "")
+  .replace(/<script\s+src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?[^"]*)?"\s+defer><\/script>/gi, "")
 const ADMIN_HTML_FOR_TEST = ADMIN_HTML_STRIPPED_FOR_TEST.replace(
   "</body>",
   `<script>\n${ADMIN_JS.replace(/<\/script>/gi, "<\\\\/script>")}\n</script>\n</body>`
@@ -428,6 +428,125 @@ test("admin ui login success swaps panels and restores login button state", asyn
   assert.equal(loginButton.textContent, "Login")
   assert.ok(calls.includes("POST /api/admin/auth/login"))
 
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("admin ui pageload paints the overview before student table hydration finishes", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: true,
+    canWrite: true,
+    canManageUsers: true,
+    canManagePermissions: true,
+    startPage: "overview",
+    allowedPages: ["overview", "profile", "attendance", "grades", "reports", "family", "users", "permissions"],
+  }
+  let resolveStudents = null
+  const studentsDeferred = new Promise((resolve) => {
+    resolveStudents = resolve
+  })
+  const dom = await createAdminUiDom(async (resource) => {
+    const url = String(resource)
+
+    if (url.includes("/api/admin/auth/me")) {
+      return jsonResponse(200, {
+        authenticated: true,
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: rolePolicy,
+        },
+      })
+    }
+
+    if (url.includes("/api/admin/settings/ui")) {
+      return jsonResponse(200, { uiSettings: { queueHub: { panelOrder: [] } } })
+    }
+
+    if (url.includes("/api/admin/assignment-templates")) {
+      return jsonResponse(200, { items: [] })
+    }
+
+    if (url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        today: {
+          totalEnrollment: 127,
+          attendance: 0,
+          absences: 127,
+          tardy10PlusPercent: 0,
+          tardy30PlusPercent: 0,
+          unenrolledYtd: 0,
+          attendancePercentOfEnrollment: 0,
+        },
+        assignments: {},
+        weeklyAssignmentCompletion: [],
+        classEnrollmentAttendance: [],
+        parentReports: { total: 0 },
+      })
+    }
+
+    if (url.includes("/api/admin/queue-hub")) {
+      return jsonResponse(200, { generatedAt: "2026-04-25T00:00:00.000Z", panels: [], panelOrder: [] })
+    }
+
+    if (url.includes("/api/admin/runtime/service-control")) {
+      return jsonResponse(200, {
+        service: "exercise-mailer.service",
+        status: "active",
+        detail: "active",
+        checkedAt: "2026-04-25T00:00:00.000Z",
+        available: true,
+        enabled: true,
+      })
+    }
+
+    if (url.includes("/api/admin/exercise-results/incoming")) {
+      return jsonResponse(200, { items: [], total: 0, hasMore: false, statuses: [] })
+    }
+
+    if (url.includes("/api/admin/exercise-titles")) {
+      return jsonResponse(200, { items: [] })
+    }
+
+    if (url.includes("/api/admin/users")) {
+      return jsonResponse(200, { items: [] })
+    }
+
+    if (url.includes("/api/admin/filters")) {
+      return jsonResponse(200, { levels: [], schools: [] })
+    }
+
+    if (url.includes("/api/admin/students")) {
+      return studentsDeferred
+    }
+
+    return jsonResponse(200, {})
+  }, "http://127.0.0.1/admin", {
+    beforeParse(window) {
+      window.__SIS_ADMIN_AUTH_BOOTSTRAP__ = runStudentAdminAuthBootstrap
+    },
+  })
+
+  await waitFor(() => {
+    const document = dom.window.document
+    assert.equal(document.getElementById("app").classList.contains("hidden"), false)
+    assert.equal(document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.match(document.getElementById("status").textContent, /Authenticated as admin/i)
+  }, 5000)
+
+  await waitFor(() => {
+    const document = dom.window.document
+    assert.match(document.getElementById("ovTotalEnrollment").textContent, /127/)
+    assert.equal(document.getElementById("systemHealthLoading").classList.contains("hidden"), true)
+  }, 5000)
+
+  resolveStudents?.(jsonResponse(200, { items: [] }))
   await settleDomAsync(dom)
   dom.window.close()
 })

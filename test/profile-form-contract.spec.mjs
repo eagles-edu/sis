@@ -44,9 +44,9 @@ function readProfileFormRows() {
   const html = fs.readFileSync("web-asset/admin/student-admin.html", "utf8")
   const js = fs.readFileSync("web-asset/admin/student-admin.js", "utf8")
   const source = `${html}\n${js}`
-  const marker = "const PROFILE_FORM_FIELD_ROWS = ["
-  const markerIndex = source.indexOf(marker)
-  assert.ok(markerIndex >= 0, "PROFILE_FORM_FIELD_ROWS marker must exist")
+  const markerMatch = source.match(/PROFILE_FORM_FIELD_ROWS\s*=\s*\[/)
+  assert.ok(markerMatch, "PROFILE_FORM_FIELD_ROWS marker must exist")
+  const markerIndex = markerMatch.index ?? -1
 
   const openIndex = source.indexOf("[", markerIndex)
   let depth = 0

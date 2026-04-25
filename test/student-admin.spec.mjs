@@ -701,9 +701,14 @@ test("GET /admin returns HTML UI", async () => {
   assert.equal(inlineStyleBlocks.length, 1)
   assert.match(inlineStyleBlocks[0], /\.app-shell/i)
   assert.match(inlineStyleBlocks[0], /\.school-map-preview-shell/i)
-  assert.match(responseHtml, /href="\/web-asset\/admin\/student-admin\.css"/i)
-  assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin\.css"[\s\S]*as="style"/i)
-  assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin\.js"\s+defer/i)
+  assert.match(responseHtml, /<link[^>]*rel="preload"[^>]*href="\/web-asset\/admin\/student-admin\.css(?:\?v=[^"]+)?"[^>]*as="style"/i)
+  assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin\.css(?:\?v=[^"]+)?"[\s\S]*as="style"/i)
+  assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin\.js(?:\?v=[^"]+)?"\s+defer/i)
+  assert.match(responseHtml, /<button class="portal-theme-toggle" id="adminThemeToggle" type="button"[^>]*data-tooltip="Switch to dark theme"/i)
+  assert.match(
+    responseHtml,
+    /<svg-icon[\s\S]*?name="theme-moon"[\s\S]*?size="110%"[\s\S]*?id="adminThemeToggleIcon"[\s\S]*?><\/svg-icon>/i,
+  )
   assert.match(responseHtml, /href="\/admin"[^>]*data-page-link="overview"/i)
   assert.match(responseHtml, /href="\/admin\/queue-hub"[^>]*data-page-link="queue-hub"/i)
   assert.match(responseHtml, /href="\/admin\/attendance"[^>]*data-page-link="attendance"/i)
@@ -942,17 +947,29 @@ test("GET /web-asset/vendor/fullcalendar/index.global.min.js returns runtime sta
   assert.match(js, /FullCalendar Standard Bundle v6\.1\.20/i)
 })
 
-test("GET /web-asset/admin/student-admin.css returns externalized admin styles", async () => {
-  const res = await fetchLocal(port, "/web-asset/admin/student-admin.css")
+test("GET /web-asset/admin/student-admin.min.css returns externalized admin styles", async () => {
+  const res = await fetchLocal(port, "/web-asset/admin/student-admin.min.css")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/css/i)
   const css = await res.text()
   assert.match(css, /\.page-section\[data-page="news-reports"\]\s+\.table-toolbar/i)
   assert.match(css, /\.grade-chart-lanes/i)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle\s*\{/)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:focus-visible\s*\{/)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg-icon\s*\{/)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle::after/i)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle\s*\{/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle::after\s*\{/)
+  assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle\s*\{/m)
+  assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle__icon\s*\{/m)
 })
 
-test("GET /web-asset/admin/student-admin.js returns externalized admin app script", async () => {
-  const res = await fetchLocal(port, "/web-asset/admin/student-admin.js")
+test("GET /web-asset/admin/student-admin.min.js returns externalized admin app script", async () => {
+  const res = await fetchLocal(port, "/web-asset/admin/student-admin.min.js")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /javascript/i)
   const js = await res.text()

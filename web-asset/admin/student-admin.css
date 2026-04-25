@@ -1079,32 +1079,95 @@ transition:
         font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
         font-size: 11px;
   }
-      .portal-theme-toggle {
+      body.admin-portal-page .portal-theme-toggle {
         align-items: center;
         appearance: none;
         background: transparent;
-        border: 0;
+        border: 1px solid transparent;
         border-radius: 999px;
         color: #172033;
         cursor: pointer;
         display: inline-flex;
         inline-size: auto;
+        justify-self: end;
         justify-content: center;
-        min-height: 38px;
-        padding: 4px;
+        min-height: 44px;
+        padding: 7px;
+        position: relative;
+        transition:
+          background-color 180ms ease,
+          border-color 180ms ease,
+          box-shadow 180ms ease,
+          color 180ms ease,
+          transform 180ms ease;
   }
-      .portal-theme-toggle__icon {
+      body.admin-portal-page .portal-theme-toggle:hover {
+        border-color: rgba(15, 22, 41, 1);
+        transform: translateY(-1px);
+  }
+      body.admin-portal-page .portal-theme-toggle:focus-visible {
+        box-shadow: 0 0 0 3px rgba(47, 91, 227, 0.2);
+        outline: none;
+  }
+      body.admin-portal-page .portal-theme-toggle__icon {
         align-items: center;
         background: rgba(255, 255, 255, 0.78);
         border-radius: 999px;
         color: #172033;
         display: inline-flex;
-        height: 34px;
+        flex: 0 0 auto;
+        height: 36px;
         justify-content: center;
-        width: 34px;
+        width: 36px;
   }
-      .portal-theme-toggle__icon svg-icon {
+      body.admin-portal-page .portal-theme-toggle__icon svg-icon {
         color: inherit;
+      }
+      body.admin-portal-page .portal-theme-toggle__label {
+        display: none;
+  }
+      body.admin-portal-page .portal-theme-toggle::after {
+        background: rgba(20, 24, 34, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        color: #f4f7ff;
+        content: attr(data-tooltip);
+        font-size: 0.76rem;
+        font-weight: 700;
+        right: calc(100% + 8px);
+        opacity: 0;
+        padding: 6px 10px;
+        pointer-events: none;
+        position: absolute;
+        top: 50%;
+        transform: translate(4px, -50%);
+        transition:
+          opacity 120ms ease 400ms,
+          transform 120ms ease 400ms;
+        white-space: nowrap;
+        z-index: 50;
+  }
+      body.admin-portal-page .portal-theme-toggle:hover::after,
+      body.admin-portal-page .portal-theme-toggle:focus-visible::after {
+        opacity: 1;
+        transform: translate(0, -50%);
+  }
+      html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle {
+        background: transparent;
+        border-color: transparent;
+        color: #ffd76a;
+  }
+      html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle:hover {
+        border-color: rgba(255, 215, 106, 0.42);
+  }
+      html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle__icon {
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffd76a;
+  }
+      html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle::after {
+        background: rgba(9, 12, 18, 0.98);
+        border-color: rgba(255, 255, 255, 0.16);
+        color: #eef3ff;
   }
       .menu-groups {
         display: grid;

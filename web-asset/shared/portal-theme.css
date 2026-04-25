@@ -249,7 +249,7 @@ body.portal-hub-page .theme-toggle {
   align-items: center;
   appearance: none;
   background: transparent;
-  border: transparent;
+  border: 1px solid transparent;
   border-radius: 999px;
   color: #172033;
   cursor: pointer;
@@ -328,15 +328,16 @@ body.portal-hub-page .theme-toggle:focus-visible::after {
 html[data-theme="dark"] body.portal-hub-page .theme-toggle {
   background: transparent;
   border-color: transparent;
-  color: #edf3ff;
+  color: #ffd76a;
 }
 
 html[data-theme="dark"] body.portal-hub-page .theme-toggle:hover {
-  border-color: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 215, 106, 0.42);
 }
 
 html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffd76a;
 }
 
 html[data-theme="dark"] body.portal-hub-page .theme-toggle::after {
