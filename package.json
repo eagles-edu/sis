@@ -78,7 +78,7 @@
   "homepage": "",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@redocly/cli": "^2.28.1",
+    "@redocly/cli": "^2.30.0",
     "@types/node": "^25.6.0",
     "dependency-cruiser": "^17.3.10",
     "eslint": "^10.2.1",
@@ -91,8 +91,8 @@
     "playwright": "^1.59.1",
     "postcss-html": "^1.8.1",
     "prettier": "^3.8.3",
-    "prisma": "^7.7.0",
-    "stylelint": "^17.8.0",
+    "prisma": "^7.8.0",
+    "stylelint": "^17.9.0",
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
