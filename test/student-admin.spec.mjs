@@ -644,7 +644,7 @@ test("GET / returns the public portal hub with branded navigation", async () => 
   assert.ok(titleMatch)
   assert.match(titleMatch[1], /\bEagles\b/i)
   assert.match(titleMatch[1], /\bClub\b/i)
-  assert.match(html, /Xem trang chủ/i)
+  assert.match(html, /Hệ thống thông tin sinh viên/i)
   assert.match(html, /href="\/admin"/i)
   assert.match(html, /href="\/parent"/i)
   assert.match(html, /href="\/student"/i)
@@ -674,7 +674,7 @@ test("GET / renders hub links to canonical portal routes", async () => {
   }
 
   assert.match(html, /href="\/admin"/i)
-  assert.match(html, /Xem trang chủ/i)
+  assert.match(html, /Hệ thống thông tin sinh viên/i)
   assert.match(html, /portal-card--admin/i)
   assert.match(html, /portal-card--parent/i)
   assert.match(html, /portal-card--student/i)
@@ -701,10 +701,10 @@ test("GET /admin returns HTML UI", async () => {
   assert.equal(inlineStyleBlocks.length, 1)
   assert.match(inlineStyleBlocks[0], /\.app-shell/i)
   assert.match(inlineStyleBlocks[0], /\.school-map-preview-shell/i)
-  assert.match(responseHtml, /<link[^>]*rel="preload"[^>]*href="\/web-asset\/admin\/student-admin\.css(?:\?v=[^"]+)?"[^>]*as="style"/i)
-  assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin\.css(?:\?v=[^"]+)?"[\s\S]*as="style"/i)
-  assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin\.js(?:\?v=[^"]+)?"\s+defer/i)
-  assert.match(responseHtml, /<button class="portal-theme-toggle" id="adminThemeToggle" type="button"[^>]*data-tooltip="Switch to dark theme"/i)
+  assert.match(responseHtml, /<link[^>]*rel="preload"[^>]*href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?v=[^"]+)?"[^>]*as="style"/i)
+  assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?v=[^"]+)?"[\s\S]*as="style"/i)
+  assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?v=[^"]+)?"\s+defer/i)
+  assert.match(responseHtml, /<button class="portal-theme-toggle" id="adminThemeToggle" type="button"[^>]*aria-label="Switch to dark theme"/i)
   assert.match(
     responseHtml,
     /<svg-icon[\s\S]*?name="theme-moon"[\s\S]*?size="110%"[\s\S]*?id="adminThemeToggleIcon"[\s\S]*?><\/svg-icon>/i,
@@ -952,20 +952,19 @@ test("GET /web-asset/admin/student-admin.min.css returns externalized admin styl
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/css/i)
   const css = await res.text()
-  assert.match(css, /\.page-section\[data-page="news-reports"\]\s+\.table-toolbar/i)
+  assert.match(css, /\.page-section\[data-page(?:="|=)news-reports(?:")?\]\s+\.table-toolbar/i)
   assert.match(css, /\.grade-chart-lanes/i)
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle\s*\{/)
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:focus-visible\s*\{/)
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg-icon\s*\{/)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle::after/i)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle\s*\{/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle::after\s*\{/)
   assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle\s*\{/m)
   assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle__icon\s*\{/m)
+  assert.doesNotMatch(css, /portal-theme-toggle::after/i)
 })
 
 test("GET /web-asset/admin/student-admin.min.js returns externalized admin app script", async () => {

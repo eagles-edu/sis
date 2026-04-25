@@ -49,10 +49,20 @@ test("shared portal theme keeps the hub theme toggle scoped and legible in dark 
   assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*color:\s*#ffd76a;/)
   assert.doesNotMatch(sharedTheme, /(^|\n)\s*\.theme-toggle\s*\{/m)
   assert.doesNotMatch(sharedTheme, /(^|\n)\s*\.theme-toggle__icon\s*\{/m)
+  assert.doesNotMatch(sharedTheme, /theme-toggle::after/i)
 })
 
 test("parent, student, and admin theme toggles keep the same hub visual contract", () => {
-  const sharedToggleRules = [
+  const hubToggleRules = [
+    /class="theme-toggle"/i,
+    /data-theme-toggle/i,
+    /aria-pressed="false"/i,
+    /aria-label="Chuyển sang giao diện tối"/i,
+    /data-theme-toggle-icon/i,
+    /size="110%"/i,
+  ]
+
+  const portalToggleRules = [
     /border:\s*1px solid transparent;/,
     /justify-self:\s*end;/,
     /inline-size:\s*auto;/,
@@ -62,19 +72,19 @@ test("parent, student, and admin theme toggles keep the same hub visual contract
     /:hover\s*\{[\s\S]*border-color:\s*rgba\(15,\s*22,\s*41,\s*1\);[\s\S]*transform:\s*translateY\(-1px\);/i,
     /:focus-visible\s*\{[\s\S]*box-shadow:\s*0 0 0 3px rgba\(47,\s*91,\s*227,\s*0\.2\);[\s\S]*outline:\s*none;/i,
     /\.portal-theme-toggle__icon\s*\{[\s\S]*height:\s*36px;[\s\S]*width:\s*36px;/i,
-    /\.portal-theme-toggle::after\s*\{[\s\S]*content:\s*attr\(data-tooltip\);/i,
     /html\[data-theme="dark"\][\s\S]*color:\s*#ffd76a;/i,
     /html\[data-theme="dark"\][\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.12\);/i,
     /html\[data-theme="dark"\][\s\S]*border-color:\s*rgba\(255,\s*215,\s*106,\s*0\.42\);/i,
   ]
 
   const sources = [
-    ["parent portal", parentPortal, /body\.parent-portal-page \.portal-theme-toggle\s*\{/, /data-tooltip="Chuyển sang giao diện tối"/, /size="110%"/],
-    ["student portal", studentPortal, /body\.student-portal-page \.portal-theme-toggle\s*\{/, /data-tooltip="Switch to dark theme"/, /size="110%"/],
-    ["admin theme css", adminTheme, /body\.admin-portal-page \.portal-theme-toggle\s*\{/],
+    ["admin hub", fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8"), /body\.portal-hub-page \.theme-toggle\s*\{/, null, /size="110%"/, hubToggleRules],
+    ["parent portal", parentPortal, /body\.parent-portal-page \.portal-theme-toggle\s*\{/, null, /size="110%"/],
+    ["student portal", studentPortal, /body\.student-portal-page \.portal-theme-toggle\s*\{/, null, /size="110%"/],
+    ["admin theme css", adminTheme, /body\.admin-portal-page \.portal-theme-toggle\s*\{/, null, null, portalToggleRules],
   ]
 
-  for (const [label, source, baseSelector, tooltipPattern, sizePattern] of sources) {
+  for (const [label, source, baseSelector, tooltipPattern, sizePattern, rules = portalToggleRules] of sources) {
     assert.match(source, baseSelector, `${label} should scope the theme toggle to its page`)
     if (tooltipPattern) {
       assert.match(source, tooltipPattern, `${label} should render the tooltip contract`)
@@ -82,8 +92,10 @@ test("parent, student, and admin theme toggles keep the same hub visual contract
     if (sizePattern) {
       assert.match(source, sizePattern, `${label} should render the hub-sized icon contract`)
     }
-    for (const pattern of sharedToggleRules) {
+    for (const pattern of rules) {
       assert.match(source, pattern, `${label} should keep the shared hub toggle contract`)
     }
+    assert.doesNotMatch(source, /data-tooltip=/i, `${label} should not emit a tooltip attribute`)
+    assert.doesNotMatch(source, /title="[^"]*theme/i, `${label} should not emit a native tooltip title`)
   }
 })

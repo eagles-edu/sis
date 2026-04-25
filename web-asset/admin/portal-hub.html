@@ -530,7 +530,7 @@ grid-template-areas:
             </div>
           </div>
           <div class="hero-actions">
-            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang giao diện tối" data-tooltip="Chuyển sang giao diện tối">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang giao diện tối">
               <span class="theme-toggle__icon" aria-hidden="true">
                 <svg-icon name="theme-moon" size="110%" data-theme-toggle-icon></svg-icon>
               </span>
@@ -652,7 +652,6 @@ grid-template-areas:
         const tooltip = isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
         themeToggle.setAttribute("aria-pressed", String(isDark));
         themeToggle.setAttribute("aria-label", tooltip);
-        themeToggle.setAttribute("data-tooltip", tooltip);
         themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
       }
 

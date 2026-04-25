@@ -269,7 +269,7 @@
                 <button id="overviewRuntimeRestartBtn" type="button" class="primary hidden">
                   Self-Heal Runtime
                 </button>
-                <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch to dark theme" data-tooltip="Switch to dark theme">
+                <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
                   <span class="portal-theme-toggle__icon" aria-hidden="true">
                     <svg-icon name="theme-moon" size="110%" id="adminThemeToggleIcon"></svg-icon>
                   </span>
@@ -3161,8 +3161,6 @@ Select an assignment link to inspect details.</pre>
         const label = isDark ? "Switch to light theme" : "Switch to dark theme";
         button.setAttribute("aria-pressed", String(isDark));
         button.setAttribute("aria-label", label);
-        button.setAttribute("title", label);
-        button.setAttribute("data-tooltip", label);
         icon.setAttribute("name", isDark ? "theme-sun" : "theme-moon");
       }
 

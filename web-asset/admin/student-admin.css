@@ -2130,7 +2130,7 @@ transition:
   }
       .system-health-loading-pulse::after {
         animation: system-health-pulse 0.8s infinite;
-        transform: perspective(352px) translateZ(0px);
+        transform: perspective(352px) translateZ(0);
   }
       .system-health-loading-copy {
         display: grid;
