@@ -66,8 +66,17 @@ test("deploy-api-safe runs blocking modal chip and portal parity gates after syn
   assert.match(deployScript, /tools\/verify-portal-sync-proof\.sh/)
   assert.match(
     deployScript,
-    /perform_sync\s+restart_if_requested\s+run_blocking_portal_contract_gates\s+run_health_checks/
+    /perform_sync\s+refresh_runtime_prisma_client\s+restart_if_requested\s+run_blocking_portal_contract_gates\s+run_health_checks/
   )
+  assert.match(deployScript, /collect_prisma_drift\(\)/)
+  assert.match(deployScript, /refresh_runtime_prisma_client\(\)/)
+  assert.match(deployScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{SOURCE_ROOT\}\/prisma\/\" \"\$\{RUNTIME_ROOT\}\/prisma\/\"/)
+  assert.match(deployScript, /rsync -a --delete \"\$\{SOURCE_ROOT\}\/prisma\.config\.ts\" \"\$\{RUNTIME_ROOT\}\/\"/)
+  assert.match(deployScript, /npm run db:generate/)
+  assert.match(deployScript, /note=DB unchanged \(no migrate, no restore\)/)
+  assert.doesNotMatch(deployScript, /boot-prep/)
+  assert.doesNotMatch(deployScript, /db:migrate:deploy/)
+  assert.doesNotMatch(deployScript, /db:restore/)
 })
 
 test("sis-runtime-resync uses delete-sync rsync and route matrices for all portals", () => {
@@ -98,6 +107,13 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/images\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/images\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/icons\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/icons\/\"/)
   assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/web-asset\/admin\/\" \"\$\{RUNTIME_ROOT\}\/web-asset\/admin\/\"/)
+  assert.match(runtimeResyncScript, /collect_prisma_drift\(\)/)
+  assert.match(runtimeResyncScript, /refresh_runtime_prisma_client\(\)/)
+  assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{RSYNC_EXCLUDES\[@\]\}\" \"\$\{REPO_ROOT\}\/prisma\/\" \"\$\{RUNTIME_ROOT\}\/prisma\/\"/)
+  assert.match(runtimeResyncScript, /rsync -a --delete \"\$\{REPO_ROOT\}\/prisma\.config\.ts\" \"\$\{RUNTIME_ROOT\}\/\"/)
+  assert.match(runtimeResyncScript, /note=DB unchanged \(no migrate, no restore\)/)
+  assert.doesNotMatch(runtimeResyncScript, /boot-prep/)
+  assert.doesNotMatch(runtimeResyncScript, /db:migrate:deploy/)
 })
 
 test("deploy-moodle-plugin mirrors the plugin into live Moodle and runs upgrade plus cache purge", () => {

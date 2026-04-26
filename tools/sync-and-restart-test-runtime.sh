@@ -334,6 +334,18 @@ run_sync() {
   esac
 }
 
+build_admin_assets() {
+  case "$MODE" in
+    full|public)
+      log "building admin minified assets from source"
+      (cd "$REPO_ROOT" && npm run build:admin-assets)
+      ;;
+    restart-only|boot-prep)
+      log "skip admin asset build for mode=${MODE}"
+      ;;
+  esac
+}
+
 sync_test_src_tree() {
   if [[ ! -d "${REPO_ROOT}/src" ]]; then
     log "skip src tree sync (repo src missing)"
@@ -618,6 +630,7 @@ restart_test_runtime() {
 
 main() {
   log "file mirror only; git commit matching is not part of the test sync contract"
+  build_admin_assets
   run_sync
   sync_test_src_tree
   cleanup_test_backup_artifacts

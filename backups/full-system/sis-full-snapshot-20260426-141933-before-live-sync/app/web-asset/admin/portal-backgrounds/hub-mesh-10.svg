@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="mesh-gradient" width="1000" height="500" viewBox="0 0 1000 500" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <defs id="defs10">
+    <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="0" width="1000" height="500">
+      <feGaussianBlur stdDeviation="133" id="feGaussianBlur2" />
+    </filter>
+    <filter id="noise" x="0" y="0" width="1" height="1">
+      <feTurbulence type="fractalNoise" baseFrequency="1" octaves="3" result="turbulence" stitchTiles="stitch" id="feTurbulence5" />
+      <feBlend in="SourceGraphic" in2="turbulence" mode="overlay" id="feBlend7" />
+    </filter>
+  </defs>
+  <rect id="background" width="100%" height="100%" fill="#E8EEFF" />
+  <g id="swatches" width="1000" height="500" filter="url(#blur)">
+    <rect x="86.68074190603181" y="-197.01735211773163" width="326.2214830393495" height="505.76324136067785" fill="#002768" id="rect13" />
+    <rect x="142.52013647397945" y="192.1603309673156" width="350.3808892976642" height="371.4788972138872" fill="#FFFFFF" id="rect15" />
+    <rect x="529.5102212246582" y="-107.02264996638053" width="324.6925516401635" height="403.9021392858308" fill="#E0162B" id="rect17" />
+    <rect x="345.7512279158934" y="147.75772727934827" width="365.9392857777839" height="570.0886399481996" fill="#FFFFFF" id="rect19" />
+  </g>
+  <rect x="0" y="0" width="1000" height="500" style="mix-blend-mode:soft-light;filter:url(#noise);opacity:74%" id="rect22" />
+</svg>

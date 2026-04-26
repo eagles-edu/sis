@@ -1,0 +1,26 @@
+<template>
+    <svg viewBox="0 0 24 24" stroke-width="2" fill="currentColor" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <rect opacity="0.5" width="4" height="8" x="3" y="8">
+            <animate attributeName="height" dur="1s" keyTimes="0; 0.1666; 0.333; 1" repeatCount="indefinite" values="8; 22; 8; 8" />
+            <animate attributeName="y" dur="1s" keyTimes="0; 0.1666; 0.333; 1" repeatCount="indefinite" values="8; 1; 8; 8" />
+            <animate attributeName="opacity" dur="1s" keyTimes="0; 0.1666; 0.333; 1" repeatCount="indefinite" values="0.5; 1; 0.5; 0.5" />
+        </rect>
+        <rect opacity="0.5" width="4" height="8" x="10" y="8">
+            <animate attributeName="height" dur="1s" keyTimes="0; 0.25; 0.5833; 1" repeatCount="indefinite" values="8; 22; 8; 8" />
+            <animate attributeName="y" dur="1s" keyTimes="0; 0.25; 0.5833; 1" repeatCount="indefinite" values="8; 1; 8; 8" />
+            <animate attributeName="opacity" dur="1s" keyTimes="0; 0.25; 0.5833; 1" repeatCount="indefinite" values="0.5; 1; 0.5; 0.5" />
+        </rect>
+        <rect opacity="0.5" stroke-width="1" width="4" height="8" x="17" y="8">
+            <animate attributeName="height" dur="1s" keyTimes="0; 0.4166; 0.75; 1" repeatCount="indefinite" values="8; 22; 8; 8" />
+            <animate attributeName="y" dur="1s" keyTimes="0; 0.4166; 0.75; 1" repeatCount="indefinite" values="8; 1; 8; 8" />
+            <animate attributeName="opacity" dur="1s" keyTimes="0; 0.4166; 0.75; 1" repeatCount="indefinite" values="0.5; 1; 0.5; 0.5" />
+        </rect>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

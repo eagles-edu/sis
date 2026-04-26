@@ -20,5 +20,8 @@ test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", (
     /should_refresh_prisma\(\) \{\s+\[\[ "\$MODE" == "full" \|\| "\$MODE" == "restart-only" \|\| "\$MODE" == "boot-prep" \]\]/
   )
   assert.match(script, /if should_refresh_prisma; then\s+refresh_test_prisma\s+else\s+log "skip Prisma refresh for mode=\$\{MODE\}"/)
+  assert.match(script, /build_admin_assets\(\)/)
+  assert.match(script, /npm run build:admin-assets/)
   assert.match(script, /public\)\s+log "running ffs-sis-public-root-test --batch"/)
+  assert.match(script, /main\(\) \{\s+log "file mirror only; git commit matching is not part of the test sync contract"\s+build_admin_assets\s+run_sync/s)
 })

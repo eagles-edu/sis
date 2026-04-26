@@ -45,19 +45,66 @@ wait_for_port_release() {
 }
 
 run_sync() {
+  run_ffs() {
+    local label="$1"
+    shift
+
+    if "$@"; then
+      return 0
+    else
+      local status=$?
+      if [[ "$status" == "3" ]]; then
+        log "${label} reported no changes; continuing"
+        return 0
+      fi
+
+      return "$status"
+    fi
+  }
+
   case "$MODE" in
     full)
       log "running ffs-sis-root --batch"
-      (cd "$REPO_ROOT" && ffs-sis-root --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-root" ffs-sis-root --batch)
       ;;
     public)
       log "running ffs-sis-public-root --batch"
-      (cd "$REPO_ROOT" && ffs-sis-public-root --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root" ffs-sis-public-root --batch)
       ;;
     restart-only)
       log "skip sync (restart-only mode)"
       ;;
   esac
+}
+
+build_admin_assets() {
+  case "$MODE" in
+    full|public)
+      log "building admin minified assets from source"
+      (cd "$REPO_ROOT" && npm run build:admin-assets)
+      ;;
+    restart-only)
+      log "skip admin asset build (restart-only mode)"
+      ;;
+  esac
+}
+
+sync_live_prisma_files() {
+  if [[ ! -d "${LIVE_ROOT}" ]]; then
+    log "skip Prisma file sync (live root missing): ${LIVE_ROOT}"
+    return 0
+  fi
+  if [[ ! -d "${REPO_ROOT}/prisma" ]]; then
+    log "skip Prisma file sync (source prisma missing): ${REPO_ROOT}/prisma"
+    return 0
+  fi
+
+  mkdir -p "${LIVE_ROOT}/prisma"
+  log "syncing Prisma schema and config into ${LIVE_ROOT}"
+  rsync -a --delete "${REPO_ROOT}/prisma/" "${LIVE_ROOT}/prisma/"
+  if [[ -f "${REPO_ROOT}/prisma.config.ts" ]]; then
+    rsync -a --delete "${REPO_ROOT}/prisma.config.ts" "${LIVE_ROOT}/"
+  fi
 }
 
 refresh_live_prisma_client() {
@@ -187,7 +234,10 @@ NODE
 }
 
 main() {
+  build_admin_assets
   run_sync
+  sync_live_prisma_files
+  log "note=DB unchanged (no migrate, no restore)"
   refresh_live_prisma_client
   restart_live_runtime
   stop_dev_runtime

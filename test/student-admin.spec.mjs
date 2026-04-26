@@ -705,10 +705,11 @@ test("GET /admin returns HTML UI", async () => {
   assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?v=[^"]+)?"[\s\S]*as="style"/i)
   assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?v=[^"]+)?"\s+defer/i)
   assert.match(responseHtml, /<button class="portal-theme-toggle" id="adminThemeToggle" type="button"[^>]*aria-label="Switch to dark theme"/i)
-  assert.match(
-    responseHtml,
-    /<svg-icon[\s\S]*?name="theme-moon"[\s\S]*?size="110%"[\s\S]*?id="adminThemeToggleIcon"[\s\S]*?><\/svg-icon>/i,
-  )
+  assert.match(responseHtml, /<span class="portal-theme-toggle__icon"[^>]*id="adminThemeToggleIcon"[^>]*data-theme-icon="moon"/i)
+  assert.match(responseHtml, /<svg class="portal-theme-toggle__icon-moon"[\s\S]*?<svg class="portal-theme-toggle__icon-sun"/i)
+  assert.doesNotMatch(responseHtml, /<svg-icon\b/i)
+  assert.doesNotMatch(responseHtml, /requestIdleCallback/i)
+  assert.doesNotMatch(responseHtml, /svg-icon\.js/i)
   assert.match(responseHtml, /href="\/admin"[^>]*data-page-link="overview"/i)
   assert.match(responseHtml, /href="\/admin\/queue-hub"[^>]*data-page-link="queue-hub"/i)
   assert.match(responseHtml, /href="\/admin\/attendance"[^>]*data-page-link="attendance"/i)
@@ -958,13 +959,24 @@ test("GET /web-asset/admin/student-admin.min.css returns externalized admin styl
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:focus-visible\s*\{/)
   assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg-icon\s*\{/)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg\{[^}]*display:none/i)
+  assert.match(
+    css,
+    /body\.admin-portal-page \.portal-theme-toggle__icon\[data-theme-icon=(?:"|')?moon(?:"|')?\] \.portal-theme-toggle__icon-moon,body\.admin-portal-page \.portal-theme-toggle__icon\[data-theme-icon=(?:"|')?sun(?:"|')?\] \.portal-theme-toggle__icon-sun\{display:block/i,
+  )
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle\s*\{/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-hub-panel \.queue-row-btn\{[^}]*color:#b4c4ea;[^}]*text-decoration-color:rgba\(180,196,234,(?:0)?\.82\)(?:;|})/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page :where\(\.queue-row-btn, \.row-options-trigger\)\{[^}]*color:#b4c4ea(?:;|})/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.row-options-trigger\{[^}]*background:rgba\(180,196,234,(?:0)?\.12\);[^}]*color:#b4c4ea(?:;|})/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.row-options-menu\[open\]\s*>\s*\.row-options-trigger\{[^}]*background:rgba\(180,196,234,(?:0)?\.18\);[^}]*color:#eef4ff(?:;|})/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:focus-visible,html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:hover\{[^}]*background:rgba\(180,196,234,(?:0)?\.14\);[^}]*color:#eef4ff(?:;|})/)
+  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:focus-visible,html\[data-theme="dark"\] body\.admin-portal-page \.row-options-trigger:focus-visible\{[^}]*outline:2px solid rgba\(180,196,234,(?:0)?\.46\)(?:;|})/)
   assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle\s*\{/m)
   assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle__icon\s*\{/m)
-  assert.doesNotMatch(css, /portal-theme-toggle::after/i)
+  assert.doesNotMatch(css, /portal-theme-toggle__icon svg-icon/i)
+  assert.match(css, /portal-theme-toggle::after/i)
 })
 
 test("GET /web-asset/admin/student-admin.min.js returns externalized admin app script", async () => {

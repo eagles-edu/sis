@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-04-25T19:36:07.027Z",
+  "backupFile": "postgres-20260425-193607Z.dump",
+  "backupPath": "/home/eagles/dockerz/sis/backups/postgres/postgres-20260425-193607Z.dump",
+  "outputDir": "/home/eagles/dockerz/sis/backups/postgres",
+  "checksumSha256": "a5fe4fe3700facf6a4857d7e68db59c0660aac4119e67a47aae54092206c739c",
+  "sizeBytes": 520987,
+  "verified": true,
+  "databaseUrlRedacted": "postgresql://***:***@127.0.0.1:5432/sis",
+  "retentionDays": 30,
+  "keepMin": 14,
+  "toolVersion": "1"
+}

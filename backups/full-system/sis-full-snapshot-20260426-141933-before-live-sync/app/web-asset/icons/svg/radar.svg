@@ -1,0 +1,24 @@
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <circle opacity="0.5" fill="url(#radar_gradient1)" cx="12" cy="12" r="12" />
+    <defs stroke-width="1.25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <linearGradient id="radar_gradient0" gradientTransform="rotate(122 0.361423 0.25)">
+            <stop offset="0%" stop-color="currentColor" />
+            <stop offset="81%" stop-color="currentColor" stop-opacity="0" />
+        </linearGradient>
+        <radialGradient id="radar_gradient1" gradientTransform="rotate(45 0.5 0.5)">
+            <stop offset="60%" stop-color="currentColor" stop-opacity="0" />
+            <stop offset="100%" stop-color="currentColor" />
+        </radialGradient>
+    </defs>
+    <g>
+        <path fill="url(#radar_gradient0)" d="M12 0h1v13H0v-1A12 12 0.7854 0 1 12 0z" />
+        <line stroke-width="2" stroke="currentColor" stroke-linecap="round" x1="12" x2="12" y1="1" y2="12" />
+        <animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+    </g>
+</svg>

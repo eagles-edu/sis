@@ -1,0 +1,38 @@
+<template>
+    <svg viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" stroke-linecap="round" fill="none" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <g>
+            <animateTransform attributeName="transform" dur="2s" keyTimes="0; 0.7; 1" repeatCount="indefinite" type="rotate" values="0 12 12; 300 12 12; 360 12 12" />
+            <line x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+            <line transform="rotate(45 12 12)" x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+            <line transform="rotate(90 12 12)" x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+            <line transform="rotate(135 12 12)" x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+            <line transform="rotate(180 12 12)" x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+            <line transform="rotate(-135 12 12)" x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+            <line transform="rotate(-90 12 12)" x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+            <line transform="rotate(-45 12 12)" x1="12" x2="12" y1="6" y2="1">
+                <animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12" />
+            </line>
+        </g>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

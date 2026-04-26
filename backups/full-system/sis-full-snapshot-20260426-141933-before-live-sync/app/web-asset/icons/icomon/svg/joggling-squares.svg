@@ -1,0 +1,23 @@
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <g>
+        <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" type="rotate" values="360 12 12; 0 12 12" />
+        <polygon points="7 5 12 0 17 5 12 10" transform-origin="12 5">
+            <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 45; 45; 90; 90" />
+        </polygon>
+        <polygon points="19 7 24 12 19 17 14 12" transform-origin="19 12">
+            <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 45; 45; 90; 90" />
+        </polygon>
+        <polygon points="17 19 12 24 7 19 12 14" transform-origin="12 19">
+            <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 45; 45; 90; 90" />
+        </polygon>
+        <polygon points="5 17 0 12 5 7 10 12" transform-origin="5 12">
+            <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 45; 45; 90; 90" />
+        </polygon>
+    </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg color="#dadada" fill="none" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><circle cx="8" cy="8" fill="url(#gradient1)" opacity="0.5" r="8"></circle><defs stroke="currentColor" stroke-width="0.833333">
+    <linearGradient gradientTransform="rotate(90 0.25 0.25)" id="gradient0">
+      <stop offset="25%" stop-color="currentColor"></stop>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0"></stop>
+    </linearGradient>
+    <radialGradient gradientTransform="rotate(45 0.5 0.5)" id="gradient1">
+      <stop offset="60%" stop-color="currentColor" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="currentColor"></stop>
+    </radialGradient>
+  </defs><path d="M8 0A0.6667 0.6667 0.3927 0 1 8.4714 0.1953C8.6667 0.3905 8.6667 0.6331 8.6667 0.8758L8.6667 8L7.3333 8L7.3333 0.8758C7.3333 0.6331 7.3333 0.3905 7.5286 0.1953A0.6667 0.6667 0.3927 0 1 8 0Z" fill="url(#gradient0)" stroke-linecap="butt" stroke-linejoin="miter"><animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform></path></svg>

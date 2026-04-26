@@ -1,0 +1,21 @@
+<template>
+    <svg viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" stroke-linecap="round" fill="none" width="32" height="32" stroke-dasharray="66 66" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <g stroke-width="2" stroke="none" stroke-linejoin="round" fill="currentColor">
+            <circle opacity="0.3" stroke-width="3" stroke="currentColor" fill="none" cx="12" cy="12" r="8.5" />
+            <circle cx="12" cy="3.5" r="1.5">
+                <animate attributeName="r" dur="2s" repeatCount="indefinite" values="3.5; 1.5; 3.5; 1.5; 3.5" />
+            </circle>
+            <circle cx="12" cy="20.5" r="1.5">
+                <animate attributeName="r" dur="1s" repeatCount="indefinite" values="1.5; 3.5; 1.5" />
+            </circle>
+            <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+        </g>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

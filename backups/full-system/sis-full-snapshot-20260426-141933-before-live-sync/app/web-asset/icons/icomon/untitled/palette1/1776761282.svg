@@ -1,0 +1,12 @@
+<svg color="#dadada" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g transform="scale(0.666667)">
+    <animateTransform attributeName="transform" calcMode="discrete" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12; 45 12 12; 90 12 12; 135 12 12; 180 12 12; 225 12 12; 270 12 12; 315 12 12"></animateTransform>
+    <polygon points="10 0 16 3.5 10 7"></polygon>
+    <polygon opacity="0.125" points="10 0 16 3.5 10 7" transform="rotate(90 12 12)"></polygon>
+    <polygon opacity="0.25" points="10 0 16 3.5 10 7" transform="rotate(135 12 12)"></polygon>
+    <polygon opacity="0.5" points="10 0 16 3.5 10 7" transform="rotate(180 12 12)"></polygon>
+    <polygon opacity="0.625" points="10 0 16 3.5 10 7" transform="rotate(-135 12 12)"></polygon>
+    <polygon opacity="0.75" points="10 0 16 3.5 10 7" transform="rotate(-90 12 12)"></polygon>
+    <polygon opacity="0.875" points="10 0 16 3.5 10 7" transform="rotate(-45 12 12)"></polygon>
+  </g>
+</svg>

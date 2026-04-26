@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    participant U as Admin UI (overview page)
+    participant D as /api/admin/dashboard
+    participant A as /api/admin/assignment-templates
+    participant V as /api/admin/assignment-announcements/volatile
+    participant S as getAdminDashboardSummary()
+    participant T as assignment-template store
+    participant DB as PostgreSQL
+
+    U->>D: GET dashboard summary
+    D->>S: build summary payload
+    S->>T: load assignment templates
+    T->>DB: fetch assignment-template rows
+    DB-->>T: records
+    T-->>S: normalized templates + currentAssignmentMeta + enrollmentOnlyLevels
+    S->>DB: fetch enrollment + grade/attendance rows
+    DB-->>S: records
+    S-->>D: { levelCompletion, enrollmentOnlyLevels, currentAssignmentMeta, ... }
+    D-->>U: JSON summary
+
+    alt summary.levelCompletion has rows
+        U->>U: render bars/buttons from backend rows
+    else summary.enrollmentOnlyLevels has rows
+        U->>U: render enrollment-only rows from backend summary
+    end
+
+    U->>U: render detail panel when level button clicked
+    alt assignment metadata present but link missing
+        U->>V: POST /api/admin/assignment-announcements/volatile
+        V-->>U: preview URL
+        U->>U: autofill reminder form from currentAssignmentMeta
+    end
+
+    U->>A: GET /api/admin/assignment-templates

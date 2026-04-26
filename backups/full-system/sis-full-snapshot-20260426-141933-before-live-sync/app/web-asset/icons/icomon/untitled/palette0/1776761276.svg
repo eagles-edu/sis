@@ -1,0 +1,9 @@
+<svg color="#272727" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <linearGradient gradientTransform="rotate(-70 0.857037 0.25)" id="one_gradient0">
+            <stop offset="0%" stop-color="currentColor" stop-opacity="0"></stop>
+            <stop offset="100%" stop-color="currentColor"></stop>
+        </linearGradient>
+    </defs>
+    <path d="M8 15.3333C5.3333 15 2.9833 12.4835 2.6667 9C2.3333 5.3333 5.0545 2.6667 8 2.6667C8.3639 2.6667 8.7279 2.6667 9.0208 2.3738C9.2083 2.1863 9.3137 1.9319 9.3137 1.6667C9.3137 1.4015 9.2083 1.1471 9.0208 0.9595C8.7279 0.6667 8.3639 0.6667 8 0.6667C3.9499 0.6667 0.6667 3.9499 0.6667 8C0.6667 12.0501 3.9499 15.3333 8 15.3333" fill="url(#one_gradient0)"><animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform></path>
+</svg>

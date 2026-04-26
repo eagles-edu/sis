@@ -1,0 +1,7 @@
+<svg color="#272727" fill="none" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs stroke="currentColor" stroke-width="0.666667">
+    <linearGradient gradientTransform="matrix(0.919239, 0.919239, -0.707107, 0.707107, 0.04038, 0.04038)" id="gradient1">
+      <stop offset="0%" stop-color="currentColor" stop-opacity="0"></stop>
+      <stop offset="50%" stop-color="currentColor"></stop>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs><circle cx="8" cy="8" r="7" stroke="url(#gradient1)" stroke-width="2"><animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12"></animateTransform></circle></svg>

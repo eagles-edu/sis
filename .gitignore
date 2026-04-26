@@ -30,6 +30,7 @@ tmp/
 *.BAK.*
 *.BAK-*
 *.tmp
+backups/**/*.tar.gz
 
 # Local scratch content
 docs/

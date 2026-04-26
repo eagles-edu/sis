@@ -1,0 +1,26 @@
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <radialGradient id="gradient0">
+            <stop offset="70%" stop-color="currentColor" stop-opacity="0" />
+            <stop offset="100%" stop-color="currentColor" />
+        </radialGradient>
+    </defs>
+    <path opacity="1" d="M12 24c-4.4183 0-8-5.3726-8-12S7.5817 0 12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12z">
+        <animate attributeName="opacity" dur="1s" keyTimes="0; 0; 0; 0.3; 1" repeatCount="indefinite" values="0; 0; 1; 0; 0" />
+    </path>
+    <path opacity="0" d="M12 0C7.5817 0 4 5.3726 4 12s3.5817 12 8 12c-1.6569 0-3-5.3726-3-12s1.3431-12 3-12z">
+        <animate attributeName="opacity" dur="1s" keyTimes="0; 0.1; 0.1; 0.4; 1" repeatCount="indefinite" values="0; 0; 1; 0; 0" />
+    </path>
+    <ellipse opacity="0" cx="12" cy="12" rx="3" ry="12">
+        <animate attributeName="opacity" dur="1s" keyTimes="0; 0.2; 0.2; 0.5; 1" repeatCount="indefinite" values="0; 0; 1; 0; 0" />
+    </ellipse>
+    <path opacity="0" transform="matrix(-1, 0, 0, 1, 24, 0)" d="M12 24c-1.6569 0-3-5.3726-3-12s1.3431-12 3-12C7.5817 0 4 5.3726 4 12s3.5817 12 8 12z">
+        <animate attributeName="opacity" dur="1s" keyTimes="0; 0.3; 0.3; 0.6; 1" repeatCount="indefinite" values="0; 0; 1; 0; 0" />
+    </path>
+    <path opacity="0" transform="matrix(-1, 0, 0, 1, 24, 0)" d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c-4.4183 0-8-5.3726-8-12S7.5817 0 12 0z">
+        <animate attributeName="opacity" dur="1s" keyTimes="0; 0.4; 0.4; 0.7; 1" repeatCount="indefinite" values="0; 0; 1; 0; 0" />
+    </path>
+    <circle opacity="0.5" fill="url(#gradient0)" cx="12" cy="12" r="12">
+        <animate attributeName="opacity" dur="1s" repeatCount="indefinite" values="0.5; 0.2; 0.7; 0.5" />
+    </circle>
+</svg>

@@ -1,0 +1,46 @@
+{
+  "runtimeEnv": "test",
+  "adminPagePath": "/admin",
+  "adminLegacyPagePath": "/admin/students",
+  "parentPortalPagePath": "/parent",
+  "parentLegacyPagePath": "/parent/portal",
+  "studentPortalPagePath": "/student",
+  "studentLegacyPagePath": "/student/portal",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "needle": "window.__SIS_RUNTIME_ENV=\"test\""
+    },
+    {
+      "path": "/admin",
+      "status": 200,
+      "needle": "Student Admin Login"
+    },
+    {
+      "path": "/parent",
+      "status": 200,
+      "needle": "dành cho phụ huynh"
+    },
+    {
+      "path": "/student",
+      "status": 200,
+      "needle": "Student Portal"
+    },
+    {
+      "path": "/admin/students",
+      "status": 308,
+      "location": "/admin"
+    },
+    {
+      "path": "/parent/portal",
+      "status": 308,
+      "location": "/parent"
+    },
+    {
+      "path": "/student/portal",
+      "status": 308,
+      "location": "/student"
+    }
+  ]
+}

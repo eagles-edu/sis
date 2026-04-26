@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-04-25T19:35:45.347Z",
+  "backupFile": "postgres-20260425-193545Z.dump",
+  "backupPath": "/home/eagles/dockerz/sis/backups/full-system/sis-full-snapshot-20260426-023544-before-prisma-upgrade/db/postgres-20260425-193545Z.dump",
+  "outputDir": "/home/eagles/dockerz/sis/backups/full-system/sis-full-snapshot-20260426-023544-before-prisma-upgrade/db",
+  "checksumSha256": "9d4d5bab5b661a3b6ae16deb09b33a16ea9f30a6d537df9a090f3a21692a3b7f",
+  "sizeBytes": 520987,
+  "verified": true,
+  "databaseUrlRedacted": "postgresql://***:***@127.0.0.1:5432/sis",
+  "retentionDays": 30,
+  "keepMin": 14,
+  "toolVersion": "1"
+}

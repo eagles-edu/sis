@@ -1,0 +1,10 @@
+[Unit]
+Description=Run SIS Database Backup Daily
+
+[Timer]
+OnCalendar={{BACKUP_SCHEDULE}}
+Persistent=true
+Unit=sis-db-backup.service
+
+[Install]
+WantedBy=timers.target

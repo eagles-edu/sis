@@ -1,0 +1,10 @@
+apis:
+  sis-admin@v1:
+    root: docs/mapping/openapi/sis-admin.openapi.yaml
+
+extends:
+  - recommended
+
+rules:
+  no-unused-components: warn
+  operation-4xx-response: warn

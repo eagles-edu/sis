@@ -1,0 +1,382 @@
+openapi: 3.0.3
+info:
+  title: SIS Parent Portal API (Planned Contract)
+  version: 1.0.0
+  license:
+    name: ISC
+    url: https://opensource.org/license/isc-license-txt
+  description: |
+    Contract baseline for public parent portal workflows.
+    Naming policy:
+    - public identity: eaglesId
+    - public opaque ref: eaglesRefId
+    - studentId is not used in parent-facing payloads
+
+servers:
+  - url: http://127.0.0.1:8787
+    description: Local SIS runtime
+
+tags:
+  - name: parent-auth
+    description: Parent session login/logout and identity checks.
+  - name: parent-children
+    description: Parent child linkage and profile reads.
+  - name: parent-profile
+    description: Parent profile draft and submission workflows.
+  - name: parent-dashboard
+    description: Parent dashboard snapshot endpoints.
+
+security:
+  - cookieAuth: []
+
+paths:
+  /api/parent/auth/login:
+    post:
+      tags: [parent-auth]
+      summary: Login with parentsId and password
+      operationId: postParentAuthLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentLoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentLoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/parent/auth/logout:
+    post:
+      tags: [parent-auth]
+      summary: Clear parent session cookie
+      operationId: postParentAuthLogout
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/parent/auth/me:
+    get:
+      tags: [parent-auth]
+      summary: Return current parent session user
+      operationId: getParentAuthMe
+      responses:
+        '200':
+          description: Authenticated parent session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentMeResponse'
+        '401':
+          description: Missing or invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/parent/children:
+    get:
+      tags: [parent-children]
+      summary: List children linked to parent account
+      operationId: getParentChildren
+      responses:
+        '200':
+          description: Linked children
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParentChildSummary'
+        '401':
+          description: Missing or invalid session
+
+  /api/parent/dashboard:
+    get:
+      tags: [parent-dashboard]
+      summary: Return parent dashboard snapshot across linked children
+      operationId: getParentDashboard
+      responses:
+        '200':
+          description: Parent dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentDashboardResponse'
+        '401':
+          description: Missing or invalid session
+
+  /api/parent/children/{eaglesId}/profile:
+    get:
+      tags: [parent-children]
+      summary: Return profile payload for one linked child
+      operationId: getParentChildProfile
+      parameters:
+        - in: path
+          name: eaglesId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Child profile payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParentChildProfileResponse'
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Child is not linked to parent account
+        '404':
+          description: Child not found
+
+  /api/parent/children/{eaglesId}/profile-draft:
+    put:
+      tags: [parent-profile]
+      summary: Save parent draft changes for child profile
+      operationId: putParentChildProfileDraft
+      parameters:
+        - in: path
+          name: eaglesId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileDraftSaveRequest'
+      responses:
+        '200':
+          description: Draft saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileDraftSaveResponse'
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Child is not linked or field is locked
+
+  /api/parent/children/{eaglesId}/profile-submit:
+    post:
+      tags: [parent-profile]
+      summary: Submit parent draft for admin review
+      operationId: postParentChildProfileSubmit
+      parameters:
+        - in: path
+          name: eaglesId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Submission queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSubmitResponse'
+        '400':
+          description: Draft missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid session
+        '403':
+          description: Child is not linked to parent account
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: parent_portal_sid
+
+  schemas:
+    ParentLoginRequest:
+      type: object
+      required: [parentsId, password]
+      properties:
+        parentsId:
+          type: string
+        password:
+          type: string
+
+    ParentLoginResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/ParentUser'
+
+    ParentUser:
+      type: object
+      properties:
+        parentsId:
+          type: string
+        role:
+          type: string
+          enum: [parent]
+
+    ParentMeResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/ParentUser'
+
+    ParentChildSummary:
+      type: object
+      properties:
+        eaglesId:
+          type: string
+        eaglesRefId:
+          type: string
+        studentNumber:
+          type: integer
+          nullable: true
+        fullName:
+          type: string
+        englishName:
+          type: string
+        currentGrade:
+          type: string
+
+    ParentDashboardResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        generatedAt:
+          type: string
+          format: date-time
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParentChildDashboard'
+
+    ParentChildDashboard:
+      type: object
+      properties:
+        eaglesId:
+          type: string
+        eaglesRefId:
+          type: string
+        attendance:
+          type: object
+          additionalProperties: true
+        grades:
+          type: object
+          additionalProperties: true
+        performance:
+          type: object
+          additionalProperties: true
+        assignments:
+          type: object
+          additionalProperties: true
+
+    ParentChildProfileResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        child:
+          $ref: '#/components/schemas/ParentChildSummary'
+        immutableFields:
+          type: array
+          items:
+            type: string
+            enum: [eaglesId, studentNumber]
+        lockedFields:
+          type: array
+          items:
+            type: string
+        profile:
+          type: object
+          additionalProperties: true
+
+    ProfileDraftSaveRequest:
+      type: object
+      required: [patch]
+      properties:
+        patch:
+          type: object
+          description: Touched-field patch map. Field omitted means unchanged.
+          additionalProperties: true
+
+    ProfileDraftSaveResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        submissionId:
+          type: string
+        status:
+          type: string
+          enum: [draft]
+
+    ProfileSubmitResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        submissionId:
+          type: string
+        status:
+          type: string
+          enum: [submitted]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string

@@ -1,0 +1,3 @@
+<svg color="#dadada" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <circle cx="8" cy="8" r="2"><animate attributeName="r" dur="1s" repeatCount="indefinite" values="3; 12"></animate><animate attributeName="opacity" dur="1s" repeatCount="indefinite" values="1; 0"></animate></circle>
+</svg>

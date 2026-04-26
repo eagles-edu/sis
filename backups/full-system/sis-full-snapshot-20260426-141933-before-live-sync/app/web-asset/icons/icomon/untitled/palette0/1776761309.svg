@@ -1,0 +1,31 @@
+<svg color="#272727" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <radialGradient id="gradient0">
+      <stop offset="50%">
+        <animate attributeName="offset" dur="2s" repeatCount="indefinite" values="0.2; 0.7; 0.2"></animate>
+</stop>
+      <stop offset="50%" stop-color="#fff">
+        <animate attributeName="offset" dur="2s" repeatCount="indefinite" values="0.2; 0.7; 0.2"></animate>
+</stop>
+    </radialGradient>
+    <mask color="#000" id="m">
+      <rect fill="url(#gradient0)" height="18.666667" width="18.666667" x="-1.333333" y="-1.333333"></rect>
+    </mask>
+  </defs>
+<g transform="scale(0.666667)">
+    <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" type="rotate" values="360 12 12; 0 12 12"></animateTransform>
+  <g mask="url(#m)">
+
+
+    <animateTransform attributeName="transform" calcMode="discrete" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12; 45 12 12; 90 12 12; 135 12 12; 180 12 12; 225 12 12; 270 12 12; 315 12 12"></animateTransform>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z"></path>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z" opacity="0.9" transform="rotate(-45 12 12)"></path>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z" opacity="0.8" transform="rotate(-90 12 12)"></path>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z" opacity="0.7" transform="rotate(-135 12 12)"></path>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z" opacity="0.6" transform="rotate(-180 12 12)"></path>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z" opacity="0.5" transform="rotate(135 12 12)"></path>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z" opacity="0.4" transform="rotate(90 12 12)"></path>
+    <path d="M12 12L20.4853 3.5147C19.38 2.4094 18.0601 1.5187 16.5934 0.9105L12 12Z" opacity="0.3" transform="rotate(45 12 12)"></path>
+  </g>
+  </g>
+</svg>

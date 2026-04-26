@@ -1,0 +1,14 @@
+<svg viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        :root, .palette0 {color: currentColor;
+            --color0: #fff;
+            --color1: #000;
+        }
+    </style>
+    <path d="M7.7574 7.7574 9.1716 9.1716M6 12h2M7.7574 16.2426l1.4142-1.4142M12 18v-2M16.2426 16.2426l-1.4142-1.4142M18 12h-2M16.2426 7.7574 14.8284 9.1716M12 6v2">
+        <animateTransform attributeName="transform" dur="1s" keyTimes="0; 0.3; 0.3; 1" repeatCount="indefinite" type="rotate" values="0 12 12; 45 12 12; 0 12 12; 0 12 12" />
+    </path>
+    <path opacity="0.6" d="M7.7905 1.8373 8.5558 3.6851M4.2218 4.2218 5.636 5.636M1.8373 7.7905 3.6851 8.5558M1 12h2M1.8373 16.2095l1.8478-0.7653M4.2218 19.7782 5.636 18.364M7.7905 22.1627l0.7653-1.8478M12 23v-2M16.2095 22.1627l-0.7653-1.8478M19.7782 19.7782 18.364 18.364M22.1627 16.2095l-1.8478-0.7653M23 12h-2M22.1627 7.7905 20.3149 8.5558M19.7782 4.2218 18.364 5.636M16.2095 1.8373 15.4442 3.6851M12 1v2">
+        <animateTransform attributeName="transform" dur="1s" keyTimes="0; 0.3; 0.3; 1" repeatCount="indefinite" type="rotate" values="0 12 12; -22.5 12 12; 0 12 12; 0 12 12" />
+    </path>
+</svg>

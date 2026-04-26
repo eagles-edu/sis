@@ -1,0 +1,38 @@
+<template>
+    <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs>
+            <linearGradient id="eclipsed_dots_gradient0">
+                <stop offset="25%" />
+                <stop offset="100%" stop-color="var(--color0, #fff)" />
+            </linearGradient>
+            <mask id="eclipsed_dots_m" color="#000">
+                <rect fill="url(#eclipsed_dots_gradient0)" width="100%" height="100%" />
+            </mask>
+        </defs>
+        <g mask="url(#eclipsed_dots_m)">
+            <animateTransform attributeName="transform" dur="3s" repeatCount="indefinite" type="rotate" values="0 12 12; 360 12 12" />
+            <g>
+                <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="360 12 12; 0 12 12" />
+                <circle cx="12" cy="2" r="2" />
+                <circle transform="rotate(30 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(60 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(90 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(120 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(150 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(180 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(-150 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(-120 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(-90 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(-60 12 12)" cx="12" cy="2" r="2" />
+                <circle transform="rotate(-30 12 12)" cx="12" cy="2" r="2" />
+            </g>
+        </g>
+    </svg>
+</template>
+
+<style scoped>
+:root, .palette0 {color: currentColor;
+    --color0: #fff;
+    --color1: #000;
+}
+</style>

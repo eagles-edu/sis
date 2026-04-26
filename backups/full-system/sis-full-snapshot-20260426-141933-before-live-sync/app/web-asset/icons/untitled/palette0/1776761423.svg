@@ -1,0 +1,13 @@
+<svg color="#272727" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g transform="scale(0.666667)">
+    <animateTransform attributeName="transform" dur="2s" keyTimes="0; 0.7; 1" repeatCount="indefinite" type="rotate" values="0 12 12; 300 12 12; 360 12 12"></animateTransform>
+    <line x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+    <line transform="rotate(45 12 12)" x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+    <line transform="rotate(90 12 12)" x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+    <line transform="rotate(135 12 12)" x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+    <line transform="rotate(180 12 12)" x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+    <line transform="rotate(-135 12 12)" x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+    <line transform="rotate(-90 12 12)" x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+    <line transform="rotate(-45 12 12)" x1="12" x2="12" y1="6" y2="1"><animate attributeName="x1" dur="2s" keyTimes="0; 0.4; 0.7; 1" repeatCount="indefinite" values="12; 17; 12; 12"></animate></line>
+  </g>
+</svg>

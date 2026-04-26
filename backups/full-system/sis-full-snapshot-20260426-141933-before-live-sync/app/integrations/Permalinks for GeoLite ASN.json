@@ -1,0 +1,9 @@
+Permalinks for GeoLite ASN
+Below are permalinks that you can use to download the database.
+
+To use these links, you need to provide your account ID and license key using Basic Authentication. For information about how to do this, see our developer portal.
+
+Database URL
+https://download.maxmind.com/geoip/databases/GeoLite2-ASN/download?suffix=tar.gz
+SHA256 URL
+https://download.maxmind.com/geoip/databases/GeoLite2-ASN/download?suffix=tar.gz.sha256
