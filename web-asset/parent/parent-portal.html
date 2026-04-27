@@ -33,6 +33,25 @@
     }
   </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
+  <style>
+    html {
+      background: linear-gradient(180deg, #f9faff, #ebedf7);
+    }
+
+    body.parent-portal-page {
+      background: linear-gradient(180deg, #f9faff, #ebedf7);
+      color: #212121;
+    }
+
+    html[data-theme="dark"] {
+      background: linear-gradient(180deg, #111215, #171b22);
+    }
+
+    html[data-theme="dark"] body.parent-portal-page {
+      background: linear-gradient(180deg, #111215, #171b22);
+      color: #f2f4f7;
+    }
+  </style>
   <title>Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club</title>
   <style>
     .hint {
@@ -264,85 +283,6 @@
     .homework-modal-btn:disabled {
       cursor: not-allowed;
       opacity: 0.6;
-    }
-
-    .portal-modal.hidden {
-      display: none;
-    }
-
-    .portal-modal {
-      box-sizing: border-box;
-      display: grid;
-      inset: 0;
-      padding: 14px;
-      place-items: center;
-      position: fixed;
-      z-index: 95;
-    }
-
-    .portal-modal-backdrop {
-      background: rgb(13 22 34 / 58%);
-      inset: 0;
-      position: absolute;
-    }
-
-    .portal-modal-dialog {
-      background: #fff;
-      border: 1px solid #cad7ea;
-      border-radius: 12px;
-      box-sizing: border-box;
-      display: grid;
-      gap: 10px;
-      max-height: calc(100vh - 28px);
-      overflow: auto;
-      padding: 12px;
-      position: relative;
-      width: min(720px, calc(100vw - 28px));
-    }
-
-    .portal-modal-head {
-      align-items: center;
-      display: flex;
-      gap: 8px;
-      justify-content: space-between;
-    }
-
-    .portal-modal-body {
-      display: grid;
-      gap: 10px;
-    }
-
-    .portal-modal-head h4 {
-      color: #1f3f63;
-      font-size: clamp(16px, 3.6vw, 19px);
-      line-height: 1.2;
-      margin: 0;
-    }
-
-    .portal-modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
-
-    .portal-modal-close {
-      background: #f6f9ff;
-      border: 1px solid #b7c8df;
-      border-radius: 8px;
-      color: #24466b;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      min-height: 34px;
-      padding: 6px 10px;
-    }
-
-    .portal-modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
     }
 
     .homework-modal-table {
@@ -821,74 +761,6 @@
 
     .status.err {
       color: var(--err);
-    }
-
-    .portal-theme-toggle {
-      align-items: center;
-      appearance: none;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 999px;
-      color: #172033;
-      cursor: pointer;
-      display: inline-flex;
-      justify-self: end;
-      justify-content: center;
-      inline-size: auto;
-      min-height: 44px;
-      padding: 7px;
-      position: relative;
-      transition:
-        background-color 180ms ease,
-        border-color 180ms ease,
-        box-shadow 180ms ease,
-        color 180ms ease,
-        transform 180ms ease;
-    }
-
-    .portal-theme-toggle:hover {
-      border-color: rgba(15, 22, 41, 1);
-      transform: translateY(-1px);
-    }
-
-    .portal-theme-toggle:focus-visible {
-      box-shadow: 0 0 0 3px rgba(47, 91, 227, 0.2);
-      outline: none;
-    }
-
-    .portal-theme-toggle__icon {
-      align-items: center;
-      background: rgba(255, 255, 255, 0.78);
-      border-radius: 999px;
-      color: #172033;
-      display: inline-flex;
-      flex: 0 0 auto;
-      height: 36px;
-      justify-content: center;
-      width: 36px;
-    }
-
-    .portal-theme-toggle__icon svg-icon {
-      color: inherit;
-    }
-
-    .portal-theme-toggle__label {
-      display: none;
-    }
-
-    html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle {
-      background: transparent;
-      border-color: transparent;
-      color: #ffd76a;
-    }
-
-    html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle:hover {
-      border-color: rgba(255, 215, 106, 0.42);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle__icon {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffd76a;
     }
 
     .chip {
@@ -1743,7 +1615,7 @@
     }
 
     .field-row.signature-muted .field-label {
-      color: #778390;
+      color: #5f6d7b;
       font-size: 12px;
       font-weight: 600;
     }
@@ -1751,7 +1623,7 @@
     .field-row.signature-muted input,
     .field-row.signature-muted textarea {
       background: #f7f9fb;
-      color: #6f7b89;
+      color: #5f6d7b;
       font-size: 13px;
     }
 
@@ -1782,6 +1654,7 @@
       display: grid;
       gap: 10px;
       grid-template-columns: minmax(0, 1fr);
+      grid-column: 1 / -1;
       min-width: 0;
     }
 
@@ -2232,15 +2105,36 @@
       color: var(--portal-dark-text);
     }
 
-    html[data-theme="dark"] body.parent-portal-page :where(.portal-layout, .panel, .card, .topbar, .hero, .side-nav, .side-brand, .side-link, .portal-modal-dialog, .portal-modal-body, .homework-card-shell, .queue-table-wrap, .report-modal-body, .report-section, .report-card, .calendar-shell, .detail-item, .student-profile-card) {
+    html[data-theme="dark"] body.parent-portal-page :where(.portal-layout, .panel, .card, .topbar, .hero, .side-nav, .side-brand, .side-link, .portal-modal-dialog, .portal-modal-body, .homework-card-shell, .queue-table-wrap, .report-modal-body, .report-section, .report-card, .calendar-shell, .detail-item, .student-profile-card, .identity-item, .metric, .profile-group, .field-row.locked, .field-row.edited) {
       background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
+      background-color: var(--portal-dark-panel);
       border-color: var(--portal-dark-border);
       border-radius: var(--portal-dark-radius);
       color: var(--portal-dark-text);
     }
 
-    html[data-theme="dark"] body.parent-portal-page :where(.hint, .sub, .small, .muted, .page-note, .section-lede, .detail-meta, .detail-note, .homework-card-label, .side-brand span, .portal-modal-body, .admin-table-summary) {
+    html[data-theme="dark"] body.parent-portal-page :where(.hint, .sub, .small, .muted, .page-note, .section-lede, .detail-meta, .detail-note, .homework-card-label, .side-brand span, .portal-modal-body, .admin-table-summary, .dashboard-card-subtitle, .parent-overview-title, .summary-title, .report-grades-hint, .report-head-value) {
       color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] body.parent-portal-page :where(.metric.metric-green, .metric.metric-blue, .metric.metric-purple, .metric.metric-red) {
+      background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-green .k,
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-blue .k,
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-purple .k,
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-red .k {
+      color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-green .v,
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-blue .v,
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-purple .v,
+    html[data-theme="dark"] body.parent-portal-page .metric.metric-red .v {
+      color: var(--portal-dark-text);
     }
 
     html[data-theme="dark"] body.parent-portal-page input,
@@ -2268,16 +2162,37 @@
       background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
       border-color: var(--portal-dark-border);
       margin: 0 auto;
-      max-width: 550px;
-      width: 100%;
     }
 
     html[data-theme="dark"] body.parent-portal-page #loginCard .login-form {
       align-items: stretch;
       grid-template-columns: 1fr;
       margin-inline: auto;
-      max-width: 430px;
-      width: 100%;
+    }
+
+    html[data-theme="dark"] body.parent-portal-page .homework-link {
+      color: #b4c4ea;
+    }
+
+    html[data-theme="dark"] body.parent-portal-page .homework-link:hover,
+    html[data-theme="dark"] body.parent-portal-page .homework-link:focus-visible {
+      color: #eef4ff;
+    }
+
+    html[data-parent-auth-state="authenticated"] body.parent-portal-page #loginCard {
+      display: none !important;
+    }
+
+    html[data-parent-auth-state="authenticated"] body.parent-portal-page #portalCard {
+      display: block !important;
+    }
+
+    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard {
+      display: block !important;
+    }
+
+    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCard {
+      display: none !important;
     }
 
     html[data-theme="dark"] body.parent-portal-page :where(h1, h2, h3, h4, strong, label, summary, th, td) {
@@ -3569,9 +3484,9 @@
         });
       });
     });
-    const state = {
-      me: null,
-      children: [],
+      const state = {
+        me: null,
+        children: [],
       dashboard: null,
       overdueHomeworkRows: [],
       reportPastDueRows: [],
@@ -3595,12 +3510,13 @@
       newsWeekSetViewerItems: [],
       newsWeekSetViewerIndex: -1,
       status: "",
-      textZoomPct: TEXT_ZOOM_DEFAULT,
-    };
+        textZoomPct: TEXT_ZOOM_DEFAULT,
+      };
+      const INITIAL_AUTH_STATE = window.__SIS_PARENT_INITIAL_AUTH__;
 
-    function updateEnvBadgeParent() {
-      const badge = document.getElementById("envBadgeParent");
-      if (!badge) return;
+      function updateEnvBadgeParent() {
+        const badge = document.getElementById("envBadgeParent");
+        if (!badge) return;
       const envLabel = RUNTIME_ENV === "development" ? "DEV" : "LIVE";
       badge.dataset.env = RUNTIME_ENV === "development" ? "development" : "production";
       badge.textContent = `${envLabel} • ${PARENT_API_ORIGIN || "(missing apiOrigin)"}`;
@@ -7253,15 +7169,31 @@
         select.appendChild(option);
       });
     }
-    async function hydratePortal() {
-      const me = await api(`${PARENT_AUTH_PREFIX}/me`);
-      state.me = me.user || null;
-      updateSessionBadge(
-        state.me?.parentsId ?
-        `Đã đăng nhập: ${state.me.parentsId}` :
-        "Chưa đăng nhập",
-        Boolean(state.me?.parentsId),
-      );
+    async function hydratePortal(options = {}) {
+      const initialUser =
+        options && typeof options === "object" ? options.initialUser || null : null;
+      if (initialUser) {
+        state.me = initialUser;
+        document.documentElement.dataset.parentAuthState = "authenticated";
+        updateSessionBadge(
+          state.me?.parentsId ?
+          `Đã đăng nhập: ${state.me.parentsId}` :
+          "Chưa đăng nhập",
+          Boolean(state.me?.parentsId),
+        );
+      } else {
+        const me = await api(`${PARENT_AUTH_PREFIX}/me`);
+        state.me = me.user || null;
+        document.documentElement.dataset.parentAuthState = state.me?.parentsId ?
+          "authenticated" :
+          "unauthenticated";
+        updateSessionBadge(
+          state.me?.parentsId ?
+          `Đã đăng nhập: ${state.me.parentsId}` :
+          "Chưa đăng nhập",
+          Boolean(state.me?.parentsId),
+        );
+      }
       const childrenPayload = await api(PARENT_CHILDREN_PATH);
       state.children =
         Array.isArray(childrenPayload.items) ? childrenPayload.items : [];
@@ -7293,16 +7225,21 @@
         setStatus("Vui lòng nhập đầy đủ parentsId và mật khẩu.", "err");
         return;
       }
-      await api(`${PARENT_AUTH_PREFIX}/login`, {
+      const result = await api(`${PARENT_AUTH_PREFIX}/login`, {
         method: "POST",
         body: {
           parentsId,
           password
         },
       });
+      state.me = result?.user || {
+        parentsId,
+        role: "parent",
+      };
+      document.documentElement.dataset.parentAuthState = "authenticated";
       document.getElementById("loginCard").classList.add("hidden");
       setActivePortalView("dashboard");
-      await hydratePortal();
+      await hydratePortal({ initialUser: state.me });
       setStatus("Đăng nhập thành công.", "ok");
     }
     async function logout() {
@@ -7310,6 +7247,7 @@
         method: "POST",
         body: {}
       });
+      document.documentElement.dataset.parentAuthState = "unauthenticated";
       document.getElementById("portalCard").classList.add("hidden");
       document.getElementById("portalDetailCard").classList.add("hidden");
       document.getElementById("childPageCard").classList.add("hidden");
@@ -7386,6 +7324,26 @@
       try {
         assertApiOriginConfiguredForStaticPreview();
         updateEnvBadgeParent();
+        if (INITIAL_AUTH_STATE && typeof INITIAL_AUTH_STATE === "object") {
+          if (INITIAL_AUTH_STATE.authenticated) {
+            state.me = INITIAL_AUTH_STATE.user || null;
+            document.documentElement.dataset.parentAuthState = "authenticated";
+            document.getElementById("loginCard").classList.add("hidden");
+            setActivePortalView("dashboard");
+            await hydratePortal({ initialUser: state.me });
+            scheduleChipTooltipRefresh(document);
+          } else {
+            document.documentElement.dataset.parentAuthState = "unauthenticated";
+            updateSessionBadge("Chưa đăng nhập", false);
+            document.getElementById("portalCard").classList.add("hidden");
+            document.getElementById("portalDetailCard").classList.add("hidden");
+            document.getElementById("childPageCard").classList.add("hidden");
+            document.getElementById("loginCard").classList.remove("hidden");
+            setStatus("Vui lòng đăng nhập.", "");
+          }
+          updateDraftBadge();
+          return;
+        }
         await hydratePortal();
         document.getElementById("loginCard").classList.add("hidden");
         setActivePortalView("dashboard");
@@ -7407,25 +7365,28 @@
     document.getElementById("parentNavScrim")?.addEventListener("click", () => {
       setSideNavOpen(false);
     });
-    document.querySelectorAll(".side-link").forEach((link) => {
-      link.addEventListener("click", (event) => {
-        const targetView = normalizeText(link.getAttribute("data-view-target"));
-        const pageTarget = normalizeDashboardPage(
-          link.getAttribute("data-page-target"),
+      document.querySelectorAll(".side-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const targetView = normalizeText(link.getAttribute("data-view-target"));
+          const pageTarget = normalizeDashboardPage(
+            link.getAttribute("data-page-target"),
         );
+        const destination = link.getAttribute("href") || "";
         event.preventDefault();
-        if (targetView === "child") {
-          setActivePortalView("child");
-        } else {
-          setActiveDashboardPage(pageTarget);
-        }
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
+          if (targetView === "child") {
+            setActivePortalView("child");
+          } else {
+            setActiveDashboardPage(pageTarget);
+          }
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const target = destination ? document.querySelector(destination) : null;
+              target?.scrollIntoView({ behavior: "auto", block: "start" });
+            });
+          });
+          setSideNavOpen(false);
         });
-        setSideNavOpen(false);
       });
-    });
     document
       .getElementById("parentTextZoomDownBtn")
       ?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));

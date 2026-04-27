@@ -687,12 +687,15 @@ test("GET /admin returns HTML UI", async () => {
   const res = await fetchLocal(port, "/admin")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  assert.match(res.headers.get("cache-control") || "", /no-cache/i)
+  assert.match(res.headers.get("cache-control") || "", /no-store/i)
   const responseHtml = await res.text()
   const html = withAdminAssets(responseHtml)
   const inlineStyleBlocks = responseHtml.match(/<style>[\s\S]*?<\/style>/gi) || []
   const renderedSections = renderedAdminPageSections(responseHtml)
   assert.match(html, /Student Admin/i)
   assert.match(html, /id="loginForm"/i)
+  assert.match(responseHtml, /data-admin-auth-state="unauthenticated"/i)
   assert.ok(renderedSections.length > 1)
   assert.ok(renderedSections.includes("overview"))
   assert.ok(renderedSections.includes("queue-hub"))
@@ -842,8 +845,10 @@ test("GET /parent returns parent portal HTML with runtime config", async () => {
   assert.match(res.headers.get("cache-control") || "", /no-store/i)
   const html = await res.text()
   assert.match(html, /Parent Portal|cổng thông tin dành cho phụ huynh/i)
+  assert.match(html, /data-parent-auth-state="unauthenticated"/i)
   assert.match(html, /__SIS_PARENT_API_PREFIX/i)
   assert.match(html, /__SIS_PARENT_AUTH_PREFIX/i)
+  assert.match(html, /__SIS_PARENT_INITIAL_AUTH__/i)
   assert.match(html, /id="portalDetailCard"/i)
   assert.match(html, /id="currentHomeworkBadgeValue"/i)
   assert.match(html, /id="currentHomeworkAssignmentLink"/i)
@@ -870,14 +875,34 @@ test("GET /parent returns parent portal HTML with runtime config", async () => {
   assert.match(html, /\.queue-table-wrap table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i)
   assert.doesNotMatch(html, /fonts\\.googleapis\\.com/i)
   assert.doesNotMatch(html, /fonts\\.gstatic\\.com/i)
+
+  const loginRes = await fetchLocal(port, "/api/parent/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ parentsId: "cmvi001", password: "family-pass-123" }),
+  })
+  assert.equal(loginRes.status, 200)
+  const parentCookie = (loginRes.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(parentCookie, /parent_portal_sid=/i)
+
+  const authenticatedRes = await fetchLocal(port, "/parent", {
+    headers: { Cookie: parentCookie },
+  })
+  assert.equal(authenticatedRes.status, 200)
+  const authenticatedHtml = await authenticatedRes.text()
+  assert.match(authenticatedHtml, /data-parent-auth-state="authenticated"/i)
+  assert.match(authenticatedHtml, /__SIS_PARENT_INITIAL_AUTH__=.*"authenticated":true/i)
 })
 
 test("GET /admin/points-management returns points page HTML with runtime config", async () => {
   const res = await fetchLocal(port, "/admin/points-management")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  assert.match(res.headers.get("cache-control") || "", /no-cache/i)
+  assert.match(res.headers.get("cache-control") || "", /no-store/i)
   const html = await res.text()
   assert.match(html, /Points Management/i)
+  assert.match(html, /html\[data-theme="dark"\] \.primary \{\s*color:\s*var\(--ink\);\s*\}/i)
   assert.match(html, /__SIS_ADMIN_POINTS_SUMMARY_PATH/i)
   assert.match(html, /__SIS_ADMIN_POINTS_STUDENTS_PATH/i)
   assert.match(html, /__SIS_ADMIN_POINTS_LEDGER_PATH/i)
@@ -894,6 +919,7 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /<title>\s*Student Portal\s*<\/title>/i)
   assert.doesNotMatch(html, /<title>\s*Student News Portal\s*<\/title>/i)
   assert.match(html, /Daily News Report/i)
+  assert.match(html, /data-student-auth-state="unauthenticated"/i)
   assert.match(html, /id="loginForm"/i)
   assert.match(html, /id="studentHomeCard"/i)
   assert.match(html, /id="studentDetailPageCard"/i)
@@ -938,6 +964,24 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /\.queue-table-wrap table\.news-queue-table th,\s*[\s\S]*?padding:\s*4px 6px;/i)
   assert.match(html, /\.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i)
   assert.match(html, /\.queue-table-wrap table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i)
+  assert.match(html, /__SIS_STUDENT_INITIAL_AUTH__/i)
+
+  const loginRes = await fetchLocal(port, "/api/student/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ eaglesId: "flyers01", password: "student-pass-123" }),
+  })
+  assert.equal(loginRes.status, 200)
+  const studentCookie = (loginRes.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(studentCookie, /student_portal_sid=/i)
+
+  const authenticatedRes = await fetchLocal(port, "/student", {
+    headers: { Cookie: studentCookie },
+  })
+  assert.equal(authenticatedRes.status, 200)
+  const authenticatedHtml = await authenticatedRes.text()
+  assert.match(authenticatedHtml, /data-student-auth-state="authenticated"/i)
+  assert.match(authenticatedHtml, /__SIS_STUDENT_INITIAL_AUTH__=.*"authenticated":true/i)
 })
 
 test("GET /web-asset/vendor/fullcalendar/index.global.min.js returns runtime static asset", async () => {
@@ -955,28 +999,28 @@ test("GET /web-asset/admin/student-admin.min.css returns externalized admin styl
   const css = await res.text()
   assert.match(css, /\.page-section\[data-page(?:="|=)news-reports(?:")?\]\s+\.table-toolbar/i)
   assert.match(css, /\.grade-chart-lanes/i)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle\s*\{/)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle:focus-visible\s*\{/)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg\{[^}]*display:none/i)
-  assert.match(
-    css,
-    /body\.admin-portal-page \.portal-theme-toggle__icon\[data-theme-icon=(?:"|')?moon(?:"|')?\] \.portal-theme-toggle__icon-moon,body\.admin-portal-page \.portal-theme-toggle__icon\[data-theme-icon=(?:"|')?sun(?:"|')?\] \.portal-theme-toggle__icon-sun\{display:block/i,
-  )
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle\s*\{/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle:hover\s*\{/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/)
+  assert.match(css, /body\{background:linear-gradient\(45deg,var\(--background-color\) 0(?:%|),#8a94a8 100%\);color:var\(--ink\);font-family:var\(--font-base\);margin:0\}/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-hub-panel \.queue-row-btn\{[^}]*color:#b4c4ea;[^}]*text-decoration-color:rgba\(180,196,234,(?:0)?\.82\)(?:;|})/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page :where\(\.queue-row-btn, \.row-options-trigger\)\{[^}]*color:#b4c4ea(?:;|})/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.row-options-trigger\{[^}]*background:rgba\(180,196,234,(?:0)?\.12\);[^}]*color:#b4c4ea(?:;|})/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.row-options-menu\[open\]\s*>\s*\.row-options-trigger\{[^}]*background:rgba\(180,196,234,(?:0)?\.18\);[^}]*color:#eef4ff(?:;|})/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:focus-visible,html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:hover\{[^}]*background:rgba\(180,196,234,(?:0)?\.14\);[^}]*color:#eef4ff(?:;|})/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:focus-visible,html\[data-theme="dark"\] body\.admin-portal-page \.row-options-trigger:focus-visible\{[^}]*outline:2px solid rgba\(180,196,234,(?:0)?\.46\)(?:;|})/)
-  assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle\s*\{/m)
-  assert.doesNotMatch(css, /(^|\n)\s*\.portal-theme-toggle__icon\s*\{/m)
-  assert.doesNotMatch(css, /portal-theme-toggle__icon svg-icon/i)
-  assert.match(css, /portal-theme-toggle::after/i)
+})
+
+test("GET /web-asset/shared/portal-theme.css returns shared portal toggle styles", async () => {
+  const res = await fetchLocal(port, "/web-asset/shared/portal-theme.css")
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/css/i)
+  const css = await res.text()
+  assert.match(css, /body\.student-portal-page \.portal-theme-toggle,\s*body\.parent-portal-page \.portal-theme-toggle,\s*body\.admin-portal-page \.portal-theme-toggle/i)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg-icon/i)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg\s*\{/i)
+  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon\[data-theme-icon=(?:"|')?moon(?:"|')?\] \.portal-theme-toggle__icon-moon/i)
+  assert.match(
+    css,
+    /html\[data-theme="dark"\] body\.student-portal-page \.portal-theme-toggle__icon,\s*html\[data-theme="dark"\] body\.parent-portal-page \.portal-theme-toggle__icon,\s*html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon/i,
+  )
 })
 
 test("GET /web-asset/admin/student-admin.min.js returns externalized admin app script", async () => {
@@ -1223,6 +1267,19 @@ test("GET /api/admin/auth/me returns authenticated user and refreshes cookie", a
   assert.equal(body.authenticated, true)
   assert.equal(body.user?.username, "admin")
   assert.equal(body.user?.role, "admin")
+})
+
+test("GET /admin with an admin session injects authenticated initial state", async () => {
+  const res = await fetchLocal(port, "/admin", {
+    headers: { Cookie: adminSessionCookie },
+  })
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("cache-control") || "", /no-cache/i)
+  assert.match(res.headers.get("cache-control") || "", /no-store/i)
+  const html = await res.text()
+  assert.match(html, /data-admin-auth-state="authenticated"/i)
+  assert.match(html, /window\.__SIS_ADMIN_INITIAL_AUTH__=\{"authenticated":true/i)
+  assert.match(html, /"username":"admin"/i)
 })
 
 test("POST /api/admin/exports/xlsx returns workbook for admin", async () => {

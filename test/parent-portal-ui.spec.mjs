@@ -57,7 +57,7 @@ function normalizeText(value) {
     .trim()
 }
 
-async function createParentPortalDom(fetchHandler, url) {
+async function createParentPortalDom(fetchHandler, url, options = {}) {
   const dom = new JSDOM(PARENT_PORTAL_HTML_FOR_TEST, {
     runScripts: "dangerously",
     resources: "usable",
@@ -66,6 +66,12 @@ async function createParentPortalDom(fetchHandler, url) {
     beforeParse(window) {
       window.fetch = (resource, init = {}) => fetchHandler(resource, init)
       window.scrollTo = () => {}
+      if (options.initialAuthState) {
+        window.__SIS_PARENT_INITIAL_AUTH__ = options.initialAuthState
+      }
+      if (typeof options.beforeParse === "function") {
+        options.beforeParse(window)
+      }
       window.FullCalendar = {
         Calendar: class CalendarStub {
           constructor(element, options = {}) {
@@ -103,6 +109,12 @@ async function createParentPortalDom(fetchHandler, url) {
   return dom
 }
 
+test("parent portal dark theme keeps identity, metric, profile, and homework surfaces on the dark card hierarchy", () => {
+  assert.match(PARENT_PORTAL_HTML, /html\[data-theme="dark"\] body\.parent-portal-page :where\([^)]*identity-item[^)]*metric[^)]*profile-group[^)]*field-row\.locked[^)]*field-row\.edited[^)]*\)/s)
+  assert.match(PARENT_PORTAL_HTML, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-link\s*\{/i)
+  assert.match(PARENT_PORTAL_HTML, /html\[data-theme="dark"\] body\.parent-portal-page :where\([^)]*homework-card-label[^)]*\)/s)
+})
+
 test("parent news week-set modal keeps student-clone visuals with only wired controls", () => {
   assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalPrevBtn"/)
   assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalNextBtn"/)
@@ -119,6 +131,80 @@ test("parent news week-set modal keeps student-clone visuals with only wired con
   assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal \.portal-modal-close/)
   assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal button/)
   assert.match(PARENT_PORTAL_HTML, /#newsWeekSetModal input,\s*#newsWeekSetModal textarea/)
+})
+
+test("parent portal initial auth paints the dashboard without probing /me", async () => {
+  const calls = []
+  let meCalls = 0
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      calls.push(`${method} ${urlText}`)
+
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        meCalls += 1
+        return jsonTextResponse(401, { error: "Unauthorized" })
+      }
+
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "egg-chicks",
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          children: [
+            {
+              eaglesId: "vi001",
+              attendance: { total: 20, present: 19, absent: 1 },
+              assignments: { pending: 0, overdue: 0, completed: 1 },
+              grades: { averageScorePercent: 92 },
+              performance: { reportCount: 1 },
+            },
+          ],
+        })
+      }
+
+      return jsonTextResponse(200, {})
+    },
+    "http://127.0.0.1:46145/web-asset/parent/parent-portal.html",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: {
+          parentsId: "cmkramer001",
+          role: "parent",
+        },
+      },
+    },
+  )
+
+  const document = dom.window.document
+  await waitFor(() => {
+    assert.equal(document.getElementById("loginCard").classList.contains("hidden"), true)
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
+
+  assert.equal(meCalls, 0)
+  assert.ok(!calls.some((entry) => entry.includes("/api/parent/auth/me")))
+  assert.match(document.documentElement.getAttribute("data-parent-auth-state") || "", /authenticated/i)
+
+  dom.window.close()
 })
 
 test("parent portal static preview over http falls back to dev apiOrigin when omitted", async () => {

@@ -91,6 +91,8 @@
   --portal-dark-text: #f2f4f7;
   --portal-dark-text-soft: #c9ced4;
   --portal-dark-radius: var(--radius-3);
+  --portal-login-form-max-width: 430px;
+  --portal-login-panel-max-width: 550px;
   --surface-2: #f7f9fc;
   --radius-1: var(--radius-base);
   --radius-2: calc(var(--radius-base) * 2);
@@ -130,6 +132,11 @@ html[data-theme="dark"] body.portal-hub-page {
     radial-gradient(640px 320px at 92% 0%, rgba(109, 135, 191, 0.18), transparent 56%),
     radial-gradient(520px 240px at 56% 100%, rgba(255, 255, 255, 0.08), transparent 60%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(16, 18, 22, 0.24));
+  --hub-panel-bg: var(--portal-dark-panel);
+  --hub-panel-bg-footer: var(--portal-dark-panel-soft);
+  --hub-panel-bg-hero: var(--portal-dark-panel);
+  --hub-panel-bg-section: var(--portal-dark-panel);
+  --hub-panel-bg-support: var(--portal-dark-panel-soft);
 }
 
 * {
@@ -194,6 +201,172 @@ body::before {
     radial-gradient(920px 420px at -15% -20%, #d9edff 0%, transparent 62%),
     radial-gradient(980px 520px at 110% -25%, #dff8ea 0%, transparent 55%),
     linear-gradient(180deg, var(--bg-0), var(--bg-1));
+}
+
+body.student-portal-page,
+body.parent-portal-page {
+  background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+}
+
+html[data-theme="dark"] body.admin-portal-page::before,
+html[data-theme="dark"] body.student-portal-page::before,
+html[data-theme="dark"] body.parent-portal-page::before {
+  background:
+    radial-gradient(920px 420px at -15% -20%, rgba(106, 164, 255, 0.16) 0%, transparent 62%),
+    radial-gradient(980px 520px at 110% -25%, rgba(124, 214, 164, 0.08) 0%, transparent 55%),
+    linear-gradient(180deg, #111215, #171b22);
+}
+
+body.student-portal-page #loginPanel,
+body.parent-portal-page #loginCard,
+body.admin-portal-page #authPanel {
+  margin-inline: auto;
+  width: min(100%, var(--portal-login-panel-max-width));
+}
+
+body.student-portal-page #loginPanel #loginForm,
+body.parent-portal-page #loginCard .login-form,
+body.admin-portal-page #authPanel #loginForm {
+  margin-inline: auto;
+  width: min(100%, var(--portal-login-form-max-width));
+}
+
+/* Keep student and parent calendar surfaces legible in dark mode without touching button/chip styling. */
+html[data-theme="dark"] body.student-portal-page .calendar-shell,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell {
+  --fc-border-color: rgba(255, 255, 255, 0.14);
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.03);
+  --fc-page-bg-color: transparent;
+  --fc-today-bg-color: rgba(106, 164, 255, 0.12);
+  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
+  background-color: var(--portal-dark-panel);
+  border: 1px solid var(--portal-dark-border);
+  border-radius: var(--portal-dark-radius);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-toolbar-title,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-toolbar-title {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-daygrid-day-number,
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-col-header-cell-cushion,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-daygrid-day-number,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-col-header-cell-cushion {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-col-header-cell-cushion,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-col-header-cell-cushion {
+  color: rgba(242, 244, 247, 0.84);
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-daygrid-day-number,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-daygrid-day-number {
+  font-weight: 700;
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-daygrid-day.fc-day-other .fc-daygrid-day-number,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+  color: rgba(242, 244, 247, 0.58);
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-daygrid-day-frame,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-daygrid-day-frame {
+  min-height: 108px;
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-daygrid-day,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-daygrid-day {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+html[data-theme="dark"] body.student-portal-page .calendar-shell .fc-daygrid-day.fc-day-today,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-daygrid-day.fc-day-today {
+  background: rgba(106, 164, 255, 0.1);
+}
+
+html[data-theme="dark"] body.student-portal-page .detail-empty,
+html[data-theme="dark"] body.student-portal-page .calendar-empty,
+html[data-theme="dark"] body.parent-portal-page .detail-empty,
+html[data-theme="dark"] body.parent-portal-page .calendar-empty {
+  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.96));
+  border-color: var(--portal-dark-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.student-portal-page :where(.homework-square, .attendance-square),
+html[data-theme="dark"] body.parent-portal-page :where(.homework-square, .attendance-square, .dashboard-surface-shell) {
+  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .homework-square.is-complete,
+html[data-theme="dark"] body.parent-portal-page .homework-square.is-complete,
+html[data-theme="dark"] body.parent-portal-page .attendance-square.is-good {
+  background: rgba(124, 214, 164, 0.14);
+  border-color: rgba(124, 214, 164, 0.34);
+  color: #dff7e9;
+}
+
+html[data-theme="dark"] body.student-portal-page .homework-square.is-pending,
+html[data-theme="dark"] body.parent-portal-page .homework-square.is-pending {
+  background: rgba(106, 164, 255, 0.14);
+  border-color: rgba(106, 164, 255, 0.34);
+  color: #eaf2ff;
+}
+
+html[data-theme="dark"] body.student-portal-page .homework-square.is-none,
+html[data-theme="dark"] body.parent-portal-page .homework-square.is-none,
+html[data-theme="dark"] body.parent-portal-page .attendance-square.is-warn {
+  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.student-portal-page .homework-square.is-clear,
+html[data-theme="dark"] body.parent-portal-page .homework-square.is-clear {
+  background: rgba(124, 214, 164, 0.12);
+  border-color: rgba(124, 214, 164, 0.28);
+  color: #dff7e9;
+}
+
+html[data-theme="dark"] body.student-portal-page .homework-square.is-arrears,
+html[data-theme="dark"] body.parent-portal-page .homework-square.is-arrears,
+html[data-theme="dark"] body.parent-portal-page .attendance-square.is-risk {
+  background: rgba(242, 138, 149, 0.12);
+  border-color: rgba(242, 138, 149, 0.34);
+  color: #ffd8dd;
+}
+
+html[data-theme="dark"] body.student-portal-page :where(.homework-square-k, .homework-square-v),
+html[data-theme="dark"] body.parent-portal-page :where(.homework-square-k, .homework-square-v, .attendance-square-k, .attendance-square-v) {
+  color: inherit;
+}
+
+html[data-theme="dark"] body.student-portal-page .field.is-invalid label,
+html[data-theme="dark"] body.student-portal-page .field-validation-message {
+  color: #ffb8bf;
+}
+
+html[data-theme="dark"] body.student-portal-page .field.is-invalid input,
+html[data-theme="dark"] body.student-portal-page .field.is-invalid textarea {
+  background: #2b3037;
+  border-color: rgba(242, 138, 149, 0.48);
+  box-shadow: 0 0 0 1px rgba(242, 138, 149, 0.18);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .status.bad {
+  color: #ffb8bf;
+}
+
+html[data-theme="dark"] body.student-portal-page .status.ok {
+  color: #a7e8c0;
 }
 
 body.portal-hub-page::before {
@@ -310,6 +483,428 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle:hover {
 html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   background: rgba(255, 255, 255, 0.12);
   color: #ffd76a;
+}
+
+/* Shared portal theme selector. Keep this as the single source of truth for
+   the student, parent, and admin portal pages. */
+body.student-portal-page .portal-theme-toggle,
+body.parent-portal-page .portal-theme-toggle,
+body.admin-portal-page .portal-theme-toggle {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #172033;
+  cursor: pointer;
+  display: inline-flex;
+  inline-size: auto;
+  justify-content: center;
+  justify-self: end;
+  min-height: 44px;
+  padding: 7px;
+  position: relative;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+body.student-portal-page .portal-theme-toggle:hover,
+body.parent-portal-page .portal-theme-toggle:hover,
+body.admin-portal-page .portal-theme-toggle:hover {
+  border-color: rgba(15, 22, 41, 1);
+  transform: translateY(-1px);
+}
+
+body.student-portal-page .portal-theme-toggle:focus-visible,
+body.parent-portal-page .portal-theme-toggle:focus-visible,
+body.admin-portal-page .portal-theme-toggle:focus-visible {
+  box-shadow: 0 0 0 3px rgba(47, 91, 227, 0.2);
+  outline: none;
+}
+
+body.student-portal-page .portal-theme-toggle__icon,
+body.parent-portal-page .portal-theme-toggle__icon,
+body.admin-portal-page .portal-theme-toggle__icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  color: #172033;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+body.student-portal-page .portal-theme-toggle__icon svg-icon,
+body.parent-portal-page .portal-theme-toggle__icon svg-icon,
+body.admin-portal-page .portal-theme-toggle__icon svg-icon {
+  color: inherit;
+}
+
+body.admin-portal-page .portal-theme-toggle__icon svg {
+  color: inherit;
+  display: none;
+}
+
+body.admin-portal-page .portal-theme-toggle__icon[data-theme-icon="moon"] .portal-theme-toggle__icon-moon,
+body.admin-portal-page .portal-theme-toggle__icon[data-theme-icon="sun"] .portal-theme-toggle__icon-sun {
+  display: block;
+}
+
+body.student-portal-page .portal-theme-toggle__label,
+body.parent-portal-page .portal-theme-toggle__label,
+body.admin-portal-page .portal-theme-toggle__label {
+  display: none;
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-theme-toggle,
+html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle,
+html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle {
+  background: transparent;
+  border-color: transparent;
+  color: #ffd76a;
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-theme-toggle:hover,
+html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle:hover,
+html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle:hover {
+  border-color: rgba(255, 215, 106, 0.42);
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-theme-toggle__icon,
+html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle__icon,
+html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle__icon {
+  background: var(--portal-theme-toggle-icon-dark-bg, rgba(255, 255, 255, 0.12));
+  color: #ffd76a;
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-modal button,
+html[data-theme="dark"] body.parent-portal-page .portal-modal button {
+  background: #3a3d44;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page #newsComplianceModal button,
+html[data-theme="dark"] body.student-portal-page #newsWeekSetModal button,
+html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal button {
+  background: #3a3d44;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page #newsComplianceModal .portal-modal-close,
+html[data-theme="dark"] body.student-portal-page #newsWeekSetModal .portal-modal-close,
+html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal .portal-modal-close {
+  background: #3a3d44;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-modal :where(input, textarea, select),
+html[data-theme="dark"] body.parent-portal-page .portal-modal :where(input, textarea, select) {
+  background: #2b3037;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-modal :where(input, textarea, select)::placeholder,
+html[data-theme="dark"] body.parent-portal-page .portal-modal :where(input, textarea, select)::placeholder {
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-modal .field.is-invalid label,
+html[data-theme="dark"] body.parent-portal-page .portal-modal .field.is-invalid label,
+html[data-theme="dark"] body.student-portal-page .portal-modal .field-validation-message,
+html[data-theme="dark"] body.parent-portal-page .portal-modal .field-validation-message {
+  color: #ffb8bf;
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-modal .field.is-invalid input,
+html[data-theme="dark"] body.student-portal-page .portal-modal .field.is-invalid textarea,
+html[data-theme="dark"] body.parent-portal-page .portal-modal .field.is-invalid input,
+html[data-theme="dark"] body.parent-portal-page .portal-modal .field.is-invalid textarea {
+  background: #2b3037;
+  border-color: rgba(242, 138, 149, 0.48);
+  box-shadow: 0 0 0 1px rgba(242, 138, 149, 0.18);
+  color: var(--portal-dark-text);
+}
+
+/* Shared portal modal shell for student and parent pages. Keep modal chrome
+   aligned here so news and homework dialogs do not drift across portals. */
+body.student-portal-page .portal-modal.hidden,
+body.parent-portal-page .portal-modal.hidden {
+  display: none;
+}
+
+body.student-portal-page .portal-modal,
+body.parent-portal-page .portal-modal {
+  box-sizing: border-box;
+  display: grid;
+  inset: 0;
+  padding: 14px;
+  place-items: center;
+  position: fixed;
+  z-index: 95;
+}
+
+body.student-portal-page .portal-modal-backdrop,
+body.parent-portal-page .portal-modal-backdrop {
+  background: rgb(13 22 34 / 58%);
+  inset: 0;
+  position: absolute;
+}
+
+body.student-portal-page .portal-modal-dialog,
+body.parent-portal-page .portal-modal-dialog {
+  background: #fff;
+  border: 1px solid #cad7ea;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: grid;
+  gap: 10px;
+  max-height: calc(100vh - 28px);
+  overflow: auto;
+  padding: 12px;
+  position: relative;
+  width: min(720px, calc(100vw - 28px));
+}
+
+body.student-portal-page .portal-modal-head,
+body.parent-portal-page .portal-modal-head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+body.student-portal-page .portal-modal-body,
+body.parent-portal-page .portal-modal-body {
+  display: grid;
+  gap: 10px;
+}
+
+body.student-portal-page .portal-modal-head h4,
+body.parent-portal-page .portal-modal-head h4 {
+  color: #1f3f63;
+  font-size: clamp(16px, 3.6vw, 19px);
+  line-height: 1.2;
+  margin: 0;
+}
+
+body.student-portal-page .portal-modal-actions,
+body.parent-portal-page .portal-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+body.student-portal-page .portal-modal-close,
+body.parent-portal-page .portal-modal-close {
+  background: #f6f9ff;
+  border: 1px solid #b7c8df;
+  border-radius: 8px;
+  color: #24466b;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+body.admin-portal-page .queue-modal {
+  align-items: center;
+  background: rgba(8, 18, 40, 0.58);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 12px;
+  position: fixed;
+  z-index: 1200;
+}
+
+body.admin-portal-page .queue-modal-card {
+  background: #fff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-3);
+  box-shadow: 0 22px 50px rgba(8, 18, 40, 0.22);
+  display: grid;
+  gap: 10px;
+  inline-size: 100%;
+  max-height: 92vh;
+  max-inline-size: 980px;
+  overflow: auto;
+  padding: 12px;
+}
+
+body.admin-portal-page .queue-modal-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+body.admin-portal-page .queue-modal-nav {
+  align-items: center;
+  color: var(--ink);
+  display: inline-flex;
+  font-weight: 700;
+  gap: 8px;
+}
+
+body.admin-portal-page .queue-modal-nav button {
+  min-width: 42px;
+  padding: 6px 8px;
+}
+
+body.admin-portal-page .queue-modal-body textarea {
+  min-height: 68px;
+}
+
+body.admin-portal-page .queue-modal-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+body.admin-portal-page .news-review-viewer-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.admin-portal-page .news-review-viewer-block {
+  background: #fafcff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-2);
+  box-sizing: border-box;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+}
+
+body.admin-portal-page .news-review-viewer-block strong {
+  color: var(--ink);
+}
+
+body.admin-portal-page .news-review-viewer-block a {
+  color: var(--link-color);
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+body.admin-portal-page .news-review-viewer-long {
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+body.admin-portal-page .news-review-note-line {
+  display: block;
+  margin-bottom: 2px;
+}
+
+body.admin-portal-page .news-review-note-line.pending {
+  color: #7c121d;
+  font-weight: 600;
+}
+
+body.admin-portal-page .news-review-note-line.fixed {
+  color: #0b6f3b;
+  font-weight: 600;
+}
+
+body.admin-portal-page .news-review-viewer-review {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+body.admin-portal-page .news-review-viewer-review textarea {
+  min-height: 72px;
+}
+
+body.admin-portal-page .news-review-viewer-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+}
+
+body.admin-portal-page .news-review-viewer-actions button {
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+html[data-theme="dark"] body.admin-portal-page .queue-modal {
+  background: rgba(6, 9, 16, 0.72);
+}
+
+html[data-theme="dark"] body.admin-portal-page .queue-modal-card {
+  background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .queue-modal-header,
+html[data-theme="dark"] body.admin-portal-page .queue-modal-nav,
+html[data-theme="dark"] body.admin-portal-page .queue-modal-body,
+html[data-theme="dark"] body.admin-portal-page .queue-modal-actions,
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .queue-modal-nav button {
+  color: inherit;
+}
+
+html[data-theme="dark"] body.admin-portal-page .queue-modal-body textarea,
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea {
+  background: #2b3037;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .queue-modal-body textarea::placeholder,
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea::placeholder {
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block {
+  background: #3a3f47;
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block strong {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block a {
+  color: #cfe0ff;
+}
+
+html[data-theme="dark"] body.admin-portal-page .news-review-note-line.pending {
+  color: #ffb8bf;
+}
+
+html[data-theme="dark"] body.admin-portal-page .news-review-note-line.fixed {
+  color: #a7e8c0;
+}
+
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label,
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review .small,
+html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea {
+  color: var(--portal-dark-text);
 }
 
 body.portal-hub-page .portal-hub-bg {

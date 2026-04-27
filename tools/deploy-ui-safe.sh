@@ -15,6 +15,7 @@ usage() {
 Usage: deploy-ui-safe.sh [options]
 
 Deploys admin UI HTML only (no DB writes, no migrations).
+Runtime ownership is normalized by the resync script; only the public webroot may need sudo-backed writes.
 
 Options:
   --check-only         Report drift and exit without syncing.

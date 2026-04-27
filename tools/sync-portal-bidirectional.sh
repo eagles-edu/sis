@@ -11,6 +11,7 @@ DIRECTION="dev-to-live"
 LIVE_WRITE_PREFIX=()
 DEV_WRITE_PREFIX=()
 PUBLIC_WRITE_PREFIX=()
+PUBLIC_OWNERSHIP_SENTINEL_NAME=".ownership-normalized-eagles-v1"
 
 usage() {
   cat <<'USAGE'
@@ -92,14 +93,33 @@ for required_root in "${DEV_ROOT}" "${LIVE_ROOT}" "${PUBLIC_ROOT}"; do
   fi
 done
 
+normalize_public_ownership_once() {
+  local sentinel_path="${PUBLIC_ROOT}/${PUBLIC_OWNERSHIP_SENTINEL_NAME}"
+  if [[ -f "${sentinel_path}" ]]; then
+    echo "[sync] public ownership cleanup already applied (${sentinel_path})"
+    return
+  fi
+
+  echo "[sync] one-time public ownership cleanup: ${PUBLIC_ROOT}"
+  sudo -n chown -R eagles:eagles "${PUBLIC_ROOT}"
+  : > "${sentinel_path}"
+  chmod 0644 "${sentinel_path}"
+}
+
+normalize_public_ownership_once
+
+if [[ ! -w "${PUBLIC_ROOT}" ]]; then
+  echo "Public root is not writable after normalization: ${PUBLIC_ROOT}" >&2
+  exit 1
+fi
+
 if [[ ! -w "${LIVE_ROOT}" ]]; then
-  LIVE_WRITE_PREFIX=(sudo -n)
+  echo "Live root is not writable: ${LIVE_ROOT}" >&2
+  exit 1
 fi
 if [[ ! -w "${DEV_ROOT}" ]]; then
-  DEV_WRITE_PREFIX=(sudo -n)
-fi
-if [[ ! -w "${PUBLIC_ROOT}" ]]; then
-  PUBLIC_WRITE_PREFIX=(sudo -n)
+  echo "Dev root is not writable: ${DEV_ROOT}" >&2
+  exit 1
 fi
 
 declare -A DEV_REL=()
@@ -193,11 +213,48 @@ copy_with_backup() {
   "${prefix[@]}" rsync -a --checksum "${source_path}" "${dest_path}"
 }
 
+normalize_public_ownership_once() {
+  local sentinel_path="${PUBLIC_ROOT}/${PUBLIC_OWNERSHIP_SENTINEL_NAME}"
+  if [[ -f "${sentinel_path}" ]]; then
+    echo "[sync] public ownership cleanup already applied (${sentinel_path})"
+    return
+  fi
+
+  local -a targets=(
+    "${PUBLIC_ROOT}/sis-admin"
+    "${PUBLIC_ROOT}/web-asset/admin"
+    "${PUBLIC_ROOT}/web-asset/shared"
+    "${PUBLIC_ROOT}/sis-parent"
+    "${PUBLIC_ROOT}/sis-student"
+  )
+
+  local -a existing_targets=()
+  for target in "${targets[@]}"; do
+    if [[ -e "${target}" ]]; then
+      existing_targets+=("${target}")
+    fi
+  done
+
+  if [[ "${#existing_targets[@]}" -eq 0 ]]; then
+    echo "[sync] public ownership cleanup skipped (no public targets exist yet)"
+    mkdir -p "${PUBLIC_ROOT}"
+    : > "${sentinel_path}"
+    chmod 0644 "${sentinel_path}"
+    return
+  fi
+
+  echo "[sync] one-time public ownership cleanup: ${#existing_targets[@]} target(s)"
+  sudo -n chown -R eagles:eagles "${existing_targets[@]}"
+  : > "${sentinel_path}"
+  chmod 0644 "${sentinel_path}"
+}
+
 apply_sync() {
   local timestamp
   timestamp="$(date +%Y%m%d-%H%M%S)"
 
   echo "[sync] mode=apply direction=${DIRECTION} timestamp=${timestamp}"
+  normalize_public_ownership_once
 
   for key in "${PORTAL_KEYS[@]}"; do
     local dev_path="${DEV_ROOT}/${DEV_REL[$key]}"

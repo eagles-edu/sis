@@ -8761,9 +8761,13 @@
       }
 
       function showApp() {
-        setAuthBootstrapping(false);
+        // The session is valid now, so release the boot gate immediately and
+        // let the app shell paint instead of leaving a blank reload frame.
+        document.documentElement.dataset.adminAuthState = "authenticated";
+        document.getElementById("authBootPanel")?.classList.add("hidden");
         document.getElementById("authPanel")?.classList.add("hidden");
         document.getElementById("app")?.classList.remove("hidden");
+        setAuthBootstrapping(false);
         if (authStatusEl) authStatusEl.textContent = "";
         startHubPolling();
         setActivePage(state.activePage || INITIAL_PAGE_SLUG, {
@@ -8773,7 +8777,10 @@
       }
 
       function showLogin() {
+        document.documentElement.dataset.adminAuthState = "unauthenticated";
         setAuthBootstrapping(false);
+        // Reveal the login panel only after the auth probe finishes unauthenticated.
+        document.getElementById("authBootPanel")?.classList.add("hidden");
         document.getElementById("authPanel")?.classList.remove("hidden");
         document.getElementById("app")?.classList.add("hidden");
         stopHubPolling();
@@ -21222,33 +21229,57 @@
       if (!(isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN)) {
         probeHubConnection({ notify: false }).catch(() => {});
       }
-      setAuthBootstrapping(true);
       if (isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN) {
+        setAuthBootstrapping(true);
         showLogin();
         setStatus(staticPreviewHelpMessage(), true);
       } else {
-        const authBootstrap = window.__SIS_ADMIN_AUTH_BOOTSTRAP__;
-        const authBootstrapArgs = {
-          api,
-          state,
-          showLogin,
-          showApp,
-          setStatus,
-          handleError,
-          bootAfterLogin,
-          isStaticAdminPreviewMode,
-          ADMIN_API_ORIGIN,
-          staticPreviewHelpMessage,
-          currentRoleName,
-          normalizeRolePolicy,
-          getCurrentRolePolicy,
-        };
-        if (typeof authBootstrap === "function") {
-          Promise.resolve(authBootstrap(authBootstrapArgs)).catch(handleError);
+        const initialAuthState = window.__SIS_ADMIN_INITIAL_AUTH__;
+        if (initialAuthState && typeof initialAuthState === "object") {
+          if (initialAuthState.authenticated) {
+            state.authUser = initialAuthState.user || null;
+            state.authRolePolicy = normalizeRolePolicy(
+              currentRoleName(),
+              initialAuthState.rolePolicy,
+              getCurrentRolePolicy(),
+            );
+            showApp();
+            setStatus("Loading dashboard...");
+            bootAfterLogin()
+              .then(() => {
+                setStatus(
+                  `Authenticated as ${state.authUser?.username || "admin"}. Student admin loaded.`,
+                );
+              })
+              .catch(handleError);
+          } else {
+            showLogin();
+          }
         } else {
-          void import("/web-asset/admin/student-admin-bootstrap.mjs")
-            .then((mod) => mod.runStudentAdminAuthBootstrap(authBootstrapArgs))
-            .catch(handleError);
+          setAuthBootstrapping(true);
+          const authBootstrap = window.__SIS_ADMIN_AUTH_BOOTSTRAP__;
+          const authBootstrapArgs = {
+            api,
+            state,
+            showLogin,
+            showApp,
+            setStatus,
+            handleError,
+            bootAfterLogin,
+            isStaticAdminPreviewMode,
+            ADMIN_API_ORIGIN,
+            staticPreviewHelpMessage,
+            currentRoleName,
+            normalizeRolePolicy,
+            getCurrentRolePolicy,
+          };
+          if (typeof authBootstrap === "function") {
+            Promise.resolve(authBootstrap(authBootstrapArgs)).catch(handleError);
+          } else {
+            void import("/web-asset/admin/student-admin-bootstrap.mjs")
+              .then((mod) => mod.runStudentAdminAuthBootstrap(authBootstrapArgs))
+              .catch(handleError);
+          }
         }
       }
     

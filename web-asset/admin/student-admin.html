@@ -10,20 +10,34 @@
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <script>
     (() => {
+      const applyTheme = (theme) => {
+        const root = document.documentElement;
+        const isDark = theme === "dark";
+        root.dataset.theme = isDark ? "dark" : "light";
+        root.style.colorScheme = isDark ? "dark" : "light";
+      };
       try {
         const savedTheme =
           localStorage.getItem("sis-theme-admin") || localStorage.getItem("sis-theme");
-        document.documentElement.dataset.theme =
-          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+        applyTheme(savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light");
       } catch {
-        document.documentElement.dataset.theme = "light";
+        applyTheme("light");
       }
     })();
   </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
   <style>
     :root {
       --font-base:
         system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    }
+
+    html {
+      background:
+        radial-gradient(circle at top, rgba(217, 237, 255, 0.68), transparent 42%),
+        radial-gradient(circle at top right, rgba(223, 248, 234, 0.18), transparent 38%),
+        linear-gradient(180deg, #f9faff 0%, #ebedf7 100%);
+      color-scheme: light;
     }
 
     * {
@@ -32,18 +46,51 @@
 
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: var(--font-base);
-      background: linear-gradient(45deg, #798ea4 0%, #8a94a8 100%);
+      background: linear-gradient(45deg, var(--background-color) 0%, #8a94a8 100%);
       color: #212121;
+    }
+
+    html[data-theme="dark"] body.admin-portal-page {
+      background: linear-gradient(180deg, #111215 0%, #171b22 100%);
+      color: #f2f4f7;
+    }
+
+    html[data-theme="dark"] {
+      background:
+        radial-gradient(circle at top, rgba(106, 164, 255, 0.16), transparent 42%),
+        linear-gradient(180deg, #111215 0%, #171b22 100%);
+      color-scheme: dark;
     }
 
     .hidden {
       display: none !important;
     }
 
+    body.admin-auth-booting #authBootPanel {
+      display: grid;
+    }
+
     body.admin-auth-booting #authPanel,
     body.admin-auth-booting #app {
       display: none !important;
+    }
+
+    html[data-admin-auth-state] body.admin-portal-page.admin-auth-booting #authBootPanel {
+      display: none !important;
+    }
+
+    html[data-admin-auth-state="authenticated"] body.admin-portal-page.admin-auth-booting #authPanel {
+      display: none !important;
+    }
+
+    html[data-admin-auth-state="authenticated"] body.admin-portal-page.admin-auth-booting #app {
+      display: block !important;
+    }
+
+    html[data-admin-auth-state="unauthenticated"] body.admin-portal-page.admin-auth-booting #authPanel {
+      display: block !important;
     }
 
     .wrap {
@@ -60,6 +107,27 @@
       border-radius: 11px;
       min-width: 0;
       padding: 12px;
+    }
+
+    #authBootPanel {
+      align-content: center;
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+      min-height: 180px;
+      text-align: center;
+    }
+
+    /* During auth bootstrap, this is the only visible surface. */
+    #authBootPanel .small {
+      margin: 0;
+    }
+
+    html[data-theme="dark"] body.admin-portal-page.admin-auth-booting .panel,
+    html[data-theme="dark"] body.admin-portal-page #authBootPanel {
+      background: linear-gradient(180deg, #31363e 0%, #2a2e35 100%);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #f2f4f7;
     }
 
     .app-shell {
@@ -106,6 +174,10 @@
 
 <body class="admin-portal-page admin-auth-booting">
   <div class="wrap">
+    <div class="panel" id="authBootPanel" aria-live="polite">
+      <h1>Loading Admin</h1>
+      <p class="small">Checking your session...</p>
+    </div>
     <div class="panel" id="authPanel">
       <h1>Student Admin Login</h1>
       <form id="loginForm">

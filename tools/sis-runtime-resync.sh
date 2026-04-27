@@ -29,6 +29,8 @@ RSYNC_EXCLUDES=(
   "--exclude=.sync.ffs_db"
 )
 
+RUNTIME_OWNERSHIP_SENTINEL_NAME=".ownership-normalized-eagles-v1"
+
 usage() {
   cat <<'USAGE'
 Usage: sis-runtime-resync.sh [options]
@@ -321,7 +323,9 @@ collect_dir_drift() {
     return
   fi
   local diff_output
-  diff_output="$(rsync -nrc --delete --itemize-changes "${RSYNC_EXCLUDES[@]}" "${source_dir}" "${runtime_dir}" | sed '/^$/d')"
+  local source_spec="${source_dir%/}/"
+  local runtime_spec="${runtime_dir%/}/"
+  diff_output="$(rsync -nrc --delete --itemize-changes "${RSYNC_EXCLUDES[@]}" "${source_spec}" "${runtime_spec}" | sed '/^$/d')"
   if [[ -n "${diff_output}" ]]; then
     record_drift "[${label}] content mismatch:"
     while IFS= read -r line; do
@@ -332,6 +336,61 @@ collect_dir_drift() {
 
 collect_admin_assets_drift() {
   collect_dir_drift "${REPO_ROOT}/web-asset/admin/" "${RUNTIME_ROOT}/web-asset/admin/" "admin-assets"
+}
+
+runtime_ownership_targets() {
+  local -a targets=()
+  if [[ "${SCOPE}" == "full" ]]; then
+    targets+=(
+      "${RUNTIME_ROOT}/server"
+      "${RUNTIME_ROOT}/schemas"
+      "${RUNTIME_ROOT}/prisma"
+      "${RUNTIME_ROOT}/prisma.config.ts"
+      "${RUNTIME_ROOT}/web-asset/admin"
+      "${RUNTIME_ROOT}/web-asset/parent"
+      "${RUNTIME_ROOT}/web-asset/student"
+      "${RUNTIME_ROOT}/web-asset/shared"
+      "${RUNTIME_ROOT}/web-asset/vendor"
+      "${RUNTIME_ROOT}/web-asset/images"
+      "${RUNTIME_ROOT}/web-asset/icons"
+      "${RUNTIME_ROOT}/.env"
+      "${RUNTIME_ROOT}/package.json"
+      "${RUNTIME_ROOT}/package-lock.json"
+    )
+  else
+    targets+=(
+      "${RUNTIME_ROOT}/web-asset/admin"
+    )
+  fi
+
+  printf '%s\n' "${targets[@]}"
+}
+
+normalize_runtime_ownership_once() {
+  local sentinel_path="${RUNTIME_ROOT}/${RUNTIME_OWNERSHIP_SENTINEL_NAME}"
+  if [[ -f "${sentinel_path}" ]]; then
+    echo "[sync] ownership cleanup already applied (${sentinel_path})"
+    return
+  fi
+
+  mapfile -t ownership_targets < <(runtime_ownership_targets)
+  local -a existing_targets=()
+  for target in "${ownership_targets[@]}"; do
+    if [[ -e "${target}" ]]; then
+      existing_targets+=("${target}")
+    fi
+  done
+
+  if [[ "${#existing_targets[@]}" -eq 0 ]]; then
+    echo "[sync] ownership cleanup skipped (no runtime targets exist yet)"
+    sudo -n install -d -o eagles -g eagles "${RUNTIME_ROOT}"
+    sudo -n install -m 0644 -o eagles -g eagles /dev/null "${sentinel_path}"
+    return
+  fi
+
+  echo "[sync] one-time ownership cleanup: ${#existing_targets[@]} runtime target(s)"
+  sudo -n chown -R eagles:eagles "${existing_targets[@]}"
+  sudo -n install -m 0644 -o eagles -g eagles /dev/null "${sentinel_path}"
 }
 
 collect_drift() {
@@ -368,6 +427,8 @@ perform_sync() {
   echo "[sync] runtime root: ${RUNTIME_ROOT}"
   echo "[sync] backup timestamp: ${timestamp}"
   echo "[sync] scope: ${SCOPE}"
+
+  normalize_runtime_ownership_once
 
   mkdir -p "${RUNTIME_ROOT}/web-asset/admin"
 

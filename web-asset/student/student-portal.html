@@ -28,6 +28,25 @@
     }
   </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
+  <style>
+    html {
+      background: linear-gradient(180deg, #f9faff, #ebedf7);
+    }
+
+    body.student-portal-page {
+      background: linear-gradient(180deg, #f9faff, #ebedf7);
+      color: #212121;
+    }
+
+    html[data-theme="dark"] {
+      background: linear-gradient(180deg, #111215, #171b22);
+    }
+
+    html[data-theme="dark"] body.student-portal-page {
+      background: linear-gradient(180deg, #111215, #171b22);
+      color: #f2f4f7;
+    }
+  </style>
   <title>Student Portal</title>
 
   <style>
@@ -96,74 +115,6 @@
       border-color: #2d78b4;
       color: #093a63;
       background: #d8edff;
-    }
-
-    .portal-theme-toggle {
-      align-items: center;
-      appearance: none;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 999px;
-      color: #172033;
-      cursor: pointer;
-      display: inline-flex;
-      justify-self: end;
-      justify-content: center;
-      inline-size: auto;
-      min-height: 44px;
-      padding: 7px;
-      position: relative;
-      transition:
-        background-color 180ms ease,
-        border-color 180ms ease,
-        box-shadow 180ms ease,
-        color 180ms ease,
-        transform 180ms ease;
-    }
-
-    .portal-theme-toggle:hover {
-      border-color: rgba(15, 22, 41, 1);
-      transform: translateY(-1px);
-    }
-
-    .portal-theme-toggle:focus-visible {
-      box-shadow: 0 0 0 3px rgba(47, 91, 227, 0.2);
-      outline: none;
-    }
-
-    .portal-theme-toggle__icon {
-      align-items: center;
-      background: rgba(255, 255, 255, 0.78);
-      border-radius: 999px;
-      color: #172033;
-      display: inline-flex;
-      flex: 0 0 auto;
-      height: 36px;
-      justify-content: center;
-      width: 36px;
-    }
-
-    .portal-theme-toggle__icon svg-icon {
-      color: inherit;
-    }
-
-    .portal-theme-toggle__label {
-      display: none;
-    }
-
-    html[data-theme="dark"] body.student-portal-page .portal-theme-toggle {
-      background: transparent;
-      border-color: transparent;
-      color: #ffd76a;
-    }
-
-    html[data-theme="dark"] body.student-portal-page .portal-theme-toggle:hover {
-      border-color: rgba(255, 215, 106, 0.42);
-    }
-
-    html[data-theme="dark"] body.student-portal-page .portal-theme-toggle__icon {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffd76a;
     }
 
     .chip-link {
@@ -848,78 +799,6 @@
       cursor: not-allowed;
     }
 
-    .portal-modal.hidden {
-      display: none;
-    }
-
-    .portal-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 95;
-      display: grid;
-      place-items: center;
-      padding: 14px;
-      box-sizing: border-box;
-    }
-
-    .portal-modal-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgb(13 22 34 / 58%);
-    }
-
-    .portal-modal-dialog {
-      position: relative;
-      width: min(720px, calc(100vw - 28px));
-      max-height: calc(100vh - 28px);
-      border: 1px solid #cad7ea;
-      border-radius: 12px;
-      background: #fff;
-      padding: 12px;
-      box-sizing: border-box;
-      overflow: auto;
-      display: grid;
-      gap: 10px;
-    }
-
-    .portal-modal-body {
-      display: grid;
-      gap: 10px;
-    }
-
-    .portal-modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
-
-    .portal-modal-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .portal-modal-head h4 {
-      margin: 0;
-      font-size: clamp(16px, 3.6vw, 19px);
-      line-height: 1.2;
-      color: #1f3f63;
-    }
-
-    .portal-modal-close {
-      min-height: 34px;
-      padding: 6px 10px;
-      border: 1px solid #b7c8df;
-      border-radius: 8px;
-      background: #f6f9ff;
-      color: #24466b;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
     .homework-modal-table {
       width: 100%;
       border-collapse: collapse;
@@ -1367,10 +1246,10 @@
     }
 
     .fc .fc-event.fc-obtrusive-alert {
-      background: #ff2338 !important;
-      border-color: #b50010 !important;
+      background: #d61a2f !important;
+      border-color: #9b1520 !important;
       color: #fff !important;
-      box-shadow: 0 0 0 1px rgba(125, 0, 16, 0.18), 0 0 22px rgba(255, 35, 56, 0.3);
+      box-shadow: 0 0 0 1px rgba(125, 0, 16, 0.18), 0 0 22px rgba(214, 26, 47, 0.3);
       animation: overdueBlink 0.95s steps(2, end) infinite;
     }
 
@@ -1584,15 +1463,38 @@
       color: var(--portal-dark-text);
     }
 
-    html[data-theme="dark"] body.student-portal-page :where(.portal-shell, .panel, .card, .topbar, .hero, .side-nav, .side-brand, .side-link, .portal-modal-dialog, .portal-modal-body, .queue-panel, .queue-table-wrap, .detail-calendar-panel, .detail-calendar-shell, .detail-item, .calendar-shell) {
+    html[data-theme="dark"] body.student-portal-page :where(.portal-shell, .panel, .card, .topbar, .hero, .side-nav, .side-brand, .side-link, .portal-modal-dialog, .portal-modal-body, .queue-panel, .queue-table-wrap, .detail-calendar-panel, .detail-calendar-shell, .detail-item, .calendar-shell, .identity-item, .metric, .homework-card-shell) {
       background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
+      background-color: var(--portal-dark-panel);
       border-color: var(--portal-dark-border);
       border-radius: var(--portal-dark-radius);
       color: var(--portal-dark-text);
     }
 
-    html[data-theme="dark"] body.student-portal-page :where(.sub, .small, .muted, .page-note, .section-lede, .detail-copy, .detail-meta, .detail-note, .detail-empty, .side-brand span, .portal-modal-body, .summary-title) {
+    html[data-theme="dark"] body.student-portal-page :where(.sub, .small, .muted, .page-note, .section-lede, .detail-copy, .detail-meta, .detail-note, .detail-empty, .side-brand span, .portal-modal-body, .summary-title, .homework-card-label) {
       color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(.dashboard-card-subtitle, .parent-overview-title) {
+      color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] body.student-portal-page :where(.metric.good, .metric.warn, .metric.bad) {
+      background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] body.student-portal-page .metric.good .k,
+    html[data-theme="dark"] body.student-portal-page .metric.warn .k,
+    html[data-theme="dark"] body.student-portal-page .metric.bad .k {
+      color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] body.student-portal-page .metric.good .v,
+    html[data-theme="dark"] body.student-portal-page .metric.warn .v,
+    html[data-theme="dark"] body.student-portal-page .metric.bad .v {
+      color: var(--portal-dark-text);
     }
 
     html[data-theme="dark"] body.student-portal-page :where(input, select, textarea) {
@@ -1609,19 +1511,40 @@
       background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
       border-color: var(--portal-dark-border);
       margin: 0 auto;
-      max-width: 550px;
-      width: 100%;
     }
 
     html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm {
       grid-template-columns: 1fr;
       margin-inline: auto;
-      max-width: 430px;
-      width: 100%;
     }
 
     html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm > .field {
       grid-column: 1;
+    }
+
+    html[data-theme="dark"] body.student-portal-page .homework-link {
+      color: #b4c4ea;
+    }
+
+    html[data-theme="dark"] body.student-portal-page .homework-link:hover,
+    html[data-theme="dark"] body.student-portal-page .homework-link:focus-visible {
+      color: #eef4ff;
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page #loginPanel {
+      display: none !important;
+    }
+
+    html[data-student-auth-state="authenticated"] body.student-portal-page #appPanel {
+      display: block !important;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel {
+      display: block !important;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page #appPanel {
+      display: none !important;
     }
 
     html[data-theme="dark"] body.student-portal-page :where(h1, h2, h3, h4, strong, label, summary, th, td) {
@@ -2184,6 +2107,7 @@
         newsComplianceModalOpen: false,
         newsComplianceSummary: "",
       };
+      const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
 
       function updateEnvBadge() {
         const badge = document.getElementById("envBadge");
@@ -4285,6 +4209,7 @@
       }
 
       function setAuthenticatedView(authenticated) {
+        document.documentElement.dataset.studentAuthState = authenticated ? "authenticated" : "unauthenticated";
         field("loginPanel")?.classList.toggle("hidden", authenticated);
         field("appPanel")?.classList.toggle("hidden", !authenticated);
         if (!authenticated) {
@@ -4849,12 +4774,24 @@
         });
       }
       async function boot() {
-        setAuthenticatedView(false);
         assertApiOriginConfiguredForStaticPreview();
         if (!STUDENT_API_ORIGIN) {
           throw new Error("API origin is missing. Open this portal from the correct runtime or provide ?apiOrigin=");
         }
         updateEnvBadge();
+        if (INITIAL_AUTH_STATE && typeof INITIAL_AUTH_STATE === "object") {
+          if (INITIAL_AUTH_STATE.authenticated) {
+            setAuthenticatedView(true);
+            setGlobalStatus("Student session active.");
+            await Promise.all([loadDashboard(), loadCalendar()]);
+            setFormStatus("Fill out all sections and submit once per open date.");
+          } else {
+            setAuthenticatedView(false);
+            setGlobalStatus("Sign in to submit daily news reports.");
+          }
+          return;
+        }
+        setAuthenticatedView(false);
         try {
           await api(`${STUDENT_AUTH_PREFIX}/me`);
           setAuthenticatedView(true);
@@ -4887,15 +4824,18 @@
         link.addEventListener("click", (event) => {
           const targetView = normalizeLower(link.getAttribute("data-view-target"));
           const pageTarget = normalizeStudentPage(link.getAttribute("data-page-target"));
+          const destination = link.getAttribute("href") || "";
           event.preventDefault();
           if (targetView === "news") {
             setActiveStudentView("news");
           } else {
             setActiveStudentPage(pageTarget);
           }
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth"
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const target = destination ? document.querySelector(destination) : null;
+              target?.scrollIntoView({ behavior: "auto", block: "start" });
+            });
           });
           setMenuOpen(false);
         });

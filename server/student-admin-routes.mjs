@@ -1044,20 +1044,114 @@ function sendRedirect(response, statusCode, location) {
   response.end()
 }
 
-function injectAdminRuntimeConfig(html, pageSlug, origin) {
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};</script>`
-  if (html.includes("</head>")) {
-    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+function setHtmlAttribute(html, name, value) {
+  const attributeName = normalizeText(name)
+  const attributeValue = escapeHtml(value)
+  if (!attributeName) return html
+  const attributePattern = new RegExp(`\\s${escapeRegex(attributeName)}="[^"]*"`, "i")
+  const openingTagPattern = /<html\b([^>]*)>/i
+  if (attributePattern.test(html)) {
+    return html.replace(attributePattern, ` ${attributeName}="${attributeValue}"`)
   }
-  return `${runtimeConfig}\n${html}`
+  return html.replace(openingTagPattern, `<html$1 ${attributeName}="${attributeValue}">`)
 }
 
-function injectParentRuntimeConfig(html, origin) {
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};</script>`
-  if (html.includes("</head>")) {
-    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+function buildAdminInitialAuthState(session = null) {
+  if (!session || !normalizeText(session.username)) {
+    return { authenticated: false }
   }
-  return `${runtimeConfig}\n${html}`
+  const role = normalizeRoleName(session.role)
+  return {
+    authenticated: true,
+    user: {
+      username: session.username,
+      role,
+    },
+    rolePolicy: getRolePolicy(role),
+  }
+}
+
+async function peekAdminSession(request) {
+  const sessionId = readSessionIdFromRequest(request)
+  if (!sessionId) return null
+  try {
+    return await SESSION_STORE.getSession(sessionId)
+  } catch (error) {
+    void error
+    return null
+  }
+}
+
+function buildParentInitialAuthState(session = null) {
+  if (!session || !normalizeText(session.username)) {
+    return { authenticated: false }
+  }
+  return {
+    authenticated: true,
+    user: {
+      parentsId: normalizeText(session.parentsId || session.username),
+      role: "parent",
+    },
+  }
+}
+
+async function peekParentSession(request) {
+  const sessionId = readParentSessionIdFromRequest(request)
+  if (!sessionId) return null
+  try {
+    return await PARENT_SESSION_STORE.getSession(sessionId)
+  } catch (error) {
+    void error
+    return null
+  }
+}
+
+function buildStudentInitialAuthState(session = null) {
+  if (!session || !normalizeText(session.username)) {
+    return { authenticated: false }
+  }
+  return {
+    authenticated: true,
+    user: {
+      eaglesId: normalizeText(session.eaglesId || session.username),
+      role: "student",
+    },
+  }
+}
+
+async function peekStudentSession(request) {
+  const sessionId = readStudentSessionIdFromRequest(request)
+  if (!sessionId) return null
+  try {
+    return await STUDENT_SESSION_STORE.getSession(sessionId)
+  } catch (error) {
+    void error
+    return null
+  }
+}
+
+function injectAdminRuntimeConfig(html, pageSlug, origin, initialAuthState = { authenticated: false }) {
+  const normalizedAuthState =
+    initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
+  const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
+  if (html.includes("</head>")) {
+    return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${htmlWithAuthState}`
+}
+
+function injectParentRuntimeConfig(html, origin, initialAuthState = { authenticated: false }) {
+  const normalizedAuthState =
+    initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
+  const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const htmlWithAuthState = setHtmlAttribute(html, "data-parent-auth-state", authStateName)
+  if (html.includes("</head>")) {
+    return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${htmlWithAuthState}`
 }
 
 function injectAdminPointsRuntimeConfig(html, origin) {
@@ -1068,12 +1162,16 @@ function injectAdminPointsRuntimeConfig(html, origin) {
   return `${runtimeConfig}\n${html}`
 }
 
-function injectStudentPortalRuntimeConfig(html, origin) {
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};</script>`
+function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { authenticated: false }) {
+  const normalizedAuthState =
+    initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
+  const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const htmlWithAuthState = setHtmlAttribute(html, "data-student-auth-state", authStateName)
   if (html.includes("</head>")) {
-    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+    return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
-  return `${runtimeConfig}\n${html}`
+  return `${runtimeConfig}\n${htmlWithAuthState}`
 }
 
 function injectPortalHubRuntimeConfig(html) {
@@ -6152,8 +6250,9 @@ export async function handleStudentAdminRequest(request, response) {
       return true
     }
     const htmlSource = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
-    const html = injectAdminRuntimeConfig(htmlSource, pageSlug, requestOrigin)
-    sendHtml(response, 200, html)
+    const initialAuthState = buildAdminInitialAuthState(await peekAdminSession(request))
+    const html = injectAdminRuntimeConfig(htmlSource, pageSlug, requestOrigin, initialAuthState)
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }
 
@@ -6163,7 +6262,7 @@ export async function handleStudentAdminRequest(request, response) {
       return true
     }
     const html = injectAdminPointsRuntimeConfig(fs.readFileSync(ADMIN_POINTS_HTML_PATH, "utf8"), requestOrigin)
-    sendHtml(response, 200, html)
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }
 
@@ -6172,7 +6271,12 @@ export async function handleStudentAdminRequest(request, response) {
       sendJson(response, 404, { error: "Parent portal page not found" })
       return true
     }
-    const html = injectParentRuntimeConfig(fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8"), requestOrigin)
+    const initialAuthState = buildParentInitialAuthState(await peekParentSession(request))
+    const html = injectParentRuntimeConfig(
+      fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8"),
+      requestOrigin,
+      initialAuthState,
+    )
     sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }
@@ -6182,7 +6286,12 @@ export async function handleStudentAdminRequest(request, response) {
       sendJson(response, 404, { error: "Student portal page not found" })
       return true
     }
-    const html = injectStudentPortalRuntimeConfig(fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8"), requestOrigin)
+    const initialAuthState = buildStudentInitialAuthState(await peekStudentSession(request))
+    const html = injectStudentPortalRuntimeConfig(
+      fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8"),
+      requestOrigin,
+      initialAuthState,
+    )
     sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }

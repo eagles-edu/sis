@@ -537,6 +537,7 @@ test("admin ui pageload paints the overview before student table hydration finis
     const document = dom.window.document
     assert.equal(document.getElementById("app").classList.contains("hidden"), false)
     assert.equal(document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.equal(document.body.classList.contains("admin-auth-booting"), false)
     assert.match(document.getElementById("status").textContent, /Authenticated as admin/i)
   }, 5000)
 
