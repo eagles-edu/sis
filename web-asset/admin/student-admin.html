@@ -33,11 +33,7 @@
     }
 
     html {
-      background:
-        radial-gradient(circle at top, rgba(217, 237, 255, 0.68), transparent 42%),
-        radial-gradient(circle at top right, rgba(223, 248, 234, 0.18), transparent 38%),
-        linear-gradient(180deg, #f9faff 0%, #ebedf7 100%);
-      color-scheme: light;
+      background: var(--portal-page-bg);
     }
 
     * {
@@ -48,20 +44,8 @@
       margin: 0;
       min-height: 100vh;
       font-family: var(--font-base);
-      background: linear-gradient(45deg, var(--background-color) 0%, #8a94a8 100%);
-      color: #212121;
-    }
-
-    html[data-theme="dark"] body.admin-portal-page {
-      background: linear-gradient(180deg, #111215 0%, #171b22 100%);
-      color: #f2f4f7;
-    }
-
-    html[data-theme="dark"] {
-      background:
-        radial-gradient(circle at top, rgba(106, 164, 255, 0.16), transparent 42%),
-        linear-gradient(180deg, #111215 0%, #171b22 100%);
-      color-scheme: dark;
+      background: var(--portal-page-bg);
+      color: var(--portal-text);
     }
 
     .hidden {
@@ -123,13 +107,6 @@
       margin: 0;
     }
 
-    html[data-theme="dark"] body.admin-portal-page.admin-auth-booting .panel,
-    html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-      background: linear-gradient(180deg, #31363e 0%, #2a2e35 100%);
-      border-color: rgba(255, 255, 255, 0.2);
-      color: #f2f4f7;
-    }
-
     .app-shell {
       display: grid;
       grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
@@ -164,9 +141,6 @@
       width: 105.6px;
     }
 
-    html[data-theme="dark"] body.admin-portal-page .system-health-loading-pulse {
-      color: #ffd76a;
-    }
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260426a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260426a">

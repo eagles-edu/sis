@@ -6,6 +6,23 @@
   --border-dg: #727272;
   --brand: var(--primary-color);
   --brand-strong: #8f1620;
+  --portal-page-bg: linear-gradient(180deg, #f9faff 0%, #ebedf7 100%);
+  --portal-page-bg-wash:
+    radial-gradient(920px 420px at -15% -20%, #d9edff 0%, transparent 62%),
+    radial-gradient(980px 520px at 110% -25%, #dff8ea 0%, transparent 55%),
+    linear-gradient(180deg, #f9faff 0%, #ebedf7 100%);
+  --portal-surface-card: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 250, 255, 0.99) 100%);
+  --portal-surface-panel: linear-gradient(180deg, rgba(249, 250, 255, 0.96) 0%, rgba(235, 237, 247, 0.99) 100%);
+  --portal-surface-soft: #f5f9ff;
+  --portal-surface-support: #edf3fa;
+  --portal-border: rgba(115, 136, 163, 0.96);
+  --portal-border-strong: rgba(95, 115, 145, 1);
+  --portal-text: #212121;
+  --portal-text-soft: #414141;
+  --portal-theme-toggle-ink: #172033;
+  --portal-theme-toggle-ink-dark: #ffd76a;
+  --portal-theme-toggle-icon-bg: rgba(255, 255, 255, 0.78);
+  --portal-theme-toggle-icon-bg-dark: rgba(255, 255, 255, 0.12);
   --card: #ffffff;
   --card-soft: #f5f9ff;
   --err: #9e1d1d;
@@ -84,12 +101,31 @@
     radial-gradient(860px 400px at 12% 8%, rgba(255, 255, 255, 0.68), transparent 58%),
     radial-gradient(640px 320px at 92% 0%, rgba(255, 244, 211, 0.18), transparent 56%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(237, 243, 252, 0.48));
-  --portal-dark-bg: #111215;
-  --portal-dark-panel: #31343a;
-  --portal-dark-panel-soft: #3a3d44;
-  --portal-dark-border: rgba(255, 255, 255, 0.2);
+  --portal-dark-bg: #1a1c1f;
+  --portal-dark-page-bg: linear-gradient(180deg, #1a1c1f 0%, #25292c 100%);
+  --portal-dark-page-bg-wash:
+    radial-gradient(920px 420px at -15% -20%, rgba(72, 79, 86, 0.18) 0%, transparent 62%),
+    radial-gradient(980px 520px at 110% -25%, rgba(60, 66, 72, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #1a1c1f 0%, #25292c 100%);
+  --portal-dark-panel: #25292c;
+  --portal-dark-panel-soft: #31363a;
+  --portal-dark-card: #3c4248;
+  --portal-dark-card-soft: #484f56;
+  --portal-dark-card-deep: #25292c;
+  --portal-dark-border: rgba(255, 255, 255, 0.22);
   --portal-dark-text: #f2f4f7;
   --portal-dark-text-soft: #c9ced4;
+  --portal-dark-field-bg: #e2e2e2;
+  --portal-dark-field-border: #aeb7c5;
+  --portal-dark-field-text: #172033;
+  --portal-dark-field-placeholder: #58657a;
+  --portal-dark-theme-toggle-ink: #ffd76a;
+  --portal-dark-theme-toggle-icon-bg: rgba(255, 255, 255, 0.12);
+  --portal-dark-surface-card: linear-gradient(180deg, rgba(60, 66, 72, 0.98) 0%, rgba(49, 54, 58, 0.98) 100%);
+  --portal-dark-surface-panel: linear-gradient(180deg, rgba(49, 54, 58, 0.98) 0%, rgba(37, 41, 44, 1) 100%);
+  --portal-dark-surface-soft: #3c4248;
+  --portal-dark-surface-support: #484f56;
+  --portal-dark-border-strong: rgba(255, 255, 255, 0.36);
   --portal-dark-radius: var(--radius-3);
   --portal-login-form-max-width: 430px;
   --portal-login-panel-max-width: 550px;
@@ -112,17 +148,17 @@ html[data-theme="dark"] body.portal-hub-page {
   --hub-theme-footer-bg: inherit;
   --hub-theme-footer-text: #eef1f5;
   --hub-theme-link: #b4c4ea;
-  --hub-theme-page-bg-body: #111215;
-  --hub-theme-page-bg-end: #090a0c;
-  --hub-theme-page-bg-glow: rgba(109, 135, 191, 0.18);
-  --hub-theme-page-bg-mid: #30343b;
-  --hub-theme-page-bg-start: #1c1f24;
-  --hub-theme-panel-bg: #3a3d44;
-  --hub-theme-panel-bg-footer: #2d3036;
-  --hub-theme-panel-bg-hero: #383b42;
-  --hub-theme-panel-bg-section: #31343a;
-  --hub-theme-panel-bg-soft: #45494f;
-  --hub-theme-panel-bg-support: #34373d;
+  --hub-theme-page-bg-body: #1a1c1f;
+  --hub-theme-page-bg-end: #25292c;
+  --hub-theme-page-bg-glow: rgba(72, 79, 86, 0.2);
+  --hub-theme-page-bg-mid: #31363a;
+  --hub-theme-page-bg-start: #25292c;
+  --hub-theme-panel-bg: #31363a;
+  --hub-theme-panel-bg-footer: #25292c;
+  --hub-theme-panel-bg-hero: #3c4248;
+  --hub-theme-panel-bg-section: #31363a;
+  --hub-theme-panel-bg-soft: #3c4248;
+  --hub-theme-panel-bg-support: #484f56;
   --hub-theme-panel-border: rgba(255, 255, 255, 0.2);
   --hub-theme-panel-shadow: none;
   --hub-theme-text: #f2f4f7;
@@ -169,12 +205,22 @@ body {
 
 body {
   -webkit-tap-highlight-color: transparent;
-  background: #fff;
+  background: var(--portal-page-bg);
+  color: var(--portal-text);
   position: relative;
 }
 
+html[data-theme="dark"] {
+  background: var(--portal-dark-page-bg);
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  color: var(--portal-dark-text);
+}
+
 body.portal-hub-page {
-  background: var(--hub-theme-page-bg-body);
+  background: var(--portal-page-bg);
   isolation: isolate;
   --hub-accent: var(--hub-theme-accent);
   --hub-accent-strong: var(--hub-theme-accent-strong);
@@ -197,24 +243,19 @@ body::before {
   pointer-events: none;
   position: fixed;
   z-index: -1;
-  background:
-    radial-gradient(920px 420px at -15% -20%, #d9edff 0%, transparent 62%),
-    radial-gradient(980px 520px at 110% -25%, #dff8ea 0%, transparent 55%),
-    linear-gradient(180deg, var(--bg-0), var(--bg-1));
+  background: var(--portal-page-bg-wash);
 }
 
 body.student-portal-page,
 body.parent-portal-page {
-  background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+  background: var(--portal-page-bg);
+  color: var(--portal-text);
 }
 
 html[data-theme="dark"] body.admin-portal-page::before,
 html[data-theme="dark"] body.student-portal-page::before,
 html[data-theme="dark"] body.parent-portal-page::before {
-  background:
-    radial-gradient(920px 420px at -15% -20%, rgba(106, 164, 255, 0.16) 0%, transparent 62%),
-    radial-gradient(980px 520px at 110% -25%, rgba(124, 214, 164, 0.08) 0%, transparent 55%),
-    linear-gradient(180deg, #111215, #171b22);
+  background: var(--portal-dark-page-bg-wash);
 }
 
 body.student-portal-page #loginPanel,
@@ -231,18 +272,529 @@ body.admin-portal-page #authPanel #loginForm {
   width: min(100%, var(--portal-login-form-max-width));
 }
 
+html[data-theme="dark"] body.student-portal-page :where(input, select, textarea),
+html[data-theme="dark"] body.parent-portal-page :where(input, select, textarea),
+html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea) {
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
+}
+
+html[data-theme="dark"] body.student-portal-page :where(input, select, textarea)::placeholder,
+html[data-theme="dark"] body.parent-portal-page :where(input, select, textarea)::placeholder,
+html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea)::placeholder {
+  color: var(--portal-dark-field-placeholder);
+}
+
+body.student-portal-page .portal-shell,
+body.parent-portal-page .portal-layout,
+body.admin-portal-page .wrap {
+  color: var(--portal-text);
+}
+
+.portal-text {
+  color: var(--portal-text);
+}
+
+.portal-text-soft {
+  color: var(--portal-text-soft);
+}
+
+.portal-surface-card {
+  background: var(--portal-surface-card);
+  border-color: var(--portal-border);
+}
+
+.portal-surface-panel {
+  background: var(--portal-surface-panel);
+  border-color: var(--portal-border);
+}
+
+.portal-surface-soft {
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+}
+
+.portal-surface-support {
+  background: var(--portal-surface-support);
+  border-color: var(--portal-border);
+}
+
+body.student-portal-page .card,
+body.parent-portal-page .card,
+body.admin-portal-page .panel,
+body.admin-portal-page .wrap .panel {
+  background: var(--portal-surface-card);
+  border-color: var(--portal-border);
+  color: var(--portal-text);
+}
+
+body.student-portal-page .panel,
+body.parent-portal-page .panel {
+  background: var(--portal-surface-card);
+  border-color: var(--portal-border);
+  color: var(--portal-text);
+}
+
+body.student-portal-page .topbar,
+body.parent-portal-page .hero,
+body.parent-portal-page .topbar,
+body.student-portal-page .hero,
+body.admin-portal-page .panel,
+body.admin-portal-page .wrap .panel {
+  background: var(--portal-surface-panel);
+  border-color: var(--portal-border);
+}
+
+body.student-portal-page .side-nav,
+body.parent-portal-page .side-nav {
+  background: var(--portal-surface-panel);
+  border-color: var(--portal-border);
+}
+
+body.student-portal-page .side-brand,
+body.parent-portal-page .side-brand {
+  background: var(--portal-surface-soft);
+  border-color: var(--portal-border);
+}
+
+body.student-portal-page .side-link,
+body.parent-portal-page .side-link {
+  background: var(--portal-surface-card);
+  border-color: var(--portal-border);
+  color: var(--portal-text);
+}
+
+body.student-portal-page .side-link.active,
+body.parent-portal-page .side-link.active {
+  border-color: var(--portal-border-strong);
+  color: #0f2545;
+}
+
+body.student-portal-page .identity-item,
+body.parent-portal-page .identity-item,
+body.student-portal-page .detail-item,
+body.parent-portal-page .detail-item,
+body.student-portal-page .metric,
+body.parent-portal-page .metric,
+body.student-portal-page .homework-card-shell,
+body.parent-portal-page .homework-card-shell,
+body.student-portal-page .calendar-shell,
+body.parent-portal-page .calendar-shell,
+body.student-portal-page .queue-table-wrap,
+body.parent-portal-page .queue-table-wrap,
+body.student-portal-page .portal-modal-dialog,
+body.parent-portal-page .portal-modal-dialog,
+body.student-portal-page .portal-modal-body,
+body.parent-portal-page .portal-modal-body {
+  --fc-event-bg-color: #edf4ff;
+  --fc-event-border-color: #83a8de;
+  --fc-event-text-color: #173b78;
+  background: var(--portal-surface-card);
+  border-color: var(--portal-border);
+  color: var(--portal-text);
+}
+
+body.student-portal-page .portal-modal-backdrop,
+body.parent-portal-page .portal-modal-backdrop {
+  background: rgba(13, 22, 34, 0.58);
+}
+
+html[data-theme="dark"] body.student-portal-page,
+html[data-theme="dark"] body.parent-portal-page,
+html[data-theme="dark"] body.admin-portal-page {
+  --card: var(--portal-dark-surface-card);
+  --card-soft: var(--portal-dark-surface-support);
+  --ink: var(--portal-dark-text);
+  --ink-muted: var(--portal-dark-text-soft);
+  --ink-soft: var(--portal-dark-text-soft);
+  --line: var(--portal-dark-border);
+  --text-muted: var(--portal-dark-text-soft);
+  --surface-2: var(--portal-dark-surface-support);
+  background: var(--portal-dark-page-bg);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .card,
+html[data-theme="dark"] body.student-portal-page .panel,
+html[data-theme="dark"] body.student-portal-page .topbar,
+html[data-theme="dark"] body.student-portal-page .hero,
+html[data-theme="dark"] body.student-portal-page .side-nav,
+html[data-theme="dark"] body.student-portal-page .side-brand,
+html[data-theme="dark"] body.student-portal-page .side-link,
+html[data-theme="dark"] body.student-portal-page .portal-modal-dialog,
+html[data-theme="dark"] body.student-portal-page .portal-modal-body,
+html[data-theme="dark"] body.student-portal-page .queue-panel,
+html[data-theme="dark"] body.student-portal-page .queue-table-wrap,
+html[data-theme="dark"] body.student-portal-page .detail-calendar-panel,
+html[data-theme="dark"] body.student-portal-page .detail-calendar-shell,
+html[data-theme="dark"] body.student-portal-page .detail-item,
+html[data-theme="dark"] body.student-portal-page .calendar-shell,
+html[data-theme="dark"] body.student-portal-page .identity-item,
+html[data-theme="dark"] body.student-portal-page .metric,
+html[data-theme="dark"] body.student-portal-page .homework-card-shell,
+html[data-theme="dark"] body.parent-portal-page .card,
+html[data-theme="dark"] body.parent-portal-page .panel,
+html[data-theme="dark"] body.parent-portal-page .topbar,
+html[data-theme="dark"] body.parent-portal-page .hero,
+html[data-theme="dark"] body.parent-portal-page .side-nav,
+html[data-theme="dark"] body.parent-portal-page .side-brand,
+html[data-theme="dark"] body.parent-portal-page .side-link,
+html[data-theme="dark"] body.parent-portal-page .portal-modal-dialog,
+html[data-theme="dark"] body.parent-portal-page .portal-modal-body,
+html[data-theme="dark"] body.parent-portal-page .homework-card-shell,
+html[data-theme="dark"] body.parent-portal-page .queue-table-wrap,
+html[data-theme="dark"] body.parent-portal-page .report-modal-body,
+html[data-theme="dark"] body.parent-portal-page .report-section,
+html[data-theme="dark"] body.parent-portal-page .report-card,
+html[data-theme="dark"] body.parent-portal-page .calendar-shell,
+html[data-theme="dark"] body.parent-portal-page .detail-item,
+html[data-theme="dark"] body.parent-portal-page .student-profile-card,
+html[data-theme="dark"] body.parent-portal-page .identity-item,
+html[data-theme="dark"] body.parent-portal-page .metric,
+html[data-theme="dark"] body.parent-portal-page .profile-group,
+html[data-theme="dark"] body.parent-portal-page .field-row.locked,
+html[data-theme="dark"] body.parent-portal-page .field-row.edited,
+html[data-theme="dark"] body.admin-portal-page .panel {
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .side-nav,
+html[data-theme="dark"] body.student-portal-page .side-brand,
+html[data-theme="dark"] body.parent-portal-page .side-nav,
+html[data-theme="dark"] body.parent-portal-page .side-brand,
+html[data-theme="dark"] body.student-portal-page .topbar,
+html[data-theme="dark"] body.student-portal-page .hero,
+html[data-theme="dark"] body.parent-portal-page .topbar,
+html[data-theme="dark"] body.parent-portal-page .hero,
+html[data-theme="dark"] body.admin-portal-page .wrap .panel {
+  background: var(--portal-dark-surface-panel);
+  border-color: var(--portal-dark-border);
+}
+
+body.student-portal-page .homework-card-shell,
+body.parent-portal-page .homework-card-shell,
+body.student-portal-page .detail-item.good,
+body.parent-portal-page .detail-item.good {
+  box-shadow: inset 0 0 0 1px rgba(31, 122, 78, 0.1), 0 10px 20px rgba(31, 45, 74, 0.05);
+}
+
+body.student-portal-page .detail-item.warn,
+body.parent-portal-page .detail-item.warn,
+body.student-portal-page .detail-item.bad,
+body.parent-portal-page .detail-item.bad {
+  box-shadow: inset 0 0 0 1px rgba(93, 88, 168, 0.1), 0 10px 20px rgba(31, 45, 74, 0.05);
+}
+
+body.student-portal-page .student-overview-title,
+body.parent-portal-page .parent-overview-title {
+  color: var(--portal-text);
+  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.12;
+  margin: 0;
+}
+
+body.student-portal-page .homework-card-label,
+body.parent-portal-page .homework-card-label {
+  color: var(--portal-text);
+  font-size: clamp(11px, 2.7vw, 13px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  margin: 0 0 6px;
+  padding-left: 2px;
+  text-transform: uppercase;
+}
+
+body.student-portal-page .metric .k,
+body.parent-portal-page .metric .k,
+body.student-portal-page .homework-square-k,
+body.parent-portal-page .homework-square-k,
+body.parent-portal-page .attendance-square-k,
+body.student-portal-page .identity-label,
+body.parent-portal-page .identity-label,
+body.parent-portal-page .report-head-card h5,
+body.parent-portal-page .report-grade-block h5,
+body.parent-portal-page .dashboard-card-subtitle,
+body.parent-portal-page .report-archive-meta,
+body.parent-portal-page .report-archive-status,
+body.student-portal-page .detail-meta,
+body.parent-portal-page .detail-meta,
+body.student-portal-page .detail-note,
+body.parent-portal-page .detail-note {
+  color: var(--portal-text-soft);
+}
+
+body.student-portal-page .metric .k,
+body.parent-portal-page .metric .k,
+body.student-portal-page .identity-label,
+body.parent-portal-page .identity-label,
+body.parent-portal-page .report-head-card h5,
+body.parent-portal-page .report-grade-block h5 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+
+body.student-portal-page .homework-square-k,
+body.parent-portal-page .homework-square-k,
+body.parent-portal-page .attendance-square-k {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  opacity: 0.88;
+  text-transform: uppercase;
+}
+
+body.student-portal-page .metric .v,
+body.parent-portal-page .metric .v,
+body.student-portal-page .homework-square-v,
+body.parent-portal-page .homework-square-v,
+body.parent-portal-page .attendance-square-v,
+body.parent-portal-page .report-head-value {
+  color: var(--portal-text);
+  font-weight: 700;
+}
+
+body.student-portal-page .metric .v,
+body.parent-portal-page .metric .v {
+  font-size: clamp(17px, 3.8vw, 22px);
+  line-height: 1.1;
+}
+
+body.student-portal-page .homework-square-v,
+body.parent-portal-page .homework-square-v {
+  font-size: clamp(14px, 3.4vw, 18px);
+}
+
+body.student-portal-page .homework-square-v.is-count,
+body.parent-portal-page .homework-square-v.is-count {
+  font-size: clamp(28px, 5.5vw, 36px);
+  line-height: 0.95;
+}
+
+body.student-portal-page .homework-content-title,
+body.parent-portal-page .homework-content-title {
+  color: #18395d;
+  font-size: clamp(14px, 3vw, 17px);
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.parent-portal-page .report-head-value {
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+  word-break: break-word;
+}
+
+body.parent-portal-page .report-head-card h5 {
+  color: #1c436d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+body.parent-portal-page .report-block h5 {
+  color: #1d446f;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+body.parent-portal-page .report-grade-block h5 {
+  color: #1a436f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+body.parent-portal-page .report-bands {
+  display: grid;
+  gap: 8px;
+}
+
+body.parent-portal-page .report-band {
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+  border: 1px solid #c8d5e8;
+  border-left: 5px solid #7f99bc;
+  border-radius: 10px;
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+body.parent-portal-page .report-band h5 {
+  color: #1a436f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+body.parent-portal-page .report-band-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+}
+
+body.parent-portal-page .report-band-table th,
+body.parent-portal-page .report-band-table td {
+  border-top: 1px solid #d8e3f1;
+  padding: 6px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+body.parent-portal-page .report-band-table th {
+  color: #2b4f76;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+body.parent-portal-page .report-band-table td {
+  color: #21496f;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+body.parent-portal-page .report-band-table td:nth-child(2) {
+  color: #173f69;
+  font-weight: 800;
+  white-space: nowrap;
+  width: 18%;
+}
+
+body.parent-portal-page .report-band-table td:nth-child(1) {
+  width: 46%;
+}
+
+body.parent-portal-page .report-band-table td:nth-child(3) {
+  width: 36%;
+}
+
+body.parent-portal-page .report-band.is-ok {
+  border-left-color: #6ca77d;
+}
+
+body.parent-portal-page .report-band.is-watch {
+  border-left-color: #d4ad73;
+}
+
+body.parent-portal-page .report-band.is-alert {
+  border-left-color: #c97c7c;
+}
+
+body.parent-portal-page .report-archive-meta,
+body.parent-portal-page .report-archive-status,
+body.parent-portal-page .dashboard-card-subtitle {
+  color: var(--portal-text-soft);
+  font-size: 12px;
+}
+
+body.parent-portal-page .dashboard-card-subtitle {
+  margin: -2px 0 0;
+}
+
+body.parent-portal-page .report-grades-table {
+  min-height: 170px;
+}
+
+body.parent-portal-page .report-grades-table table,
+body.parent-portal-page #performanceReportGradesTable table {
+  background: #fff;
+}
+
+body.parent-portal-page .report-grades-hint {
+  color: #48698f;
+  font-size: 12px;
+  margin: 0;
+}
+
+body.parent-portal-page .report-modal-ack {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-column: 1 / -1;
+}
+
+body.parent-portal-page .report-modal-ack button {
+  min-height: 36px;
+}
+
+body.parent-portal-page .report-modal-ack-status {
+  color: #0f6d2a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.parent-portal-page .report-modal-ack-status.is-reviewed {
+  color: #8d5d00;
+}
+
+@media (max-width: 520px) {
+  body.parent-portal-page .report-head-grid,
+  body.parent-portal-page .report-homework-cards,
+  body.parent-portal-page #performanceReportAttendanceMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  body.parent-portal-page .report-band-table,
+  body.parent-portal-page .report-band-table tbody,
+  body.parent-portal-page .report-band-table tr,
+  body.parent-portal-page .report-band-table td {
+    display: block;
+    width: 100%;
+  }
+
+  body.parent-portal-page .report-band-table thead {
+    display: none;
+  }
+
+  body.parent-portal-page .report-band-table tr {
+    border-top: 1px solid #d8e3f1;
+    padding-top: 4px;
+  }
+
+  body.parent-portal-page .report-band-table td {
+    border-top: 0;
+    padding: 4px 0;
+  }
+}
+
 /* Keep student and parent calendar surfaces legible in dark mode without touching button/chip styling. */
 html[data-theme="dark"] body.student-portal-page .calendar-shell,
 html[data-theme="dark"] body.parent-portal-page .calendar-shell {
-  --fc-border-color: rgba(255, 255, 255, 0.14);
-  --fc-neutral-bg-color: rgba(255, 255, 255, 0.03);
+  --fc-border-color: rgba(255, 255, 255, 0.16);
+  --fc-event-bg-color: var(--portal-dark-surface-support);
+  --fc-event-border-color: var(--portal-dark-border-strong);
+  --fc-event-text-color: var(--portal-dark-text);
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.02);
   --fc-page-bg-color: transparent;
   --fc-today-bg-color: rgba(106, 164, 255, 0.12);
-  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
-  background-color: var(--portal-dark-panel);
-  border: 1px solid var(--portal-dark-border);
+  background: var(--portal-dark-surface-card);
+  background-color: var(--portal-dark-panel-soft);
+  border: 1px solid var(--portal-dark-border-strong);
   border-radius: var(--portal-dark-radius);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   color: var(--portal-dark-text);
 }
 
@@ -288,20 +840,425 @@ html[data-theme="dark"] body.parent-portal-page .calendar-shell .fc-daygrid-day.
   background: rgba(106, 164, 255, 0.1);
 }
 
+body.student-portal-page .calendar-shell,
+body.parent-portal-page .calendar-shell {
+  --fc-border-color: #c9d6e6;
+  --fc-button-active-bg-color: #7f1520;
+  --fc-button-active-border-color: #6b1019;
+  --fc-button-bg-color: #b50010;
+  --fc-button-border-color: #8d0010;
+  --fc-button-hover-bg-color: #92000d;
+  --fc-button-hover-border-color: #76000a;
+  --fc-event-text-color: #173b78;
+  --fc-neutral-bg-color: #f6f9ff;
+  --fc-page-bg-color: #fff;
+  --fc-today-bg-color: rgba(24, 67, 135, 0.08);
+}
+
+body.student-portal-page .calendar-shell .fc-toolbar.fc-header-toolbar,
+body.parent-portal-page .calendar-shell .fc-toolbar.fc-header-toolbar {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+body.student-portal-page .calendar-shell .fc-toolbar-title,
+body.parent-portal-page .calendar-shell .fc-toolbar-title {
+  color: #163767;
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  line-height: 1.2;
+}
+
+body.student-portal-page .calendar-shell .fc-button-primary,
+body.parent-portal-page .calendar-shell .fc-button-primary {
+  border-radius: var(--radius-2);
+  box-shadow: none;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day-number,
+body.student-portal-page .calendar-shell .fc-col-header-cell-cushion,
+body.parent-portal-page .calendar-shell .fc-daygrid-day-number,
+body.parent-portal-page .calendar-shell .fc-col-header-cell-cushion {
+  color: #163767;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day-number,
+body.parent-portal-page .calendar-shell .fc-daygrid-day-number {
+  font-size: clamp(1rem, 1.7vw, 1.14rem);
+  line-height: 1.1;
+  padding: 6px 8px 0;
+}
+
+body.student-portal-page .calendar-shell .fc-col-header-cell-cushion,
+body.parent-portal-page .calendar-shell .fc-col-header-cell-cushion {
+  font-size: clamp(0.82rem, 1.3vw, 0.94rem);
+  letter-spacing: 0.05em;
+  line-height: 1.15;
+  padding: 8px 4px;
+  text-transform: uppercase;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day-frame,
+body.parent-portal-page .calendar-shell .fc-daygrid-day-frame {
+  min-height: 108px;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day,
+body.parent-portal-page .calendar-shell .fc-daygrid-day {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.fc-day-today,
+body.parent-portal-page .calendar-shell .fc-daygrid-day.fc-day-today {
+  background: rgba(24, 67, 135, 0.08);
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-completed {
+  background: #eefaf3;
+  border-color: #8ccba9;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-open {
+  background: #e6f3ff;
+  border-color: #4093d2;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-blue {
+  background: #e6f3ff;
+  border-color: #4093d2;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-turquoise {
+  background: #e1fbf9;
+  border-color: #2ba39a;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-missed {
+  background: #fff1f1;
+  border-color: #e1a8a8;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-revise {
+  background: #f3ecff;
+  border-color: #a48ad8;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-alert {
+  background: #fff5df;
+  border-color: #e5ab34;
+}
+
+body.student-portal-page .fc .fc-daygrid-event,
+body.parent-portal-page .fc .fc-daygrid-event {
+  border-radius: 10px;
+  margin-top: 4px;
+  padding: 4px 6px;
+  white-space: normal;
+}
+
+body.student-portal-page .fc .fc-event-main,
+body.parent-portal-page .fc .fc-event-main {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-completed,
+body.parent-portal-page .fc .fc-event.fc-event-news-completed {
+  background: #eefaf3 !important;
+  border-color: #8ccba9 !important;
+  color: #195d3d !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-open,
+body.parent-portal-page .fc .fc-event.fc-event-news-open {
+  background: #e6f3ff !important;
+  border-color: #4093d2 !important;
+  color: #0f4a73 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-open .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-news-open .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-news-open .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-news-open .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-news-open .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-news-open .fc-event-time {
+  color: #0f4a73 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-green,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-green {
+  background: #e7f8ef !important;
+  border-color: #36a66a !important;
+  color: #0f4f30 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-green .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-news-status-green .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-news-status-green .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-green .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-green .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-green .fc-event-time {
+  color: #0f4f30 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-amber,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-amber {
+  background: #fff4da !important;
+  border-color: #d89d28 !important;
+  color: #5b3b00 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-purple,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-purple {
+  background: #f3ecff !important;
+  border-color: #a48ad8 !important;
+  color: #422b7a !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-red,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-red {
+  background: #ffe1e5 !important;
+  border-color: #d43b4e !important;
+  color: #6d0d1a !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-red .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-news-status-red .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-news-status-red .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-red .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-red .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-red .fc-event-time {
+  color: #6d0d1a !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-blue,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-blue {
+  background: #e6f3ff !important;
+  border-color: #4093d2 !important;
+  color: #0f4a73 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-today,
+body.parent-portal-page .fc .fc-event.fc-event-today {
+  background: #e6f3ff !important;
+  border-color: #4093d2 !important;
+  color: #0f4a73 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-today .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-today .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-today .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-today .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-today .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-today .fc-event-time {
+  color: #0f4a73 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-turquoise,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-turquoise {
+  background: #e1fbf9 !important;
+  border-color: #2ba39a !important;
+  color: #085852 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-status-revise,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-revise {
+  background: #f3ecff !important;
+  border-color: #a48ad8 !important;
+  color: #422b7a !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-missed,
+body.parent-portal-page .fc .fc-event.fc-event-news-missed {
+  color: #6d0d1a !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-news-missed .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-news-missed .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-news-missed .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-news-missed .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-news-missed .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-news-missed .fc-event-time {
+  color: #6d0d1a !important;
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-missed,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-missed {
+  background: rgba(255, 107, 129, 0.14) !important;
+  border-color: rgba(255, 107, 129, 0.34) !important;
+  color: #ffe3e6 !important;
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-missed .fc-event-main,
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-missed .fc-event-title,
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-missed .fc-event-time,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-missed .fc-event-main,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-missed .fc-event-title,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-missed .fc-event-time {
+  color: #ffe3e6 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-review-track,
+body.parent-portal-page .fc .fc-event.fc-event-review-track {
+  background: #f1efff !important;
+  border-color: #9a8cdc !important;
+  color: #45317d !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-homework-track,
+body.parent-portal-page .fc .fc-event.fc-event-homework-track {
+  background: #edf4ff !important;
+  border-color: #83a8de !important;
+  color: #173b78 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-homework-overdue,
+body.parent-portal-page .fc .fc-event.fc-event-homework-overdue {
+  background: #ffdbe0 !important;
+  border-color: #ff2338 !important;
+  color: #7d0010 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-attendance-present,
+body.parent-portal-page .fc .fc-event.fc-event-attendance-present {
+  background: #eefaf3 !important;
+  border-color: #8ccba9 !important;
+  color: #195d3d !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-attendance-absent,
+body.parent-portal-page .fc .fc-event.fc-event-attendance-absent {
+  background: #fff1f1 !important;
+  border-color: #e1a8a8 !important;
+  color: #7d0010 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-attendance-late,
+body.parent-portal-page .fc .fc-event.fc-event-attendance-late {
+  background: #fff5df !important;
+  border-color: #e5ab34 !important;
+  color: #8a5600 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-attendance-excused,
+body.parent-portal-page .fc .fc-event.fc-event-attendance-excused {
+  background: #eef3ff !important;
+  border-color: #91a3d5 !important;
+  color: #2b4278 !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-report,
+body.parent-portal-page .fc .fc-event.fc-event-report {
+  background: #f1efff !important;
+  border-color: #9a8cdc !important;
+  color: #45317d !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-event-grade,
+body.parent-portal-page .fc .fc-event.fc-event-grade {
+  background: #edf4ff !important;
+  border-color: #83a8de !important;
+  color: #173b78 !important;
+}
+
+body.student-portal-page .fc .fc-obtrusive-alert,
+body.parent-portal-page .fc .fc-obtrusive-alert {
+  border-width: 2px;
+  box-shadow: inset 0 0 0 1px rgba(125, 0, 16, 0.16);
+}
+
+body.student-portal-page .fc .fc-obtrusive-alert .fc-event-main,
+body.parent-portal-page .fc .fc-obtrusive-alert .fc-event-main {
+  color: inherit !important;
+}
+
+body.student-portal-page .calendar-empty,
+body.parent-portal-page .calendar-empty {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  padding: 10px;
+  text-align: center;
+}
+
+@keyframes overdueBlink {
+  0%,
+  49% {
+    filter: saturate(1);
+    transform: scale(1);
+  }
+
+  50%,
+  100% {
+    filter: saturate(1.35) brightness(1.06);
+    transform: scale(1.015);
+  }
+}
+
+@keyframes dayAlertPulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 2px rgba(255, 35, 56, 0.32);
+  }
+
+  50% {
+    box-shadow: inset 0 0 0 3px rgba(255, 35, 56, 0.62);
+  }
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-attendance-present,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-attendance-present {
+  --fc-event-text-color: #dff7e9;
+  background: rgba(124, 214, 164, 0.14) !important;
+  border-color: rgba(124, 214, 164, 0.34) !important;
+  color: #dff7e9 !important;
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-attendance-absent,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-attendance-absent {
+  --fc-event-text-color: #ffe3e6;
+  background: rgba(255, 107, 129, 0.14) !important;
+  border-color: rgba(255, 107, 129, 0.34) !important;
+  color: #ffe3e6 !important;
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-attendance-late,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-attendance-late {
+  --fc-event-text-color: #fff1d0;
+  background: rgba(240, 176, 95, 0.16) !important;
+  border-color: rgba(240, 176, 95, 0.36) !important;
+  color: #fff1d0 !important;
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-attendance-excused,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-attendance-excused {
+  --fc-event-text-color: #eaf2ff;
+  background: rgba(106, 164, 255, 0.14) !important;
+  border-color: rgba(106, 164, 255, 0.34) !important;
+  color: #eaf2ff !important;
+}
+
 html[data-theme="dark"] body.student-portal-page .detail-empty,
 html[data-theme="dark"] body.student-portal-page .calendar-empty,
 html[data-theme="dark"] body.parent-portal-page .detail-empty,
 html[data-theme="dark"] body.parent-portal-page .calendar-empty {
-  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.96));
-  border-color: var(--portal-dark-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   color: var(--portal-dark-text-soft);
 }
 
 html[data-theme="dark"] body.student-portal-page :where(.homework-square, .attendance-square),
 html[data-theme="dark"] body.parent-portal-page :where(.homework-square, .attendance-square, .dashboard-surface-shell) {
-  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
-  border-color: var(--portal-dark-border);
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 
@@ -346,6 +1303,235 @@ html[data-theme="dark"] body.parent-portal-page .attendance-square.is-risk {
 html[data-theme="dark"] body.student-portal-page :where(.homework-square-k, .homework-square-v),
 html[data-theme="dark"] body.parent-portal-page :where(.homework-square-k, .homework-square-v, .attendance-square-k, .attendance-square-v) {
   color: inherit;
+}
+
+html[data-theme="dark"] body.student-portal-page .metric.good,
+html[data-theme="dark"] body.parent-portal-page .metric.metric-green {
+  border-color: rgba(124, 214, 164, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(124, 214, 164, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
+}
+
+html[data-theme="dark"] body.student-portal-page .metric,
+html[data-theme="dark"] body.parent-portal-page .metric {
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 10px 20px rgba(31, 45, 74, 0.05);
+}
+
+html[data-theme="dark"] body.student-portal-page .metric :is(.k, .v),
+html[data-theme="dark"] body.parent-portal-page .metric :is(.k, .v) {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .metric.warn,
+html[data-theme="dark"] body.parent-portal-page .metric.metric-blue {
+  border-color: rgba(106, 164, 255, 0.62);
+}
+
+html[data-theme="dark"] body.parent-portal-page .metric.metric-purple {
+  border-color: rgba(162, 125, 241, 0.62);
+}
+
+html[data-theme="dark"] body.student-portal-page .metric.bad,
+html[data-theme="dark"] body.parent-portal-page .metric.metric-red {
+  border-color: rgba(242, 138, 149, 0.62);
+}
+
+html[data-theme="dark"] body.student-portal-page #loginPanel,
+html[data-theme="dark"] body.parent-portal-page #loginCard,
+html[data-theme="dark"] body.admin-portal-page #authPanel,
+html[data-theme="dark"] body.admin-portal-page #authBootPanel {
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm,
+html[data-theme="dark"] body.parent-portal-page #loginCard .login-form {
+  grid-template-columns: 1fr;
+  margin-inline: auto;
+}
+
+html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm > .field,
+html[data-theme="dark"] body.parent-portal-page #loginCard .login-form > .field {
+  grid-column: 1;
+}
+
+html[data-theme="dark"] body.student-portal-page :where(#loginPanel, #loginPanel #loginForm, #loginPanel input, #loginPanel select, #loginPanel textarea),
+html[data-theme="dark"] body.parent-portal-page :where(#loginCard, #loginCard .login-form, #loginCard input, #loginCard select, #loginCard textarea),
+html[data-theme="dark"] body.admin-portal-page :where(#authPanel, #authPanel input, #authPanel select, #authPanel textarea) {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page :where(#loginPanel input, #loginPanel select, #loginPanel textarea),
+html[data-theme="dark"] body.parent-portal-page :where(#loginCard input, #loginCard select, #loginCard textarea),
+html[data-theme="dark"] body.admin-portal-page :where(#authPanel input, #authPanel select, #authPanel textarea) {
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
+}
+
+html[data-theme="dark"] body.student-portal-page :where(#loginPanel input, #loginPanel select, #loginPanel textarea)::placeholder,
+html[data-theme="dark"] body.parent-portal-page :where(#loginCard input, #loginCard select, #loginCard textarea)::placeholder,
+html[data-theme="dark"] body.admin-portal-page :where(#authPanel input, #authPanel select, #authPanel textarea)::placeholder {
+  color: var(--portal-dark-field-placeholder);
+}
+
+html[data-theme="dark"] body.student-portal-page .homework-link,
+html[data-theme="dark"] body.parent-portal-page .homework-link {
+  color: #b4c4ea;
+}
+
+html[data-theme="dark"] body.student-portal-page .homework-link:hover,
+html[data-theme="dark"] body.student-portal-page .homework-link:focus-visible,
+html[data-theme="dark"] body.parent-portal-page .homework-link:hover,
+html[data-theme="dark"] body.parent-portal-page .homework-link:focus-visible {
+  color: #eef4ff;
+}
+
+html[data-theme="dark"] body.student-portal-page .metric.warn,
+html[data-theme="dark"] body.parent-portal-page .metric.metric-blue {
+  box-shadow: inset 0 0 0 1px rgba(106, 164, 255, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
+}
+
+html[data-theme="dark"] body.parent-portal-page .metric.metric-purple {
+  box-shadow: inset 0 0 0 1px rgba(162, 125, 241, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
+}
+
+html[data-theme="dark"] body.student-portal-page .metric.bad,
+html[data-theme="dark"] body.parent-portal-page .metric.metric-red {
+  box-shadow: inset 0 0 0 1px rgba(242, 138, 149, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
+}
+
+html[data-theme="dark"] body.student-portal-page .portal-modal-head h4,
+html[data-theme="dark"] body.parent-portal-page .portal-modal-head h4 {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .student-overview-title,
+html[data-theme="dark"] body.parent-portal-page .parent-overview-title,
+html[data-theme="dark"] body.student-portal-page .homework-card-label,
+html[data-theme="dark"] body.parent-portal-page .homework-card-label,
+html[data-theme="dark"] body.student-portal-page .homework-content-title,
+html[data-theme="dark"] body.parent-portal-page .homework-content-title,
+html[data-theme="dark"] body.student-portal-page .identity-label,
+html[data-theme="dark"] body.parent-portal-page .identity-label,
+html[data-theme="dark"] body.student-portal-page .detail-item-head strong,
+html[data-theme="dark"] body.parent-portal-page .detail-item-head strong {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.student-portal-page .detail-meta,
+html[data-theme="dark"] body.parent-portal-page .detail-meta,
+html[data-theme="dark"] body.student-portal-page .detail-note,
+html[data-theme="dark"] body.parent-portal-page .detail-note {
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-head-card,
+html[data-theme="dark"] body.parent-portal-page .report-block {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-archive-item {
+  --report-archive-border: var(--portal-dark-border-strong);
+  --report-archive-accent: rgba(242, 138, 149, 0.72);
+  background: var(--portal-dark-surface-support);
+  border-color: var(--report-archive-border);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-archive-item.is-outstanding {
+  --report-archive-border: rgba(242, 138, 149, 0.34);
+  background: var(--portal-dark-surface-support);
+  border-color: var(--report-archive-border);
+  border-inline-start-color: var(--report-archive-accent);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-archive-link {
+  background: transparent;
+  border-color: transparent;
+  color: #b4c4ea;
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-archive-link:hover,
+html[data-theme="dark"] body.parent-portal-page .report-archive-link:focus-visible {
+  color: #eef4ff;
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-head-card h5,
+html[data-theme="dark"] body.parent-portal-page .report-block h5,
+html[data-theme="dark"] body.parent-portal-page .report-grade-block h5,
+html[data-theme="dark"] body.parent-portal-page .report-head-value {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-band {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-band h5,
+html[data-theme="dark"] body.parent-portal-page .report-band-table th,
+html[data-theme="dark"] body.parent-portal-page .report-band-table td {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-band-table th {
+  color: rgba(242, 244, 247, 0.84);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-band-table td {
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-band-table td:nth-child(2) {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-modal-ack,
+html[data-theme="dark"] body.parent-portal-page .report-metrics {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-grades-hint {
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-grades-table table,
+html[data-theme="dark"] body.parent-portal-page #performanceReportGradesTable table {
+  background: var(--portal-dark-surface-support);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-modal-ack-status {
+  color: #a7e8c0;
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-modal-ack-status.is-reviewed {
+  color: #ffd58a;
+}
+
+html[data-theme="dark"] body.parent-portal-page .report-archive-meta,
+html[data-theme="dark"] body.parent-portal-page .report-archive-status,
+html[data-theme="dark"] body.parent-portal-page .dashboard-card-subtitle {
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.student-portal-page #newsWeekSetModal :where(input, textarea, select),
+html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal :where(input, textarea, select) {
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
+}
+
+html[data-theme="dark"] body.student-portal-page #newsWeekSetModal :where(input, textarea, select)::placeholder,
+html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal :where(input, textarea, select)::placeholder {
+  color: var(--portal-dark-field-placeholder);
 }
 
 html[data-theme="dark"] body.student-portal-page .field.is-invalid label,
@@ -424,7 +1610,7 @@ body.portal-hub-page .theme-toggle {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 999px;
-  color: #172033;
+  color: var(--portal-theme-toggle-ink);
   cursor: pointer;
   display: inline-flex;
   justify-self: end;
@@ -452,9 +1638,9 @@ body.portal-hub-page .theme-toggle:focus-visible {
 
 body.portal-hub-page .theme-toggle__icon {
   align-items: center;
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--portal-theme-toggle-icon-bg);
   border-radius: 999px;
-  color: #172033;
+  color: var(--portal-theme-toggle-ink);
   display: inline-flex;
   flex: 0 0 auto;
   height: 36px;
@@ -473,7 +1659,7 @@ body.portal-hub-page .theme-toggle__label {
 html[data-theme="dark"] body.portal-hub-page .theme-toggle {
   background: transparent;
   border-color: transparent;
-  color: #ffd76a;
+  color: var(--portal-theme-toggle-ink-dark);
 }
 
 html[data-theme="dark"] body.portal-hub-page .theme-toggle:hover {
@@ -481,8 +1667,8 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle:hover {
 }
 
 html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffd76a;
+  background: var(--portal-theme-toggle-icon-bg-dark);
+  color: var(--portal-theme-toggle-ink-dark);
 }
 
 /* Shared portal theme selector. Keep this as the single source of truth for
@@ -495,7 +1681,7 @@ body.admin-portal-page .portal-theme-toggle {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 999px;
-  color: #172033;
+  color: var(--portal-theme-toggle-ink);
   cursor: pointer;
   display: inline-flex;
   inline-size: auto;
@@ -530,9 +1716,9 @@ body.student-portal-page .portal-theme-toggle__icon,
 body.parent-portal-page .portal-theme-toggle__icon,
 body.admin-portal-page .portal-theme-toggle__icon {
   align-items: center;
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--portal-theme-toggle-icon-bg);
   border-radius: 999px;
-  color: #172033;
+  color: var(--portal-theme-toggle-ink);
   display: inline-flex;
   flex: 0 0 auto;
   height: 36px;
@@ -567,7 +1753,7 @@ html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle,
 html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle {
   background: transparent;
   border-color: transparent;
-  color: #ffd76a;
+  color: var(--portal-theme-toggle-ink-dark);
 }
 
 html[data-theme="dark"] body.student-portal-page .portal-theme-toggle:hover,
@@ -579,8 +1765,8 @@ html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle:hover {
 html[data-theme="dark"] body.student-portal-page .portal-theme-toggle__icon,
 html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle__icon,
 html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle__icon {
-  background: var(--portal-theme-toggle-icon-dark-bg, rgba(255, 255, 255, 0.12));
-  color: #ffd76a;
+  background: var(--portal-theme-toggle-icon-bg-dark);
+  color: var(--portal-theme-toggle-ink-dark);
 }
 
 html[data-theme="dark"] body.student-portal-page .portal-modal button,
@@ -608,14 +1794,24 @@ html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal .portal-modal-
 
 html[data-theme="dark"] body.student-portal-page .portal-modal :where(input, textarea, select),
 html[data-theme="dark"] body.parent-portal-page .portal-modal :where(input, textarea, select) {
-  background: #2b3037;
-  border-color: rgba(255, 255, 255, 0.12);
-  color: var(--portal-dark-text);
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal :where(input, textarea, select) {
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
+}
+
+html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal :where(input, textarea, select)::placeholder {
+  color: var(--portal-dark-field-placeholder);
 }
 
 html[data-theme="dark"] body.student-portal-page .portal-modal :where(input, textarea, select)::placeholder,
 html[data-theme="dark"] body.parent-portal-page .portal-modal :where(input, textarea, select)::placeholder {
-  color: var(--portal-dark-text-soft);
+  color: var(--portal-dark-field-placeholder);
 }
 
 html[data-theme="dark"] body.student-portal-page .portal-modal .field.is-invalid label,
@@ -629,10 +1825,10 @@ html[data-theme="dark"] body.student-portal-page .portal-modal .field.is-invalid
 html[data-theme="dark"] body.student-portal-page .portal-modal .field.is-invalid textarea,
 html[data-theme="dark"] body.parent-portal-page .portal-modal .field.is-invalid input,
 html[data-theme="dark"] body.parent-portal-page .portal-modal .field.is-invalid textarea {
-  background: #2b3037;
+  background: var(--portal-dark-field-bg);
   border-color: rgba(242, 138, 149, 0.48);
   box-shadow: 0 0 0 1px rgba(242, 138, 149, 0.18);
-  color: var(--portal-dark-text);
+  color: var(--portal-dark-field-text);
 }
 
 /* Shared portal modal shell for student and parent pages. Keep modal chrome
@@ -849,9 +2045,49 @@ html[data-theme="dark"] body.admin-portal-page .queue-modal {
 }
 
 html[data-theme="dark"] body.admin-portal-page .queue-modal-card {
-  background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
-  border-color: var(--portal-dark-border);
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .overview-group,
+html[data-theme="dark"] body.admin-portal-page .system-health-shell,
+html[data-theme="dark"] body.admin-portal-page .system-health-item,
+html[data-theme="dark"] body.admin-portal-page .stat-card {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .overview-group > details,
+html[data-theme="dark"] body.admin-portal-page .system-health-grid-content,
+html[data-theme="dark"] body.admin-portal-page .system-health-summary {
+  background: transparent;
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .system-health-item.ok {
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+  border-color: rgba(124, 214, 164, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(124, 214, 164, 0.12);
+}
+
+html[data-theme="dark"] body.admin-portal-page .system-health-item.warn {
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+  border-color: rgba(240, 176, 95, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(240, 176, 95, 0.12);
+}
+
+html[data-theme="dark"] body.admin-portal-page .system-health-item.error {
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+  border-color: rgba(242, 138, 149, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(242, 138, 149, 0.12);
+}
+
+html[data-theme="dark"] body.admin-portal-page .system-health-item.pending {
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+  border-color: rgba(106, 164, 255, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(106, 164, 255, 0.12);
 }
 
 html[data-theme="dark"] body.admin-portal-page .queue-modal-header,
@@ -868,19 +2104,19 @@ html[data-theme="dark"] body.admin-portal-page .queue-modal-nav button {
 
 html[data-theme="dark"] body.admin-portal-page .queue-modal-body textarea,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea {
-  background: #2b3037;
+  background: var(--portal-dark-field-bg);
   border-color: rgba(255, 255, 255, 0.12);
-  color: var(--portal-dark-text);
+  color: var(--portal-dark-field-text);
 }
 
 html[data-theme="dark"] body.admin-portal-page .queue-modal-body textarea::placeholder,
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea::placeholder {
-  color: var(--portal-dark-text-soft);
+  color: var(--portal-dark-field-placeholder);
 }
 
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block {
-  background: #3a3f47;
-  border-color: var(--portal-dark-border);
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 
@@ -890,6 +2126,51 @@ html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block strong 
 
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block a {
   color: #cfe0ff;
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-card {
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-header,
+html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-body {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-title {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-meta {
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-svg-wrap {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-empty {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text-soft);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-lane {
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card-deep));
+  border-color: var(--portal-dark-border);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-lane-title {
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .grade-chart-svg .grade-chart-axis-label {
+  fill: var(--portal-dark-text-soft);
 }
 
 html[data-theme="dark"] body.admin-portal-page .news-review-note-line.pending {
@@ -1392,6 +2673,10 @@ body.menu-open .floating-menu-icon::after {
 .resource-list {
   display: grid;
   gap: 10px;
+}
+
+.portal-grid > .portal-col {
+  grid-column: 1 / -1;
 }
 
 .portal-grid {
@@ -1933,6 +3218,19 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 }
 
 @media (max-width: 820px) {
+  .shell {
+    padding: 12px;
+  }
+
+  .main-col {
+    padding: 12px;
+  }
+
+  .hero,
+  .topbar {
+    padding: 8px 60px 8px 10px;
+  }
+
   .brand-logo-wrap--sm {
     height: 34px;
     width: 34px;

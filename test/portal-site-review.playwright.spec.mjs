@@ -300,7 +300,14 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
 
   const routeStates = []
   for (const link of links) {
-    await page.goto(new URL(link.href, origin).toString(), { waitUntil: "domcontentloaded" })
+    if (link.pageLink) {
+      await page.goto(new URL(link.href, origin).toString(), {
+        waitUntil: "commit",
+        timeout: 10000,
+      })
+    } else {
+      await page.goto(new URL(link.href, origin).toString(), { waitUntil: "domcontentloaded" })
+    }
     await page.waitForTimeout(650)
     const state = await pageState(page)
     const surfaces = await snapshotSurfaces(page, [

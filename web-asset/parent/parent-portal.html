@@ -33,23 +33,15 @@
     }
   </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
+  <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
-      background: linear-gradient(180deg, #f9faff, #ebedf7);
+      background: var(--portal-page-bg);
     }
 
     body.parent-portal-page {
-      background: linear-gradient(180deg, #f9faff, #ebedf7);
-      color: #212121;
-    }
-
-    html[data-theme="dark"] {
-      background: linear-gradient(180deg, #111215, #171b22);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page {
-      background: linear-gradient(180deg, #111215, #171b22);
-      color: #f2f4f7;
+      background: var(--portal-page-bg);
+      color: var(--portal-text);
     }
   </style>
   <title>Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club</title>
@@ -65,17 +57,6 @@
       border: 0;
       margin-top: 10px;
       padding: 0;
-    }
-
-    .homework-card-label {
-      color: #284a72;
-      font-size: clamp(11px, 2.7vw, 13px);
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      line-height: 1.15;
-      margin: 0 0 6px;
-      padding-left: 2px;
-      text-transform: uppercase;
     }
 
     .homework-card-shell {
@@ -141,17 +122,6 @@
       color: #8f2c2c;
     }
 
-    .homework-square-k,
-    .attendance-square-k {
-      color: #234e7d;
-      font-size: clamp(11px, 2.2vw, 13px);
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      line-height: 1.1;
-      opacity: 0.95;
-      text-transform: uppercase;
-    }
-
     .attendance-square-k {
       line-height: 1.12;
       max-inline-size: 92%;
@@ -164,11 +134,6 @@
       aspect-ratio: auto;
       grid-template-rows: auto auto;
       min-height: clamp(78px, 10.5vw, 90px);
-    }
-
-    .homework-square-v {
-      font-size: clamp(20px, 4.8vw, 34px);
-      line-height: 0.88;
     }
 
     .homework-square-v.is-status {
@@ -189,17 +154,6 @@
     .homework-square-v.is-count {
       font-size: clamp(34px, 8.4vw, 62px);
       line-height: 0.86;
-    }
-
-    .homework-square-v,
-    .attendance-square-v {
-      display: block;
-      font-variant-numeric: tabular-nums lining-nums;
-      font-weight: 800;
-      max-inline-size: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     .square-number {
@@ -237,17 +191,6 @@
       display: grid;
       gap: 8px;
       min-width: 0;
-    }
-
-    .homework-content-title {
-      color: #18395d;
-      font-size: clamp(14px, 3vw, 17px);
-      font-weight: 800;
-      line-height: 1.15;
-      margin: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     .homework-link {
@@ -392,22 +335,6 @@
       text-underline-offset: 2px;
     }
 
-    .report-archive-meta {
-      color: #4a6688;
-      font-size: 12px;
-    }
-
-    .report-archive-status {
-      color: #5e7390;
-      font-size: 12px;
-    }
-
-    .dashboard-card-subtitle {
-      color: var(--ink-soft);
-      font-size: 12px;
-      margin: -2px 0 0;
-    }
-
     .report-modal-nav {
       display: inline-flex;
       flex-wrap: wrap;
@@ -432,8 +359,7 @@
     #performanceReportHomeworkBlock,
     #performanceReportAttendanceBlock,
     .report-grade-block,
-    #performanceReportModalSections,
-    .report-modal-ack {
+    #performanceReportModalSections {
       grid-column: 1 / -1;
     }
 
@@ -454,24 +380,6 @@
       padding: 7px 10px;
     }
 
-    .report-head-card h5 {
-      color: #1c436d;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .report-head-value {
-      color: #1f456e;
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1.4;
-      margin: 0;
-      word-break: break-word;
-    }
-
     .report-block {
       background: linear-gradient(180deg, #f8fbff 0%, #edf4fc 100%);
       border: 1px solid #c9d7ea;
@@ -480,14 +388,6 @@
       display: grid;
       gap: 6px;
       padding: 7px 9px;
-    }
-
-    .report-block h5 {
-      color: #1d446f;
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      margin: 0;
-      text-transform: uppercase;
     }
 
     .report-metrics {
@@ -517,10 +417,6 @@
       min-height: 92px;
     }
 
-    #performanceReportHomeworkBlock .homework-content-title {
-      white-space: normal;
-    }
-
     #performanceReportAttendanceMetrics {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -547,141 +443,6 @@
       display: grid;
       gap: 6px;
       padding: 8px;
-    }
-
-    .report-grade-block h5 {
-      color: #1a436f;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .report-grades-table {
-      min-height: 170px;
-    }
-
-    #performanceReportGradesTable table {
-      background: #fff;
-    }
-
-    .report-grades-hint {
-      color: #48698f;
-      font-size: 12px;
-      margin: 0;
-    }
-
-    .report-bands {
-      display: grid;
-      gap: 8px;
-    }
-
-    .report-band {
-      background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
-      border: 1px solid #c8d5e8;
-      border-left: 5px solid #7f99bc;
-      border-radius: 10px;
-      display: grid;
-      gap: 6px;
-      padding: 8px 10px;
-    }
-
-    .report-band h5 {
-      color: #1a436f;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .report-band-table {
-      border-collapse: collapse;
-      table-layout: fixed;
-      width: 100%;
-    }
-
-    .report-band-table th,
-    .report-band-table td {
-      border-top: 1px solid #d8e3f1;
-      padding: 6px 7px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .report-band-table th {
-      color: #2b4f76;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .report-band-table td {
-      color: #21496f;
-      font-size: 12px;
-      line-height: 1.35;
-    }
-
-    .report-band-table td:nth-child(2) {
-      color: #173f69;
-      font-weight: 800;
-      white-space: nowrap;
-      width: 18%;
-    }
-
-    .report-band-table td:nth-child(1) {
-      width: 46%;
-    }
-
-    .report-band-table td:nth-child(3) {
-      width: 36%;
-    }
-
-    .report-band.is-ok {
-      border-left-color: #6ca77d;
-    }
-
-    .report-band.is-watch {
-      border-left-color: #d4ad73;
-    }
-
-    .report-band.is-alert {
-      border-left-color: #c97c7c;
-    }
-
-    .report-modal-ack {
-      align-items: center;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 8px;
-    }
-
-    .report-modal-ack button {
-      min-height: 36px;
-    }
-
-    .report-modal-ack-status {
-      color: #0f6d2a;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .report-modal-ack-status.is-reviewed {
-      background: #e6f7ee;
-      border: 1px solid #2f7d51;
-      border-radius: 8px;
-      padding: 8px 10px;
-    }
-
-    .report-modal-ack-status.is-peer {
-      background: #f2f6fb;
-      border: 1px solid #90a4bd;
-      border-radius: 8px;
-      color: #34506f;
-      padding: 8px 10px;
     }
 
     #performanceReportModal .portal-modal-dialog {
@@ -714,35 +475,6 @@
       .report-modal-body {
         grid-template-columns: 1fr;
       }
-
-      .report-head-grid,
-      .report-homework-cards,
-      #performanceReportAttendanceMetrics {
-        grid-template-columns: 1fr;
-      }
-
-      .report-band-table,
-      .report-band-table tbody,
-      .report-band-table tr,
-      .report-band-table td {
-        display: block;
-        width: 100%;
-      }
-
-      .report-band-table thead {
-        display: none;
-      }
-
-      .report-band-table tr {
-        border-top: 1px solid #d8e3f1;
-        padding-top: 4px;
-      }
-
-      .report-band-table td {
-        border-top: 0;
-        padding: 4px 0;
-      }
-    }
 
     .status {
       color: var(--ink-soft);
@@ -1117,15 +849,6 @@
       gap: 6px;
     }
 
-    .parent-overview-title {
-      color: var(--ink);
-      font-size: clamp(1.25rem, 2.2vw, 1.8rem);
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      line-height: 1.12;
-      margin: 0;
-    }
-
     label {
       color: var(--ink-soft);
       display: block;
@@ -1364,25 +1087,6 @@
       text-align: center;
     }
 
-    .metric .k {
-      color: var(--ink-soft);
-      font-size: 11px;
-      letter-spacing: 0.35px;
-      max-width: 100%;
-      overflow-wrap: anywhere;
-      text-transform: uppercase;
-      word-break: break-word;
-    }
-
-    .metric .v {
-      font-size: clamp(17px, 3.8vw, 22px);
-      font-weight: 700;
-      line-height: 1.1;
-      max-width: 100%;
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
-
     .metric.metric-green {
       background: #d7f2e1;
       border-color: #1f7a4a;
@@ -1438,14 +1142,6 @@
       gap: 5px;
       min-height: 70px;
       padding: 10px;
-    }
-
-    .identity-label {
-      color: var(--ink-soft);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
     }
 
     .identity-value {
@@ -1738,24 +1434,6 @@
       justify-content: space-between;
     }
 
-    .detail-item-head strong {
-      font-size: 0.95rem;
-      line-height: 1.35;
-    }
-
-    .detail-meta {
-      color: var(--ink-soft);
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .detail-note {
-      color: var(--ink);
-      font-size: 13px;
-      line-height: 1.45;
-      margin: 0;
-    }
-
     .detail-empty {
       background: #f8fbff;
       border: 1px dashed var(--line);
@@ -1764,169 +1442,6 @@
       font-size: 13px;
       line-height: 1.45;
       padding: 12px;
-    }
-
-    .calendar-shell {
-      min-height: 480px;
-    }
-
-    .fc {
-      --fc-border-color: #c9d6e6;
-      --fc-button-active-bg-color: #7f1520;
-      --fc-button-active-border-color: #6b1019;
-      --fc-button-bg-color: #b50010;
-      --fc-button-border-color: #8d0010;
-      --fc-button-hover-bg-color: #92000d;
-      --fc-button-hover-border-color: #76000a;
-      --fc-event-text-color: #132a45;
-      --fc-neutral-bg-color: #f6f9ff;
-      --fc-page-bg-color: #fff;
-      --fc-today-bg-color: rgba(24, 67, 135, 0.08);
-    }
-
-    .fc .fc-toolbar.fc-header-toolbar {
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .fc .fc-toolbar-title {
-      color: #163767;
-      font-size: clamp(1rem, 3vw, 1.2rem);
-      line-height: 1.2;
-    }
-
-    .fc .fc-button {
-      font-weight: 700;
-      letter-spacing: 0.01em;
-    }
-
-    .fc .fc-daygrid-day-number,
-    .fc .fc-col-header-cell-cushion {
-      color: #163767;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .fc .fc-daygrid-day-number {
-      font-size: clamp(1rem, 1.7vw, 1.14rem);
-      line-height: 1.1;
-      padding: 6px 8px 0;
-    }
-
-    .fc .fc-col-header-cell-cushion {
-      font-size: clamp(0.82rem, 1.3vw, 0.94rem);
-      letter-spacing: 0.05em;
-      line-height: 1.15;
-      padding: 8px 4px;
-      text-transform: uppercase;
-    }
-
-    .fc .fc-daygrid-day-frame {
-      min-height: 108px;
-    }
-
-    .fc .fc-daygrid-event {
-      border-radius: 10px;
-      margin-top: 4px;
-      padding: 4px 6px;
-      white-space: normal;
-    }
-
-    .fc .fc-event-main {
-      font-size: 0.9rem;
-      font-weight: 700;
-      line-height: 1.2;
-      white-space: normal;
-    }
-
-    .fc .fc-event.fc-event-news-status-green {
-      background: #e7f8ef !important;
-      border-color: #36a66a !important;
-      color: #0f4f30 !important;
-    }
-
-    .fc .fc-event.fc-event-news-status-amber {
-      background: #fff4da !important;
-      border-color: #d89d28 !important;
-      color: #5b3b00 !important;
-    }
-
-    .fc .fc-event.fc-event-news-status-purple {
-      background: #f3ecff !important;
-      border-color: #a48ad8 !important;
-      color: #422b7a !important;
-    }
-
-    .fc .fc-event.fc-event-news-status-red {
-      background: #ffe1e5 !important;
-      border-color: #d43b4e !important;
-      color: #6d0d1a !important;
-    }
-
-    .fc .fc-event.fc-event-news-status-blue {
-      background: #e6f3ff !important;
-      border-color: #4093d2 !important;
-      color: #0f4a73 !important;
-    }
-
-    .fc .fc-event.fc-event-news-status-turquoise {
-      background: #e1fbf9 !important;
-      border-color: #2ba39a !important;
-      color: #085852 !important;
-    }
-
-    .fc .fc-event.fc-event-news-status-revise {
-      background: #f3ecff !important;
-      border-color: #a48ad8 !important;
-      color: #422b7a !important;
-    }
-
-    .fc .fc-event.fc-event-homework-track {
-      background: #edf4ff !important;
-      border-color: #83a8de !important;
-      color: #173b78 !important;
-    }
-
-    .fc .fc-event.fc-event-homework-overdue {
-      background: #fff1f1 !important;
-      border-color: #e1a8a8 !important;
-      color: #7d0010 !important;
-    }
-
-    .fc .fc-event.fc-event-attendance-present {
-      background: #eefaf3 !important;
-      border-color: #8ccba9 !important;
-      color: #195d3d !important;
-    }
-
-    .fc .fc-event.fc-event-attendance-absent {
-      background: #fff1f1 !important;
-      border-color: #e1a8a8 !important;
-      color: #7d0010 !important;
-    }
-
-    .fc .fc-event.fc-event-attendance-late {
-      background: #fff5df !important;
-      border-color: #e5ab34 !important;
-      color: #8a5600 !important;
-    }
-
-    .fc .fc-event.fc-event-attendance-excused {
-      background: #eef3ff !important;
-      border-color: #91a3d5 !important;
-      color: #2b4278 !important;
-    }
-
-    .fc .fc-event.fc-event-report {
-      background: #f1efff !important;
-      border-color: #9a8cdc !important;
-      color: #45317d !important;
-    }
-
-    .fc .fc-event.fc-event-grade {
-      background: #edf4ff !important;
-      border-color: #83a8de !important;
-      color: #173b78 !important;
     }
 
     #loginCard,
@@ -2058,17 +1573,6 @@
       }
     }
 
-    @media (max-width: 820px) {
-      .shell {
-        margin: 0 auto;
-        padding: 12px;
-      }
-
-      .hero {
-        padding: 8px 60px 8px 10px;
-      }
-    }
-
     @media (max-width: 560px) {
       .section-head,
       .queue-summary-head {
@@ -2094,91 +1598,6 @@
         transform: translateY(0);
       }
     }
-    html[data-theme="dark"] body.parent-portal-page {
-      --ink: var(--portal-dark-text);
-      --ink-soft: var(--portal-dark-text-soft);
-      --line: var(--portal-dark-border);
-      --card: var(--portal-dark-panel);
-      --card-soft: var(--portal-dark-panel-soft);
-      --surface-2: var(--portal-dark-panel-soft);
-      background: var(--portal-dark-bg);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page :where(.portal-layout, .panel, .card, .topbar, .hero, .side-nav, .side-brand, .side-link, .portal-modal-dialog, .portal-modal-body, .homework-card-shell, .queue-table-wrap, .report-modal-body, .report-section, .report-card, .calendar-shell, .detail-item, .student-profile-card, .identity-item, .metric, .profile-group, .field-row.locked, .field-row.edited) {
-      background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
-      background-color: var(--portal-dark-panel);
-      border-color: var(--portal-dark-border);
-      border-radius: var(--portal-dark-radius);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page :where(.hint, .sub, .small, .muted, .page-note, .section-lede, .detail-meta, .detail-note, .homework-card-label, .side-brand span, .portal-modal-body, .admin-table-summary, .dashboard-card-subtitle, .parent-overview-title, .summary-title, .report-grades-hint, .report-head-value) {
-      color: var(--portal-dark-text-soft);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page :where(.metric.metric-green, .metric.metric-blue, .metric.metric-purple, .metric.metric-red) {
-      background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-green .k,
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-blue .k,
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-purple .k,
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-red .k {
-      color: var(--portal-dark-text-soft);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-green .v,
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-blue .v,
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-purple .v,
-    html[data-theme="dark"] body.parent-portal-page .metric.metric-red .v {
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page input,
-    html[data-theme="dark"] body.parent-portal-page select,
-    html[data-theme="dark"] body.parent-portal-page textarea {
-      background: #3a3d44;
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal input,
-    html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal textarea {
-      background: #3a3d44;
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] body.parent-portal-page input::placeholder,
-    html[data-theme="dark"] body.parent-portal-page select::placeholder,
-    html[data-theme="dark"] body.parent-portal-page textarea::placeholder {
-      color: #58657a;
-    }
-
-    html[data-theme="dark"] body.parent-portal-page #loginCard {
-      background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
-      border-color: var(--portal-dark-border);
-      margin: 0 auto;
-    }
-
-    html[data-theme="dark"] body.parent-portal-page #loginCard .login-form {
-      align-items: stretch;
-      grid-template-columns: 1fr;
-      margin-inline: auto;
-    }
-
-    html[data-theme="dark"] body.parent-portal-page .homework-link {
-      color: #b4c4ea;
-    }
-
-    html[data-theme="dark"] body.parent-portal-page .homework-link:hover,
-    html[data-theme="dark"] body.parent-portal-page .homework-link:focus-visible {
-      color: #eef4ff;
-    }
-
     html[data-parent-auth-state="authenticated"] body.parent-portal-page #loginCard {
       display: none !important;
     }
@@ -2195,15 +1614,6 @@
       display: none !important;
     }
 
-    html[data-theme="dark"] body.parent-portal-page :where(h1, h2, h3, h4, strong, label, summary, th, td) {
-      color: inherit;
-    }
-
-    html[data-theme="dark"] body.parent-portal-page :where(table, thead, tbody, tr, th, td, .queue-table-wrap table, .news-queue-table) {
-      background: transparent;
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
   </style>
 </head>
 
@@ -6188,6 +5598,7 @@
             reviewStatus,
             awaitingReReview,
           );
+          const textColor = ["blue", "green", "purple", "red"].includes(colorToken) ? "#fff" : "#173b78";
           return {
             id: `news-${dateKey}`,
             title: newsStatusLabel(status, reviewStatus, awaitingReReview),
@@ -6196,6 +5607,7 @@
             display: "block",
             backgroundColor: color,
             borderColor: color,
+            textColor,
             classNames: ["fc-event-news-status", `fc-event-news-status-${colorToken}`],
           };
         })
@@ -7365,27 +6777,21 @@
     document.getElementById("parentNavScrim")?.addEventListener("click", () => {
       setSideNavOpen(false);
     });
-      document.querySelectorAll(".side-link").forEach((link) => {
-        link.addEventListener("click", (event) => {
+      window.SISPortalNav?.bindAnchoredNavLinks({
+        onActivate({ link }) {
           const targetView = normalizeText(link.getAttribute("data-view-target"));
           const pageTarget = normalizeDashboardPage(
             link.getAttribute("data-page-target"),
-        );
-        const destination = link.getAttribute("href") || "";
-        event.preventDefault();
+          );
           if (targetView === "child") {
             setActivePortalView("child");
           } else {
             setActiveDashboardPage(pageTarget);
           }
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              const target = destination ? document.querySelector(destination) : null;
-              target?.scrollIntoView({ behavior: "auto", block: "start" });
-            });
-          });
+        },
+        onClose() {
           setSideNavOpen(false);
-        });
+        },
       });
     document
       .getElementById("parentTextZoomDownBtn")

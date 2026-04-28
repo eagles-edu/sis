@@ -1652,15 +1652,6 @@ transition:
         font-size: 10px;
         font-weight: 700;
   }
-      .grade-chart-empty {
-        background: #fff;
-        border: 1px dashed #b7c7df;
-        border-radius: var(--radius-2);
-        color: #4d6588;
-        font-size: 12px;
-        margin: 0;
-        padding: 10px;
-  }
       .grade-chart-modal-card {
         box-sizing: border-box;
         max-width: min(1100px, calc(100vw - 32px));
@@ -1687,15 +1678,6 @@ transition:
         box-sizing: border-box;
         max-height: min(76vh, 760px);
         overflow: auto;
-  }
-      .grade-chart-modal-svg-wrap {
-        background: #f8fbff;
-        border: 1px solid #cfdbed;
-        border-radius: var(--radius-2);
-        box-sizing: border-box;
-        margin-top: 4px;
-        min-height: 320px;
-        padding: 10px;
   }
       .grade-chart-modal-svg-wrap .grade-chart-svg {
         height: 380px;
@@ -3321,49 +3303,8 @@ box-shadow:
         box-sizing: border-box;
   }
 
-      html[data-theme="dark"] body.admin-portal-page {
-        --background-color: var(--portal-dark-bg);
-        --bg: var(--portal-dark-bg);
-        --border: var(--portal-dark-border);
-        --border-strong: rgba(255, 255, 255, 0.34);
-        --ink: var(--portal-dark-text);
-        --ink-muted: var(--portal-dark-text-soft);
-        --menu-bg: #3b4048;
-        --menu-border: var(--portal-dark-border);
-        --menu-link-active-bg: #495160;
-        --menu-link-bg: #373c44;
-        --panel: var(--portal-dark-panel);
-        --portal-dark-bg: #111215;
-        --portal-dark-border: rgba(255, 255, 255, 0.2);
-        --portal-dark-card: #3a4048;
-        --portal-dark-card-deep: #343941;
-        --portal-dark-card-soft: #444a54;
-        --portal-dark-panel: #2a2e35;
-        --portal-dark-panel-soft: #31363e;
-        --portal-dark-radius: var(--radius-3);
-        --portal-dark-text: #f2f4f7;
-        --portal-dark-text-soft: #c9ced4;
-        --link-active: #f7fbff;
-        --link-color: #b4c4ea;
-        --link-hover: #eef4ff;
-        --link-visited: #d7c6ff;
-        --surface-card: var(--portal-dark-panel);
-        --surface-card-muted: var(--portal-dark-panel-soft);
-        --surface-color: var(--portal-dark-panel);
-        --surface-contrast: var(--portal-dark-panel-soft);
-        --surface-muted: var(--portal-dark-panel-soft);
-        --surface-soft: var(--portal-dark-panel-soft);
-        --surface-warm: var(--portal-dark-panel-soft);
-        --portal-theme-toggle-icon-dark-bg: rgba(255, 255, 255, 0.08);
-        background: var(--portal-dark-bg);
-        color: var(--portal-dark-text);
-
-        --surface-1: var(--portal-dark-panel);
-        --surface-2: var(--portal-dark-panel-soft);
-  }
-
       html[data-theme="dark"] body.admin-portal-page :where(.wrap, .panel, .app-sidebar, .page-section, .app-page-header, .attendance-student-panel, .overview-group > details, .level-detail-panel) {
-        background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
+        background: linear-gradient(180deg, var(--portal-dark-surface-support), var(--portal-dark-panel));
         border-color: var(--portal-dark-border);
         border-radius: var(--portal-dark-radius);
         color: var(--portal-dark-text);
@@ -3416,21 +3357,21 @@ box-shadow:
   }
 
       html[data-theme="dark"] body.admin-portal-page .menu-group {
-        background: linear-gradient(180deg, #3b4048 0%, #30343b 100%);
+        background: linear-gradient(180deg, var(--portal-dark-surface-support) 0%, var(--portal-dark-panel) 100%);
   }
 
       html[data-theme="dark"] body.admin-portal-page .menu-link {
-        background: #373c44;
+        background: var(--portal-dark-surface-support);
         color: var(--portal-dark-text);
   }
 
       html[data-theme="dark"] body.admin-portal-page .menu-link.active {
-        background: #495160;
-        color: #fff;
+        background: var(--portal-dark-surface-soft);
+        color: var(--portal-dark-text);
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(.app-brand-logo-wrap, .sidebar-logo-wrap) {
-        background: #39414d !important;
+        background: var(--portal-dark-surface-soft) !important;
         border-color: var(--portal-dark-border) !important;
   }
 
@@ -3449,30 +3390,62 @@ box-shadow:
         color: var(--portal-dark-text);
   }
 
+      html[data-theme="dark"] body.admin-portal-page .mini-list,
+      html[data-theme="dark"] body.admin-portal-page .chart-shell {
+        background: var(--portal-dark-surface-support);
+        border-color: var(--portal-dark-border-strong);
+        color: var(--portal-dark-text-soft);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .chart-svg {
+        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .chart-legend,
+      html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
+      html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
+        color: var(--portal-dark-text-soft);
+      }
+
       html[data-theme="dark"] body.admin-portal-page .system-health-item {
-        --ink: #172033;
-        --ink-muted: #414141;
-        color: #172033;
-  }
+        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+        border-color: var(--portal-dark-border-strong);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.ok,
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.warn,
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.error,
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.pending {
+        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.ok {
+        border-color: rgba(124, 214, 164, 0.42);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.warn {
+        border-color: rgba(240, 176, 95, 0.42);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.error {
+        border-color: rgba(242, 138, 149, 0.42);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .system-health-item.pending {
+        border-color: rgba(106, 164, 255, 0.42);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .system-health-label {
+        color: var(--portal-dark-text);
+      }
 
       html[data-theme="dark"] body.admin-portal-page .system-health-detail,
-      html[data-theme="dark"] body.admin-portal-page .system-health-summary {
-        color: var(--portal-dark-text-soft);
-  }
-
+      html[data-theme="dark"] body.admin-portal-page .system-health-summary,
       html[data-theme="dark"] body.admin-portal-page .text-zoom-controls .zoom-label {
         color: var(--portal-dark-text-soft);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page .system-health-item .system-health-summary,
-      html[data-theme="dark"] body.admin-portal-page .system-health-item .system-health-detail,
-      html[data-theme="dark"] body.admin-portal-page .system-health-item .system-health-label {
-        color: var(--ink);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page .system-health-item .system-health-detail {
-        color: var(--ink-muted);
-  }
+      }
 
       html[data-theme="dark"] body.admin-portal-page .queue-hub-panel {
         background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
@@ -3480,13 +3453,62 @@ box-shadow:
         color: var(--portal-dark-text);
   }
 
+      html[data-theme="dark"] body.admin-portal-page .attendance-level-panel {
+        background: var(--portal-dark-surface-support);
+        border-color: var(--portal-dark-border-strong);
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .attendance-level-panel > h3,
+      html[data-theme="dark"] body.admin-portal-page .attendance-level-editor h4 {
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .attendance-level-tile {
+        border-color: var(--portal-dark-border);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .attendance-level-tile-title {
+        background: rgba(0, 0, 0, 0.24);
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .assignment-item-builder {
+        background: var(--portal-dark-surface-support);
+        border-color: var(--portal-dark-border-strong);
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .assignment-item-builder h4,
+      html[data-theme="dark"] body.admin-portal-page .assignment-item-builder label,
+      html[data-theme="dark"] body.admin-portal-page .assignment-item-builder .small {
+        color: var(--portal-dark-text-soft);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .assignment-item-table thead th {
+        background: var(--portal-dark-card-deep);
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .assignment-item-table td {
+        color: var(--portal-dark-text);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .queue-hub-empty {
+        background: var(--portal-dark-surface-support);
+        border-color: var(--portal-dark-border-strong);
+        color: var(--portal-dark-text-soft);
+      }
+
       html[data-theme="dark"] body.admin-portal-page .queue-hub-panel.drop-target {
-        background: linear-gradient(180deg, #3d4b63 0%, #2f394c 100%);
+        background: linear-gradient(180deg, rgba(106, 164, 255, 0.18) 0%, rgba(47, 57, 76, 0.95) 100%);
         border-color: #6aa4ff;
   }
 
       html[data-theme="dark"] body.admin-portal-page .queue-hub-order-dirty {
-        background: linear-gradient(180deg, #5a4322 0%, #47351b 100%);
+        background: linear-gradient(180deg, rgba(240, 176, 95, 0.18) 0%, rgba(71, 53, 27, 0.96) 100%);
         border-color: #f0b05f;
   }
 
@@ -3579,7 +3601,7 @@ box-shadow:
   }
 
       html[data-theme="dark"] body.admin-portal-page .profile-field-group h3 {
-        background: #343941;
+        background: var(--portal-dark-surface-support);
         border-color: var(--portal-dark-border);
   }
 
@@ -3675,7 +3697,7 @@ box-shadow:
   }
 
       html[data-theme="dark"] body.admin-portal-page .progress-report-rubric-row-disabled td {
-        background: #30353d;
+        background: var(--portal-dark-surface-support);
         color: var(--portal-dark-text-soft);
   }
 
@@ -3685,20 +3707,9 @@ box-shadow:
         .progress-report-rubric-row-disabled .recommendation-cell textarea:disabled,
         .progress-report-rubric-row-disabled .pt-score-radio-option
       ) {
-        background: #2b3037;
+        background: var(--portal-dark-surface-support);
         border-color: rgba(255, 255, 255, 0.12);
         color: var(--portal-dark-text-soft);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page #authPanel {
-        background: linear-gradient(180deg, var(--portal-dark-panel-soft), var(--portal-dark-panel));
-        border-color: var(--portal-dark-border);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea) {
-        background: #3a3d44;
-        border-color: var(--portal-dark-border);
-        color: var(--portal-dark-text);
   }
 
       html[data-theme="dark"] body.admin-portal-page #levelReminderSendBtn {
@@ -3709,8 +3720,14 @@ box-shadow:
         color: #fff;
   }
 
+      html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea) {
+        background: var(--portal-dark-field-bg);
+        border-color: var(--portal-dark-field-border);
+        color: var(--portal-dark-field-text);
+  }
+
       html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea)::placeholder {
-        color: #58657a;
+        color: var(--portal-dark-field-placeholder);
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(h1, h2, h3, h4, strong, label, summary, th, td) {
@@ -3744,30 +3761,14 @@ box-shadow:
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(.grade-chart-field select, .grade-chart-field input) {
-        background: #2d3036;
-        border-color: var(--portal-dark-border);
-        color: var(--portal-dark-text);
+        background: var(--portal-dark-field-bg);
+        border-color: var(--portal-dark-field-border);
+        color: var(--portal-dark-field-text);
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(.grade-chart-field input:disabled, .grade-chart-field select:disabled) {
-        background: #24272d;
-        color: var(--portal-dark-text-soft);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page .grade-chart-lane {
-        background: linear-gradient(180deg, #49505a 0%, var(--portal-dark-card-deep) 100%);
-        border-color: var(--portal-dark-border);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page .grade-chart-lane-title {
-        color: var(--portal-dark-text);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page .grade-chart-empty {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
-        color: var(--portal-dark-text-soft);
+        background: var(--portal-dark-field-bg);
+        color: var(--portal-dark-field-placeholder);
   }
 
       html[data-theme="dark"] body.admin-portal-page .permission-role-card {

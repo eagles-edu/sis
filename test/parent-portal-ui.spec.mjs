@@ -5,9 +5,12 @@ import test from "node:test"
 import { JSDOM } from "jsdom"
 
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
+const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.css")
 const PARENT_PORTAL_HTML = fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8")
+const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
   .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.css">\s*/i, "")
+  .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
 
 function jsonTextResponse(status, payload = {}) {
@@ -66,11 +69,39 @@ async function createParentPortalDom(fetchHandler, url, options = {}) {
     beforeParse(window) {
       window.fetch = (resource, init = {}) => fetchHandler(resource, init)
       window.scrollTo = () => {}
+      window.requestAnimationFrame = (callback) => window.setTimeout(() => callback(Date.now()), 0)
+      window.cancelAnimationFrame = (handle) => window.clearTimeout(handle)
       if (options.initialAuthState) {
         window.__SIS_PARENT_INITIAL_AUTH__ = options.initialAuthState
       }
       if (typeof options.beforeParse === "function") {
         options.beforeParse(window)
+      }
+      window.HTMLElement.prototype.scrollIntoView = () => {}
+      window.SISPortalNav = {
+        bindAnchoredNavLinks({ selector = ".side-link", getDestination = (link) => link.getAttribute("href") || "", onActivate = null, onClose = null, rootNode = window.document } = {}) {
+          const links = rootNode.querySelectorAll(selector)
+          links.forEach((link) => {
+            link.addEventListener("click", (event) => {
+              event.preventDefault()
+              const destination = getDestination(link) || ""
+              if (typeof onActivate === "function") {
+                onActivate({ link, destination })
+              }
+              const raf = window.requestAnimationFrame?.bind(window) || ((callback) => window.setTimeout(callback, 0))
+              raf(() => {
+                raf(() => {
+                  const target = window.document.querySelector(destination)
+                  target?.scrollIntoView({ behavior: "auto", block: "start" })
+                })
+              })
+              if (typeof onClose === "function") {
+                onClose({ link, destination })
+              }
+            })
+          })
+          return links
+        },
       }
       window.FullCalendar = {
         Calendar: class CalendarStub {
@@ -110,9 +141,13 @@ async function createParentPortalDom(fetchHandler, url, options = {}) {
 }
 
 test("parent portal dark theme keeps identity, metric, profile, and homework surfaces on the dark card hierarchy", () => {
-  assert.match(PARENT_PORTAL_HTML, /html\[data-theme="dark"\] body\.parent-portal-page :where\([^)]*identity-item[^)]*metric[^)]*profile-group[^)]*field-row\.locked[^)]*field-row\.edited[^)]*\)/s)
-  assert.match(PARENT_PORTAL_HTML, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-link\s*\{/i)
-  assert.match(PARENT_PORTAL_HTML, /html\[data-theme="dark"\] body\.parent-portal-page :where\([^)]*homework-card-label[^)]*\)/s)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.identity-item,/)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.metric,/)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.profile-group,/)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.field-row\.locked,/)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.field-row\.edited,/)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-link\s*\{/i)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-card-label,/)
 })
 
 test("parent news week-set modal keeps student-clone visuals with only wired controls", () => {

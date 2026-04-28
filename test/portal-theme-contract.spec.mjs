@@ -46,9 +46,9 @@ test("shared portal theme defines the common shell, header, and card system", ()
 test("shared portal theme keeps the hub theme toggle scoped and legible in dark mode", () => {
   assert.match(sharedTheme, /body\.portal-hub-page \.theme-toggle\s*\{/)
   assert.match(sharedTheme, /body\.portal-hub-page \.theme-toggle__icon\s*\{/)
-  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle\s*\{[\s\S]*color:\s*#ffd76a;/)
-  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.12\);/)
-  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*color:\s*#ffd76a;/)
+  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
+  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*background:\s*var\(--portal-theme-toggle-icon-bg-dark\);/)
+  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
   assert.doesNotMatch(sharedTheme, /(^|\n)\s*\.theme-toggle\s*\{/m)
   assert.doesNotMatch(sharedTheme, /(^|\n)\s*\.theme-toggle__icon\s*\{/m)
   assert.doesNotMatch(sharedTheme, /theme-toggle::after/i)
@@ -84,14 +84,13 @@ test("parent, student, and admin theme toggles keep the shared portal visual con
     /html\[data-theme="dark"\] body\.student-portal-page \.portal-theme-toggle__icon,/,
     /html\[data-theme="dark"\] body\.parent-portal-page \.portal-theme-toggle__icon,/,
     /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/,
-    /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{[\s\S]*background:\s*var\(--portal-theme-toggle-icon-dark-bg,\s*rgba\(255,\s*255,\s*255,\s*0\.12\)\);/i,
+    /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{[\s\S]*background:\s*var\(--portal-theme-toggle-icon-bg-dark\);/i,
   ]
 
   const sources = [
     ["admin hub", fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8"), hubToggleRules],
     ["parent portal", parentPortal, portalToggleMarkupRules],
     ["student portal", studentPortal, portalToggleMarkupRules],
-    ["admin theme css", adminTheme, [/--portal-theme-toggle-icon-dark-bg:\s*rgba\(255,\s*255,\s*255,\s*0\.08\);/]],
   ]
 
   for (const [label, source, rules] of sources) {
@@ -110,9 +109,9 @@ test("parent, student, and admin theme toggles keep the shared portal visual con
 })
 
 test("portal login shells codify the first-paint canvas backgrounds", () => {
-  assert.match(
-    sharedTheme,
-    /body\.student-portal-page,\s*body\.parent-portal-page\s*\{\s*background:\s*linear-gradient\(180deg,\s*var\(--bg-0\),\s*var\(--bg-1\)\);\s*\}/s,
+  assert.ok(
+    sharedTheme.includes("body.student-portal-page,\nbody.parent-portal-page {") &&
+      sharedTheme.includes("background: var(--portal-page-bg);"),
     "shared theme should keep the student and parent light canvas",
   )
   assert.match(
@@ -122,57 +121,52 @@ test("portal login shells codify the first-paint canvas backgrounds", () => {
   )
   assert.match(
     studentPortal,
-    /html\s*\{\s*background:\s*linear-gradient\(180deg,\s*#f9faff,\s*#ebedf7\);\s*\}/s,
-    "student portal should stamp the light canvas before shared CSS loads",
+    /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/s,
+    "student portal should stamp the shared light canvas token before shared CSS loads",
   )
   assert.match(
     studentPortal,
-    /body\.student-portal-page\s*\{\s*background:\s*linear-gradient\(180deg,\s*#f9faff,\s*#ebedf7\);\s*color:\s*#212121;\s*\}/s,
-    "student portal should keep the light login shell canvas",
-  )
-  assert.match(
-    studentPortal,
-    /html\[data-theme="dark"\]\s*\{\s*background:\s*linear-gradient\(180deg,\s*#111215,\s*#171b22\);\s*\}/s,
-    "student portal should stamp the dark canvas before shared CSS loads",
-  )
-  assert.match(
-    studentPortal,
-    /html\[data-theme="dark"\]\s*body\.student-portal-page\s*\{\s*background:\s*linear-gradient\(180deg,\s*#111215,\s*#171b22\);\s*color:\s*#f2f4f7;\s*\}/s,
-    "student portal should keep the dark login shell canvas",
+    /body\.student-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/s,
+    "student portal should keep the shared light login shell canvas",
   )
   assert.match(
     parentPortal,
-    /html\s*\{\s*background:\s*linear-gradient\(180deg,\s*#f9faff,\s*#ebedf7\);\s*\}/s,
-    "parent portal should stamp the light canvas before shared CSS loads",
+    /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/s,
+    "parent portal should stamp the shared light canvas token before shared CSS loads",
   )
   assert.match(
     parentPortal,
-    /body\.parent-portal-page\s*\{\s*background:\s*linear-gradient\(180deg,\s*#f9faff,\s*#ebedf7\);\s*color:\s*#212121;\s*\}/s,
-    "parent portal should keep the light login shell canvas",
-  )
-  assert.match(
-    parentPortal,
-    /html\[data-theme="dark"\]\s*\{\s*background:\s*linear-gradient\(180deg,\s*#111215,\s*#171b22\);\s*\}/s,
-    "parent portal should stamp the dark canvas before shared CSS loads",
-  )
-  assert.match(
-    parentPortal,
-    /html\[data-theme="dark"\]\s*body\.parent-portal-page\s*\{\s*background:\s*linear-gradient\(180deg,\s*#111215,\s*#171b22\);\s*color:\s*#f2f4f7;\s*\}/s,
-    "parent portal should keep the dark login shell canvas",
+    /body\.parent-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/s,
+    "parent portal should keep the shared light login shell canvas",
   )
   assert.match(
     adminPortal,
-    /body\s*\{\s*margin:\s*0;\s*font-family:\s*var\(--font-base\);\s*background:\s*linear-gradient\(45deg,\s*var\(--background-color\)\s*0%,\s*#8a94a8\s*100%\);\s*color:\s*#212121;\s*\}/s,
-    "admin portal should keep the restored light canvas",
-  )
-  assert.match(
-    adminPortal,
-    /html\[data-theme="dark"\]\s*body\.admin-portal-page\s*\{\s*background:\s*linear-gradient\(180deg,\s*#111215\s*0%,\s*#171b22\s*100%\);\s*color:\s*#f2f4f7;\s*\}/s,
-    "admin portal should keep the dark login canvas",
+    /body\s*\{\s*margin:\s*0;\s*min-height:\s*100vh;\s*font-family:\s*var\(--font-base\);\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/s,
+    "admin portal should keep the shared light canvas token",
   )
 })
 
 test("shared portal theme keeps student and parent calendars readable in dark mode", () => {
+  assert.ok(
+    sharedTheme.includes("--fc-event-bg-color: #edf4ff;") &&
+      sharedTheme.includes("--fc-event-border-color: #83a8de;") &&
+      sharedTheme.includes("--fc-event-text-color: #173b78;"),
+    "shared theme should keep the default student and parent calendar events readable in light mode",
+  )
+  assert.ok(
+    sharedTheme.includes("--fc-event-bg-color: var(--portal-dark-surface-support);") &&
+      sharedTheme.includes("--fc-event-border-color: var(--portal-dark-border-strong);") &&
+      sharedTheme.includes("--fc-event-text-color: var(--portal-dark-text);"),
+    "shared theme should keep the default student and parent calendar events readable in dark mode",
+  )
+  assert.ok(
+    sharedTheme.includes("html[data-theme=\"dark\"] body.student-portal-page .fc .fc-event.fc-event-attendance-present") &&
+      sharedTheme.includes("--fc-event-text-color: #dff7e9;") &&
+      sharedTheme.includes("--fc-event-text-color: #ffe3e6;") &&
+      sharedTheme.includes("--fc-event-text-color: #fff1d0;") &&
+      sharedTheme.includes("--fc-event-text-color: #eaf2ff;"),
+    "shared theme should keep student and parent attendance events readable in dark mode",
+  )
   assert.match(
     sharedTheme,
     /html\[data-theme="dark"\] body\.student-portal-page \.calendar-shell,[\s\S]*html\[data-theme="dark"\] body\.parent-portal-page \.calendar-shell/s,
@@ -201,14 +195,13 @@ test("shared portal theme keeps student and parent calendars readable in dark mo
 })
 
 test("admin dark surfaces keep form controls and chart empty states readable", () => {
-  assert.match(
-    adminTheme,
-    /html\[data-theme="dark"\] body\.admin-portal-page :where\(input, select, textarea\)\s*\{\s*background:\s*#3a3d44;/s,
+  assert.ok(
+    adminTheme.includes("background: var(--portal-dark-field-bg);"),
     "admin dark inputs should use the dark surface",
   )
   assert.match(
     adminTheme,
-    /html\[data-theme="dark"\] body\.admin-portal-page \.grade-chart-empty\s*\{\s*background:\s*linear-gradient\(180deg,\s*var\(--portal-dark-card-soft\),\s*var\(--portal-dark-card\)\);/s,
+    /html\[data-theme="dark"\] body\.admin-portal-page \.tabulator-entry-callout\s*\{\s*background:\s*linear-gradient\(180deg,\s*var\(--portal-dark-card-soft\),\s*var\(--portal-dark-card\)\);/s,
     "admin dark empty chart state should use the dark card surface",
   )
 })

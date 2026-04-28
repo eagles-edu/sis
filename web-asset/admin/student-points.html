@@ -34,12 +34,12 @@
     }
 
     html[data-theme="dark"] {
-      --bg: #111215;
-      --bg-accent: linear-gradient(140deg, #1a1d22 0%, #111215 100%);
-      --card: #31343a;
+      --bg: #1a1c1f;
+      --bg-accent: linear-gradient(140deg, #25292c 0%, #1a1c1f 100%);
+      --card: #31363a;
       --ink: #f2f4f7;
       --muted: #c9ced4;
-      --line: rgba(255, 255, 255, 0.2);
+      --line: rgba(255, 255, 255, 0.22);
       --primary: #6aa4ff;
       --primary-strong: #2f75bc;
       --ok: #7cd6a4;
@@ -151,11 +151,16 @@
       border-color: #7fa4d4;
     }
 
-    html[data-theme="dark"] button,
     html[data-theme="dark"] input,
     html[data-theme="dark"] select {
-      background: #3a3d44;
-      border-color: rgba(255, 255, 255, 0.2);
+      background: #E2E2E2;
+      border-color: #aeb7c5;
+      color: #172033;
+    }
+
+    html[data-theme="dark"] button {
+      background: #31363a;
+      border-color: rgba(255, 255, 255, 0.22);
       color: var(--ink);
     }
 
@@ -199,7 +204,7 @@
     }
 
     html[data-theme="dark"] .chart-wrap {
-      background: #2d3036;
+      background: #25292c;
     }
 
     table {
