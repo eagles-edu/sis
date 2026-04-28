@@ -6,7 +6,8 @@
   --border-dg: #727272;
   --brand: var(--primary-color);
   --brand-strong: #8f1620;
-  --portal-page-bg: linear-gradient(180deg, #f9faff 0%, #ebedf7 100%);
+  --portal-page-bg: linear-gradient(45deg, var(--background-color) 0%, #8a94a8 100%);
+
   --portal-page-bg-wash:
     radial-gradient(920px 420px at -15% -20%, #d9edff 0%, transparent 62%),
     radial-gradient(980px 520px at 110% -25%, #dff8ea 0%, transparent 55%),

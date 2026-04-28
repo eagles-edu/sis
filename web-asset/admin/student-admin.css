@@ -102,7 +102,7 @@
         box-sizing: border-box;
       }
       body {
-        background: linear-gradient(45deg, var(--background-color) 0%, #8a94a8 100%);
+        background: linear-gradient(45deg, var(--background-color) 0%, #8da5d5 100%);
         color: var(--ink);
         font-family: var(--font-base);
         margin: 0;
