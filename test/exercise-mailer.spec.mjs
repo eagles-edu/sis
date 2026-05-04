@@ -189,6 +189,42 @@ test("POST /api/exercise-submission suppresses duplicate notifications for same 
   assert.equal(newHistory[1].to[0], "once@example.com")
 })
 
+test("POST /api/exercise-submission sends learner-only receipt for browser source", async () => {
+  const beforeHistory = transport.calls.history.length
+  const payload = {
+    email: "learner-only@example.com",
+    eaglesId: "browser001",
+    pageTitle: "Browser Cloze",
+    completedAt: "2026-03-01T07:45:00.000Z",
+    correctCount: 10,
+    pendingCount: 0,
+    incorrectCount: 0,
+    totalQuestions: 10,
+    scorePercent: 100,
+    recipients: ["teacher-not-used@example.com"],
+    sourceSystem: "cloze-web",
+    sourceAttemptId: "browser-cloze-attempt-001",
+  }
+
+  const res = await fetchLocal(basePort, "/api/exercise-submission", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+
+  assert.equal(res.status, 204)
+
+  const newHistory = transport.calls.history.slice(beforeHistory)
+  assert.equal(newHistory.length, 1, "browser source should send only a learner receipt")
+
+  const [learnerMail] = newHistory
+  assert.ok(learnerMail, "learner receipt payload captured")
+  assert.equal(learnerMail.to[0], "learner-only@example.com")
+  assert.match(learnerMail.subject, /Confirmation/)
+  assert.match(learnerMail.text, /Browser Cloze/)
+  assert.match(learnerMail.text, /Eagles ID: browser001/)
+})
+
 test("POST /api/exercise-submission decodes obfuscated recipients", async () => {
   const beforeHistory = transport.calls.history.length
   const payload = {

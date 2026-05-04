@@ -221,6 +221,7 @@ const LIVE_RUNTIME_PORT = 8787
 const DEFAULT_PATH = process.env.EXERCISE_MAILER_PATH || "/api/exercise-submission"
 const DEFAULT_INTAKE_PATH =
   process.env.EXERCISE_MAILER_INTAKE_PATH || "/api/student-intake-submission"
+const CLOZE_WEB_SOURCE = "cloze-web"
 const DEFAULT_HOST = process.env.EXERCISE_MAILER_HOST || "0.0.0.0"
 const DOCS_URL_PREFIX = "/docs"
 const DOCS_PUBLIC_ROOT = path.resolve(process.cwd(), "docs")
@@ -660,6 +661,10 @@ function buildSubmissionNotificationKey(payload) {
     ? Math.round(completedAtMs / 1000)
     : "unknown-time"
   return `${actorKey}|${completedAtBucket}`
+}
+
+function isBrowserExerciseSource(sourceSystem) {
+  return normalizeLower(sourceSystem) === CLOZE_WEB_SOURCE
 }
 
 function pruneExpiredSubmissionNotificationKeys(now = Date.now()) {
@@ -1241,6 +1246,8 @@ function validatePayload(payload, options = {}) {
   const email = normalizeString(payload?.email)
   const allowMissingEmail = Boolean(options?.allowMissingEmail)
   if (!allowMissingEmail && !isEmailLike(email)) throw createBadRequestError("Invalid email")
+  const sourceSystem = normalizeString(payload?.sourceSystem)
+  const sourceAttemptId = normalizeString(payload?.sourceAttemptId)
 
   const rawPageTitle = normalizeString(payload?.pageTitle)
   if (!rawPageTitle) throw createBadRequestError("Missing pageTitle")
@@ -1270,6 +1277,8 @@ function validatePayload(payload, options = {}) {
   return {
     eaglesId,
     email: isEmailLike(email) ? email : "",
+    sourceSystem,
+    sourceAttemptId,
     pageTitle,
     completedAt,
     recipients: decodeRecipients(Array.isArray(payload.recipients) ? payload.recipients : []),
@@ -1626,12 +1635,14 @@ async function handleRequest(request, response, transporter) {
     const validated = validatePayload(normalizedPayload, {
       allowMissingEmail: moodleRequest,
     })
+    const browserExerciseSource = isBrowserExerciseSource(validated.sourceSystem)
     const submissionActorKey = buildSubmissionActorKey(validated)
 
     await withSubmissionLock(submissionActorKey, async () => {
       /** @type {ExerciseStoreResult | null} */
       let storeResult = null
-      let shouldNotify = !moodleRequest
+      let shouldSendTeacherNotification = !moodleRequest && !browserExerciseSource
+      let shouldSendLearnerNotification = !moodleRequest && Boolean(normalizeEnvText(validated.email))
 
       try {
         storeResult = await persistExerciseSubmission(validated, {
@@ -1640,7 +1651,10 @@ async function handleRequest(request, response, transporter) {
         if (storeResult?.saved) {
           STATUS.lastStoreOk = true
           STATUS.lastStoreAt = new Date().toISOString()
-          if (storeResult?.shouldNotify === false) shouldNotify = false
+          if (storeResult?.shouldNotify === false) {
+            shouldSendTeacherNotification = false
+            shouldSendLearnerNotification = false
+          }
           if (MAILER_DEBUG) {
             console.log("Saved exercise submission:", {
               submissionId: storeResult.submissionId,
@@ -1659,7 +1673,7 @@ async function handleRequest(request, response, transporter) {
         console.warn("⚠️ Submission persisted to email only (database write failed):", STATUS.lastError)
       }
 
-      if (!shouldNotify) {
+      if (!shouldSendTeacherNotification && !shouldSendLearnerNotification) {
         STATUS.lastSendOk = true
         STATUS.lastSendAt = new Date().toISOString()
         if (MAILER_DEBUG) {
@@ -1685,33 +1699,36 @@ async function handleRequest(request, response, transporter) {
       }
 
       const emailData = createEmail(validated)
-      const teacherTo = emailData.teacherEmail.to.length
-        ? emailData.teacherEmail.to
-        : DEFAULT_RECIPIENTS
-
-      if (!teacherTo.length) {
-        throw new Error("No recipients configured")
-      }
       const from = process.env.SMTP_FROM || process.env.SMTP_USER || "no-reply@eaglesvn.online"
 
-      if (MAILER_DEBUG) {
-        console.log("Sending message →", {
+      if (shouldSendTeacherNotification) {
+        const teacherTo = emailData.teacherEmail.to.length
+          ? emailData.teacherEmail.to
+          : DEFAULT_RECIPIENTS
+
+        if (!teacherTo.length) {
+          throw new Error("No recipients configured")
+        }
+
+        if (MAILER_DEBUG) {
+          console.log("Sending message →", {
+            from,
+            to: teacherTo,
+            subject: emailData.teacherEmail.subject,
+          })
+        }
+
+        await transporter.sendMail({
           from,
           to: teacherTo,
           subject: emailData.teacherEmail.subject,
+          text: emailData.teacherEmail.text,
+          html: emailData.teacherEmail.html,
+          replyTo: validated.email || undefined,
         })
       }
 
-      await transporter.sendMail({
-        from,
-        to: teacherTo,
-        subject: emailData.teacherEmail.subject,
-        text: emailData.teacherEmail.text,
-        html: emailData.teacherEmail.html,
-        replyTo: validated.email || undefined,
-      })
-
-      if (emailData.learnerEmail) {
+      if (shouldSendLearnerNotification && emailData.learnerEmail) {
         await transporter.sendMail({
           from,
           to: emailData.learnerEmail.to,
@@ -1726,9 +1743,10 @@ async function handleRequest(request, response, transporter) {
       STATUS.lastSendAt = new Date().toISOString()
       if (MAILER_DEBUG)
         console.log("✉️  Mail sent:", {
-          to: teacherTo,
+          teacherNotified: shouldSendTeacherNotification,
+          learnerNotified: shouldSendLearnerNotification,
           subject: emailData.teacherEmail.subject,
-          learnerNotified: Boolean(emailData.learnerEmail),
+          sourceSystem: normalizeEnvText(validated.sourceSystem) || "(none)",
         })
     })
 

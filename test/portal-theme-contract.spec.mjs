@@ -20,6 +20,7 @@ const adminTheme = fs.readFileSync(adminThemePath, "utf8")
 const adminPortal = fs.readFileSync(adminPortalPath, "utf8")
 const parentPortal = fs.readFileSync(parentPortalPath, "utf8")
 const studentPortal = fs.readFileSync(studentPortalPath, "utf8")
+const hubPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8")
 
 test("portal pages load the shared portal theme stylesheet", () => {
   for (const [label, relPath] of portalPaths) {
@@ -43,12 +44,14 @@ test("shared portal theme defines the common shell, header, and card system", ()
   assert.match(sharedTheme, /\.portal-card,\s*\.resource-card/)
 })
 
-test("shared portal theme keeps the hub theme toggle scoped and legible in dark mode", () => {
-  assert.match(sharedTheme, /body\.portal-hub-page \.theme-toggle\s*\{/)
-  assert.match(sharedTheme, /body\.portal-hub-page \.theme-toggle__icon\s*\{/)
-  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
-  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*background:\s*var\(--portal-theme-toggle-icon-bg-dark\);/)
-  assert.match(sharedTheme, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
+test("hub keeps its own theme toggle chrome and shared theme stays scoped off it", () => {
+  assert.match(hubPortal, /body\.portal-hub-page \.theme-toggle\s*\{/)
+  assert.match(hubPortal, /body\.portal-hub-page \.theme-toggle__icon\s*\{/)
+  assert.match(hubPortal, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
+  assert.match(hubPortal, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*background:\s*var\(--portal-theme-toggle-icon-bg-dark\);/)
+  assert.match(hubPortal, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
+  assert.doesNotMatch(sharedTheme, /body\.portal-hub-page \.theme-toggle\s*\{/)
+  assert.doesNotMatch(sharedTheme, /body\.portal-hub-page \.theme-toggle__icon\s*\{/)
   assert.doesNotMatch(sharedTheme, /(^|\n)\s*\.theme-toggle\s*\{/m)
   assert.doesNotMatch(sharedTheme, /(^|\n)\s*\.theme-toggle__icon\s*\{/m)
   assert.doesNotMatch(sharedTheme, /theme-toggle::after/i)
@@ -72,19 +75,12 @@ test("parent, student, and admin theme toggles keep the shared portal visual con
   ]
 
   const portalToggleRules = [
-    /body\.student-portal-page \.portal-theme-toggle,/,
-    /body\.parent-portal-page \.portal-theme-toggle,/,
-    /body\.admin-portal-page \.portal-theme-toggle\s*\{/,
-    /body\.student-portal-page \.portal-theme-toggle__icon,/,
-    /body\.parent-portal-page \.portal-theme-toggle__icon,/,
-    /body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/,
-    /html\[data-theme="dark"\] body\.student-portal-page \.portal-theme-toggle,/,
-    /html\[data-theme="dark"\] body\.parent-portal-page \.portal-theme-toggle,/,
-    /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle\s*\{/,
-    /html\[data-theme="dark"\] body\.student-portal-page \.portal-theme-toggle__icon,/,
-    /html\[data-theme="dark"\] body\.parent-portal-page \.portal-theme-toggle__icon,/,
-    /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{/,
-    /html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon\s*\{[\s\S]*background:\s*var\(--portal-theme-toggle-icon-bg-dark\);/i,
+    /body\.student-portal-page \.topbar \.header-actions \.portal-theme-toggle,/,
+    /body\.parent-portal-page \.hero \.hero-actions \.portal-theme-toggle,/,
+    /body\.admin-portal-page \.app-page-header \.app-header-actions \.portal-theme-toggle\s*\{/,
+    /body\.student-portal-page \.topbar \.header-actions \.portal-theme-toggle__icon,/,
+    /body\.parent-portal-page \.hero \.hero-actions \.portal-theme-toggle__icon,/,
+    /body\.admin-portal-page \.app-page-header \.app-header-actions \.portal-theme-toggle__icon\s*\{/,
   ]
 
   const sources = [
@@ -109,10 +105,10 @@ test("parent, student, and admin theme toggles keep the shared portal visual con
 })
 
 test("portal login shells codify the first-paint canvas backgrounds", () => {
-  assert.ok(
-    sharedTheme.includes("body.student-portal-page,\nbody.parent-portal-page {") &&
-      sharedTheme.includes("background: var(--portal-page-bg);"),
-    "shared theme should keep the student and parent light canvas",
+  assert.match(
+    sharedTheme,
+    /body\.student-portal-page,\s*body\.parent-portal-page,\s*body\.admin-portal-page,\s*body\.portal-hub-page\s*\{[\s\S]*background:\s*var\(--portal-page-bg\);/s,
+    "shared theme should keep the light portal canvas token",
   )
   assert.match(
     sharedTheme,
@@ -184,7 +180,7 @@ test("shared portal theme keeps student and parent calendars readable in dark mo
   )
   assert.match(
     sharedTheme,
-    /html\[data-theme="dark"\] body\.student-portal-page :where\(\.homework-square, \.attendance-square\),[\s\S]*html\[data-theme="dark"\] body\.parent-portal-page :where\(\.homework-square, \.attendance-square, \.dashboard-surface-shell\)/s,
+    /html\[data-theme="dark"\] body\.student-portal-page :where\(\.homework-square, \.attendance-square\),[\s\S]*html\[data-theme="dark"\] body\.parent-portal-page :where\(\.homework-square, \.attendance-square\)/s,
     "shared theme should keep the student and parent summary cards dark",
   )
   assert.match(

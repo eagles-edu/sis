@@ -35,6 +35,7 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 - If that panel/card hierarchy is ambiguous for a given surface, ask the user before choosing a direction.
 - Before making any out-of-scope UI or design change, stop and ask the user first.
 - Avoid regression-by-cleanup: do not rewrite or replace settled styling rules unless the current task requires it.
+- Parent portal ownership rule: `web-asset/parent/parent-portal.html` owns page structure and boot-gate behavior only; shared chrome, buttons, modal surfaces, placeholders, and typography belong in `web-asset/shared/portal-theme.css` unless the user explicitly requests a parent-only exception.
 
 ## OpenAI Docs
 

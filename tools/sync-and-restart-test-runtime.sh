@@ -22,6 +22,11 @@ TEST_NODE_BIN="${SIS_TEST_NODE_BIN:-/home/eagles/node-v20.19.4-linux-x64/bin/nod
 TEST_PRIMARY_ORIGIN="${SIS_TEST_PRIMARY_ORIGIN:-https://test.eagles.edu.vn}"
 LIVE_ROOT_CANONICAL="${SIS_LIVE_ROOT_CANONICAL:-/home/admin.eagles.edu.vn/sis}"
 DEV_ROOT_CANONICAL="${SIS_DEV_ROOT_CANONICAL:-/home/eagles/dockerz/sis}"
+TEST_PUBLIC_ROOT="${SIS_TEST_PUBLIC_ROOT:-/home/test.eagles.edu.vn/public_html}"
+TEST_PUBLIC_ADMIN_DIR="${SIS_TEST_PUBLIC_ADMIN_DIR:-${TEST_PUBLIC_ROOT}/sis-admin}"
+TEST_PUBLIC_PARENT_DIR="${SIS_TEST_PUBLIC_PARENT_DIR:-${TEST_PUBLIC_ROOT}/sis-parent}"
+TEST_PUBLIC_STUDENT_DIR="${SIS_TEST_PUBLIC_STUDENT_DIR:-${TEST_PUBLIC_ROOT}/sis-student}"
+TEST_PUBLIC_SHARED_DIR="${SIS_TEST_PUBLIC_SHARED_DIR:-${TEST_PUBLIC_ROOT}/web-asset/shared}"
 ROUTE_CONTRACT_FILE="${SIS_TEST_ROUTE_CONTRACT_FILE:-${REPO_ROOT}/config/test-route-contract.json}"
 if [[ ! -f "$ROUTE_CONTRACT_FILE" ]]; then
   echo "missing test route contract file: $ROUTE_CONTRACT_FILE" >&2
@@ -106,12 +111,22 @@ upsert_env_value() {
   local env_file="$1"
   local key="$2"
   local value="$3"
-  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" ENV_FILE="$env_file" ENV_KEY="$key" ENV_VALUE="$value" "$TEST_NODE_BIN" --input-type=module <<'EOF'
+  local env_dir
+  local can_write=0
+
+  env_dir="$(dirname "$env_file")"
+  if [[ -w "$env_file" || ( ! -e "$env_file" && -w "$env_dir" ) ]]; then
+    can_write=1
+  fi
+
+  env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" ENV_FILE="$env_file" ENV_KEY="$key" ENV_VALUE="$value" CAN_WRITE="$can_write" "$TEST_NODE_BIN" --input-type=module <<'EOF'
 import fs from "node:fs"
+import { execFileSync } from "node:child_process"
 
 const envFile = process.env.ENV_FILE
 const envKey = process.env.ENV_KEY
 const envValue = process.env.ENV_VALUE || ""
+const canWrite = process.env.CAN_WRITE === "1"
 const raw = fs.readFileSync(envFile, "utf8")
 const lines = raw.split(/\r?\n/u)
 const trailingNewline = raw.endsWith("\n")
@@ -143,7 +158,18 @@ if (!trailingNewline) {
 }
 
 if (next !== raw) {
-  fs.writeFileSync(envFile, next)
+  if (canWrite) {
+    fs.writeFileSync(envFile, next)
+  } else {
+    try {
+      execFileSync("sudo", ["tee", envFile], {
+        input: next,
+        stdio: ["pipe", "ignore", "inherit"],
+      })
+    } catch (error) {
+      console.log(`[sync-test] skip env update for ${envFile} (requires elevated permissions)`)
+    }
+  }
 }
 EOF
 }
@@ -251,10 +277,7 @@ ensure_test_runtime_env_contract() {
   local test_env_path="${TEST_ROOT}/.env.test"
   local default_env_path="${TEST_ROOT}/.env"
 
-  if [[ ! -f "$test_env_path" ]]; then
-    log "skip test env contract pinning (missing .env.test in ${TEST_ROOT})"
-    return 0
-  fi
+  seed_test_runtime_env_file
 
   local test_dev_roots="${DEV_ROOT_CANONICAL},${TEST_ROOT}"
   local source_env_path=""
@@ -320,13 +343,13 @@ run_sync() {
   case "$MODE" in
     full)
       log "running ffs-sis-root-test --batch"
-      (cd "$REPO_ROOT" && run_ffs "ffs-sis-root-test" ffs-sis-root-test --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-root-test" sudo /usr/local/bin/ffs-sis-root-test --batch)
       log "running ffs-sis-public-root-test --batch"
-      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" ffs-sis-public-root-test --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" sudo /usr/local/bin/ffs-sis-public-root-test --batch)
       ;;
     public)
       log "running ffs-sis-public-root-test --batch"
-      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" ffs-sis-public-root-test --batch)
+      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" sudo /usr/local/bin/ffs-sis-public-root-test --batch)
       ;;
     restart-only)
       log "skip sync (restart-only mode)"
@@ -360,6 +383,29 @@ sync_test_src_tree() {
     echo "src tree sync failed: ${TEST_ROOT}/src/modules/exercises/exercise-store.mjs missing" >&2
     return 1
   fi
+}
+
+sync_test_portal_html_assets() {
+  mkdir -p \
+    "${TEST_ROOT}/web-asset/admin" \
+    "${TEST_ROOT}/web-asset/parent" \
+    "${TEST_ROOT}/web-asset/student"
+
+  log "syncing admin portal HTML into ${TEST_ROOT}/web-asset/admin/student-admin.html"
+  install -m 644 "${REPO_ROOT}/web-asset/admin/student-admin.html" \
+    "${TEST_ROOT}/web-asset/admin/student-admin.html"
+
+  log "syncing admin hub HTML into ${TEST_ROOT}/web-asset/admin/portal-hub.html"
+  install -m 644 "${REPO_ROOT}/web-asset/admin/portal-hub.html" \
+    "${TEST_ROOT}/web-asset/admin/portal-hub.html"
+
+  log "syncing parent portal HTML into ${TEST_ROOT}/web-asset/parent/parent-portal.html"
+  install -m 644 "${REPO_ROOT}/web-asset/parent/parent-portal.html" \
+    "${TEST_ROOT}/web-asset/parent/parent-portal.html"
+
+  log "syncing student portal HTML into ${TEST_ROOT}/web-asset/student/student-portal.html"
+  install -m 644 "${REPO_ROOT}/web-asset/student/student-portal.html" \
+    "${TEST_ROOT}/web-asset/student/student-portal.html"
 }
 
 cleanup_test_backup_artifacts() {
@@ -425,11 +471,12 @@ EOF
 }
 
 sync_test_public_assets() {
-  local target_public_root="/home/test.eagles.edu.vn/public_html"
+  local target_public_root="$TEST_PUBLIC_ROOT"
   local target_web_asset_root="${target_public_root}/web-asset"
   local target_owner
   local target_group
   local install_prefix=()
+  local rsync_prefix=(sudo)
 
   target_owner="$(id -un)"
   target_group="$(id -gn)"
@@ -439,6 +486,24 @@ sync_test_public_assets() {
   fi
 
   "${install_prefix[@]}" install -d -o "$target_owner" -g "$target_group" \
+    "$TEST_PUBLIC_ADMIN_DIR" \
+    "$TEST_PUBLIC_PARENT_DIR" \
+    "$TEST_PUBLIC_STUDENT_DIR" \
+    "$TEST_PUBLIC_SHARED_DIR"
+
+  log "syncing public admin portal mirror into ${TEST_PUBLIC_ADMIN_DIR}"
+  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/admin/" "${TEST_PUBLIC_ADMIN_DIR}/"
+
+  log "syncing public parent portal mirror into ${TEST_PUBLIC_PARENT_DIR}"
+  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/parent/" "${TEST_PUBLIC_PARENT_DIR}/"
+
+  log "syncing public student portal mirror into ${TEST_PUBLIC_STUDENT_DIR}"
+  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/student/" "${TEST_PUBLIC_STUDENT_DIR}/"
+
+  log "syncing public shared portal mirror into ${TEST_PUBLIC_SHARED_DIR}"
+  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${TEST_PUBLIC_SHARED_DIR}/"
+
+  "${install_prefix[@]}" install -d -o "$target_owner" -g "$target_group" \
     "$target_web_asset_root" \
     "${target_web_asset_root}/shared" \
     "${target_web_asset_root}/images" \
@@ -446,9 +511,9 @@ sync_test_public_assets() {
     "${target_web_asset_root}/admin/portal-backgrounds"
 
   log "syncing public web assets into ${target_web_asset_root}"
-  "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${target_web_asset_root}/shared/"
-  "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/images/" "${target_web_asset_root}/images/"
-  "${install_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/admin/portal-backgrounds/" "${target_web_asset_root}/admin/portal-backgrounds/"
+  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${target_web_asset_root}/shared/"
+  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/images/" "${target_web_asset_root}/images/"
+  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/admin/portal-backgrounds/" "${target_web_asset_root}/admin/portal-backgrounds/"
 }
 
 sync_test_icons_assets() {
@@ -463,6 +528,31 @@ sync_test_icons_assets() {
   mkdir -p "${target_icons_root}"
   log "syncing icon web component assets into ${target_icons_root}"
   rsync -a --delete "${REPO_ROOT}/web-asset/icons/" "${target_icons_root}/"
+}
+
+seed_test_runtime_env_file() {
+  local test_env_path="${TEST_ROOT}/.env.test"
+  local source_env_path=""
+
+  if [[ -f "${TEST_ROOT}/.env" ]]; then
+    source_env_path="${TEST_ROOT}/.env"
+  elif [[ -f "${REPO_ROOT}/.env" ]]; then
+    source_env_path="${REPO_ROOT}/.env"
+  elif [[ -f "${REPO_ROOT}/.env.test.example" ]]; then
+    source_env_path="${REPO_ROOT}/.env.test.example"
+  fi
+
+  if [[ -f "$test_env_path" ]]; then
+    return 0
+  fi
+
+  if [[ -z "$source_env_path" ]]; then
+    echo "cannot seed test env contract; no source env template found" >&2
+    return 1
+  fi
+
+  log "seeding ${test_env_path} from $(basename "$source_env_path")"
+  install -m 644 "$source_env_path" "$test_env_path"
 }
 
 verify_test_public_html_index() {
@@ -633,6 +723,7 @@ main() {
   build_admin_assets
   run_sync
   sync_test_src_tree
+  sync_test_portal_html_assets
   cleanup_test_backup_artifacts
   if [[ "$MODE" != "boot-prep" ]]; then
     sync_test_public_html_index
@@ -642,8 +733,8 @@ main() {
     log "skip public web asset sync for mode=boot-prep"
   fi
   sync_test_icons_assets
-  align_test_env_from_dev_source
   ensure_test_runtime_env_contract
+  align_test_env_from_dev_source
   ensure_test_redis_env
   if should_refresh_prisma; then
     refresh_test_prisma

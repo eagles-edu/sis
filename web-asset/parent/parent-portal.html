@@ -22,6 +22,9 @@
       }
     })();
   </script>
+  <script>
+    document.documentElement.dataset.parentAuthState = "booting";
+  </script>
   <script type="module">
     import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
 
@@ -43,317 +46,31 @@
       background: var(--portal-page-bg);
       color: var(--portal-text);
     }
+
+    html[data-parent-auth-state="booting"] body.parent-portal-page {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    html[data-parent-auth-state="booting"] body.parent-portal-page #loginCard,
+    html[data-parent-auth-state="booting"] body.parent-portal-page #portalCard {
+      display: none !important;
+    }
   </style>
   <title>Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club</title>
   <style>
-    .hint {
-      color: var(--ink-soft);
-      font-size: 12px;
-      margin: 0;
-    }
-
-    .homework-card {
-      background: transparent;
-      border: 0;
-      margin-top: 10px;
-      padding: 0;
-    }
-
-    .homework-card-shell {
-      align-items: stretch;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-3);
-      box-sizing: border-box;
-      display: grid;
-      gap: 10px;
-      grid-template-columns: 96px minmax(0, 1fr);
-      padding: 10px;
-    }
-
-    .homework-square,
-    .attendance-square {
-      align-content: center;
-      aspect-ratio: 1 / 1;
-      background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
-      border: 1px solid #9eb5d4;
-      border-radius: 10px;
-      box-sizing: border-box;
-      color: #173d67;
-      display: grid;
-      font-weight: 800;
-      gap: 4px;
-      grid-template-rows: auto 1fr;
-      justify-items: center;
-      line-height: 1;
-      min-height: 98px;
-      padding: 8px;
-      place-items: center;
-      text-align: center;
-    }
-
-    .homework-square.is-complete {
-      background: linear-gradient(180deg, #eefaf4 0%, #e3f4eb 100%);
-      border-color: #72b18f;
-      color: #1b5e3f;
-    }
-
-    .homework-square.is-pending {
-      background: linear-gradient(180deg, #f4f1ff 0%, #ebe5ff 100%);
-      border-color: #9d8ad3;
-      color: #3a2a77;
-    }
-
-    .homework-square.is-none {
-      background: linear-gradient(180deg, #f4f6fa 0%, #eceff5 100%);
-      border-color: #9fa9b8;
-      color: #485061;
-    }
-
-    .homework-square.is-clear {
-      background: linear-gradient(180deg, #eefaf4 0%, #e3f4eb 100%);
-      border-color: #72b18f;
-      color: #1b5e3f;
-    }
-
-    .homework-square.is-arrears {
-      background: linear-gradient(180deg, #fff3f3 0%, #ffe8e8 100%);
-      border-color: #d18d8d;
-      color: #8f2c2c;
-    }
-
-    .attendance-square-k {
-      line-height: 1.12;
-      max-inline-size: 92%;
-      overflow-wrap: anywhere;
-      text-wrap: balance;
-      white-space: normal;
-    }
-
-    .attendance-square {
-      aspect-ratio: auto;
-      grid-template-rows: auto auto;
-      min-height: clamp(78px, 10.5vw, 90px);
-    }
-
-    .homework-square-v.is-status {
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      display: -webkit-box;
-      font-size: clamp(14px, 2.8vw, 22px);
-      line-clamp: 2;
-      line-height: 1.04;
-      max-inline-size: 100%;
-      overflow: hidden;
-      overflow-wrap: anywhere;
-      text-overflow: ellipsis;
-      text-wrap: balance;
-      white-space: normal;
-    }
-
-    .homework-square-v.is-count {
-      font-size: clamp(34px, 8.4vw, 62px);
-      line-height: 0.86;
-    }
-
-    .square-number {
-      display: inline-block;
-    }
-
-    .square-percent-symbol {
-      font-size: 0.52em;
-      font-style: normal;
-      font-weight: 900;
-      line-height: 1;
-      margin-inline-start: 0.02em;
-      position: relative;
-      top: -0.11em;
-      vertical-align: text-top;
-    }
-
-    .homework-square-v.is-percent,
-    .attendance-square-v.is-percent {
-      font-size: clamp(25px, 6.2vw, 46px);
-      letter-spacing: -0.06em;
-      overflow: visible;
-      padding-inline-end: 0.08em;
-      text-overflow: clip;
-    }
-
-    .homework-square-v.is-percent.is-hundred,
-    .attendance-square-v.is-percent.is-hundred {
-      font-size: clamp(22px, 5.5vw, 40px);
-      letter-spacing: -0.085em;
-    }
-
-    .homework-card-content {
-      align-content: center;
-      display: grid;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .homework-link {
-      color: #174f92;
-      font-size: clamp(12px, 2.8vw, 14px);
-      font-weight: 700;
-      line-height: 1.35;
-      min-width: 0;
-      overflow-wrap: anywhere;
-      text-decoration: underline;
-      text-decoration-thickness: 1.2px;
-      text-underline-offset: 2px;
-    }
-
-    .homework-link:hover,
-    .homework-link:focus-visible {
-      color: #0f3c70;
-    }
-
-    .homework-modal-btn {
-      background: #f5f8fd;
-      border: 1px solid #b7c8df;
-      border-radius: 8px;
-      color: #24466b;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      justify-self: start;
-      min-height: 36px;
-      padding: 7px 11px;
-    }
-
-    .homework-modal-btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    .homework-modal-table {
-      border-collapse: collapse;
-      font-size: 13px;
-      table-layout: fixed;
-      width: 100%;
-    }
-
-    .homework-modal-table th,
-    .homework-modal-table td {
-      border-bottom: 1px solid #dde6f2;
-      padding: 8px 6px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .homework-modal-table th {
-      color: #36577e;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .homework-modal-table td:first-child,
-    .homework-modal-table th:first-child {
-      white-space: nowrap;
-      width: 140px;
-    }
-
-    .attendance-overview-grid {
-      display: grid;
-      gap: 10px;
-      grid-auto-rows: 1fr;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .dashboard-surface-shell {
-      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-      border: 1px solid #9eb4d0;
-      border-radius: var(--radius-3);
-      box-sizing: border-box;
-      display: grid;
-      gap: 10px;
-      padding: 10px;
-    }
-
-    .attendance-square-v {
-      color: #143a64;
-      font-size: clamp(30px, 7.3vw, 54px);
-      letter-spacing: -0.015em;
-      line-height: 0.9;
-    }
-
-    .attendance-square.is-good {
-      background: linear-gradient(180deg, #edf9f3 0%, #e2f4ea 100%);
-      border-color: #72b18f;
-    }
-
-    .attendance-square.is-warn {
-      background: linear-gradient(180deg, #fff8ee 0%, #fff1dc 100%);
-      border-color: #d4ad73;
-    }
-
-    .attendance-square.is-risk {
-      background: linear-gradient(180deg, #fff2f2 0%, #ffe8e8 100%);
-      border-color: #d18d8d;
-    }
-
-    .report-archive-list {
-      display: grid;
-      gap: 8px;
-      margin: 0;
-    }
-
-    .report-archive-item {
-      align-items: start;
-      background: #f8fbff;
-      border: 1px solid #c8d5e8;
-      border-inline-start: 4px solid var(--brand-2);
-      border-radius: 10px;
-      display: grid;
-      gap: 6px;
-      min-height: 96px;
-      padding: 10px 12px;
-    }
-
-    .report-archive-item.is-outstanding {
-      background: #fdf5f5;
-      border-color: #d09b9b;
-      border-inline-start-color: var(--brand);
-      font-weight: 800;
-    }
-
-    .report-archive-link {
-      background: none;
-      border: 0;
-      color: #154b8a;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: inherit;
-      justify-self: start;
-      padding: 0;
-      text-align: left;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-
-    .report-modal-nav {
-      display: inline-flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .report-modal-nav button {
-      min-height: 32px;
-      min-width: 54px;
-      padding: 4px 10px;
-    }
-
-    .report-modal-body {
-      align-items: start;
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+    /* VS Code selector resolution anchors; shared styles live in portal-theme.css. */
+    .alt {}
+    .portal-action-strip {}
+    .quick-link-select {}
+    .quick-link-select__label {}
+    .portal-action-strip__actions {}
+    .portal-action-btn {}
+    .portal-action-btn--brand {}
+    .portal-action-btn--danger {}
+    .identity-value {}
+    .is-peer {}
+    .detail-copy {}
 
     #performanceReportHeader,
     #performanceReportHomeworkBlock,
@@ -363,94 +80,7 @@
       grid-column: 1 / -1;
     }
 
-    .report-head-grid {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .report-head-card {
-      background: linear-gradient(180deg, #f9fcff 0%, #eef4fb 100%);
-      border: 1px solid #c9d7ea;
-      border-left: 4px solid #6f94be;
-      border-radius: 10px;
-      box-sizing: border-box;
-      display: grid;
-      gap: 4px;
-      padding: 7px 10px;
-    }
-
-    .report-block {
-      background: linear-gradient(180deg, #f8fbff 0%, #edf4fc 100%);
-      border: 1px solid #c9d7ea;
-      border-left: 4px solid #6e93bf;
-      border-radius: 10px;
-      display: grid;
-      gap: 6px;
-      padding: 7px 9px;
-    }
-
-    .report-metrics {
-      align-items: stretch;
-      display: grid;
-      gap: 8px;
-      grid-auto-rows: 1fr;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .report-homework-cards {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .report-homework-cards .homework-card {
-      margin-top: 0;
-    }
-
-    #performanceReportHomeworkBlock .homework-card-shell {
-      grid-template-columns: 92px minmax(0, 1fr);
-      padding: 8px;
-    }
-
-    #performanceReportHomeworkBlock .homework-square {
-      min-height: 92px;
-    }
-
-    #performanceReportAttendanceMetrics {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    #performanceReportAttendanceMetrics .attendance-square {
-      aspect-ratio: auto;
-      min-height: 84px;
-    }
-
-    #performanceReportAttendanceMetrics .attendance-square-v {
-      font-size: clamp(26px, 4.8vw, 42px);
-    }
-
-    .report-grade-card {
-      border: 1px solid #ccd9eb;
-      border-radius: 9px;
-      overflow: hidden;
-    }
-
-    .report-grade-block {
-      background: linear-gradient(180deg, #fcfeff 0%, #f2f7fe 100%);
-      border: 1px solid #ccd9eb;
-      border-radius: 10px;
-      display: grid;
-      gap: 6px;
-      padding: 8px;
-    }
-
-    #performanceReportModal .portal-modal-dialog {
-      box-sizing: border-box;
-      max-height: calc(100vh - 20px);
-      padding: 14px;
-      width: min(1120px, calc(100vw - 20px));
-    }
+    /* Report modal chrome is centralized in portal-theme.css. */
 
     @media (max-width: 520px) {
       .homework-card-shell {
@@ -462,354 +92,8 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .report-homework-cards {
-        grid-template-columns: 1fr;
-      }
-
       #performanceReportAttendanceMetrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 900px) {
-      .report-modal-body {
-        grid-template-columns: 1fr;
-      }
-
-    .status {
-      color: var(--ink-soft);
-      font-size: 13px;
-      margin: 0;
-      min-height: 20px;
-    }
-
-    .status.ok {
-      color: var(--ok);
-    }
-
-    .status.warn {
-      color: var(--warn);
-    }
-
-    .status.err {
-      color: var(--err);
-    }
-
-    .chip {
-      --chip-height: 30px;
-      --chip-min-ar: 0;
-      align-items: center;
-      justify-content: center;
-      background: #e2edff;
-      border: 2px solid #5f7ca6;
-      border-bottom-width: 3px;
-      border-radius: 999px;
-      box-sizing: border-box;
-      color: #173962;
-      display: inline-flex;
-      inline-size: auto;
-      min-inline-size: 0;
-      max-inline-size: 100%;
-      font-size: 12px;
-      font-weight: 800;
-      gap: 6px;
-      line-height: 1;
-      min-height: 0;
-      height: var(--chip-height);
-      padding: 0 10px;
-      text-align: center;
-      text-transform: none;
-      box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 0 0 auto;
-    }
-
-    .chip-neutral {
-      background: #dfeaff;
-      border-color: #5877a3;
-      color: #12345b;
-    }
-
-    .chip-ok {
-      background: #d8f2e3;
-      border-color: #287a4f;
-      color: #0f452c;
-    }
-
-    .chip-warn {
-      background: #ffe9c7;
-      border-color: #b16d00;
-      color: #5b3500;
-    }
-
-    .chip-open {
-      background: #d8edff;
-      border-color: #2d78b4;
-      color: #093a63;
-    }
-
-    .chip-revise {
-      background: #eadcff;
-      border-color: #7348b5;
-      color: #351267;
-    }
-
-    .chip-link {
-      cursor: pointer;
-      display: inline-flex;
-    }
-
-    .chip-link:hover,
-    .chip-link:focus-visible {
-      cursor: pointer;
-    }
-
-    .chip-bad {
-      background: #ffd8dd;
-      border-color: #ad2c3c;
-      color: #67101d;
-    }
-
-    .chip-checked {
-      background: #cef4ef;
-      border-color: #1d8b82;
-      color: #044e48;
-    }
-
-    .chip-lock {
-      background: #ffe1e1;
-      border-color: #b24949;
-      color: #661717;
-    }
-
-    .chip-edited {
-      background: #d7e8ff;
-      border-color: #2f67b8;
-      color: #0c3c7a;
-    }
-
-    .queue-panel details summary {
-      display: grid;
-      gap: 4px;
-      cursor: pointer;
-      list-style: none;
-    }
-
-    .queue-panel details summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .queue-summary-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .summary-title {
-      display: block;
-      font-weight: 800;
-      font-size: 1rem;
-      line-height: 1.2;
-    }
-
-    .queue-table-wrap {
-      border: 1px solid var(--line-strong);
-      border-radius: var(--radius-2);
-      padding: 6px;
-      max-height: 260px;
-      overflow: auto;
-      box-sizing: border-box;
-      min-width: 0;
-      background: #fff;
-    }
-
-    .queue-table-wrap table {
-      min-width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      table-layout: fixed;
-      width: 100%;
-    }
-
-    .queue-table-wrap th,
-    .queue-table-wrap td {
-      padding: 6px 8px;
-      border-bottom: 1px solid var(--line-strong);
-      text-align: left;
-      vertical-align: top;
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
-
-    .queue-table-wrap tr:last-child td {
-      border-bottom: none;
-    }
-
-    .queue-table-wrap .link-btn {
-      padding: 6px 10px;
-      min-height: 0;
-      font-size: 12px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .actions-2>* {
-      flex: 1 1 45%;
-    }
-
-    .queue-panel .actions-2>* {
-      flex: 0 0 auto;
-    }
-
-    .actions-3>* {
-      flex: 1 1 30%;
-    }
-
-    .btn-refresh {
-      background: #f1f5ff;
-      border: 1px solid #9bb5df;
-      color: #214072;
-    }
-
-    .queue-table-wrap .cell-actions {
-      white-space: nowrap;
-    }
-
-    .queue-table-wrap table.news-queue-table {
-      table-layout: auto;
-    }
-
-    .queue-table-wrap table.news-queue-table th,
-    .queue-table-wrap table.news-queue-table td {
-      padding: 4px 6px;
-    }
-
-    .queue-table-wrap table.news-queue-table th:nth-child(2),
-    .queue-table-wrap table.news-queue-table td:nth-child(2),
-    .queue-table-wrap table.news-queue-table th:nth-child(3),
-    .queue-table-wrap table.news-queue-table td:nth-child(3),
-    .queue-table-wrap table.news-queue-table th:nth-child(5),
-    .queue-table-wrap table.news-queue-table td:nth-child(5) {
-      white-space: nowrap;
-    }
-
-    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip {
-      --chip-height: 24px;
-      --chip-min-ar: 0;
-      min-inline-size: 0;
-      padding: 0 8px;
-      border-width: 1px;
-      border-bottom-width: 2px;
-      font-size: 11px;
-    }
-
-    .queue-table-wrap table.news-queue-table .queue-row-btn {
-      min-height: 28px;
-      padding: 3px 8px;
-      font-size: 11px;
-      line-height: 1.1;
-      white-space: nowrap;
-      box-sizing: border-box;
-    }
-
-    .queue-compact-datetime {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1px;
-      line-height: 1.1;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .queue-compact-datetime-date {
-      font-weight: 700;
-    }
-
-    .queue-compact-datetime-time {
-      font-size: 11px;
-      color: var(--ink-soft);
-    }
-
-    @media (max-width: 920px) {
-
-      .queue-table-wrap table.news-queue-table th:nth-child(4),
-      .queue-table-wrap table.news-queue-table td:nth-child(4) {
-        display: none;
-      }
-    }
-
-    @media (max-width: 620px) {
-
-      .queue-table-wrap table.news-queue-table th:nth-child(2),
-      .queue-table-wrap table.news-queue-table td:nth-child(2) {
-        display: none;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .queue-table-wrap table.news-queue-table {
-        table-layout: auto;
-      }
-
-      .queue-table-wrap table.news-queue-table thead {
-        display: none;
-      }
-
-      .queue-table-wrap table.news-queue-table th:nth-child(2),
-      .queue-table-wrap table.news-queue-table td:nth-child(2),
-      .queue-table-wrap table.news-queue-table th:nth-child(3),
-      .queue-table-wrap table.news-queue-table td:nth-child(3),
-      .queue-table-wrap table.news-queue-table th:nth-child(4),
-      .queue-table-wrap table.news-queue-table td:nth-child(4) {
-        display: none;
-      }
-
-      .queue-table-wrap table.news-queue-table tbody {
-        display: grid;
-        gap: 8px;
-      }
-
-      .queue-table-wrap table.news-queue-table tbody tr {
-        display: grid;
-        gap: 6px;
-        grid-template-columns: minmax(0, 1fr);
-        border: 1px solid var(--line-strong);
-        border-radius: var(--radius-2);
-        background: #f5f9ff;
-        padding: 8px;
-      }
-
-      .queue-table-wrap table.news-queue-table tbody td {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        border-bottom: 0;
-        padding: 0;
-      }
-
-      .queue-table-wrap table.news-queue-table tbody td:nth-child(1) {
-        font-weight: 700;
-      }
-
-      .queue-table-wrap table.news-queue-table tbody td:nth-child(5) .queue-row-btn {
-        width: 100%;
-        box-sizing: border-box;
-      }
-
-      .queue-table-wrap table.news-queue-table tbody td[colspan] {
-        display: block;
-        text-align: center;
       }
     }
 
@@ -849,189 +133,6 @@
       gap: 6px;
     }
 
-    label {
-      color: var(--ink-soft);
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .field label {
-      color: var(--ink-soft);
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      text-transform: none;
-    }
-
-    input,
-    select,
-    textarea,
-    button {
-      font: inherit;
-    }
-
-    input,
-    select,
-    textarea {
-      background: var(--surface-2);
-      border: 1px solid #c9d2e0;
-      border-radius: 10px;
-      box-sizing: border-box;
-      color: var(--ink);
-      min-height: 44px;
-      padding: 10px 12px;
-      width: 100%;
-      transition:
-        border-color 140ms ease,
-        box-shadow 140ms ease,
-        background 140ms ease;
-    }
-
-    textarea {
-      line-height: 1.4;
-      min-height: 98px;
-      resize: vertical;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus,
-    button:not(.floating-menu-btn):not(.nav-scrim):focus-visible {
-      background: #fff;
-      border-color: #4f78bb;
-      box-shadow: 0 0 0 3px rgba(79, 120, 187, 0.18);
-      outline: none;
-    }
-
-    input:disabled,
-    textarea:disabled {
-      background: #f1f3f8;
-      border-color: #d7dfec;
-      color: #667792;
-      cursor: not-allowed;
-    }
-
-    button:not(.floating-menu-btn):not(.nav-scrim) {
-      background: #f6f8fc;
-      border: 1px solid #8da0bf;
-      border-radius: 10px;
-      color: #172033;
-      cursor: pointer;
-      min-height: 44px;
-      padding: 10px 14px;
-      transition:
-        transform 120ms ease,
-        box-shadow 120ms ease;
-    }
-
-    button:not(.floating-menu-btn):not(.nav-scrim):hover:not(:disabled) {
-      box-shadow: 0 8px 16px rgba(19, 35, 61, 0.12);
-      transform: translateY(-1px);
-    }
-
-    button:not(.floating-menu-btn):not(.nav-scrim):disabled {
-      box-shadow: none;
-      cursor: not-allowed;
-      opacity: 0.6;
-      transform: none;
-    }
-
-    button.primary {
-      background: linear-gradient(180deg, var(--brand), #8f1620);
-      border-color: #7f1520;
-      color: #fff;
-    }
-
-    button.alt {
-      background: linear-gradient(180deg, var(--brand-2), #143a81);
-      border-color: #13346f;
-      color: #fff;
-    }
-
-    /* Keep parent news week-set modal controls visually aligned with student modal. */
-    #newsWeekSetModal .actions {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    #newsWeekSetModal .portal-modal-body {
-      display: grid;
-      gap: 10px;
-    }
-
-    #newsWeekSetModal .portal-modal-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    #newsWeekSetModal input,
-    #newsWeekSetModal textarea,
-    #newsWeekSetModal button {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      box-sizing: border-box;
-      color: var(--ink);
-      font: inherit;
-    }
-
-    #newsWeekSetModal input,
-    #newsWeekSetModal textarea {
-      padding: 10px 12px;
-      width: 100%;
-    }
-
-    #newsWeekSetModal textarea {
-      line-height: 1.35;
-      min-height: 98px;
-      resize: vertical;
-    }
-
-    #newsWeekSetModal button {
-      align-items: center;
-      background: #f8fbff;
-      cursor: pointer;
-      display: inline-flex;
-      justify-content: center;
-      min-height: 42px;
-      padding: 10px 12px;
-      text-align: center;
-      text-decoration: none;
-      transition: none;
-    }
-
-    #newsWeekSetModal button:hover:not(:disabled) {
-      box-shadow: none;
-      transform: none;
-    }
-
-    #newsWeekSetModal button:disabled {
-      box-shadow: none;
-      cursor: not-allowed;
-      opacity: 0.6;
-      transform: none;
-    }
-
-    #newsWeekSetModal .portal-modal-close {
-      background: #f6f9ff;
-      border: 1px solid #b7c8df;
-      border-radius: 8px;
-      color: #24466b;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      min-height: 34px;
-      padding: 6px 10px;
-    }
-
     .login-form {
       display: grid;
       gap: 10px;
@@ -1042,113 +143,6 @@
       font-size: 12px;
       line-height: 1.35;
       margin: 0;
-    }
-
-    .toolbar {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 12px;
-      min-width: 0;
-    }
-
-    .toolbar-actions {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    }
-
-    .panel {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-3);
-      margin-top: 10px;
-      min-width: 0;
-      padding: 12px;
-    }
-
-    .metrics {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .metric {
-      background: #f3f8ff;
-      border: 2px solid #8ea3c1;
-      border-bottom-width: 4px;
-      border-radius: 10px;
-      box-sizing: border-box;
-      display: grid;
-      gap: 4px;
-      min-height: 72px;
-      min-width: 0;
-      padding: 8px;
-      place-items: center;
-      text-align: center;
-    }
-
-    .metric.metric-green {
-      background: #d7f2e1;
-      border-color: #1f7a4a;
-    }
-
-    .metric.metric-green .k,
-    .metric.metric-green .v {
-      color: #0f4129;
-    }
-
-    .metric.metric-blue {
-      background: #d9eaff;
-      border-color: #265f9f;
-    }
-
-    .metric.metric-blue .k,
-    .metric.metric-blue .v {
-      color: #103d70;
-    }
-
-    .metric.metric-purple {
-      background: #eadcff;
-      border-color: #7348b5;
-    }
-
-    .metric.metric-purple .k,
-    .metric.metric-purple .v {
-      color: #351267;
-    }
-
-    .metric.metric-red {
-      background: #ffd9de;
-      border-color: #b3263a;
-    }
-
-    .metric.metric-red .k,
-    .metric.metric-red .v {
-      color: #5f0f1c;
-    }
-
-    .identity-list {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .identity-item {
-      align-content: start;
-      background: #f9fbff;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      display: grid;
-      gap: 5px;
-      min-height: 70px;
-      padding: 10px;
-    }
-
-    .identity-value {
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1.25;
-      word-break: break-word;
     }
 
     .profile-groups {
@@ -1220,10 +214,10 @@
     }
 
     .field-label {
-      color: var(--ink);
-      font-size: 14px;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
       font-weight: 700;
-      line-height: 1.25;
+      line-height: 1.2;
       margin: 0;
     }
 
@@ -1312,7 +306,7 @@
 
     .field-row.signature-muted .field-label {
       color: #5f6d7b;
-      font-size: 12px;
+      font-size: 0.75rem;
       font-weight: 600;
     }
 
@@ -1336,119 +330,6 @@
       background: linear-gradient(180deg,
           rgba(255, 255, 255, 0.92),
           rgba(248, 250, 255, 0.96));
-    }
-
-    .portal-grid {
-      align-items: start;
-      display: grid;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .portal-col {
-      align-content: start;
-      display: grid;
-      gap: 10px;
-      grid-template-columns: minmax(0, 1fr);
-      grid-column: 1 / -1;
-      min-width: 0;
-    }
-
-    .quick-links {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: 1fr;
-      margin-top: 8px;
-    }
-
-    .quick-link {
-      align-items: center;
-      background: #f6f9ff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      color: var(--ink);
-      display: inline-flex;
-      font-size: 13px;
-      font-weight: 700;
-      justify-content: center;
-      min-height: 42px;
-      padding: 9px 12px;
-      text-align: center;
-      text-decoration: none;
-    }
-
-    .quick-link:hover,
-    .quick-link:focus-visible {
-      background: #edf4ff;
-      border-color: #6f97cb;
-      outline: none;
-    }
-
-    .detail-copy {
-      color: var(--ink-soft);
-      font-size: 0.92rem;
-      line-height: 1.45;
-      margin: 0;
-    }
-
-    .detail-layout {
-      align-content: start;
-      display: grid;
-      gap: 12px;
-    }
-
-    .detail-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .detail-item {
-      background: #fbfcff;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      display: grid;
-      gap: 6px;
-      padding: 10px;
-    }
-
-    .detail-item.warn {
-      background: #eff5ff;
-      border-color: #9dbde5;
-    }
-
-    .detail-item.bad {
-      background: #fff1f1;
-      border-color: #e1a8a8;
-    }
-
-    .detail-item.good {
-      background: #eefaf3;
-      border-color: #8ccba9;
-    }
-
-    .detail-item-head {
-      align-items: baseline;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: space-between;
-    }
-
-    .detail-empty {
-      background: #f8fbff;
-      border: 1px dashed var(--line);
-      border-radius: 10px;
-      color: var(--ink-soft);
-      font-size: 13px;
-      line-height: 1.45;
-      padding: 12px;
-    }
-
-    #loginCard,
-    #portalCard,
-    #portalDetailCard,
-    #childPageCard {
-      zoom: var(--portal-text-zoom);
     }
 
     @media (max-width: 430px) {
@@ -1475,9 +356,6 @@
     }
 
     @media (max-width: 399px) {
-
-      .metrics,
-      .identity-list,
       .toolbar-actions {
         grid-template-columns: 1fr;
       }
@@ -1493,11 +371,6 @@
     }
 
     @media (min-width: 720px) {
-      .login-form {
-        align-items: end;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-      }
-
       .toolbar {
         align-items: end;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -1505,14 +378,6 @@
 
       .toolbar-actions {
         display: flex;
-      }
-
-      .metrics {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .identity-list {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .field-header {
@@ -1527,18 +392,6 @@
     }
 
     @media (min-width: 1000px) {
-      .quick-links {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .metrics {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-      }
-
-      .portal-col {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       #overviewPanel,
       #quickLinksPanel,
       #portalStatus {
@@ -1568,9 +421,6 @@
     }
 
     @media (min-width: 1000px) and (max-width: 1280px) {
-      .metrics {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
     }
 
     @media (max-width: 560px) {
@@ -1614,6 +464,54 @@
       display: none !important;
     }
 
+    html[data-parent-auth-state="booting"] body.parent-portal-page #overviewPanel,
+    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #overviewPanel {
+      display: none !important;
+    }
+
+    html[data-parent-auth-state="authenticated"] body.parent-portal-page #overviewPanel {
+      display: grid !important;
+    }
+
+    body.parent-portal-page #openNewsQueueDetailBtn,
+    body.parent-portal-page #backToDashboardBtn,
+    body.parent-portal-page #saveDraftBtn,
+    body.parent-portal-page #parentTextZoomDownBtn,
+    body.parent-portal-page #parentTextZoomUpBtn,
+    body.parent-portal-page #parentTextZoomResetBtn {
+      background: #f1f5ff !important;
+      background-image: none !important;
+      border: 1px solid #9bb5df !important;
+      color: #214072 !important;
+    }
+
+    body.parent-portal-page #openNewsQueueDetailBtn:hover:not(:disabled),
+    body.parent-portal-page #openNewsQueueDetailBtn:focus-visible,
+    body.parent-portal-page #backToDashboardBtn:hover:not(:disabled),
+    body.parent-portal-page #backToDashboardBtn:focus-visible,
+    body.parent-portal-page #saveDraftBtn:hover:not(:disabled),
+    body.parent-portal-page #saveDraftBtn:focus-visible,
+    body.parent-portal-page #parentTextZoomDownBtn:hover:not(:disabled),
+    body.parent-portal-page #parentTextZoomDownBtn:focus-visible,
+    body.parent-portal-page #parentTextZoomUpBtn:hover:not(:disabled),
+    body.parent-portal-page #parentTextZoomUpBtn:focus-visible,
+    body.parent-portal-page #parentTextZoomResetBtn:hover:not(:disabled),
+    body.parent-portal-page #parentTextZoomResetBtn:focus-visible {
+      background: #f3f8ff !important;
+      background-image: none !important;
+      border-color: #9bb5df !important;
+      box-shadow: 0 8px 16px rgba(19, 35, 61, 0.12);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    body.parent-portal-page .portal-modal :where(input, textarea, select)::placeholder,
+    body.parent-portal-page #newsWeekSetModal :where(input, textarea, select)::placeholder,
+    body.parent-portal-page #performanceReportModal :where(input, textarea, select)::placeholder {
+      color: #6b7f97;
+      opacity: 1;
+    }
+
   </style>
 </head>
 
@@ -1642,7 +540,7 @@
 
     <button id="parentNavScrim" class="nav-scrim" type="button" aria-label="Đóng điều hướng"></button>
 
-    <main class="shell">
+    <main class="main-col">
       <section class="card hero">
         <button id="parentMenuBtn" class="floating-menu-btn" type="button" aria-label="Mở điều hướng">
           <span class="floating-menu-icon" aria-hidden="true"></span>
@@ -1696,27 +594,32 @@
         </form>
         <p id="loginStatus" class="status"></p>
       </section>
-
+      <div class="toolbar" id="overviewPanel">
+        <div class="form-row">
+          <p id="parentOverviewSummary" class="parent-overview-title-head">Đang tải bảng điều khiển học sinh... </p>
+        </div>
+      </div>
       <section class="card hidden" id="portalCard">
         <div class="portal-grid">
           <div class="portal-col">
-            <div class="toolbar" id="overviewPanel">
-              <div class="form-row">
-                <p id="parentOverviewSummary" class="parent-overview-title">Đang tải bảng điều khiển học sinh...</p>
-                <select id="childSelect" aria-label="Chọn học sinh"></select>
+            <section id="quickLinksPanel" class="panel portal-action-strip" aria-label="Bộ chọn học sinh và hành động">
+              <label class="quick-link-select">
+                <span class="quick-link-select__label">Chọn học sinh</span>
+                <select id="childSelect"></select>
+              </label>
+              <div class="portal-action-strip__actions">
+                <button id="openChildPageBtn" type="button" class="portal-action-btn portal-action-btn--brand">Chỉnh sửa hồ sơ</button>
+                <button id="reloadBtn" type="button" class="portal-action-btn portal-action-btn--brand">Tải lại</button>
+                <button id="logoutBtn" type="button" class="portal-action-btn portal-action-btn--danger">Đăng xuất</button>
               </div>
-              <div class="toolbar-actions">
-                <button id="reloadBtn" type="button">Tải lại</button>
-                <button id="openChildPageBtn" type="button">Chỉnh sửa hồ sơ</button>
-                <button id="logoutBtn" type="button" class="alt">Đăng xuất</button>
-              </div>
-            </div>
+            </section>
 
             <section class="panel" id="identityPanel">
               <div class="section-head">
                 <h3>Thông tin định danh học sinh</h3>
                 <span class="chip chip-lock">Chỉ xem</span>
               </div>
+              <p id="parentIdentity" class="hint">Đang tải thông tin học sinh...</p>
               <div class="identity-list">
                 <div class="identity-item">
                   <span class="identity-label">Eagles ID</span>
@@ -1920,50 +823,48 @@
               </div>
             </section>
 
-            <section id="attendanceCalendarCard" class="panel homework-card">
-              <h3 class="homework-card-label">Hồ sơ điểm danh lớp học</h3>
-              <div class="dashboard-surface-shell">
-                <p class="dashboard-card-subtitle">
-                  Tính đến thời điểm hiện tại của năm học
-                </p>
-                <div class="attendance-overview-grid" id="attendanceOverviewGrid">
-                  <article class="attendance-square is-good">
-                    <span class="attendance-square-k">Lớp đã học</span>
-                    <strong class="attendance-square-v" id="attendanceClassesAttendedValue">0</strong>
-                  </article>
-                  <article class="attendance-square">
-                    <span class="attendance-square-k">Tổng số lớp</span>
-                    <strong class="attendance-square-v" id="attendanceClassesTotalValue">0</strong>
-                  </article>
-                  <article class="attendance-square">
-                    <span class="attendance-square-k">Chuyên cần</span>
-                    <strong class="attendance-square-v" id="attendanceRateValue">0%</strong>
-                  </article>
-                  <article class="attendance-square">
-                    <span class="attendance-square-k">Đi trễ 10'</span>
-                    <strong class="attendance-square-v" id="attendanceLateTardy10Value">0</strong>
-                  </article>
-                  <article class="attendance-square">
-                    <span class="attendance-square-k">Đi trễ 30'</span>
-                    <strong class="attendance-square-v" id="attendanceLateTardy30Value">0</strong>
-                  </article>
-                  <article class="attendance-square">
-                    <span class="attendance-square-k">% đi trễ</span>
-                    <strong class="attendance-square-v" id="attendanceLateRateValue">0%</strong>
-                  </article>
-                </div>
-                <p class="hint" id="attendanceCalendarSummary">Chưa có dữ liệu.</p>
+            <section id="attendanceCalendarCard" class="panel">
+              <div class="section-head">
+                <h3>Hồ sơ điểm danh lớp học</h3>
               </div>
+              <p class="dashboard-card-subtitle">
+                Tính đến thời điểm hiện tại của năm học
+              </p>
+              <div class="attendance-overview-grid" id="attendanceOverviewGrid">
+                <article class="attendance-square is-good">
+                  <span class="attendance-square-k">Lớp đã học</span>
+                  <strong class="attendance-square-v" id="attendanceClassesAttendedValue">0</strong>
+                </article>
+                <article class="attendance-square">
+                  <span class="attendance-square-k">Tổng số lớp</span>
+                  <strong class="attendance-square-v" id="attendanceClassesTotalValue">0</strong>
+                </article>
+                <article class="attendance-square">
+                  <span class="attendance-square-k">Chuyên cần</span>
+                  <strong class="attendance-square-v" id="attendanceRateValue">0%</strong>
+                </article>
+                <article class="attendance-square">
+                  <span class="attendance-square-k">Đi trễ 10'</span>
+                  <strong class="attendance-square-v" id="attendanceLateTardy10Value">0</strong>
+                </article>
+                <article class="attendance-square">
+                  <span class="attendance-square-k">Đi trễ 30'</span>
+                  <strong class="attendance-square-v" id="attendanceLateTardy30Value">0</strong>
+                </article>
+                <article class="attendance-square">
+                  <span class="attendance-square-k">% đi trễ</span>
+                  <strong class="attendance-square-v" id="attendanceLateRateValue">0%</strong>
+                </article>
+              </div>
+              <p class="hint" id="attendanceCalendarSummary">Chưa có dữ liệu.</p>
             </section>
 
-            <section id="performanceReportsCard" class="panel homework-card">
-              <h3 class="homework-card-label">
-                Lưu trữ báo cáo kết quả học tập của học sinh
-              </h3>
-              <div class="dashboard-surface-shell">
-                <div id="performanceReportsList" class="report-archive-list"></div>
-                <p class="hint" id="performanceReportsSummary">Chưa có dữ liệu.</p>
+            <section id="performanceReportsCard" class="panel">
+              <div class="section-head">
+                <h3>Lưu trữ báo cáo kết quả học tập của học sinh</h3>
               </div>
+              <div id="performanceReportsList" class="report-archive-list"></div>
+              <p class="hint" id="performanceReportsSummary">Chưa có dữ liệu.</p>
             </section>
 
             <section id="performanceReportModal" class="portal-modal hidden">
@@ -3116,6 +2017,7 @@
       const loopback = isLoopbackHostname(hostname);
       if (RUNTIME_ENV === "development" && !loopback)
         throw new Error("Dev portal requires a loopback apiOrigin (http://127.0.0.1:<port>).");
+      if (RUNTIME_ENV === "test") return parsed.origin;
       if (RUNTIME_ENV !== "development" && loopback)
         throw new Error("Live portal cannot use loopback apiOrigin.");
       return parsed.origin;
@@ -6280,10 +5182,12 @@
 
     function renderDashboard() {
       const root = document.getElementById("dashboardMetrics");
+      const identity = document.getElementById("parentIdentity");
       const snapshotBadge = document.getElementById("snapshotBadge");
       const overview = document.getElementById("parentOverviewSummary");
       const child = selectedDashboardChild();
       if (!child) {
+        if (identity) identity.textContent = "Thông tin học sinh chưa sẵn sàng.";
         root.replaceChildren(metricCard("Tổng quan", "Chưa có dữ liệu"));
         renderCurrentHomeworkOverviewCard({}, 0);
         renderPastDueHomeworkOverviewCard({}, 0);
@@ -6355,6 +5259,10 @@
         Number.isFinite(averageScore) && averageScore <= 70 ? "red" :
         Number.isFinite(averageScore) && averageScore <= 76 ? "purple" :
         "";
+      if (identity) {
+        identity.textContent =
+          `${displayName} | ${displayEaglesId || "-"} | ${normalizeText(child.currentGrade || "Chưa có lớp")}`;
+      }
       root.replaceChildren(
         metricCard("Chuyên cần SYTD", formatPercent(attendancePercent), "green"),
         metricCard("Vắng SYTD", formatPercent(absencePercent), absenceTone),
@@ -6763,9 +5671,11 @@
       } catch (error) {
         setStatus(error?.message || "Không thể khởi tạo cổng phụ huynh.", "err");
         updateSessionBadge("Chưa đăng nhập", false);
+        document.documentElement.dataset.parentAuthState = "unauthenticated";
         document.getElementById("portalCard").classList.add("hidden");
         document.getElementById("portalDetailCard").classList.add("hidden");
         document.getElementById("childPageCard").classList.add("hidden");
+        document.getElementById("loginCard").classList.remove("hidden");
       }
       updateDraftBadge();
     }

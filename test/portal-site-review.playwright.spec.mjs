@@ -139,6 +139,218 @@ async function snapshotSurfaces(page, selectors) {
   }, selectors)
 }
 
+async function captureSharedSurfaceProfile(page, role) {
+  return await page.evaluate((currentRole) => {
+    const selectors =
+      currentRole === "parent" ?
+        {
+          topbar: "main .card.hero",
+          authCard: "#portalCard",
+        } :
+        {
+          topbar: "main .card.topbar",
+          authCard: "#studentHomeCard",
+        }
+
+    const sharedSelectors = {
+      identity: "#identityPanel",
+      metrics: "#metricsPanel",
+      homework: "#pastDueHomeworkCard",
+      currentHomework: "#currentHomeworkCard",
+      homeworkShell: "#pastDueHomeworkCard .homework-card-shell",
+      queue: "#newsQueueCard",
+      portalGrid: ".portal-grid",
+      portalCol: ".portal-col",
+    }
+
+    const read = (selector) => {
+      const el = globalThis.document.querySelector(selector)
+      if (!el) return null
+      const cs = globalThis.getComputedStyle(el)
+      return {
+        display: cs.display,
+        alignItems: cs.alignItems,
+        alignContent: cs.alignContent,
+        gridAutoFlow: cs.gridAutoFlow,
+        gridTemplateColumns: cs.gridTemplateColumns,
+        gap: cs.gap,
+        minWidth: cs.minWidth,
+        pt: cs.paddingTop,
+        pr: cs.paddingRight,
+        pb: cs.paddingBottom,
+        pl: cs.paddingLeft,
+        radius: cs.borderRadius,
+        border: cs.border,
+        shadow: cs.boxShadow,
+        bg: cs.backgroundImage || cs.backgroundColor,
+      }
+    }
+
+    const profile = { role: currentRole }
+    for (const [key, selector] of Object.entries(selectors)) {
+      profile[key] = read(selector)
+    }
+    for (const [key, selector] of Object.entries(sharedSelectors)) {
+      profile[key] = read(selector)
+    }
+    return profile
+  }, role)
+}
+
+async function capturePlacementProfile(page, role) {
+  return await page.evaluate((currentRole) => {
+    const gridSelector = currentRole === "parent" ? ".portal-col" : "#studentHomeGrid"
+    const grid = globalThis.document.querySelector(gridSelector)
+    if (!grid) return null
+    const gridRect = grid.getBoundingClientRect()
+    const selectors = [
+      "#overviewPanel",
+      "#identityPanel",
+      "#metricsPanel",
+      "#pastDueHomeworkCard",
+      "#newsQueueCard",
+      "#currentHomeworkCard",
+      "#attendanceCalendarCard",
+      "#performanceReportsCard",
+      "#gradesYtdCard",
+      "#recommendationsCard",
+      "#portalStatus",
+    ]
+    const classify = (rect) => {
+      const width = Math.round(rect.width)
+      const fullWidth = Math.round(gridRect.width)
+      if (Math.abs(width - fullWidth) <= 4) return "full"
+      return rect.left < gridRect.left + fullWidth / 2 ? "left" : "right"
+    }
+    const items = []
+    for (const selector of selectors) {
+      const el = globalThis.document.querySelector(selector)
+      if (!el) continue
+      const rect = el.getBoundingClientRect()
+      items.push({
+        selector,
+        lane: classify(rect),
+        width: Math.round(rect.width),
+        x: Math.round(rect.left - gridRect.left),
+        y: Math.round(rect.top - gridRect.top),
+      })
+    }
+    return items
+  }, role)
+}
+
+async function captureFrameProfile(page, role) {
+  return await page.evaluate((currentRole) => {
+    const selectors =
+      currentRole === "parent" ?
+        {
+          main: "main",
+          topbar: "main .card.hero",
+          grid: "#portalCard > .portal-grid",
+        } :
+        {
+          main: "main",
+          topbar: "main .card.topbar",
+          grid: "#studentHomeCard > .portal-grid",
+        }
+
+    const read = (selector) => {
+      const el = globalThis.document.querySelector(selector)
+      if (!el) return null
+      const rect = el.getBoundingClientRect()
+      const cs = globalThis.getComputedStyle(el)
+      return {
+        x: Math.round(rect.left),
+        y: Math.round(rect.top),
+        w: Math.round(rect.width),
+        h: Math.round(rect.height),
+        margin: cs.margin,
+        pt: cs.paddingTop,
+        pr: cs.paddingRight,
+        pb: cs.paddingBottom,
+        pl: cs.paddingLeft,
+      }
+    }
+
+    return {
+      role: currentRole,
+      main: read(selectors.main),
+      topbar: read(selectors.topbar),
+      grid: read(selectors.grid),
+    }
+  }, role)
+}
+
+function assertSharedSurfaceProfilesMatch(studentProfile, parentProfile, theme) {
+  const keys = [
+    "topbar",
+    "authCard",
+    "identity",
+    "metrics",
+    "homework",
+    "currentHomework",
+    "homeworkShell",
+    "queue",
+  ]
+  const styleKeys = [
+    "display",
+    "alignItems",
+    "alignContent",
+    "gridAutoFlow",
+    "gridTemplateColumns",
+    "gap",
+    "minWidth",
+    "pt",
+    "pr",
+    "pb",
+    "pl",
+    "radius",
+    "border",
+    "shadow",
+    "bg",
+  ]
+  for (const key of keys) {
+    assert.ok(studentProfile?.[key], `${theme} student profile should include ${key}`)
+    assert.ok(parentProfile?.[key], `${theme} parent profile should include ${key}`)
+    assert.deepEqual(
+      Object.fromEntries(styleKeys.map((styleKey) => [styleKey, studentProfile[key][styleKey]])),
+      Object.fromEntries(styleKeys.map((styleKey) => [styleKey, parentProfile[key][styleKey]])),
+      `${theme} parent/student surface mismatch for ${key}`,
+    )
+  }
+}
+
+function assertPlacementProfilesMatch(studentProfile, parentProfile, theme) {
+  assert.ok(Array.isArray(studentProfile), `${theme} student placement profile should exist`)
+  assert.ok(Array.isArray(parentProfile), `${theme} parent placement profile should exist`)
+  const studentComparable = studentProfile.map((entry) => ({
+    selector: entry.selector,
+    lane: entry.lane,
+  }))
+  const parentComparable = parentProfile.map((entry) => ({
+    selector: entry.selector,
+    lane: entry.lane,
+  }))
+  assert.deepEqual(
+    parentComparable,
+    studentComparable,
+    `${theme} parent/student placement mismatch`,
+  )
+}
+
+function assertFrameProfilesMatch(studentProfile, parentProfile, theme) {
+  assert.ok(studentProfile?.main, `${theme} student frame profile should include main`)
+  assert.ok(parentProfile?.main, `${theme} parent frame profile should include main`)
+  const keys = ["main", "topbar", "grid"]
+  for (const key of keys) {
+    assert.deepEqual(
+      parentProfile[key],
+      studentProfile[key],
+      `${theme} parent/student frame mismatch for ${key}`,
+    )
+  }
+}
+
 function summarizeAxe(violations = []) {
   return violations.map((violation) => ({
     id: violation.id,
@@ -380,6 +592,9 @@ async function reviewStudent(page, origin, theme, coverage, credentials) {
   }))
   assert.equal(bootState.loginHidden, true, "authenticated student reload should not flash the login card")
   assert.equal(bootState.appPanelHidden, false, "authenticated student reload should show the app immediately")
+  const surfaceProfile = await captureSharedSurfaceProfile(page, "student")
+  const placementProfile = await capturePlacementProfile(page, "student")
+  const frameProfile = await captureFrameProfile(page, "student")
 
   const navLinks = page.locator("a[data-page-target]")
   const navMeta = await page.evaluate(() =>
@@ -478,7 +693,7 @@ async function reviewStudent(page, origin, theme, coverage, credentials) {
     }
   }
 
-  coverage.push({ theme, role: "student", links: navMeta, routeStates: visited })
+  coverage.push({ theme, role: "student", links: navMeta, routeStates: visited, surfaceProfile, placementProfile, frameProfile })
 }
 
 async function reviewParent(page, origin, theme, coverage, credentials) {
@@ -492,6 +707,9 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
   }))
   assert.equal(bootState.loginHidden, true, "authenticated parent reload should not flash the login card")
   assert.equal(bootState.portalHidden, false, "authenticated parent reload should show the portal immediately")
+  const surfaceProfile = await captureSharedSurfaceProfile(page, "parent")
+  const placementProfile = await capturePlacementProfile(page, "parent")
+  const frameProfile = await captureFrameProfile(page, "parent")
 
   const navLinks = page.locator("a[data-page-target]")
   const navMeta = await page.evaluate(() =>
@@ -515,7 +733,6 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
       ".calendar-shell",
       ".homework-square",
       ".attendance-square",
-      ".dashboard-surface-shell",
       ".field-validation-message",
       "#newsWeekSetModal .portal-modal-dialog",
       "#newsWeekSetModal .portal-modal-body",
@@ -557,7 +774,7 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
     }
   }
 
-  coverage.push({ theme, role: "parent", links: navMeta, routeStates: visited })
+  coverage.push({ theme, role: "parent", links: navMeta, routeStates: visited, surfaceProfile, placementProfile, frameProfile })
 }
 
 async function reviewAdminUtilities(page, origin, theme, coverage) {
@@ -649,6 +866,18 @@ test(
       path.resolve(ARTIFACTS_DIR, "portal-site-review.json"),
       JSON.stringify({ coverage }, null, 2),
     )
+
+    for (const theme of ["light", "dark"]) {
+      const studentProfile = coverage.find((entry) => entry.theme === theme && entry.role === "student")?.surfaceProfile
+      const parentProfile = coverage.find((entry) => entry.theme === theme && entry.role === "parent")?.surfaceProfile
+      assertSharedSurfaceProfilesMatch(studentProfile, parentProfile, theme)
+      const studentPlacement = coverage.find((entry) => entry.theme === theme && entry.role === "student")?.placementProfile
+      const parentPlacement = coverage.find((entry) => entry.theme === theme && entry.role === "parent")?.placementProfile
+      assertPlacementProfilesMatch(studentPlacement, parentPlacement, theme)
+      const studentFrame = coverage.find((entry) => entry.theme === theme && entry.role === "student")?.frameProfile
+      const parentFrame = coverage.find((entry) => entry.theme === theme && entry.role === "parent")?.frameProfile
+      assertFrameProfilesMatch(studentFrame, parentFrame, theme)
+    }
 
     const summary = coverage
       .map((entry) => ({

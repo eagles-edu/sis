@@ -893,7 +893,7 @@ transition:
         align-items: start;
         display: grid;
         gap: 12px;
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
   }
       .app-sidebar {
         border-radius: 0 var(--radius-3) var(--radius-3) 0;
@@ -2331,6 +2331,41 @@ box-shadow:
         inline-size: auto;
         min-inline-size: 92px;
   }
+      .portal-theme-toggle {
+        align-items: center;
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+        color: var(--ink);
+        display: inline-flex;
+        flex: 0 0 auto;
+        inline-size: 44px;
+        justify-content: center;
+        min-inline-size: 44px;
+        padding: 0;
+  }
+      .portal-theme-toggle:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: transparent;
+        box-shadow: none;
+        filter: none;
+        transform: none;
+  }
+      .portal-theme-toggle:focus-visible {
+        outline-offset: 2px;
+  }
+      .portal-theme-toggle__icon {
+        align-items: center;
+        display: inline-flex;
+        height: 22px;
+        justify-content: center;
+        width: 22px;
+  }
+      .portal-theme-toggle__icon svg {
+        display: block;
+        height: 100%;
+        width: 100%;
+  }
       .app-header-menu-toggle {
         display: none;
         justify-self: end;
@@ -2890,9 +2925,6 @@ box-shadow:
       .progress-shorthand-row {
         align-items: end;
   }
-      .progress-shorthand-row button {
-        min-height: 36px;
-  }
       #pt_actionHelperStatus {
         margin-top: 2px;
   }
@@ -3018,6 +3050,63 @@ box-shadow:
         font-size: 11px;
         font-weight: 500;
   }
+      .news-review-viewer-grid {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+      .news-review-viewer-block {
+        background: var(--surface-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-2);
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        padding: 8px 10px;
+  }
+      .news-review-viewer-block strong {
+        color: var(--ink);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        margin: 0;
+        text-transform: uppercase;
+  }
+      .news-review-viewer-block span,
+      .news-review-viewer-long {
+        color: var(--ink);
+        font-size: 13px;
+        line-height: 1.45;
+        margin: 0;
+        overflow-wrap: anywhere;
+  }
+      .news-review-viewer-long {
+        white-space: pre-wrap;
+  }
+      .news-review-viewer-block a {
+        color: var(--link-color);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+  }
+      .news-review-viewer-review {
+        background: var(--surface-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-2);
+        display: grid;
+        gap: 6px;
+        padding: 8px 10px;
+  }
+      .news-review-viewer-review label {
+        margin-bottom: 0;
+  }
+      .news-review-viewer-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+  }
+      .news-review-viewer-actions button {
+        inline-size: auto;
+        min-width: 132px;
+  }
       @media (max-width: 1100px) {
         .app-shell {
           grid-template-columns: 1fr;
@@ -3026,6 +3115,9 @@ box-shadow:
           width: min(92vw, 320px);
     }
         .progress-report-layout {
+          grid-template-columns: 1fr;
+    }
+        .news-review-viewer-grid {
           grid-template-columns: 1fr;
     }
         .permission-page-grid {
@@ -3294,6 +3386,10 @@ box-shadow:
         .page-section[data-page="news-reports"] .table-scroll-wrap tbody td::before {
           font-size: 10px;
     }
+        .news-review-viewer-actions button {
+          min-width: 0;
+          width: 100%;
+    }
   }
 
       /* modern CSS reset */
@@ -3387,6 +3483,16 @@ box-shadow:
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(.app-brand-logo-fallback, .sidebar-logo-fallback) {
+        color: var(--portal-dark-text);
+  }
+
+      html[data-theme="dark"] body.admin-portal-page {
+        background: var(--portal-dark-page-bg);
+        color: var(--portal-dark-text);
+        color-scheme: dark;
+  }
+
+      html[data-theme="dark"] body.admin-portal-page .app-school-name {
         color: var(--portal-dark-text);
   }
 
@@ -3511,57 +3617,6 @@ box-shadow:
         background: linear-gradient(180deg, rgba(240, 176, 95, 0.18) 0%, rgba(71, 53, 27, 0.96) 100%);
         border-color: #f0b05f;
   }
-
-      html[data-theme="dark"] body.admin-portal-page .queue-hub-panel .queue-row-btn {
-        color: #b4c4ea;
-        text-decoration-color: rgba(180, 196, 234, 0.82);
-      }
-
-      html[data-theme="dark"] body.admin-portal-page :where(.queue-row-btn, .row-options-trigger) {
-        color: #b4c4ea;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .queue-row-btn {
-        border-radius: var(--radius-2);
-        padding: 1px 6px;
-        text-decoration-color: rgba(180, 196, 234, 0.82);
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:hover,
-      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:focus-visible {
-        background: rgba(180, 196, 234, 0.14);
-        box-shadow: inset 0 0 0 1px rgba(180, 196, 234, 0.28);
-        color: #eef4ff;
-        text-decoration-color: currentColor;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .row-options-trigger {
-        background: rgba(180, 196, 234, 0.12);
-        border-color: rgba(180, 196, 234, 0.22);
-        border-inline-start-color: rgba(180, 196, 234, 0.22);
-        color: #b4c4ea;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .row-options-trigger:hover,
-      html[data-theme="dark"] body.admin-portal-page .row-options-trigger:focus-visible {
-        background: rgba(180, 196, 234, 0.18);
-        border-color: rgba(180, 196, 234, 0.34);
-        border-inline-start-color: rgba(180, 196, 234, 0.34);
-        color: #eef4ff;
-        text-decoration-color: currentColor;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .row-options-menu[open] > .row-options-trigger {
-        background: rgba(180, 196, 234, 0.18);
-        color: #eef4ff;
-        text-decoration-color: currentColor;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .row-options-trigger:focus-visible,
-      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:focus-visible {
-        outline: 2px solid rgba(180, 196, 234, 0.46);
-        outline-offset: 1px;
-      }
 
       html[data-theme="dark"] body.admin-portal-page :where(.profile-tabs-shell, .profile-info-tabs, .profile-tab-panel, .profile-info-summary, .profile-summary-primary, .profile-summary-chip, .profile-info-panel, .profile-info-group, .profile-info-item, .profile-info-empty-stack, .profile-field-group, .profile-choice-item, .profile-layout-editor, .profile-layout-table-wrap) {
         box-shadow: none;
@@ -3710,6 +3765,20 @@ box-shadow:
         background: var(--portal-dark-surface-support);
         border-color: rgba(255, 255, 255, 0.12);
         color: var(--portal-dark-text-soft);
+  }
+      html[data-theme="dark"] body.admin-portal-page :where(
+        .news-review-viewer-block,
+        .news-review-viewer-review
+      ) {
+        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+        border-color: var(--portal-dark-border);
+        color: var(--portal-dark-text);
+  }
+      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block strong,
+      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block span,
+      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-long,
+      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label {
+        color: var(--portal-dark-text);
   }
 
       html[data-theme="dark"] body.admin-portal-page #levelReminderSendBtn {

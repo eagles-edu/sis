@@ -48,101 +48,6 @@
       line-height: 1.2;
     }
 
-    .status.bad {
-      color: #b71f2f;
-    }
-
-    .status.ok {
-      color: #1c8050;
-    }
-
-    .chip {
-      --chip-height: 30px;
-      --chip-min-ar: 4.5;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      inline-size: auto;
-      min-inline-size: calc(var(--chip-height) * var(--chip-min-ar));
-      max-inline-size: 100%;
-      border-radius: 999px;
-      border: 2px solid #5f7ca6;
-      border-bottom-width: 3px;
-      box-sizing: border-box;
-      min-height: 0;
-      height: var(--chip-height);
-      padding: 0 10px;
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1;
-      text-align: center;
-      text-transform: uppercase;
-      color: #173962;
-      background: #e2edff;
-      box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
-      white-space: nowrap;
-      flex: 0 0 auto;
-    }
-
-    .chip-neutral {
-      border-color: #5877a3;
-      color: #12345b;
-      background: #dfeaff;
-    }
-
-    .chip-ok {
-      border-color: #287a4f;
-      color: #0f452c;
-      background: #d8f2e3;
-    }
-
-    .chip-warn {
-      border-color: #b16d00;
-      color: #5b3500;
-      background: #ffe9c7;
-    }
-
-    .chip-open {
-      border-color: #2d78b4;
-      color: #093a63;
-      background: #d8edff;
-    }
-
-    .chip-link {
-      cursor: pointer;
-      display: inline-flex;
-    }
-
-    .chip-link:hover,
-    .chip-link:focus-visible {
-      cursor: pointer;
-    }
-
-    .chip-revise {
-      border-color: #7348b5;
-      color: #351267;
-      background: #eadcff;
-    }
-
-    .chip-bad {
-      border-color: #ad2c3c;
-      color: #67101d;
-      background: #ffd8dd;
-    }
-
-    .chip-checked {
-      border-color: #1d8b82;
-      color: #044e48;
-      background: #cef4ef;
-    }
-
-    .chip-lock {
-      border-color: #b24949;
-      color: #661717;
-      background: #ffe1e1;
-    }
-
     .status-strip {
       padding: 10px 12px;
     }
@@ -361,13 +266,6 @@
       gap: 6px;
     }
 
-    .field label {
-      font-size: 0.8rem;
-      color: var(--ink-soft);
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
     .field.is-invalid label {
       color: #9a1424;
     }
@@ -402,127 +300,6 @@
       grid-column: span 12;
     }
 
-    input,
-    textarea,
-    button:not(.floating-menu-btn):not(.nav-overlay),
-    .link-btn {
-      font: inherit;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      padding: 10px 12px;
-      color: #172033;
-      background: #fff;
-    }
-
-    textarea {
-      min-height: 98px;
-      resize: vertical;
-      line-height: 1.35;
-    }
-
-    button:not(.floating-menu-btn):not(.nav-overlay),
-    .link-btn {
-      cursor: pointer;
-      background: #f8fbff;
-      text-decoration: none;
-      text-align: center;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 42px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .actions-2>* {
-      flex: 1 1 45%;
-    }
-
-    .actions-3>* {
-      flex: 1 1 30%;
-    }
-
-    .btn-refresh {
-      background: #f1f5ff;
-      border-color: #9bb5df;
-      color: #214072;
-    }
-
-    .primary,
-    #newsQueueOpenBtn,
-    #openNewsPageBtn {
-      background: linear-gradient(180deg, var(--brand), var(--brand-strong));
-      border-color: #7f1520;
-      color: #fff;
-    }
-
-    .primary:hover,
-    #newsQueueOpenBtn:hover,
-    #openNewsPageBtn:hover {
-      background: linear-gradient(180deg, #8f1220, #780f1b);
-      color: #fff;
-    }
-
-    .alt {
-      background: linear-gradient(180deg, #2756ab, #173f89);
-      border-color: #163b80;
-      color: #fff;
-    }
-
-    #loginPanel,
-    #appPanel {
-      zoom: var(--portal-text-zoom);
-    }
-
-    #appPanel {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-      min-width: 0;
-    }
-
-    .portal-grid {
-      align-items: start;
-      gap: 12px;
-      grid-template-columns: minmax(0, 1fr);
-      min-width: 0;
-    }
-
-    .portal-col {
-      align-content: start;
-      gap: 10px;
-      grid-template-columns: minmax(0, 1fr);
-      min-width: 0;
-    }
-
-    .toolbar {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 12px;
-      min-width: 0;
-    }
-
-    .toolbar-actions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .panel {
-      margin-top: 10px;
-    }
-
-    .identity-list {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .identity-item {
       border: 1px solid var(--line);
       background: #f9fbff;
@@ -532,20 +309,6 @@
       display: grid;
       align-content: start;
       gap: 5px;
-    }
-
-    .identity-value {
-      font-size: 14px;
-      font-weight: 700;
-      word-break: break-word;
-      line-height: 1.25;
-    }
-
-    .metrics {
-      margin-top: 10px;
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .metric {
@@ -593,36 +356,11 @@
       color: #5f0f1c;
     }
 
-    .quick-links {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: 1fr;
-      margin-top: 8px;
-    }
-
-    .hint {
-      margin: 0;
-      font-size: 12px;
-      color: var(--ink-soft);
-    }
-
     .homework-card {
       margin-top: 10px;
       padding: 0;
       background: transparent;
       border: 0;
-    }
-
-    .homework-card-shell {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-3);
-      background: #fff;
-      padding: 10px;
-      display: grid;
-      gap: 10px;
-      grid-template-columns: 96px minmax(0, 1fr);
-      align-items: stretch;
-      box-sizing: border-box;
     }
 
     .homework-square {
@@ -700,24 +438,6 @@
     .homework-link:hover,
     .homework-link:focus-visible {
       color: #0f3c70;
-    }
-
-    .homework-modal-btn {
-      justify-self: start;
-      min-height: 36px;
-      padding: 7px 11px;
-      font-size: 12px;
-      font-weight: 700;
-      border: 1px solid #b7c8df;
-      border-radius: 8px;
-      background: #f5f8fd;
-      color: #24466b;
-      cursor: pointer;
-    }
-
-    .homework-modal-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
     }
 
     .homework-modal-table {
@@ -950,9 +670,6 @@
     }
 
     @media (max-width: 399px) {
-
-      .metrics,
-      .identity-list,
       .toolbar-actions {
         grid-template-columns: 1fr;
       }
@@ -1006,14 +723,6 @@
         display: flex;
       }
 
-      .identity-list {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .metrics {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
       .fc .fc-daygrid-day-frame {
         min-height: 124px;
       }
@@ -1040,18 +749,6 @@
     }
 
     @media (min-width: 1000px) {
-      .quick-links {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .metrics {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-      }
-
-      .portal-col {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       #overviewPanel,
       #quickLinksPanel {
         grid-column: 1 / -1;
@@ -1083,9 +780,6 @@
     }
 
     @media (min-width: 1000px) and (max-width: 1280px) {
-      .metrics {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
     }
 
     html[data-student-auth-state="authenticated"] body.student-portal-page #loginPanel {
