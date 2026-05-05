@@ -1,3 +1,4 @@
+/* global getComputedStyle */
 import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
@@ -376,6 +377,12 @@ function setupTestEnv() {
   process.env.EXERCISE_MAILER_ORIGIN = "*"
   process.env.MAILER_DEBUG = "false"
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = TEST_ADMIN_UI_SETTINGS_FILE
+  delete process.env.STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON
+  delete process.env.STUDENT_STUDENT_USER
+  delete process.env.STUDENT_STUDENT_PASS
+  delete process.env.STUDENT_PARENT_PORTAL_ACCOUNTS_JSON
+  delete process.env.STUDENT_PARENT_USER
+  delete process.env.STUDENT_PARENT_PASS
   try {
     fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
   } catch (error) {
@@ -437,27 +444,67 @@ async function loginAdmin(page, origin, credentials) {
 }
 
 async function loginStudent(page, origin, credentials) {
-  await page.goto(`${origin}/student`, { waitUntil: "domcontentloaded" })
-  await page.waitForSelector("#loginForm", { timeout: 15000 })
-  await page.fill("#loginEaglesId", credentials.eaglesId)
-  await page.fill("#loginPassword", credentials.password)
-  await page.click("#loginBtn")
+  const response = await fetch(`${origin}/api/student/auth/login`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(credentials),
+  })
+  if (!response.ok) {
+    throw new Error(`student login failed with ${response.status}`)
+  }
+  const setCookie = response.headers.get("set-cookie") || ""
+  const match = setCookie.match(/^student_portal_sid=([^;]+)/i)
+  if (!match) {
+    throw new Error("student login did not return a session cookie")
+  }
+  await page.context().addCookies([
+    {
+      name: "student_portal_sid",
+      value: match[1],
+      url: origin,
+    },
+  ])
+  const url = new URL("/student", origin)
+  url.searchParams.set("apiOrigin", origin)
+  await page.goto(url.toString(), { waitUntil: "domcontentloaded" })
   await page.waitForFunction(() => {
     const app = globalThis.document.getElementById("appPanel")
     return Boolean(app && !app.classList.contains("hidden"))
-  })
+  }, undefined, { timeout: 30000 })
 }
 
 async function loginParent(page, origin, credentials) {
-  await page.goto(`${origin}/parent`, { waitUntil: "domcontentloaded" })
-  await page.waitForSelector("#loginCard", { timeout: 15000 })
-  await page.fill("#parentsId", credentials.parentsId)
-  await page.fill("#parentPassword", credentials.password)
-  await page.click("#loginBtn")
+  const response = await fetch(`${origin}/api/parent/auth/login`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(credentials),
+  })
+  if (!response.ok) {
+    throw new Error(`parent login failed with ${response.status}`)
+  }
+  const setCookie = response.headers.get("set-cookie") || ""
+  const match = setCookie.match(/^parent_portal_sid=([^;]+)/i)
+  if (!match) {
+    throw new Error("parent login did not return a session cookie")
+  }
+  await page.context().addCookies([
+    {
+      name: "parent_portal_sid",
+      value: match[1],
+      url: origin,
+    },
+  ])
+  const url = new URL("/parent", origin)
+  url.searchParams.set("apiOrigin", origin)
+  await page.goto(url.toString(), { waitUntil: "domcontentloaded" })
   await page.waitForFunction(() => {
     const app = globalThis.document.getElementById("portalCard")
     return Boolean(app && !app.classList.contains("hidden"))
-  })
+  }, undefined, { timeout: 30000 })
 }
 
 async function reviewHub(page, origin, theme, coverage) {
@@ -826,7 +873,7 @@ test(
     ensureArtifactsDir()
     const credentials = resolveReviewCredentials()
     const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
-    const server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
+    const server = await startExerciseMailer({ transporter: makeMockTransport(), port: 8788 })
     await new Promise((resolve) => server.once("listening", resolve))
     const address = server.address()
     const port = typeof address === "object" && address ? address.port : 0

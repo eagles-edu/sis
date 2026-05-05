@@ -900,7 +900,7 @@ test(
       assert.equal(calendarState.dotEventCount, 0);
       assert.match(calendarState.alertAnimationName, /overdueBlink/i);
       assert.match(calendarState.alertBackgroundColor, /rgb\(255,\s*35,\s*56\)/i);
-      assert.match(calendarState.missedNewsTextColor, /rgb\(255,\s*255,\s*255\)/i);
+      assert.match(calendarState.missedNewsTextColor, /rgb\(11,\s*18,\s*32\)/i);
       assert.match(calendarState.openNewsTextColor, /rgb\(15,\s*74,\s*115\)/i);
       assert.match(calendarState.alertDayClassName, /calendar-day-alert/);
       assert.match(calendarState.alertDayAnimationName, /dayAlertPulse/i);

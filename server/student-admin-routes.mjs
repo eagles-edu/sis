@@ -57,6 +57,7 @@ import {
 } from "../src/modules/admin/student-roster.mjs"
 import {
   getStudentAdminFilterCacheStatus,
+  closeStudentAdminFilterCache,
   listExerciseTitles,
   listLevelAndSchoolFilters,
 } from "../src/modules/admin/student-admin-queries.mjs"
@@ -139,6 +140,7 @@ const ADMIN_PAGE_SECTIONS = [
   "reports",
   "family",
   "users",
+  "school-setup",
   "permissions",
   "settings",
 ]
@@ -1253,6 +1255,21 @@ export function getStudentAdminRuntimeStatus() {
 
 export function setStudentAdminRuntimeHealthProvider(provider) {
   runtimeHealthProvider = typeof provider === "function" ? provider : null
+}
+
+/**
+ * Release runtime-backed admin resources used by the mailer/server test harness.
+ *
+ * @returns {Promise<void>}
+ */
+export async function closeStudentAdminRuntimeResources() {
+  runtimeHealthProvider = null
+  await Promise.allSettled([
+    SESSION_STORE.close(),
+    PARENT_SESSION_STORE.close(),
+    STUDENT_SESSION_STORE.close(),
+    closeStudentAdminFilterCache(),
+  ])
 }
 
 async function resolveAdminRuntimeHealthPayload() {

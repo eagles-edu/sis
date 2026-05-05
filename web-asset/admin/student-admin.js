@@ -1823,7 +1823,6 @@
         const selfHealResult = normalizeLower(runtimeSelfHeal?.lastResult);
         const showButton =
           canManageUsers() &&
-          state.activePage === "overview" &&
           runtimeSelfHeal &&
           runtimeSelfHeal.enabled !== false &&
           selfHealResult !== "in-sync" &&
@@ -2090,6 +2089,9 @@
             state.runtimeHealth = body;
             renderOverviewRuntimeRestartButton();
             renderSystemHealthPanel();
+            if (canManageUsers()) {
+              await loadRuntimeHealthSnapshotFromAdminApi(controller).catch(() => false);
+            }
           } else if (probeResult.response.ok) {
             await loadRuntimeHealthSnapshotFromAdminApi(controller).catch(() => false);
           }
@@ -9009,16 +9011,16 @@
         options.className = "row";
         options.innerHTML = `
         <div class="col-3">
-          <label>Start page</label>
-          <select data-perm-start="${roleName}"></select>
+          <label>
+          <select data-perm-start="${roleName}"></select>Start page</label>
         </div>
         <div class="col-3 permission-page-item">
           <input type="checkbox" data-perm-can-read="${roleName}" ${policy.canRead ? "checked" : ""}>
           <label>Can read data</label>
         </div>
         <div class="col-3 permission-page-item">
-          <input type="checkbox" data-perm-can-write="${roleName}" ${policy.canWrite ? "checked" : ""}>
-          <label>Can write data</label>
+          <label><input type="checkbox" data-perm-can-write="${roleName}" ${policy.canWrite ? "checked" : ""}>
+          Can write data</label>
         </div>
         <div class="col-3 permission-page-item">
           <input type="checkbox" data-perm-can-users="${roleName}" ${policy.canManageUsers ? "checked" : ""}>

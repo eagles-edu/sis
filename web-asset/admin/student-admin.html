@@ -632,10 +632,10 @@
                     <h3 id="levelDetailTitle">Current assignment progress</h3>
                     <div class="row">
                       <div class="col-4">
-                        <label>Assignment title</label><input id="levelReminderAssignment" type="text" placeholder="Homework title">
+                        <label for="levelReminderAssignment">Assignment title</label><input id="levelReminderAssignment" type="text" placeholder="Homework title">
                       </div>
                       <div class="col-4">
-                        <label>Assignment link</label><input id="levelReminderLink" type="url" placeholder="https://...">
+                        <label for="levelReminderLink">Assignment link</label><input id="levelReminderLink" type="url" placeholder="https://...">
                       </div>
                       <div class="col-2">
                         <label for="levelReminderDueAt">Due date</label><input id="levelReminderDueAt" type="date">
@@ -911,13 +911,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <input id="a_status" type="hidden" value="absent">
                       <input id="a_comments" type="hidden" value="">
                       <div class="col-3">
-                        <label>Date</label><input id="a_date" type="date">
+                        <label for="a_date">Date</label><input id="a_date" type="date">
                       </div>
                       <div class="col-3">
-                        <label>School Year</label><input id="a_schoolYear" type="text" placeholder="2026-2027">
+                        <label for="a_schoolYear">School Year</label><input id="a_schoolYear" type="text" placeholder="2026-2027">
                       </div>
                       <div class="col-2">
-                        <label>Quarter</label><select id="a_quarter">
+                        <label for="a_quarter">Quarter</label><select id="a_quarter">
                           <option>q1</option>
                           <option>q2</option>
                           <option>q3</option>
@@ -925,7 +925,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </select>
                       </div>
                       <div class="col-4">
-                        <label>Class</label><input id="a_className" type="text">
+                        <label for="a_className">Class</label><input id="a_className" type="text">
                       </div>
                     </div>
                     <div class="actions actions-3">
@@ -1014,7 +1014,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Direction</label>
+                    <label for="attendanceSortDirBtn">Direction</label>
                     <button id="attendanceSortDirBtn" type="button" class="btn-refresh">
                       Newest First
                     </button>
@@ -1046,19 +1046,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <input id="attendanceDataSearch" type="search" placeholder="date, class, status, comments">
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Archive</label>
+                    <label for="attendanceArchiveToggleBtn">Archive</label>
                     <button id="attendanceArchiveToggleBtn" type="button">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Export</label>
+                    <label for="attendanceExportXlsxBtn">Export</label>
                     <button id="attendanceExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Print</label>
+                    <label for="attendancePrintPdfBtn">Print</label>
                     <button id="attendancePrintPdfBtn" type="button">
                       Print PDF
                     </button>
@@ -1132,41 +1132,41 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <h3 id="assignmentBuilderTitle">Assignment Builder</h3>
                     <div class="row">
                       <div class="col-4">
-                        <label>Assignment title</label><input id="assignTitle" type="text" placeholder="Weekly homework package">
+                        <label for="assignTitle">Assignment title</label><input id="assignTitle" type="text" placeholder="Weekly homework package">
                       </div>
                       <div class="col-2">
-                        <label>Date assigned</label><input id="assignAssignedAt" type="date">
+                        <label for="assignAssignedAt">Date assigned</label><input id="assignAssignedAt" type="date">
                       </div>
                       <div class="col-2">
-                        <label>Due date</label><input id="assignDueAt" type="date">
+                        <label for="assignDueAt">Due date</label><input id="assignDueAt" type="date">
                       </div>
                       <div class="col-2">
-                        <label>Target level</label><select id="assignLevel">
+                        <label for="assignLevel">Target level</label><select id="assignLevel">
                           <option value="">Select level</option>
                         </select>
                       </div>
                       <div class="col-2">
-                        <label>Target student (optional)</label><select id="assignStudent">
+                        <label for="assignStudent">Target student (optional)</label><select id="assignStudent">
                           <option value="">All students in selected level</option>
                         </select>
                       </div>
                       <div class="col-12">
-                        <label>Announcement message</label><textarea id="assignMessage" placeholder="Assignment instructions and notes"></textarea>
+                        <label for="assignMessage">Announcement message</label><textarea id="assignMessage" placeholder="Assignment instructions and notes"></textarea>
                       </div>
                     </div>
                     <div class="assignment-item-builder">
                       <h4>Assignment Items</h4>
                       <div class="row">
                         <div class="col-6">
-                          <label>Exercise</label><select id="assignmentExerciseSelect">
+                          <label for="assignmentExerciseSelect">Exercise</label><select id="assignmentExerciseSelect">
                             <option value="">Select exercise</option>
                           </select>
                         </div>
                         <div class="col-4">
-                          <label>Exercise URL</label><input id="assignmentExerciseUrl" type="url" placeholder="https://...">
+                          <label for="assignmentExerciseUrl">Exercise URL</label><input id="assignmentExerciseUrl" type="url" placeholder="https://...">
                         </div>
                         <div class="col-2">
-                          <label>&nbsp;</label><button id="assignmentAddItemBtn" type="button" class="btn-edit">
+                          <label for="assignmentAddItemBtn">&nbsp;</label><button id="assignmentAddItemBtn" type="button" class="btn-edit">
                             Add Assignment Item
                           </button>
                         </div>
@@ -1233,7 +1233,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Direction</label>
+                    <label for="assignmentSortDirBtn">Direction</label>
                     <button id="assignmentSortDirBtn" type="button" class="btn-refresh">
                       Newest Due First
                     </button>
@@ -1265,19 +1265,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <input id="assignmentDataSearch" type="search" placeholder="title, level, due date, item">
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Archive</label>
+                    <label for="assignmentArchiveToggleBtn">Archive</label>
                     <button id="assignmentArchiveToggleBtn" type="button">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Export</label>
+                    <label for="assignmentExportXlsxBtn">Export</label>
                     <button id="assignmentExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Print</label>
+                    <label for="assignmentPrintPdfBtn">Print</label>
                     <button id="assignmentPrintPdfBtn" type="button">
                       Print PDF
                     </button>
@@ -1347,33 +1347,33 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <h3 id="parentTrackingPanelTitle">Student Progress Report</h3>
                     <div class="row progress-report-meta">
                       <div class="col-3">
-                        <label>Student Name</label><select id="pt_studentRefId">
+                        <label for="pt_studentRefId">Student Name</label><select id="pt_studentRefId">
                           <option value="">Select student</option>
                         </select>
                       </div>
                       <div class="col-2">
-                        <label>Class Date</label><input id="pt_classDate" type="date">
+                        <label for="pt_classDate">Class Date</label><input id="pt_classDate" type="date">
                       </div>
                       <div class="col-2">
-                        <label>Class Day</label><input id="pt_classDay" type="text" readonly>
+                        <label for="pt_classDay">Class Day</label><input id="pt_classDay" type="text" readonly>
                       </div>
                       <div class="col-2">
-                        <label>Teacher</label><select id="pt_teacherName">
+                        <label for="pt_teacherName">Teacher</label><select id="pt_teacherName">
                           <option value="">Select teacher</option>
                         </select>
                       </div>
                       <div class="col-3">
-                        <label>Class Level</label><input id="pt_classLevel" type="text" readonly>
+                        <label for="pt_classLevel">Class Level</label><input id="pt_classLevel" type="text" readonly>
                       </div>
                     </div>
                     <div class="progress-report-card">
-                      <label>Bai tap ve nha this week (auto link)</label>
+                      <label for="pt_homeworkAnnouncement">Bai tap ve nha this week (auto link)</label>
                       <input id="pt_homeworkAnnouncement" type="text" readonly placeholder="Auto-generated from assignments when available">
                     </div>
                     <div class="progress-report-layout">
                       <div class="progress-report-card">
                         <h4>Class Focus</h4>
-                        <label>Lesson Summary</label>
+                        <label for="pt_lessonSummary">Lesson Summary</label>
                         <textarea id="pt_lessonSummary" placeholder="What was covered in class today?"></textarea>
                         <label>Vision / board visibility status</label>
                         <div class="progress-report-vision-row">
@@ -1386,24 +1386,25 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <h4>Performance Snapshot (Auto from records)</h4>
                         <div class="row">
                           <div class="col-2">
-                            <label>Behavior (0-5)</label><input id="pt_behaviorScore" type="text" readonly aria-readonly="true" placeholder="Auto from rubric">
+                            <label for="pt_behaviorScore">Behavior (0-5)</label><input id="pt_behaviorScore" type="text" readonly aria-readonly="true" placeholder="Auto from rubric">
                           </div>
                           <div class="col-2">
-                            <label>Skills (0-5)</label><input id="pt_participationScore" type="text" readonly aria-readonly="true" placeholder="Auto from rubric">
+                            <label for="pt_participationScore">Skills (0-5)</label><input id="pt_participationScore" type="text" readonly aria-readonly="true" placeholder="Auto from rubric">
                           </div>
                           <div class="col-2">
-                            <label>Academic (0-5)</label><input id="pt_academicScore" type="text" readonly aria-readonly="true" placeholder="Auto from records">
+                            <label for="pt_academicScore">Academic (0-5)</label><input id="pt_academicScore" type="text" readonly aria-readonly="true" placeholder="Auto from records">
                           </div>
                           <div class="col-3">
-                            <label>Homework Timeliness %</label><input id="pt_homeworkOnTimeRate" type="number" step="0.01" readonly aria-readonly="true">
+                            <label for="pt_homeworkOnTimeRate">Homework Timeliness %</label>
+                            <input id="pt_homeworkOnTimeRate" type="number" step="0.01" readonly aria-readonly="true">
                           </div>
                           <div class="col-3">
-                            <label>Assignment Completion %</label><input id="pt_homeworkCompletionRate" type="number" step="0.01" readonly aria-readonly="true">
+                            <label for="pt_homeworkCompletionRate">Assignment Completion %</label><input id="pt_homeworkCompletionRate" type="number" step="0.01" readonly aria-readonly="true">
                           </div>
                         </div>
                         <div class="row">
                           <div class="col-3">
-                            <label>Participation Points (0-32)</label><input id="pt_participationPointsAward" type="number" min="0" max="32" step="1" placeholder="0">
+                            <label for="pt_participationPointsAward">Participation Points (0-32)</label><input id="pt_participationPointsAward" type="number" min="0" max="32" step="1" placeholder="0">
                           </div>
                         </div>
                         <p class="small">
@@ -1446,13 +1447,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                             <input id="pt_actionAddition" type="text" placeholder="Add specific details before insert">
                           </div>
                           <div class="col-2">
-                            <label>&nbsp;</label>
+                            <label for="pt_actionInsertBtn">&nbsp;</label>
                             <button id="pt_actionInsertBtn" type="button" class="btn-edit">
                               Insert to Focused Field
                             </button>
                           </div>
                           <div class="col-2">
-                            <label>&nbsp;</label>
+                            <label for="pt_actionClearBtn">&nbsp;</label>
                             <button id="pt_actionClearBtn" type="button">
                               Clear Inputs
                             </button>
@@ -1819,9 +1820,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </div>
                       </div>
                       <div class="progress-report-card progress-report-span-2">
-                        <label>Email Targets (auto from profile)</label>
+                        <label for="pt_recipients">Email Targets (auto from profile)</label>
                         <input id="pt_recipients" type="text" readonly placeholder="student + parent/homework proctor emails">
-                        <label>Parent-facing Comment (Vietnamese)</label>
+                        <label for="pt_comments">Parent-facing Comment (Vietnamese)</label>
                         <textarea id="pt_comments" placeholder="Tom tat bang tieng Viet: hanh vi da quan sat, hanh dong phu huynh can lam tai nha, ngay kiem tra lai."></textarea>
                         <p class="small">
                           TODO: Auto-render VI parent summary from rubric rows + score
@@ -1873,7 +1874,7 @@ Select an assignment link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Direction</label>
+                    <label for="performanceSortDirBtn">Direction</label>
                     <button id="performanceSortDirBtn" type="button" class="btn-refresh">
                       Newest First
                     </button>
@@ -1905,19 +1906,19 @@ Select an assignment link to inspect details.</pre>
                     <input id="performanceDataSearch" type="search" placeholder="class, quarter, score, comments">
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Archive</label>
+                    <label for="performanceArchiveToggleBtn">Archive</label>
                     <button id="performanceArchiveToggleBtn" type="button">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Export</label>
+                    <label for="performanceExportXlsxBtn">Export</label>
                     <button id="performanceExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Print</label>
+                    <label for="performancePrintPdfBtn">Print</label>
                     <button id="performancePrintPdfBtn" type="button">
                       Print PDF
                     </button>
@@ -2105,13 +2106,13 @@ Select an assignment link to inspect details.</pre>
                     <input id="newsReviewQueryFilter" type="search" placeholder="student, title, source, synopsis">
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Action</label>
+                    <label for="newsReviewRefreshBtn">Action</label>
                     <button id="newsReviewRefreshBtn" type="button" class="btn-refresh">
                       Refresh Queue
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Action</label>
+                    <label for="newsReviewClearFiltersBtn">Action</label>
                     <button id="newsReviewClearFiltersBtn" type="button">
                       Clear Filters
                     </button>
@@ -2163,13 +2164,13 @@ Select an assignment link to inspect details.</pre>
                 <div class="row">
                   <input id="g_id" type="hidden">
                   <div class="col-3">
-                    <label>Class</label><input id="g_className" type="text">
+                    <label for="g_className">Class</label><input id="g_className" type="text">
                   </div>
                   <div class="col-2">
-                    <label>School Year</label><input id="g_schoolYear" type="text">
+                    <label for="g_schoolYear">School Year</label><input id="g_schoolYear" type="text">
                   </div>
                   <div class="col-2">
-                    <label>Quarter</label><select id="g_quarter">
+                    <label for="g_quarter">Quarter</label><select id="g_quarter">
                       <option>q1</option>
                       <option>q2</option>
                       <option>q3</option>
@@ -2177,55 +2178,55 @@ Select an assignment link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="col-5">
-                    <label>Assignment</label><input id="g_assignmentName" type="text" list="exerciseTitleList">
+                    <label for="g_assignmentName">Assignment</label><input id="g_assignmentName" type="text" list="exerciseTitleList">
                   </div>
 
                   <div class="col-2">
-                    <label>Due Date</label><input id="g_dueAt" type="date">
+                    <label for="g_dueAt">Due Date</label><input id="g_dueAt" type="date">
                   </div>
                   <div class="col-2">
-                    <label>Submitted Date</label><input id="g_submittedAt" type="date">
+                    <label for="g_submittedAt">Submitted Date</label><input id="g_submittedAt" type="date">
                   </div>
                   <div class="col-1">
-                    <label>Score</label><input id="g_score" type="number" step="0.01">
+                    <label for="g_score">Score</label><input id="g_score" type="number" step="0.01">
                   </div>
                   <div class="col-1">
-                    <label>Max</label><input id="g_maxScore" type="number" step="0.01">
+                    <label for="g_maxScore">Max</label><input id="g_maxScore" type="number" step="0.01">
                   </div>
                   <div class="col-2">
-                    <label>HW Done</label><select id="g_homeworkCompleted">
+                    <label for="g_homeworkCompleted">HW Done</label><select id="g_homeworkCompleted">
                       <option value="">-</option>
                       <option value="true">Yes</option>
                       <option value="false">No</option>
                     </select>
                   </div>
                   <div class="col-2">
-                    <label>On Time</label><select id="g_homeworkOnTime">
+                    <label for="g_homeworkOnTime">On Time</label><select id="g_homeworkOnTime">
                       <option value="">-</option>
                       <option value="true">Yes</option>
                       <option value="false">No</option>
                     </select>
                   </div>
                   <div class="col-2">
-                    <label>Behavior</label><input id="g_behaviorScore" type="number">
+                    <label for="g_behaviorScore">Behavior</label><input id="g_behaviorScore" type="number">
                   </div>
 
                   <div class="col-2">
-                    <label>Participation</label><input id="g_participationScore" type="number">
+                    <label for="g_participationScore">Participation</label><input id="g_participationScore" type="number">
                   </div>
                   <div class="col-2">
-                    <label>In Class</label><input id="g_inClassScore" type="number">
+                    <label for="g_inClassScore">In Class</label><input id="g_inClassScore" type="number">
                   </div>
                   <div class="col-6">
-                    <label>Comments</label><input id="g_comments" type="text">
+                    <label for="g_comments">Comments</label><input id="g_comments" type="text">
                   </div>
                   <div class="col-2">
-                    <label>&nbsp;</label><button id="gradeSaveBtn" type="button" class="btn-edit">
+                    <label for="gradeSaveBtn">&nbsp;</label><button id="gradeSaveBtn" type="button" class="btn-edit">
                       Save
                     </button>
                   </div>
                   <div class="col-2">
-                    <label>&nbsp;</label><button id="gradeClearBtn" type="button">Clear</button>
+                    <label for="gradeClearBtn">&nbsp;</label><button id="gradeClearBtn" type="button">Clear</button>
                   </div>
                 </div>
                 <p class="small page-note">
@@ -2325,7 +2326,7 @@ Select an assignment link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Direction</label>
+                    <label for="gradeSortDirBtn">Direction</label>
                     <button id="gradeSortDirBtn" type="button" class="btn-refresh">
                       Latest Due First
                     </button>
@@ -2357,19 +2358,19 @@ Select an assignment link to inspect details.</pre>
                     <input id="gradeDataSearch" type="search" placeholder="assignment, class, score">
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Archive</label>
+                    <label for="gradeArchiveToggleBtn">Archive</label>
                     <button id="gradeArchiveToggleBtn" type="button">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Export</label>
+                    <label for="gradeExportXlsxBtn">Export</label>
                     <button id="gradeExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Print</label>
+                    <label for="gradePrintPdfBtn">Print</label>
                     <button id="gradePrintPdfBtn" type="button">Print PDF</button>
                   </div>
                 </div>
@@ -2436,13 +2437,13 @@ Select an assignment link to inspect details.</pre>
                 <div class="row">
                   <input id="r_id" type="hidden">
                   <div class="col-3">
-                    <label>Class</label><input id="r_className" type="text">
+                    <label for="r_className">Class</label><input id="r_className" type="text">
                   </div>
                   <div class="col-2">
-                    <label>School Year</label><input id="r_schoolYear" type="text">
+                    <label for="r_schoolYear">School Year</label><input id="r_schoolYear" type="text">
                   </div>
                   <div class="col-2">
-                    <label>Quarter</label><select id="r_quarter">
+                    <label for="r_quarter">Quarter</label><select id="r_quarter">
                       <option>q1</option>
                       <option>q2</option>
                       <option>q3</option>
@@ -2450,31 +2451,31 @@ Select an assignment link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="col-2">
-                    <label>HW %</label><input id="r_homeworkCompletionRate" type="number" step="0.01">
+                    <label for="r_homeworkCompletionRate">HW %</label><input id="r_homeworkCompletionRate" type="number" step="0.01">
                   </div>
                   <div class="col-2">
-                    <label>On-Time %</label><input id="r_homeworkOnTimeRate" type="number" step="0.01">
+                    <label for="r_homeworkOnTimeRate">On-Time %</label><input id="r_homeworkOnTimeRate" type="number" step="0.01">
                   </div>
                   <div class="col-1">
-                    <label>&nbsp;</label><button id="reportSaveBtn" type="button" class="btn-edit">
+                    <label for="reportSaveBtn">&nbsp;</label><button id="reportSaveBtn" type="button" class="btn-edit">
                       Save
                     </button>
                   </div>
 
                   <div class="col-2">
-                    <label>Behavior</label><input id="r_behaviorScore" type="number" step="0.01">
+                    <label for="r_behaviorScore">Behavior</label><input id="r_behaviorScore" type="number" step="0.01">
                   </div>
                   <div class="col-2">
-                    <label>Participation</label><input id="r_participationScore" type="number" step="0.01">
+                    <label for="r_participationScore">Participation</label><input id="r_participationScore" type="number" step="0.01">
                   </div>
                   <div class="col-2">
-                    <label>In Class</label><input id="r_inClassScore" type="number" step="0.01">
+                    <label for="r_inClassScore">In Class</label><input id="r_inClassScore" type="number" step="0.01">
                   </div>
                   <div class="col-2">
-                    <label>Participation Points (0-32)</label><input id="r_participationPointsAward" type="number" min="0" max="32" step="1">
+                    <label for="r_participationPointsAward">Participation Points (0-32)</label><input id="r_participationPointsAward" type="number" min="0" max="32" step="1">
                   </div>
                   <div class="col-4">
-                    <label>Comments</label><input id="r_comments" type="text">
+                    <label for="r_comments">Comments</label><input id="r_comments" type="text">
                   </div>
                 </div>
                 <div class="actions actions-3">
@@ -2502,7 +2503,7 @@ Select an assignment link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Direction</label>
+                    <label for="reportSortDirBtn">Direction</label>
                     <button id="reportSortDirBtn" type="button" class="btn-refresh">
                       Newest First
                     </button>
@@ -2534,19 +2535,19 @@ Select an assignment link to inspect details.</pre>
                     <input id="reportDataSearch" type="search" placeholder="class, quarter, score, comments">
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Archive</label>
+                    <label for="reportArchiveToggleBtn">Archive</label>
                     <button id="reportArchiveToggleBtn" type="button">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Export</label>
+                    <label for="reportExportXlsxBtn">Export</label>
                     <button id="reportExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label>Print</label>
+                    <label for="reportPrintPdfBtn">Print</label>
                     <button id="reportPrintPdfBtn" type="button">Print PDF</button>
                   </div>
                 </div>
@@ -2766,7 +2767,7 @@ Select an assignment link to inspect details.</pre>
                     <label for="schoolSetupEndDate">Last school day</label><input id="schoolSetupEndDate" type="date">
                   </div>
                   <div class="col-3">
-                    <label>&nbsp;</label><button id="schoolSetupAutoFillBtn" type="button" class="btn-refresh">
+                    <label for="schoolSetupAutoFillBtn">&nbsp;</label><button id="schoolSetupAutoFillBtn" type="button" class="btn-refresh">
                       Auto-Fill Quarters
                     </button>
                   </div>
@@ -2932,13 +2933,13 @@ Select an assignment link to inspect details.</pre>
                   </p>
                   <div class="row">
                     <div class="col-3">
-                      <label>New field key</label><input id="profileFieldCreateKey" type="text" placeholder="customFieldKey">
+                      <label for="profileFieldCreateKey">New field key</label><input id="profileFieldCreateKey" type="text" placeholder="customFieldKey">
                     </div>
                     <div class="col-3">
-                      <label>Label (VN)</label><input id="profileFieldCreateLabelVi" type="text" placeholder="Tên trường">
+                      <label for="profileFieldCreateLabelVi">Label (VN)</label><input id="profileFieldCreateLabelVi" type="text" placeholder="Tên trường">
                     </div>
                     <div class="col-2">
-                      <label>Type</label>
+                      <label for="profileFieldCreateType">Type</label>
                       <select id="profileFieldCreateType">
                         <option value="text">text</option>
                         <option value="email">email</option>
@@ -2953,7 +2954,7 @@ Select an assignment link to inspect details.</pre>
                       </select>
                     </div>
                     <div class="col-2">
-                      <label>Tab</label>
+                      <label for="profileFieldCreateTab">Tab</label>
                       <select id="profileFieldCreateTab">
                         <option value="profile">Profile</option>
                         <option value="medical">Medical</option>
@@ -2962,27 +2963,27 @@ Select an assignment link to inspect details.</pre>
                       </select>
                     </div>
                     <div class="col-2">
-                      <label>Width (1-12)</label><input id="profileFieldCreateWidth" type="number" min="1" max="12" value="4">
+                      <label for="profileFieldCreateWidth">Width (1-12)</label><input id="profileFieldCreateWidth" type="number" min="1" max="12" value="4">
                     </div>
                     <div class="col-6">
-                      <label>Section / Group (VN)</label><input id="profileFieldCreateSectionVi" type="text" placeholder="Nhóm trường">
+                      <label for="profileFieldCreateSectionVi">Section / Group (VN)</label><input id="profileFieldCreateSectionVi" type="text" placeholder="Nhóm trường">
                     </div>
                     <div class="col-6">
-                      <label>Options (for checkbox/radio/select)</label><input id="profileFieldCreateOptions" type="text" placeholder="Option A | Option B">
+                      <label for="profileFieldCreateOptions">Options (for checkbox/radio/select)</label><input id="profileFieldCreateOptions" type="text" placeholder="Option A | Option B">
                     </div>
                     <div class="col-6">
-                      <label>Placeholder (VN)</label><input id="profileFieldCreatePlaceholderVi" type="text" placeholder="placeholder">
+                      <label for="profileFieldCreatePlaceholderVi">Placeholder (VN)</label><input id="profileFieldCreatePlaceholderVi" type="text" placeholder="placeholder">
                     </div>
                     <div class="col-2">
-                      <label>Sequence</label><input id="profileFieldCreateSequence" type="number" min="1" step="1" value="9990">
+                      <label for="profileFieldCreateSequence">Sequence</label><input id="profileFieldCreateSequence" type="number" min="1" step="1" value="9990">
                     </div>
                     <div class="col-2">
-                      <label>&nbsp;</label><button id="profileFieldCreateBtn" type="button" class="btn-edit">
+                      <label for="profileFieldCreateBtn">&nbsp;</label><button id="profileFieldCreateBtn" type="button" class="btn-edit">
                         Create Field
                       </button>
                     </div>
                     <div class="col-2">
-                      <label>&nbsp;</label><button id="profileFieldLayoutRefreshBtn" type="button">
+                      <label for="profileFieldLayoutRefreshBtn">&nbsp;</label><button id="profileFieldLayoutRefreshBtn" type="button">
                         Reload Editor
                       </button>
                     </div>
@@ -3028,18 +3029,18 @@ Select an assignment link to inspect details.</pre>
                   </p>
                   <div class="row">
                     <div class="col-4">
-                      <label>Class level</label><select id="attendanceLevelStyleLevel">
+                      <label for="attendanceLevelStyleLevel">Class level</label><select id="attendanceLevelStyleLevel">
                         <option value="">Select level</option>
                       </select>
                     </div>
                     <div class="col-8">
-                      <label>Title (optional)</label><input id="attendanceLevelTitle" type="text" placeholder="Class level title">
+                      <label for="attendanceLevelTitle">Title (optional)</label><input id="attendanceLevelTitle" type="text" placeholder="Class level title">
                     </div>
                     <div class="col-4">
-                      <label>Background</label><input id="attendanceLevelColor" type="color" value="#002786">
+                      <label for="attendanceLevelColor">Background</label><input id="attendanceLevelColor" type="color" value="#002786">
                     </div>
                     <div class="col-8">
-                      <label>Image (PNG/JPG/WEBP/SVG)</label><input id="attendanceLevelImage" type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml">
+                      <label for="attendanceLevelImage">Image (PNG/JPG/WEBP/SVG)</label><input id="attendanceLevelImage" type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml">
                     </div>
                   </div>
                   <div class="actions actions-3">
@@ -3091,52 +3092,52 @@ Select an assignment link to inspect details.</pre>
       <div class="queue-modal-body">
         <div class="row">
           <div class="col-3">
-            <label>Queue ID</label><input id="parentQueueItemId" type="text" readonly>
+            <label for="parentQueueItemId">Queue ID</label><input id="parentQueueItemId" type="text" readonly>
           </div>
           <div class="col-3">
-            <label>Status</label><input id="parentQueueItemStatus" type="text" readonly>
+            <label for="parentQueueItemStatus">Status</label><input id="parentQueueItemStatus" type="text" readonly>
           </div>
           <div class="col-3">
-            <label>Queued</label><input id="parentQueueItemQueuedAt" type="text" readonly>
+            <label for="parentQueueItemQueuedAt">Queued</label><input id="parentQueueItemQueuedAt" type="text" readonly>
           </div>
           <div class="col-3">
-            <label>Scheduled</label><input id="parentQueueItemScheduledFor" type="text">
+            <label for="parentQueueItemScheduledFor">Scheduled</label><input id="parentQueueItemScheduledFor" type="text">
           </div>
           <div class="col-6">
-            <label>Title</label><input id="parentQueueItemTitle" type="text">
+            <label for="parentQueueItemTitle">Title</label><input id="parentQueueItemTitle" type="text">
           </div>
           <div class="col-6">
-            <label>Level / Class</label><input id="parentQueueItemLevel" type="text">
+            <label for="parentQueueItemLevel">Level / Class</label><input id="parentQueueItemLevel" type="text">
           </div>
           <div class="col-4">
-            <label>Exercise</label><input id="parentQueueItemExercise" type="text">
+            <label for="parentQueueItemExercise">Exercise</label><input id="parentQueueItemExercise" type="text">
           </div>
           <div class="col-4">
-            <label>Due</label><input id="parentQueueItemDueAt" type="text">
+            <label for="parentQueueItemDueAt">Due</label><input id="parentQueueItemDueAt" type="text">
           </div>
           <div class="col-4">
-            <label>Queued By</label><input id="parentQueueItemQueuedBy" type="text" readonly>
+            <label for="parentQueueItemQueuedBy">Queued By</label><input id="parentQueueItemQueuedBy" type="text" readonly>
           </div>
           <div class="col-3">
-            <label>HS Reviewed At</label><input id="parentQueueItemHsReviewedAt" type="text" placeholder="ISO timestamp or leave blank">
+            <label for="parentQueueItemHsReviewedAt">HS Reviewed At</label><input id="parentQueueItemHsReviewedAt" type="text" placeholder="ISO timestamp or leave blank">
           </div>
           <div class="col-3">
-            <label>HS Reviewed By</label><input id="parentQueueItemHsReviewedBy" type="text" placeholder="username">
+            <label for="parentQueueItemHsReviewedBy">HS Reviewed By</label><input id="parentQueueItemHsReviewedBy" type="text" placeholder="username">
           </div>
           <div class="col-3">
-            <label>CM Reviewed At</label><input id="parentQueueItemCmReviewedAt" type="text" placeholder="ISO timestamp or leave blank">
+            <label for="parentQueueItemCmReviewedAt">CM Reviewed At</label><input id="parentQueueItemCmReviewedAt" type="text" placeholder="ISO timestamp or leave blank">
           </div>
           <div class="col-3">
-            <label>CM Reviewed By</label><input id="parentQueueItemCmReviewedBy" type="text" placeholder="username">
+            <label for="parentQueueItemCmReviewedBy">CM Reviewed By</label><input id="parentQueueItemCmReviewedBy" type="text" placeholder="username">
           </div>
           <div class="col-12">
-            <label>Recipients</label><textarea id="parentQueueItemRecipients" placeholder="comma-separated emails"></textarea>
+            <label for="parentQueueItemRecipients">Recipients</label><textarea id="parentQueueItemRecipients" placeholder="comma-separated emails"></textarea>
           </div>
           <div class="col-12">
-            <label>Message</label><textarea id="parentQueueItemMessage" placeholder="queued report message"></textarea>
+            <label for="parentQueueItemMessage">Message</label><textarea id="parentQueueItemMessage" placeholder="queued report message"></textarea>
           </div>
           <div class="col-12">
-            <label>Last Error</label><textarea id="parentQueueItemLastError" readonly></textarea>
+            <label for="parentQueueItemLastError">Last Error</label><textarea id="parentQueueItemLastError" readonly></textarea>
           </div>
         </div>
       </div>

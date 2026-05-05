@@ -87,7 +87,7 @@
   --portal-dark-card: #3c4248;
   --portal-dark-card-deep: #25292c;
   --portal-dark-card-soft: #484f56;
-  --portal-dark-field-bg: #e2e2e2;
+  --portal-dark-field-bg: #3c4248;
   --portal-dark-field-border: #aeb7c5;
   --portal-dark-field-placeholder: #58657a;
   --portal-dark-field-text: var(--secondary-color);
@@ -470,6 +470,14 @@ body.parent-portal-page .portal-col {
   min-width: 0;
 }
 
+body.parent-portal-page #portalCard {
+  min-height: 1116px;
+}
+
+body.parent-portal-page #portalCard > .portal-grid {
+  min-height: 1032px;
+}
+
 body.student-portal-page .identity-item,
 body.parent-portal-page .identity-item {
   background: #f9fbff;
@@ -754,7 +762,7 @@ body.parent-portal-page .detail-item.bad {
 
 body.student-portal-page .student-overview-title,
 body.parent-portal-page #parentOverviewSummary {
-  color: var(--secondary-color);
+  color: var(--portal-text);
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: 0.01em;
@@ -765,13 +773,20 @@ body.parent-portal-page #parentOverviewSummary {
 body.parent-portal-page #parentOverviewSummary {
   background: none;
   background-color: transparent;
-  color: var(--secondary-color);
+  color: var(--portal-text);
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1.12;
   margin: 0.9rem 0;
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-theme="dark"] body.parent-portal-page #parentOverviewSummary {
+  color: var(--portal-dark-text);
 }
 
 body.parent-portal-page .parent-overview-title-head {
@@ -1437,12 +1452,28 @@ body.parent-portal-page .portal-action-strip {
   margin-top: 10px;
 }
 
+body.parent-portal-page #quickLinksPanel {
+  margin-top: 0;
+  margin-bottom: 2px;
+  padding: 4px 8px;
+}
+
+body.parent-portal-page .quick-link-select {
+  min-height: 26px;
+  padding: 2px 6px;
+}
+
 body.student-portal-page .portal-action-strip__actions,
 body.parent-portal-page .portal-action-strip__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
+}
+
+body.parent-portal-page .portal-action-strip__actions {
+  flex-wrap: nowrap;
+  gap: 4px;
 }
 
 body.student-portal-page :is(button, a).portal-action-btn,
@@ -1469,6 +1500,13 @@ transition:
     transform 140ms ease,
     border-color 140ms ease,
     filter 140ms ease;
+}
+
+body.parent-portal-page :is(button, a).portal-action-btn {
+  flex: 0 1 clamp(118px, 10vw, 156px);
+  min-height: 18px;
+  padding-block: 0;
+  font-size: 10px;
 }
 
 body.student-portal-page :is(button, a).portal-action-btn:hover:not(:disabled),
@@ -2434,15 +2472,28 @@ body.parent-portal-page .fc .fc-event.fc-event-grade {
   color: #173b78 !important;
 }
 
-body.student-portal-page .fc .fc-obtrusive-alert,
-body.parent-portal-page .fc .fc-obtrusive-alert {
+body.student-portal-page .fc .fc-event.fc-obtrusive-alert,
+body.parent-portal-page .fc .fc-event.fc-obtrusive-alert {
+  background: #ff2338 !important;
+  border-color: #ff2338 !important;
   border-width: 2px;
   box-shadow: inset 0 0 0 1px rgba(125, 0, 16, 0.16);
+  animation: overdueBlink 1.6s ease-in-out infinite;
+  color: #0b1220 !important;
 }
 
-body.student-portal-page .fc .fc-obtrusive-alert .fc-event-main,
-body.parent-portal-page .fc .fc-obtrusive-alert .fc-event-main {
+body.student-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-main {
   color: inherit !important;
+}
+
+body.student-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-time,
+body.student-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-title-container,
+body.parent-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-obtrusive-alert .fc-event-title-container {
+  color: #0b1220 !important;
 }
 
 body.student-portal-page .calendar-empty,
@@ -2453,6 +2504,11 @@ body.parent-portal-page .calendar-empty {
   font-size: 0.82rem;
   padding: 10px;
   text-align: center;
+}
+
+body.student-portal-page .calendar-shell .fc-daygrid-day.calendar-day-alert,
+body.parent-portal-page .calendar-shell .fc-daygrid-day.calendar-day-alert {
+  animation: dayAlertPulse 2.4s ease-in-out infinite;
 }
 
 @keyframes overdueBlink {
@@ -2512,6 +2568,23 @@ html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-attendanc
   background: rgba(106, 164, 255, 0.14) !important;
   border-color: rgba(106, 164, 255, 0.34) !important;
   color: #eaf2ff !important;
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-report,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-report {
+  --fc-event-text-color: #45317d;
+  background: #f1efff !important;
+  border-color: #9a8cdc !important;
+  color: #45317d !important;
+}
+
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-report .fc-event-main,
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-report .fc-event-title,
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-report .fc-event-time,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-report .fc-event-main,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-report .fc-event-title,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-report .fc-event-time {
+  color: #45317d !important;
 }
 
 html[data-theme="dark"] body.student-portal-page .detail-empty,
@@ -2873,10 +2946,12 @@ body.portal-hub-page .portal-layout {
   z-index: 1;
 }
 
+body.student-portal-page .portal-theme-toggle,
+body.parent-portal-page .portal-theme-toggle,
+body.admin-portal-page .portal-theme-toggle,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle,
-body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle,
-body.portal-hub-page .theme-toggle {
+body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle {
   align-items: center;
   appearance: none;
   background: transparent;
@@ -2899,26 +2974,32 @@ transition:
     transform 180ms ease;
 }
 
+body.student-portal-page .portal-theme-toggle:hover,
+body.parent-portal-page .portal-theme-toggle:hover,
+body.admin-portal-page .portal-theme-toggle:hover,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle:hover,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle:hover,
-body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:hover,
-body.portal-hub-page .theme-toggle:hover {
+body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:hover {
   border-color: rgba(15, 22, 41, 1);
   transform: translateY(-1px);
 }
 
+body.student-portal-page .portal-theme-toggle:focus-visible,
+body.parent-portal-page .portal-theme-toggle:focus-visible,
+body.admin-portal-page .portal-theme-toggle:focus-visible,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle:focus-visible,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle:focus-visible,
-body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:focus-visible,
-body.portal-hub-page .theme-toggle:focus-visible {
+body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:focus-visible {
   box-shadow: 0 0 0 3px rgba(47, 91, 227, 0.2);
   outline: none;
 }
 
+body.student-portal-page .portal-theme-toggle__icon,
+body.parent-portal-page .portal-theme-toggle__icon,
+body.admin-portal-page .portal-theme-toggle__icon,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle__icon,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle__icon,
-body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon,
-body.portal-hub-page .theme-toggle__icon {
+body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon {
   align-items: center;
   background: var(--portal-theme-toggle-icon-bg);
   border-radius: 999px;
@@ -2930,10 +3011,12 @@ body.portal-hub-page .theme-toggle__icon {
   width: 36px;
 }
 
+body.student-portal-page .portal-theme-toggle__icon svg-icon,
+body.parent-portal-page .portal-theme-toggle__icon svg-icon,
+body.admin-portal-page .portal-theme-toggle__icon svg-icon,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle__icon svg-icon,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle__icon svg-icon,
-body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon svg-icon,
-body.portal-hub-page .theme-toggle__icon svg-icon {
+body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon svg-icon {
   color: inherit;
 }
 
@@ -2949,31 +3032,36 @@ body.admin-portal-page .portal-theme-toggle__icon[data-theme-icon="sun"] .portal
 
 body.student-portal-page .topbar .header-actions .portal-theme-toggle__label,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle__label,
-body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__label,
-body.portal-hub-page .theme-toggle__label {
+body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__label {
   display: none;
 }
 
+html[data-theme="dark"] body.student-portal-page .portal-theme-toggle,
+html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle,
+html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle,
 html[data-theme="dark"] body.student-portal-page .topbar .header-actions .portal-theme-toggle,
 html[data-theme="dark"] body.parent-portal-page .hero .hero-actions .portal-theme-toggle,
-html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle,
-html[data-theme="dark"] body.portal-hub-page .theme-toggle {
+html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle {
   background: transparent;
   border-color: transparent;
   color: var(--portal-theme-toggle-ink-dark);
 }
 
+html[data-theme="dark"] body.student-portal-page .portal-theme-toggle:hover,
+html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle:hover,
+html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle:hover,
 html[data-theme="dark"] body.student-portal-page .topbar .header-actions .portal-theme-toggle:hover,
 html[data-theme="dark"] body.parent-portal-page .hero .hero-actions .portal-theme-toggle:hover,
-html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:hover,
-html[data-theme="dark"] body.portal-hub-page .theme-toggle:hover {
+html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:hover {
   border-color: rgba(255, 215, 106, 0.42);
 }
 
+html[data-theme="dark"] body.student-portal-page .portal-theme-toggle__icon,
+html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle__icon,
+html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle__icon,
 html[data-theme="dark"] body.student-portal-page .topbar .header-actions .portal-theme-toggle__icon,
 html[data-theme="dark"] body.parent-portal-page .hero .hero-actions .portal-theme-toggle__icon,
-html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon,
-html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
+html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon {
   background: var(--portal-theme-toggle-icon-bg-dark);
   color: var(--portal-theme-toggle-ink-dark);
 }
@@ -3125,7 +3213,8 @@ body.parent-portal-page .portal-modal-actions > button:not(.primary):not(.alt):n
 }
 
 body.student-portal-page .portal-modal-close,
-body.parent-portal-page .portal-modal-close {
+body.parent-portal-page .portal-modal-close,
+body.parent-portal-page #newsWeekSetModal .portal-modal-close {
   background: #f1f5ff !important;
   background-image: none !important;
   border: 1px solid #9bb5df;

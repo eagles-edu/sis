@@ -893,7 +893,7 @@ transition:
         align-items: start;
         display: grid;
         gap: 12px;
-        grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
   }
       .app-sidebar {
         border-radius: 0 var(--radius-3) var(--radius-3) 0;
@@ -3107,7 +3107,7 @@ box-shadow:
         inline-size: auto;
         min-width: 132px;
   }
-      @media (max-width: 1100px) {
+      @media (max-width: 860px) {
         .app-shell {
           grid-template-columns: 1fr;
     }
@@ -3559,6 +3559,36 @@ box-shadow:
         color: var(--portal-dark-text);
   }
 
+      html[data-theme="dark"] body.admin-portal-page .queue-hub-panel .queue-row-btn {
+        color: #b4c4ea;
+        text-decoration-color: rgba(180, 196, 234, 0.82);
+      }
+
+      html[data-theme="dark"] body.admin-portal-page :where(.queue-row-btn, .row-options-trigger) {
+        color: #b4c4ea;
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .row-options-trigger {
+        background: rgba(180, 196, 234, 0.12);
+        color: #b4c4ea;
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .row-options-menu[open] > .row-options-trigger {
+        background: rgba(180, 196, 234, 0.18);
+        color: #eef4ff;
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:focus-visible,
+      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:hover {
+        background: rgba(180, 196, 234, 0.14);
+        color: #eef4ff;
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:focus-visible,
+      html[data-theme="dark"] body.admin-portal-page .row-options-trigger:focus-visible {
+        outline: 2px solid rgba(180, 196, 234, 0.46);
+      }
+
       html[data-theme="dark"] body.admin-portal-page .attendance-level-panel {
         background: var(--portal-dark-surface-support);
         border-color: var(--portal-dark-border-strong);
@@ -3779,11 +3809,16 @@ box-shadow:
       html[data-theme="dark"] body.admin-portal-page .news-review-viewer-long,
       html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label {
         color: var(--portal-dark-text);
-  }
+      }
+
+      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block .level-chip,
+      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review .level-chip {
+        color: var(--chip-text, #0f452c);
+      }
 
       html[data-theme="dark"] body.admin-portal-page #levelReminderSendBtn {
         color: #fff;
-  }
+      }
 
       html[data-theme="dark"] body.admin-portal-page :where(#overviewRuntimeRestartBtn, #exerciseMailerRestartBtn) {
         color: #fff;

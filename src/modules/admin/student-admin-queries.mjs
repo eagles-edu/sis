@@ -322,6 +322,47 @@ async function writeCachedLevelAndSchoolFilters(payload = {}) {
 /**
  * @returns {Promise<void>}
  */
+export async function closeStudentAdminFilterCache() {
+  const client = filterCacheRedisClient
+  const pendingConnect = filterCacheRedisConnectPromise
+  filterCacheRedisClient = null
+  filterCacheRedisConnectPromise = null
+
+  if (!client && !pendingConnect) return
+
+  let targetClient = client
+  if (!targetClient && pendingConnect) {
+    try {
+      targetClient = await pendingConnect
+    } catch (error) {
+      void error
+      targetClient = null
+    }
+  }
+
+  if (!targetClient) return
+
+  try {
+    if (typeof targetClient.quit === "function") {
+      await targetClient.quit()
+    } else if (typeof targetClient.disconnect === "function") {
+      targetClient.disconnect()
+    }
+  } catch (error) {
+    void error
+    if (typeof targetClient.disconnect === "function") {
+      try {
+        targetClient.disconnect()
+      } catch (disconnectError) {
+        void disconnectError
+      }
+    }
+  }
+}
+
+/**
+ * @returns {Promise<void>}
+ */
 export async function invalidateLevelAndSchoolFiltersCache() {
   memoryFilterCacheEntry = null
   FILTER_CACHE_STATE.invalidations += 1

@@ -145,7 +145,8 @@
       white-space: nowrap;
     }
 
-    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip {
+    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip,
+    table.news-queue-table td:nth-child(3) .chip {
       --chip-height: 24px;
       --chip-min-ar: 0;
       min-inline-size: 0;
@@ -155,13 +156,22 @@
       font-size: 11px;
     }
 
-    .queue-table-wrap table.news-queue-table .queue-row-btn {
+    .queue-table-wrap table.news-queue-table .queue-row-btn,
+    table.news-queue-table .queue-row-btn {
       min-height: 28px;
       padding: 3px 8px;
       font-size: 11px;
       line-height: 1.1;
       white-space: nowrap;
       box-sizing: border-box;
+    }
+
+    table.news-queue-table td:nth-child(3) .chip {
+      min-inline-size: 0;
+    }
+
+    table.news-queue-table .queue-row-btn {
+      min-height: 28px;
     }
 
     .queue-compact-datetime {
@@ -1857,7 +1867,14 @@
           return origin ? assertApiOriginSafe(origin) : "";
         }
         const currentPath = t(window.location.pathname);
-        if (isStaticStudentPreviewPath(currentPath) || currentPath === "/student") {
+        if (
+          isStaticStudentPreviewPath(currentPath) ||
+          currentPath === "/student" ||
+          currentPath.startsWith("/student/")
+        ) {
+          if (currentPath === "/student" || currentPath.startsWith("/student/")) {
+            return assertApiOriginSafe(window.location.origin);
+          }
           const inferredOrigin = inferLoopbackPreviewApiOrigin();
           if (inferredOrigin) return assertApiOriginSafe(inferredOrigin);
         }

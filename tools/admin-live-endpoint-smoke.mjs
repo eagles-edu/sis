@@ -174,7 +174,7 @@ async function request(step, {
     body: requestBody,
   });
   const contentType = response.headers.get("content-type") || "";
-  let detail = "";
+  let detail;
   let json = null;
 
   if (binary || looksLikeBinaryResponse(path, requestHeaders.get("accept"), contentType)) {
@@ -284,7 +284,7 @@ async function main() {
     if (originalUiSettings && typeof originalUiSettings === "object") {
       const tempUiSettings = {
         ...originalUiSettings,
-        multiSchool: !Boolean(originalUiSettings.multiSchool),
+        multiSchool: !originalUiSettings.multiSchool,
         schoolProfile: {
           ...(originalUiSettings.schoolProfile || {}),
           schoolName: `Smoke Test School ${new Date().toISOString()}`,

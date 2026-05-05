@@ -193,6 +193,7 @@ const { persistStudentIntakeSubmission } = await import("../src/modules/intake/s
 const {
   getStudentAdminRuntimeStatus,
   handleStudentAdminRequest,
+  closeStudentAdminRuntimeResources,
   setStudentAdminRuntimeHealthProvider,
 } = await import("./student-admin-routes.mjs")
 
@@ -1822,6 +1823,7 @@ export function startExerciseMailer(options = {}) {
   })
 
   server.once("close", () => {
+    void closeStudentAdminRuntimeResources().catch(() => {})
     if (selfHealLoop && typeof selfHealLoop.stop === "function") {
       selfHealLoop.stop()
     }

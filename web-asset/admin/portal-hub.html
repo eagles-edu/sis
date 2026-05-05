@@ -136,6 +136,73 @@
       justify-content: flex-end;
   }
 
+    body.portal-hub-page .theme-toggle {
+      align-items: center;
+      appearance: none;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--portal-theme-toggle-ink);
+      cursor: pointer;
+      display: inline-flex;
+      inline-size: auto;
+      justify-content: center;
+      justify-self: end;
+      min-height: 44px;
+      padding: 7px;
+      position: relative;
+      transition:
+        background-color 180ms ease,
+        border-color 180ms ease,
+        color 180ms ease,
+        transform 180ms ease;
+    }
+
+    body.portal-hub-page .theme-toggle:hover {
+      border-color: rgba(15, 22, 41, 1);
+      transform: translateY(-1px);
+    }
+
+    body.portal-hub-page .theme-toggle:focus-visible {
+      box-shadow: 0 0 0 3px rgba(47, 91, 227, 0.2);
+      outline: none;
+    }
+
+    body.portal-hub-page .theme-toggle__icon {
+      align-items: center;
+      background: var(--portal-theme-toggle-icon-bg);
+      border-radius: 999px;
+      color: var(--portal-theme-toggle-ink);
+      display: inline-flex;
+      flex: 0 0 auto;
+      height: 36px;
+      justify-content: center;
+      width: 36px;
+    }
+
+    body.portal-hub-page .theme-toggle__icon svg-icon {
+      color: inherit;
+    }
+
+    body.portal-hub-page .theme-toggle__label {
+      display: none;
+    }
+
+    html[data-theme="dark"] body.portal-hub-page .theme-toggle {
+      background: transparent;
+      border-color: transparent;
+      color: var(--portal-theme-toggle-ink-dark);
+    }
+
+    html[data-theme="dark"] body.portal-hub-page .theme-toggle:hover {
+      border-color: rgba(255, 215, 106, 0.42);
+    }
+
+    html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
+      background: var(--portal-theme-toggle-icon-bg-dark);
+      color: var(--portal-theme-toggle-ink-dark);
+    }
+
     body.portal-hub-page .hero-kicker,
     body.portal-hub-page .section-kicker,
     body.portal-hub-page .portal-card__eyebrow {
@@ -372,7 +439,7 @@ grid-template-areas:
 
     body.portal-hub-page .hub-prefooter {
       align-items: center;
-      background: var(--hub-panel-bg-support);
+      background: var(--secondary-color);
       border: 1px solid var(--hub-panel-border);
       display: grid;
       gap: var(--hub-space-2);

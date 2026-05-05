@@ -80,7 +80,31 @@
       grid-column: 1 / -1;
     }
 
+    body.parent-portal-page #performanceReportsList {
+      display: none;
+    }
+
     /* Report modal chrome is centralized in portal-theme.css. */
+    #newsWeekSetModal .portal-modal-close {}
+    #newsWeekSetModal button {}
+    #newsWeekSetModal input,
+    #newsWeekSetModal textarea {}
+    .queue-table-wrap table.news-queue-table th,
+    .queue-table-wrap table.news-queue-table td {
+      padding: 4px 6px;
+    }
+    .queue-table-wrap table.news-queue-table .queue-row-btn {
+      min-height: 28px;
+    }
+    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip {
+      min-inline-size: 0;
+    }
+    table.news-queue-table td:nth-child(3) .chip {
+      min-inline-size: 0;
+    }
+    table.news-queue-table .queue-row-btn {
+      min-height: 28px;
+    }
 
     @media (max-width: 520px) {
       .homework-card-shell {
@@ -594,25 +618,14 @@
         </form>
         <p id="loginStatus" class="status"></p>
       </section>
-      <div class="toolbar" id="overviewPanel">
-        <div class="form-row">
-          <p id="parentOverviewSummary" class="parent-overview-title-head">Đang tải bảng điều khiển học sinh... </p>
-        </div>
-      </div>
       <section class="card hidden" id="portalCard">
         <div class="portal-grid">
           <div class="portal-col">
-            <section id="quickLinksPanel" class="panel portal-action-strip" aria-label="Bộ chọn học sinh và hành động">
-              <label class="quick-link-select">
-                <span class="quick-link-select__label">Chọn học sinh</span>
-                <select id="childSelect"></select>
-              </label>
-              <div class="portal-action-strip__actions">
-                <button id="openChildPageBtn" type="button" class="portal-action-btn portal-action-btn--brand">Chỉnh sửa hồ sơ</button>
-                <button id="reloadBtn" type="button" class="portal-action-btn portal-action-btn--brand">Tải lại</button>
-                <button id="logoutBtn" type="button" class="portal-action-btn portal-action-btn--danger">Đăng xuất</button>
+            <div class="toolbar" id="overviewPanel">
+              <div class="form-row">
+                <p id="parentOverviewSummary" class="parent-overview-title-head">Đang tải bảng điều khiển học sinh... </p>
               </div>
-            </section>
+            </div>
 
             <section class="panel" id="identityPanel">
               <div class="section-head">
@@ -973,6 +986,18 @@
             <p id="portalStatus" class="status"></p>
           </div>
         </div>
+
+        <section id="quickLinksPanel" class="panel portal-action-strip" aria-label="Bộ chọn học sinh và hành động">
+          <label class="quick-link-select">
+            <span class="quick-link-select__label">Chọn học sinh</span>
+            <select id="childSelect" aria-label="Chọn học sinh"></select>
+          </label>
+          <div class="portal-action-strip__actions">
+            <button id="openChildPageBtn" type="button" class="portal-action-btn portal-action-btn--brand">Chỉnh sửa hồ sơ</button>
+            <button id="reloadBtn" type="button" class="portal-action-btn portal-action-btn--brand">Tải lại</button>
+            <button id="logoutBtn" type="button" class="portal-action-btn portal-action-btn--danger">Đăng xuất</button>
+          </div>
+        </section>
       </section>
 
       <section class="card hidden" id="portalDetailCard">

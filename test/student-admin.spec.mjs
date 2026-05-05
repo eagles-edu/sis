@@ -999,7 +999,7 @@ test("GET /web-asset/admin/student-admin.min.css returns externalized admin styl
   const css = await res.text()
   assert.match(css, /\.page-section\[data-page(?:="|=)news-reports(?:")?\]\s+\.table-toolbar/i)
   assert.match(css, /\.grade-chart-lanes/i)
-  assert.match(css, /body\{background:linear-gradient\(45deg,var\(--background-color\) 0(?:%|),#8a94a8 100%\);color:var\(--ink\);font-family:var\(--font-base\);margin:0\}/)
+  assert.match(css, /body\{background:linear-gradient\(45deg,var\(--background-color\) 0(?:%|),#8da5d5 100%\);color:var\(--ink\);font-family:var\(--font-base\);margin:0\}/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-hub-panel \.queue-row-btn\{[^}]*color:#b4c4ea;[^}]*text-decoration-color:rgba\(180,196,234,(?:0)?\.82\)(?:;|})/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page :where\(\.queue-row-btn, \.row-options-trigger\)\{[^}]*color:#b4c4ea(?:;|})/)
   assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.row-options-trigger\{[^}]*background:rgba\(180,196,234,(?:0)?\.12\);[^}]*color:#b4c4ea(?:;|})/)
