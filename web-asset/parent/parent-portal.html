@@ -69,8 +69,17 @@
     .portal-action-btn--brand {}
     .portal-action-btn--danger {}
     .identity-value {}
+    .homework-card-content {}
+    .summary-title {}
     .is-peer {}
+    .is-status {}
     .detail-copy {}
+    .homework-modal-table {}
+    .square-number {}
+    .square-percent-symbol {}
+    .queue-compact-datetime {}
+    .queue-compact-datetime-date {}
+    .queue-compact-datetime-time {}
 
     #performanceReportHeader,
     #performanceReportHomeworkBlock,
@@ -175,7 +184,7 @@
     }
 
     .profile-group {
-      background: #fff;
+      background: var(--portal-surface-card);
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 10px;
@@ -196,7 +205,7 @@
 
     .field-row {
       animation: rise 180ms ease;
-      border-top: 1px solid #e4eaf3;
+      border-top: 1px solid var(--line);
       display: grid;
       gap: 8px;
       padding: 10px 0;
@@ -208,8 +217,8 @@
     }
 
     .field-row.locked {
-      background: #fff5f5;
-      border: 1px solid #edd8d8;
+      background: var(--portal-surface-support);
+      border: 1px solid var(--line);
       border-radius: 10px;
       border-top: none;
       margin-top: 8px;
@@ -218,13 +227,13 @@
 
     .field-row.edited input,
     .field-row.edited textarea {
-      background: #f5f9ff;
-      border-color: #6a8fcc;
+      background: var(--portal-surface-card);
+      border-color: var(--portal-border-strong);
     }
 
     .field-row.edited {
-      background: #f7fbff;
-      border: 1px solid #c8daf4;
+      background: var(--portal-surface-card);
+      border: 1px solid var(--line);
       border-radius: 10px;
       border-top: none;
       margin-top: 8px;
@@ -270,8 +279,8 @@
     }
 
     .choice-group {
-      background: var(--surface-2);
-      border: 1px solid #c9d2e0;
+      background: var(--portal-surface-support);
+      border: 1px solid var(--line);
       border-radius: 10px;
       display: grid;
       gap: 6px;
@@ -280,9 +289,9 @@
     }
 
     .choice-group:disabled {
-      background: #f1f3f8;
-      border-color: #d7dfec;
-      color: #667792;
+      background: var(--portal-surface-support);
+      border-color: var(--line);
+      color: var(--portal-text-soft);
     }
 
     .choice-option {
@@ -336,8 +345,8 @@
 
     .field-row.signature-muted input,
     .field-row.signature-muted textarea {
-      background: #f7f9fb;
-      color: #5f6d7b;
+      background: var(--portal-surface-card);
+      color: var(--portal-text-soft);
       font-size: 13px;
     }
 
@@ -351,9 +360,7 @@
       margin-top: 12px;
       padding: 10px;
       position: sticky;
-      background: linear-gradient(180deg,
-          rgba(255, 255, 255, 0.92),
-          rgba(248, 250, 255, 0.96));
+      background: var(--portal-surface-card);
     }
 
     @media (max-width: 430px) {
@@ -774,7 +781,7 @@
                       <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
                     </div>
                     <div class="field c4">
-                      <label>Trạng thái</label>
+                      <h5>Trạng thái</h5>
                       <span id="newsViewerReviewStatusChip" class="chip chip-neutral">-</span>
                     </div>
                     <div class="field c4">

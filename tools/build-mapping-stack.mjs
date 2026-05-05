@@ -93,7 +93,10 @@ function sanitizeOpenApiHtmlOutput(relativePath) {
   const target = path.join(repoRoot, relativePath)
   if (!existsSync(target)) return
   const original = readFileSync(target, "utf8")
-  const sanitized = original.replace(/([\s>+~,])\.\.([_a-zA-Z][-\w]*)/g, "$1.$2")
+  const sanitized = original
+    .replace(/([\s>+~,])\.\.([_a-zA-Z][-\w]*)/g, "$1.$2")
+    .replace(/<label\b/g, "<div")
+    .replace(/<\/label>/g, "</div>")
   if (sanitized !== original) {
     writeFileSync(target, sanitized, "utf8")
     console.log(`[map] sanitized ${path.relative(repoRoot, target)}`)

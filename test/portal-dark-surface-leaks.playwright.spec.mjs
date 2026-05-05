@@ -1,0 +1,317 @@
+/* global getComputedStyle */
+import assert from "node:assert/strict"
+import fs from "node:fs"
+import http from "node:http"
+import path from "node:path"
+import test from "node:test"
+
+const ROOT_DIR = process.cwd()
+const AXE_PATH = path.resolve(ROOT_DIR, "node_modules/axe-core/axe.min.js")
+
+let chromium = null
+try {
+  ({ chromium } = await import("playwright"))
+} catch (error) {
+  void error
+}
+
+const CHROMIUM_EXECUTABLE_CANDIDATES = [
+  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
+  process.env.CHROME_PATH,
+  "/usr/bin/google-chrome-stable",
+  "/usr/bin/google-chrome",
+  "/usr/bin/chromium-browser",
+  "/usr/bin/chromium",
+].filter(Boolean)
+
+function resolveChromiumExecutablePath() {
+  if (!chromium) return ""
+  try {
+    const bundledPath = chromium.executablePath()
+    if (bundledPath && fs.existsSync(bundledPath)) return bundledPath
+  } catch (error) {
+    void error
+  }
+  for (const candidatePath of CHROMIUM_EXECUTABLE_CANDIDATES) {
+    if (fs.existsSync(candidatePath)) return candidatePath
+  }
+  return ""
+}
+
+const CHROMIUM_EXECUTABLE_PATH = resolveChromiumExecutablePath()
+const CHROMIUM_LAUNCH_OPTIONS = CHROMIUM_EXECUTABLE_PATH
+  ? { headless: true, executablePath: CHROMIUM_EXECUTABLE_PATH }
+  : { headless: true }
+
+function resolvePlaywrightSkipReason() {
+  if (!chromium) return "playwright package is not installed"
+  if (!CHROMIUM_EXECUTABLE_PATH) return "playwright browser executable is not installed"
+  return false
+}
+
+function startStaticServer(port) {
+  return http.createServer((request, response) => {
+    const urlPath = decodeURIComponent((request.url || "/").split("?")[0])
+    const filePath = path.join(ROOT_DIR, urlPath === "/" ? "web-asset/admin/portal-hub.html" : urlPath.slice(1))
+    if (!filePath.startsWith(ROOT_DIR)) {
+      response.writeHead(403)
+      response.end("forbidden")
+      return
+    }
+    fs.readFile(filePath, (error, data) => {
+      if (error) {
+        response.writeHead(404)
+        response.end("not found")
+        return
+      }
+      const ext = path.extname(filePath)
+      const type =
+        ext === ".html" ? "text/html" :
+        ext === ".css" ? "text/css" :
+        ext === ".js" ? "application/javascript" :
+        ext === ".svg" ? "image/svg+xml" :
+        "application/octet-stream"
+      response.setHeader("Content-Type", type)
+      response.end(data)
+    })
+  }).listen(port)
+}
+
+function themeInitScript() {
+  return `
+    (() => {
+      try {
+        localStorage.setItem("sis-theme", "dark");
+        localStorage.setItem("sis-theme-admin", "dark");
+        localStorage.setItem("sis-theme-parent", "dark");
+        localStorage.setItem("sis-theme-student", "dark");
+      } catch {
+        void 0;
+      }
+    })();
+  `
+}
+
+function luminance([r, g, b]) {
+  return 0.299 * r + 0.587 * g + 0.114 * b
+}
+
+function parseRgb(value) {
+  const match = String(value).match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  if (!match) return null
+  return [Number(match[1]), Number(match[2]), Number(match[3])]
+}
+
+async function readStyle(page, selector) {
+  return await page.evaluate((inputSelector) => {
+    const el = document.querySelector(inputSelector)
+    if (!el) return null
+    const cs = getComputedStyle(el)
+    const rect = el.getBoundingClientRect()
+    return {
+      selector: inputSelector,
+      backgroundColor: cs.backgroundColor,
+      backgroundImage: cs.backgroundImage,
+      color: cs.color,
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      text: (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80),
+    }
+  }, selector)
+}
+
+function assertNotLight(label, style) {
+  assert.ok(style, `${label} should exist`)
+  const bg = parseRgb(style.backgroundColor)
+  assert.ok(bg, `${label} should expose a computed background color`)
+  assert.ok(
+    luminance(bg) < 205,
+    `${label} background is still too light: ${style.backgroundColor}`,
+  )
+}
+
+function assertLightChrome(label, style) {
+  assert.ok(style, `${label} should exist`)
+  const bg = parseRgb(style.backgroundColor)
+  assert.ok(bg, `${label} should expose a computed background color`)
+  assert.ok(
+    luminance(bg) >= 220,
+    `${label} should stay in the light chrome palette: ${style.backgroundColor}`,
+  )
+}
+
+function assertDarkSurface(label, style) {
+  assert.ok(style, `${label} should exist`)
+  const bg = parseRgb(style.backgroundColor)
+  if (bg) {
+    assert.ok(
+      luminance(bg) < 205,
+      `${label} background is still too light: ${style.backgroundColor}`,
+    )
+    return
+  }
+  assert.ok(
+    style.backgroundImage && style.backgroundImage !== "none",
+    `${label} should expose a dark gradient or solid surface`,
+  )
+}
+
+function assertMutedText(label, style) {
+  assert.ok(style, `${label} should exist`)
+  const fg = parseRgb(style.color)
+  assert.ok(fg, `${label} should expose a computed text color`)
+  assert.ok(
+    luminance(fg) >= 120 && luminance(fg) <= 235,
+    `${label} text should stay muted in dark mode: ${style.color}`,
+  )
+}
+
+test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolvePlaywrightSkipReason() }, async () => {
+  const server = startStaticServer(8092)
+  const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
+  await page.addInitScript(themeInitScript())
+
+  const cases = [
+    {
+      url: "/web-asset/admin/student-admin.html",
+      checks: [
+        ["admin auth panel", "#authPanel"],
+      ],
+    },
+    {
+      url: "/web-asset/student/student-portal.html",
+      checks: [
+        ["student login panel", "#loginPanel"],
+        ["student env badge", "#envBadge"],
+        ["student logo wrap", ".brand-logo-wrap.brand-logo-wrap--sm"],
+      ],
+    },
+    {
+      url: "/web-asset/parent/parent-portal.html",
+      checks: [
+        ["parent login card", "#loginCard"],
+        ["parent env badge", "#envBadgeParent"],
+        ["parent logo wrap", ".brand-logo-wrap.brand-logo-wrap--sm"],
+      ],
+    },
+    {
+      url: "/web-asset/admin/portal-hub.html",
+      checks: [
+        ["hub logo wrap", ".brand-logo-wrap.brand-logo-wrap--lg"],
+        ["hub prefooter", ".hub-prefooter"],
+      ],
+    },
+  ]
+
+  try {
+    for (const testCase of cases) {
+      await page.goto(`http://127.0.0.1:8092${testCase.url}`, { waitUntil: "networkidle" })
+      await page.waitForTimeout(400)
+      for (const [label, selector] of testCase.checks) {
+        const style = await readStyle(page, selector)
+        assertNotLight(label, style)
+      }
+    }
+  } finally {
+    await page.close()
+    await browser.close()
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
+test("buttons and chips stay light in dark mode", { skip: resolvePlaywrightSkipReason() }, async () => {
+  const server = startStaticServer(8094)
+  const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
+  await page.addInitScript(themeInitScript())
+
+  const cases = [
+    {
+      url: "/web-asset/admin/grades-tabulator.html",
+      checks: [
+        ["grades chip link", ".chip-link"],
+        ["grades period button", ".period-btn"],
+      ],
+    },
+    {
+      url: "/web-asset/admin/student-admin.html",
+      checks: [
+        ["admin legend button", ".pt-score-legend-btn"],
+      ],
+    },
+  ]
+
+  try {
+    for (const testCase of cases) {
+      await page.goto(`http://127.0.0.1:8094${testCase.url}`, { waitUntil: "networkidle" })
+      await page.waitForTimeout(400)
+      for (const [label, selector] of testCase.checks) {
+        const style = await readStyle(page, selector)
+        assertLightChrome(label, style)
+      }
+    }
+  } finally {
+    await page.close()
+    await browser.close()
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
+test("standalone admin pages use the shared portal theme in dark mode", { skip: resolvePlaywrightSkipReason() }, async () => {
+  const server = startStaticServer(8096)
+  const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
+  await page.addInitScript(themeInitScript())
+
+  const cases = [
+    {
+      url: "/web-asset/admin/student-points.html",
+      surfaces: ["section.card", "#loginPanel", ".chart-wrap", ".table-wrap"],
+      text: ["#globalStatus", ".status", ".mini"],
+    },
+    {
+      url: "/web-asset/admin/grades-tabulator.html",
+      surfaces: [".hero", ".control-card", ".grid-card", ".metric-card", ".distribution-dialog", ".distribution-chart-shell"],
+      text: [".status", ".hero p", ".distribution-zoom-label", ".distribution-dialog-hint", ".dim"],
+    },
+  ]
+
+  try {
+    for (const testCase of cases) {
+      await page.goto(`http://127.0.0.1:8096${testCase.url}`, { waitUntil: "networkidle" })
+      await page.waitForTimeout(400)
+      for (const selector of testCase.surfaces) {
+        const style = await readStyle(page, selector)
+        assertDarkSurface(`${testCase.url} ${selector}`, style)
+      }
+      for (const selector of testCase.text) {
+        const style = await readStyle(page, selector)
+        assertMutedText(`${testCase.url} ${selector}`, style)
+      }
+    }
+
+    await page.goto("http://127.0.0.1:8096/web-asset/admin/grades-tabulator.html", { waitUntil: "networkidle" })
+    await page.waitForTimeout(400)
+    const controlCard = await readStyle(page, ".control-card")
+    const metricCard = await readStyle(page, ".metric-card")
+    assert.ok(controlCard && metricCard, "grades tabulator card surfaces should exist")
+    assert.notEqual(
+      controlCard.backgroundImage,
+      metricCard.backgroundImage,
+      "grades tabulator control and metric cards should not share the same gradient",
+    )
+    assert.ok(
+      /60,\s*66,\s*72/.test(metricCard.backgroundImage || ""),
+      `metric cards should use the card-tier gradient: ${metricCard.backgroundImage}`,
+    )
+    assert.ok(
+      /49,\s*54,\s*58/.test(controlCard.backgroundImage || ""),
+      `control cards should keep the darker panel-tier gradient: ${controlCard.backgroundImage}`,
+    )
+  } finally {
+    await page.close()
+    await browser.close()
+    await new Promise((resolve) => server.close(resolve))
+  }
+})

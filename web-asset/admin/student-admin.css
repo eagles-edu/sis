@@ -1,10 +1,10 @@
       :root {
-        --background-color: #798ea4;
-        --bg: var(--secondary-color);
-        --blkquot-background: #f0f2f5;
-        --body-bgcolor: var(--secondary-color);
-        --border: #7388a3;
-        --border-strong: #5f7391;
+      --background-color: var(--portal-page-bg-start);
+      --bg: var(--portal-page-bg-start);
+      --blkquot-background: #f0f2f5;
+      --body-bgcolor: var(--portal-page-bg-start);
+      --border: var(--portal-border);
+      --border-strong: var(--portal-border-strong);
         --brand: var(--tertiary-color);
         --btn-delete-bg: #fbe9ea;
         --btn-delete-border: #e58a92;
@@ -15,8 +15,8 @@
         --btn-refresh-bg: #e7f5ec;
         --btn-refresh-border: #6cad85;
         --btn-refresh-text: #1f6b3a;
-        --chart-grid: #b6c5d9;
-        --chart-text: #1f2a3f;
+      --chart-grid: var(--portal-border);
+      --chart-text: var(--portal-chart-axis-label);
         --danger: #b50010;
         --danger-bg: #fce9e9;
         --danger-border: #870200;
@@ -40,32 +40,32 @@
         --link-color: var(--link-aaa);
         --link-hover: var(--tertiary-color);
         --link-visited: #630094;
-        --menu-bg: #f6f8fc;
-        --menu-border: #d7dfec;
-        --menu-header-bg: #e8eef8;
-        --menu-link-active-bg: #d9e8ff;
-        --menu-link-bg: #fcfdff;
+      --menu-bg: var(--portal-surface-support);
+      --menu-border: var(--portal-border);
+      --menu-header-bg: var(--portal-surface-support);
+      --menu-link-active-bg: var(--portal-surface-support);
+      --menu-link-bg: var(--portal-surface-card);
         --pager-hover-background: #fff;
         --pager-text-color: var(--text-color);
-        --panel: var(--secondary-color);
+      --panel: var(--portal-surface-panel);
         --primary-color: #b50010;
         --radius-base: 3.667px;
         --radius-pill: 999px;
-        --secondary-color: #f9faff;
+      --secondary-color: #f9faff;
         --sis-global-text-zoom: 1;
         --success-bg: #e6f7ee;
         --success-border: #2f7d51;
         --success-color: #0f6d2a;
-        --surface-card: #ffffff;
-        --surface-card-muted: #f5f9ff;
-        --surface-color: #eee;
-        --surface-contrast: #eef3fb;
-        --surface-muted: #f0f0ee;
-        --surface-soft: #fffaf0;
-        --surface-warm: #fff;
+      --surface-card: var(--portal-surface-card);
+      --surface-card-muted: var(--portal-surface-support);
+      --surface-color: #eee;
+      --surface-contrast: var(--portal-surface-support);
+      --surface-muted: #f0f0ee;
+      --surface-soft: var(--portal-surface-support);
+      --surface-warm: var(--portal-surface-card);
         --tertiary-color: #002786;
-        --text-color: #212121;
-        --text-muted: #414141;
+      --text-color: var(--portal-text);
+      --text-muted: var(--portal-text-soft);
         --warning-bg: #f0f0ee;
         --warning-border: #6330da;
         --warning-color: #66008e;
@@ -74,8 +74,8 @@
         --radius-2: calc(var(--radius-base) * 2);
         --radius-3: calc(var(--radius-base) * 3);
          /* menu/content surface */
-        --surface-1: #fffffa;
-        --surface-2: #fffaf0;
+      --surface-1: var(--portal-surface-card);
+      --surface-2: var(--portal-surface-support);
         /* prettier-ignore  */
         /* Brand core */
         /* locked */
@@ -102,10 +102,13 @@
         box-sizing: border-box;
       }
       body {
-        background: linear-gradient(45deg, var(--background-color) 0%, #8da5d5 100%);
-        color: var(--ink);
-        font-family: var(--font-base);
-        margin: 0;
+      background: var(--portal-page-bg);
+      color: var(--ink);
+      font-family: var(--font-base);
+      margin: 0;
+  }
+      html[data-theme="dark"] body {
+        background: var(--portal-dark-page-bg);
   }
       .app-sidebar,
       #authPanel,
@@ -120,7 +123,7 @@
       .wrap {
         display: grid;
         gap: 12px;
-        margin: 24px auto;
+        margin: 0 auto;
         max-width: 1440px;
         padding: 16px;
   }
@@ -1374,8 +1377,8 @@ transition:
         min-width: 140px;
   }
       .grade-chart-shell {
-        background: linear-gradient(160deg, #f7fbff 0%, #eef4ff 42%, #f9fbff 100%);
-        border: 1px solid #ccd9ed;
+        background: var(--portal-chart-surface);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         margin: 10px 0 14px;
         padding: 10px;
@@ -1390,12 +1393,12 @@ transition:
         margin: 0;
   }
       .grade-chart-head .small {
-        color: #324f77;
+        color: var(--portal-support-message);
         margin: 0;
   }
       .tabulator-entry-callout {
-        background: #f6faff;
-        border: 1px solid #c6d6eb;
+        background: var(--portal-chart-surface-soft);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         box-sizing: border-box;
         display: grid;
@@ -1470,7 +1473,7 @@ transition:
         gap: 4px;
   }
       .grade-chart-field label {
-        color: #35547d;
+        color: var(--portal-data-label);
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.04em;
@@ -1479,19 +1482,19 @@ transition:
   }
       .grade-chart-field select,
       .grade-chart-field input {
-        background: #fff;
-        border: 1px solid #bdd0ea;
+        background: var(--portal-surface-card);
+        border: 1px solid var(--portal-border);
         margin: 0;
         min-width: 0;
   }
       .grade-chart-field input:disabled,
       .grade-chart-field select:disabled {
-        background: #eef3fb;
-        color: #6e7f98;
+        background: var(--portal-surface-support);
+        color: var(--portal-text-soft);
         cursor: not-allowed;
   }
       .grade-chart-summary {
-        color: #1f3d63;
+        color: var(--portal-support-message);
         line-height: 1.4;
         margin: 10px 0 8px;
   }
@@ -1501,10 +1504,10 @@ transition:
         grid-template-columns: 1fr;
   }
       .grade-chart-lane {
-        background: #fff;
-        border: 1px solid #d2deef;
+        background: var(--portal-chart-surface);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
         padding: 8px;
   }
       .grade-chart-lane-head {
@@ -1520,14 +1523,14 @@ transition:
         margin-left: auto;
   }
       .grade-chart-lane-title {
-        color: #1b365a;
+        color: var(--portal-text);
         font-size: 13px;
         font-weight: 700;
         line-height: 1.25;
         margin: 0;
   }
       .grade-chart-lane-metrics {
-        color: #365b86;
+        color: var(--portal-support-message);
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.03em;
@@ -1537,11 +1540,11 @@ transition:
         white-space: nowrap;
   }
       .grade-chart-expand-btn {
-        background: #f4f8ff;
-        border: 1px solid #9eb6d7;
+        background: var(--portal-chart-surface-soft);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-pill);
         box-sizing: border-box;
-        color: #173f6d;
+        color: var(--portal-text);
         cursor: pointer;
         font-size: 10px;
         font-weight: 700;
@@ -1552,8 +1555,8 @@ transition:
         white-space: nowrap;
   }
       .grade-chart-expand-btn:hover {
-        background: #e9f1ff;
-        border-color: #4f77ab;
+        background: var(--portal-surface-support);
+        border-color: var(--portal-border-strong);
   }
       .grade-chart-svg-wrap {
         -webkit-overflow-scrolling: touch;
@@ -1568,13 +1571,13 @@ transition:
         width: 100%;
   }
       .grade-chart-lane-meta {
-        color: #4a668c;
+        color: var(--portal-support-message);
         font-size: 11px;
         line-height: 1.35;
         margin: 6px 0 0;
   }
       .grade-chart-lane-legend {
-        color: #2f4d73;
+        color: var(--portal-support-message);
         display: flex;
         flex-wrap: wrap;
         font-size: 10px;
@@ -1648,7 +1651,7 @@ transition:
         transform: scale(1.12);
   }
       .grade-chart-svg .grade-chart-axis-label {
-        fill: #4f6582;
+        fill: var(--portal-chart-axis-label);
         font-size: 10px;
         font-weight: 700;
   }
@@ -1664,12 +1667,12 @@ transition:
         justify-content: space-between;
   }
       .grade-chart-modal-title {
-        color: #123864;
+        color: var(--portal-text);
         font-size: 14px;
         margin: 0;
   }
       .grade-chart-modal-meta {
-        color: #3f6089;
+        color: var(--portal-support-message);
         font-size: 11px;
         line-height: 1.35;
         margin: 2px 0 0;
@@ -1701,8 +1704,8 @@ transition:
       .table-column-controls,
       .attendance-column-controls {
         align-items: center;
-        background: #f8fbff;
-        border: 1px solid #d8e2f1;
+        background: var(--portal-surface-support);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         display: flex;
         flex-wrap: wrap;
@@ -1712,7 +1715,7 @@ transition:
   }
       .table-column-controls .small,
       .attendance-column-controls .small {
-        color: #39557c;
+        color: var(--portal-support-message);
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.04em;
@@ -1966,8 +1969,9 @@ transition:
         min-width: 620px;
   }
       .queue-hub-order-dirty {
-        background: #ffe9c7;
-        border-color: #b16d00;
+        background: var(--portal-status-warn-bg);
+        border-color: var(--portal-status-warn-border);
+        color: var(--portal-status-warn-text);
   }
       .stats-grid {
         display: grid;
@@ -2045,8 +2049,8 @@ transition:
         display: contents;
   }
       .system-health-item {
-        background: #f3f8ff;
-        border: 2px solid #8ea3c1;
+        background: var(--portal-status-neutral-bg);
+        border: 2px solid var(--portal-status-neutral-border);
         border-bottom-width: 4px;
         border-radius: var(--radius-2);
         display: grid;
@@ -2058,20 +2062,24 @@ transition:
         grid-column: span 2;
   }
       .system-health-item.ok {
-        background: #d7f2e1;
-        border-color: #1f7a4a;
+        background: var(--portal-status-good-bg);
+        border-color: var(--portal-status-good-border);
+        color: var(--portal-status-good-text);
   }
       .system-health-item.warn {
-        background: #ffe9c7;
-        border-color: #b16d00;
+        background: var(--portal-status-warn-bg);
+        border-color: var(--portal-status-warn-border);
+        color: var(--portal-status-warn-text);
   }
       .system-health-item.error {
-        background: #ffd9de;
-        border-color: #b3263a;
+        background: var(--portal-status-bad-bg);
+        border-color: var(--portal-status-bad-border);
+        color: var(--portal-status-bad-text);
   }
       .system-health-item.pending {
-        background: #dfeaff;
-        border-color: #5877a3;
+        background: var(--portal-status-info-bg);
+        border-color: var(--portal-status-info-border);
+        color: var(--portal-status-info-text);
   }
       .system-health-label {
         align-items: center;
@@ -2090,7 +2098,7 @@ transition:
         overflow-wrap: anywhere;
   }
       .led {
-        background: #b4bfce;
+        background: var(--portal-status-neutral-border);
         border-radius: 50%;
         display: inline-block;
         height: 10px;
@@ -2101,32 +2109,32 @@ box-shadow:
           0 0 0 1px #cad4e3;
   }
       .led.ok {
-        background: #2f9a61;
+        background: var(--portal-status-good-border);
   }
       .led.warn {
-        background: #d5a91f;
+        background: var(--portal-status-warn-border);
   }
       .led.error {
-        background: #c73b4a;
+        background: var(--portal-status-bad-border);
   }
       .led.pending {
-        background: #98a7bb;
+        background: var(--portal-status-info-border);
   }
       .system-health-summary {
         margin-top: 6px;
-      }
+  }
       .system-health-shell.is-loading .system-health-grid,
       .system-health-shell.is-loading .system-health-summary {
         visibility: hidden;
   }
       .stat-card {
-        background: var(--surface-contrast);
-        border: 1px solid var(--border-strong);
+        background: var(--portal-chart-surface-soft);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         padding: 8px;
   }
       .stat-label {
-        color: var(--ink-muted);
+        color: var(--portal-data-label);
         font-size: 11px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
@@ -2138,8 +2146,8 @@ box-shadow:
         margin-top: 2px;
   }
       .mini-list {
-        background: var(--surface-card);
-        border: 1px solid var(--border-strong);
+        background: var(--portal-chart-surface);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         max-height: 180px;
         overflow: auto;
@@ -2147,21 +2155,21 @@ box-shadow:
         white-space: pre-wrap;
   }
       .chart-shell {
-        background: var(--surface-card);
-        border: 1px solid var(--border-strong);
+        background: var(--portal-chart-surface);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         margin-top: 6px;
         padding: 6px;
   }
       .chart-svg {
-        background: linear-gradient(180deg, #ffffff, var(--surface-contrast));
+        background: var(--portal-chart-surface);
         border-radius: var(--radius-2);
         display: block;
         min-height: 240px;
         width: 100%;
   }
       .chart-legend {
-        color: var(--ink-muted);
+        color: var(--portal-support-message);
         display: flex;
         font-size: 11px;
         gap: 12px;
@@ -2391,19 +2399,19 @@ box-shadow:
         white-space: nowrap;
   }
       .hub-pill.pending {
-        background: #fff7e3;
-        border-color: #e2c37a;
-        color: #785a12;
+        background: var(--portal-status-warn-bg);
+        border-color: var(--portal-status-warn-border);
+        color: var(--portal-status-warn-text);
   }
       .hub-pill.connected {
-        background: #e8f8ee;
-        border-color: #78bd95;
-        color: #155f3f;
+        background: var(--portal-status-good-bg);
+        border-color: var(--portal-status-good-border);
+        color: var(--portal-status-good-text);
   }
       .hub-pill.disconnected {
-        background: #fdeced;
-        border-color: #e38f98;
-        color: #84222b;
+        background: var(--portal-status-bad-bg);
+        border-color: var(--portal-status-bad-border);
+        color: var(--portal-status-bad-text);
   }
       .system-health-service-card {
         gap: 6px;
@@ -2634,9 +2642,9 @@ box-shadow:
         white-space: nowrap;
   }
       .assignment-completion-pill.complete {
-        background: #e7f8ef;
-        border-color: #70b68e;
-        color: #155f3f;
+        background: var(--portal-status-good-bg);
+        border-color: var(--portal-status-good-border);
+        color: var(--portal-status-good-text);
   }
       .assignment-record-items {
         display: grid;
@@ -2681,8 +2689,8 @@ box-shadow:
         min-width: 0;
   }
       .progress-report-card {
-        background: var(--surface-card-muted);
-        border: 1px solid var(--border-strong);
+        background: var(--portal-chart-surface-soft);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         display: grid;
         gap: 6px;
@@ -2690,12 +2698,13 @@ box-shadow:
         padding: 8px;
   }
       .progress-report-card h4 {
-        color: var(--ink);
+        color: var(--portal-text);
         font-size: 12px;
         letter-spacing: 0.01em;
         margin: 0;
   }
       .progress-report-card p {
+        color: var(--portal-support-message);
         line-height: 1.45;
         margin: 0;
   }
@@ -2706,10 +2715,10 @@ box-shadow:
   }
       .progress-report-vision-option {
         align-items: center;
-        background: #fff;
-        border: 1px solid var(--border-strong);
+        background: var(--portal-chart-surface);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-pill);
-        color: var(--ink);
+        color: var(--portal-text);
         display: inline-flex;
         font-size: 11px;
         gap: 6px;
@@ -2721,8 +2730,8 @@ box-shadow:
         margin: 0;
   }
       .progress-report-table-wrap {
-        background: #fff;
-        border: 1px solid var(--border-strong);
+        background: var(--portal-chart-surface);
+        border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         overflow: auto;
   }
@@ -2740,8 +2749,8 @@ box-shadow:
         vertical-align: top;
   }
       .progress-report-table thead th {
-        background: #eaf1ff;
-        color: #0f2d5f;
+        background: var(--portal-chart-surface-soft);
+        color: var(--portal-text);
         font-weight: 700;
   }
       .progress-report-table .score-cell {
@@ -3415,7 +3424,6 @@ box-shadow:
         .profile-tab-panel,
         .profile-info-summary,
         .profile-summary-primary,
-        .profile-summary-chip,
         .profile-info-panel,
         .profile-info-group,
         .profile-info-item,
@@ -3429,11 +3437,9 @@ box-shadow:
         .attendance-column-controls,
         .school-logo-preview,
         .attendance-radio-option,
-        .assignment-completion-pill,
         .progress-report-card,
         .progress-report-vision-option,
         .progress-report-table-wrap,
-        .pt-score-legend-btn,
         .pt-score-legend-popover,
         .pt-score-radio-option,
         .grade-chart-shell,
@@ -3498,19 +3504,19 @@ box-shadow:
 
       html[data-theme="dark"] body.admin-portal-page .mini-list,
       html[data-theme="dark"] body.admin-portal-page .chart-shell {
-        background: var(--portal-dark-surface-support);
-        border-color: var(--portal-dark-border-strong);
-        color: var(--portal-dark-text-soft);
+        background: var(--portal-chart-surface-soft);
+        border-color: var(--portal-border);
+        color: var(--portal-support-message);
       }
 
       html[data-theme="dark"] body.admin-portal-page .chart-svg {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
+        background: var(--portal-chart-surface);
       }
 
       html[data-theme="dark"] body.admin-portal-page .chart-legend,
       html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
       html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
-        color: var(--portal-dark-text-soft);
+        color: var(--portal-support-message);
       }
 
       html[data-theme="dark"] body.admin-portal-page .system-health-item {
@@ -3550,7 +3556,7 @@ box-shadow:
       html[data-theme="dark"] body.admin-portal-page .system-health-detail,
       html[data-theme="dark"] body.admin-portal-page .system-health-summary,
       html[data-theme="dark"] body.admin-portal-page .text-zoom-controls .zoom-label {
-        color: var(--portal-dark-text-soft);
+        color: var(--portal-support-message);
       }
 
       html[data-theme="dark"] body.admin-portal-page .queue-hub-panel {
@@ -3559,39 +3565,14 @@ box-shadow:
         color: var(--portal-dark-text);
   }
 
-      html[data-theme="dark"] body.admin-portal-page .queue-hub-panel .queue-row-btn {
-        color: #b4c4ea;
-        text-decoration-color: rgba(180, 196, 234, 0.82);
-      }
-
-      html[data-theme="dark"] body.admin-portal-page :where(.queue-row-btn, .row-options-trigger) {
-        color: #b4c4ea;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .row-options-trigger {
-        background: rgba(180, 196, 234, 0.12);
-        color: #b4c4ea;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .row-options-menu[open] > .row-options-trigger {
-        background: rgba(180, 196, 234, 0.18);
-        color: #eef4ff;
-      }
-
-      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:focus-visible,
-      html[data-theme="dark"] body.admin-portal-page .queue-row-btn:hover {
-        background: rgba(180, 196, 234, 0.14);
-        color: #eef4ff;
-      }
-
       html[data-theme="dark"] body.admin-portal-page .queue-row-btn:focus-visible,
       html[data-theme="dark"] body.admin-portal-page .row-options-trigger:focus-visible {
         outline: 2px solid rgba(180, 196, 234, 0.46);
       }
 
       html[data-theme="dark"] body.admin-portal-page .attendance-level-panel {
-        background: var(--portal-dark-surface-support);
-        border-color: var(--portal-dark-border-strong);
+        background: var(--portal-chart-surface-soft);
+        border-color: var(--portal-border);
         color: var(--portal-dark-text);
       }
 
@@ -3612,15 +3593,15 @@ box-shadow:
       }
 
       html[data-theme="dark"] body.admin-portal-page .assignment-item-builder {
-        background: var(--portal-dark-surface-support);
-        border-color: var(--portal-dark-border-strong);
+        background: var(--portal-chart-surface-soft);
+        border-color: var(--portal-border);
         color: var(--portal-dark-text);
       }
 
       html[data-theme="dark"] body.admin-portal-page .assignment-item-builder h4,
       html[data-theme="dark"] body.admin-portal-page .assignment-item-builder label,
       html[data-theme="dark"] body.admin-portal-page .assignment-item-builder .small {
-        color: var(--portal-dark-text-soft);
+        color: var(--portal-support-message);
       }
 
       html[data-theme="dark"] body.admin-portal-page .assignment-item-table thead th {
@@ -3633,9 +3614,9 @@ box-shadow:
       }
 
       html[data-theme="dark"] body.admin-portal-page .queue-hub-empty {
-        background: var(--portal-dark-surface-support);
-        border-color: var(--portal-dark-border-strong);
-        color: var(--portal-dark-text-soft);
+        background: var(--portal-chart-surface-soft);
+        border-color: var(--portal-border);
+        color: var(--portal-support-message);
       }
 
       html[data-theme="dark"] body.admin-portal-page .queue-hub-panel.drop-target {
@@ -3698,8 +3679,8 @@ box-shadow:
         .table-column-controls,
         .attendance-column-controls
       ) {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
+        background: var(--portal-chart-surface);
+        border-color: var(--portal-border);
         color: var(--portal-dark-text);
   }
 
@@ -3709,16 +3690,16 @@ box-shadow:
         .table-column-controls label,
         .attendance-column-controls label
       ) {
-        color: var(--portal-dark-text-soft);
+        color: var(--portal-support-message);
   }
 
       html[data-theme="dark"] body.admin-portal-page .school-logo-preview {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
+        background: var(--portal-chart-surface);
+        border-color: var(--portal-border);
   }
 
       html[data-theme="dark"] body.admin-portal-page .school-logo-preview.has-image {
-        background: linear-gradient(180deg, var(--portal-dark-card), var(--portal-dark-card-deep));
+        background: var(--portal-chart-surface-soft);
   }
 
       html[data-theme="dark"] body.admin-portal-page .attendance-radio-option {
@@ -3738,32 +3719,17 @@ box-shadow:
         color: #f0b05f;
   }
 
-      html[data-theme="dark"] body.admin-portal-page .assignment-completion-pill {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
-        color: var(--portal-dark-text);
-  }
-
-      html[data-theme="dark"] body.admin-portal-page .assignment-completion-pill.complete {
-        background: rgba(124, 214, 164, 0.14);
-        border-color: rgba(124, 214, 164, 0.34);
-        color: #dff7e9;
-  }
-
       html[data-theme="dark"] body.admin-portal-page .assignment-record-item.done {
         color: #9ee0b9;
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(
         .progress-report-card,
-        .progress-report-vision-option,
         .progress-report-table-wrap,
-        .pt-score-legend-btn,
         .pt-score-legend-popover,
-        .pt-score-radio-option
       ) {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
+        background: var(--portal-chart-surface);
+        border-color: var(--portal-border);
         color: var(--portal-dark-text);
   }
 
@@ -3772,18 +3738,13 @@ box-shadow:
         color: var(--portal-dark-text);
   }
 
-      html[data-theme="dark"] body.admin-portal-page .pt-score-legend-btn:hover {
-        background: #45494f;
-        border-color: rgba(255, 255, 255, 0.34);
-  }
-
       html[data-theme="dark"] body.admin-portal-page .pt-score-legend-title {
         color: var(--portal-dark-text);
   }
 
       html[data-theme="dark"] body.admin-portal-page .progress-report-rubric-row-disabled td {
-        background: var(--portal-dark-surface-support);
-        color: var(--portal-dark-text-soft);
+        background: var(--portal-chart-surface-soft);
+        color: var(--portal-support-message);
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(
@@ -3792,9 +3753,9 @@ box-shadow:
         .progress-report-rubric-row-disabled .recommendation-cell textarea:disabled,
         .progress-report-rubric-row-disabled .pt-score-radio-option
       ) {
-        background: var(--portal-dark-surface-support);
-        border-color: rgba(255, 255, 255, 0.12);
-        color: var(--portal-dark-text-soft);
+        background: var(--portal-chart-surface-soft);
+        border-color: var(--portal-border);
+        color: var(--portal-support-message);
   }
       html[data-theme="dark"] body.admin-portal-page :where(
         .news-review-viewer-block,
@@ -3845,13 +3806,13 @@ box-shadow:
   }
 
       html[data-theme="dark"] body.admin-portal-page .grade-chart-shell {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
+        background: var(--portal-chart-surface);
+        border-color: var(--portal-border);
   }
 
       html[data-theme="dark"] body.admin-portal-page .tabulator-entry-callout {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
+        background: var(--portal-chart-surface);
+        border-color: var(--portal-border);
         color: var(--portal-dark-text);
   }
 
@@ -3861,7 +3822,7 @@ box-shadow:
       html[data-theme="dark"] body.admin-portal-page .grade-chart-lane-metrics,
       html[data-theme="dark"] body.admin-portal-page .grade-chart-lane-meta,
       html[data-theme="dark"] body.admin-portal-page .grade-chart-legend-item {
-        color: var(--portal-dark-text-soft);
+        color: var(--portal-support-message);
   }
 
       html[data-theme="dark"] body.admin-portal-page :where(.grade-chart-field select, .grade-chart-field input) {
@@ -3876,7 +3837,7 @@ box-shadow:
   }
 
       html[data-theme="dark"] body.admin-portal-page .permission-role-card {
-        background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
-        border-color: var(--portal-dark-border);
+        background: var(--portal-chart-surface);
+        border-color: var(--portal-border);
         color: var(--portal-dark-text);
   }

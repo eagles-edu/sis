@@ -72,7 +72,7 @@
     "smoke:admin-live:read": "node tools/admin-live-endpoint-smoke.mjs",
     "map:deps": "node tools/build-mapping-stack.mjs --deps-only",
     "map:openapi:lint": "redocly lint --config redocly.yaml docs/mapping/openapi/sis-admin.openapi.yaml",
-    "map:openapi:build": "redocly build-docs --config redocly.yaml docs/mapping/openapi/sis-admin.openapi.yaml --output docs/mapping/out/sis-admin.openapi.html",
+    "map:openapi:build": "node tools/build-mapping-stack.mjs --openapi-only",
     "map:all": "node tools/build-mapping-stack.mjs"
   },
   "keywords": [

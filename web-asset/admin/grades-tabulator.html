@@ -7,6 +7,7 @@
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <title>The Eagles Club SIS Grades Table</title>
   <link rel="stylesheet" href="../vendor/tabulatorz/tabulator.min.css">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
   <script>
     (() => {
       try {
@@ -20,30 +21,34 @@
   </script>
   <style>
     :root {
-      --bg: #f3f7fb;
-      --panel: #ffffff;
-      --ink: #11263f;
-      --ink-soft: #5d718a;
+      --bg: var(--portal-page-bg);
+      --card: var(--portal-surface-card);
+      --card-soft: var(--portal-surface-support);
+      --panel: var(--portal-surface-panel);
+      --ink: var(--portal-text);
+      --ink-soft: var(--portal-text-soft);
       --accent: #0054b5;
-      --accent-soft: #d9e8ff;
-      --line: #d3deec;
-      --ok: #0c8f5c;
-      --warn: #b45309;
-      --bad: #b42318;
+      --accent-soft: var(--portal-surface-support);
+      --line: var(--portal-border);
+      --ok: var(--portal-status-good-text);
+      --warn: var(--portal-status-warn-text);
+      --bad: var(--portal-status-bad-text);
       color-scheme: light;
     }
 
     html[data-theme="dark"] {
-      --bg: #1a1c1f;
-      --panel: #31363a;
-      --ink: #f2f4f7;
-      --ink-soft: #c9ced4;
+      --bg: var(--portal-dark-page-bg);
+      --card: var(--portal-dark-surface-card);
+      --card-soft: var(--portal-dark-surface-support);
+      --panel: var(--portal-dark-surface-panel);
+      --ink: var(--portal-dark-text);
+      --ink-soft: var(--portal-dark-text-soft);
       --accent: #6aa4ff;
-      --accent-soft: rgba(106, 164, 255, 0.16);
-      --line: rgba(255, 255, 255, 0.22);
-      --ok: #7cd6a4;
-      --warn: #f0b05f;
-      --bad: #f28a95;
+      --accent-soft: var(--portal-dark-surface-support);
+      --line: var(--portal-dark-border);
+      --ok: var(--portal-status-good-text);
+      --warn: var(--portal-status-warn-text);
+      --bad: var(--portal-status-bad-text);
       color-scheme: dark;
     }
 
@@ -96,16 +101,12 @@
     }
 
     .grid-card {
-      background:
-        linear-gradient(180deg, rgb(255 255 255 / 96%) 0%, rgb(248 251 255 / 96%) 100%),
-        #fff;
+      background: var(--card);
       min-width: 0;
     }
 
     html[data-theme="dark"] .grid-card {
-      background:
-        linear-gradient(180deg, rgba(60, 66, 72, 0.96) 0%, rgba(49, 54, 58, 0.96) 100%),
-        var(--panel);
+      background: var(--card);
     }
 
     .hero h1 {
@@ -144,21 +145,18 @@
       text-decoration: none;
     }
 
-    html[data-theme="dark"] .btn,
-    html[data-theme="dark"] .chip-link,
-    html[data-theme="dark"] .period-btn,
     html[data-theme="dark"] .metric-card,
     html[data-theme="dark"] #gradeGrid {
-      background: #31363a;
-      border-color: rgba(255, 255, 255, 0.22);
+      background: var(--card);
+      border-color: var(--line);
       color: var(--ink);
     }
 
     html[data-theme="dark"] .field select,
     html[data-theme="dark"] .field input {
-      background: #E2E2E2;
-      border-color: #aeb7c5;
-      color: #172033;
+      background: var(--portal-dark-field-bg);
+      border-color: var(--portal-dark-field-border);
+      color: var(--portal-dark-field-text);
     }
 
     .chip-link:hover,
@@ -172,22 +170,11 @@
       color: #fff;
     }
 
-    html[data-theme="dark"] .btn.primary {
-      border-color: rgba(106, 164, 255, 0.5);
-      color: #f2f4f7;
-    }
-
     .btn.subtle {
       background: #f5f9ff;
       border-color: #bed1ea;
       color: #14385e;
       font-weight: 600;
-    }
-
-    html[data-theme="dark"] .btn.subtle {
-      background: #25292c;
-      border-color: rgba(255, 255, 255, 0.22);
-      color: var(--ink);
     }
 
     .status {
@@ -227,10 +214,6 @@
       font-weight: 700;
     }
 
-    html[data-theme="dark"] .period-btn.is-active {
-      color: #eaf2ff;
-    }
-
     .control-grid {
       display: grid;
       gap: 0.55rem;
@@ -258,7 +241,7 @@
 
     .field select,
     .field input {
-      background: #fff;
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 10px;
       box-sizing: border-box;
@@ -271,7 +254,7 @@
 
     .field select:disabled,
     .field input:disabled {
-      background: #f5f7fa;
+      background: var(--panel);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -283,7 +266,7 @@
     }
 
     .metric-card {
-      background: #fff;
+      background: var(--card);
       border: 1px solid var(--line);
       border-radius: 12px;
       box-sizing: border-box;
@@ -312,7 +295,7 @@
     }
 
     #gradeGrid {
-      background: #fff;
+      background: var(--card);
       border: 1px solid var(--line);
       border-radius: 12px;
       box-sizing: border-box;
@@ -325,7 +308,7 @@
     }
 
     html[data-theme="dark"] #gradeGrid {
-      background: #2d3036;
+      background: var(--card);
     }
 
     .grid-head {
@@ -411,14 +394,14 @@
     }
 
     .tabulator .tabulator-col {
-      background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
-      border-bottom: 1px solid #cfdced;
-      border-right-color: #d6e2f0;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      border-right-color: var(--line);
       box-sizing: border-box;
     }
 
     .tabulator .tabulator-col:last-child {
-      border-right-color: #c8d8ed;
+      border-right-color: var(--line);
     }
 
     .tabulator .tabulator-col .tabulator-col-content {
@@ -442,7 +425,7 @@
 
     .tabulator .tabulator-col .tabulator-col-title {
       box-sizing: border-box;
-      color: #173a61;
+      color: var(--ink);
       font-size: 1rem;
       font-weight: 700;
       line-height: 1.2;
@@ -601,13 +584,13 @@
     }
 
     .header-action-btn:focus-visible {
-      outline: 2px solid #2f6fb5;
+      outline: 2px solid var(--accent);
       outline-offset: 1px;
     }
 
     .tabulator .tabulator-col.assignment-col,
     .tabulator .tabulator-col.core-col {
-      background: linear-gradient(180deg, #f7f8fb 0%, #edf1f8 100%);
+      background: var(--panel);
     }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-content,
@@ -618,8 +601,8 @@
 
     .assignment-head {
       align-items: center;
-      background: linear-gradient(180deg, #fbfdff 0%, #eef3fb 100%);
-      border: 1px solid #dbe5f3;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 6px;
       box-sizing: border-box;
       display: flex;
@@ -633,18 +616,15 @@
     }
 
     .assignment-head.elective {
-      background: linear-gradient(180deg, #d9ecff 0%, #c4dfff 100%);
-      border: 1px solid #b2d8f6;
+      border: 1px solid var(--accent);
     }
 
     .assignment-head.megs {
-      background: linear-gradient(180deg, #f8ecd4 0%, #f2e2c0 100%);
-      border: 1px solid #e2d1ab;
+      border: 1px solid var(--portal-status-warn-border);
     }
 
     .assignment-head.core {
-      background: linear-gradient(180deg, #f7fbff 0%, #e9f1fc 100%);
-      border: 1px solid #c9d9ee;
+      border: 1px solid var(--line);
       justify-content: space-between;
     }
 
@@ -700,21 +680,21 @@
     }
 
     .exercise-cell.ontime {
-      background: #dcf6e7;
-      border-color: #92d2aa;
-      color: #0f5a34;
+      background: var(--portal-status-good-bg);
+      border-color: var(--portal-status-good-border);
+      color: var(--portal-status-good-text);
     }
 
     .exercise-cell.late {
-      background: #fff3c9;
-      border-color: #e5cb66;
-      color: #6a4a00;
+      background: var(--portal-status-warn-bg);
+      border-color: var(--portal-status-warn-border);
+      color: var(--portal-status-warn-text);
     }
 
     .exercise-cell.notdone {
-      background: #fde4e2;
-      border-color: #e7b6b2;
-      color: #8a1f1c;
+      background: var(--portal-status-bad-bg);
+      border-color: var(--portal-status-bad-border);
+      color: var(--portal-status-bad-text);
     }
 
     .stat-chip {
@@ -750,7 +730,7 @@
     }
 
     .distribution-mini:focus-visible {
-      outline: 2px solid #2f6fb5;
+      outline: 2px solid var(--accent);
       outline-offset: 1px;
     }
 
@@ -800,8 +780,8 @@
     }
 
     .distribution-dialog {
-      background: #fff;
-      border: 1px solid #bfd3ea;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 14px;
       box-shadow: 0 26px 60px rgb(8 22 40 / 26%);
       box-sizing: border-box;
@@ -914,14 +894,14 @@
     }
 
     .distribution-zoom-range {
-      accent-color: #2f75bc;
+      accent-color: var(--tertiary-color);
       flex: 1 1 220px;
       max-width: 420px;
       min-width: 180px;
     }
 
     .distribution-zoom-label {
-      color: #234d78;
+      color: var(--ink-soft);
       font-size: 0.86rem;
       font-weight: 700;
       min-width: 3.2rem;
@@ -929,8 +909,8 @@
     }
 
     .distribution-chart-shell {
-      background: linear-gradient(180deg, #fafdff 0%, #eef4ff 100%);
-      border: 1px solid #cfddf1;
+      background: var(--card-soft);
+      border: 1px solid var(--line);
       border-radius: 11px;
       box-sizing: border-box;
       min-height: 420px;
@@ -955,12 +935,12 @@
     }
 
     .distribution-modal-chart .dist-grid {
-      stroke: #dce7f8;
+      stroke: var(--line);
       stroke-width: 1;
     }
 
     .distribution-modal-chart .dist-axis {
-      stroke: #9db5d7;
+      stroke: var(--ink-soft);
       stroke-width: 1.4;
     }
 
@@ -970,7 +950,7 @@
 
     .distribution-modal-chart .dist-line {
       fill: none;
-      stroke: #2f75bc;
+      stroke: var(--accent);
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 2.2;
@@ -978,43 +958,43 @@
 
     .distribution-modal-chart .dist-point {
       cursor: pointer;
-      fill: #1d5ea0;
-      stroke: #fff;
+      fill: var(--accent);
+      stroke: var(--panel);
       stroke-width: 1.5;
     }
 
     .distribution-modal-chart .dist-point.is-active {
-      fill: #f0950f;
-      stroke: #143f69;
+      fill: var(--portal-status-warn-border);
+      stroke: var(--ink);
       stroke-width: 1.8;
     }
 
     .distribution-modal-chart .dist-point:focus-visible {
-      outline: 2px solid #2f6fb5;
+      outline: 2px solid var(--accent);
       outline-offset: 1px;
     }
 
     .distribution-modal-chart .dist-label {
-      fill: #31587f;
+      fill: var(--ink-soft);
       font-size: 1rem;
       font-weight: 700;
       text-anchor: middle;
     }
 
     .distribution-modal-chart .dist-y-label {
-      fill: #466487;
+      fill: var(--ink-soft);
       font-size: 1rem;
       font-weight: 600;
       text-anchor: end;
     }
 
     .distribution-hover {
-      background: #fff;
-      border: 1px solid #9db8da;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: 0 8px 22px rgb(10 28 48 / 18%);
       box-sizing: border-box;
-      color: #143b60;
+      color: var(--ink);
       font-size: 1rem;
       font-weight: 700;
       left: 0;
@@ -1027,7 +1007,7 @@
     }
 
     .distribution-dialog-hint {
-      color: #4a6282;
+      color: var(--ink-soft);
       font-size: 0.88rem;
       margin: 0;
     }
@@ -1037,16 +1017,16 @@
     }
 
     .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
-      background: #f1f6ff;
-      border-right: 1px solid #dae6f6;
+      background: var(--card-soft);
+      border-right: 1px solid var(--line);
       box-sizing: border-box;
-      color: #1f4f81;
+      color: var(--ink);
       text-align: center;
     }
 
     .tabulator-responsive-collapse {
-      background: #f9fbff;
-      border-top: 1px dashed #d9e6f6;
+      background: var(--card-soft);
+      border-top: 1px dashed var(--line);
       box-sizing: border-box;
       padding: 0.42rem 0.5rem;
     }
@@ -1057,8 +1037,8 @@
     }
 
     .collapse-item {
-      background: #fff;
-      border: 1px solid #dce7f8;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-sizing: border-box;
       display: grid;
@@ -1069,19 +1049,19 @@
     }
 
     .collapse-label {
-      color: #2b4c72;
+      color: var(--ink);
       font-weight: 700;
     }
 
     .collapse-value {
-      color: #12395f;
+      color: var(--ink-soft);
       min-width: 0;
       overflow-wrap: anywhere;
     }
 
     .tabulator-row.is-stat-row .tabulator-cell {
-      background: #eef5ff !important;
-      color: #173a61;
+      background: var(--card-soft) !important;
+      color: var(--ink);
       font-weight: 600;
     }
 
@@ -2184,13 +2164,13 @@
           .join(" ")
         const circles = series.points
           .map((point) => (
-            `<circle cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\" fill=\"#1d5ea0\"></circle>`
+            `<circle cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\" fill=\"var(--accent)\"></circle>`
           ))
           .join("")
         return (
           `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\" aria-hidden=\"true\">` +
-          `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"#d7e3f6\" stroke-width=\"1\"></line>` +
-          `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"#2f75bc\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>` +
+          `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"var(--line)\" stroke-width=\"1\"></line>` +
+          `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>` +
           `${circles}` +
           `</svg>`
         )

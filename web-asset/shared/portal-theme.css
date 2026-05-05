@@ -101,6 +101,29 @@
   --portal-dark-surface-support: #484f56;
   --portal-dark-text: #f2f4f7;
   --portal-dark-text-soft: #c9ced4;
+  --portal-data-label: var(--portal-text-soft);
+  --portal-support-message: var(--portal-text-soft);
+  --portal-chart-axis-label: var(--portal-text-soft);
+  --portal-chart-surface: var(--portal-surface-card);
+  --portal-chart-surface-soft: var(--portal-surface-support);
+  --portal-status-good-bg: #e7f8ee;
+  --portal-status-good-border: #90d3ad;
+  --portal-status-good-text: #155f3f;
+  --portal-status-warn-bg: #fff3d8;
+  --portal-status-warn-border: #e5cb66;
+  --portal-status-warn-text: #6a4a00;
+  --portal-status-bad-bg: #fde4e2;
+  --portal-status-bad-border: #e7b6b2;
+  --portal-status-bad-text: #8a1f1c;
+  --portal-status-info-bg: #eaf2ff;
+  --portal-status-info-border: #9ab9e0;
+  --portal-status-info-text: #18436f;
+  --portal-status-neutral-bg: #f5f9ff;
+  --portal-status-neutral-border: #c8d5e8;
+  --portal-status-neutral-text: #345777;
+  --portal-status-peer-bg: #f1f5ff;
+  --portal-status-peer-border: #b3c3dd;
+  --portal-status-peer-text: #214072;
   --portal-dark-theme-toggle-icon-bg: rgba(255, 255, 255, 0.12);
   --portal-dark-theme-toggle-ink: #ffd76a;
   --portal-login-form-max-width: 430px;
@@ -227,6 +250,29 @@ body {
 html[data-theme="dark"] {
   background: var(--portal-dark-page-bg);
   color-scheme: dark;
+  --portal-data-label: var(--portal-dark-text-soft);
+  --portal-support-message: var(--portal-dark-text-soft);
+  --portal-chart-axis-label: var(--portal-dark-text-soft);
+  --portal-chart-surface: var(--portal-dark-surface-card);
+  --portal-chart-surface-soft: var(--portal-dark-surface-support);
+  --portal-status-good-bg: rgba(124, 214, 164, 0.14);
+  --portal-status-good-border: rgba(124, 214, 164, 0.34);
+  --portal-status-good-text: #dff7e9;
+  --portal-status-warn-bg: rgba(240, 176, 95, 0.14);
+  --portal-status-warn-border: rgba(240, 176, 95, 0.34);
+  --portal-status-warn-text: #ffe0b6;
+  --portal-status-bad-bg: rgba(242, 138, 149, 0.12);
+  --portal-status-bad-border: rgba(242, 138, 149, 0.34);
+  --portal-status-bad-text: #ffd8dd;
+  --portal-status-info-bg: rgba(106, 164, 255, 0.14);
+  --portal-status-info-border: rgba(106, 164, 255, 0.34);
+  --portal-status-info-text: #eaf2ff;
+  --portal-status-neutral-bg: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
+  --portal-status-neutral-border: var(--portal-dark-border);
+  --portal-status-neutral-text: var(--portal-dark-text-soft);
+  --portal-status-peer-bg: rgba(106, 164, 255, 0.14);
+  --portal-status-peer-border: rgba(106, 164, 255, 0.34);
+  --portal-status-peer-text: #eaf2ff;
 }
 
 html[data-theme="dark"] body {
@@ -267,6 +313,14 @@ body.admin-portal-page,
 body.portal-hub-page {
   background: var(--portal-page-bg);
   color: var(--portal-text);
+}
+
+body.student-portal-page,
+body.parent-portal-page,
+body.admin-portal-page,
+body.portal-hub-page {
+  min-height: 100vh;
+  padding-block: 24px;
 }
 
 html[data-theme="dark"] body.admin-portal-page::before,
@@ -1122,8 +1176,8 @@ body.parent-portal-page .panel {
 
 body.parent-portal-page .metric {
   align-content: center;
-  background: #f3f8ff;
-  border: 2px solid #8ea3c1;
+  background: var(--portal-status-neutral-bg);
+  border: 2px solid var(--portal-status-neutral-border);
   border-bottom-width: 4px;
   border-radius: 10px;
   box-sizing: border-box;
@@ -1137,58 +1191,65 @@ body.parent-portal-page .metric {
 }
 
 body.parent-portal-page .metric.good {
-  background: #d7f2e1;
-  border-color: #1f7a4a;
+  background: var(--portal-status-good-bg);
+  border-color: var(--portal-status-good-border);
+  color: var(--portal-status-good-text);
 }
 
 body.parent-portal-page .metric.warn {
-  background: #d9eaff;
-  border-color: #265f9f;
+  background: var(--portal-status-info-bg);
+  border-color: var(--portal-status-info-border);
+  color: var(--portal-status-info-text);
 }
 
 body.parent-portal-page .metric.bad {
-  background: #ffd9de;
-  border-color: #b3263a;
+  background: var(--portal-status-bad-bg);
+  border-color: var(--portal-status-bad-border);
+  color: var(--portal-status-bad-text);
 }
 
 body.parent-portal-page .metric.metric-green {
-  background: #d7f2e1;
-  border-color: #1f7a4a;
+  background: var(--portal-status-good-bg);
+  border-color: var(--portal-status-good-border);
+  color: var(--portal-status-good-text);
 }
 
 body.parent-portal-page .metric.metric-green .k,
 body.parent-portal-page .metric.metric-green .v {
-  color: #0f4129;
+  color: var(--portal-status-good-text);
 }
 
 body.parent-portal-page .metric.metric-blue {
-  background: #d9eaff;
-  border-color: #265f9f;
+  background: var(--portal-status-info-bg);
+  border-color: var(--portal-status-info-border);
+  color: var(--portal-status-info-text);
 }
 
 body.parent-portal-page .metric.metric-blue .k,
 body.parent-portal-page .metric.metric-blue .v {
-  color: #103d70;
+  color: var(--portal-status-info-text);
 }
 
 body.parent-portal-page .metric.metric-purple {
-  background: #eadcff;
-  border-color: #7348b5;
+  background: var(--portal-status-peer-bg);
+  border-color: var(--portal-status-peer-border);
+  color: var(--portal-status-peer-text);
 }
 
 body.parent-portal-page .metric.metric-purple .k,
 body.parent-portal-page .metric.metric-purple .v {
-  color: #351267;
+  color: var(--portal-status-peer-text);
 }
 
 body.parent-portal-page .metric.metric-red {
-  background: #ffd9de;
-  border-color: #b3263a;
+  background: var(--portal-status-bad-bg);
+  border-color: var(--portal-status-bad-border);
+  color: var(--portal-status-bad-text);
 }
 
 body.parent-portal-page .metric.metric-red .k,
 body.parent-portal-page .metric.metric-red .v {
-  color: #5f0f1c;
+  color: var(--portal-status-bad-text);
 }
 
 body.parent-portal-page .homework-card {
@@ -1994,15 +2055,15 @@ body.parent-portal-page #performanceReportModal .portal-modal-dialog {
 }
 
 body.parent-portal-page .report-band.is-ok {
-  border-left-color: #6ca77d;
+  border-left-color: var(--portal-status-good-border);
 }
 
 body.parent-portal-page .report-band.is-watch {
-  border-left-color: #d4ad73;
+  border-left-color: var(--portal-status-warn-border);
 }
 
 body.parent-portal-page .report-band.is-alert {
-  border-left-color: #c97c7c;
+  border-left-color: var(--portal-status-bad-border);
 }
 
 body.parent-portal-page .report-archive-meta,
@@ -2045,13 +2106,13 @@ body.parent-portal-page .report-modal-ack button {
 }
 
 body.parent-portal-page .report-modal-ack-status {
-  color: #0f6d2a;
+  color: var(--portal-status-good-text);
   font-size: 13px;
   font-weight: 700;
 }
 
 body.parent-portal-page .report-modal-ack-status.is-reviewed {
-  color: #8d5d00;
+  color: var(--portal-status-warn-text);
 }
 
 @media (max-width: 520px) {
@@ -2607,39 +2668,39 @@ html[data-theme="dark"] body.parent-portal-page :where(.homework-square, .attend
 html[data-theme="dark"] body.student-portal-page .homework-square.is-complete,
 html[data-theme="dark"] body.parent-portal-page .homework-square.is-complete,
 html[data-theme="dark"] body.parent-portal-page .attendance-square.is-good {
-  background: rgba(124, 214, 164, 0.14);
-  border-color: rgba(124, 214, 164, 0.34);
-  color: #dff7e9;
+  background: var(--portal-status-good-bg);
+  border-color: var(--portal-status-good-border);
+  color: var(--portal-status-good-text);
 }
 
 html[data-theme="dark"] body.student-portal-page .homework-square.is-pending,
 html[data-theme="dark"] body.parent-portal-page .homework-square.is-pending {
-  background: rgba(106, 164, 255, 0.14);
-  border-color: rgba(106, 164, 255, 0.34);
-  color: #eaf2ff;
+  background: var(--portal-status-info-bg);
+  border-color: var(--portal-status-info-border);
+  color: var(--portal-status-info-text);
 }
 
 html[data-theme="dark"] body.student-portal-page .homework-square.is-none,
 html[data-theme="dark"] body.parent-portal-page .homework-square.is-none,
 html[data-theme="dark"] body.parent-portal-page .attendance-square.is-warn {
-  background: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
-  border-color: var(--portal-dark-border);
-  color: var(--portal-dark-text-soft);
+  background: var(--portal-status-neutral-bg);
+  border-color: var(--portal-status-neutral-border);
+  color: var(--portal-status-neutral-text);
 }
 
 html[data-theme="dark"] body.student-portal-page .homework-square.is-clear,
 html[data-theme="dark"] body.parent-portal-page .homework-square.is-clear {
-  background: rgba(124, 214, 164, 0.12);
-  border-color: rgba(124, 214, 164, 0.28);
-  color: #dff7e9;
+  background: var(--portal-status-good-bg);
+  border-color: var(--portal-status-good-border);
+  color: var(--portal-status-good-text);
 }
 
 html[data-theme="dark"] body.student-portal-page .homework-square.is-arrears,
 html[data-theme="dark"] body.parent-portal-page .homework-square.is-arrears,
 html[data-theme="dark"] body.parent-portal-page .attendance-square.is-risk {
-  background: rgba(242, 138, 149, 0.12);
-  border-color: rgba(242, 138, 149, 0.34);
-  color: #ffd8dd;
+  background: var(--portal-status-bad-bg);
+  border-color: var(--portal-status-bad-border);
+  color: var(--portal-status-bad-text);
 }
 
 html[data-theme="dark"] body.student-portal-page :where(.homework-square-k, .homework-square-v),
@@ -2649,7 +2710,7 @@ html[data-theme="dark"] body.parent-portal-page :where(.homework-square-k, .home
 
 html[data-theme="dark"] body.student-portal-page .metric.good,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-green {
-  border-color: rgba(124, 214, 164, 0.62);
+  border-color: var(--portal-status-good-border);
   box-shadow: inset 0 0 0 1px rgba(124, 214, 164, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
 }
 
@@ -2668,16 +2729,16 @@ html[data-theme="dark"] body.parent-portal-page .metric :is(.k, .v) {
 
 html[data-theme="dark"] body.student-portal-page .metric.warn,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-blue {
-  border-color: rgba(106, 164, 255, 0.62);
+  border-color: var(--portal-status-info-border);
 }
 
 html[data-theme="dark"] body.parent-portal-page .metric.metric-purple {
-  border-color: rgba(162, 125, 241, 0.62);
+  border-color: var(--portal-status-peer-border);
 }
 
 html[data-theme="dark"] body.student-portal-page .metric.bad,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-red {
-  border-color: rgba(242, 138, 149, 0.62);
+  border-color: var(--portal-status-bad-border);
 }
 
 html[data-theme="dark"] body.student-portal-page #loginPanel,
@@ -2720,6 +2781,29 @@ html[data-theme="dark"] body.admin-portal-page :where(#authPanel input, #authPan
   color: var(--portal-dark-field-placeholder);
 }
 
+html[data-theme="dark"] .brand-logo-wrap {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border);
+}
+
+html[data-theme="dark"] .env-badge {
+  background: rgba(49, 54, 58, 0.96);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] .env-badge[data-env="development"] {
+  background: rgba(49, 54, 58, 0.96);
+  border-color: rgba(124, 214, 164, 0.34);
+  color: #cbeeda;
+}
+
+html[data-theme="dark"] .env-badge[data-env="production"] {
+  background: rgba(49, 54, 58, 0.96);
+  border-color: rgba(240, 176, 95, 0.34);
+  color: #ffe0b6;
+}
+
 html[data-theme="dark"] body.student-portal-page .homework-link,
 html[data-theme="dark"] body.parent-portal-page .homework-link {
   color: #b4c4ea;
@@ -2738,7 +2822,7 @@ html[data-theme="dark"] body.parent-portal-page .metric.metric-blue {
 }
 
 html[data-theme="dark"] body.parent-portal-page .metric.metric-purple {
-  box-shadow: inset 0 0 0 1px rgba(162, 125, 241, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(106, 164, 255, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
 }
 
 html[data-theme="dark"] body.student-portal-page .metric.bad,
@@ -2851,11 +2935,11 @@ html[data-theme="dark"] body.parent-portal-page #performanceReportGradesTable ta
 }
 
 html[data-theme="dark"] body.parent-portal-page .report-modal-ack-status {
-  color: #a7e8c0;
+  color: var(--portal-status-good-text);
 }
 
 html[data-theme="dark"] body.parent-portal-page .report-modal-ack-status.is-reviewed {
-  color: #ffd58a;
+  color: var(--portal-status-warn-text);
 }
 
 html[data-theme="dark"] body.parent-portal-page .report-archive-meta,
@@ -2915,7 +2999,7 @@ a {
   box-sizing: border-box;
   display: grid;
   gap: 12px;
-  margin: 24px auto;
+  margin: 0 auto;
   max-width: 1440px;
   padding: 16px;
   width: 100%;
@@ -3378,11 +3462,16 @@ html[data-theme="dark"] body.admin-portal-page .queue-modal-card {
 }
 
 html[data-theme="dark"] body.admin-portal-page .overview-group,
-html[data-theme="dark"] body.admin-portal-page .system-health-shell,
-html[data-theme="dark"] body.admin-portal-page .system-health-item,
-html[data-theme="dark"] body.admin-portal-page .stat-card {
+html[data-theme="dark"] body.admin-portal-page .system-health-shell {
   background: var(--portal-dark-surface-support);
   border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+
+html[data-theme="dark"] body.admin-portal-page .system-health-item,
+html[data-theme="dark"] body.admin-portal-page .stat-card {
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border);
   color: var(--portal-dark-text);
 }
 

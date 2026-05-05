@@ -8998,6 +8998,12 @@
       }
 
       function buildPermissionRoleCard(roleName, policy) {
+        const roleKey = normalizeText(roleName).toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+        const startSelectId = `perm-start-${roleKey}`;
+        const canReadId = `perm-can-read-${roleKey}`;
+        const canWriteId = `perm-can-write-${roleKey}`;
+        const canUsersId = `perm-can-users-${roleKey}`;
+        const canPermsId = `perm-can-perms-${roleKey}`;
         const card = document.createElement("div");
         card.className = "permission-role-card";
         card.dataset.permissionRole = roleName;
@@ -9011,24 +9017,24 @@
         options.className = "row";
         options.innerHTML = `
         <div class="col-3">
-          <label>
-          <select data-perm-start="${roleName}"></select>Start page</label>
+          <label for="${startSelectId}">Start page</label>
+          <select id="${startSelectId}" data-perm-start="${roleName}"></select>
         </div>
         <div class="col-3 permission-page-item">
-          <input type="checkbox" data-perm-can-read="${roleName}" ${policy.canRead ? "checked" : ""}>
-          <label>Can read data</label>
+          <input id="${canReadId}" type="checkbox" data-perm-can-read="${roleName}" ${policy.canRead ? "checked" : ""}>
+          <label for="${canReadId}">Can read data</label>
         </div>
         <div class="col-3 permission-page-item">
-          <label><input type="checkbox" data-perm-can-write="${roleName}" ${policy.canWrite ? "checked" : ""}>
-          Can write data</label>
+          <input id="${canWriteId}" type="checkbox" data-perm-can-write="${roleName}" ${policy.canWrite ? "checked" : ""}>
+          <label for="${canWriteId}">Can write data</label>
         </div>
         <div class="col-3 permission-page-item">
-          <input type="checkbox" data-perm-can-users="${roleName}" ${policy.canManageUsers ? "checked" : ""}>
-          <label>Manage users</label>
+          <input id="${canUsersId}" type="checkbox" data-perm-can-users="${roleName}" ${policy.canManageUsers ? "checked" : ""}>
+          <label for="${canUsersId}">Manage users</label>
         </div>
         <div class="col-3 permission-page-item">
-          <input type="checkbox" data-perm-can-perms="${roleName}" ${policy.canManagePermissions ? "checked" : ""}>
-          <label>Manage permissions</label>
+          <input id="${canPermsId}" type="checkbox" data-perm-can-perms="${roleName}" ${policy.canManagePermissions ? "checked" : ""}>
+          <label for="${canPermsId}">Manage permissions</label>
         </div>
       `;
         card.appendChild(options);

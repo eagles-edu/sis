@@ -16,35 +16,36 @@
       }
     })();
   </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
   <style>
     :root {
-      --bg: #f7fbff;
-      --bg-accent: linear-gradient(140deg, #e9f4ff 0%, #fdf7eb 100%);
-      --card: #ffffff;
-      --ink: #18314f;
-      --muted: #60728a;
-      --line: #d5e3f4;
+      --bg: var(--portal-page-bg);
+      --bg-accent: var(--portal-page-bg-wash);
+      --card: var(--portal-surface-card);
+      --ink: var(--portal-text);
+      --muted: var(--portal-text-soft);
+      --line: var(--portal-border);
       --primary: #0d66c2;
       --primary-strong: #08488b;
-      --ok: #198754;
-      --warn: #b25012;
-      --bad: #bf1e2e;
+      --ok: var(--portal-status-good-text);
+      --warn: var(--portal-status-warn-text);
+      --bad: var(--portal-status-bad-text);
       --shadow: 0 10px 28px rgba(24, 49, 79, 0.1);
       color-scheme: light;
     }
 
     html[data-theme="dark"] {
-      --bg: #1a1c1f;
-      --bg-accent: linear-gradient(140deg, #25292c 0%, #1a1c1f 100%);
-      --card: #31363a;
-      --ink: #f2f4f7;
-      --muted: #c9ced4;
-      --line: rgba(255, 255, 255, 0.22);
+      --bg: var(--portal-dark-page-bg);
+      --bg-accent: var(--portal-dark-page-bg-wash);
+      --card: var(--portal-dark-surface-card);
+      --ink: var(--portal-dark-text);
+      --muted: var(--portal-dark-text-soft);
+      --line: var(--portal-dark-border);
       --primary: #6aa4ff;
       --primary-strong: #2f75bc;
-      --ok: #7cd6a4;
-      --warn: #f0b05f;
-      --bad: #f28a95;
+      --ok: var(--portal-status-good-text);
+      --warn: var(--portal-status-warn-text);
+      --bad: var(--portal-status-bad-text);
       --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
       color-scheme: dark;
     }
@@ -153,29 +154,15 @@
 
     html[data-theme="dark"] input,
     html[data-theme="dark"] select {
-      background: #E2E2E2;
-      border-color: #aeb7c5;
-      color: #172033;
-    }
-
-    html[data-theme="dark"] button {
-      background: #31363a;
-      border-color: rgba(255, 255, 255, 0.22);
-      color: var(--ink);
-    }
-
-    html[data-theme="dark"] button:hover {
-      border-color: rgba(255, 255, 255, 0.34);
+      background: var(--portal-dark-field-bg);
+      border-color: var(--portal-dark-field-border);
+      color: var(--portal-dark-field-text);
     }
 
     .primary {
       background: linear-gradient(160deg, var(--primary), var(--primary-strong));
       color: #fff;
       border-color: transparent;
-    }
-
-    html[data-theme="dark"] .primary {
-      color: var(--ink);
     }
 
     .status {
@@ -200,11 +187,11 @@
       border-radius: 12px;
       padding: 8px;
       box-sizing: border-box;
-      background: #fbfdff;
+      background: var(--card);
     }
 
     html[data-theme="dark"] .chart-wrap {
-      background: #25292c;
+      background: var(--card);
     }
 
     table {
@@ -215,7 +202,7 @@
     th,
     td {
       text-align: left;
-      border-bottom: 1px solid #e3ebf6;
+      border-bottom: 1px solid var(--line);
       padding: 9px 8px;
       font-size: 0.92rem;
     }
@@ -247,12 +234,6 @@
       border: 1px solid #cde0fb;
       font-size: 0.78rem;
       color: #184372;
-    }
-
-    html[data-theme="dark"] .pill {
-      background: rgba(106, 164, 255, 0.14);
-      border-color: rgba(106, 164, 255, 0.28);
-      color: #dce9ff;
     }
 
     .mini {
@@ -296,7 +277,7 @@
           <input id="loginPassword" type="password" autocomplete="current-password">
         </div>
         <div class="field c4">
-          <label>&nbsp;</label>
+          <label for="loginBtn">&nbsp;</label>
           <button id="loginBtn" class="primary" type="button">Sign In</button>
         </div>
       </div>
@@ -314,12 +295,12 @@
             <input id="endDate" type="date">
           </div>
           <div class="field c3">
-            <label>&nbsp;</label>
-            <button id="refreshChartBtn" type="button">Refresh Chart</button>
+            <label>
+            <button id="refreshChartBtn" type="button">Refresh Chart</button>&nbsp;</label>
           </div>
           <div class="field c3">
-            <label>&nbsp;</label>
-            <button id="logoutBtn" type="button">Logout</button>
+            <label>
+            <button id="logoutBtn" type="button">Logout</button>&nbsp;</label>
           </div>
         </div>
         <div class="chart-wrap">
@@ -489,21 +470,21 @@
           .filter((_, i) => i === 0 || i === rows.length - 1 || i % Math.max(1, Math.floor(rows.length / 6)) === 0)
           .map((r, i) => {
             const idx = rows.indexOf(r);
-            return `<text x="${xAt(idx)}" y="${height - 12}" text-anchor="middle" font-size="11" fill="#5f7088">${isoDate(r.date)}</text>`;
+            return `<text x="${xAt(idx)}" y="${height - 12}" text-anchor="middle" font-size="11" fill="var(--portal-chart-axis-label)">${isoDate(r.date)}</text>`;
           })
           .join("");
         const yTicks = [0, 0.25, 0.5, 0.75, 1]
           .map((ratio) => {
             const v = Math.round(maxY * ratio);
             const y = yAt(v);
-            return `<line x1="${left}" y1="${y}" x2="${left + chartW}" y2="${y}" stroke="#e1ebf8"/><text x="${left - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#5f7088">${v}</text>`;
+            return `<line x1="${left}" y1="${y}" x2="${left + chartW}" y2="${y}" stroke="var(--portal-border)"/><text x="${left - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--portal-chart-axis-label)">${v}</text>`;
           })
           .join("");
         svg.innerHTML = `
-          <rect x="${left}" y="${top}" width="${chartW}" height="${chartH}" fill="none" stroke="#cfe0f3"/>
+          <rect x="${left}" y="${top}" width="${chartW}" height="${chartH}" fill="none" stroke="var(--portal-border)"/>
           ${yTicks}
-          <polyline fill="none" stroke="#0d66c2" stroke-width="3" points="${points}"/>
-          ${rows.map((r, i) => `<circle cx="${xAt(i)}" cy="${yAt(r.cumulativePoints)}" r="3" fill="#0d66c2"/>`).join("")}
+          <polyline fill="none" stroke="var(--tertiary-color)" stroke-width="3" points="${points}"/>
+          ${rows.map((r, i) => `<circle cx="${xAt(i)}" cy="${yAt(r.cumulativePoints)}" r="3" fill="var(--tertiary-color)"/>`).join("")}
           ${xLabels}
         `;
         document.getElementById("chartSummary").textContent =

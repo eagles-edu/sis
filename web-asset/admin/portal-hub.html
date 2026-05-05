@@ -46,26 +46,26 @@
       --hub-footer-bg: var(--hub-theme-footer-bg);
       --hub-footer-text: var(--hub-theme-footer-text);
       --hub-link: var(--hub-theme-link);
-      --hub-page-bg-end: var(--hub-theme-page-bg-end);
-      --hub-page-bg-glow: var(--hub-theme-page-bg-glow);
-      --hub-page-bg-mid: var(--hub-theme-page-bg-mid);
-      --hub-page-bg-start: var(--hub-theme-page-bg-start);
-      --hub-panel-bg: var(--secondary-color);
-      --hub-panel-bg-footer: var(--secondary-color);
-      --hub-panel-bg-hero: var(--secondary-color);
-      --hub-panel-bg-section: var(--secondary-color);
-      --hub-panel-bg-support: var(--secondary-color);
-      --hub-panel-border: var(--hub-theme-panel-border);
+      --hub-page-bg-end: var(--portal-page-bg);
+      --hub-page-bg-glow: var(--portal-page-bg-wash);
+      --hub-page-bg-mid: var(--portal-page-bg);
+      --hub-page-bg-start: var(--portal-page-bg);
+      --hub-panel-bg: var(--portal-surface-card);
+      --hub-panel-bg-footer: var(--portal-surface-support);
+      --hub-panel-bg-hero: var(--portal-surface-card);
+      --hub-panel-bg-section: var(--portal-surface-panel);
+      --hub-panel-bg-support: var(--portal-surface-support);
+      --hub-panel-border: var(--portal-border);
       --hub-panel-shadow: var(--hub-theme-panel-shadow);
       --hub-phi: 1.61803398875;
       --hub-radius-base: clamp(3.33px, 0.42cqi, 8px);
-      --hub-text: var(--hub-theme-text);
-      --hub-text-soft: var(--hub-theme-text-soft);
+      --hub-text: var(--portal-text);
+      --hub-text-soft: var(--portal-text-soft);
       --hub-title-size: clamp(1.2rem, 1rem + 0.72vw, 1.6rem);
       --hub-unit: clamp(11px, 0.82vw, 14px);
       --radius-base: var(--hub-radius-base);
       background-attachment: fixed;
-      background-color: var(--hub-page-bg-start);
+      background: var(--portal-page-bg);
       container-type: inline-size;
       min-height: 100dvh;
 
@@ -76,7 +76,7 @@
       background:
         radial-gradient(920px 420px at -15% -20%, var(--hub-page-bg-mid) 0%, transparent 62%),
         radial-gradient(980px 520px at 110% -25%, var(--hub-page-bg-glow) 0%, transparent 55%),
-        linear-gradient(180deg, var(--hub-page-bg-start) 0%, var(--hub-page-bg-end) 100%);
+        var(--portal-page-bg);
   }
 
     body.portal-hub-page .portal-hub-bg {
@@ -85,7 +85,7 @@
 
     body.portal-hub-page .shell {
       gap: var(--hub-space-2);
-      margin: var(--hub-space-3) auto;
+      margin: 0 auto;
   }
 
     body.portal-hub-page .hub-banner {
@@ -390,7 +390,7 @@ grid-template-areas:
     body.portal-hub-page .portal-card--admin,
     body.portal-hub-page .portal-card--parent,
     body.portal-hub-page .portal-card--student {
-      background: var(--secondary-color);
+      background: var(--hub-panel-bg);
       border: 1px solid var(--hub-panel-border);
       box-shadow: none;
   }
@@ -402,7 +402,7 @@ grid-template-areas:
       --tone: var(--hub-theme-card-admin-tone);
       --tone-border: var(--hub-theme-card-admin-tone-border);
       --tone-soft: var(--hub-theme-card-admin-tone-soft);
-      background: var(--secondary-color);
+      background: var(--hub-panel-bg);
       border-bottom-color: var(--hub-theme-card-admin-border);
       border-bottom-style: solid;
       border-bottom-width: 6px;
@@ -416,7 +416,7 @@ grid-template-areas:
       --tone: var(--hub-theme-card-parent-tone);
       --tone-border: var(--hub-theme-card-parent-tone-border);
       --tone-soft: var(--hub-theme-card-parent-tone-soft);
-      background: var(--secondary-color);
+      background: var(--hub-panel-bg);
       border-bottom-color: var(--hub-theme-card-parent-border);
       border-bottom-style: solid;
       border-bottom-width: 6px;
@@ -430,7 +430,7 @@ grid-template-areas:
       --tone: var(--hub-theme-card-student-tone);
       --tone-border: var(--hub-theme-card-student-tone-border);
       --tone-soft: var(--hub-theme-card-student-tone-soft);
-      background: var(--secondary-color);
+      background: var(--hub-panel-bg);
       border-bottom-color: var(--hub-theme-card-student-border);
       border-bottom-style: solid;
       border-bottom-width: 6px;
@@ -439,7 +439,7 @@ grid-template-areas:
 
     body.portal-hub-page .hub-prefooter {
       align-items: center;
-      background: var(--secondary-color);
+      background: var(--hub-panel-bg-support);
       border: 1px solid var(--hub-panel-border);
       display: grid;
       gap: var(--hub-space-2);
@@ -771,10 +771,10 @@ grid-template-areas:
         accent: "var(--hub-theme-accent)",
         accentSoft: "var(--hub-theme-accent-soft)",
         accentStrong: "var(--hub-theme-accent-strong)",
-        panelBg: "var(--secondary-color)",
-        panelBorder: "var(--hub-theme-panel-border)",
+        panelBg: "var(--portal-surface-card)",
+        panelBorder: "var(--portal-border)",
         panelShadow: "var(--hub-theme-panel-shadow)",
-        wash: "var(--hub-theme-wash)",
+        wash: "var(--portal-page-bg-wash)",
       };
 
       function resolveFallbackHref(target) {
