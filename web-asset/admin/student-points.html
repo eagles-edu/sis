@@ -337,11 +337,11 @@
           </div>
           <div class="field c3">
             <label>
-            <button id="refreshChartBtn" type="button">Refresh Chart</button>&nbsp;</label>
+            <button id="refreshChartBtn" type="button" class="btn-refresh">Refresh Chart</button>&nbsp;</label>
           </div>
           <div class="field c3">
             <label>
-            <button id="logoutBtn" type="button">Logout</button>&nbsp;</label>
+            <button id="logoutBtn" type="button" class="danger">Logout</button>&nbsp;</label>
           </div>
         </div>
         <div class="chart-wrap">
@@ -386,12 +386,12 @@
           <table>
             <thead>
               <tr>
-                <th scope="col"><button type="button" data-sort="studentNumber">#</button></th>
-                <th scope="col"><button type="button" data-sort="eaglesId">Eagles ID</button></th>
-                <th scope="col"><button type="button" data-sort="fullName">Name</button></th>
-                <th scope="col"><button type="button" data-sort="level">Level</button></th>
-                <th scope="col"><button type="button" data-sort="totalPoints">Points</button></th>
-                <th scope="col"><button type="button" data-sort="lastActivityAt">Last Activity</button></th>
+                <th scope="col"><button type="button" class="alt" data-sort="studentNumber">#</button></th>
+                <th scope="col"><button type="button" class="alt" data-sort="eaglesId">Eagles ID</button></th>
+                <th scope="col"><button type="button" class="alt" data-sort="fullName">Name</button></th>
+                <th scope="col"><button type="button" class="alt" data-sort="level">Level</button></th>
+                <th scope="col"><button type="button" class="alt" data-sort="totalPoints">Points</button></th>
+                <th scope="col"><button type="button" class="alt" data-sort="lastActivityAt">Last Activity</button></th>
                 <th scope="col">Action</th>
               </tr>
             </thead>
@@ -552,7 +552,7 @@
             <td>${Number(row.totalPoints || 0)}</td>
             <td>${t(row.lastActivityAt).slice(0, 10) || "-"}</td>
             <td>
-              <button type="button" data-open-ledger="${t(row.studentRefId)}">Ledger</button>
+              <button type="button" class="alt" data-open-ledger="${t(row.studentRefId)}">Ledger</button>
               <button type="button" class="primary" data-edit-total="${t(row.studentRefId)}">Set Total</button>
             </td>
           `;

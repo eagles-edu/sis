@@ -911,7 +911,7 @@ test(
     ensureArtifactsDir()
     const credentials = resolveReviewCredentials()
     const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
-    const server = await startExerciseMailer({ transporter: makeMockTransport(), port: 8788 })
+    const server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
     await new Promise((resolve) => server.once("listening", resolve))
     const address = server.address()
     const port = typeof address === "object" && address ? address.port : 0

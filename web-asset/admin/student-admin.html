@@ -151,7 +151,7 @@
             <button id="loginBtn" type="submit" class="primary">Login</button>
           </div>
           <div class="col-2">
-            <button id="loginClearBtn" type="button">Clear</button>
+            <button id="loginClearBtn" type="button" class="danger">Clear</button>
           </div>
         </div>
       </form>
@@ -338,13 +338,13 @@
                 </button>
                 <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
                   <span class="small global-text-label">Global Text</span>
-                  <button id="globalTextZoomDownBtn" type="button" data-text-zoom-action="decrease" aria-label="Decrease global text size">
+                  <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
                     A-
                   </button>
-                  <button id="globalTextZoomUpBtn" type="button" data-text-zoom-action="increase" aria-label="Increase global text size">
+                  <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">
                     A+
                   </button>
-                  <button id="globalTextZoomResetBtn" type="button" data-text-zoom-action="reset" aria-label="Reset global text size">
+                  <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">
                     Reset
                   </button>
                   <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
@@ -376,13 +376,13 @@
                 <input id="familyPhone" type="tel" placeholder="parent emergency phone">
               </div>
               <div class="col-2">
-                <button id="searchBtn" type="button">Search</button>
+                <button id="searchBtn" type="button" class="primary">Search</button>
               </div>
               <div class="col-2">
-                <button id="familyBtn" type="button">Find Family</button>
+                <button id="familyBtn" type="button" class="primary">Find Family</button>
               </div>
               <div class="col-2">
-                <button id="clearFiltersBtn" type="button">Clear</button>
+                <button id="clearFiltersBtn" type="button" class="danger">Clear</button>
               </div>
               <div class="col-2">
                 <button id="refreshBtn" type="button" class="btn-refresh">
@@ -464,12 +464,12 @@
                   <input id="importFile" type="file" accept=".csv,.tsv,.xlsx,.xls,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
                 </div>
                 <div class="col-3">
-                  <button id="importTemplateBtn" type="button">
+                  <button id="importTemplateBtn" type="button" class="primary">
                     Download Template
                   </button>
                 </div>
                 <div class="col-3">
-                  <button id="importBtn" type="button">Import File</button>
+                  <button id="importBtn" type="button" class="primary">Import File</button>
                 </div>
               </div>
               <p class="small">
@@ -670,10 +670,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="levelReminderSendAllBtn" type="button" class="btn-refresh">
                         Send to All Listed
                       </button>
-                      <button id="levelReminderClearBtn" type="button">
+                      <button id="levelReminderClearBtn" type="button" class="danger">
                         Clear Form
                       </button>
-                      <button id="levelDetailCloseBtn" type="button">
+                      <button id="levelDetailCloseBtn" type="button" class="alt">
                         Close Detail
                       </button>
                     </div>
@@ -747,7 +747,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <button id="overviewIncomingExerciseExpandBtn" type="button" class="btn-refresh">
                           Show All Statuses
                         </button>
-                        <button id="overviewIncomingExerciseRefreshBtn" type="button">
+                        <button id="overviewIncomingExerciseRefreshBtn" type="button" class="btn-refresh">
                           Reload Queue
                         </button>
                       </div>
@@ -784,13 +784,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </table>
                       </div>
                       <div class="actions actions-3">
-                        <button id="overviewNewsQueueOpenBtn" type="button">
+                        <button id="overviewNewsQueueOpenBtn" type="button" class="primary">
                           Open News Reports Page
                         </button>
                         <button id="overviewNewsQueueRefreshBtn" type="button" class="btn-refresh">
                           Reload Queue
                         </button>
-                        <button id="overviewNewsQueueQueueHubBtn" type="button">
+                        <button id="overviewNewsQueueQueueHubBtn" type="button" class="alt">
                           Open Queue Hub
                         </button>
                       </div>
@@ -809,10 +809,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   <button id="queueHubRefreshBtn" type="button" class="btn-refresh">
                     Reload Queue Hub
                   </button>
-                  <button id="queueHubSaveOrderBtn" type="button">
+                  <button id="queueHubSaveOrderBtn" type="button" class="primary">
                     Save Panel Order
                   </button>
-                  <button id="queueHubResetOrderBtn" type="button">
+                  <button id="queueHubResetOrderBtn" type="button" class="danger">
                     Reset Panel Order
                   </button>
                 </div>
@@ -838,9 +838,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <button id="profileEditInfoBtn" type="button" class="btn-edit">
                           Edit Info
                         </button>
-                        <button id="profileCreateInfoBtn" type="button">
-                          New Form
-                        </button>
+                          <button id="profileCreateInfoBtn" type="button" class="primary">
+                            New Form
+                          </button>
                         <button id="profileRefreshInfoBtn" type="button" class="btn-refresh">
                           Refresh Info
                         </button>
@@ -858,7 +858,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <div class="profile-editor-toolbar">
                         <h3>New / Edit Form</h3>
                         <div class="actions actions-2">
-                          <button id="profileBackToInfoBtn" type="button">
+                          <button id="profileBackToInfoBtn" type="button" class="alt">
                             Back to Info
                           </button>
                         </div>
@@ -868,8 +868,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <div id="profileTabPanels"></div>
                       </div>
                       <div class="actions actions-4">
-                        <button id="newBtn" type="button">Create New</button>
-                        <button id="studentClearBtn" type="button">Clear Form</button>
+                        <button id="newBtn" type="button" class="primary">Create New</button>
+                        <button id="studentClearBtn" type="button" class="danger">Clear Form</button>
                         <button id="saveBtn" type="submit" class="primary">
                           Save / Update
                         </button>
@@ -924,7 +924,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="attendanceLandingReloadBtn" type="button" class="btn-refresh">
                         Reload Level Data
                       </button>
-                      <button id="attendanceClearBtn" type="button">Clear</button>
+                      <button id="attendanceClearBtn" type="button" class="danger">Clear</button>
                     </div>
                     <p class="small" id="attendanceLandingSummary">
                       Select a class level. Today's default status is Absent.
@@ -1036,7 +1036,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <label for="attendanceArchiveToggleBtn">Archive</label>
-                    <button id="attendanceArchiveToggleBtn" type="button">
+                    <button id="attendanceArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
@@ -1048,7 +1048,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <label for="attendancePrintPdfBtn">Print</label>
-                    <button id="attendancePrintPdfBtn" type="button">
+                    <button id="attendancePrintPdfBtn" type="button" class="primary">
                       Print PDF
                     </button>
                   </div>
@@ -1191,7 +1191,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="assignmentSendBtn" type="button" class="primary">
                         Send Assignment Email
                       </button>
-                      <button id="assignmentResetBtn" type="button">
+                      <button id="assignmentResetBtn" type="button" class="danger">
                         Clear Form
                       </button>
                       <button id="assignmentReloadTemplatesBtn" type="button" class="btn-refresh">
@@ -1255,7 +1255,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <label for="assignmentArchiveToggleBtn">Archive</label>
-                    <button id="assignmentArchiveToggleBtn" type="button">
+                    <button id="assignmentArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
@@ -1267,7 +1267,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <label for="assignmentPrintPdfBtn">Print</label>
-                    <button id="assignmentPrintPdfBtn" type="button">
+                    <button id="assignmentPrintPdfBtn" type="button" class="primary">
                       Print PDF
                     </button>
                   </div>
@@ -1443,9 +1443,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           </div>
                           <div class="col-2">
                             <label for="pt_actionClearBtn">&nbsp;</label>
-                            <button id="pt_actionClearBtn" type="button">
-                              Clear Inputs
-                            </button>
+                      <button id="pt_actionClearBtn" type="button" class="danger">
+                        Clear Inputs
+                      </button>
                           </div>
                         </div>
                         <p class="small" id="pt_actionHelperStatus">
@@ -1826,7 +1826,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="pt_queueSendBtn" type="button" class="primary">
                         Queue Weekend Batch Email
                       </button>
-                      <button id="pt_clearBtn" type="button">Clear Form</button>
+                      <button id="pt_clearBtn" type="button" class="danger">Clear Form</button>
                     </div>
                     <input id="pt_reportId" type="hidden">
                     <div id="pt_saveNotice" class="parent-tracking-save-notice hidden" role="status" aria-live="polite"></div>
@@ -1896,7 +1896,7 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="performanceArchiveToggleBtn">Archive</label>
-                    <button id="performanceArchiveToggleBtn" type="button">
+                    <button id="performanceArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
@@ -1908,7 +1908,7 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="performancePrintPdfBtn">Print</label>
-                    <button id="performancePrintPdfBtn" type="button">
+                    <button id="performancePrintPdfBtn" type="button" class="primary">
                       Print PDF
                     </button>
                   </div>
@@ -2038,7 +2038,7 @@ Select an assignment link to inspect details.</pre>
                       <button id="performanceQueueExpandBtn" type="button" class="btn-refresh">
                         Show All
                       </button>
-                      <button id="performanceQueueRefreshBtn" type="button">
+                      <button id="performanceQueueRefreshBtn" type="button" class="btn-refresh">
                         Reload Queue
                       </button>
                       <button id="performanceQueueSendAllBtn" type="button" class="primary">
@@ -2102,7 +2102,7 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="newsReviewClearFiltersBtn">Action</label>
-                    <button id="newsReviewClearFiltersBtn" type="button">
+                    <button id="newsReviewClearFiltersBtn" type="button" class="danger">
                       Clear Filters
                     </button>
                   </div>
@@ -2215,7 +2215,7 @@ Select an assignment link to inspect details.</pre>
                     </button>
                   </div>
                   <div class="col-2">
-                    <label for="gradeClearBtn">&nbsp;</label><button id="gradeClearBtn" type="button">Clear</button>
+                    <label for="gradeClearBtn">&nbsp;</label><button id="gradeClearBtn" type="button" class="danger">Clear</button>
                   </div>
                 </div>
                 <p class="small page-note">
@@ -2348,7 +2348,7 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="gradeArchiveToggleBtn">Archive</label>
-                    <button id="gradeArchiveToggleBtn" type="button">
+                    <button id="gradeArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
@@ -2360,7 +2360,7 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="gradePrintPdfBtn">Print</label>
-                    <button id="gradePrintPdfBtn" type="button">Print PDF</button>
+                    <button id="gradePrintPdfBtn" type="button" class="primary">Print PDF</button>
                   </div>
                 </div>
                 <div class="table-column-controls" id="gradeColumnControls">
@@ -2471,10 +2471,10 @@ Select an assignment link to inspect details.</pre>
                   <button id="reportGenerateBtn" type="button" class="btn-refresh">
                     Generate from Grade Records
                   </button>
-                  <button id="reportCardBtn" type="button">
+                  <button id="reportCardBtn" type="button" class="primary">
                     Download PDF Report Card
                   </button>
-                  <button id="reportClearBtn" type="button">Clear Report Form</button>
+                  <button id="reportClearBtn" type="button" class="danger">Clear Report Form</button>
                 </div>
                 <h3>Performance data [view, sort, manage, edit data]</h3>
                 <div class="table-toolbar">
@@ -2525,7 +2525,7 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="reportArchiveToggleBtn">Archive</label>
-                    <button id="reportArchiveToggleBtn" type="button">
+                    <button id="reportArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
@@ -2537,7 +2537,7 @@ Select an assignment link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="reportPrintPdfBtn">Print</label>
-                    <button id="reportPrintPdfBtn" type="button">Print PDF</button>
+                    <button id="reportPrintPdfBtn" type="button" class="primary">Print PDF</button>
                   </div>
                 </div>
                 <div class="table-column-controls" id="reportColumnControls">
@@ -2610,7 +2610,7 @@ Select an assignment link to inspect details.</pre>
                   <strong>Find Family</strong> to list matching students.
                 </p>
                 <div class="actions actions-3">
-                  <button id="familyClearResultBtn" type="button">
+                  <button id="familyClearResultBtn" type="button" class="danger">
                     Clear Result
                   </button>
                 </div>
@@ -2648,7 +2648,7 @@ Select an assignment link to inspect details.</pre>
                       </button>
                     </div>
                     <div class="col-2">
-                      <button id="userClearBtn" type="button">Clear Form</button>
+                      <button id="userClearBtn" type="button" class="danger">Clear Form</button>
                     </div>
                     <div class="col-2">
                       <button id="userRefreshBtn" type="button" class="btn-refresh">
@@ -2691,7 +2691,7 @@ Select an assignment link to inspect details.</pre>
                   <button id="permissionsSaveBtn" type="button" class="primary">
                     Save Permissions
                   </button>
-                  <button id="permissionsResetBtn" type="button">Reset Form</button>
+                  <button id="permissionsResetBtn" type="button" class="danger">Reset Form</button>
                 </div>
               </div>
 
@@ -2712,7 +2712,7 @@ Select an assignment link to inspect details.</pre>
                     <input id="schoolSetupLogoFile" type="file" accept=".svg,.jpg,.jpeg,.png,.webp,image/svg+xml,image/jpeg,image/png,image/webp">
                     <input id="schoolSetupLogoDataUrl" type="hidden">
                     <div class="actions actions-3">
-                      <button id="schoolSetupLogoClearBtn" type="button">
+                      <button id="schoolSetupLogoClearBtn" type="button" class="danger">
                         Clear Logo
                       </button>
                       <span></span>
@@ -2893,7 +2893,7 @@ Select an assignment link to inspect details.</pre>
                   <button id="schoolSetupSaveBtn" type="button" class="primary">
                     Save School Setup
                   </button>
-                  <button id="schoolSetupResetBtn" type="button">
+                  <button id="schoolSetupResetBtn" type="button" class="btn-refresh">
                     Reload Saved Setup
                   </button>
                   <span></span>
@@ -2972,7 +2972,7 @@ Select an assignment link to inspect details.</pre>
                       </button>
                     </div>
                     <div class="col-2">
-                      <label for="profileFieldLayoutRefreshBtn">&nbsp;</label><button id="profileFieldLayoutRefreshBtn" type="button">
+                      <label for="profileFieldLayoutRefreshBtn">&nbsp;</label><button id="profileFieldLayoutRefreshBtn" type="button" class="btn-refresh">
                         Reload Editor
                       </button>
                     </div>
@@ -3036,7 +3036,7 @@ Select an assignment link to inspect details.</pre>
                     <button id="attendanceLevelApplyBtn" type="button" class="btn-edit">
                       Apply Global Style
                     </button>
-                    <button id="attendanceLevelClearImageBtn" type="button">
+                    <button id="attendanceLevelClearImageBtn" type="button" class="danger">
                       Remove Image
                     </button>
                     <button id="attendanceLevelResetBtn" type="button" class="btn-delete">
@@ -3051,7 +3051,7 @@ Select an assignment link to inspect details.</pre>
                   <button id="settingsSaveBtn" type="button" class="primary">
                     Save Settings
                   </button>
-                  <button id="settingsResetBtn" type="button">Reset Settings</button>
+                  <button id="settingsResetBtn" type="button" class="btn-refresh">Reset Settings</button>
                   <span></span>
                 </div>
                 <p class="small" id="settingsStatus"></p>
@@ -3070,9 +3070,9 @@ Select an assignment link to inspect details.</pre>
     <div class="queue-modal-card">
       <div class="queue-modal-header">
         <div class="queue-modal-nav">
-          <button id="parentQueuePrevBtn" type="button">&larr;</button>
+        <button id="parentQueuePrevBtn" type="button" class="alt">&larr;</button>
           <span id="parentQueueModalIndex">0 / 0</span>
-          <button id="parentQueueNextBtn" type="button">&rarr;</button>
+          <button id="parentQueueNextBtn" type="button" class="alt">&rarr;</button>
         </div>
         <button id="parentQueueCloseBtn" type="button" class="btn-delete">
           Close
@@ -3131,7 +3131,7 @@ Select an assignment link to inspect details.</pre>
         </div>
       </div>
       <div class="queue-modal-actions">
-        <button id="parentQueueHoldBtn" type="button">Hold</button>
+        <button id="parentQueueHoldBtn" type="button" class="alt">Hold</button>
         <button id="parentQueueEditBtn" type="button" class="btn-edit">Edit</button>
         <button id="parentQueueRequeueBtn" type="button" class="btn-refresh">
           Requeue
@@ -3151,11 +3151,11 @@ Select an assignment link to inspect details.</pre>
       <div class="queue-modal-header">
         <div class="queue-modal-nav">
           <strong>Student News Report Viewer</strong>
-          <button id="newsReviewViewerPrevBtn" type="button" aria-label="Previous report">
+          <button id="newsReviewViewerPrevBtn" type="button" class="alt" aria-label="Previous report">
             &larr;
           </button>
           <span id="newsReviewViewerIndex">0 / 0</span>
-          <button id="newsReviewViewerNextBtn" type="button" aria-label="Next report">
+          <button id="newsReviewViewerNextBtn" type="button" class="alt" aria-label="Next report">
             &rarr;
           </button>
         </div>
@@ -3167,7 +3167,7 @@ Select an assignment link to inspect details.</pre>
         <button id="newsReviewViewerApproveBtn" type="button" class="btn-edit">
           Approve
         </button>
-        <button id="newsReviewViewerRevisionBtn" type="button">
+        <button id="newsReviewViewerRevisionBtn" type="button" class="danger">
           Request Revision
         </button>
       </div>

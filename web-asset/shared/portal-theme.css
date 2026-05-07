@@ -1506,15 +1506,16 @@ body.parent-portal-page .actions {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px 12px;
+  margin-top: 10px;
 }
 body.student-portal-page .actions-2>*,
 body.parent-portal-page .actions-2>* {
-  flex: 1 1 45%;
+  flex: 1 1 calc(50% - 6px);
 }
 body.student-portal-page .actions-3>*,
 body.parent-portal-page .actions-3>* {
-  flex: 1 1 30%;
+  flex: 1 1 calc(33.333% - 8px);
 }
 body.student-portal-page .toolbar,
 body.parent-portal-page .toolbar {
@@ -1560,8 +1561,8 @@ html[data-theme="light"] body.student-portal-page .metric,
 html[data-theme="light"] body.parent-portal-page .metric {
   align-content: center;
   background: linear-gradient(180deg, var(--metric-bg-start, var(--portal-status-neutral-bg)) 0%, var(--metric-bg-end, #fbfdff) 100%);
-  border: 1px solid var(--metric-border, var(--portal-status-neutral-border));
-  border-bottom-width: 4px;
+  border: 2px solid var(--metric-border, var(--portal-status-neutral-border));
+  border-bottom-width: 5px;
   border-radius: 10px;
   box-sizing: border-box;
   display: grid;
@@ -1573,6 +1574,9 @@ html[data-theme="light"] body.parent-portal-page .metric {
   place-items: center;
   position: relative;
   text-align: center;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 8px 18px rgba(19, 35, 61, 0.08);
 }
 html[data-theme="light"] body.student-portal-page .metric::before,
 html[data-theme="light"] body.parent-portal-page .metric::before {
@@ -1608,11 +1612,11 @@ html[data-theme="light"] body.student-portal-page .metric.green,
 html[data-theme="light"] body.parent-portal-page .metric.good,
 html[data-theme="light"] body.parent-portal-page .metric.green,
 html[data-theme="light"] body.parent-portal-page .metric.metric-green {
-  --metric-accent: var(--portal-status-good-border);
+  --metric-accent: #349f61;
   --metric-accent-soft: rgba(144, 211, 173, 0.18);
   --metric-bg-start: var(--portal-status-good-bg);
   --metric-bg-end: #fbfffc;
-  --metric-border: var(--portal-status-good-border);
+  --metric-border: #349f61;
   --metric-text: var(--portal-status-good-text);
 }
 html[data-theme="light"] body.student-portal-page .metric.warn,
@@ -1620,11 +1624,11 @@ html[data-theme="light"] body.student-portal-page .metric.blue,
 html[data-theme="light"] body.parent-portal-page .metric.warn,
 html[data-theme="light"] body.parent-portal-page .metric.blue,
 html[data-theme="light"] body.parent-portal-page .metric.metric-blue {
-  --metric-accent: var(--portal-status-info-border);
+  --metric-accent: #2d66cb;
   --metric-accent-soft: rgba(106, 164, 255, 0.16);
   --metric-bg-start: var(--portal-status-info-bg);
   --metric-bg-end: #f8fbff;
-  --metric-border: var(--portal-status-info-border);
+  --metric-border: #2d66cb;
   --metric-text: var(--portal-status-info-text);
 }
 html[data-theme="light"] body.student-portal-page .metric.bad,
@@ -1632,31 +1636,31 @@ html[data-theme="light"] body.student-portal-page .metric.red,
 html[data-theme="light"] body.parent-portal-page .metric.bad,
 html[data-theme="light"] body.parent-portal-page .metric.red,
 html[data-theme="light"] body.parent-portal-page .metric.metric-red {
-  --metric-accent: var(--portal-status-bad-border);
+  --metric-accent: #cc4452;
   --metric-accent-soft: rgba(242, 138, 149, 0.16);
   --metric-bg-start: var(--portal-status-bad-bg);
   --metric-bg-end: #fff7f7;
-  --metric-border: var(--portal-status-bad-border);
+  --metric-border: #cc4452;
   --metric-text: var(--portal-status-bad-text);
 }
 html[data-theme="light"] body.student-portal-page .metric.purple,
 html[data-theme="light"] body.parent-portal-page .metric.purple,
 html[data-theme="light"] body.parent-portal-page .metric.metric-purple {
-  --metric-accent: var(--portal-status-peer-border);
+  --metric-accent: #7d62d5;
   --metric-accent-soft: rgba(122, 126, 255, 0.16);
   --metric-bg-start: var(--portal-status-peer-bg);
   --metric-bg-end: #f8f7ff;
-  --metric-border: var(--portal-status-peer-border);
+  --metric-border: #7d62d5;
   --metric-text: var(--portal-status-peer-text);
 }
 html[data-theme="light"] body.student-portal-page .metric.amber,
 html[data-theme="light"] body.parent-portal-page .metric.amber,
 html[data-theme="light"] body.parent-portal-page .metric.metric-amber {
-  --metric-accent: var(--portal-status-amber-border);
+  --metric-accent: #d68a00;
   --metric-accent-soft: rgba(240, 176, 95, 0.18);
   --metric-bg-start: var(--portal-status-amber-bg);
   --metric-bg-end: #fff8e6;
-  --metric-border: var(--portal-status-amber-border);
+  --metric-border: #d68a00;
   --metric-text: var(--portal-status-amber-text);
 }
 body.parent-portal-page .homework-card {
@@ -2083,6 +2087,14 @@ body.parent-portal-page .detail-empty {
   font-size: 13px;
   line-height: 1.45;
   padding: 12px;
+}
+html[data-theme="dark"] body.parent-portal-page .calendar-empty,
+html[data-theme="dark"] body.student-portal-page .calendar-empty,
+html[data-theme="dark"] body.parent-portal-page .detail-empty,
+html[data-theme="dark"] body.student-portal-page .detail-empty {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text-soft);
 }
 @media (max-width: 399px) {
   body.student-portal-page .metrics,
@@ -3198,8 +3210,8 @@ html[data-theme="dark"] body.student-portal-page .metric,
 html[data-theme="dark"] body.parent-portal-page .metric {
   align-content: center;
   background: linear-gradient(180deg, var(--metric-bg-start, var(--portal-dark-surface-card)) 0%, var(--metric-bg-end, var(--portal-dark-surface-card)) 100%);
-  border: 1px solid var(--metric-border, var(--portal-dark-border-strong));
-  border-bottom-width: 4px;
+  border: 2px solid var(--metric-border, var(--portal-dark-border-strong));
+  border-bottom-width: 5px;
   border-radius: 10px;
   box-sizing: border-box;
   display: grid;
@@ -3246,49 +3258,49 @@ html[data-theme="dark"] body.student-portal-page .metric.green,
 html[data-theme="dark"] body.parent-portal-page .metric.good,
 html[data-theme="dark"] body.parent-portal-page .metric.green,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-green {
-  --metric-accent: var(--portal-status-good-border);
+  --metric-accent: rgba(124, 214, 164, 0.92);
   --metric-accent-soft: rgba(124, 214, 164, 0.18);
   --metric-bg-start: rgba(43, 74, 56, 0.98);
   --metric-bg-end: rgba(49, 54, 58, 0.98);
-  --metric-border: var(--portal-status-good-border);
+  --metric-border: rgba(124, 214, 164, 0.72);
   --metric-text: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .metric.warn,
 html[data-theme="dark"] body.student-portal-page .metric.blue,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-blue {
-  --metric-accent: var(--portal-status-info-border);
+  --metric-accent: rgba(106, 164, 255, 0.92);
   --metric-accent-soft: rgba(106, 164, 255, 0.18);
   --metric-bg-start: rgba(35, 58, 90, 0.98);
   --metric-bg-end: rgba(49, 54, 58, 0.98);
-  --metric-border: var(--portal-status-info-border);
+  --metric-border: rgba(106, 164, 255, 0.72);
   --metric-text: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .metric.purple,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-purple {
-  --metric-accent: var(--portal-status-peer-border);
+  --metric-accent: rgba(122, 126, 255, 0.92);
   --metric-accent-soft: rgba(122, 126, 255, 0.18);
   --metric-bg-start: rgba(60, 49, 92, 0.98);
   --metric-bg-end: rgba(49, 54, 58, 0.98);
-  --metric-border: var(--portal-status-peer-border);
+  --metric-border: rgba(122, 126, 255, 0.72);
   --metric-text: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .metric.bad,
 html[data-theme="dark"] body.student-portal-page .metric.red,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-red {
-  --metric-accent: var(--portal-status-bad-border);
+  --metric-accent: rgba(242, 138, 149, 0.92);
   --metric-accent-soft: rgba(242, 138, 149, 0.18);
   --metric-bg-start: rgba(82, 45, 49, 0.98);
   --metric-bg-end: rgba(49, 54, 58, 0.98);
-  --metric-border: var(--portal-status-bad-border);
+  --metric-border: rgba(242, 138, 149, 0.72);
   --metric-text: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .metric.amber,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-amber {
-  --metric-accent: var(--portal-status-amber-border);
+  --metric-accent: rgba(240, 176, 95, 0.98);
   --metric-accent-soft: rgba(240, 176, 95, 0.2);
   --metric-bg-start: rgba(84, 59, 28, 0.98);
   --metric-bg-end: rgba(49, 54, 58, 0.98);
-  --metric-border: var(--portal-status-amber-border);
+  --metric-border: rgba(240, 176, 95, 0.82);
   --metric-text: var(--portal-dark-text);
   box-shadow: inset 0 0 0 1px rgba(240, 176, 95, 0.16), 0 10px 20px rgba(31, 45, 74, 0.05);
 }
@@ -4233,7 +4245,7 @@ body.modal-open {
   border-color: var(--border-dg);
   display: grid;
   gap: 8px;
-  padding: 9px 64px 9px 12px;
+  padding: 6px 64px 6px 12px;
 }
 body.portal-hub-page .hero,
 body.portal-hub-page .section-card {
@@ -4949,7 +4961,7 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   }
   .hero,
   .topbar {
-    padding: 8px 60px 8px 10px;
+    padding: 5px 60px 5px 10px;
   }
   .brand-logo-wrap--sm {
     height: 34px;
@@ -4994,7 +5006,7 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     Footer
    ================================ */
 .footer {
-  background: var(--bg-secondary);
+  background: var(--footer-background);
   border-top: 1px solid var(--paper-border);
   margin-top: auto;
   padding: 20px;

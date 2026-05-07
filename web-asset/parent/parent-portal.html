@@ -87,6 +87,10 @@
     table.news-queue-table td:nth-child(3) .chip {}
     .queue-table-wrap table.news-queue-table .queue-row-btn,
     table.news-queue-table .queue-row-btn {}
+    .queue-table-wrap table.news-queue-table th,
+    .queue-table-wrap table.news-queue-table td {
+      padding: 4px 6px;
+    }
     table.news-queue-table td:nth-child(3) .chip {
       min-inline-size: 0;
     }
@@ -488,7 +492,6 @@
       display: grid !important;
     }
 
-    body.parent-portal-page #openNewsQueueDetailBtn,
     body.parent-portal-page #backToDashboardBtn,
     body.parent-portal-page #saveDraftBtn,
     body.parent-portal-page #parentTextZoomDownBtn,
@@ -500,8 +503,6 @@
       color: #214072 !important;
     }
 
-    body.parent-portal-page #openNewsQueueDetailBtn:hover:not(:disabled),
-    body.parent-portal-page #openNewsQueueDetailBtn:focus-visible,
     body.parent-portal-page #backToDashboardBtn:hover:not(:disabled),
     body.parent-portal-page #backToDashboardBtn:focus-visible,
     body.parent-portal-page #saveDraftBtn:hover:not(:disabled),
@@ -716,7 +717,7 @@
                   </table>
                 </div>
                 <div class="actions actions-2">
-                  <button id="openNewsQueueDetailBtn" type="button">
+                  <button id="openNewsQueueDetailBtn" type="button" class="primary">
                     Xem chi tiết
                   </button>
                   <button id="refreshNewsQueueBtn" type="button" class="btn-refresh">
