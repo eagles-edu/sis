@@ -26,6 +26,11 @@ const ADMIN_ASSET_TASKS = [
     source: path.join(REPO_ROOT, "web-asset/admin/student-admin.js"),
     output: path.join(REPO_ROOT, "web-asset/admin/student-admin.min.js"),
   },
+  {
+    kind: "css",
+    source: path.join(REPO_ROOT, "web-asset/shared/portal-theme.css"),
+    output: path.join(REPO_ROOT, "web-asset/shared/portal-theme.min.css"),
+  },
 ]
 
 const ADMIN_ASSET_SHARED_DEPENDENCIES = [

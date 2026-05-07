@@ -335,6 +335,10 @@ run_sync() {
         log "${label} reported no changes; continuing"
         return 0
       fi
+      if [[ "$status" == "1" ]]; then
+        log "${label} reported warning-only changes; continuing"
+        return 0
+      fi
 
       return "$status"
     fi
@@ -406,6 +410,17 @@ sync_test_portal_html_assets() {
   log "syncing student portal HTML into ${TEST_ROOT}/web-asset/student/student-portal.html"
   install -m 644 "${REPO_ROOT}/web-asset/student/student-portal.html" \
     "${TEST_ROOT}/web-asset/student/student-portal.html"
+}
+
+sync_test_shared_assets() {
+  if [[ ! -d "${REPO_ROOT}/web-asset/shared" ]]; then
+    log "skip shared asset sync (source shared tree missing)"
+    return 0
+  fi
+
+  mkdir -p "${TEST_ROOT}/web-asset/shared"
+  log "syncing shared portal assets into ${TEST_ROOT}/web-asset/shared"
+  rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${TEST_ROOT}/web-asset/shared/"
 }
 
 cleanup_test_backup_artifacts() {
@@ -591,6 +606,7 @@ verify_test_public_assets() {
   local target_public_root="/home/test.eagles.edu.vn/public_html"
   local required_assets=(
     "${target_public_root}/web-asset/shared/portal-theme.css"
+    "${target_public_root}/web-asset/shared/portal-theme.min.css"
     "${target_public_root}/web-asset/images/logo.svg"
     "${target_public_root}/web-asset/admin/portal-backgrounds/hub-mesh-05.svg"
   )
@@ -722,10 +738,13 @@ main() {
   log "file mirror only; git commit matching is not part of the test sync contract"
   build_admin_assets
   run_sync
+  log "syncing test sis root into ${TEST_ROOT}"
   sync_test_src_tree
   sync_test_portal_html_assets
+  sync_test_shared_assets
   cleanup_test_backup_artifacts
   if [[ "$MODE" != "boot-prep" ]]; then
+    log "syncing test public mirror into ${TEST_PUBLIC_ROOT}"
     sync_test_public_html_index
     sync_test_public_assets
   else

@@ -166,8 +166,10 @@ function summarizeAttendance(attendanceRecords) {
   attendanceRecords.forEach((entry) => {
     const status = normalizeLower(entry.status)
     if (status === "present") summary.present += 1
-    else if (status === "absent") summary.absent += 1
-    else if (status === "late") summary.late += 1
+    else if (status === "late") {
+      summary.present += 1
+      summary.late += 1
+    } else if (status === "absent") summary.absent += 1
     else if (status === "excused") summary.excused += 1
   })
 

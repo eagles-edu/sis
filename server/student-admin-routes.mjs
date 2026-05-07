@@ -3112,7 +3112,7 @@ function markParentPortalDbFallback(error) {
 }
 
 async function getParentPortalPrismaClient() {
-  if (PARENT_PORTAL_DB_DISABLED) return null
+  if (PARENT_PORTAL_DB_DISABLED || !isStudentAdminStoreEnabled()) return null
   try {
     const prisma = await getSharedPrismaClient()
     if (
@@ -3224,38 +3224,39 @@ async function verifyParentPortalCredentials(parentsId, password) {
   const inputPassword = normalizeText(password)
   if (!requestedParentsId || !inputPassword) return null
 
-  const dbResult = await runParentPortalDbOperation(
-    async (prisma) => {
-      const account = await prisma.parentPortalAccount.findUnique({
-        where: { parentsId: requestedParentsId },
-      })
-      if (!account) return null
-      if (normalizeLower(account.status) !== "active") return null
-      if (!verifyPassword("", account.passwordHash, inputPassword)) return null
-      return {
-        accountId: account.id,
-        parentsId: account.parentsId,
-        source: "database",
-      }
-    },
-    async () => {
-      const accounts = configuredParentPortalAccounts()
-      for (let i = 0; i < accounts.length; i += 1) {
-        const account = accounts[i]
-        if (!timingSafeEqualText(requestedParentsId, account.parentsId)) continue
+  if (isStudentAdminStoreEnabled()) {
+    const dbResult = await runParentPortalDbOperation(
+      async (prisma) => {
+        const account = await prisma.parentPortalAccount.findUnique({
+          where: { parentsId: requestedParentsId },
+        })
+        if (!account) return null
         if (normalizeLower(account.status) !== "active") return null
-        if (!verifyPassword(account.password, account.passwordHash, inputPassword)) return null
+        if (!verifyPassword("", account.passwordHash, inputPassword)) return null
         return {
-          accountId: `env:${account.parentsId}`,
+          accountId: account.id,
           parentsId: account.parentsId,
-          source: "env",
+          source: "database",
         }
-      }
-      return null
-    }
-  )
+      },
+      async () => null
+    )
+    if (dbResult) return dbResult
+  }
 
-  return dbResult
+  const accounts = configuredParentPortalAccounts()
+  for (let i = 0; i < accounts.length; i += 1) {
+    const account = accounts[i]
+    if (!timingSafeEqualText(requestedParentsId, account.parentsId)) continue
+    if (normalizeLower(account.status) !== "active") return null
+    if (!verifyPassword(account.password, account.passwordHash, inputPassword)) return null
+    return {
+      accountId: `env:${account.parentsId}`,
+      parentsId: account.parentsId,
+      source: "env",
+    }
+  }
+  return null
 }
 
 function parseStudentPortalAccountsJson(value) {
@@ -3302,54 +3303,55 @@ async function verifyStudentPortalCredentials(eaglesId, password) {
   const inputPassword = normalizeText(password)
   if (!requestedEaglesId || !inputPassword) return null
 
-  const dbResult = await runStudentPortalDbOperation(
-    async (prisma) => {
-      const account = await prisma.studentPortalAccount.findUnique({
-        where: { eaglesId: requestedEaglesId },
-      })
-      if (!account) return null
-      if (normalizeLower(account.status) !== "active") return null
-      if (!verifyPassword("", account.passwordHash, inputPassword)) return null
-
-      let mappedStudent = null
-      if (!normalizeText(account.studentRefId) && isStudentAdminStoreEnabled()) {
-        mappedStudent = await findStudentByEaglesIdForParent(requestedEaglesId)
-      }
-      const studentRefId = normalizeText(account.studentRefId || mappedStudent?.studentRefId)
-      if (!studentRefId && isStudentAdminStoreEnabled()) return null
-      return {
-        eaglesId: requestedEaglesId,
-        studentRefId,
-        accountId: account.id,
-        source: "database",
-      }
-    },
-    async () => {
-      const accounts = configuredStudentPortalAccounts()
-      for (let i = 0; i < accounts.length; i += 1) {
-        const account = accounts[i]
-        if (!timingSafeEqualText(requestedEaglesId, account.eaglesId)) continue
+  if (isStudentAdminStoreEnabled()) {
+    const dbResult = await runStudentPortalDbOperation(
+      async (prisma) => {
+        const account = await prisma.studentPortalAccount.findUnique({
+          where: { eaglesId: requestedEaglesId },
+        })
+        if (!account) return null
         if (normalizeLower(account.status) !== "active") return null
-        if (!verifyPassword(account.password, account.passwordHash, inputPassword)) return null
+        if (!verifyPassword("", account.passwordHash, inputPassword)) return null
 
         let mappedStudent = null
-        if (!normalizeText(account.studentRefId) && isStudentAdminStoreEnabled()) {
+        if (!normalizeText(account.studentRefId)) {
           mappedStudent = await findStudentByEaglesIdForParent(requestedEaglesId)
         }
         const studentRefId = normalizeText(account.studentRefId || mappedStudent?.studentRefId)
-        if (!studentRefId && isStudentAdminStoreEnabled()) return null
+        if (!studentRefId) return null
         return {
           eaglesId: requestedEaglesId,
           studentRefId,
-          accountId: `env:${account.eaglesId}`,
-          source: "env",
+          accountId: account.id,
+          source: "database",
         }
-      }
-      return null
-    }
-  )
+      },
+      async () => null
+    )
+    if (dbResult) return dbResult
+  }
 
-  return dbResult
+  const accounts = configuredStudentPortalAccounts()
+  for (let i = 0; i < accounts.length; i += 1) {
+    const account = accounts[i]
+    if (!timingSafeEqualText(requestedEaglesId, account.eaglesId)) continue
+    if (normalizeLower(account.status) !== "active") return null
+    if (!verifyPassword(account.password, account.passwordHash, inputPassword)) return null
+
+    let mappedStudent = null
+    if (!normalizeText(account.studentRefId) && isStudentAdminStoreEnabled()) {
+      mappedStudent = await findStudentByEaglesIdForParent(requestedEaglesId)
+    }
+    const studentRefId = normalizeText(account.studentRefId || mappedStudent?.studentRefId)
+    if (!studentRefId && isStudentAdminStoreEnabled()) return null
+    return {
+      eaglesId: requestedEaglesId,
+      studentRefId,
+      accountId: `env:${account.eaglesId}`,
+      source: "env",
+    }
+  }
+  return null
 }
 
 async function resolveStudentPortalSessionStudentRefId(session = {}) {
@@ -3859,7 +3861,7 @@ async function findStudentByEaglesIdForParent(eaglesId) {
   }
 }
 
-function buildChildDashboardSnapshot({
+export function buildChildDashboardSnapshot({
   child = {},
   attendanceRows = [],
   gradeRows = [],
@@ -3872,7 +3874,10 @@ function buildChildDashboardSnapshot({
   })
   const attendance = {
     total: attendanceRows.length,
-    present: attendanceRows.filter((row) => normalizeLower(row?.status) === "present").length,
+    present: attendanceRows.filter((row) => {
+      const status = normalizeLower(row?.status)
+      return status === "present" || status === "late"
+    }).length,
     absent: attendanceRows.filter((row) => normalizeLower(row?.status) === "absent").length,
     late: attendanceRows.filter((row) => normalizeLower(row?.status) === "late").length,
     excused: attendanceRows.filter((row) => normalizeLower(row?.status) === "excused").length,

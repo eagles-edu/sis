@@ -6316,7 +6316,7 @@
           const row = document.createElement("tr");
           row.dataset.newsReviewWeekSetId = weekSetId;
           row.innerHTML = `
-          <td data-label="Week Set">${escapeHtml(normalizeText(item?.weekStart))} to ${escapeHtml(normalizeText(item?.weekEnd))}</td>
+          <td data-label="Week Set">${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>
           <td data-label="Student">${escapeHtml(studentLabel)}</td>
           <td data-label="Level">${escapeHtml(fullLevelLabel(student?.level || ""))}</td>
           <td data-label="Reports">${escapeHtml(`${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`)}</td>
@@ -8682,6 +8682,45 @@
         }).format(parsed);
       }
 
+      function formatPortalWeekRange(startValue = "", endValue = "") {
+        const startRaw = normalizeText(startValue);
+        const endRaw = normalizeText(endValue);
+        const parse = (value) => {
+          if (!value) return null;
+          const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value) ?
+            new Date(`${value}T00:00:00+07:00`) :
+            new Date(value);
+          return Number.isNaN(parsed.valueOf()) ? null : parsed;
+        };
+        const startDate = parse(startRaw);
+        const endDate = parse(endRaw);
+        if (!startDate || !endDate) {
+          return `${normalizeText(startRaw)} to ${normalizeText(endRaw)}`;
+        }
+        const shortDayMonth = (date) => {
+          const parts = new Intl.DateTimeFormat("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            timeZone: FIXED_TIME_ZONE,
+          }).formatToParts(date);
+          const day = parts.find((entry) => entry.type === "day")?.value || "";
+          const month = parts.find((entry) => entry.type === "month")?.value || "";
+          return `${day}/${month}`;
+        };
+        const year = new Intl.DateTimeFormat("en-GB", {
+          year: "numeric",
+          timeZone: FIXED_TIME_ZONE,
+        });
+        const startLabel = shortDayMonth(startDate);
+        const endLabel = shortDayMonth(endDate);
+        const startYear = year.format(startDate);
+        const endYear = year.format(endDate);
+        if (startYear === endYear) {
+          return `${startLabel}-${endLabel} ${startYear}`;
+        }
+        return `${startLabel} ${startYear}-${endLabel} ${endYear}`;
+      }
+
       function selectedStudentId() {
         return state.currentStudent && state.currentStudent.id ?
             state.currentStudent.id
@@ -10883,7 +10922,7 @@
 
           const detailBtn = document.createElement("button");
           detailBtn.type = "button";
-          detailBtn.className = `level-theme-btn ${theme.className}`.trim();
+          detailBtn.className = `level-theme-btn bar-detail-action-btn ${theme.className}`.trim();
           detailBtn.style.setProperty("--level-theme-bg", theme.color);
           detailBtn.style.setProperty("--level-theme-border", theme.borderColor);
           detailBtn.style.setProperty("--level-theme-text", theme.textColor);
@@ -11512,7 +11551,7 @@
             Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10)) || 0;
           const tr = document.createElement("tr");
           tr.innerHTML = `
-          <td>${escapeHtml(`${normalizeText(item?.weekStart)} to ${normalizeText(item?.weekEnd)}`)}</td>
+          <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>
           <td>${escapeHtml(
             item?.fullName || item?.student?.fullName || "(student)",
           )}</td>
@@ -11793,7 +11832,7 @@
                   item?.setAction || newsReviewWeekSetActionToken(item),
                 );
                 return [
-                  `${normalizeText(item?.weekStart)} to ${normalizeText(item?.weekEnd)}`,
+                  formatPortalWeekRange(item?.weekStart, item?.weekEnd),
                   normalizeText(item?.fullName || item?.student?.fullName),
                   normalizeText(
                     item?.eaglesId || item?.student?.eaglesId || item?.studentRefId,

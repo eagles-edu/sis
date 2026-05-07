@@ -5,11 +5,11 @@ import test from "node:test"
 import { JSDOM } from "jsdom"
 
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
-const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.css")
+const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.min.css")
 const PARENT_PORTAL_HTML = fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
-  .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.css">\s*/i, "")
+  .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
 
@@ -79,6 +79,24 @@ async function createParentPortalDom(fetchHandler, url, options = {}) {
       }
       window.HTMLElement.prototype.scrollIntoView = () => {}
       window.SISPortalNav = {
+        scrollElementIntoView(target, options = {}) {
+          window.__scrollTargets = window.__scrollTargets || []
+          window.__scrollTargets.push(typeof target === "string" ? target : target?.id || target?.className || target?.tagName || "")
+          const element =
+            typeof target === "string" ? window.document.querySelector(target) : target
+          if (!element || typeof element.scrollIntoView !== "function") return false
+          const raf = window.requestAnimationFrame?.bind(window) || ((callback) => window.setTimeout(callback, 0))
+          raf(() => {
+            raf(() => {
+              element.scrollIntoView({
+                behavior: options.behavior || "auto",
+                block: options.block || "start",
+                inline: options.inline || "nearest",
+              })
+            })
+          })
+          return true
+        },
         bindAnchoredNavLinks({ selector = ".side-link", getDestination = (link) => link.getAttribute("href") || "", onActivate = null, onClose = null, rootNode = window.document } = {}) {
           const links = rootNode.querySelectorAll(selector)
           links.forEach((link) => {
@@ -146,7 +164,7 @@ test("parent portal dark theme keeps identity, metric, profile, and homework sur
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.profile-group,/)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.field-row\.locked,/)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.field-row\.edited,/)
-  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-link\s*\{/i)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-link(?:,|\{)/i)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-card-label,/)
 })
 
@@ -155,6 +173,9 @@ test("parent news week-set modal keeps student-clone visuals with only wired con
   assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalNextBtn"/)
   assert.match(PARENT_PORTAL_HTML, /id="closeNewsWeekSetModalBtn"/)
   assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalCloseActionBtn"/)
+  assert.match(PARENT_PORTAL_HTML, /openNewsQueueDetailBtn[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
+  assert.match(PARENT_PORTAL_HTML, /newsQueueScrollTodayBtn[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
+  assert.match(PARENT_PORTAL_HTML, /data-open-news-week-set[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
   assert.doesNotMatch(PARENT_PORTAL_HTML, /id="newsWeekSetModalSubmitBtn"/)
 
   assert.match(PARENT_PORTAL_HTML, /getElementById\("newsWeekSetModalBackdrop"\)[\s\S]*closeNewsWeekSetModal\(\)/)
@@ -516,11 +537,14 @@ test("parent portal keeps profile form on child page view instead of dashboard c
     assert.equal(document.getElementById("childPageCard").classList.contains("hidden"), true)
   })
 
+  dom.window.__scrollTargets = []
   document.getElementById("openChildPageBtn").click()
 
   await waitFor(() => {
     assert.equal(document.getElementById("portalCard").classList.contains("hidden"), true)
     assert.equal(document.getElementById("childPageCard").classList.contains("hidden"), false)
+    assert.ok(Array.isArray(dom.window.__scrollTargets) && dom.window.__scrollTargets.length > 0)
+    assert.ok(dom.window.__scrollTargets.every((target) => target === "#childPageCard"))
   })
 
   document.getElementById("backToDashboardBtn").click()
@@ -1032,24 +1056,29 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
       normalizeText(node.textContent)
     )
     const firstLatestCell = document.querySelector("#newsQueueBody tr td:nth-child(4)")
+    const firstWeekSetCell = document.querySelector("#newsQueueBody tr td:nth-child(1)")
     const latestSubmissionText = normalizeText(firstLatestCell?.textContent)
     const latestSubmissionHtml = normalizeText(firstLatestCell?.innerHTML)
     assert.deepEqual(headers, [
       "Tuần báo cáo",
       "#",
-      "Trạng thái",
+      "Tình trạng",
       "Nộp gần nhất",
       "Mở",
     ])
     const queueText = normalizeText(document.getElementById("newsQueueBody")?.textContent)
     assert.match(queueText, /Cần sửa/i)
     assert.doesNotMatch(queueText, /Submitted|None Submitted|Waiting|Revise/i)
+    assert.match(normalizeText(firstWeekSetCell?.textContent), /^\d{2}\/\d{2}-\d{2}\/\d{2}\s+\d{4}$/)
+    assert.doesNotMatch(normalizeText(firstWeekSetCell?.textContent), /đến/i)
     assert.match(latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/)
     assert.match(latestSubmissionHtml, /queue-compact-datetime/)
     const summaryText = normalizeText(document.getElementById("newsQueueSummary")?.textContent)
+    const summaryLabel = normalizeText(document.getElementById("newsQueueSummary")?.getAttribute("aria-label"))
+    assert.match(summaryText, /Đã nộp.*Cần chỉnh sửa.*Chờ duyệt.*Đã duyệt/i)
     assert.match(
-      summaryText,
-      /Đã duyệt\s+\d+\s+•\s+Đã nộp\s+\d+\s+•\s+Chờ duyệt\s+\d+\s+•\s+Cần sửa\s+\d+/i
+      summaryLabel,
+      /Đã nộp\s+\d+;\s+Cần chỉnh sửa\s+\d+;\s+Chờ duyệt\s+\d+;\s+Đã duyệt\s+\d+/i
     )
   })
 
@@ -1141,9 +1170,9 @@ test("parent portal opens news detail directly from news queue when dashboard ca
                   },
                 ],
                 window: {
-                  todayDate: "2026-03-31",
-                  reportDate: "2026-04-01",
-                  closesAt: "2026-04-01T23:59:00.000Z",
+                  todayDate: "2026-03-29",
+                  reportDate: "2026-03-30",
+                  closesAt: "2026-03-30T23:59:00.000Z",
                 },
                 calendar: [
                   {
@@ -1233,9 +1262,9 @@ test("parent portal opens news detail directly from news queue when dashboard ca
             },
           ],
           window: {
-            todayDate: "2026-03-31",
-            reportDate: "2026-04-01",
-            closesAt: "2026-04-01T23:59:00.000Z",
+            todayDate: "2026-03-29",
+            reportDate: "2026-03-30",
+            closesAt: "2026-03-30T23:59:00.000Z",
           },
           statusSummary: {
             approved: 1,
@@ -1259,13 +1288,56 @@ test("parent portal opens news detail directly from news queue when dashboard ca
       }
       return jsonTextResponse(404, { error: "Not found" })
     },
-    "http://127.0.0.1:8787/parent/portal"
+    "http://127.0.0.1:8787/parent/portal",
+    {
+      beforeParse(window) {
+        window.__scrollTargets = []
+        window.HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
+          return undefined
+        }
+        window.SISPortalNav = window.SISPortalNav || {}
+        window.SISPortalNav.scrollElementIntoView = function scrollElementIntoView(target) {
+          window.__scrollTargets.push(typeof target === "string" ? target : target?.id || target?.className || target?.tagName || "")
+          return true
+        }
+      },
+    }
   )
 
   const document = dom.window.document
 
   await waitFor(() => {
     assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  })
+
+  dom.window.__scrollTargets = []
+  document.getElementById("openNewsQueueDetailBtn").click()
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), true)
+    assert.equal(document.getElementById("portalDetailCard").classList.contains("hidden"), false)
+    const modal = document.getElementById("newsWeekSetModal")
+    assert.ok(modal && !modal.classList.contains("hidden"))
+    assert.match(normalizeText(document.getElementById("newsViewerReviewStatusChip")?.textContent), /Cần sửa/i)
+    assert.ok(Array.isArray(dom.window.__scrollTargets) && dom.window.__scrollTargets.length > 0)
+    assert.ok(dom.window.__scrollTargets.every((target) => target === "#portalDetailCard"))
+  })
+
+  dom.window.__scrollTargets = []
+  document.getElementById("newsQueueScrollTodayBtn").click()
+
+  await waitFor(() => {
+    const modal = document.getElementById("newsWeekSetModal")
+    assert.ok(modal && !modal.classList.contains("hidden"))
+    assert.match(normalizeText(document.getElementById("newsViewerReviewStatusChip")?.textContent), /Đã duyệt/i)
+    assert.ok(dom.window.__scrollTargets.every((target) => target === "#portalDetailCard"))
+  })
+
+  document.getElementById("backToDashboardBtn").click()
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+    assert.equal(document.getElementById("portalDetailCard").classList.contains("hidden"), true)
   })
 
   document.querySelector('a[data-page-target="news-reports"]').click()
@@ -1739,9 +1811,12 @@ test("parent portal profile draft submit surfaces API errors on child page", asy
     assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
   })
 
+  dom.window.__scrollTargets = []
   document.getElementById("openChildPageBtn").click()
   await waitFor(() => {
     assert.equal(document.getElementById("childPageCard").classList.contains("hidden"), false)
+    assert.ok(Array.isArray(dom.window.__scrollTargets) && dom.window.__scrollTargets.length > 0)
+    assert.ok(dom.window.__scrollTargets.every((target) => target === "#childPageCard"))
   })
 
   const schoolNameInput = document.getElementById("pf_schoolName")

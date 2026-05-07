@@ -1,4 +1,4 @@
-◇ injected env (34) from .env.dev // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (34) from .env.dev // tip: ⌘ enable debugging { debug: true }
 exercise-mailer listening on 127.0.0.1:8788 at /api/exercise-submission and /api/student-intake-submission (health: /healthz)
 assignment template store falling back to memory: Invalid `prisma.assignmentTemplate.findMany()` invocation:
 

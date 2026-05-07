@@ -8,23 +8,13 @@
   <title>The Eagles Club Student Information System</title>
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <script>
-    (() => {
-      const applyTheme = (theme) => {
-        const root = document.documentElement;
-        const isDark = theme === "dark";
-        root.dataset.theme = isDark ? "dark" : "light";
-        root.style.colorScheme = isDark ? "dark" : "light";
-      };
-      try {
-        const savedTheme =
-          localStorage.getItem("sis-theme-admin") || localStorage.getItem("sis-theme");
-        applyTheme(savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light");
-      } catch {
-        applyTheme("light");
-      }
-    })();
+    /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <style>
     :root {
       --font-base:
@@ -85,24 +75,11 @@
     }
 
     .panel {
-      background: #f9faff;
-      border: 1px solid #7388a3;
+      background: var(--portal-surface-card);
+      border: 1px solid var(--portal-border);
       border-radius: 11px;
       min-width: 0;
       padding: 12px;
-    }
-
-    #authBootPanel {
-      align-content: center;
-      display: grid;
-      gap: 8px;
-      justify-items: center;
-      min-height: 180px;
-      text-align: center;
-    }
-
-    #authBootPanel .small {
-      margin: 0;
     }
 
     .app-shell {
@@ -139,13 +116,21 @@
       width: 105.6px;
     }
 
+    /* VS Code selector resolution anchors; shared styles live in portal-theme.min.css. */
+    .login-links {}
+    .login-link {}
+
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260426a" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260426a">
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260508a" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260508a">
 </head>
 
 <body class="admin-portal-page admin-auth-booting">
   <div class="wrap">
+    <div class="header-bar">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
     <div class="panel" id="authBootPanel" aria-live="polite">
       <h1>Loading Admin</h1>
       <p class="small">Checking your session...</p>
@@ -170,6 +155,10 @@
           </div>
         </div>
       </form>
+      <div class="login-links">
+        <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Admin%20password%20reset">Reset password</a>
+        <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
+      </div>
       <p class="muted">
         Session-based secure login is required for all admin API operations.
       </p>
@@ -554,41 +543,41 @@
                   <section class="overview-group">
                     <h3>Today Snapshot</h3>
                     <div class="stats-grid" id="overviewStatsGrid">
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--student">
                         <div class="stat-label">Total Enrollment</div>
                         <div class="stat-value" id="ovTotalEnrollment">0</div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--good">
                         <div class="stat-label">Attendance % of Enrollment</div>
                         <div class="stat-value" id="ovAttendancePctEnrollment">
                           0.0%
                         </div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--warn">
                         <div class="stat-label">Unenrolled YTD</div>
                         <div class="stat-value" id="ovUnenrolledYtd">0</div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--good">
                         <div class="stat-label">Today Attendance</div>
                         <div class="stat-value" id="ovTodayAttendance">0</div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--bad">
                         <div class="stat-label">Today Absences</div>
                         <div class="stat-value" id="ovTodayAbsences">0</div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--warn">
                         <div class="stat-label">Tardy 10+ / 30+</div>
                         <div class="stat-value" id="ovTardyRates">0% / 0%</div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--bad">
                         <div class="stat-label">Pending Reminders</div>
                         <div class="stat-value" id="ovAtRiskCount">0</div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--good">
                         <div class="stat-label">Current Completed</div>
                         <div class="stat-value" id="ovOutstanding">0</div>
                       </div>
-                      <div class="stat-card">
+                      <div class="stat-card stat-card--student">
                         <div class="stat-label">Current Completion %</div>
                         <div class="stat-value" id="ovOutstandingYtd">0%</div>
                       </div>
@@ -3223,11 +3212,7 @@ Select an assignment link to inspect details.</pre>
       const root = document.documentElement;
       const button = document.getElementById("adminThemeToggle");
       const icon = document.getElementById("adminThemeToggleIcon");
-      const storageKey = "sis-theme-admin";
-
-      function validTheme(theme) {
-        return theme === "dark" || theme === "light";
-      }
+      const themeState = window.SIS_PORTAL_THEME;
 
       function sync(theme) {
         if (!button || !icon) return;
@@ -3239,18 +3224,14 @@ Select an assignment link to inspect details.</pre>
       }
 
       function apply(theme) {
-        const next = validTheme(theme) ? theme : "light";
-        root.dataset.theme = next;
-        try {
-          localStorage.setItem(storageKey, next);
-        } catch {}
+        const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "dark" ? "dark" : "light");
         sync(next);
       }
 
       button?.addEventListener("click", () => {
-        apply(root.dataset.theme === "dark" ? "light" : "dark");
+        apply(themeState?.toggleTheme ? themeState.toggleTheme("light") : (root.dataset.theme === "dark" ? "light" : "dark"));
       });
-      apply(validTheme(root.dataset.theme) ? root.dataset.theme : "light");
+      apply(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"));
     })();
   </script>
   <script src="/web-asset/admin/student-admin.min.js?v=20260426a" defer></script>

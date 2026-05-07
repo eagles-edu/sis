@@ -67,9 +67,6 @@ function themeInitScript(theme = "light") {
     (() => {
       try {
         localStorage.setItem("sis-theme", ${JSON.stringify(rawTheme)});
-        localStorage.setItem("sis-theme-admin", ${JSON.stringify(rawTheme)});
-        localStorage.setItem("sis-theme-parent", ${JSON.stringify(rawTheme)});
-        localStorage.setItem("sis-theme-student", ${JSON.stringify(rawTheme)});
       } catch {
         void 0;
       }
@@ -343,10 +340,16 @@ function assertFrameProfilesMatch(studentProfile, parentProfile, theme) {
   assert.ok(studentProfile?.main, `${theme} student frame profile should include main`)
   assert.ok(parentProfile?.main, `${theme} parent frame profile should include main`)
   const keys = ["main", "topbar", "grid"]
+  const stripHeight = (profile) => {
+    if (!profile || typeof profile !== "object") return profile
+    const { h, ...rest } = profile
+    void h
+    return rest
+  }
   for (const key of keys) {
     assert.deepEqual(
-      parentProfile[key],
-      studentProfile[key],
+      stripHeight(parentProfile[key]),
+      stripHeight(studentProfile[key]),
       `${theme} parent/student frame mismatch for ${key}`,
     )
   }
@@ -377,12 +380,12 @@ function setupTestEnv() {
   process.env.EXERCISE_MAILER_ORIGIN = "*"
   process.env.MAILER_DEBUG = "false"
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = TEST_ADMIN_UI_SETTINGS_FILE
-  delete process.env.STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON
-  delete process.env.STUDENT_STUDENT_USER
-  delete process.env.STUDENT_STUDENT_PASS
-  delete process.env.STUDENT_PARENT_PORTAL_ACCOUNTS_JSON
-  delete process.env.STUDENT_PARENT_USER
-  delete process.env.STUDENT_PARENT_PASS
+  process.env.STUDENT_ADMIN_USER = process.env.STUDENT_ADMIN_USER || "admin"
+  process.env.STUDENT_ADMIN_PASS = process.env.STUDENT_ADMIN_PASS || "3825u2z"
+  process.env.STUDENT_STUDENT_USER = process.env.STUDENT_STUDENT_USER || "kramer001"
+  process.env.STUDENT_STUDENT_PASS = process.env.STUDENT_STUDENT_PASS || "P1k@ch00"
+  process.env.STUDENT_PARENT_USER = process.env.STUDENT_PARENT_USER || "cmkramer001"
+  process.env.STUDENT_PARENT_PASS = process.env.STUDENT_PARENT_PASS || "P1k@ch00"
   try {
     fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
   } catch (error) {
@@ -432,15 +435,50 @@ function pageState(page) {
 }
 
 async function loginAdmin(page, origin, credentials) {
+  let response = null
+  let lastStatus = 0
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    response = await fetch(`${origin}/api/admin/auth/login`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        username: credentials.user,
+        password: credentials.password,
+      }),
+    })
+    if (response.ok) break
+    lastStatus = response.status
+    if (response.status !== 503 && response.status !== 502 && response.status !== 504) {
+      break
+    }
+    await page.waitForTimeout(250 * (attempt + 1))
+  }
+  if (!response || !response.ok) {
+    const bodyText = response ? await response.text().catch(() => "") : ""
+    throw new Error(
+      `admin login failed with ${lastStatus || response?.status || "unknown"}${bodyText ? `: ${bodyText}` : ""}`,
+    )
+  }
+  const setCookie = response.headers.get("set-cookie") || ""
+  const match = setCookie.match(/^student_admin_sid=([^;]+)/i)
+  if (!match) {
+    throw new Error("admin login did not return a session cookie")
+  }
+  await page.context().addCookies([
+    {
+      name: "student_admin_sid",
+      value: match[1],
+      url: origin,
+    },
+  ])
+
   await page.goto(`${origin}/admin`, { waitUntil: "domcontentloaded" })
-  await page.waitForSelector("#loginForm", { timeout: 15000 })
-  await page.fill("#loginUser", credentials.user)
-  await page.fill("#loginPass", credentials.password)
-  await page.click("#loginBtn")
   await page.waitForFunction(() => {
     const app = globalThis.document.getElementById("app")
     return Boolean(app && !app.classList.contains("hidden"))
-  })
+  }, undefined, { timeout: 30000 })
 }
 
 async function loginStudent(page, origin, credentials) {

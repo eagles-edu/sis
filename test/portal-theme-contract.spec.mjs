@@ -4,7 +4,7 @@ import path from "node:path"
 import test from "node:test"
 
 const rootDir = process.cwd()
-const sharedThemePath = path.resolve(rootDir, "web-asset/shared/portal-theme.css")
+const sharedThemePath = path.resolve(rootDir, "web-asset/shared/portal-theme.min.css")
 const adminThemePath = path.resolve(rootDir, "web-asset/admin/student-admin.css")
 const adminPortalPath = path.resolve(rootDir, "web-asset/admin/student-admin.html")
 const parentPortalPath = path.resolve(rootDir, "web-asset/parent/parent-portal.html")
@@ -27,7 +27,7 @@ test("portal pages load the shared portal theme stylesheet", () => {
     const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
     assert.match(
       html,
-      /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.css">/,
+      /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">/,
       `${label} should link the shared portal theme`,
     )
   }
@@ -44,12 +44,108 @@ test("shared portal theme defines the common shell, header, and card system", ()
   assert.match(sharedTheme, /\.portal-card,\s*\.resource-card/)
 })
 
+test("shared portal theme keeps the overview grids at 3x3, not wider", () => {
+  assert.match(
+    sharedTheme,
+    /@media\s*\(min-width:\s*720px\)[\s\S]*body\.student-portal-page \.metrics,[\s\S]*body\.parent-portal-page \.metrics[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s,
+    "overview metrics should resolve to a 3-column shared grid on wider screens",
+  )
+  assert.match(
+    sharedTheme,
+    /@media\s*\(min-width:\s*720px\)[\s\S]*body\.student-portal-page \.detail-metrics,[\s\S]*body\.parent-portal-page \.report-metrics[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s,
+    "student detail metrics and parent report metrics should also resolve to the shared 3-column grid",
+  )
+  assert.doesNotMatch(
+    sharedTheme,
+    /body\.(?:student|parent)-portal-page \.metrics[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);/s,
+    "overview metrics should not use a 6-column grid",
+  )
+})
+
+test("shared portal theme standardizes the light canvas around the #577284 base", () => {
+  assert.match(
+    sharedTheme,
+    /--portal-page-bg-base:\s*#577284;/,
+    "shared theme should expose the canonical light canvas base",
+  )
+  assert.match(
+    sharedTheme,
+    /--portal-page-bg:\s*linear-gradient\(180deg, #577284 0%, #7c909d 18%, #dbe3ea 62%, #edf1f6 100%\);/,
+    "shared theme should keep the light page background gradient based on #577284",
+  )
+  assert.match(
+    sharedTheme,
+    /--portal-page-bg-wash:\s*[\s\S]*rgba\(87, 114, 132, 0.24\)[\s\S]*rgba\(87, 114, 132, 0.14\)/s,
+    "shared theme should keep the light wash derived from the same base color",
+  )
+  assert.match(
+    parentPortal,
+    /<div class="portal-layout portal-shell">/,
+    "parent portal should expose the same shell class hook as the student portal",
+  )
+})
+
+test("shared portal theme keeps the admin-style header chrome", () => {
+  assert.match(
+    sharedTheme,
+    /body\.student-portal-page \.topbar,[\s\S]*body\.parent-portal-page \.hero,[\s\S]*background:\s*linear-gradient\(180deg, #f4f8ff 0%, #eef3fb 100%\);[\s\S]*border-color:\s*#98adca;/s,
+    "portal headers should copy the admin app-page-header chrome",
+  )
+})
+
+test("shared portal theme keeps the admin-style blue footer chrome", () => {
+  assert.match(
+    sharedTheme,
+    /--footer-background:\s*#366db1;/,
+    "shared theme should define the blue footer background token",
+  )
+  assert.match(
+    sharedTheme,
+    /\.footer \{\s*background:\s*var\(--footer-background\);/s,
+    "shared footer chrome should resolve from the shared footer token",
+  )
+})
+
+test("parent identity panel keeps the chooser at the top of the same panel", () => {
+  assert.match(
+    parentPortal,
+    /<section class="panel" id="identityPanel">[\s\S]*<div id="quickLinksPanel" class="portal-action-strip"[\s\S]*<p id="studentIdentity" class="hint">/s,
+    "the chooser should sit inside the identity panel before the identity rows",
+  )
+})
+
+test("parent identity panel reuses the student identity field ids", () => {
+  assert.match(parentPortal, /id="studentIdentity"/)
+  assert.match(parentPortal, /id="studentEaglesIdValue"/)
+  assert.match(parentPortal, /id="studentNumberValue"/)
+  assert.match(parentPortal, /id="studentNameValue"/)
+  assert.match(parentPortal, /id="studentGradeValue"/)
+  assert.doesNotMatch(parentPortal, /id="parentIdentity"/)
+  assert.doesNotMatch(parentPortal, /id="immutableEaglesId"/)
+  assert.doesNotMatch(parentPortal, /id="immutableStudentNumber"/)
+  assert.doesNotMatch(parentPortal, /id="immutableFullName"/)
+  assert.doesNotMatch(parentPortal, /id="immutableGrade"/)
+})
+
+test("student report copy remains wired to the required archive and grades labels", () => {
+  assert.match(studentPortal, /Performance Reports SYTD Archive/)
+  assert.match(
+    studentPortal,
+    /Performance reports SYTD: \$\{reportCount\}\. Archive access for prior school years is available through report exports\./,
+  )
+  assert.match(studentPortal, /Grades YTD/)
+  assert.match(studentPortal, /Grade average YTD is not available yet\./)
+})
+
 test("hub keeps its own theme toggle chrome and shared theme stays scoped off it", () => {
   assert.match(hubPortal, /body\.portal-hub-page \.theme-toggle\s*\{/)
   assert.match(hubPortal, /body\.portal-hub-page \.theme-toggle__icon\s*\{/)
   assert.match(hubPortal, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
   assert.match(hubPortal, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*background:\s*var\(--portal-theme-toggle-icon-bg-dark\);/)
   assert.match(hubPortal, /html\[data-theme="dark"\] body\.portal-hub-page \.theme-toggle__icon\s*\{[\s\S]*color:\s*var\(--portal-theme-toggle-ink-dark\);/)
+  assert.match(hubPortal, /wash:\s*"var\(--hub-theme-wash\)"/, "hub theme should use the shared hub wash token")
+  assert.match(hubPortal, /--hub-text:\s*var\(--hub-theme-text\);/, "hub body copy should follow the shared dark text token")
+  assert.match(hubPortal, /--hub-text-soft:\s*var\(--hub-theme-text-soft\);/, "hub supporting copy should follow the shared dark soft text token")
   assert.doesNotMatch(sharedTheme, /body\.portal-hub-page \.theme-toggle\s*\{/)
   assert.doesNotMatch(sharedTheme, /body\.portal-hub-page \.theme-toggle__icon\s*\{/)
   assert.doesNotMatch(sharedTheme, /(^|\n)\s*\.theme-toggle\s*\{/m)
@@ -112,8 +208,16 @@ test("portal login shells codify the first-paint canvas backgrounds", () => {
   )
   assert.match(
     sharedTheme,
-    /html\[data-theme="dark"\] body\.admin-portal-page::before,\s*html\[data-theme="dark"\] body\.student-portal-page::before,\s*html\[data-theme="dark"\] body\.parent-portal-page::before/s,
-    "shared theme should keep the dark login canvas wash for admin, student, and parent",
+    /body::before\s*\{[\s\S]*background:\s*transparent;/s,
+    "shared theme should keep the global wash layer transparent so login pages render on one continuous page backdrop",
+  )
+  assert.ok(
+    sharedTheme.includes("html[data-admin-auth-state=\"unauthenticated\"] body.admin-portal-page .wrap"),
+    "admin unauthenticated wrap selector should exist",
+  )
+  assert.ok(
+    sharedTheme.includes("background: transparent !important;"),
+    "admin auth booting wrap should stay transparent so the login page background does not split",
   )
   assert.match(
     studentPortal,
@@ -143,16 +247,14 @@ test("portal login shells codify the first-paint canvas backgrounds", () => {
 })
 
 test("shared portal theme keeps student and parent calendars readable in dark mode", () => {
-  assert.ok(
-    sharedTheme.includes("--fc-event-bg-color: #edf4ff;") &&
-      sharedTheme.includes("--fc-event-border-color: #83a8de;") &&
-      sharedTheme.includes("--fc-event-text-color: #173b78;"),
+  assert.match(
+    sharedTheme,
+    /--fc-event-bg-color:\s*#edf4ff;[\s\S]*--fc-event-border-color:\s*#83a8de;[\s\S]*--fc-event-text-color:\s*#173b78;/,
     "shared theme should keep the default student and parent calendar events readable in light mode",
   )
-  assert.ok(
-    sharedTheme.includes("--fc-event-bg-color: var(--portal-dark-surface-support);") &&
-      sharedTheme.includes("--fc-event-border-color: var(--portal-dark-border-strong);") &&
-      sharedTheme.includes("--fc-event-text-color: var(--portal-dark-text);"),
+  assert.match(
+    sharedTheme,
+    /--fc-event-bg-color:\s*var\(--portal-dark-surface-support\);[\s\S]*--fc-event-border-color:\s*var\(--portal-dark-border-strong\);[\s\S]*--fc-event-text-color:\s*var\(--portal-dark-text\);/,
     "shared theme should keep the default student and parent calendar events readable in dark mode",
   )
   assert.ok(
@@ -197,7 +299,7 @@ test("admin dark surfaces keep form controls and chart empty states readable", (
   )
   assert.match(
     adminTheme,
-    /html\[data-theme="dark"\] body\.admin-portal-page \.tabulator-entry-callout\s*\{\s*background:\s*linear-gradient\(180deg,\s*var\(--portal-dark-card-soft\),\s*var\(--portal-dark-card\)\);/s,
-    "admin dark empty chart state should use the dark card surface",
+    /html\[data-theme="dark"\] body\.admin-portal-page \.tabulator-entry-callout\s*\{\s*background:\s*var\(--portal-chart-surface\);/s,
+    "admin dark empty chart state should use the shared chart surface",
   )
 })

@@ -64,7 +64,7 @@ test("student and parent queue headers follow compact parity contract", () => {
   )
   assert.match(
     parentQueueTable,
-    /<th scope="col">Tuần báo cáo<\/th>[\s\S]*?<th scope="col">#<\/th>[\s\S]*?<th scope="col">Trạng thái<\/th>[\s\S]*?<th scope="col">Nộp gần nhất<\/th>[\s\S]*?<th scope="col">Mở<\/th>/,
+    /<th scope="col">Tuần báo cáo<\/th>[\s\S]*?<th scope="col">#<\/th>[\s\S]*?<th scope="col">Tình trạng<\/th>[\s\S]*?<th scope="col">Nộp gần nhất<\/th>[\s\S]*?<th scope="col">Mở<\/th>/,
   )
   for (const queueTable of [studentQueueTable, parentQueueTable]) {
     assert.doesNotMatch(queueTable, /<th scope="col">Student<\/th>/)

@@ -1,16 +1,25 @@
 (() => {
   const root = window.SISPortalNav || (window.SISPortalNav = {});
 
-  function scheduleScroll(destination) {
-    if (!destination) return;
+  function scrollElementIntoView(target, options = {}) {
+    if (!target) return false;
+    const element =
+      typeof target === "string" ? document.querySelector(target) : target;
+    if (!element || typeof element.scrollIntoView !== "function") return false;
     const raf = window.requestAnimationFrame?.bind(window) || ((callback) => window.setTimeout(callback, 0));
     raf(() => {
       raf(() => {
-        const target = document.querySelector(destination);
-        target?.scrollIntoView({ behavior: "auto", block: "start" });
+        element.scrollIntoView({
+          behavior: options.behavior || "auto",
+          block: options.block || "start",
+          inline: options.inline || "nearest",
+        });
       });
     });
+    return true;
   }
+
+  root.scrollElementIntoView = scrollElementIntoView;
 
   root.bindAnchoredNavLinks = function bindAnchoredNavLinks({
     selector = ".side-link",
@@ -27,12 +36,22 @@
         if (typeof onActivate === "function") {
           onActivate({ link, destination });
         }
-        scheduleScroll(destination);
         if (typeof onClose === "function") {
           onClose({ link, destination });
         }
       });
     });
     return links;
+  };
+
+  root.scrollPageTop = function scrollPageTop(options = {}) {
+    const raf = window.requestAnimationFrame?.bind(window) || ((callback) => window.setTimeout(callback, 0));
+    raf(() => {
+      window.scrollTo({
+        behavior: options.behavior || "auto",
+        left: 0,
+        top: 0,
+      });
+    });
   };
 })();

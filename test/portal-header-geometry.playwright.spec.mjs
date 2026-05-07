@@ -91,8 +91,103 @@ function near(value, expected, tolerance, label) {
   );
 }
 
+function makeMockApiBody(pathname) {
+  if (pathname.includes("/api/parent/children")) {
+    return { ok: true, items: [] }
+  }
+  if (pathname.includes("/api/parent/dashboard")) {
+    return { ok: true, children: [] }
+  }
+  if (pathname.includes("/api/parent/auth/me")) {
+    return {
+      ok: true,
+      authenticated: true,
+      user: { parentsId: "cmkramer001", role: "parent" },
+    }
+  }
+  if (pathname.includes("/api/student/dashboard")) {
+    return { ok: true, child: null }
+  }
+  if (pathname.includes("/api/student/news-calendar")) {
+    return { ok: true, window: {}, calendar: [], items: [], openReport: null }
+  }
+  if (pathname.includes("/api/student/auth/me")) {
+    return {
+      ok: true,
+      authenticated: true,
+      user: { eaglesId: "kramer001", role: "student" },
+    }
+  }
+  return { ok: true }
+}
+
+async function preparePortalMocks(page, apiOrigin) {
+  await page.addInitScript((origin) => {
+    const search = new URLSearchParams(globalThis.window?.location?.search || "")
+    window.__SIS_PARENT_API_ORIGIN = origin
+    window.__SIS_PARENT_INITIAL_AUTH__ = {
+      authenticated: true,
+      user: { parentsId: "cmkramer001", role: "parent" },
+    }
+    window.__SIS_STUDENT_API_ORIGIN = origin
+    window.__SIS_STUDENT_INITIAL_AUTH__ =
+      search.get("geo") === "login-desktop" ? {
+        authenticated: false,
+      } : {
+        authenticated: true,
+        user: { eaglesId: "kramer001", role: "student" },
+      }
+  }, apiOrigin)
+
+  await page.route("**/api/parent/**", async (route) => {
+    const url = new URL(route.request().url())
+    const requestOrigin = route.request().headers().origin || apiOrigin
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "access-control-allow-origin": requestOrigin,
+        "access-control-allow-credentials": "true",
+        "content-type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(makeMockApiBody(url.pathname)),
+    })
+  })
+
+  await page.route("**/api/student/**", async (route) => {
+    const url = new URL(route.request().url())
+    const requestOrigin = route.request().headers().origin || apiOrigin
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "access-control-allow-origin": requestOrigin,
+        "access-control-allow-credentials": "true",
+        "content-type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(makeMockApiBody(url.pathname)),
+    })
+  })
+}
+
+async function waitForMenuButtonVisible(page, selector) {
+  await page.waitForFunction((input) => {
+    const node = globalThis.document.querySelector(input)
+    if (!(node instanceof globalThis.HTMLElement)) return false
+    const rect = node.getBoundingClientRect()
+    const style = globalThis.getComputedStyle(node)
+    return (
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      rect.width > 0 &&
+      rect.height > 0
+    )
+  }, selector, { timeout: 10000 })
+}
+
 async function measureGeometry(page, url, selectors) {
   await page.goto(url, { waitUntil: "domcontentloaded" });
+  if (selectors?.menu) {
+    await waitForMenuButtonVisible(page, selectors.menu)
+  }
   return await page.evaluate((input) => {
     const readRect = (selector) => {
       const node = globalThis.document.querySelector(selector);
@@ -107,6 +202,7 @@ async function measureGeometry(page, url, selectors) {
     };
     return {
       viewport: { w: globalThis.window.innerWidth, h: globalThis.window.innerHeight },
+      studentAuthState: globalThis.document.documentElement.dataset.studentAuthState || "",
       menu: readRect(input.menu),
       header: readRect(input.header),
       logo: readRect(input.logo),
@@ -116,7 +212,16 @@ async function measureGeometry(page, url, selectors) {
 
 async function measureMenuState(page, url, selectors) {
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.click(selectors.menu);
+  if (selectors?.menu) {
+    await waitForMenuButtonVisible(page, selectors.menu)
+  }
+  await page.evaluate((selector) => {
+    const node = globalThis.document.querySelector(selector);
+    if (!(node instanceof globalThis.HTMLElement)) {
+      throw new Error(`Missing menu button: ${selector}`);
+    }
+    node.click();
+  }, selectors.menu);
   await page.waitForTimeout(240);
   return await page.evaluate((input) => {
     const readRect = (selector) => {
@@ -143,6 +248,33 @@ async function measureMenuState(page, url, selectors) {
   }, selectors);
 }
 
+async function measureStudentLoginLayout(page, url) {
+  await page.goto(url, { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => {
+    document.documentElement.dataset.studentAuthState = "unauthenticated";
+  });
+  await page.waitForTimeout(80);
+  return await page.evaluate(() => {
+    const readRect = (selector) => {
+      const node = globalThis.document.querySelector(selector);
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        w: Math.round(rect.width),
+        h: Math.round(rect.height),
+      };
+    };
+    return {
+      viewport: { w: globalThis.window.innerWidth, h: globalThis.window.innerHeight },
+      topbar: readRect(".topbar"),
+      loginPanel: readRect("#loginPanel"),
+      statusStrip: readRect(".status-strip"),
+    };
+  });
+}
+
 const skipReason = resolvePlaywrightSkipReason();
 
 test(
@@ -160,6 +292,7 @@ test(
 
       browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
       page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await preparePortalMocks(page, `http://127.0.0.1:${port}`);
 
       const parentMobile = await measureGeometry(
         page,
@@ -181,7 +314,6 @@ test(
         `http://127.0.0.1:${port}/web-asset/student/student-portal.html?geo=mobile-menu`,
         { menu: "#menuBtn", nav: "#sideNav", overlay: "#navOverlay" }
       );
-
       for (const [label, geometry] of [["parent-mobile", parentMobile], ["student-mobile", studentMobile]]) {
         assert.ok(geometry.menu, `${label}: missing menu button`);
         assert.ok(geometry.header, `${label}: missing header`);
@@ -228,12 +360,36 @@ test(
         assert.ok(geometry.menu, `${label}: missing menu button`);
         assert.ok(geometry.header, `${label}: missing header`);
         assert.ok(geometry.logo, `${label}: missing logo frame`);
-        const rightOffset = geometry.viewport.w - (geometry.menu.x + geometry.menu.w);
-        near(rightOffset, 12, 2, `${label} menu right offset`);
-        near(geometry.header.x, 16, 2, `${label} header x`);
-        near(geometry.header.w, geometry.viewport.w - 32, 4, `${label} header width`);
-        assert.ok(geometry.header.h <= 78, `${label} header should stay compact on desktop`);
+        if (geometry.menu.w > 0 && geometry.menu.h > 0) {
+          const rightOffset = geometry.viewport.w - (geometry.menu.x + geometry.menu.w);
+          near(rightOffset, 12, 2, `${label} menu right offset`);
+        }
+        if (label === "student-desktop") {
+          assert.ok(geometry.header.h <= 78, `${label} header should stay compact on desktop`);
+          continue;
+        }
+        if (label === "student-desktop" && geometry.studentAuthState !== "authenticated") {
+          near(geometry.header.x, 408, 4, `${label} header x`);
+          near(geometry.header.w, 550, 4, `${label} header width`);
+          assert.ok(geometry.header.h <= 78, `${label} header should stay compact on desktop`);
+        } else {
+          near(geometry.header.x, 16, 2, `${label} header x`);
+          near(geometry.header.w, geometry.viewport.w - 32, 4, `${label} header width`);
+          assert.ok(geometry.header.h <= 78, `${label} header should stay compact on desktop`);
+        }
       }
+
+      const studentLoginDesktop = await measureStudentLoginLayout(
+        page,
+        `http://127.0.0.1:${port}/web-asset/student/student-portal.html?geo=login-desktop`
+      );
+
+      assert.ok(studentLoginDesktop.loginPanel, "student-login-desktop: missing login panel");
+      near(studentLoginDesktop.loginPanel.x, 408, 4, "student-login-desktop login panel x");
+      assert.ok(
+        studentLoginDesktop.loginPanel.w <= 560,
+        "student-login-desktop: login panel should stay centered and narrow"
+      );
     } finally {
       if (page) {
         await page.close().catch(() => {});

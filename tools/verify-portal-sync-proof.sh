@@ -110,6 +110,7 @@ verify_target "admin-portal-html" "web-asset/admin/student-admin.html" "web-asse
 verify_target "admin-portal-css" "web-asset/admin/student-admin.css" "web-asset/admin/student-admin.css" "web-asset/admin/student-admin.css" || status=1
 verify_target "admin-portal-js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" || status=1
 verify_target "portal-theme-css" "web-asset/shared/portal-theme.css" "web-asset/shared/portal-theme.css" "web-asset/shared/portal-theme.css" || status=1
+verify_target "portal-theme-min-css" "web-asset/shared/portal-theme.min.css" "web-asset/shared/portal-theme.min.css" "web-asset/shared/portal-theme.min.css" || status=1
 verify_target "student-portal" "web-asset/student/student-portal.html" "web-asset/student/student-portal.html" "sis-student/student-portal.html" || status=1
 verify_target "parent-portal" "web-asset/parent/parent-portal.html" "web-asset/parent/parent-portal.html" "sis-parent/parent-portal.html" || status=1
 

@@ -20,6 +20,13 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 5. Keep edits ASCII unless the target file already needs Unicode.
 6. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
 
+## Communication
+
+- Keep intermediary updates terse.
+- Send one short status update at the start of work, then only ask a question if you are blocked.
+- Do not think out loud or narrate internal reasoning in progress updates.
+- When the task is complete, close any terminal or background sessions you opened for it.
+
 ## UI Guardrails
 
 - Do not recolor buttons unless the user explicitly asks for button recoloring.

@@ -11,16 +11,11 @@
   <meta name="author" content="The Eagles American Club, Ltd.">
   <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
   <script>
-    (() => {
-      try {
-        const savedTheme =
-          localStorage.getItem("sis-theme-parent") || localStorage.getItem("sis-theme");
-        document.documentElement.dataset.theme =
-          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
-      } catch {
-        document.documentElement.dataset.theme = "light";
-      }
-    })();
+    /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
+  </script>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
   </script>
   <script>
     document.documentElement.dataset.parentAuthState = "booting";
@@ -35,7 +30,7 @@
       });
     }
   </script>
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
@@ -59,7 +54,7 @@
   </style>
   <title>Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club</title>
   <style>
-    /* VS Code selector resolution anchors; shared styles live in portal-theme.css. */
+    /* VS Code selector resolution anchors; shared styles live in portal-theme.min.css. */
     .alt {}
     .portal-action-strip {}
     .quick-link-select {}
@@ -71,6 +66,11 @@
     .identity-value {}
     .homework-card-content {}
     .summary-title {}
+    .queue-summary-stack {}
+    .queue-summary-chips {}
+    .queue-summary-chip {}
+    .queue-summary-chip-label {}
+    .queue-summary-chip-count {}
     .is-peer {}
     .is-status {}
     .detail-copy {}
@@ -80,6 +80,19 @@
     .queue-compact-datetime {}
     .queue-compact-datetime-date {}
     .queue-compact-datetime-time {}
+    .login-links {}
+    .login-link {}
+    .field-hint {}
+    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip,
+    table.news-queue-table td:nth-child(3) .chip {}
+    .queue-table-wrap table.news-queue-table .queue-row-btn,
+    table.news-queue-table .queue-row-btn {}
+    table.news-queue-table td:nth-child(3) .chip {
+      min-inline-size: 0;
+    }
+    table.news-queue-table .queue-row-btn {
+      min-height: 28px;
+    }
 
     #performanceReportHeader,
     #performanceReportHomeworkBlock,
@@ -93,27 +106,11 @@
       display: none;
     }
 
-    /* Report modal chrome is centralized in portal-theme.css. */
+    /* Report modal chrome is centralized in portal-theme.min.css. */
     #newsWeekSetModal .portal-modal-close {}
     #newsWeekSetModal button {}
     #newsWeekSetModal input,
     #newsWeekSetModal textarea {}
-    .queue-table-wrap table.news-queue-table th,
-    .queue-table-wrap table.news-queue-table td {
-      padding: 4px 6px;
-    }
-    .queue-table-wrap table.news-queue-table .queue-row-btn {
-      min-height: 28px;
-    }
-    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip {
-      min-inline-size: 0;
-    }
-    table.news-queue-table td:nth-child(3) .chip {
-      min-inline-size: 0;
-    }
-    table.news-queue-table .queue-row-btn {
-      min-height: 28px;
-    }
 
     @media (max-width: 520px) {
       .homework-card-shell {
@@ -166,18 +163,6 @@
       gap: 6px;
     }
 
-    .login-form {
-      display: grid;
-      gap: 10px;
-    }
-
-    .field-hint {
-      color: var(--ink-soft);
-      font-size: 12px;
-      line-height: 1.35;
-      margin: 0;
-    }
-
     .profile-groups {
       display: grid;
       gap: 10px;
@@ -185,7 +170,7 @@
 
     .profile-group {
       background: var(--portal-surface-card);
-      border: 1px solid var(--line);
+      border: 1px solid var(--portal-border);
       border-radius: 12px;
       padding: 10px;
     }
@@ -218,7 +203,7 @@
 
     .field-row.locked {
       background: var(--portal-surface-support);
-      border: 1px solid var(--line);
+      border: 1px solid var(--portal-border);
       border-radius: 10px;
       border-top: none;
       margin-top: 8px;
@@ -233,7 +218,7 @@
 
     .field-row.edited {
       background: var(--portal-surface-card);
-      border: 1px solid var(--line);
+      border: 1px solid var(--portal-border);
       border-radius: 10px;
       border-top: none;
       margin-top: 8px;
@@ -280,7 +265,7 @@
 
     .choice-group {
       background: var(--portal-surface-support);
-      border: 1px solid var(--line);
+      border: 1px solid var(--portal-border);
       border-radius: 10px;
       display: grid;
       gap: 6px;
@@ -352,7 +337,7 @@
 
     .draft-actions {
       backdrop-filter: blur(6px);
-      border: 1px solid var(--line);
+      border: 1px solid var(--portal-border);
       border-radius: 12px;
       bottom: 8px;
       display: grid;
@@ -424,7 +409,6 @@
 
     @media (min-width: 1000px) {
       #overviewPanel,
-      #quickLinksPanel,
       #portalStatus {
         grid-column: 1 / -1;
       }
@@ -547,7 +531,7 @@
 </head>
 
 <body class="parent-portal-page">
-  <div class="portal-layout">
+  <div class="portal-layout portal-shell">
     <aside id="parentSideNav" class="side-nav" aria-label="Điều hướng cổng phụ huynh">
       <div class="side-brand">
         <strong>Bảng điều khiển dành cho phụ huynh</strong>
@@ -572,15 +556,19 @@
     <button id="parentNavScrim" class="nav-scrim" type="button" aria-label="Đóng điều hướng"></button>
 
     <main class="main-col">
+      <div class="header-bar">
+        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+        <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+      </div>
       <section class="card hero">
         <button id="parentMenuBtn" class="floating-menu-btn" type="button" aria-label="Mở điều hướng">
           <span class="floating-menu-icon" aria-hidden="true"></span>
         </button>
         <div class="hero-line">
           <div class="hero-brand">
-            <span class="brand-logo-wrap brand-logo-wrap--sm">
+            <a class="brand-logo-wrap brand-logo-wrap--sm" href="/web-asset/parent/parent-portal.html" aria-label="Go to parent home">
               <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
-            </span>
+            </a>
             <h1>Cổng phụ huynh</h1>
           </div>
           <div class="hero-actions">
@@ -623,6 +611,10 @@
           </div>
           <button id="loginBtn" class="primary" type="submit">Đăng nhập</button>
         </form>
+        <div class="login-links">
+          <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Parent%20portal%20password%20reset">Reset password</a>
+          <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
+        </div>
         <p id="loginStatus" class="status"></p>
       </section>
       <section class="card hidden" id="portalCard">
@@ -639,23 +631,35 @@
                 <h3>Thông tin định danh học sinh</h3>
                 <span class="chip chip-lock">Chỉ xem</span>
               </div>
-              <p id="parentIdentity" class="hint">Đang tải thông tin học sinh...</p>
+              <div id="quickLinksPanel" class="portal-action-strip">
+                <label class="quick-link-select">
+                  <span class="quick-link-select__label">Chọn học sinh</span>
+                  <select id="childSelect" aria-label="Chọn học sinh"></select>
+                </label>
+                <div class="portal-action-strip__actions">
+                  <button id="openChildPageBtn" type="button" class="portal-action-btn portal-action-btn--brand">Chỉnh sửa hồ sơ</button>
+                  <button id="reloadBtn" type="button" class="portal-action-btn portal-action-btn--brand">Tải lại</button>
+                  <button id="logoutBtn" type="button" class="portal-action-btn portal-action-btn--danger">Đăng xuất</button>
+                </div>
+              </div>
+              <p id="studentIdentity" class="hint">Đang tải thông tin học sinh...</p>
               <div class="identity-list">
                 <div class="identity-item">
                   <span class="identity-label">Eagles ID</span>
-                  <span id="immutableEaglesId" class="identity-value">-</span>
+                  <span id="studentEaglesIdValue" class="identity-value">-</span>
                 </div>
                 <div class="identity-item">
                   <span class="identity-label">Mã số học sinh</span>
-                  <span id="immutableStudentNumber" class="identity-value">-</span>
+                  <span id="studentNumberValue" class="identity-value">-</span>
                 </div>
                 <div class="identity-item">
                   <span class="identity-label">Họ và tên</span>
-                  <span id="immutableFullName" class="identity-value">-</span>
+                  <span id="studentNameValue" class="identity-value">-</span>
                 </div>
                 <div class="identity-item">
                   <span class="identity-label">Lớp hiện tại</span>
-                  <span id="immutableGrade" class="identity-value">-</span>
+                  <span id="studentGradeValue" class="identity-value">-</span>
+                  <span id="immutableGrade" class="identity-value hidden">-</span>
                 </div>
               </div>
             </section>
@@ -688,11 +692,10 @@
             <section id="newsQueueCard" class="panel queue-panel">
               <details id="newsQueueDetails" open>
                 <summary class="queue-summary-head">
-                  <span>
+                  <span class="queue-summary-stack">
                     <span class="summary-title">Hàng chờ báo cáo tin tức</span>
-                    <span class="hint" id="newsQueueSummary">Chưa có dữ liệu.</span>
+                    <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
                   </span>
-                  <span class="chip chip-neutral" id="newsQueueBadge">Đang tải</span>
                 </summary>
                 <div class="queue-table-wrap">
                   <table class="news-queue-table">
@@ -700,7 +703,7 @@
                       <tr>
                         <th scope="col">Tuần báo cáo</th>
                         <th scope="col">#</th>
-                        <th scope="col">Trạng thái</th>
+                        <th scope="col">Tình trạng</th>
                         <th scope="col">Nộp gần nhất</th>
                         <th scope="col">Mở</th>
                       </tr>
@@ -781,7 +784,7 @@
                       <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
                     </div>
                     <div class="field c4">
-                      <h5>Trạng thái</h5>
+                      <h5>Tình trạng</h5>
                       <span id="newsViewerReviewStatusChip" class="chip chip-neutral">-</span>
                     </div>
                     <div class="field c4">
@@ -847,34 +850,14 @@
               <div class="section-head">
                 <h3>Hồ sơ điểm danh lớp học</h3>
               </div>
-              <p class="dashboard-card-subtitle">
-                Tính đến thời điểm hiện tại của năm học
-              </p>
-              <div class="attendance-overview-grid" id="attendanceOverviewGrid">
-                <article class="attendance-square is-good">
-                  <span class="attendance-square-k">Lớp đã học</span>
-                  <strong class="attendance-square-v" id="attendanceClassesAttendedValue">0</strong>
-                </article>
-                <article class="attendance-square">
-                  <span class="attendance-square-k">Tổng số lớp</span>
-                  <strong class="attendance-square-v" id="attendanceClassesTotalValue">0</strong>
-                </article>
-                <article class="attendance-square">
-                  <span class="attendance-square-k">Chuyên cần</span>
-                  <strong class="attendance-square-v" id="attendanceRateValue">0%</strong>
-                </article>
-                <article class="attendance-square">
-                  <span class="attendance-square-k">Đi trễ 10'</span>
-                  <strong class="attendance-square-v" id="attendanceLateTardy10Value">0</strong>
-                </article>
-                <article class="attendance-square">
-                  <span class="attendance-square-k">Đi trễ 30'</span>
-                  <strong class="attendance-square-v" id="attendanceLateTardy30Value">0</strong>
-                </article>
-                <article class="attendance-square">
-                  <span class="attendance-square-k">% đi trễ</span>
-                  <strong class="attendance-square-v" id="attendanceLateRateValue">0%</strong>
-                </article>
+              <div id="attendanceCalendarMetrics" class="attendance-overview-grid"></div>
+              <div class="hidden" aria-hidden="true">
+                <strong id="attendanceClassesAttendedValue">0</strong>
+                <strong id="attendanceClassesTotalValue">0</strong>
+                <strong id="attendanceRateValue">0%</strong>
+                <strong id="attendanceLateTardy10Value">0</strong>
+                <strong id="attendanceLateTardy30Value">0</strong>
+                <strong id="attendanceLateRateValue">0%</strong>
               </div>
               <p class="hint" id="attendanceCalendarSummary">Chưa có dữ liệu.</p>
             </section>
@@ -994,22 +977,14 @@
           </div>
         </div>
 
-        <section id="quickLinksPanel" class="panel portal-action-strip" aria-label="Bộ chọn học sinh và hành động">
-          <label class="quick-link-select">
-            <span class="quick-link-select__label">Chọn học sinh</span>
-            <select id="childSelect" aria-label="Chọn học sinh"></select>
-          </label>
-          <div class="portal-action-strip__actions">
-            <button id="openChildPageBtn" type="button" class="portal-action-btn portal-action-btn--brand">Chỉnh sửa hồ sơ</button>
-            <button id="reloadBtn" type="button" class="portal-action-btn portal-action-btn--brand">Tải lại</button>
-            <button id="logoutBtn" type="button" class="portal-action-btn portal-action-btn--danger">Đăng xuất</button>
-          </div>
-        </section>
       </section>
 
       <section class="card hidden" id="portalDetailCard">
         <div class="section-head">
           <h2 id="portalDetailTitle">Chi tiết học sinh</h2>
+          <div class="actions">
+            <button id="portalDetailBackToMainBtn" type="button">Back to Main</button>
+          </div>
         </div>
         <p id="portalDetailLead" class="detail-copy">Đang tải chi tiết học sinh...</p>
         <div class="metrics" id="portalDetailMetrics"></div>
@@ -1033,7 +1008,7 @@
                   <tr>
                     <th scope="col">Tuần báo cáo</th>
                     <th scope="col">#</th>
-                    <th scope="col">Trạng thái</th>
+                    <th scope="col">Tình trạng</th>
                     <th scope="col">Nộp gần nhất</th>
                     <th scope="col">Mở</th>
                   </tr>
@@ -1061,7 +1036,7 @@
         <div class="section-head">
           <h2>Trang học sinh: Biểu mẫu cập nhật hồ sơ</h2>
           <div class="toolbar-actions">
-            <button id="backToDashboardBtn" type="button">Quay lại Dashboard</button>
+            <button id="backToDashboardBtn" type="button">Back to Main</button>
             <button id="logoutBtnChild" type="button" class="alt">Đăng xuất</button>
           </div>
         </div>
@@ -2305,6 +2280,11 @@
       syncDashboardPageVisibility();
     }
 
+    function goToParentMain() {
+      setActivePortalView("dashboard");
+      setActiveDashboardPage("home");
+    }
+
     function updateChildPageBadge() {
       const badge = document.getElementById("childPageBadge");
       if (!badge) return;
@@ -2916,39 +2896,86 @@
       const attendanceRate =
         totalClasses > 0 ? (classesAttended / totalClasses) * 100 : 0;
       const lateRate = totalClasses > 0 ? (lateTotal / totalClasses) * 100 : 0;
+      renderAttendanceOverviewMetrics(child);
+      setSummary(
+        "attendanceCalendarSummary",
+        totalClasses > 0 ?
+        `Đã học ${classesAttended}/${totalClasses} lớp (${formatPercent(attendanceRate)}), trễ ${lateTotal} (${formatPercent(lateRate)}).` :
+        "Chưa có dữ liệu điểm danh.",
+      );
+    }
+
+    function renderAttendanceOverviewMetrics(child = {}) {
+      const root = document.getElementById("attendanceCalendarMetrics");
+      if (!(root instanceof HTMLElement)) return;
+      const attendance = child?.attendance || {};
+      const totalClasses = parseNumber(attendance.total);
+      const classesAttended = parseNumber(attendance.present);
+      const tardy10 =
+        parseNumber(attendance.tardy10) ||
+        parseNumber(attendance.late10) ||
+        parseNumber(attendance.lateUnder30) ||
+        parseNumber(attendance.tardyUnder30);
+      const tardy30 =
+        parseNumber(attendance.tardy30) ||
+        parseNumber(attendance.late30) ||
+        parseNumber(attendance.lateOver30) ||
+        parseNumber(attendance.tardyOver30);
+      const lateTotal = parseNumber(attendance.late) || tardy10 + tardy30;
+      const attendanceRate =
+        totalClasses > 0 ? (classesAttended / totalClasses) * 100 : 0;
+      const lateRate = totalClasses > 0 ? (lateTotal / totalClasses) * 100 : 0;
+      const attendanceTone =
+        attendanceRate >= 95 ? "is-good" :
+        attendanceRate >= 90 ? "is-warn" :
+        "is-risk";
+      const lateTone =
+        lateRate <= 5 ? "is-good" :
+        lateRate <= 10 ? "is-warn" :
+        "is-risk";
+      root.replaceChildren(
+        createAttendanceSquareMetric({
+          label: "Lớp đã học",
+          value: String(classesAttended),
+          toneClass: "is-good",
+        }),
+        createAttendanceSquareMetric({
+          label: "Tổng số lớp",
+          value: String(totalClasses),
+        }),
+        createAttendanceSquareMetric({
+          label: "Chuyên cần",
+          value: formatPercent(attendanceRate),
+          percent: true,
+          toneClass: attendanceTone,
+        }),
+        createAttendanceSquareMetric({
+          label: "Đi trễ 10'",
+          value: String(tardy10),
+        }),
+        createAttendanceSquareMetric({
+          label: "Đi trễ 30'",
+          value: String(tardy30),
+        }),
+        createAttendanceSquareMetric({
+          label: "% đi trễ",
+          value: formatPercent(lateRate),
+          percent: true,
+          toneClass: lateTone,
+        }),
+      );
       const attendedNode = document.getElementById("attendanceClassesAttendedValue");
       const totalNode = document.getElementById("attendanceClassesTotalValue");
       const rateNode = document.getElementById("attendanceRateValue");
       const tardy10Node = document.getElementById("attendanceLateTardy10Value");
       const tardy30Node = document.getElementById("attendanceLateTardy30Value");
       const lateRateNode = document.getElementById("attendanceLateRateValue");
-      setSquareValue(attendedNode, String(classesAttended));
-      setSquareValue(totalNode, String(totalClasses));
-      setSquareValue(rateNode, formatPercent(attendanceRate), {
-        percent: true
-      });
-      setSquareValue(tardy10Node, String(tardy10));
-      setSquareValue(tardy30Node, String(tardy30));
-      setSquareValue(lateRateNode, formatPercent(lateRate), {
-        percent: true
-      });
-      document
-        .querySelectorAll("#attendanceOverviewGrid .attendance-square")
-        .forEach((node) => {
-          node.classList.remove("is-good", "is-warn", "is-risk");
-        });
-      const attendanceRateCard = rateNode?.closest(".attendance-square");
-      const lateRateCard = lateRateNode?.closest(".attendance-square");
-      if (attendanceRateCard) {
-        if (attendanceRate >= 95) attendanceRateCard.classList.add("is-good");
-        else if (attendanceRate >= 90) attendanceRateCard.classList.add("is-warn");
-        else attendanceRateCard.classList.add("is-risk");
-      }
-      if (lateRateCard) {
-        if (lateRate <= 5) lateRateCard.classList.add("is-good");
-        else if (lateRate <= 10) lateRateCard.classList.add("is-warn");
-        else lateRateCard.classList.add("is-risk");
-      }
+      if (attendedNode) attendedNode.textContent = String(classesAttended);
+      if (totalNode) totalNode.textContent = String(totalClasses);
+      if (rateNode) rateNode.textContent = formatPercent(attendanceRate);
+      if (tardy10Node) tardy10Node.textContent = String(tardy10);
+      if (tardy30Node) tardy30Node.textContent = String(tardy30);
+      if (lateRateNode) lateRateNode.textContent = formatPercent(lateRate);
     }
 
     function renderPerformanceReportsOverviewCard(child = {}) {
@@ -3552,6 +3579,10 @@
       const rows = state.reportArchiveRows;
       const active = rows[state.activeReportIndex] || null;
       const child = selectedDashboardChild() || {};
+      const linkedChild =
+        Array.isArray(state.children) ?
+        state.children.find((entry) => normalizeText(entry?.eaglesId) === normalizeText(child?.eaglesId)) || null :
+        null;
       const titleNode = document.getElementById("performanceReportModalTitle");
       const metaNode = document.getElementById("performanceReportModalMeta");
       const identityNode = document.getElementById("performanceReportIdentity");
@@ -3584,32 +3615,16 @@
           active?.generatedAt || active?.generatedDate,
         );
       if (identityNode) {
-        const linkedChild =
-          state.children.find(
-            (entry) =>
-            normalizeText(entry?.eaglesId) ===
-            normalizeText(child?.eaglesId || state.selectedEaglesId),
-          ) || {};
-        const classValue = normalizeText(active?.className) || "-";
-        const studentNumberValue =
-          child?.studentNumber === null || child?.studentNumber === undefined ?
-          linkedChild?.studentNumber :
-          child?.studentNumber;
-        const studentNumber =
-          studentNumberValue === null || studentNumberValue === undefined ?
+        const reportClassName = normalizeText(active?.className || child?.currentGrade || "-");
+        const reportStudentNumber =
+          (linkedChild?.studentNumber ?? child?.studentNumber) === null ||
+          (linkedChild?.studentNumber ?? child?.studentNumber) === undefined ?
           "-" :
-          String(studentNumberValue);
-        const studentFullName =
-          normalizeText(child?.fullName) ||
-          normalizeText(linkedChild?.fullName) ||
-          normalizeText(child?.englishName) ||
-          normalizeText(linkedChild?.englishName) ||
-          "-";
-        const studentId =
-          normalizeText(child?.eaglesId) ||
-          normalizeText(linkedChild?.eaglesId) ||
-          "-";
-        identityNode.textContent = `${classValue} | ${studentNumber} | ${studentFullName} | ${studentId}`;
+          String(linkedChild?.studentNumber ?? child.studentNumber);
+        const reportFullName = normalizeText(linkedChild?.fullName || child?.fullName || "-");
+        const reportEaglesId = normalizeText(linkedChild?.eaglesId || child?.eaglesId || "-");
+        identityNode.textContent =
+          `${reportClassName} | ${reportStudentNumber} | ${reportFullName} | ${reportEaglesId}`;
       }
       state.reportPastDueRows = performanceReportPastDueRows(active, child);
       renderPerformanceReportHomeworkSnapshot(active);
@@ -3764,6 +3779,45 @@
         timeZone: PORTAL_TIME_ZONE,
       }).format(date);
     }
+
+      function formatPortalWeekRange(startValue = "", endValue = "") {
+        const startRaw = normalizeText(startValue);
+        const endRaw = normalizeText(endValue);
+        const parse = (value) => {
+          if (!value) return null;
+        const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value) ?
+          new Date(`${value}T00:00:00+07:00`) :
+          new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      };
+      const startDate = parse(startRaw);
+      const endDate = parse(endRaw);
+        if (!startDate || !endDate) {
+          return `${formatPortalDate(startRaw)} - ${formatPortalDate(endRaw)}`;
+        }
+        const shortDayMonth = (date) => {
+          const parts = new Intl.DateTimeFormat("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            timeZone: PORTAL_TIME_ZONE,
+          }).formatToParts(date);
+          const day = parts.find((entry) => entry.type === "day")?.value || "";
+          const month = parts.find((entry) => entry.type === "month")?.value || "";
+          return `${day}/${month}`;
+        };
+        const year = new Intl.DateTimeFormat("en-GB", {
+          year: "numeric",
+          timeZone: PORTAL_TIME_ZONE,
+        });
+        const startLabel = shortDayMonth(startDate);
+        const endLabel = shortDayMonth(endDate);
+        const startYear = year.format(startDate);
+        const endYear = year.format(endDate);
+        if (startYear === endYear) {
+          return `${startLabel}-${endLabel} ${startYear}`;
+        }
+        return `${startLabel} ${startYear}-${endLabel} ${endYear}`;
+      }
 
     function formatQueueDateTimeTz7(value) {
       const raw = normalizeText(value);
@@ -4262,6 +4316,39 @@
       return span.outerHTML;
     }
 
+    function newsQueueSummaryChipHtml(label = "", count = 0, tone = "") {
+      const span = document.createElement("span");
+      span.className = `chip ${chipClassForTone(tone)} queue-summary-chip`;
+      const labelSpan = document.createElement("span");
+      labelSpan.className = "queue-summary-chip-label";
+      labelSpan.textContent = normalizeText(label);
+      const countSpan = document.createElement("strong");
+      countSpan.className = "queue-summary-chip-count";
+      countSpan.textContent = String(Math.max(0, Number.parseInt(String(count), 10) || 0));
+      span.append(labelSpan, countSpan);
+      return span.outerHTML;
+    }
+
+    function renderNewsQueueSummaryChips(summaryEl, summary = {}) {
+      if (!summaryEl) return;
+      const counts = {
+        submitted: Math.max(0, Number.parseInt(String(summary?.submitted || 0), 10) || 0),
+        revise: Math.max(0, Number.parseInt(String(summary?.revise || 0), 10) || 0),
+        waiting: Math.max(0, Number.parseInt(String(summary?.waiting || 0), 10) || 0),
+        approved: Math.max(0, Number.parseInt(String(summary?.approved || 0), 10) || 0),
+      };
+      summaryEl.innerHTML = [
+        newsQueueSummaryChipHtml("Đã nộp", counts.submitted, "warn"),
+        newsQueueSummaryChipHtml("Cần chỉnh sửa", counts.revise, "bad"),
+        newsQueueSummaryChipHtml("Chờ duyệt", counts.waiting, "revise"),
+        newsQueueSummaryChipHtml("Đã duyệt", counts.approved, "good"),
+      ].join("");
+      summaryEl.setAttribute(
+        "aria-label",
+        `Đã nộp ${counts.submitted}; Cần chỉnh sửa ${counts.revise}; Chờ duyệt ${counts.waiting}; Đã duyệt ${counts.approved}`,
+      );
+    }
+
     function summarizeNewsWeekSetStatuses(weekSets = []) {
       const summary = {
         approved: 0,
@@ -4475,6 +4562,7 @@
           `Đã mở tuần ${normalizeText(weekSet?.weekStart)} đến ${normalizeText(weekSet?.weekEnd)}.`,
         );
       }
+      window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
       return true;
     }
 
@@ -4490,6 +4578,28 @@
         ...options,
         reportDate: dateKey,
       });
+    }
+
+    function openParentNewsDate(dateKey = "", options = {}) {
+      const targetDate = normalizeText(dateKey).slice(0, 10);
+      setActivePortalView("dashboard");
+      setActiveDashboardPage("news-reports");
+      if (!targetDate) return false;
+      return openNewsWeekSetModalByReportDate(targetDate, {
+        ...options,
+        silentStatus: options?.silentStatus === true,
+      });
+    }
+
+    function getParentNewsWindowDate(key = "reportDate") {
+      const news = selectedDashboardChild()?.newsReports?.window || {};
+      const preferred = normalizeText(news?.[key]).slice(0, 10);
+      if (preferred) return preferred;
+      const fallback = normalizeText(
+        key === "todayDate" ? news?.reportDate : news?.todayDate,
+      ).slice(0, 10);
+      if (fallback) return fallback;
+      return new Date().toISOString().slice(0, 10);
     }
 
     function renderNewsQueueTable(bodyId, items = []) {
@@ -4509,7 +4619,7 @@
         );
         const latestDate = normalizeText(item?.latestReportDate || item?.reports?.[0]?.reportDate);
         const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
-        return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalDate(item?.weekStart))} đến ${escapeHtml(formatPortalDate(item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
+        return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
       }).join("");
       scheduleChipTooltipRefresh(body);
     }
@@ -4684,7 +4794,7 @@
           ],
           calendarTitle: "Lịch báo cáo tin tức",
           calendarSummary: calendar.length ?
-            "Trạng thái báo cáo trong 60 ngày gần nhất." :
+            "Tình trạng báo cáo trong 60 ngày gần nhất." :
             "Chưa có lịch báo cáo để hiển thị.",
           events: newsCalendarEvents(calendar),
           primaryTitle: "Hàng chờ gần nhất",
@@ -4853,7 +4963,7 @@
             title: `${attendanceStatusLabel(row.status)}${normalizeText(row.className) ? ` | ${normalizeText(row.className)}` : ""}`,
             meta: formatPortalDate(row.attendanceDate),
             note: normalizeText(row.comments) ||
-              "Được ghi nhận là trạng thái không có mặt.",
+              "Được ghi nhận là Tình trạng không có mặt.",
             tone: row.status === "absent" ? "bad" : "warn",
           })),
           primaryEmpty: "Không có cảnh báo vắng, trễ hoặc có phép trong lịch sử gần đây.",
@@ -5169,10 +5279,10 @@
       scheduleChipTooltipRefresh(document.getElementById("portalDetailCard") || document);
     }
 
-    function syncDashboardPageVisibility() {
-      const authenticated = document
-        .getElementById("loginCard")
-        ?.classList.contains("hidden");
+      function syncDashboardPageVisibility() {
+        const authenticated = document
+          .getElementById("loginCard")
+          ?.classList.contains("hidden");
       if (!authenticated) {
         document.getElementById("portalCard")?.classList.add("hidden");
         document.getElementById("portalDetailCard")?.classList.add("hidden");
@@ -5199,6 +5309,11 @@
         requestAnimationFrame(() => {
           renderPortalDetailPage();
           state.detailCalendar?.updateSize?.();
+          window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
+        });
+      } else if (showChild) {
+        requestAnimationFrame(() => {
+          window.SISPortalNav?.scrollElementIntoView?.("#childPageCard");
         });
       }
     }
@@ -5214,7 +5329,7 @@
 
     function renderDashboard() {
       const root = document.getElementById("dashboardMetrics");
-      const identity = document.getElementById("parentIdentity");
+      const identity = document.getElementById("studentIdentity");
       const snapshotBadge = document.getElementById("snapshotBadge");
       const overview = document.getElementById("parentOverviewSummary");
       const child = selectedDashboardChild();
@@ -5224,6 +5339,7 @@
         renderCurrentHomeworkOverviewCard({}, 0);
         renderPastDueHomeworkOverviewCard({}, 0);
         renderAttendanceOverviewCard({});
+        renderAttendanceOverviewMetrics({});
         state.reportAcknowledgements = readStoredReportAcknowledgements();
         renderPerformanceReportsOverviewCard({});
         setSummary("attendanceCalendarSummary", "Chưa có dữ liệu.");
@@ -5285,12 +5401,16 @@
         absencePercent > 10 ? "red" :
         absencePercent > 5 ? "purple" :
         "";
-      const pendingTone = pendingHomework > 0 ? "blue" : "";
-      const overdueTone = overdueHomework > 0 ? "red" : "";
+      const pendingTone = pendingHomework > 0 ? "amber" : "";
+      const overdueTone = overdueHomework > 0 ? "red" : "green";
       const averageTone =
         Number.isFinite(averageScore) && averageScore <= 70 ? "red" :
         Number.isFinite(averageScore) && averageScore <= 76 ? "purple" :
         "";
+      const reportTone = reportCount > 0 ? "green" : "";
+      const approvedNewsTone = approvedNews > 0 ? "green" : "";
+      const submittedNewsTone = submittedNews > 0 ? "blue" : "";
+      const revisionNewsTone = revisionNews > 0 ? "purple" : "";
       if (identity) {
         identity.textContent =
           `${displayName} | ${displayEaglesId || "-"} | ${normalizeText(child.currentGrade || "Chưa có lớp")}`;
@@ -5305,10 +5425,10 @@
           Number.isFinite(averageScore) ? formatPercent(averageScore) : "-",
           averageTone,
         ),
-        metricCard("Báo cáo", String(reportCount)),
-        metricCard("Tin tức đã duyệt", String(approvedNews), approvedNews ? "green" : ""),
-        metricCard("Tin tức đã nộp", String(submittedNews), submittedNews ? "blue" : ""),
-        metricCard("Tin tức cần sửa", String(revisionNews), revisionNews ? "red" : ""),
+        metricCard("Báo cáo", String(reportCount), reportTone),
+        metricCard("Tin tức đã duyệt", String(approvedNews), approvedNewsTone),
+        metricCard("Tin tức đã nộp", String(submittedNews), submittedNewsTone),
+        metricCard("Tin tức cần sửa", String(revisionNews), revisionNewsTone),
       );
       if (overview) {
         overview.textContent = displayEaglesId ?
@@ -5424,33 +5544,23 @@
 
     function renderNewsQueueHome() {
       const summaryEl = document.getElementById("newsQueueSummary");
-      const badgeEl = document.getElementById("newsQueueBadge");
-      if (!summaryEl || !badgeEl) return;
+      if (!summaryEl) return;
       const child = selectedDashboardChild();
+      const emptySummary = {
+        approved: 0,
+        submitted: 0,
+        waiting: 0,
+        revise: 0,
+      };
       if (!child) {
-        badgeEl.className = "chip chip-neutral";
-        badgeEl.textContent = "Chưa có";
-        summaryEl.textContent = "Chưa có dữ liệu.";
+        renderNewsQueueSummaryChips(summaryEl, emptySummary);
         renderNewsQueueTable("newsQueueBody", []);
         return;
       }
       const items = buildParentNewsWeekSetsFromState();
       state.newsWeekSets = items;
       const summary = summarizeNewsWeekSetStatuses(items);
-      const total = items.length;
-      const badgeTone =
-        summary.revise > 0 ? "chip-bad" :
-        summary.waiting > 0 ? "chip-revise" :
-        summary.submitted > 0 ? "chip-warn" :
-        summary.approved > 0 ? "chip-ok" :
-        "chip-neutral";
-      badgeEl.className = `chip ${badgeTone}`;
-      badgeEl.textContent = total ? `${summary.approved}/${summary.submitted}/${summary.waiting}/${summary.revise}` : "Không có";
-      const summaryText =
-        total ?
-        `Đã duyệt ${summary.approved} • Đã nộp ${summary.submitted} • Chờ duyệt ${summary.waiting} • Cần sửa ${summary.revise}` :
-        "Chưa có báo cáo tin tức.";
-      summaryEl.textContent = summaryText;
+      renderNewsQueueSummaryChips(summaryEl, summary);
       renderNewsQueueTable("newsQueueBody", items);
       scheduleChipTooltipRefresh(document.getElementById("newsQueueCard") || document);
     }
@@ -5486,16 +5596,20 @@
         payload.immutableFields.map((entry) => normalizeText(entry)) :
         ["eaglesId", "studentNumber"],
       );
-      document.getElementById("immutableEaglesId").textContent =
+      document.getElementById("studentEaglesIdValue").textContent =
         normalizeText(child.eaglesId) || "-";
-      document.getElementById("immutableStudentNumber").textContent =
+      document.getElementById("studentNumberValue").textContent =
         child.studentNumber === null || child.studentNumber === undefined ?
         "-" :
         String(child.studentNumber);
-      document.getElementById("immutableFullName").textContent =
+      document.getElementById("studentNameValue").textContent =
         normalizeText(child.fullName) || "-";
-      document.getElementById("immutableGrade").textContent =
+      document.getElementById("studentGradeValue").textContent =
         normalizeText(child.currentGrade) || "-";
+      const immutableGradeNode = document.getElementById("immutableGrade");
+      if (immutableGradeNode) {
+        immutableGradeNode.textContent = normalizeText(child.currentGrade) || "-";
+      }
       const selectedChild = selectedDashboardChild();
       state.newsItems = Array.isArray(selectedChild?.newsReports?.items) ?
         selectedChild.newsReports.items :
@@ -5773,10 +5887,14 @@
     });
     document.getElementById("openChildPageBtn")?.addEventListener("click", () => {
       setActivePortalView("child");
+      window.SISPortalNav?.scrollElementIntoView?.("#childPageCard");
     });
     document
       .getElementById("openNewsQueueDetailBtn")
-      ?.addEventListener("click", () => setActiveDashboardPage("news-reports"));
+      ?.addEventListener("click", () => {
+        openParentNewsDate(getParentNewsWindowDate("reportDate"));
+        window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
+      });
     document
       .getElementById("refreshNewsQueueBtn")
       ?.addEventListener("click", () => {
@@ -5784,8 +5902,13 @@
           .then(() => setStatus("Đã tải lại hàng chờ báo cáo tin tức.", "ok"))
           .catch((error) => setStatus(error.message, "err"));
       });
+    document
+      .getElementById("portalDetailBackToMainBtn")
+      ?.addEventListener("click", () => {
+        goToParentMain();
+      });
     document.getElementById("backToDashboardBtn")?.addEventListener("click", () => {
-      setActiveDashboardPage("home");
+      goToParentMain();
     });
     document
       .getElementById("openPastDueHomeworkModalBtn")
@@ -5829,6 +5952,7 @@
         openNewsWeekSetModalByWeekSetId(weekSetId, {
           reportDate
         });
+        window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
         return;
       }
       const rowTarget = event.target?.closest?.("tr[data-news-week-set-id]");
@@ -5841,6 +5965,7 @@
         setActivePortalView("dashboard");
         setActiveDashboardPage("news-reports");
         openNewsWeekSetModalByWeekSetId(weekSetId);
+        window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
       }
     });
     document
@@ -5947,11 +6072,7 @@
       const root = document.documentElement;
       const button = document.getElementById("parentThemeToggle");
       const icon = document.getElementById("parentThemeToggleIcon");
-      const storageKey = "sis-theme-parent";
-
-      function validTheme(theme) {
-        return theme === "dark" || theme === "light";
-      }
+      const themeState = window.SIS_PORTAL_THEME;
 
       function sync(theme) {
         if (!button || !icon) return;
@@ -5963,18 +6084,14 @@
       }
 
       function apply(theme) {
-        const next = validTheme(theme) ? theme : "light";
-        root.dataset.theme = next;
-        try {
-          localStorage.setItem(storageKey, next);
-        } catch {}
+        const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "dark" ? "dark" : "light");
         sync(next);
       }
 
       button?.addEventListener("click", () => {
-        apply(root.dataset.theme === "dark" ? "light" : "dark");
+        apply(themeState?.toggleTheme ? themeState.toggleTheme("light") : (root.dataset.theme === "dark" ? "light" : "dark"));
       });
-      apply(validTheme(root.dataset.theme) ? root.dataset.theme : "light");
+      apply(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"));
     })();
   </script>
 </body>

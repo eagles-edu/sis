@@ -5,11 +5,11 @@ import test from "node:test"
 import { JSDOM } from "jsdom"
 
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
-const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.css")
+const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.min.css")
 const STUDENT_PORTAL_HTML = fs.readFileSync(STUDENT_PORTAL_HTML_PATH, "utf8")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const STUDENT_PORTAL_HTML_FOR_TEST = STUDENT_PORTAL_HTML
-  .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.css">\s*/i, "")
+  .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
   .replace(/<script type="module">\s*import svgIcon[\s\S]*?<\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
@@ -131,7 +131,7 @@ test("student portal dark theme keeps identity, metric, and homework surfaces on
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.student-portal-page \.identity-item/s)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.student-portal-page \.metric/s)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.student-portal-page \.homework-card-shell/s)
-  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.student-portal-page \.homework-link,/i)
+  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.student-portal-page \.homework-link(?:,|\{)/i)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.student-portal-page \.homework-card-label/s)
 })
 

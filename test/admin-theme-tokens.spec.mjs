@@ -47,8 +47,8 @@ test("student-admin uses shared theme tokens for chart and support surfaces", ()
 test("student-points chart render uses shared portal tokens", () => {
   const source = readFile("web-asset/admin/student-points.html")
   assert.ok(
-    source.includes('<link rel="stylesheet" href="/web-asset/shared/portal-theme.css">'),
-    "student-points.html should load portal-theme.css",
+    source.includes('<link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">'),
+    "student-points.html should load portal-theme.min.css",
   )
   const chartBlock = sliceBetween(
     source,
@@ -80,8 +80,8 @@ test("student-points chart render uses shared portal tokens", () => {
 test("grades-tabulator chart render uses shared portal tokens", () => {
   const source = readFile("web-asset/admin/grades-tabulator.html")
   assert.ok(
-    source.includes('<link rel="stylesheet" href="/web-asset/shared/portal-theme.css">'),
-    "grades-tabulator.html should load portal-theme.css",
+    source.includes('<link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">'),
+    "grades-tabulator.html should load portal-theme.min.css",
   )
   const sparklineBlock = sliceBetween(
     source,

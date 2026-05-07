@@ -82,9 +82,6 @@ function themeInitScript() {
     (() => {
       try {
         localStorage.setItem("sis-theme", "dark");
-        localStorage.setItem("sis-theme-admin", "dark");
-        localStorage.setItem("sis-theme-parent", "dark");
-        localStorage.setItem("sis-theme-student", "dark");
       } catch {
         void 0;
       }
@@ -176,6 +173,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
     {
       url: "/web-asset/admin/student-admin.html",
       checks: [
+        ["admin auth wrap", ".wrap"],
         ["admin auth panel", "#authPanel"],
       ],
     },
@@ -198,8 +196,16 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
     {
       url: "/web-asset/admin/portal-hub.html",
       checks: [
+        ["hub page body", "body.portal-hub-page"],
+        ["hub wash layer", ".portal-hub-bg__wash"],
         ["hub logo wrap", ".brand-logo-wrap.brand-logo-wrap--lg"],
         ["hub prefooter", ".hub-prefooter"],
+      ],
+    },
+    {
+      url: "/web-asset/admin/student-points.html",
+      checks: [
+        ["student points body", "body"],
       ],
     },
   ]
@@ -210,6 +216,32 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
       await page.waitForTimeout(400)
       for (const [label, selector] of testCase.checks) {
         const style = await readStyle(page, selector)
+        if (label === "admin auth wrap") {
+          assert.ok(style, `${label} should exist`)
+          assert.equal(
+            style.backgroundColor,
+            "rgba(0, 0, 0, 0)",
+            `${label} should stay transparent so the login page background remains continuous`,
+          )
+          assert.equal(style.backgroundImage, "none", `${label} should not carry a separate fill layer`)
+          continue
+        }
+        if (label === "admin auth panel") {
+          assertDarkSurface(label, style)
+          continue
+        }
+        if (label === "hub wash layer") {
+          assert.ok(style, `${label} should exist`)
+          assert.ok(
+            !/rgb\(217,\s*237,\s*255\)|rgb\(223,\s*248,\s*234\)|#d9edff|#dff8ea/i.test(style.backgroundImage || ""),
+            `${label} should not retain the light wash token: ${style.backgroundImage}`,
+          )
+          assert.ok(
+            /rgba\(181,\s*0,\s*16,\s*0\.14\)|rgba\(109,\s*135,\s*191,\s*0\.18\)|rgba\(255,\s*255,\s*255,\s*0\.08\)|rgba\(16,\s*18,\s*22,\s*0\.24\)/i.test(style.backgroundImage || ""),
+            `${label} should use the dark hub wash token: ${style.backgroundImage}`,
+          )
+          continue
+        }
         assertNotLight(label, style)
       }
     }

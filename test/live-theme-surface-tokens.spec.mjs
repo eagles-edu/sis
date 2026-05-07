@@ -97,7 +97,7 @@ test("hub surfaces follow the shared portal theme tokens", () => {
       "--hub-panel-bg-support: var(--portal-surface-support);",
       "--hub-panel-bg-section: var(--portal-surface-panel);",
       "--hub-panel-border: var(--portal-border);",
-      "background: var(--portal-page-bg);",
+      "background: var(--hub-theme-page-bg-body);",
     ],
     "portal-hub.html",
   )
@@ -123,7 +123,7 @@ test("map page uses the shared portal page background", () => {
   assertIncludesAll(
     source,
     [
-      '<link rel="stylesheet" href="/web-asset/shared/portal-theme.css">',
+      '<link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">',
       "background: var(--portal-page-bg);",
     ],
     "map2026-v3.html",
@@ -131,7 +131,7 @@ test("map page uses the shared portal page background", () => {
 })
 
 test("semantic status palettes stay on shared portal tokens", () => {
-  const shared = readFile("web-asset/shared/portal-theme.css")
+  const shared = readFile("web-asset/shared/portal-theme.min.css")
   assertIncludesAll(
     shared,
     [
@@ -200,5 +200,18 @@ test("semantic status palettes stay on shared portal tokens", () => {
     studentAdmin,
     ["#d7f2e1", "#ffe9c7", "#ffd9de", "#dfeaff", "#70b68e"],
     "student-admin legacy status colors",
+  )
+
+  const studentAdminJs = readFile("web-asset/admin/student-admin.js")
+  assertIncludesAll(
+    studentAdminJs,
+    ["bar-detail-action-btn", "level-theme-btn"],
+    "student-admin bar-detail buttons",
+  )
+
+  assertIncludesAll(
+    shared,
+    [":not(.bar-detail-action-btn)"],
+    "shared admin button exclusions",
   )
 })

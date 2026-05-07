@@ -925,7 +925,8 @@ test("news review modal supports student-scoped navigation and modal review acti
   await waitFor(() => {
     const rows = dom.window.document.querySelectorAll("#newsReviewRows tr")
     assert.equal(rows.length, 1)
-    assert.match(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
+    assert.match(rows[0].textContent || "", /09\/03-15\/03 2026/i)
+    assert.doesNotMatch(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
     assert.match(rows[0].textContent || "", /Waiting/i)
     assert.match(rows[0].textContent || "", /Unapproved-6/i)
   })
@@ -1389,7 +1390,8 @@ test("news review week-set table headers sort all visible columns", async () => 
   await waitFor(() => {
     assert.equal(weekSetHeader.getAttribute("aria-sort"), "ascending")
     const firstWeekSetCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(1)")?.textContent)
-    assert.match(firstWeekSetCell, new RegExp(`^${localIsoDate(oldestWeekStart)}`))
+    assert.match(firstWeekSetCell, /^\d{2}\/\d{2}-\d{2}\/\d{2}\s+\d{4}$/)
+    assert.doesNotMatch(firstWeekSetCell, /2026-03-09 to 2026-03-15/i)
   })
 
   const reportsHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="reports"]')
@@ -6737,6 +6739,8 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
     )
     assert.ok(startersBtn)
     assert.ok(moversBtn)
+    assert.ok(startersBtn.classList.contains("bar-detail-action-btn"))
+    assert.ok(moversBtn.classList.contains("bar-detail-action-btn"))
     assert.ok(startersBtn.classList.contains("panelbg-starters"))
     assert.ok(moversBtn.classList.contains("panelbg-mov"))
 

@@ -16,7 +16,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <style>
     :root {
       --bg: var(--portal-page-bg);
@@ -59,7 +59,7 @@
       min-height: 100vh;
       font-family: "Segoe UI", "Trebuchet MS", sans-serif;
       color: var(--ink);
-      background: var(--bg-accent);
+      background: var(--bg);
       padding: 20px;
     }
 
@@ -80,6 +80,43 @@
       border-radius: 14px;
       box-shadow: var(--shadow);
       padding: 16px;
+    }
+
+    #loginPanel {
+      width: min(100%, 560px);
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: clamp(3rem, 5vw, 4rem);
+      padding: 20px;
+    }
+
+    #loginPanel .row {
+      align-items: stretch;
+    }
+
+    #loginPanel input,
+    #loginPanel button {
+      min-height: 48px;
+      padding: 12px 16px;
+    }
+
+    #loginPanel .login-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-top: 10px;
+    }
+
+    #loginPanel .login-link {
+      color: var(--primary-strong);
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    #loginPanel .login-link:hover,
+    #loginPanel .login-link:focus-visible {
+      text-decoration: underline;
     }
 
     h1 {
@@ -280,6 +317,10 @@
           <label for="loginBtn">&nbsp;</label>
           <button id="loginBtn" class="primary" type="button">Sign In</button>
         </div>
+      </div>
+      <div class="login-links">
+        <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20points%20password%20reset">Reset password</a>
+        <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
       </div>
     </section>
 

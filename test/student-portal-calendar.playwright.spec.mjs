@@ -711,6 +711,36 @@ test(
       assert.equal(homeState.identityHeadAscii.trim(), "Thong tin dinh danh hoc sinh");
       assert(homeState.metricLabels.includes("Absent SYTD"));
 
+      await page.click("#studentThemeToggle");
+      await page.waitForFunction(() => globalThis.document.documentElement.getAttribute("data-theme") === "dark");
+      await page.waitForFunction(() => {
+        const squares = globalThis.document.querySelectorAll("#attendanceCalendarMetrics .attendance-square-v.is-percent");
+        return Boolean(squares.length && Array.from(squares).every((square) => globalThis.window.getComputedStyle(square).color));
+      });
+
+      const attendanceDarkThemeState = await page.evaluate(() => {
+        const squares = Array.from(globalThis.document.querySelectorAll("#attendanceCalendarMetrics .attendance-square-v.is-percent"));
+        const probe = globalThis.document.createElement("span");
+        probe.style.color = "var(--secondary-color)";
+        globalThis.document.body.appendChild(probe);
+        const expectedColor = globalThis.window.getComputedStyle(probe).color;
+        probe.remove();
+        return {
+          theme: globalThis.document.documentElement.getAttribute("data-theme") || "",
+          texts: squares.map((square) => square.textContent || ""),
+          colors: squares.map((square) => globalThis.window.getComputedStyle(square).color),
+          expectedColor,
+        };
+      });
+
+      assert.equal(attendanceDarkThemeState.theme, "dark");
+      assert.ok(attendanceDarkThemeState.texts.length >= 2);
+      attendanceDarkThemeState.texts.forEach((text) => assert.match(text, /%/));
+      attendanceDarkThemeState.colors.forEach((color) => assert.equal(color, attendanceDarkThemeState.expectedColor));
+
+      await page.click("#studentThemeToggle");
+      await page.waitForFunction(() => globalThis.document.documentElement.getAttribute("data-theme") === "light");
+
       await page.waitForFunction(() => {
         const body = globalThis.document.getElementById("newsQueueBody");
         return Boolean(body && body.textContent && !/Loading/i.test(body.textContent));
@@ -746,6 +776,8 @@ test(
       assert.equal(newsQueueState.text.includes("Loading"), false);
       assert.ok(newsQueueState.rowCount >= 1);
       assert.ok(newsQueueState.actionButtons >= 1);
+      assert.match(newsQueueState.text, /^\s*.*\d{2}\/\d{2}-\d{2}\/\d{2}\s+\d{4}.*$/s);
+      assert.doesNotMatch(newsQueueState.text, /\b\d{4}-\d{2}-\d{2}\s+to\s+\d{4}-\d{2}-\d{2}\b/i);
       assert.match(newsQueueState.latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/);
       assert.match(newsQueueState.latestSubmissionHtml, /queue-compact-datetime/);
       assert.match(newsQueueState.text, /Revise/i);

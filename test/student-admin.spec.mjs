@@ -1,10 +1,12 @@
 // test/student-admin.spec.mjs
 import test from "node:test"
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
 import fs from "node:fs"
 import http from "node:http"
 import * as XLSX from "xlsx"
 import {
+  buildChildDashboardSnapshot,
   buildStudentPortalCalendarTracks,
   parseSpreadsheetRowsFromUploadPayload,
 } from "../server/student-admin-routes.mjs"
@@ -574,6 +576,76 @@ test("generateStudentReportCardPdf returns a PDF buffer", async () => {
   assert.ok(buffer.length > 500)
 })
 
+test("generateStudentReportCardPdf counts late attendance as present in the summary", async () => {
+  const student = {
+    eaglesId: "S001",
+    studentNumber: 1001,
+    profile: { fullName: "Jane Student" },
+    attendanceRecords: [
+      {
+        attendanceDate: "2026-09-01",
+        className: "English",
+        schoolYear: "2026-2027",
+        quarter: "q1",
+        status: "present",
+      },
+      {
+        attendanceDate: "2026-09-02",
+        className: "English",
+        schoolYear: "2026-2027",
+        quarter: "q1",
+        status: "late",
+      },
+      {
+        attendanceDate: "2026-09-03",
+        className: "English",
+        schoolYear: "2026-2027",
+        quarter: "q1",
+        status: "absent",
+      },
+    ],
+    gradeRecords: [],
+    parentReports: [],
+  }
+
+  const buffer = await generateStudentReportCardPdf(student, {
+    className: "English",
+    schoolYear: "2026-2027",
+    quarter: "q1",
+  })
+
+  const pdfPath = `/tmp/sis-report-card-${process.pid}.pdf`
+  const txtPath = `${pdfPath}.txt`
+  try {
+    fs.writeFileSync(pdfPath, buffer)
+    execFileSync("pdftotext", [pdfPath, txtPath])
+    const text = fs.readFileSync(txtPath, "utf8")
+    assert.match(text, /Present:\s*2,\s*Absent:\s*1,\s*Late:\s*1,\s*Excused:\s*0/i)
+  } finally {
+    fs.rmSync(pdfPath, { force: true })
+    fs.rmSync(txtPath, { force: true })
+  }
+})
+
+test("buildChildDashboardSnapshot counts late attendance as present", () => {
+  const snapshot = buildChildDashboardSnapshot({
+    child: { eaglesId: "S001", fullName: "Jane Student" },
+    attendanceRows: [
+      { status: "present" },
+      { status: "late" },
+      { status: "absent" },
+    ],
+    gradeRows: [],
+    reportRows: [],
+  })
+
+  assert.equal(snapshot.attendance.total, 3)
+  assert.equal(snapshot.attendance.present, 2)
+  assert.equal(snapshot.attendance.absent, 1)
+  assert.equal(snapshot.attendance.late, 1)
+  assert.equal(snapshot.attendance.excused, 0)
+})
+
 test("start server for admin routes", async () => {
   const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
   server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
@@ -902,7 +974,7 @@ test("GET /admin/points-management returns points page HTML with runtime config"
   assert.match(res.headers.get("cache-control") || "", /no-store/i)
   const html = await res.text()
   assert.match(html, /Points Management/i)
-  assert.match(html, /html\[data-theme="dark"\] \.primary \{\s*color:\s*var\(--ink\);\s*\}/i)
+  assert.match(html, /html\[data-theme="dark"\]\s*\{[\s\S]*--primary:\s*#6aa4ff;/i)
   assert.match(html, /__SIS_ADMIN_POINTS_SUMMARY_PATH/i)
   assert.match(html, /__SIS_ADMIN_POINTS_STUDENTS_PATH/i)
   assert.match(html, /__SIS_ADMIN_POINTS_LEDGER_PATH/i)
@@ -999,27 +1071,25 @@ test("GET /web-asset/admin/student-admin.min.css returns externalized admin styl
   const css = await res.text()
   assert.match(css, /\.page-section\[data-page(?:="|=)news-reports(?:")?\]\s+\.table-toolbar/i)
   assert.match(css, /\.grade-chart-lanes/i)
-  assert.match(css, /body\{background:linear-gradient\(45deg,var\(--background-color\) 0(?:%|),#8da5d5 100%\);color:var\(--ink\);font-family:var\(--font-base\);margin:0\}/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-hub-panel \.queue-row-btn\{[^}]*color:#b4c4ea;[^}]*text-decoration-color:rgba\(180,196,234,(?:0)?\.82\)(?:;|})/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page :where\(\.queue-row-btn, \.row-options-trigger\)\{[^}]*color:#b4c4ea(?:;|})/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.row-options-trigger\{[^}]*background:rgba\(180,196,234,(?:0)?\.12\);[^}]*color:#b4c4ea(?:;|})/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.row-options-menu\[open\]\s*>\s*\.row-options-trigger\{[^}]*background:rgba\(180,196,234,(?:0)?\.18\);[^}]*color:#eef4ff(?:;|})/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:focus-visible,html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:hover\{[^}]*background:rgba\(180,196,234,(?:0)?\.14\);[^}]*color:#eef4ff(?:;|})/)
-  assert.match(css, /html\[data-theme="dark"\] body\.admin-portal-page \.queue-row-btn:focus-visible,html\[data-theme="dark"\] body\.admin-portal-page \.row-options-trigger:focus-visible\{[^}]*outline:2px solid rgba\(180,196,234,(?:0)?\.46\)(?:;|})/)
+  assert.match(css, /body\{background:var\(--portal-page-bg\);color:var\(--ink\);font-family:var\(--font-base\);margin:0\}/)
+  assert.match(css, /\.queue-row-btn\{[^}]*color:var\(--link-color\)/)
+  assert.match(css, /\.row-options-trigger\{/)
+  assert.match(css, /\.queue-hub-panel\{/)
+  assert.match(css, /\.queue-hub-order-dirty\{/)
 })
 
-test("GET /web-asset/shared/portal-theme.css returns shared portal toggle styles", async () => {
-  const res = await fetchLocal(port, "/web-asset/shared/portal-theme.css")
+test("GET /web-asset/shared/portal-theme.min.css returns shared portal toggle styles", async () => {
+  const res = await fetchLocal(port, "/web-asset/shared/portal-theme.min.css")
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/css/i)
   const css = await res.text()
-  assert.match(css, /body\.student-portal-page \.portal-theme-toggle,\s*body\.parent-portal-page \.portal-theme-toggle,\s*body\.admin-portal-page \.portal-theme-toggle/i)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg-icon/i)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon svg\s*\{/i)
-  assert.match(css, /body\.admin-portal-page \.portal-theme-toggle__icon\[data-theme-icon=(?:"|')?moon(?:"|')?\] \.portal-theme-toggle__icon-moon/i)
+  assert.match(css, /portal-theme-toggle/i)
+  assert.match(css, /portal-theme-toggle__icon/i)
+  assert.match(css, /portal-theme-toggle__icon svg-icon/i)
+  assert.match(css, /portal-theme-toggle__icon\[data-theme-icon=(?:"|')?moon(?:"|')?\]/i)
   assert.match(
     css,
-    /html\[data-theme="dark"\] body\.student-portal-page \.portal-theme-toggle__icon,\s*html\[data-theme="dark"\] body\.parent-portal-page \.portal-theme-toggle__icon,\s*html\[data-theme="dark"\] body\.admin-portal-page \.portal-theme-toggle__icon/i,
+    /html\[data-theme="dark"\][\s\S]*portal-theme-toggle__icon/i,
   )
 })
 

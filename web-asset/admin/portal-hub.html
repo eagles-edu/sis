@@ -8,22 +8,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cổng cho admin, phụ huynh, học sinh và tài nguyên thành viên.">
   <script>
-    (() => {
-      try {
-        const savedTheme = localStorage.getItem("sis-theme");
-        if (savedTheme === "dark" || savedTheme === "light") {
-          document.documentElement.dataset.theme = savedTheme;
-        } else {
-          document.documentElement.dataset.theme = "dark";
-        }
-      } catch {
-        document.documentElement.dataset.theme = "dark";
-      }
-    })();
+    /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
+  </script>
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("dark")
   </script>
   <link rel="canonical" href="https://test.eagles.edu.vn">
   <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.css">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <title>Cổng Thông Tin Sinh Viên The Eagles American English Club Ltd</title>
   <style>
     /* Hub-only theme aliases: keep layout metrics local, source all colors from tokens. */
@@ -46,10 +39,10 @@
       --hub-footer-bg: var(--hub-theme-footer-bg);
       --hub-footer-text: var(--hub-theme-footer-text);
       --hub-link: var(--hub-theme-link);
-      --hub-page-bg-end: var(--portal-page-bg);
-      --hub-page-bg-glow: var(--portal-page-bg-wash);
-      --hub-page-bg-mid: var(--portal-page-bg);
-      --hub-page-bg-start: var(--portal-page-bg);
+      --hub-page-bg-end: var(--hub-theme-page-bg-end);
+      --hub-page-bg-glow: var(--hub-theme-page-bg-glow);
+      --hub-page-bg-mid: var(--hub-theme-page-bg-mid);
+      --hub-page-bg-start: var(--hub-theme-page-bg-start);
       --hub-panel-bg: var(--portal-surface-card);
       --hub-panel-bg-footer: var(--portal-surface-support);
       --hub-panel-bg-hero: var(--portal-surface-card);
@@ -59,13 +52,13 @@
       --hub-panel-shadow: var(--hub-theme-panel-shadow);
       --hub-phi: 1.61803398875;
       --hub-radius-base: clamp(3.33px, 0.42cqi, 8px);
-      --hub-text: var(--portal-text);
-      --hub-text-soft: var(--portal-text-soft);
+      --hub-text: var(--hub-theme-text);
+      --hub-text-soft: var(--hub-theme-text-soft);
       --hub-title-size: clamp(1.2rem, 1rem + 0.72vw, 1.6rem);
       --hub-unit: clamp(11px, 0.82vw, 14px);
       --radius-base: var(--hub-radius-base);
       background-attachment: fixed;
-      background: var(--portal-page-bg);
+      background: var(--hub-theme-page-bg-body);
       container-type: inline-size;
       min-height: 100dvh;
 
@@ -76,7 +69,7 @@
       background:
         radial-gradient(920px 420px at -15% -20%, var(--hub-page-bg-mid) 0%, transparent 62%),
         radial-gradient(980px 520px at 110% -25%, var(--hub-page-bg-glow) 0%, transparent 55%),
-        var(--portal-page-bg);
+        var(--hub-theme-page-bg-body);
   }
 
     body.portal-hub-page .portal-hub-bg {
@@ -565,6 +558,7 @@ grid-template-areas:
         justify-content: flex-start;
     }
   }
+
   </style>
 </head>
 
@@ -576,7 +570,8 @@ grid-template-areas:
   </div>
   <div class="portal-layout">
     <main class="shell">
-      <div class="hub-banner">
+      <div class="header-bar">
+        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
       <section class="card hero" aria-labelledby="hub-title">
@@ -689,23 +684,15 @@ grid-template-areas:
       const root = document.documentElement;
       const themeToggle = document.querySelector("[data-theme-toggle]");
       const themeIcon = document.querySelector("[data-theme-toggle-icon]");
+      const themeState = window.SIS_PORTAL_THEME;
       const currentOrigin = window.location.origin;
       const query = new URLSearchParams(window.location.search || "");
 
-      function getStoredTheme() {
-        try {
-          const savedTheme = localStorage.getItem("sis-theme");
-          return savedTheme === "dark" || savedTheme === "light" ? savedTheme : "";
-        } catch {
-          return "";
-        }
-      }
-
       function getPreferredTheme() {
-        if (root.dataset.theme === "dark" || root.dataset.theme === "light") {
-          return root.dataset.theme;
-        }
-        return getStoredTheme() || "dark";
+        if (themeState?.getTheme) return themeState.getTheme("dark");
+        return root.dataset.theme === "dark" || root.dataset.theme === "light"
+          ? root.dataset.theme
+          : "dark";
       }
 
       function syncThemeToggle(theme) {
@@ -718,11 +705,9 @@ grid-template-areas:
       }
 
       function applyTheme(theme) {
-        root.dataset.theme = theme;
-        try {
-          localStorage.setItem("sis-theme", theme);
-        } catch {}
-        syncThemeToggle(theme);
+        const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "light" ? "light" : "dark");
+        root.dataset.theme = next;
+        syncThemeToggle(next);
       }
 
       function isLoopbackHostname(hostname) {
@@ -774,7 +759,7 @@ grid-template-areas:
         panelBg: "var(--portal-surface-card)",
         panelBorder: "var(--portal-border)",
         panelShadow: "var(--hub-theme-panel-shadow)",
-        wash: "var(--portal-page-bg-wash)",
+        wash: "var(--hub-theme-wash)",
       };
 
       function resolveFallbackHref(target) {
@@ -815,7 +800,7 @@ grid-template-areas:
 
       syncThemeToggle(getPreferredTheme());
       themeToggle?.addEventListener("click", () => {
-        applyTheme(getPreferredTheme() === "dark" ? "light" : "dark");
+        applyTheme(themeState?.toggleTheme ? themeState.toggleTheme("dark") : (getPreferredTheme() === "dark" ? "light" : "dark"));
       });
     })();
   </script>

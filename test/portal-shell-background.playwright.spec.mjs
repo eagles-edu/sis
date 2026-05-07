@@ -122,9 +122,6 @@ test(
         await page.addInitScript((rawTheme) => {
           try {
             localStorage.setItem("sis-theme", rawTheme)
-            localStorage.setItem("sis-theme-admin", rawTheme)
-            localStorage.setItem("sis-theme-parent", rawTheme)
-            localStorage.setItem("sis-theme-student", rawTheme)
           } catch {
             void 0
           }
