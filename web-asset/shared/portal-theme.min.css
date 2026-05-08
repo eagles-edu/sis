@@ -9,7 +9,7 @@ body.parent-portal-page #loginCard,body.student-portal-page #loginPanel{backgrou
 body.admin-portal-page.admin-auth-booting #authBootPanel,
 body.admin-portal-page.admin-auth-booting .wrap,html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap{background:transparent!important;background-image:none!important}
 body.admin-portal-page #authPanel #loginForm,
-body.parent-portal-page #loginCard .login-form,body.student-portal-page #loginPanel #loginForm{gap:18px;margin-inline:auto;width:min(100%,var(--portal-login-form-max-width))}body.admin-portal-page #authPanel .row{grid-template-columns:1fr}
+body.parent-portal-page #loginCard .login-form,body.student-portal-page #loginPanel #loginForm{gap:0;margin-inline:auto;width:min(100%,var(--portal-login-form-max-width))}body.admin-portal-page #authPanel .row{grid-template-columns:1fr}
 body.admin-portal-page #authPanel .row>[class*=" col-"],body.admin-portal-page #authPanel .row>[class^="col-"]{grid-column:span 12}body.admin-portal-page #authBootPanel{align-content:center;display:grid;gap:12px;justify-items:center;min-height:180px;text-align:center}body.admin-portal-page #authBootPanel .small{margin:0}
 body.admin-portal-page #authPanel :is(input, select, textarea),
 body.parent-portal-page #loginCard :is(input, select, textarea),body.student-portal-page #loginPanel :is(input, select, textarea){font-size:.98rem;min-height:48px;padding:12px 14px}
@@ -24,6 +24,9 @@ body.admin-portal-page #authPanel .login-link:hover,
 body.parent-portal-page #loginCard .login-link:focus-visible,
 body.parent-portal-page #loginCard .login-link:hover,
 body.student-portal-page #loginPanel .login-link:focus-visible,body.student-portal-page #loginPanel .login-link:hover{text-decoration:underline}
+body.parent-portal-page .security-badge,body.student-portal-page .security-badge{align-items:center;display:grid;gap:4px;justify-items:center;margin-inline-start:auto;max-width:min(100%,180px)}
+body.parent-portal-page .security-badge__icon,body.student-portal-page .security-badge__icon{display:block;height:auto;inline-size:clamp(44px,6vw,56px)}
+body.parent-portal-page .security-badge__caption,body.student-portal-page .security-badge__caption{color:var(--portal-text-soft);font-size:11px;font-weight:700;line-height:1.2;max-width:100%;text-align:center}
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCard,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .hero,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .nav-scrim,
@@ -32,6 +35,12 @@ html[data-student-auth-state="unauthenticated"] body.student-portal-page .nav-ov
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .side-nav,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .status-strip,html[data-student-auth-state="unauthenticated"] body.student-portal-page .topbar{display:none!important}
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .portal-layout,html[data-student-auth-state="unauthenticated"] body.student-portal-page .portal-shell{padding-top:clamp(3rem,5vw,4rem)}
+body.admin-portal-page.admin-auth-booting .wrap,html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col{gap:1rem}
+body.admin-portal-page.admin-auth-booting #authBootPanel,html[data-admin-auth-state="unauthenticated"] body.admin-portal-page #authPanel,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel{margin-top:0}
 html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea),
 html[data-theme="dark"] body.parent-portal-page :where(input, select, textarea),html[data-theme="dark"] body.student-portal-page :where(input, select, textarea){background:var(--portal-dark-field-bg);border-color:var(--portal-dark-field-border);color:var(--portal-dark-field-text)}
 html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea)::placeholder,
@@ -666,7 +675,8 @@ body.admin-portal-page #authPanel .muted,
 body.admin-portal-page #authPanel .small,
 body.parent-portal-page #loginCard .muted,
 body.parent-portal-page #loginCard .small,
-body.student-portal-page #loginPanel .muted,body.student-portal-page #loginPanel .small{font-size:.98rem;line-height:1.5}body.parent-portal-page #loginCard .field-hint{color:var(--portal-text-soft);font-size:.95rem;line-height:1.45;margin:0}
+body.student-portal-page #loginPanel .muted,body.student-portal-page #loginPanel .small{font-size:.98rem;line-height:1.5}
+body.parent-portal-page #loginCard .field-hint,body.student-portal-page #loginPanel .field-hint{color:var(--portal-text-soft);font-size:.95rem;line-height:1.45;margin:0}
 body.admin-portal-page #authBootPanel p,
 body.admin-portal-page #authPanel p,
 body.parent-portal-page #loginCard p,body.student-portal-page #loginPanel p{margin:0 0 12px}
@@ -854,6 +864,9 @@ html[data-theme="dark"] body.portal-hub-page .resource-card__icon{color:var(--to
 body.admin-portal-page div.header-bar,
 body.parent-portal-page div.header-bar,body.portal-hub-page div.header-bar,
 body.student-portal-page div.header-bar{background:var(--primary-color);border-radius:clamp(4px,.9cqi,8px);color:var(--secondary-color);display:flex;font-size:calc(.72rem*var(--hub-phi));font-weight:700;inline-size:100%;justify-content:space-between;letter-spacing:.08em;line-height:1;margin:0;min-block-size:20px;padding:.75rem 1.66rem}
+body.admin-portal-page.admin-auth-booting div.header-bar,html[data-admin-auth-state="unauthenticated"] body.admin-portal-page div.header-bar,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page div.header-bar,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page div.header-bar{inline-size:min(100%,var(--portal-login-panel-max-width));margin-inline:auto}
 body.admin-portal-page .header-bar a,
 body.parent-portal-page .header-bar a,body.portal-hub-page .header-bar a,
 body.student-portal-page .header-bar a{color:inherit;text-decoration:none}

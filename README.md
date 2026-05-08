@@ -421,10 +421,11 @@ Notes:
 3. `moodle.eagles.edu.vn` is a separate direct-serve path and must not be generalized from the test-host reverse-proxy contract.
 4. `tools/sync-and-restart-test-runtime.sh` is a file mirror only; it does not rely on git commit matching.
 5. The route contract is tracked in `config/test-route-contract.json`; update that file first if the admin or portal paths change.
-6. Writes to `/home/test.eagles.edu.vn/public_html` require `sudo`; the wrapper uses `sudo install` for that webroot.
+6. `tools/sync-and-restart-test-runtime.sh` expects `/home/test.eagles.edu.vn/sis` and `/home/test.eagles.edu.vn/public_html` to be writable by the service user. If ownership drifts, repair the host first instead of adding ad hoc sudo inside the wrapper.
 7. `tools/sync-and-restart-test-runtime.sh` always re-syncs the repo `src/` tree into `/home/test.eagles.edu.vn/sis/src/` before Prisma or restart, so the runtime cannot drift without the wrapper correcting it.
-8. `tools/sync-and-restart-test-runtime.sh public` skips Prisma refresh and still enforces the `src/` safety sync before syncing public portal files + restart.
-9. `tools/sync-and-restart-test-runtime.sh restart-only` skips the FreeFileSync pass but still enforces the `src/` safety sync before Prisma refresh + restart.
+8. `tools/sync-and-restart-test-runtime.sh boot-prep` performs strict runtime sync plus `npm ci --omit=dev`, `prisma generate`, and `prisma migrate deploy` against the test database, but it skips restart and route probes.
+9. `tools/sync-and-restart-test-runtime.sh public` performs the strict runtime sync and strict public mirror sync, then restarts + health checks the test service without refreshing Prisma.
+10. `tools/sync-and-restart-test-runtime.sh restart-only` performs the strict runtime sync and strict public mirror sync, skips the admin asset build, then refreshes Prisma before restart + health checks.
 
 ## Backup and Restore Strategy
 

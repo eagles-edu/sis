@@ -9,7 +9,7 @@
   <meta name="description" content="The Eagles Club Cổng thông tin kết quả học tập của học sinh dành cho phụ huynh">
   <meta name="keywords" content="The Eagles Club, cổng thông tin, kết quả học tập của học sinh, dành cho phụ huynh">
   <meta name="author" content="The Eagles American Club, Ltd.">
-  <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
+  <link rel="shortcut icon" href="/favicon.ico?=v2">
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
@@ -597,7 +597,10 @@
       <section class="card" id="loginCard">
         <div class="section-head">
           <h2>Đăng nhập</h2>
-          <span class="chip chip-neutral">Phiên bảo mật</span>
+          <div class="security-badge">
+            <img class="security-badge__icon" src="/web-asset/shared/secure-network.svg" alt="" aria-hidden="true">
+            <span class="security-badge__caption">Phiên bảo mật</span>
+          </div>
         </div>
         <form id="loginForm" class="login-form" novalidate>
           <div class="form-row">
@@ -719,6 +722,9 @@
                 <div class="actions actions-2">
                   <button id="openNewsQueueDetailBtn" type="button" class="primary">
                     Xem chi tiết
+                  </button>
+                  <button id="newsQueueScrollTodayBtn" type="button">
+                    Xem hôm nay
                   </button>
                   <button id="refreshNewsQueueBtn" type="button" class="btn-refresh">
                     Tải lại
@@ -5894,6 +5900,12 @@
       .getElementById("openNewsQueueDetailBtn")
       ?.addEventListener("click", () => {
         openParentNewsDate(getParentNewsWindowDate("reportDate"));
+        window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
+      });
+    document
+      .getElementById("newsQueueScrollTodayBtn")
+      ?.addEventListener("click", () => {
+        openParentNewsDate(getParentNewsWindowDate("todayDate"));
         window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
       });
     document

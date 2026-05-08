@@ -1,4 +1,3 @@
-/* global getComputedStyle */
 import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
@@ -89,10 +88,14 @@ async function ensureAxe(page) {
   }
 }
 
-async function runAxe(page) {
+async function runAxe(page, selector = "") {
   await ensureAxe(page)
-  return await page.evaluate(async () => {
-    const results = await globalThis.axe.run(globalThis.document, {
+  return await page.evaluate(async (scopeSelector) => {
+    const root = scopeSelector ? globalThis.document.querySelector(scopeSelector) : globalThis.document
+    if (!root) {
+      throw new Error(`axe scope not found: ${scopeSelector}`)
+    }
+    const results = await globalThis.axe.run(root, {
       resultTypes: ["violations"],
     })
     return results.violations.map((violation) => ({
@@ -104,7 +107,7 @@ async function runAxe(page) {
         failureSummary: node.failureSummary || "",
       })),
     }))
-  })
+  }, selector)
 }
 
 async function snapshotSurfaces(page, selectors) {
@@ -597,6 +600,7 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
 
   const routeStates = []
   for (const link of links) {
+    traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> goto`)
     if (link.pageLink) {
       await page.goto(new URL(link.href, origin).toString(), {
         waitUntil: "commit",
@@ -605,8 +609,11 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
     } else {
       await page.goto(new URL(link.href, origin).toString(), { waitUntil: "domcontentloaded" })
     }
+    traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> settled`)
     await page.waitForTimeout(650)
+    traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> state`)
     const state = await pageState(page)
+    traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> surfaces`)
     const surfaces = await snapshotSurfaces(page, [
       "body",
       ".wrap",
@@ -623,13 +630,39 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
       ".news-review-note-line.fixed",
       "#reloadBtn",
     ])
-    const axe = summarizeAxe(await runAxe(page))
+    const routeHref = String(link.href || "")
+    const isPerformanceDataRoute = routeHref === "/admin/performance-data"
+    let axe = []
+    if (isPerformanceDataRoute) {
+      const performanceSelectors = [
+        "#performanceSortField",
+        "#performanceSortDirBtn",
+        "#performanceDataLevel",
+        "#performanceDataStudent",
+        "#performanceDataDateFrom",
+        "#performanceDataDateTo",
+        "#performanceDataSearch",
+        "#performanceArchiveToggleBtn",
+        "#performanceExportXlsxBtn",
+        "#performancePrintPdfBtn",
+        "#performanceColumnControls",
+        "#performanceDataSummary",
+      ]
+      for (const selector of performanceSelectors) {
+        traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> axe ${selector}`)
+        axe = axe.concat(summarizeAxe(await runAxe(page, selector)))
+      }
+    } else {
+      traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> axe`)
+      axe = summarizeAxe(await runAxe(page))
+    }
     assertNoFocusAxeIssues(axe, `admin route ${link.href} (${theme})`)
     routeStates.push({ link, state, surfaces, axe })
   }
 
   await page.goto(`${origin}/admin/news-reports`, { waitUntil: "domcontentloaded" })
   await page.waitForTimeout(1000)
+  traceReviewStage(`theme ${theme} admin news modal`)
   const openBtn = page.locator("button[data-news-review-open-week-set]").first()
   if (await openBtn.count()) {
     await openBtn.click()
@@ -657,19 +690,29 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
 
   await page.goto(`${origin}/admin/grades-data`, { waitUntil: "domcontentloaded" })
   await page.waitForTimeout(900)
+  traceReviewStage(`theme ${theme} admin grades-data`)
   const gradeChartEmpty = await page.locator(".grade-chart-empty").first().evaluate((node) => {
     const cs = getComputedStyle(node)
     return { bg: cs.backgroundColor, bgImage: cs.backgroundImage, color: cs.color }
   })
+  traceReviewStage(`theme ${theme} admin grades-data axe chart shell`)
+  const gradeChartAxe = summarizeAxe(await runAxe(page, "#gradeChartShell"))
+  assertNoFocusAxeIssues(gradeChartAxe, `admin grades-data chart shell (${theme})`)
+  traceReviewStage(`theme ${theme} admin grades-data axe controls`)
+  const gradeControlsAxe = summarizeAxe(await runAxe(page, "#gradeColumnControls"))
+  assertNoFocusAxeIssues(gradeControlsAxe, `admin grades-data controls (${theme})`)
   routeStates.push({ link: { href: "/admin/grades-data", text: "Grades Data" }, gradeChartEmpty })
 
   coverage.push({ theme, role: "admin", links, routeStates })
 }
 
 async function reviewStudent(page, origin, theme, coverage, credentials) {
+  traceReviewStage(`theme ${theme} student start`)
   await loginStudent(page, origin, credentials.student)
+  traceReviewStage(`theme ${theme} student logged in`)
 
   await page.goto(`${origin}/student`, { waitUntil: "domcontentloaded" })
+  traceReviewStage(`theme ${theme} student boot check`)
   const bootState = await page.evaluate(() => ({
     loginHidden: Boolean(globalThis.document.getElementById("loginPanel")?.classList.contains("hidden")),
     appPanelHidden: Boolean(globalThis.document.getElementById("appPanel")?.classList.contains("hidden")),
@@ -677,8 +720,11 @@ async function reviewStudent(page, origin, theme, coverage, credentials) {
   }))
   assert.equal(bootState.loginHidden, true, "authenticated student reload should not flash the login card")
   assert.equal(bootState.appPanelHidden, false, "authenticated student reload should show the app immediately")
+  traceReviewStage(`theme ${theme} student surface profile`)
   const surfaceProfile = await captureSharedSurfaceProfile(page, "student")
+  traceReviewStage(`theme ${theme} student placement profile`)
   const placementProfile = await capturePlacementProfile(page, "student")
+  traceReviewStage(`theme ${theme} student frame profile`)
   const frameProfile = await captureFrameProfile(page, "student")
 
   const navLinks = page.locator("a[data-page-target]")
@@ -694,6 +740,7 @@ async function reviewStudent(page, origin, theme, coverage, credentials) {
 
   const visited = []
   for (let index = 0; index < await navLinks.count(); index += 1) {
+    traceReviewStage(`theme ${theme} student nav #${index} start`)
     const navLink = navLinks.nth(index)
     await navLink.dispatchEvent("click")
     await page.waitForTimeout(450)
@@ -716,6 +763,7 @@ async function reviewStudent(page, origin, theme, coverage, credentials) {
     ])
     const axe = summarizeAxe(await runAxe(page))
     assertNoFocusAxeIssues(axe, `student page target #${index} (${theme})`)
+    traceReviewStage(`theme ${theme} student nav #${index} done`)
     visited.push({ index, state, surfaces, axe })
   }
 
@@ -782,9 +830,12 @@ async function reviewStudent(page, origin, theme, coverage, credentials) {
 }
 
 async function reviewParent(page, origin, theme, coverage, credentials) {
+  traceReviewStage(`theme ${theme} parent start`)
   await loginParent(page, origin, credentials.parent)
+  traceReviewStage(`theme ${theme} parent logged in`)
 
   await page.goto(`${origin}/parent`, { waitUntil: "domcontentloaded" })
+  traceReviewStage(`theme ${theme} parent boot check`)
   const bootState = await page.evaluate(() => ({
     loginHidden: Boolean(globalThis.document.getElementById("loginCard")?.classList.contains("hidden")),
     portalHidden: Boolean(globalThis.document.getElementById("portalCard")?.classList.contains("hidden")),
@@ -792,8 +843,11 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
   }))
   assert.equal(bootState.loginHidden, true, "authenticated parent reload should not flash the login card")
   assert.equal(bootState.portalHidden, false, "authenticated parent reload should show the portal immediately")
+  traceReviewStage(`theme ${theme} parent surface profile`)
   const surfaceProfile = await captureSharedSurfaceProfile(page, "parent")
+  traceReviewStage(`theme ${theme} parent placement profile`)
   const placementProfile = await capturePlacementProfile(page, "parent")
+  traceReviewStage(`theme ${theme} parent frame profile`)
   const frameProfile = await captureFrameProfile(page, "parent")
 
   const navLinks = page.locator("a[data-page-target]")
@@ -809,6 +863,7 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
 
   const visited = []
   for (let index = 0; index < await navLinks.count(); index += 1) {
+    traceReviewStage(`theme ${theme} parent nav #${index} start`)
     const navLink = navLinks.nth(index)
     await navLink.dispatchEvent("click")
     await page.waitForTimeout(450)
@@ -826,11 +881,13 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
     ])
     const axe = summarizeAxe(await runAxe(page))
     assertNoFocusAxeIssues(axe, `parent page target #${index} (${theme})`)
+    traceReviewStage(`theme ${theme} parent nav #${index} done`)
     visited.push({ index, state, surfaces, axe })
   }
 
   const newsTarget = page.locator('a[data-page-target="news-reports"]')
   if (await newsTarget.count()) {
+    traceReviewStage(`theme ${theme} parent news modal`)
     await newsTarget.first().dispatchEvent("click")
     await page.waitForTimeout(350)
     const buttons = page.locator('button[data-open-news-week-set]')
@@ -904,6 +961,10 @@ const skipReason = resolvePlaywrightSkipReason()
 
 setupTestEnv()
 
+function traceReviewStage(stage) {
+  process.stderr.write(`[portal-site-review] ${stage}\n`)
+}
+
 test(
   "portal site review sweeps light and dark portal views, link targets, modals, and text contrast",
   { skip: skipReason },
@@ -921,22 +982,27 @@ test(
 
     try {
       for (const theme of ["light", "dark"]) {
+        traceReviewStage(`theme ${theme} -> hub`)
         const hubContext = await browser.newContext({ viewport: { width: 1440, height: 1100 } })
         await hubContext.addInitScript(themeInitScript(theme))
         await reviewHub(await hubContext.newPage(), origin, theme, coverage)
         await hubContext.close()
 
+        traceReviewStage(`theme ${theme} -> admin`)
         const adminContext = await browser.newContext({ viewport: { width: 1440, height: 1100 } })
         await adminContext.addInitScript(themeInitScript(theme))
         await reviewAdmin(await adminContext.newPage(), origin, theme, coverage, credentials)
+        traceReviewStage(`theme ${theme} -> admin utilities`)
         await reviewAdminUtilities(await adminContext.newPage(), origin, theme, coverage)
         await adminContext.close()
 
+        traceReviewStage(`theme ${theme} -> student`)
         const studentContext = await browser.newContext({ viewport: { width: 1440, height: 1100 } })
         await studentContext.addInitScript(themeInitScript(theme))
         await reviewStudent(await studentContext.newPage(), origin, theme, coverage, credentials)
         await studentContext.close()
 
+        traceReviewStage(`theme ${theme} -> parent`)
         const parentContext = await browser.newContext({ viewport: { width: 1440, height: 1100 } })
         await parentContext.addInitScript(themeInitScript(theme))
         await reviewParent(await parentContext.newPage(), origin, theme, coverage, credentials)

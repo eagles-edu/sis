@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
+  <link rel="shortcut icon" href="/favicon.ico?=v2">
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
@@ -37,15 +37,10 @@
   <title>Student Portal</title>
 
   <style>
-    h2 {
-      margin: 0;
-      font-size: 1rem;
-      line-height: 1.2;
-    }
-
     /* VS Code selector resolution anchors; shared styles live in portal-theme.min.css. */
     .login-links {}
     .login-link {}
+    .field-hint {}
     .square-number {}
     .square-percent-symbol {}
     .queue-summary-stack {}
@@ -873,25 +868,32 @@
         </div>
       </section>
 
-      <section id="loginPanel" class="card hidden">
-        <h2>Student Login</h2>
-        <form id="loginForm" class="row">
-          <div class="field c6">
-            <label for="loginEaglesId">Eagles ID</label>
-            <input type="text" id="loginEaglesId" autocomplete="username">
+      <section class="card" id="loginPanel">
+        <div class="section-head">
+          <h2>STUDENT LOG-IN</h2>
+          <div class="security-badge">
+            <img class="security-badge__icon" src="/web-asset/shared/secure-network.svg" alt="" aria-hidden="true">
+            <span class="security-badge__caption">secured connection</span>
           </div>
-          <div class="field c6">
-            <label for="loginPassword">Password</label>
-            <input id="loginPassword" type="password" autocomplete="current-password">
+        </div>
+        <form id="loginForm" class="login-form" novalidate>
+          <div class="form-row">
+            <label for="loginEaglesId">Student User Name (eaglesId)</label>
+            <input id="loginEaglesId" type="text" autocomplete="username" placeholder="cm&lt;eaglesId&gt; hoặc mã gia đình">
+            <p class="field-hint">&nbsp;</p>
           </div>
-          <div class="field c12">
-            <button id="loginBtn" class="primary" type="submit">Sign In</button>
+          <div class="form-row">
+            <label for="loginPassword">Enter current password.</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mật khẩu dùng chung phụ huynh - học sinh">
+            <p class="field-hint">Enter the current password for your account.</p>
           </div>
+          <button id="loginBtn" class="primary" type="submit">Submit</button>
         </form>
         <div class="login-links">
           <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20portal%20password%20reset">Reset password</a>
           <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
         </div>
+        <p id="loginStatus" class="status"></p>
       </section>
 
       <section id="appPanel" class="hidden">
@@ -1749,15 +1751,6 @@
         const parsed = Number(raw);
         if (!Number.isFinite(parsed)) return TEXT_ZOOM_DEFAULT;
         return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(parsed)));
-      }
-
-      function readStoredTextZoomPct() {
-        try {
-          return clampTextZoomPct(window.localStorage?.getItem(TEXT_ZOOM_KEY));
-        } catch (error) {
-          void error;
-          return TEXT_ZOOM_DEFAULT;
-        }
       }
 
       function applyPortalTextZoom(percent) {
@@ -4405,7 +4398,7 @@
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));
       field("studentTextZoomUpBtn")?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP));
       field("studentTextZoomResetBtn")?.addEventListener("click", () => applyPortalTextZoom(TEXT_ZOOM_DEFAULT));
-      applyPortalTextZoom(readStoredTextZoomPct());
+      applyPortalTextZoom(TEXT_ZOOM_DEFAULT);
       field("submitBtn")?.addEventListener("click", () => {
         submitReport().catch(handleError);
       });

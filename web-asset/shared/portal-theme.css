@@ -351,7 +351,7 @@ body.admin-portal-page.admin-auth-booting #authBootPanel {
 body.student-portal-page #loginPanel #loginForm,
 body.parent-portal-page #loginCard .login-form,
 body.admin-portal-page #authPanel #loginForm {
-  gap: 18px;
+  gap: 0;
   margin-inline: auto;
   width: min(100%, var(--portal-login-form-max-width));
 }
@@ -414,6 +414,30 @@ body.parent-portal-page #loginCard .login-link:focus-visible,
 body.admin-portal-page #authPanel .login-link:focus-visible {
   text-decoration: underline;
 }
+body.student-portal-page .security-badge,
+body.parent-portal-page .security-badge {
+  align-items: center;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  margin-inline-start: auto;
+  max-width: min(100%, 180px);
+}
+body.student-portal-page .security-badge__icon,
+body.parent-portal-page .security-badge__icon {
+  display: block;
+  height: auto;
+  inline-size: clamp(44px, 6vw, 56px);
+}
+body.student-portal-page .security-badge__caption,
+body.parent-portal-page .security-badge__caption {
+  color: var(--portal-text-soft);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  max-width: 100%;
+  text-align: center;
+}
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .topbar,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .side-nav,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .nav-overlay,
@@ -427,6 +451,18 @@ html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCa
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .portal-shell,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .portal-layout {
   padding-top: clamp(3rem, 5vw, 4rem);
+}
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
+body.admin-portal-page.admin-auth-booting .wrap,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col {
+  gap: 1rem;
+}
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page #authPanel,
+body.admin-portal-page.admin-auth-booting #authBootPanel,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel {
+  margin-top: 0;
 }
 html[data-theme="dark"] body.student-portal-page :where(input, select, textarea),
 html[data-theme="dark"] body.parent-portal-page :where(input, select, textarea),
@@ -3383,6 +3419,7 @@ body.admin-portal-page #authPanel .muted {
   font-size: 0.98rem;
   line-height: 1.5;
 }
+body.student-portal-page #loginPanel .field-hint,
 body.parent-portal-page #loginCard .field-hint {
   color: var(--portal-text-soft);
   font-size: 0.95rem;
@@ -5124,6 +5161,13 @@ body.student-portal-page div.header-bar {
   padding-inline: calc(var(--hub-space-2) * 1.9);*/
   inline-size: 100%;
   padding: .75rem 1.66rem;
+}
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page div.header-bar,
+body.admin-portal-page.admin-auth-booting div.header-bar,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page div.header-bar,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page div.header-bar {
+  inline-size: min(100%, var(--portal-login-panel-max-width));
+  margin-inline: auto;
 }
 body.portal-hub-page .header-bar a,
 body.admin-portal-page .header-bar a,

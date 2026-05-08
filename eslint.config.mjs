@@ -28,6 +28,7 @@ export default [
       sourceType: "module",
       globals: {
         ...globals.node,
+        ...globals.browser,
       },
     },
     linterOptions: { reportUnusedDisableDirectives: true },

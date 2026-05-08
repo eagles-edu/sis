@@ -70,6 +70,67 @@ log() {
   printf '[sync-test] %s\n' "$*"
 }
 
+sync_exact_file() {
+  local source_path="$1"
+  local target_path="$2"
+  local owner
+  local group
+  local target_dir
+
+  if [[ ! -f "$source_path" ]]; then
+    echo "missing source file: $source_path" >&2
+    return 1
+  fi
+
+  owner="$(id -un)"
+  group="$(id -gn)"
+  target_dir="$(dirname "$target_path")"
+  if [[ ! -d "$target_dir" ]]; then
+    mkdir -p "$target_dir"
+  fi
+  if [[ ! -w "$target_dir" ]]; then
+    echo "target directory is not writable: $target_dir" >&2
+    return 1
+  fi
+
+  install -D -m 0644 "$source_path" "$target_path"
+}
+
+remove_managed_paths() {
+  local target_root="$1"
+  shift
+  local rel_path=""
+  local target_path=""
+
+  for rel_path in "$@"; do
+    target_path="${target_root}/${rel_path}"
+    if [[ ! -e "$target_path" && ! -L "$target_path" ]]; then
+      continue
+    fi
+    if [[ ! -w "$(dirname "$target_path")" ]]; then
+      echo "target path is not writable: $target_path" >&2
+      return 1
+    fi
+    rm -rf -- "$target_path"
+  done
+}
+
+sync_file_map() {
+  local source_root="$1"
+  local target_root="$2"
+  local map_name="$3"
+  local -n map_ref="$map_name"
+  local entry=""
+  local source_rel=""
+  local target_rel=""
+
+  for entry in "${map_ref[@]}"; do
+    source_rel="${entry%%|*}"
+    target_rel="${entry#*|}"
+    sync_exact_file "${source_root}/${source_rel}" "${target_root}/${target_rel}"
+  done
+}
+
 TEST_ENV_DEV_MIRROR_KEYS=(
   "STUDENT_ADMIN_API_PREFIX"
   "STUDENT_ADMIN_PAGE_PATH"
@@ -90,6 +151,72 @@ TEST_ENV_DEV_MIRROR_KEYS=(
   "STUDENT_PARENT_PORTAL_ACCOUNTS_JSON"
   "STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON"
   "STUDENT_NEWS_VALIDATION_DISABLED"
+)
+
+TEST_RUNTIME_CODE_DIRS=(
+  "src"
+  "server"
+  "schemas"
+  "prisma"
+)
+
+TEST_RUNTIME_CODE_FILES=(
+  "package.json"
+  "package-lock.json"
+  "prisma.config.ts"
+  ".nvmrc"
+)
+
+TEST_RUNTIME_WEBFILE_MAP=(
+  "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
+  "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
+  "web-asset/admin/grades-tabulator.html|web-asset/admin/grades-tabulator.html"
+  "web-asset/admin/student-points.html|web-asset/admin/student-points.html"
+  "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
+  "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
+  "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
+  "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
+  "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
+  "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
+  "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
+  "web-asset/images/logo.svg|web-asset/images/logo.svg"
+  "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
+  "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
+  "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
+  "web-asset/icons/web-component/svgs/theme-sun.svg|web-asset/icons/web-component/svgs/theme-sun.svg"
+  "web-asset/icons/web-component/svgs/joggling-lava.svg|web-asset/icons/web-component/svgs/joggling-lava.svg"
+  "web-asset/icons/web-component/svgs/joggling-triangles.svg|web-asset/icons/web-component/svgs/joggling-triangles.svg"
+  "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
+  "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
+  "web-asset/vendor/tabulatorz/tabulator.min.css|web-asset/vendor/tabulatorz/tabulator.min.css"
+  "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
+  "web-asset/images/favicon.ico|favicon.ico"
+)
+
+TEST_PUBLIC_WEBFILE_MAP=(
+  "web-asset/admin/student-admin.html|sis-admin/student-admin.html"
+  "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
+  "web-asset/parent/parent-portal.html|sis-parent/parent-portal.html"
+  "web-asset/student/student-portal.html|sis-student/student-portal.html"
+  "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
+  "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
+  "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
+  "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
+  "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
+  "web-asset/images/logo.svg|web-asset/images/logo.svg"
+  "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
+  "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
+  "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
+  "web-asset/icons/web-component/svgs/theme-sun.svg|web-asset/icons/web-component/svgs/theme-sun.svg"
+  "web-asset/icons/web-component/svgs/joggling-lava.svg|web-asset/icons/web-component/svgs/joggling-lava.svg"
+  "web-asset/icons/web-component/svgs/joggling-triangles.svg|web-asset/icons/web-component/svgs/joggling-triangles.svg"
+  "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
+  "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
+  "web-asset/images/favicon.ico|favicon.ico"
 )
 
 read_env_value() {
@@ -322,41 +449,43 @@ ensure_test_runtime_env_contract() {
   log "pinned test env contract in ${test_env_path}"
 }
 
-run_sync() {
-  run_ffs() {
-    local label="$1"
-    shift
+sync_runtime_code_trees() {
+  local target_root="$1"
+  local code_dir=""
+  local code_file=""
+  local rsync_prefix=()
 
-    if "$@"; then
-      return 0
-    else
-      local status=$?
-      if [[ "$status" == "3" ]]; then
-        log "${label} reported no changes; continuing"
-        return 0
-      fi
-      if [[ "$status" == "1" ]]; then
-        log "${label} reported warning-only changes; continuing"
-        return 0
-      fi
+  if [[ ! -d "$target_root" ]]; then
+    mkdir -p "$target_root"
+  fi
+  if [[ ! -w "$target_root" ]]; then
+    echo "test root is not writable: $target_root" >&2
+    return 1
+  fi
 
-      return "$status"
+  for code_dir in "${TEST_RUNTIME_CODE_DIRS[@]}"; do
+    if [[ ! -d "${REPO_ROOT}/${code_dir}" ]]; then
+      log "skip ${code_dir} sync (source missing)"
+      continue
     fi
-  }
+    log "syncing ${code_dir} tree into ${target_root}/${code_dir}"
+    "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/${code_dir}/" "${target_root}/${code_dir}/"
+  done
 
+  for code_file in "${TEST_RUNTIME_CODE_FILES[@]}"; do
+    if [[ ! -f "${REPO_ROOT}/${code_file}" ]]; then
+      log "skip ${code_file} sync (source missing)"
+      continue
+    fi
+    sync_exact_file "${REPO_ROOT}/${code_file}" "${target_root}/${code_file}"
+  done
+}
+
+run_sync() {
   case "$MODE" in
-    full)
-      log "running ffs-sis-root-test --batch"
-      (cd "$REPO_ROOT" && run_ffs "ffs-sis-root-test" sudo /usr/local/bin/ffs-sis-root-test --batch)
-      log "running ffs-sis-public-root-test --batch"
-      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" sudo /usr/local/bin/ffs-sis-public-root-test --batch)
-      ;;
-    public)
-      log "running ffs-sis-public-root-test --batch"
-      (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root-test" sudo /usr/local/bin/ffs-sis-public-root-test --batch)
-      ;;
-    restart-only)
-      log "skip sync (restart-only mode)"
+    full|public|restart-only|boot-prep)
+      log "syncing test code trees and runtime files into ${TEST_ROOT}"
+      sync_runtime_code_trees "$TEST_ROOT"
       ;;
   esac
 }
@@ -373,54 +502,21 @@ build_admin_assets() {
   esac
 }
 
-sync_test_src_tree() {
-  if [[ ! -d "${REPO_ROOT}/src" ]]; then
-    log "skip src tree sync (repo src missing)"
-    return 0
-  fi
+sync_test_runtime_assets() {
+  local managed_paths=(
+    "favicon.ico"
+    "web-asset/admin"
+    "web-asset/parent"
+    "web-asset/student"
+    "web-asset/shared"
+    "web-asset/images"
+    "web-asset/icons"
+    "web-asset/vendor"
+  )
 
-  mkdir -p "${TEST_ROOT}/src"
-  log "syncing repo src tree into ${TEST_ROOT}/src"
-  rsync -a --delete "${REPO_ROOT}/src/" "${TEST_ROOT}/src/"
-
-  if [[ ! -f "${TEST_ROOT}/src/modules/exercises/exercise-store.mjs" ]]; then
-    echo "src tree sync failed: ${TEST_ROOT}/src/modules/exercises/exercise-store.mjs missing" >&2
-    return 1
-  fi
-}
-
-sync_test_portal_html_assets() {
-  mkdir -p \
-    "${TEST_ROOT}/web-asset/admin" \
-    "${TEST_ROOT}/web-asset/parent" \
-    "${TEST_ROOT}/web-asset/student"
-
-  log "syncing admin portal HTML into ${TEST_ROOT}/web-asset/admin/student-admin.html"
-  install -m 644 "${REPO_ROOT}/web-asset/admin/student-admin.html" \
-    "${TEST_ROOT}/web-asset/admin/student-admin.html"
-
-  log "syncing admin hub HTML into ${TEST_ROOT}/web-asset/admin/portal-hub.html"
-  install -m 644 "${REPO_ROOT}/web-asset/admin/portal-hub.html" \
-    "${TEST_ROOT}/web-asset/admin/portal-hub.html"
-
-  log "syncing parent portal HTML into ${TEST_ROOT}/web-asset/parent/parent-portal.html"
-  install -m 644 "${REPO_ROOT}/web-asset/parent/parent-portal.html" \
-    "${TEST_ROOT}/web-asset/parent/parent-portal.html"
-
-  log "syncing student portal HTML into ${TEST_ROOT}/web-asset/student/student-portal.html"
-  install -m 644 "${REPO_ROOT}/web-asset/student/student-portal.html" \
-    "${TEST_ROOT}/web-asset/student/student-portal.html"
-}
-
-sync_test_shared_assets() {
-  if [[ ! -d "${REPO_ROOT}/web-asset/shared" ]]; then
-    log "skip shared asset sync (source shared tree missing)"
-    return 0
-  fi
-
-  mkdir -p "${TEST_ROOT}/web-asset/shared"
-  log "syncing shared portal assets into ${TEST_ROOT}/web-asset/shared"
-  rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${TEST_ROOT}/web-asset/shared/"
+  remove_managed_paths "$TEST_ROOT" "${managed_paths[@]}"
+  log "syncing strict runtime asset whitelist into ${TEST_ROOT}"
+  sync_file_map "$REPO_ROOT" "$TEST_ROOT" TEST_RUNTIME_WEBFILE_MAP
 }
 
 cleanup_test_backup_artifacts() {
@@ -437,25 +533,22 @@ sync_test_public_html_index() {
   local source_hub_html="${REPO_ROOT}/web-asset/admin/portal-hub.html"
   local target_public_root="/home/test.eagles.edu.vn/public_html"
   local target_index_path="${target_public_root}/index.html"
-  local target_owner
-  local target_group
-  local install_prefix=()
-
-  target_owner="$(id -un)"
-  target_group="$(id -gn)"
 
   if [[ ! -f "$source_hub_html" ]]; then
     log "skip public_html index sync (portal hub source missing)"
     return 0
   fi
 
-  if [[ ! -d "$target_public_root" || ! -w "$target_public_root" ]]; then
-    install_prefix=(sudo)
+  if [[ ! -d "$target_public_root" ]]; then
+    mkdir -p "$target_public_root"
+  fi
+  if [[ ! -w "$target_public_root" ]]; then
+    echo "public_html root is not writable: $target_public_root" >&2
+    return 1
   fi
 
-  "${install_prefix[@]}" install -d -o "$target_owner" -g "$target_group" "$target_public_root"
   log "syncing portal hub into ${target_index_path}"
-  "${install_prefix[@]}" install -o "$target_owner" -g "$target_group" -m 644 "$source_hub_html" "$target_index_path"
+  install -m 644 "$source_hub_html" "$target_index_path"
 
   env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" ROUTE_CONTRACT_JSON="$ROUTE_CONTRACT_JSON" TARGET_INDEX_PATH="$target_index_path" "$TEST_NODE_BIN" --input-type=module <<'EOF'
 import fs from "node:fs"
@@ -486,63 +579,18 @@ EOF
 }
 
 sync_test_public_assets() {
-  local target_public_root="$TEST_PUBLIC_ROOT"
-  local target_web_asset_root="${target_public_root}/web-asset"
-  local target_owner
-  local target_group
-  local install_prefix=()
-  local rsync_prefix=(sudo)
+  local managed_paths=(
+    "favicon.ico"
+    "index.html"
+    "sis-admin"
+    "sis-parent"
+    "sis-student"
+    "web-asset"
+  )
 
-  target_owner="$(id -un)"
-  target_group="$(id -gn)"
-
-  if [[ ! -d "$target_public_root" || ! -w "$target_public_root" ]]; then
-    install_prefix=(sudo)
-  fi
-
-  "${install_prefix[@]}" install -d -o "$target_owner" -g "$target_group" \
-    "$TEST_PUBLIC_ADMIN_DIR" \
-    "$TEST_PUBLIC_PARENT_DIR" \
-    "$TEST_PUBLIC_STUDENT_DIR" \
-    "$TEST_PUBLIC_SHARED_DIR"
-
-  log "syncing public admin portal mirror into ${TEST_PUBLIC_ADMIN_DIR}"
-  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/admin/" "${TEST_PUBLIC_ADMIN_DIR}/"
-
-  log "syncing public parent portal mirror into ${TEST_PUBLIC_PARENT_DIR}"
-  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/parent/" "${TEST_PUBLIC_PARENT_DIR}/"
-
-  log "syncing public student portal mirror into ${TEST_PUBLIC_STUDENT_DIR}"
-  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/student/" "${TEST_PUBLIC_STUDENT_DIR}/"
-
-  log "syncing public shared portal mirror into ${TEST_PUBLIC_SHARED_DIR}"
-  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${TEST_PUBLIC_SHARED_DIR}/"
-
-  "${install_prefix[@]}" install -d -o "$target_owner" -g "$target_group" \
-    "$target_web_asset_root" \
-    "${target_web_asset_root}/shared" \
-    "${target_web_asset_root}/images" \
-    "${target_web_asset_root}/admin" \
-    "${target_web_asset_root}/admin/portal-backgrounds"
-
-  log "syncing public web assets into ${target_web_asset_root}"
-  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/shared/" "${target_web_asset_root}/shared/"
-  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/images/" "${target_web_asset_root}/images/"
-  "${rsync_prefix[@]}" rsync -a --delete "${REPO_ROOT}/web-asset/admin/portal-backgrounds/" "${target_web_asset_root}/admin/portal-backgrounds/"
-}
-
-sync_test_icons_assets() {
-  local target_runtime_root="${TEST_ROOT}"
-  local target_icons_root="${target_runtime_root}/web-asset/icons"
-
-  if [[ ! -d "${REPO_ROOT}/web-asset/icons" ]]; then
-    log "skip icons sync (source icons missing)"
-    return 0
-  fi
-
-  mkdir -p "${target_icons_root}"
-  log "syncing icon web component assets into ${target_icons_root}"
-  rsync -a --delete "${REPO_ROOT}/web-asset/icons/" "${target_icons_root}/"
+  remove_managed_paths "$TEST_PUBLIC_ROOT" "${managed_paths[@]}"
+  log "syncing strict public_html asset whitelist into ${TEST_PUBLIC_ROOT}"
+  sync_file_map "$REPO_ROOT" "$TEST_PUBLIC_ROOT" TEST_PUBLIC_WEBFILE_MAP
 }
 
 seed_test_runtime_env_file() {
@@ -605,10 +653,27 @@ EOF
 verify_test_public_assets() {
   local target_public_root="/home/test.eagles.edu.vn/public_html"
   local required_assets=(
-    "${target_public_root}/web-asset/shared/portal-theme.css"
+    "${target_public_root}/favicon.ico"
+    "${target_public_root}/sis-admin/student-admin.html"
+    "${target_public_root}/sis-admin/portal-hub.html"
+    "${target_public_root}/sis-parent/parent-portal.html"
+    "${target_public_root}/sis-student/student-portal.html"
     "${target_public_root}/web-asset/shared/portal-theme.min.css"
+    "${target_public_root}/web-asset/shared/portal-theme-state.js"
+    "${target_public_root}/web-asset/shared/portal-navigation.js"
+    "${target_public_root}/web-asset/shared/secure-network.svg"
     "${target_public_root}/web-asset/images/logo.svg"
-    "${target_public_root}/web-asset/admin/portal-backgrounds/hub-mesh-05.svg"
+    "${target_public_root}/web-asset/images/favicon.ico"
+    "${target_public_root}/web-asset/admin/favicon.ico"
+    "${target_public_root}/web-asset/admin/student-admin.min.css"
+    "${target_public_root}/web-asset/admin/student-admin.min.js"
+    "${target_public_root}/web-asset/icons/web-component/svg-icon.js"
+    "${target_public_root}/web-asset/icons/web-component/svgs/theme-moon.svg"
+    "${target_public_root}/web-asset/icons/web-component/svgs/theme-sun.svg"
+    "${target_public_root}/web-asset/icons/web-component/svgs/joggling-lava.svg"
+    "${target_public_root}/web-asset/icons/web-component/svgs/joggling-triangles.svg"
+    "${target_public_root}/web-asset/icons/web-component/svgs/spiral.svg"
+    "${target_public_root}/web-asset/vendor/fullcalendar/index.global.min.js"
   )
 
   local asset_path=""
@@ -675,6 +740,9 @@ refresh_test_prisma() {
     return 1
   fi
 
+  log "installing test runtime dependencies in ${TEST_ROOT}"
+  (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm ci --omit=dev)
+
   log "refreshing test Prisma client in ${TEST_ROOT}"
   (cd "$TEST_ROOT" && env PATH="$(dirname "$TEST_NODE_BIN"):$PATH" "${TEST_VERBOSE_ENV[@]}" npm run db:generate)
 
@@ -738,20 +806,17 @@ main() {
   log "file mirror only; git commit matching is not part of the test sync contract"
   build_admin_assets
   run_sync
-  log "syncing test sis root into ${TEST_ROOT}"
-  sync_test_src_tree
-  sync_test_portal_html_assets
-  sync_test_shared_assets
+  log "syncing test runtime web assets into ${TEST_ROOT}"
+  sync_test_runtime_assets
   cleanup_test_backup_artifacts
   if [[ "$MODE" != "boot-prep" ]]; then
     log "syncing test public mirror into ${TEST_PUBLIC_ROOT}"
-    sync_test_public_html_index
     sync_test_public_assets
+    sync_test_public_html_index
   else
     log "skip public_html sync for mode=boot-prep"
     log "skip public web asset sync for mode=boot-prep"
   fi
-  sync_test_icons_assets
   ensure_test_runtime_env_contract
   align_test_env_from_dev_source
   ensure_test_redis_env

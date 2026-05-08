@@ -31,6 +31,8 @@ tmp/
 *.BAK-*
 *.tmp
 backups/**/*.tar.gz
+backups/full-system/
+backups/**/.git
 
 # Local scratch content
 docs/

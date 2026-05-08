@@ -3696,6 +3696,16 @@
       html[data-theme="dark"] body.admin-portal-page :where(.profile-tabs-shell, .profile-info-tabs, .profile-tab-panel, .profile-info-summary, .profile-summary-primary, .profile-summary-chip, .profile-info-panel, .profile-info-group, .profile-info-item, .profile-info-empty-stack, .profile-field-group, .profile-choice-item, .profile-layout-editor, .profile-layout-table-wrap) {
         box-shadow: none;
       }
+      html[data-theme="dark"] body.admin-portal-page .profile-summary-chip {
+        background: #fff;
+        border-color: #b8c8e0;
+      }
+      html[data-theme="dark"] body.admin-portal-page .profile-summary-chip-label {
+        color: #516991;
+      }
+      html[data-theme="dark"] body.admin-portal-page .profile-summary-chip-value {
+        color: #163a6d;
+      }
       html[data-theme="dark"] body.admin-portal-page :where(.profile-info-toolbar h3,
         .profile-editor-toolbar h3,
         .profile-summary-name,
