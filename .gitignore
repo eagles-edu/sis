@@ -33,6 +33,7 @@ tmp/
 backups/**/*.tar.gz
 backups/full-system/
 backups/**/.git
+backups/**/.git.backup
 
 # Local scratch content
 docs/
