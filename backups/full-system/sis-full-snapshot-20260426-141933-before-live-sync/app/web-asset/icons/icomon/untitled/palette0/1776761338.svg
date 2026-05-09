@@ -1,3 +1,0 @@
-<svg color="#272727" fill="none" stroke="currentColor" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <ellipse cx="8" cy="8" rx="2" ry="4.666667"><animate attributeName="rx" dur="3s" repeatCount="indefinite" values="0; 10; 0"></animate><animate attributeName="ry" dur="3s" repeatCount="indefinite" values="10; 0; 10"></animate></ellipse>
-</svg>

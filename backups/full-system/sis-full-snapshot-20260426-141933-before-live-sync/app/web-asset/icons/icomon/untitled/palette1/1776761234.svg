@@ -1,8 +1,0 @@
-<svg color="#dadada" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <g>
-    <animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform>
-
-    <path d="M5.3333 14.8334C2.6017 13.7667 0.6667 11.1093 0.6667 8C0.6667 3.9499 3.9499 0.6667 8 0.6667C12.0501 0.6667 15.3333 3.9499 15.3333 8C15.3333 11.1093 13.3983 13.7667 10.6667 14.8334"></path>
-    <line x1="8" x2="8" y1="15.333333" y2="8"></line>
-  </g>
-</svg>

@@ -110,7 +110,7 @@ if [[ -z "${DATABASE_URL_INPUT}" ]]; then
 fi
 
 if [[ -z "${OUTPUT_DIR}" ]]; then
-  OUTPUT_DIR="${DB_BACKUP_DIR:-${SOURCE_ROOT}/backups/postgres}"
+  OUTPUT_DIR="${DB_BACKUP_DIR:-/home/eagles/dockerz/backups/postgres}"
 fi
 
 mkdir -p "${OUTPUT_DIR}"

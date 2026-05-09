@@ -1,5 +1,0 @@
-{
-  "extends": "default",
-  "MD004": { "style": "consistent" }
-}
-

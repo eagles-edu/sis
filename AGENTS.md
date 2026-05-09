@@ -24,6 +24,7 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 
 ## Communication
 
+- Use English in chat responses unless the user explicitly asks for another language.
 - Keep intermediary updates terse.
 - Send one short status update at the start of work, then only ask a question if you are blocked.
 - Do not think out loud or narrate internal reasoning in progress updates.

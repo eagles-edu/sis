@@ -230,7 +230,7 @@ const MAINTENANCE_DB_HEALTH_STATUS_PATH = path.resolve(
 )
 const DB_BACKUP_LATEST_FILE_PATH = path.resolve(
   process.cwd(),
-  normalizeText(process.env.DB_BACKUP_LATEST_FILE) || "backups/postgres/latest.json"
+  normalizeText(process.env.DB_BACKUP_LATEST_FILE) || "/home/eagles/dockerz/backups/postgres/latest.json"
 )
 const ADMIN_UI_SETTINGS_MAX_BYTES = Math.max(
   1024,

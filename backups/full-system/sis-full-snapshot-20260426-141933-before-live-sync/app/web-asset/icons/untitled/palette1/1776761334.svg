@@ -1,3 +1,0 @@
-<svg color="#dadada" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <ellipse cx="8" cy="8" rx="4" ry="2"><animate attributeName="cx" dur="1s" repeatCount="indefinite" values="3; 21; 3"></animate><animate attributeName="rx" dur="0.5s" repeatCount="indefinite" values="3; 6; 6; 3"></animate><animate attributeName="ry" dur="0.5s" repeatCount="indefinite" values="6; 3; 3; 3; 6"></animate></ellipse>
-</svg>

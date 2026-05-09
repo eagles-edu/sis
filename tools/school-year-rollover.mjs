@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url"
 
 import { getSharedPrismaClient } from "../server/prisma-client-factory.mjs"
 
-const DEFAULT_ARCHIVE_ROOT = "backups/school-year-archive"
+const DEFAULT_ARCHIVE_ROOT = "/home/eagles/dockerz/backups/school-year-archive"
 const DEFAULT_BATCH_SIZE = 500
 const DEFAULT_PREVIEW_LIMIT = 25
 

@@ -1,7 +1,0 @@
-<svg viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <g>
-        <animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
-        <path d="M8 22.2501C3.9026 20.65 1 16.664 1 12 1 5.9249 5.9249 1 12 1s11 4.9249 11 11c0 4.664-2.9026 8.65-7 10.2501" />
-        <line x1="12" x2="12" y1="23" y2="12" />
-    </g>
-</svg>

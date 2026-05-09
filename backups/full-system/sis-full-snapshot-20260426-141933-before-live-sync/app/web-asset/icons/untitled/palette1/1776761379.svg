@@ -1,6 +1,0 @@
-<svg color="#dadada" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <g>
-    <circle cx="14" cy="8" r="2"><animate attributeName="cx" dur="1s" repeatCount="indefinite" values="21; 12; 21"></animate><animate attributeName="r" dur="1s" keyTimes="0; 0.3; 0.5; 0.7; 1" repeatCount="indefinite" values="3; 3; 5; 3; 3"></animate></circle>
-    <circle cx="2" cy="8" r="2"><animate attributeName="cx" dur="1s" repeatCount="indefinite" values="3; 12; 3"></animate><animate attributeName="r" dur="1s" keyTimes="0; 0.3; 0.5; 0.7; 1" repeatCount="indefinite" values="3; 3; 5; 3; 3"></animate></circle>
-  </g>
-</svg>

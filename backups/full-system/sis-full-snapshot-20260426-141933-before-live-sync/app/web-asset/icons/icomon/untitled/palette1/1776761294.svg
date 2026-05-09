@@ -1,7 +1,0 @@
-<svg color="#dadada" fill="none" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g fill="currentColor" stroke-width="0.666667">
-    <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform>
-    <path d="M12.0831 4.3333C15.3089 8.8973 11.778 13.8315 7.3333 13.2929" fill="none" stroke="currentColor" stroke-width="1.333333"></path>
-    <polygon points="8 16 8 10.666667 4.666667 13.333333"></polygon>
-    <path d="M3.9169 11.6667C0.6911 7.1027 4.222 2.1685 8.6667 2.7071" fill="none" stroke="currentColor" stroke-width="1.333333"></path>
-    <polygon points="8 0 8 5.333333 11.333333 2.666667"></polygon>
-  </g></svg>

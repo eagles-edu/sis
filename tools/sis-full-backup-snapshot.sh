@@ -4,7 +4,7 @@ set -euo pipefail
 
 SOURCE_ROOT="/home/eagles/dockerz/sis"
 RUNTIME_ROOT="/home/admin.eagles.edu.vn/sis"
-OUTPUT_ROOT="/home/eagles/dockerz/sis/backups/full-system"
+OUTPUT_ROOT="/home/eagles/dockerz/backups/full-system"
 LABEL=""
 INCLUDE_NODE_MODULES=0
 ARCHIVE=1

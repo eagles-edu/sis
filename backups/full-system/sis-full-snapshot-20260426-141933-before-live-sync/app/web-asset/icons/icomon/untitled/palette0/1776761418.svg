@@ -1,9 +1,0 @@
-<svg color="#272727" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <g>
-    <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" type="rotate" values="360 12 12; 0 12 12"></animateTransform>
-
-    <polygon points="12 2 8.535899 8 15.464101 8"><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 0; 0; 60; 60; 60; 120; 120"></animateTransform></polygon>
-    <polygon points="20.660254 17 17.196152 11 13.732051 17"><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 0; 0; 60; 60; 60; 120; 120"></animateTransform></polygon>
-    <polygon points="3.339746 17 10.267949 17 6.803848 11"><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 0; 0; 60; 60; 60; 120; 120"></animateTransform></polygon>
-  </g>
-</svg>

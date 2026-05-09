@@ -15,7 +15,7 @@ const timestamp = new Date()
   .replace(/[-:]/g, "")
   .replace(/\.\d{3}Z$/, "")
   .replace("T", "-");
-const backupRoot = path.resolve("backups/manual-edits", timestamp);
+const backupRoot = path.resolve("/home/eagles/dockerz/backups/manual-edits", timestamp);
 
 await fs.mkdir(backupRoot, { recursive: true });
 

@@ -1,6 +1,0 @@
-<svg color="#272727" fill="currentColor" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <rect height="5.333333" width="2" x="2" y="5.333333"><animate attributeName="height" dur="1s" repeatCount="indefinite" values="8; 16; 8"></animate><animate attributeName="y" dur="1s" repeatCount="indefinite" values="8; 4; 8"></animate></rect>
-  <rect height="10.666667" width="2" x="5.333333" y="2.666667"><animate attributeName="height" dur="1s" repeatCount="indefinite" values="16; 8; 16"></animate><animate attributeName="y" dur="1s" repeatCount="indefinite" values="4; 8; 4"></animate></rect>
-  <rect height="5.333333" width="2" x="8.666667" y="5.333333"><animate attributeName="height" dur="1s" repeatCount="indefinite" values="8; 16; 8"></animate><animate attributeName="y" dur="1s" repeatCount="indefinite" values="8; 4; 8"></animate></rect>
-  <rect height="10.666667" width="2" x="12" y="2.666667"><animate attributeName="height" dur="1s" repeatCount="indefinite" values="16; 8; 16"></animate><animate attributeName="y" dur="1s" repeatCount="indefinite" values="4; 8; 4"></animate></rect>
-</svg>

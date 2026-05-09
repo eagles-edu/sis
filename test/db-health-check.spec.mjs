@@ -6,7 +6,7 @@ import { parseArgs } from "../tools/db-health-check.mjs"
 test("db-health-check parseArgs keeps sane defaults", () => {
   const args = parseArgs([])
   assert.equal(args.outputPath, "runtime-data/maintenance/db-health-status.json")
-  assert.equal(args.backupLatestPath, "backups/postgres/latest.json")
+  assert.equal(args.backupLatestPath, "/home/eagles/dockerz/backups/postgres/latest.json")
   assert.equal(args.vacuumReportDir, "runtime-data/maintenance-reports")
   assert.equal(args.backupStaleMinutes, 1560)
   assert.equal(args.maxQueryLatencyMs, 500)

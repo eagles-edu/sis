@@ -174,7 +174,7 @@ test("parent news week-set modal keeps student-clone visuals with only wired con
   assert.match(PARENT_PORTAL_HTML, /id="closeNewsWeekSetModalBtn"/)
   assert.match(PARENT_PORTAL_HTML, /id="newsWeekSetModalCloseActionBtn"/)
   assert.match(PARENT_PORTAL_HTML, /openNewsQueueDetailBtn[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
-  assert.match(PARENT_PORTAL_HTML, /newsQueueScrollTodayBtn[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
+  assert.doesNotMatch(PARENT_PORTAL_HTML, /id="newsQueueScrollTodayBtn"/)
   assert.match(PARENT_PORTAL_HTML, /data-open-news-week-set[\s\S]*scrollElementIntoView\?\.\("#portalDetailCard"\)/)
   assert.doesNotMatch(PARENT_PORTAL_HTML, /id="newsWeekSetModalSubmitBtn"/)
 
@@ -1320,16 +1320,6 @@ test("parent portal opens news detail directly from news queue when dashboard ca
     assert.ok(modal && !modal.classList.contains("hidden"))
     assert.match(normalizeText(document.getElementById("newsViewerReviewStatusChip")?.textContent), /Cần sửa/i)
     assert.ok(Array.isArray(dom.window.__scrollTargets) && dom.window.__scrollTargets.length > 0)
-    assert.ok(dom.window.__scrollTargets.every((target) => target === "#portalDetailCard"))
-  })
-
-  dom.window.__scrollTargets = []
-  document.getElementById("newsQueueScrollTodayBtn").click()
-
-  await waitFor(() => {
-    const modal = document.getElementById("newsWeekSetModal")
-    assert.ok(modal && !modal.classList.contains("hidden"))
-    assert.match(normalizeText(document.getElementById("newsViewerReviewStatusChip")?.textContent), /Đã duyệt/i)
     assert.ok(dom.window.__scrollTargets.every((target) => target === "#portalDetailCard"))
   })
 

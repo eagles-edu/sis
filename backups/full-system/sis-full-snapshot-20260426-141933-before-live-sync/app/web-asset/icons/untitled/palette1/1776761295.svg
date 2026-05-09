@@ -1,7 +1,0 @@
-<svg color="#dadada" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <g stroke-linecap="round">
-    <animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform>
-    <path d="M13.3333 8C13.3333 10.9455 10.9455 13.3333 8 13.3333C5.0545 13.3333 2.6667 10.9455 2.6667 8C2.6667 4.8351 5.4234 2.3141 8.6667 2.7071" fill="none" stroke="currentColor" stroke-width="1.333333"></path>
-    <polygon points="8 0 8 5.333333 11.333333 2.666667"></polygon>
-  </g>
-</svg>

@@ -1,3 +1,0 @@
-<svg color="#272727" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <circle cx="8" cy="8" r="7" stroke-dasharray="66 66" stroke-dashoffset="20"><animate attributeName="stroke-dashoffset" dur="2s" repeatCount="indefinite" values="20; 66; 20"></animate><animateTransform attributeName="transform" dur="1s" repeatCount="indefinite" type="rotate" values="-90 12 12;270 12 12"></animateTransform></circle>
-</svg>

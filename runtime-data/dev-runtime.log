@@ -1,10 +1,2 @@
-◇ injected env (34) from .env.dev // tip: ⌘ override existing { override: true }
+◇ injected env (34) from .env.dev // tip: ⌁ auth for agents [www.vestauth.com]
 exercise-mailer listening on 127.0.0.1:8788 at /api/exercise-submission and /api/student-intake-submission (health: /healthz)
-assignment template store falling back to memory: Invalid `prisma.assignmentTemplate.findMany()` invocation:
-
-
-The table `public.AssignmentTemplate` does not exist in the current database.
-admin notification queue falling back to memory: Invalid `prisma.adminNotificationQueue.findMany()` invocation:
-
-
-The column `AdminNotificationQueue.studentReviewedAt` does not exist in the current database.

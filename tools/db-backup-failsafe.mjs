@@ -14,7 +14,7 @@ function printHelp() {
   console.log(`Usage: node tools/db-backup-failsafe.mjs [options]
 
 Options:
-  --output-dir <dir>         Backup directory (default: backups/postgres)
+  --output-dir <dir>         Backup directory (default: /home/eagles/dockerz/backups/postgres)
   --database-url <url>       PostgreSQL connection URL (default: DATABASE_URL)
   --retention-days <n>       Delete backups older than n days (default: 30)
   --keep-min <n>             Always keep at least n newest backups (default: 14)
@@ -459,7 +459,7 @@ function resolveConfig(parsedArgs) {
 
   return {
     outputDir: path.resolve(
-      normalizeText(parsedArgs.outputDir || process.env.DB_BACKUP_DIR || "backups/postgres")
+      normalizeText(parsedArgs.outputDir || process.env.DB_BACKUP_DIR || "/home/eagles/dockerz/backups/postgres")
     ),
     databaseUrl,
     retentionDays: toPositiveInt(

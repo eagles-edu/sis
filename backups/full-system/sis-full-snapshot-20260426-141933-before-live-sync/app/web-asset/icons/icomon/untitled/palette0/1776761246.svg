@@ -1,3 +1,0 @@
-<svg color="#272727" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <path d="M8 3.3333L8 3.3333A4.6667 4.6667 0 0 1 12.6667 8L12.6667 8A4.6667 4.6667 0 0 1 8 12.6667L8 12.6667A4.6667 4.6667 0 0 1 3.3333 8L3.3333 8A4.6667 4.6667 0 0 1 8 3.3333Z"><animate attributeName="rx" dur="1s" repeatCount="indefinite" values="0; 7; 0"></animate><animateTransform attributeName="transform" dur="3s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform></path>
-</svg>

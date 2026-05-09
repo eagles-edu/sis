@@ -1,4 +1,0 @@
-<svg color="#dadada" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <polygon points="19.333333 12 15.666667 5.649147 8.333333 5.649147 4.666667 12 8.333333 18.350853 15.666667 18.350853"><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; -30; -30; -30; -60; -60; -60"></animateTransform></polygon>
-  <polygon points="15.333333 12 12 8.666667 8.666667 12 12 15.333333"><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0; 45; 45; 45; 90; 90; 90"></animateTransform></polygon>
-</svg>

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url"
 import { getSharedPrismaClient } from "../server/prisma-client-factory.mjs"
 
 const DEFAULT_OUTPUT_PATH = "runtime-data/maintenance/db-health-status.json"
-const DEFAULT_BACKUP_LATEST_PATH = "backups/postgres/latest.json"
+const DEFAULT_BACKUP_LATEST_PATH = "/home/eagles/dockerz/backups/postgres/latest.json"
 const DEFAULT_VACUUM_REPORT_DIR = "runtime-data/maintenance-reports"
 const DEFAULT_BACKUP_STALE_MINUTES = 26 * 60
 const DEFAULT_MAX_QUERY_LATENCY_MS = 500

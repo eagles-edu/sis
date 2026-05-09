@@ -1,8 +1,0 @@
-<svg color="#272727" fill="none" stroke="currentColor" stroke-dasharray="66 66" stroke-linecap="round" stroke-width="2" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <g fill="currentColor" stroke="none" stroke-linejoin="round" stroke-width="1.333333">
-    <circle cx="8" cy="8" fill="none" opacity="0.3" r="5.666667" stroke="currentColor" stroke-width="2"></circle>
-    <circle cx="8" cy="2.333333" r="1"><animate attributeName="r" dur="2s" repeatCount="indefinite" values="3.5; 1.5; 3.5; 1.5; 3.5"></animate></circle>
-    <circle cx="8" cy="13.666667" r="1"><animate attributeName="r" dur="1s" repeatCount="indefinite" values="1.5; 3.5; 1.5"></animate></circle>
-    <animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform>
-  </g>
-</svg>

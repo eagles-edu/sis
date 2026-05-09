@@ -9,7 +9,7 @@
   <meta name="description" content="The Eagles Club Cổng thông tin kết quả học tập của học sinh dành cho phụ huynh">
   <meta name="keywords" content="The Eagles Club, cổng thông tin, kết quả học tập của học sinh, dành cho phụ huynh">
   <meta name="author" content="The Eagles American Club, Ltd.">
-  <link rel="shortcut icon" href="/favicon.ico?=v2">
+  <link rel="shortcut icon" href="../../favicon.ico?=v2">
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
@@ -722,9 +722,6 @@
                 <div class="actions actions-2">
                   <button id="openNewsQueueDetailBtn" type="button" class="primary">
                     Xem chi tiết
-                  </button>
-                  <button id="newsQueueScrollTodayBtn" type="button">
-                    Xem hôm nay
                   </button>
                   <button id="refreshNewsQueueBtn" type="button" class="btn-refresh">
                     Tải lại
@@ -5900,12 +5897,6 @@
       .getElementById("openNewsQueueDetailBtn")
       ?.addEventListener("click", () => {
         openParentNewsDate(getParentNewsWindowDate("reportDate"));
-        window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
-      });
-    document
-      .getElementById("newsQueueScrollTodayBtn")
-      ?.addEventListener("click", () => {
-        openParentNewsDate(getParentNewsWindowDate("todayDate"));
         window.SISPortalNav?.scrollElementIntoView?.("#portalDetailCard");
       });
     document

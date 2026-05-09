@@ -1,8 +1,0 @@
-<svg viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <circle stroke-width="3" cx="12" cy="12" r="10.5" stroke-dasharray="16.493361">
-        <animateTransform attributeName="transform" dur="3s" repeatCount="indefinite" type="rotate" values="0 12 12; 900 12 12; 1350 12 12; 1800 12 12" />
-    </circle>
-    <circle opacity="0.5" cx="12" cy="12" r="5">
-        <animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0.3; 1; 0.3" />
-    </circle>
-</svg>

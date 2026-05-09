@@ -13,7 +13,7 @@ function printHelp() {
 
 Options:
   --file <path|latest>       Backup file path, or "latest" (default: latest)
-  --output-dir <dir>         Backup directory for latest.json (default: backups/postgres)
+  --output-dir <dir>         Backup directory for latest.json (default: /home/eagles/dockerz/backups/postgres)
   --database-url <url>       PostgreSQL connection URL (default: DATABASE_URL)
   --verify-only              Verify archive + checksum; do not restore
   --dry-run                  Print restore command and exit
@@ -264,7 +264,7 @@ async function readExpectedChecksum(backupPath) {
  * @returns {RestoreConfig}
  */
 function resolveConfig(args) {
-  const outputDir = path.resolve(normalizeText(args.outputDir || process.env.DB_BACKUP_DIR || "backups/postgres"))
+  const outputDir = path.resolve(normalizeText(args.outputDir || process.env.DB_BACKUP_DIR || "/home/eagles/dockerz/backups/postgres"))
   const databaseUrl = normalizeText(args.databaseUrl || process.env.DATABASE_URL)
 
   if (!args.verifyOnly && !args.dryRun && !args.yes) {

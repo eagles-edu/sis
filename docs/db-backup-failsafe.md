@@ -35,8 +35,8 @@ tools/sis-full-backup-snapshot.sh --label before-change
 
 Expected artifacts:
 
-- `backups/full-system/sis-full-snapshot-<timestamp>-before-change/`
-- `backups/full-system/sis-full-snapshot-<timestamp>-before-change.tar.gz`
+- `/home/eagles/dockerz/backups/full-system/sis-full-snapshot-<timestamp>-before-change/`
+- `/home/eagles/dockerz/backups/full-system/sis-full-snapshot-<timestamp>-before-change.tar.gz`
 - `meta/manifest.json`
 - `meta/RESTORE.md`
 
@@ -45,7 +45,7 @@ Expected artifacts:
 1. Validate snapshot path:
 
 ```bash
-ls -lah /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder>
+ls -lah /home/eagles/dockerz/backups/full-system/<snapshot-folder>
 ```
 
 2. Restore:
@@ -53,7 +53,7 @@ ls -lah /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder>
 ```bash
 cd /home/eagles/dockerz/sis
 tools/sis-full-restore-snapshot.sh \
-  --snapshot-dir /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder> \
+  --snapshot-dir /home/eagles/dockerz/backups/full-system/<snapshot-folder> \
   --yes
 ```
 
@@ -107,7 +107,7 @@ Files only (keep current DB):
 ```bash
 cd /home/eagles/dockerz/sis
 tools/sis-full-restore-snapshot.sh \
-  --snapshot-dir /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder> \
+  --snapshot-dir /home/eagles/dockerz/backups/full-system/<snapshot-folder> \
   --skip-db \
   --yes
 ```
@@ -117,7 +117,7 @@ DB only (keep current runtime files):
 ```bash
 cd /home/eagles/dockerz/sis
 tools/sis-full-restore-snapshot.sh \
-  --snapshot-dir /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder> \
+  --snapshot-dir /home/eagles/dockerz/backups/full-system/<snapshot-folder> \
   --skip-files \
   --yes
 ```

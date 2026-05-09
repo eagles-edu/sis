@@ -398,7 +398,7 @@ tools/sis-full-backup-snapshot.sh --label before-major-change
 ```bash
 cd /home/eagles/dockerz/sis
 tools/sis-full-restore-snapshot.sh \
-  --snapshot-dir /home/eagles/dockerz/sis/backups/full-system/<snapshot-folder> \
+  --snapshot-dir /home/eagles/dockerz/backups/full-system/<snapshot-folder> \
   --yes
 ```
 
@@ -588,7 +588,7 @@ npm run db:rollover:inspect -- \
 
 Archive output path:
 
-- `backups/school-year-archive/<schoolYear>/<runId>/`
+- `/home/eagles/dockerz/backups/school-year-archive/<schoolYear>/<runId>/`
 - contains per-dataset `*.ndjson.gz` files plus `manifest.json`.
 
 ## School-Year Label Migration

@@ -1,4 +1,0 @@
-<svg color="#272727" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.333333" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <rect height="9.333333" width="9.333333" x="3.333333" y="3.333333"><animate attributeName="rx" dur="1s" repeatCount="indefinite" values="0; 7; 0"></animate><animateTransform attributeName="transform" dur="3s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform></rect>
-  <rect height="4" width="4" x="6" y="6"><animate attributeName="rx" dur="2s" repeatCount="indefinite" values="7; 0; 7"></animate><animateTransform attributeName="transform" dur="3s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"></animateTransform></rect>
-</svg>
