@@ -10,6 +10,8 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 - Workflow reference: `docs/sop.md`
 - Lean docs policy: hard constraints in `AGENTS.md`, current status in `sis.md`, history in `docs/history.md`.
 - Primary domains: exercise submission and email dispatch, student intake ingestion, admin APIs and session auth, report-card PDF generation
+- Dev workspace source of truth: `/home/eagles/dockerz/sis`
+- Test-host snapshot dump: `/home/eagles/dockerz/BAK/test-dump-090526/test-host-pre-wipe-20260509-011220`
 
 ## Operating Principles
 

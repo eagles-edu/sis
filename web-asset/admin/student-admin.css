@@ -1073,14 +1073,14 @@
         width: 100%;
       }
       .app-brand-logo-fallback {
-        color: #fff;
+        color: var(--text-color);
         font-size: 11px;
         font-weight: 800;
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
       .app-school-name {
-        color: #fff;
+        color: #212121;
         font-size: clamp(13px, 1.7vw, 18px);
         font-weight: 800;
         letter-spacing: 0.05em;
@@ -3588,7 +3588,7 @@
         color: #fff;
       }
       html[data-theme="dark"] body.admin-portal-page .app-school-name {
-        color: #fff;
+        color: var(--portal-dark-text);
       }
       html[data-theme="dark"] body.admin-portal-page .mini-list,
       html[data-theme="dark"] body.admin-portal-page .chart-shell {

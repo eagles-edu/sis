@@ -2,14 +2,15 @@
 
 ## Scope
 
-- Workspace: `/home/eagles/dockerz/sis`
+- Dev workspace: `/home/eagles/dockerz/sis`
+- Test-host snapshot dump: `/home/eagles/dockerz/BAK/test-dump-090526/test-host-pre-wipe-20260509-011220`
 - Runtime: Node `v20.19.4`
 - Service entrypoint: `server/exercise-mailer.mjs`
 - Admin routing module: `server/student-admin-routes.mjs`
 
 ## Active Docs
 
-- `AGENTS.md`: short always-loaded contract
+- `AGENTS.md`: short always-loaded contract, including the dev/test location split
 - `docs/sop.md`: operational procedure and workflow
 - `docs/history.md`: historical migration log
 - `docs/plan-upgrade-0426.md`: current upgrade plan

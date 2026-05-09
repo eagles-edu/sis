@@ -44,6 +44,34 @@ test("student-admin uses shared theme tokens for chart and support surfaces", ()
   )
 })
 
+test("student-admin school title stays dark text", () => {
+  const source = readFile("web-asset/admin/student-admin.css")
+  const titleBlock = sliceBetween(
+    source,
+    ".app-school-name {",
+    "      .text-zoom-controls {",
+    "student-admin.css app-school-name",
+  )
+  assertIncludesAll(titleBlock, ["color: #212121"], "student-admin.css app-school-name")
+  assertExcludesAll(titleBlock, ["color: #fff"], "student-admin.css app-school-name")
+})
+
+test("student-admin school title stays readable in dark mode", () => {
+  const source = readFile("web-asset/admin/student-admin.css")
+  const darkTitleBlock = sliceBetween(
+    source,
+    "html[data-theme=\"dark\"] body.admin-portal-page .app-school-name {",
+    "      html[data-theme=\"dark\"] body.admin-portal-page .mini-list,",
+    "student-admin.css dark app-school-name",
+  )
+  assertIncludesAll(
+    darkTitleBlock,
+    ["color: var(--portal-dark-text)"],
+    "student-admin.css dark app-school-name",
+  )
+  assertExcludesAll(darkTitleBlock, ["color: #212121"], "student-admin.css dark app-school-name")
+})
+
 test("student-points chart render uses shared portal tokens", () => {
   const source = readFile("web-asset/admin/student-points.html")
   assert.ok(
