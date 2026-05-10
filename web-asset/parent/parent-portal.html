@@ -352,6 +352,275 @@
       background: var(--portal-surface-card);
     }
 
+    .detail-copy {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .detail-layout {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .detail-metrics {
+      margin-top: 0;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-item {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-2);
+      padding: 10px;
+      background: var(--portal-surface-card);
+      display: grid;
+      gap: 6px;
+    }
+
+    .detail-item.warn {
+      border-color: var(--portal-status-info-border);
+      background: var(--portal-status-info-bg);
+    }
+
+    .detail-item.bad {
+      border-color: var(--portal-status-bad-border);
+      background: var(--portal-status-bad-bg);
+    }
+
+    .detail-item.good {
+      border-color: var(--portal-status-good-border);
+      background: var(--portal-status-good-bg);
+    }
+
+    .detail-item-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .detail-empty {
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-2);
+      padding: 12px;
+      color: var(--ink-soft);
+      background: var(--portal-surface-support);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .detail-calendar-shell {
+      min-height: 380px;
+    }
+
+    .quarter-board {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .quarter-board-shell {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .quarter-board-card {
+      background: var(--portal-surface-card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-sizing: border-box;
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .quarter-board-card.is-current {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 1px rgb(0 39 134 / 10%);
+    }
+
+    .quarter-board-head {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .quarter-board-title {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      margin: 0;
+    }
+
+    .quarter-board-meta {
+      color: var(--ink-soft);
+      font-size: 0.88rem;
+      line-height: 1.3;
+      margin: 3px 0 0;
+    }
+
+    .quarter-board-current-pill {
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid var(--brand);
+      color: var(--brand);
+      display: inline-flex;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      padding: 0.18rem 0.55rem;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .quarter-board-stats {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .quarter-board-entries {
+      display: grid;
+      gap: 8px;
+    }
+
+    .quarter-board-empty {
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.4;
+      padding: 10px 12px;
+    }
+
+    .quarter-board-entry {
+      background: var(--portal-surface-support);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr);
+      padding: 10px 12px;
+    }
+
+    .quarter-board-entry-main {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .quarter-board-entry-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      line-height: 1.22;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .quarter-board-entry-meta {
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .quarter-board-entry-score {
+      align-items: flex-start;
+      display: inline-flex;
+      flex-direction: column;
+      gap: 0.14rem;
+      justify-content: center;
+      min-width: 4.8rem;
+      text-align: right;
+    }
+
+    .quarter-board-entry-score-main {
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .quarter-board-entry-score-sub {
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .quarter-board-entry.is-open .quarter-board-entry-score-main {
+      color: var(--warning-color, #66008e);
+    }
+
+    .quarter-board-maintenance {
+      display: grid;
+      gap: 0.9rem;
+      align-items: start;
+      justify-items: stretch;
+      padding: 1.25rem;
+      text-align: left;
+    }
+
+    .quarter-board-maintenance-figure {
+      width: 100%;
+      margin: 0;
+    }
+
+    .quarter-board-maintenance-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+    }
+
+    .quarter-board-maintenance-copy {
+      display: grid;
+      gap: 0.6rem;
+      justify-items: start;
+      max-width: 46rem;
+    }
+
+    .quarter-board-maintenance-title {
+      margin: 0;
+      font-size: 1.12rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .quarter-board-maintenance-lead,
+    .quarter-board-maintenance-note {
+      margin: 0;
+      color: var(--ink-soft);
+    }
+
+    @media (min-width: 720px) {
+      .quarter-board-maintenance {
+        gap: 1rem;
+        padding: 1.75rem;
+      }
+    }
+
+    @media (min-width: 780px) {
+      .quarter-board-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .quarter-board-entry {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+    }
+
     @media (max-width: 430px) {
       .env-badge {
         display: none;
@@ -2649,6 +2918,346 @@
       return `${rounded.toFixed(1)}%`;
     }
 
+    function formatScoreOutOfTen(value) {
+      return `${(parseNumber(value) / 10).toFixed(1)}/10`;
+    }
+
+    function portalDateParts(value = "") {
+      const raw = value;
+      const text = raw instanceof Date ? "" : normalizeText(raw);
+      if (!text && !(raw instanceof Date)) return null;
+      const date = raw instanceof Date
+        ? new Date(raw.getTime())
+        : /^\d{4}-\d{2}-\d{2}$/.test(text) ?
+          new Date(`${text}T00:00:00+07:00`) :
+          new Date(text);
+      if (Number.isNaN(date.getTime())) return null;
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: PORTAL_TIME_ZONE,
+      }).formatToParts(date);
+      const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+      const year = Number.parseInt(pick("year"), 10);
+      const month = Number.parseInt(pick("month"), 10);
+      const day = Number.parseInt(pick("day"), 10);
+      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+        return null;
+      }
+      return { year, month, day };
+    }
+
+    function portalQuarterForMonth(month = 0) {
+      if (month >= 8 && month <= 10) return 1;
+      if (month >= 11) return 2;
+      if (month >= 2 && month <= 4) return 3;
+      return 4;
+    }
+
+    function quarterLabelFromParts(parts = null) {
+      if (!parts || typeof parts !== "object") return "";
+      const quarter = portalQuarterForMonth(Number(parts.month) || 0);
+      const schoolYearStart = quarter === 1 || quarter === 2 ? Number(parts.year) : Number(parts.year) - 1;
+      const schoolYearEnd = schoolYearStart + 1;
+      return {
+        key: `${schoolYearStart}-${schoolYearEnd}|q${quarter}`,
+        schoolYearLabel: `${schoolYearStart}-${schoolYearEnd}`,
+        quarterLabel: `Q${quarter}`,
+        displayLabel: `Q${quarter} ${schoolYearStart}-${schoolYearEnd}`,
+        sequence: (schoolYearStart * 4) + quarter,
+        quarter,
+        schoolYearStart,
+      };
+    }
+
+    function quarterLabelFromDate(value = "") {
+      return quarterLabelFromParts(portalDateParts(value));
+    }
+
+    function portalIsoDateKey(value = "") {
+      const parts = portalDateParts(value);
+      if (!parts) return "";
+      const year = String(parts.year).padStart(4, "0");
+      const month = String(parts.month).padStart(2, "0");
+      const day = String(parts.day).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function schoolSetupQuarterForIsoDate(value = "", setup = null) {
+      const isoDate = portalIsoDateKey(value);
+      if (!isoDate) return null;
+      const quarters = Array.isArray(setup?.quarters) ? setup.quarters : [];
+      for (let index = 0; index < quarters.length; index += 1) {
+        const entry = quarters[index];
+        const startDate = normalizeText(entry?.startDate).slice(0, 10);
+        const endDate = normalizeText(entry?.endDate).slice(0, 10);
+        if (!startDate || !endDate) continue;
+        if (startDate <= isoDate && isoDate <= endDate) return entry;
+      }
+      if (
+        normalizeText(setup?.startDate).slice(0, 10) &&
+        normalizeText(setup?.endDate).slice(0, 10) &&
+        normalizeText(setup?.startDate).slice(0, 10) <= isoDate &&
+        isoDate <= normalizeText(setup?.endDate).slice(0, 10)
+      ) {
+        return quarters[quarters.length - 1] || null;
+      }
+      return null;
+    }
+
+    function quarterLabelFromDateWithSetup(value = "", setup = null) {
+      const configured = schoolSetupQuarterForIsoDate(value, setup);
+      if (configured) {
+        const key = normalizeText(configured.quarter) || normalizeText(configured.key) || "";
+        const quarterLabel = key ? key.toUpperCase() : "";
+        const startDate = normalizeText(configured.startDate).slice(0, 10);
+        const endDate = normalizeText(configured.endDate).slice(0, 10);
+        return {
+          key: `${normalizeText(setup?.schoolYear) || normalizeText(setup?.startDate).slice(0, 10) || "school"}|${key || startDate}`,
+          schoolYearLabel: normalizeText(setup?.schoolYear) || "",
+          quarterLabel: quarterLabel || "Q",
+          displayLabel: quarterLabel ? `${quarterLabel} ${startDate}-${endDate}` : `${startDate}-${endDate}`,
+          sequence: Number.parseInt((key || "q0").replace(/\D/g, ""), 10) || 0,
+          quarter: Number.parseInt((key || "").replace(/\D/g, ""), 10) || 0,
+          startDate,
+          endDate,
+        };
+      }
+      return null;
+    }
+
+    function formatQuarterDateRange(startDate = "", endDate = "") {
+      const start = normalizeText(startDate);
+      const end = normalizeText(endDate);
+      if (!start && !end) return "Date unavailable";
+      if (start === end) return formatPortalDate(start);
+      return `${formatPortalDate(start)} - ${formatPortalDate(end)}`;
+    }
+
+    function gradeQuarterSortKey(left = {}, right = {}, currentKey = "") {
+      const leftCurrent = normalizeText(left.key) === currentKey;
+      const rightCurrent = normalizeText(right.key) === currentKey;
+      if (leftCurrent !== rightCurrent) return leftCurrent ? -1 : 1;
+      if (left.sequence !== right.sequence) return right.sequence - left.sequence;
+      return normalizeText(left.displayLabel).localeCompare(normalizeText(right.displayLabel));
+    }
+
+    function buildQuarterGradeGroups(rows = [], schoolSetup = null) {
+      const source = Array.isArray(rows) ? rows : [];
+      const currentQuarter = quarterLabelFromDateWithSetup(new Date(), schoolSetup);
+      const groups = new Map();
+      source.forEach((row) => {
+        const rowDateValue =
+          row?.submittedDate ||
+          row?.submittedAt ||
+          row?.dueDate ||
+          row?.dueAt;
+        const rowDate = rowDateValue instanceof Date ? rowDateValue : normalizeText(rowDateValue);
+        const quarter = quarterLabelFromDateWithSetup(rowDate, schoolSetup);
+        if (!quarter.key) return;
+        if (!groups.has(quarter.key)) {
+          groups.set(quarter.key, {
+            ...quarter,
+            rows: [],
+          });
+        }
+        const scoreValue = Number(row?.scorePercent);
+        const completed = normalizeText(row?.status).toLowerCase() === "completed" || Number.isFinite(scoreValue);
+        const normalizedRow = {
+          ...row,
+          quarterKey: quarter.key,
+          quarterLabel: quarter.displayLabel,
+          scorePercent: Number.isFinite(scoreValue) ? scoreValue : 0,
+          scoreOutOfTen: Number.isFinite(scoreValue) ? scoreValue / 10 : 0,
+          completed,
+          rowDate,
+        };
+        groups.get(quarter.key).rows.push(normalizedRow);
+      });
+      if (currentQuarter.key && !groups.has(currentQuarter.key)) {
+        groups.set(currentQuarter.key, {
+          ...currentQuarter,
+          rows: [],
+        });
+      }
+      const ordered = Array.from(groups.values())
+        .map((group) => {
+          const rowsForGroup = Array.isArray(group.rows) ? group.rows : [];
+          const total = rowsForGroup.length;
+          const completedCount = rowsForGroup.filter((row) => row.completed).length;
+          const uncompletedCount = Math.max(0, total - completedCount);
+          const scoreTotal = rowsForGroup.reduce((sum, row) => sum + Number(row.scorePercent || 0), 0);
+          const meanPercent = total > 0 ? scoreTotal / total : 0;
+          const completionRate = total > 0 ? (completedCount / total) * 100 : 0;
+          return {
+            ...group,
+            total,
+            completedCount,
+            uncompletedCount,
+            meanPercent,
+            meanScoreOutOfTen: meanPercent / 10,
+            completionRate,
+            rows: rowsForGroup.slice().sort((left, right) => {
+              const leftDate = normalizeText(left.rowDate || left.dueDate || left.submittedDate);
+              const rightDate = normalizeText(right.rowDate || right.dueDate || right.submittedDate);
+              return rightDate.localeCompare(leftDate);
+            }),
+          };
+        })
+        .sort((left, right) => gradeQuarterSortKey(left, right, currentQuarter.key));
+      return {
+        currentQuarter,
+        groups: ordered,
+      };
+    }
+
+    function hasCompleteQuarterSetup(schoolSetup = null) {
+      const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : [];
+      if (quarters.length < 4) return false;
+      return quarters.every((quarter) => (
+        quarter &&
+        normalizeText(quarter.quarter) &&
+        normalizeText(quarter.startDate).slice(0, 10) &&
+        normalizeText(quarter.endDate).slice(0, 10)
+      ));
+    }
+
+    function buildQuarterGradeEntry(row = {}) {
+      const article = document.createElement("article");
+      article.className = "quarter-board-entry";
+      if (!row.completed) article.classList.add("is-open");
+      const main = document.createElement("div");
+      main.className = "quarter-board-entry-main";
+      const title = document.createElement("strong");
+      title.className = "quarter-board-entry-title";
+      title.textContent = normalizeText(row.assignmentName) || "Assignment";
+      const meta = document.createElement("span");
+      meta.className = "quarter-board-entry-meta";
+      const metaBits = [
+        row.completed ? "Completed" : "Open",
+        normalizeText(row.className),
+        formatPortalDate(row.dueAt || row.dueDate || row.submittedAt || row.submittedDate),
+      ].filter(Boolean);
+      meta.textContent = metaBits.join(" | ");
+      main.append(title, meta);
+      const score = document.createElement("div");
+      score.className = "quarter-board-entry-score";
+      const scoreMain = document.createElement("span");
+      scoreMain.className = "quarter-board-entry-score-main";
+      scoreMain.textContent = formatPercent(row.scorePercent || 0);
+      const scoreSub = document.createElement("span");
+      scoreSub.className = "quarter-board-entry-score-sub";
+      scoreSub.textContent = formatScoreOutOfTen(row.scorePercent || 0);
+      score.append(scoreMain, scoreSub);
+      article.append(main, score);
+      return article;
+    }
+
+    function renderQuarterBoardMaintenance(target, maintenance = {}) {
+      if (!target) return;
+      target.innerHTML = "";
+      const board = document.createElement("div");
+      board.className = "quarter-board-shell";
+      const card = document.createElement("section");
+      card.className = "quarter-board-card quarter-board-maintenance-card";
+      const wrap = document.createElement("div");
+      wrap.className = "quarter-board-maintenance";
+      const copy = document.createElement("div");
+      copy.className = "quarter-board-maintenance-copy";
+      const title = document.createElement("h4");
+      title.className = "quarter-board-maintenance-title";
+      title.textContent = maintenance.title || "Quarter grades are temporarily unavailable";
+      const figure = document.createElement("div");
+      figure.className = "quarter-board-maintenance-figure";
+      const image = document.createElement("img");
+      image.src = "/web-asset/shared/maintenance.svg";
+      image.loading = "lazy";
+      image.decoding = "async";
+      image.alt = "";
+      image.setAttribute("aria-hidden", "true");
+      figure.append(image);
+      const lead = document.createElement("p");
+      lead.className = "quarter-board-maintenance-lead";
+      lead.textContent = maintenance.lead || "Please check back soon.";
+      const note = document.createElement("p");
+      note.className = "quarter-board-maintenance-note";
+      note.textContent = maintenance.note || "Apologies for the inconvenience while quarter dates are restored.";
+      copy.append(lead, note);
+      wrap.append(title, figure, copy);
+      card.append(wrap);
+      board.append(card);
+      target.append(board);
+    }
+
+    function renderQuarterGradeBoard(target, quarterState = {}) {
+      if (!target) return;
+      const groups = Array.isArray(quarterState.groups) ? quarterState.groups : [];
+      target.innerHTML = "";
+      const board = document.createElement("div");
+      board.className = "quarter-board-shell";
+      if (!groups.length) {
+        const empty = document.createElement("div");
+        empty.className = "quarter-board-empty";
+        empty.textContent = "No grade records are available yet.";
+        board.append(empty);
+        target.append(board);
+        return;
+      }
+      groups.forEach((group) => {
+        const card = document.createElement("section");
+        card.className = "quarter-board-card";
+        if (group.key === quarterState.currentQuarter?.key) card.classList.add("is-current");
+        const head = document.createElement("div");
+        head.className = "quarter-board-head";
+        const headingWrap = document.createElement("div");
+        const title = document.createElement("h4");
+        title.className = "quarter-board-title";
+        title.textContent = group.displayLabel || "Quarter";
+        const meta = document.createElement("p");
+        meta.className = "quarter-board-meta";
+        const range = group.rows.length ?
+          formatQuarterDateRange(
+            group.rows[group.rows.length - 1]?.rowDate || group.rows[group.rows.length - 1]?.dueDate,
+            group.rows[0]?.rowDate || group.rows[0]?.dueDate,
+          ) :
+          "No records yet";
+        meta.textContent =
+          `${range} | ${group.total} assignment${group.total === 1 ? "" : "s"} | ` +
+          `${formatPercent(group.completionRate)} complete`;
+        headingWrap.append(title, meta);
+        const pill = document.createElement("span");
+        pill.className = "quarter-board-current-pill";
+        pill.textContent = group.key === quarterState.currentQuarter?.key ? "Current quarter" : "Quarter";
+        head.append(headingWrap, pill);
+        const stats = document.createElement("div");
+        stats.className = "quarter-board-stats";
+        stats.append(
+          metricCard("Total", String(group.total), group.total ? "green" : ""),
+          metricCard("Completed", String(group.completedCount), group.completedCount ? "green" : ""),
+          metricCard("Open", String(group.uncompletedCount), group.uncompletedCount ? "blue" : "green"),
+          metricCard("Average", formatPercent(group.meanPercent), group.total ? "green" : ""),
+          metricCard("Mean /10", formatScoreOutOfTen(group.meanPercent), group.total ? "green" : ""),
+          metricCard("Completion", `${group.completedCount}/${group.total} (${formatPercent(group.completionRate)})`, group.total ? "green" : ""),
+        );
+        const entries = document.createElement("div");
+        entries.className = "quarter-board-entries";
+        if (!group.rows.length) {
+          const empty = document.createElement("div");
+          empty.className = "quarter-board-empty";
+          empty.textContent = "No grade entries are available in this quarter yet.";
+          entries.append(empty);
+        } else {
+          group.rows.forEach((row) => {
+            entries.append(buildQuarterGradeEntry(row));
+          });
+        }
+        card.append(head, stats, entries);
+        board.append(card);
+      });
+      target.append(board);
+    }
+
     function setSquareValue(node, text, {
       percent = false
     } = {}) {
@@ -4715,6 +5324,8 @@
         Array.isArray(details.gradeHistory) ? details.gradeHistory : [];
       const reportArchive =
         Array.isArray(details.reportArchive) ? details.reportArchive : [];
+      const schoolSetup = child.schoolSetup || {};
+      const quarterSetupReady = hasCompleteQuarterSetup(schoolSetup);
       const attendance = child.attendance || {};
       const assignments = child.assignments || {};
       const grades = child.grades || {};
@@ -5050,6 +5661,16 @@
         };
       }
       if (page === "grades-ytd") {
+        const quarterBoardRows = [...assignmentHistory, ...gradeHistory]
+          .filter(Boolean)
+          .filter((row, index, rows) => {
+            const rowId = normalizeText(row?.id) || `${normalizeText(row?.assignmentName)}|${normalizeText(row?.dueDate || row?.dueAt || row?.submittedDate || row?.submittedAt)}`;
+            return rows.findIndex((candidate) => {
+              const candidateId = normalizeText(candidate?.id) || `${normalizeText(candidate?.assignmentName)}|${normalizeText(candidate?.dueDate || candidate?.dueAt || candidate?.submittedDate || candidate?.submittedAt)}`;
+              return candidateId === rowId;
+            }) === index;
+          });
+        const quarterBoard = quarterSetupReady ? buildQuarterGradeGroups(quarterBoardRows, schoolSetup) : null;
         return {
           title: "Điểm số YTD",
           lead: gradeHistory.length ?
@@ -5077,21 +5698,18 @@
               "green",
             ),
           ],
-          calendarTitle: "Tiến trình điểm số",
-          calendarSummary: gradeHistory.length ?
-            "Bản ghi điểm được gắn theo ngày đến hạn hoặc ngày nộp bài." :
-            "Chưa có mốc điểm để hiển thị.",
-          events: gradeHistory
-            .map((row) => ({
-              id: `grade-${normalizeText(row.id)}`,
-              title: Number.isFinite(Number(row.scorePercent)) ?
-                `${normalizeText(row.assignmentName)} | ${formatPercent(row.scorePercent)}` :
-                normalizeText(row.assignmentName) || "Bài tập",
-              start: normalizeText(row.submittedDate || row.dueDate),
-              allDay: true,
-              classNames: ["fc-event-grade"],
-            }))
-            .filter((row) => normalizeText(row.start)),
+          calendarTitle: "Bảng điểm theo quý",
+          calendarSummary: !quarterSetupReady ?
+            "Quarter setup is temporarily unavailable while school dates are being restored." :
+            quarterBoardRows.length ?
+            "Các hàng theo quý được suy ra từ ngày bài tập và luôn xếp quý hiện tại lên đầu." :
+            "Chưa có hàng theo quý để hiển thị.",
+          quarterBoard,
+          quarterBoardMaintenance: quarterSetupReady ? null : {
+            title: "Quarter grades are temporarily unavailable",
+            lead: "Please check back soon.",
+            note: "Apologies for the inconvenience while quarter dates are restored in School Setup.",
+          },
           primaryTitle: "Điểm số gần đây",
           primaryItems: gradeHistory.slice(0, 10).map((row) => ({
             title: normalizeText(row.assignmentName) || "Bài tập",
@@ -5269,17 +5887,32 @@
         model.historyItems,
         model.historyEmpty,
       );
-      const calendar = ensurePortalDetailCalendar();
-      if (!calendar) return;
-      calendar.removeAllEvents();
-      if (Array.isArray(model.events) && model.events.length) {
-        calendar.addEventSource(model.events);
+      const grid = document.getElementById("portalDetailCalendarGrid");
+      if (!grid) return;
+      if (state.activeDashboardPage === "grades-ytd" && model.quarterBoardMaintenance) {
+        state.detailCalendar?.destroy?.();
+        state.detailCalendar = null;
+        renderQuarterBoardMaintenance(grid, model.quarterBoardMaintenance);
+        scheduleChipTooltipRefresh(document.getElementById("portalDetailCard") || document);
+        return;
       }
-      const anchorDate = normalizeText(model.events?.[0]?.start);
-      if (anchorDate) {
-        calendar.gotoDate(anchorDate);
+      if (state.activeDashboardPage === "grades-ytd" && model.quarterBoard) {
+        state.detailCalendar?.destroy?.();
+        state.detailCalendar = null;
+        renderQuarterGradeBoard(grid, model.quarterBoard);
+      } else {
+        const calendar = ensurePortalDetailCalendar();
+        if (!calendar) return;
+        calendar.removeAllEvents();
+        if (Array.isArray(model.events) && model.events.length) {
+          calendar.addEventSource(model.events);
+        }
+        const anchorDate = normalizeText(model.events?.[0]?.start);
+        if (anchorDate) {
+          calendar.gotoDate(anchorDate);
+        }
+        calendar.render();
       }
-      calendar.render();
       scheduleChipTooltipRefresh(document.getElementById("portalDetailCard") || document);
     }
 

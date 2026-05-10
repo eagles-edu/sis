@@ -527,7 +527,16 @@ test("parent portal keeps profile form on child page view instead of dashboard c
 
       return jsonTextResponse(404, { error: "Not found" })
     },
-    "http://127.0.0.1:8787/parent/portal"
+    "http://127.0.0.1:8787/parent/portal",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: {
+          parentsId: "cmkramer001",
+          role: "parent",
+        },
+      },
+    },
   )
 
   const document = dom.window.document
@@ -642,14 +651,23 @@ test("parent portal profile fields keep reference form section and label orderin
 
       return jsonTextResponse(404, { error: "Not found" })
     },
-    "http://127.0.0.1:8787/parent/portal"
+    "http://127.0.0.1:8787/parent/portal",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: {
+          parentsId: "cmkramer001",
+          role: "parent",
+        },
+      },
+    }
   )
 
   const document = dom.window.document
 
   await waitFor(() => {
     assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
-  })
+  }, 5000)
 
   const sectionHeadings = [...document.querySelectorAll("#profileFields .profile-group h4")].map((node) => normalizeText(node.textContent))
   assert.deepEqual(sectionHeadings, [
@@ -788,6 +806,17 @@ test("parent portal menu opens a detailed homework page with calendar and histor
               assignments: { total: 4, pending: 1, overdue: 1, completed: 2 },
               grades: { averageScorePercent: 88 },
               performance: { reportCount: 2 },
+              schoolSetup: {
+                startDate: "2025-08-01",
+                endDate: "2026-07-31",
+                schoolYear: "2025-2026",
+                quarters: [
+                  { quarter: "q1", startDate: "2025-08-01", endDate: "2025-10-31" },
+                  { quarter: "q2", startDate: "2025-11-01", endDate: "2026-01-31" },
+                  { quarter: "q3", startDate: "2026-02-01", endDate: "2026-04-30" },
+                  { quarter: "q4", startDate: "2026-05-01", endDate: "2026-07-31" },
+                ],
+              },
               details: {
                 currentHomework: [
                   {
@@ -878,14 +907,23 @@ test("parent portal menu opens a detailed homework page with calendar and histor
 
       return jsonTextResponse(404, { error: "Not found" })
     },
-    "http://127.0.0.1:8787/parent/portal"
+    "http://127.0.0.1:8787/parent/portal",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: {
+          parentsId: "cmkramer001",
+          role: "parent",
+        },
+      },
+    }
   )
 
   const document = dom.window.document
 
   await waitFor(() => {
     assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
-  })
+  }, 5000)
 
   document.querySelector('a[data-page-target="current-homework"]').click()
 
@@ -895,6 +933,322 @@ test("parent portal menu opens a detailed homework page with calendar and histor
     assert.match(document.getElementById("portalDetailTitle").textContent, /Current Homework|Bài tập về nhà hiện tại/i)
     assert.match(document.getElementById("portalDetailPrimaryList").textContent, /Essay Draft/i)
     assert.match(document.getElementById("portalDetailCalendarGrid").textContent, /Essay Draft/i)
+  })
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("parent portal grades YTD renders a quarter board without a calendar", async () => {
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "A2 Flyers",
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          children: [
+            {
+              eaglesId: "vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              currentGrade: "A2 Flyers",
+              attendance: { total: 20, present: 18, absent: 1, late: 1, excused: 0 },
+              assignments: { total: 4, pending: 1, overdue: 1, completed: 2 },
+              grades: { averageScorePercent: 88 },
+              performance: { reportCount: 2 },
+              schoolSetup: {
+                startDate: "2025-08-01",
+                endDate: "2026-07-31",
+                schoolYear: "2025-2026",
+                quarters: [
+                  { quarter: "q1", startDate: "2025-08-01", endDate: "2025-10-31" },
+                  { quarter: "q2", startDate: "2025-11-01", endDate: "2026-01-31" },
+                  { quarter: "q3", startDate: "2026-02-01", endDate: "2026-04-30" },
+                  { quarter: "q4", startDate: "2026-05-01", endDate: "2026-07-31" },
+                ],
+              },
+              details: {
+                currentHomework: [
+                  {
+                    id: "hw-current-1",
+                    assignmentName: "Essay Draft",
+                    className: "A2 Flyers",
+                    dueDate: "2026-03-15",
+                    dueAt: "2026-03-15T00:00:00.000Z",
+                    comments: "Finish the final paragraph and upload the draft.",
+                    status: "pending",
+                  },
+                ],
+                overdueHomework: [
+                  {
+                    id: "hw-overdue-1",
+                    assignmentName: "Vocabulary Corrections",
+                    className: "A2 Flyers",
+                    dueDate: "2026-03-11",
+                    dueAt: "2026-03-11T00:00:00.000Z",
+                    comments: "Corrections still need to be submitted.",
+                    status: "overdue",
+                  },
+                ],
+                assignmentHistory: [
+                  {
+                    id: "hw-current-1",
+                    assignmentName: "Essay Draft",
+                    className: "A2 Flyers",
+                    dueDate: "2026-03-15",
+                    dueAt: "2026-03-15T00:00:00.000Z",
+                    comments: "Finish the final paragraph and upload the draft.",
+                    status: "pending",
+                  },
+                  {
+                    id: "hw-complete-1",
+                    assignmentName: "Reading Log",
+                    className: "A2 Flyers",
+                    dueDate: "2026-03-08",
+                    dueAt: "2026-03-08T00:00:00.000Z",
+                    scorePercent: 92,
+                    comments: "Submitted cleanly and on time.",
+                    status: "completed",
+                    homeworkOnTime: true,
+                  },
+                ],
+                attendanceHistory: [],
+                gradeHistory: [
+                  {
+                    id: "grade-1",
+                    assignmentName: "Reading Log",
+                    className: "A2 Flyers",
+                    dueDate: "2026-03-08",
+                    dueAt: "2026-03-08T00:00:00.000Z",
+                    scorePercent: 92,
+                    comments: "Submitted cleanly and on time.",
+                    status: "completed",
+                  },
+                ],
+                reportArchive: [
+                  {
+                    id: "report-1",
+                    className: "A2 Flyers",
+                    quarter: "q1",
+                    generatedDate: "2026-03-10",
+                    generatedAt: "2026-03-10T08:30:00.000Z",
+                    comments: "Strong progress in spoken response and review habits.",
+                  },
+                ],
+              },
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "A2 Flyers",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: {
+          parentsId: "cmkramer001",
+          role: "parent",
+        },
+      },
+    }
+  )
+
+  const document = dom.window.document
+
+  await settleDomAsync(dom, 6, 30)
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  }, 5000)
+
+  document.querySelector('a[data-page-target="grades-ytd"]').click()
+
+  await waitFor(() => {
+    const detailCard = document.getElementById("portalDetailCard")
+    const grid = document.getElementById("portalDetailCalendarGrid")
+    assert.equal(detailCard.classList.contains("hidden"), false)
+    assert.match(document.getElementById("portalDetailTitle").textContent, /Điểm số YTD|Grades YTD/i)
+    assert.ok(grid.querySelectorAll(".quarter-board-card").length >= 2)
+    assert.ok(grid.querySelector(".quarter-board-card.is-current"))
+    assert.equal(Boolean(grid.querySelector(".fc")), false)
+  }, 5000)
+
+  const gradesQuarterState = await dom.window.eval(`(() => {
+    const grid = document.getElementById("portalDetailCalendarGrid");
+    const cards = Array.from(grid?.querySelectorAll(".quarter-board-card") || []).map((card) => ({
+      text: card.textContent || "",
+      isCurrent: card.classList.contains("is-current"),
+    }));
+    return {
+      summary: document.getElementById("portalDetailCalendarSummary")?.textContent || "",
+      firstCard: cards[0] || null,
+      secondCard: cards[1] || null,
+      hasCalendar: Boolean(grid?.querySelector(".fc")),
+    };
+  })()`)
+
+  assert.match(gradesQuarterState.summary, /quý/i)
+  assert.equal(gradesQuarterState.firstCard?.isCurrent, true)
+  assert.equal(gradesQuarterState.hasCalendar, false)
+  assert.match(gradesQuarterState.secondCard?.text || "", /Essay Draft/i)
+  assert.match(gradesQuarterState.secondCard?.text || "", /0(?:\.0)?%/)
+  assert.match(gradesQuarterState.secondCard?.text || "", /92(?:\.0)?%/)
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("parent portal grades YTD shows maintenance when quarter setup is missing", async () => {
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "A2 Flyers",
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          children: [
+            {
+              eaglesId: "vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              currentGrade: "A2 Flyers",
+              attendance: { total: 0, present: 0, absent: 0, late: 0, excused: 0 },
+              assignments: { total: 0, pending: 0, overdue: 0, completed: 0 },
+              grades: { averageScorePercent: null },
+              performance: { reportCount: 0 },
+              schoolSetup: {
+                startDate: "2025-08-01",
+                endDate: "2026-07-31",
+                schoolYear: "2025-2026",
+                quarters: [],
+              },
+              details: {
+                currentHomework: [],
+                overdueHomework: [],
+                assignmentHistory: [],
+                attendanceHistory: [],
+                gradeHistory: [],
+                reportArchive: [],
+              },
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "A2 Flyers",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal",
+    {
+      initialAuthState: {
+        authenticated: true,
+        user: {
+          parentsId: "cmkramer001",
+          role: "parent",
+        },
+      },
+    }
+  )
+
+  const document = dom.window.document
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  }, 5000)
+
+  document.querySelector('a[data-page-target="grades-ytd"]').click()
+
+  await waitFor(() => {
+    const grid = document.getElementById("portalDetailCalendarGrid")
+    assert.equal(document.getElementById("portalDetailCard").classList.contains("hidden"), false)
+    assert.match(document.getElementById("portalDetailTitle").textContent, /Grades YTD|Điểm số YTD/i)
+    assert.ok(grid?.querySelector(".quarter-board-maintenance-card"))
+    assert.ok(grid?.querySelector('img[src="/web-asset/shared/maintenance.svg"]'))
+    assert.match(grid?.textContent || "", /check back soon/i)
+    assert.equal(Boolean(grid?.querySelector(".fc")), false)
+    assert.equal(Boolean(grid?.querySelector(".quarter-board-card:not(.quarter-board-maintenance-card)")), false)
   })
 
   await settleDomAsync(dom)

@@ -58,6 +58,7 @@ function makeTabulatorFetchHandler({
   authenticated = true,
   gradeRecords,
   settingsSchoolYear = "2026-2027",
+  settingsMeta = null,
 } = {}) {
   const records = Array.isArray(gradeRecords) && gradeRecords.length
     ? gradeRecords
@@ -99,6 +100,11 @@ function makeTabulatorFetchHandler({
       return jsonResponse(200, {
         uiSettings: {
           schoolSetup: { schoolYear: settingsSchoolYear },
+        },
+        meta: settingsMeta || {
+          schoolSetupStoredQuarterCount: 4,
+          schoolSetupStoredQuartersPresent: true,
+          schoolSetupStoredQuartersMissing: false,
         },
       })
     }
@@ -189,6 +195,29 @@ test("tabulator query filters override persisted preferences for school-year and
     document.querySelector('[data-period="quarter"]')?.classList.contains("is-active"),
     true,
   )
+
+  dom.window.close()
+})
+
+test("tabulator warns when persisted quarter dates are missing and links to school setup", async () => {
+  const dom = await createTabulatorDom(
+    makeTabulatorFetchHandler({
+      authenticated: true,
+      settingsMeta: {
+        schoolSetupStoredQuarterCount: 0,
+        schoolSetupStoredQuartersPresent: false,
+        schoolSetupStoredQuartersMissing: true,
+      },
+    }),
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&currentSchoolYear=2026-2027&schoolYear=2026-2027&period=quarter&quarter=q1",
+  )
+
+  await waitFor(() => {
+    const warning = dom.window.document.getElementById("schoolSetupWarning")
+    assert.ok(warning && !warning.classList.contains("hidden"))
+    assert.match(String(warning.textContent || warning.innerHTML || ""), /Quarter dates are missing/i)
+    assert.match(String(warning.innerHTML || ""), /student-admin\.html\?apiOrigin=.*#schoolSetupPanel/i)
+  }, 5000)
 
   dom.window.close()
 })

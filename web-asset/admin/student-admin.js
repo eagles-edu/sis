@@ -37,6 +37,7 @@
         hubPollTimer: null,
         globalTextZoomPercent: 100,
         currentStudent: null,
+        uiSettingsMeta: null,
         profileFormConfig: null,
         profileActiveTab: "profile",
         profileMode: "info",
@@ -7204,6 +7205,19 @@
         };
       }
 
+      function uiSettingsMetaFromSource(source) {
+        const candidate = source && typeof source === "object" ? source : {}
+        const schoolSetup = candidate.schoolSetup && typeof candidate.schoolSetup === "object" ?
+          candidate.schoolSetup :
+          {}
+        const quarters = Array.isArray(schoolSetup.quarters) ? schoolSetup.quarters : []
+        return {
+          schoolSetupStoredQuarterCount: quarters.length,
+          schoolSetupStoredQuartersPresent: quarters.length > 0,
+          schoolSetupStoredQuartersMissing: quarters.length < 4,
+        }
+      }
+
       function loadUiSettingsFromStorage() {
         let stored = null;
         try {
@@ -7211,25 +7225,34 @@
         } catch (error) {
           void error;
         }
-        if (!stored) return normalizeUiSettings(DEFAULT_UI_SETTINGS);
+        if (!stored) {
+          state.uiSettingsMeta = uiSettingsMetaFromSource(DEFAULT_UI_SETTINGS);
+          return normalizeUiSettings(DEFAULT_UI_SETTINGS);
+        }
         try {
           const parsed = JSON.parse(stored);
+          state.uiSettingsMeta = uiSettingsMetaFromSource(parsed);
           return normalizeUiSettings({
             ...DEFAULT_UI_SETTINGS,
             ...(parsed && typeof parsed === "object" ? parsed : {}),
           });
         } catch (error) {
           void error;
+          state.uiSettingsMeta = uiSettingsMetaFromSource(DEFAULT_UI_SETTINGS);
           return normalizeUiSettings(DEFAULT_UI_SETTINGS);
         }
       }
 
-      function persistUiSettings(settings) {
+      function persistUiSettings(settings, metaOverride = null) {
         const normalized = normalizeUiSettings({
           ...DEFAULT_UI_SETTINGS,
           ...(settings && typeof settings === "object" ? settings : {}),
         });
         state.uiSettings = normalized;
+        state.uiSettingsMeta =
+          metaOverride && typeof metaOverride === "object" ?
+            metaOverride :
+            uiSettingsMetaFromSource(normalized);
         try {
           window.localStorage.setItem(
             "sis.admin.uiSettings",
@@ -7249,7 +7272,10 @@
             result && typeof result === "object" ? result.uiSettings : null;
           if (!candidate || typeof candidate !== "object" || Array.isArray(candidate))
             return null;
-          return persistUiSettings(candidate);
+          const meta = result?.meta && typeof result.meta === "object" ?
+            result.meta :
+            uiSettingsMetaFromSource(candidate);
+          return persistUiSettings(candidate, meta);
         } catch (error) {
           void error;
           return null;
@@ -7616,6 +7642,7 @@
         const endEl = document.getElementById("schoolSetupEndDate");
         const labelEl = document.getElementById("schoolSetupSchoolYearLabel");
         const rowsEl = document.getElementById("schoolSetupQuarterRows");
+        const warningEl = document.getElementById("schoolSetupWarning");
         const statusEl = document.getElementById("schoolSetupStatus");
         const schoolNameEl = document.getElementById("schoolSetupName");
         const bilingualViEl = document.getElementById("schoolSetupBilingualVi");
@@ -7695,6 +7722,16 @@
         renderSchoolSetupLogoPreview(normalizedProfile.logoDataUrl);
         renderSchoolSetupGoogleMapsPreview(normalizedProfile.googleMapsEmbedIframe);
         if (rowsEl) rowsEl.innerHTML = schoolSetupQuarterRowsHtml(normalizedSetup);
+        if (warningEl instanceof HTMLElement) {
+          const meta = state.uiSettingsMeta || {};
+          const missingQuarters = meta.schoolSetupStoredQuartersMissing === true;
+          warningEl.classList.toggle("hidden", !missingQuarters);
+          warningEl.style.color = missingQuarters ? "var(--portal-status-warn-text)" : "";
+          warningEl.style.fontWeight = missingQuarters ? "700" : "";
+          warningEl.innerHTML = missingQuarters ?
+            'Quarter dates are missing from persisted settings. <a href="#schoolSetupPanel">Open School Setup</a> to restore them before rollover or after any settings hiccup.' :
+            "";
+        }
         if (statusEl) {
           statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
           const defaultMessage =
@@ -17231,6 +17268,7 @@
         if (attendanceRowsEl) attendanceRowsEl.innerHTML = "";
         if (gradeRowsEl) gradeRowsEl.innerHTML = "";
         if (reportRowsEl) reportRowsEl.innerHTML = "";
+        applyDefaultGradeAndReportSchoolYears(true);
         renderGradePulseChart([]);
         renderProfileInfoLayout(null);
         setProfileMode(state.profileMode);
@@ -18696,10 +18734,33 @@
         };
       }
 
+      function currentAdminSchoolYear() {
+        return normalizeText(gradeChartCurrentSchoolYear());
+      }
+
+      function applyDefaultGradeAndReportSchoolYears(force = false) {
+        const currentSchoolYear = currentAdminSchoolYear();
+        if (!currentSchoolYear) return;
+        const gradeYearEl = document.getElementById("g_schoolYear");
+        const reportYearEl = document.getElementById("r_schoolYear");
+        if (
+          gradeYearEl instanceof HTMLInputElement &&
+          (force || !normalizeText(gradeYearEl.value))
+        ) {
+          gradeYearEl.value = currentSchoolYear;
+        }
+        if (
+          reportYearEl instanceof HTMLInputElement &&
+          (force || !normalizeText(reportYearEl.value))
+        ) {
+          reportYearEl.value = currentSchoolYear;
+        }
+      }
+
       function clearGradeForm() {
         document.getElementById("g_id").value = "";
         document.getElementById("g_className").value = "";
-        document.getElementById("g_schoolYear").value = "";
+        applyDefaultGradeAndReportSchoolYears(true);
         document.getElementById("g_quarter").value = "q1";
         document.getElementById("g_assignmentName").value = "";
         document.getElementById("g_dueAt").value = "";
@@ -18794,7 +18855,8 @@
           tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
             document.getElementById("g_id").value = row.id;
             document.getElementById("g_className").value = row.className || "";
-            document.getElementById("g_schoolYear").value = row.schoolYear || "";
+            document.getElementById("g_schoolYear").value =
+              row.schoolYear || currentAdminSchoolYear();
             document.getElementById("g_quarter").value = row.quarter || "q1";
             document.getElementById("g_assignmentName").value =
               row.assignmentName || "";
@@ -18869,7 +18931,7 @@
       function clearReportForm() {
         document.getElementById("r_id").value = "";
         document.getElementById("r_className").value = "";
-        document.getElementById("r_schoolYear").value = "";
+        applyDefaultGradeAndReportSchoolYears(true);
         document.getElementById("r_quarter").value = "q1";
         document.getElementById("r_homeworkCompletionRate").value = "";
         document.getElementById("r_homeworkOnTimeRate").value = "";
@@ -19027,7 +19089,8 @@
           tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
             document.getElementById("r_id").value = row.id;
             document.getElementById("r_className").value = row.className || "";
-            document.getElementById("r_schoolYear").value = row.schoolYear || "";
+            document.getElementById("r_schoolYear").value =
+              row.schoolYear || currentAdminSchoolYear();
             document.getElementById("r_quarter").value = row.quarter || "q1";
             document.getElementById("r_homeworkCompletionRate").value =
               row.homeworkCompletionRate ?? "";

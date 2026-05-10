@@ -54,6 +54,14 @@ function localIsoDate(value = new Date()) {
   return `${year}-${month}-${day}`
 }
 
+function expectedCurrentSchoolYearLabel(value = new Date()) {
+  const date = value instanceof Date ? new Date(value.getTime()) : new Date(value)
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  if (month >= 8) return `${year}-${year + 1}`
+  return `${year - 1}-${year}`
+}
+
 function nextSundayIsoDate(value = new Date()) {
   const source = value instanceof Date ? new Date(value.getTime()) : new Date(value)
   const date = new Date(source.getFullYear(), source.getMonth(), source.getDate())
@@ -7082,7 +7090,7 @@ test("clear buttons reset local admin form fields", async () => {
   document.getElementById("gradeClearBtn").click()
   assert.equal(document.getElementById("g_id").value, "")
   assert.equal(document.getElementById("g_className").value, "")
-  assert.equal(document.getElementById("g_schoolYear").value, "")
+  assert.equal(document.getElementById("g_schoolYear").value, expectedCurrentSchoolYearLabel())
   assert.equal(document.getElementById("g_quarter").value, "q1")
   assert.equal(document.getElementById("g_assignmentName").value, "")
   assert.equal(document.getElementById("g_homeworkCompleted").value, "")
@@ -7095,7 +7103,7 @@ test("clear buttons reset local admin form fields", async () => {
   document.getElementById("reportClearBtn").click()
   assert.equal(document.getElementById("r_id").value, "")
   assert.equal(document.getElementById("r_className").value, "")
-  assert.equal(document.getElementById("r_schoolYear").value, "")
+  assert.equal(document.getElementById("r_schoolYear").value, expectedCurrentSchoolYearLabel())
   assert.equal(document.getElementById("r_quarter").value, "q1")
   assert.equal(document.getElementById("r_comments").value, "")
 

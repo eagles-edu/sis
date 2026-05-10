@@ -117,8 +117,20 @@ function resolveStaticPath(rootDir, pathname) {
   return targetPath;
 }
 
-function createStudentPortalFixtureServer(rootDir) {
+function createStudentPortalFixtureServer(rootDir, options = {}) {
   const studentPortalPath = path.join(rootDir, "web-asset/student/student-portal.html");
+  const defaultSchoolSetup = {
+    startDate: "2025-08-01",
+    endDate: "2026-07-31",
+    schoolYear: "2025-2026",
+    quarters: [
+      { quarter: "q1", startDate: "2025-08-01", endDate: "2025-10-31" },
+      { quarter: "q2", startDate: "2025-11-01", endDate: "2026-01-31" },
+      { quarter: "q3", startDate: "2026-02-01", endDate: "2026-04-30" },
+      { quarter: "q4", startDate: "2026-05-01", endDate: "2026-07-31" },
+    ],
+  };
+  const dashboardSchoolSetup = options.dashboardSchoolSetup || defaultSchoolSetup;
   const studentNewsItems = [
     {
       id: "news-2026-03-17",
@@ -279,6 +291,7 @@ function createStudentPortalFixtureServer(rootDir) {
               reportCount: 2,
               latestReportAt: "2026-03-10T08:30:00.000Z",
             },
+            schoolSetup: dashboardSchoolSetup,
             details: {
               currentHomework: [
                 {
@@ -868,6 +881,49 @@ test(
       });
 
       await page.evaluate(() => {
+        globalThis.document.querySelector('a[data-page-target="grades-ytd"]')?.click();
+      });
+
+      await page.waitForFunction(() => {
+        const detailCard = globalThis.document.getElementById("studentDetailPageCard");
+        const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
+        return Boolean(
+          detailCard &&
+          !detailCard.classList.contains("hidden") &&
+          /Grades YTD/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "") &&
+          grid &&
+          grid.querySelectorAll(".quarter-board-card").length >= 2 &&
+          grid.querySelector(".quarter-board-card.is-current") &&
+          !grid.querySelector(".fc")
+        );
+      });
+
+      const gradesQuarterState = await page.evaluate(() => {
+        const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
+        const cards = Array.from(grid?.querySelectorAll(".quarter-board-card") || []).map((card) => ({
+          text: card.textContent || "",
+          isCurrent: card.classList.contains("is-current"),
+        }));
+        return {
+          title: globalThis.document.getElementById("studentDetailTitle")?.textContent || "",
+          summary: globalThis.document.getElementById("studentDetailCalendarSummary")?.textContent || "",
+          cardCount: cards.length,
+          firstCard: cards[0] || null,
+          secondCard: cards[1] || null,
+          hasCalendar: Boolean(grid?.querySelector(".fc")),
+        };
+      });
+
+      assert.match(gradesQuarterState.title, /Grades YTD/i);
+      assert.match(gradesQuarterState.summary, /quarter rows are derived|quý/i);
+      assert.equal(gradesQuarterState.cardCount >= 2, true);
+      assert.equal(gradesQuarterState.firstCard?.isCurrent, true);
+      assert.equal(gradesQuarterState.hasCalendar, false);
+      assert.match(gradesQuarterState.secondCard?.text || "", /Essay Draft/i);
+      assert.match(gradesQuarterState.secondCard?.text || "", /0\.0%/);
+      assert.match(gradesQuarterState.secondCard?.text || "", /92\.0%/);
+
+      await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="home"]')?.click();
       });
       await page.click("#openNewsPageBtn");
@@ -938,6 +994,73 @@ test(
       assert.match(calendarState.alertDayAnimationName, /dayAlertPulse/i);
       assert.match(calendarState.completedDayClassName, /calendar-day-completed/);
       assert.match(calendarState.openDayClassName, /calendar-day-open/);
+    } finally {
+      if (page) {
+        await page.close().catch(() => {});
+      }
+      if (browser) {
+        await browser.close().catch(() => {});
+      }
+      if (server.listening) {
+        await new Promise((resolve) => server.close(resolve));
+      }
+    }
+  }
+);
+
+test(
+  "student portal grades YTD shows maintenance when quarter setup is missing",
+  { skip: skipReason },
+  async () => {
+    const server = createStudentPortalFixtureServer(ROOT_DIR, {
+      dashboardSchoolSetup: {
+        startDate: "2025-08-01",
+        endDate: "2026-07-31",
+        schoolYear: "2025-2026",
+        quarters: [],
+      },
+    });
+    let browser = null;
+    let page = null;
+
+    try {
+      await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+
+      browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
+      page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+
+      await page.goto(`http://127.0.0.1:${port}/student/portal`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector("#loginForm");
+      await page.fill("#loginEaglesId", STUDENT_LOGIN.eaglesId);
+      await page.fill("#loginPassword", STUDENT_LOGIN.password);
+      await page.click('#loginForm button[type="submit"]');
+
+      await page.waitForFunction(() => {
+        const appPanel = globalThis.document.getElementById("appPanel");
+        const homeCard = globalThis.document.getElementById("studentHomeCard");
+        return Boolean(appPanel && !appPanel.classList.contains("hidden") && homeCard && !homeCard.classList.contains("hidden"));
+      });
+
+      await page.evaluate(() => {
+        globalThis.document.querySelector('a[data-page-target="grades-ytd"]')?.click();
+      });
+
+      await page.waitForFunction(() => {
+        const detailCard = globalThis.document.getElementById("studentDetailPageCard");
+        const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
+        return Boolean(
+          detailCard &&
+          !detailCard.classList.contains("hidden") &&
+          /Grades YTD/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "") &&
+          grid &&
+          grid.querySelector(".quarter-board-maintenance-card") &&
+          grid.querySelector('img[src="/web-asset/shared/maintenance.svg"]') &&
+          /check back soon/i.test(grid.textContent || "") &&
+          !grid.querySelector(".fc")
+        );
+      });
     } finally {
       if (page) {
         await page.close().catch(() => {});

@@ -2121,10 +2121,32 @@ function normalizeUiSettingsPayload(payload = {}) {
   const candidate = Object.prototype.hasOwnProperty.call(source, "uiSettings") ? source.uiSettings : source
   if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return {}
   try {
-    return JSON.parse(JSON.stringify(candidate))
+    const normalized = JSON.parse(JSON.stringify(candidate))
+    const schoolSetup = normalized?.schoolSetup
+    if (schoolSetup && typeof schoolSetup === "object" && !Array.isArray(schoolSetup)) {
+      normalized.schoolSetup = {
+        ...schoolSetup,
+        ...normalizeSchoolSetupSnapshot(schoolSetup),
+      }
+    }
+    return normalized
   } catch (error) {
     void error
     return {}
+  }
+}
+
+function uiSettingsMetaFromPayload(payload = {}) {
+  const source = payload && typeof payload === "object" ? payload : {}
+  const candidate = Object.prototype.hasOwnProperty.call(source, "uiSettings") ? source.uiSettings : source
+  const schoolSetup = candidate && typeof candidate === "object" && !Array.isArray(candidate) ?
+    candidate.schoolSetup :
+    null
+  const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : []
+  return {
+    schoolSetupStoredQuarterCount: quarters.length,
+    schoolSetupStoredQuartersPresent: quarters.length > 0,
+    schoolSetupStoredQuartersMissing: quarters.length < 4,
   }
 }
 
@@ -2135,6 +2157,7 @@ function readPersistedUiSettings() {
       updatedAt: "",
       updatedBy: "",
       filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+      meta: uiSettingsMetaFromPayload({}),
     }
   }
 
@@ -2146,6 +2169,7 @@ function readPersistedUiSettings() {
         updatedAt: "",
         updatedBy: "",
         filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+        meta: uiSettingsMetaFromPayload({}),
       }
     }
 
@@ -2154,12 +2178,14 @@ function readPersistedUiSettings() {
       parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, "uiSettings")
     const uiSettings = wrapped ? normalizeUiSettingsPayload({ uiSettings: parsed.uiSettings }) : normalizeUiSettingsPayload(parsed)
     const normalizedUpdatedBy = normalizeText(parsed?.updatedBy)
+    const meta = uiSettingsMetaFromPayload(wrapped ? { uiSettings: parsed.uiSettings } : parsed)
 
     return {
       uiSettings,
       updatedAt: normalizeText(parsed?.updatedAt),
       updatedBy: normalizedUpdatedBy || "",
       filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+      meta,
     }
   } catch (error) {
     const wrapped = new Error("Unable to read persisted admin UI settings")
@@ -2172,6 +2198,7 @@ function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
   const uiSettings = normalizeUiSettingsPayload(payload)
   const updatedAt = nowIso()
   const updatedBy = normalizeText(updatedByUsername) || null
+  const meta = uiSettingsMetaFromPayload({ uiSettings })
   const persisted = {
     uiSettings,
     updatedAt,
@@ -2195,6 +2222,7 @@ function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
     updatedAt,
     updatedBy: updatedBy || "",
     filePath: ADMIN_UI_SETTINGS_FILE_PATH,
+    meta,
   }
 }
 
@@ -3867,6 +3895,7 @@ export function buildChildDashboardSnapshot({
   gradeRows = [],
   reportRows = [],
 } = {}) {
+  const schoolSetup = normalizeSchoolSetupSnapshot(readPersistedUiSettings()?.uiSettings?.schoolSetup)
   const details = buildChildDashboardDetails({
     attendanceRows,
     gradeRows,
@@ -3926,6 +3955,7 @@ export function buildChildDashboardSnapshot({
       averageScorePercent: averageScore,
     },
     performance,
+    schoolSetup,
     details,
   }
 }
@@ -3955,6 +3985,133 @@ function toPortalDateKey(value) {
   const month = String(shifted.getUTCMonth() + 1).padStart(2, "0")
   const day = String(shifted.getUTCDate()).padStart(2, "0")
   return `${year}-${month}-${day}`
+}
+
+function compareIsoDateText(left = "", right = "") {
+  return normalizeText(left).slice(0, 10).localeCompare(normalizeText(right).slice(0, 10))
+}
+
+function parseIsoDateLocal(value = "") {
+  const dateKey = normalizeText(value).slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null
+  return parseIsoDateTime(`${dateKey}T00:00:00+07:00`)
+}
+
+function isoDateOffset(value = "", days = 0) {
+  const source = parseIsoDateLocal(value)
+  if (!source) return ""
+  const shifted = shiftToFixedTimeZone(source)
+  shifted.setUTCDate(shifted.getUTCDate() + (Number.isFinite(days) ? Math.trunc(days) : 0))
+  return toPortalDateKey(shiftFromFixedTimeZone(shifted))
+}
+
+function isWeekendIsoDate(value = "") {
+  const date = parseIsoDateLocal(value)
+  if (!date) return false
+  const shifted = shiftToFixedTimeZone(date)
+  const day = shifted.getUTCDay()
+  return day === 0 || day === 6
+}
+
+function nearestWeekdayIsoDate(target = "", start = "", end = "") {
+  const targetIso = normalizeText(target).slice(0, 10)
+  const startIso = normalizeText(start).slice(0, 10)
+  const endIso = normalizeText(end).slice(0, 10)
+  if (!parseIsoDateLocal(startIso) || !parseIsoDateLocal(endIso) || compareIsoDateText(startIso, endIso) > 0) {
+    return ""
+  }
+  let candidate = parseIsoDateLocal(targetIso) ? targetIso : startIso
+  if (compareIsoDateText(candidate, startIso) < 0) candidate = startIso
+  if (!isWeekendIsoDate(candidate)) return candidate
+  const possibilities = []
+  let backward = candidate
+  while (compareIsoDateText(backward, startIso) >= 0) {
+    if (!isWeekendIsoDate(backward)) {
+      possibilities.push(backward)
+      break
+    }
+    backward = isoDateOffset(backward, -1)
+  }
+  let forward = candidate
+  while (compareIsoDateText(forward, endIso) <= 0) {
+    if (!isWeekendIsoDate(forward)) {
+      possibilities.push(forward)
+      break
+    }
+    forward = isoDateOffset(forward, 1)
+  }
+  if (!possibilities.length) return candidate
+  possibilities.sort((left, right) => {
+    const leftDiff = Math.abs((parseIsoDateLocal(candidate)?.getTime?.() || 0) - (parseIsoDateLocal(left)?.getTime?.() || 0))
+    const rightDiff = Math.abs((parseIsoDateLocal(candidate)?.getTime?.() || 0) - (parseIsoDateLocal(right)?.getTime?.() || 0))
+    if (leftDiff !== rightDiff) return leftDiff - rightDiff
+    return compareIsoDateText(left, right)
+  })
+  return possibilities[0]
+}
+
+function splitSchoolYearIntoQuarters(startDate = "", endDate = "") {
+  const startIso = normalizeText(startDate).slice(0, 10)
+  const endIso = normalizeText(endDate).slice(0, 10)
+  if (!parseIsoDateLocal(startIso) || !parseIsoDateLocal(endIso) || compareIsoDateText(startIso, endIso) > 0) {
+    return []
+  }
+
+  const ranges = []
+  let cursor = startIso
+  let remainingDays = Math.max(0, Math.round((parseIsoDateLocal(endIso).getTime() - parseIsoDateLocal(startIso).getTime()) / (24 * 60 * 60 * 1000))) + 1
+
+  for (let index = 0; index < 4; index += 1) {
+    const quartersLeft = 4 - index
+    const quarterKey = `q${index + 1}`
+    const start = cursor
+    if (!parseIsoDateLocal(start)) break
+
+    let end = ""
+    if (index === 3) {
+      end = endIso
+      if (isWeekendIsoDate(end)) {
+        end = nearestWeekdayIsoDate(end, start, endIso) || end
+      }
+    } else {
+      const minimumDaysAfter = quartersLeft - 1
+      const maxLength = Math.max(1, remainingDays - minimumDaysAfter)
+      const suggestedLength = Math.max(1, Math.round(remainingDays / quartersLeft))
+      const pickedLength = Math.min(maxLength, suggestedLength)
+      const targetEnd = isoDateOffset(start, pickedLength - 1)
+      const latestAllowed = isoDateOffset(endIso, -minimumDaysAfter)
+      end = nearestWeekdayIsoDate(targetEnd, start, latestAllowed) || targetEnd
+    }
+
+    if (!parseIsoDateLocal(end) || compareIsoDateText(end, start) < 0) end = start
+    ranges.push({ quarter: quarterKey, startDate: start, endDate: end })
+    cursor = isoDateOffset(end, 1)
+    if (!parseIsoDateLocal(cursor) || compareIsoDateText(cursor, endIso) > 0) cursor = endIso
+    remainingDays = Math.max(0, Math.round((parseIsoDateLocal(endIso).getTime() - parseIsoDateLocal(cursor).getTime()) / (24 * 60 * 60 * 1000))) + 1
+  }
+
+  return ranges
+}
+
+function normalizeSchoolSetupSnapshot(source = {}) {
+  const fallback = {
+    startDate: "",
+    endDate: "",
+    schoolYear: "",
+    quarters: [],
+  }
+  const startDate = normalizeText(source?.startDate).slice(0, 10)
+  const endDate = normalizeText(source?.endDate).slice(0, 10)
+  if (!parseIsoDateLocal(startDate) || !parseIsoDateLocal(endDate) || compareIsoDateText(startDate, endDate) > 0) {
+    return fallback
+  }
+  const quarters = splitSchoolYearIntoQuarters(startDate, endDate)
+  return {
+    startDate,
+    endDate,
+    schoolYear: `${parseIsoDateLocal(startDate).getUTCFullYear()}-${parseIsoDateLocal(endDate).getUTCFullYear()}`,
+    quarters,
+  }
 }
 
 function toIsoOrEmpty(value) {

@@ -188,6 +188,17 @@
       color: var(--bad);
     }
 
+    .status.is-warn {
+      color: var(--warn);
+    }
+
+    .status a {
+      color: inherit;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 0.14em;
+    }
+
     .periods {
       display: flex;
       flex-wrap: wrap;
@@ -476,6 +487,40 @@
 
     .tabulator .tabulator-row.tabulator-row-even {
       background: #f1f4f8;
+    }
+
+    html[data-theme="dark"] .tabulator {
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-header,
+    html[data-theme="dark"] .tabulator .tabulator-footer,
+    html[data-theme="dark"] .tabulator .tabulator-col,
+    html[data-theme="dark"] .tabulator .tabulator-cell,
+    html[data-theme="dark"] .tabulator .tabulator-row,
+    html[data-theme="dark"] .tabulator .tabulator-responsive-collapse,
+    html[data-theme="dark"] .tabulator .tabulator-responsive-collapse table {
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-cell a,
+    html[data-theme="dark"] .tabulator .tabulator-cell button,
+    html[data-theme="dark"] .tabulator .tabulator-col-title,
+    html[data-theme="dark"] .tabulator .tabulator-footer .tabulator-page {
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-row {
+      background: var(--portal-dark-surface-card);
+      border-bottom-color: var(--portal-dark-border);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-row.tabulator-row-even {
+      background: color-mix(in srgb, var(--portal-dark-surface-card) 88%, #ffffff 12%);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-row:hover {
+      background: color-mix(in srgb, var(--portal-dark-surface-support) 86%, #ffffff 14%);
     }
 
     .group-meta {
@@ -1228,6 +1273,7 @@
           <a class="chip-link" href="/admin/students?page=grades-data">Back to Grades Admin</a>
           <button class="btn primary" id="reloadBtn" type="button">Reload SIS Grade Data</button>
         </div>
+        <p class="status is-warn hidden" id="schoolSetupWarning"></p>
         <p class="status" id="statusLine">Booting grade interface...</p>
       </section>
 
@@ -1382,6 +1428,7 @@
         distributionModalFullscreen: true,
         tableModalOpen: false,
         letterGradeRanges: [],
+        uiSettingsMeta: null,
         schoolSetup: {
           schoolYear: "",
           startDate: "",
@@ -1700,6 +1747,19 @@
           .sort((left, right) => quarterSortKey(left?.quarter) - quarterSortKey(right?.quarter))
       }
 
+      function uiSettingsMetaFromSource(settings) {
+        const candidate = settings && typeof settings === "object" ? settings : {}
+        const schoolSetup = candidate?.schoolSetup && typeof candidate.schoolSetup === "object" ?
+          candidate.schoolSetup :
+          {}
+        const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : []
+        return {
+          schoolSetupStoredQuarterCount: quarters.length,
+          schoolSetupStoredQuartersPresent: quarters.length > 0,
+          schoolSetupStoredQuartersMissing: quarters.length < 4,
+        }
+      }
+
       function syncSchoolSetupFromUiSettings(settings) {
         const setup = settings && typeof settings === "object" && settings.schoolSetup && typeof settings.schoolSetup === "object" ?
           settings.schoolSetup :
@@ -1716,6 +1776,26 @@
           quarters: normalizeSchoolSetupQuarters(setup?.quarters),
         }
         refreshSystemCurrentSchoolYear(state.schoolSetup.schoolYear)
+      }
+
+      function renderSchoolSetupWarning() {
+        const warningEl = document.getElementById("schoolSetupWarning")
+        if (!(warningEl instanceof HTMLElement)) return
+        const meta = state.uiSettingsMeta || {}
+        const missingQuarters = meta.schoolSetupStoredQuartersMissing === true
+        if (!missingQuarters) {
+          warningEl.classList.add("hidden")
+          warningEl.textContent = ""
+          warningEl.removeAttribute("aria-live")
+          return
+        }
+        warningEl.classList.remove("hidden")
+        warningEl.setAttribute("aria-live", "polite")
+        const schoolSetupHref = API_ORIGIN ?
+          `/web-asset/admin/student-admin.html?apiOrigin=${encodeURIComponent(API_ORIGIN)}#schoolSetupPanel` :
+          "/web-asset/admin/student-admin.html#schoolSetupPanel"
+        warningEl.innerHTML =
+          `Quarter dates are missing from persisted settings. <a href="${schoolSetupHref}">Open School Setup</a> to restore them before rollover or after any settings hiccup.`
       }
 
       function normalizeSearch(value) {
@@ -3201,12 +3281,20 @@
       function loadUiSettingsFromLocalStorage() {
         try {
           const raw = window.localStorage.getItem("sis.admin.uiSettings")
-          if (!raw) return null
+          if (!raw) {
+            state.uiSettingsMeta = uiSettingsMetaFromSource(null)
+            return null
+          }
           const parsed = JSON.parse(raw)
-          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            state.uiSettingsMeta = uiSettingsMetaFromSource(null)
+            return null
+          }
+          state.uiSettingsMeta = uiSettingsMetaFromSource(parsed)
           return parsed
         } catch (error) {
           void error
+          state.uiSettingsMeta = uiSettingsMetaFromSource(null)
           return null
         }
       }
@@ -3214,11 +3302,16 @@
         const localSettings = loadUiSettingsFromLocalStorage()
         state.letterGradeRanges = letterGradeRangesFromUiSettings(localSettings)
         syncSchoolSetupFromUiSettings(localSettings)
+        renderSchoolSetupWarning()
         try {
           const payload = await apiJson("/api/admin/settings/ui")
           const uiSettings = payload?.uiSettings
+          state.uiSettingsMeta = payload?.meta && typeof payload.meta === "object" ?
+            payload.meta :
+            uiSettingsMetaFromSource(uiSettings)
           state.letterGradeRanges = letterGradeRangesFromUiSettings(uiSettings)
           syncSchoolSetupFromUiSettings(uiSettings)
+          renderSchoolSetupWarning()
         } catch (error) {
           void error
         }

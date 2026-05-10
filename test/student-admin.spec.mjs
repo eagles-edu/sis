@@ -1152,6 +1152,8 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /#gradeGrid\s*\{[\s\S]*overflow-x:\s*auto;/i)
   assert.match(html, /\.page-shell\s*\{[\s\S]*margin:\s*24px auto;/i)
   assert.match(html, /\.tabulator-tooltip\s*\{[\s\S]*font-size:\s*1rem;/i)
+  assert.match(html, /html\[data-theme="dark"\]\s+\.tabulator\s*\{[\s\S]*color:\s*var\(--portal-dark-text\);/i)
+  assert.match(html, /html\[data-theme="dark"\]\s+\.tabulator\s+\.tabulator-row\s*\{[\s\S]*background:\s*var\(--portal-dark-surface-card\);/i)
   assert.match(html, /\.tabulator\s+\.tabulator-tableholder\s*\{[\s\S]*overflow-x:\s*auto/i)
   assert.match(html, /body\.table-modal-open\s*\{[\s\S]*overflow:\s*hidden;/i)
   assert.match(html, /\.grid-card\.is-table-modal\s*\{/i)
