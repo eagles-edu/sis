@@ -138,7 +138,8 @@ test("sync-and-restart-test-runtime pins the test env contract and mirrors the p
   assert.match(testRuntimeSyncScript, /"STUDENT_PARENT_PORTAL_ACCOUNTS_JSON"/)
   assert.match(testRuntimeSyncScript, /"STUDENT_STUDENT_PORTAL_ACCOUNTS_JSON"/)
   assert.match(testRuntimeSyncScript, /align_test_env_from_dev_source\(\)/)
-  assert.match(testRuntimeSyncScript, /sync_test_icons_assets\(\)/)
+  assert.match(testRuntimeSyncScript, /sync_test_runtime_assets\(\)/)
+  assert.match(testRuntimeSyncScript, /sync_test_public_assets\(\)/)
   assert.match(testRuntimeSyncScript, /sync_env_keys_between_files "\$source_env_path" "\$test_env_path" "\$\{TEST_ENV_DEV_MIRROR_KEYS\[@\]\}"/)
   assert.match(testRuntimeSyncScript, /log "aligned \$\{mirrored\} env keys from \$\(basename "\$source_env_path"\) to \$\(basename "\$target_env_path"\)"/)
   assert.match(testRuntimeSyncScript, /TEST_PRIMARY_ORIGIN="\$\{SIS_TEST_PRIMARY_ORIGIN:-https:\/\/test\.eagles\.edu\.vn\}"/)
@@ -157,11 +158,15 @@ test("sync-and-restart-test-runtime pins the test env contract and mirrors the p
   assert.match(testRuntimeSyncScript, /upsert_env_value "\$test_env_path" "SIS_RUNTIME_SELF_HEAL_ENABLED" "false"/)
   assert.match(testRuntimeSyncScript, /upsert_env_value "\$default_env_path" "SIS_LIVE_ROOT" "\$LIVE_ROOT_CANONICAL"/)
   assert.match(testRuntimeSyncScript, /upsert_env_value "\$default_env_path" "SIS_DEV_ROOT" "\$test_dev_roots"/)
-  assert.match(testRuntimeSyncScript, /local install_prefix=\(\)/)
-  assert.match(testRuntimeSyncScript, /if \[\[ ! -d "\$target_public_root" \|\| ! -w "\$target_public_root" \]\]; then\s+install_prefix=\(sudo\)/s)
-  assert.match(testRuntimeSyncScript, /"\$\{install_prefix\[@\]\}" install -d -o "\$target_owner" -g "\$target_group" "\$target_public_root"/)
-  assert.match(testRuntimeSyncScript, /"\$\{install_prefix\[@\]\}" install -o "\$target_owner" -g "\$target_group" -m 644 "\$source_hub_html" "\$target_index_path"/)
-  assert.match(testRuntimeSyncScript, /rsync -a --delete "\$\{REPO_ROOT\}\/web-asset\/icons\/" "\$\{target_icons_root\}\/"/)
+  assert.match(testRuntimeSyncScript, /sync_test_public_html_index\(\)/)
+  assert.match(testRuntimeSyncScript, /sync_file_map "\$REPO_ROOT" "\$TEST_ROOT" TEST_RUNTIME_WEBFILE_MAP/)
+  assert.match(testRuntimeSyncScript, /sync_file_map "\$REPO_ROOT" "\$TEST_PUBLIC_ROOT" TEST_PUBLIC_WEBFILE_MAP/)
+})
+
+test("sync-and-restart-test-runtime copies persisted admin UI settings into the test runtime", () => {
+  assert.match(testRuntimeSyncScript, /TEST_RUNTIME_DATA_FILES=\(/)
+  assert.match(testRuntimeSyncScript, /"runtime-data\/admin-ui-settings\.json"/)
+  assert.match(testRuntimeSyncScript, /sync_runtime_data_files "\$TEST_ROOT"/)
 })
 
 test("test nginx enables strong gzip compression for HTML and static assets", () => {

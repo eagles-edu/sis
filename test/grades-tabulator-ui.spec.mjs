@@ -215,8 +215,31 @@ test("tabulator warns when persisted quarter dates are missing and links to scho
   await waitFor(() => {
     const warning = dom.window.document.getElementById("schoolSetupWarning")
     assert.ok(warning && !warning.classList.contains("hidden"))
-    assert.match(String(warning.textContent || warning.innerHTML || ""), /Quarter dates are missing/i)
+    assert.match(String(warning.textContent || warning.innerHTML || ""), /Quarter setup is incomplete or invalid/i)
     assert.match(String(warning.innerHTML || ""), /student-admin\.html\?apiOrigin=.*#schoolSetupPanel/i)
+  }, 5000)
+
+  dom.window.close()
+})
+
+test("tabulator warns when portal issue metadata flags setup issues", async () => {
+  const dom = await createTabulatorDom(
+    makeTabulatorFetchHandler({
+      authenticated: true,
+      settingsMeta: {
+        schoolSetupStoredQuarterCount: 4,
+        schoolSetupStoredQuartersPresent: true,
+        schoolSetupStoredQuartersMissing: false,
+        schoolSetupHasIssues: true,
+      },
+    }),
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&currentSchoolYear=2026-2027&schoolYear=2026-2027&period=quarter&quarter=q1",
+  )
+
+  await waitFor(() => {
+    const warning = dom.window.document.getElementById("schoolSetupWarning")
+    assert.ok(warning && !warning.classList.contains("hidden"))
+    assert.match(String(warning.textContent || warning.innerHTML || ""), /Quarter setup is incomplete or invalid/i)
   }, 5000)
 
   dom.window.close()

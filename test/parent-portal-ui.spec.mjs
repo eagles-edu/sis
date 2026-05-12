@@ -9,9 +9,90 @@ const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-t
 const PARENT_PORTAL_HTML = fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
+  .replace(/<link rel="stylesheet" href="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">\s*/i, "")
+  .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
+  .replace(/<script src="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
+
+function installTabulatorStub(window) {
+  class StubTabulator {
+    constructor(elementOrSelector, options = {}) {
+      this.window = window
+      this.options = options
+      this.element = typeof elementOrSelector === "string" ? window.document.querySelector(elementOrSelector) : elementOrSelector
+      this.render()
+    }
+
+    render() {
+      if (!this.element) return
+      const doc = this.window.document
+      const root = doc.createElement("div")
+      root.className = "tabulator"
+      const header = doc.createElement("div")
+      header.className = "tabulator-header"
+      const headerRow = doc.createElement("div")
+      headerRow.className = "tabulator-row tabulator-header-row"
+      const columns = Array.isArray(this.options.columns) ? this.options.columns : []
+      columns.forEach((column) => {
+        const headerCell = doc.createElement("div")
+        headerCell.className = "tabulator-col"
+        const title = doc.createElement("div")
+        title.className = "tabulator-col-title"
+        title.textContent = typeof column.title === "string" ? column.title : String(column.title || "")
+        headerCell.append(title)
+        headerRow.append(headerCell)
+      })
+      header.append(headerRow)
+      const table = doc.createElement("div")
+      table.className = "tabulator-table"
+      const data = Array.isArray(this.options.data) ? this.options.data : []
+      data.forEach((rowData) => {
+        const rowEl = doc.createElement("div")
+        rowEl.className = "tabulator-row"
+        const rowApi = {
+          getData: () => rowData,
+          getElement: () => rowEl,
+        }
+        if (typeof this.options.rowFormatter === "function") {
+          this.options.rowFormatter(rowApi)
+        }
+        columns.forEach((column) => {
+          const cell = doc.createElement("div")
+          cell.className = "tabulator-cell"
+          const cellApi = {
+            getValue: () => rowData?.[column.field],
+            getData: () => rowData,
+            getRow: () => rowApi,
+            getElement: () => cell,
+            getColumn: () => ({ getField: () => column.field }),
+          }
+          if (typeof column.formatter === "function") {
+            const formatted = column.formatter(cellApi)
+            if (formatted instanceof window.Node) {
+              cell.append(formatted)
+            } else if (formatted != null) {
+              cell.innerHTML = String(formatted)
+            }
+          } else {
+            cell.textContent = rowData?.[column.field] == null ? "" : String(rowData[column.field])
+          }
+          rowEl.append(cell)
+        })
+        table.append(rowEl)
+      })
+      root.append(header, table)
+      this.element.replaceChildren(root)
+    }
+
+    destroy() {
+      if (this.element) this.element.replaceChildren()
+    }
+  }
+
+  window.Tabulator = StubTabulator
+}
 
 function jsonTextResponse(status, payload = {}) {
   const statusTextByCode = {
@@ -71,6 +152,7 @@ async function createParentPortalDom(fetchHandler, url, options = {}) {
       window.scrollTo = () => {}
       window.requestAnimationFrame = (callback) => window.setTimeout(() => callback(Date.now()), 0)
       window.cancelAnimationFrame = (handle) => window.clearTimeout(handle)
+      installTabulatorStub(window)
       if (options.initialAuthState) {
         window.__SIS_PARENT_INITIAL_AUTH__ = options.initialAuthState
       }
@@ -1111,31 +1193,37 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
     const grid = document.getElementById("portalDetailCalendarGrid")
     assert.equal(detailCard.classList.contains("hidden"), false)
     assert.match(document.getElementById("portalDetailTitle").textContent, /Điểm số YTD|Grades YTD/i)
-    assert.ok(grid.querySelectorAll(".quarter-board-card").length >= 2)
-    assert.ok(grid.querySelector(".quarter-board-card.is-current"))
+    assert.ok(grid.querySelectorAll(".tabulator-row:not(.tabulator-header-row)").length >= 2)
+    assert.ok(grid.querySelector(".tabulator-row.is-current-quarter"))
     assert.equal(Boolean(grid.querySelector(".fc")), false)
   }, 5000)
 
   const gradesQuarterState = await dom.window.eval(`(() => {
     const grid = document.getElementById("portalDetailCalendarGrid");
-    const cards = Array.from(grid?.querySelectorAll(".quarter-board-card") || []).map((card) => ({
-      text: card.textContent || "",
-      isCurrent: card.classList.contains("is-current"),
+    const rows = Array.from(grid?.querySelectorAll(".tabulator-row:not(.tabulator-header-row)") || []).map((row) => ({
+      text: row.textContent || "",
+      isCurrent: row.classList.contains("is-current-quarter"),
     }));
     return {
       summary: document.getElementById("portalDetailCalendarSummary")?.textContent || "",
-      firstCard: cards[0] || null,
-      secondCard: cards[1] || null,
+      firstRow: rows[0] || null,
+      secondRow: rows[1] || null,
       hasCalendar: Boolean(grid?.querySelector(".fc")),
+      hasTabulator: Boolean(grid?.querySelector(".tabulator")),
     };
   })()`)
 
   assert.match(gradesQuarterState.summary, /quý/i)
-  assert.equal(gradesQuarterState.firstCard?.isCurrent, true)
+  assert.equal(gradesQuarterState.firstRow?.isCurrent, true)
   assert.equal(gradesQuarterState.hasCalendar, false)
-  assert.match(gradesQuarterState.secondCard?.text || "", /Essay Draft/i)
-  assert.match(gradesQuarterState.secondCard?.text || "", /0(?:\.0)?%/)
-  assert.match(gradesQuarterState.secondCard?.text || "", /92(?:\.0)?%/)
+  assert.equal(gradesQuarterState.hasTabulator, true)
+  assert.match(gradesQuarterState.firstRow?.text || "", /Current quarter/i)
+  assert.match(gradesQuarterState.firstRow?.text || "", /0(?:\.0)?%/)
+  assert.match(gradesQuarterState.firstRow?.text || "", /0(?:\.0)?\/10/)
+  assert.match(gradesQuarterState.firstRow?.text || "", /0\/0\s*\(0(?:\.0)?%\)/)
+  assert.match(gradesQuarterState.secondRow?.text || "", /46(?:\.0)?%/)
+  assert.match(gradesQuarterState.secondRow?.text || "", /4\.6\/10/)
+  assert.match(gradesQuarterState.secondRow?.text || "", /1\/2\s*\(50(?:\.0)?%\)/)
 
   await settleDomAsync(dom)
   dom.window.close()

@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import fs from "node:fs"
 import http from "node:http"
+import path from "node:path"
 import * as XLSX from "xlsx"
 import {
   buildChildDashboardSnapshot,
@@ -644,6 +645,56 @@ test("buildChildDashboardSnapshot counts late attendance as present", () => {
   assert.equal(snapshot.attendance.absent, 1)
   assert.equal(snapshot.attendance.late, 1)
   assert.equal(snapshot.attendance.excused, 0)
+})
+
+test("buildChildDashboardSnapshot keeps stored school setup quarters when dates are blank", () => {
+  const adminUiSettingsPath = path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
+  const priorAdminUiSettings = fs.existsSync(adminUiSettingsPath)
+    ? fs.readFileSync(adminUiSettingsPath, "utf8")
+    : null
+
+  try {
+    fs.mkdirSync(path.dirname(adminUiSettingsPath), { recursive: true })
+    fs.writeFileSync(
+      adminUiSettingsPath,
+      JSON.stringify({
+        uiSettings: {
+          schoolSetup: {
+            schoolYear: "2026-2027",
+            startDate: "",
+            endDate: "",
+            quarters: [
+              { quarter: "q1", startDate: "2026-08-10", endDate: "2026-10-30" },
+              { quarter: "q2", startDate: "2026-11-02", endDate: "2027-01-29" },
+              { quarter: "q3", startDate: "2027-02-01", endDate: "2027-04-30" },
+              { quarter: "q4", startDate: "2027-05-03", endDate: "2027-06-25" },
+            ],
+          },
+        },
+      }),
+      "utf8",
+    )
+
+    const snapshot = buildChildDashboardSnapshot({
+      child: { eaglesId: "S001", fullName: "Jane Student" },
+      attendanceRows: [],
+      gradeRows: [],
+      reportRows: [],
+    })
+
+    assert.equal(snapshot.schoolSetup.schoolYear, "2026-2027")
+    assert.equal(snapshot.schoolSetup.startDate, "2026-08-10")
+    assert.equal(snapshot.schoolSetup.endDate, "2027-06-25")
+    assert.equal(snapshot.schoolSetup.quarters.length, 4)
+    assert.deepEqual(
+      snapshot.schoolSetup.quarters.map((quarter) => quarter.quarter),
+      ["q1", "q2", "q3", "q4"],
+    )
+  } finally {
+    if (priorAdminUiSettings !== null) {
+      fs.writeFileSync(adminUiSettingsPath, priorAdminUiSettings, "utf8")
+    }
+  }
 })
 
 test("start server for admin routes", async () => {
@@ -2530,7 +2581,10 @@ test("shutdown admin route server", async () => {
 
 test("cleanup persisted ui settings test file", () => {
   fs.rmSync(TEST_ADMIN_UI_SETTINGS_FILE, { force: true })
-  if (persistedUiSettingsPath) fs.rmSync(persistedUiSettingsPath, { force: true })
   assert.equal(fs.existsSync(TEST_ADMIN_UI_SETTINGS_FILE), false)
-  if (persistedUiSettingsPath) assert.equal(fs.existsSync(persistedUiSettingsPath), false)
+  const preservePersistedUiSettings = path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
+  if (persistedUiSettingsPath && path.resolve(persistedUiSettingsPath) !== preservePersistedUiSettings) {
+    fs.rmSync(persistedUiSettingsPath, { force: true })
+    assert.equal(fs.existsSync(persistedUiSettingsPath), false)
+  }
 })

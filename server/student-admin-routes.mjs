@@ -2143,10 +2143,21 @@ function uiSettingsMetaFromPayload(payload = {}) {
     candidate.schoolSetup :
     null
   const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : []
+  const startDate = normalizeText(schoolSetup?.startDate).slice(0, 10)
+  const endDate = normalizeText(schoolSetup?.endDate).slice(0, 10)
+  const hasValidRange = parseIsoDateLocal(startDate) && parseIsoDateLocal(endDate) && compareIsoDateText(startDate, endDate) <= 0
+  const validQuarters = quarters.filter((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return false
+    const quarter = normalizeText(entry?.quarter || entry?.key).toLowerCase()
+    const quarterStart = normalizeText(entry?.startDate).slice(0, 10)
+    const quarterEnd = normalizeText(entry?.endDate).slice(0, 10)
+    return /^q[1-4]$/.test(quarter) && parseIsoDateLocal(quarterStart) && parseIsoDateLocal(quarterEnd) && compareIsoDateText(quarterStart, quarterEnd) <= 0
+  })
   return {
     schoolSetupStoredQuarterCount: quarters.length,
     schoolSetupStoredQuartersPresent: quarters.length > 0,
     schoolSetupStoredQuartersMissing: quarters.length < 4,
+    schoolSetupHasIssues: !hasValidRange || validQuarters.length !== quarters.length || validQuarters.length < 4,
   }
 }
 
@@ -4067,11 +4078,13 @@ function splitSchoolYearIntoQuarters(startDate = "", endDate = "") {
     const start = cursor
     if (!parseIsoDateLocal(start)) break
 
-    let end = ""
+    let end
     if (index === 3) {
-      end = endIso
-      if (isWeekendIsoDate(end)) {
-        end = nearestWeekdayIsoDate(end, start, endIso) || end
+      const adjusted = isWeekendIsoDate(endIso) ? nearestWeekdayIsoDate(endIso, start, endIso) : null
+      if (adjusted) {
+        end = adjusted
+      } else {
+        end = endIso
       }
     } else {
       const minimumDaysAfter = quartersLeft - 1
@@ -4083,14 +4096,39 @@ function splitSchoolYearIntoQuarters(startDate = "", endDate = "") {
       end = nearestWeekdayIsoDate(targetEnd, start, latestAllowed) || targetEnd
     }
 
-    if (!parseIsoDateLocal(end) || compareIsoDateText(end, start) < 0) end = start
-    ranges.push({ quarter: quarterKey, startDate: start, endDate: end })
+    const validEnd = parseIsoDateLocal(end) && compareIsoDateText(end, start) >= 0 ? end : start
+    ranges.push({ quarter: quarterKey, startDate: start, endDate: validEnd })
     cursor = isoDateOffset(end, 1)
     if (!parseIsoDateLocal(cursor) || compareIsoDateText(cursor, endIso) > 0) cursor = endIso
     remainingDays = Math.max(0, Math.round((parseIsoDateLocal(endIso).getTime() - parseIsoDateLocal(cursor).getTime()) / (24 * 60 * 60 * 1000))) + 1
   }
 
   return ranges
+}
+
+function normalizeSchoolSetupQuarterEntry(entry = {}) {
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null
+  const quarter = normalizeText(entry?.quarter || entry?.key).toLowerCase()
+  const startDate = normalizeText(entry?.startDate).slice(0, 10)
+  const endDate = normalizeText(entry?.endDate).slice(0, 10)
+  if (!/^q[1-4]$/i.test(quarter)) return null
+  if (!parseIsoDateLocal(startDate) || !parseIsoDateLocal(endDate) || compareIsoDateText(startDate, endDate) > 0) {
+    return null
+  }
+  return {
+    quarter,
+    startDate,
+    endDate,
+  }
+}
+
+function inferSchoolYearFromQuarters(quarters = []) {
+  const firstQuarter = Array.isArray(quarters) ? quarters[0] : null
+  const lastQuarter = Array.isArray(quarters) ? quarters[quarters.length - 1] : null
+  const startYear = parseIsoDateLocal(firstQuarter?.startDate)?.getUTCFullYear?.()
+  const endYear = parseIsoDateLocal(lastQuarter?.endDate)?.getUTCFullYear?.()
+  if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) return ""
+  return `${startYear}-${endYear}`
 }
 
 function normalizeSchoolSetupSnapshot(source = {}) {
@@ -4100,17 +4138,31 @@ function normalizeSchoolSetupSnapshot(source = {}) {
     schoolYear: "",
     quarters: [],
   }
+  const normalizedSource = source && typeof source === "object" ? source : {}
   const startDate = normalizeText(source?.startDate).slice(0, 10)
   const endDate = normalizeText(source?.endDate).slice(0, 10)
-  if (!parseIsoDateLocal(startDate) || !parseIsoDateLocal(endDate) || compareIsoDateText(startDate, endDate) > 0) {
+  const sourceQuarters = Array.isArray(normalizedSource?.quarters) ? normalizedSource.quarters : []
+  const quarters = sourceQuarters
+    .map((entry) => normalizeSchoolSetupQuarterEntry(entry))
+    .filter(Boolean)
+    .sort((left, right) => compareIsoDateText(left.startDate, right.startDate) || compareIsoDateText(left.endDate, right.endDate))
+  const hasValidRange = parseIsoDateLocal(startDate) && parseIsoDateLocal(endDate) && compareIsoDateText(startDate, endDate) <= 0
+  const resolvedQuarters = quarters.length ? quarters : (hasValidRange ? splitSchoolYearIntoQuarters(startDate, endDate) : [])
+  if (!resolvedQuarters.length) {
     return fallback
   }
-  const quarters = splitSchoolYearIntoQuarters(startDate, endDate)
+  const resolvedStartDate = parseIsoDateLocal(startDate) ? startDate : resolvedQuarters[0]?.startDate || ""
+  const resolvedEndDate = parseIsoDateLocal(endDate) ? endDate : resolvedQuarters[resolvedQuarters.length - 1]?.endDate || ""
+  const normalizedSchoolYear = normalizeText(normalizedSource?.schoolYear)
   return {
-    startDate,
-    endDate,
-    schoolYear: `${parseIsoDateLocal(startDate).getUTCFullYear()}-${parseIsoDateLocal(endDate).getUTCFullYear()}`,
-    quarters,
+    startDate: resolvedStartDate,
+    endDate: resolvedEndDate,
+    schoolYear: normalizedSchoolYear || inferSchoolYearFromQuarters(resolvedQuarters) || (
+      parseIsoDateLocal(resolvedStartDate) && parseIsoDateLocal(resolvedEndDate) ?
+        `${parseIsoDateLocal(resolvedStartDate).getUTCFullYear()}-${parseIsoDateLocal(resolvedEndDate).getUTCFullYear()}` :
+        ""
+    ),
+    quarters: resolvedQuarters,
   }
 }
 
@@ -4353,6 +4405,10 @@ function serializeGradeRows(rows = [], now = new Date()) {
         participationScore: toFiniteNumberOrNull(row?.participationScore, 0),
         inClassScore: toFiniteNumberOrNull(row?.inClassScore, 0),
         comments: normalizeText(row?.comments),
+        sourceSystem: normalizeText(row?.sourceSystem),
+        sourceAttemptId: normalizeText(row?.sourceAttemptId),
+        sourceOriginLabel: normalizeText(row?.sourceOriginLabel),
+        sourceOriginHost: normalizeText(row?.sourceOriginHost),
         status: resolveGradeRecordStatus(row, now),
       }
     })

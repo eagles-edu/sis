@@ -431,6 +431,10 @@ export async function deleteAttendanceRecord(studentRefId, attendanceId) {
  *   participationScore?: number,
  *   inClassScore?: number,
  *   comments?: string,
+ *   sourceSystem?: string,
+ *   sourceAttemptId?: string,
+ *   sourceOriginLabel?: string,
+ *   sourceOriginHost?: string,
  * }} [payload]
  * @returns {Promise<Record<string, unknown> | null>}
  */
@@ -465,6 +469,10 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     participationScore: normalizeInteger(payload.participationScore),
     inClassScore: normalizeInteger(payload.inClassScore),
     comments: normalizeNullableText(payload.comments),
+    sourceSystem: normalizeNullableText(payload.sourceSystem),
+    sourceAttemptId: normalizeNullableText(payload.sourceAttemptId),
+    sourceOriginLabel: normalizeNullableText(payload.sourceOriginLabel),
+    sourceOriginHost: normalizeNullableText(payload.sourceOriginHost),
   }
 
   const recordId = normalizeText(payload.id)

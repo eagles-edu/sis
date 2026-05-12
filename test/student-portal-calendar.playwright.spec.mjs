@@ -892,36 +892,42 @@ test(
           !detailCard.classList.contains("hidden") &&
           /Grades YTD/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "") &&
           grid &&
-          grid.querySelectorAll(".quarter-board-card").length >= 2 &&
-          grid.querySelector(".quarter-board-card.is-current") &&
+          grid.querySelectorAll(".tabulator-row:not(.tabulator-header-row)").length >= 2 &&
+          grid.querySelector(".tabulator-row.is-current-quarter") &&
           !grid.querySelector(".fc")
         );
       });
 
       const gradesQuarterState = await page.evaluate(() => {
         const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
-        const cards = Array.from(grid?.querySelectorAll(".quarter-board-card") || []).map((card) => ({
-          text: card.textContent || "",
-          isCurrent: card.classList.contains("is-current"),
+        const rows = Array.from(grid?.querySelectorAll(".tabulator-row:not(.tabulator-header-row)") || []).map((row) => ({
+          text: row.textContent || "",
+          isCurrent: row.classList.contains("is-current-quarter"),
         }));
         return {
           title: globalThis.document.getElementById("studentDetailTitle")?.textContent || "",
           summary: globalThis.document.getElementById("studentDetailCalendarSummary")?.textContent || "",
-          cardCount: cards.length,
-          firstCard: cards[0] || null,
-          secondCard: cards[1] || null,
+          rowCount: rows.length,
+          firstRow: rows[0] || null,
+          secondRow: rows[1] || null,
           hasCalendar: Boolean(grid?.querySelector(".fc")),
+          hasTabulator: Boolean(grid?.querySelector(".tabulator")),
         };
       });
 
       assert.match(gradesQuarterState.title, /Grades YTD/i);
       assert.match(gradesQuarterState.summary, /quarter rows are derived|quý/i);
-      assert.equal(gradesQuarterState.cardCount >= 2, true);
-      assert.equal(gradesQuarterState.firstCard?.isCurrent, true);
+      assert.equal(gradesQuarterState.rowCount >= 2, true);
+      assert.equal(gradesQuarterState.firstRow?.isCurrent, true);
       assert.equal(gradesQuarterState.hasCalendar, false);
-      assert.match(gradesQuarterState.secondCard?.text || "", /Essay Draft/i);
-      assert.match(gradesQuarterState.secondCard?.text || "", /0\.0%/);
-      assert.match(gradesQuarterState.secondCard?.text || "", /92\.0%/);
+      assert.equal(gradesQuarterState.hasTabulator, true);
+      assert.match(gradesQuarterState.firstRow?.text || "", /Current quarter/i);
+      assert.match(gradesQuarterState.firstRow?.text || "", /0\.0%/);
+      assert.match(gradesQuarterState.firstRow?.text || "", /0\.0\/10/);
+      assert.match(gradesQuarterState.firstRow?.text || "", /0\/0\s*\(0\.0%\)/);
+      assert.match(gradesQuarterState.secondRow?.text || "", /46\.0%/);
+      assert.match(gradesQuarterState.secondRow?.text || "", /4\.6\/10/);
+      assert.match(gradesQuarterState.secondRow?.text || "", /1\/2\s*\(50\.0%\)/);
 
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="home"]')?.click();

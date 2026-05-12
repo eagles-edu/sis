@@ -1753,10 +1753,22 @@
           candidate.schoolSetup :
           {}
         const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : []
+        const startDate = normalizeText(schoolSetup?.startDate).slice(0, 10)
+        const endDate = normalizeText(schoolSetup?.endDate).slice(0, 10)
+        const isIsoDate = (value = "") => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value))
+        const validRange = isIsoDate(startDate) && isIsoDate(endDate) && startDate <= endDate
+        const validQuarters = quarters.filter((entry) => {
+          if (!entry || typeof entry !== "object" || Array.isArray(entry)) return false
+          const quarter = normalizeText(entry?.quarter || entry?.key).toLowerCase()
+          const quarterStart = normalizeText(entry?.startDate).slice(0, 10)
+          const quarterEnd = normalizeText(entry?.endDate).slice(0, 10)
+          return /^q[1-4]$/.test(quarter) && isIsoDate(quarterStart) && isIsoDate(quarterEnd) && quarterStart <= quarterEnd
+        })
         return {
           schoolSetupStoredQuarterCount: quarters.length,
           schoolSetupStoredQuartersPresent: quarters.length > 0,
           schoolSetupStoredQuartersMissing: quarters.length < 4,
+          schoolSetupHasIssues: !validRange || validQuarters.length !== quarters.length || validQuarters.length < 4,
         }
       }
 
@@ -1782,8 +1794,8 @@
         const warningEl = document.getElementById("schoolSetupWarning")
         if (!(warningEl instanceof HTMLElement)) return
         const meta = state.uiSettingsMeta || {}
-        const missingQuarters = meta.schoolSetupStoredQuartersMissing === true
-        if (!missingQuarters) {
+        const portalIssue = meta.schoolSetupHasIssues === true || meta.schoolSetupStoredQuartersMissing === true
+        if (!portalIssue) {
           warningEl.classList.add("hidden")
           warningEl.textContent = ""
           warningEl.removeAttribute("aria-live")
@@ -1795,7 +1807,7 @@
           `/web-asset/admin/student-admin.html?apiOrigin=${encodeURIComponent(API_ORIGIN)}#schoolSetupPanel` :
           "/web-asset/admin/student-admin.html#schoolSetupPanel"
         warningEl.innerHTML =
-          `Quarter dates are missing from persisted settings. <a href="${schoolSetupHref}">Open School Setup</a> to restore them before rollover or after any settings hiccup.`
+          `Quarter setup is incomplete or invalid. <a href="${schoolSetupHref}">Open School Setup</a> to restore it before rollover or after any settings hiccup.`
       }
 
       function normalizeSearch(value) {

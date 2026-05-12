@@ -36,6 +36,7 @@ export default [
       // Stage-in policy: keep parser/safety rules strict while suppressing legacy noise.
       "no-unused-vars": "off",
       "no-useless-escape": "off",
+      "no-useless-assignment": "off",
     },
   },
   {

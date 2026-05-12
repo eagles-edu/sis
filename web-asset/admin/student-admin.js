@@ -7724,12 +7724,12 @@
         if (rowsEl) rowsEl.innerHTML = schoolSetupQuarterRowsHtml(normalizedSetup);
         if (warningEl instanceof HTMLElement) {
           const meta = state.uiSettingsMeta || {};
-          const missingQuarters = meta.schoolSetupStoredQuartersMissing === true;
-          warningEl.classList.toggle("hidden", !missingQuarters);
-          warningEl.style.color = missingQuarters ? "var(--portal-status-warn-text)" : "";
-          warningEl.style.fontWeight = missingQuarters ? "700" : "";
-          warningEl.innerHTML = missingQuarters ?
-            'Quarter dates are missing from persisted settings. <a href="#schoolSetupPanel">Open School Setup</a> to restore them before rollover or after any settings hiccup.' :
+          const portalIssue = meta.schoolSetupHasIssues === true || meta.schoolSetupStoredQuartersMissing === true;
+          warningEl.classList.toggle("hidden", !portalIssue);
+          warningEl.style.color = portalIssue ? "var(--portal-status-warn-text)" : "";
+          warningEl.style.fontWeight = portalIssue ? "700" : "";
+          warningEl.innerHTML = portalIssue ?
+            'Quarter setup is incomplete or invalid. <a href="#schoolSetupPanel">Open School Setup</a> to restore it before rollover or after any settings hiccup.' :
             "";
         }
         if (statusEl) {

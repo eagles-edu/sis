@@ -105,6 +105,10 @@ loadEnvironmentFile()
  *   data?: Record<string, unknown>
  *   sourceFormId?: string
  *   sourceUrl?: string
+ *   sourcePageUrl?: string
+ *   sourceOrigin?: string
+ *   sourceOriginLabel?: string
+ *   sourceOriginHost?: string
  *   submittedAt?: string
  *   [key: string]: unknown
  * }} SubmissionPayload
@@ -120,6 +124,12 @@ loadEnvironmentFile()
  *   incorrectCount: number
  *   totalQuestions: number
  *   scorePercent: number
+ *   sourceFormId: string
+ *   sourceUrl: string
+ *   sourcePageUrl: string
+ *   sourceOrigin: string
+ *   sourceOriginLabel: string
+ *   sourceOriginHost: string
  * }} ValidatedPayload
  *
  * @typedef {{
@@ -1249,6 +1259,12 @@ function validatePayload(payload, options = {}) {
   if (!allowMissingEmail && !isEmailLike(email)) throw createBadRequestError("Invalid email")
   const sourceSystem = normalizeString(payload?.sourceSystem)
   const sourceAttemptId = normalizeString(payload?.sourceAttemptId)
+  const sourceFormId = normalizeString(payload?.sourceFormId)
+  const sourceUrl = normalizeString(payload?.sourceUrl)
+  const sourcePageUrl = normalizeString(payload?.sourcePageUrl)
+  const sourceOrigin = normalizeString(payload?.sourceOrigin)
+  const sourceOriginLabel = normalizeString(payload?.sourceOriginLabel)
+  const sourceOriginHost = normalizeString(payload?.sourceOriginHost)
 
   const rawPageTitle = normalizeString(payload?.pageTitle)
   if (!rawPageTitle) throw createBadRequestError("Missing pageTitle")
@@ -1280,6 +1296,12 @@ function validatePayload(payload, options = {}) {
     email: isEmailLike(email) ? email : "",
     sourceSystem,
     sourceAttemptId,
+    sourceFormId,
+    sourceUrl,
+    sourcePageUrl,
+    sourceOrigin,
+    sourceOriginLabel,
+    sourceOriginHost,
     pageTitle,
     completedAt,
     recipients: decodeRecipients(Array.isArray(payload.recipients) ? payload.recipients : []),

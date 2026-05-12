@@ -51,6 +51,8 @@ model ExerciseSubmission {
   submittedEmail     String?
   sourceSystem       String?
   sourceAttemptId    String?
+  sourceOriginLabel  String?
+  sourceOriginHost   String?
   completedAt        DateTime
   totalQuestions     Int
   correctCount       Int
@@ -74,6 +76,8 @@ model IncomingExerciseResult {
   sourceSystem       String?
   sourceAttemptId    String?
   pageTitle          String
+  sourceOriginLabel  String?
+  sourceOriginHost   String?
   completedAt        DateTime
   totalQuestions     Int
   correctCount       Int
@@ -294,6 +298,8 @@ model StudentGradeRecord {
   comments          String?
   sourceSystem      String?
   sourceAttemptId   String?
+  sourceOriginLabel String?
+  sourceOriginHost  String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

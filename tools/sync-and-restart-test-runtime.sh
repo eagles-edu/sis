@@ -167,6 +167,10 @@ TEST_RUNTIME_CODE_FILES=(
   ".nvmrc"
 )
 
+TEST_RUNTIME_DATA_FILES=(
+  "runtime-data/admin-ui-settings.json"
+)
+
 TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
@@ -485,11 +489,26 @@ sync_runtime_code_trees() {
   done
 }
 
+sync_runtime_data_files() {
+  local target_root="$1"
+  local data_file=""
+
+  for data_file in "${TEST_RUNTIME_DATA_FILES[@]}"; do
+    if [[ ! -f "${REPO_ROOT}/${data_file}" ]]; then
+      log "skip ${data_file} sync (source missing)"
+      continue
+    fi
+    log "syncing ${data_file} into ${target_root}/${data_file}"
+    sync_exact_file "${REPO_ROOT}/${data_file}" "${target_root}/${data_file}"
+  done
+}
+
 run_sync() {
   case "$MODE" in
     full|public|restart-only|boot-prep)
       log "syncing test code trees and runtime files into ${TEST_ROOT}"
       sync_runtime_code_trees "$TEST_ROOT"
+      sync_runtime_data_files "$TEST_ROOT"
       ;;
   esac
 }

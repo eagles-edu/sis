@@ -473,6 +473,50 @@ function normalizeSourceAttemptId(value) {
   return attemptId || null
 }
 
+function normalizeSourceOriginLabel(value) {
+  const label = normalizeString(value)
+  return label || null
+}
+
+function normalizeSourceOriginHost(value) {
+  const text = normalizeString(value)
+  if (!text) return null
+  if (/^https?:\/\//iu.test(text)) {
+    try {
+      return normalizeString(new URL(text).hostname) || null
+    } catch {
+      return null
+    }
+  }
+  const withoutScheme = text.replace(/^\/\//u, "")
+  const host = withoutScheme.split("/")[0]
+  return normalizeString(host) || null
+}
+
+function resolveSubmissionOrigin(payload = {}) {
+  const sourceOriginLabel = normalizeSourceOriginLabel(
+    payload?.sourceOriginLabel || payload?.originLabel || payload?.sourceOriginName
+  )
+  const sourceOriginHost = normalizeSourceOriginHost(
+    payload?.sourceOriginHost || payload?.originHost || payload?.sourceHost
+  )
+  const sourceUrl = normalizeString(payload?.sourceUrl || payload?.sourcePageUrl)
+  const sourceOrigin = normalizeString(payload?.sourceOrigin || payload?.origin)
+
+  let host = sourceOriginHost || normalizeSourceOriginHost(sourceOrigin)
+  if (!host && sourceUrl) host = normalizeSourceOriginHost(sourceUrl)
+  if (!host && sourceOrigin && /^https?:\/\//iu.test(sourceOrigin)) {
+    host = normalizeSourceOriginHost(sourceOrigin)
+  }
+
+  let label = sourceOriginLabel
+  if (!label && sourceOrigin && !/^https?:\/\//iu.test(sourceOrigin)) label = sourceOrigin
+  return {
+    sourceOriginLabel: label || null,
+    sourceOriginHost: host || null,
+  }
+}
+
 function canonicalizeExercisePageTitle(value) {
   let title = normalizeString(value)
   if (!title) return ""
@@ -527,6 +571,7 @@ function normalizeSubmissionPayload(payload = {}) {
   const recipientsJson = normalizeRecipients(payload?.recipients)
   const sourceSystem = normalizeSourceSystem(payload?.sourceSystem)
   const sourceAttemptId = normalizeSourceAttemptId(payload?.sourceAttemptId)
+  const { sourceOriginLabel, sourceOriginHost } = resolveSubmissionOrigin(payload)
 
   return {
     submittedEaglesId,
@@ -537,6 +582,8 @@ function normalizeSubmissionPayload(payload = {}) {
     summary,
     sourceSystem,
     sourceAttemptId,
+    sourceOriginLabel,
+    sourceOriginHost,
   }
 }
 
@@ -717,6 +764,8 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
     submittedEmail: submission.submittedEmail || null,
     sourceSystem: normalizeSourceSystem(submission.sourceSystem),
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
+    sourceOriginLabel: normalizeSourceOriginLabel(submission.sourceOriginLabel),
+    sourceOriginHost: normalizeSourceOriginHost(submission.sourceOriginHost),
     completedAt: submission.completedAt,
     totalQuestions: summary.totalQuestions,
     correctCount: summary.correctCount,
@@ -755,6 +804,8 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     comments,
     sourceSystem: normalizeSourceSystem(submission.sourceSystem),
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
+    sourceOriginLabel: normalizeSourceOriginLabel(submission.sourceOriginLabel),
+    sourceOriginHost: normalizeSourceOriginHost(submission.sourceOriginHost),
   }
 }
 
@@ -928,6 +979,8 @@ function mapIncomingExerciseResult(item) {
     submittedEmail: normalizeString(item.submittedEmail),
     sourceSystem: normalizeString(item.sourceSystem),
     sourceAttemptId: normalizeString(item.sourceAttemptId),
+    sourceOriginLabel: normalizeString(item.sourceOriginLabel),
+    sourceOriginHost: normalizeString(item.sourceOriginHost),
     pageTitle: normalizeString(item.pageTitle),
     completedAt: item.completedAt ? new Date(item.completedAt).toISOString() : "",
     totalQuestions: Number.parseInt(String(item.totalQuestions || 0), 10) || 0,
@@ -1274,6 +1327,8 @@ function incomingResultToSubmissionPayload(row) {
     submittedEmail: normalizeLower(row.submittedEmail),
     sourceSystem: normalizeSourceSystem(row.sourceSystem),
     sourceAttemptId: normalizeSourceAttemptId(row.sourceAttemptId),
+    sourceOriginLabel: normalizeSourceOriginLabel(row.sourceOriginLabel),
+    sourceOriginHost: normalizeSourceOriginHost(row.sourceOriginHost),
     pageTitle: normalizeString(row.pageTitle) || "Untitled exercise",
     completedAt: row.completedAt ? new Date(row.completedAt) : new Date(),
     recipientsJson: Array.isArray(row.recipientsJson) ? row.recipientsJson : null,
