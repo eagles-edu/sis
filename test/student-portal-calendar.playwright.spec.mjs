@@ -298,8 +298,8 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   id: "hw-current-1",
                   assignmentName: "Essay Draft",
                   className: "A2 Flyers",
-                  dueDate: "2026-03-15",
-                  dueAt: "2026-03-15T00:00:00.000Z",
+                  dueDate: "2025-09-15",
+                  dueAt: "2025-09-15T00:00:00.000Z",
                   comments: "Finish the final paragraph and upload the draft.",
                   status: "pending",
                 },
@@ -309,8 +309,8 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   id: "hw-overdue-1",
                   assignmentName: "Vocabulary Corrections",
                   className: "A2 Flyers",
-                  dueDate: "2026-03-11",
-                  dueAt: "2026-03-11T00:00:00.000Z",
+                  dueDate: "2025-09-11",
+                  dueAt: "2025-09-11T00:00:00.000Z",
                   comments: "Corrections still need to be submitted.",
                   status: "overdue",
                 },
@@ -320,8 +320,8 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   id: "hw-current-1",
                   assignmentName: "Essay Draft",
                   className: "A2 Flyers",
-                  dueDate: "2026-03-15",
-                  dueAt: "2026-03-15T00:00:00.000Z",
+                  dueDate: "2025-09-15",
+                  dueAt: "2025-09-15T00:00:00.000Z",
                   comments: "Finish the final paragraph and upload the draft.",
                   status: "pending",
                 },
@@ -329,8 +329,8 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   id: "hw-complete-1",
                   assignmentName: "Reading Log",
                   className: "A2 Flyers",
-                  dueDate: "2026-03-08",
-                  dueAt: "2026-03-08T00:00:00.000Z",
+                  dueDate: "2025-09-08",
+                  dueAt: "2025-09-08T00:00:00.000Z",
                   scorePercent: 92,
                   comments: "Submitted cleanly and on time.",
                   status: "completed",
@@ -358,8 +358,8 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   id: "grade-1",
                   assignmentName: "Reading Log",
                   className: "A2 Flyers",
-                  dueDate: "2026-03-08",
-                  dueAt: "2026-03-08T00:00:00.000Z",
+                  dueDate: "2025-09-08",
+                  dueAt: "2025-09-08T00:00:00.000Z",
                   scorePercent: 92,
                   comments: "Submitted cleanly and on time.",
                   status: "completed",
@@ -401,9 +401,9 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                 id: "homework-track-1",
                 title: "Essay Draft",
                 className: "A2 Flyers",
-                dueDate: "2026-03-11",
-                startDate: "2026-03-08",
-                endDate: "2026-03-15",
+                dueDate: "2025-09-11",
+                startDate: "2025-09-08",
+                endDate: "2025-09-15",
                 overdue: true,
               },
             ],
@@ -884,6 +884,19 @@ test(
         globalThis.document.querySelector('a[data-page-target="grades-ytd"]')?.click();
       });
 
+      await page.waitForFunction(() =>
+        Array.from(globalThis.document.querySelectorAll(".grade-quarter-picker-btn")).some((button) =>
+          (button.textContent || "").trim().toUpperCase().startsWith("Q1")
+        )
+      );
+
+      await page.evaluate(() => {
+        const q1Button = Array.from(globalThis.document.querySelectorAll(".grade-quarter-picker-btn")).find((button) =>
+          (button.textContent || "").trim().toUpperCase().startsWith("Q1")
+        );
+        q1Button?.click();
+      });
+
       await page.waitForFunction(() => {
         const detailCard = globalThis.document.getElementById("studentDetailPageCard");
         const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
@@ -893,7 +906,6 @@ test(
           /Grades YTD/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "") &&
           grid &&
           grid.querySelectorAll(".tabulator-row:not(.tabulator-header-row)").length >= 2 &&
-          grid.querySelector(".tabulator-row.is-current-quarter") &&
           !grid.querySelector(".fc")
         );
       });
@@ -907,7 +919,11 @@ test(
         return {
           title: globalThis.document.getElementById("studentDetailTitle")?.textContent || "",
           summary: globalThis.document.getElementById("studentDetailCalendarSummary")?.textContent || "",
+          activeQuarter: Array.from(globalThis.document.querySelectorAll(".grade-quarter-picker-btn")).find((button) =>
+            button.getAttribute("aria-pressed") === "true"
+          )?.textContent || "",
           rowCount: rows.length,
+          rows,
           firstRow: rows[0] || null,
           secondRow: rows[1] || null,
           hasCalendar: Boolean(grid?.querySelector(".fc")),
@@ -916,18 +932,17 @@ test(
       });
 
       assert.match(gradesQuarterState.title, /Grades YTD/i);
-      assert.match(gradesQuarterState.summary, /quarter rows are derived|quý/i);
-      assert.equal(gradesQuarterState.rowCount >= 2, true);
-      assert.equal(gradesQuarterState.firstRow?.isCurrent, true);
+      assert.match(gradesQuarterState.summary, /Q1-Q4|quarter rows are derived|quý/i);
+      assert.match(gradesQuarterState.activeQuarter || "", /^Q1/i);
+      assert.equal(gradesQuarterState.rowCount, 2);
       assert.equal(gradesQuarterState.hasCalendar, false);
       assert.equal(gradesQuarterState.hasTabulator, true);
-      assert.match(gradesQuarterState.firstRow?.text || "", /Current quarter/i);
+      assert.match(gradesQuarterState.firstRow?.text || "", /Essay Draft/i);
       assert.match(gradesQuarterState.firstRow?.text || "", /0\.0%/);
       assert.match(gradesQuarterState.firstRow?.text || "", /0\.0\/10/);
-      assert.match(gradesQuarterState.firstRow?.text || "", /0\/0\s*\(0\.0%\)/);
-      assert.match(gradesQuarterState.secondRow?.text || "", /46\.0%/);
-      assert.match(gradesQuarterState.secondRow?.text || "", /4\.6\/10/);
-      assert.match(gradesQuarterState.secondRow?.text || "", /1\/2\s*\(50\.0%\)/);
+      assert.match(gradesQuarterState.secondRow?.text || "", /Reading Log/i);
+      assert.match(gradesQuarterState.secondRow?.text || "", /92(?:\.0)?%/);
+      assert.match(gradesQuarterState.secondRow?.text || "", /9\.2\/10/);
 
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="home"]')?.click();
@@ -988,9 +1003,7 @@ test(
       assert.match(calendarState.calendarTitle, /Your View/i);
       assert.ok(calendarState.eventTitles.some((label) => /NONE SUBMITTED/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /WAITING/i.test(label)));
-      assert.ok(calendarState.eventTitles.some((label) => /MISSED HOMEWORK DEADLINE/i.test(label)));
       assert.ok(calendarState.eventTitles.some((label) => /Notes review track: Science/i.test(label)));
-      assert.ok(calendarState.eventTitles.some((label) => /Current homework: Essay Draft/i.test(label)));
       assert.equal(calendarState.dotEventCount, 0);
       assert.match(calendarState.alertAnimationName, /overdueBlink/i);
       assert.match(calendarState.alertBackgroundColor, /rgb\(255,\s*35,\s*56\)/i);

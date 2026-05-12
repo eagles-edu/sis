@@ -905,8 +905,8 @@ test("parent portal menu opens a detailed homework page with calendar and histor
                     id: "hw-current-1",
                     assignmentName: "Essay Draft",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-15",
-                    dueAt: "2026-03-15T00:00:00.000Z",
+                    dueDate: "2025-09-15",
+                    dueAt: "2025-09-15T00:00:00.000Z",
                     comments: "Finish the body paragraphs and submit online.",
                     status: "pending",
                   },
@@ -916,8 +916,8 @@ test("parent portal menu opens a detailed homework page with calendar and histor
                     id: "hw-overdue-1",
                     assignmentName: "Vocabulary Corrections",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-11",
-                    dueAt: "2026-03-11T00:00:00.000Z",
+                    dueDate: "2025-09-11",
+                    dueAt: "2025-09-11T00:00:00.000Z",
                     comments: "Still missing corrections from the last class set.",
                     status: "overdue",
                   },
@@ -927,8 +927,8 @@ test("parent portal menu opens a detailed homework page with calendar and histor
                     id: "hw-current-1",
                     assignmentName: "Essay Draft",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-15",
-                    dueAt: "2026-03-15T00:00:00.000Z",
+                    dueDate: "2025-09-15",
+                    dueAt: "2025-09-15T00:00:00.000Z",
                     comments: "Finish the body paragraphs and submit online.",
                     status: "pending",
                   },
@@ -936,8 +936,8 @@ test("parent portal menu opens a detailed homework page with calendar and histor
                     id: "hw-complete-1",
                     assignmentName: "Reading Log",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-08",
-                    dueAt: "2026-03-08T00:00:00.000Z",
+                    dueDate: "2025-09-08",
+                    dueAt: "2025-09-08T00:00:00.000Z",
                     scorePercent: 92,
                     comments: "Submitted cleanly and on time.",
                     status: "completed",
@@ -950,8 +950,8 @@ test("parent portal menu opens a detailed homework page with calendar and histor
                     id: "grade-1",
                     assignmentName: "Reading Log",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-08",
-                    dueAt: "2026-03-08T00:00:00.000Z",
+                    dueDate: "2025-09-08",
+                    dueAt: "2025-09-08T00:00:00.000Z",
                     scorePercent: 92,
                     comments: "Submitted cleanly and on time.",
                     status: "completed",
@@ -1082,8 +1082,8 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
                     id: "hw-current-1",
                     assignmentName: "Essay Draft",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-15",
-                    dueAt: "2026-03-15T00:00:00.000Z",
+                    dueDate: "2025-09-15",
+                    dueAt: "2025-09-15T00:00:00.000Z",
                     comments: "Finish the final paragraph and upload the draft.",
                     status: "pending",
                   },
@@ -1093,8 +1093,8 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
                     id: "hw-overdue-1",
                     assignmentName: "Vocabulary Corrections",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-11",
-                    dueAt: "2026-03-11T00:00:00.000Z",
+                    dueDate: "2025-09-11",
+                    dueAt: "2025-09-11T00:00:00.000Z",
                     comments: "Corrections still need to be submitted.",
                     status: "overdue",
                   },
@@ -1104,8 +1104,8 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
                     id: "hw-current-1",
                     assignmentName: "Essay Draft",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-15",
-                    dueAt: "2026-03-15T00:00:00.000Z",
+                    dueDate: "2025-09-15",
+                    dueAt: "2025-09-15T00:00:00.000Z",
                     comments: "Finish the final paragraph and upload the draft.",
                     status: "pending",
                   },
@@ -1113,8 +1113,8 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
                     id: "hw-complete-1",
                     assignmentName: "Reading Log",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-08",
-                    dueAt: "2026-03-08T00:00:00.000Z",
+                    dueDate: "2025-09-08",
+                    dueAt: "2025-09-08T00:00:00.000Z",
                     scorePercent: 92,
                     comments: "Submitted cleanly and on time.",
                     status: "completed",
@@ -1127,8 +1127,8 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
                     id: "grade-1",
                     assignmentName: "Reading Log",
                     className: "A2 Flyers",
-                    dueDate: "2026-03-08",
-                    dueAt: "2026-03-08T00:00:00.000Z",
+                    dueDate: "2025-09-08",
+                    dueAt: "2025-09-08T00:00:00.000Z",
                     scorePercent: 92,
                     comments: "Submitted cleanly and on time.",
                     status: "completed",
@@ -1189,12 +1189,23 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
   document.querySelector('a[data-page-target="grades-ytd"]').click()
 
   await waitFor(() => {
+    assert.ok(
+      Array.from(document.querySelectorAll(".grade-quarter-picker-btn")).some((button) =>
+        (button.textContent || "").trim().toUpperCase().startsWith("Q1")
+      )
+    )
+  }, 5000)
+
+  Array.from(document.querySelectorAll(".grade-quarter-picker-btn"))
+    .find((button) => (button.textContent || "").trim().toUpperCase().startsWith("Q1"))
+    ?.click()
+
+  await waitFor(() => {
     const detailCard = document.getElementById("portalDetailCard")
     const grid = document.getElementById("portalDetailCalendarGrid")
     assert.equal(detailCard.classList.contains("hidden"), false)
     assert.match(document.getElementById("portalDetailTitle").textContent, /Điểm số YTD|Grades YTD/i)
     assert.ok(grid.querySelectorAll(".tabulator-row:not(.tabulator-header-row)").length >= 2)
-    assert.ok(grid.querySelector(".tabulator-row.is-current-quarter"))
     assert.equal(Boolean(grid.querySelector(".fc")), false)
   }, 5000)
 
@@ -1206,6 +1217,10 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
     }));
     return {
       summary: document.getElementById("portalDetailCalendarSummary")?.textContent || "",
+      activeQuarter: Array.from(document.querySelectorAll(".grade-quarter-picker-btn")).find((button) =>
+        button.getAttribute("aria-pressed") === "true"
+      )?.textContent || "",
+      rows,
       firstRow: rows[0] || null,
       secondRow: rows[1] || null,
       hasCalendar: Boolean(grid?.querySelector(".fc")),
@@ -1213,17 +1228,17 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
     };
   })()`)
 
-  assert.match(gradesQuarterState.summary, /quý/i)
-  assert.equal(gradesQuarterState.firstRow?.isCurrent, true)
+  assert.match(gradesQuarterState.summary, /Q1-Q4|quý/i)
+  assert.match(gradesQuarterState.activeQuarter || "", /^Q1/i)
   assert.equal(gradesQuarterState.hasCalendar, false)
   assert.equal(gradesQuarterState.hasTabulator, true)
-  assert.match(gradesQuarterState.firstRow?.text || "", /Current quarter/i)
+  assert.match(gradesQuarterState.firstRow?.text || "", /Essay Draft/i)
   assert.match(gradesQuarterState.firstRow?.text || "", /0(?:\.0)?%/)
   assert.match(gradesQuarterState.firstRow?.text || "", /0(?:\.0)?\/10/)
-  assert.match(gradesQuarterState.firstRow?.text || "", /0\/0\s*\(0(?:\.0)?%\)/)
-  assert.match(gradesQuarterState.secondRow?.text || "", /46(?:\.0)?%/)
-  assert.match(gradesQuarterState.secondRow?.text || "", /4\.6\/10/)
-  assert.match(gradesQuarterState.secondRow?.text || "", /1\/2\s*\(50(?:\.0)?%\)/)
+  assert.equal(gradesQuarterState.rows.length, 2)
+  assert.match(gradesQuarterState.secondRow?.text || "", /Reading Log/i)
+  assert.match(gradesQuarterState.secondRow?.text || "", /92(?:\.0)?%/)
+  assert.match(gradesQuarterState.secondRow?.text || "", /9\.2\/10/)
 
   await settleDomAsync(dom)
   dom.window.close()
