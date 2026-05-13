@@ -251,7 +251,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
   }
 })
 
-test("buttons and chips stay light in dark mode", { skip: resolvePlaywrightSkipReason() }, async () => {
+test("grades tabulator buttons and chips use dark-mode surfaces", { skip: resolvePlaywrightSkipReason() }, async () => {
   const server = startStaticServer(8094)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
   const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
@@ -263,6 +263,7 @@ test("buttons and chips stay light in dark mode", { skip: resolvePlaywrightSkipR
       checks: [
         ["grades chip link", ".chip-link"],
         ["grades period button", ".period-btn"],
+        ["grades subtle button", ".grid-actions .btn.subtle"],
       ],
     },
     {
@@ -279,7 +280,11 @@ test("buttons and chips stay light in dark mode", { skip: resolvePlaywrightSkipR
       await page.waitForTimeout(400)
       for (const [label, selector] of testCase.checks) {
         const style = await readStyle(page, selector)
-        assertLightChrome(label, style)
+        if (testCase.url === "/web-asset/admin/grades-tabulator.html") {
+          assertNotLight(label, style)
+        } else {
+          assertLightChrome(label, style)
+        }
       }
     }
   } finally {

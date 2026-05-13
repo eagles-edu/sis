@@ -176,6 +176,16 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
   "web-asset/admin/grades-tabulator.html|web-asset/admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|web-asset/admin/student-points.html"
+  "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
+  "web-asset/admin/attendance-grade-controls-island.mjs|web-asset/admin/attendance-grade-controls-island.mjs"
+  "web-asset/admin/news-review-island.mjs|web-asset/admin/news-review-island.mjs"
+  "web-asset/admin/overview-news-queue-island.mjs|web-asset/admin/overview-news-queue-island.mjs"
+  "web-asset/admin/parent-tracking-island.mjs|web-asset/admin/parent-tracking-island.mjs"
+  "web-asset/admin/profile-island.mjs|web-asset/admin/profile-island.mjs"
+  "web-asset/admin/queue-hub-island.mjs|web-asset/admin/queue-hub-island.mjs"
+  "web-asset/admin/report-settings-island.mjs|web-asset/admin/report-settings-island.mjs"
+  "web-asset/admin/school-setup-branding-island.mjs|web-asset/admin/school-setup-branding-island.mjs"
+  "web-asset/admin/student-admin-bootstrap.mjs|web-asset/admin/student-admin-bootstrap.mjs"
   "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
   "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
@@ -205,6 +215,16 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
   "web-asset/admin/grades-tabulator.html|sis-admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|sis-admin/student-points.html"
+  "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
+  "web-asset/admin/attendance-grade-controls-island.mjs|web-asset/admin/attendance-grade-controls-island.mjs"
+  "web-asset/admin/news-review-island.mjs|web-asset/admin/news-review-island.mjs"
+  "web-asset/admin/overview-news-queue-island.mjs|web-asset/admin/overview-news-queue-island.mjs"
+  "web-asset/admin/parent-tracking-island.mjs|web-asset/admin/parent-tracking-island.mjs"
+  "web-asset/admin/profile-island.mjs|web-asset/admin/profile-island.mjs"
+  "web-asset/admin/queue-hub-island.mjs|web-asset/admin/queue-hub-island.mjs"
+  "web-asset/admin/report-settings-island.mjs|web-asset/admin/report-settings-island.mjs"
+  "web-asset/admin/school-setup-branding-island.mjs|web-asset/admin/school-setup-branding-island.mjs"
+  "web-asset/admin/student-admin-bootstrap.mjs|web-asset/admin/student-admin-bootstrap.mjs"
   "web-asset/parent/parent-portal.html|sis-parent/parent-portal.html"
   "web-asset/student/student-portal.html|sis-student/student-portal.html"
   "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
@@ -431,9 +451,17 @@ ensure_test_runtime_env_contract() {
     fi
   fi
 
+  local test_database_url=""
+  if [[ -f "${REPO_ROOT}/.env.test" ]]; then
+    test_database_url="$(read_env_value "${REPO_ROOT}/.env.test" "DATABASE_URL")"
+  fi
+
   upsert_env_value "$test_env_path" "EXERCISE_MAILER_HOST" "127.0.0.1"
   upsert_env_value "$test_env_path" "EXERCISE_MAILER_PORT" "$TEST_PORT"
   upsert_env_value "$test_env_path" "EXERCISE_MAILER_ORIGIN" "$TEST_PRIMARY_ORIGIN"
+  if [[ -n "$test_database_url" ]]; then
+    upsert_env_value "$test_env_path" "DATABASE_URL" "$test_database_url"
+  fi
   upsert_env_value "$test_env_path" "NODE_ENV" "test"
   upsert_env_value "$test_env_path" "SIS_LIVE_ROOT" "$LIVE_ROOT_CANONICAL"
   upsert_env_value "$test_env_path" "SIS_DEV_ROOT" "$test_dev_roots"
