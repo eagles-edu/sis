@@ -21,6 +21,7 @@ test.beforeEach(() => {
 
 test("saveAssignmentTemplate normalizes and round-trips assignment template records", async () => {
   const result = await saveAssignmentTemplate({
+    eaglesId: "S001",
     level: "A1 Movers",
     assignmentTitle: "Unit 1",
     assignedAt: "2026-03-09",
@@ -28,7 +29,7 @@ test("saveAssignmentTemplate normalizes and round-trips assignment template reco
     message: "Read, write, and finish the homework.",
     items: [
       { title: "Read the story", url: "https://example.com/read" },
-      { title: "Write the answers", done: true },
+      { title: "Write the answers", url: "https://example.com/write", done: true },
     ],
   })
 
@@ -48,6 +49,7 @@ test("saveAssignmentTemplate normalizes and round-trips assignment template reco
 test("importAssignmentTemplates upserts by id and keeps list ordering stable", async () => {
   const first = await saveAssignmentTemplate({
     id: "template-1",
+    eaglesId: "S001",
     level: "A1 Movers",
     assignmentTitle: "Movers Unit 1",
     assignedAt: "2026-03-09",
@@ -59,6 +61,7 @@ test("importAssignmentTemplates upserts by id and keeps list ordering stable", a
     templates: [
       {
         id: first.item.id,
+        eaglesId: "S001",
         level: "A1 Movers",
         assignmentTitle: "Movers Unit 1",
         assignedAt: "2026-03-09",
@@ -67,6 +70,7 @@ test("importAssignmentTemplates upserts by id and keeps list ordering stable", a
       },
       {
         id: "template-2",
+        eaglesId: "S002",
         level: "A2 Flyers",
         assignmentTitle: "Flyers Unit 2",
         assignedAt: "2026-03-10",
@@ -94,6 +98,7 @@ test("buildAssignmentDashboardSlices returns currentAssignmentMeta and enrollmen
     assignmentTemplates: [
       {
         id: "meta-1",
+        eaglesId: "S001",
         level: "A1 Movers",
         assignmentTitle: "Movers Current",
         assignedAt: "2026-03-09",
@@ -103,6 +108,7 @@ test("buildAssignmentDashboardSlices returns currentAssignmentMeta and enrollmen
       },
       {
         id: "meta-2",
+        eaglesId: "S002",
         level: "A2 Flyers",
         assignmentTitle: "Flyers Current",
         assignedAt: "2026-03-10",
@@ -112,6 +118,7 @@ test("buildAssignmentDashboardSlices returns currentAssignmentMeta and enrollmen
       },
       {
         id: "meta-3",
+        eaglesId: "S002",
         level: "A2 Flyers",
         assignmentTitle: "Flyers Older",
         assignedAt: "2026-03-02",
@@ -137,6 +144,7 @@ test("buildAssignmentDashboardSlices returns currentAssignmentMeta and enrollmen
 test("deleteAssignmentTemplateById removes saved records", async () => {
   const saved = await saveAssignmentTemplate({
     id: "delete-me",
+    eaglesId: "S001",
     level: "A1 Movers",
     assignmentTitle: "Delete Me",
     assignedAt: "2026-03-09",
@@ -149,4 +157,17 @@ test("deleteAssignmentTemplateById removes saved records", async () => {
   assert.equal(deleted.id, saved.item.id)
   const missing = await getAssignmentTemplateById(saved.item.id)
   assert.equal(missing, null)
+})
+
+test("saveAssignmentTemplate rejects incomplete provenance bundles", async () => {
+  await assert.rejects(
+    saveAssignmentTemplate({
+      level: "A1 Movers",
+      assignmentTitle: "Broken Assignment",
+      assignedAt: "2026-03-09",
+      dueAt: "2026-03-12",
+      items: [{ title: "Task", url: "https://example.com/task" }],
+    }),
+    /assignment provenance bundle is incomplete/i,
+  )
 })

@@ -572,6 +572,20 @@ function normalizeSubmissionPayload(payload = {}) {
   const sourceSystem = normalizeSourceSystem(payload?.sourceSystem)
   const sourceAttemptId = normalizeSourceAttemptId(payload?.sourceAttemptId)
   const { sourceOriginLabel, sourceOriginHost } = resolveSubmissionOrigin(payload)
+  const assignmentBundleJson =
+    payload?.assignmentBundleJson && typeof payload.assignmentBundleJson === "object" ?
+      payload.assignmentBundleJson
+    : payload?.assignmentProvenanceJson && typeof payload.assignmentProvenanceJson === "object" ?
+      payload.assignmentProvenanceJson
+    : null
+  const assignmentTemplateId = normalizeString(payload?.assignmentTemplateId)
+  const assignmentTemplateItemId = normalizeString(payload?.assignmentTemplateItemId)
+  const assignmentTitle = normalizeString(payload?.assignmentTitle)
+  const assignmentItemTitle = normalizeString(payload?.assignmentItemTitle)
+  const assignmentExerciseUrl = normalizeString(payload?.assignmentExerciseUrl)
+  const assignedAt = normalizeString(payload?.assignedAt)
+  const dueAt = normalizeString(payload?.dueAt)
+  const level = normalizeString(payload?.level)
 
   return {
     submittedEaglesId,
@@ -584,6 +598,15 @@ function normalizeSubmissionPayload(payload = {}) {
     sourceAttemptId,
     sourceOriginLabel,
     sourceOriginHost,
+    assignmentBundleJson,
+    assignmentTemplateId,
+    assignmentTemplateItemId,
+    assignmentTitle,
+    assignmentItemTitle,
+    assignmentExerciseUrl,
+    assignedAt,
+    dueAt,
+    level,
   }
 }
 
@@ -776,6 +799,62 @@ function buildExerciseSubmissionRecordData(studentRefId, exerciseRefId, submissi
   }
 }
 
+function buildAssignmentBundleFromSubmission(submission = {}) {
+  const directBundle =
+    submission?.assignmentBundleJson && typeof submission.assignmentBundleJson === "object" ?
+      submission.assignmentBundleJson
+    : submission?.assignmentProvenanceJson && typeof submission.assignmentProvenanceJson === "object" ?
+      submission.assignmentProvenanceJson
+    : null
+  if (directBundle) return directBundle
+
+  const assignmentTemplateId = normalizeString(submission?.assignmentTemplateId)
+  const assignmentTemplateItemId = normalizeString(submission?.assignmentTemplateItemId)
+  const eaglesId = normalizeString(submission?.submittedEaglesId)
+  const level = normalizeString(submission?.level)
+  const assignedAt = normalizeString(submission?.assignedAt)
+  const dueAt = normalizeString(submission?.dueAt)
+  const itemTitle = normalizeString(
+    submission?.assignmentItemTitle || submission?.itemTitle || submission?.pageTitle,
+  )
+  const exerciseUrl = normalizeString(
+    submission?.assignmentExerciseUrl || submission?.sourceUrl || submission?.sourcePageUrl,
+  )
+  if (
+    !assignmentTemplateId ||
+    !assignmentTemplateItemId ||
+    !eaglesId ||
+    !level ||
+    !assignedAt ||
+    !dueAt ||
+    !itemTitle ||
+    !exerciseUrl
+  ) {
+    return null
+  }
+
+  const assignmentTitle = normalizeString(
+    submission?.assignmentTitle || submission?.exerciseTitle || submission?.pageTitle,
+  )
+  return {
+    assignmentTemplateId,
+    eaglesId,
+    level,
+    assignmentTitle,
+    assignedAt,
+    dueAt,
+    items: [
+      {
+        assignmentTemplateItemId,
+        title: itemTitle,
+        url: exerciseUrl,
+      },
+    ],
+    itemTitles: [itemTitle],
+    exerciseUrls: [exerciseUrl],
+  }
+}
+
 function buildExerciseGradeRecordData(student, submission, summary) {
   const className = normalizeString(submission.pageTitle) || "Exercise Submission"
   const completedAt = submission.completedAt instanceof Date ? submission.completedAt : parseCompletedAt(submission.completedAt)
@@ -786,6 +865,7 @@ function buildExerciseGradeRecordData(student, submission, summary) {
   const comments = totalQuestions > 0
     ? `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX} (${correctCount}/${totalQuestions} correct).`
     : `${AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX}.`
+  const assignmentBundleJson = buildAssignmentBundleFromSubmission(submission)
 
   const schoolYear = resolveCurrentSchoolYear(completedAt)
   return {
@@ -806,6 +886,7 @@ function buildExerciseGradeRecordData(student, submission, summary) {
     sourceAttemptId: normalizeSourceAttemptId(submission.sourceAttemptId),
     sourceOriginLabel: normalizeSourceOriginLabel(submission.sourceOriginLabel),
     sourceOriginHost: normalizeSourceOriginHost(submission.sourceOriginHost),
+    assignmentBundleJson,
   }
 }
 

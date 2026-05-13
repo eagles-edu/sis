@@ -22,7 +22,7 @@ function extractMapSources(script, mapName) {
     .sort()
 }
 
-test("live admin sync wrapper is pinned to the live admin host and avoids prisma migrations", () => {
+test("live admin sync wrapper is pinned to the live admin host and refreshes Prisma", () => {
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/sis/)
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/public_html/)
   assert.match(liveScript, /https:\/\/admin\.eagles\.edu\.vn/)
@@ -35,7 +35,8 @@ test("live admin sync wrapper is pinned to the live admin host and avoids prisma
   assert.match(liveScript, /verify_live_roots_cleared/)
   assert.match(liveScript, /verify_live_sync_whitelist/)
   assert.match(liveScript, /npm ci --no-audit --no-fund/)
-  assert.doesNotMatch(liveScript, /prisma migrate deploy/i)
+  assert.match(liveScript, /refresh_runtime_prisma_client\(\)/)
+  assert.match(liveScript, /npm run db:migrate:deploy/)
 })
 
 test("package scripts expose the live admin sync entrypoints", () => {
@@ -51,7 +52,7 @@ test("package scripts expose the live admin sync entrypoints", () => {
 test("live portal docs advertise the backup bundle and admin origin", () => {
   assert.match(liveLinksDoc, /\/home\/eagles\/dockerz\/backups\/live-admin\//)
   assert.match(liveLinksDoc, /https:\/\/admin\.eagles\.edu\.vn/)
-  assert.match(liveLinksDoc, /does not run `prisma migrate deploy`/i)
+  assert.match(liveLinksDoc, /refreshes Prisma \(`db:generate` \+ `db:migrate:deploy`\)/i)
 })
 
 test("live nginx config mirrors the test parent route shape", () => {

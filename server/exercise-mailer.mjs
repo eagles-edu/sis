@@ -109,6 +109,15 @@ loadEnvironmentFile()
  *   sourceOrigin?: string
  *   sourceOriginLabel?: string
  *   sourceOriginHost?: string
+ *   assignmentBundleJson?: unknown
+ *   assignmentTemplateId?: string
+ *   assignmentTemplateItemId?: string
+ *   assignmentTitle?: string
+ *   assignmentItemTitle?: string
+ *   assignmentExerciseUrl?: string
+ *   assignedAt?: string
+ *   dueAt?: string
+ *   level?: string
  *   submittedAt?: string
  *   [key: string]: unknown
  * }} SubmissionPayload
@@ -130,6 +139,15 @@ loadEnvironmentFile()
  *   sourceOrigin: string
  *   sourceOriginLabel: string
  *   sourceOriginHost: string
+ *   assignmentBundleJson: unknown
+ *   assignmentTemplateId: string
+ *   assignmentTemplateItemId: string
+ *   assignmentTitle: string
+ *   assignmentItemTitle: string
+ *   assignmentExerciseUrl: string
+ *   assignedAt: string
+ *   dueAt: string
+ *   level: string
  * }} ValidatedPayload
  *
  * @typedef {{
@@ -1265,6 +1283,18 @@ function validatePayload(payload, options = {}) {
   const sourceOrigin = normalizeString(payload?.sourceOrigin)
   const sourceOriginLabel = normalizeString(payload?.sourceOriginLabel)
   const sourceOriginHost = normalizeString(payload?.sourceOriginHost)
+  const assignmentBundleJson =
+    payload?.assignmentBundleJson && typeof payload.assignmentBundleJson === "object"
+      ? payload.assignmentBundleJson
+      : null
+  const assignmentTemplateId = normalizeString(payload?.assignmentTemplateId)
+  const assignmentTemplateItemId = normalizeString(payload?.assignmentTemplateItemId)
+  const assignmentTitle = normalizeString(payload?.assignmentTitle)
+  const assignmentItemTitle = normalizeString(payload?.assignmentItemTitle)
+  const assignmentExerciseUrl = normalizeString(payload?.assignmentExerciseUrl)
+  const assignedAt = normalizeString(payload?.assignedAt)
+  const dueAt = normalizeString(payload?.dueAt)
+  const level = normalizeString(payload?.level)
 
   const rawPageTitle = normalizeString(payload?.pageTitle)
   if (!rawPageTitle) throw createBadRequestError("Missing pageTitle")
@@ -1302,6 +1332,15 @@ function validatePayload(payload, options = {}) {
     sourceOrigin,
     sourceOriginLabel,
     sourceOriginHost,
+    assignmentBundleJson,
+    assignmentTemplateId,
+    assignmentTemplateItemId,
+    assignmentTitle,
+    assignmentItemTitle,
+    assignmentExerciseUrl,
+    assignedAt,
+    dueAt,
+    level,
     pageTitle,
     completedAt,
     recipients: decodeRecipients(Array.isArray(payload.recipients) ? payload.recipients : []),

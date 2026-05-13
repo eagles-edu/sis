@@ -31,6 +31,25 @@ wait_for_port_release() {
   return 1
 }
 
+build_admin_assets() {
+  log "building admin minified assets from source"
+  (cd "$REPO_ROOT" && npm run build:admin-assets)
+}
+
+refresh_runtime_prisma_client() {
+  if [[ ! -f "$REPO_ROOT/package.json" ]]; then
+    log "skip Prisma refresh (package.json missing)"
+    return 0
+  fi
+
+  log "refreshing dev Prisma client and applying migrations"
+  (
+    cd "$REPO_ROOT" &&
+      env SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development npm run db:generate &&
+      env SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development npm run db:migrate:deploy
+  )
+}
+
 stop_runtime() {
   mkdir -p "$(dirname "$DEV_PID_FILE")"
 
@@ -125,7 +144,9 @@ NODE
 }
 
 main() {
+  build_admin_assets
   stop_runtime
+  refresh_runtime_prisma_client
   start_runtime
 }
 

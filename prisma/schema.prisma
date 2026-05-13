@@ -111,6 +111,7 @@ model AssignmentTemplate {
   eaglesId       String?
   message        String?
   itemsJson      Json?
+  assignmentBundleJson Json?
   completed      Boolean  @default(false)
   completedAt    String?
   createdAt      DateTime @default(now())
@@ -300,6 +301,7 @@ model StudentGradeRecord {
   sourceAttemptId   String?
   sourceOriginLabel String?
   sourceOriginHost  String?
+  assignmentBundleJson Json?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

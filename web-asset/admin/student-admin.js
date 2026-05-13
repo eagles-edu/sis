@@ -9601,6 +9601,10 @@
         const fallbackExerciseTitle = normalizeText(
           document.getElementById("assignmentExerciseSelect")?.value,
         );
+        const selectedStudentId = normalizeText(document.getElementById("assignStudent").value);
+        const selectedStudent = assignmentStudentSource().find(
+          (student) => normalizeText(student?.id) === selectedStudentId,
+        );
         return {
           id: normalizeText(state.assignmentDraft?.id),
           assignmentTitle: normalizeText(document.getElementById("assignTitle").value),
@@ -9608,7 +9612,7 @@
           assignedAt: normalizeText(document.getElementById("assignAssignedAt").value),
           dueAt: normalizeText(document.getElementById("assignDueAt").value),
           level,
-          eaglesId: normalizeText(document.getElementById("assignStudent").value),
+          eaglesId: normalizeText(selectedStudent?.eaglesId || selectedStudentId),
           message: normalizeText(document.getElementById("assignMessage").value),
           items,
         };
@@ -9834,8 +9838,12 @@
       async function saveAssignmentTemplate() {
         const form = collectAssignmentForm();
         if (!form.level) throw new Error("Select a class level before saving.");
+        if (!form.eaglesId) throw new Error("Select a student before saving this assignment.");
         if (!form.items.length)
           throw new Error("Add at least one assignment item before saving.");
+        if (form.items.some((item) => !normalizeText(item.title) || !normalizeText(item.url))) {
+          throw new Error("Each assignment item needs an exercise URL before saving.");
+        }
 
         const assignedAt = form.assignedAt || localIsoDate();
         const dueAt = form.dueAt || nextSundayIsoDate(assignedAt);

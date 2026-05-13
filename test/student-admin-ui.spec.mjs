@@ -83,6 +83,10 @@ function normalizeAssignmentTemplateFixture(source = {}, index = 0) {
     eaglesId: normalizeText(template.eaglesId),
     message: normalizeText(template.message),
     items: Array.isArray(template.items) ? template.items.map((item) => ({ ...(item && typeof item === "object" ? item : {}) })) : [],
+    assignmentBundleJson:
+      template.assignmentBundleJson && typeof template.assignmentBundleJson === "object" ?
+        template.assignmentBundleJson
+        : null,
     completed: Boolean(template.completed),
     completedAt: normalizeText(template.completedAt),
     createdAt: normalizeText(template.createdAt),
@@ -4109,6 +4113,7 @@ test("assignments page uses level tiles, itemized exercise links, and completion
   })
 
   document.getElementById("assignTitle").value = "Week 8 Starter Pack"
+  document.getElementById("assignStudent").value = "stu-01"
   document.getElementById("assignmentExerciseSelect").value = "Starter Listening 01"
   document.getElementById("assignmentExerciseSelect").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   assert.equal(document.getElementById("assignmentExerciseUrl").value, "https://megs.example/hw/starter-listening-01")

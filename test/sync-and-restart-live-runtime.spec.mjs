@@ -18,9 +18,13 @@ test("sync-and-restart-runtimes keeps the live runtime root and port pinned", ()
   assert.match(script, /run_ffs "ffs-sis-root" ffs-sis-root --batch/)
   assert.match(script, /run_ffs "ffs-sis-public-root" ffs-sis-public-root --batch/)
   assert.match(script, /if \[\[ "\$status" == "3" \]\]; then/)
+  assert.match(script, /refresh_dev_prisma_client\(\)/)
+  assert.match(script, /npm run db:migrate:deploy/)
   assert.match(script, /main\(\) \{\s+build_admin_assets\s+run_sync/s)
 })
 
-test("sync-and-restart-live-runtime delegates to the live sync wrapper", () => {
-  assert.match(wrapper, /exec "\$\{SCRIPT_DIR\}\/sync-and-restart-runtimes\.sh" "\$MODE"/)
+test("sync-and-restart-live-runtime keeps Prisma deploy in the live wrapper contract", () => {
+  assert.match(wrapper, /refresh_runtime_prisma_client\(\)/)
+  assert.match(wrapper, /refreshing Prisma client and applying migrations in \$\{LIVE_ROOT\}/)
+  assert.match(wrapper, /npm run db:migrate:deploy/)
 })

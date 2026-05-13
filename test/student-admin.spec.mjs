@@ -697,6 +697,162 @@ test("buildChildDashboardSnapshot keeps stored school setup quarters when dates 
   }
 })
 
+test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinished assignment panels", () => {
+  const adminUiSettingsPath = path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
+  const priorAdminUiSettings = fs.existsSync(adminUiSettingsPath)
+    ? fs.readFileSync(adminUiSettingsPath, "utf8")
+    : null
+  const today = new Date()
+  const month = String(today.getMonth() + 1).padStart(2, "0")
+  const toIsoDate = (date) => {
+    const yearPart = date.getFullYear()
+    const monthPart = String(date.getMonth() + 1).padStart(2, "0")
+    const dayPart = String(date.getDate()).padStart(2, "0")
+    return `${yearPart}-${monthPart}-${dayPart}`
+  }
+  const shiftDays = (value, days) => {
+    const copy = new Date(value.getTime())
+    copy.setDate(copy.getDate() + days)
+    return copy
+  }
+  const year = today.getFullYear()
+  const currentQuarterStart = toIsoDate(today)
+  const currentQuarterEnd = toIsoDate(shiftDays(today, 7))
+  const pastQuarterStart = toIsoDate(shiftDays(today, -30))
+  const pastQuarterEnd = toIsoDate(shiftDays(today, -1))
+
+  const currentBundle = {
+    assignmentTemplateId: "bundle-current",
+    eaglesId: "S001",
+    level: "A1 Movers",
+    assignmentTitle: "Current Quarter Bundle",
+    assignedAt: currentQuarterStart,
+    dueAt: currentQuarterEnd,
+    items: [
+      { assignmentTemplateItemId: "bundle-current-item-1", title: "Read current passage", url: "https://example.com/current/read" },
+    ],
+    itemTitles: ["Read current passage"],
+    exerciseUrls: ["https://example.com/current/read"],
+  }
+  const pastBundle = {
+    assignmentTemplateId: "bundle-past",
+    eaglesId: "S001",
+    level: "A1 Movers",
+    assignmentTitle: "Past Quarter Bundle",
+    assignedAt: pastQuarterStart,
+    dueAt: pastQuarterEnd,
+    items: [
+      { assignmentTemplateItemId: "bundle-past-item-1", title: "Write past answers", url: "https://example.com/past/write" },
+    ],
+    itemTitles: ["Write past answers"],
+    exerciseUrls: ["https://example.com/past/write"],
+  }
+
+  try {
+    fs.mkdirSync(path.dirname(adminUiSettingsPath), { recursive: true })
+    fs.writeFileSync(
+      adminUiSettingsPath,
+      JSON.stringify({
+        uiSettings: {
+          schoolSetup: {
+            schoolYear: `${year}-${year + 1}`,
+            startDate: `${year}-01-01`,
+            endDate: `${year}-12-31`,
+            quarters: [
+              { quarter: "q1", startDate: currentQuarterStart, endDate: currentQuarterEnd },
+              { quarter: "q2", startDate: toIsoDate(shiftDays(today, 14)), endDate: toIsoDate(shiftDays(today, 21)) },
+              { quarter: "q3", startDate: toIsoDate(shiftDays(today, 28)), endDate: toIsoDate(shiftDays(today, 35)) },
+              { quarter: "q4", startDate: pastQuarterStart, endDate: pastQuarterEnd },
+            ],
+          },
+        },
+      }),
+      "utf8",
+    )
+
+    const snapshot = buildChildDashboardSnapshot({
+      child: { eaglesId: "S001", fullName: "Jane Student", currentGrade: "A1 Movers" },
+      attendanceRows: [],
+      gradeRows: [
+        {
+          id: "grade-current",
+          className: "A1 Movers",
+          level: "A1 Movers",
+          schoolYear: `${year}-${year + 1}`,
+          quarter: "q1",
+          assignmentName: "Current Quarter Bundle",
+          dueAt: currentQuarterEnd,
+          submittedAt: null,
+          homeworkCompleted: false,
+          homeworkOnTime: false,
+          score: null,
+          maxScore: null,
+          comments: "",
+          assignmentBundleJson: currentBundle,
+        },
+        {
+          id: "grade-past",
+          className: "A1 Movers",
+          level: "A1 Movers",
+          schoolYear: `${year}-${year + 1}`,
+          quarter: "q4",
+          assignmentName: "Past Quarter Bundle",
+          dueAt: pastQuarterEnd,
+          submittedAt: `${year}-${month}-${String(Math.max(today.getDate(), 2)).padStart(2, "0")}T09:00:00.000Z`,
+          homeworkCompleted: true,
+          homeworkOnTime: false,
+          score: 8,
+          maxScore: 10,
+          comments: "Submitted after the quarter closed.",
+          assignmentBundleJson: pastBundle,
+        },
+      ],
+      reportRows: [],
+      assignmentTemplates: [
+        {
+          id: currentBundle.assignmentTemplateId,
+          assignmentTitle: currentBundle.assignmentTitle,
+          assignedAt: currentBundle.assignedAt,
+          dueAt: currentBundle.dueAt,
+          level: currentBundle.level,
+          eaglesId: currentBundle.eaglesId,
+          items: [{ id: "bundle-current-item-1", title: "Read current passage", url: "https://example.com/current/read" }],
+          itemsJson: [{ id: "bundle-current-item-1", title: "Read current passage", url: "https://example.com/current/read" }],
+          assignmentBundleJson: currentBundle,
+          completed: false,
+        },
+        {
+          id: pastBundle.assignmentTemplateId,
+          assignmentTitle: pastBundle.assignmentTitle,
+          assignedAt: pastBundle.assignedAt,
+          dueAt: pastBundle.dueAt,
+          level: pastBundle.level,
+          eaglesId: pastBundle.eaglesId,
+          items: [{ id: "bundle-past-item-1", title: "Write past answers", url: "https://example.com/past/write" }],
+          itemsJson: [{ id: "bundle-past-item-1", title: "Write past answers", url: "https://example.com/past/write" }],
+          assignmentBundleJson: pastBundle,
+          completed: false,
+        },
+      ],
+    })
+
+    assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments.length, 1)
+    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments.length, 1)
+    assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments[0].href, "https://example.com/current/read")
+    assert.equal(snapshot.details.unfinishedCurrentQuarterAssignments[0].itemLinks[0].url, "https://example.com/current/read")
+    assert.match(snapshot.details.unfinishedCurrentQuarterAssignments[0].meta || "", /Assigned/i)
+    assert.match(snapshot.details.unfinishedCurrentQuarterAssignments[0].note || "", /exercise link/i)
+    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].href, "https://example.com/past/write")
+    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].tone, "good")
+    assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].countsTowardQuarter, false)
+    assert.match(snapshot.details.pastQuartersUnfinishedAssignments[0].note || "", /not included/i)
+  } finally {
+    if (priorAdminUiSettings !== null) {
+      fs.writeFileSync(adminUiSettingsPath, priorAdminUiSettings, "utf8")
+    }
+  }
+})
+
 test("start server for admin routes", async () => {
   const { startExerciseMailer } = await import(process.cwd() + "/server/exercise-mailer.mjs")
   server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })

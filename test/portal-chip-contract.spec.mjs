@@ -86,3 +86,22 @@ test("student and parent queue compact chip/button and datetime helpers stay ali
     assert.match(html, /table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i)
   }
 })
+
+test("student and parent quarter tables keep late and missed status chips", () => {
+  const studentHtml = readPortal("web-asset/student/student-portal.html")
+  const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+
+  for (const html of [studentHtml, parentHtml]) {
+    assert.match(html, /\.grade-status-pill\s*\{[\s\S]*?color:\s*#fff;/)
+    assert.match(html, /\.grade-status-pill\.is-good[\s\S]*?color:\s*#fff;/)
+    assert.match(html, /\.grade-status-pill\.is-warn[\s\S]*?color:\s*#fff;/)
+    assert.match(html, /\.grade-status-pill\.is-bad[\s\S]*?color:\s*#fff;/)
+    assert.match(html, /\.grade-status-pill\.is-late[\s\S]*?color:\s*#fff;/)
+    assert.match(html, /\.grade-status-pill\.is-late/)
+    assert.match(html, /\.grade-status-stack/)
+    assert.match(html, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open[\s\S]*?box-shadow:\s*inset 4px 0 0 #a86400;/)
+    assert.match(html, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-completed[\s\S]*?box-shadow:\s*inset 4px 0 0 #1f7a47;/)
+    assert.match(html, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-late[\s\S]*?box-shadow:\s*inset 4px 0 0 #55389f;/)
+    assert.match(html, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-missed[\s\S]*?box-shadow:\s*inset 4px 0 0 #b23a2e;/)
+  }
+})

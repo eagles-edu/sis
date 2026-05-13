@@ -435,6 +435,7 @@ export async function deleteAttendanceRecord(studentRefId, attendanceId) {
  *   sourceAttemptId?: string,
  *   sourceOriginLabel?: string,
  *   sourceOriginHost?: string,
+ *   assignmentBundleJson?: unknown,
  * }} [payload]
  * @returns {Promise<Record<string, unknown> | null>}
  */
@@ -473,6 +474,10 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     sourceAttemptId: normalizeNullableText(payload.sourceAttemptId),
     sourceOriginLabel: normalizeNullableText(payload.sourceOriginLabel),
     sourceOriginHost: normalizeNullableText(payload.sourceOriginHost),
+    assignmentBundleJson:
+      payload.assignmentBundleJson && typeof payload.assignmentBundleJson === "object"
+        ? payload.assignmentBundleJson
+        : null,
   }
 
   const recordId = normalizeText(payload.id)

@@ -116,8 +116,30 @@ refresh_live_prisma_client() {
     log "skip Prisma generate (package.json missing): ${LIVE_ROOT}"
     return 0
   fi
-  log "refreshing live Prisma client in ${LIVE_ROOT}"
-  (cd "$LIVE_ROOT" && npm run db:generate)
+  log "refreshing live Prisma client and applying migrations in ${LIVE_ROOT}"
+  (
+    cd "$LIVE_ROOT" &&
+      npm run db:generate &&
+      npm run db:migrate:deploy
+  )
+}
+
+refresh_dev_prisma_client() {
+  if [[ ! -d "$DEV_ROOT" ]]; then
+    log "skip Prisma refresh (dev root missing): ${DEV_ROOT}"
+    return 0
+  fi
+  if [[ ! -f "$DEV_ROOT/package.json" ]]; then
+    log "skip Prisma refresh (package.json missing): ${DEV_ROOT}"
+    return 0
+  fi
+
+  log "refreshing dev Prisma client and applying migrations in ${DEV_ROOT}"
+  (
+    cd "$DEV_ROOT" &&
+      env SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development npm run db:generate &&
+      env SIS_ENV_FILE=.env.dev DOTENV_CONFIG_PATH=.env.dev NODE_ENV=development npm run db:migrate:deploy
+  )
 }
 
 restart_live_runtime() {
@@ -237,10 +259,11 @@ main() {
   build_admin_assets
   run_sync
   sync_live_prisma_files
-  log "note=DB unchanged (no migrate, no restore)"
+  log "note=live DB unchanged (no live migrate, no restore); dev DB is refreshed locally"
   refresh_live_prisma_client
   restart_live_runtime
   stop_dev_runtime
+  refresh_dev_prisma_client
   start_dev_runtime
   log "completed mode=${MODE}"
 }

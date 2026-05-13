@@ -141,6 +141,22 @@ function normalizeText(value) {
     .trim()
 }
 
+function installFixedClock(window, fixedNowIso) {
+  if (!fixedNowIso) return
+  const fixedNow = new Date(fixedNowIso).valueOf()
+  if (!Number.isFinite(fixedNow)) return
+  const RealDate = window.Date
+  class MockDate extends RealDate {
+    constructor(...args) {
+      super(...(args.length ? args : [fixedNow]))
+    }
+    static now() {
+      return fixedNow
+    }
+  }
+  window.Date = MockDate
+}
+
 async function createParentPortalDom(fetchHandler, url, options = {}) {
   const dom = new JSDOM(PARENT_PORTAL_HTML_FOR_TEST, {
     runScripts: "dangerously",
@@ -153,6 +169,7 @@ async function createParentPortalDom(fetchHandler, url, options = {}) {
       window.requestAnimationFrame = (callback) => window.setTimeout(() => callback(Date.now()), 0)
       window.cancelAnimationFrame = (handle) => window.clearTimeout(handle)
       installTabulatorStub(window)
+      installFixedClock(window, options.fixedNow)
       if (options.initialAuthState) {
         window.__SIS_PARENT_INITIAL_AUTH__ = options.initialAuthState
       }
@@ -943,6 +960,31 @@ test("parent portal menu opens a detailed homework page with calendar and histor
                     status: "completed",
                     homeworkOnTime: true,
                   },
+                  {
+                    id: "hw-late-1",
+                    assignmentName: "Late Exercise",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-06",
+                    dueAt: "2025-09-06T00:00:00.000Z",
+                    submittedAt: "2025-09-07T14:30:00.000Z",
+                    scorePercent: 85,
+                    comments: "Submitted after the deadline for Q1 tracking.",
+                    status: "completed",
+                    homeworkCompleted: true,
+                    homeworkOnTime: false,
+                  },
+                  {
+                    id: "hw-missed-1",
+                    assignmentName: "Missed Exercise",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-05",
+                    dueAt: "2025-09-05T00:00:00.000Z",
+                    scorePercent: 0,
+                    comments: "Not submitted before the Q1 deadline.",
+                    status: "overdue",
+                    homeworkCompleted: false,
+                    homeworkOnTime: false,
+                  },
                 ],
                 attendanceHistory: [],
                 gradeHistory: [
@@ -955,6 +997,31 @@ test("parent portal menu opens a detailed homework page with calendar and histor
                     scorePercent: 92,
                     comments: "Submitted cleanly and on time.",
                     status: "completed",
+                  },
+                  {
+                    id: "grade-2",
+                    assignmentName: "Late Exercise",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-06",
+                    dueAt: "2025-09-06T00:00:00.000Z",
+                    submittedAt: "2025-09-07T14:30:00.000Z",
+                    scorePercent: 85,
+                    comments: "Submitted after the deadline for Q1 tracking.",
+                    status: "completed",
+                    homeworkCompleted: true,
+                    homeworkOnTime: false,
+                  },
+                  {
+                    id: "grade-3",
+                    assignmentName: "Missed Exercise",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-05",
+                    dueAt: "2025-09-05T00:00:00.000Z",
+                    scorePercent: 0,
+                    comments: "Not submitted before the Q1 deadline.",
+                    status: "overdue",
+                    homeworkCompleted: false,
+                    homeworkOnTime: false,
                   },
                 ],
                 reportArchive: [
@@ -1022,6 +1089,7 @@ test("parent portal menu opens a detailed homework page with calendar and histor
 })
 
 test("parent portal grades YTD renders a quarter board without a calendar", async () => {
+  const fixedNow = "2025-09-10T09:00:00.000Z"
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
       const urlText = toUrlText(resource)
@@ -1120,6 +1188,31 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
                     status: "completed",
                     homeworkOnTime: true,
                   },
+                  {
+                    id: "hw-late-1",
+                    assignmentName: "Late Exercise",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-06",
+                    dueAt: "2025-09-06T00:00:00.000Z",
+                    submittedAt: "2025-09-07T14:30:00.000Z",
+                    scorePercent: 85,
+                    comments: "Submitted after the deadline for Q1 tracking.",
+                    status: "completed",
+                    homeworkCompleted: true,
+                    homeworkOnTime: false,
+                  },
+                  {
+                    id: "hw-missed-1",
+                    assignmentName: "Missed Exercise",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-05",
+                    dueAt: "2025-09-05T00:00:00.000Z",
+                    scorePercent: 0,
+                    comments: "Not submitted before the Q1 deadline.",
+                    status: "overdue",
+                    homeworkCompleted: false,
+                    homeworkOnTime: false,
+                  },
                 ],
                 attendanceHistory: [],
                 gradeHistory: [
@@ -1168,6 +1261,7 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
     },
     "http://127.0.0.1:8787/parent/portal",
     {
+      fixedNow,
       initialAuthState: {
         authenticated: true,
         user: {
@@ -1214,6 +1308,9 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
     const rows = Array.from(grid?.querySelectorAll(".tabulator-row:not(.tabulator-header-row)") || []).map((row) => ({
       text: row.textContent || "",
       isCurrent: row.classList.contains("is-current-quarter"),
+      className: row.className || "",
+      status: row.querySelector(".grade-status-pill")?.textContent || "",
+      backgroundColor: globalThis.window.getComputedStyle(row).backgroundColor,
     }));
     return {
       summary: document.getElementById("portalDetailCalendarSummary")?.textContent || "",
@@ -1233,12 +1330,18 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
   assert.equal(gradesQuarterState.hasCalendar, false)
   assert.equal(gradesQuarterState.hasTabulator, true)
   assert.match(gradesQuarterState.firstRow?.text || "", /Essay Draft/i)
+  assert.match(gradesQuarterState.firstRow?.className || "", /is-open/i)
+  assert.match(gradesQuarterState.firstRow?.status || "", /Open/i)
   assert.match(gradesQuarterState.firstRow?.text || "", /0(?:\.0)?%/)
   assert.match(gradesQuarterState.firstRow?.text || "", /0(?:\.0)?\/10/)
-  assert.equal(gradesQuarterState.rows.length, 2)
+  assert.equal(gradesQuarterState.rows.length, 4)
   assert.match(gradesQuarterState.secondRow?.text || "", /Reading Log/i)
+  assert.match(gradesQuarterState.secondRow?.className || "", /is-completed/i)
+  assert.equal(gradesQuarterState.secondRow?.backgroundColor, "rgb(226, 245, 233)")
   assert.match(gradesQuarterState.secondRow?.text || "", /92(?:\.0)?%/)
   assert.match(gradesQuarterState.secondRow?.text || "", /9\.2\/10/)
+  assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && /is-late/i.test(row.className) && /Completed/i.test(row.status) && /Submitted/i.test(row.text) && /Due/i.test(row.text)));
+  assert.ok(gradesQuarterState.rows.some((row) => /Missed Exercise/i.test(row.text) && /is-missed/i.test(row.className) && /Not Completed/i.test(row.status) && /Submitted pending/i.test(row.text) && /Not submitted before the Q1 deadline/i.test(row.text)));
 
   await settleDomAsync(dom)
   dom.window.close()

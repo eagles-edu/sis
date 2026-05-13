@@ -46,6 +46,7 @@ const CHROMIUM_EXECUTABLE_PATH = resolveChromiumExecutablePath();
 const CHROMIUM_LAUNCH_OPTIONS = CHROMIUM_EXECUTABLE_PATH
   ? { headless: true, executablePath: CHROMIUM_EXECUTABLE_PATH }
   : { headless: true };
+const FIXED_Q1_NOW = "2025-09-10T09:00:00.000Z";
 
 function resolvePlaywrightSkipReason() {
   if (!chromium) return "playwright package is not installed";
@@ -293,6 +294,70 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
             },
             schoolSetup: dashboardSchoolSetup,
             details: {
+              currentQuarterDeadline: "2026-03-31T00:00:00.000Z",
+              unfinishedCurrentQuarterAssignments: [
+                {
+                  id: "bundle-current",
+                  assignmentTemplateId: "bundle-current",
+                  assignmentTitle: "Essay Draft",
+                  itemTitles: ["Essay Draft"],
+                  itemLinks: [
+                    {
+                      id: "bundle-current:item-1",
+                      title: "Essay Draft",
+                      url: "https://example.com/essay-draft",
+                    },
+                  ],
+                  href: "https://example.com/essay-draft",
+                  meta: "Assigned Mar 1, 2026 | Due Mar 15, 2026 | Deadline Mar 31, 2026",
+                  note: "Open the exercise link below to finish this assignment.",
+                  quarterDeadline: "2026-03-31T00:00:00.000Z",
+                  completed: false,
+                  tone: "warn",
+                },
+              ],
+              pastQuartersUnfinishedAssignments: [
+                {
+                  id: "bundle-past-complete",
+                  assignmentTemplateId: "bundle-past-complete",
+                  assignmentTitle: "Late Exercise",
+                  itemTitles: ["Late Exercise"],
+                  itemLinks: [
+                    {
+                      id: "bundle-past-complete:item-1",
+                      title: "Late Exercise",
+                      url: "https://example.com/late-exercise",
+                    },
+                  ],
+                  href: "https://example.com/late-exercise",
+                  meta: "Assigned Feb 1, 2026 | Due Feb 12, 2026 | Deadline Feb 28, 2026",
+                  note: "Completed for progress tracking only.",
+                  quarterDeadline: "2026-02-28T00:00:00.000Z",
+                  completed: true,
+                  tone: "good",
+                  countsTowardQuarter: false,
+                },
+                {
+                  id: "bundle-past-open",
+                  assignmentTemplateId: "bundle-past-open",
+                  assignmentTitle: "Missed Exercise",
+                  itemTitles: ["Missed Exercise"],
+                  itemLinks: [
+                    {
+                      id: "bundle-past-open:item-1",
+                      title: "Missed Exercise",
+                      url: "https://example.com/missed-exercise",
+                    },
+                  ],
+                  href: "https://example.com/missed-exercise",
+                  meta: "Assigned Jan 20, 2026 | Due Jan 28, 2026 | Deadline Jan 31, 2026",
+                  note: "You can still finish this for practice and progress, but it will not change quarter grades.",
+                  quarterDeadline: "2026-01-31T00:00:00.000Z",
+                  completed: false,
+                  tone: "warn",
+                  countsTowardQuarter: false,
+                },
+              ],
               currentHomework: [
                 {
                   id: "hw-current-1",
@@ -336,6 +401,31 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   status: "completed",
                   homeworkOnTime: true,
                 },
+                {
+                  id: "hw-late-1",
+                  assignmentName: "Late Exercise",
+                  className: "A2 Flyers",
+                  dueDate: "2025-09-06",
+                  dueAt: "2025-09-06T00:00:00.000Z",
+                  submittedAt: "2025-09-07T14:30:00.000Z",
+                  scorePercent: 85,
+                  comments: "Submitted after the deadline for Q1 tracking.",
+                  status: "completed",
+                  homeworkCompleted: true,
+                  homeworkOnTime: false,
+                },
+                {
+                  id: "hw-missed-1",
+                  assignmentName: "Missed Exercise",
+                  className: "A2 Flyers",
+                  dueDate: "2025-09-05",
+                  dueAt: "2025-09-05T00:00:00.000Z",
+                  scorePercent: 0,
+                  comments: "Not submitted before the Q1 deadline.",
+                  status: "overdue",
+                  homeworkCompleted: false,
+                  homeworkOnTime: false,
+                },
               ],
               attendanceHistory: [
                 {
@@ -363,6 +453,31 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   scorePercent: 92,
                   comments: "Submitted cleanly and on time.",
                   status: "completed",
+                },
+                {
+                  id: "grade-2",
+                  assignmentName: "Late Exercise",
+                  className: "A2 Flyers",
+                  dueDate: "2025-09-06",
+                  dueAt: "2025-09-06T00:00:00.000Z",
+                  submittedAt: "2025-09-07T14:30:00.000Z",
+                  scorePercent: 85,
+                  comments: "Submitted after the deadline for Q1 tracking.",
+                  status: "completed",
+                  homeworkCompleted: true,
+                  homeworkOnTime: false,
+                },
+                {
+                  id: "grade-3",
+                  assignmentName: "Missed Exercise",
+                  className: "A2 Flyers",
+                  dueDate: "2025-09-05",
+                  dueAt: "2025-09-05T00:00:00.000Z",
+                  scorePercent: 0,
+                  comments: "Not submitted before the Q1 deadline.",
+                  status: "overdue",
+                  homeworkCompleted: false,
+                  homeworkOnTime: false,
                 },
               ],
               reportArchive: [
@@ -677,6 +792,20 @@ test(
 
       browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
       page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+      await page.addInitScript(({ fixedNowIso }) => {
+        const fixedNow = new Date(fixedNowIso).valueOf();
+        if (!Number.isFinite(fixedNow)) return;
+        const RealDate = Date;
+        class MockDate extends RealDate {
+          constructor(...args) {
+            super(...(args.length ? args : [fixedNow]));
+          }
+          static now() {
+            return fixedNow;
+          }
+        }
+        window.Date = MockDate;
+      }, { fixedNowIso: FIXED_Q1_NOW });
 
       await page.goto(`http://127.0.0.1:${port}/student/portal`, { waitUntil: "domcontentloaded" });
       await page.waitForSelector("#loginForm");
@@ -912,9 +1041,13 @@ test(
 
       const gradesQuarterState = await page.evaluate(() => {
         const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
-        const rows = Array.from(grid?.querySelectorAll(".tabulator-row:not(.tabulator-header-row)") || []).map((row) => ({
+        const rowNodes = Array.from(grid?.querySelectorAll(".tabulator-row:not(.tabulator-header-row)") || []);
+        const rows = rowNodes.map((row) => ({
           text: row.textContent || "",
           isCurrent: row.classList.contains("is-current-quarter"),
+          className: row.className || "",
+          status: row.querySelector(".grade-status-pill")?.textContent || "",
+          backgroundColor: globalThis.window.getComputedStyle(row).backgroundColor,
         }));
         return {
           title: globalThis.document.getElementById("studentDetailTitle")?.textContent || "",
@@ -926,6 +1059,9 @@ test(
           rows,
           firstRow: rows[0] || null,
           secondRow: rows[1] || null,
+          statusPillColors: Array.from(grid?.querySelectorAll(".grade-status-pill") || []).map((node) =>
+            globalThis.window.getComputedStyle(node).color
+          ),
           hasCalendar: Boolean(grid?.querySelector(".fc")),
           hasTabulator: Boolean(grid?.querySelector(".tabulator")),
         };
@@ -934,15 +1070,62 @@ test(
       assert.match(gradesQuarterState.title, /Grades YTD/i);
       assert.match(gradesQuarterState.summary, /Q1-Q4|quarter rows are derived|quý/i);
       assert.match(gradesQuarterState.activeQuarter || "", /^Q1/i);
-      assert.equal(gradesQuarterState.rowCount, 2);
+      assert.equal(gradesQuarterState.rowCount, 4);
       assert.equal(gradesQuarterState.hasCalendar, false);
       assert.equal(gradesQuarterState.hasTabulator, true);
       assert.match(gradesQuarterState.firstRow?.text || "", /Essay Draft/i);
+      assert.match(gradesQuarterState.firstRow?.className || "", /is-open/i);
+      assert.match(gradesQuarterState.firstRow?.status || "", /Open/i);
+      assert.equal(gradesQuarterState.firstRow?.backgroundColor, "rgb(255, 240, 204)");
       assert.match(gradesQuarterState.firstRow?.text || "", /0\.0%/);
       assert.match(gradesQuarterState.firstRow?.text || "", /0\.0\/10/);
       assert.match(gradesQuarterState.secondRow?.text || "", /Reading Log/i);
+      assert.match(gradesQuarterState.secondRow?.className || "", /is-completed/i);
+      assert.equal(gradesQuarterState.secondRow?.backgroundColor, "rgb(226, 245, 233)");
       assert.match(gradesQuarterState.secondRow?.text || "", /92(?:\.0)?%/);
       assert.match(gradesQuarterState.secondRow?.text || "", /9\.2\/10/);
+      assert.ok(gradesQuarterState.statusPillColors.length >= 4);
+      assert.ok(gradesQuarterState.statusPillColors.every((color) => color === "rgb(255, 255, 255)"));
+      assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && /is-late/i.test(row.className) && /Completed/i.test(row.status) && /Submitted/i.test(row.text) && /Due/i.test(row.text)));
+      assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && row.backgroundColor === "rgb(243, 236, 255)"));
+      assert.ok(gradesQuarterState.rows.some((row) => /Missed Exercise/i.test(row.text) && /is-missed/i.test(row.className) && /Not Completed/i.test(row.status) && /Submitted pending/i.test(row.text) && /Not submitted before the Q1 deadline/i.test(row.text)));
+
+      const assignmentPanels = await page.evaluate(() => {
+        const primaryPanel = globalThis.document.getElementById("studentDetailPrimaryList");
+        const historyPanel = globalThis.document.getElementById("studentDetailHistoryList");
+        return {
+          primaryTitle: globalThis.document.getElementById("studentDetailPrimaryTitle")?.textContent || "",
+          historyTitle: globalThis.document.getElementById("studentDetailHistoryTitle")?.textContent || "",
+          primarySummary: globalThis.document.getElementById("studentDetailPrimarySummary")?.textContent || "",
+          historySummary: globalThis.document.getElementById("studentDetailHistorySummary")?.textContent || "",
+          primaryText: primaryPanel?.textContent || "",
+          historyText: historyPanel?.textContent || "",
+          primaryLinks: Array.from(primaryPanel?.querySelectorAll("a.detail-link, .detail-item-title a") || []).map((node) => node.getAttribute("href") || ""),
+          historyLinks: Array.from(historyPanel?.querySelectorAll("a.detail-link, .detail-item-title a") || []).map((node) => node.getAttribute("href") || ""),
+          itemCount: {
+            primary: primaryPanel?.querySelectorAll(".detail-item").length || 0,
+            history: historyPanel?.querySelectorAll(".detail-item").length || 0,
+          },
+          historyItemClasses: Array.from(historyPanel?.querySelectorAll(".detail-item") || []).map((node) => node.className || ""),
+        };
+      });
+
+      assert.match(assignmentPanels.primaryTitle, /Unfinished Assignments: Current Quarter/i);
+      assert.match(assignmentPanels.historyTitle, /Past Quarters' Unfinished Assignments/i);
+      assert.match(assignmentPanels.primarySummary, /keep them in this quarter|quarter closes/i);
+      assert.match(assignmentPanels.historySummary, /practice and progress|quarter grades/i);
+      assert.equal(assignmentPanels.itemCount.primary, 1);
+      assert.equal(assignmentPanels.itemCount.history, 2);
+      assert.ok(assignmentPanels.primaryLinks.includes("https://example.com/essay-draft"));
+      assert.ok(assignmentPanels.historyLinks.includes("https://example.com/late-exercise"));
+      assert.ok(assignmentPanels.historyLinks.includes("https://example.com/missed-exercise"));
+      assert.match(assignmentPanels.primaryText, /Assigned/i);
+      assert.match(assignmentPanels.primaryText, /Due/i);
+      assert.match(assignmentPanels.primaryText, /Deadline/i);
+      assert.match(assignmentPanels.historyText, /practice and progress|progress tracking only/i);
+      assert.match(assignmentPanels.historyText, /progress tracking only|practice and progress/i);
+      assert.ok(assignmentPanels.historyItemClasses.some((className) => /\bgood\b/i.test(className)));
+      assert.ok(assignmentPanels.historyItemClasses.some((className) => /\bwarn\b/i.test(className)));
 
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="home"]')?.click();

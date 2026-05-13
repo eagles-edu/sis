@@ -548,8 +548,8 @@ pin_live_env_contract() {
 }
 
 refresh_runtime_prisma_client() {
-  log "refreshing Prisma client in ${LIVE_ROOT}"
-  (cd "${LIVE_ROOT}" && npm run db:generate)
+  log "refreshing Prisma client and applying migrations in ${LIVE_ROOT}"
+  (cd "${LIVE_ROOT}" && npm run db:generate && npm run db:migrate:deploy)
 }
 
 restart_live_service() {

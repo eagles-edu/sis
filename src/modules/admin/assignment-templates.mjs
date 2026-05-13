@@ -146,6 +146,7 @@ function compareKnownLevelOrder(left = "", right = "") {
  *   eaglesId: string,
  *   message: string,
  *   items: AssignmentItem[],
+ *   assignmentBundleJson: AssignmentBundle,
  *   completed: boolean,
  *   completedAt: string,
  *   createdAt: string,
@@ -168,6 +169,7 @@ function compareKnownLevelOrder(left = "", right = "") {
  *   href?: string,
  *   items?: unknown[],
  *   itemsJson?: unknown[],
+ *   assignmentBundleJson?: unknown,
  *   completed?: boolean,
  *   completedAt?: string | Date,
  *   completedDate?: string | Date,
@@ -187,6 +189,21 @@ function compareKnownLevelOrder(left = "", right = "") {
  *   items?: unknown[],
  *   assignmentTemplates?: unknown[],
  * } | unknown[]} AssignmentTemplateImportPayload
+ * @typedef {{
+ *   assignmentTemplateId: string,
+ *   eaglesId: string,
+ *   level: string,
+ *   assignmentTitle: string,
+ *   assignedAt: string,
+ *   dueAt: string,
+ *   items: {
+ *     assignmentTemplateItemId: string,
+ *     title: string,
+ *     url: string,
+ *   }[],
+ *   itemTitles: string[],
+ *   exerciseUrls: string[],
+ * }} AssignmentBundle
  */
 
 /**
@@ -218,6 +235,61 @@ function normalizeAssignmentItems(value = []) {
   return source
     .map((entry, index) => normalizeAssignmentItem(entry, index))
     .filter(Boolean)
+}
+
+/**
+ * @param {AssignmentTemplateSource | Record<string, unknown>} [template]
+ * @returns {AssignmentBundle}
+ */
+export function buildAssignmentTemplateBundle(template = {}) {
+  const source = template && typeof template === "object" ? template : {}
+  const items = normalizeAssignmentItems(source.items || source.itemsJson || []).map((item, index) => ({
+    assignmentTemplateItemId: normalizeText(item.id) || `assignment-item-${index + 1}`,
+    title: normalizeText(item.title),
+    url: normalizeText(item.url),
+  }))
+  return {
+    assignmentTemplateId: normalizeText(source.id || source.assignmentTemplateId),
+    eaglesId: normalizeText(source.eaglesId),
+    level: normalizeText(source.level),
+    assignmentTitle: normalizeText(source.assignmentTitle || source.title || source.exerciseTitle),
+    assignedAt: normalizeText(source.assignedAt || source.dateAssigned),
+    dueAt: normalizeText(source.dueAt || source.dueDate),
+    items,
+    itemTitles: items.map((item) => item.title),
+    exerciseUrls: items.map((item) => item.url),
+  }
+}
+
+/**
+ * @param {AssignmentTemplateSource | Record<string, unknown>} [template]
+ * @returns {{ valid: boolean, issues: string[], bundle: AssignmentBundle }}
+ */
+export function validateAssignmentTemplateBundle(template = {}) {
+  const bundle = buildAssignmentTemplateBundle(template)
+  const issues = []
+  const raw = template && typeof template === "object" ? template : {}
+
+  if (!bundle.assignmentTemplateId) issues.push("assignmentTemplateId")
+  if (!normalizeText(raw.eaglesId)) issues.push("eaglesId")
+  if (!normalizeText(raw.level)) issues.push("level")
+  if (!normalizeText(raw.assignedAt || raw.dateAssigned)) issues.push("assignedAt")
+  if (!normalizeText(raw.dueAt || raw.dueDate)) issues.push("dueAt")
+  if (!normalizeText(raw.assignmentTitle || raw.title || raw.exerciseTitle)) {
+    issues.push("assignmentTitle")
+  }
+  if (!bundle.items.length) issues.push("items")
+  if (bundle.items.some((item) => !item.assignmentTemplateItemId || !item.title || !item.url)) {
+    issues.push("item provenance")
+  }
+  const uniqueItemIds = new Set(bundle.items.map((item) => item.assignmentTemplateItemId))
+  if (uniqueItemIds.size !== bundle.items.length) issues.push("duplicate item ids")
+
+  return {
+    valid: issues.length === 0,
+    issues,
+    bundle,
+  }
 }
 
 /**
@@ -315,6 +387,15 @@ function normalizeAssignmentTemplate(source = {}) {
     completedAt,
     createdAt: normalizeDateOrText(template.createdAt),
     updatedAt: normalizeDateOrText(template.updatedAt),
+    assignmentBundleJson: buildAssignmentTemplateBundle({
+      id,
+      assignmentTitle,
+      assignedAt,
+      dueAt,
+      level,
+      eaglesId,
+      items: normalizedItems,
+    }),
   }
 }
 
@@ -389,18 +470,6 @@ function resetMemoryStore() {
 }
 
 /**
- * @param {unknown} error
- * @returns {void}
- */
-function markAssignmentTemplateDbFallback(error) {
-  assignmentTemplateDbDisabled = true
-  if (assignmentTemplateDbWarned) return
-  assignmentTemplateDbWarned = true
-  const maybeError = /** @type {{ message?: unknown } | null | undefined} */ (error)
-  console.warn(`assignment template store falling back to memory: ${normalizeText(maybeError?.message || error)}`)
-}
-
-/**
  * @returns {Promise<import("@prisma/client").PrismaClient | null>}
  */
 async function getAssignmentTemplatePrismaClient() {
@@ -408,17 +477,13 @@ async function getAssignmentTemplatePrismaClient() {
   if (prismaClientPromise) return prismaClientPromise
 
   prismaClientPromise = (async () => {
-    try {
-      const prisma = await getSharedPrismaClient()
-      if (!prisma || !prisma.assignmentTemplate) {
-        markAssignmentTemplateDbFallback(new Error("Prisma assignmentTemplate model unavailable"))
-        return null
-      }
-      return prisma
-    } catch (error) {
-      markAssignmentTemplateDbFallback(error)
-      return null
+    const prisma = await getSharedPrismaClient()
+    if (!prisma || !prisma.assignmentTemplate) {
+      const error = new Error("assignment template schema mismatch: run Prisma migrate deploy and prisma generate")
+      error.statusCode = 503
+      throw error
     }
+    return prisma
   })()
 
   try {
@@ -445,8 +510,11 @@ async function runAssignmentTemplateDbOperation(handler, fallbackHandler) {
       message.includes("assignmenttemplate") ||
       message.includes("assignment template")
     ) {
-      markAssignmentTemplateDbFallback(error)
-      return fallbackHandler()
+      const schemaError = new Error(
+        "assignment template schema mismatch: run Prisma migrate deploy and prisma generate"
+      )
+      schemaError.statusCode = 503
+      throw schemaError
     }
     throw error
   }
@@ -472,6 +540,7 @@ function mapAssignmentTemplateRow(row = {}) {
     completedAt: row.completedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    assignmentBundleJson: row.assignmentBundleJson,
   })
 }
 
@@ -640,6 +709,13 @@ export async function getAssignmentTemplateById(templateId = "") {
  */
 export async function saveAssignmentTemplate(payload = {}, options = {}) {
   const normalized = normalizeAssignmentTemplate(payload)
+  const validation = validateAssignmentTemplateBundle(normalized)
+  if (!validation.valid) {
+    /** @type {Error & { statusCode?: number }} */
+    const error = new Error(`assignment provenance bundle is incomplete: ${validation.issues.join(", ")}`)
+    error.statusCode = 400
+    throw error
+  }
   const id = normalizeText(options?.templateId || normalized.id)
   if (!id) {
     /** @type {Error & { statusCode?: number }} */
@@ -673,6 +749,7 @@ export async function saveAssignmentTemplate(payload = {}, options = {}) {
           eaglesId: nextTemplate.eaglesId || null,
           message: nextTemplate.message || null,
           itemsJson: nextTemplate.items,
+          assignmentBundleJson: nextTemplate.assignmentBundleJson,
           completed: Boolean(nextTemplate.completed),
           completedAt: nextTemplate.completedAt || null,
         },
@@ -685,6 +762,7 @@ export async function saveAssignmentTemplate(payload = {}, options = {}) {
           eaglesId: nextTemplate.eaglesId || null,
           message: nextTemplate.message || null,
           itemsJson: nextTemplate.items,
+          assignmentBundleJson: nextTemplate.assignmentBundleJson,
           completed: Boolean(nextTemplate.completed),
           completedAt: nextTemplate.completedAt || null,
         },
@@ -701,6 +779,7 @@ export async function saveAssignmentTemplate(payload = {}, options = {}) {
         createdAt,
         updatedAt,
         itemsJson: nextTemplate.items,
+        assignmentBundleJson: nextTemplate.assignmentBundleJson,
       })
       assignmentTemplateMemoryStore.set(id, item)
       return {

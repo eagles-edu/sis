@@ -78,6 +78,8 @@ import {
   getAssignmentTemplateById,
   listAssignmentTemplates,
   saveAssignmentTemplate,
+  buildAssignmentTemplateBundle,
+  validateAssignmentTemplateBundle,
 } from "../src/modules/admin/assignment-templates.mjs"
 import {
   listStudentNewsReportsForReview,
@@ -3905,12 +3907,16 @@ export function buildChildDashboardSnapshot({
   attendanceRows = [],
   gradeRows = [],
   reportRows = [],
+  assignmentTemplates = [],
 } = {}) {
   const schoolSetup = normalizeSchoolSetupSnapshot(readPersistedUiSettings()?.uiSettings?.schoolSetup)
   const details = buildChildDashboardDetails({
+    child,
     attendanceRows,
     gradeRows,
     reportRows,
+    assignmentTemplates,
+    schoolSetup,
   })
   const attendance = {
     total: attendanceRows.length,
@@ -4006,6 +4012,48 @@ function parseIsoDateLocal(value = "") {
   const dateKey = normalizeText(value).slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null
   return parseIsoDateTime(`${dateKey}T00:00:00+07:00`)
+}
+
+function schoolSetupQuarterForIsoDate(value = "", setup = null) {
+  const isoDate = toPortalDateKey(value)
+  if (!isoDate) return null
+  const quarters = Array.isArray(setup?.quarters) ? setup.quarters : []
+  for (let index = 0; index < quarters.length; index += 1) {
+    const entry = quarters[index]
+    const startDate = normalizeText(entry?.startDate).slice(0, 10)
+    const endDate = normalizeText(entry?.endDate).slice(0, 10)
+    if (!startDate || !endDate) continue
+    if (startDate <= isoDate && isoDate <= endDate) return entry
+  }
+  if (
+    normalizeText(setup?.startDate).slice(0, 10) &&
+    normalizeText(setup?.endDate).slice(0, 10) &&
+    normalizeText(setup?.startDate).slice(0, 10) <= isoDate &&
+    isoDate <= normalizeText(setup?.endDate).slice(0, 10)
+  ) {
+    return quarters[quarters.length - 1] || null
+  }
+  return null
+}
+
+function resolveQuarterInfo(value = "", schoolSetup = null) {
+  const configured = schoolSetupQuarterForIsoDate(value, schoolSetup)
+  if (!configured) return null
+  const key = normalizeText(configured.quarter) || normalizeText(configured.key) || ""
+  const quarterLabel = key ? key.toUpperCase() : ""
+  const displayLabel = quarterLabel ?
+    `${quarterLabel} ${normalizeText(configured.startDate).slice(0, 10)}-${normalizeText(configured.endDate).slice(0, 10)}`
+    : `${normalizeText(configured.startDate).slice(0, 10)}-${normalizeText(configured.endDate).slice(0, 10)}`
+  return {
+    key: `${normalizeText(schoolSetup?.schoolYear) || normalizeText(schoolSetup?.startDate).slice(0, 10) || "school"}|${key || normalizeText(configured.startDate).slice(0, 10)}`,
+    schoolYearLabel: normalizeText(schoolSetup?.schoolYear) || "",
+    quarterLabel: quarterLabel || key.toUpperCase() || "Q",
+    displayLabel,
+    sequence: Number.parseInt((key || "q0").replace(/\D/g, ""), 10) || 0,
+    quarter: Number.parseInt((key || "").replace(/\D/g, ""), 10) || 0,
+    startDate: normalizeText(configured.startDate).slice(0, 10),
+    endDate: normalizeText(configured.endDate).slice(0, 10),
+  }
 }
 
 function isoDateOffset(value = "", days = 0) {
@@ -4202,6 +4250,17 @@ function weekdayLabelFromDateKey(value = "") {
   if (!date) return ""
   return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(date)
+}
+
+function formatPortalDate(value = "") {
+  const date = parseIsoDateTime(value) || (value instanceof Date ? value : null)
+  if (!date) return "Date unavailable"
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(date)
 }
@@ -4409,6 +4468,10 @@ function serializeGradeRows(rows = [], now = new Date()) {
         sourceAttemptId: normalizeText(row?.sourceAttemptId),
         sourceOriginLabel: normalizeText(row?.sourceOriginLabel),
         sourceOriginHost: normalizeText(row?.sourceOriginHost),
+        assignmentBundleJson:
+          row?.assignmentBundleJson && typeof row.assignmentBundleJson === "object" ?
+            row.assignmentBundleJson
+            : null,
         status: resolveGradeRecordStatus(row, now),
       }
     })
@@ -4475,13 +4538,188 @@ function serializeReportRows(rows = []) {
     .filter((row) => row.generatedDate)
 }
 
+function normalizeAssignmentBundleRecord(value = {}) {
+  const source = value && typeof value === "object" ? value : {}
+  const bundle = {
+    assignmentTemplateId: normalizeText(source.assignmentTemplateId),
+    eaglesId: normalizeText(source.eaglesId),
+    level: normalizeText(source.level),
+    assignmentTitle: normalizeText(source.assignmentTitle),
+    assignedAt: normalizeText(source.assignedAt),
+    dueAt: normalizeText(source.dueAt),
+    items: Array.isArray(source.items)
+      ? source.items
+          .map((item, index) => ({
+            assignmentTemplateItemId: normalizeText(item?.assignmentTemplateItemId || item?.id) || `assignment-item-${index + 1}`,
+            title: normalizeText(item?.title),
+            url: normalizeText(item?.url),
+          }))
+          .filter((item) => Boolean(item.assignmentTemplateItemId && item.title && item.url))
+      : [],
+    itemTitles: Array.isArray(source.itemTitles)
+      ? source.itemTitles.map((entry) => normalizeText(entry)).filter(Boolean)
+      : [],
+    exerciseUrls: Array.isArray(source.exerciseUrls)
+      ? source.exerciseUrls.map((entry) => normalizeText(entry)).filter(Boolean)
+      : [],
+  }
+  const validation = validateAssignmentTemplateBundle(bundle)
+  return validation.valid ? validation.bundle : null
+}
+
+function buildAssignmentBundleKey(bundle = {}) {
+  const normalized = normalizeAssignmentBundleRecord(bundle)
+  if (!normalized) return ""
+  return JSON.stringify({
+    assignmentTemplateId: normalized.assignmentTemplateId,
+    eaglesId: normalized.eaglesId,
+    level: normalized.level,
+    assignmentTitle: normalized.assignmentTitle,
+    assignedAt: normalized.assignedAt,
+    dueAt: normalized.dueAt,
+    items: normalized.items.map((item) => ({
+      assignmentTemplateItemId: item.assignmentTemplateItemId,
+      title: item.title,
+      url: item.url,
+    })),
+  })
+}
+
+function buildStudentAssignmentDetailRows({
+  child = {},
+  assignmentTemplates = [],
+  gradeRows = [],
+  schoolSetup = null,
+  now = new Date(),
+} = {}) {
+  const studentEaglesId = normalizeText(child?.eaglesId)
+  const currentQuarterInfo = resolveQuarterInfo(now, schoolSetup)
+  const currentQuarterCode = currentQuarterInfo?.quarter ? `q${currentQuarterInfo.quarter}` : ""
+  const currentQuarterDeadline = normalizeText(currentQuarterInfo?.endDate)
+  const templateBundles = (Array.isArray(assignmentTemplates) ? assignmentTemplates : [])
+    .map((template) => {
+      const rawBundle =
+        template?.assignmentBundleJson && typeof template.assignmentBundleJson === "object" ?
+          template.assignmentBundleJson
+          : buildAssignmentTemplateBundle(template)
+      const bundle = normalizeAssignmentBundleRecord(rawBundle)
+      if (!bundle) return null
+      if (studentEaglesId && normalizeText(bundle.eaglesId) && normalizeText(bundle.eaglesId) !== studentEaglesId) {
+        return null
+      }
+      return bundle
+    })
+    .filter(Boolean)
+
+  const gradeBundleByKey = new Map()
+  for (const row of Array.isArray(gradeRows) ? gradeRows : []) {
+    const bundle = normalizeAssignmentBundleRecord(row?.assignmentBundleJson)
+    if (!bundle) continue
+    const key = buildAssignmentBundleKey(bundle)
+    if (!key || gradeBundleByKey.has(key)) continue
+    gradeBundleByKey.set(key, row)
+  }
+
+  const currentQuarterRows = []
+  const pastQuarterRows = []
+
+  templateBundles.forEach((bundle) => {
+    const key = buildAssignmentBundleKey(bundle)
+    const matchedGradeRow = key ? gradeBundleByKey.get(key) || null : null
+    const dueAt = parseIsoDateTime(bundle.dueAt)
+    if (!dueAt) return
+    const quarterInfo = resolveQuarterInfo(dueAt, schoolSetup)
+    const quarterCode = quarterInfo?.quarter ? `q${quarterInfo.quarter}` : ""
+    const quarterDeadline = normalizeText(quarterInfo?.endDate || bundle.dueAt)
+    const completed = Boolean(matchedGradeRow?.homeworkCompleted === true || matchedGradeRow?.submittedAt)
+    const submittedAt = parseIsoDateTime(matchedGradeRow?.submittedAt)
+    const lateCompleted = Boolean(completed && submittedAt && submittedAt > dueAt)
+    const itemLinks = bundle.items.map((item, index) => ({
+      id: `${bundle.assignmentTemplateId}:${item.assignmentTemplateItemId}`,
+      title: item.title || bundle.assignmentTitle || `Exercise ${index + 1}`,
+      url: item.url,
+    }))
+    const baseRow = {
+      id: key || `${bundle.assignmentTemplateId}:${bundle.assignmentTitle}`,
+      assignmentTemplateId: bundle.assignmentTemplateId,
+      assignmentTemplateItemId: bundle.items.map((item) => item.assignmentTemplateItemId),
+      assignmentTitle: bundle.assignmentTitle,
+      itemTitles: bundle.itemTitles,
+      itemLinks,
+      href: itemLinks[0]?.url || "",
+      title: bundle.assignmentTitle || itemLinks[0]?.title || "Assignment",
+      meta: `Assigned ${formatPortalDate(bundle.assignedAt)} | Due ${formatPortalDate(bundle.dueAt)} | Deadline ${formatPortalDate(quarterDeadline)}`,
+      note: bundle.items.length > 1 ?
+        "Open the exercise links below to finish this assignment." :
+        "Open the exercise link below to finish this assignment.",
+      quarterDeadline,
+      quarterCode,
+      assignedAt: bundle.assignedAt,
+      dueAt: bundle.dueAt,
+      completed,
+      lateCompleted,
+      status: completed ? "completed" : "open",
+      gradeDisposition: quarterCode === currentQuarterCode ? (completed ? "current-completed" : "current-open") : (completed ? "past-completed" : "past-open"),
+      countsTowardQuarter: quarterCode === currentQuarterCode && !completed,
+      tone: completed ? "good" : "warn",
+    }
+
+    if (quarterCode === currentQuarterCode) {
+      if (!completed) currentQuarterRows.push(baseRow)
+      return
+    }
+    pastQuarterRows.push({
+      ...baseRow,
+      note: completed ?
+        "Completed for progress tracking only." :
+        "You can still finish this for practice and progress, but it will not change quarter grades.",
+      tone: completed ? "good" : "warn",
+      countsTowardQuarter: false,
+    })
+  })
+
+  currentQuarterRows.sort((left, right) => {
+    const leftDue = parseIsoDateTime(left.dueAt)?.valueOf() || 0
+    const rightDue = parseIsoDateTime(right.dueAt)?.valueOf() || 0
+    if (leftDue !== rightDue) return leftDue - rightDue
+    return normalizeText(left.title).localeCompare(normalizeText(right.title))
+  })
+  pastQuarterRows.sort((left, right) => {
+    const leftQuarter = normalizeText(left.quarterCode)
+    const rightQuarter = normalizeText(right.quarterCode)
+    if (leftQuarter !== rightQuarter) return leftQuarter.localeCompare(rightQuarter)
+    const leftDue = parseIsoDateTime(left.dueAt)?.valueOf() || 0
+    const rightDue = parseIsoDateTime(right.dueAt)?.valueOf() || 0
+    if (leftDue !== rightDue) return leftDue - rightDue
+    if (left.completed !== right.completed) return left.completed ? 1 : -1
+    return normalizeText(left.title).localeCompare(normalizeText(right.title))
+  })
+
+  return {
+    currentQuarterDeadline,
+    currentQuarterRows,
+    pastQuarterRows,
+    currentQuarterCode,
+  }
+}
+
 function buildChildDashboardDetails({
+  child = {},
   attendanceRows = [],
   gradeRows = [],
   reportRows = [],
+  assignmentTemplates = [],
+  schoolSetup = null,
 } = {}) {
   const assignmentHistory = serializeGradeRows(gradeRows, new Date())
   const gradeHistory = assignmentHistory.filter((row) => row.status === "completed" || row.scorePercent !== null)
+  const assignmentFocus = buildStudentAssignmentDetailRows({
+    child,
+    assignmentTemplates,
+    gradeRows,
+    schoolSetup,
+    now: new Date(),
+  })
   return {
     attendanceHistory: serializeAttendanceRows(attendanceRows).slice(0, 90),
     assignmentHistory: assignmentHistory.slice(0, 48),
@@ -4489,6 +4727,9 @@ function buildChildDashboardDetails({
     overdueHomework: assignmentHistory.filter((row) => row.status === "overdue").slice(0, 24),
     gradeHistory: gradeHistory.slice(0, 36),
     reportArchive: serializeReportRows(reportRows).slice(0, 24),
+    currentQuarterDeadline: assignmentFocus.currentQuarterDeadline,
+    unfinishedCurrentQuarterAssignments: assignmentFocus.currentQuarterRows.slice(0, 24),
+    pastQuartersUnfinishedAssignments: assignmentFocus.pastQuarterRows.slice(0, 24),
   }
 }
 
@@ -4670,7 +4911,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
 
   try {
     const prisma = await getSharedPrismaClient()
-    const [student, attendanceRows, gradeRows, reportRows, pointsLedger] = await Promise.all([
+    const [student, attendanceRows, gradeRows, reportRows, pointsLedger, assignmentTemplates] = await Promise.all([
       prisma.student.findUnique({
         where: { id },
         select: {
@@ -4693,6 +4934,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
         orderBy: { generatedAt: "desc" },
       }),
       listStudentPointsLedger(id, { take: 1 }),
+      listAssignmentTemplates({ take: 1000 }),
     ])
     const newsCalendar = await listStudentNewsCalendar(id, { now: new Date(), days: 60 })
     const backfilledReportRows = await backfillLegacyParentReportMetadataRows({
@@ -4711,6 +4953,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       attendanceRows,
       gradeRows,
       reportRows: backfilledReportRows,
+      assignmentTemplates,
     })
     const pointsSummary = pointsLedger?.summary && typeof pointsLedger.summary === "object"
       ? pointsLedger.summary

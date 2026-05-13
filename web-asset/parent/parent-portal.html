@@ -430,6 +430,10 @@
       width: 100%;
     }
 
+    .grade-tabulator {
+      width: 100%;
+    }
+
     .grade-tabulator-shell .tabulator {
       background: transparent;
       border: none;
@@ -825,7 +829,8 @@
 
     .grade-status-pill {
       align-items: center;
-      border: 1px solid var(--line);
+      background: #55389f;
+      border: 1px solid #3f2977;
       border-radius: 999px;
       box-sizing: border-box;
       display: inline-flex;
@@ -836,19 +841,40 @@
       line-height: 1;
       padding: 0.22rem 0.52rem;
       text-transform: uppercase;
+      color: #fff;
       width: fit-content;
     }
 
     .grade-status-pill.is-good {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
+      background: #1f7a47;
+      border-color: #175a35;
+      color: #fff;
     }
 
     .grade-status-pill.is-warn {
-      background: var(--portal-status-warn-bg);
-      border-color: var(--portal-status-warn-border);
-      color: var(--portal-status-warn-text);
+      background: #a86400;
+      border-color: #7f4b00;
+      color: #fff;
+    }
+
+    .grade-status-pill.is-bad {
+      background: #b23a2e;
+      border-color: #7f291f;
+      color: #fff;
+    }
+
+    .grade-status-pill.is-late {
+      background: #55389f;
+      border-color: #3f2977;
+      color: #fff;
+    }
+
+    .grade-status-stack {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.28rem;
+      justify-content: flex-start;
     }
 
     .grade-exercise-score {
@@ -947,7 +973,7 @@
     }
 
     html[data-theme="dark"] .quarter-board-card.is-current {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-card) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-surface-card));
+      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-panel) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-surface-panel));
     }
 
     html[data-theme="dark"] .quarter-board-meta-chip {
@@ -1012,15 +1038,27 @@
     }
 
     html[data-theme="dark"] .grade-status-pill.is-good {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
+      background: #1f7a47;
+      border-color: #175a35;
+      color: #fff;
     }
 
     html[data-theme="dark"] .grade-status-pill.is-warn {
-      background: var(--portal-status-warn-bg);
-      border-color: var(--portal-status-warn-border);
-      color: var(--portal-status-warn-text);
+      background: #a86400;
+      border-color: #7f4b00;
+      color: #fff;
+    }
+
+    html[data-theme="dark"] .grade-status-pill.is-bad {
+      background: #b23a2e;
+      border-color: #7f291f;
+      color: #fff;
+    }
+
+    html[data-theme="dark"] .grade-status-pill.is-late {
+      background: #55389f;
+      border-color: #3f2977;
+      color: #fff;
     }
 
     html[data-theme="dark"] .grade-exercise-score {
@@ -1031,6 +1069,78 @@
     html[data-theme="dark"] .grade-exercise-score.is-open {
       background: var(--portal-dark-surface-card);
       border-color: var(--portal-dark-border);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-open {
+      background: #fff0cc;
+      box-shadow: inset 4px 0 0 #a86400;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
+      background: #ffe4a3;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
+      background: #e2f5e9;
+      box-shadow: inset 4px 0 0 #1f7a47;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
+      background: #d3ecd9;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-late {
+      background: #f3ecff;
+      box-shadow: inset 4px 0 0 #55389f;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
+      background: #ede3ff;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
+      background: #ffd7d4;
+      box-shadow: inset 4px 0 0 #b23a2e;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
+      background: #ffc9c4;
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open {
+      background: color-mix(in srgb, var(--portal-dark-surface-support) 74%, #a86400 26%);
+      box-shadow: inset 4px 0 0 #a86400;
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
+      background: color-mix(in srgb, var(--portal-dark-surface-support) 64%, #a86400 36%);
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
+      background: color-mix(in srgb, #1f7a47 18%, var(--portal-dark-surface-card) 82%);
+      box-shadow: inset 4px 0 0 #1f7a47;
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
+      background: color-mix(in srgb, #1f7a47 24%, var(--portal-dark-surface-support) 76%);
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late {
+      background: color-mix(in srgb, var(--portal-dark-surface-support) 72%, #55389f 28%);
+      box-shadow: inset 4px 0 0 #55389f;
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
+      background: color-mix(in srgb, var(--portal-dark-surface-support) 62%, #55389f 38%);
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
+      background: color-mix(in srgb, #b23a2e 18%, var(--portal-dark-surface-card) 82%);
+      box-shadow: inset 4px 0 0 #b23a2e;
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
+      background: color-mix(in srgb, #b23a2e 24%, var(--portal-dark-surface-support) 76%);
     }
 
     html[data-theme="dark"] .grade-exercise-score-sub,
@@ -1061,6 +1171,14 @@
       gap: 12px;
       min-width: 0;
       padding: 14px;
+    }
+
+    html[data-theme="dark"] .quarter-board-card {
+      background: var(--portal-dark-surface-panel);
+    }
+
+    .quarter-board-maintenance-card {
+      min-width: 0;
     }
 
     .quarter-board-card.is-current {
@@ -3821,6 +3939,47 @@
       return quarterLabelFromDateWithSetup(value, schoolSetup) || null;
     }
 
+    function parseQuarterEndTimestamp(endDate = "") {
+      const endDateText = normalizeText(endDate).slice(0, 10);
+      if (!endDateText) return null;
+      const parsed = new Date(`${endDateText}T23:59:59.999`);
+      return Number.isNaN(parsed.valueOf()) ? null : parsed.valueOf();
+    }
+
+    function resolveQuarterExerciseState(row = {}, quarterGroup = {}, asOfMs = Date.now()) {
+      const dueText = normalizeText(row.dueAt || row.dueDate).slice(0, 10);
+      const submittedText = normalizeText(row.submittedAt || row.submittedDate).slice(0, 10);
+      const dueAt = dueText ? new Date(dueText) : null;
+      const submittedAt = submittedText ? new Date(submittedText) : null;
+      const dueAtMs = dueAt instanceof Date && !Number.isNaN(dueAt.valueOf()) ? dueAt.valueOf() : null;
+      const submittedAtMs = submittedAt instanceof Date && !Number.isNaN(submittedAt.valueOf()) ? submittedAt.valueOf() : null;
+      const quarterEndMs = parseQuarterEndTimestamp(quarterGroup?.endDate);
+      const completed = submittedAtMs !== null
+        ? quarterEndMs === null || submittedAtMs <= quarterEndMs
+        : normalizeText(row?.status).toLowerCase() === "completed" || row?.homeworkCompleted === true;
+      const lateCompleted = Boolean(
+        completed &&
+        dueAtMs !== null &&
+        submittedAtMs !== null &&
+        submittedAtMs > dueAtMs
+      );
+      const missed = Boolean(!completed && dueAtMs !== null && asOfMs > dueAtMs);
+      const open = Boolean(!completed && !missed);
+      return {
+        completed,
+        dueAt,
+        dueAtMs,
+        dueLabel: dueText ? formatPortalDate(dueText) : "",
+        lateCompleted,
+        missed,
+        open,
+        quarterEndMs,
+        submittedAt,
+        submittedAtMs,
+        submittedLabel: submittedText ? formatPortalDate(submittedText) : "",
+      };
+    }
+
     function resolveQuarterMatrixCurrentCode(groups = [], schoolSetup = null, fallbackCode = "") {
       const setupQuarter = resolveQuarterInfo(new Date(), schoolSetup);
       const setupQuarterCode = setupQuarter?.quarter ? `q${setupQuarter.quarter}` : "";
@@ -3863,7 +4022,7 @@
           });
         }
         const scoreValue = Number(row?.scorePercent);
-        const completed = normalizeText(row?.status).toLowerCase() === "completed" || Number.isFinite(scoreValue);
+        const rowState = resolveQuarterExerciseState(row, quarter, Date.now());
         const normalizedRow = {
           ...row,
           quarterKey: quarter.key,
@@ -3872,8 +4031,13 @@
           quarterLabel: quarter.displayLabel,
           scorePercent: Number.isFinite(scoreValue) ? scoreValue : 0,
           scoreOutOfTen: Number.isFinite(scoreValue) ? scoreValue / 10 : 0,
-          completed,
+          completed: rowState.completed,
+          lateCompleted: rowState.lateCompleted,
+          missed: rowState.missed,
+          open: rowState.open,
           rowDate,
+          dueLabel: rowState.dueLabel,
+          submittedLabel: rowState.submittedLabel,
         };
         const rowTimestamp = new Date(rowDate).getTime();
         if (Number.isFinite(rowTimestamp) && rowTimestamp >= latestRowTimestamp) {
@@ -3939,27 +4103,40 @@
     function buildQuarterExerciseTableRows(quarterGroup = {}, currentQuarterCode = "") {
       const rows = Array.isArray(quarterGroup.rows) ? quarterGroup.rows : [];
       const activeQuarterCode = normalizeText(quarterGroup.quarterCode || currentQuarterCode);
+      const nowMs = Date.now();
       return rows.map((row, index) => {
         const rowDate = row.submittedAt || row.submittedDate || row.dueAt || row.dueDate;
         const scorePercent = Number(row.scorePercent);
-        const completed = Boolean(row.completed);
+        const rowState = resolveQuarterExerciseState(row, quarterGroup, nowMs);
+        const exerciseStateLabel = rowState.missed
+          ? "Not Completed"
+          : rowState.lateCompleted
+            ? "Completed"
+            : rowState.completed
+              ? "Completed"
+              : "Open";
         const originLabel = normalizeText(row.sourceOriginLabel) || normalizeText(row.sourceSystem) || "Origin pending";
         const originHost = normalizeText(row.sourceOriginHost);
         return {
           id: normalizeText(row.id) || `${activeQuarterCode}-${index}`,
           rowOrder: index,
           current: activeQuarterCode === currentQuarterCode,
-          completed,
+          completed: rowState.completed,
+          lateCompleted: rowState.lateCompleted,
+          missed: rowState.missed,
+          open: rowState.open,
           exerciseLabel: normalizeText(row.assignmentName) || "Exercise",
           exerciseMeta: [
-            completed ? "Completed" : "Open",
-            formatPortalDate(rowDate),
+            exerciseStateLabel,
+            rowState.lateCompleted ? "Late submission" : formatPortalDate(rowDate),
           ].filter(Boolean).join(" | "),
           originLabel,
           originHost,
-          dateLabel: formatPortalDate(rowDate),
-          statusLabel: completed ? "Completed" : "Open",
-          statusTone: completed ? "good" : "warn",
+          dateLabel: rowState.dueLabel || formatPortalDate(rowDate),
+          dueLabel: rowState.dueLabel,
+          submittedLabel: rowState.submittedLabel,
+          statusLabel: rowState.open ? "Open" : rowState.missed ? "Not Completed" : "Completed",
+          statusTone: rowState.open ? "warn" : rowState.missed ? "bad" : "good",
           scorePercent: Number.isFinite(scorePercent) ? scorePercent : 0,
           scoreOutOfTen: Number.isFinite(scorePercent) ? scorePercent / 10 : 0,
           commentLabel: normalizeText(row.comments) || "No grading comment was recorded.",
@@ -4206,13 +4383,13 @@
                 const data = cell.getRow().getData() || {};
                 const wrap = document.createElement("div");
                 wrap.className = "grade-exercise-cell";
-                const dateValue = document.createElement("div");
-                dateValue.className = "grade-exercise-title";
-                dateValue.textContent = normalizeText(data.dateLabel) || "-";
-                const dateMeta = document.createElement("div");
-                dateMeta.className = "grade-exercise-meta";
-                dateMeta.textContent = "Date-based quarter grouping";
-                wrap.append(dateValue, dateMeta);
+                const dueValue = document.createElement("div");
+                dueValue.className = "grade-exercise-title";
+                dueValue.textContent = `Due ${normalizeText(data.dueLabel) || normalizeText(data.dateLabel) || "-"}`;
+                const submittedValue = document.createElement("div");
+                submittedValue.className = "grade-exercise-meta";
+                submittedValue.textContent = data.submittedLabel ? `Submitted ${normalizeText(data.submittedLabel)}` : "Submitted pending";
+                wrap.append(dueValue, submittedValue);
                 return wrap;
               },
             },
@@ -4225,10 +4402,20 @@
                 headerClick: handleHeaderActionClick,
                 formatter: (cell) => {
                 const data = cell.getRow().getData() || {};
+                const stack = document.createElement("div");
+                stack.className = "grade-status-stack";
                 const pill = document.createElement("span");
-                pill.className = `grade-status-pill ${normalizeText(data.statusTone) === "warn" ? "is-warn" : "is-good"}`;
+                const tone = normalizeText(data.statusTone);
+                pill.className = `grade-status-pill ${tone === "bad" ? "is-bad" : tone === "warn" ? "is-warn" : "is-good"}`;
                 pill.textContent = normalizeText(data.statusLabel) || "-";
-                return pill;
+                stack.append(pill);
+                if (data.lateCompleted) {
+                  const latePill = document.createElement("span");
+                  latePill.className = "grade-status-pill is-late";
+                  latePill.textContent = "Late";
+                  stack.append(latePill);
+                }
+                return stack;
               },
             },
               {
@@ -4269,13 +4456,16 @@
             },
           ],
           rowFormatter: (row) => {
-            const data = row.getData() || {};
-            const element = row.getElement();
-            if (!element) return;
-            element.classList.toggle("is-current-quarter", Boolean(data.current));
-            element.classList.toggle("is-open", !data.completed);
-          },
-        });
+          const data = row.getData() || {};
+          const element = row.getElement();
+          if (!element) return;
+          element.classList.toggle("is-current-quarter", Boolean(data.current));
+          element.classList.toggle("is-open", Boolean(data.open));
+          element.classList.toggle("is-completed", Boolean(data.completed && !data.lateCompleted && !data.missed));
+          element.classList.toggle("is-late", Boolean(data.lateCompleted));
+          element.classList.toggle("is-missed", Boolean(data.missed));
+        },
+      });
         wireQuarterHeaderActionButtons(state.detailGradeTable);
       }
 
