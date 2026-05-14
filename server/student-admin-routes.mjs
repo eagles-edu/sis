@@ -2126,10 +2126,7 @@ function normalizeUiSettingsPayload(payload = {}) {
     const normalized = JSON.parse(JSON.stringify(candidate))
     const schoolSetup = normalized?.schoolSetup
     if (schoolSetup && typeof schoolSetup === "object" && !Array.isArray(schoolSetup)) {
-      normalized.schoolSetup = {
-        ...schoolSetup,
-        ...normalizeSchoolSetupSnapshot(schoolSetup),
-      }
+      normalized.schoolSetup = normalizeSchoolSetupSnapshot(schoolSetup)
     }
     return normalized
   } catch (error) {
@@ -2145,21 +2142,13 @@ function uiSettingsMetaFromPayload(payload = {}) {
     candidate.schoolSetup :
     null
   const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : []
-  const startDate = normalizeText(schoolSetup?.startDate).slice(0, 10)
-  const endDate = normalizeText(schoolSetup?.endDate).slice(0, 10)
-  const hasValidRange = parseIsoDateLocal(startDate) && parseIsoDateLocal(endDate) && compareIsoDateText(startDate, endDate) <= 0
-  const validQuarters = quarters.filter((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return false
-    const quarter = normalizeText(entry?.quarter || entry?.key).toLowerCase()
-    const quarterStart = normalizeText(entry?.startDate).slice(0, 10)
-    const quarterEnd = normalizeText(entry?.endDate).slice(0, 10)
-    return /^q[1-4]$/.test(quarter) && parseIsoDateLocal(quarterStart) && parseIsoDateLocal(quarterEnd) && compareIsoDateText(quarterStart, quarterEnd) <= 0
-  })
+  const validation = validateSchoolSetupSnapshot(schoolSetup)
   return {
     schoolSetupStoredQuarterCount: quarters.length,
     schoolSetupStoredQuartersPresent: quarters.length > 0,
     schoolSetupStoredQuartersMissing: quarters.length < 4,
-    schoolSetupHasIssues: !hasValidRange || validQuarters.length !== quarters.length || validQuarters.length < 4,
+    schoolSetupState: validation.schoolSetupState,
+    schoolSetupHasIssues: validation.schoolSetupState !== "ok",
   }
 }
 
@@ -2209,6 +2198,14 @@ function readPersistedUiSettings() {
 
 function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
   const uiSettings = normalizeUiSettingsPayload(payload)
+  if (Object.prototype.hasOwnProperty.call(uiSettings, "schoolSetup")) {
+    const schoolSetupState = normalizeText(uiSettings?.schoolSetup?.schoolSetupState)
+    if (schoolSetupState && schoolSetupState !== "ok") {
+      const error = new Error("School setup must include four explicit quarters before saving.")
+      error.statusCode = 422
+      throw error
+    }
+  }
   const updatedAt = nowIso()
   const updatedBy = normalizeText(updatedByUsername) || null
   const meta = uiSettingsMetaFromPayload({ uiSettings })
@@ -3973,6 +3970,7 @@ export function buildChildDashboardSnapshot({
     },
     performance,
     schoolSetup,
+    schoolSetupState: normalizeText(schoolSetup?.schoolSetupState) || "maintenance",
     details,
   }
 }
@@ -4024,14 +4022,6 @@ function schoolSetupQuarterForIsoDate(value = "", setup = null) {
     const endDate = normalizeText(entry?.endDate).slice(0, 10)
     if (!startDate || !endDate) continue
     if (startDate <= isoDate && isoDate <= endDate) return entry
-  }
-  if (
-    normalizeText(setup?.startDate).slice(0, 10) &&
-    normalizeText(setup?.endDate).slice(0, 10) &&
-    normalizeText(setup?.startDate).slice(0, 10) <= isoDate &&
-    isoDate <= normalizeText(setup?.endDate).slice(0, 10)
-  ) {
-    return quarters[quarters.length - 1] || null
   }
   return null
 }
@@ -4179,38 +4169,90 @@ function inferSchoolYearFromQuarters(quarters = []) {
   return `${startYear}-${endYear}`
 }
 
-function normalizeSchoolSetupSnapshot(source = {}) {
-  const fallback = {
-    startDate: "",
-    endDate: "",
-    schoolYear: "",
-    quarters: [],
-  }
+function defaultSchoolLetterGradeRanges() {
+  return [
+    { letter: "A", minPercent: 92, maxPercent: 100 },
+    { letter: "B", minPercent: 84, maxPercent: 91.99 },
+    { letter: "C", minPercent: 76, maxPercent: 83.99 },
+    { letter: "D", minPercent: 60, maxPercent: 75.99 },
+    { letter: "F", minPercent: 0, maxPercent: 59.99 },
+  ]
+}
+
+function normalizeSchoolPercentValue(value) {
+  const parsed = Number.parseFloat(String(value))
+  if (!Number.isFinite(parsed)) return null
+  if (parsed < 0) return 0
+  if (parsed > 100) return 100
+  return parsed
+}
+
+function normalizeSchoolLetterGradeRanges(values = []) {
+  const source = Array.isArray(values) ? values : []
+  const mapped = source
+    .map((entry) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null
+      const letter = normalizeText(entry?.letter).toUpperCase()
+      const minPercent = normalizeSchoolPercentValue(entry?.minPercent)
+      const maxPercent = normalizeSchoolPercentValue(entry?.maxPercent)
+      if (!letter) return null
+      if (!Number.isFinite(minPercent) || !Number.isFinite(maxPercent)) return null
+      return {
+        letter,
+        minPercent: Math.min(minPercent, maxPercent),
+        maxPercent: Math.max(minPercent, maxPercent),
+      }
+    })
+    .filter((entry) => entry && typeof entry === "object")
+    .sort((left, right) => right.minPercent - left.minPercent)
+  if (!mapped.length) return defaultSchoolLetterGradeRanges()
+  return mapped
+}
+
+function validateSchoolSetupSnapshot(source = {}) {
   const normalizedSource = source && typeof source === "object" ? source : {}
-  const startDate = normalizeText(source?.startDate).slice(0, 10)
-  const endDate = normalizeText(source?.endDate).slice(0, 10)
-  const sourceQuarters = Array.isArray(normalizedSource?.quarters) ? normalizedSource.quarters : []
-  const quarters = sourceQuarters
+  const startDate = normalizeText(normalizedSource?.startDate).slice(0, 10)
+  const endDate = normalizeText(normalizedSource?.endDate).slice(0, 10)
+  const schoolYear = normalizeText(normalizedSource?.schoolYear)
+  const quarters = (Array.isArray(normalizedSource?.quarters) ? normalizedSource.quarters : [])
     .map((entry) => normalizeSchoolSetupQuarterEntry(entry))
     .filter(Boolean)
     .sort((left, right) => compareIsoDateText(left.startDate, right.startDate) || compareIsoDateText(left.endDate, right.endDate))
-  const hasValidRange = parseIsoDateLocal(startDate) && parseIsoDateLocal(endDate) && compareIsoDateText(startDate, endDate) <= 0
-  const resolvedQuarters = quarters.length ? quarters : (hasValidRange ? splitSchoolYearIntoQuarters(startDate, endDate) : [])
-  if (!resolvedQuarters.length) {
-    return fallback
-  }
-  const resolvedStartDate = parseIsoDateLocal(startDate) ? startDate : resolvedQuarters[0]?.startDate || ""
-  const resolvedEndDate = parseIsoDateLocal(endDate) ? endDate : resolvedQuarters[resolvedQuarters.length - 1]?.endDate || ""
-  const normalizedSchoolYear = normalizeText(normalizedSource?.schoolYear)
+  const letterGradeRanges = normalizeSchoolLetterGradeRanges(normalizedSource?.letterGradeRanges)
+  const validStart = parseIsoDateLocal(startDate)
+  const validEnd = parseIsoDateLocal(endDate)
+  const hasValidRange = Boolean(validStart && validEnd && compareIsoDateText(startDate, endDate) <= 0)
+  const derivedSchoolYear = hasValidRange ? `${validStart.getUTCFullYear()}-${validEnd.getUTCFullYear()}` : ""
+  const hasValidSchoolYear = Boolean(/^(\d{4})-(\d{4})$/.test(schoolYear) && schoolYear === derivedSchoolYear)
+  const hasSequentialQuarters = quarters.length === 4 && quarters.every((quarter, index) => {
+    const expectedQuarter = `q${index + 1}`
+    if (!quarter || normalizeText(quarter.quarter).toLowerCase() !== expectedQuarter) return false
+    if (!parseIsoDateLocal(quarter.startDate) || !parseIsoDateLocal(quarter.endDate)) return false
+    if (compareIsoDateText(quarter.startDate, quarter.endDate) > 0) return false
+    if (index === 0) {
+      if (quarter.startDate !== startDate) return false
+    } else {
+      const previousQuarter = quarters[index - 1]
+      if (isoDateOffset(previousQuarter.endDate, 1) !== quarter.startDate) return false
+    }
+    if (index === quarters.length - 1 && quarter.endDate !== endDate) return false
+    return true
+  })
+  const schoolSetupState = hasValidRange && hasValidSchoolYear && hasSequentialQuarters ? "ok" : "maintenance"
   return {
-    startDate: resolvedStartDate,
-    endDate: resolvedEndDate,
-    schoolYear: normalizedSchoolYear || inferSchoolYearFromQuarters(resolvedQuarters) || (
-      parseIsoDateLocal(resolvedStartDate) && parseIsoDateLocal(resolvedEndDate) ?
-        `${parseIsoDateLocal(resolvedStartDate).getUTCFullYear()}-${parseIsoDateLocal(resolvedEndDate).getUTCFullYear()}` :
-        ""
-    ),
-    quarters: resolvedQuarters,
+    startDate,
+    endDate,
+    schoolYear,
+    quarters,
+    letterGradeRanges,
+    schoolSetupState,
+  }
+}
+
+function normalizeSchoolSetupSnapshot(source = {}) {
+  const normalized = validateSchoolSetupSnapshot(source)
+  return {
+    ...normalized,
   }
 }
 
@@ -4593,9 +4635,11 @@ function buildStudentAssignmentDetailRows({
   now = new Date(),
 } = {}) {
   const studentEaglesId = normalizeText(child?.eaglesId)
+  const schoolSetupState = normalizeText(schoolSetup?.schoolSetupState) || "maintenance"
   const currentQuarterInfo = resolveQuarterInfo(now, schoolSetup)
   const currentQuarterCode = currentQuarterInfo?.quarter ? `q${currentQuarterInfo.quarter}` : ""
   const currentQuarterDeadline = normalizeText(currentQuarterInfo?.endDate)
+  let hasQuarterClassificationIssues = false
   const templateBundles = (Array.isArray(assignmentTemplates) ? assignmentTemplates : [])
     .map((template) => {
       const rawBundle =
@@ -4630,6 +4674,10 @@ function buildStudentAssignmentDetailRows({
     if (!dueAt) return
     const quarterInfo = resolveQuarterInfo(dueAt, schoolSetup)
     const quarterCode = quarterInfo?.quarter ? `q${quarterInfo.quarter}` : ""
+    if (!quarterCode) {
+      hasQuarterClassificationIssues = true
+      return
+    }
     const quarterDeadline = normalizeText(quarterInfo?.endDate || bundle.dueAt)
     const completed = Boolean(matchedGradeRow?.homeworkCompleted === true || matchedGradeRow?.submittedAt)
     const submittedAt = parseIsoDateTime(matchedGradeRow?.submittedAt)
@@ -4700,6 +4748,7 @@ function buildStudentAssignmentDetailRows({
     currentQuarterRows,
     pastQuarterRows,
     currentQuarterCode,
+    quarterBoardState: schoolSetupState !== "ok" || hasQuarterClassificationIssues ? "maintenance" : "ok",
   }
 }
 
@@ -4730,6 +4779,7 @@ function buildChildDashboardDetails({
     currentQuarterDeadline: assignmentFocus.currentQuarterDeadline,
     unfinishedCurrentQuarterAssignments: assignmentFocus.currentQuarterRows.slice(0, 24),
     pastQuartersUnfinishedAssignments: assignmentFocus.pastQuarterRows.slice(0, 24),
+    quarterBoardState: assignmentFocus.quarterBoardState,
   }
 }
 

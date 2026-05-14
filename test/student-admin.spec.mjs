@@ -647,7 +647,7 @@ test("buildChildDashboardSnapshot counts late attendance as present", () => {
   assert.equal(snapshot.attendance.excused, 0)
 })
 
-test("buildChildDashboardSnapshot keeps stored school setup quarters when dates are blank", () => {
+test("buildChildDashboardSnapshot preserves stored school setup quarters and fails closed when dates are blank", () => {
   const adminUiSettingsPath = path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
   const priorAdminUiSettings = fs.existsSync(adminUiSettingsPath)
     ? fs.readFileSync(adminUiSettingsPath, "utf8")
@@ -683,13 +683,15 @@ test("buildChildDashboardSnapshot keeps stored school setup quarters when dates 
     })
 
     assert.equal(snapshot.schoolSetup.schoolYear, "2026-2027")
-    assert.equal(snapshot.schoolSetup.startDate, "2026-08-10")
-    assert.equal(snapshot.schoolSetup.endDate, "2027-06-25")
+    assert.equal(snapshot.schoolSetup.startDate, "")
+    assert.equal(snapshot.schoolSetup.endDate, "")
     assert.equal(snapshot.schoolSetup.quarters.length, 4)
     assert.deepEqual(
       snapshot.schoolSetup.quarters.map((quarter) => quarter.quarter),
       ["q1", "q2", "q3", "q4"],
     )
+    assert.equal(snapshot.schoolSetupState, "maintenance")
+    assert.equal(snapshot.details.quarterBoardState, "maintenance")
   } finally {
     if (priorAdminUiSettings !== null) {
       fs.writeFileSync(adminUiSettingsPath, priorAdminUiSettings, "utf8")
@@ -845,7 +847,7 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
     assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].href, "https://example.com/past/write")
     assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].tone, "good")
     assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].countsTowardQuarter, false)
-    assert.match(snapshot.details.pastQuartersUnfinishedAssignments[0].note || "", /not included/i)
+    assert.match(snapshot.details.pastQuartersUnfinishedAssignments[0].note || "", /progress tracking only/i)
   } finally {
     if (priorAdminUiSettings !== null) {
       fs.writeFileSync(adminUiSettingsPath, priorAdminUiSettings, "utf8")
@@ -1330,14 +1332,14 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /function refreshSystemCurrentSchoolYear\(/)
   assert.match(html, /schoolYear:\s*normalizeSchoolYearFilter\(input\.schoolYear\)/)
   assert.match(html, /function filterQueryOverridesFromLocation\(/)
-  assert.match(html, /if \(params\.has\("quarter"\)\) \{/)
+  assert.match(html, /const hasQuarterParam = params\.has\("quarter"\)/)
   assert.match(html, /state\.filters = normalizedFiltersSnapshot\(\{/)
   assert.match(html, /applyFilterQueryOverrides\(\)/)
   assert.match(html, /function applyCurrentSchoolYearDefault\(/)
   assert.match(html, /applyCurrentSchoolYearDefault\(\{\s*force:\s*true\s*\}\)/)
   assert.match(html, /function schoolSetupQuarterForIsoDate\(/)
   assert.match(html, /function quarterForSchoolYear\(/)
-  assert.match(html, /requestedSchoolYearAll/)
+  assert.match(html, /requestedSchoolYearCurrent/)
   assert.match(html, /studentDisplay:\s*"Mean"/)
   assert.match(html, /studentDisplay:\s*"Grade distribution"/)
   assert.match(html, /id="distributionModal"/)
@@ -1349,7 +1351,7 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /function renderDistributionMiniCell\(/)
   assert.match(html, /function openDistributionModal\(/)
   assert.match(html, /data-period=\"archive\"/)
-  assert.match(html, /All school years/)
+  assert.match(html, /Current school year/)
   assert.match(html, /function setTableModalOpen\(/)
   assert.match(html, /function bindTableModalControls\(/)
   assert.match(html, /function setDistributionDialogFullscreen\(/)
@@ -1949,8 +1951,15 @@ test("admin can persist and reload school setup ui settings", async () => {
     uiSettings: {
       multiSchool: true,
       schoolSetup: {
+        schoolYear: "2026-2027",
         startDate: "2026-08-10",
         endDate: "2027-05-28",
+        quarters: [
+          { quarter: "q1", startDate: "2026-08-10", endDate: "2026-10-31" },
+          { quarter: "q2", startDate: "2026-11-01", endDate: "2027-01-31" },
+          { quarter: "q3", startDate: "2027-02-01", endDate: "2027-03-31" },
+          { quarter: "q4", startDate: "2027-04-01", endDate: "2027-05-28" },
+        ],
         letterGradeRanges: [
           { letter: "A", minPercent: 92, maxPercent: 100 },
           { letter: "B", minPercent: 84, maxPercent: 91.99 },
@@ -1981,6 +1990,7 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(putBody.uiSettings.multiSchool, true)
   assert.equal(putBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(putBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
+  assert.equal(putBody.meta.schoolSetupState, "ok")
 
   const getAfter = await fetchLocal(port, "/api/admin/settings/ui", {
     headers: { Cookie: adminSessionCookie },
@@ -1990,10 +2000,35 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(afterBody.ok, true)
   assert.equal(afterBody.uiSettings.multiSchool, true)
   assert.equal(afterBody.uiSettings.schoolSetup.startDate, "2026-08-10")
+  assert.equal(afterBody.meta.schoolSetupState, "ok")
   assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].letter, "A")
   assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].minPercent, 92)
   assert.equal(afterBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(afterBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
+})
+
+test("admin rejects school setup ui settings without explicit quarters", async () => {
+  const res = await fetchLocal(port, "/api/admin/settings/ui", {
+    method: "PUT",
+    headers: {
+      Cookie: adminSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      uiSettings: {
+        schoolSetup: {
+          schoolYear: "2026-2027",
+          startDate: "2026-08-10",
+          endDate: "2027-05-28",
+          letterGradeRanges: [],
+        },
+      },
+    }),
+  })
+
+  assert.equal(res.status, 422)
+  const body = await res.json()
+  assert.match(body.error, /four explicit quarters/i)
 })
 
 test("teacher cannot access persisted ui settings endpoint", async () => {

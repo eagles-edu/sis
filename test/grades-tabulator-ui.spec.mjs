@@ -26,9 +26,9 @@ function expectedSystemDefaultSchoolYearLabel() {
   return expectedCurrentSchoolYearLabel()
 }
 
-function selectHasAllOption(selectEl) {
+function selectHasCurrentOption(selectEl) {
   if (!selectEl || typeof selectEl !== "object" || !("options" in selectEl)) return false
-  return Array.from(selectEl.options).some((entry) => String(entry.value) === "all")
+  return Array.from(selectEl.options).some((entry) => String(entry.value) === "current")
 }
 
 function jsonResponse(status, payload = {}) {
@@ -99,7 +99,17 @@ function makeTabulatorFetchHandler({
     if (pathname === "/api/admin/settings/ui" && method === "GET") {
       return jsonResponse(200, {
         uiSettings: {
-          schoolSetup: { schoolYear: settingsSchoolYear },
+          schoolSetup: {
+            schoolYear: settingsSchoolYear,
+            startDate: "2026-08-10",
+            endDate: "2027-05-28",
+            quarters: [
+              { quarter: "q1", startDate: "2026-08-10", endDate: "2026-10-31" },
+              { quarter: "q2", startDate: "2026-11-01", endDate: "2027-01-31" },
+              { quarter: "q3", startDate: "2027-02-01", endDate: "2027-03-31" },
+              { quarter: "q4", startDate: "2027-04-01", endDate: "2027-05-28" },
+            ],
+          },
         },
         meta: settingsMeta || {
           schoolSetupStoredQuarterCount: 4,
@@ -184,13 +194,13 @@ test("tabulator query filters override persisted preferences for school-year and
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "2026-2027")
+  assert.equal(schoolYearEl.value, "current")
   assert.equal(quarterEl.value, "q1")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
     true,
   )
-  assert.equal(selectHasAllOption(schoolYearEl), true)
+  assert.equal(selectHasCurrentOption(schoolYearEl), true)
   assert.equal(
     document.querySelector('[data-period="quarter"]')?.classList.contains("is-active"),
     true,
@@ -217,6 +227,10 @@ test("tabulator warns when persisted quarter dates are missing and links to scho
     assert.ok(warning && !warning.classList.contains("hidden"))
     assert.match(String(warning.textContent || warning.innerHTML || ""), /Quarter setup is incomplete or invalid/i)
     assert.match(String(warning.innerHTML || ""), /student-admin\.html\?apiOrigin=.*#schoolSetupPanel/i)
+    const maintenance = dom.window.document.getElementById("gradeGrid")?.querySelector(".grade-grid-maintenance")
+    assert.ok(maintenance)
+    assert.ok(maintenance?.querySelector('img[src="/web-asset/shared/maintenance.svg"]'))
+    assert.equal(Boolean(dom.window.document.querySelector(".tabulator")), false)
   }, 5000)
 
   dom.window.close()
@@ -240,7 +254,46 @@ test("tabulator warns when portal issue metadata flags setup issues", async () =
     const warning = dom.window.document.getElementById("schoolSetupWarning")
     assert.ok(warning && !warning.classList.contains("hidden"))
     assert.match(String(warning.textContent || warning.innerHTML || ""), /Quarter setup is incomplete or invalid/i)
+    const maintenance = dom.window.document.getElementById("gradeGrid")?.querySelector(".grade-grid-maintenance")
+    assert.ok(maintenance)
+    assert.ok(maintenance?.querySelector('img[src="/web-asset/shared/maintenance.svg"]'))
+    assert.equal(Boolean(dom.window.document.querySelector(".tabulator")), false)
   }, 5000)
+
+  dom.window.close()
+})
+
+test("tabulator preserves an explicit quarter query even when matching rows are absent", async () => {
+  const dom = await createTabulatorDom(
+    makeTabulatorFetchHandler({
+      authenticated: true,
+      gradeRecords: [
+        {
+          id: "grade-1",
+          assignmentName: "Quiz 1",
+          dueAt: "2026-09-03T00:00:00.000Z",
+          submittedAt: "2026-09-04T00:00:00.000Z",
+          score: 8,
+          maxScore: 10,
+          homeworkCompleted: true,
+          homeworkOnTime: true,
+          schoolYear: "2026-2027",
+          quarter: "q1",
+        },
+      ],
+    }),
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&currentSchoolYear=2026-2027&schoolYear=2026-2027&period=quarter&quarter=q3",
+  )
+
+  await waitFor(() => {
+    const statusText = String(dom.window.document.getElementById("statusLine")?.textContent || "")
+    assert.match(statusText, /SIS load complete/i)
+  }, 5000)
+
+  const document = dom.window.document
+  const quarterEl = document.getElementById("quarter")
+  assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
+  assert.equal(quarterEl.value, "q3")
 
   dom.window.close()
 })
@@ -261,19 +314,18 @@ test("tabulator seeds current school-year even when auth is required", async () 
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "2026-2027")
+  assert.equal(schoolYearEl.value, "current")
   assert.equal(quarterEl.value, "q1")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "2026-2027"),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
     true,
   )
-  assert.equal(selectHasAllOption(schoolYearEl), true)
+  assert.equal(selectHasCurrentOption(schoolYearEl), true)
 
   dom.window.close()
 })
 
 test("tabulator no-query load seeds current school-year over stale all preference", async () => {
-  const expectedCurrentSchoolYear = expectedSystemDefaultSchoolYearLabel()
   const dom = await createTabulatorDom(
     makeTabulatorFetchHandler({ authenticated: false }),
     "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1",
@@ -301,9 +353,9 @@ test("tabulator no-query load seeds current school-year over stale all preferenc
   const document = dom.window.document
   const schoolYearEl = document.getElementById("schoolYear")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, expectedCurrentSchoolYear)
+  assert.equal(schoolYearEl.value, "current")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === expectedCurrentSchoolYear),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
     true,
   )
 
@@ -347,20 +399,19 @@ test("tabulator no-query load uses school setup year from local settings", async
   const document = dom.window.document
   const schoolYearEl = document.getElementById("schoolYear")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, expectedSchoolYear)
+  assert.equal(schoolYearEl.value, "current")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === expectedSchoolYear),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
     true,
   )
 
   dom.window.close()
 })
 
-test("tabulator query schoolYear=all still resolves current school-year default", async () => {
-  const expectedCurrentSchoolYear = expectedSystemDefaultSchoolYearLabel()
+test("tabulator query schoolYear=current still resolves current school-year default", async () => {
   const dom = await createTabulatorDom(
     makeTabulatorFetchHandler({ authenticated: false }),
-    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=quarter&schoolYear=all&quarter=q3",
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=quarter&schoolYear=current&quarter=q3",
   )
 
   await waitFor(() => {
@@ -373,18 +424,18 @@ test("tabulator query schoolYear=all still resolves current school-year default"
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, expectedCurrentSchoolYear)
-  assert.equal(quarterEl.value, "q1")
+  assert.equal(schoolYearEl.value, "current")
+  assert.equal(quarterEl.value, "q3")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === expectedCurrentSchoolYear),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
     true,
   )
-  assert.equal(selectHasAllOption(schoolYearEl), true)
+  assert.equal(selectHasCurrentOption(schoolYearEl), true)
 
   dom.window.close()
 })
 
-test("tabulator schoolYear=all quarter query uses ssot current quarter", async () => {
+test("tabulator schoolYear=current quarter query preserves the explicit quarter", async () => {
   const expectedSchoolYear = "2026-2027"
   const dom = await createTabulatorDom(
     makeTabulatorFetchHandler({
@@ -417,7 +468,7 @@ test("tabulator schoolYear=all quarter query uses ssot current quarter", async (
         },
       ],
     }),
-    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=quarter&schoolYear=all&quarter=q3",
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=quarter&schoolYear=current&quarter=q3",
     {
       beforeParse(window) {
         window.localStorage.setItem(
@@ -450,9 +501,9 @@ test("tabulator schoolYear=all quarter query uses ssot current quarter", async (
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, expectedSchoolYear)
-  assert.equal(quarterEl.value, "q1")
-  assert.equal(selectHasAllOption(schoolYearEl), true)
+  assert.equal(schoolYearEl.value, "current")
+  assert.equal(quarterEl.value, "q3")
+  assert.equal(selectHasCurrentOption(schoolYearEl), true)
 
   dom.window.close()
 })
@@ -490,7 +541,7 @@ test("tabulator archive period keeps archive mode and excludes current school-ye
         },
       ],
     }),
-    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=archive&schoolYear=all",
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=archive&schoolYear=current",
   )
 
   await waitFor(() => {
@@ -502,7 +553,7 @@ test("tabulator archive period keeps archive mode and excludes current school-ye
   const schoolYearEl = document.getElementById("schoolYear")
   const rowCountEl = document.getElementById("metricRows")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, "all")
+  assert.equal(schoolYearEl.value, "current")
   assert.equal(String(rowCountEl?.textContent || ""), "1")
   assert.equal(
     document.querySelector('[data-period="archive"]')?.classList.contains("is-active"),
@@ -622,11 +673,11 @@ test("tabulator merges standalone auto-import attempts into one exercise column"
   dom.window.close()
 })
 
-test("tabulator sytd query quarter=q3 resets to ssot current quarter", async () => {
+test("tabulator sytd query quarter=q3 preserves the explicit quarter", async () => {
   const expectedSchoolYear = "2026-2027"
   const dom = await createTabulatorDom(
     makeTabulatorFetchHandler({ authenticated: false }),
-    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=sytd&schoolYear=all&quarter=q3",
+    "http://127.0.0.1/web-asset/admin/grades-tabulator.html?apiOrigin=http://127.0.0.1&period=sytd&schoolYear=current&quarter=q3",
     {
       beforeParse(window) {
         window.localStorage.setItem(
@@ -651,8 +702,8 @@ test("tabulator sytd query quarter=q3 resets to ssot current quarter", async () 
   const quarterEl = document.getElementById("quarter")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
   assert.ok(quarterEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, expectedSchoolYear)
-  assert.equal(quarterEl.value, "q1")
+  assert.equal(schoolYearEl.value, "current")
+  assert.equal(quarterEl.value, "q3")
 
   dom.window.close()
 })
@@ -767,9 +818,9 @@ test("tabulator authenticated bootstrap promotes server school setup year over s
   const schoolYearEl = document.getElementById("schoolYear")
   const rowCountEl = document.getElementById("metricRows")
   assert.ok(schoolYearEl instanceof dom.window.HTMLSelectElement)
-  assert.equal(schoolYearEl.value, expectedSchoolYear)
+  assert.equal(schoolYearEl.value, "current")
   assert.equal(
-    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === expectedSchoolYear),
+    Array.from(schoolYearEl.options).some((entry) => String(entry.value) === "current"),
     true,
   )
   assert.equal(String(rowCountEl?.textContent || ""), "1")

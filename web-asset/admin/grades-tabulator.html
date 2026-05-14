@@ -27,7 +27,7 @@
       --panel: var(--portal-surface-panel);
       --ink: var(--portal-text);
       --ink-soft: var(--portal-text-soft);
-      --accent: #0054b5;
+      --accent: var(--portal-action-blue-top);
       --accent-soft: var(--portal-surface-support);
       --line: var(--portal-border);
       --ok: var(--portal-status-good-text);
@@ -43,7 +43,7 @@
       --panel: var(--portal-dark-surface-panel);
       --ink: var(--portal-dark-text);
       --ink-soft: var(--portal-dark-text-soft);
-      --accent: #6aa4ff;
+      --accent: var(--portal-status-info-border);
       --accent-soft: var(--portal-dark-surface-support);
       --line: var(--portal-dark-border);
       --ok: var(--portal-status-good-text);
@@ -57,7 +57,7 @@
     }
 
     body {
-      background: linear-gradient(180deg, #f9fbff 0%, var(--bg) 38%, #eef3f9 100%);
+      background: linear-gradient(180deg, var(--card) 0%, var(--bg) 38%, var(--card-soft) 100%);
       color: var(--ink);
       font-family: "Manrope", "Avenir Next", "Segoe UI", "Noto Sans", sans-serif;
       line-height: 1.4;
@@ -66,7 +66,7 @@
     }
 
     html[data-theme="dark"] body {
-      background: linear-gradient(180deg, #25292c 0%, var(--bg) 38%, #1a1c1f 100%);
+      background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 38%, var(--card) 100%);
     }
 
     .page-shell {
@@ -131,7 +131,7 @@
     .btn,
     .chip-link {
       align-items: center;
-      background: #fff;
+      background: var(--card);
       border: 1px solid var(--line);
       border-radius: 999px;
       box-sizing: border-box;
@@ -165,15 +165,15 @@
     }
 
     .btn.primary {
-      background: var(--accent);
-      border-color: #0a4ea5;
-      color: #fff;
+      background: linear-gradient(180deg, var(--portal-action-blue-top) 0%, var(--portal-action-blue-bottom) 100%);
+      border-color: var(--portal-action-blue-border);
+      color: var(--portal-action-blue-text);
     }
 
     .btn.subtle {
-      background: #f5f9ff;
-      border-color: #bed1ea;
-      color: #14385e;
+      background: var(--card-soft);
+      border-color: var(--line);
+      color: var(--ink);
       font-weight: 600;
     }
 
@@ -207,7 +207,7 @@
     }
 
     .period-btn {
-      background: #fff;
+      background: var(--card);
       border: 1px solid var(--line);
       border-radius: 999px;
       box-sizing: border-box;
@@ -221,7 +221,7 @@
     .period-btn.is-active {
       background: var(--accent-soft);
       border-color: var(--accent);
-      color: #09346d;
+      color: var(--tertiary-color);
       font-weight: 700;
     }
 
@@ -237,7 +237,7 @@
     }
 
     .field label {
-      color: #28405e;
+      color: var(--ink-soft);
       font-size: 1rem;
       font-weight: 700;
       letter-spacing: 0.01em;
@@ -294,7 +294,7 @@
     }
 
     .metric-card p {
-      color: #0f3059;
+      color: var(--ink);
       font-size: 1.08rem;
       font-weight: 700;
       margin: 0.18rem 0 0;
@@ -332,7 +332,7 @@
     }
 
     .grid-title {
-      color: #173b62;
+      color: var(--ink);
       font-size: 1rem;
       font-weight: 700;
       letter-spacing: 0.01em;
@@ -477,16 +477,16 @@
     }
 
     .tabulator .tabulator-row {
-      border-bottom: 1px solid #e4e9f1;
-      border-bottom-color: #e6effb;
+      border-bottom: 1px solid var(--line);
+      border-bottom-color: var(--line);
     }
 
     .tabulator .tabulator-row:hover {
-      background: var(--surface-highlight, #eef4ff);
+      background: var(--card-soft);
     }
 
     .tabulator .tabulator-row.tabulator-row-even {
-      background: #f1f4f8;
+      background: var(--card);
     }
 
     html[data-theme="dark"] .tabulator {
@@ -515,12 +515,31 @@
       border-bottom-color: var(--portal-dark-border);
     }
 
+    html[data-theme="dark"] .tabulator .tabulator-cell,
+    html[data-theme="dark"] .tabulator .tabulator-col {
+      border-right-color: var(--portal-dark-surface-soft);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-row.tabulator-row-odd {
+      background: var(--portal-dark-surface-card);
+    }
+
     html[data-theme="dark"] .tabulator .tabulator-row.tabulator-row-even {
-      background: color-mix(in srgb, var(--portal-dark-surface-card) 88%, #ffffff 12%);
+      background: var(--portal-dark-surface-card);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
+      background: var(--portal-dark-surface-support);
+      border-right-color: var(--portal-dark-surface-soft);
     }
 
     html[data-theme="dark"] .tabulator .tabulator-row:hover {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 86%, #ffffff 14%);
+      background: var(--portal-dark-surface-support);
+    }
+
+    html[data-theme="dark"] .tabulator .tabulator-cell.tabulator-frozen.tabulator-frozen-right,
+    html[data-theme="dark"] .tabulator .tabulator-col.tabulator-frozen.tabulator-frozen-right {
+      border-left: 2px solid var(--portal-dark-surface-soft) !important;
     }
 
     html[data-theme="dark"] .btn,
@@ -541,9 +560,9 @@
     }
 
     html[data-theme="dark"] .btn.primary {
-      background: linear-gradient(160deg, #6aa4ff 0%, #2f75bc 100%);
-      border-color: #4e83d4;
-      color: #fff;
+      background: linear-gradient(180deg, var(--portal-action-blue-top) 0%, var(--portal-action-blue-bottom) 100%);
+      border-color: var(--portal-action-blue-border);
+      color: var(--portal-action-blue-text);
     }
 
     html[data-theme="dark"] .period-btn.is-active {
@@ -566,8 +585,8 @@
     }
 
     .score-bar {
-      background: #dfebff;
-      border: 1px solid #c6daf8;
+      background: var(--portal-status-info-bg);
+      border: 1px solid var(--portal-status-info-border);
       border-radius: 999px;
       box-sizing: border-box;
       display: inline-block;
@@ -584,7 +603,7 @@
     }
 
     .assignment-sub {
-      color: #4d627c;
+      color: var(--ink-soft);
       display: block;
       font-size: 1rem;
       font-weight: 700;
@@ -633,7 +652,7 @@
       border: 1px solid transparent;
       border-radius: 5px;
       box-sizing: border-box;
-      color: #fff;
+      color: var(--portal-action-blue-text);
       cursor: pointer;
       font-size: 0.86rem;
       font-weight: 800;
@@ -644,13 +663,15 @@
     }
 
     .header-action-btn.plus {
-      background: #1f9d51;
-      border-color: #14743a;
+      background: linear-gradient(180deg, var(--portal-action-green-top) 0%, var(--portal-action-green-bottom) 100%);
+      border-color: var(--portal-action-green-border);
+      color: var(--portal-action-green-text);
     }
 
     .header-action-btn.minus {
-      background: #3e4652;
-      border-color: #2e3440;
+      background: linear-gradient(180deg, var(--portal-action-red-top) 0%, var(--portal-action-red-bottom) 100%);
+      border-color: var(--portal-action-red-border);
+      color: var(--portal-action-red-text);
     }
 
     .header-action-btn:hover {
@@ -704,7 +725,7 @@
 
     .assignment-title-text {
       align-self: center;
-      color: #0e3359;
+      color: var(--ink);
       display: block;
       font-size: 1rem;
       font-weight: 700;
@@ -723,7 +744,7 @@
     }
 
     .assignment-col.elective-col .assignment-title-text {
-      color: #0c4f8b;
+      color: var(--tertiary-color);
     }
 
     .tabulator .tabulator-cell.student-number-col {
@@ -772,7 +793,7 @@
     }
 
     .stat-chip {
-      color: #173a61;
+      color: var(--ink-soft);
       display: block;
       font-size: 0.96rem;
       font-weight: 600;
@@ -780,7 +801,7 @@
     }
 
     .assignment-sub.core-sub {
-      color: #345777;
+      color: var(--ink-soft);
       font-size: 0.92rem;
       font-weight: 700;
     }
@@ -788,6 +809,10 @@
     html[data-theme="dark"] .assignment-title-text,
     html[data-theme="dark"] .stat-chip,
     html[data-theme="dark"] .grid-title {
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .assignment-col.elective-col .assignment-title-text {
       color: var(--portal-dark-text);
     }
 
@@ -807,8 +832,8 @@
     }
 
     html[data-theme="dark"] .distribution-mini:hover {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-support) 82%, #ffffff 18%) 0%, color-mix(in srgb, var(--portal-dark-surface-panel) 82%, #ffffff 18%) 100%);
-      border-color: color-mix(in srgb, var(--portal-dark-border) 78%, var(--portal-status-good-border) 22%);
+      background: var(--portal-dark-surface-support);
+      border-color: var(--portal-dark-border);
     }
 
     html[data-theme="dark"] .score-bar {
@@ -829,11 +854,11 @@
     }
 
     .distribution-mini {
-      background: linear-gradient(180deg, #f9fbff 0%, #eef4ff 100%);
-      border: 1px solid #c5d7ee;
+      background: linear-gradient(180deg, var(--card) 0%, var(--card-soft) 100%);
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-sizing: border-box;
-      color: #11385d;
+      color: var(--ink);
       cursor: pointer;
       display: grid;
       gap: 0.14rem;
@@ -842,8 +867,8 @@
     }
 
     .distribution-mini:hover {
-      background: linear-gradient(180deg, #f5f9ff 0%, #e8f1ff 100%);
-      border-color: #9fbce4;
+      background: linear-gradient(180deg, var(--card-soft) 0%, var(--bg) 100%);
+      border-color: var(--line);
     }
 
     .distribution-mini:focus-visible {
@@ -864,8 +889,31 @@
       width: 100%;
     }
 
+    .distribution-mini-chart svg line {
+      stroke: var(--line);
+    }
+
+    .distribution-mini-chart svg polyline {
+      fill: none;
+      stroke: var(--accent);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .distribution-mini-chart svg circle {
+      fill: var(--accent);
+    }
+
+    html[data-theme="dark"] .distribution-mini-chart svg line {
+      stroke: var(--portal-dark-border);
+    }
+
+    html[data-theme="dark"] .distribution-mini-chart svg polyline {
+      stroke: var(--portal-dark-text);
+    }
+
     .distribution-mini-meta {
-      color: #345a87;
+      color: var(--ink-soft);
       display: block;
       font-size: 0.9rem;
       font-weight: 700;
@@ -931,7 +979,7 @@
     }
 
     .distribution-dialog-head h2 {
-      color: #12365c;
+      color: var(--ink);
       font-size: 1.12rem;
       letter-spacing: 0.01em;
       margin: 0;
@@ -944,11 +992,11 @@
     }
 
     .distribution-close {
-      background: #f4f8ff;
-      border: 1px solid #b9cce6;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-sizing: border-box;
-      color: #18436f;
+      color: var(--ink);
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 700;
@@ -956,16 +1004,16 @@
     }
 
     .distribution-close:hover {
-      background: #eaf2ff;
-      border-color: #9ab9e0;
+      background: var(--card-soft);
+      border-color: var(--line);
     }
 
     .distribution-expand {
-      background: #f4f8ff;
-      border: 1px solid #b9cce6;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-sizing: border-box;
-      color: #18436f;
+      color: var(--ink);
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 700;
@@ -973,12 +1021,12 @@
     }
 
     .distribution-expand:hover {
-      background: #eaf2ff;
-      border-color: #9ab9e0;
+      background: var(--card-soft);
+      border-color: var(--line);
     }
 
     .distribution-dialog-meta {
-      color: #345777;
+      color: var(--ink-soft);
       font-size: 0.92rem;
       line-height: 1.3;
       margin: 0;
@@ -992,11 +1040,11 @@
     }
 
     .distribution-zoom-btn {
-      background: #f4f8ff;
-      border: 1px solid #b9cce6;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 8px;
       box-sizing: border-box;
-      color: #18436f;
+      color: var(--ink);
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 700;
@@ -1006,8 +1054,8 @@
     }
 
     .distribution-zoom-btn:hover {
-      background: #eaf2ff;
-      border-color: #9ab9e0;
+      background: var(--card-soft);
+      border-color: var(--line);
     }
 
     .distribution-zoom-range {
@@ -1362,7 +1410,7 @@
           <div class="field">
             <label for="schoolYear">School year</label>
             <select id="schoolYear">
-              <option value="all">All school years</option>
+              <option value="current">Current school year</option>
             </select>
           </div>
           <div class="field">
@@ -1836,11 +1884,16 @@
           const quarterEnd = normalizeText(entry?.endDate).slice(0, 10)
           return /^q[1-4]$/.test(quarter) && isIsoDate(quarterStart) && isIsoDate(quarterEnd) && quarterStart <= quarterEnd
         })
+        const schoolSetupState =
+          validRange && validQuarters.length === 4 && validQuarters.length === quarters.length ?
+            "ok" :
+            "maintenance"
         return {
           schoolSetupStoredQuarterCount: quarters.length,
           schoolSetupStoredQuartersPresent: quarters.length > 0,
           schoolSetupStoredQuartersMissing: quarters.length < 4,
-          schoolSetupHasIssues: !validRange || validQuarters.length !== quarters.length || validQuarters.length < 4,
+          schoolSetupState,
+          schoolSetupHasIssues: schoolSetupState !== "ok",
         }
       }
 
@@ -1880,6 +1933,34 @@
           "/web-asset/admin/student-admin.html#schoolSetupPanel"
         warningEl.innerHTML =
           `Quarter setup is incomplete or invalid. <a href="${schoolSetupHref}">Open School Setup</a> to restore it before rollover or after any settings hiccup.`
+      }
+
+      function renderGradeGridMaintenance(maintenance = {}) {
+        const host = tableHostElement()
+        if (!host) return
+        if (state.table && typeof state.table.destroy === "function") {
+          state.table.destroy()
+        }
+        state.table = null
+        state.tableBuilt = false
+        host.innerHTML = ""
+        const shell = document.createElement("div")
+        shell.className = "detail-empty grade-grid-maintenance"
+        const figure = document.createElement("img")
+        figure.src = "/web-asset/shared/maintenance.svg"
+        figure.alt = ""
+        figure.setAttribute("aria-hidden", "true")
+        const title = document.createElement("div")
+        title.className = "detail-empty-title"
+        title.textContent = maintenance.title || "Quarter grades are temporarily unavailable"
+        const lead = document.createElement("div")
+        lead.className = "detail-empty-copy"
+        lead.textContent = maintenance.lead || "Quarter setup is incomplete or invalid."
+        const note = document.createElement("div")
+        note.className = "detail-empty-copy"
+        note.textContent = maintenance.note || "Open School Setup and save four explicit quarters before reloading the matrix."
+        shell.append(figure, title, lead, note)
+        host.append(shell)
       }
 
       function normalizeSearch(value) {
@@ -1951,7 +2032,7 @@
       function quarterFromIsoDate(value) {
         const setupQuarter = normalizeQuarterCode(schoolSetupQuarterForIsoDate(value))
         if (setupQuarter) return setupQuarter
-        return calendarQuarterFromIsoDate(value)
+        return ""
       }
 
       function calendarQuarterFromIsoDate(value) {
@@ -2009,39 +2090,27 @@
             return normalizeQuarterCode(entry?.quarter)
           }
         }
-        if (
-          parseIsoDate(setup?.startDate) &&
-          parseIsoDate(setup?.endDate) &&
-          compareIsoDate(isoDate, setup.startDate) >= 0 &&
-          compareIsoDate(isoDate, setup.endDate) <= 0
-        ) {
-          const lastQuarter = quarters.length ? quarters[quarters.length - 1] : null
-          return normalizeQuarterCode(lastQuarter?.quarter)
-        }
         return ""
       }
 
       function quarterForSchoolYear(yearLabel = "", isoDate = TODAY_ISO) {
         const targetYear = normalizeText(yearLabel)
         const dateKey = normalizeText(isoDate).slice(0, 10)
-        if (!parseIsoDate(dateKey)) return "q1"
+        if (!parseIsoDate(dateKey)) return ""
         const setupYear = normalizeText(state.schoolSetup?.schoolYear)
         if (targetYear && setupYear && targetYear === setupYear) {
           const setupQuarter = normalizeQuarterCode(schoolSetupQuarterForIsoDate(dateKey))
           if (setupQuarter) return setupQuarter
         }
-        const parsed = parseSchoolYearRange(targetYear)
-        if (parsed) {
-          const startDate = `${String(parsed.startYear).padStart(4, "0")}-08-01`
-          const endDate = `${String(parsed.endYear).padStart(4, "0")}-07-31`
-          if (compareIsoDate(dateKey, startDate) < 0 || compareIsoDate(dateKey, endDate) > 0) return "q1"
-        }
-        return normalizeQuarterCode(calendarQuarterFromIsoDate(dateKey)) || "q1"
+        return ""
       }
 
       function resolveSystemCurrentSchoolYear() {
         const params = new URLSearchParams(window.location.search || "")
         const explicit = normalizeText(params.get("currentSchoolYear") || params.get("schoolYear"))
+        if (normalizeLower(explicit) === "current" || normalizeLower(explicit) === "all") {
+          return normalizeText(DEFAULT_SYSTEM_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO))
+        }
         if (isSchoolYearKey(explicit)) return explicit
         const localSettingsSchoolYear = schoolYearFromUiSettings(loadUiSettingsFromLocalStorage())
         if (isSchoolYearKey(localSettingsSchoolYear)) return localSettingsSchoolYear
@@ -2057,13 +2126,13 @@
         if (!isSchoolYearKey(normalizedNext)) return
         const previousYear = normalizeText(SYSTEM_CURRENT_SCHOOL_YEAR)
         SYSTEM_CURRENT_SCHOOL_YEAR = normalizedNext
-        const activeYear = normalizeText(state.filters.schoolYear)
+        const activeYear = normalizeSchoolYearFilter(state.filters.schoolYear)
         const shouldPromoteFilter =
-          activeYear === "all" ||
+          activeYear === "current" ||
           !isSchoolYearKey(activeYear) ||
           (isSchoolYearKey(previousYear) && activeYear === previousYear)
         if (shouldPromoteFilter) {
-          state.filters.schoolYear = normalizedNext
+          state.filters.schoolYear = "current"
         }
         applyCurrentSchoolYearDefault()
       }
@@ -2873,13 +2942,17 @@
 
       function normalizeSchoolYearFilter(value) {
         const normalized = normalizeText(value)
-        if (normalizeLower(normalized) === "all") return "all"
+        const lowered = normalizeLower(normalized)
+        if (lowered === "all" || lowered === "current") return "current"
+        const currentYear = currentOperationalSchoolYear()
+        if (normalized && normalized === currentYear) return "current"
         if (isSchoolYearKey(normalized)) return normalized
-        return currentOperationalSchoolYear()
+        return "current"
       }
 
       function normalizeOperationalSchoolYear(value) {
-        const normalized = normalizeText(value)
+        const normalized = normalizeSchoolYearFilter(value)
+        if (normalized === "current") return currentOperationalSchoolYear()
         if (isSchoolYearKey(normalized)) return normalized
         return currentOperationalSchoolYear()
       }
@@ -2889,7 +2962,7 @@
         return {
           period: normalizePeriodCode(input.period),
           schoolYear: normalizeSchoolYearFilter(input.schoolYear),
-          quarter: normalizeQuarterCode(input.quarter) || "q1",
+          quarter: normalizeQuarterCode(input.quarter) || "",
           classKey: normalizeText(input.classKey) || "all",
           studentKey: normalizeText(input.studentKey) || "all",
           schoolKey: normalizeText(input.schoolKey) || "all",
@@ -2936,16 +3009,16 @@
       function filterQueryOverridesFromLocation() {
         const params = new URLSearchParams(window.location.search || "")
         const overrides = {}
+        const hasQuarterParam = params.has("quarter")
         if (params.has("period")) {
           overrides.period = normalizePeriodCode(params.get("period"))
         }
         if (params.has("schoolYear")) {
-          const schoolYear = normalizeText(params.get("schoolYear"))
-          overrides.schoolYear = normalizeLower(schoolYear) === "all" ? "all" : schoolYear
+          overrides.schoolYear = normalizeSchoolYearFilter(params.get("schoolYear"))
         }
-        if (params.has("quarter")) {
+        if (hasQuarterParam) {
           const quarter = normalizeQuarterCode(params.get("quarter"))
-          overrides.quarter = quarter || "q1"
+          overrides.quarter = quarter
         }
         if (params.has("classKey")) {
           overrides.classKey = normalizeText(params.get("classKey")) || "all"
@@ -2965,11 +3038,15 @@
         if (params.has("search")) {
           overrides.search = normalizeText(params.get("search"))
         }
-        const requestedSchoolYearAll =
+        const requestedSchoolYearCurrent =
           params.has("schoolYear") &&
-          normalizeLower(params.get("schoolYear")) === "all"
+          normalizeSchoolYearFilter(params.get("schoolYear")) === "current"
         const requestedPeriod = normalizePeriodCode(overrides.period || state.filters.period)
-        if (requestedSchoolYearAll && (requestedPeriod === "quarter" || requestedPeriod === "qtd")) {
+        if (
+          requestedSchoolYearCurrent &&
+          (requestedPeriod === "quarter" || requestedPeriod === "qtd") &&
+          !hasQuarterParam
+        ) {
           overrides.quarter = quarterForSchoolYear(SYSTEM_CURRENT_SCHOOL_YEAR, TODAY_ISO)
         }
         return overrides
@@ -2989,29 +3066,27 @@
         const force = config.force === true
         const currentYear = currentOperationalSchoolYear()
         if (!isSchoolYearKey(currentYear)) return
-        const activeYear = normalizeText(state.filters.schoolYear)
+        const activeYear = normalizeSchoolYearFilter(state.filters.schoolYear)
         const activePeriod = normalizePeriodCode(state.filters.period)
         if (activePeriod === "archive") {
-          if (force) {
-            state.filters.schoolYear = "all"
-          } else if (activeYear === "all" || !isSchoolYearKey(activeYear) || activeYear === currentYear) {
-            state.filters.schoolYear = "all"
+          if (force || activeYear === "current" || !isSchoolYearKey(activeYear)) {
+            state.filters.schoolYear = "current"
           }
-        } else if (force || activeYear === "all" || !isSchoolYearKey(activeYear)) {
-          state.filters.schoolYear = currentYear
+        } else if (force || activeYear === "current" || !isSchoolYearKey(activeYear)) {
+          state.filters.schoolYear = "current"
         }
         const schoolYearSelect = document.getElementById("schoolYear")
         if (!(schoolYearSelect instanceof HTMLSelectElement)) return
         const hasCurrentOption = Array.from(schoolYearSelect.options || [])
-          .some((option) => normalizeText(option?.value) === currentYear)
+          .some((option) => normalizeText(option?.value) === "current")
         if (!hasCurrentOption) {
           const option = document.createElement("option")
-          option.value = currentYear
-          option.textContent = currentYear
+          option.value = "current"
+          option.textContent = "Current school year"
           schoolYearSelect.appendChild(option)
         }
-        const selectedYear = normalizeText(state.filters.schoolYear)
-        schoolYearSelect.value = selectedYear === "all" || isSchoolYearKey(selectedYear) ? selectedYear : currentYear
+        const selectedYear = normalizeSchoolYearFilter(state.filters.schoolYear)
+        schoolYearSelect.value = isSchoolYearKey(selectedYear) ? selectedYear : "current"
       }
 
       function normalizeSortDirection(value) {
@@ -3466,8 +3541,8 @@
             rawMaxScore && rawMaxScore > 0 && effectiveScore !== null ?
             percentValue(effectiveScore, rawMaxScore) :
             null
-          const quarter = normalizeLower(record?.quarter) || quarterFromIsoDate(dateKey)
-          const schoolYear = normalizeText(record?.schoolYear) || schoolYearForIsoDate(dateKey)
+          const quarter = normalizeQuarterCode(record?.quarter)
+          const schoolYear = normalizeText(record?.schoolYear)
           const className = normalizeText(record?.className)
           const assignmentName = normalizeText(record?.assignmentName)
           const sourceFromApi = normalizeGradeRecordSource(record?.source)
@@ -3684,7 +3759,9 @@
         const dueAt = normalizeText(current?.dueAt) || normalizeText(meta?.dueAt)
         const effectiveSchoolYear =
           normalizeText(current?.schoolYear) ||
-          (state.filters.schoolYear !== "all" ? normalizeText(state.filters.schoolYear) : "") ||
+          (normalizeSchoolYearFilter(state.filters.schoolYear) !== "current" ?
+            normalizeText(state.filters.schoolYear) :
+            "") ||
           SYSTEM_CURRENT_SCHOOL_YEAR ||
           schoolYearForIsoDate(dueAt || TODAY_ISO)
         const effectiveQuarter =
@@ -3692,8 +3769,7 @@
           normalizeQuarterCode(rowData?.quarter) ||
           normalizeQuarterCode(meta?.quarter) ||
           normalizeQuarterCode(state.filters.quarter) ||
-          quarterFromIsoDate(dueAt || TODAY_ISO) ||
-          "q1"
+          quarterFromIsoDate(dueAt || TODAY_ISO)
         const todayIso = localIsoDate(new Date())
         const homeworkOnTime = dueAt ? compareIsoDate(todayIso, dueAt) <= 0 : true
         const payload = {
@@ -4303,15 +4379,16 @@
         if (!(selectEl instanceof HTMLSelectElement)) return
         const config = options && typeof options === "object" ? options : {}
         const includeAll = config.includeAll !== false
+        const topValue = normalizeText(config.topValue || "all")
         const current = normalizeText(selectedValue)
-        const markup = includeAll ? [`<option value=\"all\">${escapeHtml(allLabel)}</option>`] : []
+        const markup = includeAll ? [`<option value=\"${escapeHtml(topValue)}\">${escapeHtml(allLabel)}</option>`] : []
         values.forEach((value) => {
           markup.push(`<option value=\"${escapeHtml(value)}\">${escapeHtml(value)}</option>`)
         })
         selectEl.innerHTML = markup.join("")
         if (includeAll) {
-          const selected = current || "all"
-          selectEl.value = values.includes(selected) ? selected : "all"
+          const selected = current || topValue
+          selectEl.value = values.includes(selected) ? selected : topValue
           return
         }
         const fallback = values.length ? values[0] : ""
@@ -4324,7 +4401,7 @@
         const schoolValues = uniqueSortedValues(rows, "schoolName")
         const currentYear = currentOperationalSchoolYear()
         const yearValues = uniqueSortedValues(rows, "schoolYear")
-        if (currentYear && !yearValues.includes(currentYear)) yearValues.push(currentYear)
+          .filter((year) => year !== currentYear)
         yearValues.sort((left, right) => right.localeCompare(left))
         const studentValues = Array.from(new Map(
             rows.map((row) => [normalizeText(row.studentRefId), normalizeText(row.studentLabel)])
@@ -4335,7 +4412,9 @@
           }))
         replaceSelectOptions(document.getElementById("classFilter"), classValues, state.filters.classKey, "All class levels")
         replaceSelectOptions(document.getElementById("schoolFilter"), schoolValues, state.filters.schoolKey, "All schools")
-        replaceSelectOptions(document.getElementById("schoolYear"), yearValues, state.filters.schoolYear, "All school years")
+        replaceSelectOptions(document.getElementById("schoolYear"), yearValues, state.filters.schoolYear, "Current school year", {
+          topValue: "current",
+        })
         const studentFilter = document.getElementById("studentFilter")
         if (studentFilter instanceof HTMLSelectElement) {
           const options = ["<option value=\"all\">All students</option>"]
@@ -4347,42 +4426,33 @@
           studentFilter.value = studentValues.some(([studentRefId]) => studentRefId === current) ? current : "all"
         }
         const periodCode = normalizePeriodCode(state.filters.period)
-        const activeSchoolYear = normalizeText(state.filters.schoolYear)
+        const activeSchoolYear = normalizeSchoolYearFilter(state.filters.schoolYear)
         if (periodCode === "archive") {
-          if (activeSchoolYear !== "all" && activeSchoolYear && !yearValues.includes(activeSchoolYear)) {
-            state.filters.schoolYear = "all"
+          if (activeSchoolYear !== "current" && activeSchoolYear && !yearValues.includes(activeSchoolYear)) {
+            state.filters.schoolYear = "current"
           }
-        } else if (currentYear && (activeSchoolYear === "all" || !isSchoolYearKey(activeSchoolYear) || !yearValues.includes(activeSchoolYear))) {
-          state.filters.schoolYear = yearValues.includes(currentYear) ? currentYear : (yearValues[0] || currentYear)
+        } else if (currentYear && (activeSchoolYear === "current" || !isSchoolYearKey(activeSchoolYear) || !yearValues.includes(activeSchoolYear))) {
+          state.filters.schoolYear = "current"
           const yearSelect = document.getElementById("schoolYear")
           if (yearSelect instanceof HTMLSelectElement) yearSelect.value = state.filters.schoolYear
         }
-        const selectedSchoolYear =
-          normalizeText(state.filters.schoolYear) === "all" ?
-          currentYear :
-          normalizeOperationalSchoolYear(state.filters.schoolYear)
-        const availableQuarters = Array.from(new Set(
-          rows
-          .filter((entry) => normalizeText(entry?.schoolYear) === normalizeText(selectedSchoolYear))
-          .map((entry) => normalizeQuarterCode(entry?.quarter))
-          .filter(Boolean)
-        )).sort((left, right) => quarterSortKey(left) - quarterSortKey(right))
-        const currentQuarter = normalizeQuarterCode(quarterFromIsoDate(TODAY_ISO)) || "q1"
-        const ssotQuarter = quarterForSchoolYear(selectedSchoolYear || currentYear, TODAY_ISO)
-        const currentQuarterFromSsot = normalizeQuarterCode(ssotQuarter) || currentQuarter
+        const selectedSchoolYear = normalizeSchoolYearFilter(state.filters.schoolYear)
+        const resolvedSchoolYear = normalizeOperationalSchoolYear(selectedSchoolYear)
+        const currentQuarter = normalizeQuarterCode(quarterFromIsoDate(TODAY_ISO)) || ""
+        const ssotQuarter = quarterForSchoolYear(resolvedSchoolYear || currentYear, TODAY_ISO)
+        const currentQuarterFromSsot = normalizeQuarterCode(ssotQuarter)
         const activeQuarter = normalizeQuarterCode(state.filters.quarter)
-        if (periodCode !== "quarter" && periodCode !== "qtd") {
+        if ((periodCode === "quarter" || periodCode === "qtd") && !activeQuarter && currentQuarterFromSsot) {
           state.filters.quarter = currentQuarterFromSsot
         } else if (!activeQuarter) {
-          state.filters.quarter = currentQuarterFromSsot
-        } else if (!availableQuarters.length && activeQuarter !== currentQuarterFromSsot) {
-          state.filters.quarter = currentQuarterFromSsot
-        } else if (availableQuarters.length && !availableQuarters.includes(activeQuarter)) {
-          state.filters.quarter = currentQuarterFromSsot
+          state.filters.quarter = currentQuarterFromSsot || currentQuarter
         }
         const quarterSelect = document.getElementById("quarter")
         if (quarterSelect instanceof HTMLSelectElement) {
-          quarterSelect.value = normalizeQuarterCode(state.filters.quarter) || currentQuarterFromSsot
+          quarterSelect.value =
+            normalizeQuarterCode(state.filters.quarter) ||
+            (periodCode === "quarter" || periodCode === "qtd" ? currentQuarterFromSsot : "") ||
+            currentQuarter
         }
       }
 
@@ -4404,10 +4474,7 @@
         const filters = state.filters
         const requestedSchoolYear = normalizeSchoolYearFilter(filters.schoolYear)
         const currentSchoolYear = currentOperationalSchoolYear()
-        const selectedSchoolYear =
-          requestedSchoolYear === "all" ?
-          "all" :
-          normalizeOperationalSchoolYear(requestedSchoolYear)
+        const selectedSchoolYear = normalizeOperationalSchoolYear(requestedSchoolYear)
         const dateDerivedCurrentSchoolYear = schoolYearForIsoDate(TODAY_ISO)
         let rangeStart = ""
         let rangeEnd = ""
@@ -4431,22 +4498,22 @@
           if (!GRADE_RECORD_SOURCES_VISIBLE_IN_MATRIX.has(rowSource)) return false
           if (filters.period === "archive") {
             if (!rowSchoolYear || rowSchoolYear === currentSchoolYear) return false
-            if (selectedSchoolYear !== "all" && rowSchoolYear !== selectedSchoolYear) return false
+            if (requestedSchoolYear !== "current" && rowSchoolYear !== selectedSchoolYear) return false
           } else {
-            const targetSchoolYear = selectedSchoolYear === "all" ? currentSchoolYear : selectedSchoolYear
+            const targetSchoolYear = selectedSchoolYear || currentSchoolYear
             if (rowSchoolYear && rowSchoolYear !== targetSchoolYear) return false
           }
           if (filters.period === "quarter" || filters.period === "qtd") {
             if (!rowQuarter || rowQuarter !== normalizeLower(filters.quarter)) return false
             if (filters.period === "qtd") {
-              const targetYear = selectedSchoolYear !== "all" ? selectedSchoolYear : currentSchoolYear
+              const targetYear = selectedSchoolYear || currentSchoolYear
               if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
                 return false
               }
             }
           }
           if (filters.period === "sytd") {
-            const targetYear = selectedSchoolYear !== "all" ? selectedSchoolYear : currentSchoolYear
+            const targetYear = selectedSchoolYear || currentSchoolYear
             if (rowSchoolYear && rowSchoolYear !== targetYear) return false
             if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
               return false
@@ -4667,6 +4734,17 @@
         if (customTo instanceof HTMLInputElement) customTo.disabled = !isCustomMode
       }
 
+      function syncFilterControlValues() {
+        const schoolYear = document.getElementById("schoolYear")
+        const quarter = document.getElementById("quarter")
+        if (schoolYear instanceof HTMLSelectElement) {
+          schoolYear.value = normalizeSchoolYearFilter(state.filters.schoolYear) || "current"
+        }
+        if (quarter instanceof HTMLSelectElement) {
+          quarter.value = normalizeQuarterCode(state.filters.quarter) || quarter.value || ""
+        }
+      }
+
       function syncPeriodButtons() {
         document.querySelectorAll("[data-period]").forEach((button) => {
           const period = normalizeLower(button.getAttribute("data-period"))
@@ -4679,6 +4757,27 @@
         state.filteredRows = outcome.rows
         const matrix = buildMatrixModel(state.filteredRows)
         state.matrixRows = matrix.rows
+        const maintenanceNeeded =
+          state.uiSettingsMeta?.schoolSetupHasIssues === true ||
+          state.uiSettingsMeta?.schoolSetupState === "maintenance" ||
+          state.uiSettingsMeta?.schoolSetupStoredQuartersMissing === true ||
+          normalizeText(state.schoolSetup?.schoolSetupState) === "maintenance"
+        if (maintenanceNeeded) {
+          renderGradeGridMaintenance({
+            title: "Quarter grades are temporarily unavailable",
+            lead: "Quarter setup is incomplete or invalid.",
+            note: "Open School Setup and save four explicit quarters before reloading the matrix.",
+          })
+          updateMetrics([])
+          const rangeHint = document.getElementById("rangeHint")
+          if (rangeHint) {
+            rangeHint.textContent = "Quarter setup is unavailable until School Setup is restored."
+          }
+          if (!state.loading) {
+            setStatus("Quarter setup is incomplete or invalid. Open School Setup to restore four explicit quarters.", true)
+          }
+          return
+        }
         ensureTable()
         if (state.table && state.tableBuilt) {
           try {
@@ -4798,7 +4897,7 @@
         if (schoolYear instanceof HTMLSelectElement) {
           state.filters.schoolYear = normalizeSchoolYearFilter(schoolYear.value)
         }
-        if (quarter instanceof HTMLSelectElement) state.filters.quarter = normalizeLower(quarter.value) || "q1"
+        if (quarter instanceof HTMLSelectElement) state.filters.quarter = normalizeQuarterCode(quarter.value)
         if (classFilter instanceof HTMLSelectElement) state.filters.classKey = normalizeText(classFilter.value) || "all"
         if (studentFilter instanceof HTMLSelectElement) state.filters.studentKey = normalizeText(studentFilter.value) || "all"
         if (schoolFilter instanceof HTMLSelectElement) state.filters.schoolKey = normalizeText(schoolFilter.value) || "all"
@@ -4905,19 +5004,20 @@
           setStatus("Missing API origin. Open with ?apiOrigin=http://127.0.0.1:8788", true)
           return
         }
-        restoreUiPreferences()
-        applyCurrentSchoolYearDefault({
-          force: true
-        })
-        applyFilterQueryOverrides()
-        applyCurrentSchoolYearDefault()
-        bindControls()
-        bindTableModalControls()
-        bindDistributionModalControls()
-        syncCompactModeUi()
-        syncPeriodButtons()
-        applyFilterControlState()
-        try {
+          restoreUiPreferences()
+          applyCurrentSchoolYearDefault({
+            force: true
+          })
+          applyFilterQueryOverrides()
+          applyCurrentSchoolYearDefault()
+          bindControls()
+          bindTableModalControls()
+          bindDistributionModalControls()
+          syncFilterControlValues()
+          syncCompactModeUi()
+          syncPeriodButtons()
+          applyFilterControlState()
+          try {
           await ensureAuthenticated()
         } catch (error) {
           if (error && error.status === 401) {

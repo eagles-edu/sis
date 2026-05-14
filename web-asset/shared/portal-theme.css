@@ -3564,6 +3564,19 @@ html[data-theme="dark"] body.parent-portal-page #performanceReportGradesTable ta
   background: var(--portal-dark-surface-support) !important;
   color: var(--portal-dark-text) !important;
 }
+html[data-theme="dark"] body.parent-portal-page .report-grades-table table tbody tr,
+html[data-theme="dark"] body.parent-portal-page #performanceReportGradesTable table tbody tr,
+html[data-theme="dark"] body.parent-portal-page .report-grades-table table thead tr,
+html[data-theme="dark"] body.parent-portal-page #performanceReportGradesTable table thead tr {
+  background: var(--portal-dark-surface-support) !important;
+}
+html[data-theme="dark"] body.parent-portal-page .report-grades-table table th,
+html[data-theme="dark"] body.parent-portal-page .report-grades-table table td,
+html[data-theme="dark"] body.parent-portal-page #performanceReportGradesTable table th,
+html[data-theme="dark"] body.parent-portal-page #performanceReportGradesTable table td {
+  background: transparent !important;
+  color: var(--portal-dark-text) !important;
+}
 html[data-theme="dark"] body.parent-portal-page .report-modal-ack-status {
   color: var(--portal-status-good-text) !important;
 }

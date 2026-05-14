@@ -4,6 +4,29 @@
     "schoolSetup": {
       "startDate": "2026-08-10",
       "endDate": "2027-05-28",
+      "schoolYear": "2026-2027",
+      "quarters": [
+        {
+          "quarter": "q1",
+          "startDate": "2026-08-10",
+          "endDate": "2026-10-31"
+        },
+        {
+          "quarter": "q2",
+          "startDate": "2026-11-01",
+          "endDate": "2027-01-31"
+        },
+        {
+          "quarter": "q3",
+          "startDate": "2027-02-01",
+          "endDate": "2027-03-31"
+        },
+        {
+          "quarter": "q4",
+          "startDate": "2027-04-01",
+          "endDate": "2027-05-28"
+        }
+      ],
       "letterGradeRanges": [
         {
           "letter": "A",
@@ -31,29 +54,7 @@
           "maxPercent": 59.99
         }
       ],
-      "schoolYear": "2026-2027",
-      "quarters": [
-        {
-          "quarter": "q1",
-          "startDate": "2026-08-10",
-          "endDate": "2026-10-21"
-        },
-        {
-          "quarter": "q2",
-          "startDate": "2026-10-22",
-          "endDate": "2027-01-01"
-        },
-        {
-          "quarter": "q3",
-          "startDate": "2027-01-02",
-          "endDate": "2027-03-16"
-        },
-        {
-          "quarter": "q4",
-          "startDate": "2027-03-17",
-          "endDate": "2027-05-28"
-        }
-      ]
+      "schoolSetupState": "ok"
     },
     "schoolProfile": {
       "schoolName": "Eagles Live",
@@ -61,6 +62,6 @@
       "mission": "Persist settings across live upgrades"
     }
   },
-  "updatedAt": "2026-05-13T11:16:53.657Z",
+  "updatedAt": "2026-05-14T10:15:43.174Z",
   "updatedBy": "admin"
 }

@@ -4000,19 +4000,40 @@
       return normalizeText(sourceGroups[0]?.quarterCode) || "";
     }
 
-    function buildQuarterGradeGroups(rows = [], schoolSetup = null) {
-      const source = Array.isArray(rows) ? rows : [];
-      const groups = new Map();
-      let latestRowTimestamp = -Infinity;
-      let latestQuarterCode = "";
-      source.forEach((row) => {
-        const rowDateValue = row?.submittedDate || row?.submittedAt || row?.dueDate || row?.dueAt;
-        const rowDate = rowDateValue instanceof Date ? rowDateValue : normalizeText(rowDateValue);
-        const quarter = resolveQuarterInfo(rowDate, schoolSetup);
-        if (!quarter?.quarter) return;
-        const quarterNumber = Number(quarter.quarter) || 0;
-        if (!quarterNumber) return;
-        const quarterCode = `q${quarterNumber}`;
+      function buildQuarterGradeGroups(rows = [], schoolSetup = null) {
+        const source = Array.isArray(rows) ? rows : [];
+        const schoolSetupState = normalizeText(schoolSetup?.schoolSetupState);
+        if (schoolSetupState && schoolSetupState !== "ok") {
+          return {
+            currentQuarter: null,
+            currentQuarterCode: "",
+            groups: [],
+            quarterBoardState: "maintenance",
+            maintenance: {
+              title: "Quarter grades are temporarily unavailable",
+              lead: "Quarter setup is incomplete or invalid.",
+              note: "Open School Setup and save four explicit quarters before reloading the matrix.",
+            },
+          };
+        }
+        const groups = new Map();
+        let latestRowTimestamp = -Infinity;
+        let latestQuarterCode = "";
+        let hasClassificationIssues = false;
+        source.forEach((row) => {
+          const rowDateValue = row?.submittedDate || row?.submittedAt || row?.dueDate || row?.dueAt;
+          const rowDate = rowDateValue instanceof Date ? rowDateValue : normalizeText(rowDateValue);
+          const quarter = resolveQuarterInfo(rowDate, schoolSetup);
+          if (!quarter?.quarter) {
+            hasClassificationIssues = true;
+            return;
+          }
+          const quarterNumber = Number(quarter.quarter) || 0;
+          if (!quarterNumber) {
+            hasClassificationIssues = true;
+            return;
+          }
+          const quarterCode = `q${quarterNumber}`;
         if (!groups.has(quarterCode)) {
           groups.set(quarterCode, {
             ...quarter,
@@ -4044,10 +4065,23 @@
           latestRowTimestamp = rowTimestamp;
           latestQuarterCode = quarterCode;
         }
-        groups.get(quarterCode).rows.push(normalizedRow);
-      });
-      const currentQuarterCode = resolveQuarterMatrixCurrentCode(Array.from(groups.values()), schoolSetup, latestQuarterCode);
-      const currentQuarter = groups.get(currentQuarterCode) || Array.from(groups.values())[0] || null;
+          groups.get(quarterCode).rows.push(normalizedRow);
+        });
+        if (hasClassificationIssues) {
+          return {
+            currentQuarter: null,
+            currentQuarterCode: "",
+            groups: [],
+            quarterBoardState: "maintenance",
+            maintenance: {
+              title: "Quarter grades are temporarily unavailable",
+              lead: "One or more grade rows could not be classified into a school quarter.",
+              note: "Open School Setup and restore the missing quarter mapping before reloading this page.",
+            },
+          };
+        }
+        const currentQuarterCode = resolveQuarterMatrixCurrentCode(Array.from(groups.values()), schoolSetup, latestQuarterCode);
+        const currentQuarter = groups.get(currentQuarterCode) || Array.from(groups.values())[0] || null;
       const ordered = [1, 2, 3, 4].map((quarterNumber) => {
         const quarterCode = `q${quarterNumber}`;
         const fallbackQuarter = quarterNumber === Number(currentQuarter?.quarter) ? currentQuarter : null;
@@ -4090,15 +4124,16 @@
         };
       });
       const activeQuarter = ordered.find((group) => normalizeText(group.quarterCode) === currentQuarterCode) || ordered.find((group) => Array.isArray(group.rows) && group.rows.length) || ordered[0] || null;
-      return {
-        currentQuarter: activeQuarter ? {
-          ...activeQuarter,
-          quarterCode: currentQuarterCode,
-        } : null,
-        currentQuarterCode,
-        groups: ordered,
-      };
-    }
+        return {
+          currentQuarter: activeQuarter ? {
+            ...activeQuarter,
+            quarterCode: currentQuarterCode,
+          } : null,
+          currentQuarterCode,
+          groups: ordered,
+          quarterBoardState: "ok",
+        };
+      }
 
     function buildQuarterExerciseTableRows(quarterGroup = {}, currentQuarterCode = "") {
       const rows = Array.isArray(quarterGroup.rows) ? quarterGroup.rows : [];
@@ -4144,12 +4179,14 @@
       });
     }
 
-    function hasCompleteQuarterSetup(schoolSetup = null) {
-      const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : [];
-      if (quarters.length < 4) return false;
-      return quarters.every((quarter) => (
-        quarter &&
-        normalizeText(quarter.quarter) &&
+      function hasCompleteQuarterSetup(schoolSetup = null) {
+        const schoolSetupState = normalizeText(schoolSetup?.schoolSetupState);
+        if (schoolSetupState) return schoolSetupState === "ok";
+        const quarters = Array.isArray(schoolSetup?.quarters) ? schoolSetup.quarters : [];
+        if (quarters.length < 4) return false;
+        return quarters.every((quarter) => (
+          quarter &&
+          normalizeText(quarter.quarter) &&
         normalizeText(quarter.startDate).slice(0, 10) &&
         normalizeText(quarter.endDate).slice(0, 10)
       ));
@@ -4220,9 +4257,19 @@
       return card;
     }
 
-    function renderQuarterGradeBoard(target, quarterState = {}) {
-      if (!target) return;
-      const groups = Array.isArray(quarterState.groups) ? quarterState.groups : [];
+      function renderQuarterGradeBoard(target, quarterState = {}) {
+        if (!target) return;
+        if (normalizeText(quarterState.quarterBoardState) === "maintenance") {
+          state.detailGradeTable?.destroy?.();
+          state.detailGradeTable = null;
+          renderQuarterBoardMaintenance(target, quarterState.maintenance || {
+            title: "Quarter grades are temporarily unavailable",
+            lead: "Quarter setup is incomplete or invalid.",
+            note: "Open School Setup and save four explicit quarters before reloading the matrix.",
+          });
+          return;
+        }
+        const groups = Array.isArray(quarterState.groups) ? quarterState.groups : [];
       target.innerHTML = "";
       state.detailGradeTable?.destroy?.();
       state.detailGradeTable = null;
@@ -4265,9 +4312,9 @@
       const tableHost = document.createElement("div");
       tableHost.className = "grade-tabulator-shell";
       const quarterButtons = new Map();
-      let activeQuarterCode = normalizeText(quarterState.currentQuarter?.quarterCode) || normalizeText(quarterState.currentQuarterCode) || normalizeText(groups[0]?.quarterCode) || "q1";
+      let activeQuarterCode = normalizeText(quarterState.currentQuarter?.quarterCode) || normalizeText(quarterState.currentQuarterCode) || normalizeText(groups[0]?.quarterCode) || "";
       if (!groups.some((group) => normalizeText(group.quarterCode) === activeQuarterCode)) {
-        activeQuarterCode = normalizeText(groups.find((group) => Array.isArray(group.rows) && group.rows.length)?.quarterCode) || normalizeText(groups[0]?.quarterCode) || "q1";
+        activeQuarterCode = normalizeText(groups.find((group) => Array.isArray(group.rows) && group.rows.length)?.quarterCode) || normalizeText(groups[0]?.quarterCode) || "";
       }
 
       function resolveGroup(code = activeQuarterCode) {
@@ -6915,7 +6962,7 @@
               return candidateId === rowId;
             }) === index;
           });
-        const quarterBoard = quarterSetupReady ? buildQuarterGradeGroups(quarterBoardRows, schoolSetup) : null;
+        const quarterBoard = buildQuarterGradeGroups(quarterBoardRows, schoolSetup);
         return {
           title: "Điểm số YTD",
           lead: gradeHistory.length ?
@@ -6949,12 +6996,8 @@
             quarterBoardRows.length ?
             "Use Q1-Q4 to filter the exercise detail rows for the active quarter." :
             "Chưa có hàng theo quý để hiển thị.",
-          quarterBoard,
-          quarterBoardMaintenance: quarterSetupReady ? null : {
-            title: "Quarter grades are temporarily unavailable",
-            lead: "Please check back soon.",
-            note: "Apologies for the inconvenience while quarter dates are restored in School Setup.",
-          },
+          quarterBoard: quarterBoard.quarterBoardState === "ok" ? quarterBoard : null,
+          quarterBoardMaintenance: quarterBoard.quarterBoardState === "ok" ? null : quarterBoard.maintenance,
           primaryTitle: "Điểm số gần đây",
           primaryItems: gradeHistory.slice(0, 10).map((row) => ({
             title: normalizeText(row.assignmentName) || "Bài tập",

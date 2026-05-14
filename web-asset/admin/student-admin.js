@@ -2480,7 +2480,12 @@
 
       const DEFAULT_UI_SETTINGS = {
         multiSchool: false,
-        schoolSetup: defaultSchoolSetupRange(),
+        schoolSetup: {
+          startDate: "",
+          endDate: "",
+          schoolYear: "",
+          quarters: [],
+        },
         schoolProfile: defaultSchoolProfile(),
         newsReportValidation: defaultNewsReportValidationSettings(),
         queueHub: {
@@ -6949,6 +6954,10 @@
         return `${startYear}-${endYear}`;
       }
 
+      function isSchoolYearKey(value = "") {
+        return /^\d{4}-\d{4}$/.test(normalizeText(value));
+      }
+
       function nearestWeekdayIsoDate(targetDate = "", minDate = "", maxDate = "") {
         const minIso = normalizeText(minDate).slice(0, 10);
         const maxIso = normalizeText(maxDate).slice(0, 10);
@@ -7041,32 +7050,86 @@
         return ranges;
       }
 
-      function normalizeSchoolSetup(source = {}) {
-        const fallback = defaultSchoolSetupRange();
-        let startDate = normalizeText(source?.startDate || fallback.startDate).slice(
-          0,
-          10,
-        );
-        let endDate = normalizeText(source?.endDate || fallback.endDate).slice(0, 10);
-        if (
-          !parseIsoDateLocal(startDate) ||
-          !parseIsoDateLocal(endDate) ||
-          compareIsoDateText(startDate, endDate) > 0
-        ) {
-          startDate = fallback.startDate;
-          endDate = fallback.endDate;
-        }
-        const quarters = splitSchoolYearIntoQuarters(startDate, endDate);
+      function normalizeSchoolSetupQuarters(source = []) {
+        return (Array.isArray(source) ? source : [])
+          .map((entry) => {
+            const quarter = quarterKey(entry?.quarter);
+            const startDate = normalizeText(entry?.startDate).slice(0, 10);
+            const endDate = normalizeText(entry?.endDate).slice(0, 10);
+            if (!quarter || !parseIsoDateLocal(startDate) || !parseIsoDateLocal(endDate)) return null;
+            if (compareIsoDateText(startDate, endDate) > 0) return null;
+            return {
+              quarter,
+              startDate,
+              endDate,
+            };
+          })
+          .filter((entry) => entry && typeof entry === "object")
+          .sort((left, right) => quarterSortKey(left?.quarter) - quarterSortKey(right?.quarter));
+      }
+
+      function quarterSortKey(value = "") {
+        const normalized = quarterKey(value);
+        if (normalized === "q1") return 1;
+        if (normalized === "q2") return 2;
+        if (normalized === "q3") return 3;
+        if (normalized === "q4") return 4;
+        return 9;
+      }
+
+      function normalizeSchoolSetupState(source = {}) {
+        const normalizedSource = source && typeof source === "object" ? source : {};
+        const startDate = normalizeText(normalizedSource.startDate).slice(0, 10);
+        const endDate = normalizeText(normalizedSource.endDate).slice(0, 10);
+        const schoolYear = normalizeText(normalizedSource.schoolYear);
+        const quarters = normalizeSchoolSetupQuarters(normalizedSource.quarters);
         const letterGradeRanges = normalizeSchoolLetterGradeRanges(
-          source?.letterGradeRanges,
+          normalizedSource.letterGradeRanges,
         );
+        const validStart = parseIsoDateLocal(startDate);
+        const validEnd = parseIsoDateLocal(endDate);
+        const hasValidRange =
+          Boolean(validStart && validEnd && compareIsoDateText(startDate, endDate) <= 0);
+        const derivedSchoolYear = hasValidRange ?
+          schoolYearLabelFromRange(startDate, endDate) :
+          "";
+        const hasValidSchoolYear =
+          Boolean(
+            isSchoolYearKey(schoolYear) &&
+            schoolYear === derivedSchoolYear,
+          );
+        const hasSequentialQuarters =
+          quarters.length === 4 &&
+          quarters.every((entry, index) => {
+            const expectedQuarter = `q${index + 1}`;
+            if (!entry || normalizeText(entry.quarter).toLowerCase() !== expectedQuarter) return false;
+            if (!parseIsoDateLocal(entry.startDate) || !parseIsoDateLocal(entry.endDate)) return false;
+            if (compareIsoDateText(entry.startDate, entry.endDate) > 0) return false;
+            if (index === 0) {
+              if (entry.startDate !== startDate) return false;
+            } else {
+              const previousQuarter = quarters[index - 1];
+              if (isoDateOffset(previousQuarter.endDate, 1) !== entry.startDate) return false;
+            }
+            if (index === quarters.length - 1 && entry.endDate !== endDate) return false;
+            return true;
+          });
+        const schoolSetupState =
+          hasValidRange && hasValidSchoolYear && hasSequentialQuarters ?
+            "ok" :
+            "maintenance";
         return {
           startDate,
           endDate,
-          schoolYear: schoolYearLabelFromRange(startDate, endDate),
+          schoolYear,
           quarters,
           letterGradeRanges,
+          schoolSetupState,
         };
+      }
+
+      function normalizeSchoolSetup(source = {}) {
+        return normalizeSchoolSetupState(source);
       }
 
       function normalizeSchoolProfile(source = {}) {
@@ -7210,11 +7273,14 @@
         const schoolSetup = candidate.schoolSetup && typeof candidate.schoolSetup === "object" ?
           candidate.schoolSetup :
           {}
-        const quarters = Array.isArray(schoolSetup.quarters) ? schoolSetup.quarters : []
+        const normalizedSchoolSetup = normalizeSchoolSetup(schoolSetup)
+        const quarters = Array.isArray(normalizedSchoolSetup.quarters) ? normalizedSchoolSetup.quarters : []
         return {
           schoolSetupStoredQuarterCount: quarters.length,
           schoolSetupStoredQuartersPresent: quarters.length > 0,
           schoolSetupStoredQuartersMissing: quarters.length < 4,
+          schoolSetupState: normalizedSchoolSetup.schoolSetupState,
+          schoolSetupHasIssues: normalizedSchoolSetup.schoolSetupState !== "ok",
         }
       }
 
@@ -7387,7 +7453,7 @@
       function schoolSetupQuarterRowsHtml(setup = schoolSetupState()) {
         const quarters = Array.isArray(setup?.quarters) ? setup.quarters : [];
         if (!quarters.length)
-          return '<tr><td colspan="4">Set first and last school day to generate quarters.</td></tr>';
+          return '<tr><td colspan="4">Click Auto-Fill Quarters to generate the explicit quarter rows.</td></tr>';
         return quarters
           .map((entry) => {
             const quarter = normalizeText(entry?.quarter || "").toUpperCase();
@@ -7397,6 +7463,55 @@
             return `<tr><td>${escapeHtml(quarter)}</td><td>${escapeHtml(startDate)}</td><td>${escapeHtml(endDate)}</td><td>${days}</td></tr>`;
           })
           .join("");
+      }
+
+      function schoolSetupDraftQuarters() {
+        const setup = state.uiSettings?.schoolSetup || {};
+        return normalizeSchoolSetupQuarters(setup.quarters);
+      }
+
+      function autoFillSchoolSetupFromInputs() {
+        const startDate = normalizeText(
+          document.getElementById("schoolSetupStartDate")?.value,
+        ).slice(0, 10);
+        const endDate = normalizeText(
+          document.getElementById("schoolSetupEndDate")?.value,
+        ).slice(0, 10);
+        const letterGradeRangesText = normalizeText(
+          document.getElementById("schoolSetupLetterGradeRanges")?.value,
+        );
+        if (!parseIsoDateLocal(startDate) || !parseIsoDateLocal(endDate)) {
+          throw new Error("First and last school day are required.");
+        }
+        if (compareIsoDateText(startDate, endDate) > 0) {
+          throw new Error("Last school day must be on or after the first school day.");
+        }
+        const quarters = splitSchoolYearIntoQuarters(startDate, endDate);
+        if (!quarters.length) {
+          throw new Error("Unable to generate quarter rows for the selected school days.");
+        }
+        const setup = normalizeSchoolSetup({
+          startDate,
+          endDate,
+          schoolYear: schoolYearLabelFromRange(startDate, endDate),
+          quarters,
+          letterGradeRanges: parseSchoolLetterGradeRangesText(letterGradeRangesText),
+        });
+        state.uiSettings = {
+          ...state.uiSettings,
+          schoolSetup: setup,
+        };
+        renderSchoolSetupPanel({
+          setup,
+          profile: draftSchoolProfileFromInputs({
+            fallbackProfile: schoolProfileState(),
+          }),
+          newsReportValidation: draftNewsReportValidationFromInputs({
+            fallbackValidation: newsReportValidationState(),
+          }),
+          message: "Quarter rows auto-filled. Review and save to persist them.",
+        });
+        return setup;
       }
 
       function schoolSetupInputValue(id = "", fallback = "") {
@@ -7724,19 +7839,23 @@
         if (rowsEl) rowsEl.innerHTML = schoolSetupQuarterRowsHtml(normalizedSetup);
         if (warningEl instanceof HTMLElement) {
           const meta = state.uiSettingsMeta || {};
-          const portalIssue = meta.schoolSetupHasIssues === true || meta.schoolSetupStoredQuartersMissing === true;
+          const portalIssue =
+            meta.schoolSetupHasIssues === true ||
+            meta.schoolSetupStoredQuartersMissing === true ||
+            meta.schoolSetupState === "maintenance" ||
+            normalizedSetup.schoolSetupState !== "ok";
           warningEl.classList.toggle("hidden", !portalIssue);
           warningEl.style.color = portalIssue ? "var(--portal-status-warn-text)" : "";
           warningEl.style.fontWeight = portalIssue ? "700" : "";
           warningEl.innerHTML = portalIssue ?
-            'Quarter setup is incomplete or invalid. <a href="#schoolSetupPanel">Open School Setup</a> to restore it before rollover or after any settings hiccup.' :
+            'Quarter setup is incomplete or invalid. Click Auto-Fill Quarters, then save to restore it before rollover or after any settings hiccup.' :
             "";
         }
         if (statusEl) {
           statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
-          const defaultMessage =
-            `School year ${normalizedSetup.schoolYear}: ${normalizedSetup.startDate} to ${normalizedSetup.endDate}. ` +
-            "Quarter ends avoid weekends.";
+          const defaultMessage = normalizedSetup.schoolSetupState === "ok" ?
+            `School year ${normalizedSetup.schoolYear}: ${normalizedSetup.startDate} to ${normalizedSetup.endDate}. Quarter rows are ready to save.` :
+            "School setup is incomplete until quarter rows are auto-filled and saved.";
           statusEl.textContent = normalizeText(message) || defaultMessage;
         }
       }
@@ -7757,11 +7876,21 @@
         if (compareIsoDateText(startDate, endDate) > 0) {
           throw new Error("Last school day must be on or after the first school day.");
         }
-        return normalizeSchoolSetup({
+        const quarters = schoolSetupDraftQuarters();
+        if (!quarters.length) {
+          throw new Error("Click Auto-Fill Quarters before saving school setup.");
+        }
+        const setup = normalizeSchoolSetup({
           startDate,
           endDate,
+          schoolYear: schoolYearLabelFromRange(startDate, endDate),
+          quarters,
           letterGradeRanges: parseSchoolLetterGradeRangesText(letterGradeRangesText),
         });
+        if (setup.schoolSetupState !== "ok") {
+          throw new Error("Quarter rows do not match the selected school year. Click Auto-Fill Quarters again.");
+        }
+        return setup;
       }
 
       async function saveSchoolSetupFromInputs({ notify = true } = {}) {
@@ -7776,11 +7905,16 @@
         const newsReportValidation = draftNewsReportValidationFromInputs({
           fallbackValidation: newsReportValidationState(),
         });
+        if (setup.schoolSetupState !== "ok") {
+          throw new Error("Click Auto-Fill Quarters before saving school setup.");
+        }
         persistUiSettings({
           ...state.uiSettings,
           schoolSetup: {
             startDate: setup.startDate,
             endDate: setup.endDate,
+            schoolYear: setup.schoolYear,
+            quarters: setup.quarters,
             letterGradeRanges: normalizeSchoolLetterGradeRanges(
               setup.letterGradeRanges,
             ),
@@ -7806,7 +7940,9 @@
       function schoolSetupQuarterForIsoDate(value = "", setup = schoolSetupState()) {
         const isoDate = normalizeText(value).slice(0, 10);
         if (!parseIsoDateLocal(isoDate)) return null;
-        const quarters = Array.isArray(setup?.quarters) ? setup.quarters : [];
+        const normalizedSetup = normalizeSchoolSetup(setup);
+        if (normalizedSetup.schoolSetupState !== "ok") return null;
+        const quarters = Array.isArray(normalizedSetup?.quarters) ? normalizedSetup.quarters : [];
         for (let index = 0; index < quarters.length; index += 1) {
           const entry = quarters[index];
           const startDate = normalizeText(entry?.startDate).slice(0, 10);
@@ -7818,14 +7954,6 @@
           ) {
             return entry;
           }
-        }
-        if (
-          parseIsoDateLocal(setup?.startDate) &&
-          parseIsoDateLocal(setup?.endDate) &&
-          compareIsoDateText(isoDate, setup.startDate) >= 0 &&
-          compareIsoDateText(isoDate, setup.endDate) <= 0
-        ) {
-          return quarters[quarters.length - 1] || null;
         }
         return null;
       }
@@ -9548,7 +9676,6 @@
               if (entry.id !== item.id) return entry;
               return { ...entry, done: doneInput.checked };
             });
-            renderAssignmentDraftItems();
           });
           doneTd.appendChild(doneInput);
 
@@ -9593,11 +9720,22 @@
         });
       }
 
+      function collectAssignmentDraftItems() {
+        const items = normalizeAssignmentItems(state.assignmentDraft?.items || []);
+        const checkboxes = Array.from(
+          document.querySelectorAll("#assignmentItemRows input[type='checkbox']"),
+        );
+        return items.map((item, index) => ({
+          ...item,
+          done: checkboxes[index]?.checked === true,
+        }));
+      }
+
       function collectAssignmentForm() {
         const level = normalizeAssignmentTargetLevel(
           document.getElementById("assignLevel").value,
         );
-        const items = normalizeAssignmentItems(state.assignmentDraft?.items || []);
+        const items = collectAssignmentDraftItems();
         const fallbackExerciseTitle = normalizeText(
           document.getElementById("assignmentExerciseSelect")?.value,
         );
@@ -13774,13 +13912,7 @@
         const isoDate = normalizeText(value).slice(0, 10);
         const setupQuarter = schoolSetupQuarterForIsoDate(isoDate);
         if (setupQuarter?.quarter) return normalizeLower(setupQuarter.quarter);
-        const parsed = parseIsoDateLocal(isoDate);
-        if (!parsed) return "q1";
-        const month = shiftToFixedTimeZone(parsed).getUTCMonth() + 1;
-        if (month >= 8 && month <= 10) return "q1";
-        if (month >= 11 || month <= 1) return "q2";
-        if (month >= 2 && month <= 4) return "q3";
-        return "q4";
+        return "";
       }
 
       function parentTrackingSummaryKey(levelName, classDate) {
@@ -14104,10 +14236,7 @@
 
       function normalizeGradeChartState(source = {}) {
         const next = source && typeof source === "object" ? source : {};
-        const normalizedQuarter =
-          quarterKey(next.quarter) ||
-          quarterKey(quarterFromIsoDate(localIsoDate())) ||
-          "q1";
+        const normalizedQuarter = quarterKey(next.quarter) || "";
         let customFrom = normalizeText(next.customFrom).slice(0, 10);
         let customTo = normalizeText(next.customTo).slice(0, 10);
         if (customFrom && customTo && compareIsoDateText(customFrom, customTo) > 0) {
@@ -14587,7 +14716,7 @@
 
         if (groupByEl) groupByEl.value = normalizedGradeChartGroupBy(chart.groupBy);
         if (quarterEl) {
-          quarterEl.value = quarterKey(chart.quarter) || "q1";
+          quarterEl.value = quarterKey(chart.quarter);
           quarterEl.disabled = !["quarter", "qtd"].includes(chart.period);
         }
 
@@ -17959,7 +18088,7 @@
         if (yearEl && !normalizeText(yearEl.value))
           yearEl.value = defaultAttendanceSchoolYear(classDate);
         if (quarterEl && !normalizeText(quarterEl.value))
-          quarterEl.value = quarterFromIsoDate(classDate);
+          quarterEl.value = quarterFromIsoDate(classDate) || "q1";
       }
 
       function syncAttendanceLevelEditorInputs() {
@@ -18594,6 +18723,7 @@
         document.getElementById("a_className").value = "";
         document.getElementById("a_date").value = attendanceTodayIsoDate();
         syncAttendanceDateDerivedFields();
+        ensureAttendanceLandingFormDefaults();
         document.getElementById("a_status").value = "absent";
         document.getElementById("a_comments").value = "";
         state.attendanceLanding.selectionsByStudentId = {};
@@ -18679,7 +18809,7 @@
             document.getElementById("a_id").value = row.id;
             document.getElementById("a_className").value = row.className || "";
             document.getElementById("a_schoolYear").value = row.schoolYear || "";
-            document.getElementById("a_quarter").value = row.quarter || "q1";
+            document.getElementById("a_quarter").value = row.quarter || "";
             document.getElementById("a_date").value =
               row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : "";
             document.getElementById("a_status").value = row.status || "present";
@@ -18769,7 +18899,7 @@
         document.getElementById("g_id").value = "";
         document.getElementById("g_className").value = "";
         applyDefaultGradeAndReportSchoolYears(true);
-        document.getElementById("g_quarter").value = "q1";
+        document.getElementById("g_quarter").value = "";
         document.getElementById("g_assignmentName").value = "";
         document.getElementById("g_dueAt").value = "";
         document.getElementById("g_submittedAt").value = "";
@@ -18865,7 +18995,7 @@
             document.getElementById("g_className").value = row.className || "";
             document.getElementById("g_schoolYear").value =
               row.schoolYear || currentAdminSchoolYear();
-            document.getElementById("g_quarter").value = row.quarter || "q1";
+            document.getElementById("g_quarter").value = row.quarter || "";
             document.getElementById("g_assignmentName").value =
               row.assignmentName || "";
             document.getElementById("g_dueAt").value =
@@ -18940,7 +19070,7 @@
         document.getElementById("r_id").value = "";
         document.getElementById("r_className").value = "";
         applyDefaultGradeAndReportSchoolYears(true);
-        document.getElementById("r_quarter").value = "q1";
+        document.getElementById("r_quarter").value = "";
         document.getElementById("r_homeworkCompletionRate").value = "";
         document.getElementById("r_homeworkOnTimeRate").value = "";
         document.getElementById("r_behaviorScore").value = "";
@@ -19099,7 +19229,7 @@
             document.getElementById("r_className").value = row.className || "";
             document.getElementById("r_schoolYear").value =
               row.schoolYear || currentAdminSchoolYear();
-            document.getElementById("r_quarter").value = row.quarter || "q1";
+            document.getElementById("r_quarter").value = row.quarter || "";
             document.getElementById("r_homeworkCompletionRate").value =
               row.homeworkCompletionRate ?? "";
             document.getElementById("r_homeworkOnTimeRate").value =
@@ -19850,7 +19980,22 @@
           ?.addEventListener("change", previewSchoolSetupFromInputs);
         document
           .getElementById("schoolSetupAutoFillBtn")
-          ?.addEventListener("click", previewSchoolSetupFromInputs);
+          ?.addEventListener("click", () => {
+            try {
+              autoFillSchoolSetupFromInputs();
+              setStatus("Quarter rows auto-filled.");
+            } catch (error) {
+              const draft = schoolSetupDraftForRender();
+              renderSchoolSetupPanel({
+                setup: draft.setup,
+                profile: draft.profile,
+                newsReportValidation: draft.newsReportValidation,
+                message: error.message || "Unable to auto-fill quarter rows.",
+                isError: true,
+              });
+              setStatus(error.message || "Unable to auto-fill quarter rows.", true);
+            }
+          });
         [
           "schoolSetupNewsSourceDefaultCnn",
           "schoolSetupNewsSourceDefaultBbc",
@@ -19977,7 +20122,20 @@
                 previewSchoolSetupFromInputs();
               },
               onSchoolSetupAutoFill() {
-                previewSchoolSetupFromInputs();
+                try {
+                  autoFillSchoolSetupFromInputs();
+                  setStatus("Quarter rows auto-filled.");
+                } catch (error) {
+                  const draft = schoolSetupDraftForRender();
+                  renderSchoolSetupPanel({
+                    setup: draft.setup,
+                    profile: draft.profile,
+                    newsReportValidation: draft.newsReportValidation,
+                    message: error.message || "Unable to auto-fill quarter rows.",
+                    isError: true,
+                  });
+                  setStatus(error.message || "Unable to auto-fill quarter rows.", true);
+                }
               },
               onSchoolSetupLogoChange(event) {
                 handleSchoolSetupLogoUpload(event).catch((error) => {
@@ -20906,7 +21064,7 @@
         });
         document.getElementById("gradeChartQuarter")?.addEventListener("change", () => {
           setGradeChartState({
-            quarter: document.getElementById("gradeChartQuarter")?.value || "q1",
+            quarter: document.getElementById("gradeChartQuarter")?.value || "",
           });
           renderGradePulseChart(state.visibleTableRows?.grades || []);
         });
@@ -21145,7 +21303,7 @@
                 renderGradePulseChart(state.visibleTableRows?.grades || []);
               },
               onGradeChartQuarterChange(value) {
-                setGradeChartState({ quarter: value || "q1" });
+                setGradeChartState({ quarter: value || "" });
                 renderGradePulseChart(state.visibleTableRows?.grades || []);
               },
               onGradeChartSchoolYearChange(value) {
@@ -21173,8 +21331,7 @@
         const selectedSchoolYear = normalizeGradeChartOperationalSchoolYear(
           chart.schoolYear,
         );
-        const selectedQuarter =
-          quarterKey(chart.quarter) || quarterKey(quarterFromIsoDate(localIsoDate())) || "q1";
+        const selectedQuarter = quarterKey(chart.quarter);
         const selectedPeriod = normalizedGradeChartPeriod(chart.period);
         const customFrom = normalizeText(chart.customFrom).slice(0, 10);
         const customTo = normalizeText(chart.customTo).slice(0, 10);

@@ -7096,7 +7096,7 @@ test("clear buttons reset local admin form fields", async () => {
   assert.equal(document.getElementById("g_id").value, "")
   assert.equal(document.getElementById("g_className").value, "")
   assert.equal(document.getElementById("g_schoolYear").value, expectedCurrentSchoolYearLabel())
-  assert.equal(document.getElementById("g_quarter").value, "q1")
+  assert.equal(document.getElementById("g_quarter").value, "")
   assert.equal(document.getElementById("g_assignmentName").value, "")
   assert.equal(document.getElementById("g_homeworkCompleted").value, "")
 
@@ -7109,7 +7109,7 @@ test("clear buttons reset local admin form fields", async () => {
   assert.equal(document.getElementById("r_id").value, "")
   assert.equal(document.getElementById("r_className").value, "")
   assert.equal(document.getElementById("r_schoolYear").value, expectedCurrentSchoolYearLabel())
-  assert.equal(document.getElementById("r_quarter").value, "q1")
+  assert.equal(document.getElementById("r_quarter").value, "")
   assert.equal(document.getElementById("r_comments").value, "")
 
   document.getElementById("familyPhone").value = "0908000000"
@@ -8563,6 +8563,7 @@ test("school setup profile fields persist and reset from saved values", async ()
   }
   document.getElementById("schoolSetupStartDate").value = "2026-08-10"
   document.getElementById("schoolSetupEndDate").value = "2027-05-28"
+  document.getElementById("schoolSetupAutoFillBtn").click()
   document.getElementById("schoolSetupSaveBtn").click()
 
   await waitFor(() => {

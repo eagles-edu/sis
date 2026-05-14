@@ -21,6 +21,22 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 4. Inspect route code before assuming auth behavior.
 5. Keep edits ASCII unless the target file already needs Unicode.
 6. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
+## Literal Instruction Terms
+
+The following words are hard constraints, not emphasis: `all`, `every`, `everything`, `everywhere`, `none`, `nothing`, `never`, `always`, `completely`, `thoroughly`, `full`, `full sync`, `move all`, `no fallback`, `no trash fallback`, `only fallback to exact copy of data`, `parity`.
+
+- `all`, `every`, `everything`, `everywhere` mean exhaustive within the stated scope. The scope includes source files, generated assets, minified files, runtime copies, test fixtures, and sync targets when they are part of the request.
+- `move all` means search the full declared scope and change every in-scope match. It does not mean a representative sample, a single file, or a line range.
+- `none`, `nothing`, `never`, `no fallback`, `no trash fallback` mean fail closed. Do not invent guessed values, synthetic defaults, heuristics, or "close enough" placeholders.
+- `only fallback to exact copy of data` means fallback is allowed only when the exact authoritative value exists and can be copied verbatim. If the verbatim value is unavailable, do not substitute another value.
+- `always` means every relevant execution path and every affected surface, every time the condition occurs, until a later instruction explicitly changes the rule.
+- `completely`, `thoroughly`, `full`, and `full sync` mean the work is not complete until all in-scope matches are changed and verified, including any generated, minified, or deployed copies that must remain in parity with source.
+- `parity` means the same behavior, same data contract, and same visible result across equivalent environments and surfaces.
+- `on page` means the page HTML, inline styles, embedded scripts, page-local CSS, and any generated or minified assets that affect that page.
+- If a task uses any of these terms, interpret them literally and choose the broadest complete scope the request reasonably implies. Do not narrow them into a sample, a window, or a "good enough" subset.
+- Do not report completion unless exhaustive search, in-scope edits, generated-asset rebuilds, and verification have all been completed with zero remaining in-scope matches.
+- If the scope is genuinely ambiguous after inspection, stop and ask before making changes.
+- This contract overrides any weaker paraphrase or casual usage.
 
 ## Communication
 
