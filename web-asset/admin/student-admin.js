@@ -2293,21 +2293,6 @@
         DEFAULT_LEVEL_CATALOG.map((level, index) => [levelNameKey(level), index]),
       );
 
-      function defaultSchoolSetupRange(value = new Date()) {
-        const date =
-          value instanceof Date ? new Date(value.getTime()) : new Date(value);
-        const fallback = new Date();
-        const source = Number.isNaN(date.valueOf()) ? fallback : date;
-        const shifted = new Date(source.getTime() + 7 * 60 * 60 * 1000);
-        const month = shifted.getUTCMonth() + 1;
-        const startYear =
-          month >= 8 ? shifted.getUTCFullYear() : shifted.getUTCFullYear() - 1;
-        return {
-          startDate: `${String(startYear).padStart(4, "0")}-08-01`,
-          endDate: `${String(startYear + 1).padStart(4, "0")}-05-31`,
-        };
-      }
-
       function defaultSchoolLetterGradeRanges() {
         return [
           { letter: "A", minPercent: 90, maxPercent: 100 },
@@ -6935,13 +6920,6 @@
         return Math.round((utcEnd - utcStart) / millisPerDay);
       }
 
-      function isWeekendIsoDate(value = "") {
-        const parsed = parseIsoDateLocal(value);
-        if (!parsed) return false;
-        const weekday = shiftToFixedTimeZone(parsed).getUTCDay();
-        return weekday === 0 || weekday === 6;
-      }
-
       function schoolYearLabelFromRange(startDate = "", endDate = "") {
         const start = parseIsoDateLocal(startDate);
         const end = parseIsoDateLocal(endDate);
@@ -6956,48 +6934,6 @@
 
       function isSchoolYearKey(value = "") {
         return /^\d{4}-\d{4}$/.test(normalizeText(value));
-      }
-
-      function nearestWeekdayIsoDate(targetDate = "", minDate = "", maxDate = "") {
-        const minIso = normalizeText(minDate).slice(0, 10);
-        const maxIso = normalizeText(maxDate).slice(0, 10);
-        let targetIso = normalizeText(targetDate).slice(0, 10);
-        if (
-          !parseIsoDateLocal(minIso) ||
-          !parseIsoDateLocal(maxIso) ||
-          compareIsoDateText(minIso, maxIso) > 0
-        )
-          return "";
-        if (!parseIsoDateLocal(targetIso)) targetIso = minIso;
-        if (compareIsoDateText(targetIso, minIso) < 0) targetIso = minIso;
-        if (compareIsoDateText(targetIso, maxIso) > 0) targetIso = maxIso;
-        if (!isWeekendIsoDate(targetIso)) return targetIso;
-
-        const candidates = [];
-        let previousIso = targetIso;
-        while (compareIsoDateText(previousIso, minIso) >= 0) {
-          if (!isWeekendIsoDate(previousIso)) {
-            candidates.push(previousIso);
-            break;
-          }
-          previousIso = isoDateOffset(previousIso, -1);
-        }
-        let nextIso = targetIso;
-        while (compareIsoDateText(nextIso, maxIso) <= 0) {
-          if (!isWeekendIsoDate(nextIso)) {
-            candidates.push(nextIso);
-            break;
-          }
-          nextIso = isoDateOffset(nextIso, 1);
-        }
-        if (!candidates.length) return targetIso;
-        candidates.sort((left, right) => {
-          const leftDiff = Math.abs(isoDateDiffDays(targetIso, left));
-          const rightDiff = Math.abs(isoDateDiffDays(targetIso, right));
-          if (leftDiff !== rightDiff) return leftDiff - rightDiff;
-          return compareIsoDateText(left, right);
-        });
-        return candidates[0];
       }
 
       function splitSchoolYearIntoQuarters(startDate = "", endDate = "") {
@@ -7023,20 +6959,22 @@
           let end = "";
           if (index === 3) {
             end = endIso;
-            if (isWeekendIsoDate(end)) {
-              end = nearestWeekdayIsoDate(end, start, endIso) || end;
-            }
           } else {
             const minimumDaysAfter = quartersLeft - 1;
             const maxLength = Math.max(1, remainingDays - minimumDaysAfter);
             const suggestedLength = Math.max(
               1,
-              Math.round(remainingDays / quartersLeft),
+              Math.floor(remainingDays / quartersLeft),
             );
             const pickedLength = Math.min(maxLength, suggestedLength);
-            const targetEnd = isoDateOffset(start, pickedLength - 1);
             const latestAllowed = isoDateOffset(endIso, -minimumDaysAfter);
-            end = nearestWeekdayIsoDate(targetEnd, start, latestAllowed) || targetEnd;
+            end = isoDateOffset(start, pickedLength - 1);
+            if (
+              parseIsoDateLocal(latestAllowed) &&
+              compareIsoDateText(end, latestAllowed) > 0
+            ) {
+              end = latestAllowed;
+            }
           }
 
           if (!parseIsoDateLocal(end) || compareIsoDateText(end, start) < 0)
@@ -7382,27 +7320,27 @@
 
       function defaultAttendanceSchoolYear(value = new Date()) {
         const setup = schoolSetupState();
+        const schoolYear = normalizeText(setup?.schoolYear);
         const isoDate =
           value instanceof Date ?
             localIsoDate(value)
           : normalizeText(value).slice(0, 10);
+        if (!schoolYear) return "";
+        if (!isoDate) return schoolYear;
         if (
-          parseIsoDateLocal(isoDate) &&
-          parseIsoDateLocal(setup.startDate) &&
-          parseIsoDateLocal(setup.endDate) &&
+          !parseIsoDateLocal(isoDate) ||
+          !parseIsoDateLocal(setup.startDate) ||
+          !parseIsoDateLocal(setup.endDate)
+        ) {
+          return "";
+        }
+        if (
           compareIsoDateText(isoDate, setup.startDate) >= 0 &&
           compareIsoDateText(isoDate, setup.endDate) <= 0
         ) {
-          return setup.schoolYear;
+          return schoolYear;
         }
-        const date =
-          value instanceof Date ? value : parseIsoDateLocal(isoDate) || new Date(value);
-        if (!date || Number.isNaN(date.valueOf())) return setup.schoolYear;
-        const shifted = shiftToFixedTimeZone(date);
-        const year = shifted.getUTCFullYear();
-        const month = shifted.getUTCMonth() + 1;
-        if (month >= 8) return `${year}-${year + 1}`;
-        return `${year - 1}-${year}`;
+        return "";
       }
 
       function loadAttendanceLevelTileConfigFromStorage() {
@@ -7438,6 +7376,7 @@
       }
 
       state.uiSettings = loadUiSettingsFromStorage();
+      renderSchoolSetupAccessWarning();
       state.profileFormConfig = loadProfileFormConfigFromStorage();
       state.tableArchiveIndex = loadTableArchiveIndexFromStorage();
       state.tableColumnVisibility = loadAllTableColumnVisibilityFromStorage();
@@ -7512,6 +7451,27 @@
           message: "Quarter rows auto-filled. Review and save to persist them.",
         });
         return setup;
+      }
+
+      function previewSchoolSetupFromInputsData() {
+        const startDate = normalizeText(
+          document.getElementById("schoolSetupStartDate")?.value,
+        ).slice(0, 10);
+        const endDate = normalizeText(
+          document.getElementById("schoolSetupEndDate")?.value,
+        ).slice(0, 10);
+        const letterGradeRangesText = normalizeText(
+          document.getElementById("schoolSetupLetterGradeRanges")?.value,
+        );
+        if (!parseIsoDateLocal(startDate) || !parseIsoDateLocal(endDate)) return null;
+        if (compareIsoDateText(startDate, endDate) > 0) return null;
+        return normalizeSchoolSetup({
+          startDate,
+          endDate,
+          schoolYear: schoolYearLabelFromRange(startDate, endDate),
+          quarters: splitSchoolYearIntoQuarters(startDate, endDate),
+          letterGradeRanges: parseSchoolLetterGradeRangesText(letterGradeRangesText),
+        });
       }
 
       function schoolSetupInputValue(id = "", fallback = "") {
@@ -7668,12 +7628,7 @@
       }
 
       function schoolSetupDraftForRender() {
-        let setup = null;
-        try {
-          setup = draftSchoolSetupFromInputs();
-        } catch (error) {
-          void error;
-        }
+        const setup = previewSchoolSetupFromInputsData();
         return {
           setup: setup || schoolSetupState(),
           profile: draftSchoolProfileFromInputs({
@@ -7858,6 +7813,35 @@
             "School setup is incomplete until quarter rows are auto-filled and saved.";
           statusEl.textContent = normalizeText(message) || defaultMessage;
         }
+        renderSchoolSetupAccessWarning(normalizedSetup);
+      }
+
+      function schoolSetupAccessWarningHtml(setup = schoolSetupState()) {
+        const normalizedSetup = normalizeSchoolSetup(setup);
+        const hasIssues =
+          normalizedSetup.schoolSetupState !== "ok" ||
+          state.uiSettingsMeta?.schoolSetupHasIssues === true;
+        if (!hasIssues) return "";
+        const isUnset =
+          !normalizeText(normalizedSetup.startDate) &&
+          !normalizeText(normalizedSetup.endDate) &&
+          !normalizeText(normalizedSetup.schoolYear) &&
+          (!Array.isArray(normalizedSetup.quarters) || !normalizedSetup.quarters.length);
+        const message = isUnset ?
+          "School setup is unset." :
+          "School setup is incomplete or invalid.";
+        return `${message} <a href="/admin/school-setup#schoolSetupPanel" rel="bookmark">Open School Setup</a> to set the quarter rows before using grades or portals.`;
+      }
+
+      function renderSchoolSetupAccessWarning(setup = schoolSetupState()) {
+        const warningHtml = schoolSetupAccessWarningHtml(setup);
+        document
+          .querySelectorAll("[data-school-setup-access-warning]")
+          .forEach((warningEl) => {
+            if (!(warningEl instanceof HTMLElement)) return;
+            warningEl.classList.toggle("hidden", !warningHtml);
+            warningEl.innerHTML = warningHtml;
+          });
       }
 
       function draftSchoolSetupFromInputs() {
@@ -8010,6 +7994,7 @@
         }
         renderSchoolBranding();
         renderSchoolSetupPanel();
+        renderSchoolSetupAccessWarning();
         state.queueHub.panelOrder = normalizeQueueHubPanelOrder(
           state.uiSettings?.queueHub?.panelOrder || state.queueHub.panelOrder,
         );
@@ -8975,6 +8960,7 @@
         document.getElementById("app")?.classList.remove("hidden");
         setAuthBootstrapping(false);
         if (authStatusEl) authStatusEl.textContent = "";
+        renderSchoolSetupAccessWarning();
         startHubPolling();
         setActivePage(state.activePage || INITIAL_PAGE_SLUG, {
           syncUrl: shouldSyncPagePathInHistory(),
@@ -8991,6 +8977,7 @@
         document.getElementById("app")?.classList.add("hidden");
         stopHubPolling();
         setLoginPending(false);
+        renderSchoolSetupAccessWarning();
       }
 
       async function login() {
@@ -9648,6 +9635,7 @@
         state.assignmentDraft = {
           id: normalizeText(id),
           items: normalizeAssignmentItems(items),
+          studentRefId: normalizeText(state.assignmentDraft?.studentRefId),
         };
       }
 
@@ -9665,18 +9653,22 @@
 
         items.forEach((item) => {
           const tr = document.createElement("tr");
+          tr.dataset.assignmentItemId = item.id;
           const doneTd = document.createElement("td");
           const doneInput = document.createElement("input");
           doneInput.type = "checkbox";
           doneInput.checked = item.done === true;
           doneInput.disabled = !canWrite;
+          doneInput.dataset.assignmentItemId = item.id;
           doneInput.setAttribute("aria-label", `Mark ${item.title} as complete`);
-          doneInput.addEventListener("change", () => {
+          const syncDoneState = () => {
             state.assignmentDraft.items = items.map((entry) => {
               if (entry.id !== item.id) return entry;
               return { ...entry, done: doneInput.checked };
             });
-          });
+          };
+          doneInput.addEventListener("click", syncDoneState);
+          doneInput.addEventListener("change", syncDoneState);
           doneTd.appendChild(doneInput);
 
           const titleTd = document.createElement("td");
@@ -9721,13 +9713,19 @@
       }
 
       function collectAssignmentDraftItems() {
-        const items = normalizeAssignmentItems(state.assignmentDraft?.items || []);
-        const checkboxes = Array.from(
-          document.querySelectorAll("#assignmentItemRows input[type='checkbox']"),
+        const normalized = normalizeAssignmentItems(state.assignmentDraft?.items || []);
+        const rowsEl = document.getElementById("assignmentItemRows");
+        if (!rowsEl) return normalized;
+        const checkboxByItemId = new Map(
+          Array.from(rowsEl.querySelectorAll("input[type='checkbox'][data-assignment-item-id]"))
+            .map((checkbox) => [normalizeText(checkbox.dataset.assignmentItemId), checkbox.checked]),
         );
-        return items.map((item, index) => ({
+        return normalized.map((item) => ({
           ...item,
-          done: checkboxes[index]?.checked === true,
+          done:
+            checkboxByItemId.has(item.id) ?
+              Boolean(checkboxByItemId.get(item.id))
+            : item.done === true,
         }));
       }
 
@@ -9739,9 +9737,14 @@
         const fallbackExerciseTitle = normalizeText(
           document.getElementById("assignmentExerciseSelect")?.value,
         );
-        const selectedStudentId = normalizeText(document.getElementById("assignStudent").value);
+        const selectedStudentId = normalizeText(
+          document.getElementById("assignStudent").value ||
+            state.assignmentDraft?.studentRefId,
+        );
         const selectedStudent = assignmentStudentSource().find(
-          (student) => normalizeText(student?.id) === selectedStudentId,
+          (student) =>
+            normalizeText(student?.id) === selectedStudentId ||
+            normalizeText(student?.eaglesId) === selectedStudentId,
         );
         return {
           id: normalizeText(state.assignmentDraft?.id),
@@ -9750,7 +9753,9 @@
           assignedAt: normalizeText(document.getElementById("assignAssignedAt").value),
           dueAt: normalizeText(document.getElementById("assignDueAt").value),
           level,
-          eaglesId: normalizeText(selectedStudent?.eaglesId || selectedStudentId),
+          eaglesId: normalizeText(selectedStudent?.id || selectedStudentId),
+          studentRefId: normalizeText(selectedStudent?.id || selectedStudentId),
+          studentEaglesId: normalizeText(selectedStudent?.eaglesId || ""),
           message: normalizeText(document.getElementById("assignMessage").value),
           items,
         };
@@ -9803,8 +9808,19 @@
         );
         setAssignmentDraft(normalized.items, normalized.id);
         refreshAssignmentStudentOptions();
+        const selectedStudent = assignmentStudentSource().find((student) => {
+          const studentId = normalizeText(student?.id);
+          const studentPublicId = normalizeText(student?.eaglesId);
+          return (
+            studentId === normalizeText(normalized.eaglesId) ||
+            studentPublicId === normalizeText(normalized.eaglesId)
+          );
+        });
+        state.assignmentDraft.studentRefId = normalizeText(
+          selectedStudent ? tableFilterStudentOptionValue(selectedStudent) : "",
+        );
         document.getElementById("assignStudent").value = normalizeText(
-          normalized.eaglesId,
+          selectedStudent ? tableFilterStudentOptionValue(selectedStudent) : normalized.eaglesId,
         );
         renderAssignmentLevelTiles();
         renderAssignmentDraftItems();
@@ -9818,6 +9834,7 @@
         document.getElementById("assignLevel").value = "";
         document.getElementById("assignStudent").value = "";
         document.getElementById("assignMessage").value = "";
+        if (state.assignmentDraft) state.assignmentDraft.studentRefId = "";
         const exerciseSelect = document.getElementById("assignmentExerciseSelect");
         const exerciseUrl = document.getElementById("assignmentExerciseUrl");
         if (exerciseSelect) exerciseSelect.value = "";
@@ -14223,9 +14240,7 @@
       }
 
       function gradeChartCurrentSchoolYear() {
-        return normalizeText(
-          schoolSetupState()?.schoolYear || defaultAttendanceSchoolYear(localIsoDate()),
-        );
+        return normalizeText(schoolSetupState()?.schoolYear || "");
       }
 
       function normalizeGradeChartOperationalSchoolYear(value = "") {
@@ -14312,19 +14327,15 @@
           targetYear &&
           targetYear === currentSchoolYear &&
           parseIsoDateLocal(setup?.startDate) &&
-          parseIsoDateLocal(setup?.endDate)
+          parseIsoDateLocal(setup?.endDate) &&
+          normalizeText(setup?.schoolYear) === currentSchoolYear
         ) {
           return {
             startDate: normalizeText(setup.startDate).slice(0, 10),
             endDate: normalizeText(setup.endDate).slice(0, 10),
           };
         }
-        const parsed = parseSchoolYearRange(targetYear);
-        if (!parsed) return { startDate: "", endDate: "" };
-        return {
-          startDate: `${String(parsed.startYear).padStart(4, "0")}-08-01`,
-          endDate: `${String(parsed.endYear).padStart(4, "0")}-05-31`,
-        };
+        return { startDate: "", endDate: "" };
       }
 
       function gradeChartQuarterRange(quarter = "", schoolYearLabel = "") {
@@ -14333,7 +14344,12 @@
         const currentSchoolYear = gradeChartCurrentSchoolYear();
         const targetYear = normalizeText(schoolYearLabel) || currentSchoolYear;
         const setup = schoolSetupState();
-        if (targetYear === currentSchoolYear && Array.isArray(setup?.quarters)) {
+        if (
+          targetYear &&
+          targetYear === currentSchoolYear &&
+          normalizeText(setup?.schoolYear) === currentSchoolYear &&
+          Array.isArray(setup?.quarters)
+        ) {
           const matched = setup.quarters.find(
             (entry) => quarterKey(entry?.quarter) === normalizedQuarter,
           );
@@ -14344,30 +14360,7 @@
             };
           }
         }
-        const parsed = parseSchoolYearRange(targetYear);
-        if (!parsed) return { startDate: "", endDate: "" };
-        if (normalizedQuarter === "q1") {
-          return {
-            startDate: `${String(parsed.startYear).padStart(4, "0")}-08-01`,
-            endDate: `${String(parsed.startYear).padStart(4, "0")}-10-31`,
-          };
-        }
-        if (normalizedQuarter === "q2") {
-          return {
-            startDate: `${String(parsed.startYear).padStart(4, "0")}-11-01`,
-            endDate: `${String(parsed.endYear).padStart(4, "0")}-01-31`,
-          };
-        }
-        if (normalizedQuarter === "q3") {
-          return {
-            startDate: `${String(parsed.endYear).padStart(4, "0")}-02-01`,
-            endDate: `${String(parsed.endYear).padStart(4, "0")}-04-30`,
-          };
-        }
-        return {
-          startDate: `${String(parsed.endYear).padStart(4, "0")}-05-01`,
-          endDate: `${String(parsed.endYear).padStart(4, "0")}-07-31`,
-        };
+        return { startDate: "", endDate: "" };
       }
 
       function gradeChartSchoolYearOptionValues(rows = []) {
@@ -19939,42 +19932,43 @@
       }
 
       const previewSchoolSetupFromInputs = () => {
-        try {
-          const draftSetup = draftSchoolSetupFromInputs();
-          const draftProfile = draftSchoolProfileFromInputs({
-            fallbackProfile: schoolProfileState(),
-          });
-          const draftNewsValidation = draftNewsReportValidationFromInputs({
-            fallbackValidation: newsReportValidationState(),
-          });
-          renderSchoolSetupPanel({
-            setup: draftSetup,
-            profile: draftProfile,
-            newsReportValidation: draftNewsValidation,
-            message: "Quarter preview updated.",
-          });
-        } catch (error) {
-          const draftProfile = draftSchoolProfileFromInputs({
-            fallbackProfile: schoolProfileState(),
-          });
-          const draftNewsValidation = draftNewsReportValidationFromInputs({
-            fallbackValidation: newsReportValidationState(),
-          });
-          renderSchoolSetupPanel({
-            profile: draftProfile,
-            newsReportValidation: draftNewsValidation,
-            message: error.message || "Unable to preview school setup.",
-            isError: true,
-          });
+        const draftSetup = previewSchoolSetupFromInputsData();
+        if (!draftSetup) {
+          return;
         }
+        const draftProfile = draftSchoolProfileFromInputs({
+          fallbackProfile: schoolProfileState(),
+        });
+        const draftNewsValidation = draftNewsReportValidationFromInputs({
+          fallbackValidation: newsReportValidationState(),
+        });
+        state.uiSettings = {
+          ...state.uiSettings,
+          schoolSetup: draftSetup,
+        };
+        renderSchoolSetupPanel({
+          setup: draftSetup,
+          profile: draftProfile,
+          newsReportValidation: draftNewsValidation,
+          message: "Quarter preview updated.",
+        });
       };
       function bindSchoolSetupBrandingFallback() {
+        document
+          .getElementById("schoolSetupStartDate")
+          ?.addEventListener("input", previewSchoolSetupFromInputs);
         document
           .getElementById("schoolSetupStartDate")
           ?.addEventListener("change", previewSchoolSetupFromInputs);
         document
           .getElementById("schoolSetupEndDate")
+          ?.addEventListener("input", previewSchoolSetupFromInputs);
+        document
+          .getElementById("schoolSetupEndDate")
           ?.addEventListener("change", previewSchoolSetupFromInputs);
+        document
+          .getElementById("schoolSetupLetterGradeRanges")
+          ?.addEventListener("input", previewSchoolSetupFromInputs);
         document
           .getElementById("schoolSetupLetterGradeRanges")
           ?.addEventListener("change", previewSchoolSetupFromInputs);
@@ -19985,14 +19979,11 @@
               autoFillSchoolSetupFromInputs();
               setStatus("Quarter rows auto-filled.");
             } catch (error) {
-              const draft = schoolSetupDraftForRender();
-              renderSchoolSetupPanel({
-                setup: draft.setup,
-                profile: draft.profile,
-                newsReportValidation: draft.newsReportValidation,
-                message: error.message || "Unable to auto-fill quarter rows.",
-                isError: true,
-              });
+              const statusEl = document.getElementById("schoolSetupStatus");
+              if (statusEl) {
+                statusEl.style.color = "#b3262d";
+                statusEl.textContent = error.message || "Unable to auto-fill quarter rows.";
+              }
               setStatus(error.message || "Unable to auto-fill quarter rows.", true);
             }
           });

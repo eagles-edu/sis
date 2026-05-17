@@ -1347,7 +1347,7 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
   dom.window.close()
 })
 
-test("parent portal grades YTD shows maintenance when quarter setup is missing", async () => {
+test("parent portal grades YTD still renders when rows carry explicit quarter codes", async () => {
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
       const urlText = toUrlText(resource)
@@ -1450,11 +1450,12 @@ test("parent portal grades YTD shows maintenance when quarter setup is missing",
     const grid = document.getElementById("portalDetailCalendarGrid")
     assert.equal(document.getElementById("portalDetailCard").classList.contains("hidden"), false)
     assert.match(document.getElementById("portalDetailTitle").textContent, /Grades YTD|Điểm số YTD/i)
-    assert.ok(grid?.querySelector(".quarter-board-maintenance-card"))
-    assert.ok(grid?.querySelector('img[src="/web-asset/shared/maintenance.svg"]'))
-    assert.match(grid?.textContent || "", /check back soon/i)
+    assert.ok(grid?.querySelector(".quarter-board-card"))
+    assert.equal(Boolean(grid?.querySelector(".quarter-board-maintenance-card")), false)
+    assert.equal(Boolean(grid?.querySelector('img[src="/web-asset/shared/maintenance.svg"]')), false)
+    assert.match(grid?.textContent || "", /Q1|Q2|Q3|Q4/i)
     assert.equal(Boolean(grid?.querySelector(".fc")), false)
-    assert.equal(Boolean(grid?.querySelector(".quarter-board-card:not(.quarter-board-maintenance-card)")), false)
+    assert.equal(Boolean(grid?.querySelector(".quarter-board-card:not(.quarter-board-maintenance-card)")), true)
   })
 
   await settleDomAsync(dom)

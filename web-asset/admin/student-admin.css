@@ -2005,6 +2005,20 @@
         border-color: var(--portal-status-warn-border);
         color: var(--portal-status-warn-text);
       }
+      .school-setup-access-warning {
+        background: var(--portal-status-warn-bg);
+        border: 1px solid var(--portal-status-warn-border);
+        border-radius: var(--radius-2);
+        color: var(--portal-status-warn-text);
+        font-size: 12px;
+        line-height: 1.45;
+        margin-top: 10px;
+        padding: 10px 12px;
+      }
+      .school-setup-access-warning a {
+        color: inherit;
+        font-weight: 700;
+      }
       .stats-grid {
         display: grid;
         gap: 8px;

@@ -44,10 +44,3 @@ Keep result math variant-specific per level.
 Allow different subsections per level so Cambridge, ETS, and IELTS can present the right breakdowns.
 Treat the results page as an official results surface, not a generic practice dashboard.
 Codify the level-to-variant mapping in the plan before implementation.
-
-
-
-
-
-
-

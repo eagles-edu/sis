@@ -4,11 +4,13 @@ import path from "node:path"
 import test from "node:test"
 
 const rootDir = process.cwd()
+const buildAdminAssetsPath = path.resolve(rootDir, "tools/build-admin-assets.mjs")
 const sharedThemePath = path.resolve(rootDir, "web-asset/shared/portal-theme.min.css")
 const adminThemePath = path.resolve(rootDir, "web-asset/admin/student-admin.css")
 const adminPortalPath = path.resolve(rootDir, "web-asset/admin/student-admin.html")
 const parentPortalPath = path.resolve(rootDir, "web-asset/parent/parent-portal.html")
 const studentPortalPath = path.resolve(rootDir, "web-asset/student/student-portal.html")
+const buildAdminAssets = fs.readFileSync(buildAdminAssetsPath, "utf8")
 const portalPaths = [
   ["admin hub", "web-asset/admin/portal-hub.html"],
   ["parent portal", "web-asset/parent/parent-portal.html"],
@@ -21,6 +23,8 @@ const adminPortal = fs.readFileSync(adminPortalPath, "utf8")
 const parentPortal = fs.readFileSync(parentPortalPath, "utf8")
 const studentPortal = fs.readFileSync(studentPortalPath, "utf8")
 const hubPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8")
+const gradesTabulatorPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/grades-tabulator.html"), "utf8")
+const studentPointsPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-points.html"), "utf8")
 
 test("portal pages load the shared portal theme stylesheet", () => {
   for (const [label, relPath] of portalPaths) {
@@ -29,6 +33,50 @@ test("portal pages load the shared portal theme stylesheet", () => {
       html,
       /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">/,
       `${label} should link the shared portal theme`,
+    )
+  }
+})
+
+test("shared portal theme minified asset is generated from portal-theme.css by the build script", () => {
+  assert.match(
+    buildAdminAssets,
+    /source:\s*path\.join\(REPO_ROOT,\s*"web-asset\/shared\/portal-theme\.css"\),\s*output:\s*path\.join\(REPO_ROOT,\s*"web-asset\/shared\/portal-theme\.min\.css"\)/s,
+    "build-admin-assets.mjs should define portal-theme.css as the only shared theme source for portal-theme.min.css",
+  )
+  assert.match(
+    buildAdminAssets,
+    /task\.kind === "css" \? await buildAdminCss\(task\.source\) : await buildAdminJs\(task\.source\)/,
+    "build-admin-assets.mjs should rebuild minified assets from source files",
+  )
+})
+
+test("repo app pages do not define raw theme colors in inline style or script blocks", () => {
+  const appHtmlPaths = [
+    "web-asset/admin/grades-tabulator-dev.html",
+    "web-asset/admin/grades-tabulator.html",
+    "web-asset/admin/portal-hub.html",
+    "web-asset/admin/student-admin.html",
+    "web-asset/admin/student-points.html",
+    "web-asset/parent/parent-portal.html",
+    "web-asset/student/fi.html",
+    "web-asset/student/student-portal.html",
+  ]
+  const styleBlockPattern = /<style>([\s\S]*?)<\/style>/gi
+  const scriptBlockPattern = /<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi
+  const styleColorPattern = /(?:^|[;{])\s*--?[\w-]+\s*:\s*[^;{}]*(#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|color-mix\()/u
+  const scriptColorPattern = /(#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|color-mix\()/u
+
+  for (const relPath of appHtmlPaths) {
+    const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
+    const styleBlocks = Array.from(html.matchAll(styleBlockPattern), (match) => match[1] || "")
+    const scriptBlocks = Array.from(html.matchAll(scriptBlockPattern), (match) => match[1] || "")
+    assert.ok(
+      styleBlocks.every((block) => !styleColorPattern.test(block)),
+      `${relPath} should keep inline style colors in the shared theme token contract`,
+    )
+    assert.ok(
+      scriptBlocks.every((block) => !scriptColorPattern.test(block)),
+      `${relPath} should not hardcode theme colors in inline scripts`,
     )
   }
 })
@@ -42,6 +90,57 @@ test("shared portal theme defines the common shell, header, and card system", ()
   assert.match(sharedTheme, /\.brand-logo-wrap--sm/)
   assert.match(sharedTheme, /\.brand-logo-wrap--lg/)
   assert.match(sharedTheme, /\.portal-card,\s*\.resource-card/)
+})
+
+test("shared portal theme owns reusable surface roles for columns, panels, cards, tables, charts, and dialogs", () => {
+  for (const token of [
+    ".portal-center-column",
+    ".portal-theme-panel",
+    ".portal-theme-card",
+    ".portal-theme-soft-card",
+    ".portal-theme-table-shell",
+    ".portal-theme-chart-shell",
+    ".portal-theme-dialog",
+    ".portal-theme-tooltip",
+    ".portal-theme-overlay",
+    ".portal-theme-overlay-strong",
+  ]) {
+    assert.ok(sharedTheme.includes(token), `shared theme should define ${token}`)
+  }
+
+  assert.match(studentPointsPortal, /class="app portal-center-column"/)
+  assert.match(studentPointsPortal, /class="card portal-theme-card"/)
+  assert.match(studentPointsPortal, /class="chart-wrap portal-theme-chart-shell"/)
+  assert.match(studentPointsPortal, /class="table-wrap portal-theme-table-shell"/)
+  assert.doesNotMatch(studentPointsPortal, /\.card\s*\{[^}]*(background|border:\s*1px|box-shadow:)/)
+  assert.doesNotMatch(studentPointsPortal, /\.chart-wrap\s*\{[^}]*(background|border:\s*1px)/)
+  assert.doesNotMatch(studentPointsPortal, /\.table-wrap\s*\{[^}]*border:\s*1px/)
+
+  assert.match(gradesTabulatorPortal, /class="page-shell portal-center-column"/)
+  assert.match(gradesTabulatorPortal, /class="hero portal-theme-panel"/)
+  assert.match(gradesTabulatorPortal, /class="control-card portal-theme-panel"/)
+  assert.match(gradesTabulatorPortal, /class="metric-card portal-theme-card"/)
+  assert.match(gradesTabulatorPortal, /class="grid-card portal-theme-card"/)
+  assert.match(gradesTabulatorPortal, /id="gradeGrid" class="portal-theme-table-shell"/)
+  assert.match(gradesTabulatorPortal, /class="table-modal-backdrop portal-theme-overlay-strong"/)
+  assert.match(gradesTabulatorPortal, /class="distribution-modal-backdrop portal-theme-overlay"/)
+  assert.match(gradesTabulatorPortal, /class="distribution-dialog portal-theme-dialog is-fullscreen"/)
+  assert.match(gradesTabulatorPortal, /class="distribution-chart-shell portal-theme-soft-card"/)
+  assert.match(gradesTabulatorPortal, /class="distribution-hover portal-theme-tooltip"/)
+  assert.match(gradesTabulatorPortal, /button\.className = "distribution-mini portal-theme-soft-card"/)
+  for (const selector of [
+    /\.hero,\s*\.control-card,\s*\.grid-card\s*\{[^}]*(background|border:\s*1px|box-shadow:)/,
+    /\.metric-card\s*\{[^}]*(background|border:\s*1px)/,
+    /#gradeGrid\s*\{[^}]*(background|border:\s*1px)/,
+    /\.table-modal-backdrop\s*\{[^}]*background:/,
+    /\.distribution-mini\s*\{[^}]*(background|border:\s*1px|color:)/,
+    /\.distribution-modal-backdrop\s*\{[^}]*background:/,
+    /\.distribution-dialog\s*\{[^}]*(background|border:\s*1px|box-shadow:)/,
+    /\.distribution-chart-shell\s*\{[^}]*(background|border:\s*1px)/,
+    /\.distribution-hover\s*\{[^}]*(background|border:\s*1px|box-shadow:|color:)/,
+  ]) {
+    assert.doesNotMatch(gradesTabulatorPortal, selector)
+  }
 })
 
 test("shared portal theme keeps the overview grids at 3x3, not wider", () => {

@@ -346,7 +346,7 @@
     .field.is-invalid input,
     .field.is-invalid textarea {
       border-color: var(--portal-status-bad-border);
-      box-shadow: 0 0 0 1px rgba(242, 138, 149, 0.22);
+      box-shadow: var(--portal-field-invalid-shadow);
       background: var(--portal-status-bad-bg);
     }
 
@@ -385,7 +385,7 @@
     }
 
     .metric {
-      border: 2px solid #8ea3c1;
+      border: 2px solid var(--portal-metric-border);
       border-bottom-width: 4px;
       border-radius: 10px;
       box-sizing: border-box;
@@ -437,7 +437,7 @@
     }
 
     .homework-square {
-      border: 1px solid #b7c8dd;
+      border: 1px solid var(--portal-homework-square-border);
       border-radius: 8px;
       min-height: 96px;
       box-sizing: border-box;
@@ -450,7 +450,7 @@
       padding: 8px;
       font-weight: 800;
       line-height: 1.1;
-      color: #264868;
+      color: var(--portal-homework-square-text);
       background: var(--portal-surface-card);
     }
 
@@ -498,7 +498,7 @@
 
     .homework-link {
       min-width: 0;
-      color: #174f92;
+      color: var(--portal-homework-link);
       font-size: clamp(12px, 2.8vw, 14px);
       font-weight: 700;
       line-height: 1.35;
@@ -510,7 +510,7 @@
 
     .homework-link:hover,
     .homework-link:focus-visible {
-      color: #0f3c70;
+      color: var(--portal-homework-link-hover);
     }
 
     .homework-modal-table {
@@ -568,7 +568,7 @@
     .quick-link:hover,
     .quick-link:focus-visible {
       outline: none;
-      border-color: #6f97cb;
+      border-color: var(--portal-quick-link-hover-border);
       background: var(--portal-surface-support);
     }
 
@@ -702,122 +702,9 @@
       min-height: 380px;
     }
 
-    .grade-tabulator-shell {
-      background: var(--portal-surface-card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-sizing: border-box;
-      overflow: hidden;
-      width: 100%;
-    }
-
-    .grade-tabulator {
-      width: 100%;
-    }
-
-    .grade-tabulator-shell .tabulator {
-      background: transparent;
-      border: none;
-      color: var(--ink);
-      font-size: 0.92rem;
-      width: 100%;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-header,
-    .grade-tabulator-shell .tabulator .tabulator-footer,
-    .grade-tabulator-shell .tabulator .tabulator-col,
-    .grade-tabulator-shell .tabulator .tabulator-cell,
-    .grade-tabulator-shell .tabulator .tabulator-row,
-    .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
-    .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table {
-      color: var(--ink);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-header,
-    .grade-tabulator-shell .tabulator .tabulator-footer,
-    .grade-tabulator-shell .tabulator .tabulator-col {
-      background: var(--portal-surface-support);
-      border-color: var(--line);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row {
-      background: var(--portal-surface-card);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
-      background: color-mix(in srgb, var(--portal-surface-card) 92%, #ffffff 8%);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row:hover {
-      background: color-mix(in srgb, var(--portal-surface-support) 82%, #ffffff 18%);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
-      background: color-mix(in srgb, var(--portal-status-good-bg) 84%, #ffffff 16%);
-      box-shadow: inset 4px 0 0 var(--brand);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-cell {
-      border-right-color: var(--line);
-      box-sizing: border-box;
-      line-height: 1.2;
-      padding: 0.28rem 0.36rem;
-      vertical-align: top;
-      white-space: normal;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-cell:last-child {
-      border-right-color: var(--line);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content {
-      box-sizing: border-box;
-      min-height: 100%;
-      padding: 0.24rem 0.36rem;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title {
-      color: var(--ink);
-      font-size: 0.92rem;
-      font-weight: 800;
-      line-height: 1.2;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-content {
-      box-sizing: border-box;
-      padding: 0.1rem 0.16rem 0.08rem;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-title {
-      align-items: stretch;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      height: 100%;
-      justify-content: stretch;
-      min-height: 4.8rem;
-      padding: 0.02rem 0;
-    }
-
     .assignment-head {
       align-items: center;
-      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 92%, var(--brand) 8%), var(--portal-surface-card));
+      background: var(--portal-assignment-head-bg);
       border: 1px solid var(--line);
       border-radius: 6px;
       box-sizing: border-box;
@@ -849,7 +736,7 @@
       border: 1px solid var(--line);
       border-radius: 6px;
       box-sizing: border-box;
-      color: #ffffff;
+      color: var(--portal-primary-text-strong);
       display: inline-flex;
       flex: 0 0 auto;
       font-size: 0.76rem;
@@ -863,8 +750,8 @@
     }
 
     .header-action-btn.plus {
-      background: var(--success-color, #1e9a52);
-      border-color: var(--success-color, #1e9a52);
+      background: var(--portal-status-good-text);
+      border-color: var(--portal-status-good-text);
     }
 
     .header-action-btn.minus {
@@ -1041,21 +928,21 @@
     }
 
     .grade-quarter-picker-btn:hover {
-      background: color-mix(in srgb, var(--portal-surface-support) 82%, #ffffff 18%);
-      border-color: color-mix(in srgb, var(--line) 72%, var(--brand) 28%);
+      background: var(--portal-quarter-button-hover-bg);
+      border-color: var(--portal-quarter-button-hover-border);
       transform: translateY(-1px);
     }
 
     .grade-quarter-picker-btn.is-current {
       border-color: var(--brand);
-      box-shadow: 0 0 0 1px rgb(0 39 134 / 10%);
+      box-shadow: var(--portal-quarter-button-current-shadow);
     }
 
     .grade-quarter-picker-btn.is-active {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 92%, #ffffff 8%), var(--brand));
-      border-color: var(--brand);
-      color: #ffffff;
-      box-shadow: 0 12px 24px rgb(0 39 134 / 22%), inset 0 0 0 1px rgb(255 255 255 / 14%);
+      background: var(--portal-quarter-button-active-bg);
+      border-color: var(--portal-quarter-button-active-border);
+      color: var(--portal-quarter-button-active-text);
+      box-shadow: var(--portal-quarter-button-active-shadow);
       transform: translateY(-1px);
     }
 
@@ -1083,10 +970,10 @@
     }
 
     .grade-quarter-picker-btn[aria-pressed="true"] {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 92%, #ffffff 8%), var(--brand));
-      border-color: var(--brand);
-      color: #ffffff;
-      box-shadow: 0 12px 24px rgb(0 39 134 / 22%), inset 0 0 0 1px rgb(255 255 255 / 14%);
+      background: var(--portal-quarter-button-active-bg);
+      border-color: var(--portal-quarter-button-active-border);
+      color: var(--portal-quarter-button-active-text);
+      box-shadow: var(--portal-quarter-button-active-shadow);
       transform: translateY(-1px);
     }
 
@@ -1109,151 +996,10 @@
       overflow-wrap: anywhere;
     }
 
-    .grade-exercise-meta {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      line-height: 1.18;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-status-pill {
-      align-items: center;
-      background: #55389f;
-      border: 1px solid #3f2977;
-      border-radius: 999px;
-      box-sizing: border-box;
-      display: inline-flex;
-      font-size: 0.74rem;
-      font-weight: 800;
-      gap: 0.28rem;
-      justify-content: center;
-      line-height: 1;
-      padding: 0.22rem 0.52rem;
-      text-transform: uppercase;
-      color: #fff;
-      width: fit-content;
-    }
-
-    .grade-status-pill.is-good {
-      background: #1f7a47;
-      border-color: #175a35;
-      color: #fff;
-    }
-
-    .grade-status-pill.is-warn {
-      background: #a86400;
-      border-color: #7f4b00;
-      color: #fff;
-    }
-
-    .grade-status-pill.is-bad {
-      background: #b23a2e;
-      border-color: #7f291f;
-      color: #fff;
-    }
-
-    .grade-status-pill.is-late {
-      background: #55389f;
-      border-color: #3f2977;
-      color: #fff;
-    }
-
-    .grade-status-stack {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.28rem;
-      justify-content: flex-start;
-    }
-
-    .grade-exercise-score {
-      align-items: center;
-      background: var(--portal-status-good-bg);
-      border: 1px solid var(--portal-status-good-border);
-      border-radius: 14px;
-      box-sizing: border-box;
-      display: grid;
-      gap: 0.08rem;
-      justify-items: center;
-      min-width: 5rem;
-      padding: 0.32rem 0.42rem;
-      text-align: center;
-    }
-
-    .grade-exercise-score.is-open {
-      background: var(--portal-surface-support);
-      border-color: var(--line);
-    }
-
-    .grade-exercise-score-main {
-      font-size: 0.94rem;
-      font-weight: 800;
-      line-height: 1.1;
-    }
-
-    .grade-exercise-score-sub {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .grade-exercise-comment {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
     @media (min-width: 720px) {
       .grade-quarter-stats {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell {
-      background: var(--portal-dark-surface-card);
-      border-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-header,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-footer,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-col,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-cell,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table {
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-header,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-footer,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-col {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row {
-      background: var(--portal-dark-surface-card);
-      border-bottom-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
-      background: color-mix(in srgb, var(--portal-dark-surface-card) 88%, #ffffff 12%);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row:hover {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 82%, #ffffff 18%);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 72%, #ffffff 28%);
-      box-shadow: inset 4px 0 0 var(--portal-status-good-border);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-cell {
-      border-right-color: var(--portal-dark-border);
     }
 
     html[data-theme="dark"] .grade-quarter-pill {
@@ -1262,7 +1008,7 @@
     }
 
     html[data-theme="dark"] .quarter-board-card.is-current {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-panel) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-surface-panel));
+      background: var(--portal-quarter-card-current-bg);
     }
 
     html[data-theme="dark"] .quarter-board-meta-chip {
@@ -1270,7 +1016,7 @@
     }
 
     html[data-theme="dark"] .quarter-board-meta-quarter {
-      background: color-mix(in srgb, var(--portal-status-good-bg) 20%, var(--portal-dark-surface-support) 80%);
+      background: var(--portal-quarter-meta-quarter-bg);
       border-color: var(--portal-status-good-border);
       color: var(--portal-status-good-text);
     }
@@ -1281,15 +1027,15 @@
     }
 
     html[data-theme="dark"] .quarter-board-meta-count {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
+      background: var(--portal-quarter-current-pill-bg);
+      border-color: var(--portal-quarter-current-pill-border);
+      color: var(--portal-quarter-current-pill-text);
     }
 
     html[data-theme="dark"] .quarter-board-current-pill {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
+      background: var(--portal-quarter-current-pill-bg);
+      border-color: var(--portal-quarter-current-pill-border);
+      color: var(--portal-quarter-current-pill-text);
     }
 
     html[data-theme="dark"] .grade-quarter-stat {
@@ -1310,132 +1056,20 @@
     }
 
     html[data-theme="dark"] .grade-quarter-picker-btn {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
+      background: var(--portal-control-surface);
+      border-color: var(--portal-control-border);
+      color: var(--portal-control-text);
     }
 
     html[data-theme="dark"] .grade-quarter-picker-btn:hover {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 82%, #ffffff 18%);
-      border-color: color-mix(in srgb, var(--portal-dark-border) 72%, var(--portal-status-good-border) 28%);
+      background: var(--portal-quarter-button-hover-bg);
+      border-color: var(--portal-quarter-button-hover-border);
     }
 
     html[data-theme="dark"] .grade-quarter-picker-btn.is-active {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-good {
-      background: #1f7a47;
-      border-color: #175a35;
-      color: #fff;
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-warn {
-      background: #a86400;
-      border-color: #7f4b00;
-      color: #fff;
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-bad {
-      background: #b23a2e;
-      border-color: #7f291f;
-      color: #fff;
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-late {
-      background: #55389f;
-      border-color: #3f2977;
-      color: #fff;
-    }
-
-    html[data-theme="dark"] .grade-exercise-score {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .grade-exercise-score.is-open {
-      background: var(--portal-dark-surface-card);
-      border-color: var(--portal-dark-border);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-open {
-      background: #fff0cc;
-      box-shadow: inset 4px 0 0 #a86400;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
-      background: #ffe4a3;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
-      background: #e2f5e9;
-      box-shadow: inset 4px 0 0 #1f7a47;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
-      background: #d3ecd9;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-late {
-      background: #f3ecff;
-      box-shadow: inset 4px 0 0 #55389f;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
-      background: #ede3ff;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
-      background: #ffd7d4;
-      box-shadow: inset 4px 0 0 #b23a2e;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
-      background: #ffc9c4;
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 74%, #a86400 26%);
-      box-shadow: inset 4px 0 0 #a86400;
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 64%, #a86400 36%);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
-      background: color-mix(in srgb, #1f7a47 18%, var(--portal-dark-surface-card) 82%);
-      box-shadow: inset 4px 0 0 #1f7a47;
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
-      background: color-mix(in srgb, #1f7a47 24%, var(--portal-dark-surface-support) 76%);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 72%, #55389f 28%);
-      box-shadow: inset 4px 0 0 #55389f;
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 62%, #55389f 38%);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
-      background: color-mix(in srgb, #b23a2e 18%, var(--portal-dark-surface-card) 82%);
-      box-shadow: inset 4px 0 0 #b23a2e;
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
-      background: color-mix(in srgb, #b23a2e 24%, var(--portal-dark-surface-support) 76%);
-    }
-
-    html[data-theme="dark"] .grade-exercise-score-sub,
-    html[data-theme="dark"] .grade-exercise-meta,
-    html[data-theme="dark"] .grade-exercise-comment {
-      color: var(--portal-dark-text-soft);
+      background: var(--portal-quarter-button-active-bg);
+      border-color: var(--portal-quarter-button-active-border);
+      color: var(--portal-quarter-button-active-text);
     }
 
     .quarter-board {
@@ -1472,8 +1106,8 @@
 
     .quarter-board-card.is-current {
       border-color: var(--brand);
-      box-shadow: 0 0 0 1px rgb(0 39 134 / 10%), 0 12px 26px rgb(0 39 134 / 7%);
-      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 88%, var(--brand) 12%), var(--portal-surface-card));
+      box-shadow: var(--portal-quarter-card-current-shadow);
+      background: var(--portal-quarter-card-current-bg);
     }
 
     .quarter-board-head {
@@ -1515,7 +1149,7 @@
     }
 
     .quarter-board-meta-quarter {
-      background: color-mix(in srgb, var(--brand) 12%, #ffffff 88%);
+      background: var(--portal-quarter-meta-quarter-bg);
       border-color: var(--brand);
       color: var(--brand);
       font-size: 1.08rem;
@@ -1543,8 +1177,8 @@
       border-radius: 999px;
       border: 1px solid var(--brand);
       background: var(--brand);
-      color: #ffffff;
-      box-shadow: 0 10px 20px rgb(0 39 134 / 18%);
+      color: var(--portal-quarter-current-pill-text);
+      box-shadow: var(--portal-quarter-current-pill-shadow);
       display: inline-flex;
       font-size: 0.86rem;
       font-weight: 900;
@@ -1628,7 +1262,7 @@
     }
 
     .quarter-board-entry.is-open .quarter-board-entry-score-main {
-      color: var(--warning-color, #66008e);
+      color: var(--portal-quarter-open-text);
     }
 
     .quarter-board-maintenance {
@@ -1728,27 +1362,27 @@
     }
 
     .dot.good {
-      background: #40b06c;
+      background: var(--portal-status-good-border);
     }
 
     .dot.bad {
-      background: #d45a66;
+      background: var(--portal-status-bad-border);
     }
 
     .dot.open {
-      background: #4093d2;
+      background: var(--portal-status-info-border);
     }
 
     .dot.submitted {
-      background: #d2912b;
+      background: var(--portal-status-warn-border);
     }
 
     .dot.waiting {
-      background: #7a59cc;
+      background: var(--portal-status-revise-bg);
     }
 
     .dot.revise {
-      background: #7a59cc;
+      background: var(--portal-status-revise-bg);
     }
 
     @keyframes overdueBlink {
@@ -1770,11 +1404,11 @@
 
       0%,
       100% {
-        box-shadow: inset 0 0 0 2px rgba(255, 35, 56, 0.32);
+        box-shadow: inset 0 0 0 2px var(--portal-status-bad-border);
       }
 
       50% {
-        box-shadow: inset 0 0 0 3px rgba(255, 35, 56, 0.62);
+        box-shadow: inset 0 0 0 3px var(--portal-status-bad-text);
       }
     }
 
@@ -3420,7 +3054,15 @@
         source.forEach((row) => {
           const rowDateValue = row?.dueDate || row?.dueAt || row?.submittedDate || row?.submittedAt;
           const rowDate = rowDateValue instanceof Date ? rowDateValue : t(rowDateValue);
-          const quarter = resolveQuarterInfo(rowDate, schoolSetup);
+          const explicitQuarter = t(row?.quarter || row?.quarterCode || row?.quarterLabel).toLowerCase();
+          const quarter = /^q[1-4]$/.test(explicitQuarter) ? {
+            quarter: Number.parseInt(explicitQuarter.slice(1), 10) || 0,
+            key: explicitQuarter,
+            quarterLabel: explicitQuarter.toUpperCase(),
+            displayLabel: explicitQuarter.toUpperCase(),
+            startDate: "",
+            endDate: "",
+          } : resolveQuarterInfo(rowDate, schoolSetup);
           if (!quarter?.quarter) {
             hasClassificationIssues = true;
             return;

@@ -131,10 +131,82 @@
   --portal-status-peer-bg: #f1f5ff;
   --portal-status-peer-border: #b3c3dd;
   --portal-status-peer-text: #214072;
+  --portal-status-revise-bg: #55389f;
+  --portal-status-revise-border: #3f2977;
+  --portal-status-revise-text: #fff;
   --portal-status-warn-bg: #fff3d8;
   --portal-status-warn-border: #e5cb66;
   --portal-status-warn-text: #6a4a00;
   --portal-support-message: var(--portal-text-soft);
+  --portal-button-surface: #f5f9ff;
+  --portal-button-surface-hover: #f3f8ff;
+  --portal-button-border: #b8cce4;
+  --portal-button-border-hover: #7fa4d4;
+  --portal-assignment-head-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 92%, var(--brand) 8%), var(--portal-surface-card));
+  --portal-calendar-status-bad-bg: #d92d20;
+  --portal-calendar-status-good-bg: #2e7d32;
+  --portal-calendar-status-open-bg: #0f4a73;
+  --portal-calendar-status-revise-bg: #7a59cc;
+  --portal-calendar-status-submitted-bg: #f6a609;
+  --portal-calendar-status-text-strong: #fff;
+  --portal-calendar-status-text-soft: #173b78;
+  --portal-control-border: #9bb5df;
+  --portal-control-surface: #f1f5ff;
+  --portal-control-surface-hover: #f3f8ff;
+  --portal-control-text: #214072;
+  --portal-control-shadow-hover: 0 8px 16px rgba(19, 35, 61, 0.12);
+  --portal-field-state-info: #5774a5;
+  --portal-field-state-locked: #8f3939;
+  --portal-field-state-edited: #124990;
+  --portal-field-state-muted: #5f6d7b;
+  --portal-field-invalid-shadow: 0 0 0 1px rgba(242, 138, 149, 0.22);
+  --portal-homework-link: #174f92;
+  --portal-homework-link-hover: #0f3c70;
+  --portal-homework-square-border: #b7c8dd;
+  --portal-homework-square-text: #264868;
+  --portal-metric-border: #8ea3c1;
+  --portal-modal-backdrop-strong: rgba(8, 22, 40, 0.56);
+  --portal-modal-backdrop: rgba(8, 22, 40, 0.52);
+  --portal-panel-shadow: 0 8px 22px rgba(17, 38, 63, 0.08);
+  --portal-panel-shadow-strong: 0 26px 60px rgba(8, 22, 40, 0.26);
+  --portal-panel-shadow-soft: 0 8px 22px rgba(10, 28, 48, 0.18);
+  --portal-pill-bg: #eff6ff;
+  --portal-pill-border: #cde0fb;
+  --portal-pill-text: #184372;
+  --portal-primary-text-strong: #fff;
+  --portal-quick-link-hover-border: #6f97cb;
+  --portal-quarter-button-current-shadow: 0 0 0 1px rgba(0, 39, 134, 0.1);
+  --portal-quarter-button-hover-bg: color-mix(in srgb, var(--portal-surface-support) 82%, #ffffff 18%);
+  --portal-quarter-button-hover-border: color-mix(in srgb, var(--line) 72%, var(--brand) 28%);
+  --portal-quarter-button-active-bg: linear-gradient(180deg, color-mix(in srgb, var(--brand) 92%, #ffffff 8%), var(--brand));
+  --portal-quarter-button-active-border: var(--brand);
+  --portal-quarter-button-active-text: #fff;
+  --portal-quarter-button-active-shadow: 0 12px 24px rgba(0, 39, 134, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  --portal-quarter-card-current-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 88%, var(--brand) 12%), var(--portal-surface-card));
+  --portal-quarter-card-current-shadow: 0 0 0 1px rgba(0, 39, 134, 0.1), 0 12px 26px rgba(0, 39, 134, 0.07);
+  --portal-quarter-meta-quarter-bg: color-mix(in srgb, var(--brand) 12%, #ffffff 88%);
+  --portal-quarter-current-pill-bg: var(--brand);
+  --portal-quarter-current-pill-border: var(--brand);
+  --portal-quarter-current-pill-text: #fff;
+  --portal-quarter-current-pill-shadow: 0 10px 20px rgba(0, 39, 134, 0.18);
+  --portal-quarter-open-text: var(--warn);
+  --portal-radio-control-bg: #fff;
+  --portal-radio-control-border: #9db0cc;
+  --portal-score-bar-fill: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
+  --portal-svg-accent-soft-fill: rgba(62, 123, 192, 0.15);
+  --portal-table-dark-border: rgba(255, 255, 255, 0.14);
+  --portal-theme-toggle-focus-ring: 0 0 0 3px rgba(47, 91, 227, 0.2);
+  --portal-theme-toggle-hover-border: rgba(15, 22, 41, 1);
+  --portal-theme-toggle-hover-border-dark: rgba(255, 215, 106, 0.42);
+  --portal-role-panel-bg: var(--portal-surface-panel);
+  --portal-role-card-bg: var(--portal-surface-card);
+  --portal-role-soft-bg: var(--portal-surface-soft);
+  --portal-role-support-bg: var(--portal-surface-support);
+  --portal-role-border: var(--portal-border);
+  --portal-role-text: var(--portal-text);
+  --portal-role-shadow: var(--portal-panel-shadow);
+  --portal-role-shadow-strong: var(--portal-panel-shadow-strong);
+  --portal-role-shadow-soft: var(--portal-panel-shadow-soft);
   --portal-surface-card: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 250, 255, 0.99) 100%);
   --portal-surface-panel: linear-gradient(180deg, rgba(249, 250, 255, 0.96) 0%, rgba(235, 237, 247, 0.99) 100%);
   --portal-surface-soft: #f5f9ff;
@@ -268,10 +340,82 @@ html[data-theme="dark"] {
   --portal-status-peer-bg: rgba(106, 164, 255, 0.14);
   --portal-status-peer-border: rgba(106, 164, 255, 0.34);
   --portal-status-peer-text: #eaf2ff;
+  --portal-status-revise-bg: #55389f;
+  --portal-status-revise-border: #3f2977;
+  --portal-status-revise-text: #fff;
   --portal-status-warn-bg: rgba(240, 176, 95, 0.14);
   --portal-status-warn-border: rgba(240, 176, 95, 0.34);
   --portal-status-warn-text: #ffe0b6;
   --portal-support-message: var(--portal-dark-text-soft);
+  --portal-button-surface: var(--portal-dark-surface-support);
+  --portal-button-surface-hover: var(--portal-dark-surface-soft);
+  --portal-button-border: var(--portal-dark-border);
+  --portal-button-border-hover: var(--portal-status-info-border);
+  --portal-assignment-head-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-card) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-surface-card));
+  --portal-calendar-status-bad-bg: #d92d20;
+  --portal-calendar-status-good-bg: #2e7d32;
+  --portal-calendar-status-open-bg: #0f4a73;
+  --portal-calendar-status-revise-bg: #7a59cc;
+  --portal-calendar-status-submitted-bg: #f6a609;
+  --portal-calendar-status-text-strong: #fff;
+  --portal-calendar-status-text-soft: #173b78;
+  --portal-control-border: var(--portal-dark-border);
+  --portal-control-surface: var(--portal-dark-surface-support);
+  --portal-control-surface-hover: var(--portal-dark-surface-soft);
+  --portal-control-text: var(--portal-dark-text);
+  --portal-control-shadow-hover: 0 8px 16px rgba(19, 35, 61, 0.12);
+  --portal-field-state-info: #b4c4ea;
+  --portal-field-state-locked: #f28a95;
+  --portal-field-state-edited: #9ab9e0;
+  --portal-field-state-muted: var(--portal-dark-text-soft);
+  --portal-field-invalid-shadow: 0 0 0 1px rgba(242, 138, 149, 0.22);
+  --portal-homework-link: #b4c4ea;
+  --portal-homework-link-hover: #d7e4ff;
+  --portal-homework-square-border: var(--portal-dark-border);
+  --portal-homework-square-text: var(--portal-dark-text);
+  --portal-metric-border: var(--portal-dark-border);
+  --portal-modal-backdrop-strong: rgba(8, 22, 40, 0.56);
+  --portal-modal-backdrop: rgba(8, 22, 40, 0.52);
+  --portal-panel-shadow: 0 8px 22px rgba(17, 38, 63, 0.08);
+  --portal-panel-shadow-strong: 0 26px 60px rgba(8, 22, 40, 0.26);
+  --portal-panel-shadow-soft: 0 8px 22px rgba(10, 28, 48, 0.18);
+  --portal-pill-bg: rgba(106, 164, 255, 0.14);
+  --portal-pill-border: rgba(106, 164, 255, 0.34);
+  --portal-pill-text: #eaf2ff;
+  --portal-primary-text-strong: #fff;
+  --portal-quick-link-hover-border: var(--portal-status-info-border);
+  --portal-quarter-button-current-shadow: 0 0 0 1px rgba(0, 39, 134, 0.1);
+  --portal-quarter-button-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 82%, #ffffff 18%);
+  --portal-quarter-button-hover-border: color-mix(in srgb, var(--portal-dark-border) 72%, var(--portal-status-good-border) 28%);
+  --portal-quarter-button-active-bg: var(--portal-status-good-bg);
+  --portal-quarter-button-active-border: var(--portal-status-good-border);
+  --portal-quarter-button-active-text: var(--portal-status-good-text);
+  --portal-quarter-button-active-shadow: 0 12px 24px rgba(0, 39, 134, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  --portal-quarter-card-current-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-panel) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-surface-panel));
+  --portal-quarter-card-current-shadow: 0 0 0 1px rgba(0, 39, 134, 0.1), 0 12px 26px rgba(0, 39, 134, 0.07);
+  --portal-quarter-meta-quarter-bg: color-mix(in srgb, var(--portal-status-good-bg) 20%, var(--portal-dark-surface-support) 80%);
+  --portal-quarter-current-pill-bg: var(--portal-status-good-bg);
+  --portal-quarter-current-pill-border: var(--portal-status-good-border);
+  --portal-quarter-current-pill-text: var(--portal-status-good-text);
+  --portal-quarter-current-pill-shadow: 0 10px 20px rgba(0, 39, 134, 0.18);
+  --portal-quarter-open-text: #f0b05f;
+  --portal-radio-control-bg: var(--portal-dark-field-bg);
+  --portal-radio-control-border: var(--portal-dark-field-border);
+  --portal-score-bar-fill: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
+  --portal-svg-accent-soft-fill: rgba(62, 123, 192, 0.15);
+  --portal-table-dark-border: rgba(255, 255, 255, 0.14);
+  --portal-theme-toggle-focus-ring: 0 0 0 3px rgba(47, 91, 227, 0.2);
+  --portal-theme-toggle-hover-border: rgba(15, 22, 41, 1);
+  --portal-theme-toggle-hover-border-dark: rgba(255, 215, 106, 0.42);
+  --portal-role-panel-bg: var(--portal-dark-surface-panel);
+  --portal-role-card-bg: var(--portal-dark-surface-card);
+  --portal-role-soft-bg: var(--portal-dark-surface-soft);
+  --portal-role-support-bg: var(--portal-dark-surface-support);
+  --portal-role-border: var(--portal-dark-border);
+  --portal-role-text: var(--portal-dark-text);
+  --portal-role-shadow: var(--portal-panel-shadow);
+  --portal-role-shadow-strong: var(--portal-panel-shadow-strong);
+  --portal-role-shadow-soft: var(--portal-panel-shadow-soft);
   background: var(--portal-dark-page-bg);
   color-scheme: dark;
 }
@@ -510,6 +654,60 @@ html[data-theme="dark"] body.parent-portal-page .panel {
 .portal-surface-support {
   background: var(--portal-surface-support);
   border-color: var(--portal-border);
+}
+.portal-center-column {
+  margin-inline: auto;
+  min-width: 0;
+  width: min(var(--portal-center-column-max, 1040px), 100%);
+}
+.portal-theme-panel,
+.portal-theme-card,
+.portal-theme-soft-card,
+.portal-theme-table-shell,
+.portal-theme-chart-shell,
+.portal-theme-dialog,
+.portal-theme-tooltip {
+  border: 1px solid var(--portal-role-border);
+  color: var(--portal-role-text);
+}
+.portal-theme-panel,
+.portal-theme-card,
+.portal-theme-soft-card,
+.portal-theme-table-shell,
+.portal-theme-chart-shell,
+.portal-theme-dialog {
+  box-sizing: border-box;
+}
+.portal-theme-panel {
+  background: var(--portal-role-panel-bg);
+  box-shadow: var(--portal-role-shadow);
+}
+.portal-theme-card,
+.portal-theme-table-shell,
+.portal-theme-dialog,
+.portal-theme-tooltip {
+  background: var(--portal-role-card-bg);
+}
+.portal-theme-card,
+.portal-theme-panel,
+.portal-theme-dialog {
+  box-shadow: var(--portal-role-shadow);
+}
+.portal-theme-soft-card,
+.portal-theme-chart-shell {
+  background: var(--portal-role-support-bg);
+}
+.portal-theme-dialog {
+  box-shadow: var(--portal-role-shadow-strong);
+}
+.portal-theme-tooltip {
+  box-shadow: var(--portal-role-shadow-soft);
+}
+.portal-theme-overlay {
+  background: var(--portal-modal-backdrop);
+}
+.portal-theme-overlay-strong {
+  background: var(--portal-modal-backdrop-strong);
 }
 body.student-portal-page .card,
 body.parent-portal-page .card {
@@ -892,6 +1090,297 @@ body.parent-portal-page .identity-list {
   gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+body.student-portal-page,
+body.parent-portal-page {
+  --portal-grade-table-shell-bg: var(--portal-surface-card);
+  --portal-grade-table-border: var(--line);
+  --portal-grade-table-current-row-accent: var(--brand);
+  --portal-grade-table-current-row-bg: color-mix(in srgb, var(--portal-status-good-bg) 84%, #ffffff 16%);
+  --portal-grade-table-header-bg: var(--portal-surface-support);
+  --portal-grade-table-row-bg: var(--portal-surface-card);
+  --portal-grade-table-row-completed-bg: #e2f5e9;
+  --portal-grade-table-row-completed-hover-bg: #d3ecd9;
+  --portal-grade-table-row-even-bg: color-mix(in srgb, var(--portal-surface-card) 92%, #ffffff 8%);
+  --portal-grade-table-row-hover-bg: color-mix(in srgb, var(--portal-surface-support) 82%, #ffffff 18%);
+  --portal-grade-table-row-late-bg: #f3ecff;
+  --portal-grade-table-row-late-hover-bg: #ede3ff;
+  --portal-grade-table-row-missed-bg: #ffd7d4;
+  --portal-grade-table-row-missed-hover-bg: #ffc9c4;
+  --portal-grade-table-row-open-bg: #fff0cc;
+  --portal-grade-table-row-open-hover-bg: #ffe4a3;
+  --portal-grade-table-text: var(--ink);
+}
+body.student-portal-page .grade-tabulator-shell,
+body.parent-portal-page .grade-tabulator-shell {
+  background: var(--portal-grade-table-shell-bg);
+  border: 1px solid var(--portal-grade-table-border);
+  border-radius: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  width: 100%;
+}
+body.student-portal-page .grade-tabulator,
+body.parent-portal-page .grade-tabulator {
+  width: 100%;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator,
+body.parent-portal-page .grade-tabulator-shell .tabulator {
+  background: transparent;
+  border: none;
+  color: var(--portal-grade-table-text);
+  font-size: 0.92rem;
+  width: 100%;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-header,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-footer,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-cell,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-header,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-footer,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-cell,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table {
+  color: var(--portal-grade-table-text);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-header,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-footer,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-header,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-footer,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col {
+  background: var(--portal-grade-table-header-bg);
+  border-color: var(--portal-grade-table-border);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row {
+  background: var(--portal-grade-table-row-bg);
+  border-bottom: 1px solid var(--portal-grade-table-border);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
+  background: var(--portal-grade-table-row-even-bg);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row:hover,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row:hover {
+  background: var(--portal-grade-table-row-hover-bg);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
+  background: var(--portal-grade-table-current-row-bg);
+  box-shadow: inset 4px 0 0 var(--portal-grade-table-current-row-accent);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-open,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-open {
+  background: var(--portal-grade-table-row-open-bg);
+  box-shadow: inset 4px 0 0 #a86400;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
+  background: var(--portal-grade-table-row-open-hover-bg);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
+  background: var(--portal-grade-table-row-completed-bg);
+  box-shadow: inset 4px 0 0 #1f7a47;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
+  background: var(--portal-grade-table-row-completed-hover-bg);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-late,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-late {
+  background: var(--portal-grade-table-row-late-bg);
+  box-shadow: inset 4px 0 0 #55389f;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
+  background: var(--portal-grade-table-row-late-hover-bg);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
+  background: var(--portal-grade-table-row-missed-bg);
+  box-shadow: inset 4px 0 0 #b23a2e;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
+  background: var(--portal-grade-table-row-missed-hover-bg);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-cell,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-cell {
+  border-right-color: var(--portal-grade-table-border);
+  box-sizing: border-box;
+  line-height: 1.2;
+  padding: 0.28rem 0.36rem;
+  vertical-align: top;
+  white-space: normal;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-cell:last-child,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-cell:last-child {
+  border-right-color: var(--portal-grade-table-border);
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 0.24rem 0.36rem;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title {
+  color: var(--portal-grade-table-text);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-content,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-content,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-content,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-content,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-content,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-content,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-content,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-content,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-content {
+  box-sizing: border-box;
+  padding: 0.1rem 0.16rem 0.08rem;
+}
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-title,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-title,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-title,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-title,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-title,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-title,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-title,
+body.student-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-title,
+body.parent-portal-page .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-title {
+  align-items: stretch;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  justify-content: stretch;
+  min-height: 4.8rem;
+  padding: 0.02rem 0;
+}
+body.student-portal-page .grade-exercise-meta,
+body.parent-portal-page .grade-exercise-meta,
+body.student-portal-page .grade-exercise-score-sub,
+body.parent-portal-page .grade-exercise-score-sub,
+body.student-portal-page .grade-exercise-comment,
+body.parent-portal-page .grade-exercise-comment {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+body.student-portal-page .grade-exercise-meta,
+body.parent-portal-page .grade-exercise-meta {
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+body.student-portal-page .grade-exercise-score-sub,
+body.parent-portal-page .grade-exercise-score-sub {
+  font-weight: 700;
+  line-height: 1.1;
+}
+body.student-portal-page .grade-exercise-comment,
+body.parent-portal-page .grade-exercise-comment {
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+body.student-portal-page .grade-status-pill,
+body.parent-portal-page .grade-status-pill {
+  align-items: center;
+  border-radius: 999px;
+  box-sizing: border-box;
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 800;
+  gap: 0.28rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0.22rem 0.52rem;
+  text-transform: uppercase;
+  width: fit-content;
+}
+body.student-portal-page .grade-status-pill,
+body.student-portal-page .grade-status-pill.is-late,
+body.parent-portal-page .grade-status-pill,
+body.parent-portal-page .grade-status-pill.is-late {
+  background: var(--portal-status-revise-bg);
+  border: 1px solid var(--portal-status-revise-border);
+  color: var(--portal-status-revise-text);
+}
+body.student-portal-page .grade-status-pill.is-good,
+body.parent-portal-page .grade-status-pill.is-good {
+  background: var(--ok);
+  border: 1px solid var(--ok);
+  color: var(--portal-primary-text-strong);
+}
+body.student-portal-page .grade-status-pill.is-warn,
+body.parent-portal-page .grade-status-pill.is-warn {
+  background: var(--warn);
+  border: 1px solid var(--warn);
+  color: var(--portal-primary-text-strong);
+}
+body.student-portal-page .grade-status-pill.is-bad,
+body.parent-portal-page .grade-status-pill.is-bad {
+  background: var(--err);
+  border: 1px solid var(--err);
+  color: var(--portal-primary-text-strong);
+}
+body.student-portal-page .grade-status-stack,
+body.parent-portal-page .grade-status-stack {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  justify-content: flex-start;
+}
+body.student-portal-page .grade-exercise-score,
+body.parent-portal-page .grade-exercise-score {
+  align-items: center;
+  background: var(--portal-status-good-bg);
+  border: 1px solid var(--portal-status-good-border);
+  border-radius: 14px;
+  box-sizing: border-box;
+  color: var(--portal-status-good-text);
+  display: grid;
+  gap: 0.08rem;
+  justify-items: center;
+  min-width: 5rem;
+  padding: 0.32rem 0.42rem;
+  text-align: center;
+}
+body.student-portal-page .grade-exercise-score.is-open,
+body.parent-portal-page .grade-exercise-score.is-open {
+  background: var(--portal-surface-support);
+  border-color: var(--line);
+  color: var(--portal-grade-table-text);
+}
+body.student-portal-page .grade-exercise-score-main,
+body.parent-portal-page .grade-exercise-score-main {
+  font-size: 0.94rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
 body.student-portal-page .metrics,
 body.parent-portal-page .metrics {
   display: grid;
@@ -1194,6 +1683,26 @@ html[data-theme="dark"] body.admin-portal-page {
   background: var(--portal-dark-page-bg);
   color: var(--portal-dark-text);
   --surface-2: var(--portal-dark-surface-support);
+}
+html[data-theme="dark"] body.student-portal-page,
+html[data-theme="dark"] body.parent-portal-page {
+  --portal-grade-table-shell-bg: var(--portal-dark-surface-card);
+  --portal-grade-table-border: var(--portal-dark-border);
+  --portal-grade-table-current-row-accent: var(--portal-status-good-border);
+  --portal-grade-table-current-row-bg: color-mix(in srgb, var(--portal-dark-surface-support) 72%, #ffffff 28%);
+  --portal-grade-table-header-bg: var(--portal-dark-surface-support);
+  --portal-grade-table-row-bg: var(--portal-dark-surface-card);
+  --portal-grade-table-row-completed-bg: color-mix(in srgb, #1f7a47 18%, var(--portal-dark-surface-card) 82%);
+  --portal-grade-table-row-completed-hover-bg: color-mix(in srgb, #1f7a47 24%, var(--portal-dark-surface-support) 76%);
+  --portal-grade-table-row-even-bg: color-mix(in srgb, var(--portal-dark-surface-card) 88%, #ffffff 12%);
+  --portal-grade-table-row-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 82%, #ffffff 18%);
+  --portal-grade-table-row-late-bg: color-mix(in srgb, var(--portal-dark-surface-support) 72%, #55389f 28%);
+  --portal-grade-table-row-late-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 62%, #55389f 38%);
+  --portal-grade-table-row-missed-bg: color-mix(in srgb, #b23a2e 18%, var(--portal-dark-surface-card) 82%);
+  --portal-grade-table-row-missed-hover-bg: color-mix(in srgb, #b23a2e 24%, var(--portal-dark-surface-support) 76%);
+  --portal-grade-table-row-open-bg: color-mix(in srgb, var(--portal-dark-surface-support) 74%, #a86400 26%);
+  --portal-grade-table-row-open-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 64%, #a86400 36%);
+  --portal-grade-table-text: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .card,
 html[data-theme="dark"] body.student-portal-page .panel,

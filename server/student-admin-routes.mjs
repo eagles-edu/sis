@@ -4054,51 +4054,6 @@ function isoDateOffset(value = "", days = 0) {
   return toPortalDateKey(shiftFromFixedTimeZone(shifted))
 }
 
-function isWeekendIsoDate(value = "") {
-  const date = parseIsoDateLocal(value)
-  if (!date) return false
-  const shifted = shiftToFixedTimeZone(date)
-  const day = shifted.getUTCDay()
-  return day === 0 || day === 6
-}
-
-function nearestWeekdayIsoDate(target = "", start = "", end = "") {
-  const targetIso = normalizeText(target).slice(0, 10)
-  const startIso = normalizeText(start).slice(0, 10)
-  const endIso = normalizeText(end).slice(0, 10)
-  if (!parseIsoDateLocal(startIso) || !parseIsoDateLocal(endIso) || compareIsoDateText(startIso, endIso) > 0) {
-    return ""
-  }
-  let candidate = parseIsoDateLocal(targetIso) ? targetIso : startIso
-  if (compareIsoDateText(candidate, startIso) < 0) candidate = startIso
-  if (!isWeekendIsoDate(candidate)) return candidate
-  const possibilities = []
-  let backward = candidate
-  while (compareIsoDateText(backward, startIso) >= 0) {
-    if (!isWeekendIsoDate(backward)) {
-      possibilities.push(backward)
-      break
-    }
-    backward = isoDateOffset(backward, -1)
-  }
-  let forward = candidate
-  while (compareIsoDateText(forward, endIso) <= 0) {
-    if (!isWeekendIsoDate(forward)) {
-      possibilities.push(forward)
-      break
-    }
-    forward = isoDateOffset(forward, 1)
-  }
-  if (!possibilities.length) return candidate
-  possibilities.sort((left, right) => {
-    const leftDiff = Math.abs((parseIsoDateLocal(candidate)?.getTime?.() || 0) - (parseIsoDateLocal(left)?.getTime?.() || 0))
-    const rightDiff = Math.abs((parseIsoDateLocal(candidate)?.getTime?.() || 0) - (parseIsoDateLocal(right)?.getTime?.() || 0))
-    if (leftDiff !== rightDiff) return leftDiff - rightDiff
-    return compareIsoDateText(left, right)
-  })
-  return possibilities[0]
-}
-
 function splitSchoolYearIntoQuarters(startDate = "", endDate = "") {
   const startIso = normalizeText(startDate).slice(0, 10)
   const endIso = normalizeText(endDate).slice(0, 10)
@@ -4118,20 +4073,17 @@ function splitSchoolYearIntoQuarters(startDate = "", endDate = "") {
 
     let end
     if (index === 3) {
-      const adjusted = isWeekendIsoDate(endIso) ? nearestWeekdayIsoDate(endIso, start, endIso) : null
-      if (adjusted) {
-        end = adjusted
-      } else {
-        end = endIso
-      }
+      end = endIso
     } else {
       const minimumDaysAfter = quartersLeft - 1
       const maxLength = Math.max(1, remainingDays - minimumDaysAfter)
-      const suggestedLength = Math.max(1, Math.round(remainingDays / quartersLeft))
+      const suggestedLength = Math.max(1, Math.floor(remainingDays / quartersLeft))
       const pickedLength = Math.min(maxLength, suggestedLength)
-      const targetEnd = isoDateOffset(start, pickedLength - 1)
       const latestAllowed = isoDateOffset(endIso, -minimumDaysAfter)
-      end = nearestWeekdayIsoDate(targetEnd, start, latestAllowed) || targetEnd
+      end = isoDateOffset(start, pickedLength - 1)
+      if (parseIsoDateLocal(latestAllowed) && compareIsoDateText(end, latestAllowed) > 0) {
+        end = latestAllowed
+      }
     }
 
     const validEnd = parseIsoDateLocal(end) && compareIsoDateText(end, start) >= 0 ? end : start
@@ -4672,7 +4624,15 @@ function buildStudentAssignmentDetailRows({
     const matchedGradeRow = key ? gradeBundleByKey.get(key) || null : null
     const dueAt = parseIsoDateTime(bundle.dueAt)
     if (!dueAt) return
-    const quarterInfo = resolveQuarterInfo(dueAt, schoolSetup)
+    const explicitQuarter = normalizeLower(matchedGradeRow?.quarter || matchedGradeRow?.quarterCode || matchedGradeRow?.quarterLabel)
+    const quarterInfo = /^q[1-4]$/.test(explicitQuarter) ? {
+      quarter: Number.parseInt(explicitQuarter.slice(1), 10) || 0,
+      key: explicitQuarter,
+      quarterLabel: explicitQuarter.toUpperCase(),
+      displayLabel: explicitQuarter.toUpperCase(),
+      startDate: "",
+      endDate: "",
+    } : resolveQuarterInfo(dueAt, schoolSetup)
     const quarterCode = quarterInfo?.quarter ? `q${quarterInfo.quarter}` : ""
     if (!quarterCode) {
       hasQuarterClassificationIssues = true

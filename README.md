@@ -280,6 +280,7 @@ npm run sync:proof:portal
 ```
 
 Chip semantics SSOT must stay aligned across both:
+
 - `docs/chips.md`
 - `docs/chips.xlsx`
 

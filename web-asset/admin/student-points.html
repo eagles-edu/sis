@@ -25,12 +25,9 @@
       --ink: var(--portal-text);
       --muted: var(--portal-text-soft);
       --line: var(--portal-border);
-      --primary: #0d66c2;
-      --primary-strong: #08488b;
       --ok: var(--portal-status-good-text);
       --warn: var(--portal-status-warn-text);
       --bad: var(--portal-status-bad-text);
-      --shadow: 0 10px 28px rgba(24, 49, 79, 0.1);
       color-scheme: light;
     }
 
@@ -41,12 +38,9 @@
       --ink: var(--portal-dark-text);
       --muted: var(--portal-dark-text-soft);
       --line: var(--portal-dark-border);
-      --primary: #6aa4ff;
-      --primary-strong: #2f75bc;
       --ok: var(--portal-status-good-text);
       --warn: var(--portal-status-warn-text);
       --bad: var(--portal-status-bad-text);
-      --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
       color-scheme: dark;
     }
 
@@ -64,8 +58,7 @@
     }
 
     .app {
-      max-width: 1280px;
-      margin: 0 auto;
+      --portal-center-column-max: 1280px;
       display: grid;
       gap: 16px;
     }
@@ -75,10 +68,7 @@
     }
 
     .card {
-      background: var(--card);
-      border: 1px solid var(--line);
       border-radius: 14px;
-      box-shadow: var(--shadow);
       padding: 16px;
     }
 
@@ -172,21 +162,21 @@
     button {
       font: inherit;
       border-radius: 10px;
-      border: 1px solid #b8cce4;
+      border: 1px solid var(--portal-button-border);
       padding: 10px 12px;
-      background: #fff;
+      background: var(--portal-surface-card);
       color: var(--ink);
     }
 
     button {
       cursor: pointer;
-      background: #f5f9ff;
+      background: var(--portal-button-surface);
       transition: transform 120ms ease, border-color 120ms ease;
     }
 
     button:hover {
       transform: translateY(-1px);
-      border-color: #7fa4d4;
+      border-color: var(--portal-button-border-hover);
     }
 
     html[data-theme="dark"] input,
@@ -197,8 +187,8 @@
     }
 
     .primary {
-      background: linear-gradient(160deg, var(--primary), var(--primary-strong));
-      color: #fff;
+      background: linear-gradient(160deg, var(--portal-action-blue-top), var(--portal-action-blue-bottom));
+      color: var(--portal-primary-text-strong);
       border-color: transparent;
     }
 
@@ -220,15 +210,9 @@
     .chart-wrap {
       width: 100%;
       height: 280px;
-      border: 1px solid var(--line);
       border-radius: 12px;
       padding: 8px;
       box-sizing: border-box;
-      background: var(--card);
-    }
-
-    html[data-theme="dark"] .chart-wrap {
-      background: var(--card);
     }
 
     table {
@@ -246,7 +230,7 @@
 
     html[data-theme="dark"] th,
     html[data-theme="dark"] td {
-      border-bottom-color: rgba(255, 255, 255, 0.14);
+      border-bottom-color: var(--portal-table-dark-border);
     }
 
     th button {
@@ -259,7 +243,6 @@
 
     .table-wrap {
       overflow: auto;
-      border: 1px solid var(--line);
       border-radius: 12px;
     }
 
@@ -267,10 +250,10 @@
       display: inline-block;
       border-radius: 999px;
       padding: 2px 9px;
-      background: #eff6ff;
-      border: 1px solid #cde0fb;
+      background: var(--portal-pill-bg);
+      border: 1px solid var(--portal-pill-border);
       font-size: 0.78rem;
-      color: #184372;
+      color: var(--portal-pill-text);
     }
 
     .mini {
@@ -296,14 +279,14 @@
 </head>
 
 <body>
-  <div class="app">
-    <section class="card">
+  <div class="app portal-center-column">
+    <section class="card portal-theme-card">
       <h1>Points Management</h1>
       <p class="sub">School YTD trend + student point ledger controls.</p>
       <p id="globalStatus" class="status">Checking admin session...</p>
     </section>
 
-    <section id="loginPanel" class="card hidden" aria-label="Admin login">
+    <section id="loginPanel" class="card portal-theme-card hidden" aria-label="Admin login">
       <div class="row">
         <div class="field c4">
           <label for="loginUsername">Username</label>
@@ -325,7 +308,7 @@
     </section>
 
     <section id="appPanel" class="hidden">
-      <div class="card">
+      <div class="card portal-theme-card">
         <div class="row">
           <div class="field c3">
             <label for="startDate">Start Date</label>
@@ -344,13 +327,13 @@
             <button id="logoutBtn" type="button" class="danger">Logout</button>&nbsp;</label>
           </div>
         </div>
-        <div class="chart-wrap">
+        <div class="chart-wrap portal-theme-chart-shell">
           <svg id="ytdChart" viewBox="0 0 900 260" width="100%" height="100%" aria-hidden="true"></svg>
         </div>
         <p id="chartSummary" class="mini">No data loaded.</p>
       </div>
 
-      <div class="card">
+      <div class="card portal-theme-card">
         <div class="row">
           <div class="field c4">
             <label for="studentSearch">Student Search</label>
@@ -382,7 +365,7 @@
           </div>
         </div>
 
-        <div class="table-wrap">
+        <div class="table-wrap portal-theme-table-shell">
           <table>
             <thead>
               <tr>
@@ -405,10 +388,10 @@
         <p id="studentSummary" class="mini">No data loaded.</p>
       </div>
 
-      <div class="card">
+      <div class="card portal-theme-card">
         <h2 style="margin:0 0 8px; font-size:1.1rem;">Selected Student Ledger</h2>
         <p id="ledgerSummary" class="mini">Select a student to view recent points events.</p>
-        <div class="table-wrap">
+        <div class="table-wrap portal-theme-table-shell">
           <table>
             <thead>
               <tr>

@@ -94,20 +94,6 @@
       }
     }
 
-    .school-map-preview-shell {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      overflow: hidden;
-    }
-
-    .school-map-preview-shell iframe {
-      border: 0;
-      display: block;
-      min-height: 320px;
-      width: 100%;
-    }
-
     /* Keep the loader class locally declared so editor diagnostics resolve it. */
     .system-health-loading-pulse {
       color: var(--primary-color);
@@ -117,8 +103,8 @@
     }
 
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260508a" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260508a">
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260515a" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260515a">
 </head>
 
 <body class="admin-portal-page admin-auth-booting">
@@ -158,6 +144,7 @@
       <p class="muted">
         Session-based secure login is required for all admin API operations.
       </p>
+      <div id="authSchoolSetupWarning" class="school-setup-access-warning hidden" data-school-setup-access-warning role="status" aria-live="polite"></div>
       <p class="small" id="authStatus" aria-live="polite"></p>
     </div>
 
@@ -348,6 +335,7 @@
               </div>
             </div>
           </div>
+          <div id="appSchoolSetupWarning" class="school-setup-access-warning hidden" data-school-setup-access-warning role="status" aria-live="polite"></div>
           <div class="panel" id="topControlsPanel">
             <div class="row">
               <div class="col-3">
@@ -3231,7 +3219,7 @@ Select an assignment link to inspect details.</pre>
       apply(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"));
     })();
   </script>
-  <script src="/web-asset/admin/student-admin.min.js?v=20260426a" defer></script>
+  <script src="/web-asset/admin/student-admin.min.js?v=20260515a" defer></script>
 </body>
 
 </html>

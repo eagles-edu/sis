@@ -12,20 +12,6 @@ const TABULATOR_HTML = fs
 const TABULATOR_UI_PREFS_KEY = "sis.grades-tabulator.ui-prefs.v1"
 const ADMIN_UI_SETTINGS_KEY = "sis.admin.uiSettings"
 
-function expectedCurrentSchoolYearLabel(date = new Date()) {
-  const safeDate = date instanceof Date ? new Date(date.getTime()) : new Date(date)
-  const year = safeDate.getFullYear()
-  const month = safeDate.getMonth() + 1
-  if (month >= 8) return `${year}-${year + 1}`
-  return `${year - 1}-${year}`
-}
-
-function expectedSystemDefaultSchoolYearLabel() {
-  const match = TABULATOR_HTML.match(/const DEFAULT_SYSTEM_SCHOOL_YEAR = \"(\d{4}-\d{4})\"/)
-  if (match && match[1]) return match[1]
-  return expectedCurrentSchoolYearLabel()
-}
-
 function selectHasCurrentOption(selectEl) {
   if (!selectEl || typeof selectEl !== "object" || !("options" in selectEl)) return false
   return Array.from(selectEl.options).some((entry) => String(entry.value) === "current")

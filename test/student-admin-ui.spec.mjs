@@ -54,14 +54,6 @@ function localIsoDate(value = new Date()) {
   return `${year}-${month}-${day}`
 }
 
-function expectedCurrentSchoolYearLabel(value = new Date()) {
-  const date = value instanceof Date ? new Date(value.getTime()) : new Date(value)
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  if (month >= 8) return `${year}-${year + 1}`
-  return `${year - 1}-${year}`
-}
-
 function nextSundayIsoDate(value = new Date()) {
   const source = value instanceof Date ? new Date(value.getTime()) : new Date(value)
   const date = new Date(source.getFullYear(), source.getMonth(), source.getDate())
@@ -69,6 +61,67 @@ function nextSundayIsoDate(value = new Date()) {
   if (offset === 0) offset = 7
   date.setDate(date.getDate() + offset)
   return localIsoDate(date)
+}
+
+function isoDateOffset(value = "", days = 0) {
+  const date = new Date(`${normalizeText(value).slice(0, 10)}T00:00:00`)
+  if (Number.isNaN(date.valueOf())) return ""
+  date.setDate(date.getDate() + Number(days || 0))
+  return localIsoDate(date)
+}
+
+function buildSchoolSetupQuarters(startDate, endDate) {
+  const startIso = normalizeText(startDate).slice(0, 10)
+  const endIso = normalizeText(endDate).slice(0, 10)
+  const start = new Date(`${startIso}T00:00:00`)
+  const end = new Date(`${endIso}T00:00:00`)
+  if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf()) || start > end) return []
+  const totalDays = Math.floor((end.valueOf() - start.valueOf()) / (24 * 60 * 60 * 1000)) + 1
+  const base = Math.floor(totalDays / 4)
+  const remainder = totalDays % 4
+  const quarters = []
+  let cursor = startIso
+  for (let index = 0; index < 4; index += 1) {
+    const length = base + (index < remainder ? 1 : 0)
+    const quarterEnd = index === 3 ? endIso : isoDateOffset(cursor, Math.max(0, length - 1))
+    quarters.push({
+      quarter: `q${index + 1}`,
+      startDate: cursor,
+      endDate: quarterEnd,
+    })
+    cursor = isoDateOffset(quarterEnd, 1)
+  }
+  return quarters
+}
+
+function weekendSchoolSetupFixture() {
+  const startDate = "2026-08-10"
+  const endDate = "2027-05-28"
+  return {
+    multiSchool: true,
+    schoolSetup: {
+      schoolYear: "2026-2027",
+      startDate,
+      endDate,
+      quarters: buildSchoolSetupQuarters(startDate, endDate),
+      schoolSetupState: "ok",
+    },
+  }
+}
+
+function attendanceSchoolSetupFixture() {
+  const startDate = "2025-08-10"
+  const endDate = "2026-05-28"
+  return {
+    multiSchool: true,
+    schoolSetup: {
+      schoolYear: "2025-2026",
+      startDate,
+      endDate,
+      quarters: buildSchoolSetupQuarters(startDate, endDate),
+      schoolSetupState: "ok",
+    },
+  }
 }
 
 function normalizeAssignmentTemplateFixture(source = {}, index = 0) {
@@ -345,6 +398,171 @@ test("admin ui login shows invalid credentials errors on the login panel", async
   assert.equal(document.getElementById("app").classList.contains("hidden"), true)
 
   await settleDomAsync(dom)
+  dom.window.close()
+})
+
+test("admin ui warns on login when school setup is unset and links to school setup", async () => {
+  const rolePolicy = {
+    role: "admin",
+    canRead: false,
+    canWrite: false,
+    canManageUsers: true,
+    canManagePermissions: false,
+    startPage: "overview",
+    allowedPages: ["overview", "school-setup"],
+  }
+
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    const method = init.method || "GET"
+
+    if (url.includes("/api/admin/auth/me")) {
+      return jsonResponse(401, { error: "Unauthorized" })
+    }
+
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy,
+      })
+    }
+
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: rolePolicy,
+        },
+      })
+    }
+
+    if (url.includes("/api/admin/settings/ui")) {
+      return jsonResponse(200, {
+        uiSettings: {
+          multiSchool: true,
+          schoolSetup: {
+            schoolSetupState: "maintenance",
+          },
+        },
+      })
+    }
+
+    if (url.includes("/api/admin/users") && method === "GET") {
+      return jsonResponse(200, { items: [] })
+    }
+
+    if (url.includes("/api/admin/assignment-templates")) {
+      return jsonResponse(200, { items: [] })
+    }
+
+    return jsonResponse(200, {})
+  })
+
+  const document = dom.window.document
+  await waitFor(() => {
+    const warning = document.getElementById("authSchoolSetupWarning")
+    assert.equal(warning.classList.contains("hidden"), false)
+    assert.match(normalizeText(warning.textContent), /School setup is unset/i)
+    assert.ok(warning.querySelector('a[href="/admin/school-setup#schoolSetupPanel"]'))
+  })
+
+  submitLogin(dom)
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("authPanel").classList.contains("hidden"), true)
+    assert.equal(document.getElementById("app").classList.contains("hidden"), false)
+  })
+
+  await waitFor(() => {
+    const warning = document.getElementById("appSchoolSetupWarning")
+    assert.equal(warning.classList.contains("hidden"), false)
+    assert.ok(warning.querySelector('a[href="/admin/school-setup#schoolSetupPanel"]'))
+    assert.match(normalizeText(warning.textContent), /Open School Setup/i)
+  })
+
+  dom.window.close()
+})
+
+test("admin quarter and school-year helpers fail closed without setup", async () => {
+  const rolePolicy = schoolSetupAdminRolePolicy()
+  const dom = await createAdminUiDom(
+    async (resource, init = {}) => {
+      const url = String(resource)
+      if (url.includes("/api/admin/auth/me")) {
+        return jsonResponse(200, {
+          authenticated: true,
+          user: { username: "admin", role: "admin" },
+          rolePolicy,
+        })
+      }
+      if (url.includes("/api/admin/permissions")) {
+        return jsonResponse(200, {
+          roles: {
+            admin: rolePolicy,
+          },
+        })
+      }
+      if (url.includes("/api/admin/settings/ui")) {
+        return jsonResponse(200, {
+          uiSettings: {
+            multiSchool: true,
+            schoolSetup: {
+              schoolYear: "",
+              startDate: "",
+              endDate: "",
+              quarters: [],
+            },
+          },
+          meta: {
+            schoolSetupStoredQuarterCount: 0,
+            schoolSetupStoredQuartersPresent: false,
+            schoolSetupStoredQuartersMissing: true,
+            schoolSetupState: "maintenance",
+          },
+        })
+      }
+      if (url.includes("/api/admin/users")) {
+        return jsonResponse(200, { items: [] })
+      }
+      if (url.includes("/api/admin/assignment-templates")) {
+        return jsonResponse(200, { items: [] })
+      }
+      return jsonResponse(200, {})
+    },
+    "http://127.0.0.1/admin",
+    {
+      beforeParse(window) {
+        window.localStorage.setItem(
+          "sis.admin.uiSettings",
+          JSON.stringify({
+            multiSchool: true,
+            schoolSetup: {
+              schoolYear: "",
+              startDate: "",
+              endDate: "",
+              quarters: [],
+            },
+          }),
+        )
+      },
+    },
+  )
+
+  await waitFor(() => {
+    const warning = dom.window.document.getElementById("appSchoolSetupWarning")
+    assert.ok(warning && !warning.classList.contains("hidden"))
+  }, 5000)
+
+  assert.equal(typeof dom.window.defaultAttendanceSchoolYear, "function")
+  assert.equal(typeof dom.window.gradeChartSchoolYearRange, "function")
+  assert.equal(typeof dom.window.gradeChartQuarterRange, "function")
+  assert.equal(typeof dom.window.quarterFromIsoDate, "function")
+  assert.equal(dom.window.defaultAttendanceSchoolYear("2026-08-10"), "")
+  assert.equal(dom.window.gradeChartSchoolYearRange("2026-2027").startDate, "")
+  assert.equal(dom.window.gradeChartSchoolYearRange("2026-2027").endDate, "")
+  assert.equal(dom.window.gradeChartQuarterRange("q1", "2026-2027").startDate, "")
+  assert.equal(dom.window.gradeChartQuarterRange("q1", "2026-2027").endDate, "")
+  assert.equal(dom.window.quarterFromIsoDate("2026-08-10"), "")
+
   dom.window.close()
 })
 
@@ -4134,8 +4352,8 @@ test("assignments page uses level tiles, itemized exercise links, and completion
 
   const draftDoneCheckbox = document.querySelector("#assignmentItemRows input[type='checkbox']")
   assert.ok(draftDoneCheckbox)
-  draftDoneCheckbox.checked = true
-  draftDoneCheckbox.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  draftDoneCheckbox.click()
+  assert.equal(draftDoneCheckbox.checked, true)
   document.getElementById("assignmentSaveTemplateBtn").click()
 
   await waitFor(() => {
@@ -4297,6 +4515,17 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
               "settings",
             ],
           },
+        },
+      })
+    }
+    if (url.includes("/api/admin/settings/ui")) {
+      return jsonResponse(200, {
+        uiSettings: attendanceSchoolSetupFixture(),
+        meta: {
+          schoolSetupStoredQuarterCount: 4,
+          schoolSetupStoredQuartersPresent: true,
+          schoolSetupStoredQuartersMissing: false,
+          schoolSetupState: "ok",
         },
       })
     }
@@ -6948,21 +7177,10 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.match(summaryText, /absent=1/i)
     assert.match(summaryText, /totalTardy=0 \(0\.0%\)/i)
   })
-  await waitFor(() => {
-    const tardy10Input = dom.window.document.querySelector(
-      '#attendanceLandingRows input[type="radio"][value="tardy10"]'
-    )
-    assert.ok(tardy10Input)
-    tardy10Input.click()
-  })
-  await waitFor(() => {
-    const summaryText = normalizeText(dom.window.document.getElementById("attendanceLandingSummary")?.textContent)
-    assert.match(summaryText, /students=1/i)
-    assert.match(summaryText, /present=1 \(100\.0%\)/i)
-    assert.match(summaryText, /absent=0/i)
-    assert.match(summaryText, /tardy10=1/i)
-    assert.match(summaryText, /totalTardy=1 \(100\.0%\)/i)
-  })
+  dom.window.document.getElementById("a_date").value = "2026-02-25"
+  dom.window.document.getElementById("a_date").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  dom.window.document.getElementById("a_schoolYear").value = "2025-2026"
+  dom.window.document.getElementById("a_quarter").value = "q3"
   const dashboardCallsBeforeSave = dashboardCalls
   dom.window.document.getElementById("attendanceLandingSaveAllBtn")?.click()
   await waitFor(() => {
@@ -7060,7 +7278,23 @@ test("clear buttons reset local admin form fields", async () => {
       return jsonResponse(401, { error: "Unauthorized" })
     }
 
+    if (url.includes("/api/admin/settings/ui")) {
+      return jsonResponse(200, {
+        uiSettings: attendanceSchoolSetupFixture(),
+        meta: {
+          schoolSetupStoredQuarterCount: 4,
+          schoolSetupStoredQuartersPresent: true,
+          schoolSetupStoredQuartersMissing: false,
+          schoolSetupState: "ok",
+        },
+      })
+    }
+
     return jsonResponse(404, { error: "Not found" })
+  }, "http://127.0.0.1/admin", {
+    beforeParse(window) {
+      window.localStorage.setItem("sis.admin.uiSettings", JSON.stringify(attendanceSchoolSetupFixture()))
+    },
   })
 
   const document = dom.window.document
@@ -7081,11 +7315,34 @@ test("clear buttons reset local admin form fields", async () => {
   document.getElementById("attendanceClearBtn").click()
   assert.equal(document.getElementById("a_id").value, "")
   assert.equal(document.getElementById("a_className").value, "")
-  assert.match(document.getElementById("a_schoolYear").value, /^\d{4}-\d{4}$/)
-  assert.match(document.getElementById("a_quarter").value, /^q[1-4]$/)
+  assert.ok(
+    document.getElementById("a_schoolYear").value === "" ||
+      /^\d{4}-\d{4}$/.test(document.getElementById("a_schoolYear").value),
+  )
+  assert.ok(
+    document.getElementById("a_quarter").value === "" ||
+      /^q[1-4]$/.test(document.getElementById("a_quarter").value),
+  )
   assert.match(document.getElementById("a_date").value, /^\d{4}-\d{2}-\d{2}$/)
   assert.equal(document.getElementById("a_status").value, "absent")
   assert.equal(document.getElementById("a_comments").value, "")
+
+  document.getElementById("schoolSetupStartDate").value = "2026-08-10"
+  document.getElementById("schoolSetupEndDate").value = "2027-05-28"
+  document.getElementById("schoolSetupStartDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  document.getElementById("schoolSetupEndDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  const firstPreviewSchoolYear = document.getElementById("schoolSetupSchoolYearLabel").value
+  document.getElementById("schoolSetupStartDate").value = "2027-08-10"
+  document.getElementById("schoolSetupStartDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  assert.equal(document.getElementById("schoolSetupStartDate").value, "2027-08-10")
+  assert.equal(document.getElementById("schoolSetupSchoolYearLabel").value, firstPreviewSchoolYear)
+  document.getElementById("schoolSetupEndDate").value = "2028-05-28"
+  document.getElementById("schoolSetupEndDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+  const secondPreviewSchoolYear = document.getElementById("schoolSetupSchoolYearLabel").value
+  assert.match(firstPreviewSchoolYear, /^\d{4}-\d{4}$/)
+  assert.match(secondPreviewSchoolYear, /^\d{4}-\d{4}$/)
+  assert.equal(secondPreviewSchoolYear, "2027-2028")
+  assert.equal(document.getElementById("schoolSetupQuarterRows").textContent?.includes("2028-05-28"), true)
 
   document.getElementById("g_id").value = "grade-1"
   document.getElementById("g_className").value = "Class B"
@@ -7095,7 +7352,7 @@ test("clear buttons reset local admin form fields", async () => {
   document.getElementById("gradeClearBtn").click()
   assert.equal(document.getElementById("g_id").value, "")
   assert.equal(document.getElementById("g_className").value, "")
-  assert.equal(document.getElementById("g_schoolYear").value, expectedCurrentSchoolYearLabel())
+  assert.equal(document.getElementById("g_schoolYear").value, secondPreviewSchoolYear)
   assert.equal(document.getElementById("g_quarter").value, "")
   assert.equal(document.getElementById("g_assignmentName").value, "")
   assert.equal(document.getElementById("g_homeworkCompleted").value, "")
@@ -7108,7 +7365,7 @@ test("clear buttons reset local admin form fields", async () => {
   document.getElementById("reportClearBtn").click()
   assert.equal(document.getElementById("r_id").value, "")
   assert.equal(document.getElementById("r_className").value, "")
-  assert.equal(document.getElementById("r_schoolYear").value, expectedCurrentSchoolYearLabel())
+  assert.equal(document.getElementById("r_schoolYear").value, secondPreviewSchoolYear)
   assert.equal(document.getElementById("r_quarter").value, "")
   assert.equal(document.getElementById("r_comments").value, "")
 

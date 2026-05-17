@@ -75,6 +75,7 @@
       gap: 0.75rem;
       margin: 24px auto;
       padding: 16px;
+      --portal-center-column-max: 1460px;
       width: min(1460px, calc(100% - 32px));
     }
 
@@ -93,20 +94,12 @@
     .hero,
     .control-card,
     .grid-card {
-      background: var(--panel);
-      border: 1px solid var(--line);
       border-radius: 14px;
-      box-shadow: 0 8px 22px rgb(17 38 63 / 8%);
       padding: 0.8rem;
     }
 
     .grid-card {
-      background: var(--card);
       min-width: 0;
-    }
-
-    html[data-theme="dark"] .grid-card {
-      background: var(--card);
     }
 
     .hero h1 {
@@ -143,13 +136,6 @@
       min-height: 2rem;
       padding: 0.3rem 0.8rem;
       text-decoration: none;
-    }
-
-    html[data-theme="dark"] .metric-card,
-    html[data-theme="dark"] #gradeGrid {
-      background: var(--card);
-      border-color: var(--line);
-      color: var(--ink);
     }
 
     html[data-theme="dark"] .field select,
@@ -277,8 +263,6 @@
     }
 
     .metric-card {
-      background: var(--card);
-      border: 1px solid var(--line);
       border-radius: 12px;
       box-sizing: border-box;
       padding: 0.45rem 0.6rem;
@@ -306,8 +290,6 @@
     }
 
     #gradeGrid {
-      background: var(--card);
-      border: 1px solid var(--line);
       border-radius: 12px;
       box-sizing: border-box;
       min-height: 480px;
@@ -316,10 +298,6 @@
       overflow-y: hidden;
       resize: vertical;
       width: 100%;
-    }
-
-    html[data-theme="dark"] #gradeGrid {
-      background: var(--card);
     }
 
     .grid-head {
@@ -356,7 +334,6 @@
     }
 
     .table-modal-backdrop {
-      background: rgb(8 22 40 / 56%);
       border: 0;
       cursor: pointer;
       inset: 0;
@@ -566,7 +543,7 @@
     }
 
     html[data-theme="dark"] .period-btn.is-active {
-      background: color-mix(in srgb, var(--portal-dark-surface-support) 74%, var(--portal-status-good-border) 26%);
+      background: var(--portal-quarter-button-active-bg);
       border-color: var(--portal-status-good-border);
       color: var(--portal-dark-text);
     }
@@ -596,7 +573,7 @@
     }
 
     .score-bar-fill {
-      background: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
+      background: var(--portal-score-bar-fill);
       display: block;
       height: 100%;
       width: 0;
@@ -825,24 +802,13 @@
       color: var(--portal-dark-text-soft);
     }
 
-    html[data-theme="dark"] .distribution-mini {
-      background: linear-gradient(180deg, var(--portal-dark-surface-support) 0%, var(--portal-dark-surface-panel) 100%);
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .distribution-mini:hover {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-    }
-
     html[data-theme="dark"] .score-bar {
       background: var(--portal-dark-surface-support);
       border-color: var(--portal-dark-border);
     }
 
     html[data-theme="dark"] .header-action-btn.plus {
-      background: color-mix(in srgb, var(--portal-status-good-bg) 18%, var(--portal-dark-surface-support) 82%);
+      background: var(--portal-quarter-button-active-bg);
       border-color: var(--portal-status-good-border);
       color: var(--portal-dark-text);
     }
@@ -854,11 +820,8 @@
     }
 
     .distribution-mini {
-      background: linear-gradient(180deg, var(--card) 0%, var(--card-soft) 100%);
-      border: 1px solid var(--line);
       border-radius: 8px;
       box-sizing: border-box;
-      color: var(--ink);
       cursor: pointer;
       display: grid;
       gap: 0.14rem;
@@ -867,8 +830,7 @@
     }
 
     .distribution-mini:hover {
-      background: linear-gradient(180deg, var(--card-soft) 0%, var(--bg) 100%);
-      border-color: var(--line);
+      filter: brightness(0.99);
     }
 
     .distribution-mini:focus-visible {
@@ -939,16 +901,12 @@
     }
 
     .distribution-modal-backdrop {
-      background: rgb(8 22 40 / 52%);
       inset: 0;
       position: absolute;
     }
 
     .distribution-dialog {
-      background: var(--card);
-      border: 1px solid var(--line);
       border-radius: 14px;
-      box-shadow: 0 26px 60px rgb(8 22 40 / 26%);
       box-sizing: border-box;
       display: grid;
       gap: 0.6rem;
@@ -1074,8 +1032,6 @@
     }
 
     .distribution-chart-shell {
-      background: var(--card-soft);
-      border: 1px solid var(--line);
       border-radius: 11px;
       box-sizing: border-box;
       min-height: 420px;
@@ -1110,7 +1066,7 @@
     }
 
     .distribution-modal-chart .dist-area {
-      fill: rgb(62 123 192 / 15%);
+      fill: var(--portal-svg-accent-soft-fill);
     }
 
     .distribution-modal-chart .dist-line {
@@ -1154,12 +1110,8 @@
     }
 
     .distribution-hover {
-      background: var(--card);
-      border: 1px solid var(--line);
       border-radius: 8px;
-      box-shadow: 0 8px 22px rgb(10 28 48 / 18%);
       box-sizing: border-box;
-      color: var(--ink);
       font-size: 1rem;
       font-weight: 700;
       left: 0;
@@ -1384,9 +1336,9 @@
 </head>
 
 <body>
-  <main class="page-shell">
+  <main class="page-shell portal-center-column">
     <div class="top-stack">
-      <section class="hero">
+      <section class="hero portal-theme-panel">
         <h1>Grades Tabulator</h1>
         <p>Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
         <div class="hero-actions">
@@ -1397,7 +1349,7 @@
         <p class="status" id="statusLine">Booting grade interface...</p>
       </section>
 
-      <section class="control-card">
+      <section class="control-card portal-theme-panel">
         <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
           <button type="button" class="period-btn" data-period="week">Week</button>
           <button type="button" class="period-btn" data-period="quarter">Quarter</button>
@@ -1456,30 +1408,30 @@
       </section>
 
       <section class="metrics" aria-label="Grade data snapshot">
-        <article class="metric-card">
+        <article class="metric-card portal-theme-card">
           <h2>Rows</h2>
           <p id="metricRows">0</p>
         </article>
-        <article class="metric-card">
+        <article class="metric-card portal-theme-card">
           <h2>Students</h2>
           <p id="metricStudents">0</p>
         </article>
-        <article class="metric-card">
+        <article class="metric-card portal-theme-card">
           <h2>Classes</h2>
           <p id="metricClasses">0</p>
         </article>
-        <article class="metric-card">
+        <article class="metric-card portal-theme-card">
           <h2>Avg Score %</h2>
           <p id="metricAvgPercent">n/a</p>
         </article>
-        <article class="metric-card">
+        <article class="metric-card portal-theme-card">
           <h2>HW Completion</h2>
           <p id="metricCompletion">n/a</p>
         </article>
       </section>
     </div>
 
-    <section id="gradeGridCard" class="grid-card">
+    <section id="gradeGridCard" class="grid-card portal-theme-card">
       <div class="grid-head">
         <p class="grid-title">Interactive Matrix</p>
         <div class="grid-actions">
@@ -1488,16 +1440,16 @@
           <button class="btn subtle" id="resetColumnsBtn" type="button">Reset columns</button>
         </div>
       </div>
-      <div id="gradeGrid"></div>
+      <div id="gradeGrid" class="portal-theme-table-shell"></div>
       <p class="dim" id="rangeHint"></p>
     </section>
   </main>
 
-  <button id="tableModalBackdrop" class="table-modal-backdrop" type="button" hidden data-close-table-modal="true" aria-label="Close table modal"></button>
+  <button id="tableModalBackdrop" class="table-modal-backdrop portal-theme-overlay-strong" type="button" hidden data-close-table-modal="true" aria-label="Close table modal"></button>
 
   <div id="distributionModal" class="distribution-modal" hidden>
-    <div class="distribution-modal-backdrop" data-close-distribution-modal="true"></div>
-    <section id="distributionDialog" class="distribution-dialog is-fullscreen" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
+    <div class="distribution-modal-backdrop portal-theme-overlay" data-close-distribution-modal="true"></div>
+    <section id="distributionDialog" class="distribution-dialog portal-theme-dialog is-fullscreen" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
       <div class="distribution-dialog-head">
         <h2 id="distributionModalTitle">Grade Distribution Detail</h2>
         <div class="distribution-dialog-actions">
@@ -1513,11 +1465,11 @@
         <input id="distributionZoomRange" class="distribution-zoom-range" type="range" min="1" max="6" step="0.1" value="1" aria-label="Chart zoom level">
         <span id="distributionZoomLabel" class="distribution-zoom-label">100%</span>
       </div>
-      <div id="distributionChartShell" class="distribution-chart-shell">
+      <div id="distributionChartShell" class="distribution-chart-shell portal-theme-soft-card">
         <div id="distributionChartScroll" class="distribution-chart-scroll">
           <svg id="distributionModalChart" class="distribution-modal-chart" viewBox="0 0 760 360" preserveAspectRatio="none"></svg>
         </div>
-        <div id="distributionModalHover" class="distribution-hover" hidden></div>
+        <div id="distributionModalHover" class="distribution-hover portal-theme-tooltip" hidden></div>
       </div>
       <p class="distribution-dialog-hint">Hover points for values. Use slider, +/- buttons, or mouse wheel to zoom.</p>
     </section>
@@ -1567,7 +1519,6 @@
           search: "",
         },
       }
-      const DEFAULT_SYSTEM_SCHOOL_YEAR = "2026-2027"
       const DEFAULT_LETTER_GRADE_RANGES = Object.freeze([
         Object.freeze({
           letter: "A",
@@ -2023,10 +1974,14 @@
       function schoolYearForIsoDate(value) {
         const parsed = parseIsoDate(value)
         if (!parsed) return ""
-        const year = parsed.getFullYear()
-        const month = parsed.getMonth() + 1
-        if (month >= 8) return `${year}-${year + 1}`
-        return `${year - 1}-${year}`
+        const setup = state.schoolSetup && typeof state.schoolSetup === "object" ? state.schoolSetup : {}
+        const startDate = normalizeText(setup.startDate).slice(0, 10)
+        const endDate = normalizeText(setup.endDate).slice(0, 10)
+        const schoolYear = normalizeText(setup.schoolYear)
+        if (!schoolYear || !parseIsoDate(startDate) || !parseIsoDate(endDate) || compareIsoDate(startDate, endDate) > 0) return ""
+        const isoDate = localIsoDate(parsed)
+        if (compareIsoDate(isoDate, startDate) >= 0 && compareIsoDate(isoDate, endDate) <= 0) return schoolYear
+        return ""
       }
 
       function quarterFromIsoDate(value) {
@@ -2036,13 +1991,8 @@
       }
 
       function calendarQuarterFromIsoDate(value) {
-        const parsed = parseIsoDate(value)
-        if (!parsed) return ""
-        const month = parsed.getMonth() + 1
-        if (month >= 8 && month <= 10) return "q1"
-        if (month === 11 || month === 12 || month === 1) return "q2"
-        if (month === 2 || month === 3) return "q3"
-        return "q4"
+        void value
+        return ""
       }
 
       function normalizeQuarterCode(value) {
@@ -2109,16 +2059,13 @@
         const params = new URLSearchParams(window.location.search || "")
         const explicit = normalizeText(params.get("currentSchoolYear") || params.get("schoolYear"))
         if (normalizeLower(explicit) === "current" || normalizeLower(explicit) === "all") {
-          return normalizeText(DEFAULT_SYSTEM_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO))
+          const localSettingsSchoolYear = schoolYearFromUiSettings(loadUiSettingsFromLocalStorage())
+          return isSchoolYearKey(localSettingsSchoolYear) ? localSettingsSchoolYear : ""
         }
         if (isSchoolYearKey(explicit)) return explicit
         const localSettingsSchoolYear = schoolYearFromUiSettings(loadUiSettingsFromLocalStorage())
         if (isSchoolYearKey(localSettingsSchoolYear)) return localSettingsSchoolYear
-        const fallback = normalizeText(DEFAULT_SYSTEM_SCHOOL_YEAR)
-        if (isSchoolYearKey(fallback)) return fallback
-        const dateDerived = normalizeText(schoolYearForIsoDate(TODAY_ISO))
-        if (isSchoolYearKey(dateDerived)) return dateDerived
-        return dateDerived
+        return ""
       }
 
       function refreshSystemCurrentSchoolYear(nextSchoolYear) {
@@ -2821,7 +2768,7 @@
         }
         const button = document.createElement("button")
         button.type = "button"
-        button.className = "distribution-mini"
+        button.className = "distribution-mini portal-theme-soft-card"
         button.title = `${payload.summaryText} | Click for detail chart`
         button.setAttribute("aria-label", `Open distribution chart for ${payload.assignmentTitle}`)
         button.innerHTML =
@@ -2937,7 +2884,11 @@
       }
 
       function currentOperationalSchoolYear() {
-        return normalizeText(SYSTEM_CURRENT_SCHOOL_YEAR || schoolYearForIsoDate(TODAY_ISO))
+        return normalizeText(
+          SYSTEM_CURRENT_SCHOOL_YEAR ||
+            state.schoolSetup?.schoolYear ||
+            "",
+        )
       }
 
       function normalizeSchoolYearFilter(value) {
@@ -4465,7 +4416,7 @@
       function shouldApplyTodayCap(targetSchoolYear, dateDerivedCurrentSchoolYear) {
         const target = normalizeText(targetSchoolYear)
         const dateDerived = normalizeText(dateDerivedCurrentSchoolYear)
-        if (!target || !dateDerived) return true
+        if (!target || !dateDerived) return false
         return target === dateDerived
       }
 
@@ -4507,7 +4458,11 @@
             if (!rowQuarter || rowQuarter !== normalizeLower(filters.quarter)) return false
             if (filters.period === "qtd") {
               const targetYear = selectedSchoolYear || currentSchoolYear
-              if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
+              if (
+                rowDate &&
+                compareIsoDate(rowDate, TODAY_ISO) > 0 &&
+                shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)
+              ) {
                 return false
               }
             }
@@ -4515,7 +4470,11 @@
           if (filters.period === "sytd") {
             const targetYear = selectedSchoolYear || currentSchoolYear
             if (rowSchoolYear && rowSchoolYear !== targetYear) return false
-            if (rowDate && compareIsoDate(rowDate, TODAY_ISO) > 0 && shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)) {
+            if (
+              rowDate &&
+              compareIsoDate(rowDate, TODAY_ISO) > 0 &&
+              shouldApplyTodayCap(targetYear, dateDerivedCurrentSchoolYear)
+            ) {
               return false
             }
           }
