@@ -25,6 +25,14 @@ const studentPortal = fs.readFileSync(studentPortalPath, "utf8")
 const hubPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8")
 const gradesTabulatorPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/grades-tabulator.html"), "utf8")
 const studentPointsPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-points.html"), "utf8")
+const denyLocalThemePropertyPattern = /\b(?:background(?:-color)?|border(?:-color)?|box-shadow|fill|stroke|color)\s*:/u
+
+function stripAllowedThemeSnippets(html, allowlist) {
+  const styleBlocks = Array.from(html.matchAll(/<style>([\s\S]*?)<\/style>/gi), (match) => match[1] || "")
+  return styleBlocks
+    .map((block) => allowlist.reduce((result, pattern) => result.replace(pattern, ""), block))
+    .join("\n")
+}
 
 test("portal pages load the shared portal theme stylesheet", () => {
   for (const [label, relPath] of portalPaths) {
@@ -79,6 +87,51 @@ test("repo app pages do not define raw theme colors in inline style or script bl
       `${relPath} should not hardcode theme colors in inline scripts`,
     )
   }
+})
+
+test("portal pages fail closed on local theme ownership outside the explicit structural allowlist", () => {
+  const allowlists = new Map([
+    [studentPortalPath, [
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
+      /body\.student-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
+      /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
+      /\.queue-table-wrap\s*\{[\s\S]*?background:\s*var\(--portal-surface-card\);\s*\}/gs,
+      /\.queue-table-wrap table\.news-queue-table tbody tr\s*\{[\s\S]*?background:\s*var\(--portal-surface-support\);\s*padding:\s*8px;\s*\}/gs,
+      /\.homework-modal-table th\s*\{[\s\S]*?color:\s*var\(--portal-text-soft\);[\s\S]*?\}/gs,
+      /\.detail-item-title a\s*\{[\s\S]*?color:\s*inherit;[\s\S]*?\}/gs,
+      /@keyframes dayAlertPulse\s*\{[\s\S]*?box-shadow:\s*inset 0 0 0 3px var\(--portal-status-bad-text\);\s*\}\s*\}/gs,
+    ]],
+    [parentPortalPath, [
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
+      /body\.parent-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
+      /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
+    ]],
+    [adminPortalPath, [
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
+      /body\s*\{\s*margin:\s*0;\s*min-height:\s*100vh;\s*font-family:\s*var\(--font-base\);\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
+    ]],
+    [path.resolve(rootDir, "web-asset/admin/student-points.html"), []],
+  ])
+
+  for (const [filePath, allowlist] of allowlists.entries()) {
+    const stripped = stripAllowedThemeSnippets(fs.readFileSync(filePath, "utf8"), allowlist)
+    assert.doesNotMatch(
+      stripped,
+      denyLocalThemePropertyPattern,
+      `${path.relative(rootDir, filePath)} should keep local CSS structural-only outside the explicit theme allowlist`,
+    )
+  }
+})
+
+test("student and parent portals keep critical grade and quarter overrides local after vendor css", () => {
+  assert.match(studentPortal, /\/\*\s*portal-critical-theme:start\s*\*\//)
+  assert.match(parentPortal, /\/\*\s*portal-critical-theme:start\s*\*\//)
+  assert.match(studentPortal, /\.grade-quarter-picker-btn\s*\{/)
+  assert.match(parentPortal, /\.grade-quarter-picker-btn\s*\{/)
+  assert.match(studentPortal, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open\s*\{/)
+  assert.match(parentPortal, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open\s*\{/)
+  assert.match(studentPortal, /\.quarter-board-card\s*\{/)
+  assert.match(parentPortal, /\.quarter-board-card\s*\{/)
 })
 
 test("shared portal theme defines the common shell, header, and card system", () => {

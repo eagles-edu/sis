@@ -13,6 +13,7 @@ const STUDENT_PORTAL_HTML_FOR_TEST = STUDENT_PORTAL_HTML
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
   .replace(/<script type="module">\s*import svgIcon[\s\S]*?<\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
+  .replace(/<head>/i, `<head><style>${SHARED_THEME}</style>`)
 
 function jsonTextResponse(status, payload = {}) {
   return {

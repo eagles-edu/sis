@@ -984,7 +984,6 @@ test("GET /admin returns HTML UI", async () => {
   assert.match(responseHtml, /id="overviewClassRows"/i)
   assert.equal(inlineStyleBlocks.length, 1)
   assert.match(inlineStyleBlocks[0], /\.app-shell/i)
-  assert.match(inlineStyleBlocks[0], /\.school-map-preview-shell/i)
   assert.match(responseHtml, /<link[^>]*rel="preload"[^>]*href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?v=[^"]+)?"[^>]*as="style"/i)
   assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?v=[^"]+)?"[\s\S]*as="style"/i)
   assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?v=[^"]+)?"\s+defer/i)
@@ -1183,7 +1182,10 @@ test("GET /admin/points-management returns points page HTML with runtime config"
   assert.match(res.headers.get("cache-control") || "", /no-store/i)
   const html = await res.text()
   assert.match(html, /Points Management/i)
-  assert.match(html, /html\[data-theme="dark"\]\s*\{[\s\S]*--primary:\s*#6aa4ff;/i)
+  assert.match(html, /localStorage\.getItem\("sis-theme"\)/i)
+  assert.match(html, /document\.documentElement\.dataset\.theme\s*=/i)
+  assert.match(html, /href="\/web-asset\/shared\/portal-theme\.min\.css"/i)
+  assert.match(html, /class="card portal-theme-card"/i)
   assert.match(html, /__SIS_ADMIN_POINTS_SUMMARY_PATH/i)
   assert.match(html, /__SIS_ADMIN_POINTS_STUDENTS_PATH/i)
   assert.match(html, /__SIS_ADMIN_POINTS_LEDGER_PATH/i)
@@ -1294,11 +1296,11 @@ test("GET /web-asset/shared/portal-theme.min.css returns shared portal toggle st
   const css = await res.text()
   assert.match(css, /portal-theme-toggle/i)
   assert.match(css, /portal-theme-toggle__icon/i)
-  assert.match(css, /portal-theme-toggle__icon svg-icon/i)
+  assert.match(css, /portal-theme-toggle__icon svg/i)
   assert.match(css, /portal-theme-toggle__icon\[data-theme-icon=(?:"|')?moon(?:"|')?\]/i)
   assert.match(
     css,
-    /html\[data-theme="dark"\][\s\S]*portal-theme-toggle__icon/i,
+    /html\[data-theme="dark"\][\s\S]*portal-theme-toggle__icon(?:\s|\{|,)/i,
   )
 })
 

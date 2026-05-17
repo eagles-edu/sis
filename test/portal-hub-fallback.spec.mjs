@@ -31,7 +31,7 @@ test("portal hub panels stay on the shared portal surface tokens", () => {
   assert.match(hubHtml, /--hub-panel-bg-hero:\s*var\(--portal-surface-card\);/)
   assert.match(hubHtml, /--hub-panel-bg-section:\s*var\(--portal-surface-panel\);/)
   assert.match(hubHtml, /--hub-panel-bg-support:\s*var\(--portal-surface-support\);/)
-  assert.match(hubHtml, /body\.portal-hub-page \.hub-banner \{\s*align-items: center;\s*border-radius: clamp\(4\.5px, 0\.9cqi, 12px\);\s*background: var\(--primary-color\);\s*border: 1px solid rgba\(255, 255, 255, 0\.18\);\s*color: var\(--secondary-color\);\s*display: flex;\s*font-size: calc\(0\.72rem \* var\(--hub-phi\)\);\s*font-weight: 700;\s*justify-content: flex-end;\s*letter-spacing: 0\.08em;\s*line-height: 1;\s*margin: 0;\s*min-block-size: 18px;\s*padding-block: 6px;\s*padding-inline: calc\(var\(--hub-space-2\) \* 1\.9\);\s*inline-size: 100%;/s)
+  assert.match(hubHtml, /body\.portal-hub-page \.hub-banner \{\s*align-items: center;\s*border-radius: clamp\(4\.5px, 0\.9cqi, 12px\);\s*background: var\(--primary-color\);\s*border: 1px solid var\(--hub-banner-border\);\s*color: var\(--secondary-color\);\s*display: flex;\s*font-size: calc\(0\.72rem \* var\(--hub-phi\)\);\s*font-weight: 700;\s*justify-content: flex-end;\s*letter-spacing: 0\.08em;\s*line-height: 1;\s*margin: 0;\s*min-block-size: 18px;\s*padding-block: 6px;\s*padding-inline: calc\(var\(--hub-space-2\) \* 1\.9\);\s*inline-size: 100%;/s)
   assert.match(hubHtml, /body\.portal-hub-page \.hub-banner a \{\s*color: inherit;\s*text-decoration: none;\s*}/s)
   assert.doesNotMatch(hubHtml, /hub-banner__dot/)
   assert.doesNotMatch(hubHtml, />Hub<\/span>/)

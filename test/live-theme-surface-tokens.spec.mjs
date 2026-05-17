@@ -31,6 +31,7 @@ function assertExcludesAll(source, tokens, label) {
 
 test("student portal surfaces follow the shared portal theme tokens", () => {
   const source = readFile("web-asset/student/student-portal.html")
+  const shared = readFile("web-asset/shared/portal-theme.css")
 
   assertIncludesAll(
     source,
@@ -45,11 +46,11 @@ test("student portal surfaces follow the shared portal theme tokens", () => {
 
   const structuralBlocks = [
     sliceBetween(source, ".queue-table-wrap {", ".queue-table-wrap table {", "student-portal queue-table-wrap"),
-    sliceBetween(source, ".identity-item {", ".metric {", "student-portal identity-item"),
-    sliceBetween(source, ".homework-square {", ".homework-square.is-complete {", "student-portal homework-square"),
     sliceBetween(source, ".homework-modal-table th,", ".homework-modal-table td:first-child,", "student-portal homework modal"),
-    sliceBetween(source, ".quick-link {", "button.quick-link:hover:not(:disabled) {", "student-portal quick-link"),
-    sliceBetween(source, ".detail-item {", ".detail-item.warn {", "student-portal detail-item"),
+    sliceBetween(shared, "body.student-portal-page .identity-item,\nbody.parent-portal-page .identity-item {\n  align-content: start;", "body.student-portal-page .detail-list,", "student shared identity-item"),
+    sliceBetween(shared, "body.student-portal-page .homework-square.is-complete,", "body.student-portal-page .homework-square.is-clear,", "student shared homework-square"),
+    sliceBetween(shared, "body.student-portal-page .quick-link,", "body.student-portal-page .quick-link:hover,", "student shared quick-link"),
+    sliceBetween(shared, "body.student-portal-page .detail-item,\nbody.parent-portal-page .detail-item {\n  background: var(--portal-surface-card) !important;", "body.student-portal-page .detail-copy,", "student shared detail-item"),
   ].join("\n")
 
   assertExcludesAll(
@@ -61,6 +62,7 @@ test("student portal surfaces follow the shared portal theme tokens", () => {
 
 test("parent portal surfaces follow the shared portal theme tokens", () => {
   const source = readFile("web-asset/parent/parent-portal.html")
+  const shared = readFile("web-asset/shared/portal-theme.css")
 
   assertIncludesAll(
     source,
@@ -74,10 +76,10 @@ test("parent portal surfaces follow the shared portal theme tokens", () => {
   )
 
   const structuralBlocks = [
-    sliceBetween(source, ".profile-group {", ".profile-group h4 {", "parent-portal profile-group"),
-    sliceBetween(source, ".field-row {", ".field-row:first-of-type {", "parent-portal field-row"),
-    sliceBetween(source, ".choice-group {", ".choice-group:disabled {", "parent-portal choice-group"),
-    sliceBetween(source, ".draft-actions {", "@media (max-width: 430px) {", "parent-portal draft-actions"),
+    sliceBetween(shared, "body.parent-portal-page .profile-group {", "body.parent-portal-page .profile-group p {", "parent shared profile-group"),
+    sliceBetween(shared, "body.parent-portal-page .field-row {", "body.parent-portal-page .field-row:first-of-type {", "parent shared field-row"),
+    sliceBetween(shared, "body.parent-portal-page .choice-group {", "body.parent-portal-page .choice-group:disabled {", "parent shared choice-group"),
+    sliceBetween(shared, "body.parent-portal-page .draft-actions {", "body.parent-portal-page :is(#backToDashboardBtn, #saveDraftBtn, #parentTextZoomDownBtn, #parentTextZoomUpBtn, #parentTextZoomResetBtn) {", "parent shared draft-actions"),
   ].join("\n")
 
   assertExcludesAll(
@@ -152,18 +154,23 @@ test("semantic status palettes stay on shared portal tokens", () => {
   )
 
   const studentPortal = readFile("web-asset/student/student-portal.html")
+  const portalTheme = readFile("web-asset/shared/portal-theme.css")
   assertIncludesAll(
-    studentPortal,
+    portalTheme,
     [
+      "body.student-portal-page .homework-square.is-complete",
       "var(--portal-status-good-bg)",
+      "body.student-portal-page .homework-square.is-pending",
       "var(--portal-status-info-bg)",
+      "body.student-portal-page .homework-square.is-arrears",
       "var(--portal-status-bad-bg)",
+      "body.student-portal-page .homework-square.is-clear",
       "var(--portal-status-neutral-bg)",
     ],
     "student portal status palette",
   )
   assertExcludesAll(
-    studentPortal,
+    portalTheme,
     ["#d7f2e1", "#d9eaff", "#ffd9de", "#fff0f0", "#fff6f7"],
     "student portal legacy status colors",
   )

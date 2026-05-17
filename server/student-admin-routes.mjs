@@ -4814,7 +4814,7 @@ async function buildParentDashboardPayload(session = {}) {
 
   try {
     const prisma = await getSharedPrismaClient()
-    const [attendanceRows, gradeRows, reportRows] = await Promise.all([
+    const [attendanceRows, gradeRows, reportRows, assignmentTemplates] = await Promise.all([
       prisma.studentAttendance.findMany({
         where: { studentRefId: { in: childIds } },
         orderBy: { attendanceDate: "desc" },
@@ -4827,6 +4827,7 @@ async function buildParentDashboardPayload(session = {}) {
         where: { studentRefId: { in: childIds } },
         orderBy: { generatedAt: "desc" },
       }),
+      listAssignmentTemplates({ take: 1000 }),
     ])
     const backfilledReportRows = await backfillLegacyParentReportMetadataRows({
       prisma,
@@ -4889,6 +4890,7 @@ async function buildParentDashboardPayload(session = {}) {
           attendanceRows: groupedAttendance.get(child.studentRefId) || [],
           gradeRows: groupedGrades.get(child.studentRefId) || [],
           reportRows: groupedReports.get(child.studentRefId) || [],
+          assignmentTemplates,
         })
         return {
           ...snapshot,

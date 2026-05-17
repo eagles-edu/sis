@@ -98,6 +98,19 @@
       padding: 0.8rem;
     }
 
+    .hero.portal-theme-panel,
+    .control-card.portal-theme-panel {
+      background: var(--panel);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    .grid-card.portal-theme-card {
+      background: var(--card);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
     .grid-card {
       min-width: 0;
     }
@@ -360,6 +373,30 @@
       max-height: none;
       min-height: 0;
       resize: none;
+    }
+
+    .grade-grid-maintenance {
+      display: grid;
+      gap: 0.45rem;
+      justify-items: start;
+    }
+
+    .grade-grid-maintenance img {
+      height: 72px;
+      width: 72px;
+    }
+
+    .detail-empty-title {
+      color: var(--ink);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .detail-empty-copy {
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+      line-height: 1.45;
     }
 
     body.table-modal-open {

@@ -74,14 +74,6 @@
       gap: 12px;
     }
 
-    .panel {
-      background: var(--portal-surface-card);
-      border: 1px solid var(--portal-border);
-      border-radius: 11px;
-      min-width: 0;
-      padding: 12px;
-    }
-
     .app-shell {
       display: grid;
       grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
@@ -94,13 +86,24 @@
       }
     }
 
-    /* Keep the loader class locally declared so editor diagnostics resolve it. */
-    .system-health-loading-pulse {
-      color: var(--primary-color);
-      height: 105.6px;
-      position: relative;
-      width: 105.6px;
+    .school-setup-warning {
+      background: var(--portal-status-warn-bg);
+      border: 1px solid var(--portal-status-warn-border);
+      border-radius: var(--radius-2);
+      color: var(--portal-status-warn-text);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 10px;
+      padding: 10px 12px;
     }
+
+    .school-setup-warning a {
+      color: inherit;
+      font-weight: 700;
+    }
+
+    /* Keep the loader class locally declared so editor diagnostics resolve it. */
+    .system-health-loading-pulse { height: 105.6px; position: relative; width: 105.6px; }
 
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260515a" as="style">

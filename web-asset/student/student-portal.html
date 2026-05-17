@@ -237,25 +237,6 @@
       min-height: 28px;
     }
 
-    .queue-compact-datetime {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1px;
-      line-height: 1.1;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .queue-compact-datetime-date {
-      font-weight: 700;
-    }
-
-    .queue-compact-datetime-time {
-      font-size: 11px;
-      color: var(--ink-soft);
-    }
-
     @media (max-width: 920px) {
 
       .queue-table-wrap table.news-queue-table th:nth-child(4),
@@ -339,6 +320,26 @@
       gap: 6px;
     }
 
+    /* portal-critical-theme:start */
+    .queue-compact-datetime {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1px;
+      line-height: 1.1;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .queue-compact-datetime-date {
+      font-weight: 700;
+    }
+
+    .queue-compact-datetime-time {
+      font-size: 11px;
+      color: var(--ink-soft);
+    }
+
     .field.is-invalid label {
       color: var(--portal-status-bad-text);
     }
@@ -356,6 +357,7 @@
       line-height: 1.35;
       color: var(--portal-status-bad-text);
     }
+    /* portal-critical-theme:end */
 
     .c3 {
       grid-column: span 3;
@@ -371,146 +373,6 @@
 
     .c12 {
       grid-column: span 12;
-    }
-
-    .identity-item {
-      border: 1px solid var(--line);
-      background: var(--portal-surface-card);
-      border-radius: var(--radius-2);
-      padding: 10px;
-      min-height: 70px;
-      display: grid;
-      align-content: start;
-      gap: 5px;
-    }
-
-    .metric {
-      border: 2px solid var(--portal-metric-border);
-      border-bottom-width: 4px;
-      border-radius: 10px;
-      box-sizing: border-box;
-      padding: 8px;
-      min-height: 72px;
-      min-width: 0;
-      background: var(--portal-surface-card);
-      display: grid;
-      place-items: center;
-      text-align: center;
-      gap: 4px;
-    }
-
-    .metric.good {
-      border-color: var(--portal-status-good-border);
-      background: var(--portal-status-good-bg);
-    }
-
-    .metric.good .k,
-    .metric.good .v {
-      color: var(--portal-status-good-text);
-    }
-
-    .metric.warn {
-      border-color: var(--portal-status-info-border);
-      background: var(--portal-status-info-bg);
-    }
-
-    .metric.warn .k,
-    .metric.warn .v {
-      color: var(--portal-status-info-text);
-    }
-
-    .metric.bad {
-      border-color: var(--portal-status-bad-border);
-      background: var(--portal-status-bad-bg);
-    }
-
-    .metric.bad .k,
-    .metric.bad .v {
-      color: var(--portal-status-bad-text);
-    }
-
-    .homework-card {
-      margin-top: 10px;
-      padding: 0;
-      background: transparent;
-      border: 0;
-    }
-
-    .homework-square {
-      border: 1px solid var(--portal-homework-square-border);
-      border-radius: 8px;
-      min-height: 96px;
-      box-sizing: border-box;
-      display: grid;
-      place-items: center;
-      align-content: center;
-      justify-items: center;
-      text-align: center;
-      gap: 4px;
-      padding: 8px;
-      font-weight: 800;
-      line-height: 1.1;
-      color: var(--portal-homework-square-text);
-      background: var(--portal-surface-card);
-    }
-
-    .homework-square.is-complete {
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-      background: var(--portal-status-good-bg);
-    }
-
-    .homework-square.is-pending {
-      border-color: var(--portal-status-info-border);
-      color: var(--portal-status-info-text);
-      background: var(--portal-status-info-bg);
-    }
-
-    .homework-square.is-none {
-      border-color: var(--portal-status-neutral-border);
-      color: var(--portal-status-neutral-text);
-      background: var(--portal-status-neutral-bg);
-    }
-
-    .homework-square.is-clear {
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-      background: var(--portal-status-good-bg);
-    }
-
-    .homework-square.is-arrears {
-      border-color: var(--portal-status-bad-border);
-      color: var(--portal-status-bad-text);
-      background: var(--portal-status-bad-bg);
-    }
-
-    .homework-square-v.is-count {
-      font-size: clamp(28px, 5.5vw, 36px);
-      line-height: 0.95;
-    }
-
-    .homework-card-content {
-      min-width: 0;
-      display: grid;
-      gap: 8px;
-      align-content: center;
-    }
-
-    .homework-link {
-      min-width: 0;
-      color: var(--portal-homework-link);
-      font-size: clamp(12px, 2.8vw, 14px);
-      font-weight: 700;
-      line-height: 1.35;
-      text-decoration: underline;
-      text-decoration-thickness: 1.2px;
-      text-underline-offset: 2px;
-      overflow-wrap: anywhere;
-    }
-
-    .homework-link:hover,
-    .homework-link:focus-visible {
-      color: var(--portal-homework-link-hover);
     }
 
     .homework-modal-table {
@@ -549,48 +411,6 @@
       }
     }
 
-    .quick-link {
-      min-height: 42px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 9px 12px;
-      background: var(--portal-surface-card);
-      color: var(--ink);
-      font-size: 13px;
-      text-decoration: none;
-      font-weight: 700;
-    }
-
-    .quick-link:hover,
-    .quick-link:focus-visible {
-      outline: none;
-      border-color: var(--portal-quick-link-hover-border);
-      background: var(--portal-surface-support);
-    }
-
-    button.quick-link:hover:not(:disabled) {
-      transform: none;
-      box-shadow: none;
-    }
-
-    .detail-copy {
-      margin: 0;
-      color: var(--ink-soft);
-      font-size: 0.92rem;
-      line-height: 1.45;
-    }
-
-    .detail-hint {
-      margin: 4px 0 0;
-      color: var(--ink-soft);
-      font-size: 0.82rem;
-      line-height: 1.35;
-    }
-
     .detail-layout {
       display: grid;
       gap: 12px;
@@ -606,28 +426,19 @@
       gap: 10px;
     }
 
-    .detail-item {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      padding: 8px 10px;
-      background: var(--portal-surface-card);
-      display: grid;
-      gap: 4px;
+    /* portal-critical-theme:start */
+    .detail-copy {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.45;
     }
 
-    .detail-item.warn {
-      border-color: var(--portal-status-info-border);
-      background: var(--portal-status-info-bg);
-    }
-
-    .detail-item.bad {
-      border-color: var(--portal-status-bad-border);
-      background: var(--portal-status-bad-bg);
-    }
-
-    .detail-item.good {
-      border-color: var(--portal-status-good-border);
-      background: var(--portal-status-good-bg);
+    .detail-hint {
+      margin: 4px 0 0;
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.35;
     }
 
     .detail-item-head {
@@ -686,16 +497,6 @@
       margin: 0;
       font-size: 0.82rem;
       line-height: 1.35;
-    }
-
-    .detail-empty {
-      border: 1px dashed var(--line);
-      border-radius: var(--radius-2);
-      padding: 12px;
-      color: var(--ink-soft);
-      background: var(--portal-surface-support);
-      font-size: 13px;
-      line-height: 1.45;
     }
 
     .detail-calendar-shell {
@@ -882,6 +683,19 @@
       overflow-wrap: anywhere;
     }
 
+    .quarter-board {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .quarter-board-shell {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-width: 0;
+    }
+
     .quarter-board-copy {
       display: grid;
       gap: 2px;
@@ -896,195 +710,6 @@
       min-width: 0;
     }
 
-    .grade-quarter-picker {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .grade-quarter-picker-btn {
-      align-items: center;
-      background: var(--portal-surface-support);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--ink);
-      cursor: pointer;
-      display: inline-flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 0.06rem;
-      font-size: 0.82rem;
-      font-weight: 900;
-      line-height: 1.05;
-      min-width: 4.2rem;
-      padding: 0.34rem 0.68rem;
-      transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease,
-        color 0.15s ease,
-        box-shadow 0.15s ease,
-        transform 0.15s ease;
-    }
-
-    .grade-quarter-picker-btn:hover {
-      background: var(--portal-quarter-button-hover-bg);
-      border-color: var(--portal-quarter-button-hover-border);
-      transform: translateY(-1px);
-    }
-
-    .grade-quarter-picker-btn.is-current {
-      border-color: var(--brand);
-      box-shadow: var(--portal-quarter-button-current-shadow);
-    }
-
-    .grade-quarter-picker-btn.is-active {
-      background: var(--portal-quarter-button-active-bg);
-      border-color: var(--portal-quarter-button-active-border);
-      color: var(--portal-quarter-button-active-text);
-      box-shadow: var(--portal-quarter-button-active-shadow);
-      transform: translateY(-1px);
-    }
-
-    .grade-quarter-picker-btn:focus-visible {
-      outline: 2px solid var(--brand);
-      outline-offset: 2px;
-    }
-
-    .grade-quarter-picker-btn-label {
-      display: block;
-      font-size: 0.84rem;
-      font-weight: 900;
-      line-height: 1.05;
-      text-align: center;
-    }
-
-    .grade-quarter-picker-btn-sub {
-      display: block;
-      font-size: 0.62rem;
-      font-weight: 800;
-      line-height: 1.05;
-      opacity: 0.8;
-      text-align: center;
-      text-transform: none;
-    }
-
-    .grade-quarter-picker-btn[aria-pressed="true"] {
-      background: var(--portal-quarter-button-active-bg);
-      border-color: var(--portal-quarter-button-active-border);
-      color: var(--portal-quarter-button-active-text);
-      box-shadow: var(--portal-quarter-button-active-shadow);
-      transform: translateY(-1px);
-    }
-
-    .grade-quarter-picked-summary {
-      display: grid;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .grade-exercise-cell {
-      display: grid;
-      gap: 0.08rem;
-      min-width: 0;
-    }
-
-    .grade-exercise-title {
-      font-size: 0.88rem;
-      font-weight: 800;
-      line-height: 1.12;
-      overflow-wrap: anywhere;
-    }
-
-    @media (min-width: 720px) {
-      .grade-quarter-stats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    html[data-theme="dark"] .grade-quarter-pill {
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    html[data-theme="dark"] .quarter-board-card.is-current {
-      background: var(--portal-quarter-card-current-bg);
-    }
-
-    html[data-theme="dark"] .quarter-board-meta-chip {
-      border-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .quarter-board-meta-quarter {
-      background: var(--portal-quarter-meta-quarter-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    html[data-theme="dark"] .quarter-board-meta-range {
-      background: var(--portal-dark-surface-support);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .quarter-board-meta-count {
-      background: var(--portal-quarter-current-pill-bg);
-      border-color: var(--portal-quarter-current-pill-border);
-      color: var(--portal-quarter-current-pill-text);
-    }
-
-    html[data-theme="dark"] .quarter-board-current-pill {
-      background: var(--portal-quarter-current-pill-bg);
-      border-color: var(--portal-quarter-current-pill-border);
-      color: var(--portal-quarter-current-pill-text);
-    }
-
-    html[data-theme="dark"] .grade-quarter-stat {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .header-action-btn.plus {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    html[data-theme="dark"] .header-action-btn.minus {
-      background: var(--portal-dark-border);
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn {
-      background: var(--portal-control-surface);
-      border-color: var(--portal-control-border);
-      color: var(--portal-control-text);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn:hover {
-      background: var(--portal-quarter-button-hover-bg);
-      border-color: var(--portal-quarter-button-hover-border);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn.is-active {
-      background: var(--portal-quarter-button-active-bg);
-      border-color: var(--portal-quarter-button-active-border);
-      color: var(--portal-quarter-button-active-text);
-    }
-
-    .quarter-board {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-    }
-
-    .quarter-board-shell {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-      min-width: 0;
-    }
-
     .quarter-board-card {
       background: var(--portal-surface-card);
       border: 1px solid var(--line);
@@ -1094,10 +719,6 @@
       gap: 12px;
       min-width: 0;
       padding: 14px;
-    }
-
-    html[data-theme="dark"] .quarter-board-card {
-      background: var(--portal-dark-surface-panel);
     }
 
     .quarter-board-maintenance-card {
@@ -1306,21 +927,502 @@
       color: var(--ink-soft);
     }
 
-    @media (min-width: 720px) {
-      .quarter-board-maintenance {
-        gap: 1rem;
-        padding: 1.75rem;
-      }
+    .grade-quarter-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 0;
     }
 
-    @media (min-width: 780px) {
-      .quarter-board-stats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
+    .grade-quarter-picker-btn {
+      align-items: center;
+      background: var(--portal-surface-support);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.06rem;
+      font-size: 0.82rem;
+      font-weight: 900;
+      line-height: 1.05;
+      min-width: 4.2rem;
+      padding: 0.34rem 0.68rem;
+      transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+    }
 
-      .quarter-board-entry {
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
+    .grade-quarter-picker-btn:hover {
+      background: var(--portal-quarter-button-hover-bg);
+      border-color: var(--portal-quarter-button-hover-border);
+      transform: translateY(-1px);
+    }
+
+    .grade-quarter-picker-btn.is-current {
+      border-color: var(--brand);
+      box-shadow: var(--portal-quarter-button-current-shadow);
+    }
+
+    .grade-quarter-picker-btn.is-active,
+    .grade-quarter-picker-btn[aria-pressed="true"] {
+      background: var(--portal-quarter-button-active-bg);
+      border-color: var(--portal-quarter-button-active-border);
+      color: var(--portal-quarter-button-active-text);
+      box-shadow: var(--portal-quarter-button-active-shadow);
+      transform: translateY(-1px);
+    }
+
+    .grade-quarter-picker-btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    .grade-quarter-picker-btn-label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 900;
+      line-height: 1.05;
+      text-align: center;
+    }
+
+    .grade-quarter-picker-btn-sub {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 800;
+      line-height: 1.05;
+      opacity: 0.8;
+      text-align: center;
+      text-transform: none;
+    }
+
+    .grade-quarter-picked-summary {
+      display: grid;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .grade-tabulator-shell {
+      background: var(--portal-grade-table-shell-bg);
+      border: 1px solid var(--portal-grade-table-border);
+      border-radius: 12px;
+      box-sizing: border-box;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .grade-tabulator {
+      width: 100%;
+    }
+
+    .grade-tabulator-shell .tabulator {
+      background: transparent;
+      border: none;
+      color: var(--portal-grade-table-text);
+      font-size: 0.92rem;
+      width: 100%;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-header,
+    .grade-tabulator-shell .tabulator .tabulator-footer,
+    .grade-tabulator-shell .tabulator .tabulator-col,
+    .grade-tabulator-shell .tabulator .tabulator-cell,
+    .grade-tabulator-shell .tabulator .tabulator-row,
+    .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
+    .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table {
+      color: var(--portal-grade-table-text);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-header,
+    .grade-tabulator-shell .tabulator .tabulator-footer,
+    .grade-tabulator-shell .tabulator .tabulator-col {
+      background: var(--portal-grade-table-header-bg);
+      border-color: var(--portal-grade-table-border);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row {
+      background: var(--portal-grade-table-row-bg, #ffffff);
+      border-bottom: 1px solid var(--portal-grade-table-border);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
+      background: var(--portal-grade-table-row-even-bg, #fbfcff);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row:hover {
+      background: var(--portal-grade-table-row-hover-bg, #f3f8ff);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
+      background: var(--portal-grade-table-current-row-bg, #edf3fa);
+      box-shadow: inset 4px 0 0 var(--portal-grade-table-current-row-accent);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-open {
+      background: var(--portal-grade-table-row-open-bg, #fff0cc);
+      box-shadow: inset 4px 0 0 #a86400;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
+      background: var(--portal-grade-table-row-open-hover-bg, #ffe4a3);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
+      background: var(--portal-grade-table-row-completed-bg, #e2f5e9);
+      box-shadow: inset 4px 0 0 #1f7a47;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
+      background: var(--portal-grade-table-row-completed-hover-bg, #d3ecd9);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-late {
+      background: var(--portal-grade-table-row-late-bg, #f3ecff);
+      box-shadow: inset 4px 0 0 #55389f;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
+      background: var(--portal-grade-table-row-late-hover-bg, #ede3ff);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
+      background: var(--portal-grade-table-row-missed-bg, #ffd7d4);
+      box-shadow: inset 4px 0 0 #b23a2e;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
+      background: var(--portal-grade-table-row-missed-hover-bg, #ffc9c4);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-cell {
+      border-right-color: var(--portal-grade-table-border);
+      box-sizing: border-box;
+      line-height: 1.2;
+      padding: 0.28rem 0.36rem;
+      vertical-align: top;
+      white-space: normal;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-cell:last-child {
+      border-right-color: var(--portal-grade-table-border);
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content {
+      box-sizing: border-box;
+      min-height: 100%;
+      padding: 0.24rem 0.36rem;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title {
+      color: var(--portal-grade-table-text);
+      font-size: 0.92rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-content,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-content,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-content,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-content,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-content,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-content,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-content,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-content {
+      box-sizing: border-box;
+      padding: 0.1rem 0.16rem 0.08rem;
+    }
+
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-title,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-title,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-title,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-title,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-title,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-title,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-title,
+    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-title {
+      align-items: stretch;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+      justify-content: stretch;
+      min-height: 4.8rem;
+      padding: 0.02rem 0;
+    }
+
+    .grade-exercise-cell {
+      display: grid;
+      gap: 0.08rem;
+      min-width: 0;
+    }
+
+    .grade-exercise-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+    }
+
+    .grade-exercise-meta {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      line-height: 1.18;
+      overflow-wrap: anywhere;
+    }
+
+    .grade-status-pill {
+      align-items: center;
+      background: var(--portal-status-revise-bg);
+      border: 1px solid var(--portal-status-revise-border);
+      border-radius: 999px;
+      box-sizing: border-box;
+      color: var(--portal-status-revise-text);
+      display: inline-flex;
+      font-size: 0.74rem;
+      font-weight: 800;
+      gap: 0.28rem;
+      justify-content: center;
+      line-height: 1;
+      padding: 0.22rem 0.52rem;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .grade-status-pill.is-good {
+      background: var(--ok);
+      border-color: var(--ok);
+      color: var(--portal-primary-text-strong);
+    }
+
+    .grade-status-pill.is-warn {
+      background: var(--warn);
+      border-color: var(--warn);
+      color: var(--portal-primary-text-strong);
+    }
+
+    .grade-status-pill.is-bad {
+      background: var(--err);
+      border-color: var(--err);
+      color: var(--portal-primary-text-strong);
+    }
+
+    .grade-status-pill.is-late {
+      background: var(--portal-status-revise-bg);
+      border-color: var(--portal-status-revise-border);
+      color: var(--portal-status-revise-text);
+    }
+
+    .grade-status-stack {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.28rem;
+      justify-content: flex-start;
+    }
+
+    .grade-exercise-score {
+      align-items: center;
+      background: var(--portal-status-good-bg);
+      border: 1px solid var(--portal-status-good-border);
+      border-radius: 14px;
+      box-sizing: border-box;
+      color: var(--portal-status-good-text);
+      display: grid;
+      gap: 0.08rem;
+      justify-items: center;
+      min-width: 5rem;
+      padding: 0.32rem 0.42rem;
+      text-align: center;
+    }
+
+    .grade-exercise-score.is-open {
+      background: var(--portal-surface-support);
+      border-color: var(--line);
+      color: var(--portal-grade-table-text);
+    }
+
+    .grade-exercise-score-main {
+      font-size: 0.94rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .grade-exercise-score-sub {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .grade-exercise-comment {
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    html[data-theme="dark"] .grade-quarter-pill {
+      border-color: var(--portal-status-good-border);
+      color: var(--portal-status-good-text);
+    }
+
+    html[data-theme="dark"] .quarter-board-card.is-current {
+      background: var(--portal-quarter-card-current-bg);
+    }
+
+    html[data-theme="dark"] .quarter-board-meta-chip {
+      border-color: var(--portal-dark-border);
+    }
+
+    html[data-theme="dark"] .quarter-board-meta-quarter {
+      background: var(--portal-quarter-meta-quarter-bg);
+      border-color: var(--portal-status-good-border);
+      color: var(--portal-status-good-text);
+    }
+
+    html[data-theme="dark"] .quarter-board-meta-range {
+      background: var(--portal-dark-surface-support);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .quarter-board-meta-count,
+    html[data-theme="dark"] .quarter-board-current-pill {
+      background: var(--portal-quarter-current-pill-bg);
+      border-color: var(--portal-quarter-current-pill-border);
+      color: var(--portal-quarter-current-pill-text);
+    }
+
+    html[data-theme="dark"] .grade-quarter-stat {
+      background: var(--portal-dark-surface-support);
+      border-color: var(--portal-dark-border);
+    }
+
+    html[data-theme="dark"] .header-action-btn.plus {
+      background: var(--portal-status-good-bg);
+      border-color: var(--portal-status-good-border);
+      color: var(--portal-status-good-text);
+    }
+
+    html[data-theme="dark"] .header-action-btn.minus {
+      background: var(--portal-dark-border);
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .grade-quarter-picker-btn {
+      background: var(--portal-dark-surface-support);
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .grade-quarter-picker-btn:hover {
+      background: var(--portal-quarter-button-hover-bg);
+      border-color: var(--portal-quarter-button-hover-border);
+    }
+
+    html[data-theme="dark"] .grade-quarter-picker-btn.is-active,
+    html[data-theme="dark"] .grade-quarter-picker-btn[aria-pressed="true"] {
+      background: var(--portal-status-good-bg);
+      border-color: var(--portal-status-good-border);
+      color: var(--portal-status-good-text);
+    }
+
+    html[data-theme="dark"] .grade-status-pill.is-good {
+      background: #1f7a47;
+      border-color: #175a35;
+      color: #fff;
+    }
+
+    html[data-theme="dark"] .grade-status-pill.is-warn {
+      background: #a86400;
+      border-color: #7f4b00;
+      color: #fff;
+    }
+
+    html[data-theme="dark"] .grade-status-pill.is-bad {
+      background: #b23a2e;
+      border-color: #7f291f;
+      color: #fff;
+    }
+
+    html[data-theme="dark"] .grade-status-pill.is-late {
+      background: #55389f;
+      border-color: #3f2977;
+      color: #fff;
+    }
+
+    html[data-theme="dark"] .grade-exercise-score {
+      background: var(--portal-dark-surface-support);
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .grade-exercise-score.is-open {
+      background: var(--portal-dark-surface-card);
+      border-color: var(--portal-dark-border);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .grade-exercise-score-sub,
+    html[data-theme="dark"] .grade-exercise-meta,
+    html[data-theme="dark"] .grade-exercise-comment {
+      color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row,
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
+      background: var(--portal-grade-table-row-bg, #3c4248);
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row:hover {
+      background: var(--portal-grade-table-row-hover-bg, color-mix(in srgb, #484f56 82%, #ffffff 18%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
+      background: var(--portal-grade-table-current-row-bg, color-mix(in srgb, #484f56 72%, #ffffff 28%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open {
+      background: var(--portal-grade-table-row-open-bg, color-mix(in srgb, #484f56 74%, #a86400 26%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
+      background: var(--portal-grade-table-row-open-hover-bg, color-mix(in srgb, #484f56 64%, #a86400 36%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
+      background: var(--portal-grade-table-row-completed-bg, color-mix(in srgb, #1f7a47 18%, #3c4248 82%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
+      background: var(--portal-grade-table-row-completed-hover-bg, color-mix(in srgb, #1f7a47 24%, #484f56 76%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late {
+      background: var(--portal-grade-table-row-late-bg, color-mix(in srgb, #484f56 72%, #55389f 28%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
+      background: var(--portal-grade-table-row-late-hover-bg, color-mix(in srgb, #484f56 62%, #55389f 38%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
+      background: var(--portal-grade-table-row-missed-bg, color-mix(in srgb, #b23a2e 18%, #3c4248 82%));
+    }
+
+    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
+      background: var(--portal-grade-table-row-missed-hover-bg, color-mix(in srgb, #b23a2e 24%, #484f56 76%));
+    }
+    /* portal-critical-theme:end */
+    @media (min-width: 720px) {
+      .grade-quarter-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
 
@@ -1341,48 +1443,6 @@
     .calendar-range {
       margin: 6px 0 8px;
       font-size: 0.84rem;
-    }
-
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      color: var(--ink-soft);
-      font-size: 0.8rem;
-      margin: 0 0 8px;
-    }
-
-    .dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 5px;
-      vertical-align: middle;
-    }
-
-    .dot.good {
-      background: var(--portal-status-good-border);
-    }
-
-    .dot.bad {
-      background: var(--portal-status-bad-border);
-    }
-
-    .dot.open {
-      background: var(--portal-status-info-border);
-    }
-
-    .dot.submitted {
-      background: var(--portal-status-warn-border);
-    }
-
-    .dot.waiting {
-      background: var(--portal-status-revise-bg);
-    }
-
-    .dot.revise {
-      background: var(--portal-status-revise-bg);
     }
 
     @keyframes overdueBlink {
@@ -3183,7 +3243,7 @@
           const scorePercent = Number(row.scorePercent);
           const rowState = resolveQuarterExerciseState(row, quarterGroup, nowMs);
           const exerciseStateLabel = rowState.missed
-            ? "Not Completed"
+            ? "Incomplete"
             : rowState.lateCompleted
               ? "Completed"
               : rowState.completed
@@ -3209,7 +3269,7 @@
             dateLabel: rowState.dueLabel || formatPortalDate(rowDate),
             dueLabel: rowState.dueLabel,
             submittedLabel: rowState.submittedLabel,
-            statusLabel: rowState.open ? "Open" : rowState.missed ? "Not Completed" : "Completed",
+            statusLabel: rowState.open ? "Open" : rowState.missed ? "Incomplete" : "Completed",
             statusTone: rowState.open ? "warn" : rowState.missed ? "bad" : "good",
             scorePercent: Number.isFinite(scorePercent) ? scorePercent : 0,
             scoreOutOfTen: Number.isFinite(scorePercent) ? scorePercent / 10 : 0,

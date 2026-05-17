@@ -18,32 +18,6 @@
   </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <style>
-    :root {
-      --bg: var(--portal-page-bg);
-      --bg-accent: var(--portal-page-bg-wash);
-      --card: var(--portal-surface-card);
-      --ink: var(--portal-text);
-      --muted: var(--portal-text-soft);
-      --line: var(--portal-border);
-      --ok: var(--portal-status-good-text);
-      --warn: var(--portal-status-warn-text);
-      --bad: var(--portal-status-bad-text);
-      color-scheme: light;
-    }
-
-    html[data-theme="dark"] {
-      --bg: var(--portal-dark-page-bg);
-      --bg-accent: var(--portal-dark-page-bg-wash);
-      --card: var(--portal-dark-surface-card);
-      --ink: var(--portal-dark-text);
-      --muted: var(--portal-dark-text-soft);
-      --line: var(--portal-dark-border);
-      --ok: var(--portal-status-good-text);
-      --warn: var(--portal-status-warn-text);
-      --bad: var(--portal-status-bad-text);
-      color-scheme: dark;
-    }
-
     * {
       box-sizing: border-box;
     }
@@ -52,8 +26,6 @@
       margin: 0;
       min-height: 100vh;
       font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-      color: var(--ink);
-      background: var(--bg);
       padding: 20px;
     }
 
@@ -97,18 +69,6 @@
       margin-top: 10px;
     }
 
-    #loginPanel .login-link {
-      color: var(--primary-strong);
-      font-size: 0.92rem;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    #loginPanel .login-link:hover,
-    #loginPanel .login-link:focus-visible {
-      text-decoration: underline;
-    }
-
     h1 {
       margin: 0;
       font-size: clamp(1.4rem, 2.5vw, 1.9rem);
@@ -117,7 +77,6 @@
 
     .sub {
       margin: 4px 0 0;
-      color: var(--muted);
       font-size: 0.95rem;
     }
 
@@ -132,10 +91,7 @@
       gap: 6px;
     }
 
-    .field label {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
+    .field label { font-size: 0.8rem; }
 
     .c2 {
       grid-column: span 2;
@@ -157,54 +113,21 @@
       grid-column: span 12;
     }
 
-    input,
-    select,
-    button {
-      font: inherit;
-      border-radius: 10px;
-      border: 1px solid var(--portal-button-border);
-      padding: 10px 12px;
-      background: var(--portal-surface-card);
-      color: var(--ink);
-    }
+    input, select, button { font: inherit; padding: 10px 12px; }
 
     button {
       cursor: pointer;
-      background: var(--portal-button-surface);
       transition: transform 120ms ease, border-color 120ms ease;
     }
 
     button:hover {
       transform: translateY(-1px);
-      border-color: var(--portal-button-border-hover);
-    }
-
-    html[data-theme="dark"] input,
-    html[data-theme="dark"] select {
-      background: var(--portal-dark-field-bg);
-      border-color: var(--portal-dark-field-border);
-      color: var(--portal-dark-field-text);
-    }
-
-    .primary {
-      background: linear-gradient(160deg, var(--portal-action-blue-top), var(--portal-action-blue-bottom));
-      color: var(--portal-primary-text-strong);
-      border-color: transparent;
     }
 
     .status {
       margin: 0;
       font-size: 0.9rem;
-      color: var(--muted);
       min-height: 1.4em;
-    }
-
-    .status.bad {
-      color: var(--bad);
-    }
-
-    .status.ok {
-      color: var(--ok);
     }
 
     .chart-wrap {
@@ -220,47 +143,16 @@
       border-collapse: collapse;
     }
 
-    th,
-    td {
-      text-align: left;
-      border-bottom: 1px solid var(--line);
-      padding: 9px 8px;
-      font-size: 0.92rem;
-    }
-
-    html[data-theme="dark"] th,
-    html[data-theme="dark"] td {
-      border-bottom-color: var(--portal-table-dark-border);
-    }
-
-    th button {
-      border: 0;
-      background: transparent;
-      padding: 0;
-      color: inherit;
-      font-weight: 700;
-    }
+    th, td { text-align: left; padding: 9px 8px; font-size: 0.92rem; }
+    th button { padding: 0; font-weight: 700; }
 
     .table-wrap {
       overflow: auto;
       border-radius: 12px;
     }
 
-    .pill {
-      display: inline-block;
-      border-radius: 999px;
-      padding: 2px 9px;
-      background: var(--portal-pill-bg);
-      border: 1px solid var(--portal-pill-border);
-      font-size: 0.78rem;
-      color: var(--portal-pill-text);
-    }
-
-    .mini {
-      color: var(--muted);
-      font-size: 0.82rem;
-      margin-top: 8px;
-    }
+    .pill { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 0.78rem; }
+    .mini { font-size: 0.82rem; margin-top: 8px; }
 
     .hidden {
       display: none;
@@ -278,7 +170,7 @@
   </style>
 </head>
 
-<body>
+<body class="student-points-page">
   <div class="app portal-center-column">
     <section class="card portal-theme-card">
       <h1>Points Management</h1>

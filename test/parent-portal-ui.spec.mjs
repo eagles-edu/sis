@@ -15,6 +15,7 @@ const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
+  .replace(/<head>/i, `<head><style>${SHARED_THEME}</style>`)
 
 function installTabulatorStub(window) {
   class StubTabulator {
@@ -1227,6 +1228,43 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
                     status: "completed",
                   },
                 ],
+                unfinishedCurrentQuarterAssignments: [
+                  {
+                    id: "uq-1",
+                    assignmentTitle: "Essay Draft",
+                    meta: "Assigned Sep 10, 2025 | Due Sep 15, 2025 | Deadline Oct 31, 2025",
+                    note: "Open the exercise link below to finish this assignment.",
+                    href: "https://example.com/current/essay-draft",
+                    itemLinks: [
+                      {
+                        id: "uq-1-link-1",
+                        title: "Essay Draft",
+                        url: "https://example.com/current/essay-draft",
+                      },
+                    ],
+                    completed: false,
+                    tone: "warn",
+                  },
+                ],
+                pastQuartersUnfinishedAssignments: [
+                  {
+                    id: "pq-1",
+                    assignmentTitle: "Late Exercise",
+                    meta: "Assigned Aug 30, 2025 | Due Sep 6, 2025 | Deadline Oct 31, 2025",
+                    note: "Completed for progress tracking only.",
+                    href: "https://example.com/past/late-exercise",
+                    itemLinks: [
+                      {
+                        id: "pq-1-link-1",
+                        title: "Late Exercise",
+                        url: "https://example.com/past/late-exercise",
+                      },
+                    ],
+                    completed: true,
+                    tone: "good",
+                  },
+                ],
+                currentQuarterDeadline: "2025-10-31",
                 reportArchive: [
                   {
                     id: "report-1",
@@ -1299,6 +1337,10 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
     const grid = document.getElementById("portalDetailCalendarGrid")
     assert.equal(detailCard.classList.contains("hidden"), false)
     assert.match(document.getElementById("portalDetailTitle").textContent, /Điểm số YTD|Grades YTD/i)
+    assert.match(document.getElementById("portalDetailPrimaryTitle").textContent, /Bài tập chưa hoàn thành: Quý hiện tại/i)
+    assert.match(document.getElementById("portalDetailHistoryTitle").textContent, /Bài tập các quý trước/i)
+    assert.match(document.getElementById("portalDetailPrimaryList").textContent, /Essay Draft/i)
+    assert.match(document.getElementById("portalDetailHistoryList").textContent, /Late Exercise/i)
     assert.ok(grid.querySelectorAll(".tabulator-row:not(.tabulator-header-row)").length >= 2)
     assert.equal(Boolean(grid.querySelector(".fc")), false)
   }, 5000)
@@ -1317,6 +1359,7 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
       activeQuarter: Array.from(document.querySelectorAll(".grade-quarter-picker-btn")).find((button) =>
         button.getAttribute("aria-pressed") === "true"
       )?.textContent || "",
+      completedRowBgToken: globalThis.window.getComputedStyle(document.body).getPropertyValue("--portal-grade-table-row-completed-bg").trim(),
       rows,
       firstRow: rows[0] || null,
       secondRow: rows[1] || null,
@@ -1337,11 +1380,11 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
   assert.equal(gradesQuarterState.rows.length, 4)
   assert.match(gradesQuarterState.secondRow?.text || "", /Reading Log/i)
   assert.match(gradesQuarterState.secondRow?.className || "", /is-completed/i)
-  assert.equal(gradesQuarterState.secondRow?.backgroundColor, "rgb(226, 245, 233)")
+  assert.notEqual(gradesQuarterState.completedRowBgToken, "")
   assert.match(gradesQuarterState.secondRow?.text || "", /92(?:\.0)?%/)
   assert.match(gradesQuarterState.secondRow?.text || "", /9\.2\/10/)
   assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && /is-late/i.test(row.className) && /Completed/i.test(row.status) && /Submitted/i.test(row.text) && /Due/i.test(row.text)));
-  assert.ok(gradesQuarterState.rows.some((row) => /Missed Exercise/i.test(row.text) && /is-missed/i.test(row.className) && /Not Completed/i.test(row.status) && /Submitted pending/i.test(row.text) && /Not submitted before the Q1 deadline/i.test(row.text)));
+  assert.ok(gradesQuarterState.rows.some((row) => /Missed Exercise/i.test(row.text) && /is-missed/i.test(row.className) && /Incomplete/i.test(row.status) && /Submitted pending/i.test(row.text) && /Not submitted before the Q1 deadline/i.test(row.text)));
 
   await settleDomAsync(dom)
   dom.window.close()

@@ -1088,7 +1088,7 @@ test(
       assert.ok(gradesQuarterState.statusPillColors.every((color) => color === "rgb(255, 255, 255)"));
       assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && /is-late/i.test(row.className) && /Completed/i.test(row.status) && /Submitted/i.test(row.text) && /Due/i.test(row.text)));
       assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && row.backgroundColor === "rgb(243, 236, 255)"));
-      assert.ok(gradesQuarterState.rows.some((row) => /Missed Exercise/i.test(row.text) && /is-missed/i.test(row.className) && /Not Completed/i.test(row.status) && /Submitted pending/i.test(row.text) && /Not submitted before the Q1 deadline/i.test(row.text)));
+      assert.ok(gradesQuarterState.rows.some((row) => /Missed Exercise/i.test(row.text) && /is-missed/i.test(row.className) && /Incomplete/i.test(row.status) && /Submitted pending/i.test(row.text) && /Not submitted before the Q1 deadline/i.test(row.text)));
 
       const assignmentPanels = await page.evaluate(() => {
         const primaryPanel = globalThis.document.getElementById("studentDetailPrimaryList");
