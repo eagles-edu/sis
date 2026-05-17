@@ -4851,6 +4851,11 @@ html[data-theme="dark"] body.student-points-page {
   background: var(--portal-dark-page-bg);
   color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.student-points-page .card {
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
+}
 html[data-theme="dark"] body.student-points-page .sub,
 html[data-theme="dark"] body.student-points-page .mini,
 html[data-theme="dark"] body.student-points-page .field label,
