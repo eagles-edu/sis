@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grayscale Interactive UI Layout</title>
+  <style>
+    :root {
+      /* Layout Architecture Layers */
+      --pg-background: #000000;
+      --main-page-content: #2E2E2E;
+      --panels: #4B4B4B;
+      --cards: #7D7D7D;
+
+      /* Form Fields & States */
+      --form-field-resting: #7D7D7D;
+      --form-field-active: #BFBFBF;
+      
+      /* Text Layers */
+      --text-main: #BFBFBF;
+      --text-inverted: #2E2E2E;
+      --text-error-dark: #000000;
+    }
+
+    /* Global Base Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--pg-background);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    /* Main Page Content Area / Centered Column */
+    .main-page-content {
+      background-color: var(--main-page-content);
+      width: 100%;
+      max-width: 680px;
+      padding: 32px;
+      border-radius: 8px;
+    }
+
+    h1, h2 {
+      color: var(--text-main);
+      margin-bottom: 24px;
+    }
+
+    /* Panels containing cards */
+    .panels {
+      background-color: var(--panels);
+      padding: 24px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Cards for discreet data */
+    .cards {
+      background-color: var(--cards);
+      padding: 20px;
+      border-radius: 4px;
+    }
+
+    /* Form Layout Elements */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Text Fields & Base Inputs Resting Shade */
+    .form-input-field {
+      background-color: var(--form-field-resting);
+      color: var(--text-main);
+      border: 1px solid var(--panels);
+      border-radius: 4px;
+      padding: 12px;
+      font-size: 1rem;
+      width: 100%;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .form-input-field::placeholder {
+      color: var(--main-page-content); 
+    }
+
+    /* Input Field Hover */
+    .form-input-field:hover {
+      background-color: #8A8A8A;
+      border-color: var(--form-field-active);
+    }
+
+    /* Input Field Active Focus */
+    .form-input-field:focus {
+      background-color: var(--form-field-active);
+      color: var(--text-inverted);
+      outline: 2px solid var(--form-field-active);
+      outline-offset: 2px;
+    }
+
+    /* --- Custom Dropdown Implementation Layer --- */
+    .select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .select-wrapper::after {
+      content: '▼';
+      font-size: 0.7rem;
+      color: var(--main-page-content);
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      transition: color 0.15s ease;
+    }
+
+    .select-wrapper:hover::after {
+      color: var(--text-main);
+    }
+
+    select.form-input-field {
+      appearance: none;
+      cursor: pointer;
+      padding-right: 40px;
+    }
+
+    select.form-input-field option {
+      background-color: var(--cards);
+      color: var(--text-main);
+    }
+
+    /* --- Custom Selection Toggles (Checkboxes/Radios) --- */
+    .selection-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .selection-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-main);
+      transition: color 0.15s ease;
+    }
+
+    .selection-label:hover {
+      color: #FFFFFF;
+    }
+
+    .custom-indicator {
+      width: 18px;
+      height: 18px;
+      background-color: var(--panels);
+      border: 2px solid var(--main-page-content);
+      display: inline-block;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+      flex-shrink: 0;
+    }
+
+    .checkbox-container .custom-indicator {
+      border-radius: 3px;
+    }
+
+    .radio-container .custom-indicator {
+      border-radius: 50%;
+    }
+
+    .hidden-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* Control Interactivity Hover Rules */
+    .selection-label:hover .custom-indicator {
+      background-color: var(--main-page-content);
+      border-color: var(--form-field-active);
+    }
+
+    .selection-label:active .custom-indicator {
+      transform: scale(0.95);
+    }
+
+    /* Focus Tracking via Keyboard Navigation */
+    .hidden-input:focus-visible + .custom-indicator {
+      outline: 2px solid var(--form-field-active);
+      outline-offset: 2px;
+    }
+
+    /* Selected Active State Mapping */
+    .hidden-input:checked + .custom-indicator {
+      background-color: var(--form-field-active);
+      border-color: var(--form-field-active);
+      box-shadow: inset 0 0 0 3px var(--cards);
+    }
+
+    /* Inline Validation Override State */
+    .form-input-field.has-error {
+      background-color: var(--form-field-active);
+      color: var(--text-error-dark);
+      border-color: var(--main-page-content);
+    }
+
+    .error-text {
+      color: var(--form-field-active);
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    /* Global Submit Action Component */
+    .form-btn {
+      background-color: var(--form-field-active);
+      color: var(--text-inverted);
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+      transition: background-color 0.15s, transform 0.1s;
+    }
+
+    .form-btn:hover {
+      background-color: #D6D6D6; /* Clean micro-lightening value for high clarity interaction */
+    }
+
+    .form-btn:active {
+      transform: scale(0.99);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MAIN PAGE CONTENT / CENTERED COLUMN AREA -->
+  <main class="main-page-content">
+    <h1>Account Configuration</h1>
+    
+    <!-- PANELS CONTAINING CARDS -->
+    <section class="panels">
+      <h2>Preference Control Panel</h2>
+      
+      <form action="#" method="POST">
+        
+        <!-- CARDS FOR DISCREET DATA (Card 1: Structured Select Dropdown) -->
+        <div class="cards">
+          <div class="form-group">
+            <label for="theme-select">Interface Theme Preference</label>
+            <div class="select-wrapper">
+              <select id="theme-select" class="form-input-field">
+                <option value="amoled">Absolute Onyx Black (#000000)</option>
+                <option value="charcoal">Elevated Dark Gray (#2E2E2E)</option>
+                <option value="dimmed">Muted Slate Gray (#4B4B4B)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARDS FOR DISCREET DATA (Card 2: Interactive Checkboxes & Radios) -->
+        <div class="cards">
+          <!-- Checkbox Elements Group -->
+          <div class="form-group">
+            <label>Notification System Settings</label>
+            <div class="selection-row">
+              <label class="selection-label checkbox-container">
+                <input type="checkbox" class="hidden-input" checked>
+                <span class="custom-indicator"></span>
+                <span>Receive desktop alerts</span>
+              </label>
+              
+              <label class="selection-label checkbox-container">
+                <input type="checkbox" class="hidden-input">
+                <span class="custom-indicator"></span>
+                <span>Weekly summary digest</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Radio Controls Group -->
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Data Transfer Priority</label>
+            <div class="selection-row">
+              <label class="selection-label radio-container">
+                <input type="radio" name="priority" class="hidden-input" checked>
+                <span class="custom-indicator"></span>
+                <span>Standard sync rate</span>
+              </label>
+              
+              <label class="selection-label radio-container">
+                <input type="radio" name="priority" class="hidden-input">
+                <span class="custom-indicator"></span>
+                <span>Real-time stream streaming</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARDS FOR DISCREET DATA (Card 3: Standard Input Field with Hover States) -->
+        <div class="cards">
+          <div class="form-group">
+            <label for="username">System Hostname Identifier</label>
+            <input type="text" id="username" class="form-input-field" placeholder="Enter system node name...">
+          </div>
+        </div>
+
+        <button type="submit" class="form-btn">Save Changes</button>
+
+      </form>
+    </section>
+  </main>
+
+</body>
+</html>
+
+

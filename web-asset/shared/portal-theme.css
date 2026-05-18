@@ -89,22 +89,18 @@
   --portal-dark-card: #3c4248;
   --portal-dark-card-deep: #25292c;
   --portal-dark-card-soft: #484f56;
-  /* Dark form contract:
-     - default field fill stays in the dark control surface
-     - focus shifts to a darker-panel variant, never to white
-     - placeholder text is lighter than muted body text, but still subdued */
-  --portal-dark-field-bg: #3c4248;
+  --portal-dark-field-bg: #0f1112;
   --portal-dark-field-border: #aeb7c5;
-  --portal-dark-field-focus-bg: #484f56;
-  --portal-dark-field-focus-border: rgba(255, 255, 255, 0.58);
-  --portal-dark-field-placeholder: color-mix(in srgb, var(--portal-dark-text-soft) 72%, #ffffff 28%);
+  --portal-dark-field-active-bg: #4b5157;
+  --portal-dark-field-active-border: #c8d0da;
+  --portal-dark-field-placeholder: #58657a;
   --portal-dark-field-text: var(--secondary-color);
   --portal-dark-page-bg: linear-gradient(180deg, #1a1c1f 0%, #25292c 100%);
   --portal-dark-panel: #25292c;
   --portal-dark-panel-soft: #31363a;
   --portal-dark-radius: var(--radius-3);
   --portal-dark-surface-card: linear-gradient(180deg, rgba(60, 66, 72, 0.98) 0%, rgba(49, 54, 58, 0.98) 100%);
-  --portal-dark-surface-panel: linear-gradient(180deg, rgba(10, 11, 12, 0.98) 0%, rgb(12, 13, 13) 100%);
+	--portal-dark-surface-panel: linear-gradient(180deg, rgba(46, 46, 48, 0.98), rgb(49 49 49 / 99%));
   --portal-dark-surface-soft: #3c4248;
   --portal-dark-surface-support: #484f56;
   --portal-dark-text: #f2f4f7;
@@ -614,20 +610,51 @@ html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCar
 html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel {
   margin-top: 0;
 }
-/* Dark form controls are centralized here so every portal, modal, and login
-   shell uses the same control surface, focus surface, and placeholder tone. */
-html[data-theme="dark"] :where(input, select, textarea) {
+html[data-theme="dark"] body.student-portal-page input,
+html[data-theme="dark"] body.student-portal-page select,
+html[data-theme="dark"] body.student-portal-page textarea,
+html[data-theme="dark"] body.parent-portal-page input,
+html[data-theme="dark"] body.parent-portal-page select,
+html[data-theme="dark"] body.parent-portal-page textarea,
+html[data-theme="dark"] body.admin-portal-page input,
+html[data-theme="dark"] body.admin-portal-page select,
+html[data-theme="dark"] body.admin-portal-page textarea {
   background: var(--portal-dark-field-bg);
   border-color: var(--portal-dark-field-border);
   color: var(--portal-dark-field-text);
+  border-radius: var(--radius-base);
 }
-html[data-theme="dark"] :where(input, select, textarea):is(:focus, :focus-visible) {
-  background: var(--portal-dark-field-focus-bg);
-  border-color: var(--portal-dark-field-focus-border);
-  box-shadow: 0 0 0 3px rgba(106, 164, 255, 0.18);
-  outline: none;
+html[data-theme="dark"] body.student-portal-page input:focus,
+html[data-theme="dark"] body.student-portal-page select:focus,
+html[data-theme="dark"] body.student-portal-page textarea:focus,
+html[data-theme="dark"] body.student-portal-page input:focus-visible,
+html[data-theme="dark"] body.student-portal-page select:focus-visible,
+html[data-theme="dark"] body.student-portal-page textarea:focus-visible,
+html[data-theme="dark"] body.parent-portal-page input:focus,
+html[data-theme="dark"] body.parent-portal-page select:focus,
+html[data-theme="dark"] body.parent-portal-page textarea:focus,
+html[data-theme="dark"] body.parent-portal-page input:focus-visible,
+html[data-theme="dark"] body.parent-portal-page select:focus-visible,
+html[data-theme="dark"] body.parent-portal-page textarea:focus-visible,
+html[data-theme="dark"] body.admin-portal-page input:focus,
+html[data-theme="dark"] body.admin-portal-page select:focus,
+html[data-theme="dark"] body.admin-portal-page textarea:focus,
+html[data-theme="dark"] body.admin-portal-page input:focus-visible,
+html[data-theme="dark"] body.admin-portal-page select:focus-visible,
+html[data-theme="dark"] body.admin-portal-page textarea:focus-visible {
+  background: var(--portal-dark-field-active-bg);
+  border-color: var(--portal-dark-field-active-border);
+  color: var(--portal-dark-field-text);
 }
-html[data-theme="dark"] :where(input, select, textarea)::placeholder {
+html[data-theme="dark"] body.student-portal-page input::placeholder,
+html[data-theme="dark"] body.student-portal-page select::placeholder,
+html[data-theme="dark"] body.student-portal-page textarea::placeholder,
+html[data-theme="dark"] body.parent-portal-page input::placeholder,
+html[data-theme="dark"] body.parent-portal-page select::placeholder,
+html[data-theme="dark"] body.parent-portal-page textarea::placeholder,
+html[data-theme="dark"] body.admin-portal-page input::placeholder,
+html[data-theme="dark"] body.admin-portal-page select::placeholder,
+html[data-theme="dark"] body.admin-portal-page textarea::placeholder {
   color: var(--portal-dark-field-placeholder);
 }
 body.student-portal-page .portal-shell,
@@ -3816,6 +3843,11 @@ body.parent-portal-page #newsWeekSetModal :where(input, textarea)[readonly] {
   color: var(--ink);
   cursor: default;
 }
+html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal :where(input, textarea)[readonly] {
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
+}
 body.parent-portal-page .report-archive-list {
   display: grid;
   gap: 10px;
@@ -4871,19 +4903,6 @@ html[data-theme="dark"] body.student-points-page .mini,
 html[data-theme="dark"] body.student-points-page .field label,
 html[data-theme="dark"] body.student-points-page .status {
   color: var(--portal-dark-text-soft);
-}
-html[data-theme="dark"] body.student-points-page :is(input, select, textarea, button) {
-  background: var(--portal-dark-field-bg);
-  border-color: var(--portal-dark-field-border);
-  color: var(--portal-dark-field-text);
-}
-html[data-theme="dark"] body.student-points-page :where(input, select, textarea)::placeholder {
-  color: var(--portal-dark-field-placeholder);
-}
-html[data-theme="dark"] body.student-points-page .primary {
-  background: linear-gradient(160deg, var(--portal-action-blue-top), var(--portal-action-blue-bottom));
-  border-color: transparent;
-  color: var(--portal-primary-text-strong);
 }
 html[data-theme="dark"] body.student-points-page th,
 html[data-theme="dark"] body.student-points-page td {
@@ -6613,4 +6632,269 @@ body.student-portal-page .header-bar a:hover {
   text-decoration-line: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
+}
+
+/* Generated portal color registry: central SSOT for page-local color literals. */
+:root {
+  --portal-color-000d003e64: #f3f4f6;
+  --portal-color-0077beaeb3: color-mix(in srgb, #b23a2e 24%, #484f56 76%);
+  --portal-color-01768eaf2d: rgba(240, 176, 95, 0.42);
+  --portal-color-0288ae9c5c: #dde5f2;
+  --portal-color-039996725e: #fbe9ea;
+  --portal-color-03b5721e8c: #fcab15;
+  --portal-color-05477e89d0: rgba(12, 22, 39, 0.4);
+  --portal-color-069bc807ea: rgba(240, 176, 95, 0.18);
+  --portal-color-08145c4aa5: #3a87ad;
+  --portal-color-0a4767016c: #3c4248;
+  --portal-color-0b88d7b8bd: #66008e;
+  --portal-color-0c609735cb: #849ec4;
+  --portal-color-0c79f2d461: #0f6d2a;
+  --portal-color-106784249d: #90a4c3;
+  --portal-color-107a42fd77: #7a43cc;
+  --portal-color-10fe7b83d5: #a86400;
+  --portal-color-11a8da3fa1: rgba(0, 39, 134, 0.32);
+  --portal-color-1239e09212: #175a35;
+  --portal-color-155b35e0df: #76000a;
+  --portal-color-157650bcd0: rgba(31, 107, 58, 0.2);
+  --portal-color-194b2d925e: #9ee0b9;
+  --portal-color-1a725bdb9a: rgba(181, 0, 16, 0.35);
+  --portal-color-1ae8f85b9b: #3f2977;
+  --portal-color-1b2ad6543d: #e6f7ee;
+  --portal-color-1b4f759bcf: rgba(0, 0, 0, 0.35);
+  --portal-color-1b8d818ad2: #143157;
+  --portal-color-1c5b3b4180: #1f7a47;
+  --portal-color-1c77cc184c: color-mix(in srgb, #484f56 64%, #a86400 36%);
+  --portal-color-1d89e3bf1e: #516991;
+  --portal-color-1f6f13263d: #bbb;
+  --portal-color-1fafc2b5c0: #8ea9cc;
+  --portal-color-21fe6cd7d5: #edf4ff;
+  --portal-color-22aee4e14f: rgba(20, 36, 62, 0.24);
+  --portal-color-23882d0d91: #fbecec;
+  --portal-color-243de7efde: #86ade4;
+  --portal-color-24f3dafd18: #fbfcff;
+  --portal-color-2526d46483: color-mix(in srgb, #484f56 72%, #ffffff 28%);
+  --portal-color-254f75671f: rgba(255, 255, 255, 0);
+  --portal-color-25a7b86435: #19406d;
+  --portal-color-25d88c9a84: #2a9361;
+  --portal-color-27470381e4: #8ea4c7;
+  --portal-color-2774a5c299: rgba(18, 70, 133, 0.28);
+  --portal-color-27bfe87810: rgba(14, 24, 42, 0.32);
+  --portal-color-28b516db10: rgba(255, 255, 255, 0.45);
+  --portal-color-293711fbb6: #a8bbda;
+  --portal-color-2a05c02cf9: rgba(11, 32, 60, 0.22);
+  --portal-color-2affe7a39e: #364f74;
+  --portal-color-2c68c614a2: #163a72;
+  --portal-color-2cdb084429: #f3f8ff;
+  --portal-color-2d8370cc89: #f2f7ff;
+  --portal-color-2e75310a87: #5c7fc4;
+  --portal-color-2ff174e8be: rgba(0, 39, 134, 0.16);
+  --portal-color-312c8e26c3: #980001;
+  --portal-color-31b5e68729: #e2f5e9;
+  --portal-color-323093c4da: #9b1520;
+  --portal-color-33ade86742: rgba(255, 255, 255, 0.05);
+  --portal-color-344889c9c5: rgba(106, 164, 255, 0.18);
+  --portal-color-3505c4ac4c: rgba(9, 46, 92, 0.3);
+  --portal-color-367774f22d: #fcfdff;
+  --portal-color-373f0ec52e: #2f4f7f;
+  --portal-color-375613b652: rgba(255, 246, 246, 1);
+  --portal-color-37b99f5bd9: #102f59;
+  --portal-color-3adead38cc: rgba(128, 152, 190, 0.12);
+  --portal-color-3b79014ba0: #f7faff;
+  --portal-color-3c48a6d95d: #eaf1ff;
+  --portal-color-3c582210ea: #0a2f66;
+  --portal-color-3d608aab85: #e7f5ec;
+  --portal-color-3e7fb9eac4: #d99494;
+  --portal-color-41b1689b86: rgba(31, 107, 58, 0.28);
+  --portal-color-4222bb2d34: #e8f0fd;
+  --portal-color-422e89e498: #f3ecff;
+  --portal-color-426a2e5cc8: rgba(15, 36, 68, 0.2);
+  --portal-color-42f0808f83: #203656;
+  --portal-color-437c03ed17: #e8f1ff;
+  --portal-color-4453415d9e: #212121;
+  --portal-color-45756b2b73: #002786;
+  --portal-color-4643f99d7f: #124685;
+  --portal-color-46586438f4: #913198;
+  --portal-color-469978e86b: #f5f8ff;
+  --portal-color-47fb0fc0c1: #e5e7eb;
+  --portal-color-4809f882c5: #4f5968;
+  --portal-color-48cd3a6648: #304f7a;
+  --portal-color-48d9abbb8e: #b5c4da;
+  --portal-color-4961d06ce2: rgba(0, 39, 134, 0.26);
+  --portal-color-4a1e07fc47: #ffd7d4;
+  --portal-color-4a291f7155: rgba(106, 164, 255, 0.42);
+  --portal-color-4a4eba674d: rgba(0, 39, 134, 0.22);
+  --portal-color-4ae9a1f7c6: rgba(248, 251, 255, 1);
+  --portal-color-4b343826a8: rgba(255, 255, 255, 0.36);
+  --portal-color-4b848cb5df: #6cad85;
+  --portal-color-4c58cd2153: #eee;
+  --portal-color-4d6f92dfee: #0b2a67;
+  --portal-color-515a32c043: rgba(18, 70, 133, 0.22);
+  --portal-color-51f08e7078: #f0f0ee;
+  --portal-color-53432a348e: #f4f8ff;
+  --portal-color-54b560c774: #c7d4e8;
+  --portal-color-5526919828: #d3ecd9;
+  --portal-color-55773a19e5: #e8efff;
+  --portal-color-55a7dc028b: #fce9e9;
+  --portal-color-5647dd626d: #0b3f86;
+  --portal-color-568e8455f1: rgba(106, 164, 255, 0.22);
+  --portal-color-56fcea51d1: rgba(180, 196, 234, 0.46);
+  --portal-color-57b962ee7c: rgba(255, 255, 255, 0.14);
+  --portal-color-57be6b39f7: #7f291f;
+  --portal-color-588c301c36: #8d0010;
+  --portal-color-597d622954: rgba(124, 214, 164, 0.42);
+  --portal-color-5987913019: #8ea3c1;
+  --portal-color-5bdf769798: #244165;
+  --portal-color-5ce4c7c743: #e1e8f4;
+  --portal-color-5f0caed72f: #9fb8d8;
+  --portal-color-5ff93edc43: color-mix(in srgb, #b23a2e 18%, #3c4248 82%);
+  --portal-color-628daaa478: color-mix(in srgb, #1f7a47 24%, #484f56 76%);
+  --portal-color-64f144942a: #b6c8e4;
+  --portal-color-66a08ca4d4: #415b84;
+  --portal-color-6773f1a111: #e18825;
+  --portal-color-6861024013: #1f2d48;
+  --portal-color-69fd3cb4e6: #8f2026;
+  --portal-color-6b2342831b: #abc0de;
+  --portal-color-6f258c7bd7: #0e3156;
+  --portal-color-6fcde86d35: rgba(231, 182, 178, 0.2);
+  --portal-color-709e6795a7: #038e9f;
+  --portal-color-7133576b43: #d9edf7;
+  --portal-color-719541c06a: #6aa4ff;
+  --portal-color-75e50d3433: #870200;
+  --portal-color-75f461b553: #7f4b00;
+  --portal-color-763bbb26ad: #e58a92;
+  --portal-color-7801470977: #1f6b3a;
+  --portal-color-7a02302f0b: #b3262d;
+  --portal-color-7a33f242ff: #2d5ea6;
+  --portal-color-7e4f1499c9: #ffd76a;
+  --portal-color-7f8784021f: #1f5b9f;
+  --portal-color-7f8b941c53: rgba(255, 255, 255, 0.32);
+  --portal-color-80f5b9512c: #0034a1;
+  --portal-color-81a116a7df: #6330da;
+  --portal-color-81aacf4ad5: rgba(255, 255, 255, 0.04);
+  --portal-color-82f80f783f: #55389f;
+  --portal-color-87159a30a0: #fafcff;
+  --portal-color-8749aa0320: #dfeafd;
+  --portal-color-87bbb79e2e: #9eb7dd;
+  --portal-color-8aa2dbb5d9: #eef4ff;
+  --portal-color-8e5456173c: #96abc9;
+  --portal-color-8e84576524: color-mix(in srgb, #1f7a47 18%, #3c4248 82%);
+  --portal-color-8f0ff52e0d: rgba(20, 35, 68, 0.2);
+  --portal-color-8ff5c44654: #d8dee9;
+  --portal-color-90f12f5115: #445f89;
+  --portal-color-9121bb2e26: rgba(7, 32, 73, 0.22);
+  --portal-color-91d2ea6cfe: #92000d;
+  --portal-color-9203fef560: rgba(255, 255, 255, 0.95);
+  --portal-color-9548739191: #e3efff;
+  --portal-color-95bd928787: #a8bbd7;
+  --portal-color-972749c27e: #122f58;
+  --portal-color-9783dee77b: rgba(255, 255, 255, 0.34);
+  --portal-color-97f9ffca77: #163a6d;
+  --portal-color-991ebe2c3a: rgba(17, 70, 37, 0.3);
+  --portal-color-997324aabe: #eaf2ff;
+  --portal-color-9a49c7aede: #8ab0e6;
+  --portal-color-9b98859584: #7fa6e2;
+  --portal-color-9bc0b93906: #e3ecff;
+  --portal-color-9bd5813b2b: rgba(31, 107, 58, 0.23);
+  --portal-color-9c1eaddb49: #cd1637;
+  --portal-color-9d851aa3c8: #b9cbe4;
+  --portal-color-9e200f76d6: #f9fbff;
+  --portal-color-9f5af08a94: #4c6489;
+  --portal-color-9fc7feb5f0: #90a6c8;
+  --portal-color-a0cebdc6af: #12385f;
+  --portal-color-a28e5c5618: #eef3ff;
+  --portal-color-a3a68d90c8: #e8eef8;
+  --portal-color-a48f0535e6: rgba(255, 250, 235, 1);
+  --portal-color-a4aa943622: rgba(18, 28, 45, 0.64);
+  --portal-color-a5b5be78d6: rgba(18, 70, 133, 0.2);
+  --portal-color-a5d9717d79: #b8c8e0;
+  --portal-color-a6f8278158: rgba(226, 235, 255, 1);
+  --portal-color-a747dbf759: rgba(229, 203, 102, 0.2);
+  --portal-color-a85bd9ef7f: #17345c;
+  --portal-color-a8c93a3767: rgba(181, 0, 16, 0.26);
+  --portal-color-ab255e34c0: #7e98be;
+  --portal-color-acba0a17f6: #1a2235;
+  --portal-color-ad9368f436: #143a64;
+  --portal-color-b0a854d782: rgba(144, 211, 173, 0.18);
+  --portal-color-b0e4f2e1c7: rgba(12, 21, 40, 0.32);
+  --portal-color-b204248b5d: #ddd;
+  --portal-color-b245852d50: #1d2f4a;
+  --portal-color-b514a5be40: color-mix(in srgb, #484f56 72%, #55389f 28%);
+  --portal-color-b52559cb1c: rgba(242, 138, 149, 0.42);
+  --portal-color-b6a2764085: #c1d0e4;
+  --portal-color-b7090b879b: #7a8ca9;
+  --portal-color-b710eadc9f: #2a6e45;
+  --portal-color-b72cf2de92: #ffc9c4;
+  --portal-color-b75eb09de7: #2f7d51;
+  --portal-color-ba0cc5c38a: rgba(0, 39, 134, 0.18);
+  --portal-color-bd73054f6d: #113a67;
+  --portal-color-bd827b1b26: #b50010;
+  --portal-color-be559484b4: #536b92;
+  --portal-color-be77b3b86a: #f9faff;
+  --portal-color-bf36793f67: #d4ddeb;
+  --portal-color-bf48c79991: #cad4e3;
+  --portal-color-c1ea88f252: #875115;
+  --portal-color-c26311f0ba: #9ab0d0;
+  --portal-color-c2efe9c01a: #b3c3dd;
+  --portal-color-c3656bda4a: #0f1d33;
+  --portal-color-c559054d76: rgba(120, 0, 12, 0.35);
+  --portal-color-c659d630ce: #ffffff;
+  --portal-color-c684a558ca: color-mix(in srgb, #484f56 74%, #a86400 26%);
+  --portal-color-c7238605a6: rgba(0,0,0,0.1);
+  --portal-color-c736538b33: #7bc48f;
+  --portal-color-c82f339b4e: #f8fbff;
+  --portal-color-c899a97281: #ede3ff;
+  --portal-color-c8b4c9efb7: #005e8d;
+  --portal-color-ca3c517be2: rgba(20, 35, 68, 0.12);
+  --portal-color-cb48e6e5d4: #333;
+  --portal-color-cbc1cfa6cf: #f7fbff;
+  --portal-color-cbfc8005b4: #e0162b;
+  --portal-color-ccf3801810: #3e5679;
+  --portal-color-ccfa40c9d0: #6e8eb8;
+  --portal-color-cd39781015: #bfd0ea;
+  --portal-color-cd5fad86be: #f0f2f5;
+  --portal-color-cebb176820: #143463;
+  --portal-color-cf16fd64c5: #e9eef7;
+  --portal-color-cf801561d7: #edf3fa;
+  --portal-color-d03a38f50d: #366db1;
+  --portal-color-d07e7e7d52: #b23a2e;
+  --portal-color-d14f901611: #fff;
+  --portal-color-d22a529744: #d6dfec;
+  --portal-color-d2900205b2: rgba(248, 255, 251, 1);
+  --portal-color-d2d30945b7: #d5deec;
+  --portal-color-da467d2b4a: #7ea4df;
+  --portal-color-dbb4046a12: #d8edff;
+  --portal-color-dcaac7c975: #630094;
+  --portal-color-ddbaa7561b: rgba(20, 35, 68, 0.22);
+  --portal-color-ddfd1638e3: rgba(71, 53, 27, 0.96);
+  --portal-color-df9c1d2dba: #666;
+  --portal-color-dfd1c124aa: #5f7599;
+  --portal-color-e273abe831: #fff0cc;
+  --portal-color-e32e5ac3d5: #0f4a9f;
+  --portal-color-e337dcad67: #1e8b52;
+  --portal-color-e45f66b6fc: #001d62;
+  --portal-color-e4eca72dfb: #8a94a8;
+  --portal-color-e59910651a: #e8f6ed;
+  --portal-color-e794d5c0c8: #f2f6ff;
+  --portal-color-e826bd6aa5: rgba(106, 164, 255, 0.16);
+  --portal-color-e83556da4c: #edf3ff;
+  --portal-color-ea68f7072c: #d7dfea;
+  --portal-color-eb22a8aca6: rgba(0, 0, 0, 0.24);
+  --portal-color-ec28aed7ca: #f6f9ff;
+  --portal-color-ec630fca03: #0f5c2b;
+  --portal-color-edb7fe91a8: #b5d570;
+  --portal-color-efc4ce6dd0: #0f452c;
+  --portal-color-f0163600e1: rgba(181, 0, 16, 0.2);
+  --portal-color-f145d41978: #8ea4c0;
+  --portal-color-f18c37b592: color-mix(in srgb, #484f56 62%, #55389f 38%);
+  --portal-color-f549e07556: #1f2d45;
+  --portal-color-f5531c30a5: #123866;
+  --portal-color-f6cf2589bd: #ffe4a3;
+  --portal-color-f8af596fb2: color-mix(in srgb, #484f56 82%, #ffffff 18%);
+  --portal-color-f8f09f4f88: rgba(12, 31, 63, 0.08);
+  --portal-color-f901fae8ae: #f0b05f;
+  --portal-color-fac29d76ac: #d0d7e2;
+  --portal-color-fbe71060c6: #2d78b4;
+  --portal-color-fd15f49e34: #b10128;
+  --portal-color-ff3f35cedc: rgba(47, 57, 76, 0.95);
+  --portal-color-ff50535d27: rgba(255, 255, 255, 0.62);
 }

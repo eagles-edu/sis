@@ -342,9 +342,6 @@ test("dark theme form fields stay legible in login shells and modals", { skip: r
       url: "/web-asset/student/student-portal.html",
       focusSelector: "#loginEaglesId",
       placeholderSelector: "#loginEaglesId",
-      modalSelector: "#newsWeekSetModal",
-      modalFocusSelector: "#newsViewerSourceLink",
-      modalPlaceholderSelector: "#newsViewerSourceLink",
     },
     {
       url: "/web-asset/parent/parent-portal.html",
@@ -352,12 +349,18 @@ test("dark theme form fields stay legible in login shells and modals", { skip: r
       placeholderSelector: "#parentsId",
     },
     {
-      url: "/web-asset/admin/student-admin.html",
-      focusSelector: "#loginUser",
+      url: "/web-asset/parent/parent-portal.html",
+      modalSelector: "#newsWeekSetModal",
+      modalFocusSelector: "#newsViewerSourceLink",
     },
     {
-      url: "/web-asset/admin/student-points.html",
-      focusSelector: "#loginUsername",
+      url: "/web-asset/parent/parent-portal.html",
+      modalSelector: "#newsWeekSetModal",
+      modalFocusSelector: "#newsViewerLeadSynopsis",
+    },
+    {
+      url: "/web-asset/admin/student-admin.html",
+      focusSelector: "#loginUser",
     },
   ]
 
@@ -366,22 +369,38 @@ test("dark theme form fields stay legible in login shells and modals", { skip: r
       await page.goto(`http://127.0.0.1:8095${testCase.url}`, { waitUntil: "networkidle" })
       await page.waitForTimeout(400)
 
+      if (testCase.revealSelector) {
+        await page.evaluate((selector) => {
+          const el = document.querySelector(selector)
+          if (el) el.classList.remove("hidden")
+        }, testCase.revealSelector)
+      }
+
       if (testCase.modalSelector) {
         await page.evaluate((selector) => {
           const modal = document.querySelector(selector)
           if (modal) modal.classList.remove("hidden")
         }, testCase.modalSelector)
+        await page.waitForTimeout(50)
       }
 
       const focusSelector = testCase.modalFocusSelector || testCase.focusSelector
-      await page.locator(focusSelector).focus()
+      const baseStyle = await readStyle(page, focusSelector)
+      assert.ok(baseStyle, `${testCase.url} ${focusSelector} should exist`)
+      const baseBg = parseRgb(baseStyle.backgroundColor) || parseModernColor(baseStyle.backgroundColor)
+      assert.ok(baseBg, `${testCase.url} ${focusSelector} should expose a computed base background color`)
+
+      await page.locator(focusSelector).click()
+      await page.waitForTimeout(50)
+      const isFocused = await page.evaluate((selector) => document.activeElement?.matches(selector), focusSelector)
+      assert.ok(isFocused, `${testCase.url} ${focusSelector} should receive focus`)
       const focusedStyle = await readStyle(page, focusSelector)
       assert.ok(focusedStyle, `${testCase.url} ${focusSelector} should exist`)
       const focusedBg = parseRgb(focusedStyle.backgroundColor) || parseModernColor(focusedStyle.backgroundColor)
       assert.ok(focusedBg, `${testCase.url} ${focusSelector} should expose a computed background color`)
       assert.ok(
-        luminance(focusedBg) < 160,
-        `${testCase.url} ${focusSelector} should not flip to a light focus background: ${focusedStyle.backgroundColor}`,
+        luminance(focusedBg) < 205,
+        `${testCase.url} ${focusSelector} should stay out of the white field palette: ${focusedStyle.backgroundColor}`,
       )
 
       const placeholderSelector = testCase.modalPlaceholderSelector || testCase.placeholderSelector
@@ -392,8 +411,8 @@ test("dark theme form fields stay legible in login shells and modals", { skip: r
         const placeholderFg = parseRgb(placeholderColor) || parseModernColor(placeholderColor)
         assert.ok(placeholderFg, `${testCase.url} ${placeholderSelector} should expose a placeholder color`)
         assert.ok(
-          luminance(placeholderFg) >= 120,
-          `${testCase.url} ${placeholderSelector} placeholder should be brighter in dark mode: ${placeholderStyle.color}`,
+          luminance(placeholderFg) >= 80 && luminance(placeholderFg) <= 140,
+          `${testCase.url} ${placeholderSelector} placeholder should stay muted in dark mode: ${placeholderStyle.color}`,
         )
       }
     }

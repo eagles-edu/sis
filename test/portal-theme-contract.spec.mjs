@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
+import postcss from "postcss"
 
 const rootDir = process.cwd()
 const buildAdminAssetsPath = path.resolve(rootDir, "tools/build-admin-assets.mjs")
@@ -26,12 +27,26 @@ const hubPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-
 const gradesTabulatorPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/grades-tabulator.html"), "utf8")
 const studentPointsPortal = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/student-points.html"), "utf8")
 const denyLocalThemePropertyPattern = /\b(?:background(?:-color)?|border(?:-color)?|box-shadow|fill|stroke|color)\s*:/u
+const colorLiteralPattern = /#(?:[0-9a-fA-F]{3,8})\b|\b(?:rgba?|hsla?|color-mix)\([^)]*\)/g
+const styleBlockPattern = /<style[^>]*>([\s\S]*?)<\/style>/gi
 
 function stripAllowedThemeSnippets(html, allowlist) {
-  const styleBlocks = Array.from(html.matchAll(/<style>([\s\S]*?)<\/style>/gi), (match) => match[1] || "")
+  const styleBlocks = Array.from(html.matchAll(styleBlockPattern), (match) => match[1] || "")
   return styleBlocks
     .map((block) => allowlist.reduce((result, pattern) => result.replace(pattern, ""), block))
     .join("\n")
+}
+
+function collectColorLiteralHits(cssText, filePath) {
+  const hits = []
+  const root = postcss.parse(cssText, { from: filePath })
+  root.walkDecls((decl) => {
+    const matches = decl.value.match(colorLiteralPattern)
+    if (matches) {
+      hits.push(`${decl.prop}: ${decl.value}`)
+    }
+  })
+  return hits
 }
 
 test("portal pages load the shared portal theme stylesheet", () => {
@@ -89,6 +104,35 @@ test("repo app pages do not define raw theme colors in inline style or script bl
   }
 })
 
+test("portal-facing pages route every raw color literal through the shared theme registry", () => {
+  const filePaths = [
+    "web-asset/admin/student-admin.css",
+    "web-asset/admin/student-admin.min.css",
+    "web-asset/admin/student-admin.html",
+    "web-asset/admin/portal-hub.html",
+    "web-asset/admin/student-points.html",
+    "web-asset/parent/parent-portal.html",
+    "web-asset/student/student-portal.html",
+    "web-asset/student/fi.html",
+    "web-asset/Untitled-1.html",
+  ]
+
+  for (const relPath of filePaths) {
+    const filePath = path.resolve(rootDir, relPath)
+    const text = fs.readFileSync(filePath, "utf8")
+    const cssChunks = filePath.endsWith(".css")
+      ? [text]
+      : Array.from(text.matchAll(styleBlockPattern), (match) => match[1] || "")
+
+    const hits = cssChunks.flatMap((chunk) => collectColorLiteralHits(chunk, filePath))
+    assert.equal(
+      hits.length,
+      0,
+      `${relPath} should not contain raw color literals outside the shared theme registry`,
+    )
+  }
+})
+
 test("portal pages fail closed on local theme ownership outside the explicit structural allowlist", () => {
   const allowlists = new Map([
     [studentPortalPath, [
@@ -109,6 +153,16 @@ test("portal pages fail closed on local theme ownership outside the explicit str
     [adminPortalPath, [
       /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
       /body\s*\{\s*margin:\s*0;\s*min-height:\s*100vh;\s*font-family:\s*var\(--font-base\);\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
+      /:root\s*\{\s*--font-base:[\s\S]*?\}/gs,
+      /body\.admin-auth-booting\s*#authBootPanel\s*\{\s*display:\s*grid;\s*\}/gs,
+      /body\.admin-auth-booting\s*#authPanel,\s*body\.admin-auth-booting\s*#app\s*\{\s*display:\s*none\s*!important;\s*\}/gs,
+      /html\[data-admin-auth-state\]\s*body\.admin-portal-page\.admin-auth-booting\s*#authBootPanel\s*\{\s*display:\s*none\s*!important;\s*\}/gs,
+      /html\[data-admin-auth-state="authenticated"\]\s*body\.admin-portal-page\.admin-auth-booting\s*#authPanel\s*\{\s*display:\s*none\s*!important;\s*\}/gs,
+      /html\[data-admin-auth-state="authenticated"\]\s*body\.admin-portal-page\.admin-auth-booting\s*#app\s*\{\s*display:\s*block\s*!important;\s*\}/gs,
+      /html\[data-admin-auth-state="unauthenticated"\]\s*body\.admin-portal-page\.admin-auth-booting\s*#authPanel\s*\{\s*display:\s*block\s*!important;\s*\}/gs,
+      /\.school-setup-warning\s*\{\s*background:\s*var\(--portal-status-warn-bg\);\s*border:\s*1px solid var\(--portal-status-warn-border\);\s*border-radius:\s*var\(--radius-2\);\s*color:\s*var\(--portal-status-warn-text\);\s*font-size:\s*12px;\s*line-height:\s*1\.45;\s*margin-top:\s*10px;\s*padding:\s*10px 12px;\s*\}/gs,
+      /\.school-setup-warning a\s*\{\s*color:\s*inherit;\s*font-weight:\s*700;\s*\}/gs,
+      /\.system-health-loading-pulse\s*\{\s*height:\s*105\.6px;\s*position:\s*relative;\s*width:\s*105\.6px;\s*\}/gs,
     ]],
     [path.resolve(rootDir, "web-asset/admin/student-points.html"), []],
   ])
@@ -444,13 +498,37 @@ test("shared portal theme keeps student and parent calendars readable in dark mo
   )
 })
 
-test("shared portal theme keeps dark form fields readable and focusable", () => {
-  assert.match(sharedTheme, /--portal-dark-field-focus-bg:#484f56/)
-  assert.match(sharedTheme, /--portal-dark-field-focus-border:(?:rgba\(255,255,255,0\.58\)|hsla\(0,0%,100%,\.58\))/)
+test("shared portal theme keeps dark form fields readable", () => {
+  assert.match(sharedTheme, /--portal-dark-field-bg:#25292c/)
+  assert.match(sharedTheme, /--portal-dark-field-active-bg:#4b5157/)
+  assert.match(sharedTheme, /--portal-dark-field-active-border:#c8d0da/)
+  assert.match(sharedTheme, /--portal-dark-field-placeholder:#58657a/)
   assert.match(
     sharedTheme,
-    /--portal-dark-field-placeholder:color-mix\(in srgb,var\(--portal-dark-text-soft\) 72%,#(?:fff|ffffff) 28%\)/,
+    /html\[data-theme="dark"\]\s*body\.student-portal-page\s+input,/,
   )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\]\s*body\.parent-portal-page\s+textarea,/,
+  )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\]\s*body\.admin-portal-page\s+select:focus-visible/,
+  )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\]\s*body\.student-portal-page\s+input::placeholder/,
+  )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\]\s*body\.parent-portal-page\s+textarea::placeholder/,
+  )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\]\s*body\.admin-portal-page\s+select::placeholder/,
+  )
+  assert.doesNotMatch(sharedTheme, /body\.student-points-page\s*:is\(input,\s*select,\s*textarea,\s*button\)/)
+  assert.doesNotMatch(sharedTheme, /body\.student-points-page\s*:where\(input,\s*select,\s*textarea\)::placeholder/)
 })
 
 test("admin dark surfaces keep form controls and chart empty states readable", () => {
