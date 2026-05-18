@@ -436,6 +436,21 @@ test("shared portal theme keeps student and parent calendars readable in dark mo
       sharedTheme.includes("background:var(--portal-status-bad-bg);border-color:var(--portal-status-bad-border);color:var(--portal-status-bad-text)}"),
     "shared theme should keep the summary state chips legible in dark mode",
   )
+  assert.ok(
+    sharedTheme.includes(
+      "html[data-theme=\"dark\"] body.parent-portal-page .draft-actions{background:var(--portal-dark-surface-panel)!important;border-color:var(--portal-dark-border)!important;color:var(--portal-dark-text)!important}",
+    ),
+    "shared theme should keep the parent draft action bar on the dark card surface",
+  )
+})
+
+test("shared portal theme keeps dark form fields readable and focusable", () => {
+  assert.match(sharedTheme, /--portal-dark-field-focus-bg:#484f56/)
+  assert.match(sharedTheme, /--portal-dark-field-focus-border:(?:rgba\(255,255,255,0\.58\)|hsla\(0,0%,100%,\.58\))/)
+  assert.match(
+    sharedTheme,
+    /--portal-dark-field-placeholder:color-mix\(in srgb,var\(--portal-dark-text-soft\) 72%,#(?:fff|ffffff) 28%\)/,
+  )
 })
 
 test("admin dark surfaces keep form controls and chart empty states readable", () => {

@@ -98,6 +98,16 @@ function parseRgb(value) {
   return [Number(match[1]), Number(match[2]), Number(match[3])]
 }
 
+function parseModernColor(value) {
+  const match = String(value).match(/color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/)
+  if (!match) return null
+  return [
+    Math.round(Number(match[1]) * 255),
+    Math.round(Number(match[2]) * 255),
+    Math.round(Number(match[3]) * 255),
+  ]
+}
+
 async function readStyle(page, selector) {
   return await page.evaluate((inputSelector) => {
     const el = document.querySelector(inputSelector)
@@ -114,6 +124,32 @@ async function readStyle(page, selector) {
       text: (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80),
     }
   }, selector)
+}
+
+async function readPseudoStyle(page, selector, pseudoElement) {
+  return await page.evaluate(({ inputSelector, pseudo }) => {
+    const el = document.querySelector(inputSelector)
+    if (!el) return null
+    const cs = getComputedStyle(el, pseudo)
+    return {
+      selector: inputSelector,
+      pseudo,
+      backgroundColor: cs.backgroundColor,
+      borderColor: cs.borderColor,
+      color: cs.color,
+    }
+  }, { inputSelector: selector, pseudo: pseudoElement })
+}
+
+async function normalizeColor(page, value) {
+  return await page.evaluate((inputColor) => {
+    const probe = document.createElement("span")
+    probe.style.color = inputColor
+    document.body.appendChild(probe)
+    const computed = getComputedStyle(probe).color
+    probe.remove()
+    return computed
+  }, value)
 }
 
 function assertNotLight(label, style) {
@@ -189,6 +225,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
       checks: [
         ["parent login card", "#loginCard"],
         ["parent env badge", "#envBadgeParent"],
+        ["parent draft actions", ".draft-actions"],
         ["parent logo wrap", ".brand-logo-wrap.brand-logo-wrap--sm"],
       ],
     },
@@ -294,6 +331,79 @@ test("grades tabulator buttons and chips use dark-mode surfaces", { skip: resolv
   }
 })
 
+test("dark theme form fields stay legible in login shells and modals", { skip: resolvePlaywrightSkipReason() }, async () => {
+  const server = startStaticServer(8095)
+  const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
+  await page.addInitScript(themeInitScript())
+
+  const cases = [
+    {
+      url: "/web-asset/student/student-portal.html",
+      focusSelector: "#loginEaglesId",
+      placeholderSelector: "#loginEaglesId",
+      modalSelector: "#newsWeekSetModal",
+      modalFocusSelector: "#newsViewerSourceLink",
+      modalPlaceholderSelector: "#newsViewerSourceLink",
+    },
+    {
+      url: "/web-asset/parent/parent-portal.html",
+      focusSelector: "#parentsId",
+      placeholderSelector: "#parentsId",
+    },
+    {
+      url: "/web-asset/admin/student-admin.html",
+      focusSelector: "#loginUser",
+    },
+    {
+      url: "/web-asset/admin/student-points.html",
+      focusSelector: "#loginUsername",
+    },
+  ]
+
+  try {
+    for (const testCase of cases) {
+      await page.goto(`http://127.0.0.1:8095${testCase.url}`, { waitUntil: "networkidle" })
+      await page.waitForTimeout(400)
+
+      if (testCase.modalSelector) {
+        await page.evaluate((selector) => {
+          const modal = document.querySelector(selector)
+          if (modal) modal.classList.remove("hidden")
+        }, testCase.modalSelector)
+      }
+
+      const focusSelector = testCase.modalFocusSelector || testCase.focusSelector
+      await page.locator(focusSelector).focus()
+      const focusedStyle = await readStyle(page, focusSelector)
+      assert.ok(focusedStyle, `${testCase.url} ${focusSelector} should exist`)
+      const focusedBg = parseRgb(focusedStyle.backgroundColor) || parseModernColor(focusedStyle.backgroundColor)
+      assert.ok(focusedBg, `${testCase.url} ${focusSelector} should expose a computed background color`)
+      assert.ok(
+        luminance(focusedBg) < 160,
+        `${testCase.url} ${focusSelector} should not flip to a light focus background: ${focusedStyle.backgroundColor}`,
+      )
+
+      const placeholderSelector = testCase.modalPlaceholderSelector || testCase.placeholderSelector
+      if (placeholderSelector) {
+        const placeholderStyle = await readPseudoStyle(page, placeholderSelector, "::placeholder")
+        assert.ok(placeholderStyle, `${testCase.url} ${placeholderSelector} should expose placeholder styles`)
+        const placeholderColor = await normalizeColor(page, placeholderStyle.color)
+        const placeholderFg = parseRgb(placeholderColor) || parseModernColor(placeholderColor)
+        assert.ok(placeholderFg, `${testCase.url} ${placeholderSelector} should expose a placeholder color`)
+        assert.ok(
+          luminance(placeholderFg) >= 120,
+          `${testCase.url} ${placeholderSelector} placeholder should be brighter in dark mode: ${placeholderStyle.color}`,
+        )
+      }
+    }
+  } finally {
+    await page.close()
+    await browser.close()
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
 test("standalone admin pages use the shared portal theme in dark mode", { skip: resolvePlaywrightSkipReason() }, async () => {
   const server = startStaticServer(8096)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
@@ -342,7 +452,8 @@ test("standalone admin pages use the shared portal theme in dark mode", { skip: 
       `metric cards should use the card-tier gradient: ${metricCard.backgroundImage}`,
     )
     assert.ok(
-      /49,\s*54,\s*58/.test(controlCard.backgroundImage || ""),
+      /10,\s*11,\s*12/.test(controlCard.backgroundImage || "") &&
+        /12,\s*13,\s*13/.test(controlCard.backgroundImage || ""),
       `control cards should keep the darker panel-tier gradient: ${controlCard.backgroundImage}`,
     )
   } finally {

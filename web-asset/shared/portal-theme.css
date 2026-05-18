@@ -89,16 +89,22 @@
   --portal-dark-card: #3c4248;
   --portal-dark-card-deep: #25292c;
   --portal-dark-card-soft: #484f56;
+  /* Dark form contract:
+     - default field fill stays in the dark control surface
+     - focus shifts to a darker-panel variant, never to white
+     - placeholder text is lighter than muted body text, but still subdued */
   --portal-dark-field-bg: #3c4248;
   --portal-dark-field-border: #aeb7c5;
-  --portal-dark-field-placeholder: #58657a;
+  --portal-dark-field-focus-bg: #484f56;
+  --portal-dark-field-focus-border: rgba(255, 255, 255, 0.58);
+  --portal-dark-field-placeholder: color-mix(in srgb, var(--portal-dark-text-soft) 72%, #ffffff 28%);
   --portal-dark-field-text: var(--secondary-color);
   --portal-dark-page-bg: linear-gradient(180deg, #1a1c1f 0%, #25292c 100%);
   --portal-dark-panel: #25292c;
   --portal-dark-panel-soft: #31363a;
   --portal-dark-radius: var(--radius-3);
   --portal-dark-surface-card: linear-gradient(180deg, rgba(60, 66, 72, 0.98) 0%, rgba(49, 54, 58, 0.98) 100%);
-  --portal-dark-surface-panel: linear-gradient(180deg, rgba(49, 54, 58, 0.98) 0%, rgba(37, 41, 44, 1) 100%);
+  --portal-dark-surface-panel: linear-gradient(180deg, rgba(10, 11, 12, 0.98) 0%, rgb(12, 13, 13) 100%);
   --portal-dark-surface-soft: #3c4248;
   --portal-dark-surface-support: #484f56;
   --portal-dark-text: #f2f4f7;
@@ -608,16 +614,20 @@ html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCar
 html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel {
   margin-top: 0;
 }
-html[data-theme="dark"] body.student-portal-page :where(input, select, textarea),
-html[data-theme="dark"] body.parent-portal-page :where(input, select, textarea),
-html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea) {
+/* Dark form controls are centralized here so every portal, modal, and login
+   shell uses the same control surface, focus surface, and placeholder tone. */
+html[data-theme="dark"] :where(input, select, textarea) {
   background: var(--portal-dark-field-bg);
   border-color: var(--portal-dark-field-border);
   color: var(--portal-dark-field-text);
 }
-html[data-theme="dark"] body.student-portal-page :where(input, select, textarea)::placeholder,
-html[data-theme="dark"] body.parent-portal-page :where(input, select, textarea)::placeholder,
-html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea)::placeholder {
+html[data-theme="dark"] :where(input, select, textarea):is(:focus, :focus-visible) {
+  background: var(--portal-dark-field-focus-bg);
+  border-color: var(--portal-dark-field-focus-border);
+  box-shadow: 0 0 0 3px rgba(106, 164, 255, 0.18);
+  outline: none;
+}
+html[data-theme="dark"] :where(input, select, textarea)::placeholder {
   color: var(--portal-dark-field-placeholder);
 }
 body.student-portal-page .portal-shell,
@@ -4862,10 +4872,13 @@ html[data-theme="dark"] body.student-points-page .field label,
 html[data-theme="dark"] body.student-points-page .status {
   color: var(--portal-dark-text-soft);
 }
-html[data-theme="dark"] body.student-points-page :is(input, select, button) {
+html[data-theme="dark"] body.student-points-page :is(input, select, textarea, button) {
   background: var(--portal-dark-field-bg);
   border-color: var(--portal-dark-field-border);
   color: var(--portal-dark-field-text);
+}
+html[data-theme="dark"] body.student-points-page :where(input, select, textarea)::placeholder {
+  color: var(--portal-dark-field-placeholder);
 }
 html[data-theme="dark"] body.student-points-page .primary {
   background: linear-gradient(160deg, var(--portal-action-blue-top), var(--portal-action-blue-bottom));
@@ -4985,6 +4998,11 @@ html[data-theme="dark"] body.parent-portal-page .report-archive-meta,
 html[data-theme="dark"] body.parent-portal-page .report-archive-status,
 html[data-theme="dark"] body.parent-portal-page .dashboard-card-subtitle {
   color: var(--portal-dark-text-soft) !important;
+}
+html[data-theme="dark"] body.parent-portal-page .draft-actions {
+  background: var(--portal-dark-surface-panel) !important;
+  border-color: var(--portal-dark-border) !important;
+  color: var(--portal-dark-text) !important;
 }
 html[data-theme="dark"] body.student-portal-page #newsWeekSetModal :where(input, textarea, select),
 html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal :where(input, textarea, select) {
