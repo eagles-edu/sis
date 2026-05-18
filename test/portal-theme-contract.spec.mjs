@@ -499,7 +499,7 @@ test("shared portal theme keeps student and parent calendars readable in dark mo
 })
 
 test("shared portal theme keeps dark form fields readable", () => {
-  assert.match(sharedTheme, /--portal-dark-field-bg:#25292c/)
+  assert.match(sharedTheme, /--portal-dark-field-bg:#272c2f/)
   assert.match(sharedTheme, /--portal-dark-field-active-bg:#4b5157/)
   assert.match(sharedTheme, /--portal-dark-field-active-border:#c8d0da/)
   assert.match(sharedTheme, /--portal-dark-field-placeholder:#58657a/)

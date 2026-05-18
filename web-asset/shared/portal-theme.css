@@ -89,7 +89,7 @@
   --portal-dark-card: #3c4248;
   --portal-dark-card-deep: #25292c;
   --portal-dark-card-soft: #484f56;
-  --portal-dark-field-bg: #0f1112;
+  --portal-dark-field-bg: #272c2f;
   --portal-dark-field-border: #aeb7c5;
   --portal-dark-field-active-bg: #4b5157;
   --portal-dark-field-active-border: #c8d0da;
@@ -5022,6 +5022,18 @@ html[data-theme="dark"] body.parent-portal-page .draft-actions {
   background: var(--portal-dark-surface-panel) !important;
   border-color: var(--portal-dark-border) !important;
   color: var(--portal-dark-text) !important;
+}
+html[data-theme="dark"] body.parent-portal-page .field-row.edited,
+html[data-theme="dark"] body.parent-portal-page .field-row.signature-muted {
+  background: transparent;
+}
+html[data-theme="dark"] body.parent-portal-page .field-row.edited input,
+html[data-theme="dark"] body.parent-portal-page .field-row.edited textarea,
+html[data-theme="dark"] body.parent-portal-page .field-row.signature-muted input,
+html[data-theme="dark"] body.parent-portal-page .field-row.signature-muted textarea {
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
 }
 html[data-theme="dark"] body.student-portal-page #newsWeekSetModal :where(input, textarea, select),
 html[data-theme="dark"] body.parent-portal-page #newsWeekSetModal :where(input, textarea, select) {

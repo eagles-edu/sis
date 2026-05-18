@@ -263,7 +263,16 @@ test("parent portal dark theme keeps identity, metric, profile, and homework sur
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.metric,/)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.profile-group,/)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.field-row\.locked,/)
-  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.field-row\.edited,/)
+  assert.ok(
+    SHARED_THEME.includes("html[data-theme=\"dark\"] body.parent-portal-page .field-row.signature-muted{background:transparent}"),
+    "dark parent edited rows should not repaint from the light card surface",
+  )
+  assert.ok(
+    SHARED_THEME.includes(
+      "html[data-theme=\"dark\"] body.parent-portal-page .field-row.edited input,\nhtml[data-theme=\"dark\"] body.parent-portal-page .field-row.edited textarea,\nhtml[data-theme=\"dark\"] body.parent-portal-page .field-row.signature-muted input,\nhtml[data-theme=\"dark\"] body.parent-portal-page .field-row.signature-muted textarea{background:var(--portal-dark-field-bg);border-color:var(--portal-dark-field-border);color:var(--portal-dark-field-text)}",
+    ),
+    "dark parent edited fields should stay on the shared dark field surface",
+  )
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-link(?:,|\{)/i)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.homework-card-label,/)
 })
@@ -1673,7 +1682,7 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
     const queueText = normalizeText(document.getElementById("newsQueueBody")?.textContent)
     assert.match(queueText, /Cần sửa/i)
     assert.doesNotMatch(queueText, /Submitted|None Submitted|Waiting|Revise/i)
-    assert.match(normalizeText(firstWeekSetCell?.textContent), /^\d{2}\/\d{2}-\d{2}\/\d{2}\s+\d{4}$/)
+    assert.match(normalizeText(firstWeekSetCell?.textContent), /^\d{2}\/\d{2}\/\d{2}\s+-\s+\d{2}\/\d{2}\/\d{2}$/)
     assert.doesNotMatch(normalizeText(firstWeekSetCell?.textContent), /đến/i)
     assert.match(latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/)
     assert.match(latestSubmissionHtml, /queue-compact-datetime/)

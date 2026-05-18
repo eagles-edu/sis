@@ -2023,7 +2023,7 @@
             label: "Ngày sinh *",
             control: "date",
             required: true,
-            placeholder: "ví dụ: 2011-03-17",
+            placeholder: "ví dụ: 17/03/11",
           },
           {
             key: "birthOrder",
@@ -2333,7 +2333,7 @@
             label: "Ngày khám mắt gần đây nhất",
             control: "date",
             required: false,
-            placeholder: "ví dụ: 2011-03-17",
+            placeholder: "ví dụ: 17/03/11",
           },
           {
             key: "prescriptionMedicine",
@@ -2456,7 +2456,7 @@
             label: 'Bắt buộc: Nếu bạn đã xét nghiệm dương tính với COVID, thì vui lòng cung cấp ngày bạn xét nghiệm âm tính với COVID bên dưới. **Nếu bạn trả lời "không" ở trên, vui lòng nhập "không" vào đây. *',
             control: "text",
             required: true,
-            placeholder: "ví dụ: 2011-03-17 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh",
+            placeholder: "ví dụ: 17/03/11 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh",
           },
           {
             key: "covidShotAlready",
@@ -4835,18 +4835,13 @@
       if (!raw) return "Ngày: - | Thứ: - | Giờ: -";
       const date = new Date(raw);
       if (Number.isNaN(date.getTime())) return "Ngày: - | Thứ: - | Giờ: -";
-      const datePart = new Intl.DateTimeFormat("vi-VN", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        timeZone: PORTAL_TIME_ZONE,
-      }).format(date);
+      const datePart = formatPortalDate(date);
       const dayPart = new Intl.DateTimeFormat("vi-VN", {
         weekday: "long",
         timeZone: PORTAL_TIME_ZONE,
       }).format(date);
       const timePart = new Intl.DateTimeFormat("vi-VN", {
-        hour: "numeric",
+        hour: "2-digit",
         minute: "2-digit",
         timeZone: PORTAL_TIME_ZONE,
       }).format(date);
@@ -5475,33 +5470,45 @@
     }
 
     function formatPortalDate(value) {
-      const raw = normalizeText(value);
+      const raw = value instanceof Date ? value : normalizeText(value);
       if (!raw) return "Không có ngày";
       const date =
+        raw instanceof Date ?
+        new Date(raw.getTime()) :
         /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
         new Date(`${raw}T00:00:00+07:00`) :
         new Date(raw);
       if (Number.isNaN(date.getTime())) return "Không có ngày";
       return new Intl.DateTimeFormat("vi-VN", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
         timeZone: PORTAL_TIME_ZONE,
       }).format(date);
     }
 
     function formatPortalDateTime(value) {
-      const raw = normalizeText(value);
+      const raw = value instanceof Date ? value : normalizeText(value);
       if (!raw) return "Không có thời gian";
-      const date = new Date(raw);
+      const date = raw instanceof Date ? new Date(raw.getTime()) : new Date(raw);
       if (Number.isNaN(date.getTime())) return "Không có thời gian";
-      return new Intl.DateTimeFormat("vi-VN", {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
+      const parts = new Intl.DateTimeFormat("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+        hour: "2-digit",
         minute: "2-digit",
+        hour12: false,
         timeZone: PORTAL_TIME_ZONE,
-      }).format(date);
+      }).formatToParts(date);
+      const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+      const day = pick("day");
+      const month = pick("month");
+      const year = pick("year");
+      const hour = pick("hour");
+      const minute = pick("minute");
+      if (!day || !month || !year || !hour || !minute) return "Không có thời gian";
+      return `${day}/${month}/${year} ${hour}:${minute}`;
     }
 
       function formatPortalWeekRange(startValue = "", endValue = "") {
@@ -5513,34 +5520,13 @@
           new Date(`${value}T00:00:00+07:00`) :
           new Date(value);
         return Number.isNaN(parsed.getTime()) ? null : parsed;
-      };
-      const startDate = parse(startRaw);
-      const endDate = parse(endRaw);
+        };
+        const startDate = parse(startRaw);
+        const endDate = parse(endRaw);
         if (!startDate || !endDate) {
           return `${formatPortalDate(startRaw)} - ${formatPortalDate(endRaw)}`;
         }
-        const shortDayMonth = (date) => {
-          const parts = new Intl.DateTimeFormat("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            timeZone: PORTAL_TIME_ZONE,
-          }).formatToParts(date);
-          const day = parts.find((entry) => entry.type === "day")?.value || "";
-          const month = parts.find((entry) => entry.type === "month")?.value || "";
-          return `${day}/${month}`;
-        };
-        const year = new Intl.DateTimeFormat("en-GB", {
-          year: "numeric",
-          timeZone: PORTAL_TIME_ZONE,
-        });
-        const startLabel = shortDayMonth(startDate);
-        const endLabel = shortDayMonth(endDate);
-        const startYear = year.format(startDate);
-        const endYear = year.format(endDate);
-        if (startYear === endYear) {
-          return `${startLabel}-${endLabel} ${startYear}`;
-        }
-        return `${startLabel} ${startYear}-${endLabel} ${endYear}`;
+        return `${formatPortalDate(startDate)} - ${formatPortalDate(endDate)}`;
       }
 
     function formatQueueDateTimeTz7(value) {
@@ -5584,14 +5570,18 @@
       if (!raw) return "Không có thời gian";
       const date = new Date(raw);
       if (Number.isNaN(date.getTime())) return "Không có thời gian";
-      return new Intl.DateTimeFormat("vi-VN", {
+      const dateLabel = formatPortalDate(date);
+      const weekdayLabel = new Intl.DateTimeFormat("vi-VN", {
         weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
         timeZone: PORTAL_TIME_ZONE,
       }).format(date);
+      const timeLabel = new Intl.DateTimeFormat("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: PORTAL_TIME_ZONE,
+      }).format(date);
+      return `${weekdayLabel} ${dateLabel} ${timeLabel}`;
     }
 
     function normalizeDashboardPage(page) {

@@ -1155,7 +1155,7 @@ test("news review modal supports student-scoped navigation and modal review acti
   await waitFor(() => {
     const rows = dom.window.document.querySelectorAll("#newsReviewRows tr")
     assert.equal(rows.length, 1)
-    assert.match(rows[0].textContent || "", /09\/03-15\/03 2026/i)
+    assert.match(rows[0].textContent || "", /09\/03\/26 to 15\/03\/26/i)
     assert.doesNotMatch(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
     assert.match(rows[0].textContent || "", /Waiting/i)
     assert.match(rows[0].textContent || "", /Unapproved-6/i)
@@ -1620,7 +1620,7 @@ test("news review week-set table headers sort all visible columns", async () => 
   await waitFor(() => {
     assert.equal(weekSetHeader.getAttribute("aria-sort"), "ascending")
     const firstWeekSetCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(1)")?.textContent)
-    assert.match(firstWeekSetCell, /^\d{2}\/\d{2}-\d{2}\/\d{2}\s+\d{4}$/)
+    assert.match(firstWeekSetCell, /^\d{2}\/\d{2}\/\d{2}\s+to\s+\d{2}\/\d{2}\/\d{2}$/)
     assert.doesNotMatch(firstWeekSetCell, /2026-03-09 to 2026-03-15/i)
   })
 
@@ -8744,7 +8744,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   await waitFor(() => {
     const rows = document.querySelectorAll("#pt_reportRows tr")
     assert.equal(rows.length, 1)
-    assert.match(rows[0].textContent || "", /2026-02-10/i)
+    assert.match(rows[0].textContent || "", /10\/02\/26/i)
   })
 
   openPage(dom, "reports")
@@ -8766,7 +8766,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   await waitFor(() => {
     const rows = document.querySelectorAll("#reportRows tr")
     assert.equal(rows.length, 1)
-    assert.match(rows[0].textContent || "", /2026-02-02/i)
+    assert.match(rows[0].textContent || "", /02\/02\/26/i)
   })
   reportSearch.value = ""
   reportSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))

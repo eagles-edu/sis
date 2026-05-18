@@ -3920,29 +3920,39 @@
       }
 
       function formatPortalDate(value) {
-        const raw = t(value);
+        const raw = value instanceof Date ? value : t(value);
         const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ?
           new Date(`${raw}T00:00:00+07:00`) :
-          (raw ? new Date(raw) : null);
+          (raw instanceof Date ? new Date(raw.getTime()) : (raw ? new Date(raw) : null));
         if (!date || Number.isNaN(date.getTime())) return "Date unavailable";
-        return new Intl.DateTimeFormat(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
+        return new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
           timeZone: PORTAL_TIME_ZONE,
         }).format(date);
       }
 
       function formatPortalDateTime(value) {
-        const date = value ? new Date(value) : null;
+        const date = value instanceof Date ? new Date(value.getTime()) : (value ? new Date(value) : null);
         if (!date || Number.isNaN(date.getTime())) return "Time unavailable";
-        return new Intl.DateTimeFormat(undefined, {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
           minute: "2-digit",
+          hour12: false,
           timeZone: PORTAL_TIME_ZONE,
-        }).format(date);
+        }).formatToParts(date);
+        const pick = (type) => parts.find((entry) => entry.type === type)?.value || "";
+        const day = pick("day");
+        const month = pick("month");
+        const year = pick("year");
+        const hour = pick("hour");
+        const minute = pick("minute");
+        if (!day || !month || !year || !hour || !minute) return "Time unavailable";
+        return `${day}/${month}/${year} ${hour}:${minute}`;
       }
 
       function formatPortalWeekRange(startValue = "", endValue = "") {
@@ -3960,28 +3970,7 @@
         if (!startDate || !endDate) {
           return `${formatPortalDate(startRaw)} to ${formatPortalDate(endRaw)}`;
         }
-        const shortDayMonth = (date) => {
-          const parts = new Intl.DateTimeFormat("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            timeZone: PORTAL_TIME_ZONE,
-          }).formatToParts(date);
-          const day = parts.find((entry) => entry.type === "day")?.value || "";
-          const month = parts.find((entry) => entry.type === "month")?.value || "";
-          return `${day}/${month}`;
-        };
-        const year = new Intl.DateTimeFormat("en-GB", {
-          year: "numeric",
-          timeZone: PORTAL_TIME_ZONE,
-        });
-        const startLabel = shortDayMonth(startDate);
-        const endLabel = shortDayMonth(endDate);
-        const startYear = year.format(startDate);
-        const endYear = year.format(endDate);
-        if (startYear === endYear) {
-          return `${startLabel}-${endLabel} ${startYear}`;
-        }
-        return `${startLabel} ${startYear}-${endLabel} ${endYear}`;
+        return `${formatPortalDate(startDate)} to ${formatPortalDate(endDate)}`;
       }
 
       function formatQueueDateTimeTz7(value) {

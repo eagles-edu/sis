@@ -209,7 +209,25 @@ function summarizeGrades(gradeRecords) {
 
 function toDisplay(value) {
   if (value === undefined || value === null || value === "") return "-"
-  return String(value)
+  const text = String(value).trim()
+  if (!text) return "-"
+  if (/^\d{4}-\d{2}-\d{2}(?:[T ].*)?$/.test(text)) {
+    const date = new Date(text)
+    if (!Number.isNaN(date.valueOf())) {
+      const parts = new Intl.DateTimeFormat("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+        timeZone: "Asia/Ho_Chi_Minh",
+      }).formatToParts(date)
+      const pick = (type) => parts.find((part) => part.type === type)?.value || ""
+      const day = pick("day")
+      const month = pick("month")
+      const year = pick("year")
+      if (day && month && year) return `${day}/${month}/${year}`
+    }
+  }
+  return text
 }
 
 function assertStudentIdentity(student, context = "student") {

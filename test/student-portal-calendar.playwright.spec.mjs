@@ -918,7 +918,7 @@ test(
       assert.equal(newsQueueState.text.includes("Loading"), false);
       assert.ok(newsQueueState.rowCount >= 1);
       assert.ok(newsQueueState.actionButtons >= 1);
-      assert.match(newsQueueState.text, /^\s*.*\d{2}\/\d{2}-\d{2}\/\d{2}\s+\d{4}.*$/s);
+      assert.match(newsQueueState.text, /^\s*.*\d{2}\/\d{2}\/\d{2}\s+to\s+\d{2}\/\d{2}\/\d{2}.*$/s);
       assert.doesNotMatch(newsQueueState.text, /\b\d{4}-\d{2}-\d{2}\s+to\s+\d{4}-\d{2}-\d{2}\b/i);
       assert.match(newsQueueState.latestSubmissionText, /^\d{2}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2}\s+\+7$/);
       assert.match(newsQueueState.latestSubmissionHtml, /queue-compact-datetime/);
@@ -965,7 +965,7 @@ test(
       assert.equal(modalBeforeSubmit.hasLegacyStatusInput, false);
       assert.match(modalBeforeSubmit.statusChipText, /Waiting/i);
       assert.match(modalBeforeSubmit.statusChipClass, /\bchip-revise\b/i);
-      assert.match(modalBeforeSubmit.submittedAt, /2026|Mar|March/i);
+      assert.match(modalBeforeSubmit.submittedAt, /^\d{2}\/\d{2}\/\d{2}\s+\d{2}:\d{2}$/);
 
       await page.fill("#newsViewerArticleTitle", "Waiting Report Updated");
       await page.click("#newsWeekSetModalSubmitBtn");

@@ -489,7 +489,7 @@
           "profile",
           "Thông tin của người học",
           "text",
-          "ví dụ: 2011-03-17",
+          "ví dụ: 17/03/11",
           "",
           "dobText",
           "",
@@ -881,7 +881,7 @@
           "medical",
           "Thuốc uống",
           "text",
-          "ví dụ: 2011-03-17",
+          "ví dụ: 17/03/11",
           "",
           "lastEyeExamDateText",
           "",
@@ -1021,7 +1021,7 @@
           "covid",
           "COVID",
           "text",
-          "ví dụ: 2011-03-17 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh",
+          "ví dụ: 17/03/11 - ngày bạn xét nghiệm âm tính sau khi bị nhiễm bệnh",
           "",
           "covidNegativeDateText",
           "",
@@ -6503,7 +6503,7 @@
           <div class="news-review-viewer-block"><strong>Status</strong>${newsReviewStatusChipHtml(report?.reviewStatus)}</div>
           <div class="news-review-viewer-block"><strong>Student</strong><span>${escapeHtml(studentLabel)}</span></div>
           <div class="news-review-viewer-block"><strong>Level</strong><span>${escapeHtml(fullLevelLabel(student?.level || report?.level || ""))}</span></div>
-          <div class="news-review-viewer-block"><strong>Report Date</strong><span>${escapeHtml(normalizeText(report?.reportDate))}</span></div>
+          <div class="news-review-viewer-block"><strong>Report Date</strong><span>${escapeHtml(formatDate(report?.reportDate))}</span></div>
           <div class="news-review-viewer-block"><strong>Reviewed</strong><span>${escapeHtml(formatDateTime(report?.reviewedAt || report?.submittedAt || ""))} ${normalizeText(report?.reviewedByUsername) ? `| ${escapeHtml(normalizeText(report?.reviewedByUsername))}` : ""}</span></div>
           <div class="news-review-viewer-block"><strong>Article</strong><span>${escapeHtml(normalizeText(report?.articleTitle))}</span></div>
           <div class="news-review-viewer-block"><strong>Source</strong><span><a href="${escapeHtml(normalizeText(report?.sourceLink || "#"))}" target="_blank" rel="noopener noreferrer">${escapeHtml(normalizeText(report?.sourceLink || "-"))}</a></span></div>
@@ -8815,21 +8815,52 @@
         document.getElementById("u_password").value = "";
       }
 
-      function formatDateTime(value) {
-        const text = normalizeText(value);
-        if (!text) return "";
-        const parsed = new Date(text);
+      function formatDate(value) {
+        const text = value instanceof Date ? "" : normalizeText(value);
+        const parsed = value instanceof Date ?
+          new Date(value.getTime())
+          : /^\d{4}-\d{2}-\d{2}$/.test(text) ?
+            new Date(`${text}T00:00:00+07:00`)
+          : new Date(text);
         if (Number.isNaN(parsed.valueOf())) return text;
-        return new Intl.DateTimeFormat(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          timeZone: FIXED_TIME_ZONE,
+        }).formatToParts(parsed);
+        const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+        const day = pick("day");
+        const month = pick("month");
+        const year = pick("year");
+        if (!day || !month || !year) return text;
+        return `${day}/${month}/${year}`;
+      }
+
+      function formatDateTime(value) {
+        const text = value instanceof Date ? "" : normalizeText(value);
+        if (!text) return "";
+        const parsed = value instanceof Date ? new Date(value.getTime()) : new Date(text);
+        if (Number.isNaN(parsed.valueOf())) return text;
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
           hour12: false,
           timeZone: FIXED_TIME_ZONE,
-        }).format(parsed);
+        }).formatToParts(parsed);
+        const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+        const day = pick("day");
+        const month = pick("month");
+        const year = pick("year");
+        const hour = pick("hour");
+        const minute = pick("minute");
+        const second = pick("second");
+        if (!day || !month || !year || !hour || !minute || !second) return text;
+        return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
       }
 
       function formatPortalWeekRange(startValue = "", endValue = "") {
@@ -8847,28 +8878,7 @@
         if (!startDate || !endDate) {
           return `${normalizeText(startRaw)} to ${normalizeText(endRaw)}`;
         }
-        const shortDayMonth = (date) => {
-          const parts = new Intl.DateTimeFormat("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            timeZone: FIXED_TIME_ZONE,
-          }).formatToParts(date);
-          const day = parts.find((entry) => entry.type === "day")?.value || "";
-          const month = parts.find((entry) => entry.type === "month")?.value || "";
-          return `${day}/${month}`;
-        };
-        const year = new Intl.DateTimeFormat("en-GB", {
-          year: "numeric",
-          timeZone: FIXED_TIME_ZONE,
-        });
-        const startLabel = shortDayMonth(startDate);
-        const endLabel = shortDayMonth(endDate);
-        const startYear = year.format(startDate);
-        const endYear = year.format(endDate);
-        if (startYear === endYear) {
-          return `${startLabel}-${endLabel} ${startYear}`;
-        }
-        return `${startLabel} ${startYear}-${endLabel} ${endYear}`;
+        return `${formatDate(startDate)} to ${formatDate(endDate)}`;
       }
 
       function selectedStudentId() {
@@ -12774,7 +12784,7 @@
           );
           const tr = document.createElement("tr");
           tr.innerHTML = `
-          <td>${escapeHtml(row.generatedAt ? row.generatedAt.slice(0, 10) : "-")}</td>
+          <td>${escapeHtml(formatDate(row.generatedAt) || "-")}</td>
           <td>${escapeHtml(row.fullName || "")}</td>
           <td>${escapeHtml(row.eaglesId || "")}</td>
           <td>${escapeHtml(row.className || "-")}</td>
@@ -15064,7 +15074,7 @@
         const firstOutstanding = outstanding[0] || null;
         const assignmentName =
           normalizeText(firstOutstanding?.assignmentName) || "Bài tập hiện tại";
-        const dueDate = normalizeText(firstOutstanding?.dueAt).slice(0, 10);
+        const dueDate = formatDate(firstOutstanding?.dueAt);
         const deepLink =
           firstOutstanding ?
             parentTrackingDeepLinkAbsolute(
@@ -15100,7 +15110,7 @@
         return outstanding
           .map((entry) => {
             const assignmentName = normalizeText(entry?.assignmentName);
-            const dueAt = normalizeText(entry?.dueAt).slice(0, 10);
+            const dueAt = formatDate(entry?.dueAt);
             if (!assignmentName && !dueAt) return null;
             return {
               assignmentName: assignmentName || "(untitled assignment)",
@@ -15164,7 +15174,7 @@
         }
         const firstRow = outstanding[0];
         const assignment = normalizeText(firstRow?.assignmentName) || "Homework item";
-        const due = normalizeText(firstRow?.dueAt).slice(0, 10);
+        const due = formatDate(firstRow?.dueAt);
         const deepLink = parentTrackingDeepLinkAbsolute(
           studentRefId,
           normalizeText(firstRow?.id),
@@ -15180,8 +15190,8 @@
 
         const assignmentName =
           normalizeText(record.assignmentName) || "(untitled assignment)";
-        const dueAt = normalizeText(record.dueAt).slice(0, 10);
-        const submittedAt = normalizeText(record.submittedAt).slice(0, 10);
+        const dueAt = formatDate(record.dueAt);
+        const submittedAt = formatDate(record.submittedAt);
         const completionState =
           isGradeRecordCompleted(record) ? "Completed" : "Uncompleted";
         const onTimeState = isGradeRecordOnTime(record) ? "On Time" : "Late / Pending";
@@ -15472,7 +15482,7 @@
           <td data-performance-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
           <td data-performance-col="fullName">${escapeHtml(row.fullName || "")}</td>
           <td data-performance-col="englishName">${escapeHtml(row.englishName || "")}</td>
-          <td data-performance-col="generatedAt">${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
+          <td data-performance-col="generatedAt">${escapeHtml(formatDate(row.generatedAt))}</td>
           <td data-performance-col="className">${row.className || ""}</td>
           <td data-performance-col="quarter">${row.quarter || ""}</td>
           <td data-performance-col="homeworkCompletionRate">${row.homeworkCompletionRate ?? ""}</td>
@@ -15970,7 +15980,7 @@
         const outstandingLines =
           context.metrics.outstanding.length ?
             context.metrics.outstanding.map((row, index) => {
-              const due = normalizeText(row?.dueAt).slice(0, 10) || "-";
+              const due = formatDate(row?.dueAt) || "-";
               const assignment =
                 normalizeText(row?.assignmentName) || "(untitled assignment)";
               const link = parentTrackingDeepLinkAbsolute(
@@ -18782,7 +18792,7 @@
           <td data-attendance-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
           <td data-attendance-col="fullName">${escapeHtml(row.fullName || "")}</td>
           <td data-attendance-col="englishName">${escapeHtml(row.englishName || "")}</td>
-          <td data-attendance-col="attendanceDate">${row.attendanceDate ? String(row.attendanceDate).slice(0, 10) : ""}</td>
+          <td data-attendance-col="attendanceDate">${escapeHtml(formatDate(row.attendanceDate))}</td>
           <td data-attendance-col="className">${row.className || ""}</td>
           <td data-attendance-col="quarter">${row.quarter || ""}</td>
           <td data-attendance-col="status">${row.status || ""}</td>
@@ -18960,7 +18970,7 @@
           <td data-grades-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
           <td data-grades-col="fullName">${escapeHtml(row.fullName || "")}</td>
           <td data-grades-col="englishName">${escapeHtml(row.englishName || "")}</td>
-          <td data-grades-col="dueAt">${row.dueAt ? String(row.dueAt).slice(0, 10) : ""}</td>
+          <td data-grades-col="dueAt">${escapeHtml(formatDate(row.dueAt))}</td>
           <td data-grades-col="className">${row.className || ""}</td>
           <td data-grades-col="assignmentName">${row.assignmentName || ""}</td>
           <td data-grades-col="score">${row.score ?? ""}/${row.maxScore ?? ""}</td>
@@ -19198,7 +19208,7 @@
           <td data-reports-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
           <td data-reports-col="fullName">${escapeHtml(row.fullName || "")}</td>
           <td data-reports-col="englishName">${escapeHtml(row.englishName || "")}</td>
-          <td data-reports-col="generatedAt">${row.generatedAt ? String(row.generatedAt).slice(0, 10) : ""}</td>
+          <td data-reports-col="generatedAt">${escapeHtml(formatDate(row.generatedAt))}</td>
           <td data-reports-col="className">${row.className || ""}</td>
           <td data-reports-col="quarter">${row.quarter || ""}</td>
           <td data-reports-col="homeworkCompletionRate">${row.homeworkCompletionRate ?? ""}</td>
