@@ -1080,7 +1080,7 @@
         text-transform: uppercase;
       }
       .app-school-name {
-        color: var(--portal-color-4453415d9e);
+        color: var(--portal-text);
         font-size: clamp(13px, 1.7vw, 18px);
         font-weight: 800;
         letter-spacing: 0.05em;

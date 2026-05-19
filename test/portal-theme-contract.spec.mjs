@@ -307,6 +307,17 @@ test("shared portal theme keeps the admin-style blue footer chrome", () => {
   assert.ok(sharedTheme.includes(".footer{background:var(--footer-background);"), "shared footer chrome should resolve from the shared footer token")
 })
 
+test("shared portal theme keeps unauthenticated header bars aligned to the login panel width", () => {
+  assert.ok(
+    sharedTheme.includes('html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col') &&
+      sharedTheme.includes('html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col') &&
+      sharedTheme.includes('box-sizing:border-box') &&
+      sharedTheme.includes('max-inline-size:calc(var(--portal-login-panel-max-width) + 32px)') &&
+      sharedTheme.includes('width:min(100%,calc(var(--portal-login-panel-max-width) + 32px))'),
+    "unauthenticated login shells should use the login panel as the bounding container",
+  )
+})
+
 test("parent identity panel keeps the chooser at the top of the same panel", () => {
   assert.match(
     parentPortal,
@@ -529,6 +540,56 @@ test("shared portal theme keeps dark form fields readable", () => {
   )
   assert.doesNotMatch(sharedTheme, /body\.student-points-page\s*:is\(input,\s*select,\s*textarea,\s*button\)/)
   assert.doesNotMatch(sharedTheme, /body\.student-points-page\s*:where\(input,\s*select,\s*textarea\)::placeholder/)
+})
+
+test("shared portal theme expands mobile choice hit areas for radios and checkboxes", () => {
+  assert.match(sharedTheme, /@media\s*\(max-width:520px\)\{/)
+  assert.ok(
+    sharedTheme.includes("body.parent-portal-page .choice-option,body.student-portal-page .choice-option") ||
+      sharedTheme.includes("body.student-portal-page .choice-option,body.parent-portal-page .choice-option"),
+    "mobile choice controls should expand the parent/student option hit area",
+  )
+  assert.ok(
+    sharedTheme.includes("min-height:44px") && sharedTheme.includes("touch-action:manipulation"),
+    "mobile choice controls should expose a larger hit area",
+  )
+  assert.ok(
+    sharedTheme.includes('input[type="checkbox"]') &&
+      sharedTheme.includes('input[type="radio"]') &&
+      sharedTheme.includes("height:22px") &&
+      sharedTheme.includes("width:22px"),
+    "mobile choice controls should expose a larger affordance size",
+  )
+})
+
+test("shared portal theme enlarges mobile select targets for parent and student forms", () => {
+  assert.match(sharedTheme, /@media\s*\(max-width:520px\)\{/)
+  assert.ok(
+    sharedTheme.includes("body.student-portal-page select,body.parent-portal-page select") ||
+      sharedTheme.includes("body.parent-portal-page select,body.student-portal-page select"),
+    "mobile selects should be explicitly widened in the shared theme",
+  )
+  assert.ok(
+    sharedTheme.includes("min-height:48px") &&
+      sharedTheme.includes("padding-block:12px") &&
+      sharedTheme.includes("touch-action:manipulation"),
+    "mobile selects should expose a larger tap target",
+  )
+})
+
+test("shared portal theme widens the parent dashboard quick-link dropdown target", () => {
+  assert.match(sharedTheme, /@media\s*\(max-width:520px\)\{/)
+  assert.ok(
+    sharedTheme.includes("body.parent-portal-page .quick-link-select,body.student-portal-page .quick-link-select") &&
+      sharedTheme.includes("min-height:52px") &&
+      sharedTheme.includes("padding:12px 14px"),
+    "parent quick-link dropdown wrapper should be easier to hit on mobile",
+  )
+  assert.ok(
+    sharedTheme.includes("body.parent-portal-page .quick-link-select select,body.student-portal-page .quick-link-select select") &&
+      sharedTheme.includes("min-height:44px"),
+    "parent quick-link select itself should remain easy to tap",
+  )
 })
 
 test("admin dark surfaces keep form controls and chart empty states readable", () => {

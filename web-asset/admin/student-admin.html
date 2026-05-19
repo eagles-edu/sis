@@ -50,6 +50,12 @@
       display: none !important;
     }
 
+    body.admin-auth-booting .wrap,
+    html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap {
+      max-width: var(--portal-login-panel-max-width);
+      width: min(100%, var(--portal-login-panel-max-width));
+    }
+
     html[data-admin-auth-state] body.admin-portal-page.admin-auth-booting #authBootPanel {
       display: none !important;
     }

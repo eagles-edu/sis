@@ -471,8 +471,8 @@ test("standalone admin pages use the shared portal theme in dark mode", { skip: 
       `metric cards should use the card-tier gradient: ${metricCard.backgroundImage}`,
     )
     assert.ok(
-      /10,\s*11,\s*12/.test(controlCard.backgroundImage || "") &&
-        /12,\s*13,\s*13/.test(controlCard.backgroundImage || ""),
+      /46,\s*46,\s*48/.test(controlCard.backgroundImage || "") &&
+        /49,\s*49,\s*49/.test(controlCard.backgroundImage || ""),
       `control cards should keep the darker panel-tier gradient: ${controlCard.backgroundImage}`,
     )
   } finally {

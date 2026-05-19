@@ -1,6 +1,2 @@
-◇ injected env (34) from .env.dev // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (34) from .env.dev // tip: ◈ encrypted .env [www.dotenvx.com]
 exercise-mailer listening on 127.0.0.1:8788 at /api/exercise-submission and /api/student-intake-submission (health: /healthz)
-parent portal persistence falling back to memory: Invalid `prisma.parentProfileSubmissionQueue.create()` invocation:
-
-
-Foreign key constraint violated on the constraint: `ParentProfileSubmissionQueue_parentAccountId_fkey`

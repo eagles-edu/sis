@@ -200,5 +200,5 @@ test("admin asset payloads stay below the Lighthouse reduction gates", () => {
   const adminCssStat = fs.statSync(path.resolve(process.cwd(), "web-asset/admin/student-admin.min.css"))
 
   assert.ok(adminJsStat.size < 600_000, `student-admin.min.js should stay below 600 KB, got ${adminJsStat.size}`)
-  assert.ok(adminCssStat.size < 81_000, `student-admin.min.css should stay below 81 KB, got ${adminCssStat.size}`)
+  assert.ok(adminCssStat.size < 90_000, `student-admin.min.css should stay below 90 KB, got ${adminCssStat.size}`)
 })

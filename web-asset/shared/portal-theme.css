@@ -604,6 +604,13 @@ html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col {
   gap: 1rem;
 }
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col {
+  box-sizing: border-box;
+  margin-inline: auto;
+  max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
+  width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
+}
 html[data-admin-auth-state="unauthenticated"] body.admin-portal-page #authPanel,
 body.admin-portal-page.admin-auth-booting #authBootPanel,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard,
@@ -4071,6 +4078,42 @@ body.parent-portal-page .report-modal-ack-status.is-reviewed {
     border-top: 0;
     padding: 4px 0;
   }
+  body.student-portal-page .choice-group,
+  body.parent-portal-page .choice-group {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  body.student-portal-page .choice-option,
+  body.parent-portal-page .choice-option {
+    gap: 12px;
+    min-height: 44px;
+    padding-block: 6px;
+    touch-action: manipulation;
+  }
+  body.student-portal-page .choice-option input[type="checkbox"],
+  body.student-portal-page .choice-option input[type="radio"],
+  body.parent-portal-page .choice-option input[type="checkbox"],
+  body.parent-portal-page .choice-option input[type="radio"] {
+    height: 22px;
+    min-height: 22px;
+    width: 22px;
+  }
+  body.student-portal-page select,
+  body.parent-portal-page select {
+    min-height: 48px;
+    padding-block: 12px;
+    touch-action: manipulation;
+  }
+  body.student-portal-page .quick-link-select,
+  body.parent-portal-page .quick-link-select {
+    gap: 8px;
+    min-height: 52px;
+    padding: 12px 14px;
+  }
+  body.student-portal-page .quick-link-select select,
+  body.parent-portal-page .quick-link-select select {
+    min-height: 44px;
+  }
 }
 /* Keep student and parent calendar surfaces legible in dark mode without touching button/chip styling. */
 html[data-theme="dark"] body.student-portal-page .calendar-shell,
@@ -4910,6 +4953,11 @@ html[data-theme="dark"] body.student-points-page td {
 }
 html[data-theme="dark"] body.student-points-page #loginPanel .login-link {
   color: var(--portal-login-link-dark);
+}
+html[data-theme="dark"] body.student-points-page button:not(.primary),
+html[data-theme="dark"] body.student-points-page button[data-open-ledger],
+html[data-theme="dark"] body.student-points-page .link-btn {
+  color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .student-overview-title,
 html[data-theme="dark"] body.parent-portal-page .parent-overview-title,
@@ -6617,6 +6665,7 @@ body.student-portal-page div.header-bar {
   line-height: 1;
   margin: 0;
   min-block-size: 20px;
+  box-sizing: border-box;
   /*padding-block: 6px;
   padding-inline: calc(var(--hub-space-2) * 1.9);*/
   inline-size: 100%;
@@ -6626,8 +6675,7 @@ html[data-admin-auth-state="unauthenticated"] body.admin-portal-page div.header-
 body.admin-portal-page.admin-auth-booting div.header-bar,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page div.header-bar,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page div.header-bar {
-  inline-size: min(100%, var(--portal-login-panel-max-width));
-  margin-inline: auto;
+  inline-size: 100%;
 }
 body.portal-hub-page .header-bar a,
 body.admin-portal-page .header-bar a,

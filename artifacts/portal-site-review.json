@@ -332,7 +332,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "block",
               "width": 1440,
-              "height": 2575
+              "height": 2194
             },
             ".wrap": {
               "selector": ".wrap",
@@ -344,7 +344,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 2527
+              "height": 2146
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -356,7 +356,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 2443
+              "height": 2062
             },
             ".panel": {
               "selector": ".panel",
@@ -815,7 +815,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 645
+              "height": 747
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -827,7 +827,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 561
+              "height": 663
             },
             ".panel": {
               "selector": ".panel",
@@ -1563,7 +1563,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "block",
               "width": 1440,
-              "height": 2077
+              "height": 1190
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1575,7 +1575,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 2029
+              "height": 1142
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1587,7 +1587,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 1945
+              "height": 1058
             },
             ".panel": {
               "selector": ".panel",
@@ -1624,7 +1624,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1382,
-              "height": 792
+              "height": 445
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1635,8 +1635,8 @@
               "color": "rgb(33, 33, 33)",
               "border": "rgb(33, 33, 33)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 675,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -1820,25 +1820,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -6579,42 +6560,42 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 639
+          "y": 732
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 639
+          "y": 732
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 804
+          "y": 1029
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 804
+          "y": 1029
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 905
+          "y": 1131
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 997
+          "y": 1222
         }
       ],
       "frameProfile": {
@@ -6623,7 +6604,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1290,
+          "h": 1446,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -6645,7 +6626,7 @@
           "x": 31,
           "y": 197,
           "w": 1378,
-          "h": 1032,
+          "h": 1242,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -7078,7 +7059,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -7245,7 +7226,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -7397,7 +7378,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -7549,7 +7530,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -7701,7 +7682,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -7853,7 +7834,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -8005,7 +7986,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -8157,7 +8138,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -8217,7 +8198,7 @@
               "border": "rgb(242, 244, 247)",
               "display": "block",
               "width": 1440,
-              "height": 2077
+              "height": 1190
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8229,7 +8210,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 2029
+              "height": 1142
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8241,7 +8222,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 1945
+              "height": 1058
             },
             ".panel": {
               "selector": ".panel",
@@ -8278,7 +8259,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1382,
-              "height": 792
+              "height": 445
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -8289,8 +8270,8 @@
               "color": "rgb(201, 206, 212)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 675,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -8309,7 +8290,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -8461,7 +8442,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -8632,7 +8613,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -8761,7 +8742,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -8913,7 +8894,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -9065,7 +9046,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -9217,7 +9198,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -9391,7 +9372,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -9554,7 +9535,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -9706,7 +9687,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -9858,7 +9839,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -9986,7 +9967,7 @@
               "selector": "#newsReviewViewerNote",
               "id": "newsReviewViewerNote",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(242, 244, 247)",
               "border": "rgba(255, 255, 255, 0.12)",
@@ -10309,7 +10290,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -10435,7 +10416,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -10565,7 +10546,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -10695,7 +10676,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -10825,7 +10806,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -10955,7 +10936,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -11085,7 +11066,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -11199,7 +11180,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -11284,7 +11265,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -11336,7 +11317,7 @@
           ],
           "sourceLink": {
             "color": "rgb(249, 250, 255)",
-            "bg": "rgb(60, 66, 72)",
+            "bg": "rgb(39, 44, 47)",
             "bgImage": "none",
             "value": "https://www.bbc.com/news/live/cje4x38q8xqt"
           },
@@ -11850,7 +11831,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -11971,7 +11952,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12107,7 +12088,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12228,7 +12209,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12364,7 +12345,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12500,7 +12481,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12636,7 +12617,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12772,7 +12753,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12893,7 +12874,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -12974,7 +12955,7 @@
               "selector": "#newsViewerSourceLink",
               "id": "newsViewerSourceLink",
               "className": "",
-              "bg": "rgb(60, 66, 72)",
+              "bg": "rgb(39, 44, 47)",
               "bgImage": "none",
               "color": "rgb(249, 250, 255)",
               "border": "rgb(174, 183, 197)",
@@ -13013,7 +12994,7 @@
           ],
           "sourceLink": {
             "color": "rgb(249, 250, 255)",
-            "bg": "rgb(60, 66, 72)",
+            "bg": "rgb(39, 44, 47)",
             "bgImage": "none",
             "value": "https://www.bbc.com/news/live/cje4x38q8xqt"
           }

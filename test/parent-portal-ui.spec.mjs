@@ -740,7 +740,7 @@ test("parent portal profile fields keep reference form section and label orderin
             fullName: "Student One",
             city: "Ho Chi Minh City",
             motherName: "Parent Mother",
-            dobText: "2011-03-17",
+            dobText: "2011-03-17T00:00:00.000Z",
             englishName: "Anna",
             genderSelections: ["M"],
             studentPhone: "0901000000",
@@ -829,9 +829,19 @@ test("parent portal profile fields keep reference form section and label orderin
     "Thành phố *",
   ])
 
-  assert.equal(document.getElementById("pf_dobText")?.getAttribute("type"), "date")
-  assert.equal(document.getElementById("pf_birthOrder")?.getAttribute("type"), "number")
-  assert.equal(document.getElementById("pf_studentPhone")?.getAttribute("type"), "tel")
+  assert.equal(document.getElementById("pf_dobText")?.getAttribute("type"), "text")
+  assert.equal(document.getElementById("pf_dobText")?.getAttribute("inputmode"), "numeric")
+  assert.equal(document.getElementById("pf_dobText")?.getAttribute("placeholder"), "nn/tt/nnnn")
+  assert.equal(document.getElementById("pf_dobText")?.value, "17/03/2011")
+  assert.equal(document.getElementById("pf_birthOrder")?.getAttribute("type"), "text")
+  assert.equal(document.getElementById("pf_birthOrder")?.getAttribute("inputmode"), "numeric")
+  assert.equal(document.getElementById("pf_birthOrder")?.getAttribute("pattern"), "^\\d*$")
+  assert.equal(document.getElementById("pf_siblingBrothers")?.getAttribute("type"), "text")
+  assert.equal(document.getElementById("pf_siblingBrothers")?.getAttribute("inputmode"), "numeric")
+  assert.equal(document.getElementById("pf_siblingSisters")?.getAttribute("type"), "text")
+  assert.equal(document.getElementById("pf_siblingSisters")?.getAttribute("inputmode"), "numeric")
+  assert.equal(document.getElementById("pf_studentPhone")?.getAttribute("type"), "text")
+  assert.equal(document.getElementById("pf_studentPhone")?.getAttribute("inputmode"), "numeric")
   assert.equal(document.getElementById("pf_studentEmail")?.getAttribute("type"), "email")
   assert.equal(document.getElementById("pf_schoolName")?.value, "HCMC Public School")
   assert.equal(document.getElementById("pf_currentSchoolGrade")?.value, "6A")

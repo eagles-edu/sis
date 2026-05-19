@@ -2979,6 +2979,9 @@
           const candidateToken = normalizeFieldToken(candidate);
           if (candidateToken && candidateToken === immutableGradeToken) continue;
         }
+        if (normalizeText(fieldMeta.control).toLowerCase() === "date") {
+          return formatDateInputDisplayValue(candidate);
+        }
         return candidate;
       }
       return fieldMeta.control === "checkbox" ? [] : "";
@@ -3118,7 +3121,49 @@
       if (control === "checkbox") return normalizeArrayValue(rawValue);
       if (control === "radio" || control === "select")
         return resolveSelectedOptionValue(fieldMeta, rawValue);
+      if (control === "number") return normalizeText(rawValue).replace(/[^\d]/g, "");
+      if (control === "date") return normalizeDateInputValue(rawValue);
       return normalizeText(rawValue);
+    }
+
+    function normalizeDateInputValue(rawValue) {
+      const text = normalizeText(rawValue);
+      if (!text) return "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+      const displayMatch = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (displayMatch) {
+        return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`;
+      }
+      const date = new Date(text);
+      if (Number.isNaN(date.getTime())) return text;
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: PORTAL_TIME_ZONE,
+      }).formatToParts(date);
+      const pick = (type) => parts.find((part) => part.type === type)?.value || "";
+      const day = pick("day");
+      const month = pick("month");
+      const year = pick("year");
+      if (!day || !month || !year) return text;
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatDateInputDisplayValue(rawValue) {
+      const text = normalizeText(rawValue);
+      if (!text) return "";
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(text)) return text;
+      const iso = normalizeDateInputValue(text);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+        const [year, month, day] = iso.split("-");
+        return `${day}/${month}/${year}`;
+      }
+      const parsed = text ? new Date(text) : null;
+      if (!parsed || Number.isNaN(parsed.getTime())) return text;
+      const parts = portalDateParts(parsed);
+      if (!parts) return text;
+      return `${String(parts.day).padStart(2, "0")}/${String(parts.month).padStart(2, "0")}/${String(parts.year).padStart(4, "0")}`;
     }
 
     function updateSessionBadge(text, signedIn) {
@@ -3324,36 +3369,123 @@
       control.setAttribute("data-field-key", fieldMeta.key);
       control.disabled = locked;
       control.required = fieldMeta.required === true;
-      if (fieldMeta.placeholder)
+      if (fieldMeta.placeholder && controlType !== "date")
         control.placeholder = normalizeText(fieldMeta.placeholder);
       if (fieldMeta.autocomplete)
         control.autocomplete = normalizeText(fieldMeta.autocomplete);
+      if (controlType === "number" && control instanceof HTMLInputElement) {
+        const initialValue = normalizeText(value);
+        control.type = "text";
+        control.inputMode = "numeric";
+        control.pattern = "^\\d*$";
+        control.autocomplete = "off";
+        control.value = normalizeFieldInput(initialValue, fieldMeta);
+      }
+      if (controlType === "date" && control instanceof HTMLInputElement) {
+        const dateShell = document.createElement("div");
+        dateShell.style.position = "relative";
+        dateShell.style.display = "grid";
+        dateShell.style.gap = "8px";
+
+        control.type = "text";
+        control.placeholder = "nn/tt/nnnn";
+        control.inputMode = "numeric";
+        control.autocomplete = fieldMeta.key === "dobText" ? "bday" : "off";
+        control.value = formatDateInputDisplayValue(value);
+
+        const picker = document.createElement("input");
+        picker.id = `${inputId}_picker`;
+        picker.type = "date";
+        picker.disabled = locked;
+        picker.required = fieldMeta.required === true;
+        picker.value = normalizeDateInputValue(value);
+        picker.tabIndex = -1;
+        picker.setAttribute("aria-hidden", "true");
+        picker.style.position = "absolute";
+        picker.style.inset = "0 auto auto 0";
+        picker.style.width = "1px";
+        picker.style.height = "1px";
+        picker.style.margin = "0";
+        picker.style.padding = "0";
+        picker.style.border = "0";
+        picker.style.opacity = "0";
+        picker.style.pointerEvents = "none";
+
+        const syncPickerFromText = () => {
+          picker.value = normalizeDateInputValue(control.value);
+        };
+        const syncTextFromPicker = () => {
+          control.value = formatDateInputDisplayValue(picker.value);
+        };
+
+        control.addEventListener("input", syncPickerFromText);
+        control.addEventListener("change", () => {
+          syncPickerFromText();
+          control.value = formatDateInputDisplayValue(control.value);
+        });
+        control.addEventListener("blur", () => {
+          syncPickerFromText();
+          control.value = formatDateInputDisplayValue(control.value);
+        });
+        control.addEventListener("click", () => {
+          if (typeof picker.showPicker === "function") {
+            try {
+              picker.showPicker();
+            } catch (error) {
+              void error;
+            }
+          }
+        });
+        control.addEventListener("focus", () => {
+          if (typeof picker.showPicker === "function") {
+            try {
+              picker.showPicker();
+            } catch (error) {
+              void error;
+            }
+          }
+        });
+        picker.addEventListener("input", syncTextFromPicker);
+        picker.addEventListener("change", syncTextFromPicker);
+        dateShell.appendChild(control);
+        dateShell.appendChild(picker);
+        return {
+          node: dateShell,
+          controls: [control, picker],
+          readValue() {
+            return normalizeDateInputValue(picker.value || control.value);
+          },
+        };
+      }
       if (control instanceof HTMLInputElement) {
         const initialValue = normalizeText(value);
+        const normalizedDateValue =
+          controlType === "date" ? normalizeDateInputValue(initialValue) : initialValue;
         if (
           controlType === "date" &&
-          initialValue &&
-          !/^\d{4}-\d{2}-\d{2}$/.test(initialValue)
+          normalizedDateValue &&
+          !/^\d{4}-\d{2}-\d{2}$/.test(normalizedDateValue)
         ) {
           control.type = "text";
           control.pattern = "^\\d{4}-\\d{2}-\\d{2}$";
         } else {
           control.type =
             controlType === "date" ? "date" :
-            controlType === "number" ? "number" :
+            controlType === "number" ? "text" :
             controlType === "email" ? "email" :
-            controlType === "tel" ? "tel" :
+            controlType === "tel" ? "text" :
             "text";
         }
-        if (control.type === "number") {
-          control.step = "1";
-          control.min = "0";
+        if (controlType === "number") {
           control.inputMode = "numeric";
-        } else if (control.type === "tel") {
-          control.inputMode = "tel";
+          control.pattern = "^\\d*$";
+          control.autocomplete = "off";
+        } else if (controlType === "tel") {
+          control.inputMode = "numeric";
           control.pattern = "^[0-9+()\\-\\s]{7,20}$";
+          control.autocomplete = "tel";
         }
-        control.value = initialValue;
+        control.value = normalizedDateValue;
       } else {
         control.value = normalizeText(value);
       }

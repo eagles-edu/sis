@@ -58,7 +58,7 @@
   - `submittedCount` excludes `revision-requested` rows (returned/waiting for revision), so those do not increase `UNAPPROVED-X`.
 - Action mapping (strict precedence):
   1. `COMPLETED` when `reportCount>=7` and `approvedCount>=7`.
-  2. `INCOMPLETE` when not completed and `unapprovedCount=0`.
+  2. `Incomplete` when not completed and `unapprovedCount=0`.
   3. `UNAPPROVED-X` when not completed and `unapprovedCount>0`, where `X=unapprovedCount`.
 - Hard rule:
   - `UNAPPROVED-X` must include YTBC initial submissions and YTBC resubmissions.

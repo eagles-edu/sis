@@ -218,9 +218,12 @@ test(
       })
       await page.waitForTimeout(120)
       rects = await readRects(page, {
+        headerBar: ".header-bar",
         authPanel: "#authPanel",
       })
+      rectExists(rects.headerBar, "admin header bar")
       rectExists(rects.authPanel, "admin auth panel")
+      assert.equal(rects.headerBar.w, rects.authPanel.w, "admin login: header bar should match the auth panel width")
       assert.ok(rects.authPanel.y >= 40 && rects.authPanel.y <= 220, "admin login: top margin should be compact")
       assert.ok(rects.authPanel.w <= 700, "admin login: auth panel should stay centered and narrow")
       assert.ok(

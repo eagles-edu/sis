@@ -52,7 +52,7 @@ test("student-admin school title stays dark text", () => {
     "      .text-zoom-controls {",
     "student-admin.css app-school-name",
   )
-  assertIncludesAll(titleBlock, ["color: #212121"], "student-admin.css app-school-name")
+  assertIncludesAll(titleBlock, ["color: var(--portal-text)"], "student-admin.css app-school-name")
   assertExcludesAll(titleBlock, ["color: #fff"], "student-admin.css app-school-name")
 })
 

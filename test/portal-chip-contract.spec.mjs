@@ -105,7 +105,10 @@ test("student and parent quarter tables keep late and missed status chips", () =
     assert.match(html, /\.grade-exercise-score-sub\s*\{/)
     assert.match(html, /\.grade-exercise-meta\s*\{/)
     assert.match(html, /\.grade-exercise-comment\s*\{/)
-    assert.match(html, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open[\s\S]*?box-shadow:\s*inset 4px 0 0 #a86400;/)
+    assert.match(
+      html,
+      /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open[\s\S]*?box-shadow:\s*inset 4px 0 0 (?:#a86400|var\(--portal-color-10fe7b83d5\));/
+    )
     assert.match(html, /html\[data-theme="dark"\] \.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open/)
   }
 
@@ -121,7 +124,7 @@ test("student and parent quarter tables keep late and missed status chips", () =
   assert.match(sharedTheme, /\.grade-exercise-score-sub[^}]*\{[^}]*font-size:\.72rem/)
   assert.match(sharedTheme, /\.grade-exercise-meta[^}]*\{[^}]*overflow-wrap:anywhere/)
   assert.match(sharedTheme, /\.grade-exercise-comment[^}]*\{[^}]*overflow-wrap:anywhere/)
-  assert.match(sharedTheme, /tabulator-row\.is-open\{[^}]*box-shadow:inset 4px 0 0 #a86400/)
+  assert.match(sharedTheme, /tabulator-row\.is-open\{[^}]*box-shadow:inset 4px 0 0 (?:#a86400|var\(--portal-color-10fe7b83d5\))/)
   assert.match(sharedTheme, /tabulator-row\.is-completed\{[^}]*box-shadow:inset 4px 0 0 #1f7a47/)
   assert.match(sharedTheme, /tabulator-row\.is-late\{[^}]*box-shadow:inset 4px 0 0 #55389f/)
   assert.match(sharedTheme, /tabulator-row\.is-missed\{[^}]*box-shadow:inset 4px 0 0 #b23a2e/)
