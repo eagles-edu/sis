@@ -41,23 +41,20 @@
       display: none !important;
     }
 
-    body.admin-auth-booting #authBootPanel {
-      display: grid;
-    }
-
+    body.admin-auth-booting #authBootPanel,
     body.admin-auth-booting #authPanel,
     body.admin-auth-booting #app {
       display: none !important;
     }
 
-    body.admin-auth-booting .wrap,
-    html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap {
-      max-width: var(--portal-login-panel-max-width);
-      width: min(100%, var(--portal-login-panel-max-width));
+    body.admin-auth-booting .wrap {
+      max-width: 1440px;
+      width: min(100%, 1440px);
     }
 
-    html[data-admin-auth-state] body.admin-portal-page.admin-auth-booting #authBootPanel {
-      display: none !important;
+    body.admin-auth-booting #authPanel {
+      justify-self: center;
+      width: min(100%, var(--portal-login-panel-max-width));
     }
 
     html[data-admin-auth-state="authenticated"] body.admin-portal-page.admin-auth-booting #authPanel {
@@ -70,6 +67,12 @@
 
     html[data-admin-auth-state="unauthenticated"] body.admin-portal-page.admin-auth-booting #authPanel {
       display: block !important;
+    }
+
+    #overviewStatsGrid .stat-value {
+      font-variant-numeric: tabular-nums;
+      min-inline-size: 4.5ch;
+      white-space: nowrap;
     }
 
     .wrap {

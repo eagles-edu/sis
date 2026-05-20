@@ -19316,10 +19316,26 @@
         setStatus(error.message || String(error), true);
       }
 
+      function scheduleIdleTask(task, timeout = 1200) {
+        const runner = () => {
+          try {
+            return Promise.resolve(task());
+          } catch (error) {
+            handleError(error);
+            return Promise.resolve();
+          }
+        };
+        const execute = () => {
+          void runner().catch(handleError);
+        };
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(execute, { timeout });
+          return;
+        }
+        window.setTimeout(execute, 0);
+      }
+
       async function bootAfterLogin() {
-        // Keep the first paint focused on the overview shell.
-        // Background-heavy data for tables and selectors loads after the
-        // critical top-of-page summary and health cards are visible.
         initializeParentTrackingScoreSelects();
         initializeParentTrackingScoreLegendPopovers();
         await loadRolePermissions();
@@ -19347,20 +19363,22 @@
           ]);
           renderHubConnectionStatus();
           renderServiceControlCard();
-          void Promise.allSettled([
-            loadFilters(),
-            loadStudents(),
-            loadDashboardStudents(),
-            loadQueueHub({ notify: false }),
-            loadIncomingExerciseResults({
-              showAll: state.incomingExerciseQueue.showAll,
+          await loadStudents();
+          scheduleIdleTask(() =>
+            Promise.allSettled([
+              loadFilters(),
+              loadDashboardStudents(),
+              loadQueueHub({ notify: false }),
+              loadIncomingExerciseResults({
+                showAll: state.incomingExerciseQueue.showAll,
+              }),
+              loadExerciseTitles(),
+            ]).then((results) => {
+              results.forEach((result) => {
+                if (result.status === "rejected") handleError(result.reason);
+              });
             }),
-            loadExerciseTitles(),
-          ]).then((results) => {
-            results.forEach((result) => {
-              if (result.status === "rejected") handleError(result.reason);
-            });
-          });
+          );
         } else {
           state.students = [];
           renderStudents();
@@ -21479,29 +21497,33 @@
       updateNavigationAccess();
       updateTrackingDataSubmenuVisibility();
       updateArchiveToggleButtons();
-      renderProfileFormLayout();
-      renderProfileInfoLayout();
-      renderProfileFieldLayoutEditor();
-      setProfileMode("info");
-      applyUiSettings();
-      renderAssignmentTemplates();
-      renderAssignmentDraftItems();
-      renderAssignmentExerciseOptions();
-      populateProfileLevelOptions();
-      populateAssignmentLevelOptions();
-      populateAttendanceLevelStyleOptions();
-      refreshAllTableSearchFilterControls();
-      applyGradeChartCurrentSchoolYearDefault();
-      renderGradePulseChart(state.visibleTableRows?.grades || []);
-      syncAttendanceLevelEditorInputs();
-      refreshAssignmentStudentOptions();
-      renderTopSearchStudentOptions();
-      updateTopSearchScopeHint();
-      renderParentTrackingTeacherOptions();
-      refreshParentTracking({ preserveStudentSelection: true }).catch(() => {});
-      refreshAttendanceLanding({ reloadRows: false }).catch(() => {});
       renderHubConnectionStatus();
       renderServiceControlCard();
+      scheduleIdleTask(() => {
+        renderProfileFormLayout();
+        renderProfileInfoLayout();
+        renderProfileFieldLayoutEditor();
+        setProfileMode("info");
+        applyUiSettings();
+        renderAssignmentTemplates();
+        renderAssignmentDraftItems();
+        renderAssignmentExerciseOptions();
+        populateProfileLevelOptions();
+        populateAssignmentLevelOptions();
+        populateAttendanceLevelStyleOptions();
+        refreshAllTableSearchFilterControls();
+        applyGradeChartCurrentSchoolYearDefault();
+        renderGradePulseChart(state.visibleTableRows?.grades || []);
+        syncAttendanceLevelEditorInputs();
+        refreshAssignmentStudentOptions();
+        renderTopSearchStudentOptions();
+        updateTopSearchScopeHint();
+        renderParentTrackingTeacherOptions();
+        refreshParentTracking({ preserveStudentSelection: true }).catch(
+          () => {},
+        );
+        refreshAttendanceLanding({ reloadRows: false }).catch(() => {});
+      });
       if (!(isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN)) {
         probeHubConnection({ notify: false }).catch(() => {});
       }

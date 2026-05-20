@@ -22,18 +22,35 @@ function extractMapSources(script, mapName) {
     .sort()
 }
 
+function extractQuotedEntries(script, listName) {
+  const match = script.match(new RegExp(`${listName}=\\(([^]*?)\\n\\)`, "m"))
+  assert.ok(match, `missing ${listName}`)
+  return match[1]
+    .split(/\n/u)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("\""))
+    .map((line) => line.replace(/^"|"$/g, ""))
+}
+
 test("live admin sync wrapper is pinned to the live admin host and refreshes Prisma", () => {
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/sis/)
   assert.match(liveScript, /\/home\/admin\.eagles\.edu\.vn\/public_html/)
   assert.match(liveScript, /https:\/\/admin\.eagles\.edu\.vn/)
+  assert.match(liveScript, /LIVE_RUNTIME_ENV=.*production/)
   assert.match(liveScript, /backup-only/)
   assert.match(liveScript, /check-only/)
   assert.match(liveScript, /full/)
+  assert.match(liveScript, /https:\/\/admin\.eagles\.edu\.vn\/\|200\|Cổng Thông Tin Sinh Viên\|/)
   assert.match(liveScript, /maintenance\.svg/)
   assert.match(liveScript, /emptying live runtime root/)
   assert.match(liveScript, /emptying live public root/)
   assert.match(liveScript, /verify_live_roots_cleared/)
   assert.match(liveScript, /verify_live_sync_whitelist/)
+  assert.match(liveScript, /sync_live_runtime_data_files\(\)/)
+  assert.match(liveScript, /sync_live_public_html_index\(\)/)
+  assert.match(liveScript, /verify_live_public_html_index\(\)/)
+  assert.match(liveScript, /window\.__SIS_RUNTIME_ENV=.*window\.__SIS_ADMIN_PAGE_PATH=.*window\.__SIS_PARENT_PORTAL_PAGE_PATH=.*window\.__SIS_STUDENT_PORTAL_PAGE_PATH=/s)
+  assert.match(liveScript, /runtime-data\/admin-ui-settings\.json/)
   assert.match(liveScript, /npm ci --no-audit --no-fund/)
   assert.match(liveScript, /refresh_runtime_prisma_client\(\)/)
   assert.match(liveScript, /npm run db:migrate:deploy/)
@@ -52,7 +69,7 @@ test("package scripts expose the live admin sync entrypoints", () => {
 test("live portal docs advertise the backup bundle and admin origin", () => {
   assert.match(liveLinksDoc, /\/home\/eagles\/dockerz\/backups\/live-admin\//)
   assert.match(liveLinksDoc, /https:\/\/admin\.eagles\.edu\.vn/)
-  assert.match(liveLinksDoc, /refreshes Prisma \(`db:generate` \+ `db:migrate:deploy`\)/i)
+  assert.match(liveLinksDoc, /refreshes Prisma[\s\S]*`db:generate` \+ `db:migrate:deploy`/i)
 })
 
 test("live nginx config mirrors the test parent route shape", () => {
@@ -69,5 +86,12 @@ test("test and live sync wrappers share the same strict whitelist sources", () =
   assert.deepEqual(
     extractMapSources(testScript, "TEST_PUBLIC_WEBFILE_MAP"),
     extractMapSources(liveScript, "LIVE_PUBLIC_WEBFILE_MAP"),
+  )
+})
+
+test("test and live sync wrappers share the same runtime data contract", () => {
+  assert.deepEqual(
+    extractQuotedEntries(testScript, "TEST_RUNTIME_DATA_FILES"),
+    extractQuotedEntries(liveScript, "LIVE_RUNTIME_DATA_FILES"),
   )
 })

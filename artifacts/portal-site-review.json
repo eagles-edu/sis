@@ -651,7 +651,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "block",
               "width": 1440,
-              "height": 1783
+              "height": 1600
             },
             ".wrap": {
               "selector": ".wrap",
@@ -663,7 +663,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 1735
+              "height": 1552
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -675,7 +675,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 1651
+              "height": 1468
             },
             ".panel": {
               "selector": ".panel",
@@ -815,7 +815,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 747
+              "height": 645
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -827,7 +827,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 663
+              "height": 561
             },
             ".panel": {
               "selector": ".panel",
@@ -955,7 +955,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "block",
               "width": 1440,
-              "height": 1100
+              "height": 1173
             },
             ".wrap": {
               "selector": ".wrap",
@@ -967,7 +967,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 1023
+              "height": 1125
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -979,7 +979,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 939
+              "height": 1041
             },
             ".panel": {
               "selector": ".panel",
@@ -1563,7 +1563,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "block",
               "width": 1440,
-              "height": 1190
+              "height": 2077
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1575,7 +1575,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 1142
+              "height": 2029
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1587,7 +1587,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 1058
+              "height": 1945
             },
             ".panel": {
               "selector": ".panel",
@@ -1624,7 +1624,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1382,
-              "height": 445
+              "height": 792
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1635,8 +1635,8 @@
               "color": "rgb(33, 33, 33)",
               "border": "rgb(33, 33, 33)",
               "display": "block",
-              "width": 675,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -1820,6 +1820,25 @@
             "#reloadBtn": null
           },
           "axe": [
+            {
+              "id": "label-title-only",
+              "impact": "serious",
+              "help": "Form elements should have a visible label",
+              "nodes": [
+                {
+                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
+                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
+                },
+                {
+                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
+                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
+                },
+                {
+                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
+                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
+                }
+              ]
+            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -4930,56 +4949,56 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 407
+          "y": 271
         },
         {
           "selector": "#newsQueueCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 407
+          "y": 271
         },
         {
           "selector": "#currentHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 702
+          "y": 473
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 702
+          "y": 473
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1002
+          "y": 638
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1002
+          "y": 638
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1103
+          "y": 739
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1194
+          "y": 831
         }
       ],
       "frameProfile": {
@@ -4988,7 +5007,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1472,
+          "h": 1202,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5010,7 +5029,7 @@
           "x": 31,
           "y": 197,
           "w": 1378,
-          "h": 1214,
+          "h": 944,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -6560,42 +6579,42 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 732
+          "y": 639
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 732
+          "y": 639
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1029
+          "y": 804
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 1029
+          "y": 804
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1131
+          "y": 905
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1222
+          "y": 997
         }
       ],
       "frameProfile": {
@@ -6604,7 +6623,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1446,
+          "h": 1290,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -6626,7 +6645,7 @@
           "x": 31,
           "y": 197,
           "w": 1378,
-          "h": 1242,
+          "h": 1032,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -6967,7 +6986,7 @@
               "border": "rgb(242, 244, 247)",
               "display": "block",
               "width": 1440,
-              "height": 2575
+              "height": 2194
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6979,7 +6998,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 2527
+              "height": 2146
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6991,7 +7010,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 2443
+              "height": 2062
             },
             ".panel": {
               "selector": ".panel",
@@ -7590,7 +7609,7 @@
               "border": "rgb(242, 244, 247)",
               "display": "block",
               "width": 1440,
-              "height": 1100
+              "height": 1173
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7602,7 +7621,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 1023
+              "height": 1125
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7614,7 +7633,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 939
+              "height": 1041
             },
             ".panel": {
               "selector": ".panel",
@@ -8198,7 +8217,7 @@
               "border": "rgb(242, 244, 247)",
               "display": "block",
               "width": 1440,
-              "height": 1190
+              "height": 2077
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8210,7 +8229,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1440,
-              "height": 1142
+              "height": 2029
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8222,7 +8241,7 @@
               "border": "rgb(33, 33, 33)",
               "display": "grid",
               "width": 1408,
-              "height": 1058
+              "height": 1945
             },
             ".panel": {
               "selector": ".panel",
@@ -8259,7 +8278,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1382,
-              "height": 445
+              "height": 792
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -8270,8 +8289,8 @@
               "color": "rgb(201, 206, 212)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 675,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -8455,25 +8474,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "label-title-only",
-              "impact": "serious",
-              "help": "Form elements should have a visible label",
-              "nodes": [
-                {
-                  "target": "textarea[name=\"pt_rec_internationalNews\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_readingEnglishEnjoyment\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                },
-                {
-                  "target": "textarea[name=\"pt_rec_vocabularyLookup\"]",
-                  "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -13258,7 +13258,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1290,
+          "h": 1446,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -13280,7 +13280,7 @@
           "x": 31,
           "y": 197,
           "w": 1378,
-          "h": 1032,
+          "h": 1242,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",

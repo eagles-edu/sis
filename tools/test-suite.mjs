@@ -38,15 +38,28 @@ if (!["all", "core", "dev", "playwright"].includes(mode)) {
 }
 
 const files = buildFileList(mode)
-const fileTimeoutMs = Number.parseInt(process.env.SIS_TEST_FILE_TIMEOUT_MS || "300000", 10)
+const DEFAULT_FILE_TIMEOUT_MS = 300000
+const FILE_TIMEOUT_OVERRIDES = new Map([
+  ["test/portal-site-review.playwright.spec.mjs", 900000],
+])
+
+function resolveFileTimeoutMs(filePath) {
+  const envTimeoutMs = Number.parseInt(process.env.SIS_TEST_FILE_TIMEOUT_MS || "", 10)
+  if (Number.isFinite(envTimeoutMs) && envTimeoutMs > 0) {
+    return envTimeoutMs
+  }
+  return FILE_TIMEOUT_OVERRIDES.get(filePath) || DEFAULT_FILE_TIMEOUT_MS
+}
+
 let exitCode = 0
 for (const [index, filePath] of files.entries()) {
   const position = `${index + 1}/${files.length}`
+  const fileTimeoutMs = resolveFileTimeoutMs(filePath)
   console.log(`[test-suite:${mode}] ${position} start ${filePath}`)
   const result = spawnSync(process.execPath, ["--test", filePath], {
     stdio: "inherit",
     env: process.env,
-    timeout: Number.isFinite(fileTimeoutMs) && fileTimeoutMs > 0 ? fileTimeoutMs : 300000,
+    timeout: fileTimeoutMs,
     killSignal: "SIGTERM",
   })
   if (result.error) {

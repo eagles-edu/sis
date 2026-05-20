@@ -17,6 +17,7 @@ SOURCE_ROOT="${SIS_SOURCE_ROOT:-${REPO_ROOT}}"
 LIVE_ROOT="${SIS_LIVE_ROOT:-/home/admin.eagles.edu.vn/sis}"
 PUBLIC_ROOT="${SIS_LIVE_PUBLIC_ROOT:-/home/admin.eagles.edu.vn/public_html}"
 LIVE_ORIGIN="${SIS_LIVE_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
+LIVE_RUNTIME_ENV="${SIS_LIVE_RUNTIME_ENV:-production}"
 LIVE_SERVICE="${SIS_LIVE_SERVICE:-exercise-mailer.service}"
 BACKUP_ROOT="${SIS_LIVE_BACKUP_ROOT:-/home/eagles/dockerz/backups/live-admin}"
 POSTGRES_BACKUP_DIR="${SIS_LIVE_POSTGRES_BACKUP_DIR:-/home/eagles/dockerz/backups/postgres}"
@@ -40,6 +41,10 @@ LIVE_RUNTIME_CODE_FILES=(
   "package-lock.json"
   "prisma.config.ts"
   ".nvmrc"
+)
+
+LIVE_RUNTIME_DATA_FILES=(
+  "runtime-data/admin-ui-settings.json"
 )
 
 LIVE_RUNTIME_WEBFILE_MAP=(
@@ -119,6 +124,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
 )
 
 LIVE_ROUTE_MATRIX=(
+  "https://admin.eagles.edu.vn/|200|Cổng Thông Tin Sinh Viên|"
   "https://admin.eagles.edu.vn/admin|200|Student Admin Login|"
   "https://admin.eagles.edu.vn/parent|200|dành cho phụ huynh|"
   "https://admin.eagles.edu.vn/student|200|Student Portal|"
@@ -379,7 +385,62 @@ check_whitelist_drift() {
     fi
   done
 
+  for data_file in "${LIVE_RUNTIME_DATA_FILES[@]}"; do
+    local source_hash
+    local live_hash
+    source_hash="$(sha256_or_missing "${SOURCE_ROOT}/${data_file}")"
+    live_hash="$(sha256_or_missing "${LIVE_ROOT}/${data_file}")"
+    if [[ "${source_hash}" != "${live_hash}" ]]; then
+      echo "[drift] data file ${data_file} source=${source_hash} live=${live_hash}"
+      status=1
+    fi
+  done
+
   return "${status}"
+}
+
+verify_live_public_html_index() {
+  local target_index_path="${PUBLIC_ROOT}/index.html"
+
+  if [[ ! -f "${target_index_path}" ]]; then
+    echo "live public index missing: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq "https://admin.eagles.edu.vn" "${target_index_path}"; then
+    echo "live public index missing live admin origin: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq 'window.__SIS_RUNTIME_ENV="production"' "${target_index_path}"; then
+    echo "live public index missing runtime env injection: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq 'window.__SIS_ADMIN_PAGE_PATH="/admin"' "${target_index_path}"; then
+    echo "live public index missing admin page injection: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq 'window.__SIS_PARENT_PORTAL_PAGE_PATH="/parent"' "${target_index_path}"; then
+    echo "live public index missing parent page injection: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq 'window.__SIS_STUDENT_PORTAL_PAGE_PATH="/student"' "${target_index_path}"; then
+    echo "live public index missing student page injection: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if grep -Fq 'href="https://eagles.edu.vn"' "${target_index_path}"; then
+    echo "live public index still references the bare eagles origin: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if grep -Fq "https://test.eagles.edu.vn" "${target_index_path}"; then
+    echo "live public index still references the test origin: ${target_index_path}" >&2
+    return 1
+  fi
 }
 
 verify_live_roots_cleared() {
@@ -500,6 +561,19 @@ sync_runtime_code_trees() {
   done
 }
 
+sync_live_runtime_data_files() {
+  local data_file=""
+
+  for data_file in "${LIVE_RUNTIME_DATA_FILES[@]}"; do
+    if [[ ! -f "${SOURCE_ROOT}/${data_file}" ]]; then
+      log "skip missing data file ${data_file}"
+      continue
+    fi
+    log "syncing runtime data ${data_file}"
+    sync_exact_file "${SOURCE_ROOT}/${data_file}" "${LIVE_ROOT}/${data_file}"
+  done
+}
+
 sync_live_runtime_assets() {
   local managed_paths=(
     "favicon.ico"
@@ -529,6 +603,51 @@ sync_live_public_assets() {
   remove_managed_paths "${PUBLIC_ROOT}" "${managed_paths[@]}"
   log "syncing strict public whitelist into ${PUBLIC_ROOT}"
   sync_file_map "${SOURCE_ROOT}" "${PUBLIC_ROOT}" LIVE_PUBLIC_WEBFILE_MAP
+}
+
+sync_live_public_html_index() {
+  local source_hub_html="${SOURCE_ROOT}/web-asset/admin/portal-hub.html"
+  local target_index_path="${PUBLIC_ROOT}/index.html"
+
+  if [[ ! -f "${source_hub_html}" ]]; then
+    log "skip public_html index sync (portal hub source missing)"
+    return 0
+  fi
+
+  mkdir -p "${PUBLIC_ROOT}"
+  if [[ ! -w "${PUBLIC_ROOT}" ]]; then
+    echo "public root is not writable: ${PUBLIC_ROOT}" >&2
+    return 1
+  fi
+
+  log "syncing portal hub into ${target_index_path}"
+  install -m 0644 "${source_hub_html}" "${target_index_path}"
+
+  env TARGET_INDEX_PATH="${target_index_path}" LIVE_RUNTIME_ENV="${LIVE_RUNTIME_ENV}" node --input-type=module <<'EOF'
+import fs from "node:fs"
+
+const targetIndexPath = process.env.TARGET_INDEX_PATH
+const runtimeEnv = process.env.LIVE_RUNTIME_ENV || "production"
+const raw = fs.readFileSync(targetIndexPath, "utf8")
+const replacements = [
+  ["https://test.eagles.edu.vn", "https://admin.eagles.edu.vn"],
+  ["https://eagles.edu.vn", "https://admin.eagles.edu.vn"],
+]
+const injectedRuntimeConfig =
+  `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(runtimeEnv)};window.__SIS_ADMIN_PAGE_PATH="/admin";window.__SIS_PARENT_PORTAL_PAGE_PATH="/parent";window.__SIS_STUDENT_PORTAL_PAGE_PATH="/student";</script>`
+
+let next = raw
+if (next.includes("</head>")) {
+  next = next.replace("</head>", `  ${injectedRuntimeConfig}\n</head>`)
+}
+for (const [from, to] of replacements) {
+  next = next.split(from).join(to)
+}
+
+if (next !== raw) {
+  fs.writeFileSync(targetIndexPath, next)
+}
+EOF
 }
 
 ensure_live_dependencies() {
@@ -626,6 +745,8 @@ verify_live_routes() {
 run_check_only() {
   log "checking live whitelist drift"
   check_whitelist_drift
+  log "checking public hub index derivation"
+  verify_live_public_html_index
   log "checking admin asset build parity"
   (cd "${REPO_ROOT}" && npm run build:admin-assets:check)
   log "checking live route coverage"
@@ -638,14 +759,17 @@ run_apply() {
   wipe_live_target_contents
   verify_live_roots_cleared
   sync_runtime_code_trees
+  sync_live_runtime_data_files
   sync_live_runtime_assets
   sync_live_public_assets
+  sync_live_public_html_index
   ensure_live_dependencies
   pin_live_env_contract
   refresh_runtime_prisma_client
   restart_live_service
   sleep 3
   verify_live_sync_whitelist
+  verify_live_public_html_index
   verify_live_routes
   curl -fsS "${LIVE_HEALTH_URL}" >/dev/null
   log "live admin sync complete"
