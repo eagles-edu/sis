@@ -56,6 +56,14 @@ import {
   listStudents,
 } from "../src/modules/admin/student-roster.mjs"
 import {
+  backfillEnrollmentPeriodLinks,
+  changeStudentEnrollment,
+  ENROLLMENT_LEVEL_FILTER_UNENROLLED_ONLY,
+  getStudentEnrollmentDetail,
+  listEnrollmentRoster,
+  STUDENT_UNENROLLMENT_REASONS,
+} from "../src/modules/admin/enrollment-periods.mjs"
+import {
   getStudentAdminFilterCacheStatus,
   closeStudentAdminFilterCache,
   listExerciseTitles,
@@ -119,6 +127,10 @@ const ADMIN_POINTS_PAGE_PATH = normalizePathPrefix(
   process.env.STUDENT_POINTS_PAGE_PATH,
   "/admin/points-management"
 )
+const ADMIN_ENROLLMENT_PAGE_PATH = normalizePathPrefix(
+  process.env.STUDENT_ENROLLMENT_PAGE_PATH,
+  "/admin/enrollment"
+)
 const PARENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_PARENT_PORTAL_PAGE_PATH, "/parent")
 const STUDENT_PORTAL_PAGE_PATH = normalizePathPrefix(process.env.STUDENT_STUDENT_PORTAL_PAGE_PATH, "/student")
 const LEGACY_ADMIN_PAGE_PATH = "/admin/students"
@@ -128,6 +140,7 @@ const ADMIN_PAGE_DEFAULT_SLUG = "overview"
 const ADMIN_PAGE_SECTIONS = [
   "overview",
   "queue-hub",
+  "enrollment",
   "student-admin",
   "profile",
   "attendance",
@@ -152,6 +165,7 @@ const ADMIN_API_PREFIX = normalizePathPrefix(process.env.STUDENT_ADMIN_API_PREFI
 const ADMIN_AUTH_PREFIX = `${ADMIN_API_PREFIX}/auth`
 const ADMIN_USERS_PREFIX = `${ADMIN_API_PREFIX}/users`
 const ADMIN_STUDENTS_PREFIX = `${ADMIN_API_PREFIX}/students`
+const ADMIN_ENROLLMENT_PREFIX = `${ADMIN_API_PREFIX}/enrollment`
 const ADMIN_NEXT_STUDENT_NUMBER_PATH = `${ADMIN_STUDENTS_PREFIX}/next-student-number`
 const ADMIN_PERMISSIONS_PATH = `${ADMIN_API_PREFIX}/permissions`
 const ADMIN_UI_SETTINGS_PATH = `${ADMIN_API_PREFIX}/settings/ui`
@@ -215,6 +229,7 @@ const ADMIN_ASSIGNMENT_TEMPLATE_PATH_RE = new RegExp(
 const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin.html")
 const ADMIN_HUB_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/portal-hub.html")
 const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
+const ADMIN_ENROLLMENT_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-enrollment.html")
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
@@ -1166,6 +1181,18 @@ function injectAdminPointsRuntimeConfig(html, origin) {
   return `${runtimeConfig}\n${html}`
 }
 
+function injectEnrollmentRuntimeConfig(html, origin, initialAuthState = { authenticated: false }) {
+  const normalizedAuthState =
+    initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
+  const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_ENROLLMENT_PAGE_PATH=${JSON.stringify(ADMIN_ENROLLMENT_PAGE_PATH)};window.__SIS_ADMIN_ENROLLMENT_STUDENTS_PATH=${JSON.stringify(`${ADMIN_ENROLLMENT_PREFIX}/students`)};window.__SIS_ADMIN_ENROLLMENT_REASONS=${JSON.stringify(STUDENT_UNENROLLMENT_REASONS)};window.__SIS_ADMIN_ENROLLMENT_UNENROLLED_ONLY=${JSON.stringify(ENROLLMENT_LEVEL_FILTER_UNENROLLED_ONLY)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
+  if (html.includes("</head>")) {
+    return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${htmlWithAuthState}`
+}
+
 function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { authenticated: false }) {
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
@@ -1226,6 +1253,8 @@ export function getStudentAdminRuntimeStatus() {
     assignmentAnnouncementPreviewPath: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
     assignmentAnnouncementPreviewTtlMinutes: ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES,
     pointsPagePath: ADMIN_POINTS_PAGE_PATH,
+    enrollmentPagePath: ADMIN_ENROLLMENT_PAGE_PATH,
+    enrollmentStudentsPath: `${ADMIN_ENROLLMENT_PREFIX}/students`,
     pointsSummaryPath: ADMIN_POINTS_SUMMARY_PATH,
     pointsStudentsPath: ADMIN_POINTS_STUDENTS_PATH,
     pointsLedgerPath: ADMIN_POINTS_LEDGER_PATH,
@@ -4406,16 +4435,20 @@ async function backfillLegacyParentReportMetadataForStudentRefs(prisma = null, s
   })
 }
 
-async function getStudentByIdWithReportBackfill(studentRefId = "") {
+async function getStudentByIdWithReportBackfill(studentRefId = "", { enrollmentPeriodId = "" } = {}) {
   const studentId = normalizeText(studentRefId)
-  if (!studentId) return getStudentById(studentRefId)
+  if (!studentId) return getStudentById(studentRefId, { enrollmentPeriodId })
   try {
     const prisma = await getSharedPrismaClient()
     await backfillLegacyParentReportMetadataForStudentRefs(prisma, [studentId])
+    await backfillEnrollmentPeriodLinks({
+      prisma,
+      updatedByUsername: "system",
+    })
   } catch (error) {
     void error
   }
-  return getStudentById(studentRefId)
+  return getStudentById(studentRefId, { enrollmentPeriodId })
 }
 
 function serializeAttendanceRows(rows = []) {
@@ -6151,6 +6184,23 @@ async function handleApiRequest(request, response, pathname, url) {
     return true
   }
 
+  if (method === "GET" && pathname === `${ADMIN_ENROLLMENT_PREFIX}/students`) {
+    assertStoreEnabled()
+    const data = await listEnrollmentRoster({
+      query: url.searchParams.get("q") || "",
+      level: url.searchParams.get("level") || "",
+      includeUnenrolled: resolveBoolean(url.searchParams.get("includeUnenrolled"), false),
+      take: url.searchParams.get("take") || "500",
+    })
+    sendJson(response, 200, {
+      ok: true,
+      ...data,
+      reasons: [...STUDENT_UNENROLLMENT_REASONS],
+      unenrolledOnlyValue: ENROLLMENT_LEVEL_FILTER_UNENROLLED_ONLY,
+    })
+    return true
+  }
+
   if (method === "GET" && pathname === ADMIN_STUDENTS_PREFIX) {
     assertStoreEnabled()
     const data = await listStudents({
@@ -6158,6 +6208,7 @@ async function handleApiRequest(request, response, pathname, url) {
       level: url.searchParams.get("level") || "",
       school: url.searchParams.get("school") || "",
       take: url.searchParams.get("take") || "250",
+      includeUnenrolled: resolveBoolean(url.searchParams.get("includeUnenrolled"), false),
     })
     sendJson(response, 200, data)
     return true
@@ -6260,7 +6311,9 @@ async function handleApiRequest(request, response, pathname, url) {
     const studentRefId = decodeURIComponent(studentPathMatch[1])
 
     if (method === "GET") {
-      const student = await getStudentByIdWithReportBackfill(studentRefId)
+      const student = await getStudentByIdWithReportBackfill(studentRefId, {
+        enrollmentPeriodId: url.searchParams.get("enrollmentPeriodId") || "",
+      })
       sendJson(response, 200, student)
       return true
     }
@@ -6275,6 +6328,39 @@ async function handleApiRequest(request, response, pathname, url) {
     if (method === "DELETE") {
       const result = await deleteStudent(studentRefId)
       sendJson(response, 200, result)
+      return true
+    }
+  }
+
+  const studentEnrollmentMatch = pathname.match(
+    new RegExp(`^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/enrollment$`)
+  )
+  if (studentEnrollmentMatch) {
+    assertStoreEnabled()
+    const studentRefId = decodeURIComponent(studentEnrollmentMatch[1])
+
+    if (method === "GET") {
+      const result = await getStudentEnrollmentDetail(studentRefId)
+      sendJson(response, 200, {
+        ok: true,
+        ...result,
+        reasons: [...STUDENT_UNENROLLMENT_REASONS],
+        unenrolledOnlyValue: ENROLLMENT_LEVEL_FILTER_UNENROLLED_ONLY,
+      })
+      return true
+    }
+
+    if (method === "POST") {
+      const payload = await parseBody(request)
+      const result = await changeStudentEnrollment(studentRefId, payload, {
+        updatedByUsername: normalizeText(session?.username),
+      })
+      const student = await getStudentByIdWithReportBackfill(studentRefId)
+      sendJson(response, 200, {
+        ok: true,
+        ...result,
+        student,
+      })
       return true
     }
   }
@@ -6727,6 +6813,21 @@ export async function handleStudentAdminRequest(request, response) {
     sendHtml(response, 200, html, {
       "Cache-Control": "no-cache, must-revalidate",
     })
+    return true
+  }
+
+  if (method === "GET" && pathname === ADMIN_ENROLLMENT_PAGE_PATH) {
+    if (!fs.existsSync(ADMIN_ENROLLMENT_HTML_PATH)) {
+      sendJson(response, 404, { error: "Student enrollment page not found" })
+      return true
+    }
+    const initialAuthState = buildAdminInitialAuthState(await peekAdminSession(request))
+    const html = injectEnrollmentRuntimeConfig(
+      fs.readFileSync(ADMIN_ENROLLMENT_HTML_PATH, "utf8"),
+      requestOrigin,
+      initialAuthState,
+    )
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true
   }
 

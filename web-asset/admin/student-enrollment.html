@@ -1,0 +1,1314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Eagles Club Student Enrollment</title>
+  <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260515a" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260515a">
+  <style>
+    :root {
+      --font-base:
+        system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+      --enrollment-shell-max: 1280px;
+      --enrollment-table-head-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 92%, var(--brand) 8%), var(--portal-surface-card));
+      --enrollment-table-row-alt: color-mix(in srgb, var(--portal-surface-soft) 78%, #ffffff 22%);
+    }
+
+    html {
+      background: var(--portal-page-bg);
+      font-size: calc(16px * var(--sis-global-text-zoom, 1));
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--portal-page-bg);
+      color: var(--portal-text);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-base);
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    html[data-admin-auth-state="authenticated"] #app {
+      display: block !important;
+    }
+
+    html[data-admin-auth-state="authenticated"] #sessionRequiredPanel {
+      display: none !important;
+    }
+
+    html[data-admin-auth-state="unauthenticated"] #app {
+      display: none !important;
+    }
+
+    html[data-admin-auth-state="unauthenticated"] #sessionRequiredPanel {
+      display: block !important;
+    }
+
+    .wrap {
+      display: grid;
+      gap: clamp(10px, 2.2vw, 14px);
+      margin: 0 auto;
+      max-width: 1440px;
+      padding: clamp(12px, 2.8vw, 16px);
+      width: min(100%, 1440px);
+    }
+
+    .enrollment-shell {
+      --portal-center-column-max: var(--enrollment-shell-max);
+      display: grid;
+      gap: clamp(12px, 2vw, 16px);
+    }
+
+    .app-brand-copy {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .app-brand-kicker {
+      color: var(--portal-text-soft);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    .app-school-name {
+      color: var(--portal-text);
+      font-size: clamp(1rem, 1rem + 0.6vw, 1.25rem);
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      line-height: 1.2;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .app-page-subtitle {
+      color: var(--portal-text-soft);
+      font-size: 0.92rem;
+      line-height: 1.45;
+      margin: 0;
+      max-width: 72ch;
+    }
+
+    .status {
+      margin: 0;
+      min-height: 1.4em;
+    }
+
+    .status.is-error {
+      color: var(--portal-status-danger-text);
+    }
+
+    .status:empty {
+      display: none;
+    }
+
+    #sessionRequiredPanel {
+      justify-self: center;
+      width: min(100%, var(--portal-login-panel-max-width));
+    }
+
+    #sessionRequiredPanel h2 {
+      margin: 0 0 10px;
+    }
+
+    .session-required-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .session-required-actions a {
+      text-decoration: none;
+    }
+
+    #appMain {
+      display: grid;
+      gap: clamp(12px, 2vw, 16px);
+    }
+
+    .row {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .field-inline {
+      align-items: center;
+      display: inline-flex;
+      gap: 8px;
+      min-height: 48px;
+    }
+
+    .field-inline input[type="checkbox"] {
+      inline-size: auto;
+      margin: 0;
+    }
+
+    .c2,
+    .c3,
+    .c4,
+    .c6 {
+      grid-column: span 12;
+    }
+
+    .c12 {
+      grid-column: span 12;
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input:not([type="checkbox"]),
+    select,
+    button,
+    textarea {
+      min-height: 46px;
+      padding: 10px 12px;
+    }
+
+    .enrollment-summary-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+
+    .enrollment-summary-card {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+      padding: 7px;
+    }
+
+    .enrollment-summary-card p {
+      margin: 0;
+    }
+
+    .enrollment-summary-label {
+      color: var(--portal-text-soft);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .enrollment-summary-value {
+      font-size: clamp(1.4rem, 1rem + 0.95vw, 1.75rem);
+      font-variant-numeric: tabular-nums;
+      font-weight: 900;
+      line-height: 1.05;
+    }
+
+    .enrollment-summary-note {
+      color: var(--portal-text-soft);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .table-wrap {
+      border: 1px solid var(--portal-border);
+      border-radius: var(--radius-3);
+      overflow: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      min-width: 1080px;
+      width: 100%;
+    }
+
+    thead th {
+      background: var(--enrollment-table-head-bg);
+      border-bottom: 1px solid var(--portal-border);
+      color: var(--portal-text);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      padding: 11px 10px;
+      position: sticky;
+      text-align: left;
+      text-transform: uppercase;
+      top: 0;
+      vertical-align: top;
+      z-index: 1;
+    }
+
+    tbody td {
+      border-top: 1px solid var(--portal-border);
+      padding: 12px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--enrollment-table-row-alt);
+    }
+
+    .student-ident {
+      display: grid;
+      gap: 4px;
+    }
+
+    .student-ident strong {
+      font-size: 0.98rem;
+    }
+
+    .student-ident small {
+      color: var(--portal-text-soft);
+      font-size: 0.8rem;
+    }
+
+    .enrollment-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .status-chip-row {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .history-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-item {
+      border-radius: var(--radius-2);
+      display: grid;
+      gap: 5px;
+      padding: 8px 9px;
+    }
+
+    .history-line {
+      color: var(--portal-text-soft);
+      font-size: 0.82rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .action-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .action-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .action-grid > * {
+      min-width: 0;
+    }
+
+    .comment-input {
+      inline-size: 100%;
+      max-inline-size: 100%;
+      min-block-size: 46px;
+      min-width: 0;
+      overflow-y: hidden;
+      resize: vertical;
+      width: 100%;
+    }
+
+    .action-comment {
+      grid-column: 1 / -1;
+    }
+
+    .table-empty {
+      color: var(--portal-text-soft);
+      padding: 20px 12px;
+      text-align: center;
+    }
+
+    .header-bar,
+    .hub-footer {
+      margin-inline: auto;
+      width: min(var(--portal-center-column-max, var(--enrollment-shell-max)), 100%);
+    }
+
+    .hub-footer {
+      margin-top: auto;
+    }
+
+    html[data-theme="dark"] body.admin-portal-page {
+      background: var(--portal-dark-page-bg);
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .student-ident strong,
+    html[data-theme="dark"] thead th,
+    html[data-theme="dark"] .enrollment-summary-value {
+      color: var(--portal-dark-text);
+    }
+
+    html[data-theme="dark"] .app-brand-kicker,
+    html[data-theme="dark"] .app-page-subtitle,
+    html[data-theme="dark"] .status:not(.is-error),
+    html[data-theme="dark"] .student-ident small,
+    html[data-theme="dark"] .history-line,
+    html[data-theme="dark"] .enrollment-summary-label,
+    html[data-theme="dark"] .enrollment-summary-note,
+    html[data-theme="dark"] .text-zoom-controls .zoom-label {
+      color: var(--portal-dark-text-soft);
+    }
+
+    html[data-theme="dark"] .portal-theme-card,
+    html[data-theme="dark"] .portal-theme-panel,
+    html[data-theme="dark"] .table-wrap {
+      border-color: var(--portal-dark-border);
+    }
+
+    @media (min-width: 720px) {
+      .c2 {
+        grid-column: span 2;
+      }
+
+      .c3 {
+        grid-column: span 3;
+      }
+
+      .c4 {
+        grid-column: span 4;
+      }
+
+      .c6 {
+        grid-column: span 6;
+      }
+
+      .enrollment-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .action-grid {
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+      }
+    }
+
+    @media (min-width: 980px) {
+    }
+
+    @media (max-width: 820px) {
+      .table-wrap {
+        overflow: visible;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody {
+        display: grid;
+        gap: 10px;
+      }
+
+      tbody tr {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-2);
+        display: grid;
+        gap: 8px;
+        grid-template-columns: minmax(0, 1fr);
+        padding: 10px;
+      }
+
+      tbody td {
+        align-items: start;
+        border: 0;
+        display: grid;
+        gap: 4px;
+        grid-template-columns: minmax(112px, 40%) minmax(0, 1fr);
+        padding: 0;
+      }
+
+      tbody td::before {
+        color: var(--ink-muted);
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      tbody td[data-label="Enrollment action"] {
+        gap: 8px;
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      tbody td[data-label="Enrollment action"]::before {
+        content: "Enrollment action";
+      }
+
+      .action-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .student-ident strong {
+        font-size: 1.08rem;
+        line-height: 1.25;
+      }
+
+      .student-ident small {
+        font-size: 0.92rem;
+        line-height: 1.35;
+      }
+
+      .action-grid [data-apply] {
+        order: 5;
+        width: 100%;
+      }
+
+      .action-grid .action-comment {
+        order: 4;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app-brand-logo-wrap {
+        height: 42px;
+        width: 42px;
+      }
+
+      .text-zoom-controls .global-text-label,
+      .text-zoom-controls .zoom-label {
+        display: none;
+      }
+    }
+  </style>
+</head>
+  <body class="admin-portal-page" id="top">
+  <div class="wrap">
+    <div class="enrollment-shell portal-center-column">
+      <div class="header-bar">
+        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+        <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+      </div>
+      <section id="sessionRequiredPanel" class="panel portal-theme-card hidden" aria-label="Admin session required">
+        <h2>Admin session required</h2>
+        <p class="app-page-subtitle">
+          Enrollment uses the current admin session. Sign in through the main admin page, then return here.
+        </p>
+        <div class="session-required-actions">
+          <a href="/admin">Open Admin Login</a>
+          <a href="/admin/profile">Back to Profile</a>
+        </div>
+      </section>
+
+      <div id="app" class="hidden">
+        <button id="floatingMenuBtn" type="button" class="floating-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+          <span class="floating-menu-icon" aria-hidden="true"></span>
+        </button>
+        <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+        <div class="app-shell">
+          <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
+            <h2>Navigation</h2>
+            <div class="sidebar-logo-wrap" id="sidebarLogoWrap">
+              <img id="sidebarLogoImg" src="data:," alt="School logo" class="hidden">
+              <span id="sidebarLogoFallback" class="sidebar-logo-fallback">SIS</span>
+            </div>
+            <p class="small">Shared admin navigation keeps standalone pages aligned with the rest of the portal.</p>
+            <nav class="menu-groups" id="navMenu">
+              <a href="/admin" class="menu-link menu-link-top">DASHBOARD</a>
+              <a href="/admin/profile" class="menu-link menu-link-top">STUDENTS</a>
+              <div class="menu-group expanded" data-menu-group="tracking">
+                <button type="button" class="menu-group-btn" aria-expanded="true">TRACKING</button>
+                <div class="menu-group-links">
+                  <a href="/admin/attendance" class="menu-link">Attendance</a>
+                  <a href="/admin/assignments" class="menu-link">Assignments</a>
+                  <a href="/admin/grades" class="menu-link">Grades</a>
+                  <a href="/admin/parent-tracking" class="menu-link">Performance</a>
+                  <a href="/admin/news-reports" class="menu-link">News Reports</a>
+                  <a href="/admin/reports" class="menu-link">All Reports</a>
+                </div>
+              </div>
+              <div class="menu-group expanded" data-menu-group="admin">
+                <button type="button" class="menu-group-btn" aria-expanded="true">ADMINISTRATION</button>
+                <div class="menu-group-links">
+                  <a href="/admin/enrollment" class="menu-link active" aria-current="page">Enrollment</a>
+                  <a href="/admin/school-setup" class="menu-link">School Setup</a>
+                  <a href="/admin/student-admin" class="menu-link">Student Admin</a>
+                  <a href="/admin/settings" class="menu-link">Settings</a>
+                </div>
+              </div>
+            </nav>
+            <div class="sidebar-actions">
+              <button id="logoutBtn" type="button" class="danger ghost hidden">Logout</button>
+            </div>
+          </aside>
+
+          <main id="appMain" class="section-stack" aria-label="Enrollment workspace">
+            <section class="panel app-page-header" aria-label="Enrollment page header">
+              <div class="app-brand-strip">
+                <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+                  <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
+                  <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
+                </div>
+                <div class="app-brand-copy">
+                  <p class="app-brand-kicker">Administration</p>
+                  <h1 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h1>
+                  <!-- <p class="app-page-subtitle">
+                    Enrollment stays on its own page, but it follows the same admin portal chrome, theme controls, and data-surface contract.
+                  </p>-->
+                </div>
+                <div class="app-header-actions">
+                  <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
+                    <span class="portal-theme-toggle__icon" aria-hidden="true" id="adminThemeToggleIcon" data-theme-icon="moon">
+                      <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <mask id="enrollment_theme_moon_cutout">
+                            <rect width="24" height="24" fill="#fff"></rect>
+                            <circle cx="12.95" cy="7.95" r="10.1" fill="#000"></circle>
+                          </mask>
+                        </defs>
+                        <g fill="currentColor">
+                          <circle cx="10.8" cy="13.2" r="10.3" mask="url(#enrollment_theme_moon_cutout)"></circle>
+                          <path d="M17.65 3.75L18.62 6.68L21.7 6.68L19.21 8.49L20.16 11.42L17.65 9.6L15.14 11.42L16.09 8.49L13.6 6.68L16.68 6.68L17.65 3.75Z" opacity="0.95"></path>
+                          <path d="M9.95 8L10.62 10.02L12.75 10.02L11.03 11.27L11.69 13.28L9.95 12.02L8.22 13.28L8.88 11.27L7.15 10.02L9.28 10.02L9.95 8Z" opacity="0.78"></path>
+                        </g>
+                      </svg>
+                      <svg class="portal-theme-toggle__icon-sun" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g stroke="currentColor" stroke-linecap="round" stroke-width="1.8">
+                          <path d="M12 1.75V4.25"></path>
+                          <path d="M12 19.75V22.25"></path>
+                          <path d="M1.75 12H4.25"></path>
+                          <path d="M19.75 12H22.25"></path>
+                          <path d="M4.75 4.75L6.52 6.52"></path>
+                          <path d="M17.48 17.48L19.25 19.25"></path>
+                          <path d="M17.48 6.52L19.25 4.75"></path>
+                          <path d="M4.75 19.25L6.52 17.48"></path>
+                          <circle cx="12" cy="12" fill="currentColor" r="4.6"></circle>
+                        </g>
+                      </svg>
+                    </span>
+                    <span class="portal-theme-toggle__label" id="adminThemeToggleLabel">Dark</span>
+                  </button>
+                  <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
+                    <span class="global-text-label">Text</span>
+                    <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">A-</button>
+                    <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">A+</button>
+                    <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">100%</button>
+                    <span class="zoom-label" data-text-zoom-label>100%</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="panel portal-theme-panel">
+              <div class="enrollment-summary-grid" id="summaryGrid">
+                <article class="portal-theme-card enrollment-summary-card">
+                  <p class="enrollment-summary-label">Visible rows</p>
+                  <p class="enrollment-summary-value" id="summaryVisibleRows">0</p>
+                <!-- <p class="enrollment-summary-note">Current result set after page filters.</p> -->
+                </article>
+                <article class="portal-theme-card enrollment-summary-card">
+                  <p class="enrollment-summary-label">Active students</p>
+                  <p class="enrollment-summary-value" id="summaryActiveRows">0</p>
+                  <!--
+                  <p class="enrollment-summary-note">Students currently enrolled in the visible result set.</p>-->
+                </article>
+                <article class="portal-theme-card enrollment-summary-card">
+                  <p class="enrollment-summary-label">Unenrolled students</p>
+                  <p class="enrollment-summary-value" id="summaryUnenrolledRows">0</p>
+                  <!--
+                  <p class="enrollment-summary-note">Students archived from active lists but still searchable here.</p>  -->
+                </article>
+              </div>
+            </section>
+
+            <section class="panel portal-theme-panel">
+              <p id="globalStatus" class="status" aria-live="polite"></p>
+              <div class="row">
+                <div class="field c4">
+                  <label for="searchQ">Search student</label>
+                  <input id="searchQ" type="search" placeholder="name, eagles id, parent">
+                </div>
+                <div class="field c3">
+                  <label for="filterLevel">Level</label>
+                  <select id="filterLevel">
+                    <option value="">All levels</option>
+                  </select>
+                </div>
+                <div class="field c3">
+                  <label>Roster scope</label>
+                  <div class="field-inline">
+                    <input id="includeUnenrolled" type="checkbox">
+                    <span>Include unenrolled</span>
+                  </div>
+                </div>
+                <div class="field c2">
+                  <label for="refreshBtn">&nbsp;</label>
+                  <button id="refreshBtn" type="button" class="btn-refresh">Refresh</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel portal-theme-panel">
+              <div class="table-wrap portal-theme-table-shell">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Student</th>
+                      <th scope="col">Current status</th>
+                      <th scope="col">Same-year history</th>
+                      <th scope="col">Enrollment action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="enrollmentRows">
+                    <tr>
+                      <td colspan="4" class="table-empty">Loading...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+      <footer class="hub-footer" aria-label="Site footer">
+        <p class="hub-footer__copy">
+          © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+        </p>
+        <p class="hub-footer__action">
+          <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+        </p>
+      </footer>
+    </div>
+  </div>
+  <script>
+    ;
+    (() => {
+      "use strict"
+      const year = new Date().getFullYear()
+      document.querySelectorAll("[data-copyright-year]").forEach((el) => {
+        const start = parseInt(el.getAttribute("data-start"), 10)
+        el.textContent = Number.isFinite(start) && start < year ? `${start}–${year}` : String(year)
+      })
+    })()
+  </script>
+
+  <script>
+    (() => {
+      const API_ORIGIN = window.__SIS_ADMIN_API_ORIGIN || "";
+      const ADMIN_AUTH_PREFIX = window.__SIS_ADMIN_AUTH_PREFIX || "/api/admin/auth";
+      const ENROLLMENT_STUDENTS_PATH =
+        window.__SIS_ADMIN_ENROLLMENT_STUDENTS_PATH || "/api/admin/enrollment/students";
+      const UI_SETTINGS_PATH =
+        window.__SIS_ADMIN_UI_SETTINGS_PATH || "/api/admin/settings/ui";
+      const ENROLLMENT_REASONS = Array.isArray(window.__SIS_ADMIN_ENROLLMENT_REASONS)
+        ? window.__SIS_ADMIN_ENROLLMENT_REASONS
+        : [];
+      const UNENROLLED_ONLY = window.__SIS_ADMIN_ENROLLMENT_UNENROLLED_ONLY || "__UNENROLLED_ONLY__";
+      const TEXT_ZOOM_STORAGE_KEY = "sis.admin.globalTextZoomPercent.v1";
+      const TEXT_ZOOM_DEFAULT = 100;
+      const TEXT_ZOOM_MIN = 85;
+      const TEXT_ZOOM_MAX = 125;
+      const TEXT_ZOOM_STEP = 5;
+      const DEFAULT_SCHOOL_PROFILE = {
+        schoolName: "The Eagles Club",
+        logoDataUrl: "",
+      };
+      const LEVEL_THEME_LOOKUP = new Map(
+        [
+          ["Eggs & Chicks", "#e0162b"],
+          ["Pre-A1 Starters", "#FCAB15"],
+          ["A1 Movers", "#913198"],
+          ["A2 Flyers", "#b5d570"],
+          ["A2 KET", "#038e9f"],
+          ["B1 PET", "#cd1637"],
+          ["B2+ IELTS", "#b10128"],
+          ["C1+ TAYK", "#980001"],
+          ["Private", "#002786"],
+        ].map(([label, color]) => [normalizeLevelKey(label), color]),
+      );
+      const KNOWN_LEVELS = [
+        "Eggs & Chicks",
+        "Pre-A1 Starters",
+        "A1 Movers",
+        "A2 Flyers",
+        "A2 KET",
+        "B1 PET",
+        "B2+ IELTS",
+        "C1+ TAYK",
+        "Private",
+      ];
+      const state = {
+        globalTextZoomPercent: TEXT_ZOOM_DEFAULT,
+      };
+
+      function normalizeText(value) {
+        return value === undefined || value === null ? "" : String(value).trim();
+      }
+
+      function normalizeLower(value) {
+        return normalizeText(value).toLowerCase();
+      }
+
+      function normalizeLevelKey(value) {
+        return normalizeLower(value).replace(/[^a-z0-9]/g, "");
+      }
+
+      function escapeHtml(value) {
+        return normalizeText(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function apiUrl(path) {
+        if (!API_ORIGIN) return path;
+        return `${API_ORIGIN}${path}`;
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(apiUrl(path), {
+          method: options.method || "GET",
+          headers: {
+            ...(options.body ? { "Content-Type": "application/json" } : {}),
+            ...(options.headers || {}),
+          },
+          credentials: "include",
+          body: options.body ? JSON.stringify(options.body) : undefined,
+        });
+        const text = await response.text();
+        const payload = text ? JSON.parse(text) : {};
+        if (!response.ok) {
+          throw new Error(payload?.error || payload?.message || `Request failed (${response.status})`);
+        }
+        return payload;
+      }
+
+      function setStatus(message, isError = false) {
+        const el = document.getElementById("globalStatus");
+        if (!el) return;
+        el.textContent = normalizeText(message);
+        el.classList.toggle("is-error", Boolean(isError));
+      }
+
+      function syncNavigationMenuState() {
+        const floatingMenuBtnEl = document.getElementById("floatingMenuBtn");
+        const menuOpen = document.body.classList.contains("menu-open");
+        if (floatingMenuBtnEl) {
+          floatingMenuBtnEl.setAttribute("aria-expanded", menuOpen ? "true" : "false");
+          floatingMenuBtnEl.setAttribute(
+            "aria-label",
+            menuOpen ? "Close navigation menu" : "Open navigation menu",
+          );
+        }
+      }
+
+      function toggleNavigationMenu(forceOpen = null) {
+        const nextOpen =
+          forceOpen === null ? !document.body.classList.contains("menu-open") : Boolean(forceOpen);
+        document.body.classList.toggle("menu-open", nextOpen);
+        syncNavigationMenuState();
+      }
+
+      function setAuthenticated(authenticated) {
+        document.getElementById("sessionRequiredPanel")?.classList.toggle("hidden", authenticated);
+        document.getElementById("app")?.classList.toggle("hidden", !authenticated);
+        document.getElementById("logoutBtn")?.classList.toggle("hidden", !authenticated);
+        if (!authenticated) toggleNavigationMenu(false);
+      }
+
+      function reasonLabel(value) {
+        return normalizeText(value).replaceAll("_", " ");
+      }
+
+      function shiftHexColor(hexColor, delta = 0) {
+        const parts = String(hexColor || "").match(/[0-9a-f]{2}/gi);
+        if (!parts || parts.length < 3) return "#1b3f75";
+        const shift = (part) => Math.max(0, Math.min(255, Number.parseInt(part, 16) + delta));
+        return `#${parts.slice(0, 3).map((part) => shift(part).toString(16).padStart(2, "0")).join("")}`;
+      }
+
+      function toRgba(hexColor, alpha = 1) {
+        const parts = String(hexColor || "").match(/[0-9a-f]{2}/gi);
+        if (!parts || parts.length < 3) return `rgba(27, 63, 117, ${alpha})`;
+        const [r, g, b] = parts.slice(0, 3).map((part) => Number.parseInt(part, 16));
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function preferredContrastText(hexColor) {
+        const parts = String(hexColor || "").match(/[0-9a-f]{2}/gi);
+        if (!parts || parts.length < 3) return "#f5f8ff";
+        const [r, g, b] = parts.slice(0, 3).map((part) => Number.parseInt(part, 16) / 255);
+        const transform = (value) =>
+          value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+        const luminance = 0.2126 * transform(r) + 0.7152 * transform(g) + 0.0722 * transform(b);
+        return luminance > 0.45 ? "#0b1220" : "#f5f8ff";
+      }
+
+      function buildChipStyle(color) {
+        const borderColor = shiftHexColor(color, -42);
+        const textColor = preferredContrastText(color);
+        return `--chip-bg:${color};--chip-border:${borderColor};--chip-dot:${toRgba(textColor, 0.95)};--chip-text:${textColor};`;
+      }
+
+      function chipHtml(label = "", color = "#002786") {
+        return `<span class="level-chip level-chip-standard" style="${buildChipStyle(color)}">${escapeHtml(label)}</span>`;
+      }
+
+      function levelChipHtml(levelName = "") {
+        const normalizedLevel = normalizeText(levelName || "Unassigned");
+        const levelColor = LEVEL_THEME_LOOKUP.get(normalizeLevelKey(normalizedLevel)) || "#002786";
+        return chipHtml(normalizedLevel, levelColor);
+      }
+
+      function currentLevelText(row) {
+        return normalizeText(row?.currentEnrollment?.level || row?.profile?.currentGrade || "");
+      }
+
+      function currentStatusText(row) {
+        return normalizeLower(row?.currentEnrollment?.status || "active") === "unenrolled"
+          ? "Unenrolled"
+          : "Enrolled";
+      }
+
+      function currentStatusChipHtml(row) {
+        return normalizeLower(row?.currentEnrollment?.status || "active") === "unenrolled"
+          ? chipHtml("Unenrolled", "#ad2c3c")
+          : chipHtml("Enrolled", "#287a4f");
+      }
+
+      function enrollmentStatusChipHtml(statusValue = "") {
+        return normalizeLower(statusValue || "active") === "unenrolled"
+          ? chipHtml("Unenrolled", "#ad2c3c")
+          : chipHtml("Enrolled", "#287a4f");
+      }
+
+      function historyPeriods(row) {
+        return Array.isArray(row?.enrollmentPeriods) ? row.enrollmentPeriods : [];
+      }
+
+      function formatHistoryDate(value) {
+        const raw = normalizeText(value);
+        if (!raw) return "";
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.valueOf())) return "";
+        const day = String(parsed.getDate()).padStart(2, "0");
+        const month = String(parsed.getMonth() + 1).padStart(2, "0");
+        const year = String(parsed.getFullYear());
+        return `${day}/${month}/${year}`;
+      }
+
+      function buildHistoryNote(row) {
+        const periods = historyPeriods(row);
+        if (!periods.length) return "";
+        const currentPeriod = periods[0] || null;
+        if (!currentPeriod) return "";
+        const byId = new Map(periods.map((period) => [normalizeText(period?.id), period]));
+        const previousPeriod = byId.get(normalizeText(currentPeriod?.promotedFromPeriodId || ""));
+        const effectiveDate = formatHistoryDate(currentPeriod?.startedAt || currentPeriod?.createdAt);
+        const dateSuffix = effectiveDate ? ` on ${effectiveDate}` : "";
+        const currentLevel = normalizeText(currentPeriod?.level || "");
+        const previousLevel = normalizeText(previousPeriod?.level || "");
+
+        if (previousLevel && currentLevel && normalizeLower(previousLevel) !== normalizeLower(currentLevel)) {
+          return `Student was promoted from ${previousLevel} to ${currentLevel}${dateSuffix}.`;
+        }
+        return "";
+      }
+
+      function historySummaryHtml(row) {
+        const periods = historyPeriods(row);
+        const schoolYear = chipHtml(periods[0]?.schoolYear || "Unknown year", "#2d78b4");
+        const note = buildHistoryNote(row);
+        return `<div class="history-stack"><div class="history-item portal-theme-card">
+          <div class="enrollment-chip-row">${schoolYear}</div>
+          ${note ? `<p class="history-line">${escapeHtml(note)}</p>` : ""}
+        </div></div>`;
+      }
+
+      function renderLevelOptions(select, selected = "") {
+        if (!(select instanceof HTMLSelectElement)) return;
+        select.innerHTML = '<option value="">Select level</option>';
+        KNOWN_LEVELS.forEach((level) => {
+          const option = document.createElement("option");
+          option.value = level;
+          option.textContent = level;
+          if (normalizeText(selected) === level) option.selected = true;
+          select.appendChild(option);
+        });
+      }
+
+      function renderReasonOptions(select, selected = "") {
+        if (!(select instanceof HTMLSelectElement)) return;
+        select.innerHTML = '<option value="">Select reason</option>';
+        ENROLLMENT_REASONS.forEach((reason) => {
+          const option = document.createElement("option");
+          option.value = reason;
+          option.textContent = reasonLabel(reason);
+          if (normalizeText(selected) === reason) option.selected = true;
+          select.appendChild(option);
+        });
+      }
+
+      function renderLevelFilterOptions(levels = []) {
+        const select = document.getElementById("filterLevel");
+        if (!(select instanceof HTMLSelectElement)) return;
+        const current = normalizeText(select.value);
+        select.innerHTML = '<option value="">All levels</option>';
+        Array.from(new Set([...KNOWN_LEVELS, ...levels.filter(Boolean)])).forEach((level) => {
+          const option = document.createElement("option");
+          option.value = level;
+          option.textContent = level;
+          if (current === level) option.selected = true;
+          select.appendChild(option);
+        });
+        const unenrolled = document.createElement("option");
+        unenrolled.value = UNENROLLED_ONLY;
+        unenrolled.textContent = "Unenrolled only";
+        if (current === UNENROLLED_ONLY) unenrolled.selected = true;
+        select.appendChild(unenrolled);
+      }
+
+      function updateSummary(rows = []) {
+        const activeRows = rows.filter((row) => normalizeLower(row?.currentEnrollment?.status || "active") !== "unenrolled").length;
+        const unenrolledRows = rows.length - activeRows;
+        const visibleEl = document.getElementById("summaryVisibleRows");
+        const activeEl = document.getElementById("summaryActiveRows");
+        const unenrolledEl = document.getElementById("summaryUnenrolledRows");
+        if (visibleEl) visibleEl.textContent = String(rows.length);
+        if (activeEl) activeEl.textContent = String(activeRows);
+        if (unenrolledEl) unenrolledEl.textContent = String(unenrolledRows);
+      }
+
+      async function loadRows() {
+        const params = new URLSearchParams();
+        const query = normalizeText(document.getElementById("searchQ")?.value || "");
+        const level = normalizeText(document.getElementById("filterLevel")?.value || "");
+        const includeUnenrolled = Boolean(document.getElementById("includeUnenrolled")?.checked);
+        if (query) params.set("q", query);
+        if (level) params.set("level", level);
+        if (includeUnenrolled) params.set("includeUnenrolled", "true");
+        params.set("take", "1000");
+
+        const data = await api(`${ENROLLMENT_STUDENTS_PATH}?${params.toString()}`);
+        const rows = Array.isArray(data?.items) ? data.items : [];
+        renderLevelFilterOptions(rows.map((row) => currentLevelText(row)).filter(Boolean));
+        renderRows(rows);
+        updateSummary(rows);
+        setStatus("");
+      }
+
+      function syncExpandableTextareaHeight(textarea) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return;
+        textarea.style.height = "auto";
+        textarea.style.height = `${Math.max(textarea.scrollHeight, 46)}px`;
+      }
+
+      function renderRows(rows = []) {
+        const tbody = document.getElementById("enrollmentRows");
+        if (!(tbody instanceof HTMLTableSectionElement)) return;
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No students match current enrollment filters.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = "";
+        rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td data-label="Student">
+              <div class="student-ident">
+                <strong>${escapeHtml(row?.profile?.fullName || row?.profile?.englishName || row?.eaglesId)}</strong>
+                <small>${escapeHtml(row?.eaglesId || "")}</small>
+                <small>#${escapeHtml(row?.studentNumber || "")}</small>
+              </div>
+            </td>
+            <td data-label="Current status">
+              <div class="status-chip-row">${currentStatusChipHtml(row)}${levelChipHtml(currentLevelText(row) || "Unassigned")}</div>
+            </td>
+            <td data-label="Same-year history">${historySummaryHtml(row)}</td>
+            <td data-label="Enrollment action">
+              <div class="action-stack">
+                <div class="action-grid">
+                  <select data-action aria-label="Enrollment action">
+                    <option value="change-level">Change level</option>
+                    <option value="promote">Promote</option>
+                    <option value="unenroll">Unenroll</option>
+                  </select>
+                  <select data-level aria-label="Target level"></select>
+                  <select data-reason aria-label="Unenrollment reason"></select>
+                  <button type="button" class="primary" data-apply>Apply</button>
+                  <textarea data-comment class="comment-input action-comment" rows="1" placeholder="Comment" aria-label="Enrollment comment"></textarea>
+                </div>
+              </div>
+            </td>
+          `;
+          const levelSelect = tr.querySelector("[data-level]");
+          const reasonSelect = tr.querySelector("[data-reason]");
+          const actionSelect = tr.querySelector("[data-action]");
+          const commentInput = tr.querySelector("[data-comment]");
+          const applyButton = tr.querySelector("[data-apply]");
+          renderLevelOptions(levelSelect, currentLevelText(row));
+          renderReasonOptions(reasonSelect, "");
+          const syncControls = () => {
+            const action = normalizeText(actionSelect?.value || "change-level");
+            if (levelSelect instanceof HTMLSelectElement) levelSelect.disabled = action === "unenroll";
+            if (reasonSelect instanceof HTMLSelectElement) reasonSelect.disabled = action !== "unenroll";
+          };
+          actionSelect?.addEventListener("change", syncControls);
+          if (commentInput instanceof HTMLTextAreaElement) {
+            syncExpandableTextareaHeight(commentInput);
+            commentInput.addEventListener("input", () => syncExpandableTextareaHeight(commentInput));
+          }
+          syncControls();
+          applyButton?.addEventListener("click", async () => {
+            try {
+              applyButton.disabled = true;
+              const action = normalizeText(actionSelect?.value || "");
+              await api(`/api/admin/students/${encodeURIComponent(row.id)}/enrollment`, {
+                method: "POST",
+                body: {
+                  action,
+                  level: normalizeText(levelSelect?.value || ""),
+                  unenrollmentReason: normalizeText(reasonSelect?.value || ""),
+                  comment: normalizeText(commentInput?.value || ""),
+                },
+              });
+              await loadRows();
+              setStatus("Enrollment updated.");
+            } catch (error) {
+              setStatus(error?.message || error, true);
+            } finally {
+              applyButton.disabled = false;
+            }
+          });
+          tbody.appendChild(tr);
+        });
+      }
+
+      function normalizeSchoolProfile(source = {}) {
+        const profile = source && typeof source === "object" && !Array.isArray(source)
+          ? source
+          : {};
+        return {
+          schoolName: normalizeText(profile.schoolName || DEFAULT_SCHOOL_PROFILE.schoolName),
+          logoDataUrl: normalizeText(profile.logoDataUrl || DEFAULT_SCHOOL_PROFILE.logoDataUrl),
+        };
+      }
+
+      function schoolBrandFallbackToken(name = "") {
+        const parts = normalizeText(name).split(/\s+/).filter(Boolean);
+        if (!parts.length) return "SIS";
+        return parts.slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("") || "SIS";
+      }
+
+      function renderSchoolBranding(profile = DEFAULT_SCHOOL_PROFILE) {
+        const normalizedProfile = normalizeSchoolProfile(profile);
+        const schoolName = normalizedProfile.schoolName || DEFAULT_SCHOOL_PROFILE.schoolName;
+        const logoDataUrl = normalizedProfile.logoDataUrl;
+        const fallbackToken = schoolBrandFallbackToken(schoolName);
+        const schoolNameEl = document.getElementById("appSchoolName");
+        const imageTargets = [
+          { imageId: "appBrandLogo", fallbackId: "appBrandLogoFallback" },
+          { imageId: "sidebarLogoImg", fallbackId: "sidebarLogoFallback" },
+        ];
+        if (schoolNameEl) {
+          schoolNameEl.textContent = schoolName.toUpperCase();
+          schoolNameEl.title = schoolName;
+        }
+        const hasLogo = Boolean(logoDataUrl);
+        imageTargets.forEach(({ imageId, fallbackId }) => {
+          const imageEl = document.getElementById(imageId);
+          const fallbackEl = document.getElementById(fallbackId);
+          if (imageEl instanceof HTMLImageElement) {
+            imageEl.classList.toggle("hidden", !hasLogo);
+            imageEl.src = hasLogo ? logoDataUrl : "data:,";
+          }
+          if (fallbackEl) {
+            fallbackEl.classList.toggle("hidden", hasLogo);
+            fallbackEl.textContent = fallbackToken;
+            fallbackEl.title = schoolName;
+          }
+        });
+      }
+
+      async function loadBranding() {
+        try {
+          const payload = await api(UI_SETTINGS_PATH);
+          renderSchoolBranding(payload?.uiSettings?.schoolProfile || DEFAULT_SCHOOL_PROFILE);
+        } catch {
+          renderSchoolBranding(DEFAULT_SCHOOL_PROFILE);
+        }
+      }
+
+      function normalizeTextZoomPercent(value) {
+        const numeric = Number.parseInt(value, 10);
+        if (!Number.isFinite(numeric)) return TEXT_ZOOM_DEFAULT;
+        return Math.max(TEXT_ZOOM_MIN, Math.min(TEXT_ZOOM_MAX, numeric));
+      }
+
+      function loadGlobalTextZoomFromStorage() {
+        let stored = "";
+        try {
+          stored = normalizeText(window.localStorage.getItem(TEXT_ZOOM_STORAGE_KEY));
+        } catch {
+          stored = "";
+        }
+        return normalizeTextZoomPercent(stored || TEXT_ZOOM_DEFAULT);
+      }
+
+      function persistGlobalTextZoomToStorage(value = state.globalTextZoomPercent) {
+        const normalized = normalizeTextZoomPercent(value);
+        state.globalTextZoomPercent = normalized;
+        try {
+          window.localStorage.setItem(TEXT_ZOOM_STORAGE_KEY, String(normalized));
+        } catch {
+          void 0;
+        }
+        return normalized;
+      }
+
+      function applyGlobalTextZoom() {
+        const percent = normalizeTextZoomPercent(state.globalTextZoomPercent);
+        state.globalTextZoomPercent = percent;
+        document.documentElement.style.setProperty("--sis-global-text-zoom", String(percent / 100));
+        document.querySelectorAll("[data-text-zoom-label]").forEach((labelEl) => {
+          labelEl.textContent = `${percent}%`;
+        });
+      }
+
+      function updateGlobalTextZoom(action = "") {
+        const mode = normalizeLower(action);
+        let next = normalizeTextZoomPercent(state.globalTextZoomPercent);
+        if (mode === "decrease") next -= TEXT_ZOOM_STEP;
+        else if (mode === "increase") next += TEXT_ZOOM_STEP;
+        else next = TEXT_ZOOM_DEFAULT;
+        persistGlobalTextZoomToStorage(next);
+        applyGlobalTextZoom();
+        setStatus(`Global text size: ${next}%`);
+      }
+
+      function syncThemeToggle() {
+        const theme = window.SIS_PORTAL_THEME?.getTheme("light") || "light";
+        const button = document.getElementById("adminThemeToggle");
+        const icon = document.getElementById("adminThemeToggleIcon");
+        const label = document.getElementById("adminThemeToggleLabel");
+        const dark = theme === "dark";
+        if (button) {
+          button.setAttribute("aria-pressed", dark ? "true" : "false");
+          button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+        }
+        if (icon) icon.setAttribute("data-theme-icon", dark ? "sun" : "moon");
+        if (label) label.textContent = dark ? "Light" : "Dark";
+      }
+
+      async function logout() {
+        await api(`${ADMIN_AUTH_PREFIX}/logout`, { method: "POST" });
+        setAuthenticated(false);
+        updateSummary([]);
+        setStatus("Signed out.");
+      }
+
+      const INITIAL_AUTH = window.__SIS_ADMIN_INITIAL_AUTH__ && typeof window.__SIS_ADMIN_INITIAL_AUTH__ === "object"
+        ? window.__SIS_ADMIN_INITIAL_AUTH__
+        : { authenticated: false };
+
+      async function bootstrap() {
+        state.globalTextZoomPercent = loadGlobalTextZoomFromStorage();
+        applyGlobalTextZoom();
+        renderSchoolBranding(DEFAULT_SCHOOL_PROFILE);
+        syncThemeToggle();
+        if (INITIAL_AUTH.authenticated) {
+          setAuthenticated(true);
+          await loadBranding();
+          await loadRows();
+          return;
+        }
+        setAuthenticated(false);
+        setStatus("Admin session required. Use the main admin login, then return here.");
+      }
+      document.getElementById("logoutBtn")?.addEventListener("click", () => logout().catch((error) => {
+        setStatus(error?.message || error, true);
+      }));
+      document.getElementById("floatingMenuBtn")?.addEventListener("click", () => {
+        toggleNavigationMenu();
+      });
+      document.getElementById("menuBackdrop")?.addEventListener("click", () => {
+        toggleNavigationMenu(false);
+      });
+      document.getElementById("refreshBtn")?.addEventListener("click", () => loadRows().catch((error) => {
+        setStatus(error?.message || error, true);
+      }));
+      document.getElementById("searchQ")?.addEventListener("input", () => {
+        window.clearTimeout(window.__sisEnrollmentSearchTimer || 0);
+        window.__sisEnrollmentSearchTimer = window.setTimeout(() => {
+          loadRows().catch((error) => setStatus(error?.message || error, true));
+        }, 180);
+      });
+      document.getElementById("filterLevel")?.addEventListener("change", () => loadRows().catch((error) => {
+        setStatus(error?.message || error, true);
+      }));
+      document.getElementById("includeUnenrolled")?.addEventListener("change", () => loadRows().catch((error) => {
+        setStatus(error?.message || error, true);
+      }));
+      document.querySelectorAll("[data-text-zoom-action]").forEach((buttonEl) => {
+        buttonEl.addEventListener("click", () => updateGlobalTextZoom(buttonEl.getAttribute("data-text-zoom-action") || ""));
+      });
+      document.getElementById("adminThemeToggle")?.addEventListener("click", () => {
+        window.SIS_PORTAL_THEME?.toggleTheme("light");
+        syncThemeToggle();
+      });
+      document.addEventListener("click", (event) => {
+        if (!document.body.classList.contains("menu-open")) return;
+        const target = event.target;
+        const sidebarEl = document.getElementById("appSidebarNav");
+        const floatingMenuBtnEl = document.getElementById("floatingMenuBtn");
+        if (!(target instanceof Node)) return;
+        if (sidebarEl?.contains(target)) return;
+        if (floatingMenuBtnEl?.contains(target)) return;
+        toggleNavigationMenu(false);
+      });
+
+      bootstrap().catch((error) => {
+        setAuthenticated(false);
+        setStatus(error?.message || error, true);
+      });
+    })();
+  </script>
+</body>
+</html>

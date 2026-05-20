@@ -2,6 +2,8 @@
 import process from "node:process"
 import { URL } from "node:url"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
+import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import {
   addAwaitingReReviewMarker,
   evaluateStudentNewsCompliance,
@@ -410,6 +412,7 @@ export function mapStudentNewsReportRow(row = {}) {
   return {
     id: normalizeText(row?.id),
     studentRefId: normalizeText(row?.studentRefId),
+    enrollmentPeriodId: normalizeText(row?.enrollmentPeriodId),
     reportDate: toLocalIsoDate(row?.reportDate),
     sourceLink,
     articleTitle,
@@ -623,6 +626,7 @@ export async function saveStudentNewsReport(
         select: {
           id: true,
           reportDate: true,
+          enrollmentPeriodId: true,
           reviewStatus: true,
           reviewNote: true,
           validationIssuesJson: true,
@@ -658,6 +662,7 @@ export async function saveStudentNewsReport(
         select: {
           id: true,
           reportDate: true,
+          enrollmentPeriodId: true,
           reviewStatus: true,
           reviewNote: true,
           validationIssuesJson: true,
@@ -745,7 +750,19 @@ export async function saveStudentNewsReport(
   const reviewStatus = hasFailures && !isResubmission
     ? STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
     : STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  let enrollmentPeriodId = normalizeText(payload?.enrollmentPeriodId)
+  if (!enrollmentPeriodId && normalizeText(existing?.enrollmentPeriodId)) {
+    enrollmentPeriodId = normalizeText(existing?.enrollmentPeriodId)
+  }
+  if (!enrollmentPeriodId) {
+    const schoolYear = getConfiguredSchoolYear()
+    const period = await resolveEnrollmentPeriodForStudent(prisma, id, {
+      schoolYear,
+    })
+    enrollmentPeriodId = normalizeText(period?.id)
+  }
   const reportData = {
+    enrollmentPeriodId: enrollmentPeriodId || null,
     sourceLink,
     articleTitle,
     byline: normalizeNullableText(byline),

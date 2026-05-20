@@ -85,14 +85,8 @@
 
     .app-shell {
       display: grid;
-      grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       gap: 12px;
-    }
-
-    @media (max-width: 1080px) {
-      .app-shell {
-        grid-template-columns: 1fr;
-      }
     }
 
     .school-setup-warning {
@@ -246,6 +240,9 @@
                 ADMINISTRATION
               </button>
               <div class="menu-group-links">
+                <a href="/admin/enrollment" class="menu-link">
+                  Enrollment
+                </a>
                 <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">
                   Student Admin
                 </a>
@@ -360,6 +357,12 @@
                 <select id="filterLevel">
                   <option value="">All levels</option>
                 </select>
+              </div>
+              <div class="col-2">
+                <label>
+                  <input id="includeUnenrolled" type="checkbox">
+                  Include unenrolled
+                </label>
               </div>
               <div class="col-2" id="schoolFilterCol">
                 <label for="filterSchool">School</label>
@@ -840,6 +843,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <button id="profileRefreshInfoBtn" type="button" class="btn-refresh">
                           Refresh Info
                         </button>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-4">
+                        <label for="profileEnrollmentPeriodSelect">Enrollment Period</label>
+                        <select id="profileEnrollmentPeriodSelect">
+                          <option value="">Current period</option>
+                        </select>
                       </div>
                     </div>
                     <div id="profileInfoDataSummary" class="profile-info-summary" aria-live="polite"></div>

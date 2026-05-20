@@ -22,6 +22,7 @@ model Student {
   parentReports     ParentClassReport[]
   pointsAdjustments StudentPointsAdjustment[]
   newsReports       StudentNewsReport[]
+  enrollmentPeriods StudentEnrollmentPeriod[]
   parentPortalLinks ParentPortalStudentLink[]
   studentPortalAccount StudentPortalAccount?
   parentProfileSubmissions ParentProfileSubmissionQueue[]
@@ -154,6 +155,24 @@ enum AdminUserRole {
   teacher
 }
 
+enum StudentEnrollmentStatus {
+  active
+  unenrolled
+}
+
+enum StudentUnenrollmentReason {
+  moved_residence
+  changed_esl_center
+  financial
+  with_prejudice
+  distance_traffic
+  stopped_learning_esl
+  changed_languages
+  pre_high_school_exam_tutoring
+  pre_college_exam_tutoring
+  unknown
+}
+
 model IntakeFieldDefinition {
   id           String            @id @default(cuid())
   formId       String
@@ -263,6 +282,8 @@ model StudentAttendance {
   id             String           @id @default(cuid())
   studentRefId   String
   student        Student          @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId String?
+  enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodAttendanceRecords", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   className      String
   level          String?
   schoolYear     String
@@ -275,6 +296,7 @@ model StudentAttendance {
 
   @@unique([studentRefId, className, attendanceDate])
   @@index([studentRefId, attendanceDate])
+  @@index([enrollmentPeriodId])
   @@index([level, schoolYear, quarter, attendanceDate])
 }
 
@@ -282,6 +304,8 @@ model StudentGradeRecord {
   id                String        @id @default(cuid())
   studentRefId      String
   student           Student       @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId String?
+  enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodGradeRecords", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   className         String
   level             String?
   schoolYear        String
@@ -307,6 +331,7 @@ model StudentGradeRecord {
 
   @@unique([sourceSystem, sourceAttemptId])
   @@index([studentRefId, schoolYear, quarter])
+  @@index([enrollmentPeriodId])
   @@index([className, schoolYear, quarter])
   @@index([dueAt])
 }
@@ -315,6 +340,8 @@ model ParentClassReport {
   id                     String        @id @default(cuid())
   studentRefId           String
   student                Student       @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId     String?
+  enrollmentPeriod       StudentEnrollmentPeriod? @relation("EnrollmentPeriodParentReports", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   className              String
   level                  String?
   schoolYear             String
@@ -332,7 +359,8 @@ model ParentClassReport {
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
-  @@unique([studentRefId, className, schoolYear, quarter])
+  @@unique([studentRefId, className, schoolYear, quarter, enrollmentPeriodId])
+  @@index([enrollmentPeriodId])
   @@index([level, schoolYear, quarter])
   @@index([approvedAt])
 }
@@ -355,6 +383,8 @@ model StudentNewsReport {
   id            String   @id @default(cuid())
   studentRefId  String
   student       Student  @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  enrollmentPeriodId String?
+  enrollmentPeriod   StudentEnrollmentPeriod? @relation("EnrollmentPeriodNewsReports", fields: [enrollmentPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   reportDate    DateTime
   sourceLink    String
   articleTitle  String
@@ -377,9 +407,38 @@ model StudentNewsReport {
   updatedAt     DateTime @updatedAt
 
   @@unique([studentRefId, reportDate])
+  @@index([enrollmentPeriodId])
   @@index([reportDate, submittedAt])
   @@index([reviewStatus, reportDate, submittedAt])
   @@index([reviewedAt])
+}
+
+model StudentEnrollmentPeriod {
+  id                    String                    @id @default(cuid())
+  studentRefId          String
+  student               Student                   @relation(fields: [studentRefId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  schoolYear            String
+  level                 String?
+  status                StudentEnrollmentStatus
+  startedAt             DateTime
+  endedAt               DateTime?
+  unenrollmentReason    StudentUnenrollmentReason?
+  comment               String?
+  promotedFromPeriodId  String?
+  promotedFromPeriod    StudentEnrollmentPeriod?  @relation("EnrollmentPromotionChain", fields: [promotedFromPeriodId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  promotedToPeriods     StudentEnrollmentPeriod[] @relation("EnrollmentPromotionChain")
+  attendanceRecords     StudentAttendance[]       @relation("EnrollmentPeriodAttendanceRecords")
+  gradeRecords          StudentGradeRecord[]      @relation("EnrollmentPeriodGradeRecords")
+  parentReports         ParentClassReport[]       @relation("EnrollmentPeriodParentReports")
+  newsReports           StudentNewsReport[]       @relation("EnrollmentPeriodNewsReports")
+  createdBy             String?
+  updatedBy             String?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  @@index([studentRefId, schoolYear])
+  @@index([status, schoolYear, level])
+  @@index([promotedFromPeriodId])
 }
 
 model AdminUser {

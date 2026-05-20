@@ -2,6 +2,7 @@
 // @ts-check
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 
 /**
  * @param {unknown} value
@@ -471,6 +472,7 @@ export function mapParentClassReport(report) {
   const metaPayload = decoded.metaPayload && typeof decoded.metaPayload === "object" ? decoded.metaPayload : null
   return {
     ...report,
+    enrollmentPeriodId: normalizeText(report?.enrollmentPeriodId),
     comments: decoded.comment,
     rubricPayload: decoded.rubricPayload,
     metaPayload,
@@ -600,6 +602,7 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     level: normalizeNullableText(payload.level),
     schoolYear,
     quarter,
+    enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
     homeworkCompletionRate: normalizeFloat(payload.homeworkCompletionRate),
     homeworkOnTimeRate: normalizeFloat(payload.homeworkOnTimeRate),
     behaviorScore: normalizeFloat(payload.behaviorScore),
@@ -609,13 +612,15 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     comments: encodeParentReportCommentBundle(payload.comments, normalizedRubricPayload, normalizedMetaPayload),
     generatedAt: normalizeDate(payload.generatedAt) || new Date(),
   }
-
   const reportId = normalizeText(payload.id)
 
   if (reportId) {
     const existing = await prisma.parentClassReport.findUnique({ where: { id: reportId } })
     assertWithStatus(Boolean(existing), 404, "Parent report not found")
     assertWithStatus(existing.studentRefId === studentRef, 403, "Parent report does not belong to student")
+    if (!reportData.enrollmentPeriodId) {
+      reportData.enrollmentPeriodId = normalizeNullableText(existing.enrollmentPeriodId)
+    }
 
     let updatedReport
     try {
@@ -633,15 +638,24 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     return mapParentClassReport(updatedReport)
   }
 
+  if (!reportData.enrollmentPeriodId) {
+    const period = await resolveEnrollmentPeriodForStudent(prisma, studentRef, {
+      schoolYear,
+      levelHint: reportData.level || "",
+    })
+    reportData.enrollmentPeriodId = normalizeNullableText(period?.id)
+  }
+
   let upsertedReport
   try {
     upsertedReport = await prisma.parentClassReport.upsert({
       where: {
-        studentRefId_className_schoolYear_quarter: {
+        studentRefId_className_schoolYear_quarter_enrollmentPeriodId: {
           studentRefId: studentRef,
           className,
           schoolYear,
           quarter,
+          enrollmentPeriodId: reportData.enrollmentPeriodId,
         },
       },
       update: reportData,
@@ -655,11 +669,12 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     const legacyReportData = stripLegacyParentReportFields(reportData)
     upsertedReport = await prisma.parentClassReport.upsert({
       where: {
-        studentRefId_className_schoolYear_quarter: {
+        studentRefId_className_schoolYear_quarter_enrollmentPeriodId: {
           studentRefId: studentRef,
           className,
           schoolYear,
           quarter,
+          enrollmentPeriodId: reportData.enrollmentPeriodId,
         },
       },
       update: legacyReportData,

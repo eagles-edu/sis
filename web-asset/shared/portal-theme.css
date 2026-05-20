@@ -604,6 +604,8 @@ html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col {
   gap: 1rem;
 }
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
+body.admin-portal-page.admin-auth-booting .wrap,
 html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col,
 html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col {
   box-sizing: border-box;
@@ -6603,6 +6605,41 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 .footer .inner-footer a:focus,
 .footer .inner-footer a:active {
   color: inherit;
+}
+.hub-footer {
+  align-items: center;
+  background: var(--hub-footer-bg, var(--tertiary-color));
+  border: 1px solid var(--hub-panel-border, var(--paper-border));
+  border-radius: clamp(4.5px, 0.9cqi, 12px);
+  color: var(--hub-footer-text, var(--secondary-color));
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--hub-label-size, 0.95rem);
+  gap: calc(var(--hub-space-1, 12px) / 2) var(--hub-space-1, 12px);
+  justify-content: space-between;
+  margin-top: calc(var(--hub-space-1, 12px) / 2);
+  padding: var(--hub-space-2, 12px) var(--hub-space-3, 16px);
+}
+.hub-footer__copy,
+.hub-footer__action {
+  margin: 0;
+}
+.hub-footer__action {
+  margin-inline-start: auto;
+}
+.hub-footer a,
+.hub-footer a:visited,
+.hub-footer a:hover,
+.hub-footer a:focus,
+.hub-footer a:active {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+.hub-footer a:hover,
+.hub-footer a:focus-visible {
+  outline: none;
+  text-decoration: underline;
 }
 .mar10 {
   margin: 0.625rem;

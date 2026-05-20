@@ -2,6 +2,11 @@
 // @ts-check
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import {
+  ENROLLMENT_STATUS_ACTIVE,
+  ensureEnrollmentPeriodsBackfilled,
+} from "./enrollment-periods.mjs"
+import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 
 /**
  * @param {unknown} value
@@ -388,14 +393,30 @@ export async function listLevelAndSchoolFilters() {
   if (cached) return cached
 
   const prisma = await getPrismaClient()
+  const schoolYear = getConfiguredSchoolYear()
+  if (schoolYear) {
+    await ensureEnrollmentPeriodsBackfilled({ prisma, schoolYear })
+  }
 
   const [levels, schools] = await Promise.all([
-    prisma.studentProfile.findMany({
-      where: { currentGrade: { not: null } },
-      select: { currentGrade: true },
-      distinct: ["currentGrade"],
-      orderBy: { currentGrade: "asc" },
-    }),
+    schoolYear
+      ? prisma.studentEnrollmentPeriod.findMany({
+          where: {
+            schoolYear,
+            status: ENROLLMENT_STATUS_ACTIVE,
+            endedAt: null,
+            level: { not: null },
+          },
+          select: { level: true },
+          distinct: ["level"],
+          orderBy: { level: "asc" },
+        })
+      : prisma.studentProfile.findMany({
+          where: { currentGrade: { not: null } },
+          select: { currentGrade: true },
+          distinct: ["currentGrade"],
+          orderBy: { currentGrade: "asc" },
+        }),
     prisma.studentProfile.findMany({
       where: { schoolName: { not: null } },
       select: { schoolName: true },
@@ -406,7 +427,7 @@ export async function listLevelAndSchoolFilters() {
 
   const payload = {
     levels: levels
-      .map((entry) => canonicalizeLevel(entry.currentGrade))
+      .map((entry) => canonicalizeLevel(entry.currentGrade || entry.level))
       .filter(Boolean),
     schools: schools
       .map((entry) => normalizeText(entry.schoolName))

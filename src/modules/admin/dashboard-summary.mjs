@@ -1,12 +1,17 @@
 // @ts-check
 import { buildAssignmentDashboardSlices, listAssignmentTemplates } from "./assignment-templates.mjs"
 import {
+  ENROLLMENT_STATUS_ACTIVE,
+  ensureEnrollmentPeriodsBackfilled,
+} from "./enrollment-periods.mjs"
+import {
   isAssignmentTrackingGradeRecord,
   isCompletedGradeRecord,
   isLateCompletedGradeRecord,
   isOnTimeCompletedGradeRecord,
   isOutstandingGradeRecord,
 } from "./student-records.mjs"
+import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 
 /**
@@ -670,6 +675,10 @@ export function summarizeTodayAttendanceForDashboard({
  */
 export async function getAdminDashboardSummary() {
   const prisma = await getSharedPrismaClient()
+  const schoolYear = getConfiguredSchoolYear()
+  if (schoolYear) {
+    await ensureEnrollmentPeriodsBackfilled({ prisma, schoolYear })
+  }
   const now = new Date()
   const todayStart = startOfDay(now)
   const todayEnd = endOfDay(now)
@@ -680,13 +689,42 @@ export async function getAdminDashboardSummary() {
   const msPerDay = 24 * 60 * 60 * 1000
 
   const [
-    enrolledProfiles,
+    activeEnrollmentPeriods,
     todayAttendance,
     weekAttendance,
     allGradeRecords,
     parentReportTotal,
   ] = await Promise.all([
-    prisma.studentProfile.findMany({
+    schoolYear
+      ? prisma.studentEnrollmentPeriod.findMany({
+          where: {
+            schoolYear,
+            status: ENROLLMENT_STATUS_ACTIVE,
+            endedAt: null,
+          },
+          select: {
+            id: true,
+            studentRefId: true,
+            level: true,
+            student: {
+              select: {
+                eaglesId: true,
+                studentNumber: true,
+                email: true,
+                profile: {
+                  select: {
+                    fullName: true,
+                    currentGrade: true,
+                    studentEmail: true,
+                    motherEmail: true,
+                    fatherEmail: true,
+                  },
+                },
+              },
+            },
+          },
+        })
+      : prisma.studentProfile.findMany({
       select: {
         studentRefId: true,
         fullName: true,
@@ -705,6 +743,7 @@ export async function getAdminDashboardSummary() {
     }),
     prisma.studentAttendance.findMany({
       where: {
+        ...(schoolYear ? { schoolYear, enrollmentPeriod: { is: { schoolYear, status: ENROLLMENT_STATUS_ACTIVE } } } : {}),
         attendanceDate: {
           gte: todayStart,
           lte: todayEnd,
@@ -719,6 +758,7 @@ export async function getAdminDashboardSummary() {
     }),
     prisma.studentAttendance.findMany({
       where: {
+        ...(schoolYear ? { schoolYear, enrollmentPeriod: { is: { schoolYear, status: ENROLLMENT_STATUS_ACTIVE } } } : {}),
         attendanceDate: {
           gte: weekStart,
           lte: weekEnd,
@@ -731,6 +771,7 @@ export async function getAdminDashboardSummary() {
       },
     }),
     prisma.studentGradeRecord.findMany({
+      where: schoolYear ? { schoolYear, enrollmentPeriod: { is: { schoolYear, status: ENROLLMENT_STATUS_ACTIVE } } } : {},
       select: {
         studentRefId: true,
         className: true,
@@ -745,21 +786,41 @@ export async function getAdminDashboardSummary() {
         comments: true,
       },
     }),
-    prisma.parentClassReport.count(),
+    prisma.parentClassReport.count({
+      where: schoolYear ? { schoolYear, enrollmentPeriod: { is: { schoolYear, status: ENROLLMENT_STATUS_ACTIVE } } } : {},
+    }),
   ])
 
   const profileByStudentRefId = new Map()
   const enrolledByLevel = new Map()
   let totalEnrollment = 0
+  const enrolledProfiles = activeEnrollmentPeriods.map((entry) => {
+    if (entry?.student?.profile) {
+      return {
+        studentRefId: entry.studentRefId,
+        fullName: entry.student.profile.fullName,
+        currentGrade: entry.level || entry.student.profile.currentGrade,
+        studentEmail: entry.student.profile.studentEmail,
+        motherEmail: entry.student.profile.motherEmail,
+        fatherEmail: entry.student.profile.fatherEmail,
+        student: {
+          eaglesId: entry.student.eaglesId,
+          studentNumber: entry.student.studentNumber,
+          email: entry.student.email,
+        },
+      }
+    }
+    return entry
+  })
   enrolledProfiles.forEach((profile) => {
-    const canonicalLevel = canonicalizeLevel(profile.currentGrade || "")
+    const canonicalLevel = canonicalizeLevel(profile.currentGrade || profile.level || "")
     if (canonicalLevel) totalEnrollment += 1
     const level = canonicalLevel || "Unassigned"
     const current = enrolledByLevel.get(level) || 0
     enrolledByLevel.set(level, current + 1)
     profileByStudentRefId.set(profile.studentRefId, profile)
   })
-  const unenrolledYtd = Math.max(0, enrolledProfiles.length - totalEnrollment)
+  const unenrolledYtd = 0
 
   const todayAttendanceSummary = summarizeTodayAttendanceForDashboard({
     rows: todayAttendance,

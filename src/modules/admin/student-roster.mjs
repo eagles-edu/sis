@@ -4,6 +4,16 @@
 import { mapParentClassReport } from "./parent-reports.mjs"
 import { mapGradeRecordForApi } from "./student-records.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import {
+  buildStudentEnrollmentSnapshot,
+  ENROLLMENT_LEVEL_FILTER_UNENROLLED_ONLY,
+  ENROLLMENT_STATUS_ACTIVE,
+  ENROLLMENT_STATUS_UNENROLLED,
+  ensureEnrollmentPeriodsBackfilled,
+  getStudentEnrollmentDetail,
+  listEnrollmentRoster,
+} from "./enrollment-periods.mjs"
+import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 
 /**
  * @param {unknown} value
@@ -244,6 +254,13 @@ function assertStudentIdentityIntegrity(student = {}, context = "student") {
 function mapStudent(student) {
   if (!student) return null
   const identity = assertStudentIdentityIntegrity(student, `student ${normalizeText(student?.id)}`)
+  const enrollmentSnapshot = buildStudentEnrollmentSnapshot({
+    student,
+    attendanceRecords: student?.attendanceRecords,
+    gradeRecords: student?.gradeRecords,
+    parentReports: student?.parentReports,
+    selectedEnrollmentPeriodId: student?.selectedEnrollmentPeriodId,
+  })
   return {
     id: student.id,
     externalKey: student.externalKey,
@@ -267,6 +284,9 @@ function mapStudent(student) {
     parentReports: Array.isArray(student.parentReports)
       ? student.parentReports.map((entry) => mapParentClassReport(entry))
       : undefined,
+    currentEnrollment: enrollmentSnapshot.currentEnrollment,
+    enrollmentPeriods: enrollmentSnapshot.enrollmentPeriods,
+    selectedEnrollmentPeriodId: enrollmentSnapshot.selectedEnrollmentPeriodId,
   }
 }
 
@@ -298,30 +318,9 @@ const STUDENT_SEARCH_FALLBACK_SCAN_BATCH = 250
  * @param {{ levelFilter?: string, schoolFilter?: string, levelVariants?: string[] }} [options]
  * @returns {Record<string, unknown>}
  */
-function listStudentsBaseWhere({ levelFilter = "", schoolFilter = "", levelVariants = [] } = {}) {
+function listStudentsBaseWhere({ schoolFilter = "" } = {}) {
   return {
     AND: [
-      levelFilter
-        ? {
-            profile: {
-              is: levelVariants.length
-                ? {
-                    OR: levelVariants.map((entry) => ({
-                      currentGrade: {
-                        equals: entry,
-                        mode: "insensitive",
-                      },
-                    })),
-                  }
-                : {
-                    currentGrade: {
-                      equals: levelFilter,
-                      mode: "insensitive",
-                    },
-                  },
-            },
-          }
-        : {},
       schoolFilter
         ? {
             profile: {
@@ -417,26 +416,53 @@ async function findAccentInsensitiveStudentIds({ prisma, baseWhere = {}, searchC
 }
 
 /**
- * @param {{ query?: string, level?: string, school?: string, take?: number }} [options]
+ * @param {{ query?: string, level?: string, school?: string, take?: number, includeUnenrolled?: boolean }} [options]
  * @returns {Promise<{ total: number, items: Array<ReturnType<typeof mapStudent>> }>}
  */
-export async function listStudents({ query = "", level = "", school = "", take = 250 } = {}) {
+export async function listStudents({ query = "", level = "", school = "", take = 250, includeUnenrolled = false } = {}) {
   const prisma = await getSharedPrismaClient()
   const searchQuery = normalizeText(query)
   const levelFilter = normalizeText(level)
   const schoolFilter = normalizeText(school)
   const limit = Math.max(1, Math.min(Number.parseInt(String(take), 10) || 250, 1000))
-  const levelVariants = resolveLevelVariants(levelFilter)
-  const baseWhere = listStudentsBaseWhere({ levelFilter, schoolFilter, levelVariants })
+  const baseWhere = listStudentsBaseWhere({ schoolFilter })
   const searchClause = listStudentsSearchClause(searchQuery)
   const where = searchClause ? { AND: [...(baseWhere.AND || []), searchClause] } : baseWhere
-
-  let students = await prisma.student.findMany({
-    where,
-    include: STUDENT_LIST_QUERY_INCLUDE,
-    orderBy: STUDENT_LIST_QUERY_ORDER_BY,
+  const targetSchoolYear = getConfiguredSchoolYear()
+  if (targetSchoolYear) {
+    await ensureEnrollmentPeriodsBackfilled({ prisma, schoolYear: targetSchoolYear })
+  }
+  const enrollmentRoster = await listEnrollmentRoster({
+    query: searchQuery,
+    level: levelFilter,
+    includeUnenrolled,
     take: limit,
+    schoolYear: targetSchoolYear,
   })
+  const rosterIds = Array.isArray(enrollmentRoster?.items)
+    ? enrollmentRoster.items.map((entry) => normalizeText(entry?.id)).filter(Boolean)
+    : []
+
+  let students = rosterIds.length
+    ? await prisma.student.findMany({
+        where: {
+          id: { in: rosterIds },
+        },
+        include: {
+          ...STUDENT_LIST_QUERY_INCLUDE,
+          enrollmentPeriods: targetSchoolYear
+            ? {
+                where: { schoolYear: targetSchoolYear },
+                orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+              }
+            : {
+                orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+              },
+        },
+        orderBy: STUDENT_LIST_QUERY_ORDER_BY,
+        take: limit,
+      })
+    : []
 
   if (searchQuery && students.length === 0) {
     const matchedIds = await findAccentInsensitiveStudentIds({
@@ -446,16 +472,39 @@ export async function listStudents({ query = "", level = "", school = "", take =
       limit,
     })
     if (matchedIds.length) {
-      students = await prisma.student.findMany({
-        where: {
-          id: {
-            in: matchedIds,
-          },
-        },
-        include: STUDENT_LIST_QUERY_INCLUDE,
-        orderBy: STUDENT_LIST_QUERY_ORDER_BY,
-        take: limit,
+      const fallbackRoster = await listEnrollmentRoster({
+        query: "",
+        level: levelFilter,
+        includeUnenrolled,
+        take: 1000,
+        schoolYear: targetSchoolYear,
       })
+      const allowedIds = new Set(
+        (fallbackRoster.items || []).map((entry) => normalizeText(entry?.id)).filter(Boolean)
+      )
+      const finalIds = matchedIds.filter((id) => allowedIds.has(normalizeText(id)))
+      if (finalIds.length) {
+        students = await prisma.student.findMany({
+          where: {
+            id: {
+              in: finalIds,
+            },
+          },
+          include: {
+            ...STUDENT_LIST_QUERY_INCLUDE,
+            enrollmentPeriods: targetSchoolYear
+              ? {
+                  where: { schoolYear: targetSchoolYear },
+                  orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+                }
+              : {
+                  orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+                },
+          },
+          orderBy: STUDENT_LIST_QUERY_ORDER_BY,
+          take: limit,
+        })
+      }
     }
   }
 
@@ -467,12 +516,17 @@ export async function listStudents({ query = "", level = "", school = "", take =
 
 /**
  * @param {string} studentRefId
+ * @param {{ enrollmentPeriodId?: string }} [options]
  * @returns {Promise<ReturnType<typeof mapStudent>>}
  */
-export async function getStudentById(studentRefId) {
+export async function getStudentById(studentRefId, { enrollmentPeriodId = "" } = {}) {
   const prisma = await getSharedPrismaClient()
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
+  const targetSchoolYear = getConfiguredSchoolYear()
+  if (targetSchoolYear) {
+    await ensureEnrollmentPeriodsBackfilled({ prisma, schoolYear: targetSchoolYear, studentRefId: id })
+  }
 
   const student = await prisma.student.findUnique({
     where: { id },
@@ -490,6 +544,14 @@ export async function getStudentById(studentRefId) {
         orderBy: { generatedAt: "desc" },
         take: 200,
       },
+      enrollmentPeriods: targetSchoolYear
+        ? {
+            where: { schoolYear: targetSchoolYear },
+            orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+          }
+        : {
+            orderBy: [{ startedAt: "desc" }, { createdAt: "desc" }],
+          },
       _count: {
         select: {
           submissions: true,
@@ -503,7 +565,21 @@ export async function getStudentById(studentRefId) {
   })
 
   assertWithStatus(Boolean(student), 404, "Student not found")
-  return mapStudent(student)
+  const enrollmentSnapshot = buildStudentEnrollmentSnapshot({
+    student,
+    attendanceRecords: student.attendanceRecords,
+    gradeRecords: student.gradeRecords,
+    parentReports: student.parentReports,
+    selectedEnrollmentPeriodId: enrollmentPeriodId,
+  })
+
+  return mapStudent({
+    ...student,
+    selectedEnrollmentPeriodId: enrollmentSnapshot.selectedEnrollmentPeriodId,
+    attendanceRecords: enrollmentSnapshot.filteredAttendanceRecords,
+    gradeRecords: enrollmentSnapshot.filteredGradeRecords,
+    parentReports: enrollmentSnapshot.filteredParentReports,
+  })
 }
 
 /**

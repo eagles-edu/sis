@@ -1,5 +1,6 @@
 // @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 
 /**
  * @param {unknown} value
@@ -287,6 +288,7 @@ export function mapGradeRecordForApi(record = {}) {
   return {
     ...record,
     source: inferGradeRecordSource(record),
+    enrollmentPeriodId: normalizeText(record?.enrollmentPeriodId),
   }
 }
 
@@ -366,22 +368,33 @@ export async function saveAttendanceRecord(studentRefId, payload = {}) {
     level: normalizeNullableText(payload.level),
     schoolYear,
     quarter,
+    enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
     attendanceDate,
     status: normalizeAttendanceStatus(payload.status),
     comments: normalizeNullableText(payload.comments),
   }
-
   const recordId = normalizeText(payload.id)
 
   if (recordId) {
     const existing = await prisma.studentAttendance.findUnique({ where: { id: recordId } })
     assertWithStatus(Boolean(existing), 404, "Attendance record not found")
     assertWithStatus(existing.studentRefId === studentRef, 403, "Attendance record does not belong to student")
+    if (!data.enrollmentPeriodId) {
+      data.enrollmentPeriodId = normalizeNullableText(existing.enrollmentPeriodId)
+    }
 
     return prisma.studentAttendance.update({
       where: { id: recordId },
       data,
     })
+  }
+
+  if (!data.enrollmentPeriodId) {
+    const period = await resolveEnrollmentPeriodForStudent(prisma, studentRef, {
+      schoolYear,
+      levelHint: data.level || "",
+    })
+    data.enrollmentPeriodId = normalizeNullableText(period?.id)
   }
 
   return prisma.studentAttendance.create({
@@ -459,6 +472,7 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
     level: normalizeNullableText(payload.level),
     schoolYear,
     quarter,
+    enrollmentPeriodId: normalizeNullableText(payload.enrollmentPeriodId),
     assignmentName,
     dueAt: normalizeDate(payload.dueAt),
     submittedAt: normalizeDate(payload.submittedAt),
@@ -479,19 +493,29 @@ export async function saveGradeRecord(studentRefId, payload = {}) {
         ? payload.assignmentBundleJson
         : null,
   }
-
   const recordId = normalizeText(payload.id)
 
   if (recordId) {
     const existing = await prisma.studentGradeRecord.findUnique({ where: { id: recordId } })
     assertWithStatus(Boolean(existing), 404, "Grade record not found")
     assertWithStatus(existing.studentRefId === studentRef, 403, "Grade record does not belong to student")
+    if (!data.enrollmentPeriodId) {
+      data.enrollmentPeriodId = normalizeNullableText(existing.enrollmentPeriodId)
+    }
 
     const updated = await prisma.studentGradeRecord.update({
       where: { id: recordId },
       data,
     })
     return mapGradeRecordForApi(updated)
+  }
+
+  if (!data.enrollmentPeriodId) {
+    const period = await resolveEnrollmentPeriodForStudent(prisma, studentRef, {
+      schoolYear,
+      levelHint: data.level || "",
+    })
+    data.enrollmentPeriodId = normalizeNullableText(period?.id)
   }
 
   const created = await prisma.studentGradeRecord.create({

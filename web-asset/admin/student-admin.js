@@ -37,6 +37,7 @@
         hubPollTimer: null,
         globalTextZoomPercent: 100,
         currentStudent: null,
+        selectedEnrollmentPeriodId: "",
         uiSettingsMeta: null,
         profileFormConfig: null,
         profileActiveTab: "profile",
@@ -200,6 +201,7 @@
           query: "",
           level: "",
           school: "",
+          includeUnenrolled: false,
         },
         topSearch: {
           expanded: false,
@@ -16570,6 +16572,9 @@
       function renderProfileInfoSummary(student = state.currentStudent) {
         const summaryEl = document.getElementById("profileInfoDataSummary");
         if (!summaryEl) return;
+        const enrollmentSelect = document.getElementById(
+          "profileEnrollmentPeriodSelect",
+        );
 
         const profile =
           student?.profile && typeof student.profile === "object" ?
@@ -16605,6 +16610,15 @@
           : "Select a student row to review profile clusters.";
 
         const currentGrade = resolveSystemLevelName(profile?.currentGrade || "");
+        const currentEnrollment =
+          student?.currentEnrollment && typeof student.currentEnrollment === "object" ?
+            student.currentEnrollment
+          : null;
+        const enrollmentStatus = normalizeText(currentEnrollment?.status || "")
+          .toLowerCase();
+        const statusLabel =
+          enrollmentStatus === "unenrolled" ? "Unenrolled" : "Enrolled";
+        const currentSchoolYear = normalizeText(currentEnrollment?.schoolYear || "");
         const schoolName = normalizeText(profile?.schoolName);
         const motherContact = normalizeText(
           [profile?.motherName, profile?.motherPhone].filter(Boolean).join(" / "),
@@ -16613,13 +16627,42 @@
           [profile?.fatherName, profile?.fatherPhone].filter(Boolean).join(" / "),
         );
 
+        if (enrollmentSelect) {
+          const periods = Array.isArray(student?.enrollmentPeriods)
+            ? student.enrollmentPeriods
+            : [];
+          const selectedPeriodId = normalizeText(
+            student?.selectedEnrollmentPeriodId ||
+              state.selectedEnrollmentPeriodId ||
+              "",
+          );
+          enrollmentSelect.innerHTML =
+            '<option value="">Current period</option>';
+          periods.forEach((period) => {
+            const option = document.createElement("option");
+            option.value = normalizeText(period?.id);
+            const labelParts = [
+              normalizeText(period?.schoolYear),
+              normalizeText(period?.level || period?.status || "Unassigned"),
+              normalizeText(period?.status || "active"),
+            ].filter(Boolean);
+            option.textContent = labelParts.join(" | ");
+            if (normalizeText(option.value) === selectedPeriodId) {
+              option.selected = true;
+            }
+            enrollmentSelect.appendChild(option);
+          });
+        }
+
         summaryEl.innerHTML = `
         <article class="profile-summary-primary">
           <p class="profile-summary-kicker">Student Snapshot</p>
           <p class="profile-summary-name">${escapeHtml(studentName)}</p>
           <p class="profile-summary-subline">${escapeHtml(subline)}</p>
         </article>
+        ${profileSummaryChipHtml("Status", statusLabel)}
         ${profileSummaryChipHtml("Class Level", currentGrade)}
+        ${profileSummaryChipHtml("School Year", currentSchoolYear)}
         ${profileSummaryChipHtml("School", schoolName)}
         ${profileSummaryChipHtml("Primary Contact", motherContact)}
         ${profileSummaryChipHtml("Secondary Contact", fatherContact)}
@@ -17517,17 +17560,25 @@
         const data = await api("/api/admin/filters");
         const levelSelect = document.getElementById("filterLevel");
         const schoolSelect = document.getElementById("filterSchool");
-        const currentLevel = resolveSystemLevelName(levelSelect?.value);
+        const currentLevelValue = normalizeText(levelSelect?.value || "");
+        const currentLevel =
+          currentLevelValue === "__UNENROLLED_ONLY__" ?
+            "__UNENROLLED_ONLY__"
+          : resolveSystemLevelName(currentLevelValue);
         const currentSchool = normalizeText(schoolSelect?.value);
 
-        if (levelSelect) levelSelect.innerHTML = '<option value="">All levels</option>';
+        if (levelSelect)
+          levelSelect.innerHTML = '<option value="">All levels</option>';
         if (schoolSelect) schoolSelect.innerHTML = '<option value="">All schools</option>';
 
         const filterLevels = (data.levels || []).map((entry) =>
           normalizeLevelName(entry),
         );
         syncSystemLevelNames(filterLevels);
-        const levelList = collectKnownLevelNames([currentLevel, ...filterLevels]);
+        const levelList = collectKnownLevelNames([
+          currentLevel === "__UNENROLLED_ONLY__" ? "" : currentLevel,
+          ...filterLevels,
+        ]);
 
         levelList.forEach((level) => {
           const option = document.createElement("option");
@@ -17536,6 +17587,14 @@
           if (levelNamesMatch(option.value, currentLevel)) option.selected = true;
           if (levelSelect) levelSelect.appendChild(option);
         });
+        if (levelSelect) {
+          const unenrolledOption = document.createElement("option");
+          unenrolledOption.value = "__UNENROLLED_ONLY__";
+          unenrolledOption.textContent = "Unenrolled only";
+          if (normalizeText(currentLevel) === "__UNENROLLED_ONLY__")
+            unenrolledOption.selected = true;
+          levelSelect.appendChild(unenrolledOption);
+        }
         (data.schools || []).forEach((school) => {
           const option = document.createElement("option");
           option.value = school;
@@ -17564,24 +17623,32 @@
       async function loadStudents() {
         const qInput = normalizeText(document.getElementById("searchQ")?.value || "");
         const qRaw = normalizeTopSearchQuery(qInput);
-        const levelRaw = resolveSystemLevelName(
+        const levelControlValue = normalizeText(
           document.getElementById("filterLevel")?.value || "",
         );
+        const levelRaw =
+          levelControlValue === "__UNENROLLED_ONLY__" ?
+            "__UNENROLLED_ONLY__"
+          : resolveSystemLevelName(levelControlValue);
         const schoolRaw = normalizeText(
           document.getElementById("filterSchool")?.value || "",
+        );
+        const includeUnenrolled = Boolean(
+          document.getElementById("includeUnenrolled")?.checked,
         );
 
         const q = encodeURIComponent(qRaw);
         const level = encodeURIComponent(levelRaw);
         const school = encodeURIComponent(schoolRaw);
+        const includeParam = includeUnenrolled ? "&includeUnenrolled=true" : "";
 
         const data = await api(
-          `/api/admin/students?q=${q}&level=${level}&school=${school}`,
+          `/api/admin/students?q=${q}&level=${level}&school=${school}${includeParam}`,
         );
         let students = Array.isArray(data?.items) ? data.items : [];
         if (qRaw && students.length === 0) {
           const fallback = await api(
-            `/api/admin/students?q=&level=${level}&school=${school}&take=1000`,
+            `/api/admin/students?q=&level=${level}&school=${school}&take=1000${includeParam}`,
           );
           students = Array.isArray(fallback?.items) ? fallback.items : [];
         }
@@ -17618,6 +17685,7 @@
           query: qRaw,
           level: levelRaw,
           school: schoolRaw,
+          includeUnenrolled,
         };
         state.students = studentsWithIdentity;
         syncSystemLevelNames(
@@ -17650,19 +17718,21 @@
         const searchEl = document.getElementById("searchQ");
         const levelEl = document.getElementById("filterLevel");
         const schoolEl = document.getElementById("filterSchool");
+        const includeUnenrolledEl = document.getElementById("includeUnenrolled");
         const familyPhoneEl = document.getElementById("familyPhone");
         const familyResultEl = document.getElementById("familyResult");
 
         if (searchEl) searchEl.value = "";
         if (levelEl) levelEl.value = "";
         if (schoolEl) schoolEl.value = "";
+        if (includeUnenrolledEl) includeUnenrolledEl.checked = false;
         if (familyPhoneEl) familyPhoneEl.value = "";
         if (familyResultEl) familyResultEl.textContent = "No family lookup yet.";
 
         if (canReadData()) {
           await loadStudents();
         } else {
-          state.topStudentScope = { query: "", level: "", school: "" };
+          state.topStudentScope = { query: "", level: "", school: "", includeUnenrolled: false };
           renderStudents();
           renderTopSearchStudentOptions();
           updateTopSearchScopeHint();
@@ -17670,9 +17740,13 @@
         setStatus("Search and filter form cleared.");
       }
 
-      async function loadStudentDetail(studentRefId) {
+      async function loadStudentDetail(studentRefId, enrollmentPeriodId = "") {
+        const params = new URLSearchParams();
+        if (normalizeText(enrollmentPeriodId)) {
+          params.set("enrollmentPeriodId", normalizeText(enrollmentPeriodId));
+        }
         const student = await api(
-          `/api/admin/students/${encodeURIComponent(studentRefId)}`,
+          `/api/admin/students/${encodeURIComponent(studentRefId)}${params.size ? `?${params.toString()}` : ""}`,
         );
         if (!normalizeText(student?.eaglesId))
           throw new Error(
@@ -17686,6 +17760,9 @@
             "Data integrity error: studentNumber is required for student records.",
           );
         }
+        state.selectedEnrollmentPeriodId = normalizeText(
+          student?.selectedEnrollmentPeriodId || enrollmentPeriodId || "",
+        );
         state.currentStudent = student;
         cacheStudentDetail(student);
         if (student?.id)
@@ -19335,6 +19412,20 @@
         window.setTimeout(execute, 0);
       }
 
+      function scheduleIdleTaskSeries(tasks = [], { timeout = 1200 } = {}) {
+        const queue = Array.isArray(tasks) ? tasks.filter((task) => typeof task === "function") : [];
+        if (!queue.length) return;
+        const runNext = () => {
+          const nextTask = queue.shift();
+          if (!nextTask) return;
+          scheduleIdleTask(async () => {
+            await nextTask();
+            if (queue.length) runNext();
+          }, timeout);
+        };
+        runNext();
+      }
+
       async function bootAfterLogin() {
         initializeParentTrackingScoreSelects();
         initializeParentTrackingScoreLegendPopovers();
@@ -19364,21 +19455,16 @@
           renderHubConnectionStatus();
           renderServiceControlCard();
           await loadStudents();
-          scheduleIdleTask(() =>
-            Promise.allSettled([
-              loadFilters(),
-              loadDashboardStudents(),
-              loadQueueHub({ notify: false }),
+          scheduleIdleTaskSeries([
+            () => loadFilters().catch(handleError),
+            () => loadDashboardStudents().catch(handleError),
+            () => loadQueueHub({ notify: false }).catch(handleError),
+            () =>
               loadIncomingExerciseResults({
                 showAll: state.incomingExerciseQueue.showAll,
-              }),
-              loadExerciseTitles(),
-            ]).then((results) => {
-              results.forEach((result) => {
-                if (result.status === "rejected") handleError(result.reason);
-              });
-            }),
-          );
+              }).catch(handleError),
+            () => loadExerciseTitles().catch(handleError),
+          ]);
         } else {
           state.students = [];
           renderStudents();
@@ -19511,7 +19597,14 @@
       bindById("searchBtn", "click", () => loadStudents().catch(handleError));
       bindById("clearFiltersBtn", "click", () => clearTopControls().catch(handleError));
       bindById("filterLevel", "change", () => loadStudents().catch(handleError));
+      bindById("includeUnenrolled", "change", () => loadStudents().catch(handleError));
       bindById("filterSchool", "change", () => loadStudents().catch(handleError));
+      bindById("profileEnrollmentPeriodSelect", "change", (event) => {
+        const target = event?.target;
+        const studentRefId = normalizeText(state.currentStudent?.id || "");
+        if (!(target instanceof HTMLSelectElement) || !studentRefId) return;
+        loadStudentDetail(studentRefId, target.value).catch(handleError);
+      });
       DATA_TABLE_KEYS.forEach((tableKey) => {
         const config = tableFilterFieldConfig(tableKey);
         if (!config) return;
@@ -21499,31 +21592,33 @@
       updateArchiveToggleButtons();
       renderHubConnectionStatus();
       renderServiceControlCard();
-      scheduleIdleTask(() => {
-        renderProfileFormLayout();
-        renderProfileInfoLayout();
-        renderProfileFieldLayoutEditor();
-        setProfileMode("info");
-        applyUiSettings();
-        renderAssignmentTemplates();
-        renderAssignmentDraftItems();
-        renderAssignmentExerciseOptions();
-        populateProfileLevelOptions();
-        populateAssignmentLevelOptions();
-        populateAttendanceLevelStyleOptions();
-        refreshAllTableSearchFilterControls();
-        applyGradeChartCurrentSchoolYearDefault();
-        renderGradePulseChart(state.visibleTableRows?.grades || []);
-        syncAttendanceLevelEditorInputs();
-        refreshAssignmentStudentOptions();
-        renderTopSearchStudentOptions();
-        updateTopSearchScopeHint();
-        renderParentTrackingTeacherOptions();
-        refreshParentTracking({ preserveStudentSelection: true }).catch(
-          () => {},
-        );
-        refreshAttendanceLanding({ reloadRows: false }).catch(() => {});
-      });
+      scheduleIdleTaskSeries([
+        () => {
+          renderProfileFormLayout();
+          renderProfileInfoLayout();
+          renderProfileFieldLayoutEditor();
+          setProfileMode("info");
+          applyUiSettings();
+          renderAssignmentTemplates();
+          renderAssignmentDraftItems();
+          renderAssignmentExerciseOptions();
+        },
+        () => {
+          populateProfileLevelOptions();
+          populateAssignmentLevelOptions();
+          populateAttendanceLevelStyleOptions();
+          refreshAllTableSearchFilterControls();
+          applyGradeChartCurrentSchoolYearDefault();
+          renderGradePulseChart(state.visibleTableRows?.grades || []);
+          syncAttendanceLevelEditorInputs();
+          refreshAssignmentStudentOptions();
+          renderTopSearchStudentOptions();
+          updateTopSearchScopeHint();
+          renderParentTrackingTeacherOptions();
+        },
+        () => refreshParentTracking({ preserveStudentSelection: true }).catch(() => {}),
+        () => refreshAttendanceLanding({ reloadRows: false }).catch(() => {}),
+      ]);
       if (!(isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN)) {
         probeHubConnection({ notify: false }).catch(() => {});
       }
