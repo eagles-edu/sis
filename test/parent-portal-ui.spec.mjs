@@ -1703,6 +1703,8 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
       summaryLabel,
       /Đã nộp\s+\d+;\s+Cần chỉnh sửa\s+\d+;\s+Chờ duyệt\s+\d+;\s+Đã duyệt\s+\d+/i
     )
+    assert.equal(document.querySelectorAll("#newsQueueCard details").length, 0)
+    assert.equal(document.getElementById("newsQueueDetails")?.tagName, "DIV")
   })
 
   await settleDomAsync(dom)

@@ -121,17 +121,6 @@
       grid-template-columns: repeat(12, minmax(0, 1fr));
     }
 
-    .queue-panel details summary {
-      display: grid;
-      gap: 4px;
-      cursor: pointer;
-      list-style: none;
-    }
-
-    .queue-panel details summary::-webkit-details-marker {
-      display: none;
-    }
-
     .queue-summary-head {
       display: flex;
       align-items: flex-start;
@@ -1761,13 +1750,13 @@
               </section>
 
               <section id="newsQueueCard" class="panel queue-panel">
-              <details id="newsQueueDetails" open>
-                <summary class="queue-summary-head">
+                <div id="newsQueueDetails">
+                  <div class="queue-summary-head">
                   <span class="queue-summary-stack">
                     <span class="summary-title">News Report Queue</span>
                     <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
                   </span>
-                </summary>
+                  </div>
                   <div class="queue-table-wrap">
                     <table class="news-queue-table">
                       <thead>
@@ -1790,7 +1779,7 @@
                     <button id="openNewsPageBtn" type="button">Open News Page</button>
                     <button id="newsQueueRefreshBtn" type="button" class="btn-refresh">Refresh</button>
                   </div>
-                </details>
+                </div>
               </section>
 
               <section id="currentHomeworkCard" class="panel homework-card">
@@ -2027,13 +2016,13 @@
             </section>
 
             <section id="newsQueuePanel" class="panel queue-panel">
-              <details id="newsPageQueueDetails" open>
-                <summary class="queue-summary-head">
+              <div id="newsPageQueueDetails">
+                <div class="queue-summary-head">
                   <span class="queue-summary-stack">
                     <span class="summary-title">News Report Queue</span>
                     <span id="newsPageQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
                   </span>
-                </summary>
+                </div>
                 <div class="queue-table-wrap">
                   <table class="news-queue-table">
                     <thead>
@@ -2052,7 +2041,7 @@
                     </tbody>
                   </table>
                 </div>
-              </details>
+              </div>
             </section>
 
             <section id="newsReportFormCard" class="panel">
