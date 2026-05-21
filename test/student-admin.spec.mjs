@@ -1319,7 +1319,7 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const html = await res.text()
   assert.match(html, /Grades Tabulator/i)
-  assert.match(html, /href="\/admin\/students\?page=grades-data"/i)
+  assert.match(html, /href="\/admin\?page=grades-data"/i)
   assert.match(html, /data-period=\"qtd\"/i)
   assert.match(html, /\/api\/admin\/auth\/me/i)
   assert.match(html, /counts\?\.gradeRecords/)
@@ -1435,8 +1435,8 @@ test("GET /web-asset/admin/grades-tabulator-dev.html redirects to consolidated p
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const html = await res.text()
-  assert.match(html, /grades-tabulator\.html/i)
-  assert.match(html, /window\.location\.replace\(\"\/web-asset\/admin\/grades-tabulator\.html\"\)/i)
+  assert.match(html, /\/admin\?page=grades-data/i)
+  assert.match(html, /window\.location\.replace\(\"\/admin\?page=grades-data\"\)/i)
 })
 
 test("GET /web-asset/vendor/tabulatorz/tabulator.min.js returns runtime static asset", async () => {

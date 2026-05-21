@@ -60,6 +60,19 @@ test("portal pages load the shared portal theme stylesheet", () => {
   }
 })
 
+test("portal home links use canonical runtime routes", () => {
+  assert.match(
+    parentPortal,
+    /<a class="brand-logo-wrap brand-logo-wrap--sm" href="\/parent" aria-label="Go to parent home">/,
+    "parent portal should link its logo to /parent",
+  )
+  assert.match(
+    studentPortal,
+    /<a class="brand-logo-wrap brand-logo-wrap--sm" href="\/student" aria-label="Go to student home">/,
+    "student portal should link its logo to /student",
+  )
+})
+
 test("shared portal theme minified asset is generated from portal-theme.css by the build script", () => {
   assert.match(
     buildAdminAssets,

@@ -21460,10 +21460,13 @@
           if (customFrom) params.set("customFrom", customFrom);
           if (customTo) params.set("customTo", customTo);
         }
-        const query = params.toString();
-        return query
-          ? `/web-asset/admin/grades-tabulator.html?${query}`
-          : "/web-asset/admin/grades-tabulator.html";
+        const targetUrl = new URL(buildPageQueryPath("grades-data"), window.location.origin);
+        const targetParams = targetUrl.searchParams;
+        params.forEach((value, key) => {
+          targetParams.set(key, value);
+        });
+        targetUrl.search = targetParams.toString();
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
       }
       function bindQueueHubIslandFallback() {
         const queueHubPanelsEl = document.getElementById("queueHubPanels");

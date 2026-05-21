@@ -6,6 +6,8 @@ import test from "node:test"
 const rootDir = process.cwd()
 const hubHtmlPath = path.resolve(rootDir, "web-asset/admin/portal-hub.html")
 const hubHtml = fs.readFileSync(hubHtmlPath, "utf8")
+const portalThemeCssPath = path.resolve(rootDir, "web-asset/shared/portal-theme.css")
+const portalThemeCss = fs.readFileSync(portalThemeCssPath, "utf8")
 
 test("portal hub falls back to the dev apiOrigin when runtime paths are unavailable", () => {
   assert.match(hubHtml, /const currentOrigin = window\.location\.origin/)
@@ -42,8 +44,8 @@ test("portal hub panels stay on the shared portal surface tokens", () => {
   assert.match(hubHtml, /body\.portal-hub-page \.section-card \{\s*background: var\(--hub-panel-bg-section\);/s)
   assert.match(hubHtml, /body\.portal-hub-page \.section-card::before \{\s*background: none;\s*opacity: 0;/s)
   assert.match(hubHtml, /body\.portal-hub-page \.hub-prefooter \{\s*align-items: center;\s*background: var\(--hub-panel-bg-support\);/s)
-  assert.match(hubHtml, /body\.portal-hub-page \.hub-footer \{\s*align-items: center;\s*background: var\(--tertiary-color\);\s*border: 1px solid var\(--hub-panel-border\);\s*border-radius: clamp\(4\.5px, 0\.9cqi, 12px\);\s*color: var\(--secondary-color\);/s)
-  assert.match(hubHtml, /body\.portal-hub-page \.hub-footer a \{\s*color: var\(--secondary-color\);/s)
+  assert.match(portalThemeCss, /\.hub-footer \{\s*align-items: center;\s*background: var\(--hub-footer-bg, var\(--tertiary-color\)\);\s*border: 1px solid var\(--hub-panel-border, var\(--paper-border\)\);\s*border-radius: clamp\(4\.5px, 0\.9cqi, 12px\);\s*color: var\(--hub-footer-text, var\(--secondary-color\)\);/s)
+  assert.match(portalThemeCss, /\.hub-footer a,\s*\.hub-footer a:visited,\s*\.hub-footer a:hover,\s*\.hub-footer a:focus,\s*\.hub-footer a:active \{\s*color: inherit;\s*font-weight: 700;\s*text-decoration: none;\s*}/s)
   assert.match(hubHtml, /body\.portal-hub-page \.portal-card--admin,\s*body\.portal-hub-page \.portal-card--parent,\s*body\.portal-hub-page \.portal-card--student \{\s*background: var\(--hub-panel-bg\);/s)
   assert.match(hubHtml, /panelBg:\s*"var\(--portal-surface-card\)"/)
 })
