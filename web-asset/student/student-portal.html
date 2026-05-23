@@ -2192,6 +2192,13 @@
       function t(v) {
         return String(v == null ? "" : v).trim();
       }
+      function gradeLabel(v) {
+        const raw = t(v);
+        if (!raw) return "";
+        const key = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (key === "eggchicks") return "Eggs & Chicks";
+        return raw;
+      }
       const NEWS_FORM_FIELD_IDS = [
         "sourceLink",
         "articleTitle",
@@ -4635,11 +4642,11 @@
         const reviseTone = reviseNews > 0 ? "purple" : "";
         const displayEaglesId = t(child.eaglesId);
         const displayName = t(child.englishName || child.fullName || child.eaglesId);
-        identity.textContent = `${displayName} | ${displayEaglesId} | ${t(child.currentGrade || "No class")}`;
+        identity.textContent = `${displayName} | ${displayEaglesId} | ${gradeLabel(child.currentGrade || "No class")}`;
         setSummary("studentEaglesIdValue", t(child.eaglesId) || "-");
         setSummary("studentNumberValue", t(child.studentNumber) || "-");
         setSummary("studentNameValue", t(child.fullName || child.englishName || child.eaglesId) || "-");
-        setSummary("studentGradeValue", t(child.currentGrade) || "-");
+        setSummary("studentGradeValue", gradeLabel(child.currentGrade) || "-");
         if (overview) {
           overview.textContent = displayEaglesId ? `${displayName} (${displayEaglesId})` : displayName;
         }
@@ -5190,7 +5197,7 @@
             const child = state.dashboard?.child || {};
             const studentLabel =
               t(child?.fullName || child?.englishName || child?.eaglesId) || "Student";
-            const level = t(child?.currentGrade) || "-";
+            const level = gradeLabel(child?.currentGrade) || "-";
             metaEl.textContent =
               `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`;
           }

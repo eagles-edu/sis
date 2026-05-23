@@ -159,7 +159,7 @@ test("student portal initial auth paints the dashboard without probing /me", asy
             eaglesId: "flyers01",
             fullName: "Student One",
             englishName: "Student One",
-            currentGrade: "EggChicks",
+            currentGrade: "Eggs & Chicks",
             studentNumber: 106,
             attendance: { total: 20, present: 19, absent: 1, late: 0, excused: 0 },
             assignments: { pending: 0, overdue: 0, completed: 1 },

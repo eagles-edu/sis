@@ -1,6 +1,7 @@
 {
   "runtimeEnv": "test",
   "adminPagePath": "/admin",
+  "adminEnrollmentPagePath": "/admin/enrollment",
   "adminLegacyPagePath": "/admin/students",
   "parentPortalPagePath": "/parent",
   "parentLegacyPagePath": "/parent/portal",
@@ -16,6 +17,11 @@
       "path": "/admin",
       "status": 200,
       "needle": "Student Admin Login"
+    },
+    {
+      "path": "/admin/enrollment",
+      "status": 200,
+      "needle": "The Eagles Club Student Enrollment"
     },
     {
       "path": "/parent",

@@ -283,7 +283,7 @@ const IMPORT_STRICT_IDENTITY_REQUIRED = resolveBooleanFlag(
 const LEVEL_DEFINITIONS = [
   {
     canonical: "Eggs & Chicks",
-    aliases: ["EggChic", "Eggs and Chicks", "Eggs Chicks"],
+    aliases: ["EggChic", "EggChicks", "Eggs and Chicks", "Eggs Chicks"],
   },
   {
     canonical: "Pre-A1 Starters",

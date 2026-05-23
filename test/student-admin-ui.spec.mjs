@@ -3448,7 +3448,7 @@ test("top search results support show-all expansion and sortable headers", async
   levelHeader.click()
   await waitFor(() => {
     const firstLevelText = normalizeText(document.querySelector("#topSearchRows tr td:nth-child(4)")?.textContent)
-    assert.match(firstLevelText, /EggChic|Starters/i)
+    assert.match(firstLevelText, /Eggs & Chicks|Starters/i)
     assert.equal(levelHeader.getAttribute("aria-sort"), "ascending")
   })
 
@@ -7320,8 +7320,7 @@ test("clear buttons reset local admin form fields", async () => {
       /^\d{4}-\d{4}$/.test(document.getElementById("a_schoolYear").value),
   )
   assert.ok(
-    document.getElementById("a_quarter").value === "" ||
-      /^q[1-4]$/.test(document.getElementById("a_quarter").value),
+    document.getElementById("a_quarter").value === dom.window.currentQuarterFromToday(),
   )
   assert.match(document.getElementById("a_date").value, /^\d{4}-\d{2}-\d{2}$/)
   assert.equal(document.getElementById("a_status").value, "absent")
@@ -7353,7 +7352,7 @@ test("clear buttons reset local admin form fields", async () => {
   assert.equal(document.getElementById("g_id").value, "")
   assert.equal(document.getElementById("g_className").value, "")
   assert.equal(document.getElementById("g_schoolYear").value, secondPreviewSchoolYear)
-  assert.equal(document.getElementById("g_quarter").value, "")
+  assert.equal(document.getElementById("g_quarter").value, dom.window.currentQuarterFromToday())
   assert.equal(document.getElementById("g_assignmentName").value, "")
   assert.equal(document.getElementById("g_homeworkCompleted").value, "")
 
@@ -7366,7 +7365,7 @@ test("clear buttons reset local admin form fields", async () => {
   assert.equal(document.getElementById("r_id").value, "")
   assert.equal(document.getElementById("r_className").value, "")
   assert.equal(document.getElementById("r_schoolYear").value, secondPreviewSchoolYear)
-  assert.equal(document.getElementById("r_quarter").value, "")
+  assert.equal(document.getElementById("r_quarter").value, dom.window.currentQuarterFromToday())
   assert.equal(document.getElementById("r_comments").value, "")
 
   document.getElementById("familyPhone").value = "0908000000"

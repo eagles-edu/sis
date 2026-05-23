@@ -107,8 +107,11 @@ verify_target() {
 
 status=0
 verify_target "admin-portal-html" "web-asset/admin/student-admin.html" "web-asset/admin/student-admin.html" "sis-admin/student-admin.html" || status=1
+verify_target "admin-enrollment-html" "web-asset/admin/student-enrollment.html" "web-asset/admin/student-enrollment.html" "sis-admin/student-enrollment.html" || status=1
 verify_target "admin-portal-css" "web-asset/admin/student-admin.css" "web-asset/admin/student-admin.css" "web-asset/admin/student-admin.css" || status=1
 verify_target "admin-portal-js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" "web-asset/admin/student-admin.js" || status=1
+verify_target "admin-portal-min-css" "web-asset/admin/student-admin.min.css" "web-asset/admin/student-admin.min.css" "web-asset/admin/student-admin.min.css" || status=1
+verify_target "admin-portal-min-js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" "web-asset/admin/student-admin.min.js" || status=1
 verify_target "portal-theme-css" "web-asset/shared/portal-theme.css" "web-asset/shared/portal-theme.css" "web-asset/shared/portal-theme.css" || status=1
 verify_target "portal-theme-min-css" "web-asset/shared/portal-theme.min.css" "web-asset/shared/portal-theme.min.css" "web-asset/shared/portal-theme.min.css" || status=1
 verify_target "maintenance-svg" "web-asset/shared/maintenance.svg" "web-asset/shared/maintenance.svg" "web-asset/shared/maintenance.svg" || status=1

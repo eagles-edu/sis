@@ -41,11 +41,13 @@ const contract = JSON.parse(process.env.ROUTE_CONTRACT_JSON || "{}")
 const port = String(process.env.TEST_PORT || "8786")
 const runtimeEnv = contract.runtimeEnv || "test"
 const adminPagePath = contract.adminPagePath || "/admin"
+const adminEnrollmentPagePath = contract.adminEnrollmentPagePath || "/admin/enrollment"
 const parentPortalPagePath = contract.parentPortalPagePath || "/parent"
 const studentPortalPagePath = contract.studentPortalPagePath || "/student"
 const entries = [
   [`http://127.0.0.1:${port}/`, 200, `window.__SIS_RUNTIME_ENV=${JSON.stringify(runtimeEnv)}`, ""],
   [`http://127.0.0.1:${port}${adminPagePath}`, 200, "Student Admin Login", ""],
+  [`http://127.0.0.1:${port}${adminEnrollmentPagePath}`, 200, "The Eagles Club Student Enrollment", ""],
   [`http://127.0.0.1:${port}${parentPortalPagePath}`, 200, "dành cho phụ huynh", ""],
   [`http://127.0.0.1:${port}${studentPortalPagePath}`, 200, "Student Portal", ""],
   [`http://127.0.0.1:${port}${contract.adminLegacyPagePath || "/admin/students"}`, 308, "", adminPagePath],
@@ -68,6 +70,14 @@ fi
 
 log() {
   printf '[sync-test] %s\n' "$*"
+}
+
+verify_portal_sync_proof() {
+  log "verifying portal parity proof"
+  (cd "${REPO_ROOT}" && tools/verify-portal-sync-proof.sh \
+    --source-root "${REPO_ROOT}" \
+    --runtime-root "${TEST_ROOT}" \
+    --public-root "${TEST_PUBLIC_ROOT}")
 }
 
 sync_exact_file() {
@@ -173,6 +183,7 @@ TEST_RUNTIME_DATA_FILES=(
 
 TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
+  "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
   "web-asset/admin/grades-tabulator.html|web-asset/admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|web-asset/admin/student-points.html"
@@ -188,10 +199,13 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin-bootstrap.mjs|web-asset/admin/student-admin-bootstrap.mjs"
   "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
   "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
+  "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
+  "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
@@ -212,6 +226,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
 
 TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|sis-admin/student-admin.html"
+  "web-asset/admin/student-enrollment.html|sis-admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
   "web-asset/admin/grades-tabulator.html|sis-admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|sis-admin/student-points.html"
@@ -229,8 +244,11 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/student/student-portal.html|sis-student/student-portal.html"
   "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
   "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
+  "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
+  "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
@@ -884,6 +902,7 @@ main() {
     verify_test_public_html_index
     verify_test_public_assets
     verify_test_runtime_routes "$TEST_ROUTE_MATRIX"
+    verify_portal_sync_proof
   else
     log "skip runtime restart and route probes for mode=${MODE}"
   fi

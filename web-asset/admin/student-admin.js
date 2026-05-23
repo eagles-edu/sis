@@ -213,7 +213,7 @@
         gradeChart: {
           period: "custom",
           groupBy: "class",
-          quarter: "q1",
+          quarter: "",
           schoolYear: "",
           customFrom: "",
           customTo: "",
@@ -2216,7 +2216,7 @@
 
       const LEVEL_SHORTCUT_LABELS = new Map(
         [
-          ["Eggs & Chicks", "EggChic"],
+          ["Eggs & Chicks", "Eggs & Chicks"],
           ["Pre-A1 Starters", "Starters"],
           ["A1 Movers", "Movers"],
           ["A2 Flyers", "Flyers"],
@@ -2243,6 +2243,7 @@
 
       const LEVEL_FULL_LABELS = new Map([
         ["eggchic", "Eggs & Chicks"],
+        ["eggchicks", "Eggs & Chicks"],
         ["prea1starters", "Pre-A1 Starters"],
         ["starters", "Pre-A1 Starters"],
         ["a1movers", "A1 Movers"],
@@ -13944,6 +13945,10 @@
         return "";
       }
 
+      function currentQuarterFromToday() {
+        return quarterFromIsoDate(localIsoDate(new Date()));
+      }
+
       function parentTrackingSummaryKey(levelName, classDate) {
         const level = levelNameKey(resolveSystemLevelName(levelName || ""));
         const date = normalizeText(classDate);
@@ -14253,6 +14258,18 @@
 
       function gradeChartCurrentSchoolYear() {
         return normalizeText(schoolSetupState()?.schoolYear || "");
+      }
+
+      function gradeChartCurrentQuarter() {
+        return currentQuarterFromToday();
+      }
+
+      function applyGradeChartCurrentQuarterDefault(force = false) {
+        const chart = gradeChartState();
+        const currentQuarter = gradeChartCurrentQuarter();
+        if (!currentQuarter) return chart;
+        if (!force && normalizeText(chart.quarter)) return chart;
+        return setGradeChartState({ quarter: currentQuarter });
       }
 
       function normalizeGradeChartOperationalSchoolYear(value = "") {
@@ -14720,9 +14737,11 @@
           });
 
         if (groupByEl) groupByEl.value = normalizedGradeChartGroupBy(chart.groupBy);
+        applyGradeChartCurrentQuarterDefault();
+        const activeChart = gradeChartState();
         if (quarterEl) {
-          quarterEl.value = quarterKey(chart.quarter);
-          quarterEl.disabled = !["quarter", "qtd"].includes(chart.period);
+          quarterEl.value = quarterKey(activeChart.quarter) || gradeChartCurrentQuarter();
+          quarterEl.disabled = !["quarter", "qtd"].includes(activeChart.period);
         }
 
         if (schoolYearEl) {
@@ -18168,7 +18187,7 @@
         if (yearEl && !normalizeText(yearEl.value))
           yearEl.value = defaultAttendanceSchoolYear(classDate);
         if (quarterEl && !normalizeText(quarterEl.value))
-          quarterEl.value = quarterFromIsoDate(classDate) || "q1";
+          quarterEl.value = quarterFromIsoDate(classDate);
       }
 
       function syncAttendanceLevelEditorInputs() {
@@ -18979,7 +18998,7 @@
         document.getElementById("g_id").value = "";
         document.getElementById("g_className").value = "";
         applyDefaultGradeAndReportSchoolYears(true);
-        document.getElementById("g_quarter").value = "";
+        document.getElementById("g_quarter").value = currentQuarterFromToday();
         document.getElementById("g_assignmentName").value = "";
         document.getElementById("g_dueAt").value = "";
         document.getElementById("g_submittedAt").value = "";
@@ -19150,7 +19169,7 @@
         document.getElementById("r_id").value = "";
         document.getElementById("r_className").value = "";
         applyDefaultGradeAndReportSchoolYears(true);
-        document.getElementById("r_quarter").value = "";
+        document.getElementById("r_quarter").value = currentQuarterFromToday();
         document.getElementById("r_homeworkCompletionRate").value = "";
         document.getElementById("r_homeworkOnTimeRate").value = "";
         document.getElementById("r_behaviorScore").value = "";
@@ -21166,6 +21185,7 @@
             );
             setGradeChartState({ period });
             applyGradeChartCurrentSchoolYearDefault();
+            applyGradeChartCurrentQuarterDefault();
             renderGradePulseChart(state.visibleTableRows?.grades || []);
           });
         document.getElementById("gradeChartGroupBy")?.addEventListener("change", () => {
@@ -21408,6 +21428,7 @@
                   period: normalizedGradeChartPeriod(period),
                 });
                 applyGradeChartCurrentSchoolYearDefault();
+                applyGradeChartCurrentQuarterDefault();
                 renderGradePulseChart(state.visibleTableRows?.grades || []);
               },
               onGradeChartGroupByChange(value) {
@@ -21460,8 +21481,12 @@
           if (customFrom) params.set("customFrom", customFrom);
           if (customTo) params.set("customTo", customTo);
         }
-        const targetUrl = new URL(buildPageQueryPath("grades-data"), window.location.origin);
+        const targetUrl =
+          window.location.protocol.startsWith("http") ?
+            new URL("/web-asset/admin/grades-tabulator.html", window.location.origin) :
+            new URL("grades-tabulator.html", window.location.href);
         const targetParams = targetUrl.searchParams;
+        if (ADMIN_API_ORIGIN) targetParams.set("apiOrigin", ADMIN_API_ORIGIN);
         params.forEach((value, key) => {
           targetParams.set(key, value);
         });
@@ -21612,6 +21637,7 @@
           populateAttendanceLevelStyleOptions();
           refreshAllTableSearchFilterControls();
           applyGradeChartCurrentSchoolYearDefault();
+          applyGradeChartCurrentQuarterDefault();
           renderGradePulseChart(state.visibleTableRows?.grades || []);
           syncAttendanceLevelEditorInputs();
           refreshAssignmentStudentOptions();

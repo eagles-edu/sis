@@ -325,7 +325,7 @@ test("parent portal initial auth paints the dashboard without probing /me", asyn
               studentNumber: 101,
               fullName: "Student One",
               englishName: "Student One",
-              currentGrade: "egg-chicks",
+              currentGrade: "Eggs & Chicks",
             },
           ],
         })
@@ -411,7 +411,7 @@ test("parent portal static preview over http falls back to dev apiOrigin when om
               studentNumber: 101,
               fullName: "Student One",
               englishName: "Student One",
-              currentGrade: "egg-chicks",
+              currentGrade: "Eggs & Chicks",
             },
           ],
         })
@@ -516,7 +516,7 @@ test("parent portal static preview over http uses explicit apiOrigin for login",
               studentNumber: 101,
               fullName: "Student One",
               englishName: "Student One",
-              currentGrade: "egg-chicks",
+              currentGrade: "Eggs & Chicks",
             },
           ],
         })
@@ -726,7 +726,7 @@ test("parent portal profile fields keep reference form section and label orderin
             eaglesId: "vi001",
             studentNumber: 101,
             fullName: "Student One",
-            currentGrade: "egg-chicks",
+            currentGrade: "Eggs & Chicks",
           },
           profile: {
             id: "cmmdu4wxs000126g0g5mdskt2",
@@ -746,7 +746,7 @@ test("parent portal profile fields keep reference form section and label orderin
             studentPhone: "0901000000",
             schoolName: "HCMC Public School",
             currentSchoolGrade: "6A",
-            currentGrade: "egg-chicks",
+            currentGrade: "Eggs & Chicks",
             fatherName: "Parent Father",
             streetAddress: "123 Street",
             hasGlasses: "Không",
@@ -2297,7 +2297,7 @@ test("parent portal grade/class fallback ignores immutable eagles level when pub
               studentNumber: 101,
               fullName: "Student One",
               englishName: "Student One",
-              currentGrade: "egg-chicks",
+              currentGrade: "Eggs & Chicks",
             },
           ],
         })
@@ -2323,12 +2323,12 @@ test("parent portal grade/class fallback ignores immutable eagles level when pub
             eaglesId: "vi001",
             studentNumber: 101,
             fullName: "Student One",
-            currentGrade: "egg-chicks",
+            currentGrade: "Eggs & Chicks",
           },
           profile: {
             fullName: "Student One",
             schoolName: "Fallback Public School",
-            currentGrade: "egg-chicks",
+            currentGrade: "Eggs & Chicks",
           },
           lockedFields: [],
           immutableFields: ["eaglesId", "studentNumber"],
@@ -2346,7 +2346,7 @@ test("parent portal grade/class fallback ignores immutable eagles level when pub
     assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
   })
 
-  assert.equal(document.getElementById("immutableGrade")?.textContent?.trim(), "egg-chicks")
+  assert.equal(document.getElementById("immutableGrade")?.textContent?.trim(), "Eggs & Chicks")
   assert.equal(document.getElementById("pf_currentSchoolGrade")?.value, "")
   assert.equal(document.querySelectorAll("input[name='pf_genderSelections'][type='radio']:checked").length, 0)
 

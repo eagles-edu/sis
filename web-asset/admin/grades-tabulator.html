@@ -1547,7 +1547,7 @@
         filters: {
           period: "sytd",
           schoolYear: "",
-          quarter: "q1",
+          quarter: "",
           classKey: "all",
           studentKey: "all",
           schoolKey: "all",
@@ -3075,6 +3075,31 @@
         }
         const selectedYear = normalizeSchoolYearFilter(state.filters.schoolYear)
         schoolYearSelect.value = isSchoolYearKey(selectedYear) ? selectedYear : "current"
+      }
+
+      function currentQuarterForFilters() {
+        return (
+          normalizeQuarterCode(
+            quarterForSchoolYear(normalizeOperationalSchoolYear(state.filters.schoolYear), TODAY_ISO),
+          ) ||
+          normalizeQuarterCode(quarterFromIsoDate(TODAY_ISO)) ||
+          ""
+        )
+      }
+
+      function applyCurrentQuarterDefault(options = {}) {
+        const config = options && typeof options === "object" ? options : {}
+        const force = config.force === true
+        const currentQuarter = currentQuarterForFilters()
+        if (!currentQuarter) return
+        const activeQuarter = normalizeQuarterCode(state.filters.quarter)
+        if (force || !activeQuarter) {
+          state.filters.quarter = currentQuarter
+        }
+        const quarterSelect = document.getElementById("quarter")
+        if (quarterSelect instanceof HTMLSelectElement) {
+          quarterSelect.value = normalizeQuarterCode(state.filters.quarter) || currentQuarter
+        }
       }
 
       function normalizeSortDirection(value) {
@@ -4737,7 +4762,12 @@
           schoolYear.value = normalizeSchoolYearFilter(state.filters.schoolYear) || "current"
         }
         if (quarter instanceof HTMLSelectElement) {
-          quarter.value = normalizeQuarterCode(state.filters.quarter) || quarter.value || ""
+          const currentQuarter = currentQuarterForFilters()
+          const activeQuarter = normalizeQuarterCode(state.filters.quarter)
+          quarter.value = activeQuarter || currentQuarter || ""
+          if (!activeQuarter && currentQuarter) {
+            state.filters.quarter = currentQuarter
+          }
         }
       }
 
@@ -5006,6 +5036,7 @@
           })
           applyFilterQueryOverrides()
           applyCurrentSchoolYearDefault()
+          applyCurrentQuarterDefault()
           bindControls()
           bindTableModalControls()
           bindDistributionModalControls()

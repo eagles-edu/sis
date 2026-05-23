@@ -2729,6 +2729,14 @@
       return String(value).trim();
     }
 
+    function gradeLabel(value) {
+      const raw = normalizeText(value);
+      if (!raw) return "";
+      const key = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (key === "eggchicks") return "Eggs & Chicks";
+      return raw;
+    }
+
     function clampTextZoomPct(value) {
       const rawValue = normalizeText(value);
       if (!rawValue) return TEXT_ZOOM_DEFAULT;
@@ -2942,14 +2950,14 @@
         childMatch &&
         Object.prototype.hasOwnProperty.call(childMatch, "currentGrade")
       ) {
-        return normalizeText(childMatch.currentGrade);
+        return gradeLabel(childMatch.currentGrade);
       }
       const dashboardChildren =
         Array.isArray(state.dashboard?.children) ? state.dashboard.children : [];
       const dashboardMatch = dashboardChildren.find(
         (entry) => normalizeText(entry?.eaglesId) === selectedId,
       );
-      return normalizeText(dashboardMatch?.currentGrade);
+      return gradeLabel(dashboardMatch?.currentGrade);
     }
 
     function resolveProfileFieldValue(fieldMeta) {
@@ -2982,7 +2990,7 @@
         if (normalizeText(fieldMeta.control).toLowerCase() === "date") {
           return formatDateInputDisplayValue(candidate);
         }
-        return candidate;
+        return fieldMeta.key === "currentSchoolGrade" ? gradeLabel(candidate) : candidate;
       }
       return fieldMeta.control === "checkbox" ? [] : "";
     }
@@ -5466,7 +5474,7 @@
           active?.generatedAt || active?.generatedDate,
         );
       if (identityNode) {
-        const reportClassName = normalizeText(active?.className || child?.currentGrade || "-");
+        const reportClassName = normalizeText(active?.className || gradeLabel(child?.currentGrade) || "-");
         const reportStudentNumber =
           (linkedChild?.studentNumber ?? child?.studentNumber) === null ||
           (linkedChild?.studentNumber ?? child?.studentNumber) === undefined ?
@@ -6344,7 +6352,7 @@
           const studentLabel =
             normalizeText(child?.fullName || child?.englishName || child?.eaglesId) ||
             "Học sinh";
-          const level = normalizeText(child?.currentGrade) || "-";
+          const level = gradeLabel(child?.currentGrade) || "-";
           metaEl.textContent =
             `${formatPortalDate(weekSet.weekStart)} - ${formatPortalDate(weekSet.weekEnd)} | ${studentLabel} | ${level}`;
         }
@@ -7318,7 +7326,7 @@
       const revisionNewsTone = revisionNews > 0 ? "purple" : "";
       if (identity) {
         identity.textContent =
-          `${displayName} | ${displayEaglesId || "-"} | ${normalizeText(child.currentGrade || "Chưa có lớp")}`;
+        `${displayName} | ${displayEaglesId || "-"} | ${gradeLabel(child.currentGrade || "Chưa có lớp")}`;
       }
       root.replaceChildren(
         metricCard("Chuyên cần SYTD", formatPercent(attendancePercent), "green"),
@@ -7510,10 +7518,10 @@
       document.getElementById("studentNameValue").textContent =
         normalizeText(child.fullName) || "-";
       document.getElementById("studentGradeValue").textContent =
-        normalizeText(child.currentGrade) || "-";
+        gradeLabel(child.currentGrade) || "-";
       const immutableGradeNode = document.getElementById("immutableGrade");
       if (immutableGradeNode) {
-        immutableGradeNode.textContent = normalizeText(child.currentGrade) || "-";
+        immutableGradeNode.textContent = gradeLabel(child.currentGrade) || "-";
       }
       const selectedChild = selectedDashboardChild();
       state.newsItems = Array.isArray(selectedChild?.newsReports?.items) ?
