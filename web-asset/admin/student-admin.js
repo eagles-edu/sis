@@ -1541,6 +1541,11 @@
           runtime.filterCache && typeof runtime.filterCache === "object" ?
             runtime.filterCache
           : {};
+        const sisConfigMirrorHealth =
+          runtimeHealth.sisConfigMirrorHealth &&
+          typeof runtimeHealth.sisConfigMirrorHealth === "object" ?
+            runtimeHealth.sisConfigMirrorHealth
+          : null;
 
         const hubState = normalizeLower(state.hubConnection?.state);
         const hubSystemState =
@@ -1671,6 +1676,30 @@
           detail: `exercise=${describeFlag(runtimeHealth.lastStoreOk)} | intake=${describeFlag(runtimeHealth.lastIntakeStoreOk)} | send=${describeFlag(runtimeHealth.lastSendOk)}`,
         });
 
+        if (sisConfigMirrorHealth) {
+          const filePresent = Boolean(sisConfigMirrorHealth.file?.present);
+          const dbPresent = Boolean(sisConfigMirrorHealth.db?.present);
+          const synced = Boolean(sisConfigMirrorHealth.synced);
+          let mirrorState = "pending";
+          if (filePresent && dbPresent) mirrorState = synced ? "ok" : "error";
+          else if (filePresent || dbPresent) mirrorState = "warn";
+          else mirrorState = "error";
+          checks.push({
+            key: "sisConfigMirror",
+            label: "JSON + DB",
+            state: mirrorState,
+            detail: sisConfigMirrorHealth.detail || "",
+            mirror: {
+              filePresent,
+              dbPresent,
+              synced,
+              fileLabel: "JSON",
+              dbLabel: "DB",
+              syncLabel: synced ? "IN SYNC" : "OUT OF SYNC",
+            },
+          });
+        }
+
         return checks;
       }
 
@@ -1698,9 +1727,11 @@
         const gridEl = rowsEl.parentElement;
         const buildCheckCard = (check) => {
           const stateClass = normalizeSystemState(check.state);
+          const mirror = check.mirror && typeof check.mirror === "object" ? check.mirror : null;
 
           const item = document.createElement("div");
           item.className = `system-health-item ${stateClass}`;
+          if (mirror) item.classList.add("system-health-mirror-card");
           item.setAttribute("data-system-key", normalizeText(check.key));
 
           const labelEl = document.createElement("div");
@@ -1715,7 +1746,46 @@
 
           const detailEl = document.createElement("div");
           detailEl.className = "system-health-detail";
-          detailEl.textContent = normalizeText(check.detail) || "n/a";
+          if (mirror) {
+            detailEl.classList.add("system-health-mirror");
+
+            const presenceRow = document.createElement("div");
+            presenceRow.className = "system-health-mirror-row";
+
+            const buildPresence = (label, present) => {
+              const chip = document.createElement("span");
+              chip.className = `system-health-mirror-chip ${present ? "present" : "missing"}`;
+
+              const led = document.createElement("span");
+              led.className = `led ${present ? "ok" : "missing"}`;
+              led.setAttribute("aria-hidden", "true");
+              chip.appendChild(led);
+
+              const text = document.createElement("span");
+              text.textContent = label;
+              chip.appendChild(text);
+              return chip;
+            };
+
+            presenceRow.appendChild(buildPresence(mirror.fileLabel || "JSON", Boolean(mirror.filePresent)));
+            presenceRow.appendChild(buildPresence(mirror.dbLabel || "DB", Boolean(mirror.dbPresent)));
+
+            const syncRow = document.createElement("div");
+            syncRow.className = "system-health-mirror-sync";
+            const syncLed = document.createElement("span");
+            syncLed.className = `led ${mirror.synced ? "ok" : "error"}`;
+            syncLed.setAttribute("aria-hidden", "true");
+            syncRow.appendChild(syncLed);
+
+            const syncText = document.createElement("span");
+            syncText.textContent = mirror.synced ? "SYNCED" : "OUT OF SYNC";
+            syncRow.appendChild(syncText);
+
+            detailEl.appendChild(presenceRow);
+            detailEl.appendChild(syncRow);
+          } else {
+            detailEl.textContent = normalizeText(check.detail) || "n/a";
+          }
 
           item.appendChild(labelEl);
           item.appendChild(detailEl);

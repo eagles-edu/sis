@@ -2103,6 +2103,10 @@
         gap: 4px;
         padding: 8px;
       }
+      .system-health-mirror-card {
+        gap: 6px;
+        padding-bottom: 7px;
+      }
       .system-health-hub-card {
         gap: 6px;
         grid-column: span 2;
@@ -2143,6 +2147,44 @@
         line-height: 1.35;
         overflow-wrap: anywhere;
       }
+      .system-health-mirror {
+        display: grid;
+        gap: 5px;
+      }
+      .system-health-mirror-row,
+      .system-health-mirror-sync {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .system-health-mirror-sync {
+        color: var(--ink);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+      .system-health-mirror-chip {
+        align-items: center;
+        color: var(--ink);
+        display: inline-flex;
+        font-size: 10px;
+        font-weight: 700;
+        gap: 6px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .system-health-mirror-chip .led {
+        height: 8px;
+        width: 8px;
+      }
+      .system-health-mirror-chip.present {
+        color: var(--ink);
+      }
+      .system-health-mirror-chip.missing {
+        color: var(--ink-muted);
+      }
       .led {
         background: var(--portal-status-neutral-border);
         border-radius: 50%;
@@ -2152,6 +2194,9 @@
         box-shadow:
           0 0 0 2px var(--portal-color-9203fef560),
           0 0 0 1px var(--portal-color-bf48c79991);
+      }
+      .led.missing {
+        background: var(--portal-status-neutral-border);
       }
       .led.ok {
         background: var(--portal-status-good-border);

@@ -32,6 +32,67 @@ const SCHOOL_SETUP_FALLBACK = {
   schoolSetupState: "ok",
 }
 
+const SCHOOL_PROFILE_FALLBACK = {
+  schoolName: "The Eagles Club",
+  bilingualTextVi: "Vietnamese text block",
+  bilingualTextEn: "English text block",
+  motto: "Serious English",
+  mission: "Sứ Mệnh",
+  values: "The Eagles American English Club giá trị cốt lõi",
+  address: "28 Đường Số 30, Phường An Lạc, Thành Phố Hồ Chí Minh 71906",
+  phone: "0937667818",
+  publicSite: "https://eagles.edu.vn",
+  privateLessonSite: "https://anhngu.eagles.edu.vn",
+  webPresence: "https://ielts.eagles.edu.vn",
+  socialIm: "Zalo: 84937667818",
+  businessTaxId: "0315358180",
+  timeFormat: "24hr",
+  timeZone: "Asia/Ho_Chi_Minh",
+  googleMapsEmbedIframe: "https://maps.example.invalid/embed",
+  logoDataUrl: "web-asset/images/logo.svg",
+}
+
+const LEVEL_TILE_FALLBACK = {
+  "Eggs & Chicks": { title: "Eggs & Chicks", bgColor: "#e0162b", imageDataUrl: "web-asset/images/eggs-chicks.svg" },
+  "Pre-A1 Starters": { title: "Pre-A1 Starters", bgColor: "#FCAB15", imageDataUrl: "web-asset/images/starters.svg" },
+  "A1 Movers": { title: "A1 Movers", bgColor: "#913198", imageDataUrl: "web-asset/images/movers.svg" },
+  "A2 Flyers": { title: "A2 Flyers", bgColor: "#b5d570", imageDataUrl: "web-asset/images/flyers.svg" },
+  "A2 KET": { title: "A2 KET", bgColor: "#038e9f", imageDataUrl: "web-asset/images/ket.svg" },
+  "B1 PET": { title: "B1 PET", bgColor: "#cd1637", imageDataUrl: "web-asset/images/pet.svg" },
+}
+
+function writeRichSisConfigFixture(filePath, { updatedAt = "2026-05-01T00:00:00.000Z", updatedBy = "config" } = {}) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true })
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify({
+      uiSettings: {
+        multiSchool: true,
+        schoolSetup: {
+          ...SCHOOL_SETUP_FALLBACK,
+        },
+        schoolProfile: {
+          ...SCHOOL_PROFILE_FALLBACK,
+        },
+        levelTileStylesByLevel: {
+          ...LEVEL_TILE_FALLBACK,
+        },
+        newsReportValidation: {},
+        queueHub: {},
+      },
+      runtime: {
+        databaseUrl: "postgresql://user:pass@localhost:5432/sis",
+      },
+      newsReports: {
+        weeklyMinimumReports: 5,
+      },
+      updatedAt,
+      updatedBy,
+    }, null, 2),
+    "utf8",
+  )
+}
+
 test("saveSisConfigSnapshot writes config and legacy mirror", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
@@ -172,6 +233,10 @@ test("sis config loader reinjects relative logo and six level image paths when m
     const snapshot = await mod.ensureSisConfigLoaded({ refresh: true })
 
     assert.equal(snapshot.uiSettings.schoolProfile.logoDataUrl, "web-asset/images/logo.svg")
+    assert.equal(snapshot.uiSettings.schoolProfile.schoolName, "The Eagles Club")
+    assert.equal(snapshot.uiSettings.schoolProfile.phone, "")
+    assert.equal(snapshot.uiSettings.schoolProfile.publicSite, "")
+    assert.equal(snapshot.uiSettings.schoolProfile.googleMapsEmbedIframe, "")
     assert.deepEqual(Object.keys(snapshot.uiSettings.levelTileStylesByLevel).sort(), [
       "A1 Movers",
       "A2 Flyers",
@@ -187,6 +252,22 @@ test("sis config loader reinjects relative logo and six level image paths when m
     assert.equal(
       snapshot.uiSettings.levelTileStylesByLevel["Pre-A1 Starters"].imageDataUrl,
       "web-asset/images/starters.svg",
+    )
+    assert.equal(
+      snapshot.uiSettings.levelTileStylesByLevel["A1 Movers"].imageDataUrl,
+      "web-asset/images/movers.svg",
+    )
+    assert.equal(
+      snapshot.uiSettings.levelTileStylesByLevel["A2 Flyers"].imageDataUrl,
+      "web-asset/images/flyers.svg",
+    )
+    assert.equal(
+      snapshot.uiSettings.levelTileStylesByLevel["A2 KET"].imageDataUrl,
+      "web-asset/images/ket.svg",
+    )
+    assert.equal(
+      snapshot.uiSettings.levelTileStylesByLevel["B1 PET"].imageDataUrl,
+      "web-asset/images/pet.svg",
     )
 
     const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
@@ -265,6 +346,89 @@ test("ensureSisConfigLoaded restores the config snapshot when it is present", as
     assert.equal(restoredConfig.uiSettings.schoolSetup.schoolYear, "2025-2026")
     assert.equal(restoredLegacy.uiSettings.schoolSetup.schoolYear, "2025-2026")
     assert.equal(restoredLegacy.updatedBy, "config")
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true })
+    delete process.env.SIS_CONFIG_FILE
+    delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+    delete process.env.DATABASE_URL
+  }
+})
+
+test("ensureSisConfigLoaded recreates a missing SIS config from the DB mirror shape", async () => {
+  const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  process.env.SIS_CONFIG_FILE = sisConfigPath
+  process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
+  process.env.DATABASE_URL = ""
+
+  try {
+    fs.mkdirSync(path.dirname(legacyPath), { recursive: true })
+    fs.writeFileSync(
+      legacyPath,
+      JSON.stringify({
+        uiSettings: {
+          multiSchool: true,
+          schoolSetup: {
+            ...SCHOOL_SETUP_FALLBACK,
+          },
+          schoolProfile: {
+            ...SCHOOL_PROFILE_FALLBACK,
+          },
+          levelTileStylesByLevel: {
+            ...LEVEL_TILE_FALLBACK,
+          },
+          newsReportValidation: {},
+          queueHub: {},
+        },
+        updatedAt: "2026-06-01T00:00:00.000Z",
+        updatedBy: "legacy",
+      }, null, 2),
+      "utf8",
+    )
+
+    const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    const snapshot = await mod.ensureSisConfigLoaded({ refresh: true })
+
+    assert.equal(snapshot.source, "legacy")
+    assert.equal(snapshot.uiSettings.schoolProfile.schoolName, "The Eagles Club")
+    assert.equal(snapshot.uiSettings.schoolProfile.logoDataUrl, "web-asset/images/logo.svg")
+    assert.equal(snapshot.uiSettings.levelTileStylesByLevel["A2 KET"].imageDataUrl, "web-asset/images/ket.svg")
+    assert.equal(fs.existsSync(sisConfigPath), true)
+
+    const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
+    assert.equal(restoredConfig.uiSettings.schoolProfile.phone, "0937667818")
+    assert.equal(restoredConfig.uiSettings.levelTileStylesByLevel["B1 PET"].imageDataUrl, "web-asset/images/pet.svg")
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true })
+    delete process.env.SIS_CONFIG_FILE
+    delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+    delete process.env.DATABASE_URL
+  }
+})
+
+test("ensureSisConfigLoaded recreates a missing legacy mirror from SIS config", async () => {
+  const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  process.env.SIS_CONFIG_FILE = sisConfigPath
+  process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
+  process.env.DATABASE_URL = ""
+
+  try {
+    writeRichSisConfigFixture(sisConfigPath, {
+      updatedAt: "2026-05-01T00:00:00.000Z",
+      updatedBy: "config",
+    })
+
+    const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    const snapshot = await mod.ensureSisConfigLoaded({ refresh: true })
+
+    assert.equal(snapshot.source, "file")
+    assert.equal(snapshot.uiSettings.schoolProfile.schoolName, "The Eagles Club")
+    assert.equal(snapshot.uiSettings.schoolProfile.logoDataUrl, "web-asset/images/logo.svg")
+    assert.equal(snapshot.uiSettings.levelTileStylesByLevel["A1 Movers"].imageDataUrl, "web-asset/images/movers.svg")
+    assert.equal(fs.existsSync(legacyPath), true)
+
+    const restoredLegacy = JSON.parse(fs.readFileSync(legacyPath, "utf8"))
+    assert.equal(restoredLegacy.uiSettings.schoolProfile.publicSite, "https://eagles.edu.vn")
+    assert.equal(restoredLegacy.uiSettings.levelTileStylesByLevel["Eggs & Chicks"].imageDataUrl, "web-asset/images/eggs-chicks.svg")
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
     delete process.env.SIS_CONFIG_FILE

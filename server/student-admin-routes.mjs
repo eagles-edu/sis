@@ -113,6 +113,7 @@ import {
 } from "../src/modules/admin/points.mjs"
 import {
   getSisConfigSnapshotSync,
+  getSisConfigMirrorHealthSnapshot,
   getWeeklyMinimumReportsSync,
   saveSisConfigSnapshot,
 } from "../src/modules/admin/sis-config-store.mjs"
@@ -1342,6 +1343,7 @@ async function resolveAdminRuntimeHealthPayload() {
     node: process.version,
     studentAdminRuntime: runtimeStatus,
     maintenance: runtimeStatus.maintenance || null,
+    sisConfigMirrorHealth: await getSisConfigMirrorHealthSnapshot(),
     runtimeSelfHeal: {
       enabled: false,
       lastResult: "unavailable",

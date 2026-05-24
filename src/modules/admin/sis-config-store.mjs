@@ -46,6 +46,26 @@ const DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL = new Map(
   ].map(([level, label]) => [normalizeLower(level), label]),
 )
 
+const DEFAULT_SCHOOL_PROFILE = Object.freeze({
+  schoolName: "",
+  bilingualTextVi: "",
+  bilingualTextEn: "",
+  motto: "",
+  mission: "",
+  values: "",
+  address: "",
+  phone: "",
+  publicSite: "",
+  privateLessonSite: "",
+  webPresence: "",
+  socialIm: "",
+  businessTaxId: "",
+  timeFormat: "",
+  timeZone: "",
+  googleMapsEmbedIframe: "",
+  logoDataUrl: "",
+})
+
 /**
  * @typedef {Record<string, any>} PlainObject
  * @typedef {{ quarter: string, startDate: string, endDate: string }} SchoolSetupQuarter
@@ -338,7 +358,10 @@ function normalizeUiSettings(source = {}) {
       schoolSetupState: normalizeText(schoolSetup.schoolSetupState) || "missing",
     },
     schoolProfile: (() => {
-      const normalized = toPlainObject(candidate.schoolProfile)
+      const normalized = {
+        ...DEFAULT_SCHOOL_PROFILE,
+        ...toPlainObject(candidate.schoolProfile),
+      }
       return {
         ...normalized,
         logoDataUrl:
@@ -612,6 +635,89 @@ async function readMirrorFromDatabase() {
   } catch (error) {
     void error
     return null
+  }
+}
+
+/**
+ * @returns {Promise<{
+ *   file: {
+ *     present: boolean,
+ *     source: string,
+ *     updatedAt: string,
+ *     error: string,
+ *   },
+ *   legacy: {
+ *     present: boolean,
+ *     source: string,
+ *     updatedAt: string,
+ *     error: string,
+ *   },
+ *   db: {
+ *     present: boolean,
+ *     source: string,
+ *     updatedAt: string,
+ *     error: string,
+ *   },
+ *   synced: boolean,
+ *   state: string,
+ *   detail: string,
+ * }>}
+ */
+export async function getSisConfigMirrorHealthSnapshot() {
+  const filePath = resolveSisConfigFilePath()
+  const legacyPath = resolveLegacyUiSettingsFilePath()
+  const fileSnapshot = parseJsonFile(filePath)
+  const legacySnapshot = parseJsonFile(legacyPath)
+  const fileLoaded = fileSnapshot.parsed ? normalizeLoadedSnapshot(fileSnapshot.parsed, filePath, "file") : null
+  const legacyLoaded = legacySnapshot.parsed ?
+    normalizeLoadedSnapshot({
+      uiSettings: legacySnapshot.parsed?.uiSettings || legacySnapshot.parsed,
+      updatedAt: legacySnapshot.parsed?.updatedAt || legacySnapshot.mtimeIso,
+      updatedBy: legacySnapshot.parsed?.updatedBy || "",
+    }, legacyPath, "legacy") :
+    null
+  const dbSnapshot = await readMirrorFromDatabase()
+
+  const filePresent = Boolean(fileLoaded)
+  const legacyPresent = Boolean(legacyLoaded)
+  const dbPresent = Boolean(dbSnapshot)
+  const fileVsDbSynced =
+    filePresent && dbPresent &&
+    snapshotComparisonKey(fileLoaded) === snapshotComparisonKey(dbSnapshot)
+
+  const state =
+    filePresent && dbPresent ?
+      (fileVsDbSynced ? "ok" : "error")
+    : filePresent || dbPresent ?
+      "warn"
+    : "error"
+
+  const fileLabel = filePresent ? "present" : fileSnapshot.error ? "missing" : "missing"
+  const dbLabel = dbPresent ? "present" : "missing"
+  const detail = `json=${fileLabel} | db=${dbLabel} | sync=${filePresent && dbPresent ? (fileVsDbSynced ? "in-sync" : "out-of-sync") : "out-of-sync"}`
+
+  return {
+    file: {
+      present: filePresent,
+      source: fileLoaded?.source || "missing",
+      updatedAt: normalizeText(fileLoaded?.updatedAt),
+      error: normalizeText(fileSnapshot.error?.message || fileSnapshot.error),
+    },
+    legacy: {
+      present: legacyPresent,
+      source: legacyLoaded?.source || "missing",
+      updatedAt: normalizeText(legacyLoaded?.updatedAt),
+      error: normalizeText(legacySnapshot.error?.message || legacySnapshot.error),
+    },
+    db: {
+      present: dbPresent,
+      source: dbSnapshot?.source || "missing",
+      updatedAt: normalizeText(dbSnapshot?.updatedAt),
+      error: "",
+    },
+    synced: fileVsDbSynced,
+    state,
+    detail,
   }
 }
 

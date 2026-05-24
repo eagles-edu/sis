@@ -167,6 +167,18 @@ test("sync-and-restart-test-runtime copies persisted admin UI settings into the 
   assert.match(testRuntimeSyncScript, /TEST_RUNTIME_DATA_FILES=\(/)
   assert.match(testRuntimeSyncScript, /"runtime-data\/admin-ui-settings\.json"/)
   assert.match(testRuntimeSyncScript, /sync_runtime_data_files "\$TEST_ROOT"/)
+  assert.match(testRuntimeSyncScript, /web-asset\/images\/eggs-chicks\.svg\|web-asset\/images\/eggs-chicks\.svg/)
+  assert.match(testRuntimeSyncScript, /web-asset\/images\/starters\.svg\|web-asset\/images\/starters\.svg/)
+  assert.match(testRuntimeSyncScript, /web-asset\/images\/movers\.svg\|web-asset\/images\/movers\.svg/)
+  assert.match(testRuntimeSyncScript, /web-asset\/images\/flyers\.svg\|web-asset\/images\/flyers\.svg/)
+  assert.match(testRuntimeSyncScript, /web-asset\/images\/ket\.svg\|web-asset\/images\/ket\.svg/)
+  assert.match(testRuntimeSyncScript, /web-asset\/images\/pet\.svg\|web-asset\/images\/pet\.svg/)
+  assert.match(testRuntimeSyncScript, /\$\{target_public_root\}\/web-asset\/images\/eggs-chicks\.svg/)
+  assert.match(testRuntimeSyncScript, /\$\{target_public_root\}\/web-asset\/images\/starters\.svg/)
+  assert.match(testRuntimeSyncScript, /\$\{target_public_root\}\/web-asset\/images\/movers\.svg/)
+  assert.match(testRuntimeSyncScript, /\$\{target_public_root\}\/web-asset\/images\/flyers\.svg/)
+  assert.match(testRuntimeSyncScript, /\$\{target_public_root\}\/web-asset\/images\/ket\.svg/)
+  assert.match(testRuntimeSyncScript, /\$\{target_public_root\}\/web-asset\/images\/pet\.svg/)
 })
 
 test("test nginx enables strong gzip compression for HTML and static assets", () => {

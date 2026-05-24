@@ -54,3 +54,4 @@ nginx
 .sto
 frogbot.yml
 dev/tabulatorz/
+test/e2e/index.html
