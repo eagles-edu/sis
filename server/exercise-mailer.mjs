@@ -205,6 +205,9 @@ loadEnvironmentFile()
 
 // Load SIS route/store modules after env hydration so their module-level config reads
 // the intended env file values instead of shell defaults.
+const { ensureSisConfigLoaded } = await import("../src/modules/admin/sis-config-store.mjs")
+await ensureSisConfigLoaded()
+
 const {
   isExerciseStoreRequired,
   persistExerciseSubmission,

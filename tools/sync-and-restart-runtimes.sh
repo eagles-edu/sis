@@ -18,9 +18,27 @@ LIVE_PORT="${SIS_LIVE_PORT:-8787}"
 DEV_PORT="${SIS_DEV_PORT:-8788}"
 DEV_PID_FILE="${SIS_DEV_PID_FILE:-$DEV_ROOT/runtime-data/dev-runtime.pid}"
 DEV_LOG_FILE="${SIS_DEV_LOG_FILE:-$DEV_ROOT/runtime-data/dev-runtime.log}"
+SIS_CONFIG_FILE_NAME="SIS_CONFIG.json"
+SIS_CONFIG_SOURCE_PATH="${REPO_ROOT}/${SIS_CONFIG_FILE_NAME}"
+SIS_CONFIG_SOURCE_BACKUP=""
 
 log() {
   printf '[sync-restart] %s\n' "$*"
+}
+
+stash_local_sis_config() {
+  if [[ ! -f "$SIS_CONFIG_SOURCE_PATH" ]]; then
+    return 0
+  fi
+  SIS_CONFIG_SOURCE_BACKUP="${SIS_CONFIG_SOURCE_PATH}.sync-backup-$$-$RANDOM"
+  mv "$SIS_CONFIG_SOURCE_PATH" "$SIS_CONFIG_SOURCE_BACKUP"
+}
+
+restore_local_sis_config() {
+  if [[ -n "$SIS_CONFIG_SOURCE_BACKUP" && -f "$SIS_CONFIG_SOURCE_BACKUP" ]]; then
+    mv "$SIS_CONFIG_SOURCE_BACKUP" "$SIS_CONFIG_SOURCE_PATH"
+    SIS_CONFIG_SOURCE_BACKUP=""
+  fi
 }
 
 port_listener_pids() {
@@ -65,11 +83,19 @@ run_sync() {
   case "$MODE" in
     full)
       log "running ffs-sis-root --batch"
+      stash_local_sis_config
+      trap restore_local_sis_config EXIT
       (cd "$REPO_ROOT" && run_ffs "ffs-sis-root" ffs-sis-root --batch)
+      restore_local_sis_config
+      trap - EXIT
       ;;
     public)
       log "running ffs-sis-public-root --batch"
+      stash_local_sis_config
+      trap restore_local_sis_config EXIT
       (cd "$REPO_ROOT" && run_ffs "ffs-sis-public-root" ffs-sis-public-root --batch)
+      restore_local_sis_config
+      trap - EXIT
       ;;
     restart-only)
       log "skip sync (restart-only mode)"

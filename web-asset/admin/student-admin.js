@@ -3,6 +3,8 @@
         authRolePolicy: null,
         rolePermissions: null,
         uiSettings: null,
+        sisConfig: null,
+        sisConfigMeta: null,
         adminUsers: [],
         currentAdminUser: null,
         students: [],
@@ -2486,6 +2488,20 @@
             "news-report-review",
             "pending-profile-submissions",
           ],
+        },
+      };
+      const DEFAULT_SIS_CONFIG = {
+        runtime: {
+          databaseUrl: "",
+          redisUrl: "",
+          sessionDriver: "auto",
+          adminSessionTtlSeconds: 28800,
+          parentSessionTtlSeconds: 28800,
+          studentSessionTtlSeconds: 86400,
+          redisConnectTimeoutMs: 5000,
+        },
+        newsReports: {
+          weeklyMinimumReports: 5,
         },
       };
       const QUEUE_HUB_PANEL_IDS = Object.freeze([
@@ -5390,6 +5406,14 @@
         return sortLevelNames(DEFAULT_LEVEL_CATALOG);
       }
 
+      const TRACKING_LEVEL_EXCLUDED_KEYS = new Set([levelNameKey("Eggs & Chicks")]);
+
+      function collectTrackingLevelNames(extraValues = []) {
+        return collectKnownLevelNames(extraValues).filter(
+          (levelName) => !TRACKING_LEVEL_EXCLUDED_KEYS.has(levelNameKey(levelName)),
+        );
+      }
+
       function syncSystemLevelNames(extraValues = []) {
         state.systemLevels = sortLevelNames([
           ...(Array.isArray(state.systemLevels) ? state.systemLevels : []),
@@ -5422,7 +5446,7 @@
         const selectedLevel = resolveSystemLevelName(
           tableFilterValue(tableKey, "level"),
         );
-        const levelValues = collectKnownLevelNames([selectedLevel]);
+        const levelValues = collectTrackingLevelNames([selectedLevel]);
         selectEl.innerHTML = '<option value="">Any</option>';
         levelValues.forEach((levelName) => {
           if (!levelName) return;
@@ -5881,6 +5905,19 @@
         return `total=${total} | showing=${showing} | status: approved=${approved} waiting=${waiting} checked=${checked} | action: completed=${completed} incomplete=${incomplete} unapproved=${unapproved}`;
       }
 
+      function weeklyMinimumNewsReports() {
+        return Math.max(
+          1,
+          Number.parseInt(
+            String(
+              state.sisConfig?.newsReports?.weeklyMinimumReports ||
+                DEFAULT_SIS_CONFIG.newsReports.weeklyMinimumReports,
+            ),
+            10,
+          ) || DEFAULT_SIS_CONFIG.newsReports.weeklyMinimumReports,
+        );
+      }
+
       function newsReviewWeekSetStatusToken(set = {}) {
         const submitted = Math.max(
           0,
@@ -5906,7 +5943,8 @@
           Number.parseInt(String(set?.reportCount || 0), 10) || 0,
         );
         const uncheckedInitial = Math.max(0, submitted - awaitingReReview);
-        if (reportCount >= 7 && approved >= 7) return "approved";
+        const requiredReports = weeklyMinimumNewsReports();
+        if (reportCount >= requiredReports && approved >= requiredReports) return "approved";
         if (
           awaitingReReview > 0 &&
           revisionRequested === 0 &&
@@ -5937,6 +5975,7 @@
       }
 
       function newsReviewWeekSetActionToken(set = {}) {
+        const requiredReports = weeklyMinimumNewsReports();
         const reportCount = Math.max(
           0,
           Number.parseInt(String(set?.reportCount || 0), 10) || 0,
@@ -5950,7 +5989,7 @@
           Number.parseInt(String(set?.submittedCount || 0), 10) || 0,
         );
         const unapproved = Math.max(0, submitted);
-        if (reportCount >= 7 && approved >= 7) return "completed";
+        if (reportCount >= requiredReports && approved >= requiredReports) return "completed";
         if (unapproved === 0) return "incomplete";
         return `unapproved-${unapproved}`;
       }
@@ -6308,12 +6347,13 @@
             item?.setAction || newsReviewWeekSetActionToken(item),
           );
           const row = document.createElement("tr");
+          const requiredReports = weeklyMinimumNewsReports();
           row.dataset.newsReviewWeekSetId = weekSetId;
           row.innerHTML = `
           <td data-label="Week Set">${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>
           <td data-label="Student">${escapeHtml(studentLabel)}</td>
           <td data-label="Level">${escapeHtml(fullLevelLabel(student?.level || ""))}</td>
-          <td data-label="Reports">${escapeHtml(`${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`)}</td>
+          <td data-label="Reports">${escapeHtml(`${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/${requiredReports}`)}</td>
           <td data-label="Action">${newsReviewSetActionChipHtml(setAction)}</td>
           <td data-label="Status">${newsReviewStatusChipHtml(rowStatus)}</td>
           <td data-label="Latest Submission">${escapeHtml(formatDateTime(item?.latestSubmittedAt || ""))}<br><span class="small">${escapeHtml(normalizeText(item?.latestReviewedByUsername || "-"))}</span></td>
@@ -7209,6 +7249,87 @@
         };
       }
 
+      function normalizeSisRuntimeConfig(source = {}) {
+        const candidate = source && typeof source === "object" ? source : {};
+        return {
+          databaseUrl: normalizeText(
+            candidate.databaseUrl || DEFAULT_SIS_CONFIG.runtime.databaseUrl,
+          ),
+          redisUrl: normalizeText(
+            candidate.redisUrl || DEFAULT_SIS_CONFIG.runtime.redisUrl,
+          ),
+          sessionDriver:
+            normalizeText(candidate.sessionDriver || DEFAULT_SIS_CONFIG.runtime.sessionDriver) ||
+            DEFAULT_SIS_CONFIG.runtime.sessionDriver,
+          adminSessionTtlSeconds:
+            Math.max(
+              60,
+              Number.parseInt(
+                String(
+                  candidate.adminSessionTtlSeconds ||
+                    DEFAULT_SIS_CONFIG.runtime.adminSessionTtlSeconds,
+                ),
+                10,
+              ) || DEFAULT_SIS_CONFIG.runtime.adminSessionTtlSeconds,
+            ),
+          parentSessionTtlSeconds:
+            Math.max(
+              60,
+              Number.parseInt(
+                String(
+                  candidate.parentSessionTtlSeconds ||
+                    DEFAULT_SIS_CONFIG.runtime.parentSessionTtlSeconds,
+                ),
+                10,
+              ) || DEFAULT_SIS_CONFIG.runtime.parentSessionTtlSeconds,
+            ),
+          studentSessionTtlSeconds:
+            Math.max(
+              60,
+              Number.parseInt(
+                String(
+                  candidate.studentSessionTtlSeconds ||
+                    DEFAULT_SIS_CONFIG.runtime.studentSessionTtlSeconds,
+                ),
+                10,
+              ) || DEFAULT_SIS_CONFIG.runtime.studentSessionTtlSeconds,
+            ),
+          redisConnectTimeoutMs:
+            Math.max(
+              100,
+              Number.parseInt(
+                String(
+                  candidate.redisConnectTimeoutMs ||
+                    DEFAULT_SIS_CONFIG.runtime.redisConnectTimeoutMs,
+                ),
+                10,
+              ) || DEFAULT_SIS_CONFIG.runtime.redisConnectTimeoutMs,
+            ),
+        };
+      }
+
+      function normalizeSisConfig(source = {}) {
+        const candidate = source && typeof source === "object" ? source : {};
+        return {
+          runtime: normalizeSisRuntimeConfig(
+            candidate.runtime || DEFAULT_SIS_CONFIG.runtime,
+          ),
+          newsReports: {
+            weeklyMinimumReports:
+              Math.max(
+                1,
+                Number.parseInt(
+                  String(
+                    candidate.newsReports?.weeklyMinimumReports ||
+                      DEFAULT_SIS_CONFIG.newsReports.weeklyMinimumReports,
+                  ),
+                  10,
+                ) || DEFAULT_SIS_CONFIG.newsReports.weeklyMinimumReports,
+              ),
+          },
+        };
+      }
+
       function uiSettingsMetaFromSource(source) {
         const candidate = source && typeof source === "object" ? source : {}
         const schoolSetup = candidate.schoolSetup && typeof candidate.schoolSetup === "object" ?
@@ -7250,6 +7371,31 @@
         }
       }
 
+      function loadSisConfigFromStorage() {
+        let stored = null;
+        try {
+          stored = window.localStorage.getItem("sis.admin.sisConfig");
+        } catch (error) {
+          void error;
+        }
+        if (!stored) {
+          state.sisConfigMeta = null;
+          return normalizeSisConfig(DEFAULT_SIS_CONFIG);
+        }
+        try {
+          const parsed = JSON.parse(stored);
+          state.sisConfigMeta = parsed && typeof parsed === "object" ? parsed.meta || null : null;
+          return normalizeSisConfig({
+            ...DEFAULT_SIS_CONFIG,
+            ...(parsed && typeof parsed === "object" ? parsed : {}),
+          });
+        } catch (error) {
+          void error;
+          state.sisConfigMeta = null;
+          return normalizeSisConfig(DEFAULT_SIS_CONFIG);
+        }
+      }
+
       function persistUiSettings(settings, metaOverride = null) {
         const normalized = normalizeUiSettings({
           ...DEFAULT_UI_SETTINGS,
@@ -7271,18 +7417,41 @@
         return normalized;
       }
 
+      function persistSisConfig(config, metaOverride = null) {
+        const normalized = normalizeSisConfig({
+          ...DEFAULT_SIS_CONFIG,
+          ...(config && typeof config === "object" ? config : {}),
+        });
+        state.sisConfig = normalized;
+        state.sisConfigMeta = metaOverride && typeof metaOverride === "object" ? metaOverride : null;
+        try {
+          window.localStorage.setItem(
+            "sis.admin.sisConfig",
+            JSON.stringify({ ...normalized, meta: state.sisConfigMeta }),
+          );
+        } catch (error) {
+          void error;
+        }
+        return normalized;
+      }
+
       async function hydrateUiSettingsFromServer() {
         if (!canManageSettings()) return null;
         try {
           const result = await api(ADMIN_UI_SETTINGS_PATH);
           const candidate =
             result && typeof result === "object" ? result.uiSettings : null;
+          const sisConfigCandidate =
+            result && typeof result === "object" ? result.sisConfig : null;
           if (!candidate || typeof candidate !== "object" || Array.isArray(candidate))
             return null;
           const meta = result?.meta && typeof result.meta === "object" ?
             result.meta :
             uiSettingsMetaFromSource(candidate);
-          return persistUiSettings(candidate, meta);
+          const settings = persistUiSettings(candidate, meta);
+          persistSisConfig(sisConfigCandidate || DEFAULT_SIS_CONFIG, result?.sisConfigMeta || null);
+          applySisConfigToForm(state.sisConfig);
+          return settings;
         } catch (error) {
           void error;
           return null;
@@ -7291,15 +7460,18 @@
 
       async function persistUiSettingsToServer(
         settings,
+        sisConfig = state.sisConfig || DEFAULT_SIS_CONFIG,
         { notifyOnFailure = false } = {},
       ) {
         if (!canManageSettings()) return null;
         const normalized = normalizeUiSettings(settings);
+        const normalizedSisConfig = normalizeSisConfig(sisConfig);
         try {
           return await api(ADMIN_UI_SETTINGS_PATH, {
             method: "PUT",
             body: {
               uiSettings: normalized,
+              sisConfig: normalizedSisConfig,
             },
           });
         } catch (error) {
@@ -7379,6 +7551,8 @@
       }
 
       state.uiSettings = loadUiSettingsFromStorage();
+      state.sisConfig = loadSisConfigFromStorage();
+      applySisConfigToForm(state.sisConfig);
       renderSchoolSetupAccessWarning();
       state.profileFormConfig = loadProfileFormConfigFromStorage();
       state.tableArchiveIndex = loadTableArchiveIndexFromStorage();
@@ -7909,7 +8083,9 @@
           schoolProfile: profile,
           newsReportValidation,
         });
-        await persistUiSettingsToServer(state.uiSettings, { notifyOnFailure: notify });
+        await persistUiSettingsToServer(state.uiSettings, state.sisConfig, {
+          notifyOnFailure: notify,
+        });
         applyUiSettings();
         renderSchoolSetupPanel({
           setup,
@@ -9472,7 +9648,7 @@
         const hintEl = document.getElementById("assignmentLevelPanelHint");
         if (!tilesEl) return;
 
-        const levels = collectKnownLevelNames();
+        const levels = collectTrackingLevelNames();
         const selectedLevel = normalizeAssignmentTargetLevel(
           document.getElementById("assignLevel")?.value,
         );
@@ -9542,7 +9718,7 @@
         const select = document.getElementById("assignLevel");
         if (!select) return;
         const selected = resolveSystemLevelName(select.value);
-        const values = collectKnownLevelNames([
+        const values = collectTrackingLevelNames([
           selected,
           ...assignmentStudentSource().map((student) =>
             normalizeLevelName(student?.profile?.currentGrade || ""),
@@ -11762,6 +11938,7 @@
           );
           const reportCount =
             Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10)) || 0;
+          const requiredReports = weeklyMinimumNewsReports();
           const tr = document.createElement("tr");
           tr.innerHTML = `
           <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>
@@ -11774,7 +11951,7 @@
           <td>${escapeHtml(
             fullLevelLabel(resolveSystemLevelName(item?.level || "")),
           )}</td>
-          <td>${reportCount}/7</td>
+          <td>${reportCount}/${requiredReports}</td>
           <td>${newsReviewStatusChipHtml(setStatus)}</td>
           <td>${newsReviewSetActionChipHtml(setAction)}</td>
         `;
@@ -12051,7 +12228,7 @@
                     item?.eaglesId || item?.student?.eaglesId || item?.studentRefId,
                   ),
                   fullLevelLabel(resolveSystemLevelName(item?.level || "")),
-                  `${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/7`,
+                  `${Math.max(0, Number.parseInt(String(item?.reportCount || 0), 10) || 0)}/${weeklyMinimumNewsReports()}`,
                   queueHubCellHtml(
                     newsReviewStatusChipHtml(setStatus),
                     newsReviewStatusLabel(setStatus),
@@ -12457,7 +12634,9 @@
             panelOrder,
           },
         });
-        await persistUiSettingsToServer(state.uiSettings, { notifyOnFailure: true });
+        await persistUiSettingsToServer(state.uiSettings, state.sisConfig, {
+          notifyOnFailure: true,
+        });
         state.queueHub.hasUnsavedOrder = false;
         renderQueueHubPanels();
         setQueueHubStatus("Queue Hub panel order saved.");
@@ -15339,7 +15518,7 @@
         const hintEl = document.getElementById("parentTrackingLevelHint");
         if (!tilesEl) return;
         const selectedLevel = selectedParentTrackingLevel();
-        const levels = collectKnownLevelNames([selectedLevel]);
+        const levels = collectTrackingLevelNames([selectedLevel]);
         if (!levels.length) {
           tilesEl.innerHTML = "";
           if (hintEl) hintEl.textContent = "No class levels available.";
@@ -16128,6 +16307,43 @@
         });
       }
 
+      function sisConfigFormValues() {
+        return normalizeSisConfig({
+          runtime: {
+            databaseUrl: document.getElementById("settingDatabaseUrl")?.value,
+            redisUrl: document.getElementById("settingRedisUrl")?.value,
+            sessionDriver: document.getElementById("settingSessionDriver")?.value,
+            adminSessionTtlSeconds: document.getElementById("settingAdminSessionTtl")?.value,
+            parentSessionTtlSeconds: document.getElementById("settingParentSessionTtl")?.value,
+            studentSessionTtlSeconds: document.getElementById("settingStudentSessionTtl")?.value,
+            redisConnectTimeoutMs: document.getElementById("settingRedisConnectTimeoutMs")?.value,
+          },
+          newsReports: {
+            weeklyMinimumReports: document.getElementById("settingWeeklyMinimumReports")?.value,
+          },
+        });
+      }
+
+      function applySisConfigToForm(config = state.sisConfig || DEFAULT_SIS_CONFIG) {
+        const normalized = normalizeSisConfig(config);
+        const runtime = normalized.runtime || DEFAULT_SIS_CONFIG.runtime;
+        const newsReports = normalized.newsReports || DEFAULT_SIS_CONFIG.newsReports;
+        const setValue = (id, value) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.value = normalizeText(value);
+        };
+        setValue("settingDatabaseUrl", runtime.databaseUrl);
+        setValue("settingRedisUrl", runtime.redisUrl);
+        const driverEl = document.getElementById("settingSessionDriver");
+        if (driverEl) driverEl.value = normalizeText(runtime.sessionDriver) || "auto";
+        setValue("settingAdminSessionTtl", runtime.adminSessionTtlSeconds);
+        setValue("settingParentSessionTtl", runtime.parentSessionTtlSeconds);
+        setValue("settingStudentSessionTtl", runtime.studentSessionTtlSeconds);
+        setValue("settingRedisConnectTimeoutMs", runtime.redisConnectTimeoutMs);
+        setValue("settingWeeklyMinimumReports", newsReports.weeklyMinimumReports);
+      }
+
       async function saveUiSettings() {
         if (!canManageSettings())
           throw new Error("Only roles with settings permission can update settings.");
@@ -16135,7 +16351,14 @@
           document.getElementById("settingMultiSchool")?.checked,
         );
         persistUiSettings({ ...state.uiSettings, multiSchool });
-        await persistUiSettingsToServer(state.uiSettings, { notifyOnFailure: true });
+        const sisConfig = sisConfigFormValues();
+        persistSisConfig(sisConfig);
+        const result = await persistUiSettingsToServer(state.uiSettings, sisConfig, {
+          notifyOnFailure: true,
+        });
+        if (result?.sisConfig) {
+          persistSisConfig(result.sisConfig, result?.sisConfigMeta || null);
+        }
         persistProfileFormConfig(state.profileFormConfig);
         applyUiSettings();
         setProfileLayoutStatus("Settings saved.");
@@ -16145,6 +16368,8 @@
       async function resetUiSettings() {
         await hydrateUiSettingsFromServer();
         state.uiSettings = loadUiSettingsFromStorage();
+        state.sisConfig = loadSisConfigFromStorage();
+        applySisConfigToForm(state.sisConfig);
         state.profileFormConfig = loadProfileFormConfigFromStorage();
         renderProfileFormLayout();
         renderProfileInfoLayout(state.currentStudent);
@@ -18064,11 +18289,11 @@
         return selected;
       }
 
-      function populateAttendanceLevelStyleOptions(levels = collectKnownLevelNames()) {
+      function populateAttendanceLevelStyleOptions(levels = collectTrackingLevelNames()) {
         const selectEl = document.getElementById("attendanceLevelStyleLevel");
         if (!selectEl) return;
         const current = selectedAttendanceLevelStyleLevel();
-        const values = collectKnownLevelNames([
+        const values = collectTrackingLevelNames([
           current,
           ...(Array.isArray(levels) ? levels : []),
         ]).filter(Boolean);
@@ -18227,7 +18452,7 @@
         ].filter((entry) => Boolean(entry.tilesEl));
         if (!tileTargets.length) return;
 
-        const levels = collectKnownLevelNames();
+        const levels = collectTrackingLevelNames();
         if (!levels.length) {
           populateAttendanceLevelStyleOptions([]);
           syncAttendanceLevelEditorInputs();

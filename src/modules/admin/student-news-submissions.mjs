@@ -2,6 +2,7 @@
 import process from "node:process"
 import { URL } from "node:url"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import {
@@ -233,7 +234,7 @@ function hasPrismaDelegateMethod(prisma, delegateName, methodName) {
  * @returns {boolean}
  */
 function isStudentAdminStoreEnabled() {
-  const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
+  const hasDatabaseUrl = Boolean(normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL))
   const envFlag = normalizeLower(process.env.STUDENT_ADMIN_STORE_ENABLED)
   if (!envFlag) return hasDatabaseUrl
   if (["false", "0", "no"].includes(envFlag)) return false

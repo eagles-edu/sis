@@ -1164,29 +1164,6 @@
       overflow-wrap: anywhere;
     }
 
-    html[data-theme="dark"] .grade-quarter-pill {
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn:hover {
-      background: var(--portal-quarter-button-hover-bg);
-      border-color: var(--portal-quarter-button-hover-border);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn.is-active,
-    html[data-theme="dark"] .grade-quarter-picker-btn[aria-pressed="true"] {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
     html[data-theme="dark"] .grade-exercise-score {
       background: var(--portal-dark-surface-support);
       border-color: var(--portal-dark-border);
@@ -6125,6 +6102,16 @@
         });
     }
 
+    function weeklyMinimumNewsReports() {
+      return Math.max(
+        1,
+        Number.parseInt(
+          String(state.dashboard?.newsReports?.weeklyMinimumReports || 5),
+          10,
+        ) || 5,
+      );
+    }
+
     function newsWeekSetStatusToken(weekSet = {}) {
       const approvedCount = Math.max(
         0,
@@ -6153,7 +6140,8 @@
         0,
         Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
       );
-      if (reportCount >= 7 && approvedCount >= 7) return "approved";
+      const requiredReports = weeklyMinimumNewsReports();
+      if (reportCount >= requiredReports && approvedCount >= requiredReports) return "approved";
       if (revisionRequestedCount > 0) return "revise";
       if (awaitingReReviewCount > 0) return "waiting";
       if (submittedCount > 0) return "submitted";
@@ -6482,9 +6470,10 @@
           0,
           Number.parseInt(String(item?.reportCount || 0), 10) || 0,
         );
+        const requiredReports = weeklyMinimumNewsReports();
         const latestDate = normalizeText(item?.latestReportDate || item?.reports?.[0]?.reportDate);
         const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
-        return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
+        return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${requiredReports}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
       }).join("");
       scheduleChipTooltipRefresh(body);
     }

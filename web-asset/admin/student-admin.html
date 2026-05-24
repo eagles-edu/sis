@@ -2922,6 +2922,50 @@ Select an assignment link to inspect details.</pre>
                     <label for="settingMultiSchool">Enable multi-school UI features</label>
                   </div>
                 </div>
+                <div class="settings-runtime-config">
+                  <h4>SIS Config Mirror</h4>
+                  <p class="small">
+                    These values are stored in <code>SIS_CONFIG.json</code> and mirrored to the database for recovery.
+                  </p>
+                  <div class="row">
+                    <div class="col-6">
+                      <label for="settingDatabaseUrl">Database URL</label>
+                      <input id="settingDatabaseUrl" type="text" placeholder="postgresql://user:pass@host:5432/db">
+                    </div>
+                    <div class="col-6">
+                      <label for="settingRedisUrl">Redis session URL</label>
+                      <input id="settingRedisUrl" type="text" placeholder="redis://localhost:6379">
+                    </div>
+                    <div class="col-3">
+                      <label for="settingSessionDriver">Session driver</label>
+                      <select id="settingSessionDriver">
+                        <option value="auto">auto</option>
+                        <option value="memory">memory</option>
+                        <option value="redis">redis</option>
+                      </select>
+                    </div>
+                    <div class="col-3">
+                      <label for="settingAdminSessionTtl">Admin TTL (sec)</label>
+                      <input id="settingAdminSessionTtl" type="number" min="60" step="60">
+                    </div>
+                    <div class="col-3">
+                      <label for="settingParentSessionTtl">Parent TTL (sec)</label>
+                      <input id="settingParentSessionTtl" type="number" min="60" step="60">
+                    </div>
+                    <div class="col-3">
+                      <label for="settingStudentSessionTtl">Student TTL (sec)</label>
+                      <input id="settingStudentSessionTtl" type="number" min="60" step="60">
+                    </div>
+                    <div class="col-4">
+                      <label for="settingRedisConnectTimeoutMs">Redis connect timeout (ms)</label>
+                      <input id="settingRedisConnectTimeoutMs" type="number" min="100" step="100">
+                    </div>
+                    <div class="col-4">
+                      <label for="settingWeeklyMinimumReports">News reports required / week</label>
+                      <input id="settingWeeklyMinimumReports" type="number" min="1" step="1" value="5">
+                    </div>
+                  </div>
+                </div>
                 <div class="profile-layout-editor">
                   <h4>Student Profile Field Layout</h4>
                   <p class="small">

@@ -5,6 +5,7 @@ import {
   enqueueAsyncSideEffectJob,
 } from "../async/side-effect-jobs.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 
 /**
  * @typedef {{
@@ -105,7 +106,7 @@ const EMAIL_QUEUE_BACKEND_MODE = (() => {
   const mode = normalizeLower(process.env.STUDENT_ADMIN_NOTIFY_QUEUE_BACKEND || "auto")
   if (mode === "database" || mode === "db" || mode === "postgres" || mode === "postgresql") return "database"
   if (mode === "memory" || mode === "in-memory") return "memory"
-  return normalizeText(process.env.DATABASE_URL) ? "database" : "memory"
+  return normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL) ? "database" : "memory"
 })()
 const EMAIL_BATCH_QUEUE_LIMIT = Math.max(
   10,

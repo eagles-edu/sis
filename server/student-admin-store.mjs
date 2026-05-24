@@ -13,6 +13,7 @@ import {
 import { mapGradeRecordForApi } from "../src/modules/admin/student-records.mjs"
 import { getStudentById as getStudentRosterById } from "../src/modules/admin/student-roster.mjs"
 import { getSharedPrismaClient } from "../src/infra/db/prisma-client.mjs"
+import { getConfiguredDatabaseUrlSync } from "../src/modules/admin/sis-config-store.mjs"
 export {
   buildStudentNewsCalendarRows,
   listStudentNewsCalendar,
@@ -441,7 +442,7 @@ let prismaClientPromise = null
  * @returns {boolean}
  */
 export function isStudentAdminStoreEnabled() {
-  const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
+  const hasDatabaseUrl = Boolean(normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL))
   const envFlag = normalizeLower(process.env.STUDENT_ADMIN_STORE_ENABLED)
   if (!envFlag) return hasDatabaseUrl
   if (["false", "0", "no"].includes(envFlag)) return false

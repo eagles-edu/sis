@@ -555,6 +555,38 @@ test("shared portal theme keeps dark form fields readable", () => {
   assert.doesNotMatch(sharedTheme, /body\.student-points-page\s*:where\(input,\s*select,\s*textarea\)::placeholder/)
 })
 
+test("portal sources avoid dark-only recolors for buttons, chips, pills, and washes", () => {
+  for (const html of [studentPortal, parentPortal]) {
+    for (const pattern of [
+      /html\[data-theme="dark"\]\s+\.grade-quarter-pill/,
+      /html\[data-theme="dark"\]\s+\.quarter-board-meta-chip/,
+      /html\[data-theme="dark"\]\s+\.quarter-board-current-pill/,
+      /html\[data-theme="dark"\]\s+\.grade-quarter-picker-btn/,
+      /html\[data-theme="dark"\]\s+\.header-action-btn\.(?:plus|minus)/,
+      /html\[data-theme="dark"\]\s+\.grade-status-pill\./,
+    ]) {
+      assert.doesNotMatch(html, pattern)
+    }
+  }
+
+  for (const pattern of [
+    /html\[data-theme="dark"\] body\.student-portal-page \.grade-quarter-pill/,
+    /html\[data-theme="dark"\] body\.parent-portal-page \.grade-quarter-pill/,
+    /html\[data-theme="dark"\] body\.student-portal-page \.quarter-board-meta-chip/,
+    /html\[data-theme="dark"\] body\.parent-portal-page \.quarter-board-meta-chip/,
+    /html\[data-theme="dark"\] body\.student-portal-page \.quarter-board-current-pill/,
+    /html\[data-theme="dark"\] body\.parent-portal-page \.quarter-board-current-pill/,
+    /html\[data-theme="dark"\] body\.student-portal-page \.grade-quarter-picker-btn/,
+    /html\[data-theme="dark"\] body\.parent-portal-page \.grade-quarter-picker-btn/,
+    /html\[data-theme="dark"\] body\.student-portal-page \.header-action-btn\.(?:plus|minus)/,
+    /html\[data-theme="dark"\] body\.parent-portal-page \.header-action-btn\.(?:plus|minus)/,
+    /html\[data-theme="dark"\] body\.student-points-page button:not\(\.primary\)/,
+    /html\[data-theme="dark"\] body\.admin-portal-page #authPanel button\.primary/,
+  ]) {
+    assert.doesNotMatch(sharedTheme, pattern)
+  }
+})
+
 test("shared portal theme expands mobile choice hit areas for radios and checkboxes", () => {
   assert.match(sharedTheme, /@media\s*\(max-width:520px\)\{/)
   assert.ok(

@@ -240,10 +240,6 @@
     radial-gradient(860px 400px at 12% 8%, rgba(255, 255, 255, 0.68), transparent 58%),
     radial-gradient(640px 320px at 92% 0%, rgba(255, 244, 211, 0.18), transparent 56%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(237, 243, 252, 0.48));
-  --portal-dark-page-bg-wash:
-    radial-gradient(920px 420px at -15% -20%, rgba(72, 79, 86, 0.18) 0%, transparent 62%),
-    radial-gradient(980px 520px at 110% -25%, rgba(60, 66, 72, 0.12) 0%, transparent 55%),
-    linear-gradient(180deg, #1a1c1f 0%, #25292c 100%);
   --surface-2: #f7f9fc;
   --radius-1: var(--radius-base);
   --radius-2: calc(var(--radius-base) * 2);
@@ -282,11 +278,6 @@ html[data-theme="dark"] body.portal-hub-page {
   --hub-theme-panel-shadow: none;
   --hub-theme-text: #f2f4f7;
   --hub-theme-text-soft: #c9ced4;
-  --hub-theme-wash:
-    radial-gradient(860px 400px at 12% 8%, rgba(181, 0, 16, 0.14), transparent 58%),
-    radial-gradient(640px 320px at 92% 0%, rgba(109, 135, 191, 0.18), transparent 56%),
-    radial-gradient(520px 240px at 56% 100%, rgba(255, 255, 255, 0.08), transparent 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(16, 18, 22, 0.24));
 }
 * {
   box-sizing: border-box;
@@ -349,10 +340,6 @@ html[data-theme="dark"] {
   --portal-status-warn-border: rgba(240, 176, 95, 0.34);
   --portal-status-warn-text: #ffe0b6;
   --portal-support-message: var(--portal-dark-text-soft);
-  --portal-button-surface: var(--portal-dark-surface-support);
-  --portal-button-surface-hover: var(--portal-dark-surface-soft);
-  --portal-button-border: var(--portal-dark-border);
-  --portal-button-border-hover: var(--portal-status-info-border);
   --portal-assignment-head-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-card) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-card));
   --portal-calendar-status-bad-bg: #d92d20;
   --portal-calendar-status-good-bg: #2e7d32;
@@ -381,25 +368,9 @@ html[data-theme="dark"] {
   --portal-panel-shadow: 0 8px 22px rgba(17, 38, 63, 0.08);
   --portal-panel-shadow-strong: 0 26px 60px rgba(8, 22, 40, 0.26);
   --portal-panel-shadow-soft: 0 8px 22px rgba(10, 28, 48, 0.18);
-  --portal-pill-bg: rgba(106, 164, 255, 0.14);
-  --portal-pill-border: rgba(106, 164, 255, 0.34);
-  --portal-pill-text: #eaf2ff;
   --portal-primary-text-strong: #fff;
   --portal-quick-link-hover-border: var(--portal-status-info-border);
   --portal-quarter-button-current-shadow: 0 0 0 1px rgba(0, 39, 134, 0.1);
-  --portal-quarter-button-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 82%, #ffffff 18%);
-  --portal-quarter-button-hover-border: color-mix(in srgb, var(--portal-dark-border) 72%, var(--portal-status-good-border) 28%);
-  --portal-quarter-button-active-bg: var(--portal-status-good-bg);
-  --portal-quarter-button-active-border: var(--portal-status-good-border);
-  --portal-quarter-button-active-text: var(--portal-status-good-text);
-  --portal-quarter-button-active-shadow: 0 12px 24px rgba(0, 39, 134, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-  --portal-quarter-card-current-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-panel-soft) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-panel));
-  --portal-quarter-card-current-shadow: 0 0 0 1px rgba(0, 39, 134, 0.1), 0 12px 26px rgba(0, 39, 134, 0.07);
-  --portal-quarter-meta-quarter-bg: color-mix(in srgb, var(--portal-status-good-bg) 20%, var(--portal-dark-surface-support) 80%);
-  --portal-quarter-current-pill-bg: var(--portal-status-good-bg);
-  --portal-quarter-current-pill-border: var(--portal-status-good-border);
-  --portal-quarter-current-pill-text: var(--portal-status-good-text);
-  --portal-quarter-current-pill-shadow: 0 10px 20px rgba(0, 39, 134, 0.18);
   --portal-quarter-open-text: #f0b05f;
   --portal-radio-control-bg: var(--portal-dark-field-bg);
   --portal-radio-control-border: var(--portal-dark-field-border);
@@ -4574,18 +4545,6 @@ html[data-theme="dark"] body.parent-portal-page .choice-option input[type="radio
   border-color: var(--portal-dark-border-strong) !important;
   color: var(--portal-dark-text) !important;
 }
-html[data-theme="dark"] body.student-portal-page .grade-quarter-pill,
-html[data-theme="dark"] body.parent-portal-page .grade-quarter-pill {
-  border-color: var(--portal-status-good-border);
-  color: var(--portal-status-good-text);
-}
-html[data-theme="dark"] body.student-portal-page .grade-quarter-stat,
-html[data-theme="dark"] body.parent-portal-page .grade-quarter-stat,
-html[data-theme="dark"] body.student-portal-page .quarter-board-meta-chip,
-html[data-theme="dark"] body.parent-portal-page .quarter-board-meta-chip {
-  background: var(--portal-dark-surface-support);
-  border-color: var(--portal-dark-border);
-}
 html[data-theme="dark"] body.student-portal-page .quarter-board-card,
 html[data-theme="dark"] body.parent-portal-page .quarter-board-card {
   background: var(--portal-dark-surface-panel);
@@ -4594,55 +4553,10 @@ html[data-theme="dark"] body.student-portal-page .quarter-board-card.is-current,
 html[data-theme="dark"] body.parent-portal-page .quarter-board-card.is-current {
   background: var(--portal-quarter-card-current-bg);
 }
-html[data-theme="dark"] body.student-portal-page .quarter-board-meta-quarter,
-html[data-theme="dark"] body.parent-portal-page .quarter-board-meta-quarter {
-  background: var(--portal-quarter-meta-quarter-bg);
-  border-color: var(--portal-status-good-border);
-  color: var(--portal-status-good-text);
-}
 html[data-theme="dark"] body.student-portal-page .quarter-board-meta-range,
 html[data-theme="dark"] body.parent-portal-page .quarter-board-meta-range {
   background: var(--portal-dark-surface-support);
   color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.student-portal-page .quarter-board-meta-count,
-html[data-theme="dark"] body.parent-portal-page .quarter-board-meta-count,
-html[data-theme="dark"] body.student-portal-page .quarter-board-current-pill,
-html[data-theme="dark"] body.parent-portal-page .quarter-board-current-pill {
-  background: var(--portal-quarter-current-pill-bg);
-  border-color: var(--portal-quarter-current-pill-border);
-  color: var(--portal-quarter-current-pill-text);
-}
-html[data-theme="dark"] body.student-portal-page .header-action-btn.plus,
-html[data-theme="dark"] body.parent-portal-page .header-action-btn.plus {
-  background: var(--portal-status-good-bg);
-  border-color: var(--portal-status-good-border);
-  color: var(--portal-status-good-text);
-}
-html[data-theme="dark"] body.student-portal-page .header-action-btn.minus,
-html[data-theme="dark"] body.parent-portal-page .header-action-btn.minus {
-  background: var(--portal-dark-border);
-  border-color: var(--portal-dark-border);
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.student-portal-page .grade-quarter-picker-btn,
-html[data-theme="dark"] body.parent-portal-page .grade-quarter-picker-btn {
-  background: var(--portal-control-surface);
-  border-color: var(--portal-control-border);
-  color: var(--portal-control-text);
-}
-html[data-theme="dark"] body.student-portal-page .grade-quarter-picker-btn:hover,
-html[data-theme="dark"] body.parent-portal-page .grade-quarter-picker-btn:hover {
-  background: var(--portal-quarter-button-hover-bg);
-  border-color: var(--portal-quarter-button-hover-border);
-}
-html[data-theme="dark"] body.student-portal-page .grade-quarter-picker-btn.is-active,
-html[data-theme="dark"] body.student-portal-page .grade-quarter-picker-btn[aria-pressed="true"],
-html[data-theme="dark"] body.parent-portal-page .grade-quarter-picker-btn.is-active,
-html[data-theme="dark"] body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"] {
-  background: var(--portal-quarter-button-active-bg);
-  border-color: var(--portal-quarter-button-active-border);
-  color: var(--portal-quarter-button-active-text);
 }
 html[data-theme="dark"] body.student-portal-page .school-map-preview-shell,
 html[data-theme="dark"] body.admin-portal-page .school-map-preview-shell {
@@ -4838,11 +4752,6 @@ html[data-theme="dark"] body.parent-portal-page #loginCard .login-link,
 html[data-theme="dark"] body.admin-portal-page #authPanel .login-link {
   color: var(--portal-login-link-dark);
 }
-html[data-theme="dark"] body.student-portal-page #loginPanel button.primary,
-html[data-theme="dark"] body.parent-portal-page #loginCard button.primary,
-html[data-theme="dark"] body.admin-portal-page #authPanel button.primary {
-  border: 1px solid rgba(249, 250, 255, 0.45);
-}
 body.student-portal-page #loginPanel :is(h1, h2),
 body.parent-portal-page #loginCard :is(h1, h2),
 body.admin-portal-page #authPanel :is(h1, h2) {
@@ -4955,11 +4864,6 @@ html[data-theme="dark"] body.student-points-page td {
 }
 html[data-theme="dark"] body.student-points-page #loginPanel .login-link {
   color: var(--portal-login-link-dark);
-}
-html[data-theme="dark"] body.student-points-page button:not(.primary),
-html[data-theme="dark"] body.student-points-page button[data-open-ledger],
-html[data-theme="dark"] body.student-points-page .link-btn {
-  color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .student-overview-title,
 html[data-theme="dark"] body.parent-portal-page .parent-overview-title,

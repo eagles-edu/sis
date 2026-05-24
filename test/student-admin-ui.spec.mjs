@@ -70,58 +70,30 @@ function isoDateOffset(value = "", days = 0) {
   return localIsoDate(date)
 }
 
-function buildSchoolSetupQuarters(startDate, endDate) {
-  const startIso = normalizeText(startDate).slice(0, 10)
-  const endIso = normalizeText(endDate).slice(0, 10)
-  const start = new Date(`${startIso}T00:00:00`)
-  const end = new Date(`${endIso}T00:00:00`)
-  if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf()) || start > end) return []
-  const totalDays = Math.floor((end.valueOf() - start.valueOf()) / (24 * 60 * 60 * 1000)) + 1
-  const base = Math.floor(totalDays / 4)
-  const remainder = totalDays % 4
-  const quarters = []
-  let cursor = startIso
-  for (let index = 0; index < 4; index += 1) {
-    const length = base + (index < remainder ? 1 : 0)
-    const quarterEnd = index === 3 ? endIso : isoDateOffset(cursor, Math.max(0, length - 1))
-    quarters.push({
-      quarter: `q${index + 1}`,
-      startDate: cursor,
-      endDate: quarterEnd,
-    })
-    cursor = isoDateOffset(quarterEnd, 1)
-  }
-  return quarters
-}
-
-function weekendSchoolSetupFixture() {
-  const startDate = "2026-08-10"
-  const endDate = "2027-05-28"
+function defaultSchoolSetupFixture() {
   return {
     multiSchool: true,
     schoolSetup: {
       schoolYear: "2026-2027",
-      startDate,
-      endDate,
-      quarters: buildSchoolSetupQuarters(startDate, endDate),
+      startDate: "2026-02-21",
+      endDate: "2027-01-24",
+      quarters: [
+        { quarter: "q1", startDate: "2026-02-21", endDate: "2026-05-15" },
+        { quarter: "q2", startDate: "2026-05-16", endDate: "2026-08-07" },
+        { quarter: "q3", startDate: "2026-08-08", endDate: "2026-10-31" },
+        { quarter: "q4", startDate: "2026-11-01", endDate: "2027-01-24" },
+      ],
       schoolSetupState: "ok",
     },
   }
 }
 
+function weekendSchoolSetupFixture() {
+  return defaultSchoolSetupFixture()
+}
+
 function attendanceSchoolSetupFixture() {
-  const startDate = "2025-08-10"
-  const endDate = "2026-05-28"
-  return {
-    multiSchool: true,
-    schoolSetup: {
-      schoolYear: "2025-2026",
-      startDate,
-      endDate,
-      quarters: buildSchoolSetupQuarters(startDate, endDate),
-      schoolSetupState: "ok",
-    },
-  }
+  return defaultSchoolSetupFixture()
 }
 
 function normalizeAssignmentTemplateFixture(source = {}, index = 0) {
@@ -305,6 +277,18 @@ function schoolSetupBootstrapResponses(url, rolePolicy) {
       },
     })
   }
+  if (url.includes("/api/admin/settings/ui")) {
+    return jsonResponse(200, {
+      uiSettings: defaultSchoolSetupFixture(),
+      meta: {
+        schoolSetupStoredQuarterCount: 4,
+        schoolSetupStoredQuartersPresent: true,
+        schoolSetupStoredQuartersMissing: false,
+        schoolSetupState: "ok",
+        schoolSetupHasIssues: false,
+      },
+    })
+  }
   if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
   if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: ["Main"] })
   if (url.includes("/api/admin/students")) return jsonResponse(200, { items: [] })
@@ -333,6 +317,16 @@ function schoolSetupBootstrapResponses(url, rolePolicy) {
 async function createSchoolSetupAdminDom(options = {}) {
   const rolePolicy = schoolSetupAdminRolePolicy()
   let authenticated = false
+  let schoolSetupUiSettingsResponse = {
+    uiSettings: defaultSchoolSetupFixture(),
+    meta: {
+      schoolSetupStoredQuarterCount: 4,
+      schoolSetupStoredQuartersPresent: true,
+      schoolSetupStoredQuartersMissing: false,
+      schoolSetupState: "ok",
+      schoolSetupHasIssues: false,
+    },
+  }
   return createAdminUiDom(
     async (resource, init = {}) => {
       const url = String(resource)
@@ -354,6 +348,28 @@ async function createSchoolSetupAdminDom(options = {}) {
       if (url.includes("/api/admin/auth/logout")) {
         authenticated = false
         return jsonResponse(200, { ok: true })
+      }
+      if (url.includes("/api/admin/settings/ui")) {
+        if ((init.method || "GET") === "PUT") {
+          const body = typeof init.body === "string" ? JSON.parse(init.body) : init.body || {}
+          const uiSettings = body && typeof body === "object" ? body.uiSettings : null
+          if (uiSettings && typeof uiSettings === "object") {
+            const setup = uiSettings.schoolSetup && typeof uiSettings.schoolSetup === "object" ? uiSettings.schoolSetup : {}
+            const quarterCount = Array.isArray(setup.quarters) ? setup.quarters.length : 0
+            const schoolSetupState = normalizeText(setup.schoolSetupState) || (quarterCount ? "ok" : "missing")
+            schoolSetupUiSettingsResponse = {
+              uiSettings,
+              meta: {
+                schoolSetupStoredQuarterCount: quarterCount,
+                schoolSetupStoredQuartersPresent: quarterCount > 0,
+                schoolSetupStoredQuartersMissing: quarterCount < 4,
+                schoolSetupState,
+                schoolSetupHasIssues: schoolSetupState !== "ok",
+              },
+            }
+          }
+        }
+        return jsonResponse(200, schoolSetupUiSettingsResponse)
       }
       const bootstrapResponse = schoolSetupBootstrapResponses(url, rolePolicy)
       if (bootstrapResponse) return bootstrapResponse
@@ -556,12 +572,12 @@ test("admin quarter and school-year helpers fail closed without setup", async ()
   assert.equal(typeof dom.window.gradeChartSchoolYearRange, "function")
   assert.equal(typeof dom.window.gradeChartQuarterRange, "function")
   assert.equal(typeof dom.window.quarterFromIsoDate, "function")
-  assert.equal(dom.window.defaultAttendanceSchoolYear("2026-08-10"), "")
+  assert.equal(dom.window.defaultAttendanceSchoolYear("2026-04-10"), "")
   assert.equal(dom.window.gradeChartSchoolYearRange("2026-2027").startDate, "")
   assert.equal(dom.window.gradeChartSchoolYearRange("2026-2027").endDate, "")
   assert.equal(dom.window.gradeChartQuarterRange("q1", "2026-2027").startDate, "")
   assert.equal(dom.window.gradeChartQuarterRange("q1", "2026-2027").endDate, "")
-  assert.equal(dom.window.quarterFromIsoDate("2026-08-10"), "")
+  assert.equal(dom.window.quarterFromIsoDate("2026-04-10"), "")
 
   dom.window.close()
 })
@@ -1367,7 +1383,7 @@ test("news review queue includes incomplete student week sets and marks status",
     assert.match(latestQueryString, /status=all/i)
     const row = dom.window.document.querySelector("#newsReviewRows tr[data-news-review-week-set-id]")
     assert.ok(row)
-    assert.match(row.textContent || "", /5\/7/i)
+    assert.match(row.textContent || "", /5\/5/i)
     assert.match(row.textContent || "", /Waiting/i)
     assert.match(row.textContent || "", /Incomplete/i)
     const summaryText = normalizeText(dom.window.document.getElementById("newsReviewSummary").textContent)
@@ -1630,13 +1646,13 @@ test("news review week-set table headers sort all visible columns", async () => 
   await waitFor(() => {
     assert.equal(reportsHeader.getAttribute("aria-sort"), "descending")
     const firstReportsCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(4)")?.textContent)
-    assert.equal(firstReportsCell, "7/7")
+    assert.equal(firstReportsCell, "7/5")
   })
   reportsHeader.click()
   await waitFor(() => {
     assert.equal(reportsHeader.getAttribute("aria-sort"), "ascending")
     const firstReportsCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(4)")?.textContent)
-    assert.equal(firstReportsCell, "5/7")
+    assert.equal(firstReportsCell, "5/5")
   })
 
   const statusHeader = document.querySelector('th[data-table-sort="newsReview"][data-sort-field="setStatus"]')
@@ -4411,7 +4427,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
           schoolYear: "2026-2027",
           quarter: "q1",
           assignmentName: "Homework Past Due",
-          dueAt: "2026-09-01",
+          dueAt: "2026-04-01",
           submittedAt: "",
           homeworkCompleted: false,
           homeworkOnTime: false,
@@ -4429,8 +4445,8 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
           schoolYear: "2026-2027",
           quarter: "q1",
           assignmentName: "Homework Completed",
-          dueAt: "2026-08-30",
-          submittedAt: "2026-08-29",
+          dueAt: "2026-03-30",
+          submittedAt: "2026-03-29",
           homeworkCompleted: true,
           homeworkOnTime: true,
           score: 9,
@@ -4564,7 +4580,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
         ok: true,
         queued: true,
         deliveryMode: "weekend-batch",
-        scheduledFor: "2026-09-05T12:00:00.000Z",
+        scheduledFor: "2026-04-05T12:00:00.000Z",
       })
     }
     if (url.includes("/api/admin/dashboard")) {
@@ -4669,7 +4685,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
   })
   assert.match(document.getElementById("pt_actionHelperStatus").textContent || "", /Inserted shorthand/i)
 
-  const selectedDate = "2026-09-15"
+  const selectedDate = "2026-04-14"
   document.getElementById("pt_classDate").value = selectedDate
   document.getElementById("pt_classDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
 
@@ -4946,12 +4962,12 @@ test("performance queued parent reports list opens modal and supports hold/edit/
       assignmentTitle: "Starter Student class report",
       exerciseTitle: "Pre-A1 Starters",
       level: "Pre-A1 Starters",
-      dueAt: "2026-09-15",
+      dueAt: "2026-04-15",
       message: "Initial queued message",
       recipients: ["starter@example.com", "mom@example.com"],
       queuedByUsername: "teacher_01",
-      queuedAt: "2026-09-14T11:00:00.000Z",
-      scheduledFor: "2026-09-14T12:00:00.000Z",
+      queuedAt: "2026-04-14T11:00:00.000Z",
+      scheduledFor: "2026-04-14T12:00:00.000Z",
       attempts: 0,
       lastError: "",
     },
@@ -5069,7 +5085,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
         return jsonResponse(200, { ok: true, action: "edit", item: queueItems[0] })
       }
       if (payload.action === "requeue" && payload.queueId === "queue-01") {
-        queueItems = [{ ...queueItems[0], status: "queued", scheduledFor: "2026-09-20T12:00:00.000Z" }]
+        queueItems = [{ ...queueItems[0], status: "queued", scheduledFor: "2026-04-20T12:00:00.000Z" }]
         return jsonResponse(200, { ok: true, action: "requeue", item: queueItems[0] })
       }
       if (payload.action === "sendAll") {
@@ -5235,7 +5251,7 @@ test("performance staged reports panel queues a staged report via approve action
             className: "Pre-A1 Starters",
             schoolYear: "2026-2027",
             quarter: "q1",
-            generatedAt: "2026-09-15T11:00:00.000Z",
+            generatedAt: "2026-04-15T11:00:00.000Z",
             behaviorScore: 7,
             participationScore: 8,
             inClassScore: 9,
@@ -5284,8 +5300,8 @@ test("performance staged reports panel queues a staged report via approve action
           message: payload.message,
           recipients: payload.recipients || [],
           queuedByUsername: "admin",
-          queuedAt: "2026-09-15T12:00:00.000Z",
-          scheduledFor: "2026-09-15T18:00:00.000Z",
+          queuedAt: "2026-04-15T12:00:00.000Z",
+          scheduledFor: "2026-04-15T18:00:00.000Z",
           attempts: 0,
           lastError: "",
           payloadJson: payload,
@@ -5296,7 +5312,7 @@ test("performance staged reports panel queues a staged report via approve action
         queued: true,
         queueType: "parent-report",
         queueSize: queueItems.length,
-        scheduledFor: "2026-09-15T18:00:00.000Z",
+        scheduledFor: "2026-04-15T18:00:00.000Z",
       })
     }
 
@@ -5362,7 +5378,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
       correctCount: 16,
       scorePercent: 80,
       reviewedByUsername: "",
-      createdAt: "2026-09-14T10:00:00.000Z",
+      createdAt: "2026-04-14T10:00:00.000Z",
     },
     {
       id: "incoming-02",
@@ -5374,7 +5390,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
       correctCount: 19,
       scorePercent: 95,
       reviewedByUsername: "",
-      createdAt: "2026-09-13T10:00:00.000Z",
+      createdAt: "2026-04-13T10:00:00.000Z",
     },
     {
       id: "incoming-03",
@@ -5386,7 +5402,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
       correctCount: 7,
       scorePercent: 70,
       reviewedByUsername: "admin",
-      createdAt: "2026-09-13T09:00:00.000Z",
+      createdAt: "2026-04-13T09:00:00.000Z",
     },
   ]
 
@@ -7326,22 +7342,22 @@ test("clear buttons reset local admin form fields", async () => {
   assert.equal(document.getElementById("a_status").value, "absent")
   assert.equal(document.getElementById("a_comments").value, "")
 
-  document.getElementById("schoolSetupStartDate").value = "2026-08-10"
-  document.getElementById("schoolSetupEndDate").value = "2027-05-28"
+  document.getElementById("schoolSetupStartDate").value = "2026-02-21"
+  document.getElementById("schoolSetupEndDate").value = "2027-01-24"
   document.getElementById("schoolSetupStartDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   document.getElementById("schoolSetupEndDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   const firstPreviewSchoolYear = document.getElementById("schoolSetupSchoolYearLabel").value
-  document.getElementById("schoolSetupStartDate").value = "2027-08-10"
+  document.getElementById("schoolSetupStartDate").value = "2027-02-21"
   document.getElementById("schoolSetupStartDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  assert.equal(document.getElementById("schoolSetupStartDate").value, "2027-08-10")
+  assert.equal(document.getElementById("schoolSetupStartDate").value, "2027-02-21")
   assert.equal(document.getElementById("schoolSetupSchoolYearLabel").value, firstPreviewSchoolYear)
-  document.getElementById("schoolSetupEndDate").value = "2028-05-28"
+  document.getElementById("schoolSetupEndDate").value = "2028-01-24"
   document.getElementById("schoolSetupEndDate").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   const secondPreviewSchoolYear = document.getElementById("schoolSetupSchoolYearLabel").value
   assert.match(firstPreviewSchoolYear, /^\d{4}-\d{4}$/)
   assert.match(secondPreviewSchoolYear, /^\d{4}-\d{4}$/)
   assert.equal(secondPreviewSchoolYear, "2027-2028")
-  assert.equal(document.getElementById("schoolSetupQuarterRows").textContent?.includes("2028-05-28"), true)
+  assert.equal(document.getElementById("schoolSetupQuarterRows").textContent?.includes("2028-01-24"), true)
 
   document.getElementById("g_id").value = "grade-1"
   document.getElementById("g_className").value = "Class B"
@@ -8817,8 +8833,8 @@ test("school setup profile fields persist and reset from saved values", async ()
     assert.ok(field)
     field.value = value
   }
-  document.getElementById("schoolSetupStartDate").value = "2026-08-10"
-  document.getElementById("schoolSetupEndDate").value = "2027-05-28"
+  document.getElementById("schoolSetupStartDate").value = "2026-02-21"
+  document.getElementById("schoolSetupEndDate").value = "2027-01-24"
   document.getElementById("schoolSetupAutoFillBtn").click()
   document.getElementById("schoolSetupSaveBtn").click()
 
@@ -8830,8 +8846,8 @@ test("school setup profile fields persist and reset from saved values", async ()
   const savedRaw = dom.window.localStorage.getItem("sis.admin.uiSettings")
   assert.ok(savedRaw)
   const saved = JSON.parse(savedRaw)
-  assert.equal(saved.schoolSetup.startDate, "2026-08-10")
-  assert.equal(saved.schoolSetup.endDate, "2027-05-28")
+  assert.equal(saved.schoolSetup.startDate, "2026-02-21")
+  assert.equal(saved.schoolSetup.endDate, "2027-01-24")
   assert.equal(saved.schoolSetup.letterGradeRanges[0].letter, "A")
   assert.equal(saved.schoolSetup.letterGradeRanges[0].minPercent, 92)
   assert.equal(saved.schoolSetup.letterGradeRanges[4].letter, "F")
@@ -8866,8 +8882,8 @@ test("school setup profile fields persist and reset from saved values", async ()
   await waitFor(() => {
     assert.equal(document.getElementById("schoolSetupName").value, "Eagles Learning Hub")
     assert.equal(document.getElementById("schoolSetupMission").value, "Deliver student outcomes")
-    assert.equal(document.getElementById("schoolSetupStartDate").value, "2026-08-10")
-    assert.equal(document.getElementById("schoolSetupEndDate").value, "2027-05-28")
+    assert.equal(document.getElementById("schoolSetupStartDate").value, "2026-02-21")
+    assert.equal(document.getElementById("schoolSetupEndDate").value, "2027-01-24")
     assert.equal(
       document.getElementById("schoolSetupLetterGradeRanges").value,
       fieldValuesById.schoolSetupLetterGradeRanges

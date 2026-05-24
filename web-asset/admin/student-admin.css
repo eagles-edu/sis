@@ -15,7 +15,7 @@
         --btn-refresh-bg: var(--portal-color-3d608aab85);
         --btn-refresh-border: var(--portal-color-4b848cb5df);
         --btn-refresh-text: var(--portal-color-7801470977);
-        --chart-grid: var(--portal-border);
+        --chart-grid: var(--secondary-color);
         --chart-text: var(--portal-chart-axis-label);
         --danger: var(--portal-color-bd827b1b26);
         --danger-bg: var(--portal-color-55a7dc028b);
@@ -378,9 +378,9 @@
         color: var(--btn-delete-text);
       }
       button.ghost {
-        background: transparent;
+        background: var(--primary-color);
         border-color: var(--btn-delete-border);
-        color: var(--btn-delete-text);
+        color: var(--secondary-color);
       }
       button.btn-delete {
         --btn-active-shadow:
@@ -3710,16 +3710,6 @@
       html[data-theme="dark"] body.admin-portal-page :where(.profile-tabs-shell, .profile-info-tabs, .profile-tab-panel, .profile-info-summary, .profile-summary-primary, .profile-summary-chip, .profile-info-panel, .profile-info-group, .profile-info-item, .profile-info-empty-stack, .profile-field-group, .profile-choice-item, .profile-layout-editor, .profile-layout-table-wrap) {
         box-shadow: none;
       }
-      html[data-theme="dark"] body.admin-portal-page .profile-summary-chip {
-        background: var(--portal-color-d14f901611);
-        border-color: var(--portal-color-a5d9717d79);
-      }
-      html[data-theme="dark"] body.admin-portal-page .profile-summary-chip-label {
-        color: var(--portal-color-1d89e3bf1e);
-      }
-      html[data-theme="dark"] body.admin-portal-page .profile-summary-chip-value {
-        color: var(--portal-color-97f9ffca77);
-      }
       html[data-theme="dark"] body.admin-portal-page :where(.profile-info-toolbar h3,
         .profile-editor-toolbar h3,
         .profile-summary-name,
@@ -3827,16 +3817,6 @@
       html[data-theme="dark"] body.admin-portal-page .news-review-viewer-long,
       html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label {
         color: var(--portal-dark-text);
-      }
-      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block .level-chip,
-      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review .level-chip {
-        color: var(--chip-text, var(--portal-color-efc4ce6dd0));
-      }
-      html[data-theme="dark"] body.admin-portal-page #levelReminderSendBtn {
-        color: var(--portal-color-d14f901611);
-      }
-      html[data-theme="dark"] body.admin-portal-page :where(#overviewRuntimeRestartBtn, #exerciseMailerRestartBtn) {
-        color: var(--portal-color-d14f901611);
       }
       html[data-theme="dark"] body.admin-portal-page :where(input, select, textarea) {
         background: var(--portal-dark-field-bg);

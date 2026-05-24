@@ -5,6 +5,7 @@ import fs from "node:fs"
 import path from "node:path"
 import process from "node:process"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { getConfiguredDatabaseUrlSync } from "../admin/sis-config-store.mjs"
 
 const DEFAULT_SCHEMA_PATH = path.resolve(process.cwd(), "schemas/member-intake-cf3.schema.json")
 const SKIPPED_REQUIRED_FIELDS = new Set(["hcaptcha_84", "submit_1"])
@@ -214,7 +215,7 @@ function parseSubmittedAt(value) {
 let prismaClientPromise = null
 
 function isStoreEnabled() {
-  const hasDatabaseUrl = Boolean(normalizeText(process.env.DATABASE_URL))
+  const hasDatabaseUrl = Boolean(normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL))
   return resolveBoolean(process.env.STUDENT_INTAKE_STORE_ENABLED, hasDatabaseUrl)
 }
 

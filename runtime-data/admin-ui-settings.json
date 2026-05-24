@@ -2,66 +2,69 @@
   "uiSettings": {
     "multiSchool": true,
     "schoolSetup": {
-      "startDate": "2026-08-10",
-      "endDate": "2027-05-28",
+      "startDate": "2026-02-21",
+      "endDate": "2027-01-24",
       "schoolYear": "2026-2027",
       "quarters": [
         {
           "quarter": "q1",
-          "startDate": "2026-08-10",
-          "endDate": "2026-10-31"
+          "startDate": "2026-02-21",
+          "endDate": "2026-05-15"
         },
         {
           "quarter": "q2",
-          "startDate": "2026-11-01",
-          "endDate": "2027-01-31"
+          "startDate": "2026-05-16",
+          "endDate": "2026-08-07"
         },
         {
           "quarter": "q3",
-          "startDate": "2027-02-01",
-          "endDate": "2027-03-31"
+          "startDate": "2026-08-08",
+          "endDate": "2026-10-31"
         },
         {
           "quarter": "q4",
-          "startDate": "2027-04-01",
-          "endDate": "2027-05-28"
+          "startDate": "2026-11-01",
+          "endDate": "2027-01-24"
         }
       ],
       "letterGradeRanges": [
         {
           "letter": "A",
-          "minPercent": 92,
-          "maxPercent": 100
+          "maxPercent": 100,
+          "minPercent": 93
         },
         {
           "letter": "B",
-          "minPercent": 84,
-          "maxPercent": 91.99
+          "maxPercent": 92.99,
+          "minPercent": 85
         },
         {
           "letter": "C",
-          "minPercent": 76,
-          "maxPercent": 83.99
+          "maxPercent": 84.99,
+          "minPercent": 77
         },
         {
           "letter": "D",
-          "minPercent": 60,
-          "maxPercent": 75.99
+          "maxPercent": 76.99,
+          "minPercent": 70
         },
         {
           "letter": "F",
-          "minPercent": 0,
-          "maxPercent": 59.99
+          "maxPercent": 69.99,
+          "minPercent": 0
         }
       ],
       "schoolSetupState": "ok"
     },
     "schoolProfile": {
+      "mission": "Persist settings across live upgrades",
       "schoolName": "Eagles Live",
-      "logoDataUrl": "data:image/png;base64,AAAA",
-      "mission": "Persist settings across live upgrades"
-    }
+      "logoDataUrl": "data:image/png;base64,AAAA"
+    },
+    "newsReportValidation": {},
+    "queueHub": {},
+    "levelTileStylesByLevel": {}
   },
-  "updatedAt": "2026-05-19T18:27:07.796Z",
+  "updatedAt": "2026-05-24T08:45:47.051Z",
   "updatedBy": "admin"
 }

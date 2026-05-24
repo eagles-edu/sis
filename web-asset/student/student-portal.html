@@ -1256,23 +1256,8 @@
       overflow-wrap: anywhere;
     }
 
-    html[data-theme="dark"] .grade-quarter-pill {
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
     html[data-theme="dark"] .quarter-board-card.is-current {
       background: var(--portal-quarter-card-current-bg);
-    }
-
-    html[data-theme="dark"] .quarter-board-meta-chip {
-      border-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .quarter-board-meta-quarter {
-      background: var(--portal-quarter-meta-quarter-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
     }
 
     html[data-theme="dark"] .quarter-board-meta-range {
@@ -1280,70 +1265,9 @@
       color: var(--portal-dark-text);
     }
 
-    html[data-theme="dark"] .quarter-board-meta-count,
-    html[data-theme="dark"] .quarter-board-current-pill {
-      background: var(--portal-quarter-current-pill-bg);
-      border-color: var(--portal-quarter-current-pill-border);
-      color: var(--portal-quarter-current-pill-text);
-    }
-
     html[data-theme="dark"] .grade-quarter-stat {
       background: var(--portal-dark-surface-support);
       border-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .header-action-btn.plus {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    html[data-theme="dark"] .header-action-btn.minus {
-      background: var(--portal-dark-border);
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn:hover {
-      background: var(--portal-quarter-button-hover-bg);
-      border-color: var(--portal-quarter-button-hover-border);
-    }
-
-    html[data-theme="dark"] .grade-quarter-picker-btn.is-active,
-    html[data-theme="dark"] .grade-quarter-picker-btn[aria-pressed="true"] {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-good {
-      background: var(--portal-color-1c5b3b4180);
-      border-color: var(--portal-color-1239e09212);
-      color: var(--portal-color-d14f901611);
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-warn {
-      background: var(--portal-color-10fe7b83d5);
-      border-color: var(--portal-color-75f461b553);
-      color: var(--portal-color-d14f901611);
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-bad {
-      background: var(--portal-color-d07e7e7d52);
-      border-color: var(--portal-color-57be6b39f7);
-      color: var(--portal-color-d14f901611);
-    }
-
-    html[data-theme="dark"] .grade-status-pill.is-late {
-      background: var(--portal-color-82f80f783f);
-      border-color: var(--portal-color-1ae8f85b9b);
-      color: var(--portal-color-d14f901611);
     }
 
     html[data-theme="dark"] .grade-exercise-score {
@@ -4952,6 +4876,16 @@
         return state.newsWeekSets;
       }
 
+      function weeklyMinimumNewsReports() {
+        return Math.max(
+          1,
+          Number.parseInt(
+            String(state.dashboard?.newsReports?.weeklyMinimumReports || 5),
+            10,
+          ) || 5,
+        );
+      }
+
       function newsWeekSetStatusToken(weekSet = {}) {
         const approvedCount = Math.max(
           0,
@@ -4980,7 +4914,8 @@
           0,
           Number.parseInt(String(weekSet?.reportCount || 0), 10) || 0,
         );
-        if (reportCount >= 7 && approvedCount >= 7) return "approved";
+        const requiredReports = weeklyMinimumNewsReports();
+        if (reportCount >= requiredReports && approvedCount >= requiredReports) return "approved";
         if (revisionRequestedCount > 0) return "revise";
         if (awaitingReReviewCount > 0) return "waiting";
         if (submittedCount > 0) return "submitted";
@@ -5301,7 +5236,7 @@
           );
           const latestDate = t(item?.latestReportDate || item?.reports?.[0]?.reportDate);
           const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
-          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/7`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${weeklyMinimumNewsReports()}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
         }).join("");
       }
 

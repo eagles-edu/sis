@@ -3,6 +3,8 @@
 import fs from "node:fs"
 import path from "node:path"
 
+import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
+
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
@@ -27,6 +29,25 @@ export function getAdminUiSettingsFilePath() {
 
 export function readSchoolSetupSnapshot() {
   const filePath = getAdminUiSettingsFilePath()
+  const configSnapshot = getSisConfigSnapshotSync()
+  const schoolSetup = configSnapshot?.uiSettings?.schoolSetup && typeof configSnapshot.uiSettings.schoolSetup === "object" ?
+    configSnapshot.uiSettings.schoolSetup :
+    null
+  const configHasMeaningfulSchoolSetup =
+    Boolean(normalizeSchoolYear(schoolSetup?.schoolYear)) ||
+    Boolean(normalizeIsoDate(schoolSetup?.startDate)) ||
+    Boolean(normalizeIsoDate(schoolSetup?.endDate)) ||
+    (Array.isArray(schoolSetup?.quarters) && schoolSetup.quarters.length > 0)
+  if (configHasMeaningfulSchoolSetup) {
+    return {
+      filePath,
+      schoolYear: normalizeSchoolYear(schoolSetup.schoolYear),
+      startDate: normalizeIsoDate(schoolSetup.startDate),
+      endDate: normalizeIsoDate(schoolSetup.endDate),
+      schoolSetupState: normalizeText(schoolSetup.schoolSetupState) || "missing",
+    }
+  }
+
   if (!fs.existsSync(filePath)) {
     return {
       filePath,
@@ -44,17 +65,17 @@ export function readSchoolSetupSnapshot() {
       parsed && typeof parsed === "object" && !Array.isArray(parsed) && parsed.uiSettings && typeof parsed.uiSettings === "object"
         ? parsed.uiSettings
         : parsed
-    const schoolSetup =
+    const legacySchoolSetup =
       uiSettings && typeof uiSettings === "object" && !Array.isArray(uiSettings) && uiSettings.schoolSetup && typeof uiSettings.schoolSetup === "object"
         ? uiSettings.schoolSetup
         : {}
 
     return {
       filePath,
-      schoolYear: normalizeSchoolYear(schoolSetup.schoolYear),
-      startDate: normalizeIsoDate(schoolSetup.startDate),
-      endDate: normalizeIsoDate(schoolSetup.endDate),
-      schoolSetupState: normalizeText(schoolSetup.schoolSetupState) || "missing",
+      schoolYear: normalizeSchoolYear(legacySchoolSetup.schoolYear),
+      startDate: normalizeIsoDate(legacySchoolSetup.startDate),
+      endDate: normalizeIsoDate(legacySchoolSetup.endDate),
+      schoolSetupState: normalizeText(legacySchoolSetup.schoolSetupState) || "missing",
     }
   } catch (error) {
     return {

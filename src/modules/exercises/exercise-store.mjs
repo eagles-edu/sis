@@ -5,6 +5,7 @@ import fs from "node:fs"
 import path from "node:path"
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { getConfiguredDatabaseUrlSync, getSisConfigSnapshotSync } from "../admin/sis-config-store.mjs"
 
 /**
  * @typedef {{
@@ -132,7 +133,7 @@ function createStatusError(message, statusCode) {
 }
 
 function isStoreEnabled() {
-  const hasDatabaseUrl = Boolean(normalizeString(process.env.DATABASE_URL))
+  const hasDatabaseUrl = Boolean(normalizeString(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL))
   return resolveBoolean(process.env.EXERCISE_STORE_ENABLED, hasDatabaseUrl)
 }
 
@@ -239,6 +240,22 @@ function schoolSetupFromUiSettingsPayload(payload = {}) {
 
 function readSchoolSetupFromUiSettingsFile() {
   const filePath = resolveUiSettingsFilePath()
+  const configSnapshot = getSisConfigSnapshotSync()
+  const configSchoolSetup =
+    configSnapshot?.uiSettings?.schoolSetup && typeof configSnapshot.uiSettings.schoolSetup === "object" ?
+      configSnapshot.uiSettings.schoolSetup
+      : null
+  const configHasMeaningfulSchoolSetup =
+    Boolean(isSchoolYearLabel(configSchoolSetup?.schoolYear)) ||
+    normalizeString(configSchoolSetup?.startDate).length > 0 ||
+    normalizeString(configSchoolSetup?.endDate).length > 0 ||
+    (Array.isArray(configSchoolSetup?.quarters) && configSchoolSetup.quarters.length > 0)
+  if (configHasMeaningfulSchoolSetup) {
+    return {
+      schoolYear: isSchoolYearLabel(configSchoolSetup.schoolYear) ? configSchoolSetup.schoolYear : "",
+      quarters: normalizeSchoolSetupQuarters(configSchoolSetup.quarters),
+    }
+  }
   let stat
   try {
     stat = fs.statSync(filePath)

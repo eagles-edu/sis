@@ -246,10 +246,8 @@
       min-width: 0;
     }
 
-    .status-detail-line {
-      color: var(--portal-text-soft);
-      font-size: 0.82rem;
-      line-height: 1.35;
+    .status-chip-row--compact {
+      gap: 4px;
     }
 
     .table-wrap {
@@ -346,15 +344,21 @@
     }
 
     .history-rail__button {
+      appearance: none;
       align-items: center;
+      background: transparent;
+      border: 0;
+      color: var(--portal-text);
       display: inline-flex;
       justify-content: center;
+      min-height: 0;
       min-width: 28px;
-      padding-inline: 0;
+      padding: 0;
       width: 28px;
     }
 
     .history-rail__button .history-rail__dots {
+      color: inherit;
       display: inline-flex;
       font-size: 1.2rem;
       line-height: 1;
@@ -482,6 +486,11 @@
     }
 
     .enrollment-history-modal__close {
+      background: var(--portal-surface-soft);
+      border: 1px solid var(--portal-border);
+      color: var(--portal-text);
+      min-height: 36px;
+      padding-inline: 10px;
       white-space: nowrap;
     }
 
@@ -945,7 +954,8 @@
               <p class="enrollment-history-modal__kicker">History</p>
               <h2 id="enrollmentHistoryModalTitle" class="enrollment-history-modal__title">Student history note</h2>
             </div>
-            <button type="button" class="ghost enrollment-history-modal__close" data-history-close>Close</button>
+            <button type="button" class="ghost enrollment-history-modal__close"
+            data-history-close tabindex="-1">Close</button>
           </div>
           <p id="enrollmentHistoryModalSummary" class="enrollment-history-modal__summary"></p>
           <div id="enrollmentHistoryModalBody" class="enrollment-history-modal__list"></div>
@@ -1162,6 +1172,11 @@
 
       function currentSchoolYearText(row) {
         return normalizeText(row?.currentEnrollment?.schoolYear || historyPeriods(row)[0]?.schoolYear || "");
+      }
+
+      function currentSchoolYearChipHtml(row) {
+        const schoolYear = currentSchoolYearText(row);
+        return schoolYear ? chipHtml(schoolYear, "#2d78b4") : "";
       }
 
       function enrollmentStatusChipHtml(statusValue = "") {
@@ -1466,7 +1481,7 @@
             <td data-label="Current status">
               <div class="status-cell-stack">
                 <div class="status-chip-row">${currentStatusChipHtml(row)}${levelChipHtml(currentLevelText(row) || "Unassigned")}</div>
-                <div class="status-detail-line">School year ${escapeHtml(currentSchoolYearText(row) || "Unknown")}</div>
+                <div class="status-chip-row status-chip-row--compact">${currentSchoolYearChipHtml(row) || chipHtml("Unknown", "#677892")}</div>
               </div>
             </td>
             <td data-label="Enrollment action">

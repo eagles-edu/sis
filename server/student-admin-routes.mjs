@@ -70,6 +70,9 @@ import {
   listLevelAndSchoolFilters,
 } from "../src/modules/admin/student-admin-queries.mjs"
 import {
+  readSchoolSetupSnapshot,
+} from "../src/modules/admin/school-setup-store.mjs"
+import {
   getAdminDashboardSummary,
 } from "../src/modules/admin/dashboard-summary.mjs"
 import {
@@ -108,6 +111,11 @@ import {
   listStudentPointsSnapshots,
   setStudentPointsTotal,
 } from "../src/modules/admin/points.mjs"
+import {
+  getSisConfigSnapshotSync,
+  getWeeklyMinimumReportsSync,
+  saveSisConfigSnapshot,
+} from "../src/modules/admin/sis-config-store.mjs"
 import {
   deleteAttendanceRecord,
   deleteGradeRecord,
@@ -249,10 +257,6 @@ const DB_BACKUP_LATEST_FILE_PATH = path.resolve(
   process.cwd(),
   normalizeText(process.env.DB_BACKUP_LATEST_FILE) || "/home/eagles/dockerz/backups/postgres/latest.json"
 )
-const ADMIN_UI_SETTINGS_MAX_BYTES = Math.max(
-  1024,
-  Number.parseInt(String(process.env.STUDENT_ADMIN_UI_SETTINGS_MAX_BYTES || 1024 * 1024), 10) || 1024 * 1024
-)
 const PORTAL_NO_CACHE_HEADERS = Object.freeze({
   "Cache-Control": "no-cache, no-store, must-revalidate",
   Pragma: "no-cache",
@@ -270,9 +274,10 @@ const PARENT_CHILD_NEWS_CALENDAR_PATH_RE = new RegExp(
   `^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/news-reports/calendar$`
 )
 
+const SIS_RUNTIME_CONFIG = getSisConfigSnapshotSync().runtime || {}
 const SESSION_TTL_SECONDS = Math.max(
   60,
-  Number.parseInt(String(process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS || "28800"), 10) || 28800
+  Number.parseInt(String(SIS_RUNTIME_CONFIG.adminSessionTtlSeconds || process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS || "28800"), 10) || 28800
 )
 const SESSION_COOKIE_NAME = normalizeText(process.env.STUDENT_ADMIN_SESSION_COOKIE_NAME) || "student_admin_sid"
 const SESSION_COOKIE_PATH = normalizeText(process.env.STUDENT_ADMIN_SESSION_COOKIE_PATH) || "/"
@@ -284,7 +289,7 @@ const SESSION_COOKIE_SECURE = resolveBoolean(
 )
 const PARENT_SESSION_TTL_SECONDS = Math.max(
   60,
-  Number.parseInt(String(process.env.STUDENT_PARENT_SESSION_TTL_SECONDS || "28800"), 10) || 28800
+  Number.parseInt(String(SIS_RUNTIME_CONFIG.parentSessionTtlSeconds || process.env.STUDENT_PARENT_SESSION_TTL_SECONDS || "28800"), 10) || 28800
 )
 const PARENT_SESSION_COOKIE_NAME = normalizeText(process.env.STUDENT_PARENT_SESSION_COOKIE_NAME) || "parent_portal_sid"
 const PARENT_SESSION_COOKIE_PATH = normalizeText(process.env.STUDENT_PARENT_SESSION_COOKIE_PATH) || "/"
@@ -298,7 +303,7 @@ const PARENT_SESSION_COOKIE_SECURE = resolveBoolean(
 )
 const STUDENT_SESSION_TTL_SECONDS = Math.max(
   60,
-  Number.parseInt(String(process.env.STUDENT_STUDENT_SESSION_TTL_SECONDS || "86400"), 10) || 86400
+  Number.parseInt(String(SIS_RUNTIME_CONFIG.studentSessionTtlSeconds || process.env.STUDENT_STUDENT_SESSION_TTL_SECONDS || "86400"), 10) || 86400
 )
 const STUDENT_SESSION_COOKIE_NAME = normalizeText(process.env.STUDENT_STUDENT_SESSION_COOKIE_NAME) || "student_portal_sid"
 const STUDENT_SESSION_COOKIE_PATH = normalizeText(process.env.STUDENT_STUDENT_SESSION_COOKIE_PATH) || "/"
@@ -363,13 +368,22 @@ const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_STORE = new Map()
 /** @type {RolePermissionsMap | null} */
 let ROLE_PERMISSIONS = null
 const SESSION_STORE = createStudentAdminSessionStore({
+  driver: normalizeText(SIS_RUNTIME_CONFIG.sessionDriver) || "auto",
+  redisUrl: normalizeText(SIS_RUNTIME_CONFIG.redisUrl),
   ttlSeconds: SESSION_TTL_SECONDS,
+  redisConnectTimeoutMs: SIS_RUNTIME_CONFIG.redisConnectTimeoutMs,
 })
 const PARENT_SESSION_STORE = createStudentAdminSessionStore({
+  driver: normalizeText(SIS_RUNTIME_CONFIG.sessionDriver) || "auto",
+  redisUrl: normalizeText(SIS_RUNTIME_CONFIG.redisUrl),
   ttlSeconds: PARENT_SESSION_TTL_SECONDS,
+  redisConnectTimeoutMs: SIS_RUNTIME_CONFIG.redisConnectTimeoutMs,
 })
 const STUDENT_SESSION_STORE = createStudentAdminSessionStore({
+  driver: normalizeText(SIS_RUNTIME_CONFIG.sessionDriver) || "auto",
+  redisUrl: normalizeText(SIS_RUNTIME_CONFIG.redisUrl),
   ttlSeconds: STUDENT_SESSION_TTL_SECONDS,
+  redisConnectTimeoutMs: SIS_RUNTIME_CONFIG.redisConnectTimeoutMs,
 })
 const PARENT_PROFILE_QUEUE_STATUS_DRAFT = "draft"
 const PARENT_PROFILE_QUEUE_STATUS_SUBMITTED = "submitted"
@@ -436,13 +450,14 @@ function resolveNewsSetStatus({
   revisionRequestedCount = 0,
   awaitingReReviewCount = 0,
 } = {}) {
+  const requiredReports = getWeeklyMinimumReportsSync()
   const totalReports = toNonNegativeInt(reportCount)
   const approved = toNonNegativeInt(approvedCount)
   const submitted = toNonNegativeInt(submittedCount)
   const revisionRequested = toNonNegativeInt(revisionRequestedCount)
   const awaitingReReview = Math.min(submitted, toNonNegativeInt(awaitingReReviewCount))
   const uncheckedInitial = Math.max(0, submitted - awaitingReReview)
-  if (totalReports >= 7 && approved >= 7) return "approved"
+  if (totalReports >= requiredReports && approved >= requiredReports) return "approved"
   if (awaitingReReview > 0 && revisionRequested === 0 && uncheckedInitial === 0) return "waiting"
   if (submitted === 0 && revisionRequested === 0) return "checked"
   if (revisionRequested > 0) return "revise"
@@ -463,10 +478,11 @@ function resolveNewsSetAction({
   submittedCount = 0,
   revisionRequestedCount = 0,
 } = {}) {
+  const requiredReports = getWeeklyMinimumReportsSync()
   const totalReports = toNonNegativeInt(reportCount)
   const approved = toNonNegativeInt(approvedCount)
   const unapproved = resolveNewsSetUnapprovedCount({ submittedCount, revisionRequestedCount })
-  if (totalReports >= 7 && approved >= 7) return "completed"
+  if (totalReports >= requiredReports && approved >= requiredReports) return "completed"
   if (unapproved === 0) return "incomplete"
   return `unapproved-${unapproved}`
 }
@@ -2182,51 +2198,50 @@ function uiSettingsMetaFromPayload(payload = {}) {
 }
 
 function readPersistedUiSettings() {
-  if (!fs.existsSync(ADMIN_UI_SETTINGS_FILE_PATH)) {
-    return {
-      uiSettings: null,
-      updatedAt: "",
-      updatedBy: "",
-      filePath: ADMIN_UI_SETTINGS_FILE_PATH,
-      meta: uiSettingsMetaFromPayload({}),
-    }
-  }
-
-  try {
-    const raw = fs.readFileSync(ADMIN_UI_SETTINGS_FILE_PATH, "utf8")
-    if (!normalizeText(raw)) {
-      return {
-        uiSettings: null,
-        updatedAt: "",
-        updatedBy: "",
-        filePath: ADMIN_UI_SETTINGS_FILE_PATH,
-        meta: uiSettingsMetaFromPayload({}),
-      }
-    }
-
-    const parsed = JSON.parse(raw)
-    const wrapped =
-      parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, "uiSettings")
-    const uiSettings = wrapped ? normalizeUiSettingsPayload({ uiSettings: parsed.uiSettings }) : normalizeUiSettingsPayload(parsed)
-    const normalizedUpdatedBy = normalizeText(parsed?.updatedBy)
-    const meta = uiSettingsMetaFromPayload(wrapped ? { uiSettings: parsed.uiSettings } : parsed)
-
-    return {
-      uiSettings,
-      updatedAt: normalizeText(parsed?.updatedAt),
-      updatedBy: normalizedUpdatedBy || "",
-      filePath: ADMIN_UI_SETTINGS_FILE_PATH,
-      meta,
-    }
-  } catch (error) {
-    const wrapped = new Error("Unable to read persisted admin UI settings")
-    wrapped.statusCode = 500
-    throw wrapped
+  const snapshot = getSisConfigSnapshotSync()
+  const legacySchoolSetup = readSchoolSetupSnapshot()
+  const configSchoolSetup = snapshot?.uiSettings?.schoolSetup && typeof snapshot.uiSettings.schoolSetup === "object" ?
+    snapshot.uiSettings.schoolSetup :
+    null
+  const hasMeaningfulConfigSchoolSetup =
+    Boolean(normalizeText(configSchoolSetup?.schoolYear)) ||
+    Boolean(normalizeText(configSchoolSetup?.startDate)) ||
+    Boolean(normalizeText(configSchoolSetup?.endDate)) ||
+    (Array.isArray(configSchoolSetup?.quarters) && configSchoolSetup.quarters.length > 0)
+  const mergedSchoolSetup = hasMeaningfulConfigSchoolSetup ?
+    configSchoolSetup :
+    (legacySchoolSetup && typeof legacySchoolSetup === "object"
+      ? {
+          schoolYear: normalizeText(legacySchoolSetup.schoolYear),
+          startDate: normalizeText(legacySchoolSetup.startDate),
+          endDate: normalizeText(legacySchoolSetup.endDate),
+          schoolSetupState: normalizeText(legacySchoolSetup.schoolSetupState) || "missing",
+          quarters: Array.isArray(configSchoolSetup?.quarters) ? configSchoolSetup.quarters : [],
+          letterGradeRanges: Array.isArray(configSchoolSetup?.letterGradeRanges) ? configSchoolSetup.letterGradeRanges : [],
+        }
+      : null)
+  return {
+    uiSettings: snapshot?.uiSettings
+      ? {
+          ...snapshot.uiSettings,
+          schoolSetup: mergedSchoolSetup || snapshot.uiSettings.schoolSetup || null,
+        }
+      : null,
+    sisConfig: {
+      runtime: snapshot?.runtime || {},
+      newsReports: snapshot?.newsReports || {},
+    },
+    updatedAt: normalizeText(snapshot?.updatedAt),
+    updatedBy: normalizeText(snapshot?.updatedBy),
+    filePath: snapshot?.filePath || ADMIN_UI_SETTINGS_FILE_PATH,
+    sisConfigFilePath: snapshot?.filePath || "",
+    meta: uiSettingsMetaFromPayload({ uiSettings: snapshot?.uiSettings || {} }),
   }
 }
 
-function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
-  const uiSettings = normalizeUiSettingsPayload(payload)
+async function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
+  const candidate = payload && typeof payload === "object" ? payload : {}
+  const uiSettings = normalizeUiSettingsPayload(candidate?.uiSettings || candidate)
   if (Object.prototype.hasOwnProperty.call(uiSettings, "schoolSetup")) {
     const schoolSetupState = normalizeText(uiSettings?.schoolSetup?.schoolSetupState)
     if (schoolSetupState && schoolSetupState !== "ok") {
@@ -2235,33 +2250,35 @@ function writePersistedUiSettings(payload = {}, updatedByUsername = "") {
       throw error
     }
   }
-  const updatedAt = nowIso()
-  const updatedBy = normalizeText(updatedByUsername) || null
-  const meta = uiSettingsMetaFromPayload({ uiSettings })
-  const persisted = {
+  const runtimeSource =
+    candidate?.sisConfig?.runtime && typeof candidate.sisConfig.runtime === "object" ?
+      candidate.sisConfig.runtime :
+      candidate?.runtime && typeof candidate.runtime === "object" ? candidate.runtime : {}
+  const newsReportsSource =
+    candidate?.sisConfig?.newsReports && typeof candidate.sisConfig.newsReports === "object" ?
+      candidate.sisConfig.newsReports :
+      candidate?.newsReports && typeof candidate.newsReports === "object" ? candidate.newsReports : {}
+  const sisConfig = {
+    runtime: runtimeSource,
+    newsReports: newsReportsSource,
     uiSettings,
-    updatedAt,
-    updatedBy,
   }
-  const encoded = JSON.stringify(persisted, null, 2)
-  const encodedBytes = Buffer.byteLength(encoded, "utf8")
-  if (encodedBytes > ADMIN_UI_SETTINGS_MAX_BYTES) {
-    const error = new Error("uiSettings payload is too large")
-    error.statusCode = 413
-    throw error
-  }
-
-  fs.mkdirSync(path.dirname(ADMIN_UI_SETTINGS_FILE_PATH), { recursive: true })
-  const tmpPath = `${ADMIN_UI_SETTINGS_FILE_PATH}.tmp-${process.pid}-${Date.now()}`
-  fs.writeFileSync(tmpPath, encoded, "utf8")
-  fs.renameSync(tmpPath, ADMIN_UI_SETTINGS_FILE_PATH)
+  const persisted = await saveSisConfigSnapshot({
+    ...sisConfig,
+    uiSettings,
+  }, updatedByUsername)
 
   return {
-    uiSettings,
-    updatedAt,
-    updatedBy: updatedBy || "",
-    filePath: ADMIN_UI_SETTINGS_FILE_PATH,
-    meta,
+    uiSettings: persisted.uiSettings,
+    sisConfig: {
+      runtime: persisted.runtime,
+      newsReports: persisted.newsReports,
+    },
+    updatedAt: persisted.updatedAt,
+    updatedBy: persisted.updatedBy || "",
+    filePath: persisted.filePath || ADMIN_UI_SETTINGS_FILE_PATH,
+    sisConfigFilePath: persisted.filePath || "",
+    meta: uiSettingsMetaFromPayload({ uiSettings: persisted.uiSettings }),
   }
 }
 
@@ -4928,6 +4945,7 @@ async function buildParentDashboardPayload(session = {}) {
         return {
           ...snapshot,
           newsReports: {
+            weeklyMinimumReports: getWeeklyMinimumReportsSync(),
             submittedCount: newsSummary.submitted + newsSummary.approved + newsSummary.revisionRequested,
             statusSummary: newsSummary,
             latestSubmittedAt,
@@ -5042,6 +5060,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       },
       calendarTracks,
       newsReports: {
+        weeklyMinimumReports: getWeeklyMinimumReportsSync(),
         submittedCount,
         latestSubmittedAt,
         statusSummary,
@@ -5347,6 +5366,7 @@ async function buildQueueHubPayload() {
         id: "news-report-review",
         title: "News Week Sets",
         total: Number.parseInt(String(newsReviewQueue?.total || 0), 10) || 0,
+        weeklyMinimumReports: getWeeklyMinimumReportsSync(),
         statusSummary: newsReviewQueue?.statusSummary || { submitted: 0, approved: 0, revisionRequested: 0 },
         items: Array.isArray(newsReviewQueue?.items) ? newsReviewQueue.items : [],
       },
@@ -5412,7 +5432,7 @@ async function handleApiRequest(request, response, pathname, url) {
 
     if (method === "PUT") {
       const payload = await parseBody(request)
-      const result = writePersistedUiSettings(payload, session?.username)
+      const result = await writePersistedUiSettings(payload, session?.username)
       sendJson(response, 200, {
         ok: true,
         ...result,
@@ -5678,7 +5698,10 @@ async function handleApiRequest(request, response, pathname, url) {
       query: url.searchParams.get("q") || "",
       take: url.searchParams.get("take") || "200",
     })
-    sendJson(response, 200, data)
+    sendJson(response, 200, {
+      ...data,
+      weeklyMinimumReports: getWeeklyMinimumReportsSync(),
+    })
     return true
   }
 

@@ -1,0 +1,8 @@
+CREATE TABLE "SisConfigMirror" (
+  "id" TEXT NOT NULL,
+  "payloadJson" JSONB NOT NULL,
+  "updatedBy" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "SisConfigMirror_pkey" PRIMARY KEY ("id")
+);

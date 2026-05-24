@@ -123,6 +123,14 @@ model AssignmentTemplate {
   @@index([updatedAt])
 }
 
+model SisConfigMirror {
+  id         String   @id
+  payloadJson Json
+  updatedBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
 enum IntakeControlType {
   text
   textarea

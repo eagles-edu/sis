@@ -1,6 +1,8 @@
 // src/infra/db/prisma-client.mjs
 // @ts-check
 
+import { getConfiguredDatabaseUrlSync } from "../../modules/admin/sis-config-store.mjs"
+
 /**
  * @param {unknown} value
  * @returns {string}
@@ -64,7 +66,7 @@ async function createPrismaClientWithFallback(PrismaClient) {
     if (!isAdapterRequiredError(error)) throw error
   }
 
-  const databaseUrl = normalizeText(process.env.DATABASE_URL)
+  const databaseUrl = normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL)
   if (!databaseUrl) {
     /** @type {Error & { statusCode?: number }} */
     const error = new Error("DATABASE_URL is required for Prisma adapter mode")

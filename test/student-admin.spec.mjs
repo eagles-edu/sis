@@ -474,10 +474,12 @@ test("queue hub source contract includes student-week news-set panel", () => {
 
 test("news review status/action rules and revise chip label keep locked admin ui rules", () => {
   const adminUiSource = withAdminAssets(ADMIN_HTML_SOURCE)
+  const runtimesScript = fs.readFileSync(path.resolve(process.cwd(), "tools/sync-and-restart-runtimes.sh"), "utf8")
+  const gitignoreSource = fs.readFileSync(path.resolve(process.cwd(), ".gitignore"), "utf8")
   const statusStart = ADMIN_JS_SOURCE.indexOf("function newsReviewWeekSetStatusToken(")
   assert.ok(statusStart >= 0, "newsReviewWeekSetStatusToken is present")
   const statusChunk = ADMIN_JS_SOURCE.slice(statusStart, statusStart + 1400)
-  assert.match(statusChunk, /if \(reportCount >= 7 && approved >= 7\) return "approved";/)
+  assert.match(statusChunk, /if \(reportCount >= requiredReports && approved >= requiredReports\) return "approved";/)
   assert.match(statusChunk, /return "waiting";/)
   assert.match(statusChunk, /if \(submitted === 0 && revisionRequested === 0\) return "checked";/)
   assert.match(statusChunk, /if \(revisionRequested > 0 \|\| submitted > 0\) return "waiting";/)
@@ -488,6 +490,9 @@ test("news review status/action rules and revise chip label keep locked admin ui
   assert.match(actionChunk, /const unapproved = Math\.max\(0, submitted\);/)
   assert.doesNotMatch(actionChunk, /awaitingReReview/)
   assert.doesNotMatch(actionChunk, /submitted \+ revisionRequested/)
+  assert.match(runtimesScript, /stash_local_sis_config/)
+  assert.match(runtimesScript, /restore_local_sis_config/)
+  assert.match(gitignoreSource, /SIS_CONFIG\.json/)
   assert.match(
     adminUiSource,
     /data-sort-field="setAction"[\s\S]*Action[\s\S]*data-sort-field="setStatus"[\s\S]*Status/
@@ -522,14 +527,14 @@ test("generateStudentReportCardPdf returns a PDF buffer", async () => {
         className: "English",
         schoolYear: "2026-2027",
         quarter: "q1",
-        attendanceDate: "2026-09-01",
+        attendanceDate: "2026-04-01",
         status: "present",
       },
       {
         className: "English",
         schoolYear: "2026-2027",
         quarter: "q1",
-        attendanceDate: "2026-09-02",
+        attendanceDate: "2026-04-02",
         status: "late",
       },
     ],
@@ -539,8 +544,8 @@ test("generateStudentReportCardPdf returns a PDF buffer", async () => {
         schoolYear: "2026-2027",
         quarter: "q1",
         assignmentName: "Homework 1",
-        dueAt: "2026-09-05",
-        submittedAt: "2026-09-04",
+        dueAt: "2026-04-05",
+        submittedAt: "2026-04-04",
         score: 8,
         maxScore: 10,
         homeworkCompleted: true,
@@ -555,7 +560,7 @@ test("generateStudentReportCardPdf returns a PDF buffer", async () => {
         className: "English",
         schoolYear: "2026-2027",
         quarter: "q1",
-        generatedAt: "2026-09-10",
+        generatedAt: "2026-04-10",
         homeworkCompletionRate: 100,
         homeworkOnTimeRate: 100,
         behaviorScore: 9,
@@ -584,21 +589,21 @@ test("generateStudentReportCardPdf counts late attendance as present in the summ
     profile: { fullName: "Jane Student" },
     attendanceRecords: [
       {
-        attendanceDate: "2026-09-01",
+        attendanceDate: "2026-04-01",
         className: "English",
         schoolYear: "2026-2027",
         quarter: "q1",
         status: "present",
       },
       {
-        attendanceDate: "2026-09-02",
+        attendanceDate: "2026-04-02",
         className: "English",
         schoolYear: "2026-2027",
         quarter: "q1",
         status: "late",
       },
       {
-        attendanceDate: "2026-09-03",
+        attendanceDate: "2026-04-03",
         className: "English",
         schoolYear: "2026-2027",
         quarter: "q1",
@@ -648,12 +653,16 @@ test("buildChildDashboardSnapshot counts late attendance as present", () => {
 })
 
 test("buildChildDashboardSnapshot preserves stored school setup quarters and fails closed when dates are blank", () => {
-  const adminUiSettingsPath = path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
+  const adminUiSettingsPath = process.env.STUDENT_ADMIN_UI_SETTINGS_FILE || path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
+  const sisConfigPath = `/tmp/sis-config-blank-${process.pid}.json`
   const priorAdminUiSettings = fs.existsSync(adminUiSettingsPath)
     ? fs.readFileSync(adminUiSettingsPath, "utf8")
     : null
+  const priorSisConfigFile = process.env.SIS_CONFIG_FILE
+  const priorSisConfig = fs.existsSync(sisConfigPath) ? fs.readFileSync(sisConfigPath, "utf8") : null
 
   try {
+    process.env.SIS_CONFIG_FILE = sisConfigPath
     fs.mkdirSync(path.dirname(adminUiSettingsPath), { recursive: true })
     fs.writeFileSync(
       adminUiSettingsPath,
@@ -664,10 +673,29 @@ test("buildChildDashboardSnapshot preserves stored school setup quarters and fai
             startDate: "",
             endDate: "",
             quarters: [
-              { quarter: "q1", startDate: "2026-08-10", endDate: "2026-10-30" },
-              { quarter: "q2", startDate: "2026-11-02", endDate: "2027-01-29" },
-              { quarter: "q3", startDate: "2027-02-01", endDate: "2027-04-30" },
-              { quarter: "q4", startDate: "2027-05-03", endDate: "2027-06-25" },
+              { quarter: "q1", startDate: "2026-02-21", endDate: "2026-05-15" },
+              { quarter: "q2", startDate: "2026-05-16", endDate: "2026-08-07" },
+              { quarter: "q3", startDate: "2026-08-08", endDate: "2026-10-31" },
+              { quarter: "q4", startDate: "2026-11-01", endDate: "2027-01-24" },
+            ],
+          },
+        },
+      }),
+      "utf8",
+    )
+    fs.writeFileSync(
+      sisConfigPath,
+      JSON.stringify({
+        uiSettings: {
+          schoolSetup: {
+            schoolYear: "2026-2027",
+            startDate: "",
+            endDate: "",
+            quarters: [
+              { quarter: "q1", startDate: "2026-02-21", endDate: "2026-05-15" },
+              { quarter: "q2", startDate: "2026-05-16", endDate: "2026-08-07" },
+              { quarter: "q3", startDate: "2026-08-08", endDate: "2026-10-31" },
+              { quarter: "q4", startDate: "2026-11-01", endDate: "2027-01-24" },
             ],
           },
         },
@@ -693,6 +721,16 @@ test("buildChildDashboardSnapshot preserves stored school setup quarters and fai
     assert.equal(snapshot.schoolSetupState, "maintenance")
     assert.equal(snapshot.details.quarterBoardState, "maintenance")
   } finally {
+    if (priorSisConfigFile === undefined) {
+      delete process.env.SIS_CONFIG_FILE
+    } else {
+      process.env.SIS_CONFIG_FILE = priorSisConfigFile
+    }
+    if (priorSisConfig !== null) {
+      fs.writeFileSync(sisConfigPath, priorSisConfig, "utf8")
+    } else {
+      fs.rmSync(sisConfigPath, { force: true })
+    }
     if (priorAdminUiSettings !== null) {
       fs.writeFileSync(adminUiSettingsPath, priorAdminUiSettings, "utf8")
     }
@@ -700,10 +738,13 @@ test("buildChildDashboardSnapshot preserves stored school setup quarters and fai
 })
 
 test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinished assignment panels", () => {
-  const adminUiSettingsPath = path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
+  const adminUiSettingsPath = process.env.STUDENT_ADMIN_UI_SETTINGS_FILE || path.resolve(process.cwd(), "runtime-data/admin-ui-settings.json")
+  const sisConfigPath = `/tmp/sis-config-current-${process.pid}.json`
   const priorAdminUiSettings = fs.existsSync(adminUiSettingsPath)
     ? fs.readFileSync(adminUiSettingsPath, "utf8")
     : null
+  const priorSisConfigFile = process.env.SIS_CONFIG_FILE
+  const priorSisConfig = fs.existsSync(sisConfigPath) ? fs.readFileSync(sisConfigPath, "utf8") : null
   const today = new Date()
   const month = String(today.getMonth() + 1).padStart(2, "0")
   const toIsoDate = (date) => {
@@ -751,9 +792,29 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
   }
 
   try {
+    process.env.SIS_CONFIG_FILE = sisConfigPath
     fs.mkdirSync(path.dirname(adminUiSettingsPath), { recursive: true })
     fs.writeFileSync(
       adminUiSettingsPath,
+      JSON.stringify({
+        uiSettings: {
+          schoolSetup: {
+            schoolYear: `${year}-${year + 1}`,
+            startDate: `${year}-01-01`,
+            endDate: `${year}-12-31`,
+            quarters: [
+              { quarter: "q1", startDate: currentQuarterStart, endDate: currentQuarterEnd },
+              { quarter: "q2", startDate: toIsoDate(shiftDays(today, 14)), endDate: toIsoDate(shiftDays(today, 21)) },
+              { quarter: "q3", startDate: toIsoDate(shiftDays(today, 28)), endDate: toIsoDate(shiftDays(today, 35)) },
+              { quarter: "q4", startDate: pastQuarterStart, endDate: pastQuarterEnd },
+            ],
+          },
+        },
+      }),
+      "utf8",
+    )
+    fs.writeFileSync(
+      sisConfigPath,
       JSON.stringify({
         uiSettings: {
           schoolSetup: {
@@ -849,6 +910,16 @@ test("buildChildDashboardSnapshot exact-matches assignment bundles for unfinishe
     assert.equal(snapshot.details.pastQuartersUnfinishedAssignments[0].countsTowardQuarter, false)
     assert.match(snapshot.details.pastQuartersUnfinishedAssignments[0].note || "", /progress tracking only/i)
   } finally {
+    if (priorSisConfigFile === undefined) {
+      delete process.env.SIS_CONFIG_FILE
+    } else {
+      process.env.SIS_CONFIG_FILE = priorSisConfigFile
+    }
+    if (priorSisConfig !== null) {
+      fs.writeFileSync(sisConfigPath, priorSisConfig, "utf8")
+    } else {
+      fs.rmSync(sisConfigPath, { force: true })
+    }
     if (priorAdminUiSettings !== null) {
       fs.writeFileSync(adminUiSettingsPath, priorAdminUiSettings, "utf8")
     }
@@ -1954,13 +2025,13 @@ test("admin can persist and reload school setup ui settings", async () => {
       multiSchool: true,
       schoolSetup: {
         schoolYear: "2026-2027",
-        startDate: "2026-08-10",
-        endDate: "2027-05-28",
+        startDate: "2026-02-21",
+        endDate: "2027-01-24",
         quarters: [
-          { quarter: "q1", startDate: "2026-08-10", endDate: "2026-10-31" },
-          { quarter: "q2", startDate: "2026-11-01", endDate: "2027-01-31" },
-          { quarter: "q3", startDate: "2027-02-01", endDate: "2027-03-31" },
-          { quarter: "q4", startDate: "2027-04-01", endDate: "2027-05-28" },
+          { quarter: "q1", startDate: "2026-02-21", endDate: "2026-05-15" },
+          { quarter: "q2", startDate: "2026-05-16", endDate: "2026-08-07" },
+          { quarter: "q3", startDate: "2026-08-08", endDate: "2026-10-31" },
+          { quarter: "q4", startDate: "2026-11-01", endDate: "2027-01-24" },
         ],
         letterGradeRanges: [
           { letter: "A", minPercent: 92, maxPercent: 100 },
@@ -1974,6 +2045,20 @@ test("admin can persist and reload school setup ui settings", async () => {
         schoolName: "Eagles Live",
         logoDataUrl: "data:image/png;base64,AAAA",
         mission: "Persist settings across live upgrades",
+      },
+    },
+    sisConfig: {
+      runtime: {
+        databaseUrl: "postgresql://example:secret@db.example.test:5432/sis",
+        redisUrl: "redis://cache.example.test:6379",
+        sessionDriver: "redis",
+        adminSessionTtlSeconds: 12345,
+        parentSessionTtlSeconds: 23456,
+        studentSessionTtlSeconds: 34567,
+        redisConnectTimeoutMs: 9876,
+      },
+      newsReports: {
+        weeklyMinimumReports: 5,
       },
     },
   }
@@ -1992,6 +2077,8 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(putBody.uiSettings.multiSchool, true)
   assert.equal(putBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(putBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
+  assert.equal(putBody.sisConfig.runtime.sessionDriver, "redis")
+  assert.equal(putBody.sisConfig.newsReports.weeklyMinimumReports, 5)
   assert.equal(putBody.meta.schoolSetupState, "ok")
 
   const getAfter = await fetchLocal(port, "/api/admin/settings/ui", {
@@ -2001,12 +2088,14 @@ test("admin can persist and reload school setup ui settings", async () => {
   const afterBody = await getAfter.json()
   assert.equal(afterBody.ok, true)
   assert.equal(afterBody.uiSettings.multiSchool, true)
-  assert.equal(afterBody.uiSettings.schoolSetup.startDate, "2026-08-10")
+  assert.equal(afterBody.uiSettings.schoolSetup.startDate, "2026-02-21")
   assert.equal(afterBody.meta.schoolSetupState, "ok")
   assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].letter, "A")
   assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].minPercent, 92)
   assert.equal(afterBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(afterBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
+  assert.equal(afterBody.sisConfig.runtime.redisUrl, "redis://cache.example.test:6379")
+  assert.equal(afterBody.sisConfig.newsReports.weeklyMinimumReports, 5)
 })
 
 test("admin rejects school setup ui settings without explicit quarters", async () => {
@@ -2018,12 +2107,12 @@ test("admin rejects school setup ui settings without explicit quarters", async (
     },
     body: JSON.stringify({
       uiSettings: {
-        schoolSetup: {
-          schoolYear: "2026-2027",
-          startDate: "2026-08-10",
-          endDate: "2027-05-28",
-          letterGradeRanges: [],
-        },
+          schoolSetup: {
+            schoolYear: "2026-2027",
+            startDate: "2026-02-21",
+            endDate: "2027-01-24",
+            letterGradeRanges: [],
+          },
       },
     }),
   })
