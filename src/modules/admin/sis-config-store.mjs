@@ -11,6 +11,40 @@ const DEFAULT_ADMIN_SESSION_TTL_SECONDS = 28800
 const DEFAULT_PARENT_SESSION_TTL_SECONDS = 28800
 const DEFAULT_STUDENT_SESSION_TTL_SECONDS = 86400
 const DEFAULT_SESSION_REDIS_CONNECT_TIMEOUT_MS = 5000
+const DEFAULT_SCHOOL_LOGO_IMAGE_PATH = "web-asset/images/logo.svg"
+const DEFAULT_LEVEL_TILE_IMAGE_PATH_BY_LEVEL = new Map(
+  [
+    ["Eggs & Chicks", "web-asset/images/eggs-chicks.svg"],
+    ["Pre-A1 Starters", "web-asset/images/starters.svg"],
+    ["A1 Movers", "web-asset/images/movers.svg"],
+    ["A2 Flyers", "web-asset/images/flyers.svg"],
+    ["A2 KET", "web-asset/images/ket.svg"],
+    ["B1 PET", "web-asset/images/pet.svg"],
+  ].map(([level, imagePath]) => [normalizeLower(level), imagePath]),
+)
+const DEFAULT_LEVEL_THEME_BY_LEVEL = new Map(
+  [
+    ["Eggs & Chicks", { color: "#e0162b", className: "panelbg-eggs-chicks" }],
+    ["Pre-A1 Starters", { color: "#FCAB15", className: "panelbg-starters" }],
+    ["A1 Movers", { color: "#913198", className: "panelbg-mov" }],
+    ["A2 Flyers", { color: "#b5d570", className: "panelbg-fly" }],
+    ["A2 KET", { color: "#038e9f", className: "panelbg-key" }],
+    ["B1 PET", { color: "#cd1637", className: "panelbg-pet" }],
+    ["B2+ IELTS", { color: "#b10128", className: "panelbg-ielts" }],
+    ["C1+ TAYK", { color: "#980001", className: "panelbg-tayk" }],
+    ["Private", { color: "#002786", className: "panelbg-private" }],
+  ].map(([level, theme]) => [normalizeLower(level), theme]),
+)
+const DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL = new Map(
+  [
+    ["Eggs & Chicks", "Eggs & Chicks"],
+    ["Pre-A1 Starters", "Pre-A1 Starters"],
+    ["A1 Movers", "A1 Movers"],
+    ["A2 Flyers", "A2 Flyers"],
+    ["A2 KET", "A2 KET"],
+    ["B1 PET", "B1 PET"],
+  ].map(([level, label]) => [normalizeLower(level), label]),
+)
 
 /**
  * @typedef {Record<string, any>} PlainObject
@@ -247,10 +281,45 @@ function normalizeSchoolSetupQuarters(value) {
     .filter((entry) => entry !== null)
 }
 
+function defaultLevelTileStyle(levelName = "") {
+  const normalized = normalizeLower(levelName)
+  const theme = DEFAULT_LEVEL_THEME_BY_LEVEL.get(normalized) || null
+  return {
+    title: DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL.get(normalized) || normalizeText(levelName),
+    bgColor: normalizeText(theme?.color),
+    imageDataUrl: DEFAULT_LEVEL_TILE_IMAGE_PATH_BY_LEVEL.get(normalized) || DEFAULT_SCHOOL_LOGO_IMAGE_PATH,
+  }
+}
+
+function normalizeLevelTileStylesByLevel(source = {}) {
+  const candidate = toPlainObject(source)
+  const normalized = {}
+  const knownLevels = Array.from(DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL.values())
+  Object.entries(candidate).forEach(([levelName, entry]) => {
+    const levelKey = normalizeText(levelName)
+    if (!levelKey) return
+    const sourceEntry = toPlainObject(entry)
+    const defaultEntry = defaultLevelTileStyle(levelKey)
+    normalized[levelKey] = {
+      ...sourceEntry,
+      title: normalizeText(sourceEntry.title) || defaultEntry.title,
+      bgColor: normalizeText(sourceEntry.bgColor) || defaultEntry.bgColor,
+      imageDataUrl:
+        normalizeText(sourceEntry.imageDataUrl || sourceEntry.imagePath || sourceEntry.imageUrl) ||
+        defaultEntry.imageDataUrl,
+    }
+  })
+  knownLevels.forEach((levelName) => {
+    if (Object.prototype.hasOwnProperty.call(normalized, levelName)) return
+    normalized[levelName] = defaultLevelTileStyle(levelName)
+  })
+  return normalized
+}
+
 function normalizeUiSettings(source = {}) {
   const candidate = toPlainObject(source)
   const schoolSetup = toPlainObject(candidate.schoolSetup)
-  const levelTileStylesByLevel = toPlainObject(
+  const levelTileStylesByLevel = normalizeLevelTileStylesByLevel(
     candidate.levelTileStylesByLevel ||
       candidate.levelTileStyleByLevel ||
       candidate.levelTileStyles ||
@@ -268,7 +337,17 @@ function normalizeUiSettings(source = {}) {
         [],
       schoolSetupState: normalizeText(schoolSetup.schoolSetupState) || "missing",
     },
-    schoolProfile: toPlainObject(candidate.schoolProfile),
+    schoolProfile: (() => {
+      const normalized = toPlainObject(candidate.schoolProfile)
+      return {
+        ...normalized,
+        logoDataUrl:
+          normalizeText(normalized.logoDataUrl) &&
+          normalizeText(normalized.logoDataUrl) !== "data:image/png;base64,aaaa"
+            ? normalizeText(normalized.logoDataUrl)
+            : DEFAULT_SCHOOL_LOGO_IMAGE_PATH,
+      }
+    })(),
     newsReportValidation: toPlainObject(candidate.newsReportValidation),
     queueHub: toPlainObject(candidate.queueHub),
     levelTileStylesByLevel,
@@ -322,6 +401,49 @@ function normalizeSisConfigPayload(source = {}) {
     updatedAt: normalizeText(candidate.updatedAt),
     updatedBy: normalizeText(candidate.updatedBy),
   }
+}
+
+/**
+ * @param {Partial<SisConfigPayload> | Partial<LoadedSisConfigSnapshot> | PlainObject} snapshot
+ * @returns {string}
+ */
+function snapshotComparisonKey(snapshot = {}) {
+  const source = toPlainObject(snapshot)
+  return JSON.stringify({
+    uiSettings: normalizeUiSettings(source.uiSettings || {}),
+    runtime: normalizeRuntimeConfig(source.runtime || {}),
+    newsReports: normalizeNewsReportsConfig(source.newsReports || {}),
+    updatedAt: normalizeText(source.updatedAt),
+    updatedBy: normalizeText(source.updatedBy),
+  })
+}
+
+/**
+ * @param {Partial<SisConfigPayload> | Partial<LoadedSisConfigSnapshot> | PlainObject} snapshot
+ * @returns {string}
+ */
+function rawSnapshotComparisonKey(snapshot = {}) {
+  const source = toPlainObject(snapshot)
+  return JSON.stringify({
+    uiSettings: toPlainObject(source.uiSettings || {}),
+    runtime: toPlainObject(source.runtime || {}),
+    newsReports: toPlainObject(source.newsReports || {}),
+    updatedAt: normalizeText(source.updatedAt),
+    updatedBy: normalizeText(source.updatedBy),
+  })
+}
+
+/**
+ * @param {Partial<SisConfigPayload> | Partial<LoadedSisConfigSnapshot> | PlainObject} snapshot
+ * @returns {string}
+ */
+function rawLegacyEnvelopeComparisonKey(snapshot = {}) {
+  const source = toPlainObject(snapshot)
+  return JSON.stringify({
+    uiSettings: toPlainObject(source.uiSettings || source),
+    updatedAt: normalizeText(source.updatedAt),
+    updatedBy: normalizeText(source.updatedBy) || null,
+  })
 }
 
 /**
@@ -648,16 +770,27 @@ export async function ensureSisConfigLoaded(options = {}) {
   }, filePath, latest.source || "file")
 
   const latestSourceIsDatabase = latest.source === "database"
+  const fileMatchesSnapshot = !fileSnapshot.parsed || rawSnapshotComparisonKey(fileSnapshot.parsed) === snapshotComparisonKey(snapshot)
+  const legacyMatchesSnapshot = !legacySnapshot.parsed || rawLegacyEnvelopeComparisonKey(legacySnapshot.parsed) === rawLegacyEnvelopeComparisonKey(legacyUiSettingsEnvelopeFromSnapshot(snapshot))
+  const dbMatchesSnapshot = !dbSnapshot || rawSnapshotComparisonKey({
+    uiSettings: dbSnapshot.uiSettings,
+    runtime: dbSnapshot.runtime,
+    newsReports: dbSnapshot.newsReports,
+    updatedAt: dbSnapshot.updatedAt,
+    updatedBy: dbSnapshot.updatedBy,
+  }) === snapshotComparisonKey(snapshot)
   const fileNeedsWrite =
     !fileSnapshot.exists ||
     fileSnapshot.error ||
     latestSourceIsDatabase ||
+    !fileMatchesSnapshot ||
     (fileLoaded && compareIsoValues(snapshot.updatedAt, fileLoaded.updatedAt) > 0)
   const legacyNeedsWrite =
     !legacySnapshot.exists ||
     legacySnapshot.error ||
     latestSourceIsDatabase ||
     latest.source === "file" ||
+    !legacyMatchesSnapshot ||
     (legacyLoaded && compareIsoValues(snapshot.updatedAt, legacyLoaded.updatedAt) > 0)
 
   backupCorruptJsonFileIfNeeded(filePath, fileSnapshot)
@@ -681,6 +814,9 @@ export async function ensureSisConfigLoaded(options = {}) {
     !dbSnapshot ||
     latestSourceIsDatabase ||
     latest.source === "file" ||
+    fileNeedsWrite ||
+    legacyNeedsWrite ||
+    !dbMatchesSnapshot ||
     compareIsoValues(snapshot.updatedAt, dbSnapshot.updatedAt) !== 0
   if (mirrorNeedsWrite) {
     await upsertMirrorToDatabase(snapshot)

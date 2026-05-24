@@ -132,6 +132,80 @@ test("sis config loader fails fast on placeholder example database hosts with li
   }
 })
 
+test("sis config loader reinjects relative logo and six level image paths when missing", async () => {
+  const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  process.env.SIS_CONFIG_FILE = sisConfigPath
+  process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
+  process.env.DATABASE_URL = ""
+
+  try {
+    fs.mkdirSync(path.dirname(sisConfigPath), { recursive: true })
+    fs.writeFileSync(
+      sisConfigPath,
+      JSON.stringify({
+        uiSettings: {
+          multiSchool: false,
+          schoolSetup: {
+            ...SCHOOL_SETUP_FALLBACK,
+          },
+          schoolProfile: {
+            schoolName: "The Eagles Club",
+            logoDataUrl: "",
+          },
+          levelTileStylesByLevel: {},
+          newsReportValidation: {},
+          queueHub: {},
+        },
+        runtime: {
+          databaseUrl: "postgresql://user:pass@localhost:5432/sis",
+        },
+        newsReports: {
+          weeklyMinimumReports: 5,
+        },
+        updatedAt: "2026-05-01T00:00:00.000Z",
+        updatedBy: "config",
+      }, null, 2),
+      "utf8",
+    )
+
+    const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    const snapshot = await mod.ensureSisConfigLoaded({ refresh: true })
+
+    assert.equal(snapshot.uiSettings.schoolProfile.logoDataUrl, "web-asset/images/logo.svg")
+    assert.deepEqual(Object.keys(snapshot.uiSettings.levelTileStylesByLevel).sort(), [
+      "A1 Movers",
+      "A2 Flyers",
+      "A2 KET",
+      "B1 PET",
+      "Eggs & Chicks",
+      "Pre-A1 Starters",
+    ])
+    assert.equal(
+      snapshot.uiSettings.levelTileStylesByLevel["Eggs & Chicks"].imageDataUrl,
+      "web-asset/images/eggs-chicks.svg",
+    )
+    assert.equal(
+      snapshot.uiSettings.levelTileStylesByLevel["Pre-A1 Starters"].imageDataUrl,
+      "web-asset/images/starters.svg",
+    )
+
+    const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
+    assert.equal(
+      restoredConfig.uiSettings.schoolProfile.logoDataUrl,
+      "web-asset/images/logo.svg",
+    )
+    assert.equal(
+      restoredConfig.uiSettings.levelTileStylesByLevel["A2 Flyers"].imageDataUrl,
+      "web-asset/images/flyers.svg",
+    )
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true })
+    delete process.env.SIS_CONFIG_FILE
+    delete process.env.STUDENT_ADMIN_UI_SETTINGS_FILE
+    delete process.env.DATABASE_URL
+  }
+})
+
 test("ensureSisConfigLoaded restores the config snapshot when it is present", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
