@@ -5354,6 +5354,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
   const incomingCalls = []
   const incomingActionCalls = []
   const serviceControlCalls = []
+  const sisConfigRepairCalls = []
   const API_BASE = "http://127.0.0.1"
   const knownStudents = [
     {
@@ -5519,6 +5520,13 @@ test("overview anonymous exercise submissions panel renders and supports show-al
           lastResult: "pending",
           syncCount: 1,
         },
+        sisConfigMirrorHealth: {
+          file: { present: true, source: "file", updatedAt: "2026-05-24T19:25:47.542Z", error: "" },
+          db: { present: true, source: "database", updatedAt: "2026-05-24T19:25:47.542Z", error: "" },
+          synced: true,
+          state: "ok",
+          detail: "json=present | db=present | sync=in-sync",
+        },
       })
     }
     if (method === "GET" && pathname === "/api/admin/exercise-results/incoming") {
@@ -5628,6 +5636,24 @@ test("overview anonymous exercise submissions panel renders and supports show-al
         },
       })
     }
+    if (method === "POST" && pathname === "/api/admin/runtime/sis-config-repair") {
+      sisConfigRepairCalls.push("run")
+      return jsonResponse(200, {
+        ok: true,
+        snapshot: {
+          source: "database",
+          updatedAt: "2026-05-24T19:25:47.542Z",
+          updatedBy: "admin",
+        },
+        mirrorHealth: {
+          file: { present: true, source: "file", updatedAt: "2026-05-24T19:25:47.542Z", error: "" },
+          db: { present: true, source: "database", updatedAt: "2026-05-24T19:25:47.542Z", error: "" },
+          synced: true,
+          state: "ok",
+          detail: "json=present | db=present | sync=in-sync",
+        },
+      })
+    }
 
     return jsonResponse(200, {})
   })
@@ -5658,6 +5684,21 @@ test("overview anonymous exercise submissions panel renders and supports show-al
     assert.ok(dashboardRestartBtn)
     assert.equal(dashboardRestartBtn.classList.contains("hidden"), false)
     assert.match(dashboardRestartBtn.textContent || "", /Self-Heal Runtime/i)
+    const sisConfigRepairBtn = document.querySelector(
+      '[data-system-key="sisConfigMirror"] [data-system-sync-action="sis-config-repair"]',
+    )
+    assert.ok(sisConfigRepairBtn)
+    assert.equal(sisConfigRepairBtn.disabled, false)
+  })
+
+  const sisConfigRepairBtn = document.querySelector(
+    '[data-system-key="sisConfigMirror"] [data-system-sync-action="sis-config-repair"]',
+  )
+  assert.ok(sisConfigRepairBtn, "system config repair action button is rendered for admin")
+  sisConfigRepairBtn.click()
+  await waitFor(() => {
+    assert.ok(sisConfigRepairCalls.includes("run"))
+    assert.match(document.getElementById("status").textContent || "", /SIS config sync cron completed/i)
   })
 
   const addToStudentBtn = document.querySelector(

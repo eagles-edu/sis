@@ -646,12 +646,6 @@ async function readMirrorFromDatabase() {
  *     updatedAt: string,
  *     error: string,
  *   },
- *   legacy: {
- *     present: boolean,
- *     source: string,
- *     updatedAt: string,
- *     error: string,
- *   },
  *   db: {
  *     present: boolean,
  *     source: string,
@@ -665,21 +659,11 @@ async function readMirrorFromDatabase() {
  */
 export async function getSisConfigMirrorHealthSnapshot() {
   const filePath = resolveSisConfigFilePath()
-  const legacyPath = resolveLegacyUiSettingsFilePath()
   const fileSnapshot = parseJsonFile(filePath)
-  const legacySnapshot = parseJsonFile(legacyPath)
   const fileLoaded = fileSnapshot.parsed ? normalizeLoadedSnapshot(fileSnapshot.parsed, filePath, "file") : null
-  const legacyLoaded = legacySnapshot.parsed ?
-    normalizeLoadedSnapshot({
-      uiSettings: legacySnapshot.parsed?.uiSettings || legacySnapshot.parsed,
-      updatedAt: legacySnapshot.parsed?.updatedAt || legacySnapshot.mtimeIso,
-      updatedBy: legacySnapshot.parsed?.updatedBy || "",
-    }, legacyPath, "legacy") :
-    null
   const dbSnapshot = await readMirrorFromDatabase()
 
   const filePresent = Boolean(fileLoaded)
-  const legacyPresent = Boolean(legacyLoaded)
   const dbPresent = Boolean(dbSnapshot)
   const fileVsDbSynced =
     filePresent && dbPresent &&
@@ -702,12 +686,6 @@ export async function getSisConfigMirrorHealthSnapshot() {
       source: fileLoaded?.source || "missing",
       updatedAt: normalizeText(fileLoaded?.updatedAt),
       error: normalizeText(fileSnapshot.error?.message || fileSnapshot.error),
-    },
-    legacy: {
-      present: legacyPresent,
-      source: legacyLoaded?.source || "missing",
-      updatedAt: normalizeText(legacyLoaded?.updatedAt),
-      error: normalizeText(legacySnapshot.error?.message || legacySnapshot.error),
     },
     db: {
       present: dbPresent,
@@ -754,6 +732,11 @@ async function upsertMirrorToDatabase(snapshot = {}) {
         updatedBy: payload.updatedBy,
       },
     })
+    await prisma.$executeRaw`
+      UPDATE "SisConfigMirror"
+      SET "updatedAt" = ${new Date(payload.updatedAt)}
+      WHERE "id" = ${SIS_CONFIG_MIRROR_ID}
+    `
   } catch (error) {
     void error
   }

@@ -95,3 +95,10 @@ test("test and live sync wrappers share the same runtime data contract", () => {
     extractQuotedEntries(liveScript, "LIVE_RUNTIME_DATA_FILES"),
   )
 })
+
+test("test and live sync wrappers preserve the same immutable runtime files", () => {
+  assert.deepEqual(
+    extractQuotedEntries(testScript, "TEST_PRESERVED_RUNTIME_FILES"),
+    extractQuotedEntries(liveScript, "LIVE_PRESERVED_RUNTIME_FILES"),
+  )
+})

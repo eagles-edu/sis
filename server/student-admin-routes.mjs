@@ -115,6 +115,7 @@ import {
   getSisConfigSnapshotSync,
   getSisConfigMirrorHealthSnapshot,
   getWeeklyMinimumReportsSync,
+  ensureSisConfigLoaded,
   saveSisConfigSnapshot,
 } from "../src/modules/admin/sis-config-store.mjs"
 import {
@@ -188,6 +189,7 @@ const ADMIN_NOTIFY_BATCH_STATUS_PATH = `${ADMIN_API_PREFIX}/notifications/batch-
 const ADMIN_INCOMING_EXERCISE_RESULTS_PATH = `${ADMIN_API_PREFIX}/exercise-results/incoming`
 const ADMIN_PROFILE_SUBMISSIONS_PATH = `${ADMIN_API_PREFIX}/profile-submissions`
 const ADMIN_RUNTIME_HEALTH_PATH = `${ADMIN_API_PREFIX}/runtime/health`
+const ADMIN_SIS_CONFIG_REPAIR_PATH = `${ADMIN_API_PREFIX}/runtime/sis-config-repair`
 const ADMIN_SERVICE_CONTROL_PATH = `${ADMIN_API_PREFIX}/runtime/service-control`
 const ADMIN_POINTS_SUMMARY_PATH = `${ADMIN_API_PREFIX}/points/summary`
 const ADMIN_POINTS_STUDENTS_PATH = `${ADMIN_API_PREFIX}/points/students`
@@ -1170,7 +1172,7 @@ function injectAdminRuntimeConfig(html, pageSlug, origin, initialAuthState = { a
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -5446,6 +5448,22 @@ async function handleApiRequest(request, response, pathname, url) {
   if (method === "GET" && pathname === ADMIN_RUNTIME_HEALTH_PATH) {
     const payload = await resolveAdminRuntimeHealthPayload()
     sendJson(response, 200, payload)
+    return true
+  }
+
+  if (method === "POST" && pathname === ADMIN_SIS_CONFIG_REPAIR_PATH) {
+    assertCanManageUsers(rolePolicy)
+    const snapshot = await ensureSisConfigLoaded({ refresh: true })
+    const mirrorHealth = await getSisConfigMirrorHealthSnapshot()
+    sendJson(response, 200, {
+      ok: true,
+      snapshot: {
+        source: snapshot.source,
+        updatedAt: snapshot.updatedAt,
+        updatedBy: snapshot.updatedBy,
+      },
+      mirrorHealth,
+    })
     return true
   }
 

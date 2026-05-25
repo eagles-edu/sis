@@ -3,13 +3,17 @@
 
 import { ensureSisConfigLoaded } from "../src/modules/admin/sis-config-store.mjs"
 
-try {
-  const snapshot = await ensureSisConfigLoaded({ refresh: true })
-  console.log(
-    `[sis-config-repair] synced ${snapshot.filePath} from ${snapshot.source || "file"} at ${snapshot.updatedAt || "<unknown>"}`,
-  )
-} catch (error) {
-  const message = error instanceof Error ? error.message : String(error)
-  console.error(`[sis-config-repair] failed: ${message}`)
-  process.exitCode = 1
+async function main() {
+  try {
+    const snapshot = await ensureSisConfigLoaded({ refresh: true })
+    console.log(
+      `[sis-config-repair] synced ${snapshot.filePath} from ${snapshot.source || "file"} at ${snapshot.updatedAt || "<unknown>"}`,
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(`[sis-config-repair] failed: ${message}`)
+    process.exitCode = 1
+  }
 }
+
+await main()

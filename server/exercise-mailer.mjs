@@ -205,7 +205,10 @@ loadEnvironmentFile()
 
 // Load SIS route/store modules after env hydration so their module-level config reads
 // the intended env file values instead of shell defaults.
-const { ensureSisConfigLoaded } = await import("../src/modules/admin/sis-config-store.mjs")
+const {
+  ensureSisConfigLoaded,
+  getSisConfigMirrorHealthSnapshot,
+} = await import("../src/modules/admin/sis-config-store.mjs")
 await ensureSisConfigLoaded()
 
 const {
@@ -918,8 +921,8 @@ function getRuntimeSelfHealStatus() {
   }
 }
 
-/** @returns {Record<string, unknown>} */
-function buildRuntimeHealthPayload() {
+/** @returns {Promise<Record<string, unknown>>} */
+async function buildRuntimeHealthPayload() {
   const studentAdminRuntime = getStudentAdminRuntimeStatus()
   const maintenance = studentAdminRuntime?.maintenance || null
   return {
@@ -940,6 +943,7 @@ function buildRuntimeHealthPayload() {
     intakeEndpoint: DEFAULT_INTAKE_PATH,
     studentAdminRuntime,
     maintenance,
+    sisConfigMirrorHealth: await getSisConfigMirrorHealthSnapshot(),
     runtimeSelfHeal: getRuntimeSelfHealStatus(),
   }
 }
@@ -1605,7 +1609,7 @@ async function handleRequest(request, response, transporter) {
 
   // Health endpoint (no CORS needed, but harmless if included)
   if (method === "GET" && url.pathname === "/healthz") {
-    const body = buildRuntimeHealthPayload()
+    const body = await buildRuntimeHealthPayload()
     allowCors(request, response)
     response.writeHead(200, { "Content-Type": "application/json" })
     response.end(JSON.stringify(body))

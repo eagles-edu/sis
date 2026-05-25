@@ -31,61 +31,62 @@
         {
           "letter": "A",
           "maxPercent": 100,
-          "minPercent": 93
+          "minPercent": 92
         },
         {
           "letter": "B",
-          "maxPercent": 92.99,
-          "minPercent": 85
+          "maxPercent": 91.99,
+          "minPercent": 84
         },
         {
           "letter": "C",
-          "maxPercent": 84.99,
-          "minPercent": 77
+          "maxPercent": 83.99,
+          "minPercent": 76
         },
         {
           "letter": "D",
-          "maxPercent": 76.99,
-          "minPercent": 70
+          "maxPercent": 75.99,
+          "minPercent": 60
         },
         {
           "letter": "F",
-          "maxPercent": 69.99,
+          "maxPercent": 59.99,
           "minPercent": 0
         }
       ],
       "schoolSetupState": "ok"
     },
     "schoolProfile": {
-      "mission": "Sứ Mệnh: \n\n\"Tạo một môi trường học tập chuyên nghiệp, an toàn, vui vẻ và bền vững, nơi mà các thành viên có thể học tiếng Anh thông qua việc áp dụng những kiến thức đã học vào các hoạt động thực tế, trải nghiệm, đa phương tiện và sư phạm dựa trên các nghiên cứu về tâm lý học và giáo dục.\"",
-      "schoolName": "The Eagles Club",
-      "logoDataUrl": "web-asset/images/logo.svg",
-      "phone": "0937667818",
-      "bilingualTextVi": "Vietnamese text block",
-      "bilingualTextEn": "English text block",
-      "motto": "Serious English",
-      "values": "The Eagles American English Club giá trị cốt lõi\n\nĐể thực hiện sứ mệnh này, Eagles American English Club được hướng dẫn bởi những giá trị cốt lõi sau và mong đợi những kết quả sau:\n\nTập trung vào thành viên: The Eagles American English Club tiếp cận việc giảng dạy với trọng tâm là tập trung vào thành viên, xem xét nhu cầu, sở thích và mục tiêu của mỗi thành viên; The Eagles American English Club cũng thừa nhận rằng tất cả học sinh đều không giống nhau và việc điều chỉnh thường xuyên là cần thiết và mong muốn để đáp ứng đầy đủ các nhu cầu của học sinh. Chương trình giảng dạy tập trung vào thành viên nhằm trao quyền cho các thành viên, cho phép họ định hình nền giáo dục của mình thông qua các lựa chọn sáng suốt.\n\nTăng trưởng cá nhân: Sử dụng thông tin liên lạc rõ ràng, chúng tôi nhất quán thúc đẩy sự phát triển trí tuệ và cá nhân của các thành viên bằng cách thấm nhuần tầm quan trọng của tính tự lập, tư duy phản biện và phân tích, giải quyết vấn đề, làm việc theo nhóm, sử dụng công nghệ thông tin giáo dục và tiếp xúc rộng rãi với các vấn đề quan trọng trong thế giới thực như kinh tế toàn cầu, biến đổi khí hậu và ô nhiễm.\n\nHọc bổng: The Eagles American English Club tin rằng các thành viên và nhân viên nên phát triển và nắm vững các kỹ năng giáo dục giúp họ trở thành những người học tập suốt đời; những kỹ năng này bao gồm lắng nghe tích cực, ghi chú, lập kế hoạch trước, sắp xếp thứ tự ưu tiên cho bài tập ở trường, quản lý thời gian và trách nhiệm cá nhân để học tập và ôn tập hiệu quả.\n\n    - Học Cambridge\n    - Học IELTS\n    - Học TOEIC\n\nNăng lực: Chúng tôi phát triển và duy trì “Chương trình tiếng Anh được quản lý của Câu lạc bộ Eagles™ (TECMEP),” trong đó chuẩn bị cho tất cả các thành viên đầy đủ và năng lực cho tương lai giáo dục trong nước và quốc tế và cơ hội kinh doanh.\n\nNuôi dưỡng: The Eagles American English Club cố gắng cung cấp một môi trường lớp học thoải mái, an toàn và kích thích với công nghệ thích hợp nuôi dưỡng các thành viên và giảng viên của chúng tôi phát triển về trí tuệ, xã hội và cá nhân.\n\nTrách nhiệm: The Eagles American English Club khuyến khích sự minh bạch và nhất quán trong việc ra quyết định giáo dục của chúng tôi thông qua một quá trình hội nghị chuyên môn được chia sẻ dựa trên nghiên cứu giáo dục, được đánh giá ngang hàng và tương tác giữa giảng viên, nhân viên và sinh viên.\n\nHợp tác: The Eagles American English Club thúc đẩy mối quan hệ hợp tác cộng tác giữa học sinh, phụ huynh và nhân viên; thúc đẩy tinh thần tự lập suốt đời, học tập trải nghiệm, tự học, phục vụ cộng đồng, trách nhiệm xã hội và ý thức văn hóa.",
-      "address": "28 Đường Số 30, \nPhường An Lạc, \nThành Phố Hồ Chí Minh 71906",
-      "publicSite": "https://eagles.edu.vn",
-      "privateLessonSite": "https://anhngu.eagles.edu.vn",
-      "webPresence": "https://ielts.eagles.edu.vn\nhttps://thuvien.eagles.edu.vn",
-      "socialIm": "Zalo: 84937667818",
-      "businessTaxId": "0315358180",
-      "timeFormat": "24hr",
-      "timeZone": "Asia/Ho_Chi_Minh"
+      "schoolName": "Eagles Live",
+      "bilingualTextVi": "",
+      "bilingualTextEn": "",
+      "motto": "",
+      "mission": "Persist settings across live upgrades",
+      "values": "",
+      "address": "",
+      "phone": "",
+      "publicSite": "",
+      "privateLessonSite": "",
+      "webPresence": "",
+      "socialIm": "",
+      "businessTaxId": "",
+      "timeFormat": "",
+      "timeZone": "",
+      "googleMapsEmbedIframe": "",
+      "logoDataUrl": "data:image/png;base64,AAAA"
     },
     "newsReportValidation": {},
     "queueHub": {},
     "levelTileStylesByLevel": {
-      "Eggs & Chicks": {
-        "title": "Eggs & Chicks",
-        "bgColor": "#e0162b",
-        "imageDataUrl": "web-asset/images/eggs-chicks.svg"
+      "A2 KET": {
+        "title": "A2 KET",
+        "bgColor": "#038e9f",
+        "imageDataUrl": "web-asset/images/ket.svg"
       },
-      "Pre-A1 Starters": {
-        "title": "Pre-A1 Starters",
-        "bgColor": "#FCAB15",
-        "imageDataUrl": "web-asset/images/starters.svg"
+      "B1 PET": {
+        "title": "B1 PET",
+        "bgColor": "#cd1637",
+        "imageDataUrl": "web-asset/images/pet.svg"
       },
       "A1 Movers": {
         "title": "A1 Movers",
@@ -97,18 +98,18 @@
         "bgColor": "#b5d570",
         "imageDataUrl": "web-asset/images/flyers.svg"
       },
-      "A2 KET": {
-        "title": "A2 KET",
-        "bgColor": "#038e9f",
-        "imageDataUrl": "web-asset/images/ket.svg"
+      "Eggs & Chicks": {
+        "title": "Eggs & Chicks",
+        "bgColor": "#e0162b",
+        "imageDataUrl": "web-asset/images/eggs-chicks.svg"
       },
-      "B1 PET": {
-        "title": "B1 PET",
-        "bgColor": "#cd1637",
-        "imageDataUrl": "web-asset/images/pet.svg"
+      "Pre-A1 Starters": {
+        "title": "Pre-A1 Starters",
+        "bgColor": "#FCAB15",
+        "imageDataUrl": "web-asset/images/starters.svg"
       }
     }
   },
-  "updatedAt": "2026-05-24T11:16:59.431Z",
+  "updatedAt": "2026-05-25T09:52:40.726Z",
   "updatedBy": "admin"
 }

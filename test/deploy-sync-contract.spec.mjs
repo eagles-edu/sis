@@ -5,12 +5,14 @@ import test from "node:test"
 
 const deployScriptPath = path.resolve(process.cwd(), "tools/deploy-api-safe.sh")
 const runtimeResyncScriptPath = path.resolve(process.cwd(), "tools/sis-runtime-resync.sh")
+const restoreSnapshotScriptPath = path.resolve(process.cwd(), "tools/sis-full-restore-snapshot.sh")
 const moodleDeployScriptPath = path.resolve(process.cwd(), "tools/deploy-moodle-plugin.sh")
 const testRuntimeSyncScriptPath = path.resolve(process.cwd(), "tools/sync-and-restart-test-runtime.sh")
 const testNginxConfigPath = path.resolve(process.cwd(), "deploy/nginx/test.eagles.edu.vn.conf")
 
 const deployScript = fs.readFileSync(deployScriptPath, "utf8")
 const runtimeResyncScript = fs.readFileSync(runtimeResyncScriptPath, "utf8")
+const restoreSnapshotScript = fs.readFileSync(restoreSnapshotScriptPath, "utf8")
 const moodleDeployScript = fs.readFileSync(moodleDeployScriptPath, "utf8")
 const testRuntimeSyncScript = fs.readFileSync(testRuntimeSyncScriptPath, "utf8")
 const testNginxConfig = fs.readFileSync(testNginxConfigPath, "utf8")
@@ -114,6 +116,14 @@ test("sis-runtime-resync uses delete-sync rsync and route matrices for all porta
   assert.match(runtimeResyncScript, /note=DB unchanged \(no migrate, no restore\)/)
   assert.doesNotMatch(runtimeResyncScript, /boot-prep/)
   assert.doesNotMatch(runtimeResyncScript, /db:migrate:deploy/)
+})
+
+test("sis-full-restore-snapshot preserves immutable runtime files during root restore", () => {
+  assert.match(restoreSnapshotScript, /PRESERVED_RUNTIME_FILES=\(/)
+  assert.match(restoreSnapshotScript, /"SIS_CONFIG\.json"/)
+  assert.match(restoreSnapshotScript, /backup_preserved_runtime_files\(\)/)
+  assert.match(restoreSnapshotScript, /restore_preserved_runtime_files\(\)/)
+  assert.match(restoreSnapshotScript, /rsync -a --delete \"\$\{SNAPSHOT_DIR\}\/app\/\" \"\$\{RUNTIME_ROOT\}\/\"/)
 })
 
 test("deploy-moodle-plugin mirrors the plugin into live Moodle and runs upgrade plus cache purge", () => {

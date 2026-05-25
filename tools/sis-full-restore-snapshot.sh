@@ -12,6 +12,9 @@ SKIP_FILES=0
 SKIP_DB=0
 RESTART=1
 HEALTH_CHECK=1
+PRESERVED_RUNTIME_FILES=(
+  "SIS_CONFIG.json"
+)
 
 usage() {
   cat <<'USAGE'
@@ -119,6 +122,37 @@ if [[ "${SKIP_DB}" -ne 1 && ! -f "${SNAPSHOT_DIR}/db/latest.json" ]]; then
   exit 1
 fi
 
+preserve_runtime_file_backup_dir=""
+
+backup_preserved_runtime_files() {
+  if [[ "${SKIP_FILES}" -eq 1 ]]; then
+    return 0
+  fi
+  preserve_runtime_file_backup_dir="$(mktemp -d)"
+  local rel_path=""
+  for rel_path in "${PRESERVED_RUNTIME_FILES[@]}"; do
+    if [[ -f "${RUNTIME_ROOT}/${rel_path}" ]]; then
+      mkdir -p "${preserve_runtime_file_backup_dir}/$(dirname "${rel_path}")"
+      cp -a "${RUNTIME_ROOT}/${rel_path}" "${preserve_runtime_file_backup_dir}/${rel_path}"
+    fi
+  done
+}
+
+restore_preserved_runtime_files() {
+  if [[ -z "${preserve_runtime_file_backup_dir}" || ! -d "${preserve_runtime_file_backup_dir}" ]]; then
+    return 0
+  fi
+  local rel_path=""
+  for rel_path in "${PRESERVED_RUNTIME_FILES[@]}"; do
+    if [[ -f "${preserve_runtime_file_backup_dir}/${rel_path}" ]]; then
+      mkdir -p "${RUNTIME_ROOT}/$(dirname "${rel_path}")"
+      cp -a "${preserve_runtime_file_backup_dir}/${rel_path}" "${RUNTIME_ROOT}/${rel_path}"
+    fi
+  done
+  rm -rf -- "${preserve_runtime_file_backup_dir}"
+  preserve_runtime_file_backup_dir=""
+}
+
 HAS_PG_RESTORE=0
 if command -v pg_restore >/dev/null 2>&1; then
   HAS_PG_RESTORE=1
@@ -205,12 +239,14 @@ timestamp="$(date +%Y%m%d-%H%M%S)"
 runtime_backup_dir="${RUNTIME_ROOT}.BEFORE-RESTORE-${timestamp}"
 
 if [[ "${SKIP_FILES}" -ne 1 ]]; then
+  backup_preserved_runtime_files
   echo "[step] backing up current runtime files -> ${runtime_backup_dir}"
   mkdir -p "${runtime_backup_dir}"
   rsync -a --delete "${RUNTIME_ROOT}/" "${runtime_backup_dir}/"
 
   echo "[step] restoring runtime files from snapshot"
   rsync -a --delete "${SNAPSHOT_DIR}/app/" "${RUNTIME_ROOT}/"
+  restore_preserved_runtime_files
 fi
 
 if [[ "${SKIP_DB}" -ne 1 ]]; then

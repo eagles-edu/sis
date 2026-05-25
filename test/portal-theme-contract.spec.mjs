@@ -320,6 +320,14 @@ test("shared portal theme keeps the admin-style blue footer chrome", () => {
   assert.ok(sharedTheme.includes(".footer{background:var(--footer-background);"), "shared footer chrome should resolve from the shared footer token")
 })
 
+test("shared portal theme keeps admin today snapshot cards LM=DM for the stat-card subset", () => {
+  assert.doesNotMatch(
+    sharedTheme,
+    /html\[data-theme="dark"\] body\.admin-portal-page \.stat-card/,
+    "Today Snapshot stat cards should not carry any dark-mode-specific override",
+  )
+})
+
 test("shared portal theme keeps unauthenticated header bars aligned to the login panel width", () => {
   assert.ok(
     sharedTheme.includes('html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col') &&

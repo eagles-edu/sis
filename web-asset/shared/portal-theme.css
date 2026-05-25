@@ -139,6 +139,31 @@
   --portal-status-warn-bg: #fff3d8;
   --portal-status-warn-border: #e5cb66;
   --portal-status-warn-text: #6a4a00;
+  --portal-stat-card-bg-start: #edf3fa;
+  --portal-stat-card-bg-end: #f7faff;
+  --portal-stat-card-border: rgba(115, 136, 163, 0.96);
+  --portal-led-core-highlight: rgba(255, 255, 255, 0.18);
+  --portal-led-core-highlight-soft: rgba(255, 255, 255, 0.06);
+  --portal-led-core-clear: rgba(255, 255, 255, 0);
+  --portal-led-outline-light: rgba(255, 255, 255, 0.14);
+  --portal-led-outline-light-soft: rgba(255, 255, 255, 0.16);
+  --portal-led-outline-dark: rgba(0, 0, 0, 0.05);
+  --portal-led-core-shadow: rgba(0, 0, 0, 0.26);
+  --portal-led-missing: #8d97a8;
+  --portal-led-ok: #39ff14;
+  --portal-led-warn: #ffd87a;
+  --portal-led-error: #ff3131;
+  --portal-led-pending: #4deeea;
+  --portal-led-glow-missing-soft: rgba(141, 151, 168, 0.16);
+  --portal-led-glow-missing-wide: rgba(141, 151, 168, 0.08);
+  --portal-led-glow-ok-soft: rgba(57, 255, 20, 0.28);
+  --portal-led-glow-ok-wide: rgba(57, 255, 20, 0.12);
+  --portal-led-glow-warn-soft: rgba(255, 216, 122, 0.26);
+  --portal-led-glow-warn-wide: rgba(255, 216, 122, 0.12);
+  --portal-led-glow-error-soft: rgba(255, 49, 49, 0.28);
+  --portal-led-glow-error-wide: rgba(255, 49, 49, 0.12);
+  --portal-led-glow-pending-soft: rgba(77, 238, 234, 0.26);
+  --portal-led-glow-pending-wide: rgba(77, 238, 234, 0.12);
   --portal-support-message: var(--portal-text-soft);
   --portal-button-surface: #f5f9ff;
   --portal-button-surface-hover: #f3f8ff;
@@ -5442,8 +5467,7 @@ html[data-theme="dark"] body.admin-portal-page .system-health-shell {
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
-html[data-theme="dark"] body.admin-portal-page .system-health-item,
-html[data-theme="dark"] body.admin-portal-page .stat-card {
+html[data-theme="dark"] body.admin-portal-page .system-health-item {
   background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border);
   color: var(--portal-dark-text);

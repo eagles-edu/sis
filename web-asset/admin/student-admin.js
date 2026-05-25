@@ -14,6 +14,7 @@
         systemLevels: [],
         activeLevelDetail: null,
         runtimeHealth: null,
+        sisConfigRepairBusy: false,
         hubConnection: {
           state: "pending",
           endpoint: "",
@@ -1686,7 +1687,7 @@
           else mirrorState = "error";
           checks.push({
             key: "sisConfigMirror",
-            label: "JSON + DB",
+            label: "System Config",
             state: mirrorState,
             detail: sisConfigMirrorHealth.detail || "",
             mirror: {
@@ -1736,10 +1737,12 @@
 
           const labelEl = document.createElement("div");
           labelEl.className = "system-health-label";
-          const ledEl = document.createElement("span");
-          ledEl.className = `led ${stateClass}`;
-          ledEl.setAttribute("aria-hidden", "true");
-          labelEl.appendChild(ledEl);
+          if (!mirror) {
+            const ledEl = document.createElement("span");
+            ledEl.className = `led ${stateClass}`;
+            ledEl.setAttribute("aria-hidden", "true");
+            labelEl.appendChild(ledEl);
+          }
           const textEl = document.createElement("span");
           textEl.textContent = normalizeText(check.label) || "System";
           labelEl.appendChild(textEl);
@@ -1749,40 +1752,69 @@
           if (mirror) {
             detailEl.classList.add("system-health-mirror");
 
-            const presenceRow = document.createElement("div");
-            presenceRow.className = "system-health-mirror-row";
+            const rail = document.createElement("div");
+            rail.className = "system-health-mirror-rail";
 
-            const buildPresence = (label, present) => {
-              const chip = document.createElement("span");
-              chip.className = `system-health-mirror-chip ${present ? "present" : "missing"}`;
+            const buildToken = (label, ledState, tokenState) => {
+              const token = document.createElement("span");
+              token.className = "system-health-mirror-token";
+              if (tokenState) token.classList.add(tokenState);
+              token.title = label;
+              token.setAttribute("aria-label", label);
 
               const led = document.createElement("span");
-              led.className = `led ${present ? "ok" : "missing"}`;
+              led.className = `led ${ledState}`;
               led.setAttribute("aria-hidden", "true");
-              chip.appendChild(led);
+              token.appendChild(led);
 
               const text = document.createElement("span");
+              text.className = "system-health-mirror-token-label";
               text.textContent = label;
-              chip.appendChild(text);
-              return chip;
+              token.appendChild(text);
+              return token;
             };
 
-            presenceRow.appendChild(buildPresence(mirror.fileLabel || "JSON", Boolean(mirror.filePresent)));
-            presenceRow.appendChild(buildPresence(mirror.dbLabel || "DB", Boolean(mirror.dbPresent)));
+            const buildOp = (symbol) => {
+              const op = document.createElement("span");
+              op.className = "system-health-mirror-op";
+              op.textContent = symbol;
+              return op;
+            };
 
-            const syncRow = document.createElement("div");
-            syncRow.className = "system-health-mirror-sync";
-            const syncLed = document.createElement("span");
-            syncLed.className = `led ${mirror.synced ? "ok" : "error"}`;
-            syncLed.setAttribute("aria-hidden", "true");
-            syncRow.appendChild(syncLed);
+            rail.appendChild(buildToken(mirror.fileLabel || "JSON", mirror.filePresent ? "ok" : "missing", mirror.filePresent ? "present" : "missing"));
+            rail.appendChild(buildOp("+"));
+            rail.appendChild(buildToken(mirror.dbLabel || "DB", mirror.dbPresent ? "ok" : "missing", mirror.dbPresent ? "present" : "missing"));
+            rail.appendChild(buildOp("="));
+            rail.appendChild(buildToken(
+              "SYNC",
+              mirror.synced ? "ok" : "error",
+              mirror.synced ? "synced" : "out-of-sync",
+            ));
 
-            const syncText = document.createElement("span");
-            syncText.textContent = mirror.synced ? "SYNCED" : "OUT OF SYNC";
-            syncRow.appendChild(syncText);
+            detailEl.appendChild(rail);
 
-            detailEl.appendChild(presenceRow);
-            detailEl.appendChild(syncRow);
+            if (check.key === "sisConfigMirror" && canManageUsers()) {
+              const actions = document.createElement("div");
+              actions.className = "system-health-mirror-actions";
+              actions.style.display = "flex";
+              actions.style.flexWrap = "wrap";
+              actions.style.gap = "6px";
+              actions.style.marginTop = "6px";
+
+              const repairBtn = document.createElement("button");
+              repairBtn.type = "button";
+              repairBtn.className = "btn-refresh system-health-action-btn";
+              repairBtn.setAttribute("data-system-sync-action", "sis-config-repair");
+              repairBtn.setAttribute("aria-label", "Run SIS config sync cron job");
+              repairBtn.textContent =
+                state.sisConfigRepairBusy ? "Running Sync Cron..." : "Run Sync Cron";
+              repairBtn.disabled = Boolean(state.sisConfigRepairBusy);
+              repairBtn.addEventListener("click", () => {
+                runSisConfigRepair().catch(handleError);
+              });
+              actions.appendChild(repairBtn);
+              detailEl.appendChild(actions);
+            }
           } else {
             detailEl.textContent = normalizeText(check.detail) || "n/a";
           }
@@ -1983,6 +2015,35 @@
         restartBtn.textContent =
           state.serviceControl.busy ? "Restarting..." : "Restart";
         renderSystemHealthPanel();
+      }
+
+      async function runSisConfigRepair() {
+        if (!canManageUsers())
+          throw new Error("Only admin can run the SIS config sync cron job.");
+        state.sisConfigRepairBusy = true;
+        renderSystemHealthPanel();
+        try {
+          const result = await api(ADMIN_SIS_CONFIG_REPAIR_PATH, {
+            method: "POST",
+          });
+          if (result?.mirrorHealth && state.runtimeHealth && typeof state.runtimeHealth === "object") {
+            state.runtimeHealth.sisConfigMirrorHealth = result.mirrorHealth;
+          }
+          if (result?.ok) {
+            const updatedAt = normalizeText(result?.snapshot?.updatedAt);
+            setStatus(
+              updatedAt ?
+                `SIS config sync cron completed at ${updatedAt}.`
+              : "SIS config sync cron completed.",
+            );
+          } else {
+            setStatus("SIS config sync cron failed.", true);
+          }
+        } finally {
+          state.sisConfigRepairBusy = false;
+          renderSystemHealthPanel();
+          await loadRuntimeHealthSnapshotFromAdminApi().catch(() => false);
+        }
       }
 
       async function loadServiceControlStatus({ notify = false, paint = true } = {}) {
@@ -8288,6 +8349,9 @@
       const ADMIN_RUNTIME_HEALTH_PATH =
         normalizeText(window.__SIS_ADMIN_RUNTIME_HEALTH_PATH) ||
         "/api/admin/runtime/health";
+      const ADMIN_SIS_CONFIG_REPAIR_PATH =
+        normalizeText(window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH) ||
+        "/api/admin/runtime/sis-config-repair";
       const ADMIN_SERVICE_CONTROL_PATH =
         normalizeText(window.__SIS_ADMIN_SERVICE_CONTROL_PATH) ||
         "/api/admin/runtime/service-control";

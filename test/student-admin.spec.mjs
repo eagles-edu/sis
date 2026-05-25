@@ -492,6 +492,10 @@ test("news review status/action rules and revise chip label keep locked admin ui
   assert.doesNotMatch(actionChunk, /submitted \+ revisionRequested/)
   assert.match(runtimesScript, /stash_local_sis_config/)
   assert.match(runtimesScript, /restore_local_sis_config/)
+  assert.match(runtimesScript, /SIS_CONFIG_SOURCE_BACKUP_DIR/)
+  assert.match(runtimesScript, /cp -a "\$SIS_CONFIG_SOURCE_PATH" "\$SIS_CONFIG_SOURCE_BACKUP"/)
+  assert.match(runtimesScript, /cp -a "\$SIS_CONFIG_SOURCE_BACKUP" "\$SIS_CONFIG_SOURCE_PATH"/)
+  assert.doesNotMatch(runtimesScript, /mv "\$SIS_CONFIG_SOURCE_PATH" "\$SIS_CONFIG_SOURCE_BACKUP"/)
   assert.match(gitignoreSource, /SIS_CONFIG\.json/)
   assert.match(
     adminUiSource,
@@ -1896,6 +1900,16 @@ test("teacher cannot access runtime service-control endpoint", async () => {
   assert.match(body.error, /Forbidden/i)
 })
 
+test("teacher cannot run the SIS config sync cron endpoint", async () => {
+  const res = await fetchLocal(port, "/api/admin/runtime/sis-config-repair", {
+    method: "POST",
+    headers: { Cookie: teacherSessionCookie },
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
 test("teacher can access runtime health endpoint", async () => {
   const res = await fetchLocal(port, "/api/admin/runtime/health", {
     headers: { Cookie: teacherSessionCookie },
@@ -2012,8 +2026,17 @@ test("GET /api/admin/news-reports returns store-disabled response when admin sto
 })
 
 test("admin can persist and reload school setup ui settings", async () => {
+  const loginRes = await fetchLocal(port, "/api/admin/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "admin", password: "admin-pass-123" }),
+  })
+  assert.equal(loginRes.status, 200)
+  const adminCookie = (loginRes.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(adminCookie, /student_admin_sid=/i)
+
   const getBefore = await fetchLocal(port, "/api/admin/settings/ui", {
-    headers: { Cookie: adminSessionCookie },
+    headers: { Cookie: adminCookie },
   })
   assert.equal(getBefore.status, 200)
   const beforeBody = await getBefore.json()
@@ -2049,8 +2072,8 @@ test("admin can persist and reload school setup ui settings", async () => {
     },
     sisConfig: {
       runtime: {
-        databaseUrl: "postgresql://example:secret@db.example.test:5432/sis",
-        redisUrl: "redis://cache.example.test:6379",
+        databaseUrl: "postgresql://sis_app:secret@localhost:5432/sis-test",
+        redisUrl: "redis://:secret@localhost:6379/1",
         sessionDriver: "redis",
         adminSessionTtlSeconds: 12345,
         parentSessionTtlSeconds: 23456,
@@ -2066,7 +2089,7 @@ test("admin can persist and reload school setup ui settings", async () => {
   const putRes = await fetchLocal(port, "/api/admin/settings/ui", {
     method: "PUT",
     headers: {
-      Cookie: adminSessionCookie,
+      Cookie: adminCookie,
       "content-type": "application/json",
     },
     body: JSON.stringify(payload),
@@ -2082,7 +2105,7 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(putBody.meta.schoolSetupState, "ok")
 
   const getAfter = await fetchLocal(port, "/api/admin/settings/ui", {
-    headers: { Cookie: adminSessionCookie },
+    headers: { Cookie: adminCookie },
   })
   assert.equal(getAfter.status, 200)
   const afterBody = await getAfter.json()
@@ -2094,7 +2117,7 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(afterBody.uiSettings.schoolSetup.letterGradeRanges[0].minPercent, 92)
   assert.equal(afterBody.uiSettings.schoolProfile.schoolName, "Eagles Live")
   assert.equal(afterBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
-  assert.equal(afterBody.sisConfig.runtime.redisUrl, "redis://cache.example.test:6379")
+  assert.equal(afterBody.sisConfig.runtime.redisUrl, "redis://:secret@localhost:6379/1")
   assert.equal(afterBody.sisConfig.newsReports.weeklyMinimumReports, 5)
 })
 
@@ -2514,6 +2537,37 @@ test("GET /api/admin/runtime/service-control requires auth", async () => {
   assert.equal(res.status, 401)
   const body = await res.json()
   assert.match(body.error, /Unauthorized/i)
+})
+
+test("POST /api/admin/runtime/sis-config-repair requires auth", async () => {
+  const res = await fetchLocal(port, "/api/admin/runtime/sis-config-repair", {
+    method: "POST",
+  })
+  assert.equal(res.status, 401)
+  const body = await res.json()
+  assert.match(body.error, /Unauthorized/i)
+})
+
+test("POST /api/admin/runtime/sis-config-repair runs for admin", async () => {
+  const loginRes = await fetchLocal(port, "/api/admin/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "admin", password: "admin-pass-123" }),
+  })
+  assert.equal(loginRes.status, 200)
+  const adminCookie = (loginRes.headers.get("set-cookie") || "").split(";")[0]
+  assert.match(adminCookie, /student_admin_sid=/i)
+
+  const res = await fetchLocal(port, "/api/admin/runtime/sis-config-repair", {
+    method: "POST",
+    headers: { Cookie: adminCookie },
+  })
+  assert.equal(res.status, 200)
+  const body = await res.json()
+  assert.equal(body.ok, true)
+  assert.ok(body.snapshot && typeof body.snapshot === "object")
+  assert.ok(body.mirrorHealth && typeof body.mirrorHealth === "object")
+  assert.ok(["ok", "warn"].includes(body.mirrorHealth.state))
 })
 
 test("GET /api/admin/runtime/health requires auth", async () => {

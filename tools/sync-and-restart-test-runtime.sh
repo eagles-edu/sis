@@ -181,6 +181,10 @@ TEST_RUNTIME_DATA_FILES=(
   "runtime-data/admin-ui-settings.json"
 )
 
+TEST_PRESERVED_RUNTIME_FILES=(
+  "SIS_CONFIG.json"
+)
+
 TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"

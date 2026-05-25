@@ -24,6 +24,8 @@ test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", (
   assert.match(script, /npm run build:admin-assets/)
   assert.match(script, /sync_test_runtime_assets\(\)/)
   assert.match(script, /sync_test_public_assets\(\)/)
+  assert.match(script, /TEST_PRESERVED_RUNTIME_FILES=\(/)
+  assert.match(script, /"SIS_CONFIG\.json"/)
   assert.match(script, /npm run db:migrate:deploy/)
   assert.match(script, /refresh_test_prisma\(\)/)
   assert.match(script, /restart_test_runtime\(\)/)

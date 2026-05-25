@@ -47,6 +47,10 @@ LIVE_RUNTIME_DATA_FILES=(
   "runtime-data/admin-ui-settings.json"
 )
 
+LIVE_PRESERVED_RUNTIME_FILES=(
+  "SIS_CONFIG.json"
+)
+
 LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"
@@ -686,13 +690,24 @@ ensure_live_dependencies() {
 
 wipe_live_target_contents() {
   local env_backup=""
+  local runtime_file_backup_dir=""
   local restore_env=0
+  local restore_runtime_files=0
 
   if [[ -f "${LIVE_ROOT}/.env" ]]; then
     env_backup="$(mktemp)"
     cp -a "${LIVE_ROOT}/.env" "${env_backup}"
     restore_env=1
   fi
+
+  runtime_file_backup_dir="$(mktemp -d)"
+  for rel_path in "${LIVE_PRESERVED_RUNTIME_FILES[@]}"; do
+    if [[ -f "${LIVE_ROOT}/${rel_path}" ]]; then
+      mkdir -p "${runtime_file_backup_dir}/$(dirname "${rel_path}")"
+      cp -a "${LIVE_ROOT}/${rel_path}" "${runtime_file_backup_dir}/${rel_path}"
+      restore_runtime_files=1
+    fi
+  done
 
   log "emptying live runtime root ${LIVE_ROOT}"
   "${LIVE_WRITE_PREFIX[@]}" find "${LIVE_ROOT}" -mindepth 1 -maxdepth 1 ! -name '.env' -exec rm -rf -- {} +
@@ -701,6 +716,16 @@ wipe_live_target_contents() {
     "${LIVE_WRITE_PREFIX[@]}" cp -a "${env_backup}" "${LIVE_ROOT}/.env"
     rm -f "${env_backup}"
   fi
+
+  if [[ "${restore_runtime_files}" -eq 1 ]]; then
+    for rel_path in "${LIVE_PRESERVED_RUNTIME_FILES[@]}"; do
+      if [[ -f "${runtime_file_backup_dir}/${rel_path}" ]]; then
+        "${LIVE_WRITE_PREFIX[@]}" mkdir -p "${LIVE_ROOT}/$(dirname "${rel_path}")"
+        "${LIVE_WRITE_PREFIX[@]}" cp -a "${runtime_file_backup_dir}/${rel_path}" "${LIVE_ROOT}/${rel_path}"
+      fi
+    done
+  fi
+  rm -rf "${runtime_file_backup_dir}"
 
   log "emptying live public root ${PUBLIC_ROOT}"
   "${PUBLIC_WRITE_PREFIX[@]}" find "${PUBLIC_ROOT}" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
