@@ -51,9 +51,10 @@ function isAdapterRequiredError(error) {
 
 /**
  * @param {typeof import("@prisma/client").PrismaClient} PrismaClient
+ * @param {string} databaseUrl
  * @returns {Promise<import("@prisma/client").PrismaClient>}
  */
-async function createPrismaClientWithFallback(PrismaClient) {
+async function createPrismaClientWithFallback(PrismaClient, databaseUrl = "") {
   try {
     return new PrismaClient()
   } catch (error) {
@@ -66,8 +67,8 @@ async function createPrismaClientWithFallback(PrismaClient) {
     if (!isAdapterRequiredError(error)) throw error
   }
 
-  const databaseUrl = normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL)
-  if (!databaseUrl) {
+  const resolvedDatabaseUrl = normalizeText(databaseUrl || getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL)
+  if (!resolvedDatabaseUrl) {
     /** @type {Error & { statusCode?: number }} */
     const error = new Error("DATABASE_URL is required for Prisma adapter mode")
     error.statusCode = 500
@@ -75,7 +76,7 @@ async function createPrismaClientWithFallback(PrismaClient) {
   }
 
   const [{ Pool }, { PrismaPg }] = await Promise.all([import("pg"), import("@prisma/adapter-pg")])
-  const pool = new Pool({ connectionString: databaseUrl })
+  const pool = new Pool({ connectionString: resolvedDatabaseUrl })
   const adapter = new PrismaPg(pool)
   return new PrismaClient({ adapter })
 }
@@ -86,11 +87,30 @@ async function createPrismaClientWithFallback(PrismaClient) {
 let sharedPrismaClientPromise = null
 
 /**
+ * @type {string}
+ */
+let sharedPrismaClientDatabaseUrl = ""
+
+/**
  * @returns {Promise<import("@prisma/client").PrismaClient>}
  */
 export async function getSharedPrismaClient() {
-  if (sharedPrismaClientPromise) return sharedPrismaClientPromise
+  const resolvedDatabaseUrl = normalizeText(getConfiguredDatabaseUrlSync() || process.env.DATABASE_URL)
+  if (sharedPrismaClientPromise && sharedPrismaClientDatabaseUrl === resolvedDatabaseUrl) return sharedPrismaClientPromise
 
+  if (sharedPrismaClientPromise && sharedPrismaClientDatabaseUrl !== resolvedDatabaseUrl) {
+    try {
+      const existingClient = await sharedPrismaClientPromise
+      await existingClient.$disconnect()
+    } catch (error) {
+      void error
+    } finally {
+      sharedPrismaClientPromise = null
+      sharedPrismaClientDatabaseUrl = ""
+    }
+  }
+
+  sharedPrismaClientDatabaseUrl = resolvedDatabaseUrl
   sharedPrismaClientPromise = (async () => {
     const pkg = await import("@prisma/client")
     const PrismaClient = pkg?.PrismaClient
@@ -101,7 +121,7 @@ export async function getSharedPrismaClient() {
       throw error
     }
 
-    const prisma = await createPrismaClientWithFallback(PrismaClient)
+    const prisma = await createPrismaClientWithFallback(PrismaClient, resolvedDatabaseUrl)
     await prisma.$connect()
     return prisma
   })()

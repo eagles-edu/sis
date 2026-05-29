@@ -355,15 +355,35 @@
     .history-rail__button {
       appearance: none;
       align-items: center;
-      background: transparent;
-      border: 0;
-      color: var(--portal-text);
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      color: var(--portal-text) !important;
       display: inline-flex;
       justify-content: center;
-      min-height: 0;
-      min-width: 0;
-      padding: 0;
+      min-height: 0 !important;
+      min-width: 0 !important;
+      padding: 0 !important;
       width: auto;
+    }
+
+    html[data-theme="dark"] .history-rail__button,
+    html[data-theme="dark"] .history-rail__button .history-rail__dots {
+      color: var(--secondary-color) !important;
+    }
+
+    .history-rail__button:hover,
+    .history-rail__button:active,
+    .history-rail__button:focus-visible {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    .history-rail__button:focus-visible {
+      outline: 2px solid var(--portal-border-strong);
+      outline-offset: 2px;
     }
 
     .history-rail__button .history-rail__dots {
@@ -395,6 +415,9 @@
     }
 
     .history-rail__menu button {
+      background: #1d4999 !important;
+      border: 1px solid var(--portal-border) !important;
+      color: var(--secondary-color)#f9faff !important;
       justify-content: flex-start;
       min-height: 36px;
       padding-inline: 10px;
@@ -1036,7 +1059,10 @@
 
   <script>
     (() => {
-      const API_ORIGIN = window.__SIS_ADMIN_API_ORIGIN || "";
+      const IS_JSDOM_ENV = /\bjsdom\b/i.test(String(window.navigator?.userAgent || ""));
+      const API_ORIGIN =
+        window.__SIS_ADMIN_API_ORIGIN ||
+        (!IS_JSDOM_ENV && window.location.protocol.startsWith("http") ? window.location.origin : "");
       const ADMIN_AUTH_PREFIX = window.__SIS_ADMIN_AUTH_PREFIX || "/api/admin/auth";
       const ENROLLMENT_STUDENTS_PATH =
         window.__SIS_ADMIN_ENROLLMENT_STUDENTS_PATH || "/api/admin/enrollment/students";
@@ -1111,6 +1137,16 @@
         return `${API_ORIGIN}${path}`;
       }
 
+      function buildAdminLoginHref() {
+        const url = new URL("/admin", window.location.origin);
+        if (API_ORIGIN) url.searchParams.set("apiOrigin", API_ORIGIN);
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
+
+      function redirectToAdminLogin() {
+        window.location.replace(buildAdminLoginHref());
+      }
+
       async function api(path, options = {}) {
         const response = await fetch(apiUrl(path), {
           method: options.method || "GET",
@@ -1123,9 +1159,20 @@
           body: options.body ? JSON.stringify(options.body) : undefined,
         });
         const text = await response.text();
-        const payload = text ? JSON.parse(text) : {};
+        let payload = {};
+        if (text) {
+          try {
+            payload = JSON.parse(text);
+          } catch {
+            payload = {};
+          }
+        }
         if (!response.ok) {
-          throw new Error(payload?.error || payload?.message || `Request failed (${response.status})`);
+          const error = new Error(
+            payload?.error || payload?.message || `Request failed (${response.status})`,
+          );
+          error.status = response.status;
+          throw error;
         }
         return payload;
       }
@@ -1135,6 +1182,12 @@
         if (!el) return;
         el.textContent = normalizeText(message);
         el.classList.toggle("is-error", Boolean(isError));
+      }
+
+      function handleAuthError(error) {
+        if (!(error && error.status === 401)) return false;
+        redirectToAdminLogin();
+        return true;
       }
 
       function syncNavigationMenuState() {
@@ -1311,11 +1364,11 @@
         const studentName = normalizeText(row?.profile?.fullName || row?.profile?.englishName || row?.eaglesId || "Student");
         return `
           <div class="history-rail">
-            <button type="button" class="ghost history-rail__button" data-history-toggle aria-haspopup="menu" aria-expanded="false" aria-label="Open history menu for ${escapeHtml(studentName)}">
+            <button type="button" class="history-rail__button" data-history-toggle aria-haspopup="menu" aria-expanded="false" aria-label="Open history menu for ${escapeHtml(studentName)}">
               <span class="history-rail__dots" aria-hidden="true">⋮</span>
             </button>
             <div class="history-rail__menu hidden" data-history-menu role="menu" aria-label="History actions">
-              <button type="button" class="ghost" data-history-open role="menuitem">Open history note</button>
+              <button type="button" data-history-open role="menuitem">Open history note</button>
             </div>
           </div>
         `;
@@ -1630,6 +1683,7 @@
               }
               setStatus("Enrollment updated.");
             } catch (error) {
+              if (handleAuthError(error)) return;
               setStatus(error?.message || error, true);
             } finally {
               applyButton.disabled = false;
@@ -1777,10 +1831,10 @@
           await loadRows();
           return;
         }
-        setAuthenticated(false);
-        setStatus("Admin session required. Use the main admin login, then return here.");
+        redirectToAdminLogin();
       }
       document.getElementById("logoutBtn")?.addEventListener("click", () => logout().catch((error) => {
+        if (handleAuthError(error)) return;
         setStatus(error?.message || error, true);
       }));
       document.getElementById("floatingMenuBtn")?.addEventListener("click", () => {
@@ -1790,18 +1844,24 @@
         toggleNavigationMenu(false);
       });
       document.getElementById("refreshBtn")?.addEventListener("click", () => loadRows().catch((error) => {
+        if (handleAuthError(error)) return;
         setStatus(error?.message || error, true);
       }));
       document.getElementById("searchQ")?.addEventListener("input", () => {
         window.clearTimeout(window.__sisEnrollmentSearchTimer || 0);
         window.__sisEnrollmentSearchTimer = window.setTimeout(() => {
-          loadRows().catch((error) => setStatus(error?.message || error, true));
+          loadRows().catch((error) => {
+            if (handleAuthError(error)) return;
+            setStatus(error?.message || error, true);
+          });
         }, 180);
       });
       document.getElementById("filterLevel")?.addEventListener("change", () => loadRows().catch((error) => {
+        if (handleAuthError(error)) return;
         setStatus(error?.message || error, true);
       }));
       document.getElementById("includeUnenrolled")?.addEventListener("change", () => loadRows().catch((error) => {
+        if (handleAuthError(error)) return;
         setStatus(error?.message || error, true);
       }));
       document.querySelectorAll("[data-text-zoom-action]").forEach((buttonEl) => {
@@ -1832,6 +1892,7 @@
       });
 
       bootstrap().catch((error) => {
+        if (handleAuthError(error)) return;
         setAuthenticated(false);
         setStatus(error?.message || error, true);
       });

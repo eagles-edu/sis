@@ -276,6 +276,20 @@ function isPlainObject(value) {
   return Boolean(value && typeof value === "object" && !Array.isArray(value))
 }
 
+function canonicalizeComparisonValue(value) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => canonicalizeComparisonValue(entry))
+  }
+
+  if (!isPlainObject(value)) return value
+
+  const normalized = {}
+  for (const key of Object.keys(value).sort()) {
+    normalized[key] = canonicalizeComparisonValue(value[key])
+  }
+  return normalized
+}
+
 function resolveSisConfigFilePath() {
   const explicitPath = normalizeText(process.env.SIS_CONFIG_FILE)
   if (explicitPath) {
@@ -463,9 +477,9 @@ function normalizeSisConfigPayload(source = {}) {
 function snapshotComparisonKey(snapshot = {}) {
   const source = toPlainObject(snapshot)
   return JSON.stringify({
-    uiSettings: normalizeUiSettings(source.uiSettings || {}),
-    runtime: normalizeRuntimeConfig(source.runtime || {}),
-    newsReports: normalizeNewsReportsConfig(source.newsReports || {}),
+    uiSettings: canonicalizeComparisonValue(normalizeUiSettings(source.uiSettings || {})),
+    runtime: canonicalizeComparisonValue(normalizeRuntimeConfig(source.runtime || {})),
+    newsReports: canonicalizeComparisonValue(normalizeNewsReportsConfig(source.newsReports || {})),
     environment: normalizeRuntimeEnvironment(source.environment),
     updatedAt: normalizeText(source.updatedAt),
     updatedBy: normalizeText(source.updatedBy),
@@ -476,12 +490,26 @@ function snapshotComparisonKey(snapshot = {}) {
  * @param {Partial<SisConfigPayload> | Partial<LoadedSisConfigSnapshot> | PlainObject} snapshot
  * @returns {string}
  */
+function mirrorHealthComparisonKey(snapshot = {}) {
+  const source = toPlainObject(snapshot)
+  return JSON.stringify({
+    uiSettings: canonicalizeComparisonValue(normalizeUiSettings(source.uiSettings || {})),
+    runtime: canonicalizeComparisonValue(normalizeRuntimeConfig(source.runtime || {})),
+    newsReports: canonicalizeComparisonValue(normalizeNewsReportsConfig(source.newsReports || {})),
+    environment: normalizeRuntimeEnvironment(source.environment),
+  })
+}
+
+/**
+ * @param {Partial<SisConfigPayload> | Partial<LoadedSisConfigSnapshot> | PlainObject} snapshot
+ * @returns {string}
+ */
 function rawSnapshotComparisonKey(snapshot = {}) {
   const source = toPlainObject(snapshot)
   return JSON.stringify({
-    uiSettings: toPlainObject(source.uiSettings || {}),
-    runtime: toPlainObject(source.runtime || {}),
-    newsReports: toPlainObject(source.newsReports || {}),
+    uiSettings: canonicalizeComparisonValue(toPlainObject(source.uiSettings || {})),
+    runtime: canonicalizeComparisonValue(toPlainObject(source.runtime || {})),
+    newsReports: canonicalizeComparisonValue(toPlainObject(source.newsReports || {})),
     environment: normalizeText(source.environment),
     updatedAt: normalizeText(source.updatedAt),
     updatedBy: normalizeText(source.updatedBy),
@@ -495,7 +523,7 @@ function rawSnapshotComparisonKey(snapshot = {}) {
 function rawLegacyEnvelopeComparisonKey(snapshot = {}) {
   const source = toPlainObject(snapshot)
   return JSON.stringify({
-    uiSettings: toPlainObject(source.uiSettings || source),
+    uiSettings: canonicalizeComparisonValue(toPlainObject(source.uiSettings || source)),
     updatedAt: normalizeText(source.updatedAt),
     updatedBy: normalizeText(source.updatedBy) || null,
   })
@@ -700,7 +728,7 @@ export async function getSisConfigMirrorHealthSnapshot() {
   const dbPresent = Boolean(dbSnapshot)
   const fileVsDbSynced =
     filePresent && dbPresent &&
-    snapshotComparisonKey(fileLoaded) === snapshotComparisonKey(dbSnapshot)
+    mirrorHealthComparisonKey(fileLoaded) === mirrorHealthComparisonKey(dbSnapshot)
 
   const state =
     filePresent && dbPresent ?

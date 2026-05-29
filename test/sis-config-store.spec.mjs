@@ -202,6 +202,138 @@ test("development runtime defaults to an environment-specific SIS config file", 
   }
 })
 
+test("sis config mirror health ignores nested key order drift", async () => {
+  const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
+  const priorCwd = process.cwd()
+  const priorNodeEnv = process.env.NODE_ENV
+  const priorSisConfigFile = process.env.SIS_CONFIG_FILE
+  const priorDatabaseUrl = process.env.DATABASE_URL
+  const repoRoot = process.cwd()
+  const devEnvPath = path.resolve(process.cwd(), ".env.dev")
+  const devEnvRaw = fs.readFileSync(devEnvPath, "utf8")
+  const devDatabaseUrl = devEnvRaw.match(/^DATABASE_URL=(.*)$/m)?.[1]?.trim() || ""
+
+  const fileSnapshot = {
+    uiSettings: {
+      multiSchool: true,
+      schoolSetup: {
+        ...SCHOOL_SETUP_FALLBACK,
+        letterGradeRanges: [
+          { letter: "A", minPercent: 93, maxPercent: 100 },
+          { letter: "B", minPercent: 85, maxPercent: 92.99 },
+          { letter: "C", minPercent: 77, maxPercent: 84.99 },
+          { letter: "D", minPercent: 70, maxPercent: 76.99 },
+          { letter: "F", minPercent: 0, maxPercent: 69.99 },
+        ],
+      },
+      schoolProfile: SCHOOL_PROFILE_FALLBACK,
+      newsReportValidation: {},
+      queueHub: { panelOrder: ["queued-performance-reports"] },
+      levelTileStylesByLevel: LEVEL_TILE_FALLBACK,
+    },
+    runtime: {
+      databaseUrl: "postgresql://sis_app:Mg2yLkcVNSR2xzFvcLkKt1uPUWpb@127.0.0.1:5432/sis_dev?schema=public",
+      redisUrl: "redis://:L8ZsQ5zDk6XrPz49@127.0.0.1:6379/12",
+      sessionDriver: "redis",
+      adminSessionTtlSeconds: 28800,
+      parentSessionTtlSeconds: 28800,
+      studentSessionTtlSeconds: 86400,
+      redisConnectTimeoutMs: 5000,
+    },
+    newsReports: {
+      weeklyMinimumReports: 5,
+    },
+    environment: "development",
+    updatedAt: "2026-05-27T19:44:11.093Z",
+    updatedBy: "admin",
+  }
+
+  const dbSnapshot = {
+    uiSettings: {
+      multiSchool: true,
+      schoolSetup: {
+        ...SCHOOL_SETUP_FALLBACK,
+        letterGradeRanges: [
+          { letter: "A", maxPercent: 100, minPercent: 93 },
+          { letter: "B", maxPercent: 92.99, minPercent: 85 },
+          { letter: "C", maxPercent: 84.99, minPercent: 77 },
+          { letter: "D", maxPercent: 76.99, minPercent: 70 },
+          { letter: "F", maxPercent: 69.99, minPercent: 0 },
+        ],
+      },
+      schoolProfile: SCHOOL_PROFILE_FALLBACK,
+      newsReportValidation: {},
+      queueHub: { panelOrder: ["queued-performance-reports"] },
+      levelTileStylesByLevel: LEVEL_TILE_FALLBACK,
+    },
+    runtime: fileSnapshot.runtime,
+    newsReports: {
+      weeklyMinimumReports: 5,
+    },
+    environment: "development",
+    updatedAt: "2026-05-27T19:44:11.093Z",
+    updatedBy: "admin",
+  }
+
+  try {
+    process.chdir(tempDir)
+    process.env.NODE_ENV = "development"
+    process.env.SIS_CONFIG_FILE = sisConfigPath
+    process.env.DATABASE_URL = devDatabaseUrl
+
+    fs.mkdirSync(path.dirname(sisConfigPath), { recursive: true })
+    fs.writeFileSync(sisConfigPath, JSON.stringify(fileSnapshot, null, 2), "utf8")
+    fs.mkdirSync(path.dirname(legacyPath), { recursive: true })
+    fs.writeFileSync(
+      legacyPath,
+      JSON.stringify(
+        {
+          uiSettings: fileSnapshot.uiSettings,
+          updatedAt: fileSnapshot.updatedAt,
+          updatedBy: fileSnapshot.updatedBy,
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    )
+
+    const prismaClientModule = await freshImport(path.resolve(repoRoot, "src/infra/db/prisma-client.mjs"))
+    const prisma = await prismaClientModule.getSharedPrismaClient()
+    try {
+      await prisma.sisConfigMirror.upsert({
+        where: { id: "sis-config" },
+        create: {
+          id: "sis-config",
+          payloadJson: dbSnapshot,
+          updatedBy: dbSnapshot.updatedBy,
+        },
+        update: {
+          payloadJson: dbSnapshot,
+          updatedBy: dbSnapshot.updatedBy,
+        },
+      })
+
+      const mod = await freshImport(path.resolve(repoRoot, "src/modules/admin/sis-config-store.mjs"))
+      const mirrorHealth = await mod.getSisConfigMirrorHealthSnapshot()
+      assert.equal(mirrorHealth.synced, true)
+      assert.equal(mirrorHealth.state, "ok")
+      assert.match(mirrorHealth.detail, /sync=in-sync/)
+    } finally {
+      await prisma.$disconnect()
+    }
+  } finally {
+    process.chdir(priorCwd)
+    if (priorNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = priorNodeEnv
+    if (priorSisConfigFile === undefined) delete process.env.SIS_CONFIG_FILE
+    else process.env.SIS_CONFIG_FILE = priorSisConfigFile
+    if (priorDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = priorDatabaseUrl
+    fs.rmSync(tempDir, { recursive: true, force: true })
+  }
+})
+
 test("sis config loader fails fast on placeholder example database hosts with line and column", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath

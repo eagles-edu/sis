@@ -109,8 +109,8 @@
     .system-health-loading-pulse { height: 105.6px; position: relative; width: 105.6px; }
 
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260525i" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260525i">
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
 </head>
 
 <body class="admin-portal-page admin-auth-booting">
@@ -240,7 +240,7 @@
                 ADMINISTRATION
               </button>
               <div class="menu-group-links">
-                <a href="/admin/enrollment" class="menu-link">
+                <a href="/admin/enrollment" class="menu-link" data-page-link="enrollment">
                   Enrollment
                 </a>
                 <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">
@@ -2922,7 +2922,7 @@ Select an assignment link to inspect details.</pre>
                     <label for="settingMultiSchool">Enable multi-school UI features</label>
                   </div>
                 </div>
-                <div class="settings-runtime-config">
+                <div>
                   <h4>SIS Config Mirror</h4>
                   <p class="small">
                     These values are stored in <code>SIS_CONFIG.json</code> and mirrored to the database for recovery.

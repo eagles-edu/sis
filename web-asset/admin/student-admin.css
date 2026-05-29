@@ -1826,11 +1826,11 @@
       }
       .row-options-trigger {
         align-items: center;
-        background: var(--btn-edit-text);
-        border-inline-start: 1px solid var(--portal-color-5ce4c7c743);
+        background: transparent;
+        border: 0;
         border-radius: var(--radius-2);
         box-sizing: border-box;
-        color: var(--secondary-color);
+        color: var(--text-color);
         cursor: pointer;
         display: inline-flex;
         font-size: 12px;
@@ -1868,13 +1868,10 @@
           opacity 140ms ease;
       }
       .row-options-trigger:hover {
-        background: var(--portal-color-8aa2dbb5d9);
-        border: 1px solid var(--tertiary-color);
         color: var(--link-hover);
         text-decoration-color: currentColor;
       }
       .row-options-trigger:active {
-        background: var(--portal-color-9bc0b93906);
         color: var(--link-active);
         text-decoration-color: currentColor;
       }
@@ -1884,7 +1881,6 @@
         outline-offset: -1px;
       }
       .row-options-menu[open]>.row-options-trigger {
-        background: var(--portal-color-437c03ed17);
         color: var(--link-hover);
         text-decoration-color: currentColor;
       }
@@ -1905,6 +1901,9 @@
         z-index: 12;
       }
       .row-options-dropdown button {
+        background: var(--info-bg);
+        border: 1px solid var(--info-border);
+        color: var(--info-color);
         font-size: 12px;
         inline-size: 100%;
         min-width: 0;

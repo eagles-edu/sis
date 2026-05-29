@@ -7045,7 +7045,15 @@
         const params = new URLSearchParams(window.location.search || "");
         const queryOrigin = normalizeText(params.get("apiOrigin"));
         const injectedOrigin = normalizeText(window.__SIS_ADMIN_API_ORIGIN);
-        const selectedOrigin = queryOrigin || injectedOrigin;
+        const isJsdom =
+          /\bjsdom\b/i.test(String(window.navigator?.userAgent || ""));
+        const sameOriginFallback =
+          window.location.protocol.startsWith("http") &&
+          !isJsdom &&
+          !isStaticAdminPreviewPath(window.location.pathname) ?
+            window.location.origin
+          : "";
+        const selectedOrigin = queryOrigin || injectedOrigin || sameOriginFallback;
         if (!selectedOrigin) {
           return "";
         }
@@ -8754,6 +8762,9 @@
         params.delete("page");
         params.delete("pageSlug");
         if (slug !== DEFAULT_ADMIN_PAGE_SLUG) params.set("page", slug);
+        if (ADMIN_API_ORIGIN && !params.has("apiOrigin")) {
+          params.set("apiOrigin", ADMIN_API_ORIGIN);
+        }
         const query = params.toString();
         return `${ADMIN_PAGE_PATH}${query ? `?${query}` : ""}`;
       }
@@ -8763,6 +8774,9 @@
         const params = new URLSearchParams(window.location.search || "");
         params.delete("page");
         params.delete("pageSlug");
+        if (ADMIN_API_ORIGIN && !params.has("apiOrigin")) {
+          params.set("apiOrigin", ADMIN_API_ORIGIN);
+        }
         const query = params.toString();
         return `${buildPagePath(slug)}${query ? `?${query}` : ""}`;
       }

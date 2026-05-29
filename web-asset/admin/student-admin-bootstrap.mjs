@@ -19,7 +19,7 @@ export async function runStudentAdminAuthBootstrap({
     return { status: "preview" };
   }
 
-  let me = null;
+  let me;
   try {
     me = await api?.("/api/admin/auth/me");
   } catch (error) {
