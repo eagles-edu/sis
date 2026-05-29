@@ -142,6 +142,25 @@
   --portal-stat-card-bg-start: #edf3fa;
   --portal-stat-card-bg-end: #f7faff;
   --portal-stat-card-border: rgba(115, 136, 163, 0.96);
+  --portal-admin-stat-card-dark-bg-start: rgba(57, 66, 76, 0.98);
+  --portal-admin-stat-card-dark-bg-end: rgba(47, 56, 66, 0.98);
+  --portal-admin-stat-card-dark-border: rgba(115, 136, 163, 0.44);
+  --portal-admin-stat-card-dark-student-bg-start: rgba(42, 76, 102, 0.98);
+  --portal-admin-stat-card-dark-student-bg-end: rgba(32, 56, 82, 0.98);
+  --portal-admin-stat-card-dark-student-border: rgba(0, 102, 255, 0.44);
+  --portal-admin-stat-card-dark-student-accent: rgba(0, 102, 255, 0.66);
+  --portal-admin-stat-card-dark-good-bg-start: rgba(46, 69, 50, 0.98);
+  --portal-admin-stat-card-dark-good-bg-end: rgba(36, 59, 40, 0.98);
+  --portal-admin-stat-card-dark-good-border: rgba(144, 211, 173, 0.44);
+  --portal-admin-stat-card-dark-good-accent: rgba(57, 211, 102, 0.66);
+  --portal-admin-stat-card-dark-warn-bg-start: rgba(102, 74, 32, 0.98);
+  --portal-admin-stat-card-dark-warn-bg-end: rgba(92, 64, 22, 0.98);
+  --portal-admin-stat-card-dark-warn-border: rgba(229, 203, 102, 0.44);
+  --portal-admin-stat-card-dark-warn-accent: rgba(255, 168, 0, 0.66);
+  --portal-admin-stat-card-dark-bad-bg-start: rgba(76, 40, 44, 0.98);
+  --portal-admin-stat-card-dark-bad-bg-end: rgba(66, 30, 34, 0.98);
+  --portal-admin-stat-card-dark-bad-border: rgba(255, 100, 100, 0.44);
+  --portal-admin-stat-card-dark-bad-accent: rgba(255, 85, 85, 0.66);
   --portal-led-core-highlight: rgba(255, 255, 255, 0.18);
   --portal-led-core-highlight-soft: rgba(255, 255, 255, 0.06);
   --portal-led-core-clear: rgba(255, 255, 255, 0);
@@ -570,6 +589,18 @@ body.parent-portal-page .security-badge__icon {
   display: block;
   height: auto;
   inline-size: clamp(44px, 6vw, 56px);
+}
+body.student-portal-page .security-badge__icon--dark,
+body.parent-portal-page .security-badge__icon--dark {
+  display: none;
+}
+html[data-theme="dark"] body.student-portal-page .security-badge__icon--light,
+html[data-theme="dark"] body.parent-portal-page .security-badge__icon--light {
+  display: none;
+}
+html[data-theme="dark"] body.student-portal-page .security-badge__icon--dark,
+html[data-theme="dark"] body.parent-portal-page .security-badge__icon--dark {
+  display: block;
 }
 body.student-portal-page .security-badge__caption,
 body.parent-portal-page .security-badge__caption {
@@ -4313,6 +4344,14 @@ body.parent-portal-page .fc .fc-event.fc-event-news-status-amber {
   border-color: #d89d28 !important;
   color: #5b3b00 !important;
 }
+body.student-portal-page .fc .fc-event.fc-event-news-status-amber .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-news-status-amber .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-news-status-amber .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-amber .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-amber .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-amber .fc-event-time {
+  color: #5b3b00 !important;
+}
 body.student-portal-page .fc .fc-event.fc-event-news-status-purple,
 body.parent-portal-page .fc .fc-event.fc-event-news-status-purple {
   background: #f3ecff !important;
@@ -4363,6 +4402,14 @@ body.student-portal-page .fc .fc-event.fc-event-news-status-revise,
 body.parent-portal-page .fc .fc-event.fc-event-news-status-revise {
   background: #f3ecff !important;
   border-color: #a48ad8 !important;
+  color: #422b7a !important;
+}
+body.student-portal-page .fc .fc-event.fc-event-news-status-revise .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-news-status-revise .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-news-status-revise .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-revise .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-revise .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-news-status-revise .fc-event-time {
   color: #422b7a !important;
 }
 body.student-portal-page .fc .fc-event.fc-event-news-missed,

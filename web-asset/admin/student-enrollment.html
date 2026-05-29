@@ -306,6 +306,13 @@
       font-size: 0.8rem;
     }
 
+    .student-ident small:first-of-type {
+      max-inline-size: 52%;
+      overflow-wrap: normal;
+      white-space: normal;
+      word-break: normal;
+    }
+
     .enrollment-chip-row {
       display: flex;
       flex-wrap: wrap;
@@ -328,7 +335,7 @@
       align-items: start;
       display: grid;
       gap: 10px;
-      grid-template-columns: minmax(0, 1fr) 28px;
+      grid-template-columns: minmax(0, 1fr);
       min-width: 0;
     }
 
@@ -338,7 +345,9 @@
       display: grid;
       gap: 0;
       justify-items: center;
+      justify-self: end;
       min-width: 28px;
+      white-space: nowrap;
       position: relative;
       padding-top: 2px;
     }
@@ -352,9 +361,9 @@
       display: inline-flex;
       justify-content: center;
       min-height: 0;
-      min-width: 28px;
+      min-width: 0;
       padding: 0;
-      width: 28px;
+      width: auto;
     }
 
     .history-rail__button .history-rail__dots {
@@ -405,6 +414,33 @@
 
     .action-grid > * {
       min-width: 0;
+    }
+
+    .action-comment-row {
+      align-items: start;
+      display: grid;
+      gap: 8px;
+      grid-column: 1 / -1;
+      grid-template-columns: minmax(0, 1fr) auto;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .action-comment-row .comment-input {
+      inline-size: auto;
+      grid-column: 1;
+      min-width: 0;
+      padding-inline-end: 12px;
+      width: 100%;
+    }
+
+    .action-comment-row .history-rail {
+      align-self: start;
+      grid-column: 2;
+      justify-self: end;
+      min-width: 0;
+      padding-top: 0;
+      width: auto;
     }
 
     .comment-input {
@@ -622,28 +658,25 @@
 
       table {
         min-width: 0;
-        table-layout: fixed;
+        table-layout: auto;
         width: 100%;
       }
 
       thead th:nth-child(1),
       tbody td:nth-child(1) {
-        width: 32%;
+        width: 1%;
+        white-space: nowrap;
       }
 
       thead th:nth-child(2),
       tbody td:nth-child(2) {
-        width: 23%;
+        width: 1%;
+        white-space: nowrap;
       }
 
       thead th:nth-child(3),
       tbody td:nth-child(3) {
-        width: 18%;
-      }
-
-      thead th:nth-child(4),
-      tbody td:nth-child(4) {
-        width: 27%;
+        width: auto;
       }
 
       thead th,
@@ -725,6 +758,24 @@
 
       .action-grid {
         grid-template-columns: minmax(0, 1fr);
+      }
+
+      .action-comment-row {
+        align-items: start;
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .action-comment-row .comment-input {
+        inline-size: auto;
+        grid-column: 1;
+        min-width: 0;
+        padding-inline-end: 8px;
+        width: 100%;
+      }
+
+      .action-comment-row .history-rail {
+        grid-column: 2;
+        justify-self: end;
       }
 
       .student-ident strong {
@@ -1033,6 +1084,7 @@
       };
       let enrollmentHistoryModalReturnFocus = null;
       let openHistoryRailMenu = null;
+      let enrollmentRowsCache = [];
 
       function normalizeText(value) {
         return value === undefined || value === null ? "" : String(value).trim();
@@ -1067,6 +1119,7 @@
             ...(options.headers || {}),
           },
           credentials: "include",
+          cache: "no-store",
           body: options.body ? JSON.stringify(options.body) : undefined,
         });
         const text = await response.text();
@@ -1155,7 +1208,9 @@
       }
 
       function currentLevelText(row) {
-        return normalizeText(row?.currentEnrollment?.level || row?.profile?.currentGrade || "");
+        return normalizeText(
+          row?.profile?.currentGrade || row?.currentEnrollment?.level || historyPeriods(row)[0]?.level || ""
+        );
       }
 
       function currentStatusText(row) {
@@ -1226,7 +1281,6 @@
         ].filter(Boolean);
         const noteLines = [
           normalizeText(period?.unenrollmentReason) ? `Unenrollment reason: ${reasonLabel(period.unenrollmentReason)}` : "",
-          normalizeText(period?.promotedFromPeriodId) ? `Promoted from period ${period.promotedFromPeriodId}` : "",
           normalizeText(period?.comment) ? `HX note: ${period.comment}` : "",
         ].filter(Boolean);
         return `
@@ -1333,6 +1387,7 @@
 
         const data = await api(`${ENROLLMENT_STUDENTS_PATH}?${params.toString()}`);
         const rows = Array.isArray(data?.items) ? data.items : [];
+        enrollmentRowsCache = rows;
         renderLevelFilterOptions(rows.map((row) => currentLevelText(row)).filter(Boolean));
         renderRows(rows);
         updateSummary(rows);
@@ -1349,7 +1404,7 @@
         if (isOpen) {
           const studentName = normalizeText(row?.profile?.fullName || row?.profile?.englishName || row?.eaglesId || "Student");
           const schoolYear = currentSchoolYearText(row) || "Unknown school year";
-          if (title instanceof HTMLElement) title.textContent = `${studentName} history note`;
+          if (title instanceof HTMLElement) title.textContent = studentName;
           if (summary instanceof HTMLElement) {
             const currentStatus = currentStatusText(row);
             summary.textContent = `Current status: ${currentStatus}. School year: ${schoolYear}.`;
@@ -1365,12 +1420,16 @@
           return;
         }
 
+        const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        if (activeElement && modal.contains(activeElement)) {
+          activeElement.blur();
+        }
+        if (enrollmentHistoryModalReturnFocus instanceof HTMLElement && !modal.contains(enrollmentHistoryModalReturnFocus)) {
+          enrollmentHistoryModalReturnFocus.focus();
+        }
         modal.classList.add("hidden");
         modal.setAttribute("aria-hidden", "true");
         document.body.classList.remove("modal-open");
-        if (enrollmentHistoryModalReturnFocus instanceof HTMLElement) {
-          enrollmentHistoryModalReturnFocus.focus();
-        }
         enrollmentHistoryModalReturnFocus = null;
       }
 
@@ -1461,6 +1520,7 @@
       function renderRows(rows = []) {
         const tbody = document.getElementById("enrollmentRows");
         if (!(tbody instanceof HTMLTableSectionElement)) return;
+        enrollmentRowsCache = rows;
         closeHistoryRailMenu();
         if (!rows.length) {
           tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No students match current enrollment filters.</td></tr>';
@@ -1473,8 +1533,8 @@
           tr.innerHTML = `
             <td data-label="Student">
               <div class="student-ident">
-                <strong>${escapeHtml(row?.profile?.fullName || row?.profile?.englishName || row?.eaglesId)}</strong>
-                <small>${escapeHtml(row?.eaglesId || "")}</small>
+                <strong>${escapeHtml(row?.eaglesId || row?.profile?.englishName || row?.profile?.fullName || "")}</strong>
+                <small>${escapeHtml(row?.profile?.fullName || row?.profile?.englishName || "")}</small>
                 <small>#${escapeHtml(row?.studentNumber || "")}</small>
               </div>
             </td>
@@ -1489,6 +1549,7 @@
                 <div class="action-stack">
                   <div class="action-grid">
                   <select data-action aria-label="Enrollment action">
+                    <option value="" selected disabled>Select action</option>
                     <option value="change-level">Change level</option>
                     <option value="promote">Promote</option>
                     <option value="unenroll">Unenroll</option>
@@ -1496,10 +1557,12 @@
                   <select data-level aria-label="Target level"></select>
                   <select data-reason aria-label="Unenrollment reason"></select>
                   <button type="button" class="primary" data-apply>Apply</button>
-                  <textarea data-comment class="comment-input action-comment" rows="1" placeholder="Comment" aria-label="Enrollment comment"></textarea>
+                  <div class="action-comment-row">
+                    <textarea data-comment class="comment-input action-comment" rows="1" placeholder="Comment" aria-label="Enrollment comment"></textarea>
+                    ${historyRailHtml(row)}
+                  </div>
                 </div>
-                </div>
-                ${historyRailHtml(row)}
+              </div>
               </div>
             </td>
           `;
@@ -1511,9 +1574,12 @@
           renderLevelOptions(levelSelect, currentLevelText(row));
           renderReasonOptions(reasonSelect, "");
           const syncControls = () => {
-            const action = normalizeText(actionSelect?.value || "change-level");
-            if (levelSelect instanceof HTMLSelectElement) levelSelect.disabled = action === "unenroll";
-            if (reasonSelect instanceof HTMLSelectElement) reasonSelect.disabled = action !== "unenroll";
+            const action = normalizeText(actionSelect?.value || "");
+            const isUnenroll = action === "unenroll";
+            const hasAction = Boolean(action);
+            if (levelSelect instanceof HTMLSelectElement) levelSelect.disabled = !hasAction || isUnenroll;
+            if (reasonSelect instanceof HTMLSelectElement) reasonSelect.disabled = !isUnenroll;
+            if (applyButton instanceof HTMLButtonElement) applyButton.disabled = !hasAction;
           };
           actionSelect?.addEventListener("change", syncControls);
           if (commentInput instanceof HTMLTextAreaElement) {
@@ -1523,6 +1589,10 @@
           syncControls();
           applyButton?.addEventListener("click", async () => {
             try {
+              if (!(actionSelect instanceof HTMLSelectElement) || !normalizeText(actionSelect.value)) {
+                setStatus("Select an enrollment action first.", true);
+                return;
+              }
               applyButton.disabled = true;
               const action = normalizeText(actionSelect?.value || "");
               await api(`/api/admin/students/${encodeURIComponent(row.id)}/enrollment`, {
@@ -1534,7 +1604,30 @@
                   comment: normalizeText(commentInput?.value || ""),
                 },
               });
-              await loadRows();
+              const refreshed = await api(`/api/admin/students/${encodeURIComponent(row.id)}/enrollment`);
+              if (refreshed?.student) {
+                enrollmentRowsCache = enrollmentRowsCache.map((entry) =>
+                  entry.id === row.id
+                    ? {
+                        ...entry,
+                        ...refreshed.student,
+                        profile: refreshed.student.profile || entry.profile,
+                        currentEnrollment:
+                          refreshed.currentEnrollment
+                          || refreshed.student.currentEnrollment
+                          || entry.currentEnrollment,
+                        enrollmentPeriods:
+                          Array.isArray(refreshed.student.enrollmentPeriods) && refreshed.student.enrollmentPeriods.length
+                            ? refreshed.student.enrollmentPeriods
+                            : entry.enrollmentPeriods,
+                      }
+                    : entry
+                );
+                renderRows(enrollmentRowsCache);
+                updateSummary(enrollmentRowsCache);
+              } else {
+                await loadRows();
+              }
               setStatus("Enrollment updated.");
             } catch (error) {
               setStatus(error?.message || error, true);

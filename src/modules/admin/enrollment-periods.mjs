@@ -746,6 +746,13 @@ export async function changeStudentEnrollment(
   assertWithStatus(Boolean(action), 400, "action is required")
 
   return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`
+      SELECT id
+      FROM "Student"
+      WHERE id = ${targetStudentId}
+      FOR UPDATE
+    `
+
     await ensureEnrollmentPeriodsBackfilled({
       prisma: tx,
       schoolYear: targetSchoolYear,
@@ -776,10 +783,12 @@ export async function changeStudentEnrollment(
 
     if (action === "promote" || action === "change-level" || action === "set-level") {
       assertWithStatus(Boolean(nextLevel), 400, "level is required")
+      const currentLevel = normalizeLower(canonicalizeLevel(currentPeriod.level))
+      const nextLevelToken = normalizeLower(canonicalizeLevel(nextLevel))
       if (
         normalizeEnrollmentStatus(currentPeriod.status) === ENROLLMENT_STATUS_ACTIVE &&
         !normalizeDate(currentPeriod.endedAt) &&
-        normalizeLower(canonicalizeLevel(currentPeriod.level)) === normalizeLower(nextLevel)
+        currentLevel === nextLevelToken
       ) {
         return {
           ok: true,

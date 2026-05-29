@@ -209,4 +209,7 @@ async function main() {
   console.log(`Updated ${changedFiles.length} admin asset file(s).`)
 }
 
-await main()
+main().catch((error) => {
+  console.error(error)
+  process.exitCode = 1
+})

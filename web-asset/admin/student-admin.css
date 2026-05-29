@@ -3735,9 +3735,9 @@
         color: var(--portal-support-message);
       }
       html[data-theme="dark"] body.admin-portal-page .stat-card {
-        --stat-card-bg-start: rgba(57, 66, 76, 0.98);
-        --stat-card-bg-end: rgba(47, 56, 66, 0.98);
-        --stat-card-border: rgba(115, 136, 163, 0.44);
+        --stat-card-bg-start: var(--portal-admin-stat-card-dark-bg-start);
+        --stat-card-bg-end: var(--portal-admin-stat-card-dark-bg-end);
+        --stat-card-border: var(--portal-admin-stat-card-dark-border);
         --stat-card-label: var(--portal-support-message);
         --stat-card-value: var(--portal-dark-text);
         background: linear-gradient(
@@ -3748,28 +3748,28 @@
         border-color: var(--stat-card-border);
       }
       html[data-theme="dark"] body.admin-portal-page .stat-card--student {
-        --stat-card-bg-start: rgba(42, 76, 102, 0.98);
-        --stat-card-bg-end: rgba(32, 56, 82, 0.98);
-        --stat-card-border: rgba(0, 102, 255, 0.44);
-        --stat-card-accent: rgba(0, 102, 255, 0.66);
+        --stat-card-bg-start: var(--portal-admin-stat-card-dark-student-bg-start);
+        --stat-card-bg-end: var(--portal-admin-stat-card-dark-student-bg-end);
+        --stat-card-border: var(--portal-admin-stat-card-dark-student-border);
+        --stat-card-accent: var(--portal-admin-stat-card-dark-student-accent);
       }
       html[data-theme="dark"] body.admin-portal-page .stat-card--good {
-        --stat-card-bg-start: rgba(46, 69, 50, 0.98);
-        --stat-card-bg-end: rgba(36, 59, 40, 0.98);
-        --stat-card-border: rgba(144, 211, 173, 0.44);
-        --stat-card-accent: rgba(57, 211, 102, 0.66);
+        --stat-card-bg-start: var(--portal-admin-stat-card-dark-good-bg-start);
+        --stat-card-bg-end: var(--portal-admin-stat-card-dark-good-bg-end);
+        --stat-card-border: var(--portal-admin-stat-card-dark-good-border);
+        --stat-card-accent: var(--portal-admin-stat-card-dark-good-accent);
       }
       html[data-theme="dark"] body.admin-portal-page .stat-card--warn {
-        --stat-card-bg-start: rgba(102, 74, 32, 0.98);
-        --stat-card-bg-end: rgba(92, 64, 22, 0.98);
-        --stat-card-border: rgba(229, 203, 102, 0.44);
-        --stat-card-accent: rgba(255, 168, 0, 0.66);
+        --stat-card-bg-start: var(--portal-admin-stat-card-dark-warn-bg-start);
+        --stat-card-bg-end: var(--portal-admin-stat-card-dark-warn-bg-end);
+        --stat-card-border: var(--portal-admin-stat-card-dark-warn-border);
+        --stat-card-accent: var(--portal-admin-stat-card-dark-warn-accent);
       }
       html[data-theme="dark"] body.admin-portal-page .stat-card--bad {
-        --stat-card-bg-start: rgba(76, 40, 44, 0.98);
-        --stat-card-bg-end: rgba(66, 30, 34, 0.98);
-        --stat-card-border: rgba(255, 100, 100, 0.44);
-        --stat-card-accent: rgba(255, 85, 85, 0.66);
+        --stat-card-bg-start: var(--portal-admin-stat-card-dark-bad-bg-start);
+        --stat-card-bg-end: var(--portal-admin-stat-card-dark-bad-bg-end);
+        --stat-card-border: var(--portal-admin-stat-card-dark-bad-border);
+        --stat-card-accent: var(--portal-admin-stat-card-dark-bad-accent);
       }
       html[data-theme="dark"] body.admin-portal-page .queue-hub-panel {
         background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));

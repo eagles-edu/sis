@@ -1,0 +1,30 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - link "0937‑667‑818" [ref=e5] [cursor=pointer]:
+      - /url: tel:0937667818
+    - link "eagles.edu.vn" [ref=e6] [cursor=pointer]:
+      - /url: https://eagles.edu.vn
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - heading "STUDENT LOG-IN" [level=2] [ref=e9]
+      - generic [ref=e10]:
+        - img [ref=e11]
+        - generic [ref=e12]: secured connection
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: Student User Name (eaglesId)
+        - textbox "Student User Name (eaglesId)" [ref=e16]:
+          - /placeholder: cm<eaglesId> hoặc mã gia đình
+        - paragraph [ref=e17]
+      - generic [ref=e18]:
+        - generic [ref=e19]: Enter current password.
+        - textbox "Enter current password." [ref=e20]:
+          - /placeholder: Mật khẩu dùng chung phụ huynh - học sinh
+        - paragraph [ref=e21]: Enter the current password for your account.
+      - button "Submit" [ref=e22]
+    - generic [ref=e23]:
+      - link "Reset password" [ref=e24] [cursor=pointer]:
+        - /url: mailto:support@eagles.edu.vn?subject=Student%20portal%20password%20reset
+      - link "0937 667 818" [ref=e25] [cursor=pointer]:
+        - /url: tel:0937667818
+    - paragraph [ref=e26]

@@ -101,6 +101,7 @@ const DEFAULT_SCHOOL_PROFILE = Object.freeze({
  *   uiSettings: UiSettingsConfig,
  *   runtime: RuntimeConfig,
  *   newsReports: NewsReportsConfig,
+ *   environment: string,
  *   updatedAt: string,
  *   updatedBy: string,
  * }} SisConfigPayload
@@ -136,6 +137,19 @@ function normalizeText(value) {
 
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
+}
+
+/**
+ * @param {unknown} value
+ * @param {string} [fallback]
+ * @returns {string}
+ */
+function normalizeRuntimeEnvironment(value, fallback = process.env.NODE_ENV || "production") {
+  const normalized = normalizeLower(value || fallback)
+  if (!normalized) return "production"
+  if (normalized === "dev") return "development"
+  if (normalized === "prod" || normalized === "live") return "production"
+  return normalized
 }
 
 /**
@@ -263,10 +277,25 @@ function isPlainObject(value) {
 }
 
 function resolveSisConfigFilePath() {
-  return path.resolve(
-    process.cwd(),
-    normalizeText(process.env.SIS_CONFIG_FILE) || SIS_CONFIG_FILE_NAME,
-  )
+  const explicitPath = normalizeText(process.env.SIS_CONFIG_FILE)
+  if (explicitPath) {
+    return path.resolve(process.cwd(), explicitPath)
+  }
+
+  const nodeEnv = normalizeRuntimeEnvironment(process.env.NODE_ENV)
+  if (nodeEnv === "development") {
+    return path.resolve(process.cwd(), "config", "sis-config.development.json")
+  }
+  if (nodeEnv === "test") {
+    return path.resolve(process.cwd(), "config", "sis-config.test.json")
+  }
+
+  return path.resolve(process.cwd(), SIS_CONFIG_FILE_NAME)
+}
+
+function shouldPreferSisConfigFileOverDatabase() {
+  const nodeEnv = normalizeRuntimeEnvironment(process.env.NODE_ENV)
+  return Boolean(normalizeText(process.env.SIS_CONFIG_FILE)) || nodeEnv === "development" || nodeEnv === "test"
 }
 
 function resolveLegacyUiSettingsFilePath() {
@@ -421,6 +450,7 @@ function normalizeSisConfigPayload(source = {}) {
     uiSettings: normalizeUiSettings(rawUiSettings),
     runtime: normalizeRuntimeConfig(candidate.runtime || candidate.db || candidate.database || candidate),
     newsReports: normalizeNewsReportsConfig(candidate.newsReports || candidate.newsReportPolicy || candidate),
+    environment: normalizeRuntimeEnvironment(candidate.environment),
     updatedAt: normalizeText(candidate.updatedAt),
     updatedBy: normalizeText(candidate.updatedBy),
   }
@@ -436,6 +466,7 @@ function snapshotComparisonKey(snapshot = {}) {
     uiSettings: normalizeUiSettings(source.uiSettings || {}),
     runtime: normalizeRuntimeConfig(source.runtime || {}),
     newsReports: normalizeNewsReportsConfig(source.newsReports || {}),
+    environment: normalizeRuntimeEnvironment(source.environment),
     updatedAt: normalizeText(source.updatedAt),
     updatedBy: normalizeText(source.updatedBy),
   })
@@ -451,6 +482,7 @@ function rawSnapshotComparisonKey(snapshot = {}) {
     uiSettings: toPlainObject(source.uiSettings || {}),
     runtime: toPlainObject(source.runtime || {}),
     newsReports: toPlainObject(source.newsReports || {}),
+    environment: normalizeText(source.environment),
     updatedAt: normalizeText(source.updatedAt),
     updatedBy: normalizeText(source.updatedBy),
   })
@@ -592,6 +624,7 @@ function buildDefaultSnapshot() {
     uiSettings: {},
     runtime: {},
     newsReports: {},
+    environment: normalizeRuntimeEnvironment(process.env.NODE_ENV),
     updatedAt: "",
     updatedBy: "",
   }, resolveSisConfigFilePath(), "default")
@@ -712,6 +745,7 @@ async function upsertMirrorToDatabase(snapshot = {}) {
       uiSettings: normalizeUiSettings(source.uiSettings || {}),
       runtime: normalizeRuntimeConfig(source.runtime || {}),
       newsReports: normalizeNewsReportsConfig(source.newsReports || {}),
+      environment: normalizeRuntimeEnvironment(source.environment),
       updatedAt: normalizeText(source.updatedAt) || nowIso(),
       updatedBy: normalizeText(source.updatedBy) || null,
     }
@@ -762,6 +796,7 @@ async function writeSnapshotFiles(snapshot = {}) {
     uiSettings: normalized.uiSettings,
     runtime: normalized.runtime,
     newsReports: normalized.newsReports,
+    environment: normalized.environment,
     updatedAt: normalized.updatedAt || nowIso(),
     updatedBy: normalized.updatedBy || null,
   })
@@ -798,6 +833,7 @@ export async function ensureSisConfigLoaded(options = {}) {
   const legacyParsed = toPlainObject(legacySnapshot.parsed)
   const fileParsed = toPlainObject(fileSnapshot.parsed)
   const dbParsed = toPlainObject(dbSnapshot)
+  const preferSisConfigFile = shouldPreferSisConfigFileOverDatabase()
 
   assertValidRuntimeDatabaseUrl({
     filePath,
@@ -813,7 +849,7 @@ export async function ensureSisConfigLoaded(options = {}) {
       source: "legacy",
     })
   }
-  if (dbSnapshot) {
+  if (!preferSisConfigFile && dbSnapshot) {
     assertValidRuntimeDatabaseUrl({
       filePath,
       databaseUrl: toPlainObject(dbParsed.runtime).databaseUrl || "",
@@ -830,30 +866,35 @@ export async function ensureSisConfigLoaded(options = {}) {
     }, legacyPath, "legacy") :
     null
 
-  const candidates = [fileLoaded, dbSnapshot].filter(Boolean)
-  let latest = candidates[0] || null
-  for (const candidate of candidates.slice(1)) {
+  let latest = null
+  if (preferSisConfigFile) {
+    latest = fileLoaded || legacyLoaded || buildDefaultSnapshot()
+  } else {
+    const candidates = [fileLoaded, dbSnapshot].filter(Boolean)
+    latest = candidates[0] || null
+    for (const candidate of candidates.slice(1)) {
+      if (!latest) {
+        latest = candidate
+        continue
+      }
+      if (compareIsoValues(candidate.updatedAt, latest.updatedAt) > 0) {
+        latest = candidate
+        continue
+      }
+      if (!normalizeText(latest.updatedAt) && normalizeText(candidate.updatedAt)) {
+        latest = candidate
+      }
+    }
     if (!latest) {
-      latest = candidate
-      continue
+      latest = legacyLoaded || buildDefaultSnapshot()
     }
-    if (compareIsoValues(candidate.updatedAt, latest.updatedAt) > 0) {
-      latest = candidate
-      continue
-    }
-    if (!normalizeText(latest.updatedAt) && normalizeText(candidate.updatedAt)) {
-      latest = candidate
-    }
-  }
-
-  if (!latest) {
-    latest = legacyLoaded || buildDefaultSnapshot()
   }
 
   const snapshot = normalizeLoadedSnapshot({
     uiSettings: latest.uiSettings || {},
     runtime: latest.runtime || {},
     newsReports: latest.newsReports || {},
+    environment: latest.environment || normalizeRuntimeEnvironment(process.env.NODE_ENV),
     updatedAt: latest.updatedAt || nowIso(),
     updatedBy: latest.updatedBy || "",
   }, filePath, latest.source || "file")
@@ -871,13 +912,13 @@ export async function ensureSisConfigLoaded(options = {}) {
   const fileNeedsWrite =
     !fileSnapshot.exists ||
     fileSnapshot.error ||
-    latestSourceIsDatabase ||
+    (!preferSisConfigFile && latestSourceIsDatabase) ||
     !fileMatchesSnapshot ||
     (fileLoaded && compareIsoValues(snapshot.updatedAt, fileLoaded.updatedAt) > 0)
   const legacyNeedsWrite =
     !legacySnapshot.exists ||
     legacySnapshot.error ||
-    latestSourceIsDatabase ||
+    (!preferSisConfigFile && latestSourceIsDatabase) ||
     latest.source === "file" ||
     !legacyMatchesSnapshot ||
     (legacyLoaded && compareIsoValues(snapshot.updatedAt, legacyLoaded.updatedAt) > 0)
@@ -890,6 +931,7 @@ export async function ensureSisConfigLoaded(options = {}) {
       uiSettings: snapshot.uiSettings,
       runtime: snapshot.runtime,
       newsReports: snapshot.newsReports,
+      environment: snapshot.environment,
       updatedAt: snapshot.updatedAt,
       updatedBy: snapshot.updatedBy || null,
     })
@@ -901,8 +943,9 @@ export async function ensureSisConfigLoaded(options = {}) {
 
   const mirrorNeedsWrite =
     !dbSnapshot ||
-    latestSourceIsDatabase ||
+    (!preferSisConfigFile && latestSourceIsDatabase) ||
     latest.source === "file" ||
+    (preferSisConfigFile && latest.source === "legacy") ||
     fileNeedsWrite ||
     legacyNeedsWrite ||
     !dbMatchesSnapshot ||
@@ -1005,6 +1048,7 @@ export async function saveSisConfigSnapshot(payload = {}, updatedByUsername = ""
     uiSettings: source.uiSettings || current.uiSettings,
     runtime: source.runtime || current.runtime,
     newsReports: source.newsReports || current.newsReports,
+    environment: source.environment || current.environment,
     updatedAt: nowIso(),
     updatedBy: normalizeText(updatedByUsername) || normalizeText(source.updatedBy) || current.updatedBy,
   }, resolveSisConfigFilePath(), "file")

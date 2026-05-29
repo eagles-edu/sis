@@ -148,6 +148,60 @@ test("saveSisConfigSnapshot writes config and legacy mirror", async () => {
   }
 })
 
+test("development runtime defaults to an environment-specific SIS config file", async () => {
+  const { tempDir } = makeTempConfigPaths()
+  const priorCwd = process.cwd()
+  const priorNodeEnv = process.env.NODE_ENV
+  const priorDatabaseUrl = process.env.DATABASE_URL
+  const storePath = path.resolve(process.cwd(), "src/modules/admin/sis-config-store.mjs")
+  const rootConfigPath = path.join(tempDir, "SIS_CONFIG.json")
+  const devConfigPath = path.join(tempDir, "config", "sis-config.development.json")
+
+  try {
+    process.chdir(tempDir)
+    process.env.NODE_ENV = "development"
+    process.env.DATABASE_URL = "postgresql://dev-user:dev-pass@localhost:5432/dev-only"
+    fs.mkdirSync(path.dirname(rootConfigPath), { recursive: true })
+    fs.writeFileSync(
+      rootConfigPath,
+      JSON.stringify({
+        uiSettings: {
+          schoolSetup: {
+            ...SCHOOL_SETUP_FALLBACK,
+          },
+        },
+        runtime: {
+          databaseUrl: "postgresql://live-user:live-pass@localhost:5432/live-only",
+        },
+        newsReports: {
+          weeklyMinimumReports: 5,
+        },
+        updatedAt: "2026-05-01T00:00:00.000Z",
+        updatedBy: "root",
+      }, null, 2),
+      "utf8",
+    )
+
+    const mod = await freshImport(storePath)
+    const snapshot = await mod.ensureSisConfigLoaded({ refresh: true })
+
+    assert.equal(snapshot.filePath, devConfigPath)
+    assert.equal(snapshot.environment, "development")
+    assert.equal(snapshot.runtime.databaseUrl, "postgresql://dev-user:dev-pass@localhost:5432/dev-only")
+    assert.equal(fs.existsSync(devConfigPath), true)
+
+    const rootConfig = JSON.parse(fs.readFileSync(rootConfigPath, "utf8"))
+    assert.equal(rootConfig.runtime.databaseUrl, "postgresql://live-user:live-pass@localhost:5432/live-only")
+  } finally {
+    process.chdir(priorCwd)
+    if (priorNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = priorNodeEnv
+    if (priorDatabaseUrl === undefined) delete process.env.DATABASE_URL
+    else process.env.DATABASE_URL = priorDatabaseUrl
+    fs.rmSync(tempDir, { recursive: true, force: true })
+  }
+})
+
 test("sis config loader fails fast on placeholder example database hosts with line and column", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath

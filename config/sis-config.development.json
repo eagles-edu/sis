@@ -159,6 +159,19 @@
       }
     }
   },
+  "runtime": {
+    "databaseUrl": "postgresql://sis_app:Mg2yLkcVNSR2xzFvcLkKt1uPUWpb@127.0.0.1:5432/sis_dev?schema=public",
+    "redisUrl": "redis://:L8ZsQ5zDk6XrPz49@127.0.0.1:6379/12",
+    "sessionDriver": "redis",
+    "adminSessionTtlSeconds": 28800,
+    "parentSessionTtlSeconds": 28800,
+    "studentSessionTtlSeconds": 86400,
+    "redisConnectTimeoutMs": 5000
+  },
+  "newsReports": {
+    "weeklyMinimumReports": 5
+  },
+  "environment": "development",
   "updatedAt": "2026-05-27T19:44:11.093Z",
   "updatedBy": "admin"
 }

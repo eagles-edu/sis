@@ -141,5 +141,8 @@ async function main() {
 const isMainModule = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 
 if (isMainModule) {
-  await main()
+  main().catch((error) => {
+    console.error(error)
+    process.exitCode = 1
+  })
 }

@@ -7,6 +7,7 @@ import postcss from "postcss"
 const rootDir = process.cwd()
 const buildAdminAssetsPath = path.resolve(rootDir, "tools/build-admin-assets.mjs")
 const sharedThemePath = path.resolve(rootDir, "web-asset/shared/portal-theme.min.css")
+const sharedThemeSourcePath = path.resolve(rootDir, "web-asset/shared/portal-theme.css")
 const adminThemePath = path.resolve(rootDir, "web-asset/admin/student-admin.css")
 const adminPortalPath = path.resolve(rootDir, "web-asset/admin/student-admin.html")
 const parentPortalPath = path.resolve(rootDir, "web-asset/parent/parent-portal.html")
@@ -19,6 +20,7 @@ const portalPaths = [
 ]
 
 const sharedTheme = fs.readFileSync(sharedThemePath, "utf8")
+const sharedThemeSource = fs.readFileSync(sharedThemeSourcePath, "utf8")
 const adminTheme = fs.readFileSync(adminThemePath, "utf8")
 const adminPortal = fs.readFileSync(adminPortalPath, "utf8")
 const parentPortal = fs.readFileSync(parentPortalPath, "utf8")
@@ -144,6 +146,29 @@ test("portal-facing pages route every raw color literal through the shared theme
       `${relPath} should not contain raw color literals outside the shared theme registry`,
     )
   }
+})
+
+test("security badges use the white secure-network asset in dark mode", () => {
+  assert.match(
+    parentPortal,
+    /security-badge__icon security-badge__icon--dark" src="\/web-asset\/shared\/secure-network-white\.svg"/,
+    "parent portal should reference the white security icon variant",
+  )
+  assert.match(
+    studentPortal,
+    /security-badge__icon security-badge__icon--dark" src="\/web-asset\/shared\/secure-network-white\.svg"/,
+    "student portal should reference the white security icon variant",
+  )
+  assert.match(
+    sharedThemeSource,
+    /html\[data-theme="dark"\]\s+body\.(?:student|parent)-portal-page\s+\.security-badge__icon--dark/,
+    "shared portal theme should show the white icon in dark mode",
+  )
+  assert.match(
+    sharedThemeSource,
+    /html\[data-theme="dark"\]\s+body\.(?:student|parent)-portal-page\s+\.security-badge__icon--light/,
+    "shared portal theme should hide the default icon in dark mode",
+  )
 })
 
 test("portal pages fail closed on local theme ownership outside the explicit structural allowlist", () => {
@@ -510,6 +535,18 @@ test("shared portal theme keeps student and parent calendars readable in dark mo
       "html[data-theme=\"dark\"] body.parent-portal-page :where(.homework-square, .attendance-square),html[data-theme=\"dark\"] body.student-portal-page :where(.homework-square, .attendance-square){background:var(--portal-dark-surface-support);border-color:var(--portal-dark-border-strong);color:var(--portal-dark-text)}",
     ),
     "shared theme should keep the student and parent summary cards dark",
+  )
+  assert.ok(
+    /body\.(?:parent|student)-portal-page \.fc \.fc-event\.fc-event-news-status-revise \.fc-event-main,[^}]*color:#422b7a!important/.test(
+      sharedTheme,
+    ),
+    "shared theme should force revise event text to the purple brand color",
+  )
+  assert.ok(
+    /body\.(?:parent|student)-portal-page \.fc \.fc-event\.fc-event-news-status-amber \.fc-event-main,[^}]*color:#5b3b00!important/.test(
+      sharedTheme,
+    ),
+    "shared theme should force amber event text to the amber brand color",
   )
   assert.ok(
     sharedTheme.includes("html[data-theme=\"dark\"] body.parent-portal-page .attendance-square.is-good") &&
