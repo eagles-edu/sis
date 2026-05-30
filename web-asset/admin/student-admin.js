@@ -5431,17 +5431,22 @@
         };
       }
 
-      function levelBadgeHtml(levelName, { full = false, variant = "" } = {}) {
+      function levelChipClass(levelName) {
         const theme = getLevelTheme(levelName);
+        return theme.className || "";
+      }
+
+      function levelBadgeHtml(levelName, { full = false, variant = "" } = {}) {
         const label = full ? fullLevelLabel(levelName) : shortLevelLabel(levelName);
         const variantToken = normalizeText(variant)
           .toLowerCase()
           .replace(/[^a-z0-9_-]/g, "");
-        const chipStyle = `--chip-bg:${theme.color};--chip-border:${theme.borderColor};--chip-dot:${toRgba(theme.textColor, 0.95)};--chip-text:${theme.textColor};`;
+        const chipClass = levelChipClass(levelName);
+        const classes = ["level-chip", chipClass, "level-chip-standard"].filter(Boolean).join(" ");
         if (variantToken === "standard") {
-          return `<span class="level-chip level-chip-standard" style="${chipStyle}">${escapeHtml(label)}</span>`;
+          return `<span class="${classes}">${escapeHtml(label)}</span>`;
         }
-        return `<span class="level-chip" style="${chipStyle}">${escapeHtml(label)}</span>`;
+        return `<span class="${classes.replace(/\blevel-chip-standard\b/, "").trim()}">${escapeHtml(label)}</span>`;
       }
 
       function resetSectionLevelAccents() {
@@ -5901,32 +5906,26 @@
         return "amber";
       }
 
-      function newsReviewStatusChipStyle(status = "") {
+      function newsReviewChipClass(status = "") {
         const colorToken = newsReviewStatusColorToken(status);
-        if (colorToken === "green")
-          return "--chip-bg:#d8f2e3;--chip-border:#287a4f;--chip-dot:#0f452c;--chip-text:#0f452c;";
-        if (colorToken === "red")
-          return "--chip-bg:#ffd8dd;--chip-border:#ad2c3c;--chip-dot:#67101d;--chip-text:#67101d;";
-        if (colorToken === "purple")
-          return "--chip-bg:#eadcff;--chip-border:#7348b5;--chip-dot:#351267;--chip-text:#351267;";
-        if (colorToken === "blue")
-          return "--chip-bg:#d8edff;--chip-border:#2d78b4;--chip-dot:#093a63;--chip-text:#093a63;";
-        if (colorToken === "turquoise")
-          return "--chip-bg:#cef4ef;--chip-border:#1d8b82;--chip-dot:#044e48;--chip-text:#044e48;";
-        return "--chip-bg:#ffe9c7;--chip-border:#b16d00;--chip-dot:#5b3500;--chip-text:#5b3500;";
+        if (colorToken === "green") return "chip-ok";
+        if (colorToken === "red") return "chip-bad";
+        if (colorToken === "purple") return "chip-revise";
+        if (colorToken === "blue") return "chip-open";
+        if (colorToken === "turquoise") return "chip-checked";
+        return "chip-warn";
       }
 
       function newsReviewStatusChipHtml(status = "") {
-        const chipStyle = newsReviewStatusChipStyle(status);
         const label = newsReviewStatusLabel(status);
-        return `<span class="level-chip level-chip-standard" style="${chipStyle}">${escapeHtml(label)}</span>`;
+        return `<span class="chip ${newsReviewChipClass(status)}">${escapeHtml(label)}</span>`;
       }
 
       function newsReviewSetActionChipHtml(setAction = "") {
         const colorToken = newsReviewSetActionColorToken(setAction);
-        const chipStyle = newsReviewStatusChipStyle(colorToken);
+        const chipClass = newsReviewChipClass(colorToken);
         const label = newsReviewSetActionLabel(setAction);
-        return `<span class="level-chip level-chip-standard" style="${chipStyle}">${escapeHtml(label)}</span>`;
+        return `<span class="chip ${chipClass}">${escapeHtml(label)}</span>`;
       }
 
       const NEWS_REVIEW_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";

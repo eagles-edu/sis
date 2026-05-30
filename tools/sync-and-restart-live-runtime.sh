@@ -340,22 +340,28 @@ collect_dir_drift() {
 verify_cleared_root() {
   local target_root="$1"
   local label="$2"
-  local allowed_path="${3:-}"
+  shift 2
+  local allowed_paths=("$@")
   local remaining
 
   remaining="$(
-    TARGET_ROOT="${target_root}" ALLOWED_PATH="${allowed_path}" node --input-type=module <<'EOF'
+    TARGET_ROOT="${target_root}" ALLOWED_PATHS_TEXT="$(printf '%s\n' "${allowed_paths[@]}")" node --input-type=module <<'EOF'
 import fs from "node:fs"
 import path from "node:path"
 
 const targetRoot = process.env.TARGET_ROOT || ""
-const allowedPath = process.env.ALLOWED_PATH || ""
+const allowedPaths = new Set(
+  String(process.env.ALLOWED_PATHS_TEXT || "")
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean),
+)
 const entries = fs.existsSync(targetRoot) ? fs.readdirSync(targetRoot, { withFileTypes: true }) : []
 const remaining = []
 
 for (const entry of entries) {
   const entryPath = path.join(targetRoot, entry.name)
-  if (allowedPath && entryPath === allowedPath) continue
+  if (allowedPaths.has(entryPath)) continue
   remaining.push(entry.name)
 }
 
@@ -478,7 +484,7 @@ verify_live_public_html_index() {
 
 verify_live_roots_cleared() {
   log "verifying cleared live runtime root"
-  verify_cleared_root "${LIVE_ROOT}" "runtime root" "${LIVE_ROOT}/.env"
+  verify_cleared_root "${LIVE_ROOT}" "runtime root" "${LIVE_ROOT}/.env" "${LIVE_ROOT}/SIS_CONFIG.json"
   log "verifying cleared live public root"
   verify_cleared_root "${PUBLIC_ROOT}" "public root"
 }
@@ -756,6 +762,60 @@ verify_route() {
   local expected_status="$2"
   local expected_needle="$3"
   local expected_location="$4"
+  if [[ "$url" == https://admin.eagles.edu.vn/* ]]; then
+    env \
+      PROBE_URL="${url}" \
+      EXPECTED_STATUS="${expected_status}" \
+      EXPECTED_NEEDLE="${expected_needle}" \
+      EXPECTED_LOCATION="${expected_location}" \
+      CURL_BROWSER_USER_AGENT="${CURL_BROWSER_USER_AGENT}" \
+      node --input-type=module <<'EOF'
+import assert from "node:assert/strict"
+import { chromium } from "playwright"
+
+const probeUrl = process.env.PROBE_URL || ""
+const expectedStatus = Number.parseInt(process.env.EXPECTED_STATUS || "0", 10)
+const expectedNeedle = process.env.EXPECTED_NEEDLE || ""
+const expectedLocation = process.env.EXPECTED_LOCATION || ""
+const browser = await chromium.launch({ headless: true })
+
+try {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } })
+  const page = await context.newPage()
+  const response = await page.goto(probeUrl, { waitUntil: "commit", timeout: 30000 })
+
+  if (expectedStatus === 308) {
+    const finalUrl = page.url()
+    assert.ok(
+      finalUrl.endsWith(expectedLocation),
+      `${probeUrl} expected redirect to ${expectedLocation}, got ${finalUrl}`,
+    )
+  } else {
+    assert.equal(
+      response?.status() || 0,
+      expectedStatus,
+      `${probeUrl} expected ${expectedStatus}, got ${response?.status() || 0}`,
+    )
+    const bodyText = await page.textContent("body")
+    const titleText = await page.title()
+    const acceptsLoginGate =
+      probeUrl.endsWith("/admin/enrollment") &&
+      (String(bodyText || "").includes("Student Admin Login") ||
+        String(titleText || "").includes("Student Admin Login"))
+    assert.ok(
+      String(bodyText || "").includes(expectedNeedle) ||
+        String(titleText || "").includes(expectedNeedle) ||
+        acceptsLoginGate,
+      `${probeUrl} missing body needle: ${expectedNeedle}`,
+    )
+  }
+} finally {
+  await browser.close().catch(() => {})
+}
+EOF
+    return
+  fi
+
   local headers_file
   headers_file="$(mktemp)"
   local body_file

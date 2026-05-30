@@ -2510,6 +2510,51 @@
         text-transform: uppercase;
         white-space: nowrap;
       }
+      .level-chip.panelbg-eggs-chicks {
+        --chip-bg: var(--portal-color-cbfc8005b4);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-color-469978e86b);
+      }
+      .level-chip.panelbg-starters {
+        --chip-bg: var(--portal-color-03b5721e8c);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-status-amber-text);
+      }
+      .level-chip.panelbg-mov {
+        --chip-bg: var(--portal-color-46586438f4);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-color-469978e86b);
+      }
+      .level-chip.panelbg-fly {
+        --chip-bg: var(--portal-color-edb7fe91a8);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-status-good-text);
+      }
+      .level-chip.panelbg-key {
+        --chip-bg: var(--portal-color-709e6795a7);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-color-469978e86b);
+      }
+      .level-chip.panelbg-pet {
+        --chip-bg: var(--portal-color-9c1eaddb49);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-color-469978e86b);
+      }
+      .level-chip.panelbg-ielts {
+        --chip-bg: var(--portal-color-fd15f49e34);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-color-469978e86b);
+      }
+      .level-chip.panelbg-tayk {
+        --chip-bg: var(--portal-color-312c8e26c3);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-color-469978e86b);
+      }
+      .level-chip.panelbg-private {
+        --chip-bg: var(--tertiary-color);
+        --chip-border: var(--portal-color-0a4767016c);
+        --chip-text: var(--portal-color-469978e86b);
+      }
       .level-chip.level-chip-standard {
         justify-content: center;
         min-inline-size: calc(var(--chip-height) * var(--chip-min-ar));
@@ -2828,10 +2873,10 @@
       }
       .assignment-completion-pill {
         align-items: center;
-        background: var(--portal-color-a28e5c5618);
-        border: 1px solid var(--border-strong);
+        background: var(--portal-status-neutral-bg);
+        border: 1px solid var(--portal-status-neutral-border);
         border-radius: var(--radius-pill);
-        color: var(--portal-color-6861024013);
+        color: var(--portal-status-neutral-text);
         display: inline-flex;
         font-size: 11px;
         font-weight: 700;
