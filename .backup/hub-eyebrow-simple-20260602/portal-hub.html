@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <title>Cổng Thông Tin Sinh Viên The Eagles American English Club Ltd</title>
   <style>
+    /* Hub-only theme aliases: keep structure local, source neutral fills from shared palette tokens. */
     body.portal-hub-page {
       --hub-card-aspect: 1.7;
       --hub-card-gap: 12px;
@@ -30,20 +31,62 @@
       --hub-label-size: calc(11px * var(--hub-phi) / 1.2);
       --hub-measure: calc(39ch / var(--hub-phi));
       --hub-meta-size: calc(10px * var(--hub-phi) / 1.18);
+      --hub-surface-page: var(--portal-neutral-page-light);
+      --hub-surface-content: var(--portal-neutral-content-light);
+      --hub-surface-panel: var(--portal-neutral-panel-light);
+      --hub-surface-card: var(--portal-neutral-card-light);
+      --hub-surface-support: var(--portal-neutral-support-light);
+      --hub-surface-border: var(--hub-theme-panel-border);
+      --hub-surface-shadow: var(--hub-theme-panel-shadow);
+      --hub-surface-text: var(--hub-theme-text);
+      --hub-surface-text-soft: var(--hub-theme-text-soft);
+      --hub-page-bg-end: var(--hub-theme-page-bg-end);
+      --hub-page-bg-glow: var(--hub-theme-page-bg-glow);
+      --hub-page-bg-mid: var(--hub-theme-page-bg-mid);
+      --hub-page-bg-start: var(--hub-theme-page-bg-start);
       --hub-phi: 1.61803398875;
       --hub-hero-logo-size: calc((var(--hub-title-size) * 1.04) + (0.91rem * 1.35) + (var(--hub-space-1) / 1.3));
       --hub-title-size: clamp(1.2rem, 1rem + 0.72vw, 1.6rem);
       --hub-unit: clamp(11px, 0.82vw, 14px);
+      background-attachment: fixed;
+      background: var(--hub-surface-page);
       container-type: inline-size;
       min-height: 100dvh;
       --hub-space-1: var(--hub-unit);
       --hub-space-2: calc(var(--hub-space-1) * var(--hub-phi));
       --hub-space-3: calc(var(--hub-space-2) * var(--hub-phi));
       --hub-space-4: calc(var(--hub-space-3) * var(--hub-phi));
+      background:
+        radial-gradient(920px 420px at -15% -20%, var(--hub-page-bg-mid) 0%, transparent 62%),
+        radial-gradient(980px 520px at 110% -25%, var(--hub-page-bg-glow) 0%, transparent 55%),
+        var(--hub-surface-page);
     }
 
+    /* Hub-only dark proof-of-concept: source neutral fills from the shared dark palette. */
     html[data-theme="dark"] body.portal-hub-page {
+      --primary-color: #b50010;
+      --secondary-color: #f9faff;
+      --tertiary-color: #002786;
+      --hub-surface-page: var(--portal-neutral-page-dark);
+      --hub-surface-content: var(--portal-neutral-content-dark);
+      --hub-surface-panel: var(--portal-neutral-panel-dark);
+      --hub-surface-card: var(--portal-neutral-card-dark);
+      --hub-surface-support: var(--portal-neutral-support-dark);
+      --hub-surface-border: rgba(115, 136, 163, 0.96);
+      --hub-surface-shadow: 0 10px 26px rgba(19, 35, 61, 0.1);
+      --hub-surface-text: #f9faff;
+      --hub-surface-text-soft: #c8c8c8;
+      --hub-theme-page-bg-end: #000000;
+      --hub-theme-page-bg-glow: transparent;
+      --hub-theme-page-bg-mid: #000000;
+      --hub-theme-page-bg-start: #000000;
+      background: var(--hub-surface-page);
+      color: var(--hub-surface-text);
       color-scheme: dark;
+    }
+
+    html[data-theme="dark"] body.portal-hub-page .portal-card__subtitle {
+      color: #f2f4f7;
     }
 
     html[data-theme="dark"] body.portal-hub-page .portal-hub-bg {
@@ -127,6 +170,7 @@
     }
 
     body.portal-hub-page .section-kicker {
+      color: var(--brand);
       font-size: var(--hub-meta-size);
       font-weight: 700;
       letter-spacing: 0.14em;
@@ -212,6 +256,7 @@
       aspect-ratio: 1 / 1;
       block-size: var(--hub-card-icon-size);
       border-radius: var(--hub-card-radius);
+      color: var(--icon-color, var(--tone, var(--brand-2)));
       display: inline-flex;
       flex: none;
       grid-area: icon;
@@ -233,6 +278,7 @@
     }
 
     body.portal-hub-page .portal-card__eyebrow {
+      color: var(--tone, var(--brand));
       font-size: var(--hub-meta-size);
       font-weight: 700;
       grid-area: eyebrow;
@@ -253,6 +299,7 @@
 
     body.portal-hub-page .portal-card--admin {
       border-bottom-width: 6px;
+      box-shadow: none;
     }
 
     body.portal-hub-page .hub-prefooter {
@@ -260,8 +307,7 @@
       gap: var(--hub-space-2);
       grid-template-columns: minmax(0, 1fr);
       justify-content: normal;
-      padding-block: calc(var(--hub-space-1) * 1.35);
-      padding-inline: var(--hub-space-3);
+      padding: calc(var(--hub-space-1) * 1.35);
     }
 
     body.portal-hub-page .hub-prefooter__links {
@@ -445,8 +491,8 @@
 
       <section class="card hub-prefooter" aria-label="Support links">
         <nav class="hub-prefooter__links" aria-label="Support links">
-          <a class="hub-prefooter__link portal-action-btn portal-action-btn--brand" href="mailto:admin@eagles.edu.vn">Gửi email hỗ trợ</a>
-          <a class="hub-prefooter__link portal-action-btn portal-action-btn--brand" href="/admin">Mở admin portal</a>
+          <a class="hub-prefooter__link" href="mailto:admin@eagles.edu.vn">Gửi email hỗ trợ</a>
+          <a class="hub-prefooter__link" href="/admin">Mở admin portal</a>
         </nav>
       </section>
 

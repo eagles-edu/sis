@@ -1910,6 +1910,7 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
     assert.match(normalizeText(newsPanel?.textContent), /Action/i)
     assert.match(normalizeText(newsPanel?.textContent), /Unapproved-7/i)
     assert.match(normalizeText(newsPanel?.textContent), /Waiting/i)
+    assert.ok(newsPanel?.querySelectorAll(".chip").length >= 2)
   })
 
   dom.window.document
