@@ -445,7 +445,6 @@
       }
       .profile-tab-nav button {
         align-items: center;
-        border: 1px solid transparent;
         border-radius: var(--radius-pill);
         box-sizing: border-box;
         display: inline-flex;
@@ -459,8 +458,9 @@
         white-space: nowrap;
         width: auto;
       }
+      .profile-tab-nav button.active {
+      }
       .profile-tab-panel {
-        border: 1px solid transparent;
         border-radius: var(--radius-3);
         display: none;
         gap: 12px;
@@ -470,7 +470,6 @@
         display: grid;
       }
       .profile-info-summary {
-        border: 1px solid transparent;
         border-radius: var(--radius-3);
         display: grid;
         gap: 8px;
@@ -479,7 +478,6 @@
       }
       .profile-summary-primary {
         align-content: start;
-        border: 1px solid transparent;
         border-radius: var(--radius-2);
         box-sizing: border-box;
         display: grid;
@@ -507,7 +505,6 @@
       }
       .profile-summary-chip {
         align-content: start;
-        border: 1px solid transparent;
         border-radius: var(--radius-2);
         box-sizing: border-box;
         display: grid;
@@ -532,7 +529,6 @@
         word-break: break-word;
       }
       .profile-info-panel {
-        border: 1px solid transparent;
         border-radius: var(--radius-3);
         display: none;
         gap: 12px;
@@ -573,7 +569,6 @@
       }
       .profile-info-item {
         align-content: start;
-        border: 1px solid transparent;
         border-radius: var(--radius-2);
         box-sizing: border-box;
         display: grid;
@@ -621,7 +616,6 @@
       }
       .profile-field {
         align-self: start;
-        border: 1px solid transparent;
         border-radius: var(--radius-2);
         display: grid;
         gap: 6px;
@@ -765,7 +759,6 @@
         }
       }
       .profile-layout-editor {
-        border: 1px solid transparent;
         border-radius: var(--radius-2);
         display: grid;
         gap: 8px;
@@ -786,7 +779,6 @@
         padding: 6px 8px;
       }
       .profile-layout-table-wrap {
-        border: 1px solid transparent;
         border-radius: var(--radius-2);
         max-height: 280px;
         overflow: auto;
@@ -1175,6 +1167,9 @@
       #topSearchRows tr.top-search-row {
         cursor: pointer;
       }
+      #topSearchRows tr.top-search-row:hover {
+        background: var(--portal-color-21fe6cd7d5);
+      }
       .top-search-open-btn {
         inline-size: auto;
         min-width: 96px;
@@ -1185,8 +1180,13 @@
         position: relative;
         user-select: none;
       }
+      #topSearchResultsPanel th[data-top-search-sort]:focus {
+        outline: 2px solid var(--portal-color-9b98859584);
+        outline-offset: -2px;
+      }
       #topSearchResultsPanel th.sort-active-asc::after,
       #topSearchResultsPanel th.sort-active-desc::after {
+        color: var(--portal-color-4643f99d7f);
         font-size: 10px;
         position: absolute;
         right: 6px;
@@ -3615,7 +3615,9 @@
         .profile-tabs-shell,
         .profile-info-tabs,
         .profile-tab-panel,
+        .profile-info-summary,
         .profile-summary-primary,
+        .profile-info-panel,
         .profile-info-group,
         .profile-info-item,
         .profile-info-empty-stack,

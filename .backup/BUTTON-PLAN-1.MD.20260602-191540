@@ -1,0 +1,136 @@
+<!-- @format -->
+
+# Button Fix Order Table
+
+## Summary
+
+Use this as the cleanup order for the remaining generic buttons. The lists below show the actual buttons so each one can be tweaked individually.  pure white buttons are to be considered unclassified and should be assigned to the best fitting semantic class per the intent of the action. The hover colors are recommended, but feel free to suggest a different choice if you think it better suits the intent of the action.
+
+## Fix Order
+
+| Fix order | Button group             | Associated color | What to use it for                                                                         |
+| --------- | ------------------------ | ---------------- | ------------------------------------------------------------------------------------------ |
+| 1         | `btn-refresh`            | TEAL             | Reload, refresh, and reload-state actions.                                                 |
+| 2         | `primary`                | Red - primary    | Main action buttons such as create, save, import, and open-primary-view.                   |
+| 3         | `alt`                    | Blue - tertiary  | Secondary navigation, back, close, prev, next, and zoom controls.                          |
+| 4         | `danger`                 | PURPLE           | Logout or destructive actions.                                                             |
+| 5         | `needs class assignment` | see  below       | Buttons still relying on the generic fallback; assign the right semantic class per intent. |
+| 6         | `info`                   | lt. blue         | View/navigate to info section, page, or modal                                              |
+
+## `btn-refresh` hover = 'contrasting darker/richer teal' color
+
+| Page                                    | Line | Button ID                            | Label              |
+| --------------------------------------- | ---: | ------------------------------------ | ------------------ |
+| `web-asset/admin/student-admin.html`    |  750 | `overviewIncomingExerciseRefreshBtn` | Reload Queue       |
+| `web-asset/admin/student-admin.html`    | 2041 | `performanceQueueRefreshBtn`         | Reload Queue       |
+| `web-asset/admin/student-admin.html`    | 2896 | `schoolSetupResetBtn`                | Reload Saved Setup |
+| `web-asset/admin/student-admin.html`    | 2975 | `profileFieldLayoutRefreshBtn`       | Reload Editor      |
+| `web-asset/admin/student-admin.html`    | 3054 | `settingsResetBtn`                   | Reset Settings     |
+| `web-asset/admin/student-points.html`   |  340 | `refreshChartBtn`                    | Refresh Chart      |
+| `web-asset/student/student-portal.html` |  906 | `reloadBtn`                          | Tải lại            |
+
+## `primary` - hover = 'alt' color
+
+| Page                                    | Line | Button ID                  | Label                    |
+| --------------------------------------- | ---: | -------------------------- | ------------------------ |
+| `web-asset/admin/student-admin.html`    |  379 | `searchBtn`                | Search                   |
+| `web-asset/admin/student-admin.html`    |  382 | `familyBtn`                | Find Family              |
+| `web-asset/admin/student-admin.html`    |  467 | `importTemplateBtn`        | Download Template        |
+| `web-asset/admin/student-admin.html`    |  472 | `importBtn`                | Import File              |
+| `web-asset/admin/student-admin.html`    |  787 | `overviewNewsQueueOpenBtn` | Open News Reports Page   |
+| `web-asset/admin/student-admin.html`    |  812 | `queueHubSaveOrderBtn`     | Save Panel Order         |
+| `web-asset/admin/student-admin.html`    |  841 | `profileCreateInfoBtn`     | New Form                 |
+| `web-asset/admin/student-admin.html`    |  871 | `newBtn`                   | Create New               |
+| `web-asset/admin/student-admin.html`    | 2474 | `reportCardBtn`            | Download PDF Report Card |
+| `web-asset/parent/parent-portal.html`   |  719 | `openNewsQueueDetailBtn`   | Xem chi tiết             |
+| `web-asset/parent/parent-portal.html`   | 1061 | `saveDraftBtn`             | Lưu nháp                 |
+| `web-asset/student/student-portal.html` |  987 | `openNewsPageBtn`          | Open News Page           |
+
+## `alt` - hover = 'primary' color
+
+| Page                                    | Line | Button ID                           | Label          |
+| --------------------------------------- | ---: | ----------------------------------- | -------------- |
+| `web-asset/admin/student-admin.html`    |  341 | `globalTextZoomDownBtn`             | A-             |
+| `web-asset/admin/student-admin.html`    |  344 | `globalTextZoomUpBtn`               | A+             |
+| `web-asset/admin/student-admin.html`    |  347 | `globalTextZoomResetBtn`            | Reset          |
+| `web-asset/admin/student-admin.html`    |  676 | `levelDetailCloseBtn`               | Close Detail   |
+| `web-asset/admin/student-admin.html`    |  793 | `overviewNewsQueueQueueHubBtn`      | Open Queue Hub |
+| `web-asset/admin/student-admin.html`    |  861 | `profileBackToInfoBtn`              | Back to Info   |
+| `web-asset/admin/student-admin.html`    | 3073 | `parentQueuePrevBtn`                | &larr;         |
+| `web-asset/admin/student-admin.html`    | 3075 | `parentQueueNextBtn`                | &rarr;         |
+| `web-asset/admin/student-admin.html`    | 3154 | `newsReviewViewerPrevBtn`           | &larr;         |
+| `web-asset/admin/student-admin.html`    | 3158 | `newsReviewViewerNextBtn`           | &rarr;         |
+| `web-asset/parent/parent-portal.html`   |  582 | `parentTextZoomDownBtn`             | A-             |
+| `web-asset/parent/parent-portal.html`   |  585 | `parentTextZoomUpBtn`               | A+             |
+| `web-asset/parent/parent-portal.html`   |  588 | `parentTextZoomResetBtn`            | Đặt lại        |
+| `web-asset/parent/parent-portal.html`   |  773 | `newsWeekSetModalPrevBtn`           | ←              |
+| `web-asset/parent/parent-portal.html`   |  775 | `newsWeekSetModalNextBtn`           | →              |
+| `web-asset/parent/parent-portal.html`   |  843 | `newsWeekSetModalCloseActionBtn`    | Đóng           |
+| `web-asset/parent/parent-portal.html`   |  879 | `performanceReportPrevBtn`          | Trước          |
+| `web-asset/parent/parent-portal.html`   |  880 | `performanceReportNextBtn`          | Tiếp           |
+| `web-asset/parent/parent-portal.html`   |  986 | `portalDetailBackToMainBtn`         | Back to Main   |
+| `web-asset/parent/parent-portal.html`   | 1039 | `backToDashboardBtn`                | Back to Main   |
+| `web-asset/student/student-portal.html` |  868 | `studentTextZoomDownBtn`            | A-             |
+| `web-asset/student/student-portal.html` |  869 | `studentTextZoomUpBtn`              | A+             |
+| `web-asset/student/student-portal.html` |  870 | `studentTextZoomResetBtn`           | Reset          |
+| `web-asset/student/student-portal.html` | 1038 | `newsComplianceModalCloseActionBtn` | Close          |
+| `web-asset/student/student-portal.html` | 1049 | `newsWeekSetModalPrevBtn`           | ←              |
+| `web-asset/student/student-portal.html` | 1051 | `newsWeekSetModalNextBtn`           | →              |
+| `web-asset/student/student-portal.html` | 1120 | `newsWeekSetModalCloseActionBtn`    | Close          |
+| `web-asset/student/student-portal.html` | 1170 | `studentDetailBackToMainBtn`        | Back to Main   |
+| `web-asset/student/student-portal.html` | 1204 | `backToHomeBtn`                     | Back to Main   |
+
+## `danger` - hover = 'construction yellow w black text' color
+
+| Page                                    | Line | Button ID       | Label  |
+| --------------------------------------- | ---: | --------------- | ------ |
+| `web-asset/admin/student-points.html`   |  344 | `logoutBtn`     | Logout |
+| `web-asset/student/student-portal.html` | 1205 | `logoutBtnNews` | Logout |
+
+## `needed class assignment`
+
+| Page                                  | Line | Button ID                      | Label             | Suggested class    |
+| ------------------------------------- | ---: | ------------------------------ | ----------------- | ------------------ |
+| `web-asset/admin/student-admin.html`  |  154 | `loginClearBtn`                | Clear             | `DANGER`           |
+| `web-asset/admin/student-admin.html`  |  385 | `clearFiltersBtn`              | Clear             | `DANGER`           |
+| `web-asset/admin/student-admin.html`  |  673 | `levelReminderClearBtn`        | Clear Form        | `DANGER`           |
+| `web-asset/admin/student-admin.html`  |  815 | `queueHubResetOrderBtn`        | Reset Panel Order | `DANGER`           |
+| `web-asset/admin/student-admin.html`  |  872 | `studentClearBtn`              | Clear Form        | `DANGER`           |
+| `web-asset/admin/student-admin.html`  |  927 | `attendanceClearBtn`           | Clear             | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 1039 | `attendanceArchiveToggleBtn`   | Show Archived     | `info`              |
+| `web-asset/admin/student-admin.html`  | 1051 | `attendancePrintPdfBtn`        | Print PDF         | `primary`          |
+| `web-asset/admin/student-admin.html`  | 1194 | `assignmentResetBtn`           | Clear Form        | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 1258 | `assignmentArchiveToggleBtn`   | Show Archived     | `info`              |
+| `web-asset/admin/student-admin.html`  | 1270 | `assignmentPrintPdfBtn`        | Print PDF         | `primary`          |
+| `web-asset/admin/student-admin.html`  | 1446 | `pt_actionClearBtn`            | Clear Inputs      | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 1829 | `pt_clearBtn`                  | Clear Form        | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 1899 | `performanceArchiveToggleBtn`  | Show Archived     | `info`              |
+| `web-asset/admin/student-admin.html`  | 1911 | `performancePrintPdfBtn`       | Print PDF         | `primary`          |
+| `web-asset/admin/student-admin.html`  | 2105 | `newsReviewClearFiltersBtn`    | Clear Filters     | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 2218 | `gradeClearBtn`                | Clear             | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 2351 | `gradeArchiveToggleBtn`        | Show Archived     | `info`              |
+| `web-asset/admin/student-admin.html`  | 2363 | `gradePrintPdfBtn`             | Print PDF         | `primary`          |
+| `web-asset/admin/student-admin.html`  | 2477 | `reportClearBtn`               | Clear Report Form | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 2528 | `reportArchiveToggleBtn`       | Show Archived     | `info`              |
+| `web-asset/admin/student-admin.html`  | 2540 | `reportPrintPdfBtn`            | Print PDF         | `primary`          |
+| `web-asset/admin/student-admin.html`  | 2613 | `familyClearResultBtn`         | Clear Result      | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 2651 | `userClearBtn`                 | Clear Form        | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 2694 | `permissionsResetBtn`          | Reset Form        | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 2715 | `schoolSetupLogoClearBtn`      | Clear Logo        | `DANGER`           |
+| `web-asset/admin/student-admin.html`  | 3039 | `attendanceLevelClearImageBtn` | Remove Image      | `danger`           |
+| `web-asset/admin/student-admin.html`  | 3134 | `parentQueueHoldBtn`           | Hold              | `alt`              |
+| `web-asset/admin/student-admin.html`  | 3170 | `newsReviewViewerRevisionBtn`  | Request Revision  | `DANGER`           |
+| `web-asset/admin/student-points.html` |  389 | table header sort button       | `#`               | `info`              |
+| `web-asset/admin/student-points.html` |  390 | table header sort button       | `Eagles ID`       | `info`              |
+| `web-asset/admin/student-points.html` |  391 | table header sort button       | `Name`            | `info`              |
+| `web-asset/admin/student-points.html` |  392 | table header sort button       | `Level`           | `info`              |
+| `web-asset/admin/student-points.html` |  393 | table header sort button       | `Points`          | `info`              |
+| `web-asset/admin/student-points.html` |  394 | table header sort button       | `Last Activity`   | `info`              |
+| `web-asset/admin/student-points.html` |  555 | `Ledger`                       | Ledger            | `info` |
+
+## Assumptions
+
+- This list covers the buttons that were still relying on generic fallback styling when scanned.
+- Buttons already carrying an explicit semantic class were not repeated here.
+- Some `needs class assignment` rows are intentionally conservative where the right semantic bucket still needs a visual
+  decision.

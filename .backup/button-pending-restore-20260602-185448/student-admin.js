@@ -100,7 +100,7 @@
           statusSummary: {
             completed: 0,
             incomplete: 0,
-            pending: 0,
+            unapproved: 0,
             submitted: 0,
             approved: 0,
             waiting: 0,
@@ -3955,17 +3955,15 @@
         const normalized = normalizeLower(action);
         if (normalized === "completed") return 0;
         if (normalized === "incomplete") return 1;
-        if (normalized.startsWith("pending-")) return 2;
+        if (normalized.startsWith("unapproved-")) return 2;
         return 3;
       }
 
       function newsReviewActionSortCount(action = "") {
         const normalized = normalizeLower(action);
-        if (normalized.startsWith("pending-")) {
-          const value = Number.parseInt(normalized.slice("pending-".length), 10);
-          return Number.isFinite(value) ? value : 0;
-        }
-        return 0;
+        if (!normalized.startsWith("unapproved-")) return 0;
+        const value = Number.parseInt(normalized.slice("unapproved-".length), 10);
+        return Number.isFinite(value) ? value : 0;
       }
 
       function compareNewsReviewAction(leftAction = "", rightAction = "") {
@@ -5704,13 +5702,11 @@
           : "all";
         const setAction = normalizeLower(source.setAction || source.reviewCheck || "all");
         const normalizedSetAction =
-          setAction === "unapproved" ?
-            "pending"
-          : (["all", "completed", "incomplete", "pending"].includes(
-              setAction,
-            )) ?
-              setAction
-            : "all";
+          (["all", "completed", "incomplete", "unapproved"].includes(
+            setAction,
+          )) ?
+            setAction
+          : "all";
         return {
           status: normalizedStatus,
           setAction: normalizedSetAction,
@@ -5867,19 +5863,17 @@
 
       function newsReviewSetActionCount(setAction = "") {
         const normalized = normalizeLower(setAction);
-        if (normalized.startsWith("pending-")) {
-          const parsed = Number.parseInt(normalized.slice("pending-".length), 10);
-          return Number.isFinite(parsed) ? parsed : 0;
-        }
-        return 0;
+        if (!normalized.startsWith("unapproved-")) return 0;
+        const parsed = Number.parseInt(normalized.slice("unapproved-".length), 10);
+        return Number.isFinite(parsed) ? parsed : 0;
       }
 
       function newsReviewSetActionLabel(setAction = "") {
         const normalized = normalizeLower(setAction);
         if (normalized === "completed") return "Completed";
         if (normalized === "incomplete") return "Incomplete";
-        if (normalized.startsWith("pending-"))
-          return `Pending-${newsReviewSetActionCount(normalized)}`;
+        if (normalized.startsWith("unapproved-"))
+          return `Unapproved-${newsReviewSetActionCount(normalized)}`;
         return "Incomplete";
       }
 
@@ -5891,13 +5885,12 @@
           normalized === "red" ||
           normalized === "purple" ||
           normalized === "blue" ||
-          normalized === "teal" ||
           normalized === "turquoise"
         )
-          return normalized === "turquoise" ? "teal" : normalized;
+          return normalized;
         if (normalized === "approved") return "green";
         if (normalized === "waiting") return "purple";
-        if (normalized === "checked") return "teal";
+        if (normalized === "checked") return "turquoise";
         if (normalized === "revise" || normalized === "revision-requested")
           return "purple";
         if (normalized === "none-submitted") return "red";
@@ -5909,7 +5902,7 @@
         const normalized = normalizeLower(setAction);
         if (normalized === "completed") return "green";
         if (normalized === "incomplete") return "amber";
-        if (normalized.startsWith("pending-")) return "teal";
+        if (normalized.startsWith("unapproved-")) return "turquoise";
         return "amber";
       }
 
@@ -5919,7 +5912,7 @@
         if (colorToken === "red") return "chip-bad";
         if (colorToken === "purple") return "chip-revise";
         if (colorToken === "blue") return "chip-open";
-        if (colorToken === "teal" || colorToken === "turquoise") return "chip-checked";
+        if (colorToken === "turquoise") return "chip-checked";
         return "chip-warn";
       }
 
@@ -6035,11 +6028,11 @@
           0,
           Number.parseInt(String(summary.incomplete || 0), 10) || 0,
         );
-        const pending = Math.max(
+        const unapproved = Math.max(
           0,
-          Number.parseInt(String(summary.pending || 0), 10) || 0,
+          Number.parseInt(String(summary.unapproved || 0), 10) || 0,
         );
-        return `total=${total} | showing=${showing} | status: approved=${approved} waiting=${waiting} checked=${checked} | action: completed=${completed} incomplete=${incomplete} pending=${pending}`;
+        return `total=${total} | showing=${showing} | status: approved=${approved} waiting=${waiting} checked=${checked} | action: completed=${completed} incomplete=${incomplete} unapproved=${unapproved}`;
       }
 
       function weeklyMinimumNewsReports() {
@@ -6125,17 +6118,17 @@
           0,
           Number.parseInt(String(set?.submittedCount || 0), 10) || 0,
         );
-        const pending = Math.max(0, submitted);
+        const unapproved = Math.max(0, submitted);
         if (reportCount >= requiredReports && approved >= requiredReports) return "completed";
-        if (pending === 0) return "incomplete";
-        return `pending-${pending}`;
+        if (unapproved === 0) return "incomplete";
+        return `unapproved-${unapproved}`;
       }
 
       function newsReviewSetActionFilterToken(setAction = "") {
         const normalized = normalizeLower(setAction);
         if (normalized === "completed" || normalized === "incomplete")
           return normalized;
-        if (normalized.startsWith("pending-")) return "pending";
+        if (normalized.startsWith("unapproved-")) return "unapproved";
         return "all";
       }
 
@@ -6430,7 +6423,7 @@
         const summary = {
           completed: 0,
           incomplete: 0,
-          pending: 0,
+          unapproved: 0,
           approved: 0,
           waiting: 0,
           checked: 0,
@@ -6444,8 +6437,7 @@
           const setAction = normalizeLower(entry?.setAction);
           if (setAction === "completed") summary.completed += 1;
           else if (setAction === "incomplete") summary.incomplete += 1;
-          else if (setAction.startsWith("pending-"))
-            summary.pending += 1;
+          else if (setAction.startsWith("unapproved-")) summary.unapproved += 1;
         });
         return summary;
       }
@@ -11449,7 +11441,7 @@
           const completedHeight = Math.max(1, padTop + chartHeight - completedY);
 
           bars.push(
-            `<rect x="${enrolledX}" y="${enrolledY}" width="${barWidth}" height="${enrolledHeight}" rx="4" fill="${toRgba(theme.color, 0.58)}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
+            `<rect x="${enrolledX}" y="${enrolledY}" width="${barWidth}" height="${enrolledHeight}" rx="4" fill="${toRgba(theme.color, 0.3)}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
           );
           bars.push(
             `<rect x="${completedX}" y="${completedY}" width="${barWidth}" height="${completedHeight}" rx="4" fill="${theme.color}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
@@ -17575,18 +17567,37 @@
                 );
               });
 
+            const populatedRecords = renderedRecords.filter((entry) => entry.hasValue);
+            const emptyRecords = renderedRecords.filter((entry) => !entry.hasValue);
+
             const grid = document.createElement("div");
             grid.className = "profile-info-grid";
-            renderedRecords.forEach((entry) => {
+            populatedRecords.forEach((entry) => {
               grid.appendChild(entry.item);
             });
-            if (!renderedRecords.some((entry) => entry.hasValue)) {
+            if (!populatedRecords.length) {
               const note = document.createElement("p");
               note.className = "small profile-info-empty-note";
               note.textContent = "No populated values in this cluster yet.";
               group.appendChild(note);
+            } else group.appendChild(grid);
+
+            if (emptyRecords.length) {
+              const emptyDetails = document.createElement("details");
+              emptyDetails.className = "profile-info-empty-stack";
+              const summary = document.createElement("summary");
+              summary.className = "profile-info-empty-toggle";
+              summary.textContent = `Show ${emptyRecords.length} empty fields`;
+              emptyDetails.appendChild(summary);
+
+              const emptyGrid = document.createElement("div");
+              emptyGrid.className = "profile-info-grid profile-info-empty-grid";
+              emptyRecords.forEach((entry) => {
+                emptyGrid.appendChild(entry.item);
+              });
+              emptyDetails.appendChild(emptyGrid);
+              group.appendChild(emptyDetails);
             }
-            group.appendChild(grid);
 
             panel.appendChild(group);
           });

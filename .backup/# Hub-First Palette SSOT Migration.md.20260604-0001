@@ -1,0 +1,234 @@
+# Canonical Portal Theme SSOT
+
+## Summary
+
+This document is the active portal theme architecture spec. It supersedes the
+older hub-only migration framing and defines the shared neutral surface system,
+ownership boundaries, and normalization target for admin, student, parent, and
+hub surfaces.
+
+The target state is:
+
+- one normalized light/dark neutral surface system
+- one shared ownership model in `web-asset/shared/portal-theme.css`
+- one strict ban on page-local theming when a shared role already exists
+- one migration roadmap for converging legacy markup and selectors onto the
+  shared contract
+
+This contract aligns with:
+
+- `docs/sop.md`
+- `docs/01-gray-palette-darkmode.md`
+- `docs/chips.md`
+- `docs/BUTTON-PLAN-1.MD`
+
+## Historical Context
+
+- The earlier hub-first pass used the hub as the proving page for neutral
+  palette centralization.
+- That pass intentionally stopped before cross-portal markup and selector
+  normalization.
+- The hub-first work remains valid as the initial token-centralization step,
+  but it is no longer the active architecture boundary.
+- This document replaces the narrower "hub-only palette rollout" contract with
+  the canonical cross-portal SSOT.
+
+## Canonical Surface Model
+
+### Approved neutral surface roles
+
+All portal theming must resolve to one of these neutral roles:
+
+- `page`
+- `content`
+- `panel`
+- `card`
+- `data-surface`
+
+These are the only approved neutral layout roles. Message and alert surfaces
+remain semantic exception surfaces, not new layout roles.
+
+### Dark-mode role values
+
+Approved dark-mode values from `docs/01-gray-palette-darkmode.md`:
+
+- `page = #000000`
+- `content = #2c2c2c`
+- `panel = #3b3b3b`
+- `card = #4c4c4c`
+- `data-surface = #5d5d5d`
+
+Use `data-surface` for chart/table family surfaces. Do not create separate
+neutral layout roles for chart and table.
+
+### Inheritance caveat
+
+If a role container is absent, the child surface inherits the visible fill of
+the parent layer. For example:
+
+- if no content container is visible, panel inherits from `content`
+- if no panel container is visible, card inherits the visible panel fill
+
+This is a layout consequence, not a reason to invent new theme roles.
+
+## Ownership Contract
+
+### Shared theme owns
+
+`web-asset/shared/portal-theme.css` owns:
+
+- neutral surface tokens
+- shared role selectors and classes for `page`, `content`, `panel`, `card`,
+  and `data-surface`
+- shared text and support-text rules tied to those roles
+- shared table and chart surface rules
+- shared modal and dialog surface rules
+- immutable button, chip, pill, theme-toggle, and icon chrome
+
+### Page-local CSS may own only
+
+Page-local CSS may own only:
+
+- layout
+- spacing
+- responsive structure
+- boot and prepaint behavior
+- page-critical CLS-prevention structure
+- truly semantic or structurally unique exceptions
+
+### Hard bans
+
+The following are regressions unless the shared contract itself changes:
+
+- page-local dark surface fills for anything that is only `content`, `panel`,
+  `card`, or `data-surface`
+- per-portal duplicate neutral mappings
+- redefining shared role colors inside page HTML or page-local CSS
+- treating `.panel` and `.card` as visual aliases when they represent
+  different hierarchy levels
+- adding new chip-like or button-like surface classes to solve neutral
+  hierarchy problems
+- page-local ownership of neutral `background`, `border-color`, `color`,
+  `box-shadow`, `fill`, or `stroke` for a shared surface role
+
+## Immutable Exclusions
+
+### Button contract exclusion
+
+Surface SSOT must not absorb or restyle button systems.
+
+Per `docs/BUTTON-PLAN-1.MD`:
+
+- shared CSS owns button skin
+- page-local code may position controls but must not reskin them
+- immutable chrome controls stay immutable across theme changes unless the
+  button contract itself changes
+
+### Chip contract exclusion
+
+Surface SSOT must not absorb or restyle chip systems.
+
+Per `docs/chips.md`:
+
+- chips are not generic cards or buttons
+- chip dimensions, typography, and semantics remain a separate SSOT
+- theme refactors must not create new chip classes or mutate chip geometry
+
+## Current Drift Inventory
+
+The current codebase still contains the following drift that this SSOT is meant
+to eliminate:
+
+- token SSOT exists, but selector SSOT is incomplete
+- shared role classes exist, but page markup does not consume them consistently
+- page-scoped dark-mode selectors still own neutral surfaces in admin, student,
+  and parent flows
+- hub still has local structure that is acceptable, but its neutral fills must
+  still conform to the shared role system
+- standalone admin pages already show stronger role normalization patterns than
+  legacy admin and student pages, but they are reference shapes only, not a
+  justification for preserving duplication
+
+## Migration Roadmap
+
+### Phase 1. Normalize shared theme contract
+
+- Keep one neutral token map in `web-asset/shared/portal-theme.css`.
+- Define one shared role layer for `page`, `content`, `panel`, `card`, and
+  `data-surface`.
+- Keep semantic exceptions separate from neutral layout roles.
+
+### Phase 2. Normalize markup semantics across portals
+
+- Use shared role classes consistently across admin, student, parent, and hub.
+- Stop relying on page-specific selectors to reinterpret generic containers.
+- Treat ambiguous surfaces as implementation defects to resolve, not as a
+  reason to add more overrides.
+
+### Phase 3. Remove duplicated page and portal surface ownership
+
+- Strip page-specific neutral dark-mode fill selectors once the shared role
+  class and selector contract is in place.
+- Preserve only structural and semantic exceptions.
+
+### Phase 4. Verify parity and drift boundaries
+
+- Admin, student, parent, and hub must all consume the same neutral role
+  system.
+- Button, chip, theme-toggle, and icon chrome must remain unchanged.
+- Semantic cards and semantic status surfaces remain unchanged unless a
+  separate contract explicitly changes them.
+
+## Test Plan
+
+Implementation that follows this document is not complete until all of the
+following are true:
+
+- Any dark-mode page can be described entirely by `page`, `content`, `panel`,
+  `card`, and `data-surface`, plus explicit semantic exceptions.
+- Changing one neutral token changes the same role everywhere it is used.
+- No page-local CSS owns neutral `background`, `border-color`, `color`,
+  `box-shadow`, `fill`, or `stroke` for shared surface roles.
+- Buttons, chips, pills, icons, theme selector, header bar, and footer remain
+  unchanged unless their own SSOT docs change.
+- Panel/card hierarchy is preserved:
+  - content darker than page
+  - panel darker than card
+  - data-surface distinct from panel/card where required
+- Parent, student, admin, and hub render with the same neutral role semantics
+  even if their layouts differ.
+- `web-asset/shared/portal-theme.min.css` is always rebuilt from source after
+  changes to the canonical theme file.
+
+## Assumptions
+
+- This document supersedes the current narrow hub-first scope rather than
+  coexisting as a parallel theme strategy.
+- "Best practice" here means maintainable, normalized, shared-role
+  architecture with minimal selector duplication and low-cost theme change
+  capability.
+- This document is strict and normative, not advisory.
+- This document remains implementation-oriented and concise rather than turning
+  into a design essay or change diary.
+
+## Current Status
+
+- 2026-06-02: hub dark-mode neutral tokens were centralized into shared CSS.
+- 2026-06-02: shared footer token pair was consolidated to
+  `--theme-footer-bg` and `--theme-footer-text`.
+- 2026-06-02: hub light-mode admin/family/student card bottom borders were
+  restored.
+- 2026-06-02: hub prefooter buttons stayed on one row at desktop widths
+  through the shared action-button contract.
+- 2026-06-02: admin news-review runtime contract was normalized to
+  `pending-*` / `teal`; legacy `unapproved-*` fallbacks were removed from
+  source and tests.
+
+## Notes
+
+- `docs/sop.md` remains the procedural source of truth for shared-theme
+  ownership rules.
+- `docs/01-gray-palette-darkmode.md` remains the value source for the approved
+  dark neutral fills.
+- `docs/chips.md` and `docs/BUTTON-PLAN-1.MD` remain separate SSOT documents
+  for immutable chip and button systems.

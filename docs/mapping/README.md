@@ -43,7 +43,7 @@ Use this sequence when you want to regenerate and view mapping artifacts in brow
 npm run map:all
 ```
 
-2. Open the unified mapping portal (recommended):
+1. Open the unified mapping portal (recommended):
 
 ```text
 /docs/mapping/out/
@@ -57,7 +57,7 @@ Portal capabilities:
 - OpenAPI docs via `Open in New Tab` (embed intentionally disabled for stability)
 - Separated quick links for all maps, downloadable config/data docs, and live router endpoints
 
-3. Open grouped links (replace host/port with your active SIS runtime; examples use `http://127.0.0.1:33999`):
+1. Open grouped links (replace host/port with your active SIS runtime; examples use `http://127.0.0.1:33999`):
 
 Direct graphical live-router view in portal:
 

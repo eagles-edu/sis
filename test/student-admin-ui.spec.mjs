@@ -1163,9 +1163,9 @@ test("news review modal supports student-scoped navigation and modal review acti
   )
   assert.equal(
     normalizeText(
-      dom.window.document.querySelector('#newsReviewCheckFilter option[value="unapproved"]')?.textContent,
+      dom.window.document.querySelector('#newsReviewCheckFilter option[value="pending"]')?.textContent,
     ),
-    "Unapproved",
+    "Pending",
   )
 
   await waitFor(() => {
@@ -1174,7 +1174,7 @@ test("news review modal supports student-scoped navigation and modal review acti
     assert.match(rows[0].textContent || "", /09\/03\/26 to 15\/03\/26/i)
     assert.doesNotMatch(rows[0].textContent || "", /2026-03-09 to 2026-03-15/i)
     assert.match(rows[0].textContent || "", /Waiting/i)
-    assert.match(rows[0].textContent || "", /Unapproved-6/i)
+    assert.match(rows[0].textContent || "", /Pending-6/i)
   })
 
   const document = dom.window.document
@@ -1388,7 +1388,7 @@ test("news review queue includes incomplete student week sets and marks status",
     assert.match(row.textContent || "", /Incomplete/i)
     const summaryText = normalizeText(dom.window.document.getElementById("newsReviewSummary").textContent)
     assert.match(summaryText, /incomplete=1/i)
-    assert.match(summaryText, /unapproved=0/i)
+    assert.match(summaryText, /pending=0/i)
     assert.match(summaryText, /waiting=1/i)
     assert.match(summaryText, /checked=0/i)
     assert.doesNotMatch(summaryText, /submitted=/i)
@@ -1676,7 +1676,7 @@ test("news review week-set table headers sort all visible columns", async () => 
   await waitFor(() => {
     assert.equal(setActionHeader.getAttribute("aria-sort"), "descending")
     const firstActionCell = normalizeText(getRows()[0]?.querySelector("td:nth-child(5)")?.textContent)
-    assert.equal(firstActionCell, "Unapproved-6")
+    assert.equal(firstActionCell, "Pending-6")
   })
   setActionHeader.click()
   await waitFor(() => {
@@ -1753,8 +1753,8 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
             approvedCount: 0,
             revisionRequestedCount: 0,
             setStatus: "submitted",
-            setAction: "unapproved-7",
-            setActionColor: "turquoise",
+            setAction: "pending-7",
+            setActionColor: "teal",
             latestReportId: "news-007",
             latestReportDate: "2026-03-15",
             latestSubmittedAt: "2026-03-15T08:00:00.000Z",
@@ -1908,7 +1908,7 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
     assert.ok(openBtn)
     const newsPanel = openBtn.closest(".queue-hub-panel")
     assert.match(normalizeText(newsPanel?.textContent), /Action/i)
-    assert.match(normalizeText(newsPanel?.textContent), /Unapproved-7/i)
+    assert.match(normalizeText(newsPanel?.textContent), /Pending-7/i)
     assert.match(normalizeText(newsPanel?.textContent), /Waiting/i)
     assert.ok(newsPanel?.querySelectorAll(".chip").length >= 2)
   })
@@ -1980,8 +1980,8 @@ test("overview news queue buttons route and refresh through the island", async (
             approvedCount: 0,
             revisionRequestedCount: 0,
             setStatus: "submitted",
-            setAction: "unapproved-7",
-            setActionColor: "turquoise",
+            setAction: "pending-7",
+            setActionColor: "teal",
             latestReportId: "news-007",
             latestReportDate: "2026-03-15",
             latestSubmittedAt: "2026-03-15T08:00:00.000Z",

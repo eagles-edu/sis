@@ -11449,7 +11449,7 @@
           const completedHeight = Math.max(1, padTop + chartHeight - completedY);
 
           bars.push(
-            `<rect x="${enrolledX}" y="${enrolledY}" width="${barWidth}" height="${enrolledHeight}" rx="4" fill="${toRgba(theme.color, 0.58)}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
+            `<rect x="${enrolledX}" y="${enrolledY}" width="${barWidth}" height="${enrolledHeight}" rx="4" fill="${toRgba(theme.color, 0.3)}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
           );
           bars.push(
             `<rect x="${completedX}" y="${completedY}" width="${barWidth}" height="${completedHeight}" rx="4" fill="${theme.color}" stroke="${theme.borderColor}" stroke-width="1"></rect>`,
@@ -17575,18 +17575,37 @@
                 );
               });
 
+            const populatedRecords = renderedRecords.filter((entry) => entry.hasValue);
+            const emptyRecords = renderedRecords.filter((entry) => !entry.hasValue);
+
             const grid = document.createElement("div");
             grid.className = "profile-info-grid";
-            renderedRecords.forEach((entry) => {
+            populatedRecords.forEach((entry) => {
               grid.appendChild(entry.item);
             });
-            if (!renderedRecords.some((entry) => entry.hasValue)) {
+            if (!populatedRecords.length) {
               const note = document.createElement("p");
               note.className = "small profile-info-empty-note";
               note.textContent = "No populated values in this cluster yet.";
               group.appendChild(note);
+            } else group.appendChild(grid);
+
+            if (emptyRecords.length) {
+              const emptyDetails = document.createElement("details");
+              emptyDetails.className = "profile-info-empty-stack";
+              const summary = document.createElement("summary");
+              summary.className = "profile-info-empty-toggle";
+              summary.textContent = `Show ${emptyRecords.length} empty fields`;
+              emptyDetails.appendChild(summary);
+
+              const emptyGrid = document.createElement("div");
+              emptyGrid.className = "profile-info-grid profile-info-empty-grid";
+              emptyRecords.forEach((entry) => {
+                emptyGrid.appendChild(entry.item);
+              });
+              emptyDetails.appendChild(emptyGrid);
+              group.appendChild(emptyDetails);
             }
-            group.appendChild(grid);
 
             panel.appendChild(group);
           });

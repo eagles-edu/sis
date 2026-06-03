@@ -1,0 +1,174 @@
+# Hub-First Palette SSOT Migration
+
+## Summary
+
+Use the hub as the proving page for palette-only SSOT migration. Treat the current hub dark-mode neutral surface mapping as the local reference implementation, then move only those neutral fill values into shared theme tokens. Do not centralize structure. Do not touch immutable elements. Do not centralize semantic colors yet.
+
+The migration target for this pass is:
+
+- shared LM/DM neutral surface palette tokens exist
+- hub consumes those shared neutral tokens
+- hub keeps all structural ownership local
+- no immutable or semantic color drift
+
+## Implementation Changes
+
+### 1. Establish shared palette primitives only
+
+- In `web-asset/shared/portal-theme.css`, define palette-only neutral tokens for LM and DM:
+  - page background
+  - content background
+  - panel background
+  - card background
+  - support background
+- Keep these as raw color/fill primitives only.
+- Do not define shared text, border, shadow, radius, spacing, or layout ownership tokens in this pass.
+- Keep existing semantic and immutable color tokens unchanged.
+
+### 2. Reduce hub to local aliases over shared palette
+
+- In `web-asset/admin/portal-hub.html`, replace hardcoded local DM neutral fills with aliases to the new shared DM palette tokens.
+- Keep hub-local ownership for:
+  - layout
+  - spacing
+  - rail alignment
+  - card geometry
+  - icon placement
+  - typography sizing/placement
+  - breakpoint behavior
+  - overflow clamps
+- Keep the current hub-only dark page mapping behavior, but source the neutral values from shared tokens instead of local literals.
+
+### 3. Preserve immutable and semantic color systems exactly
+
+- Do not change or remap:
+  - top header bar
+  - footer
+  - buttons
+  - chips
+  - pills
+  - theme selector
+  - icons
+- Do not change:
+  - admin/parent/student semantic card colors
+  - semantic borders
+  - washes
+  - semantic text colors
+  - shadows
+- If any shared token attempt causes these to drift, back that token out and keep it local to hub.
+
+### 4. Keep propagation blocked after hub
+
+- Do not roll the palette into parent, student, or admin pages in this pass.
+- This pass ends when hub is successfully consuming shared neutral DM palette tokens with zero non-surface drift.
+- LM token formatting may be added in shared CSS now for parity, but LM pages do not consume the new contract until DM hub validation is complete.
+
+## Test Plan
+
+- Compare hub before/after at `320`, `390`, `768`, and `1280`.
+- Validate that only these hub surfaces change through shared tokens:
+  - page background
+  - hero/section neutral surfaces
+  - neutral support surface
+- Validate no drift in:
+  - card geometry
+  - icon size/placement
+  - text size/placement
+  - header/footer alignment
+  - prefooter button appearance
+  - semantic parent/student/admin treatments
+  - overflow behavior
+- Smoke-check that parent, student, and admin pages still load and show no obvious palette regression.
+- Regenerate `web-asset/shared/portal-theme.min.css` only after source CSS is correct.
+
+## Assumptions
+
+- The current hub local DM neutral palette is the approved baseline for centralization.
+- Shared-token centralization in this pass is limited to neutral fills only.
+- Any token that affects border, shadow, text, or immutable elements is out of scope and must remain local or unchanged.
+- Structural normalization is not part of this pass, even if repeated patterns are observed.
+
+### Progress Updates
+
+**02/06/2024**:1.  look at the thick red  bottom border on admin card. family and stu are missing this in lm . i want this fixed now. dm bot border is fine .
+
+**attention**: bot border on family card likely needs a grayer color than dm, it's ok to make a light mode version that contravenes the immutability directive on this one element
+
+The border radius (BR) uses golden ratio chi (GRC) to maintain BR visual symmetry, there 3 variations that clamp to facilitate visual symmetry on large, medium, and small height containers, however, this drifted; header bar & footer have sharp corners on smaller vw's. and needs its GRC BR reapplied during phase two.
+
+also, **there is no need to make 4 versions of the same style block**:
+
+```css
+--hub-theme-footer-bg: var(--tertiary-color);
+  --hub-theme-footer-text: var(--secondary-color);
+
+--admin-theme-footer-bg: var(--tertiary-color);
+  --admin-theme-footer-text: var(--secondary-color);
+
+--parent-theme-footer-bg: var(--tertiary-color);
+  --parent-theme-footer-text: var(--secondary-color);
+
+--student-theme-footer-bg: var(--tertiary-color);
+  --student-theme-footer-text: var(--secondary-color);
+
+```
+
+_Use instead:_
+
+- `--theme-footer-bg: var(--tertiary-color);`
+- `--theme-footer-text: var(--secondary-color);`
+
+But, to reduce this 300% css bloat confusion/machinations. NOTE: YOU SHOULD FIRST CONSOLIDATE token NAMES ON ONE PARAMETER, the later we can normalize e.g.,
+
+```css
+--hub-theme-footer-bg,
+--admin-theme-footer-bg,
+--parent-theme-footer-bg,
+--student-theme-footer-bg,
+--theme-footer-bg: var(--tertiary-color);
+```
+
+**same with style, .hub-..., .student..., etc, are no longer needed since 98% of style is homogeneous for all repo elements.**
+
+Prefooter buttons stack @ =>1280vw. and **should not** - normalize
+
+Implemented the LM card border fix, consolidated the footer tokens to one pair, and normalized the hub prefooter buttons so they stay in one row at desktop widths.
+
+What changed:
+
+- web-asset/shared/portal-theme.css (lines 280-282) now defines one shared footer token pair:
+
+- `--theme-footer-bg`
+- `--theme-footer-text`
+- `--footer-background` now aliases `--theme-footer-bg`
+
+web-asset/shared/portal-theme.css (lines 6336-6389) now gives all three hub cards the 6px bottom border in LM:
+
+- admin: 6px red bottom border
+- family: 6px gray bottom border
+- student: 6px blue bottom border
+
+- web-asset/shared/portal-theme.css (lines 3474-3487) now makes the hub prefooter button row a shared non-wrapping desktop row, with a mobile column fallback.
+- web-asset/shared/portal-theme.css (lines 6775-6780) now uses the consolidated footer tokens for the hub footer.
+- web-asset/admin/portal-hub.html (lines 254-265) no longer carries the hub-local prefooter flex override, so the shared row rule can actually win.
+
+Verified live:
+
+- The hub footer now correctly uses the shared tertiary/secondary tokens for background/text, and the hub cards now have their correct bottom borders in LM.
+
+In light mode, the bottom borders are now present and colored correctly:
+
+```css
+- admin 6px, rgba(181, 0, 16, 0.96)
+- family 6px, rgba(154, 155, 156, 0.965)
+- student 6px, rgba(12, 65, 175, 0.957)
+```
+
+At 1280px, the prefooter buttons stay in one row:
+first button x 913.06, 
+second button x 1077.91
+
+The shared asset was rebuilt at web-asset/shared/portal-theme.min.css.
+
+_Not changed yet:
+Header/footer border-radius rework for small widths. I left that for the phase-two pass you called out._

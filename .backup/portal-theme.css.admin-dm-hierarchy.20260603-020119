@@ -122,8 +122,8 @@
   --portal-login-link: var(--brand-2);
   --portal-login-link-dark: #d7e4ff;
   --portal-login-panel-max-width: 550px;
-  --portal-page-bg-base: #e8eef4;
-  --portal-page-bg: #e8eef4;
+  --portal-page-bg-base: #577284;
+  --portal-page-bg: linear-gradient(180deg, #577284 0%, #7c909d 18%, #dbe3ea 62%, #edf1f6 100%);
   --portal-status-bad-bg: #fde4e2;
   --portal-status-bad-border: #e7b6b2;
   --portal-status-bad-text: #8a1f1c;
@@ -253,24 +253,20 @@
   --portal-theme-toggle-focus-ring: 0 0 0 3px rgba(47, 91, 227, 0.2);
   --portal-theme-toggle-hover-border: rgba(15, 22, 41, 1);
   --portal-theme-toggle-hover-border-dark: rgba(255, 215, 106, 0.42);
-  --portal-neutral-page-light: #e8eef4;
-  --portal-neutral-content-light: #ffffff;
-  --portal-neutral-panel-light: #f6f8fc;
-  --portal-neutral-card-light: #fcfdff;
-  --portal-neutral-support-light: #f1f4f8;
+  --portal-neutral-page-light: var(--portal-page-bg);
+  --portal-neutral-content-light: var(--secondary-color);
+  --portal-neutral-panel-light: var(--portal-surface-panel);
+  --portal-neutral-card-light: var(--portal-surface-card);
+  --portal-neutral-support-light: var(--portal-surface-support);
   --portal-neutral-page-dark: #000000;
   --portal-neutral-content-dark: #2c2c2c;
-  --portal-neutral-panel-dark: #3b3b3b;
-  --portal-neutral-card-dark: #4c4c4c;
-  --portal-neutral-support-dark: #5d5d5d;
-  --portal-neutral-chart-dark: #5d5d5d;
-  --portal-neutral-table-dark: #6e6e6e;
-  --portal-neutral-message-dark: #7f7f7f;
-  --portal-neutral-alert-dark: #9f9f9f;
-  --portal-surface-card: #fcfdff;
-  --portal-surface-panel: #f6f8fc;
-  --portal-surface-soft: #f6f8fc;
-  --portal-surface-support: #f1f4f8;
+  --portal-neutral-panel-dark: #2c2c2c;
+  --portal-neutral-card-dark: #3b3b3b;
+  --portal-neutral-support-dark: #31363a;
+  --portal-surface-card: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 250, 255, 0.99) 100%);
+  --portal-surface-panel: linear-gradient(180deg, rgba(249, 250, 255, 0.96) 0%, rgba(235, 237, 247, 0.99) 100%);
+  --portal-surface-soft: #f5f9ff;
+  --portal-surface-support: #edf3fa;
   --portal-text: #212121;
   --portal-text-soft: #414141;
   --portal-text-zoom: 1;
@@ -567,12 +563,12 @@ body.admin-portal-page #authBootPanel {
   width: min(100%, var(--portal-login-panel-max-width));
 }
 html[data-theme="dark"] body.admin-portal-page #authPanel {
-  background: var(--portal-neutral-card-dark);
+  background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background: var(--portal-neutral-card-dark);
+  background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
@@ -2622,17 +2618,6 @@ html[data-theme="dark"] body.admin-portal-page {
   --bg: var(--portal-neutral-page-dark);
   --body-bgcolor: var(--portal-neutral-page-dark);
   --footer-background: var(--theme-footer-bg);
-  --card: var(--portal-neutral-card-dark);
-  --card-soft: var(--portal-neutral-support-dark);
-  --portal-chart-surface: var(--portal-neutral-chart-dark);
-  --portal-chart-surface-soft: var(--portal-neutral-table-dark);
-  --portal-dark-text: #f9faff;
-  --portal-dark-text-soft: #f9faff;
-  --portal-support-message: #f9faff;
-  --portal-surface-card: var(--portal-neutral-card-dark);
-  --portal-surface-panel: var(--portal-neutral-panel-dark);
-  --portal-surface-soft: var(--portal-neutral-support-dark);
-  --portal-surface-support: var(--portal-neutral-support-dark);
   --menu-bg: var(--portal-neutral-support-dark);
   --menu-header-bg: var(--portal-neutral-support-dark);
   --menu-link-active-bg: var(--portal-neutral-support-dark);
@@ -2647,273 +2632,6 @@ html[data-theme="dark"] body.admin-portal-page {
   --surface-muted: var(--portal-neutral-support-dark);
   --surface-soft: var(--portal-neutral-support-dark);
   --surface-warm: var(--portal-neutral-card-dark);
-  background: var(--portal-neutral-page-dark);
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page .app-page-header.panel,
-html[data-theme="dark"] body.admin-portal-page #topControlsPanel.panel,
-html[data-theme="dark"] body.admin-portal-page .page-section[data-page="student-admin"].panel,
-html[data-theme="dark"] body.admin-portal-page .page-section[data-page="overview"].panel {
-  background: var(--portal-neutral-content-dark) !important;
-  border-color: var(--portal-dark-border);
-  color: var(--portal-dark-text);
-}
-body.admin-portal-page .page-section[data-page="profile"].panel {
-  background: var(--portal-neutral-content-light);
-  border-color: var(--portal-border);
-  color: var(--portal-text);
-}
-body.admin-portal-page :where(.profile-tabs-shell,
-  .profile-info-tabs,
-  .profile-info-group,
-  .profile-field-group,
-  .profile-tab-panel) {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-body.admin-portal-page :where(.profile-tab-nav,
-  .profile-tabs-shell,
-  .profile-info-tabs,
-  .profile-info-summary,
-  .profile-info-panel,
-  .profile-layout-editor,
-  .profile-layout-table-wrap) {
-  background: var(--portal-neutral-panel-light);
-  border-color: var(--portal-border);
-  color: var(--portal-text);
-  box-shadow: none;
-}
-body.admin-portal-page .profile-tab-nav button {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-status-info-border);
-  color: var(--portal-status-info-text);
-  box-shadow: none;
-}
-body.admin-portal-page .profile-tab-nav button:hover:not(:disabled),
-body.admin-portal-page .profile-tab-nav button:focus-visible {
-  background: var(--portal-button-surface-hover);
-  border-color: var(--portal-control-border);
-  color: var(--portal-status-info-text);
-  outline: 2px solid var(--portal-control-border);
-  outline-offset: 1px;
-}
-body.admin-portal-page .profile-tab-nav button.active {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-control-border);
-  color: var(--portal-status-info-text);
-  box-shadow: inset 0 0 0 1px var(--portal-control-border);
-}
-body.admin-portal-page :where(.profile-summary-primary,
-  .profile-summary-chip,
-  .profile-info-item,
-  .profile-field,
-  .profile-choice-item) {
-  background: var(--portal-neutral-card-light);
-  border-color: var(--portal-border);
-  color: var(--portal-text);
-  box-shadow: none;
-}
-body.admin-portal-page .profile-choice-item {
-  background: transparent;
-  border: none;
-}
-body.admin-portal-page .profile-choice-item input {
-  border: none;
-}
-body.admin-portal-page :where(.profile-info-toolbar h3,
-  .profile-editor-toolbar h3,
-  .page-section[data-page="profile"] > h2,
-  .profile-summary-name,
-  .profile-summary-chip-value,
-  .profile-info-group h4,
-  .profile-field-group h3,
-  .profile-info-value,
-  .profile-field input,
-  .profile-field select,
-  .profile-field textarea,
-  .profile-choice-item label,
-  #profileTabStatus) {
-  color: var(--portal-text);
-}
-body.admin-portal-page :where(.page-section[data-page="profile"] .page-note,
-  .profile-summary-kicker,
-  .profile-summary-subline,
-  .profile-summary-chip-label,
-  .profile-info-group-meta,
-  .profile-info-label,
-  .profile-info-empty,
-  .profile-info-empty-note,
-  .profile-file-row + .file-caption) {
-  color: var(--portal-text-soft);
-}
-body.admin-portal-page .profile-field input,
-body.admin-portal-page .profile-field select,
-body.admin-portal-page .profile-field textarea {
-  background: var(--portal-neutral-card-light);
-  border-color: var(--portal-border);
-  color: var(--portal-text);
-}
-body.admin-portal-page .profile-field input:focus,
-body.admin-portal-page .profile-field select:focus,
-body.admin-portal-page .profile-field textarea:focus {
-  outline: 2px solid var(--portal-control-border);
-  outline-offset: 1px;
-}
-body.admin-portal-page .profile-choice-item input[type="checkbox"],
-body.admin-portal-page .profile-choice-item input[type="radio"] {
-  accent-color: var(--brand);
-}
-body.admin-portal-page #topSearchResultsPanel .list-box,
-body.admin-portal-page #topSearchResultsPanel .top-search-results-box,
-body.admin-portal-page #topSearchResultsPanel .table-scroll-wrap {
-  background: var(--portal-neutral-panel-light);
-  border-color: var(--portal-border);
-  color: var(--portal-text);
-}
-body.admin-portal-page #topSearchResultsPanel .top-search-results-title,
-body.admin-portal-page #topSearchResultsPanel #topSearchCount {
-  color: var(--portal-text);
-}
-body.admin-portal-page #topSearchResultsPanel th[data-top-search-sort]:focus {
-  outline: 2px solid var(--portal-control-border);
-  outline-offset: -2px;
-}
-body.admin-portal-page #topSearchResultsPanel th.sort-active-asc::after,
-body.admin-portal-page #topSearchResultsPanel th.sort-active-desc::after {
-  color: var(--portal-status-info-text);
-}
-body.admin-portal-page #topSearchRows tr.top-search-row:hover > td,
-body.admin-portal-page #topSearchRows tr.top-search-row:focus-within > td,
-body.admin-portal-page #topSearchRows tr.top-search-row.active > td,
-body.admin-portal-page #topSearchRows tr.top-search-row[aria-selected="true"] > td {
-  background: var(--portal-status-info-bg);
-  color: var(--portal-text);
-}
-html[data-theme="dark"] body.admin-portal-page .page-section[data-page="profile"].panel {
-  background: var(--portal-neutral-content-dark) !important;
-  border-color: var(--portal-dark-border) !important;
-  color: var(--portal-dark-text) !important;
-}
-html[data-theme="dark"] body.admin-portal-page :where(.profile-tabs-shell,
-  .profile-info-tabs,
-  .profile-info-group,
-  .profile-field-group,
-  .profile-tab-panel) {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-html[data-theme="dark"] body.admin-portal-page :where(.profile-tab-nav,
-  .profile-tabs-shell,
-  .profile-info-tabs,
-  .profile-info-summary,
-  .profile-info-panel,
-  .profile-layout-editor,
-  .profile-layout-table-wrap) {
-  background: var(--portal-neutral-panel-dark);
-  border-color: var(--portal-dark-border);
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page :where(.profile-summary-primary,
-  .profile-summary-chip,
-  .profile-info-item,
-  .profile-field,
-  .profile-choice-item) {
-  background: var(--portal-neutral-card-dark);
-  border-color: var(--portal-dark-border);
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page .profile-field {
-  border-color: var(--portal-dark-border-strong);
-}
-html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-status-info-border);
-  color: var(--portal-status-info-text);
-}
-html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button:hover:not(:disabled),
-html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button:focus-visible,
-html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button.active {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-status-info-border);
-  color: var(--portal-status-info-text);
-  box-shadow: inset 0 0 0 1px var(--portal-status-info-border);
-  outline: 2px solid var(--portal-status-info-border);
-  outline-offset: 1px;
-}
-html[data-theme="dark"] body.admin-portal-page :where(.profile-info-toolbar h3,
-  .profile-editor-toolbar h3,
-  .page-section[data-page="profile"] > h2,
-  .profile-summary-name,
-  .profile-summary-chip-value,
-  .profile-info-group h4,
-  .profile-field-group h3,
-  .profile-info-value,
-  .profile-field input,
-  .profile-field select,
-  .profile-field textarea,
-  .profile-choice-item label,
-  #profileTabStatus) {
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page :where(.page-section[data-page="profile"] .page-note,
-  .profile-summary-kicker,
-  .profile-summary-subline,
-  .profile-summary-chip-label,
-  .profile-info-group-meta,
-  .profile-info-label,
-  .profile-info-empty,
-  .profile-info-empty-note,
-  .profile-file-row + .file-caption) {
-  color: var(--portal-dark-text-soft);
-}
-html[data-theme="dark"] body.admin-portal-page .profile-field input,
-html[data-theme="dark"] body.admin-portal-page .profile-field select,
-html[data-theme="dark"] body.admin-portal-page .profile-field textarea {
-  background: var(--portal-dark-field-bg);
-  border-color: var(--portal-dark-field-border);
-  color: var(--portal-dark-field-text);
-}
-html[data-theme="dark"] body.admin-portal-page .profile-field input::placeholder,
-html[data-theme="dark"] body.admin-portal-page .profile-field select::placeholder,
-html[data-theme="dark"] body.admin-portal-page .profile-field textarea::placeholder {
-  color: var(--portal-dark-field-placeholder);
-}
-html[data-theme="dark"] body.admin-portal-page .profile-field input:focus,
-html[data-theme="dark"] body.admin-portal-page .profile-field select:focus,
-html[data-theme="dark"] body.admin-portal-page .profile-field textarea:focus {
-  outline: 2px solid var(--portal-status-info-border);
-  outline-offset: 1px;
-}
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel .list-box,
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel .top-search-results-box,
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel .table-scroll-wrap {
-  background: var(--portal-neutral-card-dark);
-  border-color: var(--portal-dark-border);
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel .top-search-results-title,
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel #topSearchCount {
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel th[data-top-search-sort]:focus {
-  outline: 2px solid var(--portal-status-info-border);
-  outline-offset: -2px;
-}
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel th.sort-active-asc::after,
-html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel th.sort-active-desc::after {
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row:hover > td,
-html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row:focus-within > td {
-  background: var(--portal-neutral-support-dark);
-  color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row.active > td,
-html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row[aria-selected="true"] > td {
-  background: var(--portal-neutral-table-dark);
-  color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page,
 html[data-theme="dark"] body.parent-portal-page {
@@ -2976,7 +2694,7 @@ html[data-theme="dark"] body.parent-portal-page .profile-group,
 html[data-theme="dark"] body.parent-portal-page .field-row.locked,
 html[data-theme="dark"] body.parent-portal-page .field-row.edited,
 html[data-theme="dark"] body.admin-portal-page .panel {
-  background: var(--portal-neutral-panel-dark) !important;
+  background: var(--portal-dark-surface-card) !important;
   border-color: var(--portal-dark-border) !important;
   color: var(--portal-dark-text) !important;
 }
@@ -2997,7 +2715,7 @@ html[data-theme="dark"] body.student-portal-page .hero,
 html[data-theme="dark"] body.parent-portal-page .topbar,
 html[data-theme="dark"] body.parent-portal-page .hero,
 html[data-theme="dark"] body.admin-portal-page .wrap .panel {
-  background: var(--portal-neutral-panel-dark);
+  background: var(--portal-dark-surface-panel);
   border-color: var(--portal-dark-border);
 }
 body.student-portal-page .homework-card-shell,
@@ -5202,7 +4920,7 @@ html[data-theme="dark"] body.student-portal-page #loginPanel,
 html[data-theme="dark"] body.parent-portal-page #loginCard,
 html[data-theme="dark"] body.admin-portal-page #authPanel,
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background: var(--portal-neutral-card-dark);
+  background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
@@ -5923,18 +5641,18 @@ html[data-theme="dark"] body.admin-portal-page .queue-modal {
   background: rgba(6, 9, 16, 0.72);
 }
 html[data-theme="dark"] body.admin-portal-page .queue-modal-card {
-  background: var(--portal-neutral-card-dark);
+  background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page .overview-group,
 html[data-theme="dark"] body.admin-portal-page .system-health-shell {
-  background: var(--portal-neutral-panel-dark);
+  background: var(--portal-dark-surface-support);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page .system-health-item {
-  background: var(--portal-neutral-card-dark);
+  background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border);
   color: var(--portal-dark-text);
 }
@@ -5945,22 +5663,22 @@ html[data-theme="dark"] body.admin-portal-page .system-health-summary {
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page .system-health-item.ok {
-  background: var(--portal-neutral-card-dark);
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
   border-color: rgba(124, 214, 164, 0.42);
   box-shadow: inset 0 0 0 1px rgba(124, 214, 164, 0.12);
 }
 html[data-theme="dark"] body.admin-portal-page .system-health-item.warn {
-  background: var(--portal-neutral-card-dark);
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
   border-color: rgba(240, 176, 95, 0.42);
   box-shadow: inset 0 0 0 1px rgba(240, 176, 95, 0.12);
 }
 html[data-theme="dark"] body.admin-portal-page .system-health-item.error {
-  background: var(--portal-neutral-card-dark);
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
   border-color: rgba(242, 138, 149, 0.42);
   box-shadow: inset 0 0 0 1px rgba(242, 138, 149, 0.12);
 }
 html[data-theme="dark"] body.admin-portal-page .system-health-item.pending {
-  background: var(--portal-neutral-card-dark);
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card));
   border-color: rgba(106, 164, 255, 0.42);
   box-shadow: inset 0 0 0 1px rgba(106, 164, 255, 0.12);
 }
@@ -5982,7 +5700,7 @@ html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textar
   color: var(--portal-dark-field-placeholder);
 }
 html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block {
-  background: var(--portal-neutral-message-dark);
+  background: var(--portal-dark-surface-support);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
@@ -5993,7 +5711,7 @@ html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block a {
   color: #cfe0ff;
 }
 html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-card {
-  background: var(--portal-neutral-card-dark);
+  background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
@@ -6008,17 +5726,17 @@ html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-meta {
   color: var(--portal-dark-text-soft);
 }
 html[data-theme="dark"] body.admin-portal-page .grade-chart-modal-svg-wrap {
-  background: var(--portal-neutral-table-dark);
+  background: var(--portal-dark-surface-support);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page .grade-chart-empty {
-  background: var(--portal-neutral-table-dark);
+  background: var(--portal-dark-surface-support);
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text-soft);
 }
 html[data-theme="dark"] body.admin-portal-page .grade-chart-lane {
-  background: var(--portal-neutral-chart-dark);
+  background: linear-gradient(180deg, var(--portal-dark-card-soft), var(--portal-dark-card-deep));
   border-color: var(--portal-dark-border);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }

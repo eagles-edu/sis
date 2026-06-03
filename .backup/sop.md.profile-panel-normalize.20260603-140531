@@ -1,0 +1,100 @@
+# SIS Operating SOP
+
+This file holds the reusable operational procedure. Keep `AGENTS.md` short and use `README.md` for commands and entrypoints.
+
+## Prompt Economy
+
+- Keep `AGENTS.md` as the always-loaded contract: hard constraints only.
+- Keep `sis.md` as the current-status snapshot.
+- Keep `docs/history.md` as append-only migration history.
+- Keep `docs/sop.md` as reusable procedure, not a project diary.
+- Put commands and runnable entrypoints in `README.md` unless they are part of a live workflow rule.
+- Prefer focused diffs, small context, and file-local changes over broad rewrites.
+- Move slow-changing detail out of the hot path; only keep rules here if they change agent behavior.
+
+## Communication
+
+- Use English in chat responses unless the user explicitly asks for another language.
+- Interpret the user's words literally and keep the scope narrow; do not widen, reinterpret, or "improve" the request unless the user explicitly asks for that.
+
+## Canonical Workspace
+
+- Canonical source: `/home/eagles/dockerz/sis`
+- Mirrors: `/home/admin.eagles.edu.vn/sis` and `/home/test.eagles.edu.vn/sis`
+- Version split is mandatory:
+  - live `admin.eagles.edu.vn` is `v1.0`
+  - dev/test route contract is `v2.0`
+- Do not promote `v2.0` route or edge assumptions into live `admin` unless the user explicitly requests a live migration.
+- Mirror sync is file-level only; do not rely on git commit matching as part of the sync contract.
+- Writes to `/home/*/public_html` are host-owned; use `sudo` for those webroot writes.
+- Test route contract lives in `config/test-route-contract.json`; update that file before changing the test sync wrapper checks.
+- Dev and test sync use the same strict file whitelist for the portal/runtime payload; only the target roots and route mappings differ.
+- Live admin HTTPS edge uses Nginx for TLS and proxies to OLSWS on `8088`. Before changing edge docs or cert paths, verify the active listener and certificate on the host; do not infer ownership from templates, backups, or old notes.
+- Backup artifacts now live under `/home/eagles/dockerz/backups` instead of the repo-local `backups/` tree. Keep new dev, test, and live backup outputs there, and update scripts or docs that still point at the old root.
+- Live admin clean sync uses `tools/sync-and-restart-live-runtime.sh` with a restorable bundle under `/home/eagles/dockerz/backups/live-admin/`; keep its whitelist aligned with the test runtime whitelist unless the live host explicitly needs a different file.
+- `moodle.eagles.edu.vn` is a separate direct-serve path; do not apply the test-host reverse-proxy contract to it.
+- Treat mirror edits as temporary hotfixes unless the user explicitly asks to propagate them.
+- If a mirror edit is unavoidable, record paths, `sha256`, `mtime`, and the reason.
+- Do not sync mirror changes back into canonical source without explicit approval.
+- After approval, merge to canonical first, run targeted tests and parity checks, then sync mirrors.
+- Every status report should state whether drift exists and which copy is newest.
+
+## Frontend A11y and Box Model
+
+- Add `box-sizing: border-box;` when width or height is combined with padding or border.
+- Use `aria-label` only on interactive, labelable, or explicitly role-bearing elements.
+- Prefer visible labels on containers and name the actual control instead.
+
+## Frontend Layout Baseline
+
+- Keep container padding uniform on all sides unless a deliberate asymmetry is required.
+- Do not vertically center text blocks inside card/grid cells when the result shifts the perceived margin; top-align the block instead.
+- Align sibling edges to the same inset line so the visual left, right, top, and bottom margins read as equidistant from the container boundary.
+- If a lower text block needs to span full width, move it to its own row instead of indenting it to match an inner column.
+- In dark mode, normalize grouped surfaces to the established visual hierarchy: panel background darker, cards lighter.
+- If it is unclear whether a surface is acting as a panel or a card, ask the user before changing it.
+
+## UI Scope Guardrails
+
+- Treat existing UI decisions as binding unless the user explicitly asks to change them.
+- Do not recolor buttons unless the user explicitly asks for button recoloring.
+- Do not recolor chips or button-like controls in dark mode unless the user explicitly asks for recoloring.
+- Do not recolor buttons in dark mode.
+- Do not recolor chips or button-like controls in dark mode.
+- Do not recolor icons in dark mode.
+- Do not change theme selector styling in dark mode unless the user explicitly asks for it.
+- Preserve the established UI unless the user explicitly asks otherwise.
+- For dark-mode work, fix missing dark styling and illegible text only; do not redesign settled component styling as part of that work.
+- When a page has both dark panels and intentionally light-style controls, preserve that split unless the user says otherwise.
+- Before making any out-of-scope visual change, stop and ask the user first.
+- Prefer browser-verified fixes over assumption-driven cleanup; patch only the specific rendered regressions you can point to.
+- Before editing, create or verify a backup/snapshot for the target file.
+
+## Portal Theme Contract
+
+- Treat `web-asset/shared/portal-theme.css` as the source of truth for portal theme tokens and shared semantic colors.
+- Edit `web-asset/shared/portal-theme.css` first; rebuild `web-asset/shared/portal-theme.min.css` from the script. Do not hand-edit the minified file.
+- Standalone admin surfaces such as Enrollment must inherit the existing admin portal frame instead of shipping ad hoc chrome: red contact header, branded page header with current school logo/name, shared theme toggle, shared text-size controls, centered content column, themed panels/cards/tables, and the shared blue footer in both light and dark mode.
+- Use shared tokens and shared selectors for page background, panel, card, data-set/table surfaces, muted/support text, chart axis labels, modal/dialog surfaces, immutable header/footer chrome, and immutable button/chip/pill chrome.
+- Keep local CSS for layout, spacing, responsive structure, boot-state/prepaint rules, and any page-critical post-vendor overrides that must remain on-page to preserve portal text/layout behavior and prevent drift or CLS.
+- Do not add page-local login forms or parallel auth flows on standalone admin pages. They must use the current admin cookie session and, when unauthenticated, fail closed back to the main admin login surface.
+- Do not feed gradient tokens into `color-mix()` or other color-only functions. When blend math is required, mix against solid color tokens only.
+- Do not introduce ad hoc page-local theme colors when an equivalent shared portal token already exists.
+- Treat page-local ownership of `background`, `color`, `border-color`, `box-shadow`, `fill`, and `stroke` as a regression unless it is in the explicit structural allowlist enforced by tests.
+- Keep button and chip chrome intentionally light unless the user explicitly asks for recoloring.
+- In dark mode, preserve the established surface hierarchy:
+  - panel backgrounds darker
+  - cards lighter
+  - support text muted
+- When you find low-contrast or dead-looking text/elements during theme work, surface the issue explicitly instead of silently restyling unrelated chrome.
+- If a surface is structurally important but the panel/card role is unclear, ask before changing its treatment.
+
+## Testing and Security
+
+- When behavior changes, update or add tests in the same task.
+- Verify response codes and key headers, not only response bodies.
+- For any portal date-display change, restart the dev runtime and verify the parent, student, and admin browser views before calling it done.
+- Keep disabled-store tests separate from DB-backed integration tests.
+- Never commit secrets from `.env`.
+- Do not log raw credentials or sensitive student PII.
+- Preserve `HttpOnly`, `SameSite`, and `Secure` handling unless the requirement changes.

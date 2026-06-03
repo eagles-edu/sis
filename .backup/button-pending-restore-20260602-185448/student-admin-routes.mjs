@@ -419,14 +419,13 @@ function resolveNewsStatusColor(status) {
     || normalized === "red"
     || normalized === "purple"
     || normalized === "blue"
-    || normalized === "teal"
     || normalized === "turquoise"
   ) {
-    return normalized === "turquoise" ? "teal" : normalized
+    return normalized
   }
   if (normalized === "approved") return "green"
   if (normalized === "waiting") return "purple"
-  if (normalized === "checked") return "teal"
+  if (normalized === "checked") return "turquoise"
   if (normalized === "revise" || normalized === "revision-requested") return "purple"
   if (normalized === "submitted") return "amber"
   if (normalized === "open") return "blue"
@@ -488,14 +487,14 @@ function resolveNewsSetAction({
   const unapproved = resolveNewsSetUnapprovedCount({ submittedCount, revisionRequestedCount })
   if (totalReports >= requiredReports && approved >= requiredReports) return "completed"
   if (unapproved === 0) return "incomplete"
-  return `pending-${unapproved}`
+  return `unapproved-${unapproved}`
 }
 
 function resolveNewsSetActionColor(action = "") {
   const normalized = normalizeLower(action)
   if (normalized === "completed") return "green"
   if (normalized === "incomplete") return "amber"
-  if (normalized.startsWith("pending-")) return "teal"
+  if (normalized.startsWith("unapproved-")) return "turquoise"
   return "amber"
 }
 

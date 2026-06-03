@@ -487,7 +487,7 @@ test("news review status/action rules and revise chip label keep locked admin ui
   const actionStart = ADMIN_JS_SOURCE.indexOf("function newsReviewWeekSetActionToken(")
   assert.ok(actionStart >= 0, "newsReviewWeekSetActionToken is present")
   const actionChunk = ADMIN_JS_SOURCE.slice(actionStart, actionStart + 1100)
-  assert.match(actionChunk, /const unapproved = Math\.max\(0, submitted\);/)
+  assert.match(actionChunk, /const pending = Math\.max\(0, submitted\);/)
   assert.doesNotMatch(actionChunk, /awaitingReReview/)
   assert.doesNotMatch(actionChunk, /submitted \+ revisionRequested/)
   assert.match(runtimesScript, /stash_local_sis_config/)

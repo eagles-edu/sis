@@ -12,7 +12,7 @@ test("news review island wires filters, actions, and modal controls", async () =
       <html>
         <body>
           <select id="newsReviewStatusFilter"><option value="all">All</option><option value="approved">Approved</option></select>
-          <select id="newsReviewCheckFilter"><option value="all">All</option><option value="unapproved">Unapproved</option></select>
+          <select id="newsReviewCheckFilter"><option value="all">All</option><option value="pending">Pending</option></select>
           <select id="newsReviewLevelFilter"><option value="">All levels</option><option value="A1">A1</option></select>
           <select id="newsReviewStudentFilter"><option value="">All students</option><option value="student-1">Student 1</option></select>
           <input id="newsReviewDateFromFilter" type="date">
@@ -93,7 +93,7 @@ test("news review island wires filters, actions, and modal controls", async () =
   document.getElementById("newsReviewStatusFilter").dispatchEvent(
     new dom.window.Event("change", { bubbles: true }),
   )
-  document.getElementById("newsReviewCheckFilter").value = "unapproved"
+  document.getElementById("newsReviewCheckFilter").value = "pending"
   document.getElementById("newsReviewCheckFilter").dispatchEvent(
     new dom.window.Event("change", { bubbles: true }),
   )
@@ -137,7 +137,7 @@ test("news review island wires filters, actions, and modal controls", async () =
 
   assert.deepEqual(events, [
     ["status", "approved"],
-    ["check", "unapproved"],
+    ["check", "pending"],
     ["level", "A1", ""],
     ["student", "student-1"],
     ["range", "2026-03-09", "2026-03-15"],

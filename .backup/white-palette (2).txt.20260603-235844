@@ -1,0 +1,50 @@
+PAGE BG = #587385
+CONTENT = #FFFFFF
+panel = #F9FAFF
+card = #FFFEFC
+data-surface = #F4F4F6
+
+LIGHT MODE
+#587385
+#FFFFFF
+#F9FAFF
+#FFFEFC
+#F4F4F6
+
+
+ALTS
+#FBFCFA
+#F5F5F5
+#FBFBFB
+#ECECF0
+
+
+
+
+
+### new
+
+Recommended set:
+
+page = #EEF3F7
+content = #FFFFFF
+panel = #F6F8FC
+card = #FCFDFF
+data-surface = #F1F4F8
+
+
+If you want a slightly stronger frame:
+
+page = #E8EEF4
+content = #FFFFFF
+panel = #F4F7FB
+card = #FBFCFE
+data-surface = #EEF2F6
+
+
+hybrid
+page = #E8EEF4
+content = #FFFFFF
+panel = #F6F8FC
+card = #FCFDFF
+data-surface = #F1F4F8
