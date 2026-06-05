@@ -28,7 +28,7 @@ Recommended set:
 
 page = #EEF3F7
 content = #FFFFFF
-panel = #E3E9F0
+panel = #EDF2F7
 card = #FCFDFF
 data-surface = #F1F4F8
 
@@ -45,7 +45,7 @@ data-surface = #EEF2F6
 hybrid
 page = #E8EEF4
 content = #FFFFFF
-panel = #E3E9F0
+panel = #EDF2F7
 card = #FCFDFF
 data-surface = #F1F4F8
 
@@ -54,8 +54,8 @@ data-surface = #F1F4F8
 
 page = #E8EEF4
 content = #FFFFFF
-panel = #E3E9F0
+panel = #EDF2F7
 card = #FCFDFF
 data-surface = #F1F4F8
 
-(IMPORTANT CAVEAT: if no content container is visible, each named element will inherit the color of the element bg fill above it. For example: if no styled content container is visible, panel inherits bg from page = #E8EEF4, and card inherits PANEL = #E3E9F0 bg color, etc.)_
+(IMPORTANT CAVEAT: if no content container is visible, each named element will inherit the color of the element bg fill above it. For example: if no styled content container is visible, panel inherits bg from page = #E8EEF4, and card inherits PANEL = #EDF2F7 bg color, etc.)_

@@ -108,16 +108,6 @@
     /* Keep the loader class locally declared so editor diagnostics resolve it. */
     .system-health-loading-pulse { height: 105.6px; position: relative; width: 105.6px; }
 
-    /* Keep the toolbar note selector locally declared so editor diagnostics resolve it here too. */
-    .profile-info-toolbar-note {
-      color: var(--portal-text-soft);
-      font-size: 12px;
-      grid-area: note;
-      line-height: 1.35;
-      margin: 0;
-      width: 100%;
-    }
-
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
@@ -841,7 +831,6 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </p>
                 <div class="profile-info-toolbar">
                   <h3>Student Info</h3>
-                  <p class="small profile-info-toolbar-note" id="profileInfoToolbarNote"></p>
                   <div class="actions actions-3">
                     <button id="profileEditInfoBtn" type="button" class="btn-edit">
                       Edit Info
@@ -863,7 +852,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                 </div>
                 <div id="profileInfoDataSummary" class="panel profile-info-summary" aria-live="polite"></div>
-                <div class="profile-info-tabs">
+                <div class="profile-info-tabs panel">
                   <div class="profile-tab-nav" id="profileInfoTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile info tabs"></div>
                 </div>
 

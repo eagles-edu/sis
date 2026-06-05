@@ -108,22 +108,12 @@
     /* Keep the loader class locally declared so editor diagnostics resolve it. */
     .system-health-loading-pulse { height: 105.6px; position: relative; width: 105.6px; }
 
-    /* Keep the toolbar note selector locally declared so editor diagnostics resolve it here too. */
-    .profile-info-toolbar-note {
-      color: var(--portal-text-soft);
-      font-size: 12px;
-      grid-area: note;
-      line-height: 1.35;
-      margin: 0;
-      width: 100%;
-    }
-
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
 </head>
 
-<body class="admin-portal-page admin-auth-booting page">
+<body class="admin-portal-page admin-auth-booting">
   <div class="wrap">
     <div class="header-bar">
       <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
@@ -833,41 +823,44 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
               </div>
 
-              <div class="content page-section" data-page="profile">
+              <div class="panel page-section" data-page="profile">
                 <h2>Student Profile (linked to individual)</h2>
                 <p class="small page-note">
                   Profile information is shown in a compact read view. Use
                   <strong>Edit Info</strong> to open the New/Edit form page.
                 </p>
-                <div class="profile-info-toolbar">
-                  <h3>Student Info</h3>
-                  <p class="small profile-info-toolbar-note" id="profileInfoToolbarNote"></p>
-                  <div class="actions actions-3">
-                    <button id="profileEditInfoBtn" type="button" class="btn-edit">
-                      Edit Info
-                    </button>
-                    <button id="profileCreateInfoBtn" type="button" class="primary">
-                      New Form
-                    </button>
-                    <button id="profileRefreshInfoBtn" type="button" class="btn-refresh">
-                      Refresh Info
-                    </button>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-4">
-                    <label for="profileEnrollmentPeriodSelect">Enrollment Period</label>
-                    <select id="profileEnrollmentPeriodSelect">
-                      <option value="">Current period</option>
-                    </select>
-                  </div>
-                </div>
-                <div id="profileInfoDataSummary" class="panel profile-info-summary" aria-live="polite"></div>
-                <div class="profile-info-tabs">
-                  <div class="profile-tab-nav" id="profileInfoTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile info tabs"></div>
-                </div>
+                <div class="profile-mode-shell">
+                  <section id="profileInfoShell" class="profile-info-shell">
+                    <div class="profile-info-toolbar">
+                      <h3>Student Info</h3>
+                      <div class="actions actions-3">
+                        <button id="profileEditInfoBtn" type="button" class="btn-edit">
+                          Edit Info
+                        </button>
+                          <button id="profileCreateInfoBtn" type="button" class="primary">
+                            New Form
+                          </button>
+                        <button id="profileRefreshInfoBtn" type="button" class="btn-refresh">
+                          Refresh Info
+                        </button>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-4">
+                        <label for="profileEnrollmentPeriodSelect">Enrollment Period</label>
+                        <select id="profileEnrollmentPeriodSelect">
+                          <option value="">Current period</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div id="profileInfoDataSummary" class="profile-info-summary" aria-live="polite"></div>
+                    <div class="profile-tabs-shell profile-info-tabs">
+                      <div class="profile-tab-nav" id="profileInfoTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile info tabs"></div>
+                      <div id="profileInfoPanels"></div>
+                    </div>
+                  </section>
 
-                <section id="profileEditorShell" class="panel profile-edit-shell hidden">
+                  <section id="profileEditorShell" class="profile-edit-shell hidden">
                     <form id="profileEditorForm" class="profile-editor-form" autocomplete="off" novalidate>
                       <div class="profile-editor-toolbar">
                         <h3>New / Edit Form</h3>
@@ -877,7 +870,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           </button>
                         </div>
                       </div>
-                      <div class="profile-tab-nav" id="profileTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile form tabs"></div>
+                      <div class="profile-tabs-shell">
+                        <div class="profile-tab-nav" id="profileTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile form tabs"></div>
+                        <div id="profileTabPanels"></div>
+                      </div>
                       <div class="actions actions-4">
                         <button id="newBtn" type="button" class="primary">Create New</button>
                         <button id="studentClearBtn" type="button" class="danger">Clear Form</button>
@@ -889,7 +885,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </button>
                       </div>
                     </form>
-                </section>
+                  </section>
+                </div>
                 <p class="small" id="profileTabStatus"></p>
               </div>
 

@@ -1,0 +1,12 @@
+- PAGE-BG=000000
+- CONTENT=2c2c2c
+
+    <blockquote>(IMPORTANT CAVEAT: if no content container visible, each named element will inherit the color of the element bg fill above it. e.g., if no styled container, then panel inherits bg from content=2c2c2c, card inherits PANEL=3b3b3b bg color, etc.)_
+    </blockquote>
+
+- PANEL=3b3b3b
+- CARD=4c4c4c
+- CHART/TABLE-BG=5d5d5d
+
+- blacktext=212121
+- whitetext=f9faff

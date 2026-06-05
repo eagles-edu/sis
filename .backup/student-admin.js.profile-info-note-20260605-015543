@@ -17009,7 +17009,6 @@
           : student?.id ?
             "No additional profile identifiers available."
           : "No student selected; Select a student row to review profile clusters.";
-        const toolbarNoteEl = document.getElementById("profileInfoToolbarNote");
 
         const currentGrade = resolveSystemLevelName(profile?.currentGrade || "");
         const currentEnrollment =
@@ -17061,6 +17060,7 @@
           <p class="profile-summary-kicker">Student Snapshot</p>
           <p class="profile-summary-name">${escapeHtml(studentName)}</p>
         </article>
+        <p class="small profile-summary-subline profile-summary-subline-row">${escapeHtml(subline)}</p>
         ${profileSummaryChipHtml("Status", statusLabel)}
         ${profileSummaryChipHtml("Class Level", currentGrade)}
         ${profileSummaryChipHtml("School Year", currentSchoolYear)}
@@ -17068,7 +17068,6 @@
         ${profileSummaryChipHtml("Primary Contact", motherContact)}
         ${profileSummaryChipHtml("Secondary Contact", fatherContact)}
       `;
-        if (toolbarNoteEl) toolbarNoteEl.textContent = subline;
       }
 
       function renderProfileInfoItem(field = {}, rawValue = "") {
@@ -17444,13 +17443,6 @@
             const title = document.createElement("h3");
             title.textContent = sectionLabel;
             group.appendChild(title);
-            const subtitleText = profileFormSectionSubtitle(sectionLabel);
-            if (subtitleText) {
-              const subtitle = document.createElement("p");
-              subtitle.className = "small profile-field-group-subtitle";
-              subtitle.textContent = subtitleText;
-              group.appendChild(subtitle);
-            }
             const row = document.createElement("div");
             row.className = "row";
             sectionFields.forEach((field) =>
@@ -17470,16 +17462,6 @@
             `${fields.length} fields rendered across ${tabs.length} tabs.`,
           );
         }
-      }
-
-      function profileFormSectionSubtitle(sectionLabel = "") {
-        const label = normalizeText(sectionLabel);
-        if (!label) return "";
-        if (label === "Thông tin của người học") return "Student information";
-        if (label === "Liên hệ của mẹ hoặc học sinh trưởng thành") return "Mother's information";
-        if (label === "Liên hệ của ba") return "Father's information";
-        if (label === "Địa chỉ") return "Address";
-        return "";
       }
 
       function renderProfileInfoLayout(student = state.currentStudent) {

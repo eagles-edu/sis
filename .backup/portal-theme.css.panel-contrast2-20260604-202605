@@ -255,7 +255,7 @@
   --portal-theme-toggle-hover-border-dark: rgba(255, 215, 106, 0.42);
   --portal-neutral-page-light: #e8eef4;
   --portal-neutral-content-light: #ffffff;
-  --portal-neutral-panel-light: #e3e9f0;
+  --portal-neutral-panel-light: #edf2f7;
   --portal-neutral-card-light: #fcfdff;
   --portal-neutral-support-light: #f1f4f8;
   --portal-neutral-page-dark: #000000;
@@ -268,8 +268,8 @@
   --portal-neutral-message-dark: #7f7f7f;
   --portal-neutral-alert-dark: #9f9f9f;
   --portal-surface-card: #fcfdff;
-  --portal-surface-panel: var(--portal-neutral-panel-light);
-  --portal-surface-soft: var(--portal-neutral-panel-light);
+  --portal-surface-panel: #f6f8fc;
+  --portal-surface-soft: #f6f8fc;
   --portal-surface-support: #f1f4f8;
   --portal-text: #212121;
   --portal-text-soft: #414141;
@@ -2649,7 +2649,8 @@ body.admin-portal-page :where(.profile-tabs-shell,
   border-color: transparent;
   box-shadow: none;
 }
-body.admin-portal-page :where(.profile-tabs-shell,
+body.admin-portal-page :where(.profile-tab-nav,
+  .profile-tabs-shell,
   .profile-info-summary,
   .profile-info-panel,
   .profile-layout-editor,
@@ -2657,11 +2658,6 @@ body.admin-portal-page :where(.profile-tabs-shell,
   background: var(--portal-neutral-panel-light);
   border-color: var(--portal-border);
   color: var(--portal-text);
-  box-shadow: none;
-}
-body.admin-portal-page .profile-tab-nav {
-  background: transparent;
-  border-color: transparent;
   box-shadow: none;
 }
 body.admin-portal-page .profile-tab-nav button {
@@ -2779,7 +2775,8 @@ html[data-theme="dark"] body.admin-portal-page :where(.profile-tabs-shell,
   border-color: transparent;
   box-shadow: none;
 }
-html[data-theme="dark"] body.admin-portal-page :where(.profile-tabs-shell,
+html[data-theme="dark"] body.admin-portal-page :where(.profile-tab-nav,
+  .profile-tabs-shell,
   .profile-info-summary,
   .profile-info-panel,
   .profile-layout-editor,
@@ -2787,11 +2784,6 @@ html[data-theme="dark"] body.admin-portal-page :where(.profile-tabs-shell,
   background: var(--portal-neutral-panel-dark);
   border-color: var(--portal-dark-border);
   color: var(--portal-dark-text);
-}
-html[data-theme="dark"] body.admin-portal-page .profile-tab-nav {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
 }
 html[data-theme="dark"] body.admin-portal-page :where(.profile-summary-primary,
   .profile-summary-chip,

@@ -108,16 +108,6 @@
     /* Keep the loader class locally declared so editor diagnostics resolve it. */
     .system-health-loading-pulse { height: 105.6px; position: relative; width: 105.6px; }
 
-    /* Keep the toolbar note selector locally declared so editor diagnostics resolve it here too. */
-    .profile-info-toolbar-note {
-      color: var(--portal-text-soft);
-      font-size: 12px;
-      grid-area: note;
-      line-height: 1.35;
-      margin: 0;
-      width: 100%;
-    }
-
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">

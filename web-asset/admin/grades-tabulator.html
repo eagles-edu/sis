@@ -1434,7 +1434,7 @@
           <button class="btn subtle" id="resetColumnsBtn" type="button">Reset columns</button>
         </div>
       </div>
-      <div id="gradeGrid" class="portal-theme-table-shell"></div>
+      <div id="gradeGrid" class="panel"></div>
       <p class="dim" id="rangeHint"></p>
     </section>
   </main>
@@ -1443,7 +1443,7 @@
 
   <div id="distributionModal" class="distribution-modal" hidden>
     <div class="distribution-modal-backdrop portal-theme-overlay" data-close-distribution-modal="true"></div>
-    <section id="distributionDialog" class="distribution-dialog portal-theme-dialog is-fullscreen" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
+    <section id="distributionDialog" class="distribution-dialog card is-fullscreen" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
       <div class="distribution-dialog-head">
         <h2 id="distributionModalTitle">Grade Distribution Detail</h2>
         <div class="distribution-dialog-actions">
@@ -1459,11 +1459,11 @@
         <input id="distributionZoomRange" class="distribution-zoom-range" type="range" min="1" max="6" step="0.1" value="1" aria-label="Chart zoom level">
         <span id="distributionZoomLabel" class="distribution-zoom-label">100%</span>
       </div>
-      <div id="distributionChartShell" class="distribution-chart-shell portal-theme-soft-card">
+      <div id="distributionChartShell" class="distribution-chart-shell panel">
         <div id="distributionChartScroll" class="distribution-chart-scroll">
           <svg id="distributionModalChart" class="distribution-modal-chart" viewBox="0 0 760 360" preserveAspectRatio="none"></svg>
         </div>
-        <div id="distributionModalHover" class="distribution-hover portal-theme-tooltip" hidden></div>
+        <div id="distributionModalHover" class="distribution-hover card" hidden></div>
       </div>
       <p class="distribution-dialog-hint">Hover points for values. Use slider, +/- buttons, or mouse wheel to zoom.</p>
     </section>
