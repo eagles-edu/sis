@@ -88,6 +88,62 @@ test("shared portal theme minified asset is generated from portal-theme.css by t
   )
 })
 
+test("shared dark neutral ladder values stay pinned to the documented palette", () => {
+  assert.match(
+    sharedThemeSource,
+    /--portal-neutral-content-dark:\s*#2d2d2d;/,
+    "portal-theme.css should define the shared dark content token as #2d2d2d",
+  )
+  assert.match(
+    sharedThemeSource,
+    /--portal-neutral-panel-dark:\s*#3b3c3e;/,
+    "portal-theme.css should define the shared dark panel token as #3b3c3e",
+  )
+  assert.match(
+    sharedTheme,
+    /--portal-neutral-content-dark:#2d2d2d;/,
+    "portal-theme.min.css should carry the shared dark content token",
+  )
+  assert.match(
+    sharedTheme,
+    /--portal-neutral-panel-dark:#3b3c3e;/,
+    "portal-theme.min.css should carry the shared dark panel token",
+  )
+})
+
+test("shared portal theme centralizes the admin users table frame and row separator", () => {
+  assert.match(
+    sharedThemeSource,
+    /body\.admin-portal-page \.user-admin-table \{\s*border:\s*1px solid var\(--border-strong\);\s*border-radius:\s*var\(--radius-2\);\s*overflow:\s*hidden;\s*\}/s,
+    "portal-theme.css should own the admin users table frame",
+  )
+  assert.match(
+    sharedThemeSource,
+    /body\.admin-portal-page \.user-admin-table tbody td \{\s*border-bottom:\s*1px solid var\(--border-strong\) !important;\s*\}/s,
+    "portal-theme.css should own the admin users row separator",
+  )
+  assert.match(
+    sharedThemeSource,
+    /html\[data-theme="dark"\] body\.admin-portal-page \.user-admin-table tbody td \{\s*border-bottom-color:\s*var\(--portal-dark-border-strong\) !important;\s*\}/s,
+    "portal-theme.css should own the dark users row separator",
+  )
+  assert.match(
+    sharedTheme,
+    /body\.admin-portal-page \.user-admin-table\{border:1px solid var\(--border-strong\);border-radius:var\(--radius-2\);overflow:hidden\}/,
+    "portal-theme.min.css should carry the admin users table frame",
+  )
+  assert.match(
+    sharedTheme,
+    /body\.admin-portal-page \.user-admin-table tbody td\{border-bottom:1px solid var\(--border-strong\)!important\}/,
+    "portal-theme.min.css should carry the admin users row separator",
+  )
+  assert.match(
+    sharedTheme,
+    /html\[data-theme="dark"\] body\.admin-portal-page \.user-admin-table tbody td\{border-bottom-color:var\(--portal-dark-border-strong\)!important\}/,
+    "portal-theme.min.css should carry the dark admin users row separator",
+  )
+})
+
 test("repo app pages do not define raw theme colors in inline style or script blocks", () => {
   const appHtmlPaths = [
     "web-asset/admin/grades-tabulator-dev.html",

@@ -282,7 +282,8 @@
     }
 
     tbody td {
-      border-top: 1px solid var(--portal-border);
+      border-top: 1px solid var(--border-strong);
+      border-bottom: 1px solid var(--border-strong);
       padding: 12px 10px;
       text-align: left;
       vertical-align: top;
@@ -644,6 +645,10 @@
     html[data-theme="dark"] .table-wrap {
       border-color: var(--portal-dark-border);
     }
+    html[data-theme="dark"] tbody td {
+      border-top-color: var(--portal-dark-border-strong);
+      border-bottom-color: var(--portal-dark-border-strong);
+    }
 
     @media (min-width: 720px) {
       .c2 {
@@ -841,7 +846,7 @@
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
-      <section id="sessionRequiredPanel" class="panel portal-theme-card hidden" aria-label="Admin session required">
+      <section id="sessionRequiredPanel" class="panel portal-theme-card hidden" aria-label="Admin session required" data-surface-role="panel">
         <h2>Admin session required</h2>
         <p class="app-page-subtitle">
           Enrollment uses the current admin session. Sign in through the main admin page, then return here.
@@ -895,7 +900,7 @@
           </aside>
 
           <main id="appMain" class="section-stack" aria-label="Enrollment workspace">
-            <section class="panel app-page-header" aria-label="Enrollment page header">
+            <section class="content app-page-header" aria-label="Enrollment page header" data-surface-role="content">
               <div class="app-brand-strip">
                 <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
                   <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
@@ -950,20 +955,20 @@
                 </div>
               </div>
             </section>
-            <section class="panel portal-theme-panel">
+            <section class="content" aria-label="Enrollment summary" data-surface-role="content">
               <div class="enrollment-summary-grid" id="summaryGrid">
-                <article class="portal-theme-card enrollment-summary-card">
+                <article class="portal-theme-card enrollment-summary-card panel" data-surface-role="panel">
                   <p class="enrollment-summary-label">Visible rows</p>
                   <p class="enrollment-summary-value" id="summaryVisibleRows">0</p>
                 <!-- <p class="enrollment-summary-note">Current result set after page filters.</p> -->
                 </article>
-                <article class="portal-theme-card enrollment-summary-card">
+                <article class="portal-theme-card enrollment-summary-card panel" data-surface-role="panel">
                   <p class="enrollment-summary-label">Active students</p>
                   <p class="enrollment-summary-value" id="summaryActiveRows">0</p>
                   <!--
                   <p class="enrollment-summary-note">Students currently enrolled in the visible result set.</p>-->
                 </article>
-                <article class="portal-theme-card enrollment-summary-card">
+                <article class="portal-theme-card enrollment-summary-card panel" data-surface-role="panel">
                   <p class="enrollment-summary-label">Unenrolled students</p>
                   <p class="enrollment-summary-value" id="summaryUnenrolledRows">0</p>
                   <!--
@@ -972,7 +977,7 @@
               </div>
             </section>
 
-            <section class="panel portal-theme-panel">
+            <section class="content" aria-label="Enrollment filters" data-surface-role="content">
               <p id="globalStatus" class="status" aria-live="polite"></p>
               <div class="row">
                 <div class="field c4">
@@ -999,8 +1004,8 @@
               </div>
             </section>
 
-            <section class="panel portal-theme-panel">
-              <div class="table-wrap panel">
+            <section class="content" aria-label="Enrollment roster" data-surface-role="content">
+              <div class="table-wrap data-surface" data-surface-role="data-surface">
                 <table>
                   <thead>
                     <tr>
@@ -1022,7 +1027,7 @@
       </div>
       <div id="enrollmentHistoryModal" class="enrollment-history-modal hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="enrollmentHistoryModalTitle" aria-describedby="enrollmentHistoryModalSummary">
         <div class="enrollment-history-modal__backdrop" data-history-close aria-hidden="true"></div>
-        <section class="enrollment-history-modal__panel portal-theme-card" aria-label="History details">
+        <section class="enrollment-history-modal__panel content" aria-label="History details" data-surface-role="content">
           <div class="enrollment-history-modal__header">
             <div>
               <p class="enrollment-history-modal__kicker">History</p>
@@ -1032,7 +1037,7 @@
             data-history-close tabindex="-1">Close</button>
           </div>
           <p id="enrollmentHistoryModalSummary" class="enrollment-history-modal__summary"></p>
-          <div id="enrollmentHistoryModalBody" class="enrollment-history-modal__list"></div>
+          <div id="enrollmentHistoryModalBody" class="enrollment-history-modal__list panel" data-surface-role="panel"></div>
         </section>
       </div>
       <footer class="hub-footer" aria-label="Site footer">
@@ -1337,7 +1342,7 @@
           normalizeText(period?.comment) ? `HX note: ${period.comment}` : "",
         ].filter(Boolean);
         return `
-          <article class="enrollment-history-period portal-theme-card">
+          <article class="enrollment-history-period portal-theme-card card" data-surface-role="card">
             <div class="enrollment-history-period__head">${headChips.join("")}</div>
             <div class="enrollment-history-period__meta">
               ${noteLines.map((line) => `<p class="enrollment-history-period__note">${escapeHtml(line)}</p>`).join("")}

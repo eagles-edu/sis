@@ -353,7 +353,7 @@
   </style>
 </head>
 
-<body class="portal-hub-page" id="top">
+<body class="portal-hub-page" id="top" data-surface-role="page">
   <div class="portal-hub-bg" aria-hidden="true">
     <span class="portal-hub-bg__layer portal-hub-bg__layer--a"></span>
     <span class="portal-hub-bg__layer portal-hub-bg__layer--b"></span>
@@ -361,11 +361,11 @@
   </div>
   <div class="portal-layout">
     <main class="shell">
-      <div class="header-bar">
+      <div class="header-bar" data-surface-role="content">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
-      <section class="card hero" aria-labelledby="hub-title">
+      <section class="card hero" aria-labelledby="hub-title" data-surface-role="content">
         <div class="hero-line">
           <div class="hero-brand">
             <a class="brand-logo-wrap brand-logo-wrap--lg" href="/" aria-label="Eagles portal home">
@@ -388,7 +388,7 @@
         </div>
       </section>
 
-      <section class="card section-card section-card--primary" aria-labelledby="primary-portals">
+      <section class="card section-card section-card--primary" aria-labelledby="primary-portals" data-surface-role="content">
         <div class="section-head">
           <p class="section-kicker"></p>
           <h2 class="section-title" id="primary-portals">Hệ thống thông tin sinh viên</h2>
@@ -396,7 +396,7 @@
         </div>
 
         <div class="portal-grid">
-          <a class="portal-card portal-card--admin" href="/admin" data-portal-target="admin">
+          <a class="portal-card portal-card--admin" href="/admin" data-portal-target="admin" data-surface-role="card">
             <span class="portal-card__icon" aria-hidden="true">
               <svg-icon name="joggling-lava" size="100%"></svg-icon>
             </span>
@@ -408,7 +408,7 @@
             <span class="portal-card__chev" aria-hidden="true">↗</span>
           </a>
 
-          <a class="portal-card portal-card--parent" href="/parent" data-portal-target="parent">
+          <a class="portal-card portal-card--parent" href="/parent" data-portal-target="parent" data-surface-role="card">
             <span class="portal-card__icon" aria-hidden="true">
               <svg-icon name="joggling-triangles" size="100%"></svg-icon>
             </span>
@@ -420,7 +420,7 @@
             <span class="portal-card__chev" aria-hidden="true">↗</span>
           </a>
 
-          <a class="portal-card portal-card--student" href="/student" data-portal-target="student">
+          <a class="portal-card portal-card--student" href="/student" data-portal-target="student" data-surface-role="card">
             <span class="portal-card__icon" aria-hidden="true">
               <svg-icon name="spiral" size="100%"></svg-icon>
             </span>
@@ -434,7 +434,7 @@
         </div>
       </section>
 
-      <section class="card hub-prefooter" aria-label="Support links">
+      <section class="card hub-prefooter" aria-label="Support links" data-surface-role="content">
         <nav class="hub-prefooter__links" aria-label="Support links">
           <a class="hub-prefooter__link portal-action-btn portal-action-btn--brand" href="mailto:admin@eagles.edu.vn">Gửi email hỗ trợ</a>
           <a class="hub-prefooter__link portal-action-btn portal-action-btn--brand" href="/admin">Mở admin portal</a>
@@ -538,9 +538,9 @@
           student: typeof window.__SIS_STUDENT_PORTAL_PAGE_PATH === "string" ? window.__SIS_STUDENT_PORTAL_PAGE_PATH : "",
         };
         const portalFiles = {
-          admin: "/web-asset/admin/student-admin.html",
-          parent: "/web-asset/parent/parent-portal.html",
-          student: "/web-asset/student/student-portal.html",
+          admin: "/admin",
+          parent: "/parent",
+          student: "/student",
         };
 
         function resolveFallbackHref(target) {

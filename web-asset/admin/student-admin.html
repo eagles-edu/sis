@@ -278,8 +278,8 @@
           </div>
         </aside>
 
-        <main class="section-stack" id="appMain">
-          <div class="panel app-page-header" id="appPageHeader">
+        <main class="section-stack" id="appMain" data-surface-role="content">
+          <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
             <div class="app-brand-strip">
               <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
                 <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
@@ -355,7 +355,7 @@
             </div>
           </div>
           <div id="appSchoolSetupWarning" class="school-setup-access-warning hidden" data-school-setup-access-warning role="status" aria-live="polite"></div>
-          <div class="panel" id="topControlsPanel">
+          <div class="content" id="topControlsPanel" data-surface-role="content">
             <div class="row">
               <div class="col-3">
                 <label for="searchQ">Search student</label>
@@ -364,7 +364,7 @@
               </div>
               <div class="col-2">
                 <label for="filterLevel">Level</label>
-                <select id="filterLevel">
+                <select id="filterLevel" data-surface-role="card">
                   <option value="">All levels</option>
                 </select>
               </div>
@@ -376,7 +376,7 @@
               </div>
               <div class="col-2" id="schoolFilterCol">
                 <label for="filterSchool">School</label>
-                <select id="filterSchool">
+                <select id="filterSchool" data-surface-role="card">
                   <option value="">All schools</option>
                 </select>
               </div>
@@ -407,11 +407,11 @@
                   students.
                 </p>
               </div>
-              <div class="col-12" id="topSearchResultsPanel">
+              <div class="col-12" id="topSearchResultsPanel" data-surface-role="panel">
                 <p class="small top-search-results-title">
                   Live student results (click row or Open Profile)
                 </p>
-                <div class="list-box top-search-results-box">
+                <div class="list-box top-search-results-box data-surface" data-surface-role="data-surface">
                   <table>
                     <thead>
                       <tr>
@@ -448,9 +448,9 @@
           </div>
 
           <div class="grid-main">
-            <div class="panel" id="studentListPanel">
+            <div class="panel" id="studentListPanel" data-surface-role="panel">
               <h2>Students</h2>
-              <div class="list-box">
+              <div class="list-box data-surface" data-surface-role="data-surface">
                 <table>
                   <thead>
                     <tr>
@@ -488,18 +488,18 @@
             </div>
 
             <div class="section-stack">
-              <div class="panel page-section" data-page="student-admin">
+              <div class="content page-section" data-page="student-admin" data-surface-role="content">
                 <h2>Student Admin</h2>
                 <p class="page-note">
                   Use Search and the Students panel to select a student, then open
                   Profile, Attendance, Grades, or Reports.
                 </p>
               </div>
-              <div class="panel page-section" data-page="overview">
+              <div class="content page-section" data-page="overview" data-surface-role="content">
                 <h2>Overview</h2>
                 <p class="small" id="overviewStudent">No student selected.</p>
                 <div class="overview-layout">
-                  <section id="systemHealthSection" class="overview-group">
+                  <section id="systemHealthSection" class="overview-group panel" data-surface-role="panel">
                     <h3>Systems Health</h3>
                     <div id="systemHealthShell" class="system-health-shell is-loading">
                       <div id="systemHealthLoading" class="system-health-loading" aria-live="polite" aria-busy="true">
@@ -510,7 +510,7 @@
                         </div>
                       </div>
                       <div class="system-health-grid" aria-live="polite">
-                        <div id="hubConnectionCard" class="system-health-item system-health-hub-card pending">
+                        <div id="hubConnectionCard" class="system-health-item system-health-hub-card pending card" data-surface-role="card">
                           <div class="system-health-label">
                             <span id="hubStatusLed" class="led pending" aria-hidden="true"></span>
                             <span>SIS Hub Connection</span>
@@ -525,7 +525,7 @@
                             waiting for first probe...
                           </p>
                         </div>
-                        <div id="exerciseMailerServiceCard" class="system-health-item system-health-service-card pending">
+                        <div id="exerciseMailerServiceCard" class="system-health-item system-health-service-card pending card" data-surface-role="card">
                           <div class="system-health-label">
                             <span id="exerciseMailerServiceLed" class="led pending" aria-hidden="true"></span>
                             <span>Service Control</span>
@@ -549,52 +549,52 @@
                       </p>
                     </div>
                   </section>
-                  <section class="overview-group">
+                  <section class="overview-group panel" data-surface-role="panel">
                     <h3>Today Snapshot</h3>
                     <div class="stats-grid" id="overviewStatsGrid">
-                      <div class="stat-card stat-card--student">
+                      <div class="stat-card stat-card--student card" data-surface-role="card">
                         <div class="stat-label">Total Enrollment</div>
                         <div class="stat-value" id="ovTotalEnrollment">0</div>
                       </div>
-                      <div class="stat-card stat-card--good">
+                      <div class="stat-card stat-card--good card" data-surface-role="card">
                         <div class="stat-label">Attendance % of Enrollment</div>
                         <div class="stat-value" id="ovAttendancePctEnrollment">
                           0.0%
                         </div>
                       </div>
-                      <div class="stat-card stat-card--warn">
+                      <div class="stat-card stat-card--warn card" data-surface-role="card">
                         <div class="stat-label">Unenrolled YTD</div>
                         <div class="stat-value" id="ovUnenrolledYtd">0</div>
                       </div>
-                      <div class="stat-card stat-card--good">
+                      <div class="stat-card stat-card--good card" data-surface-role="card">
                         <div class="stat-label">Today Attendance</div>
                         <div class="stat-value" id="ovTodayAttendance">0</div>
                       </div>
-                      <div class="stat-card stat-card--bad">
+                      <div class="stat-card stat-card--bad card" data-surface-role="card">
                         <div class="stat-label">Today Absences</div>
                         <div class="stat-value" id="ovTodayAbsences">0</div>
                       </div>
-                      <div class="stat-card stat-card--warn">
+                      <div class="stat-card stat-card--warn card" data-surface-role="card">
                         <div class="stat-label">Tardy 10+ / 30+</div>
                         <div class="stat-value" id="ovTardyRates">0% / 0%</div>
                       </div>
-                      <div class="stat-card stat-card--bad">
+                      <div class="stat-card stat-card--bad card" data-surface-role="card">
                         <div class="stat-label">Pending Reminders</div>
                         <div class="stat-value" id="ovAtRiskCount">0</div>
                       </div>
-                      <div class="stat-card stat-card--good">
+                      <div class="stat-card stat-card--good card" data-surface-role="card">
                         <div class="stat-label">Current Completed</div>
                         <div class="stat-value" id="ovOutstanding">0</div>
                       </div>
-                      <div class="stat-card stat-card--student">
+                      <div class="stat-card stat-card--student card" data-surface-role="card">
                         <div class="stat-label">Current Completion %</div>
                         <div class="stat-value" id="ovOutstandingYtd">0%</div>
                       </div>
                     </div>
                   </section>
-                  <section class="overview-group">
+                  <section class="overview-group panel" data-surface-role="panel">
                     <h3>Current Assignment Completion (Line)</h3>
-                    <div class="chart-shell">
+                    <div class="chart-shell data-surface" data-surface-role="data-surface">
                       <svg id="overviewLineChart" class="chart-svg" viewBox="0 0 900 320" role="img">
                         <title>
                           Current assignment completion percent (Mon to today)
@@ -606,9 +606,9 @@
                       </div>
                     </div>
                   </section>
-                  <section class="overview-group">
+                  <section class="overview-group panel" data-surface-role="panel">
                     <h3>Current Assignment Completion (Bar by Level)</h3>
-                    <div class="chart-shell bar-chart-shell">
+                    <div class="chart-shell bar-chart-shell data-surface" data-surface-role="data-surface">
                       <svg id="overviewBarChart" class="chart-svg" viewBox="0 0 780 360" role="img">
                         <title>
                           Students versus current assignment completions by level
@@ -626,7 +626,7 @@
                       </p>
                     </div>
                   </section>
-                  <section class="overview-group level-detail-panel" id="levelDetailPanel">
+                  <section class="overview-group level-detail-panel panel" id="levelDetailPanel" data-surface-role="panel">
                     <h3 id="levelDetailTitle">Current assignment progress</h3>
                     <div class="row">
                       <div class="col-4">
@@ -651,7 +651,7 @@ Chào {{name}}, đây là lời nhắc nhở rằng bài tập {{assignment}} đ
 Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Please complete it here: {{link}}.</textarea>
                       </div>
                     </div>
-                    <div class="table-scroll-wrap">
+                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                       <table>
                         <thead>
                           <tr>
@@ -691,9 +691,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       students.
                     </p>
                   </section>
-                  <section class="overview-group">
+                  <section class="overview-group panel" data-surface-role="panel">
                     <h3>Enrolled vs Attendance (Today)</h3>
-                    <div class="table-scroll-wrap" id="overviewClassTableWrap">
+                    <div class="table-scroll-wrap data-surface" id="overviewClassTableWrap" data-surface-role="data-surface">
                       <table>
                         <thead>
                           <tr>
@@ -706,9 +706,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </table>
                     </div>
                   </section>
-                  <section class="overview-group">
+                  <section class="overview-group panel" data-surface-role="panel">
                     <h3>Current Assignment Snapshot</h3>
-                    <table>
+                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                      <table>
                       <thead>
                         <tr>
                           <th scope="col">Metric</th>
@@ -716,22 +717,23 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </tr>
                       </thead>
                       <tbody id="overviewAssignmentRows"></tbody>
-                    </table>
+                      </table>
+                    </div>
                   </section>
-                  <section class="overview-group full">
+                  <section class="overview-group full panel" data-surface-role="panel">
                     <h3>Pending Students (Current Not-Yet-Due)</h3>
-                    <div class="mini-list" id="overviewRiskStudents">
+                    <div class="mini-list data-surface" id="overviewRiskStudents" data-surface-role="data-surface">
                       No pending students for current not-yet-due assignments.
                     </div>
                   </section>
-                  <section class="overview-group full hidden" id="overviewIncomingExerciseSection">
+                  <section class="overview-group full hidden panel" id="overviewIncomingExerciseSection" data-surface-role="panel">
                     <h3>Anonymous Exercise Submissions</h3>
                     <details id="overviewIncomingExerciseDetails">
                       <summary>
                         <span>Intake Queue</span>
                         <span class="small" id="overviewIncomingExerciseSummary">No anonymous exercise submissions.</span>
                       </summary>
-                      <div class="table-scroll-wrap">
+                      <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                         <table>
                           <thead>
                             <tr>
@@ -765,14 +767,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </p>
                     </details>
                   </section>
-                  <section class="overview-group full" id="overviewNewsQueueSection">
+                  <section class="overview-group full panel" id="overviewNewsQueueSection" data-surface-role="panel">
                     <h3>News Report Review Queue</h3>
                     <details id="overviewNewsQueueDetails">
                       <summary>
                         <span>News Reports</span>
                         <span class="small" id="overviewNewsQueueSummary">News report queue not loaded yet.</span>
                       </summary>
-                      <div class="table-scroll-wrap">
+                      <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                         <table>
                           <thead>
                             <tr>
@@ -808,7 +810,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
               </div>
 
-              <div class="panel page-section" data-page="queue-hub">
+              <div class="content page-section" data-page="queue-hub" data-surface-role="content">
                 <h2>Queue Hub</h2>
                 <p class="small page-note">
                   Admin single-contact queue dashboard. Drag panels to reorder, then
@@ -825,7 +827,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     Reset Panel Order
                   </button>
                 </div>
-                <p class="small" id="queueHubStatus">
+                <p class="small panel" id="queueHubStatus" data-surface-role="panel">
                   Queue hub data not loaded yet.
                 </p>
                 <div id="queueHubPanels" class="queue-hub-panels">
@@ -833,7 +835,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
               </div>
 
-              <div class="content page-section" data-page="profile">
+              <div class="content page-section" data-page="profile" data-surface-role="content">
                 <h2>Student Profile (linked to individual)</h2>
                 <p class="small page-note">
                   Profile information is shown in a compact read view. Use
@@ -857,12 +859,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 <div class="row">
                   <div class="col-4">
                     <label for="profileEnrollmentPeriodSelect">Enrollment Period</label>
-                    <select id="profileEnrollmentPeriodSelect">
+                    <select id="profileEnrollmentPeriodSelect" data-surface-role="card">
                       <option value="">Current period</option>
                     </select>
                   </div>
                 </div>
-                <div id="profileInfoDataSummary" class="panel profile-info-summary" aria-live="polite"></div>
+                <div id="profileInfoDataSummary" class="panel profile-info-summary" aria-live="polite" data-surface-role="panel"></div>
                 <div class="profile-info-tabs">
                   <div class="profile-tab-nav" id="profileInfoTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile info tabs"></div>
                 </div>
@@ -893,17 +895,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 <p class="small" id="profileTabStatus"></p>
               </div>
 
-              <div class="panel page-section" data-page="attendance">
+              <div class="content page-section" data-page="attendance" data-surface-role="content">
                 <h2>Attendance [input]</h2>
                 <div id="attendanceLandingSection" class="attendance-landing-grid">
-                  <section class="attendance-level-panel">
+                  <section class="attendance-level-panel panel" data-surface-role="panel">
                     <h3>Class Levels</h3>
                     <div id="attendanceLevelTiles" class="attendance-level-grid"></div>
                     <p class="small" id="attendanceLevelPanelHint">
                       Select a class level to load students for today.
                     </p>
                   </section>
-                  <section class="attendance-student-panel">
+                  <section class="attendance-student-panel panel" data-surface-role="panel">
                     <h3 id="attendanceSelectedLevelLabel">Attendance Input</h3>
                     <div class="row">
                       <input id="a_id" type="hidden">
@@ -916,7 +918,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <label for="a_schoolYear">School Year</label><input id="a_schoolYear" type="text" placeholder="2026-2027">
                       </div>
                       <div class="col-2">
-                        <label for="a_quarter">Quarter</label><select id="a_quarter">
+                        <label for="a_quarter">Quarter</label><select id="a_quarter" data-surface-role="card">
                           <option>q1</option>
                           <option>q2</option>
                           <option>q3</option>
@@ -939,15 +941,17 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <p class="small" id="attendanceLandingSummary">
                       Select a class level. Today's default status is Absent.
                     </p>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th scope="col">Student</th>
-                          <th scope="col">Attendance (Today)</th>
-                        </tr>
-                      </thead>
-                      <tbody id="attendanceLandingRows"></tbody>
-                    </table>
+                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Student</th>
+                            <th scope="col">Attendance (Today)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="attendanceLandingRows"></tbody>
+                      </table>
+                    </div>
                   </section>
                 </div>
                 <div class="hidden">
@@ -957,19 +961,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
               </div>
 
-              <div class="panel page-section" data-page="attendance-admin">
+              <div class="content page-section" data-page="attendance-admin" data-surface-role="content">
                 <h2 id="attendanceAdminSection">
                   Attendance data [view, sort, manage, edit data]
                 </h2>
                 <div class="attendance-landing-grid">
-                  <section class="attendance-level-panel">
+                  <section class="attendance-level-panel panel" data-surface-role="panel">
                     <h3>Class Levels</h3>
                     <div id="attendanceAdminLevelTiles" class="attendance-level-grid"></div>
                     <p class="small" id="attendanceAdminLevelPanelHint">
                       Select a class level to inspect per-student stats.
                     </p>
                   </section>
-                  <section class="attendance-student-panel">
+                  <section class="attendance-student-panel panel" data-surface-role="panel">
                     <h3 id="attendanceAdminSelectedLevelLabel">
                       Per-Student Attendance Stats
                     </h3>
@@ -979,30 +983,32 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <p class="small" id="attendanceAdminRiskSummary">
                       Select a class level to view attendance risk signals.
                     </p>
-                    <div class="mini-list" id="attendanceAdminRiskStudents">
+                    <div class="mini-list data-surface" id="attendanceAdminRiskStudents" data-surface-role="data-surface">
                       Select a class level to view attendance risk signals.
                     </div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th scope="col">Student</th>
-                          <th scope="col">Present</th>
-                          <th scope="col">Absent</th>
-                          <th scope="col">Tardy10</th>
-                          <th scope="col">Tardy30</th>
-                          <th scope="col">Present %</th>
-                          <th scope="col">Tardy %</th>
-                        </tr>
-                      </thead>
-                      <tbody id="attendanceAdminRows"></tbody>
-                    </table>
+                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Student</th>
+                            <th scope="col">Present</th>
+                            <th scope="col">Absent</th>
+                            <th scope="col">Tardy10</th>
+                            <th scope="col">Tardy30</th>
+                            <th scope="col">Present %</th>
+                            <th scope="col">Tardy %</th>
+                          </tr>
+                        </thead>
+                        <tbody id="attendanceAdminRows"></tbody>
+                      </table>
+                    </div>
                   </section>
                 </div>
                 <h3 id="attendanceHistorySection">Attendance records</h3>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="attendanceSortField">Sort Attendance Data By</label>
-                    <select id="attendanceSortField">
+                    <select id="attendanceSortField" data-surface-role="card">
                       <option value="studentNumber">#</option>
                       <option value="eaglesId">Eagles ID</option>
                       <option value="fullName">Full Name</option>
@@ -1022,13 +1028,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="attendanceDataLevel">Class Level</label>
-                    <select id="attendanceDataLevel">
+                    <select id="attendanceDataLevel" data-surface-role="card">
                       <option value="">Any</option>
                     </select>
                   </div>
                   <div class="toolbar-field">
                     <label for="attendanceDataStudent">Student</label>
-                    <select id="attendanceDataStudent">
+                    <select id="attendanceDataStudent" data-surface-role="card">
                       <option value="">All students</option>
                     </select>
                   </div>
@@ -1063,7 +1069,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </button>
                   </div>
                 </div>
-                <div class="attendance-column-controls" id="attendanceColumnControls">
+                <div class="attendance-column-controls data-surface" id="attendanceColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
                   <label><input type="checkbox" data-attendance-col-toggle="studentNumber" checked>#</label>
                   <label><input type="checkbox" data-attendance-col-toggle="eaglesId" checked>Eagles ID</label>
@@ -1078,56 +1084,58 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 <p class="small admin-table-summary" id="attendanceDataSummary">
                   Showing attendance records for all students.
                 </p>
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col" class="table-col-student-number" data-attendance-col="studentNumber" data-table-sort="attendance" data-sort-field="studentNumber" tabindex="0" aria-sort="none">
-                        #
-                      </th>
-                      <th scope="col" data-attendance-col="eaglesId" data-table-sort="attendance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">
-                        Eagles ID
-                      </th>
-                      <th scope="col" data-attendance-col="fullName" data-table-sort="attendance" data-sort-field="fullName" tabindex="0" aria-sort="none">
-                        Full Name
-                      </th>
-                      <th scope="col" data-attendance-col="englishName">
-                        English Name
-                      </th>
-                      <th scope="col" data-attendance-col="attendanceDate" data-table-sort="attendance" data-sort-field="attendanceDate" tabindex="0" aria-sort="none">
-                        Date
-                      </th>
-                      <th scope="col" data-attendance-col="className" data-table-sort="attendance" data-sort-field="className" tabindex="0" aria-sort="none">
-                        Class
-                      </th>
-                      <th scope="col" data-attendance-col="quarter" data-table-sort="attendance" data-sort-field="quarter" tabindex="0" aria-sort="none">
-                        Quarter
-                      </th>
-                      <th scope="col" data-attendance-col="status" data-table-sort="attendance" data-sort-field="status" tabindex="0" aria-sort="none">
-                        Status
-                      </th>
-                      <th scope="col" data-attendance-col="comments">Comments</th>
-                      <th scope="col">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="attendanceRows"></tbody>
-                </table>
+                <div class="table-scroll-wrap data-surface news-review-table-wrap" data-surface-role="data-surface">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col" class="table-col-student-number" data-attendance-col="studentNumber" data-table-sort="attendance" data-sort-field="studentNumber" tabindex="0" aria-sort="none">
+                          #
+                        </th>
+                        <th scope="col" data-attendance-col="eaglesId" data-table-sort="attendance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">
+                          Eagles ID
+                        </th>
+                        <th scope="col" data-attendance-col="fullName" data-table-sort="attendance" data-sort-field="fullName" tabindex="0" aria-sort="none">
+                          Full Name
+                        </th>
+                        <th scope="col" data-attendance-col="englishName">
+                          English Name
+                        </th>
+                        <th scope="col" data-attendance-col="attendanceDate" data-table-sort="attendance" data-sort-field="attendanceDate" tabindex="0" aria-sort="none">
+                          Date
+                        </th>
+                        <th scope="col" data-attendance-col="className" data-table-sort="attendance" data-sort-field="className" tabindex="0" aria-sort="none">
+                          Class
+                        </th>
+                        <th scope="col" data-attendance-col="quarter" data-table-sort="attendance" data-sort-field="quarter" tabindex="0" aria-sort="none">
+                          Quarter
+                        </th>
+                        <th scope="col" data-attendance-col="status" data-table-sort="attendance" data-sort-field="status" tabindex="0" aria-sort="none">
+                          Status
+                        </th>
+                        <th scope="col" data-attendance-col="comments">Comments</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="attendanceRows"></tbody>
+                  </table>
+                </div>
               </div>
 
-              <div class="panel page-section" data-page="assignments">
+              <div class="content page-section" data-page="assignments" data-surface-role="content">
                 <h2>Assignments [input]</h2>
                 <p class="small page-note">
                   Assignments are sent by class level. Select a class tile, add one or
                   more exercise items, then save and send.
                 </p>
                 <div class="assignments-landing-grid">
-                  <section class="attendance-level-panel">
+                  <section class="attendance-level-panel panel" data-surface-role="panel">
                     <h3>Class Levels</h3>
                     <div id="assignmentLevelTiles" class="attendance-level-grid"></div>
                     <p class="small" id="assignmentLevelPanelHint">
                       Select a class level to prefill assignment fields.
                     </p>
                   </section>
-                  <section class="attendance-student-panel">
+                  <section class="attendance-student-panel panel" data-surface-role="panel">
                     <h3 id="assignmentBuilderTitle">Assignment Builder</h3>
                     <div class="row">
                       <div class="col-4">
@@ -1181,21 +1189,23 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           Delete Assignment
                         </button>
                       </div>
-                      <table class="assignment-item-table">
-                        <thead>
-                          <tr>
-                            <th scope="col">Done</th>
-                            <th scope="col">Exercise</th>
-                            <th scope="col">URL</th>
-                            <th scope="col">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody id="assignmentItemRows">
-                          <tr>
-                            <td colspan="4">No assignment items yet.</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                      <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                        <table class="assignment-item-table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Done</th>
+                              <th scope="col">Exercise</th>
+                              <th scope="col">URL</th>
+                              <th scope="col">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody id="assignmentItemRows">
+                            <tr>
+                              <td colspan="4">No assignment items yet.</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                     <div class="actions actions-3">
                       <button id="assignmentSendBtn" type="button" class="primary">
@@ -1217,7 +1227,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
               </div>
 
-              <div class="panel page-section" data-page="assignments-data">
+              <div class="content page-section" data-page="assignments-data" data-surface-role="content">
                 <h2>Assignments data [view, sort, manage, edit data]</h2>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
@@ -1282,7 +1292,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </button>
                   </div>
                 </div>
-                <div class="table-column-controls" id="assignmentColumnControls">
+                <div class="table-column-controls data-surface" id="assignmentColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
                   <label><input type="checkbox" data-assignments-col-toggle="studentNumber" checked>#</label>
                   <label><input type="checkbox" data-assignments-col-toggle="assignmentTitle" checked>Assignment</label>
@@ -1296,53 +1306,55 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 <p class="small admin-table-summary" id="assignmentDataSummary">
                   Showing assignment submissions.
                 </p>
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col" class="table-col-student-number" data-assignments-col="studentNumber">
-                        #
-                      </th>
-                      <th scope="col" data-assignments-col="assignmentTitle" data-table-sort="assignments" data-sort-field="assignmentTitle" tabindex="0" aria-sort="none">
-                        Assignment
-                      </th>
-                      <th scope="col" data-assignments-col="level" data-table-sort="assignments" data-sort-field="level" tabindex="0" aria-sort="none">
-                        Level
-                      </th>
-                      <th scope="col" data-assignments-col="student" data-table-sort="assignments" data-sort-field="student" tabindex="0" aria-sort="none">
-                        Student
-                      </th>
-                      <th scope="col" data-assignments-col="assignedAt" data-table-sort="assignments" data-sort-field="assignedAt" tabindex="0" aria-sort="none">
-                        Assigned
-                      </th>
-                      <th scope="col" data-assignments-col="dueAt" data-table-sort="assignments" data-sort-field="dueAt" tabindex="0" aria-sort="none">
-                        Due
-                      </th>
-                      <th scope="col" data-assignments-col="items">Items</th>
-                      <th scope="col" data-assignments-col="completion" data-table-sort="assignments" data-sort-field="completion" tabindex="0" aria-sort="none">
-                        Status
-                      </th>
-                      <th scope="col">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="assignmentTemplateRows"></tbody>
-                </table>
+                <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col" class="table-col-student-number" data-assignments-col="studentNumber">
+                          #
+                        </th>
+                        <th scope="col" data-assignments-col="assignmentTitle" data-table-sort="assignments" data-sort-field="assignmentTitle" tabindex="0" aria-sort="none">
+                          Assignment
+                        </th>
+                        <th scope="col" data-assignments-col="level" data-table-sort="assignments" data-sort-field="level" tabindex="0" aria-sort="none">
+                          Level
+                        </th>
+                        <th scope="col" data-assignments-col="student" data-table-sort="assignments" data-sort-field="student" tabindex="0" aria-sort="none">
+                          Student
+                        </th>
+                        <th scope="col" data-assignments-col="assignedAt" data-table-sort="assignments" data-sort-field="assignedAt" tabindex="0" aria-sort="none">
+                          Assigned
+                        </th>
+                        <th scope="col" data-assignments-col="dueAt" data-table-sort="assignments" data-sort-field="dueAt" tabindex="0" aria-sort="none">
+                          Due
+                        </th>
+                        <th scope="col" data-assignments-col="items">Items</th>
+                        <th scope="col" data-assignments-col="completion" data-table-sort="assignments" data-sort-field="completion" tabindex="0" aria-sort="none">
+                          Status
+                        </th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="assignmentTemplateRows"></tbody>
+                  </table>
+                </div>
               </div>
 
-              <div class="panel page-section" data-page="parent-tracking">
+              <div class="content page-section" data-page="parent-tracking" data-surface-role="content">
                 <h2>Performance reports [input]</h2>
                 <p class="small page-note">
                   Teacher-facing report builder. Student and family visibility is
                   delivered through the scheduled email message.
                 </p>
                 <div class="assignments-landing-grid parent-tracking-grid">
-                  <section class="attendance-level-panel">
+                  <section class="attendance-level-panel panel" data-surface-role="panel">
                     <h3>Class Levels</h3>
                     <div id="parentTrackingLevelTiles" class="attendance-level-grid"></div>
                     <p class="small" id="parentTrackingLevelHint">
                       Select a class level to load students.
                     </p>
                   </section>
-                  <section class="attendance-student-panel parent-tracking-form">
+                  <section class="attendance-student-panel panel parent-tracking-form" data-surface-role="panel">
                     <h3 id="parentTrackingPanelTitle">Student Progress Report</h3>
                     <div class="row progress-report-meta">
                       <div class="col-3">
@@ -1365,12 +1377,12 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <label for="pt_classLevel">Class Level</label><input id="pt_classLevel" type="text" readonly>
                       </div>
                     </div>
-                    <div class="progress-report-card">
+                    <div class="progress-report-card card" data-surface-role="card">
                       <label for="pt_homeworkAnnouncement">Bai tap ve nha this week (auto link)</label>
                       <input id="pt_homeworkAnnouncement" type="text" readonly placeholder="Auto-generated from assignments when available">
                     </div>
                     <div class="progress-report-layout">
-                      <div class="progress-report-card">
+                      <div class="progress-report-card card" data-surface-role="card">
                         <h4>Class Focus</h4>
                         <label for="pt_lessonSummary">Lesson Summary</label>
                         <textarea id="pt_lessonSummary" placeholder="What was covered in class today?"></textarea>
@@ -1381,7 +1393,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           <label class="progress-report-vision-option"><input type="radio" name="pt_visionStatus" value="monitor">Monitor in class</label>
                         </div>
                       </div>
-                      <div class="progress-report-card">
+                      <div class="progress-report-card card" data-surface-role="card">
                         <h4>Performance Snapshot (Auto from records)</h4>
                         <div class="row">
                           <div class="col-2">
@@ -1414,7 +1426,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           completed/tracked assignments (current quarter).
                         </p>
                       </div>
-                      <div class="progress-report-card progress-report-span-2">
+                      <div class="progress-report-card card progress-report-span-2" data-surface-role="card">
                         <h4>Corrective Action Shorthand</h4>
                         <div class="row progress-shorthand-row">
                           <div class="col-4">
@@ -1463,9 +1475,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           insert shorthand. Free text remains fully editable.
                         </p>
                       </div>
-                      <div class="progress-report-card">
+                      <div class="progress-report-card card" data-surface-role="card">
                         <h4>Basic Student Skills</h4>
-                        <div class="progress-report-table-wrap">
+                        <div class="progress-report-table-wrap data-surface" data-surface-role="data-surface">
                           <table class="progress-report-table progress-report-rubric-table">
                             <thead>
                               <tr>
@@ -1622,9 +1634,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           </table>
                         </div>
                       </div>
-                      <div class="progress-report-card">
+                      <div class="progress-report-card card" data-surface-role="card">
                         <h4>Conduct During Class</h4>
-                        <div class="progress-report-table-wrap">
+                        <div class="progress-report-table-wrap data-surface" data-surface-role="data-surface">
                           <table class="progress-report-table progress-report-rubric-table">
                             <thead>
                               <tr>
@@ -1792,13 +1804,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           </table>
                         </div>
                       </div>
-                      <div class="progress-report-card progress-report-span-2">
+                      <div class="progress-report-card card progress-report-span-2" data-surface-role="card">
                         <h4>Homework Completion</h4>
                         <p class="small">
                           Auto list of overdue and incomplete assignments for the
                           selected class date.
                         </p>
-                        <div class="progress-report-table-wrap">
+                        <div class="progress-report-table-wrap data-surface" data-surface-role="data-surface">
                           <table class="progress-report-table">
                             <thead>
                               <tr>
@@ -1818,7 +1830,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           </table>
                         </div>
                       </div>
-                      <div class="progress-report-card progress-report-span-2">
+                      <div class="progress-report-card card progress-report-span-2" data-surface-role="card">
                         <label for="pt_recipients">Email Targets (auto from profile)</label>
                         <input id="pt_recipients" type="text" readonly placeholder="student + parent/homework proctor emails">
                         <label for="pt_comments">Parent-facing Comment (Vietnamese)</label>
@@ -1856,7 +1868,7 @@ Select an assignment link to inspect details.</pre>
                 </div>
               </div>
 
-              <div class="panel page-section" data-page="performance-data">
+              <div class="content page-section" data-page="performance-data" data-surface-role="content">
                 <h2>Performance data [view, sort, manage, edit data]</h2>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
@@ -1923,7 +1935,7 @@ Select an assignment link to inspect details.</pre>
                     </button>
                   </div>
                 </div>
-                <div class="table-column-controls" id="performanceColumnControls">
+                <div class="table-column-controls data-surface" id="performanceColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
                   <label><input type="checkbox" data-performance-col-toggle="studentNumber" checked>#</label>
                   <label><input type="checkbox" data-performance-col-toggle="eaglesId" checked>Eagles ID</label>
@@ -1938,61 +1950,65 @@ Select an assignment link to inspect details.</pre>
                   <label><input type="checkbox" data-performance-col-toggle="participationScore" checked>Participation</label>
                   <label><input type="checkbox" data-performance-col-toggle="inClassScore" checked>In Class</label>
                 </div>
-                <p class="small admin-table-summary" id="performanceDataSummary">
-                  Showing performance records.
-                </p>
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col" class="table-col-student-number" data-performance-col="studentNumber" data-table-sort="performance" data-sort-field="studentNumber" tabindex="0" aria-sort="none">
-                        #
-                      </th>
-                      <th scope="col" data-performance-col="eaglesId" data-table-sort="performance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">
-                        Eagles ID
-                      </th>
-                      <th scope="col" data-performance-col="fullName" data-table-sort="performance" data-sort-field="fullName" tabindex="0" aria-sort="none">
-                        Full Name
-                      </th>
-                      <th scope="col" data-performance-col="englishName">
-                        English Name
-                      </th>
-                      <th scope="col" data-performance-col="generatedAt" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">
-                        Generated
-                      </th>
-                      <th scope="col" data-performance-col="className" data-table-sort="performance" data-sort-field="className" tabindex="0" aria-sort="none">
-                        Class
-                      </th>
-                      <th scope="col" data-performance-col="quarter">Quarter</th>
-                      <th scope="col" data-performance-col="homeworkCompletionRate" data-table-sort="performance" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">
-                        HW %
-                      </th>
-                      <th scope="col" data-performance-col="homeworkOnTimeRate" data-table-sort="performance" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">
-                        On-Time %
-                      </th>
-                      <th scope="col" data-performance-col="behaviorScore" data-table-sort="performance" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">
-                        Behavior
-                      </th>
-                      <th scope="col" data-performance-col="participationScore">
-                        Participation
-                      </th>
-                      <th scope="col" data-performance-col="inClassScore">
-                        In Class
-                      </th>
-                      <th scope="col">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="pt_reportRows">
-                    <tr>
-                      <td colspan="13">Select a student to load performance data.</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <section class="hidden" id="performanceStagedSection">
+                <div class="performance-data-list data-surface" data-surface-role="data-surface">
+                  <p class="small admin-table-summary" id="performanceDataSummary">
+                    Showing performance records.
+                  </p>
+                  <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col" class="table-col-student-number" data-performance-col="studentNumber" data-table-sort="performance" data-sort-field="studentNumber" tabindex="0" aria-sort="none">
+                            #
+                          </th>
+                          <th scope="col" data-performance-col="eaglesId" data-table-sort="performance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">
+                            Eagles ID
+                          </th>
+                          <th scope="col" data-performance-col="fullName" data-table-sort="performance" data-sort-field="fullName" tabindex="0" aria-sort="none">
+                            Full Name
+                          </th>
+                          <th scope="col" data-performance-col="englishName">
+                            English Name
+                          </th>
+                          <th scope="col" data-performance-col="generatedAt" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">
+                            Generated
+                          </th>
+                          <th scope="col" data-performance-col="className" data-table-sort="performance" data-sort-field="className" tabindex="0" aria-sort="none">
+                            Class
+                          </th>
+                          <th scope="col" data-performance-col="quarter">Quarter</th>
+                          <th scope="col" data-performance-col="homeworkCompletionRate" data-table-sort="performance" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">
+                            HW %
+                          </th>
+                          <th scope="col" data-performance-col="homeworkOnTimeRate" data-table-sort="performance" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">
+                            On-Time %
+                          </th>
+                          <th scope="col" data-performance-col="behaviorScore" data-table-sort="performance" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">
+                            Behavior
+                          </th>
+                          <th scope="col" data-performance-col="participationScore">
+                            Participation
+                          </th>
+                          <th scope="col" data-performance-col="inClassScore">
+                            In Class
+                          </th>
+                          <th scope="col">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="pt_reportRows">
+                        <tr>
+                          <td colspan="13">Select a student to load performance data.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <section class="hidden panel" id="performanceStagedSection" data-surface-role="panel">
                   <h3>Staged Performance Reports</h3>
                   <p class="small" id="performanceStagedSummary">
                     No staged performance reports.
                   </p>
-                  <div class="table-scroll-wrap">
+                  <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                     <table>
                       <thead>
                         <tr>
@@ -2018,14 +2034,14 @@ Select an assignment link to inspect details.</pre>
                     </button>
                   </div>
                 </section>
-                <section class="hidden" id="performanceQueueSection">
+                <section class="hidden panel" id="performanceQueueSection" data-surface-role="panel">
                   <h3>Queued Performance Reports</h3>
-                  <details id="performanceQueueDetails">
+                  <details class="data-surface" id="performanceQueueDetails" data-surface-role="data-surface">
                     <summary>
                       <span>Queue Review</span>
                       <span class="small" id="performanceQueueSummary">No queued performance reports.</span>
                     </summary>
-                    <div class="table-scroll-wrap">
+                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                       <table>
                         <thead>
                           <tr>
@@ -2059,7 +2075,7 @@ Select an assignment link to inspect details.</pre>
                 </section>
               </div>
 
-              <div class="panel page-section" data-page="news-reports">
+              <div class="content page-section" data-page="news-reports" data-surface-role="content">
                 <h2>Student news reports [review queue]</h2>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
@@ -2120,7 +2136,7 @@ Select an assignment link to inspect details.</pre>
                 <p class="small admin-table-summary" id="newsReviewSummary">
                   Submitted news reports are ready for review.
                 </p>
-                <div class="table-scroll-wrap">
+                <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                   <table>
                     <thead>
                       <tr>
@@ -2157,7 +2173,7 @@ Select an assignment link to inspect details.</pre>
                 </div>
               </div>
 
-              <div class="panel page-section" data-page="grades">
+              <div class="content page-section" data-page="grades" data-surface-role="content">
                 <h2>Grades [input]</h2>
                 <p class="section-label">Grades input</p>
                 <div class="row">
@@ -2234,9 +2250,9 @@ Select an assignment link to inspect details.</pre>
                 </p>
               </div>
 
-              <div class="panel page-section" data-page="grades-data">
+              <div class="content page-section" data-page="grades-data" data-surface-role="content">
                 <h2>Grades data [view, sort, manage, edit data]</h2>
-                <section class="grade-chart-shell" id="gradeChartShell">
+                <section class="grade-chart-shell panel" id="gradeChartShell" data-surface-role="panel">
                   <div class="grade-chart-head">
                     <h3>Grades Pulse (mobile-first)</h3>
                     <p class="small">
@@ -2373,7 +2389,7 @@ Select an assignment link to inspect details.</pre>
                     <button id="gradePrintPdfBtn" type="button" class="primary">Print PDF</button>
                   </div>
                 </div>
-                <div class="table-column-controls" id="gradeColumnControls">
+                <div class="table-column-controls data-surface" id="gradeColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
                   <label><input type="checkbox" data-grades-col-toggle="studentNumber" checked>#</label>
                   <label><input type="checkbox" data-grades-col-toggle="eaglesId" checked>Eagles ID</label>
@@ -2389,45 +2405,49 @@ Select an assignment link to inspect details.</pre>
                   <label><input type="checkbox" data-grades-col-toggle="participationScore" checked>Participation</label>
                   <label><input type="checkbox" data-grades-col-toggle="inClassScore" checked>In Class</label>
                 </div>
-                <p class="small admin-table-summary" id="gradeDataSummary">
-                  Showing grade entries.
-                </p>
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col" class="table-col-student-number" data-grades-col="studentNumber" data-table-sort="grades" data-sort-field="studentNumber" tabindex="0" aria-sort="none">
-                        #
-                      </th>
-                      <th scope="col" data-grades-col="eaglesId" data-table-sort="grades" data-sort-field="eaglesId" tabindex="0" aria-sort="none">
-                        Eagles ID
-                      </th>
-                      <th scope="col" data-grades-col="fullName" data-table-sort="grades" data-sort-field="fullName" tabindex="0" aria-sort="none">
-                        Full Name
-                      </th>
-                      <th scope="col" data-grades-col="englishName">English Name</th>
-                      <th scope="col" data-grades-col="dueAt" data-table-sort="grades" data-sort-field="dueAt" tabindex="0" aria-sort="none">
-                        Due
-                      </th>
-                      <th scope="col" data-grades-col="className" data-table-sort="grades" data-sort-field="className" tabindex="0" aria-sort="none">
-                        Class
-                      </th>
-                      <th scope="col" data-grades-col="assignmentName" data-table-sort="grades" data-sort-field="assignmentName" tabindex="0" aria-sort="none">
-                        Assignment
-                      </th>
-                      <th scope="col" data-grades-col="score" data-table-sort="grades" data-sort-field="score" tabindex="0" aria-sort="none">
-                        Score
-                      </th>
-                      <th scope="col" data-grades-col="homeworkCompleted">HW</th>
-                      <th scope="col" data-grades-col="behaviorScore">Behavior</th>
-                      <th scope="col" data-grades-col="participationScore">
-                        Participation
-                      </th>
-                      <th scope="col" data-grades-col="inClassScore">In Class</th>
-                      <th scope="col">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="gradeRows"></tbody>
-                </table>
+                <div class="grade-data-list data-surface" data-surface-role="data-surface">
+                  <p class="small admin-table-summary" id="gradeDataSummary">
+                    Showing grade entries.
+                  </p>
+                  <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col" class="table-col-student-number" data-grades-col="studentNumber" data-table-sort="grades" data-sort-field="studentNumber" tabindex="0" aria-sort="none">
+                            #
+                          </th>
+                          <th scope="col" data-grades-col="eaglesId" data-table-sort="grades" data-sort-field="eaglesId" tabindex="0" aria-sort="none">
+                            Eagles ID
+                          </th>
+                          <th scope="col" data-grades-col="fullName" data-table-sort="grades" data-sort-field="fullName" tabindex="0" aria-sort="none">
+                            Full Name
+                          </th>
+                          <th scope="col" data-grades-col="englishName">English Name</th>
+                          <th scope="col" data-grades-col="dueAt" data-table-sort="grades" data-sort-field="dueAt" tabindex="0" aria-sort="none">
+                            Due
+                          </th>
+                          <th scope="col" data-grades-col="className" data-table-sort="grades" data-sort-field="className" tabindex="0" aria-sort="none">
+                            Class
+                          </th>
+                          <th scope="col" data-grades-col="assignmentName" data-table-sort="grades" data-sort-field="assignmentName" tabindex="0" aria-sort="none">
+                            Assignment
+                          </th>
+                          <th scope="col" data-grades-col="score" data-table-sort="grades" data-sort-field="score" tabindex="0" aria-sort="none">
+                            Score
+                          </th>
+                          <th scope="col" data-grades-col="homeworkCompleted">HW</th>
+                          <th scope="col" data-grades-col="behaviorScore">Behavior</th>
+                          <th scope="col" data-grades-col="participationScore">
+                            Participation
+                          </th>
+                          <th scope="col" data-grades-col="inClassScore">In Class</th>
+                          <th scope="col">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="gradeRows"></tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
 
               <div class="panel page-section" data-page="reports">
@@ -2627,8 +2647,9 @@ Select an assignment link to inspect details.</pre>
                 <pre class="small" id="familyResult">No family lookup yet.</pre>
               </div>
 
-              <div class="panel page-section hidden" id="userAdminPanel" data-page="users">
+              <div class="content page-section hidden" id="userAdminPanel" data-page="users" data-surface-role="content">
                 <h2>Admin User Management</h2>
+                <div class="panel user-admin-form" data-surface-role="panel">
                 <form id="userForm">
                   <div class="row">
                     <input id="u_id" type="hidden">
@@ -2672,6 +2693,8 @@ Select an assignment link to inspect details.</pre>
                     </div>
                   </div>
                 </form>
+                </div>
+                <div class="table-wrap data-surface user-admin-table" data-surface-role="data-surface">
                 <table>
                   <thead>
                     <tr>
@@ -2683,17 +2706,20 @@ Select an assignment link to inspect details.</pre>
                   </thead>
                   <tbody id="userRows"></tbody>
                 </table>
+                </div>
                 <p class="small" id="userCount">0 users</p>
               </div>
 
-              <div class="panel page-section hidden" id="permissionsPanel" data-page="permissions">
+              <div class="content page-section hidden" id="permissionsPanel" data-page="permissions" data-surface-role="content">
                 <h2>Role Permissions Matrix</h2>
                 <p class="small page-note">
                   Define starting page and exposed sections/functions for
                   <strong>admin</strong>, <strong>teacher</strong>,
                   <strong>student</strong>, and <strong>parent</strong>.
                 </p>
-                <div id="permissionsRows"></div>
+                <div class="panel permissions-rows-panel" data-surface-role="panel">
+                  <div id="permissionsRows"></div>
+                </div>
                 <div class="actions">
                   <button id="permissionsReloadBtn" type="button" class="btn-refresh">
                     Reload Permissions
@@ -2705,13 +2731,14 @@ Select an assignment link to inspect details.</pre>
                 </div>
               </div>
 
-              <div class="panel page-section hidden" id="schoolSetupPanel" data-page="school-setup">
+              <div class="content page-section hidden" id="schoolSetupPanel" data-page="school-setup" data-surface-role="content">
                 <h2>School Setup</h2>
                 <p class="small page-note">
                   Set school profile, logo, and first/last school day. The system
                   splits 4 near-equal quarters and adjusts quarter-end dates to
                   weekdays.
                 </p>
+                <div class="panel school-setup-body" data-surface-role="panel">
                 <div class="row">
                   <div class="col-3">
                     <label for="schoolSetupLogoFile">Square Logo (svg/jpg/png/webp, max 650px)</label>
@@ -2882,6 +2909,7 @@ Select an assignment link to inspect details.</pre>
                     </div>
                   </div>
                 </div>
+                <div class="table-wrap data-surface school-setup-quarter-table" data-surface-role="data-surface">
                 <table>
                   <thead>
                     <tr>
@@ -2899,6 +2927,7 @@ Select an assignment link to inspect details.</pre>
                     </tr>
                   </tbody>
                 </table>
+                </div>
                 <div class="actions actions-3">
                   <button id="schoolSetupSaveBtn" type="button" class="primary">
                     Save School Setup
@@ -2912,20 +2941,23 @@ Select an assignment link to inspect details.</pre>
                 <p class="small" id="schoolSetupStatus">
                   School setup is using default school-year dates.
                 </p>
+                </div>
               </div>
 
-              <div class="panel page-section hidden" id="settingsPanel" data-page="settings">
+              <div class="content page-section hidden" id="settingsPanel" data-page="settings" data-surface-role="content">
                 <h2>Admin Settings</h2>
                 <p class="small page-note">
                   Toggle optional features for this deployment profile.
                 </p>
-                <div class="row">
-                  <div class="col-4 permission-page-item">
-                    <input type="checkbox" id="settingMultiSchool">
-                    <label for="settingMultiSchool">Enable multi-school UI features</label>
+                <div class="panel settings-options-panel" data-surface-role="panel">
+                  <div class="row">
+                    <div class="col-4 permission-page-item">
+                      <input type="checkbox" id="settingMultiSchool">
+                      <label for="settingMultiSchool">Enable multi-school UI features</label>
+                    </div>
                   </div>
                 </div>
-                <div>
+                <div class="panel settings-mirror-panel" data-surface-role="panel">
                   <h4>SIS Config Mirror</h4>
                   <p class="small">
                     These values are stored in <code>SIS_CONFIG.json</code> and mirrored to the database for recovery.
@@ -2969,7 +3001,7 @@ Select an assignment link to inspect details.</pre>
                     </div>
                   </div>
                 </div>
-                <div class="profile-layout-editor">
+                <div class="profile-layout-editor panel" data-surface-role="panel">
                   <h4>Student Profile Field Layout</h4>
                   <p class="small">
                     Manage field type, tab location, sequence (left-to-right then wrap
@@ -2984,7 +3016,7 @@ Select an assignment link to inspect details.</pre>
                     </div>
                     <div class="col-2">
                       <label for="profileFieldCreateType">Type</label>
-                      <select id="profileFieldCreateType">
+                      <select id="profileFieldCreateType" data-surface-role="card">
                         <option value="text">text</option>
                         <option value="email">email</option>
                         <option value="number">number</option>
@@ -2999,7 +3031,7 @@ Select an assignment link to inspect details.</pre>
                     </div>
                     <div class="col-2">
                       <label for="profileFieldCreateTab">Tab</label>
-                      <select id="profileFieldCreateTab">
+                      <select id="profileFieldCreateTab" data-surface-role="card">
                         <option value="profile">Profile</option>
                         <option value="medical">Medical</option>
                         <option value="covid">COVID</option>
@@ -3032,7 +3064,7 @@ Select an assignment link to inspect details.</pre>
                       </button>
                     </div>
                   </div>
-                  <div class="profile-layout-table-wrap">
+                  <div class="profile-layout-table-wrap data-surface" data-surface-role="data-surface">
                     <table>
                       <thead>
                         <tr>
@@ -3065,7 +3097,7 @@ Select an assignment link to inspect details.</pre>
                     Layout editor ready.
                   </p>
                 </div>
-                <div class="attendance-level-editor">
+                <div class="attendance-level-editor panel" data-surface-role="panel">
                   <h4>Global Class Level Tile Style</h4>
                   <p class="small">
                     Styles set here apply to all class-level tile modules (Attendance,
@@ -3073,7 +3105,7 @@ Select an assignment link to inspect details.</pre>
                   </p>
                   <div class="row">
                     <div class="col-4">
-                      <label for="attendanceLevelStyleLevel">Class level</label><select id="attendanceLevelStyleLevel">
+                      <label for="attendanceLevelStyleLevel">Class level</label><select id="attendanceLevelStyleLevel" data-surface-role="card">
                         <option value="">Select level</option>
                       </select>
                     </div>
@@ -3115,8 +3147,16 @@ Select an assignment link to inspect details.</pre>
           </div>
 
           <datalist id="exerciseTitleList"></datalist>
-          <div class="panel" id="status"></div>
+          <div class="content" id="status" data-surface-role="content"></div>
         </main>
+        <footer class="hub-footer" aria-label="Site footer">
+          <p class="hub-footer__copy">
+            © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+          </p>
+          <p class="hub-footer__action">
+            <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+          </p>
+        </footer>
       </div>
     </div>
   </div>
@@ -3202,7 +3242,7 @@ Select an assignment link to inspect details.</pre>
   </div>
 
   <div id="newsReviewViewerModal" class="queue-modal hidden" role="dialog" aria-modal="true" aria-label="Student news report detail viewer">
-    <div class="queue-modal-card">
+    <div class="queue-modal-card content" data-surface-role="content">
       <div class="queue-modal-header">
         <div class="queue-modal-nav">
           <strong>Student News Report Viewer</strong>
@@ -3226,12 +3266,12 @@ Select an assignment link to inspect details.</pre>
           Request Revision
         </button>
       </div>
-      <div id="newsReviewViewerBody" class="queue-modal-body">
+      <div id="newsReviewViewerBody" class="queue-modal-body panel" data-surface-role="panel">
         <p class="small">Select a report row to open details.</p>
       </div>
-      <div class="news-review-viewer-review">
+      <div class="news-review-viewer-review card" data-surface-role="card">
         <label for="newsReviewViewerNote">Review Note</label>
-        <textarea id="newsReviewViewerNote" rows="3" placeholder="Save note with approve/revision action"></textarea>
+        <textarea id="newsReviewViewerNote" class="card" data-surface-role="card" rows="3" placeholder="Save note with approve/revision action"></textarea>
       </div>
       <p class="small" id="newsReviewViewerStatus">Viewer is ready.</p>
     </div>

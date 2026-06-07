@@ -225,6 +225,134 @@
         gradeChartModalOpen: false,
         gradeChartModalLaneKey: "",
       };
+      let activeButtonTooltip = null;
+      let buttonTooltipRoot = null;
+      let buttonTooltipBound = false;
+      const BUTTON_TOOLTIP_SELECTOR =
+        'button:not([data-button-tooltip="off"]):not(.history-rail__button)';
+
+      function tooltipTextForButton(buttonEl) {
+        if (!(buttonEl instanceof HTMLButtonElement)) return "";
+        const explicit = normalizeText(buttonEl.dataset.buttonTooltip || "");
+        if (explicit && explicit.toLowerCase() !== "auto") return explicit;
+        const storedTitle = normalizeText(buttonEl.dataset.buttonTooltipTitle || "");
+        if (storedTitle) return storedTitle;
+        const ariaLabel = normalizeText(buttonEl.getAttribute("aria-label") || "");
+        if (ariaLabel) return ariaLabel;
+        return normalizeText(buttonEl.textContent || "");
+      }
+
+      function ensureButtonTooltipRoot() {
+        if (buttonTooltipRoot instanceof HTMLElement) return buttonTooltipRoot;
+        const tooltipEl = document.createElement("div");
+        tooltipEl.className = "admin-button-tooltip hidden";
+        tooltipEl.setAttribute("role", "tooltip");
+        document.body.appendChild(tooltipEl);
+        buttonTooltipRoot = tooltipEl;
+        return tooltipEl;
+      }
+
+      function suppressNativeButtonTitles(scope = document) {
+        if (!(scope instanceof Document || scope instanceof HTMLElement)) return;
+        Array.from(scope.querySelectorAll(BUTTON_TOOLTIP_SELECTOR)).forEach((buttonEl) => {
+          if (!(buttonEl instanceof HTMLButtonElement)) return;
+          if (buttonEl.dataset.buttonTooltipTitle) return;
+          const nativeTitle = normalizeText(buttonEl.getAttribute("title") || "");
+          if (!nativeTitle) return;
+          buttonEl.dataset.buttonTooltipTitle = nativeTitle;
+          buttonEl.removeAttribute("title");
+        });
+      }
+
+      function hideButtonTooltip() {
+        activeButtonTooltip = null;
+        const tooltipEl = ensureButtonTooltipRoot();
+        tooltipEl.classList.add("hidden");
+        tooltipEl.textContent = "";
+      }
+
+      function positionButtonTooltip(buttonEl) {
+        const tooltipEl = ensureButtonTooltipRoot();
+        if (!(buttonEl instanceof HTMLButtonElement) || tooltipEl.classList.contains("hidden"))
+          return;
+        const rect = buttonEl.getBoundingClientRect();
+        const margin = 12;
+        const gap = 10;
+        const tooltipWidth = tooltipEl.offsetWidth;
+        const tooltipHeight = tooltipEl.offsetHeight;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const fitsAbove = rect.top >= tooltipHeight + gap + margin;
+        const top = fitsAbove
+          ? rect.top - tooltipHeight - gap
+          : Math.min(viewportHeight - tooltipHeight - margin, rect.bottom + gap);
+        const centeredLeft = rect.left + rect.width / 2 - tooltipWidth / 2;
+        const left = Math.max(
+          margin,
+          Math.min(centeredLeft, viewportWidth - tooltipWidth - margin),
+        );
+        tooltipEl.style.left = `${Math.round(left + window.scrollX)}px`;
+        tooltipEl.style.top = `${Math.round(top + window.scrollY)}px`;
+      }
+
+      function showButtonTooltip(buttonEl) {
+        if (!(buttonEl instanceof HTMLButtonElement)) return;
+        const text = tooltipTextForButton(buttonEl);
+        if (!text) {
+          hideButtonTooltip();
+          return;
+        }
+        activeButtonTooltip = buttonEl;
+        const tooltipEl = ensureButtonTooltipRoot();
+        tooltipEl.textContent = text;
+        tooltipEl.classList.remove("hidden");
+        positionButtonTooltip(buttonEl);
+      }
+
+      function initializeButtonTooltips() {
+        suppressNativeButtonTitles();
+        ensureButtonTooltipRoot();
+        if (buttonTooltipBound) return;
+        document.addEventListener("mouseover", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          const buttonEl = target.closest(BUTTON_TOOLTIP_SELECTOR);
+          if (!(buttonEl instanceof HTMLButtonElement)) {
+            if (activeButtonTooltip && !target.closest(".admin-button-tooltip")) {
+              hideButtonTooltip();
+            }
+            return;
+          }
+          showButtonTooltip(buttonEl);
+        });
+        document.addEventListener("mouseout", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (!target.closest(BUTTON_TOOLTIP_SELECTOR)) return;
+          const related = event.relatedTarget;
+          if (related instanceof Element && related.closest(BUTTON_TOOLTIP_SELECTOR)) return;
+          hideButtonTooltip();
+        });
+        document.addEventListener("focusin", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          const buttonEl = target.closest(BUTTON_TOOLTIP_SELECTOR);
+          if (buttonEl instanceof HTMLButtonElement) showButtonTooltip(buttonEl);
+        });
+        document.addEventListener("focusout", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (!target.closest(BUTTON_TOOLTIP_SELECTOR)) return;
+          hideButtonTooltip();
+        });
+        window.addEventListener("scroll", () => {
+          if (activeButtonTooltip) positionButtonTooltip(activeButtonTooltip);
+        });
+        window.addEventListener("resize", () => {
+          if (activeButtonTooltip) positionButtonTooltip(activeButtonTooltip);
+        });
+        buttonTooltipBound = true;
+      }
 
       const statusEl = document.getElementById("status");
       const authStatusEl = document.getElementById("authStatus");
@@ -3532,11 +3660,18 @@
         return normalizeLower(normalizeLevelName(value)).replace(/[^a-z0-9]/g, "");
       }
 
+      function canonicalLevelDisplayName(value) {
+        const normalized = normalizeLevelName(value);
+        if (!normalized) return "";
+        const compact = normalizeLower(normalized).replace(/[\s._-]+/g, "");
+        return LEVEL_FULL_LABELS.get(compact) || normalized;
+      }
+
       function mergeUniqueLevelNames(values = []) {
         const seen = new Set();
         const merged = [];
         (Array.isArray(values) ? values : []).forEach((entry) => {
-          const label = normalizeLevelName(entry);
+          const label = canonicalLevelDisplayName(entry);
           if (!label) return;
           const key = levelNameKey(label);
           if (!key || seen.has(key)) return;
@@ -3564,7 +3699,7 @@
         if (!key) return normalized;
         const source = Array.isArray(state.systemLevels) ? state.systemLevels : [];
         const matched = source.find((entry) => levelNameKey(entry) === key);
-        return matched || normalized;
+        return canonicalLevelDisplayName(matched || normalized);
       }
 
       function shortLevelLabel(value) {
@@ -5544,11 +5679,42 @@
         return sortLevelNames(DEFAULT_LEVEL_CATALOG);
       }
 
-      const TRACKING_LEVEL_EXCLUDED_KEYS = new Set([levelNameKey("Eggs & Chicks")]);
-
-      function collectTrackingLevelNames(extraValues = []) {
-        return collectKnownLevelNames(extraValues).filter(
-          (levelName) => !TRACKING_LEVEL_EXCLUDED_KEYS.has(levelNameKey(levelName)),
+      function collectAttendanceLevelNames(extraValues = []) {
+        const attendanceLevels = [
+          ...(Array.isArray(extraValues) ? extraValues : []),
+          ...((Array.isArray(state.students) ? state.students : []).flatMap((student) => [
+            student?.profile?.currentGrade,
+            student?.profile?.classLevel,
+            student?.profile?.level,
+            student?.currentGrade,
+            student?.classLevel,
+            student?.level,
+            student?.className,
+          ])),
+          ...((Array.isArray(state.dashboardStudents) ? state.dashboardStudents : []).flatMap(
+            (student) => [
+              student?.profile?.currentGrade,
+              student?.profile?.classLevel,
+              student?.profile?.level,
+              student?.currentGrade,
+              student?.classLevel,
+              student?.level,
+              student?.className,
+            ],
+          )),
+          ...((Array.isArray(state.dashboardSummary?.classEnrollmentAttendance) ?
+            state.dashboardSummary.classEnrollmentAttendance
+          : []).map((entry) => entry?.level)),
+          ...((Array.isArray(state.dashboardLevelCompletionRows) &&
+            state.dashboardLevelCompletionRows.length) ?
+            state.dashboardLevelCompletionRows
+          : Array.isArray(state.dashboardSummary?.levelCompletion) ?
+            state.dashboardSummary.levelCompletion
+          : []).map((entry) => entry?.level),
+          ...(Array.isArray(state.systemLevels) ? state.systemLevels : []),
+        ];
+        return sortLevelNames(
+          attendanceLevels.filter((value) => Boolean(normalizeLevelName(value || ""))),
         );
       }
 
@@ -5584,7 +5750,7 @@
         const selectedLevel = resolveSystemLevelName(
           tableFilterValue(tableKey, "level"),
         );
-        const levelValues = collectTrackingLevelNames([selectedLevel]);
+        const levelValues = collectAttendanceLevelNames([selectedLevel]);
         selectEl.innerHTML = '<option value="">Any</option>';
         levelValues.forEach((levelName) => {
           if (!levelName) return;
@@ -6663,7 +6829,7 @@
         const complianceHtml = newsReviewComplianceNoteHtml(report?.reviewNote || "");
         const complianceBlockHtml =
           complianceHtml === "-" ? ""
-          : `<div class="news-review-viewer-block"><strong>Compliance Findings</strong><div class="news-review-viewer-long">${complianceHtml}</div></div>`;
+          : `<div class="news-review-viewer-block card" data-surface-role="card"><strong>Compliance Findings</strong><div class="news-review-viewer-long">${complianceHtml}</div></div>`;
         const studentLabel = studentIdentityLabel(
           {
             id: student?.studentRefId || report?.studentRefId,
@@ -6680,26 +6846,26 @@
 
         bodyEl.innerHTML = `
         <div class="news-review-viewer-grid">
-          <div class="news-review-viewer-block"><strong>Report ID</strong><span>${escapeHtml(normalizeText(report?.id))}</span></div>
-          <div class="news-review-viewer-block"><strong>Status</strong>${newsReviewStatusChipHtml(report?.reviewStatus)}</div>
-          <div class="news-review-viewer-block"><strong>Student</strong><span>${escapeHtml(studentLabel)}</span></div>
-          <div class="news-review-viewer-block"><strong>Level</strong><span>${escapeHtml(fullLevelLabel(student?.level || report?.level || ""))}</span></div>
-          <div class="news-review-viewer-block"><strong>Report Date</strong><span>${escapeHtml(formatDate(report?.reportDate))}</span></div>
-          <div class="news-review-viewer-block"><strong>Reviewed</strong><span>${escapeHtml(formatDateTime(report?.reviewedAt || report?.submittedAt || ""))} ${normalizeText(report?.reviewedByUsername) ? `| ${escapeHtml(normalizeText(report?.reviewedByUsername))}` : ""}</span></div>
-          <div class="news-review-viewer-block"><strong>Article</strong><span>${escapeHtml(normalizeText(report?.articleTitle))}</span></div>
-          <div class="news-review-viewer-block"><strong>Source</strong><span><a href="${escapeHtml(normalizeText(report?.sourceLink || "#"))}" target="_blank" rel="noopener noreferrer">${escapeHtml(normalizeText(report?.sourceLink || "-"))}</a></span></div>
-          <div class="news-review-viewer-block"><strong>Byline</strong><span>${escapeHtml(normalizeText(report?.byline || "-"))}</span></div>
-          <div class="news-review-viewer-block"><strong>Dateline</strong><span>${escapeHtml(normalizeText(report?.articleDateline || "-"))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Report ID</strong><span>${escapeHtml(normalizeText(report?.id))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Status</strong>${newsReviewStatusChipHtml(report?.reviewStatus)}</div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Student</strong><span>${escapeHtml(studentLabel)}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Level</strong><span>${escapeHtml(fullLevelLabel(student?.level || report?.level || ""))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Report Date</strong><span>${escapeHtml(formatDate(report?.reportDate))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Reviewed</strong><span>${escapeHtml(formatDateTime(report?.reviewedAt || report?.submittedAt || ""))} ${normalizeText(report?.reviewedByUsername) ? `| ${escapeHtml(normalizeText(report?.reviewedByUsername))}` : ""}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Article</strong><span>${escapeHtml(normalizeText(report?.articleTitle))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Source</strong><span><a href="${escapeHtml(normalizeText(report?.sourceLink || "#"))}" target="_blank" rel="noopener noreferrer">${escapeHtml(normalizeText(report?.sourceLink || "-"))}</a></span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Byline</strong><span>${escapeHtml(normalizeText(report?.byline || "-"))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Dateline</strong><span>${escapeHtml(normalizeText(report?.articleDateline || "-"))}</span></div>
         </div>
-        <div class="news-review-viewer-block"><strong>Lead Synopsis</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.leadSynopsis || "-"))}</div></div>
+        <div class="news-review-viewer-block card" data-surface-role="card"><strong>Lead Synopsis</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.leadSynopsis || "-"))}</div></div>
         <div class="news-review-viewer-grid">
-          <div class="news-review-viewer-block"><strong>Action Actor</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionActor || "-"))}</div></div>
-          <div class="news-review-viewer-block"><strong>Action Affected</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionAffected || "-"))}</div></div>
-          <div class="news-review-viewer-block"><strong>Action Where</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhere || "-"))}</div></div>
-          <div class="news-review-viewer-block"><strong>Action What</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhat || "-"))}</div></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Actor</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionActor || "-"))}</div></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Affected</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionAffected || "-"))}</div></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Where</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhere || "-"))}</div></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action What</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhat || "-"))}</div></div>
         </div>
-        <div class="news-review-viewer-block"><strong>Action Why</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhy || "-"))}</div></div>
-        <div class="news-review-viewer-block"><strong>Bias Assessment</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.biasAssessment || "-"))}</div></div>
+        <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Why</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhy || "-"))}</div></div>
+        <div class="news-review-viewer-block card" data-surface-role="card"><strong>Bias Assessment</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.biasAssessment || "-"))}</div></div>
         ${complianceBlockHtml}
       `;
         syncNewsReviewViewerControls(report);
@@ -9540,7 +9706,8 @@
         const canUsersId = `perm-can-users-${roleKey}`;
         const canPermsId = `perm-can-perms-${roleKey}`;
         const card = document.createElement("div");
-        card.className = "permission-role-card";
+        card.className = "permission-role-card card";
+        card.dataset.surfaceRole = "card";
         card.dataset.permissionRole = roleName;
 
         const title = document.createElement("h3");
@@ -9803,7 +9970,7 @@
         const hintEl = document.getElementById("assignmentLevelPanelHint");
         if (!tilesEl) return;
 
-        const levels = collectTrackingLevelNames();
+        const levels = collectAttendanceLevelNames();
         const selectedLevel = normalizeAssignmentTargetLevel(
           document.getElementById("assignLevel")?.value,
         );
@@ -9873,7 +10040,7 @@
         const select = document.getElementById("assignLevel");
         if (!select) return;
         const selected = resolveSystemLevelName(select.value);
-        const values = collectTrackingLevelNames([
+        const values = collectAttendanceLevelNames([
           selected,
           ...assignmentStudentSource().map((student) =>
             normalizeLevelName(student?.profile?.currentGrade || ""),
@@ -12428,7 +12595,7 @@
         const spec = queueHubTableSpec(panel?.id);
         const items = Array.isArray(panel?.items) ? panel.items : [];
         if (!items.length) {
-          return `<div class="queue-hub-empty">${escapeHtml(spec.emptyText)}</div>`;
+          return `<div class="queue-hub-empty data-surface" data-surface-role="data-surface">${escapeHtml(spec.emptyText)}</div>`;
         }
         const visibleItems = items.slice(0, 25);
         const headerHtml = spec.columns
@@ -12459,7 +12626,7 @@
             `<p class="small">Showing first ${visibleItems.length} of ${items.length} rows.</p>`
           : "";
         return `
-        <div class="table-scroll-wrap">
+        <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
           <table>
             <thead><tr>${headerHtml}</tr></thead>
             <tbody>${bodyHtml}</tbody>
@@ -12544,7 +12711,7 @@
         panelRoot.innerHTML = "";
         if (!canReview) {
           panelRoot.innerHTML =
-            '<div class="queue-hub-empty">Queue Hub is available for admin users only.</div>';
+            '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">Queue Hub is available for admin users only.</div>';
           if (saveBtn) saveBtn.disabled = true;
           return;
         }
@@ -12553,15 +12720,16 @@
         const panels = queueHubOrderedPanels();
         if (!panels.length) {
           panelRoot.innerHTML =
-            '<div class="queue-hub-empty">No queue hub panels available.</div>';
+            '<div class="queue-hub-empty data-surface" data-surface-role="data-surface">No queue hub panels available.</div>';
           return;
         }
 
         panels.forEach((panel) => {
           const panelEl = document.createElement("article");
-          panelEl.className = `queue-hub-panel${state.queueHub.hasUnsavedOrder ? " queue-hub-order-dirty" : ""}`;
+          panelEl.className = `queue-hub-panel panel${state.queueHub.hasUnsavedOrder ? " queue-hub-order-dirty" : ""}`;
           panelEl.draggable = true;
           panelEl.dataset.queueHubPanelId = panel.id;
+          panelEl.dataset.surfaceRole = "panel";
           panelEl.innerHTML = `
           <div class="queue-hub-panel-header">
             <h3>${escapeHtml(panel.title)}</h3>
@@ -15241,7 +15409,7 @@
               },
             );
             return (
-              `<article class="grade-chart-lane" data-grade-chart-lane="${escapeHtml(lane.key)}">` +
+              `<article class="grade-chart-lane data-surface" data-grade-chart-lane="${escapeHtml(lane.key)}" data-surface-role="data-surface">` +
               `<div class="grade-chart-lane-head">` +
               `<h4 class="grade-chart-lane-title">${escapeHtml(lane.label)}</h4>` +
               `<div class="grade-chart-lane-actions">` +
@@ -15673,7 +15841,7 @@
         const hintEl = document.getElementById("parentTrackingLevelHint");
         if (!tilesEl) return;
         const selectedLevel = selectedParentTrackingLevel();
-        const levels = collectTrackingLevelNames([selectedLevel]);
+        const levels = collectAttendanceLevelNames([selectedLevel]);
         if (!levels.length) {
           tilesEl.innerHTML = "";
           if (hintEl) hintEl.textContent = "No class levels available.";
@@ -16961,7 +17129,7 @@
 
       function profileSummaryChipHtml(label = "", value = "") {
         return `
-        <article class="profile-summary-chip">
+        <article class="profile-summary-chip card" data-surface-role="card">
           <p class="profile-summary-chip-label">${escapeHtml(label)}</p>
           <p class="profile-summary-chip-value">${value ? escapeHtml(value) : "No value"}</p>
         </article>
@@ -17057,7 +17225,7 @@
         }
 
         summaryEl.innerHTML = `
-        <article class="profile-summary-primary">
+        <article class="profile-summary-primary card" data-surface-role="card">
           <p class="profile-summary-kicker">Student Snapshot</p>
           <p class="profile-summary-name">${escapeHtml(studentName)}</p>
         </article>
@@ -17075,7 +17243,8 @@
         const renderedValue = formatProfileInfoValue(field, rawValue);
         const hasValue = profileInfoHasValue(rawValue);
         const item = document.createElement("article");
-        item.className = "profile-info-item";
+        item.className = "profile-info-item card";
+        item.dataset.surfaceRole = "card";
         item.dataset.priority = profileInfoFieldPriority(field);
         item.style.setProperty(
           "--profile-span",
@@ -17236,7 +17405,8 @@
 
       function renderProfileFieldControl(field = {}) {
         const wrapper = document.createElement("div");
-        wrapper.className = `profile-field col-${Math.max(1, Math.min(12, Number(field.width || 4)))}`;
+        wrapper.className = `profile-field card col-${Math.max(1, Math.min(12, Number(field.width || 4)))}`;
+        wrapper.dataset.surfaceRole = "card";
         if (field.idSuffix === "schoolName") wrapper.id = "profileSchoolCol";
         const labelText = profileFieldLabel(field);
         const labelEl = document.createElement("label");
@@ -17257,7 +17427,8 @@
             : ["Yes", "No"];
           options.forEach((option, index) => {
             const item = document.createElement("div");
-            item.className = "profile-choice-item";
+            item.className = "profile-choice-item card";
+            item.dataset.surfaceRole = "card";
             const optionId = `${controlId}_${index}`;
             const input = document.createElement("input");
             input.type = inputType;
@@ -17291,6 +17462,7 @@
           const select = document.createElement("select");
           select.id = controlId;
           select.dataset.profileInputType = inputType;
+          select.dataset.surfaceRole = "card";
           select.autocomplete = autocompleteValue;
           if (inputType === "level-select") {
             const option = document.createElement("option");
@@ -17425,7 +17597,8 @@
           const isActive = state.profileActiveTab === tab.id;
           const panel = document.createElement("section");
           panel.id = `profileFormPanel_${tab.id}`;
-          panel.className = `profile-tab-panel${isActive ? " active" : ""}`;
+          panel.className = `profile-tab-panel panel${isActive ? " active" : ""}`;
+          panel.dataset.surfaceRole = "panel";
           panel.dataset.profileTabPanel = tab.id;
           panel.setAttribute("role", "tabpanel");
           panel.setAttribute("aria-labelledby", `profileFormTab_${tab.id}`);
@@ -17546,7 +17719,8 @@
           const isActive = state.profileActiveTab === tab.id;
           const panel = document.createElement("section");
           panel.id = `profileInfoPanel_${tab.id}`;
-          panel.className = `profile-info-panel${isActive ? " active" : ""}`;
+          panel.className = `profile-info-panel panel${isActive ? " active" : ""}`;
+          panel.dataset.surfaceRole = "panel";
           panel.dataset.profileInfoPanel = tab.id;
           panel.setAttribute("role", "tabpanel");
           panel.setAttribute("aria-labelledby", `profileInfoTab_${tab.id}`);
@@ -18460,11 +18634,11 @@
         return selected;
       }
 
-      function populateAttendanceLevelStyleOptions(levels = collectTrackingLevelNames()) {
+      function populateAttendanceLevelStyleOptions(levels = collectAttendanceLevelNames()) {
         const selectEl = document.getElementById("attendanceLevelStyleLevel");
         if (!selectEl) return;
         const current = selectedAttendanceLevelStyleLevel();
-        const values = collectTrackingLevelNames([
+        const values = collectAttendanceLevelNames([
           current,
           ...(Array.isArray(levels) ? levels : []),
         ]).filter(Boolean);
@@ -18485,7 +18659,15 @@
         if (!selectedLevel) return [];
         return attendanceStudentSource()
           .filter((student) =>
-            levelNamesMatch(student?.profile?.currentGrade || "", selectedLevel),
+            [
+              student?.profile?.currentGrade,
+              student?.profile?.classLevel,
+              student?.profile?.level,
+              student?.currentGrade,
+              student?.classLevel,
+              student?.level,
+              student?.className,
+            ].some((value) => levelNamesMatch(value || "", selectedLevel)),
           )
           .sort((left, right) =>
             studentDisplayName(left, { preferEnglish: true }).localeCompare(
@@ -18623,7 +18805,7 @@
         ].filter((entry) => Boolean(entry.tilesEl));
         if (!tileTargets.length) return;
 
-        const levels = collectTrackingLevelNames();
+        const levels = collectAttendanceLevelNames();
         if (!levels.length) {
           populateAttendanceLevelStyleOptions([]);
           syncAttendanceLevelEditorInputs();
@@ -18950,11 +19132,8 @@
           renderAttendanceAdminRows([]);
           return;
         }
-        if (hydrate) {
-          rowsEl.innerHTML =
-            '<tr><td colspan="2">Loading class attendance details...</td></tr>';
-          await hydrateAttendanceLandingDetails(students);
-        }
+        const hydratePromise =
+          hydrate ? hydrateAttendanceLandingDetails(students) : Promise.resolve();
         students.forEach((student) => {
           if (state.attendanceLanding.selectionsByStudentId[student.id]) return;
           if (!dateValue) {
@@ -18972,6 +19151,19 @@
         });
         renderAttendanceLandingRows(students);
         renderAttendanceAdminRows(students);
+        if (hydrate) {
+          void hydratePromise
+            .then(() => {
+              if (!hasLiveDom()) return;
+              const latestLevel = resolveSystemLevelName(
+                state.attendanceLanding?.selectedLevel || "",
+              );
+              if (!levelNamesMatch(latestLevel, selectedLevel)) return;
+              renderAttendanceLandingRows(students);
+              renderAttendanceAdminRows(students);
+            })
+            .catch(handleError);
+        }
       }
 
       async function refreshAttendanceLanding({ reloadRows = false } = {}) {
@@ -19844,6 +20036,7 @@
       async function bootAfterLogin() {
         initializeParentTrackingScoreSelects();
         initializeParentTrackingScoreLegendPopovers();
+        initializeButtonTooltips();
         await loadRolePermissions();
         await hydrateUiSettingsFromServer();
         await loadAssignmentTemplatesFromServer({
@@ -19899,6 +20092,7 @@
       }
 
       installButtonPressFeedback();
+      initializeButtonTooltips();
 
       document.querySelectorAll("[data-menu-toggle]").forEach((toggleBtn) => {
         toggleBtn.addEventListener("click", () => {

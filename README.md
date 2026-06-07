@@ -79,6 +79,17 @@ npm run dev
 npm start
 ```
 
+## Canonical Dev Entry Points
+
+These are the canonical loopback dev URLs for the portal shell and portal apps:
+
+- `http://127.0.0.1:8788?apiOrigin=http://127.0.0.1:8788`
+- `http://127.0.0.1:8788/admin?apiOrigin=http://127.0.0.1:8788`
+- `http://127.0.0.1:8788/parent?apiOrigin=http://127.0.0.1:8788`
+- `http://127.0.0.1:8788/student?apiOrigin=http://127.0.0.1:8788`
+
+Use these links when validating the dev runtime on port `8788`.
+
 Async side-effects worker:
 
 ```bash

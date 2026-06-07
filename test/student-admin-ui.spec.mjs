@@ -3195,12 +3195,13 @@ test("student admin child page owns students panel while search stays visible", 
     }
 
     if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
-    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Eggs & Chicks", "Pre-A1 Starters"], schools: [] })
     if (url.includes("/api/admin/students/stu-")) {
       return jsonResponse(200, {
         id: "stu-01",
         eaglesId: "SIS-001",
-        profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
+        profile: { fullName: "Student One", currentGrade: "" },
+        level: "Eggs & Chicks",
         attendanceRecords: [],
         gradeRecords: [],
         parentReports: [],
@@ -4238,10 +4239,21 @@ test("assignments page uses level tiles, itemized exercise links, and completion
     }
 
     if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
-    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters", "A1 Movers"], schools: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Eggs & Chicks", "Pre-A1 Starters", "A1 Movers"], schools: [] })
     if (url.includes("/api/admin/students")) {
       return jsonResponse(200, {
         items: [
+          {
+            id: "stu-egg",
+            eaglesId: "SIS-000",
+            email: "eggs@example.com",
+            profile: {
+              fullName: "Eggs Student",
+              currentGrade: "Eggs & Chicks",
+              studentEmail: "eggs@example.com",
+            },
+            counts: { attendanceRecords: 0 },
+          },
           {
             id: "stu-01",
             eaglesId: "SIS-001",
@@ -4328,12 +4340,14 @@ test("assignments page uses level tiles, itemized exercise links, and completion
   const document = dom.window.document
   document.querySelector('[data-page-link="assignments"]').click()
 
-  await waitFor(() => {
-    assert.ok(document.querySelectorAll("#assignmentLevelTiles button").length >= 2)
-    assert.ok(document.querySelector("#assignmentExerciseSelect option[value='Starter Listening 01']"))
-  })
+    await waitFor(() => {
+      assert.ok(document.querySelectorAll("#assignmentLevelTiles button").length >= 3)
+      assert.ok(document.querySelector("#assignmentExerciseSelect option[value='Starter Listening 01']"))
+    })
 
-  const startersTile = Array.from(document.querySelectorAll("#assignmentLevelTiles button")).find((button) =>
+  const assignmentTiles = Array.from(document.querySelectorAll("#assignmentLevelTiles button"))
+  assert.match(assignmentTiles[0]?.textContent || "", /Eggs & Chicks/i)
+  const startersTile = assignmentTiles.find((button) =>
     /Pre-A1 Starters/i.test(button.textContent || "")
   )
   assert.ok(startersTile)
@@ -4547,10 +4561,16 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
       })
     }
     if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
-    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Pre-A1 Starters"], schools: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: ["Eggs & Chicks", "Pre-A1 Starters"], schools: [] })
     if (url.includes("/api/admin/students?")) {
       return jsonResponse(200, {
         items: [
+          {
+            id: "stu-egg",
+            eaglesId: "SIS-000",
+            email: "eggs@example.com",
+            profile: { fullName: "Eggs Student", currentGrade: "Eggs & Chicks", studentEmail: "eggs@example.com" },
+          },
           {
             id: "stu-01",
             eaglesId: "SIS-001",
@@ -4609,9 +4629,12 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
 
   await waitFor(() => {
     const levelTiles = document.querySelectorAll("#parentTrackingLevelTiles button")
-    assert.ok(levelTiles.length >= 1)
+    assert.ok(levelTiles.length >= 2)
+    assert.match(levelTiles[0]?.textContent || "", /Eggs & Chicks/i)
+    assert.equal(Array.from(levelTiles).filter((tile) => /Eggs & Chicks/i.test(tile.textContent || "")).length, 1)
     const studentSelect = document.getElementById("pt_studentRefId")
     assert.ok(studentSelect)
+    assert.ok(studentSelect.querySelector('option[value="stu-egg"]'))
     assert.ok(studentSelect.querySelector('option[value="stu-01"]'))
     const behaviorField = document.getElementById("pt_behaviorScore")
     assert.equal(behaviorField?.tagName, "INPUT")
@@ -5271,8 +5294,14 @@ test("performance staged reports panel queues a staged report via approve action
         assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
         weeklyAssignmentCompletion: [],
         atRiskWeek: { total: 0, students: [] },
-        classEnrollmentAttendance: [],
-        levelCompletion: [],
+        classEnrollmentAttendance: [
+          { level: "Eggs & Chicks", enrolledStudents: 6, presentStudents: 4, absentStudents: 1, tardy10Students: 1, tardy30Students: 0 },
+          { level: "Pre-A1 Starters", enrolledStudents: 8, presentStudents: 6, absentStudents: 1, tardy10Students: 1, tardy30Students: 0 },
+        ],
+        levelCompletion: [
+          { level: "Eggs & Chicks", enrolledStudents: 6, completedStudents: 4, totalAssignments: 12, completedAssignments: 8, uncompletedStudents: [] },
+          { level: "Pre-A1 Starters", enrolledStudents: 8, completedStudents: 6, totalAssignments: 14, completedAssignments: 10, uncompletedStudents: [] },
+        ],
         parentReports: { total: 1 },
         parentReportQueue: { total: queueItems.length, hasMore: false, items: queueItems },
       })
@@ -5330,7 +5359,13 @@ test("performance staged reports panel queues a staged report via approve action
   const document = dom.window.document
   await waitFor(() => {
     assert.ok(document.querySelector('[data-stage-report-id="rep-01"]'))
-  }, 2500)
+    const levelSelect = document.getElementById("performanceDataLevel")
+    assert.ok(levelSelect)
+    const options = Array.from(levelSelect.querySelectorAll("option")).map((entry) => normalizeText(entry.textContent || ""))
+    assert.ok(options.length >= 2)
+    assert.ok(options.includes("Eggs & Chicks"))
+    assert.equal(options[1], "Eggs & Chicks")
+  }, 5000)
 
   document.querySelector('[data-stage-report-id="rep-01"]').click()
   await waitFor(() => {
@@ -7158,7 +7193,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
         id: "stu-01",
         eaglesId: "SIS-001",
         studentNumber: 1001,
-        profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
+        profile: { fullName: "Student One", currentGrade: "Eggs & Chicks" },
         attendanceRecords: [
           { id: "att-1", attendanceDate: "2026-02-24", status: "present", comments: "" },
           { id: "att-2", attendanceDate: "2026-02-25", status: "absent", comments: "" },
@@ -7174,7 +7209,8 @@ test("attendance main defaults to absent and admin child shows per-student stats
           {
             id: "stu-01",
             eaglesId: "SIS-001",
-            profile: { fullName: "Student One", currentGrade: "Pre-A1 Starters" },
+            profile: { fullName: "Student One", currentGrade: "" },
+            level: "Eggs & Chicks",
             counts: { attendanceRecords: 3 },
           },
         ],
@@ -7218,9 +7254,11 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.match(promptRow.textContent || "", /Select a class level/i)
   })
   await waitFor(() => {
-    const firstLevelTile = dom.window.document.querySelector("#attendanceLevelTiles .attendance-level-tile")
-    assert.ok(firstLevelTile)
-    firstLevelTile.click()
+    const eggsLevelTile = dom.window.document.querySelector(
+      '#attendanceLevelTiles .attendance-level-tile[aria-label="Eggs & Chicks"]',
+    )
+    assert.ok(eggsLevelTile)
+    eggsLevelTile.click()
   })
   await waitFor(() => {
     const absentChecked = dom.window.document.querySelector(
@@ -7243,7 +7281,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
   dom.window.document.getElementById("attendanceLandingSaveAllBtn")?.click()
   await waitFor(() => {
     const statusText = normalizeText(dom.window.document.getElementById("status")?.textContent)
-    assert.match(statusText, /Attendance saved for Pre-A1 Starters/i)
+    assert.match(statusText, /Attendance saved for Eggs & Chicks/i)
     assert.ok(dashboardCalls > dashboardCallsBeforeSave)
   })
 
@@ -7638,6 +7676,92 @@ test("profile settings layout editor supports tab/type/sequence updates and cust
   document.querySelector('[data-profile-tab="covid"]')?.click()
   await waitFor(() => {
     assert.equal(document.getElementById("f_customHealthNote"), null)
+  })
+
+  dom.window.close()
+})
+
+test("attendance level tiles collapse Eggs & Chicks aliases and keep the canonical first level first", async () => {
+  const dom = await createAdminUiDom(async (resource, init = {}) => {
+    const url = String(resource)
+    void init
+
+    if (url.includes("/api/admin/auth/me")) return jsonResponse(401, { error: "Unauthorized" })
+    if (url.includes("/api/admin/auth/login")) {
+      return jsonResponse(200, {
+        user: { username: "admin", role: "admin" },
+        rolePolicy: {
+          role: "admin",
+          canRead: true,
+          canWrite: true,
+          canManageUsers: true,
+          canManagePermissions: true,
+          startPage: "overview",
+          allowedPages: ["overview", "attendance"],
+        },
+      })
+    }
+    if (url.includes("/api/admin/permissions")) {
+      return jsonResponse(200, {
+        roles: {
+          admin: {
+            role: "admin",
+            canRead: true,
+            canWrite: true,
+            canManageUsers: true,
+            canManagePermissions: true,
+            startPage: "overview",
+            allowedPages: ["overview", "attendance"],
+          },
+        },
+      })
+    }
+    if (url.includes("/api/admin/users")) return jsonResponse(200, { items: [] })
+    if (url.includes("/api/admin/filters")) return jsonResponse(200, { levels: [], schools: [] })
+    if (url.includes("/api/admin/students")) {
+      return jsonResponse(200, { items: [] })
+    }
+    if (url.includes("/api/admin/dashboard")) {
+      return jsonResponse(200, {
+        today: { attendance: 0, absences: 0, tardy10PlusPercent: 0, tardy30PlusPercent: 0 },
+        assignments: { total: 0, completedOnTime: 0, completedLate: 0, outstanding: 0, outstandingYtd: 0 },
+        weeklyAssignmentCompletion: [],
+        atRiskWeek: { total: 0, students: [] },
+        classEnrollmentAttendance: [
+          { level: "Eggs & Chicks", enrolledStudents: 0, presentStudents: 0, absentStudents: 0, tardy10Students: 0, tardy30Students: 0 },
+          { level: "Pre-A1 Starters", enrolledStudents: 0, presentStudents: 0, absentStudents: 0, tardy10Students: 0, tardy30Students: 0 },
+          { level: "A1 Movers", enrolledStudents: 0, presentStudents: 0, absentStudents: 0, tardy10Students: 0, tardy30Students: 0 },
+          { level: "A2 Flyers", enrolledStudents: 0, presentStudents: 0, absentStudents: 0, tardy10Students: 0, tardy30Students: 0 },
+          { level: "A2 KET", enrolledStudents: 0, presentStudents: 0, absentStudents: 0, tardy10Students: 0, tardy30Students: 0 },
+          { level: "B1 PET", enrolledStudents: 0, presentStudents: 0, absentStudents: 0, tardy10Students: 0, tardy30Students: 0 },
+        ],
+        levelCompletion: [
+          { level: "EggChicks", enrolledStudents: 0, completedStudents: 0, totalAssignments: 0, completedAssignments: 0, uncompletedStudents: [] },
+          { level: "Pre-A1 Starters", enrolledStudents: 0, completedStudents: 0, totalAssignments: 0, completedAssignments: 0, uncompletedStudents: [] },
+          { level: "A1 Movers", enrolledStudents: 0, completedStudents: 0, totalAssignments: 0, completedAssignments: 0, uncompletedStudents: [] },
+          { level: "A2 Flyers", enrolledStudents: 0, completedStudents: 0, totalAssignments: 0, completedAssignments: 0, uncompletedStudents: [] },
+          { level: "A2 KET", enrolledStudents: 0, completedStudents: 0, totalAssignments: 0, completedAssignments: 0, uncompletedStudents: [] },
+          { level: "B1 PET", enrolledStudents: 0, completedStudents: 0, totalAssignments: 0, completedAssignments: 0, uncompletedStudents: [] },
+        ],
+      })
+    }
+    if (url.includes("/api/admin/exercise-titles")) return jsonResponse(200, { items: [] })
+    return jsonResponse(200, {})
+  })
+
+  submitLogin(dom, { username: "admin" })
+  await waitFor(() => {
+    const text = dom.window.document.getElementById("status")?.textContent || ""
+    assert.match(text, /Authenticated as admin/i)
+  })
+  dom.window.document.querySelector('[data-page-link="attendance"]').click()
+  await waitFor(() => {
+    const tiles = Array.from(dom.window.document.querySelectorAll("#attendanceLevelTiles .attendance-level-tile"))
+    assert.ok(tiles.length >= 6)
+    const labels = tiles.map((tile) => (tile.getAttribute("aria-label") || "").trim())
+    assert.equal(labels[0], "Eggs & Chicks")
+    assert.equal(labels.filter((label) => label === "Eggs & Chicks").length, 1)
+    assert.equal(new Set(labels).size, labels.length)
   })
 
   dom.window.close()

@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Portal Button and Chip Proof</title>
+    <link rel="stylesheet" href="./shared/portal-theme.css">
+    <style>
+      body.button-chip-proof-page {
+        background:
+          radial-gradient(860px 420px at 10% 0%, rgba(87, 114, 132, 0.18), transparent 58%),
+          linear-gradient(180deg, #edf1f6 0%, #dce6f1 100%);
+        color: #17345e;
+        margin: 0;
+        min-height: 100vh;
+      }
+
+      .proof-shell {
+        margin: 0 auto;
+        max-width: 1480px;
+        padding: 32px 20px 56px;
+      }
+
+      .proof-header {
+        background: rgba(252, 253, 255, 0.94);
+        border: 1px solid rgba(115, 136, 163, 0.9);
+        border-radius: var(--radius-3);
+        box-shadow: 0 18px 42px rgba(19, 35, 61, 0.08);
+        padding: 24px;
+      }
+
+      .proof-header h1,
+      .proof-section h2,
+      .proof-theme-panel h2,
+      .proof-subsection h3 {
+        margin: 0;
+      }
+
+      .proof-header p,
+      .proof-note,
+      .proof-legend,
+      .proof-kicker {
+        margin: 0;
+      }
+
+      .proof-header,
+      .proof-section,
+      .proof-theme-panel,
+      .proof-subsection {
+        display: grid;
+        gap: 16px;
+      }
+
+      .proof-copy {
+        color: #264868;
+        font-size: 0.98rem;
+        line-height: 1.45;
+        max-width: 72ch;
+      }
+
+      .proof-kicker {
+        color: #365b8e;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .proof-theme-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-top: 22px;
+      }
+
+      .proof-theme-panel {
+        border: 1px solid rgba(115, 136, 163, 0.9);
+        border-radius: var(--radius-3);
+        box-shadow: 0 18px 42px rgba(19, 35, 61, 0.08);
+        padding: 22px;
+      }
+
+      .proof-theme-panel--light {
+        background: rgba(252, 253, 255, 0.95);
+        color: #17345e;
+      }
+
+      .proof-theme-panel--dark {
+        background: linear-gradient(180deg, #20252c 0%, #151a20 100%);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: #fbffff;
+      }
+
+      .proof-theme-panel--dark .proof-copy,
+      .proof-theme-panel--dark .proof-note,
+      .proof-theme-panel--dark .proof-legend {
+        color: #d9e2f1;
+      }
+
+      .proof-theme-panel--dark .proof-kicker {
+        color: #b4c4ea;
+      }
+
+      .proof-theme-panel--dark .proof-demo-card,
+      .proof-theme-panel--dark .proof-container-card,
+      .proof-theme-panel--dark .proof-compare-card,
+      .proof-theme-panel--dark .proof-token-card {
+        background: rgba(60, 66, 72, 0.88);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+
+      .proof-theme-panel--dark .proof-state-label {
+        color: #fbffff;
+      }
+
+      .proof-theme-panel--dark .proof-token-card code,
+      .proof-theme-panel--dark .proof-note code,
+      .proof-theme-panel--dark .proof-legend code {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .proof-grid,
+      .proof-state-grid,
+      .proof-compare-grid,
+      .proof-container-grid,
+      .proof-token-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .proof-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .proof-state-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .proof-container-grid,
+      .proof-token-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .proof-compare-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+
+      .proof-demo-card,
+      .proof-container-card,
+      .proof-compare-card,
+      .proof-token-card {
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(115, 136, 163, 0.82);
+        border-radius: var(--radius-2);
+        padding: 14px;
+      }
+
+      .proof-demo-card,
+      .proof-container-card,
+      .proof-compare-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .proof-state-row,
+      .proof-inline-row,
+      .proof-container-surface,
+      .proof-distinct-row {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .proof-state-row {
+        justify-content: flex-start;
+      }
+
+      .proof-container-surface {
+        border: 1px dashed rgba(108, 134, 170, 0.86);
+        border-radius: var(--radius-2);
+        min-height: 92px;
+        padding: 12px;
+      }
+
+      .proof-tooltip-proof {
+        position: relative;
+      }
+
+      .proof-tooltip-surface {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .proof-tooltip-bubble {
+        background: #17345e;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 10px;
+        box-shadow: 0 12px 24px rgba(19, 35, 61, 0.18);
+        color: #fbffff;
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1.2;
+        max-inline-size: min(280px, calc(100vw - 24px));
+        padding: 8px 10px;
+        pointer-events: none;
+        position: fixed;
+        visibility: hidden;
+        z-index: 80;
+      }
+
+      .proof-tooltip-bubble.is-visible {
+        visibility: visible;
+      }
+
+      .proof-container-surface--narrow {
+        inline-size: 210px;
+      }
+
+      .proof-container-surface--medium {
+        inline-size: 360px;
+      }
+
+      .proof-container-surface--wide {
+        inline-size: min(100%, 560px);
+      }
+
+      .proof-theme-panel--dark .proof-container-surface {
+        border-color: rgba(180, 196, 234, 0.42);
+      }
+
+      .proof-state-label,
+      .proof-card-title {
+        color: inherit;
+        font-size: 0.88rem;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .proof-note,
+      .proof-legend {
+        color: #365067;
+        font-size: 0.86rem;
+        line-height: 1.4;
+      }
+
+      .proof-note code,
+      .proof-legend code,
+      .proof-token-card code {
+        background: rgba(23, 52, 94, 0.08);
+        border-radius: 4px;
+        padding: 1px 4px;
+      }
+
+      .proof-token-card {
+        align-content: start;
+        display: grid;
+        gap: 8px;
+      }
+
+      .proof-force-hover.portal-button {
+        background: var(--portal-button-fill-hover);
+        border-color: var(--portal-button-stroke-hover);
+        box-shadow: var(--portal-button-shadow-hover);
+        color: var(--portal-button-ink-hover);
+        transform: translateY(-1px);
+      }
+
+      .proof-force-active.portal-button {
+        background: var(--portal-button-fill-active);
+        border-color: var(--portal-button-stroke-active);
+        box-shadow: var(--portal-button-shadow-active);
+        color: var(--portal-button-ink-active);
+        transform: translateY(1px);
+      }
+
+      .proof-force-hover.portal-chip-interactive {
+        background: var(--portal-chip-interactive-fill-hover);
+        border-color: var(--portal-chip-interactive-stroke-hover);
+        color: var(--portal-chip-interactive-ink);
+        transform: translateY(-1px);
+      }
+
+      .proof-force-active.portal-chip-interactive {
+        background: var(--portal-chip-interactive-fill-active);
+        border-color: var(--portal-chip-interactive-stroke-active);
+        color: var(--portal-chip-interactive-ink);
+        transform: translateY(1px);
+      }
+
+      @media (max-width: 1100px) {
+        .proof-theme-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body class="button-chip-proof-page">
+    <main class="proof-shell">
+      <section class="proof-header">
+        <p class="proof-kicker">Phase 2 Review Surface</p>
+        <h1>Portal Button and Chip Proof</h1>
+        <p class="proof-copy">
+          This page proves the new normalized button and chip families before portal adoption. Buttons use
+          <code>radius-B -&gt; --portal-radius-button -&gt; var(--radius-3)</code>. Chips use
+          <code>radius-C -&gt; --portal-radius-chip -&gt; var(--radius-2)</code>.
+        </p>
+        <p class="proof-note">
+          Review focus: descriptive class names, no default full-width behavior, stable light/dark appearance, and
+          chip geometry remaining distinct from button geometry.
+        </p>
+      </section>
+
+      <section class="proof-theme-grid" aria-label="Light and dark review panels">
+        <section class="proof-theme-panel proof-theme-panel--light" aria-labelledby="lightProofTitle">
+          <p class="proof-kicker">Light Mode Surface</p>
+          <h2 id="lightProofTitle">Button and Chip Families</h2>
+          <p class="proof-copy">Normalized controls on a light review surface. Family colors stay fixed.</p>
+
+          <div class="proof-grid">
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Blue Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-blue-action" type="button">
+                  <span class="portal-button__label">Submit</span>
+                </button>
+                <button class="portal-button portal-button-blue-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">+</span>
+                  <span class="portal-button__label">Open Workflow</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Red Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-red-action" type="button">
+                  <span class="portal-button__label">Delete</span>
+                </button>
+                <button class="portal-button portal-button-red-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">!</span>
+                  <span class="portal-button__label">Reset Form</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Green Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-green-action" type="button">
+                  <span class="portal-button__label">Approve</span>
+                </button>
+                <button class="portal-button portal-button-green-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">+</span>
+                  <span class="portal-button__label">Queue Save</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Purple Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-purple-action" type="button">
+                  <span class="portal-button__label">Revise</span>
+                </button>
+                <button class="portal-button portal-button-purple-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">?</span>
+                  <span class="portal-button__label">Open Notes</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Neutral Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-neutral-action" type="button">
+                  <span class="portal-button__label">Back</span>
+                </button>
+                <button class="portal-button portal-button-neutral-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">&lt;</span>
+                  <span class="portal-button__label">Previous Item</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Teal Refresh</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-teal-refresh" type="button">
+                  <span class="portal-button__label">Refresh</span>
+                </button>
+                <button class="portal-button portal-button-teal-refresh is-loading" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">R</span>
+                  <span class="portal-button__label">Reload Data</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Amber Info</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-amber-info" type="button">
+                  <span class="portal-button__label">Inspect</span>
+                </button>
+                <button class="portal-button portal-button-amber-info" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">i</span>
+                  <span class="portal-button__label">Open Details</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Immutable Chrome</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-immutable-chrome" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">=</span>
+                  <span class="portal-button__label">Menu</span>
+                </button>
+                <button class="portal-button portal-button-immutable-chrome" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">x</span>
+                  <span class="portal-button__label">Close</span>
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <div class="proof-grid">
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Status Chips</p>
+              <div class="proof-inline-row">
+                <span class="portal-chip portal-chip-neutral-status">Neutral</span>
+                <span class="portal-chip portal-chip-blue-status">Pending</span>
+                <span class="portal-chip portal-chip-green-status">Approved</span>
+                <span class="portal-chip portal-chip-red-status">Blocked</span>
+                <span class="portal-chip portal-chip-amber-status">Review</span>
+                <span class="portal-chip portal-chip-purple-status">Revise</span>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Interactive Chips</p>
+              <div class="proof-inline-row">
+                <button class="portal-chip portal-chip-interactive" type="button">
+                  <span class="portal-chip__label">Quarter 1</span>
+                </button>
+                <button class="portal-chip portal-chip-interactive is-current" type="button">
+                  <span class="portal-chip__label">Current</span>
+                </button>
+                <button class="portal-chip portal-chip-interactive is-disabled" type="button">
+                  <span class="portal-chip__label">Disabled</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="proof-theme-panel proof-theme-panel--dark" aria-labelledby="darkProofTitle">
+          <p class="proof-kicker">Dark Mode Surface</p>
+          <h2 id="darkProofTitle">Buttons and Chips Families</h2>
+          <p class="proof-copy">Same buttons and chips palette, geometry, and hierarchy on a dark review surface.</p>
+
+          <div class="proof-grid">
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Blue Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-blue-action" type="button">
+                  <span class="portal-button__label">Submit</span>
+                </button>
+                <button class="portal-button portal-button-blue-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">+</span>
+                  <span class="portal-button__label">Open Workflow</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Red Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-red-action" type="button">
+                  <span class="portal-button__label">Delete</span>
+                </button>
+                <button class="portal-button portal-button-red-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">!</span>
+                  <span class="portal-button__label">Reset Form</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Green Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-green-action" type="button">
+                  <span class="portal-button__label">Approve</span>
+                </button>
+                <button class="portal-button portal-button-green-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">+</span>
+                  <span class="portal-button__label">Queue Save</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Purple Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-purple-action" type="button">
+                  <span class="portal-button__label">Revise</span>
+                </button>
+                <button class="portal-button portal-button-purple-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">?</span>
+                  <span class="portal-button__label">Open Notes</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Neutral Action</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-neutral-action" type="button">
+                  <span class="portal-button__label">Back</span>
+                </button>
+                <button class="portal-button portal-button-neutral-action" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">&lt;</span>
+                  <span class="portal-button__label">Previous Item</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Teal Refresh</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-teal-refresh" type="button">
+                  <span class="portal-button__label">Refresh</span>
+                </button>
+                <button class="portal-button portal-button-teal-refresh is-loading" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">R</span>
+                  <span class="portal-button__label">Reload Data</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Amber Info</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-amber-info" type="button">
+                  <span class="portal-button__label">Inspect</span>
+                </button>
+                <button class="portal-button portal-button-amber-info" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">i</span>
+                  <span class="portal-button__label">Open Details</span>
+                </button>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Immutable Chrome</p>
+              <div class="proof-inline-row">
+                <button class="portal-button portal-button-immutable-chrome" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">=</span>
+                  <span class="portal-button__label">Menu</span>
+                </button>
+                <button class="portal-button portal-button-immutable-chrome" type="button">
+                  <span class="portal-button__icon" aria-hidden="true">x</span>
+                  <span class="portal-button__label">Close</span>
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <div class="proof-grid">
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Status Chips</p>
+              <div class="proof-inline-row">
+                <span class="portal-chip portal-chip-neutral-status">Neutral</span>
+                <span class="portal-chip portal-chip-blue-status">Pending</span>
+                <span class="portal-chip portal-chip-green-status">Approved</span>
+                <span class="portal-chip portal-chip-red-status">Blocked</span>
+                <span class="portal-chip portal-chip-amber-status">Review</span>
+                <span class="portal-chip portal-chip-purple-status">Revise</span>
+              </div>
+            </article>
+            <article class="proof-demo-card">
+              <p class="proof-card-title">Interactive Chips</p>
+              <div class="proof-inline-row">
+                <button class="portal-chip portal-chip-interactive" type="button">
+                  <span class="portal-chip__label">Quarter 1</span>
+                </button>
+                <button class="portal-chip portal-chip-interactive is-current" type="button">
+                  <span class="portal-chip__label">Current</span>
+                </button>
+                <button class="portal-chip portal-chip-interactive is-disabled" type="button">
+                  <span class="portal-chip__label">Disabled</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="proof-section" aria-labelledby="buttonStatesTitle">
+        <p class="proof-kicker">Button States</p>
+        <h2 id="buttonStatesTitle">Button family overview</h2>
+        <p class="proof-legend">Each family is shown in normal, hover-intent, active-intent, focus-visible, and disabled states.</p>
+        <div class="proof-state-grid">
+          <article class="proof-demo-card">
+            <p class="proof-state-label">Blue Action</p>
+            <div class="proof-state-row">
+              <button class="portal-button portal-button-blue-action" type="button"><span class="portal-button__label">Normal</span></button>
+              <button class="portal-button portal-button-blue-action proof-force-hover" type="button"><span class="portal-button__label">Hover</span></button>
+              <button class="portal-button portal-button-blue-action proof-force-active" type="button"><span class="portal-button__label">Active</span></button>
+              <button class="portal-button portal-button-blue-action proof-force-focus" type="button"><span class="portal-button__label">Focus</span></button>
+              <button class="portal-button portal-button-blue-action is-disabled" type="button"><span class="portal-button__label">Disabled</span></button>
+            </div>
+          </article>
+          <article class="proof-demo-card">
+            <p class="proof-state-label">Red Action</p>
+            <div class="proof-state-row">
+              <button class="portal-button portal-button-red-action" type="button"><span class="portal-button__label">Normal</span></button>
+              <button class="portal-button portal-button-red-action proof-force-hover" type="button"><span class="portal-button__label">Hover</span></button>
+              <button class="portal-button portal-button-red-action proof-force-active" type="button"><span class="portal-button__label">Active</span></button>
+              <button class="portal-button portal-button-red-action proof-force-focus" type="button"><span class="portal-button__label">Focus</span></button>
+              <button class="portal-button portal-button-red-action is-disabled" type="button"><span class="portal-button__label">Disabled</span></button>
+            </div>
+          </article>
+          <article class="proof-demo-card">
+            <p class="proof-state-label">Green Action</p>
+            <div class="proof-state-row">
+              <button class="portal-button portal-button-green-action" type="button"><span class="portal-button__label">Normal</span></button>
+              <button class="portal-button portal-button-green-action proof-force-hover" type="button"><span class="portal-button__label">Hover</span></button>
+              <button class="portal-button portal-button-green-action proof-force-active" type="button"><span class="portal-button__label">Active</span></button>
+              <button class="portal-button portal-button-green-action proof-force-focus" type="button"><span class="portal-button__label">Focus</span></button>
+              <button class="portal-button portal-button-green-action is-disabled" type="button"><span class="portal-button__label">Disabled</span></button>
+            </div>
+          </article>
+          <article class="proof-demo-card">
+            <p class="proof-state-label">Purple Action</p>
+            <div class="proof-state-row">
+              <button class="portal-button portal-button-purple-action" type="button"><span class="portal-button__label">Normal</span></button>
+              <button class="portal-button portal-button-purple-action proof-force-hover" type="button"><span class="portal-button__label">Hover</span></button>
+              <button class="portal-button portal-button-purple-action proof-force-active" type="button"><span class="portal-button__label">Active</span></button>
+              <button class="portal-button portal-button-purple-action proof-force-focus" type="button"><span class="portal-button__label">Focus</span></button>
+              <button class="portal-button portal-button-purple-action is-disabled" type="button"><span class="portal-button__label">Disabled</span></button>
+            </div>
+          </article>
+          <article class="proof-demo-card">
+            <p class="proof-state-label">Neutral / Refresh / Info / Chrome</p>
+            <div class="proof-state-row">
+              <button class="portal-button portal-button-neutral-action" type="button"><span class="portal-button__label">Neutral</span></button>
+              <button class="portal-button portal-button-teal-refresh proof-force-hover" type="button"><span class="portal-button__label">Refresh</span></button>
+              <button class="portal-button portal-button-amber-info proof-force-active" type="button"><span class="portal-button__label">Info</span></button>
+              <button class="portal-button portal-button-immutable-chrome proof-force-focus" type="button"><span class="portal-button__label">Chrome</span></button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="proof-section proof-tooltip-proof" aria-labelledby="tooltipProofTitle" data-tooltip-proof>
+        <p class="proof-kicker">Tooltip Proof</p>
+        <h2 id="tooltipProofTitle">Scoped tooltip behavior</h2>
+        <p class="proof-legend">
+          This block demonstrates the same opt-in, opt-out, hover, and focus behavior used by the admin tooltip
+          wiring. The tooltip stays inside the viewport and never covers the button.
+        </p>
+        <div class="proof-container-surface proof-tooltip-surface" data-tooltip-proof-surface>
+          <button class="portal-button portal-button-blue-action" type="button" data-button-tooltip="auto">
+            <span class="portal-button__label">Hover me</span>
+          </button>
+          <button
+            class="portal-button portal-button-purple-action"
+            type="button"
+            data-button-tooltip-title="Focus shows this tooltip"
+            aria-label="Focus shows this tooltip"
+          >
+            <span class="portal-button__label">Focus me</span>
+          </button>
+          <button
+            class="portal-button portal-button-neutral-action"
+            type="button"
+            data-button-tooltip="off"
+          >
+            <span class="portal-button__label">Tooltip off</span>
+          </button>
+          <div class="proof-tooltip-bubble" role="tooltip" aria-hidden="true" data-tooltip-bubble></div>
+        </div>
+      </section>
+
+      <section class="proof-section" aria-labelledby="containerTitle">
+        <p class="proof-kicker">Sizing Proof</p>
+        <h2 id="containerTitle">Buttons stay content-width inside narrow and wide containers</h2>
+        <p class="proof-legend">The base button contract does not default to full width. The optional full-width helper is shown only as an explicit opt-in.</p>
+        <div class="proof-container-grid">
+          <article class="proof-container-card">
+            <p class="proof-state-label">Narrow container</p>
+            <div class="proof-container-surface proof-container-surface--narrow">
+              <button class="portal-button portal-button-blue-action" type="button"><span class="portal-button__label">Submit</span></button>
+              <button class="portal-button portal-button-neutral-action" type="button"><span class="portal-button__label">Back</span></button>
+            </div>
+          </article>
+          <article class="proof-container-card">
+            <p class="proof-state-label">Medium container</p>
+            <div class="proof-container-surface proof-container-surface--medium">
+              <button class="portal-button portal-button-teal-refresh" type="button">
+                <span class="portal-button__icon" aria-hidden="true">R</span>
+                <span class="portal-button__label">Reload Saved Data</span>
+              </button>
+              <button class="portal-button portal-button-green-action" type="button">
+                <span class="portal-button__label">Approve Current Queue Item</span>
+              </button>
+            </div>
+          </article>
+          <article class="proof-container-card">
+            <p class="proof-state-label">Wide container with explicit opt-in full width</p>
+            <div class="proof-container-surface proof-container-surface--wide">
+              <button class="portal-button portal-button-red-action" type="button">
+                <span class="portal-button__label">Delete</span>
+              </button>
+              <button class="portal-button portal-button-blue-action portal-button-full" type="button">
+                <span class="portal-button__label">Explicit Full-Width Opt-In</span>
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="proof-section" aria-labelledby="chipsTitle">
+        <p class="proof-kicker">Chip Overview</p>
+        <h2 id="chipsTitle">Chips remain distinct from buttons</h2>
+        <div class="proof-compare-grid">
+          <article class="proof-compare-card">
+            <p class="proof-state-label">Same label, different geometry</p>
+            <div class="proof-distinct-row">
+              <button class="portal-button portal-button-neutral-action" type="button">
+                <span class="portal-button__label">Current Quarter</span>
+              </button>
+              <span class="portal-chip portal-chip-blue-status">Current Quarter</span>
+            </div>
+          </article>
+          <article class="proof-compare-card">
+            <p class="proof-state-label">Interactive chip states</p>
+            <div class="proof-distinct-row">
+              <button class="portal-chip portal-chip-interactive" type="button"><span class="portal-chip__label">Normal</span></button>
+              <button class="portal-chip portal-chip-interactive proof-force-hover" type="button"><span class="portal-chip__label">Hover</span></button>
+              <button class="portal-chip portal-chip-interactive proof-force-active" type="button"><span class="portal-chip__label">Active</span></button>
+              <button class="portal-chip portal-chip-interactive proof-force-focus" type="button"><span class="portal-chip__label">Focus</span></button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="proof-section" aria-labelledby="tokenTitle">
+        <p class="proof-kicker">Token Mapping</p>
+        <h2 id="tokenTitle">Geometry and radius reference notes</h2>
+        <div class="proof-token-grid">
+          <article class="proof-token-card">
+            <p class="proof-state-label">Button geometry</p>
+            <p class="proof-note"><code>radius-B -&gt; --portal-radius-button -&gt; var(--radius-3)</code></p>
+            <p class="proof-note">All button variants keep the same radius, min/max sizing, border width, font rhythm, and icon gap.</p>
+          </article>
+          <article class="proof-token-card">
+            <p class="proof-state-label">Chip geometry</p>
+            <p class="proof-note"><code>radius-C -&gt; --portal-radius-chip -&gt; var(--radius-2)</code></p>
+            <p class="proof-note">Chips keep a tighter radius and smaller vertical profile so they do not collapse into the button family.</p>
+          </article>
+          <article class="proof-token-card">
+            <p class="proof-state-label">Theme immutability</p>
+            <p class="proof-note">The light and dark review panels use the same button and chip palette. No dimming, muting, or alternate dark-mode skin is applied.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const root = document.querySelector("[data-tooltip-proof]");
+        const bubble = root?.querySelector("[data-tooltip-bubble]");
+        if (!(root instanceof HTMLElement) || !(bubble instanceof HTMLElement)) return;
+
+        const selector = 'button:not([data-button-tooltip="off"])';
+        let activeButton = null;
+
+        const textForButton = (button) => {
+          const explicit = (button.dataset.buttonTooltip || "").trim();
+          if (explicit && explicit.toLowerCase() !== "auto") return explicit;
+          const storedTitle = (button.dataset.buttonTooltipTitle || "").trim();
+          if (storedTitle) return storedTitle;
+          const ariaLabel = (button.getAttribute("aria-label") || "").trim();
+          if (ariaLabel) return ariaLabel;
+          return (button.textContent || "").trim();
+        };
+
+        const hideBubble = () => {
+          activeButton = null;
+          bubble.classList.remove("is-visible");
+          bubble.textContent = "";
+        };
+
+        const positionBubble = (button) => {
+          const rect = button.getBoundingClientRect();
+          const margin = 12;
+          const gap = 10;
+          const bubbleWidth = bubble.offsetWidth;
+          const bubbleHeight = bubble.offsetHeight;
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          const fitsAbove = rect.top >= bubbleHeight + gap + margin;
+          const top = fitsAbove
+            ? rect.top - bubbleHeight - gap
+            : Math.min(viewportHeight - bubbleHeight - margin, rect.bottom + gap);
+          const centeredLeft = rect.left + rect.width / 2 - bubbleWidth / 2;
+          const left = Math.max(margin, Math.min(centeredLeft, viewportWidth - bubbleWidth - margin));
+          bubble.style.left = `${Math.round(left)}px`;
+          bubble.style.top = `${Math.round(top)}px`;
+        };
+
+        const showBubble = (button) => {
+          const text = textForButton(button);
+          if (!text) {
+            hideBubble();
+            return;
+          }
+          activeButton = button;
+          bubble.textContent = text;
+          bubble.classList.add("is-visible");
+          positionBubble(button);
+        };
+
+        root.addEventListener("mouseover", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          const button = target.closest(selector);
+          if (button instanceof HTMLButtonElement) showBubble(button);
+        });
+
+        root.addEventListener("mouseout", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (!target.closest(selector)) return;
+          const related = event.relatedTarget;
+          if (related instanceof Element && related.closest(selector)) return;
+          hideBubble();
+        });
+
+        root.addEventListener("focusin", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          const button = target.closest(selector);
+          if (button instanceof HTMLButtonElement) showBubble(button);
+        });
+
+        root.addEventListener("focusout", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (!target.closest(selector)) return;
+          hideBubble();
+        });
+
+        window.addEventListener("scroll", () => {
+          if (activeButton) positionBubble(activeButton);
+        });
+
+        window.addEventListener("resize", () => {
+          if (activeButton) positionBubble(activeButton);
+        });
+      })();
+    </script>
+  </body>
+</html>
