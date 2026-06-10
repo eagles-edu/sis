@@ -75,17 +75,17 @@
   --portal-action-blue-bottom: #183f89;
   --portal-action-blue-bottom-active: #163a7b;
   --portal-action-blue-bottom-hover: #2150a7;
-  --portal-action-blue-text: #fdfefe;
+  --portal-action-blue-text: #fbffff;
   --portal-action-blue-top: #2d66cb;
   --portal-action-blue-top-active: #1f4f9d;
   --portal-action-blue-top-hover: #3a74e0;
   --portal-action-green-border: #185433;
   --portal-action-green-bottom: #1f6e43;
-  --portal-action-green-text: #f7fff9;
+  --portal-action-green-text: #fbffff;
   --portal-action-green-top: #349f61;
   --portal-action-red-border: #75131b;
   --portal-action-red-bottom: #8f1620;
-  --portal-action-red-text: #fff8f8;
+  --portal-action-red-text: #fbffff;
   --portal-action-red-top: #cc4452;
   --portal-border: rgba(115, 136, 163, 0.96);
   --portal-border-strong: rgba(95, 115, 145, 1);
@@ -292,7 +292,7 @@
   --primary-color: #b50010;
   --radius-base: 3.667px;
   --radius-pill: 999px;
-  --secondary-color: #f9faff;
+  --secondary-color: #fbffff;
   --shadow: 0 10px 26px rgba(19, 35, 61, 0.1);
   --side-width: min(86vw, 320px);
   --tertiary-color: #002786;
@@ -317,7 +317,6 @@
   --portal-button-border-width: 1.5px;
   --portal-button-inline: 160px;
   --portal-button-compact-inline: 112px;
-  --portal-button-specialty-inline: 60px;
   --portal-button-open-week-set-inline: 100px;
   --portal-button-font-size: clamp(0.9rem, 0.25vw + 0.88rem, 0.96rem);
   --portal-button-font-weight: 800;
@@ -339,28 +338,28 @@
   --portal-button-blue-stroke: #13346f;
   --portal-button-blue-stroke-hover: #1a448e;
   --portal-button-blue-stroke-active: #103067;
-  --portal-button-blue-ink: #fdfefe;
+  --portal-button-blue-ink: #fbffff;
   --portal-button-red-fill: #cc4452;
   --portal-button-red-fill-hover: #dd5765;
   --portal-button-red-fill-active: #b93442;
   --portal-button-red-stroke: #75131b;
   --portal-button-red-stroke-hover: #8b1b26;
   --portal-button-red-stroke-active: #671119;
-  --portal-button-red-ink: #fff8f8;
+  --portal-button-red-ink: #fbffff;
   --portal-button-green-fill: #349f61;
   --portal-button-green-fill-hover: #42b870;
   --portal-button-green-fill-active: #2a8450;
   --portal-button-green-stroke: #185433;
   --portal-button-green-stroke-hover: #1d6940;
   --portal-button-green-stroke-active: #134428;
-  --portal-button-green-ink: #f7fff9;
+  --portal-button-green-ink: #fbffff;
   --portal-button-purple-fill: #7b4cd5;
   --portal-button-purple-fill-hover: #8b5fe0;
   --portal-button-purple-fill-active: #6739c0;
   --portal-button-purple-stroke: #40227f;
   --portal-button-purple-stroke-hover: #4f2b98;
   --portal-button-purple-stroke-active: #351c69;
-  --portal-button-purple-ink: #fbf8ff;
+  --portal-button-purple-ink: #fbffff;
   --portal-button-neutral-fill: #edf4ff;
   --portal-button-neutral-fill-hover: #e3eefc;
   --portal-button-neutral-fill-active: #d7e4f8;
@@ -374,7 +373,7 @@
   --portal-button-teal-stroke: #005e8d;
   --portal-button-teal-stroke-hover: #0072a8;
   --portal-button-teal-stroke-active: #004d74;
-  --portal-button-teal-ink: #f7feff;
+  --portal-button-teal-ink: #fbffff;
   --portal-button-amber-fill: #f3bf52;
   --portal-button-amber-fill-hover: #ffd069;
   --portal-button-amber-fill-active: #e0a73a;
@@ -388,7 +387,7 @@
   --portal-button-chrome-stroke: #0f1628;
   --portal-button-chrome-stroke-hover: #18233a;
   --portal-button-chrome-stroke-active: #0b1020;
-  --portal-button-chrome-ink: #ffffff;
+  --portal-button-chrome-ink: #fbffff;
   --portal-chip-inline: 120px;
   --portal-chip-border-width: 1.5px;
   --portal-chip-font-size: 0.78rem;
@@ -677,10 +676,6 @@ a.portal-button.is-disabled {
   --portal-button-max-inline: var(--portal-button-compact-inline);
   --portal-button-min-inline: var(--portal-button-compact-inline);
 }
-.portal-button-specialty {
-  --portal-button-max-inline: var(--portal-button-specialty-inline);
-  --portal-button-min-inline: var(--portal-button-specialty-inline);
-}
 .portal-button-open-week-set {
   --portal-button-max-inline: var(--portal-button-open-week-set-inline);
   --portal-button-min-inline: var(--portal-button-open-week-set-inline);
@@ -700,6 +695,20 @@ a.portal-button.is-disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.portal-button-compact .portal-button__label,
+.portal-button-open-week-set .portal-button__label {
+  display: grid;
+  inline-size: 100%;
+  min-block-size: 100%;
+  place-items: center;
+  line-height: 1.05;
+  overflow: visible;
+  text-overflow: clip;
+  text-align: center;
+  white-space: normal;
+  word-break: normal;
+  text-wrap: balance;
 }
 .portal-button.is-loading,
 .portal-chip.is-loading,
@@ -723,6 +732,25 @@ a.portal-chip.is-loading .portal-chip__icon {
   --portal-button-ink: var(--portal-button-blue-ink);
   --portal-button-ink-hover: var(--portal-button-blue-ink);
   --portal-button-ink-active: var(--portal-button-blue-ink);
+}
+.portal-button-blue-action:hover:not(:disabled):not(.is-disabled),
+.portal-button-blue-action:focus-visible,
+a.portal-button-blue-action:hover:not(.is-disabled),
+a.portal-button-blue-action:focus-visible,
+button.portal-button-blue-action:hover:not(:disabled):not(.is-disabled),
+button.portal-button-blue-action:focus-visible {
+  background: var(--portal-button-fill-hover) !important;
+  border-color: var(--portal-button-stroke-hover) !important;
+  box-shadow: var(--portal-button-shadow-hover) !important;
+  color: var(--portal-button-ink-hover) !important;
+}
+.portal-button-blue-action:active:not(:disabled):not(.is-disabled),
+a.portal-button-blue-action:active:not(.is-disabled),
+button.portal-button-blue-action:active:not(:disabled):not(.is-disabled) {
+  background: var(--portal-button-fill-active) !important;
+  border-color: var(--portal-button-stroke-active) !important;
+  box-shadow: var(--portal-button-shadow-active) !important;
+  color: var(--portal-button-ink-active) !important;
 }
 .portal-button-red-action {
   --portal-button-fill: var(--portal-button-red-fill);
@@ -1052,18 +1080,23 @@ body.admin-portal-page.admin-auth-booting #authBootPanel {
   background-image: none !important;
 }
 body.student-portal-page #loginPanel #loginForm,
-body.parent-portal-page #loginCard .login-form,
-body.admin-portal-page #authPanel #loginForm {
+body.parent-portal-page #loginCard .login-form {
   gap: 0;
+  margin-inline: auto;
+  width: min(100%, var(--portal-login-form-max-width));
+}
+body.admin-portal-page .form-row,
+body.admin-portal-page .login-form {
+  display: grid;
+  gap: 6px;
+}
+body.admin-portal-page .login-form {
+  gap: 10px;
   margin-inline: auto;
   width: min(100%, var(--portal-login-form-max-width));
 }
 body.admin-portal-page #authPanel .row {
   grid-template-columns: 1fr;
-}
-body.admin-portal-page #authPanel .row>[class^="col-"],
-body.admin-portal-page #authPanel .row>[class*=" col-"] {
-  grid-column: span 12;
 }
 body.admin-portal-page #authBootPanel {
   align-content: center;
@@ -1085,11 +1118,21 @@ body.admin-portal-page #authPanel :is(input, select, textarea) {
 }
 body.student-portal-page #loginPanel button,
 body.parent-portal-page #loginCard button,
-body.admin-portal-page #authPanel button {
+body.admin-portal-page #authPanel button:not(.portal-button) {
   font-size: 1rem;
   margin: .75rem 0 .125rem 0;
   min-height: 50px;
   padding: 13px 16px;
+}
+body.admin-portal-page #authPanel .actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+body.admin-portal-page #authPanel .actions-2 > * {
+  flex: 1 1 calc(50% - 6px);
 }
 body.student-portal-page #loginPanel .login-links,
 body.parent-portal-page #loginCard .login-links,
@@ -1780,7 +1823,7 @@ body.student-portal-page table.news-queue-table .queue-row-btn,
 body.parent-portal-page table.news-queue-table .queue-row-btn {
   background: linear-gradient(180deg, var(--portal-action-blue-top), var(--portal-action-blue-bottom));
   border-color: var(--portal-action-blue-border);
-  color: var(--secondary-color);
+  color: var(--portal-action-blue-text);
   min-height: 28px;
   padding: 3px 8px;
   font-size: 11px;
@@ -1797,7 +1840,7 @@ body.student-portal-page table.news-queue-table .queue-row-btn:focus-visible,
 body.parent-portal-page table.news-queue-table .queue-row-btn:hover:not(:disabled),
 body.parent-portal-page table.news-queue-table .queue-row-btn:focus-visible {
   box-shadow: 0 8px 16px rgba(19, 35, 61, 0.12);
-  color: var(--secondary-color);
+  color: var(--portal-action-blue-text);
   filter: saturate(1.04);
   outline: none;
   transform: translateY(-1px);
@@ -3692,7 +3735,7 @@ body.parent-portal-page .link-btn {
   text-align: center;
   text-decoration: none;
 }
-body.admin-portal-page button:not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn),
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn),
 body.admin-portal-page .link-btn {
   align-items: center;
   background: #f1f5ff;
@@ -3703,12 +3746,12 @@ body.admin-portal-page .link-btn {
   cursor: pointer;
   display: inline-flex;
   justify-content: center;
-  min-height: 42px;
+  min-height: 48px;
   text-align: center;
   text-decoration: none;
 }
-body.admin-portal-page button:not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):hover:not(:disabled),
-body.admin-portal-page button:not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):focus-visible,
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):hover:not(:disabled),
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):focus-visible,
 body.admin-portal-page .link-btn:hover:not(:disabled),
 body.admin-portal-page .link-btn:focus-visible {
   background: #f3f8ff;
@@ -3717,7 +3760,7 @@ body.admin-portal-page .link-btn:focus-visible {
   outline: none;
   transform: translateY(-1px);
 }
-body.admin-portal-page button:not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):disabled,
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):disabled,
 body.admin-portal-page .link-btn:disabled {
   box-shadow: none;
   cursor: not-allowed;
@@ -3776,6 +3819,19 @@ body.student-portal-page .toolbar-actions {
 }
 body.parent-portal-page .toolbar-actions {
   grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+body.admin-portal-page .news-review-viewer-actions,
+body.portal-hub-page .hub-prefooter__links,
+body.button-chip-proof-page .proof-state-row,
+body.button-chip-proof-page .proof-inline-row,
+body.button-chip-proof-page .proof-container-surface,
+body.button-chip-proof-page .proof-distinct-row,
+body.button-chip-proof-page .proof-tooltip-surface {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  justify-content: flex-start;
 }
 body.student-portal-page .identity-value,
 body.parent-portal-page .identity-value {
@@ -4086,6 +4142,153 @@ body.student-portal-page #openNewsPageBtn:disabled {
   opacity: 0.6;
   transform: none;
 }
+body.admin-portal-page button.btn-refresh,
+body.admin-portal-page a.btn-refresh,
+body.admin-portal-page button.primary,
+body.admin-portal-page a.primary,
+body.admin-portal-page button.alt,
+body.admin-portal-page a.alt,
+body.admin-portal-page button.btn-edit,
+body.admin-portal-page a.btn-edit,
+body.admin-portal-page button.btn-delete,
+body.admin-portal-page a.btn-delete,
+body.admin-portal-page button.danger,
+body.admin-portal-page a.danger,
+body.admin-portal-page button.ghost,
+body.admin-portal-page a.ghost {
+  align-items: center;
+  border-radius: var(--portal-radius-button);
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: var(--portal-button-font-size);
+  font-weight: var(--portal-button-font-weight);
+  gap: var(--portal-button-gap);
+  justify-content: center;
+  line-height: var(--portal-button-line-height);
+  min-height: var(--portal-button-min-block);
+  min-width: 0;
+  padding: 0 var(--portal-button-inline-padding);
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+body.admin-portal-page button.btn-refresh,
+body.admin-portal-page a.btn-refresh {
+  background: var(--portal-button-teal-fill);
+  border-color: var(--portal-button-teal-stroke);
+  color: var(--portal-button-teal-ink);
+}
+body.admin-portal-page button.primary,
+body.admin-portal-page a.primary {
+  background: var(--portal-button-blue-fill);
+  border-color: var(--portal-button-blue-stroke);
+  color: var(--portal-button-blue-ink);
+}
+body.admin-portal-page button.alt,
+body.admin-portal-page a.alt,
+body.admin-portal-page button.ghost,
+body.admin-portal-page a.ghost {
+  background: var(--portal-button-neutral-fill);
+  border-color: var(--portal-button-neutral-stroke);
+  color: var(--portal-button-neutral-ink);
+}
+body.admin-portal-page button.btn-edit,
+body.admin-portal-page a.btn-edit {
+  background: var(--portal-button-green-fill);
+  border-color: var(--portal-button-green-stroke);
+  color: var(--portal-button-green-ink);
+}
+body.admin-portal-page button.btn-delete,
+body.admin-portal-page a.btn-delete,
+body.admin-portal-page button.danger,
+body.admin-portal-page a.danger {
+  background: var(--portal-button-red-fill);
+  border-color: var(--portal-button-red-stroke);
+  color: var(--portal-button-red-ink);
+}
+body.admin-portal-page button.btn-refresh:hover:not(:disabled),
+body.admin-portal-page button.btn-refresh:focus-visible,
+body.admin-portal-page a.btn-refresh:hover,
+body.admin-portal-page a.btn-refresh:focus-visible {
+  background: var(--portal-button-teal-fill-hover);
+  border-color: var(--portal-button-teal-stroke-hover);
+  box-shadow: var(--portal-button-shadow-hover);
+  color: var(--portal-button-teal-ink);
+  outline: none;
+  transform: translateY(-1px);
+}
+body.admin-portal-page button.primary:hover:not(:disabled),
+body.admin-portal-page button.primary:focus-visible,
+body.admin-portal-page a.primary:hover,
+body.admin-portal-page a.primary:focus-visible {
+  background: var(--portal-button-blue-fill-hover);
+  border-color: var(--portal-button-blue-stroke-hover);
+  box-shadow: var(--portal-button-shadow-hover);
+  color: var(--portal-button-blue-ink);
+  outline: none;
+  transform: translateY(-1px);
+}
+body.admin-portal-page button.alt:hover:not(:disabled),
+body.admin-portal-page button.alt:focus-visible,
+body.admin-portal-page a.alt:hover,
+body.admin-portal-page a.alt:focus-visible,
+body.admin-portal-page button.ghost:hover:not(:disabled),
+body.admin-portal-page button.ghost:focus-visible,
+body.admin-portal-page a.ghost:hover,
+body.admin-portal-page a.ghost:focus-visible {
+  background: var(--portal-button-neutral-fill-hover);
+  border-color: var(--portal-button-neutral-stroke-hover);
+  box-shadow: var(--portal-button-shadow-hover);
+  color: var(--portal-button-neutral-ink);
+  outline: none;
+  transform: translateY(-1px);
+}
+body.admin-portal-page button.btn-edit:hover:not(:disabled),
+body.admin-portal-page button.btn-edit:focus-visible,
+body.admin-portal-page a.btn-edit:hover,
+body.admin-portal-page a.btn-edit:focus-visible {
+  background: var(--portal-button-green-fill-hover);
+  border-color: var(--portal-button-green-stroke-hover);
+  box-shadow: var(--portal-button-shadow-hover);
+  color: var(--portal-button-green-ink);
+  outline: none;
+  transform: translateY(-1px);
+}
+body.admin-portal-page button.btn-delete:hover:not(:disabled),
+body.admin-portal-page button.btn-delete:focus-visible,
+body.admin-portal-page a.btn-delete:hover,
+body.admin-portal-page a.btn-delete:focus-visible,
+body.admin-portal-page button.danger:hover:not(:disabled),
+body.admin-portal-page button.danger:focus-visible,
+body.admin-portal-page a.danger:hover,
+body.admin-portal-page a.danger:focus-visible {
+  background: var(--portal-button-red-fill-hover);
+  border-color: var(--portal-button-red-stroke-hover);
+  box-shadow: var(--portal-button-shadow-hover);
+  color: var(--portal-button-red-ink);
+  outline: none;
+  transform: translateY(-1px);
+}
+body.admin-portal-page button.btn-refresh:active:not(:disabled),
+body.admin-portal-page a.btn-refresh:active,
+body.admin-portal-page button.primary:active:not(:disabled),
+body.admin-portal-page a.primary:active,
+body.admin-portal-page button.alt:active:not(:disabled),
+body.admin-portal-page a.alt:active,
+body.admin-portal-page button.ghost:active:not(:disabled),
+body.admin-portal-page a.ghost:active,
+body.admin-portal-page button.btn-edit:active:not(:disabled),
+body.admin-portal-page a.btn-edit:active,
+body.admin-portal-page button.btn-delete:active:not(:disabled),
+body.admin-portal-page a.btn-delete:active,
+body.admin-portal-page button.danger:active:not(:disabled),
+body.admin-portal-page a.danger:active {
+  box-shadow: var(--portal-button-shadow-active);
+  transform: translateY(1px);
+}
 body.student-portal-page .queue-table-wrap table.news-queue-table .queue-row-btn,
 body.parent-portal-page .queue-table-wrap table.news-queue-table .queue-row-btn,
 body.student-portal-page table.news-queue-table .queue-row-btn,
@@ -4288,8 +4491,8 @@ body.parent-portal-page :is(button, a).portal-action-btn.portal-action-btn--bran
 body.portal-hub-page .hub-prefooter__links {
   align-items: center;
   display: flex;
-  flex-wrap: nowrap;
-  gap: var(--hub-space-1);
+  flex-wrap: wrap;
+  gap: 8px 10px;
   justify-content: flex-start;
   width: 100%;
 }
@@ -6321,9 +6524,18 @@ body.admin-portal-page .queue-modal-body textarea:not(.card) {
   min-height: 68px;
 }
 body.admin-portal-page .queue-modal-actions {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+body.admin-portal-page .news-review-viewer-actions {
+  gap: 8px;
+}
+body.admin-portal-page .news-review-viewer-actions > button {
+  flex: 0 0 auto;
+  inline-size: var(--portal-button-inline);
+  min-inline-size: var(--portal-button-inline);
 }
 body.admin-portal-page .news-review-viewer-grid {
   display: grid;
@@ -6377,15 +6589,16 @@ body.admin-portal-page .news-review-table-wrap.data-surface {
   background: var(--portal-surface-support);
 }
 body.admin-portal-page .news-review-viewer-actions {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 8px;
 }
-body.admin-portal-page .news-review-viewer-actions button {
-  font-size: 14px;
-  font-weight: 700;
-  min-height: 42px;
-  padding: 10px 12px;
+body.admin-portal-page .news-review-viewer-actions > button {
+  flex: 0 0 auto;
+  inline-size: var(--portal-button-inline);
+  min-inline-size: var(--portal-button-inline);
+}
+body.admin-portal-page :is(button, a).btn-refresh.portal-button {
+  min-block-size: 48px;
+  min-height: 48px;
 }
 html[data-theme="dark"] body.admin-portal-page .queue-modal {
   background: rgba(6, 9, 16, 0.72);
@@ -6598,7 +6811,7 @@ body.portal-hub-page .hub-prefooter {
 body.portal-hub-page .hub-prefooter__links {
   align-items: center;
   display: flex;
-  gap: var(--hub-space-1);
+  gap: 8px 10px;
   justify-content: flex-end;
 }
 body.portal-hub-page .hub-prefooter__link {
@@ -7559,6 +7772,17 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   .header-actions,
   .app-header-actions {
     justify-content: flex-start;
+  }
+  body.admin-portal-page .news-review-viewer-actions,
+  body.portal-hub-page .hub-prefooter__links,
+  body.button-chip-proof-page .proof-state-row,
+  body.button-chip-proof-page .proof-inline-row,
+  body.button-chip-proof-page .proof-container-surface,
+  body.button-chip-proof-page .proof-distinct-row,
+  body.button-chip-proof-page .proof-tooltip-surface {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
   .portal-grid {
     grid-template-columns: 1fr;

@@ -191,6 +191,7 @@
           grades: {},
           reports: {},
         },
+        performanceHoldIndex: {},
         visibleTableRows: {
           attendance: [],
           assignments: [],
@@ -352,6 +353,267 @@
           if (activeButtonTooltip) positionButtonTooltip(activeButtonTooltip);
         });
         buttonTooltipBound = true;
+      }
+
+      const SHARED_BUTTON_SKIP_IDS = new Set([
+        "adminThemeToggle",
+        "gradeChartModalCloseBtn",
+        "menuToggleBtn",
+        "floatingMenuBtn",
+        "newsReviewViewerCloseBtn",
+        "newsReviewViewerPrevBtn",
+        "newsReviewViewerNextBtn",
+        "parentQueueCloseBtn",
+        "parentQueuePrevBtn",
+        "parentQueueNextBtn",
+      ]);
+
+      const SHARED_BUTTON_VARIANT_BY_ID = new Map([
+        ["loginBtn", ["portal-button-blue-action"]],
+        ["loginClearBtn", ["portal-button-purple-action"]],
+        ["refreshBtn", ["portal-button-teal-refresh"]],
+        ["clearFiltersBtn", ["portal-button-purple-action"]],
+        ["logoutBtn", ["portal-button-red-action"]],
+        ["overviewRuntimeRestartBtn", ["portal-button-blue-action"]],
+        ["hubPingBtn", ["portal-button-teal-refresh"]],
+        ["exerciseMailerServiceRefreshBtn", ["portal-button-teal-refresh"]],
+        ["exerciseMailerRestartBtn", ["portal-button-blue-action"]],
+        ["overviewIncomingExerciseExpandBtn", ["portal-button-neutral-action"]],
+        ["overviewIncomingExerciseRefreshBtn", ["portal-button-teal-refresh"]],
+        ["overviewNewsQueueOpenBtn", ["portal-button-blue-action"]],
+        ["overviewNewsQueueRefreshBtn", ["portal-button-teal-refresh"]],
+        ["overviewNewsQueueQueueHubBtn", ["portal-button-neutral-action"]],
+        ["queueHubRefreshBtn", ["portal-button-teal-refresh"]],
+        ["queueHubSaveOrderBtn", ["portal-button-green-action"]],
+        ["queueHubResetOrderBtn", ["portal-button-purple-action"]],
+        ["newsReviewRefreshBtn", ["portal-button-teal-refresh"]],
+        ["newsReviewClearFiltersBtn", ["portal-button-purple-action"]],
+        ["newsReviewViewerApproveBtn", ["portal-button-green-action"]],
+        ["newsReviewViewerRevisionBtn", ["portal-button-red-action"]],
+        ["profileEditInfoBtn", ["portal-button-amber-info"]],
+        ["profileCreateInfoBtn", ["portal-button-blue-action"]],
+        ["profileRefreshInfoBtn", ["portal-button-teal-refresh"]],
+        ["profileBackToInfoBtn", ["portal-button-neutral-action"]],
+        ["newBtn", ["portal-button-blue-action"]],
+        ["saveBtn", ["portal-button-green-action"]],
+        ["deleteBtn", ["portal-button-red-action"]],
+        ["studentClearBtn", ["portal-button-purple-action"]],
+        ["attendanceSaveBtn", ["portal-button-green-action"]],
+        ["attendanceLandingSaveAllBtn", ["portal-button-green-action"]],
+        ["attendanceLandingReloadBtn", ["portal-button-teal-refresh"]],
+        ["attendanceClearBtn", ["portal-button-purple-action"]],
+        ["attendanceSortDirBtn", ["portal-button-neutral-action"]],
+        ["attendanceArchiveToggleBtn", ["portal-button-amber-info"]],
+        ["attendanceExportXlsxBtn", ["portal-button-teal-refresh"]],
+        ["attendancePrintPdfBtn", ["portal-button-blue-action"]],
+        ["assignmentAddItemBtn", ["portal-button-green-action"]],
+        ["assignmentSaveTemplateBtn", ["portal-button-green-action"]],
+        ["assignmentSendBtn", ["portal-button-blue-action"]],
+        ["assignmentLoadTitlesBtn", ["portal-button-teal-refresh"]],
+        ["assignmentReloadTemplatesBtn", ["portal-button-teal-refresh"]],
+        ["assignmentDeleteTemplateBtn", ["portal-button-red-action"]],
+        ["assignmentResetBtn", ["portal-button-purple-action"]],
+        ["assignmentSortDirBtn", ["portal-button-neutral-action"]],
+        ["assignmentArchiveToggleBtn", ["portal-button-amber-info"]],
+        ["assignmentExportXlsxBtn", ["portal-button-teal-refresh"]],
+        ["assignmentPrintPdfBtn", ["portal-button-blue-action"]],
+        ["pt_actionInsertBtn", ["portal-button-green-action"]],
+        ["pt_clearBtn", ["portal-button-purple-action"]],
+        ["pt_saveBtn", ["portal-button-green-action"]],
+        ["pt_queueSendBtn", ["portal-button-blue-action"]],
+        ["performanceSortDirBtn", ["portal-button-neutral-action"]],
+        ["performanceStagedRefreshBtn", ["portal-button-teal-refresh"]],
+        ["performanceQueueExpandBtn", ["portal-button-neutral-action"]],
+        ["performanceQueueRefreshBtn", ["portal-button-teal-refresh"]],
+        ["performanceQueueSendAllBtn", ["portal-button-blue-action"]],
+        ["performanceExportXlsxBtn", ["portal-button-teal-refresh"]],
+        ["performancePrintPdfBtn", ["portal-button-blue-action"]],
+        ["gradeSaveBtn", ["portal-button-green-action"]],
+        ["openTabulatorGradesBtn", ["portal-button-amber-info"]],
+        ["gradeChartPeriodBtn", ["portal-button-neutral-action"]],
+        ["gradeSortDirBtn", ["portal-button-neutral-action"]],
+        ["gradeArchiveToggleBtn", ["portal-button-amber-info"]],
+        ["gradeExportXlsxBtn", ["portal-button-teal-refresh"]],
+        ["gradePrintPdfBtn", ["portal-button-blue-action"]],
+        ["gradeClearBtn", ["portal-button-purple-action"]],
+        ["reportSaveBtn", ["portal-button-green-action"]],
+        ["reportGenerateBtn", ["portal-button-teal-refresh"]],
+        ["reportCardBtn", ["portal-button-blue-action"]],
+        ["reportClearBtn", ["portal-button-purple-action"]],
+        ["reportSortDirBtn", ["portal-button-neutral-action"]],
+        ["reportArchiveToggleBtn", ["portal-button-amber-info"]],
+        ["reportExportXlsxBtn", ["portal-button-teal-refresh"]],
+        ["reportPrintPdfBtn", ["portal-button-blue-action"]],
+        ["userNewBtn", ["portal-button-green-action"]],
+        ["userSaveBtn", ["portal-button-green-action"]],
+        ["userClearBtn", ["portal-button-purple-action"]],
+        ["userRefreshBtn", ["portal-button-teal-refresh"]],
+        ["userDeleteBtn", ["portal-button-red-action"]],
+        ["permissionsReloadBtn", ["portal-button-teal-refresh"]],
+        ["permissionsSaveBtn", ["portal-button-green-action"]],
+        ["permissionsResetBtn", ["portal-button-purple-action"]],
+        ["schoolSetupLogoClearBtn", ["portal-button-purple-action"]],
+        ["schoolSetupAutoFillBtn", ["portal-button-teal-refresh"]],
+        ["schoolSetupSaveBtn", ["portal-button-green-action"]],
+        ["schoolSetupResetBtn", ["portal-button-purple-action"]],
+        ["profileFieldCreateBtn", ["portal-button-green-action"]],
+        ["profileFieldLayoutRefreshBtn", ["portal-button-teal-refresh"]],
+        ["profileFieldLayoutApplyBtn", ["portal-button-green-action"]],
+        ["profileFieldLayoutResetBtn", ["portal-button-purple-action"]],
+        ["attendanceLevelApplyBtn", ["portal-button-green-action"]],
+        ["attendanceLevelClearImageBtn", ["portal-button-purple-action"]],
+        ["attendanceLevelResetBtn", ["portal-button-purple-action"]],
+        ["settingsSaveBtn", ["portal-button-green-action"]],
+        ["settingsResetBtn", ["portal-button-purple-action"]],
+        ["familyClearResultBtn", ["portal-button-purple-action"]],
+        ["levelReminderSendBtn", ["portal-button-green-action"]],
+        ["levelReminderSendAllBtn", ["portal-button-blue-action"]],
+        ["levelReminderClearBtn", ["portal-button-purple-action"]],
+        ["pt_actionClearBtn", ["portal-button-purple-action"]],
+        ["parentQueuePrevBtn", ["portal-button-neutral-action"]],
+        ["parentQueueNextBtn", ["portal-button-neutral-action"]],
+        ["parentQueueHoldBtn", ["portal-button-amber-info"]],
+        ["parentQueueEditBtn", ["portal-button-green-action"]],
+        ["parentQueueRequeueBtn", ["portal-button-teal-refresh"]],
+        ["parentQueueSendAllBtn", ["portal-button-blue-action"]],
+      ]);
+
+      const SHARED_BUTTON_COPY_BY_ID = new Map([
+        ["overviewNewsQueueOpenBtn", ["Open Reports", "Open News Reports Page"]],
+        ["attendanceLandingSaveAllBtn", ["Save All", "Save Level Attendance"]],
+        ["assignmentAddItemBtn", ["Add Item", "Add Assignment Item"]],
+        ["assignmentLoadTitlesBtn", ["Refresh Titles", "Refresh Exercise Titles"]],
+        ["assignmentSendBtn", ["Send Email", "Send Assignment Email"]],
+        ["pt_actionInsertBtn", ["Insert Field", "Insert to Focused Field"]],
+        ["pt_saveBtn", ["Save Report", "Save Performance Report"]],
+        ["pt_queueSendBtn", ["Queue Email", "Queue Weekend Batch Email"]],
+        ["openTabulatorGradesBtn", ["Open Grades", "Open Tabulator Grades Admin"]],
+        ["reportGenerateBtn", ["Generate PDF", "Generate from Grade Records"]],
+        ["reportCardBtn", ["Report PDF", "Download PDF Report Card"]],
+        ["profileFieldLayoutApplyBtn", ["Apply Layout", "Apply Layout Changes"]],
+        ["profileFieldLayoutResetBtn", ["Reset Layout", "Reset Layout to Default"]],
+        ["attendancePrintPdfBtn", ["Print PDF", "Print Attendance PDF"]],
+        ["assignmentPrintPdfBtn", ["Print PDF", "Print Assignment PDF"]],
+        ["performancePrintPdfBtn", ["Print PDF", "Print Performance PDF"]],
+        ["gradePrintPdfBtn", ["Print PDF", "Print Grade PDF"]],
+        ["reportPrintPdfBtn", ["Print PDF", "Print Report PDF"]],
+        ["settingsResetBtn", ["Reset Settings", "Reset Settings"]],
+        ["schoolSetupAutoFillBtn", ["Auto Fill", "Auto Fill School Setup"]],
+        ["schoolSetupResetBtn", ["Reset Setup", "Reset School Setup"]],
+      ]);
+
+      function applySharedButtonCopy(button) {
+        if (!(button instanceof HTMLButtonElement)) return;
+        const id = normalizeText(button.id || "");
+        const copy = SHARED_BUTTON_COPY_BY_ID.get(id);
+        if (!copy) return;
+        const [faceText, tooltipText] = copy;
+        const tooltip = normalizeText(tooltipText || faceText);
+        const face = normalizeText(faceText);
+        if (!button.dataset.sharedButtonCopyApplied) {
+          if (face) button.textContent = face;
+          button.dataset.sharedButtonCopyApplied = "1";
+        }
+        if (tooltip) {
+          button.dataset.buttonTooltipTitle = tooltip;
+          button.setAttribute("aria-label", tooltip);
+        }
+      }
+
+      function decorateSharedButtons(scope = document) {
+        if (!(scope instanceof Document || scope instanceof HTMLElement)) return;
+        const buttons = scope.querySelectorAll("button");
+        buttons.forEach((button) => {
+          if (!(button instanceof HTMLButtonElement)) return;
+          applySharedButtonCopy(button);
+          if (button.classList.contains("portal-button")) return;
+
+          const id = normalizeText(button.id || "");
+          if (SHARED_BUTTON_SKIP_IDS.has(id) || button.matches("[data-text-zoom-action]")) return;
+          if (button.closest(".row-options-dropdown, .text-zoom-controls")) return;
+
+          const classList = button.classList;
+          const classesToAdd = new Set();
+          const stripLegacyActionClasses = () => {
+            button.classList.remove(
+              "primary",
+              "alt",
+              "danger",
+              "ghost",
+              "btn-refresh",
+              "btn-edit",
+              "btn-delete",
+            );
+          };
+          const add = (...classes) => {
+            classes.filter(Boolean).forEach((name) => classesToAdd.add(name));
+          };
+
+          const explicitVariant = SHARED_BUTTON_VARIANT_BY_ID.get(id);
+          if (explicitVariant) {
+            stripLegacyActionClasses();
+            add("portal-button", ...explicitVariant);
+            button.classList.add(...classesToAdd);
+            return;
+          }
+
+          if (button.dataset.newsReviewOpenWeekSet !== undefined) {
+            stripLegacyActionClasses();
+            add("portal-button", "portal-button-blue-action", "portal-button-open-week-set");
+          } else if (classList.contains("queue-row-btn")) {
+            stripLegacyActionClasses();
+            add("portal-button", "portal-button-blue-action");
+          } else if (classList.contains("btn-refresh")) {
+            stripLegacyActionClasses();
+            add("portal-button", "portal-button-teal-refresh");
+          } else if (classList.contains("btn-delete") || classList.contains("danger")) {
+            stripLegacyActionClasses();
+            add("portal-button", "portal-button-red-action");
+          } else if (classList.contains("btn-edit")) {
+            stripLegacyActionClasses();
+            add("portal-button", "portal-button-green-action");
+          } else if (classList.contains("primary")) {
+            stripLegacyActionClasses();
+            add("portal-button", "portal-button-blue-action");
+          } else if (classList.contains("alt") || classList.contains("ghost")) {
+            stripLegacyActionClasses();
+            add("portal-button", "portal-button-neutral-action");
+          }
+
+          if (
+            classList.contains("tabulator-entry-btn") ||
+            classList.contains("pt-score-legend-btn") ||
+            classList.contains("bar-detail-action-btn")
+          ) {
+            add("portal-button", "portal-button-amber-info");
+          }
+
+          if (classList.contains("grade-chart-period-btn")) {
+            add("portal-button", "portal-button-neutral-action");
+          }
+
+          if (!classesToAdd.size) return;
+          button.classList.add(...classesToAdd);
+        });
+      }
+
+      function wireSharedButtonDecoration() {
+        if (!hasLiveDom()) return;
+        decorateSharedButtons();
+        if (window.__SIS_ADMIN_SHARED_BUTTONS_BOUND__) return;
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (!(node instanceof Element)) return;
+              if (node.matches?.("button")) applySharedButtonCopy(node);
+              else node.querySelectorAll?.("button").forEach(applySharedButtonCopy);
+              if (node.matches?.("button")) decorateSharedButtons(node.parentElement || document);
+              else decorateSharedButtons(node);
+            });
+          });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        window.__SIS_ADMIN_SHARED_BUTTONS_BOUND__ = true;
       }
 
       const statusEl = document.getElementById("status");
@@ -1577,7 +1839,7 @@
           (event) => {
             const target = event.target;
             if (!(target instanceof Element)) return;
-            const button = target.closest("button");
+            const button = target.closest("button:not(.portal-button)");
             if (!(button instanceof HTMLButtonElement)) return;
             triggerPressFeedback(button);
           },
@@ -1590,7 +1852,7 @@
             if (event.key !== "Enter" && event.key !== " ") return;
             const target = event.target;
             if (!(target instanceof Element)) return;
-            const button = target.closest("button");
+            const button = target.closest("button:not(.portal-button)");
             if (!(button instanceof HTMLButtonElement)) return;
             triggerPressFeedback(button);
           },
@@ -1926,16 +2188,19 @@
               actions.className = "system-health-mirror-actions";
               actions.style.display = "flex";
               actions.style.flexWrap = "wrap";
-              actions.style.gap = "6px";
+              actions.style.gap = "8px";
               actions.style.marginTop = "6px";
 
               const repairBtn = document.createElement("button");
               repairBtn.type = "button";
-              repairBtn.className = "btn-refresh system-health-action-btn";
+              repairBtn.className = "portal-button portal-button-compact portal-button-blue-action system-health-action-btn";
               repairBtn.setAttribute("data-system-sync-action", "sis-config-repair");
               repairBtn.setAttribute("aria-label", "Run SIS config sync cron job");
-              repairBtn.textContent =
+              const repairLabel = document.createElement("span");
+              repairLabel.className = "portal-button__label";
+              repairLabel.textContent =
                 state.sisConfigRepairBusy ? "Running Sync Cron..." : "Run Sync Cron";
+              repairBtn.replaceChildren(repairLabel);
               repairBtn.disabled = Boolean(state.sisConfigRepairBusy);
               repairBtn.addEventListener("click", () => {
                 runSisConfigRepair().catch(handleError);
@@ -1955,8 +2220,11 @@
           if (action?.label && action?.targetId) {
             const actionBtn = document.createElement("button");
             actionBtn.type = "button";
-            actionBtn.className = "btn-refresh system-health-action-btn";
-            actionBtn.textContent = action.label;
+            actionBtn.className = "portal-button portal-button-blue-action system-health-action-btn";
+            const actionLabel = document.createElement("span");
+            actionLabel.className = "portal-button__label";
+            actionLabel.textContent = action.label;
+            actionBtn.replaceChildren(actionLabel);
             actionBtn.setAttribute("data-system-action", normalizeText(check.key));
             actionBtn.setAttribute("data-system-action-target", normalizeText(action.targetId));
             actionBtn.addEventListener("click", () => {
@@ -2775,6 +3043,8 @@
       const PARENT_TRACKING_DIGITAL_SKILL_MIN_LEVEL = "A2 Flyers";
       const DESKTOP_MENU_COLLAPSED_STORAGE_KEY = "sis.admin.menuCollapsed.desktop";
       const TABLE_ARCHIVE_STORAGE_KEY = "sis.admin.tableArchiveIndex.v1";
+      const PERFORMANCE_HOLD_STORAGE_KEY =
+        "sis.admin.performanceHoldIndex.v1";
       const STUDENT_ID_SEARCH_STORAGE_KEY = "sis.admin.eaglesIdSearchHistory.v1";
       const ATTENDANCE_COLUMN_VISIBILITY_STORAGE_KEY =
         "sis.admin.attendance.columnVisibility.v1";
@@ -3039,6 +3309,48 @@
         }
       }
 
+      function normalizePerformanceHoldIndex(source) {
+        const input = source && typeof source === "object" ? source : {};
+        const normalized = {};
+        Object.keys(input).forEach((rawId) => {
+          const recordId = normalizeText(rawId);
+          if (!recordId) return;
+          if (!input[rawId]) return;
+          normalized[recordId] = true;
+        });
+        return normalized;
+      }
+
+      function loadPerformanceHoldIndexFromStorage() {
+        let stored = "";
+        try {
+          stored = window.localStorage.getItem(PERFORMANCE_HOLD_STORAGE_KEY) || "";
+        } catch (error) {
+          void error;
+        }
+        if (!stored) return {};
+        try {
+          return normalizePerformanceHoldIndex(JSON.parse(stored));
+        } catch (error) {
+          void error;
+          return {};
+        }
+      }
+
+      function persistPerformanceHoldIndex(index = state.performanceHoldIndex) {
+        const normalized = normalizePerformanceHoldIndex(index);
+        state.performanceHoldIndex = normalized;
+        try {
+          window.localStorage.setItem(
+            PERFORMANCE_HOLD_STORAGE_KEY,
+            JSON.stringify(normalized),
+          );
+        } catch (error) {
+          void error;
+        }
+        return normalized;
+      }
+
       function persistTableArchiveIndex(index = state.tableArchiveIndex) {
         const normalized = normalizeTableArchiveIndex(index);
         state.tableArchiveIndex = normalized;
@@ -3051,6 +3363,28 @@
           void error;
         }
         return normalized;
+      }
+
+      function isPerformanceReportHeld(recordId = "") {
+        const id = normalizeText(recordId);
+        if (!id) return false;
+        if (state.performanceHoldIndex?.[id] === true) return true;
+        return Boolean(state.tableArchiveIndex?.performance?.[id]);
+      }
+
+      function setPerformanceReportHeld(recordId = "", held = true) {
+        const id = normalizeText(recordId);
+        if (!id) return false;
+        const next = normalizePerformanceHoldIndex(state.performanceHoldIndex);
+        if (held) next[id] = true;
+        else delete next[id];
+        persistPerformanceHoldIndex(next);
+        if (state.tableArchiveIndex?.performance?.[id]) {
+          const archiveNext = normalizeTableArchiveIndex(state.tableArchiveIndex);
+          delete archiveNext.performance[id];
+          persistTableArchiveIndex(archiveNext);
+        }
+        return true;
       }
 
       function tableColumnVisibilityDefaults(tableKey = "") {
@@ -4935,14 +5269,19 @@
         searchTextResolver = () => "",
       ) {
         const list = Array.isArray(rows) ? rows : [];
-        const showArchived = Boolean(state.tableShowArchived?.[tableKey]);
+        const showArchived =
+          tableKey === "performance" ?
+            false
+          : Boolean(state.tableShowArchived?.[tableKey]);
         return list.filter((row) => {
           const rowId = normalizeText(row?.id);
           const archived = isTableRecordArchived(tableKey, rowId);
-          if (showArchived) {
-            if (!archived) return false;
-          } else if (archived) {
-            return false;
+          if (tableKey !== "performance") {
+            if (showArchived) {
+              if (!archived) return false;
+            } else if (archived) {
+              return false;
+            }
           }
           if (!rowMatchesTableFilters(tableKey, row)) return false;
           return rowMatchesSearchTerm(tableKey, searchTextResolver(row));
@@ -5366,7 +5705,10 @@
         if (sortKey === "attendance") renderAttendanceRows(state.tableRows.attendance);
         else if (sortKey === "assignments") renderAssignmentTemplates();
         else if (sortKey === "performance")
-          renderParentTrackingReportRows(state.tableRows.performance);
+          renderParentTrackingReportRows(
+            state.tableRows.performance,
+            state.currentStudent,
+          );
         else if (sortKey === "grades") renderGradeRows(state.tableRows.grades);
         else if (sortKey === "reports") renderReportRows(state.tableRows.reports);
         else if (sortKey === "newsReview") renderNewsReviewRows();
@@ -7868,6 +8210,7 @@
       renderSchoolSetupAccessWarning();
       state.profileFormConfig = loadProfileFormConfigFromStorage();
       state.tableArchiveIndex = loadTableArchiveIndexFromStorage();
+      state.performanceHoldIndex = loadPerformanceHoldIndexFromStorage();
       state.tableColumnVisibility = loadAllTableColumnVisibilityFromStorage();
       state.attendanceColumnVisibility = state.tableColumnVisibility.attendance;
       state.eaglesIdSearchHistory = loadStudentIdSearchHistoryFromStorage();
@@ -9093,6 +9436,18 @@
           loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(
             handleError,
           );
+          const params = new URLSearchParams(window.location.search || "");
+          const deepLinkedEaglesId = normalizeText(params.get("eaglesId"));
+          if (deepLinkedEaglesId) {
+            const performanceDataSearch = document.getElementById(
+              "performanceDataSearch",
+            );
+            if (performanceDataSearch) {
+              performanceDataSearch.value = deepLinkedEaglesId;
+              setTableSearchTerm("performance", deepLinkedEaglesId);
+              rerenderSortedTable("performance");
+            }
+          }
         }
         if (slug === "news-reports") {
           loadNewsReviewQueue({ notify: false }).catch(handleError);
@@ -9233,7 +9588,6 @@
         const adminDataActionIds = [
           "attendanceArchiveToggleBtn",
           "assignmentArchiveToggleBtn",
-          "performanceArchiveToggleBtn",
           "gradeArchiveToggleBtn",
           "reportArchiveToggleBtn",
           "attendanceExportXlsxBtn",
@@ -12371,6 +12725,36 @@
         };
       }
 
+      function extractEaglesIdFromText(text = "") {
+        const normalized = normalizeText(text);
+        if (!normalized) return "";
+        const match = normalized.match(/\bEagles ID:\s*([A-Za-z0-9_-]+)/i);
+        return normalizeText(match?.[1] || "");
+      }
+
+      function queueHubQueuedPerformanceReportSummary(item = {}) {
+        const daySource = normalizeText(item?.scheduledFor || item?.queuedAt);
+        const dayOfWeek = daySource ?
+          new Date(daySource).toLocaleDateString(undefined, { weekday: "long" })
+          : "";
+        const recipients = Array.isArray(item?.recipients) ? item.recipients : [];
+        const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {};
+        return [
+          normalizeText(
+            item?.eaglesId ||
+              payload?.eaglesId ||
+              payload?.student?.eaglesId ||
+              payload?.studentRef?.eaglesId ||
+              extractEaglesIdFromText(item?.message || payload?.message || ""),
+              "",
+          ),
+          dayOfWeek,
+          recipients.length ? "has recipients" : "No recipients",
+        ]
+          .filter(Boolean)
+          .join("; ");
+      }
+
       function normalizeQueueHubCell(value = "") {
         if (value && typeof value === "object") {
           const html = normalizeText(value?.html);
@@ -12399,11 +12783,11 @@
         switch (panelId) {
           case "queued-performance-reports":
             return {
-              columns: ["Queued At", "Assignment", "Status", "Level", "Queued By"],
+              columns: ["Queued At", "Performance Report", "Status", "Level", "Queued By"],
               openColumnIndex: 1,
               row: (item) => [
                 formatDateTime(item?.queuedAt),
-                normalizeText(item?.assignmentTitle || item?.exerciseTitle),
+                normalizeText(queueHubQueuedPerformanceReportSummary(item) || ""),
                 normalizeText(item?.status),
                 normalizeText(item?.level),
                 normalizeText(item?.queuedByUsername),
@@ -12610,7 +12994,7 @@
                 const cell = normalizeQueueHubCell(value);
                 const text = normalizeText(cell?.text);
                 if (cellIndex === openColumnIndex) {
-                  return `<td><button type="button" class="queue-row-btn" data-queue-hub-open-panel="${escapeHtml(normalizeText(panel?.id))}" data-queue-hub-open-index="${index}">${escapeHtml(text || "(open)")}</button></td>`;
+                  return `<td><a href="#" class="queue-row-link" data-queue-hub-open-panel="${escapeHtml(normalizeText(panel?.id))}" data-queue-hub-open-index="${index}">${escapeHtml(text || "(open)")}</a></td>`;
                 }
                 if (cell?.allowHtml && cell?.html) {
                   return `<td>${cell.html}</td>`;
@@ -12986,6 +13370,14 @@
           item?.payloadJson && typeof item.payloadJson === "object" ?
             item.payloadJson
           : null;
+        const parsedEaglesId =
+          normalizeText(
+            item.eaglesId ||
+              payloadJson?.eaglesId ||
+              payloadJson?.student?.eaglesId ||
+              payloadJson?.studentRef?.eaglesId ||
+              extractEaglesIdFromText(item.message || payloadJson?.message || ""),
+          );
         return {
           id: normalizeText(item.id),
           queueType: normalizeText(item.queueType),
@@ -13007,6 +13399,14 @@
           attempts: Number.parseInt(String(item.attempts || 0), 10) || 0,
           lastError: normalizeText(item.lastError),
           payloadJson,
+          teacherName: normalizeText(
+            item.teacherName ||
+              payloadJson?.metaPayload?.teacherName ||
+              payloadJson?.teacherName ||
+              item.queuedByUsername ||
+              "",
+          ),
+          eaglesId: parsedEaglesId,
           linkedReportId: normalizeText(payloadJson?.reportId),
           linkedStudentRefId: normalizeText(payloadJson?.studentRefId),
           studentReviewedAt:
@@ -13050,6 +13450,183 @@
         return list[idx] || null;
       }
 
+      function queueItemReportId(item = {}) {
+        return normalizeText(
+          item?.linkedReportId ||
+            item?.payloadJson?.reportId ||
+            item?.id,
+        );
+      }
+
+      function queueItemStudentName(item = {}) {
+        const payloadStudent = item?.payloadJson?.student || {};
+        return normalizeText(
+          payloadStudent?.fullName ||
+            payloadStudent?.englishName ||
+            item?.fullName ||
+            item?.assignmentTitle ||
+            item?.exerciseTitle ||
+            item?.eaglesId ||
+            "",
+        );
+      }
+
+      function queueItemStudentEnglishName(item = {}) {
+        const payloadStudent = item?.payloadJson?.student || {};
+        return normalizeText(
+          payloadStudent?.englishName ||
+            item?.englishName ||
+            payloadStudent?.fullName ||
+            "",
+        );
+      }
+
+      function queueItemReportSnapshotText(item = {}) {
+        const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {};
+        const meta = payload?.metaPayload && typeof payload.metaPayload === "object" ? payload.metaPayload : {};
+        const rubric = payload?.rubricPayload && typeof payload.rubricPayload === "object" ? payload.rubricPayload : {};
+        const reportId = queueItemReportId(item);
+        const englishName = queueItemStudentEnglishName(item);
+        const fullName = queueItemStudentName(item);
+        const eaglesId = queueItemEaglesId(item);
+        const className = normalizeText(item?.exerciseTitle || item?.className || meta?.className) || "-";
+        const classDate = normalizeText(meta?.classDate) || "-";
+        const classDay = normalizeText(meta?.classDay) || "-";
+        const teacherName = normalizeText(meta?.teacherName) || "-";
+        const visionStatus = normalizeText(meta?.visionStatus) || "-";
+        const lessonSummary = normalizeText(meta?.lessonSummary) || "-";
+        const messageText = normalizeText(item?.message);
+        const summaryLines = [
+          `Behavior: ${queueRatingSummary(item?.payloadJson?.behaviorScore || rubric?.behaviorScore || payload?.behaviorScore)}`,
+          `Skills: ${queueRatingSummary(item?.payloadJson?.participationScore || rubric?.participationScore || payload?.participationScore)}`,
+          `Academic: ${queueRatingSummary(item?.payloadJson?.inClassScore || payload?.inClassScore)}`,
+          `Homework timeliness: ${queueTextOrDash(payload?.homeworkOnTimeRate)}`,
+          `Homework completion: ${queueTextOrDash(payload?.homeworkCompletionRate)}`,
+          `Participation points: ${queueTextOrDash(payload?.participationPointsAward)}`,
+        ];
+        const detailLines = [
+          `Behavior: ${queueRatingDetail(item?.payloadJson?.behaviorScore || rubric?.behaviorScore || payload?.behaviorScore)}`,
+          `Skills: ${queueRatingDetail(item?.payloadJson?.participationScore || rubric?.participationScore || payload?.participationScore)}`,
+          `Academic: ${queueRatingDetail(item?.payloadJson?.inClassScore || payload?.inClassScore)}`,
+          `Homework timeliness: ${queueTextOrDash(payload?.homeworkOnTimeRate)}`,
+          `Homework completion: ${queueTextOrDash(payload?.homeworkCompletionRate)}`,
+          `Participation points: ${queueTextOrDash(payload?.participationPointsAward)}`,
+        ];
+        const homeworkSection = (heading, rows) => [
+          heading,
+          ...(Array.isArray(rows) && rows.length ?
+            rows.map((row, index) => {
+              const due = normalizeText(row?.dueAt).slice(0, 10) || "-";
+              const assignment = normalizeText(row?.assignmentName) || "(untitled homework)";
+              const link = normalizeText(row?.deepLink);
+              return `${index + 1}. ${assignment} | due ${due}${link ? ` | details ${link}` : ""}`;
+            })
+            : ["None"]),
+        ].join("\n");
+        return [
+          "Performance Report",
+          `Report ID: ${reportId || "-"}`,
+          `Queue ID: ${normalizeText(item?.id) || "-"}`,
+          `Student: ${fullName || "-"}`,
+          `English name: ${englishName || "-"}`,
+          `Eagles ID: ${eaglesId || "-"}`,
+          `Level: ${normalizeText(item?.level) || "-"}`,
+          `Class: ${className}`,
+          `Class date: ${classDate}`,
+          `Class day: ${classDay}`,
+          `Teacher: ${teacherName}`,
+          `Vision status: ${visionStatus}`,
+          `Lesson summary: ${lessonSummary}`,
+          "",
+          "Summary by category:",
+          ...summaryLines.map((line) => `- ${line}`),
+          "",
+          "Rating guide:",
+          ...detailLines.map((line) => `- ${line}`),
+          "",
+          homeworkSection("Current week homework:", meta?.currentHomeworkAssignments),
+          "",
+          homeworkSection("Past due homework:", meta?.pastDueHomeworkAssignments),
+          "",
+          `Recipients: ${(Array.isArray(item?.recipients) && item.recipients.length) ? item.recipients.join(", ") : "None"}`,
+          `Queue status: ${normalizeText(item?.status) || "-"}`,
+          `Queued by: ${normalizeText(item?.queuedByUsername) || "-"}`,
+          `Queued at: ${formatDateTime(item?.queuedAt) || "-"}`,
+          `Scheduled for: ${normalizeText(item?.scheduledFor) || "-"}`,
+          `HS reviewed: ${normalizeText(item?.studentReviewedAt) || "-"}${normalizeText(item?.studentReviewedByUsername) ? ` | ${normalizeText(item?.studentReviewedByUsername)}` : ""}`,
+          `CM reviewed: ${normalizeText(item?.parentReviewedAt) || "-"}${normalizeText(item?.parentReviewedByUsername) ? ` | ${normalizeText(item?.parentReviewedByUsername)}` : ""}`,
+          `Last error: ${normalizeText(item?.lastError) || "-"}`,
+          "",
+          "Teacher comment:",
+          messageText || "None",
+        ]
+          .filter(Boolean)
+          .join("\n");
+      }
+
+      function queueTextOrDash(value = "") {
+        return normalizeText(value) || "-";
+      }
+
+      function queueScoreDescription(scoreValue = "") {
+        const text = normalizeText(scoreValue);
+        if (!text) return "not yet scored";
+        const score = Number.parseInt(text, 10);
+        if (!Number.isFinite(score)) return text;
+        switch (Math.max(0, Math.min(5, score))) {
+          case 0:
+            return "not yet observed";
+          case 1:
+            return "just beginning";
+          case 2:
+            return "emerging with support";
+          case 3:
+            return "developing";
+          case 4:
+            return "usually secure";
+          case 5:
+            return "consistently mastered";
+          default:
+            return "not yet scored";
+        }
+      }
+
+      function queueRatingSummary(scoreValue = "") {
+        const text = normalizeText(scoreValue);
+        if (!text) return "-";
+        return `${text}/5`;
+      }
+
+      function queueRatingDetail(scoreValue = "") {
+        const text = normalizeText(scoreValue);
+        if (!text) return "-";
+        return `${text}/5 - ${queueScoreDescription(text)}. This is a progress marker, not a good/bad judgment.`;
+      }
+
+      function queueItemEaglesId(item = {}) {
+        const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {};
+        return normalizeText(
+          item?.eaglesId ||
+            payload?.eaglesId ||
+            payload?.student?.eaglesId ||
+            payload?.studentRef?.eaglesId ||
+            extractEaglesIdFromText(item?.message || payload?.message || ""),
+        );
+      }
+
+      function buildPerformanceDataUrl(eaglesId = "") {
+        const targetUrl =
+          window.location.protocol.startsWith("http") ?
+            new URL("/admin/performance-data", window.location.origin)
+          : new URL("performance-data", window.location.href);
+        const targetParams = targetUrl.searchParams;
+        if (ADMIN_API_ORIGIN) targetParams.set("apiOrigin", ADMIN_API_ORIGIN);
+        const normalizedEaglesId = normalizeText(eaglesId);
+        if (normalizedEaglesId) targetParams.set("eaglesId", normalizedEaglesId);
+        targetUrl.search = targetParams.toString();
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+      }
+
       function renderParentQueueModal() {
         const item = queueItemByModalIndex();
         const indexEl = document.getElementById("parentQueueModalIndex");
@@ -13080,12 +13657,52 @@
           if (el) el.value = value;
         };
         setValue("parentQueueItemId", item.id);
+        setValue("parentQueueItemReportId", queueItemReportId(item));
+        const eaglesId = queueItemEaglesId(item);
+        setValue("parentQueueItemEaglesId", eaglesId);
         setValue("parentQueueItemStatus", item.status);
+        const studentFullName = queueItemStudentName(item);
+        const studentEnglishName = queueItemStudentEnglishName(item);
+        setValue("parentQueueItemStudentName", studentFullName);
         setValue("parentQueueItemQueuedAt", formatDateTime(item.queuedAt));
         setValue("parentQueueItemScheduledFor", item.scheduledFor);
         setValue("parentQueueItemTitle", item.assignmentTitle);
         setValue("parentQueueItemLevel", item.level);
         setValue("parentQueueItemExercise", item.exerciseTitle);
+        setValue("parentQueueItemReportSnapshot", queueItemReportSnapshotText(item));
+        setValue("parentQueueItemStudentFullName", studentFullName);
+        setValue("parentQueueItemStudentEnglishName", studentEnglishName);
+        setValue(
+          "parentQueueItemStudentIdentityLine",
+          [
+            eaglesId ? `Eagles ID: ${eaglesId}` : "",
+            queueItemReportId(item) ? `Report ID: ${queueItemReportId(item)}` : "",
+          ]
+            .filter(Boolean)
+            .join(" • "),
+        );
+        const eaglesDataLink = document.getElementById("parentQueueItemEaglesDataLink");
+        if (eaglesDataLink instanceof HTMLAnchorElement) {
+          if (eaglesId) {
+            eaglesDataLink.hidden = false;
+            eaglesDataLink.href = buildPerformanceDataUrl(eaglesId);
+            eaglesDataLink.textContent = `Open performance data for ${eaglesId}`;
+          } else {
+            eaglesDataLink.hidden = true;
+            eaglesDataLink.removeAttribute("href");
+            eaglesDataLink.textContent = "Open performance data";
+          }
+        }
+        const daySource = item.scheduledFor || item.queuedAt;
+        const dayOfWeek = daySource ?
+          new Date(daySource).toLocaleDateString(undefined, { weekday: "long" })
+          : "";
+        const summaryParts = [
+          eaglesId ? `eaglesId=${eaglesId}` : "",
+          dayOfWeek ? `day=${dayOfWeek}` : "",
+          item.recipients.length ? `recipients=${item.recipients.join(", ")}` : "",
+        ].filter(Boolean);
+        setValue("parentQueueItemSummary", summaryParts.join("; "));
         setValue("parentQueueItemDueAt", item.dueAt);
         setValue("parentQueueItemQueuedBy", item.queuedByUsername);
         setValue("parentQueueItemHsReviewedAt", item.studentReviewedAt);
@@ -13131,6 +13748,9 @@
           englishName: normalizeText(row.englishName),
           eaglesId: normalizeText(row.eaglesId),
           generatedAt: normalizeText(row.generatedAt),
+          teacherName: normalizeText(row.teacherName || row.approvedByUsername),
+          approvedAt: normalizeText(row.approvedAt),
+          approvedByUsername: normalizeText(row.approvedByUsername),
           className: normalizeText(row.className),
           level: normalizeText(row.level || row.classLevel),
           schoolYear: normalizeText(row.schoolYear),
@@ -13203,27 +13823,33 @@
           return;
         }
 
-        const flagHtml = (label, yes) =>
-          `<span class="hs-cm-flag ${yes ? "is-yes" : "is-no"}">${label}: ${
-            yes ? "Y" : "N"
-          }</span>`;
+        const queueApprovalLabel = (item = {}) => {
+          const status = normalizeLower(item?.status);
+          if (status === "queued") return "Approved / staged";
+          if (status === "hold") return "On hold";
+          if (status === "sent") return "Sent";
+          if (!status) return "-";
+          return normalizeText(status);
+        };
 
         normalizedItems.forEach((item, index) => {
           const tr = document.createElement("tr");
           const hsYes = Boolean(normalizeText(item.studentReviewedAt));
           const cmYes = Boolean(normalizeText(item.parentReviewedAt));
+          const eaglesId = normalizeText(item.eaglesId);
+          const teacherName = normalizeText(item.teacherName || item.queuedByUsername || "-");
           tr.innerHTML = `
           <td>${escapeHtml(formatDateTime(item.queuedAt))}</td>
-          <td><button type="button" class="queue-row-btn" data-queue-open="${escapeHtml(item.id)}">${escapeHtml(item.assignmentTitle || "(untitled)")}</button></td>
-          <td>${escapeHtml(item.status || "-")}</td>
-          <td>${escapeHtml(item.scheduledFor || "-")}</td>
+          <td><a href="#" class="queue-row-link" data-queue-open="${escapeHtml(item.id)}">${escapeHtml(eaglesId || "(missing id)")}</a></td>
+          <td>${escapeHtml(teacherName || "-")}</td>
+          <td>${escapeHtml(queueApprovalLabel(item))}</td>
           <td>${escapeHtml(item.queuedByUsername || "-")}</td>
-          <td class="hs-cm-cell">${flagHtml("HS", hsYes)} / ${flagHtml("CM", cmYes)}</td>
+          <td class="hs-cm-cell">${hsYes ? '<span class="hs-cm-flag is-yes">HS: Y</span>' : '<span class="hs-cm-flag is-no">HS: N</span>'} / ${cmYes ? '<span class="hs-cm-flag is-yes">CM: Y</span>' : '<span class="hs-cm-flag is-no">CM: N</span>'}</td>
         `;
-          tr.querySelector(`[data-queue-open="${item.id}"]`)?.addEventListener(
-            "click",
-            () => openParentQueueModal(index),
-          );
+          tr.querySelector(`[data-queue-open="${item.id}"]`)?.addEventListener("click", (event) => {
+            event.preventDefault();
+            openParentQueueModal(index);
+          });
           rowsEl.appendChild(tr);
         });
       }
@@ -13275,10 +13901,10 @@
         if (!stagedRows.length) {
           if (!loadedSavedCount && savedCountHint > 0) {
             const noun = savedCountHint === 1 ? "report is" : "reports are";
-            rowsEl.innerHTML = `<tr><td colspan="7">${savedCountHint} saved performance ${noun} staged and not queued yet. Open Performance data and click Reload Staged.</td></tr>`;
+            rowsEl.innerHTML = `<tr><td colspan="6">${savedCountHint} saved performance ${noun} awaiting approval. Open Performance data and click Reload Staged.</td></tr>`;
           } else {
             rowsEl.innerHTML =
-              '<tr><td colspan="7">No staged performance reports.</td></tr>';
+              '<tr><td colspan="6">No reports awaiting approval.</td></tr>';
           }
           return;
         }
@@ -13288,15 +13914,35 @@
             state.parentReportQueue.pendingStageQueueById?.[row.id],
           );
           const tr = document.createElement("tr");
+          const held = isPerformanceReportHeld(row.id);
+          const reportStatus =
+            held ? "On hold"
+            : normalizeText(row.approvedAt) ?
+              `Approved${normalizeText(row.approvedByUsername) ? ` by ${normalizeText(row.approvedByUsername)}` : ""}`
+            : "Awaiting approval";
           tr.innerHTML = `
           <td>${escapeHtml(formatDate(row.generatedAt) || "-")}</td>
-          <td>${escapeHtml(row.fullName || "")}</td>
           <td>${escapeHtml(row.eaglesId || "")}</td>
-          <td>${escapeHtml(row.className || "-")}</td>
-          <td>${escapeHtml(row.quarter || "-")}</td>
-          <td>Staged</td>
+          <td>${escapeHtml(row.teacherName || "-")}</td>
+          <td>${escapeHtml(reportStatus)}</td>
+          <td><label class="small"><input type="checkbox" data-stage-hold="${escapeHtml(row.id)}"${held ? " checked" : ""}> Hold</label></td>
           <td><button type="button" class="btn-edit" data-stage-report-id="${escapeHtml(row.id)}"${pending ? " disabled" : ""}>${pending ? "Queueing..." : "Approve -> Queue"}</button></td>
         `;
+          tr.querySelector(`[data-stage-hold="${row.id}"]`)?.addEventListener(
+            "change",
+            (event) => {
+              const target = event.target;
+              const nextHeld = Boolean(target?.checked);
+              setPerformanceReportHeld(row.id, nextHeld);
+              renderPerformanceStagedSection();
+              setParentQueueModalStatus(
+                nextHeld ? "Report placed on hold and kept in the approval list." : "Report released from hold.",
+              );
+              setStatus(
+                nextHeld ? "Performance report held." : "Performance report released from hold.",
+              );
+            },
+          );
           tr.querySelector(`[data-stage-report-id="${row.id}"]`)?.addEventListener(
             "click",
             () => {
@@ -13426,6 +14072,7 @@
               recipients,
               reportId: id,
               studentRefId,
+              eaglesId: studentEaglesId,
               className: normalizeText(stagedRow.className),
               schoolYear: normalizeText(stagedRow.schoolYear),
               quarter: normalizeText(stagedRow.quarter),
@@ -14568,9 +15215,9 @@
         const titleEl = document.getElementById("pt_assignmentDetailTitle");
         const bodyEl = document.getElementById("pt_assignmentDetailBody");
         if (panel) panel.classList.add("hidden");
-        if (titleEl) titleEl.textContent = "Assignment Details";
+        if (titleEl) titleEl.textContent = "Homework Details";
         if (bodyEl)
-          bodyEl.textContent = "Select an assignment link to inspect details.";
+          bodyEl.textContent = "Select a homework link to inspect details.";
       }
 
       function parentTrackingDeepLinkPath(studentRefId, assignmentId = "") {
@@ -14623,6 +15270,106 @@
         if (Number.isNaN(asOf.valueOf())) return false;
         if (dueAt.valueOf() > asOf.valueOf()) return false;
         return !isGradeRecordCompleted(record);
+      }
+
+      function parentTrackingHomeworkRowSnapshot(
+        entry = {},
+        studentRefId = "",
+      ) {
+        const assignmentName = normalizeText(entry?.assignmentName);
+        const dueAt = formatDate(entry?.dueAt);
+        if (!assignmentName && !dueAt) return null;
+        return {
+          assignmentName: assignmentName || "(untitled homework)",
+          dueAt,
+          className: normalizeText(entry?.className),
+          quarter: normalizeText(entry?.quarter),
+          deepLink: parentTrackingDeepLinkAbsolute(
+            normalizeText(studentRefId),
+            normalizeText(entry?.id),
+          ),
+        };
+      }
+
+      function parentTrackingHomeworkBuckets(
+        metrics = {},
+        studentRefId = "",
+        classDate = "",
+      ) {
+        const records = Array.isArray(metrics?.records) ? metrics.records : [];
+        const trackedHomeworkRecords = records.filter((entry) =>
+          isTrackedHomeworkRecord(entry),
+        );
+        const asOf = parseIsoDateLocal(classDate) || new Date();
+        const weekBounds = currentWeekBounds(asOf);
+        const shiftedAsOfEnd = shiftToFixedTimeZone(asOf);
+        shiftedAsOfEnd.setUTCHours(23, 59, 59, 999);
+        const asOfEnd = shiftFromFixedTimeZone(shiftedAsOfEnd);
+        const sortByDueThenTitle = (left, right) => {
+          const leftDue =
+            parseDateTime(left?.dueAt)?.valueOf() || Number.MAX_SAFE_INTEGER;
+          const rightDue =
+            parseDateTime(right?.dueAt)?.valueOf() || Number.MAX_SAFE_INTEGER;
+          if (leftDue !== rightDue) return leftDue - rightDue;
+          return normalizeText(left?.assignmentName).localeCompare(
+            normalizeText(right?.assignmentName),
+          );
+        };
+        const currentWeekHomework = trackedHomeworkRecords
+          .filter((entry) => {
+            const dueAt = parseDateTime(entry?.dueAt);
+            return (
+              dueAt &&
+              isDateWithinBounds(dueAt, weekBounds) &&
+              !isGradeRecordOutstanding(entry, asOfEnd)
+            );
+          })
+          .slice()
+          .sort(sortByDueThenTitle);
+        const pastDueHomework = trackedHomeworkRecords
+          .filter((entry) => isGradeRecordOutstanding(entry, asOfEnd))
+          .slice()
+          .sort(sortByDueThenTitle);
+        return {
+          studentRefId: normalizeText(studentRefId),
+          classDate: normalizeText(classDate),
+          currentWeekHomework,
+          pastDueHomework,
+        };
+      }
+
+      function parentTrackingCurrentSnapshotRows(
+        metrics = {},
+        studentRefId = "",
+        classDate = "",
+      ) {
+        const buckets = parentTrackingHomeworkBuckets(
+          metrics,
+          studentRefId,
+          classDate,
+        );
+        return buckets.currentWeekHomework
+          .map((entry) =>
+            parentTrackingHomeworkRowSnapshot(entry, buckets.studentRefId),
+          )
+          .filter(Boolean);
+      }
+
+      function parentTrackingPastDueSnapshotRows(
+        metrics = {},
+        studentRefId = "",
+        classDate = "",
+      ) {
+        const buckets = parentTrackingHomeworkBuckets(
+          metrics,
+          studentRefId,
+          classDate,
+        );
+        return buckets.pastDueHomework
+          .map((entry) =>
+            parentTrackingHomeworkRowSnapshot(entry, buckets.studentRefId),
+          )
+          .filter(Boolean);
       }
 
       function toAverage(values = []) {
@@ -15592,61 +16339,61 @@
         const studentRefId = normalizeText(
           context?.studentRefId || context?.student?.id,
         );
-        const outstanding =
-          Array.isArray(metrics?.outstanding) ? metrics.outstanding : [];
-        const firstOutstanding = outstanding[0] || null;
-        const assignmentName =
-          normalizeText(firstOutstanding?.assignmentName) || "Bài tập hiện tại";
-        const dueDate = formatDate(firstOutstanding?.dueAt);
-        const deepLink =
-          firstOutstanding ?
-            parentTrackingDeepLinkAbsolute(
-              studentRefId,
-              normalizeText(firstOutstanding?.id),
-            )
-          : "";
+        const classDate = normalizeText(context?.classDate || "");
+        const buckets = parentTrackingHomeworkBuckets(
+          metrics,
+          studentRefId,
+          classDate,
+        );
+        const currentHomework = buckets.currentWeekHomework;
+        const pastDueHomework = buckets.pastDueHomework;
+        const firstCurrentHomework = currentHomework[0] || null;
+        const currentHomeworkName =
+          normalizeText(firstCurrentHomework?.assignmentName) ||
+          "Current week homework";
+        const currentHomeworkDue = formatDate(firstCurrentHomework?.dueAt);
+        const currentHomeworkLink = normalizeText(firstCurrentHomework?.deepLink);
+        const currentCount = Math.max(0, currentHomework.length);
+        const pastDueCount = Math.max(0, pastDueHomework.length);
         const fallbackAnnouncement =
-          firstOutstanding ?
-            `${assignmentName}${dueDate ? ` | due ${dueDate}` : ""}${deepLink ? ` | ${deepLink}` : ""}`
-          : "No overdue homework items for selected class date.";
+          currentCount > 0 ?
+            `${currentHomeworkName}${currentHomeworkDue ? ` | due ${currentHomeworkDue}` : ""}${currentHomeworkLink ? ` | ${currentHomeworkLink}` : ""}`
+          : pastDueCount > 0 ?
+            `${pastDueCount} past due homework item(s) require attention.`
+          : "No current week homework due later this week.";
         const normalizedAnnouncement =
           normalizeText(homeworkAnnouncement) || fallbackAnnouncement;
-        const overdueCount = Math.max(0, outstanding.length);
+        const currentSummary =
+          currentCount > 0 ?
+            `${currentCount} current week homework item(s).`
+          : "No current week homework due later this week.";
+        const pastDueSummary =
+          pastDueCount > 0 ?
+            `${pastDueCount} past due homework item(s) should already have been done.`
+          : "No past due homework.";
         return {
           homeworkAnnouncement: normalizedAnnouncement,
-          currentHomeworkStatus: overdueCount > 0 ? "Cần theo dõi" : "Không có",
-          currentHomeworkHeader: firstOutstanding ? assignmentName : "Bài tập hiện tại",
-          currentHomeworkSummary:
-            overdueCount > 0 ? normalizedAnnouncement : "Không có bài tập hiện tại.",
-          pastDueHomeworkCount: String(overdueCount),
-          pastDueHomeworkSummary:
-            overdueCount > 0 ?
-              `${overdueCount} bài tập quá hạn cần xử lý ngay.`
-            : "Không có bài tập quá hạn.",
+          currentHomeworkStatus: currentCount > 0 ? "Current week" : "None",
+          currentHomeworkHeader: "Current week homework",
+          currentHomeworkSummary: currentSummary,
+          currentHomeworkCount: String(currentCount),
+          pastDueHomeworkCount: String(pastDueCount),
+          pastDueHomeworkSummary: pastDueSummary,
+          currentHomeworkAssignments: currentHomework
+            .map((entry) =>
+              parentTrackingHomeworkRowSnapshot(entry, studentRefId),
+            )
+            .filter(Boolean),
+          pastDueHomeworkAssignments: pastDueHomework
+            .map((entry) =>
+              parentTrackingHomeworkRowSnapshot(entry, studentRefId),
+            )
+            .filter(Boolean),
         };
       }
 
       function parentTrackingOutstandingSnapshotRows(metrics = {}, studentRefId = "") {
-        const normalizedStudentRefId = normalizeText(studentRefId);
-        const outstanding =
-          Array.isArray(metrics?.outstanding) ? metrics.outstanding : [];
-        return outstanding
-          .map((entry) => {
-            const assignmentName = normalizeText(entry?.assignmentName);
-            const dueAt = formatDate(entry?.dueAt);
-            if (!assignmentName && !dueAt) return null;
-            return {
-              assignmentName: assignmentName || "(untitled assignment)",
-              dueAt,
-              className: normalizeText(entry?.className),
-              quarter: normalizeText(entry?.quarter),
-              deepLink: parentTrackingDeepLinkAbsolute(
-                normalizedStudentRefId,
-                normalizeText(entry?.id),
-              ),
-            };
-          })
-          .filter(Boolean);
+        return parentTrackingPastDueSnapshotRows(metrics, studentRefId, "");
       }
 
       function clearParentTrackingComputedFields() {
@@ -15658,10 +16405,14 @@
         parentTrackingFieldSetValue("pt_participationPointsAward", "");
         parentTrackingFieldSetValue("pt_recipients", "");
         parentTrackingFieldSetValue("pt_homeworkAnnouncement", "");
+        const currentRowsEl = document.getElementById("pt_currentRows");
+        if (currentRowsEl)
+          currentRowsEl.innerHTML =
+            '<tr><td colspan="4">Select a student to load homework status.</td></tr>';
         const rowsEl = document.getElementById("pt_outstandingRows");
         if (rowsEl)
           rowsEl.innerHTML =
-            '<tr><td colspan="4">Select a student to load assignment status.</td></tr>';
+            '<tr><td colspan="4">Select a student to load homework status.</td></tr>';
         clearParentTrackingDetailPanel();
       }
 
@@ -15681,7 +16432,11 @@
         );
       }
 
-      function renderParentTrackingHomeworkAnnouncement(student = null, metrics = {}) {
+      function renderParentTrackingHomeworkAnnouncement(
+        student = null,
+        metrics = {},
+        classDate = "",
+      ) {
         const targetEl = document.getElementById("pt_homeworkAnnouncement");
         if (!targetEl) return;
         const studentRefId = normalizeText(student?.id);
@@ -15689,18 +16444,24 @@
           targetEl.value = "";
           return;
         }
-        const outstanding =
-          Array.isArray(metrics?.outstanding) ? metrics.outstanding : [];
-        if (!outstanding.length) {
-          targetEl.value = "No overdue homework items for selected class date.";
+        const buckets = parentTrackingHomeworkBuckets(
+          metrics,
+          studentRefId,
+          classDate,
+        );
+        if (!buckets.currentWeekHomework.length) {
+          targetEl.value =
+            buckets.pastDueHomework.length ?
+              `${buckets.pastDueHomework.length} past due homework item(s) need attention.`
+            : "No current week homework due later this week.";
           return;
         }
-        const firstRow = outstanding[0];
-        const assignment = normalizeText(firstRow?.assignmentName) || "Homework item";
+        const firstRow = buckets.currentWeekHomework[0];
+        const assignment =
+          normalizeText(firstRow?.assignmentName) || "Current week homework";
         const due = formatDate(firstRow?.dueAt);
-        const deepLink = parentTrackingDeepLinkAbsolute(
-          studentRefId,
-          normalizeText(firstRow?.id),
+        const deepLink = normalizeText(
+          parentTrackingDeepLinkAbsolute(studentRefId, normalizeText(firstRow?.id)),
         );
         targetEl.value = `${assignment}${due ? ` | due ${due}` : ""}${deepLink ? ` | ${deepLink}` : ""}`;
       }
@@ -15712,7 +16473,7 @@
         if (!panel || !titleEl || !bodyEl) return;
 
         const assignmentName =
-          normalizeText(record.assignmentName) || "(untitled assignment)";
+          normalizeText(record.assignmentName) || "(untitled homework)";
         const dueAt = formatDate(record.dueAt);
         const submittedAt = formatDate(record.submittedAt);
         const completionState =
@@ -15725,10 +16486,10 @@
         });
         const deepLink = parentTrackingDeepLinkAbsolute(student?.id, record?.id);
 
-        titleEl.textContent = `Assignment Details: ${assignmentName}`;
+        titleEl.textContent = `Homework Details: ${assignmentName}`;
         bodyEl.textContent = [
           studentName ? `Student: ${studentName}` : "",
-          `Assignment: ${assignmentName}`,
+          `Homework item: ${assignmentName}`,
           `Class: ${normalizeText(record.className) || "-"}`,
           `Quarter: ${normalizeText(record.quarter) || "-"}`,
           `Due: ${dueAt || "-"}`,
@@ -15772,21 +16533,31 @@
         });
       }
 
-      function renderParentTrackingOutstandingRows(records = [], student = null) {
-        const rowsEl = document.getElementById("pt_outstandingRows");
+      function renderParentTrackingHomeworkRows(
+        rowsElId = "",
+        records = [],
+        student = null,
+        {
+          emptyMessage = "No homework items for selected class date.",
+          clearDetailOnEmpty = false,
+          forceLateStatus = false,
+        } = {},
+      ) {
+        const rowsEl = document.getElementById(rowsElId);
         if (!rowsEl) return;
         const studentRefId = normalizeText(student?.id);
 
-        state.parentTracking.outstandingByRecordId = Object.fromEntries(
-          (Array.isArray(records) ? records : [])
-            .map((entry) => [normalizeText(entry?.id), entry])
-            .filter(([id]) => Boolean(id)),
-        );
+        if (rowsElId === "pt_outstandingRows") {
+          state.parentTracking.outstandingByRecordId = Object.fromEntries(
+            (Array.isArray(records) ? records : [])
+              .map((entry) => [normalizeText(entry?.id), entry])
+              .filter(([id]) => Boolean(id)),
+          );
+        }
 
         if (!records.length) {
-          rowsEl.innerHTML =
-            '<tr><td colspan="4">No overdue incomplete assignments for selected class date.</td></tr>';
-          clearParentTrackingDetailPanel();
+          rowsEl.innerHTML = `<tr><td colspan="4">${escapeHtml(emptyMessage)}</td></tr>`;
+          if (clearDetailOnEmpty) clearParentTrackingDetailPanel();
           return;
         }
 
@@ -15794,7 +16565,7 @@
         records.forEach((record) => {
           const dueAt = normalizeText(record?.dueAt).slice(0, 10);
           const assignmentName =
-            normalizeText(record?.assignmentName) || "(untitled assignment)";
+            normalizeText(record?.assignmentName) || "(untitled homework)";
           const rowId = normalizeText(record?.id);
           const deepLink = parentTrackingDeepLinkPath(studentRefId, rowId);
           const tr = document.createElement("tr");
@@ -15803,7 +16574,7 @@
           <td>
             <a href="${escapeHtml(deepLink)}" data-pt-open-assignment="${escapeHtml(rowId)}" class="assignment-item-link">${escapeHtml(assignmentName)}</a>
           </td>
-          <td>${isGradeRecordCompleted(record) ? "Completed" : "Pending"}</td>
+          <td>${forceLateStatus ? "Late / Pending" : (isGradeRecordCompleted(record) ? "Completed" : "Pending")}</td>
           <td><button type="button" class="parent-tracking-link-btn" data-pt-view-assignment="${escapeHtml(rowId)}">View details</button></td>
         `;
 
@@ -15818,6 +16589,23 @@
             showParentTrackingAssignmentDetail(record, student);
           });
           rowsEl.appendChild(tr);
+        });
+      }
+
+      function renderParentTrackingCurrentRows(records = [], student = null) {
+        renderParentTrackingHomeworkRows("pt_currentRows", records, student, {
+          emptyMessage:
+            "No current week homework due later this week for the selected class date.",
+          clearDetailOnEmpty: false,
+          forceLateStatus: false,
+        });
+      }
+
+      function renderParentTrackingOutstandingRows(records = [], student = null) {
+        renderParentTrackingHomeworkRows("pt_outstandingRows", records, student, {
+          emptyMessage: "No past due homework for the selected class date.",
+          clearDetailOnEmpty: true,
+          forceLateStatus: true,
         });
       }
 
@@ -15969,12 +16757,20 @@
       ) {
         const reports =
           Array.isArray(student?.parentReports) ? student.parentReports : [];
-        return reports.filter((row) => levelMatchesParentReport(row, selectedLevel));
+        const eaglesId = normalizeText(student?.eaglesId);
+        return reports
+          .filter((row) => levelMatchesParentReport(row, selectedLevel))
+          .map((row) => ({
+            ...row,
+            eaglesId,
+            teacherName: normalizeText(row?.teacherName || row?.approvedByUsername),
+          }));
       }
 
-      function renderParentTrackingReportRows(rows = []) {
+      function renderParentTrackingReportRows(rows = [], student = null) {
         const rowsEl = document.getElementById("pt_reportRows");
         if (!rowsEl) return;
+        const studentEaglesId = normalizeText(student?.eaglesId);
         state.tableRows.performance = Array.isArray(rows) ? [...rows] : [];
         const sortedRows = sortedPerformanceRows(state.tableRows.performance);
         const filteredRows = filterRowsForTable(
@@ -15987,41 +16783,30 @@
         renderPerformanceStagedSection(filteredRows);
         if (!filteredRows.length) {
           rowsEl.innerHTML =
-            '<tr><td colspan="13">No performance records for current filters.</td></tr>';
+            '<tr><td colspan="6">No performance records for current filters.</td></tr>';
           applyTableColumnVisibility("performance");
           return;
         }
 
         rowsEl.innerHTML = "";
         filteredRows.forEach((row) => {
-          const archived = isTableRecordArchived("performance", row.id);
-          const studentNumberText =
-            row?.studentNumber === null || row?.studentNumber === undefined ?
-              ""
-            : escapeHtml(String(row.studentNumber));
+          const held = isPerformanceReportHeld(row.id);
+          const reportTeacher = normalizeText(row.teacherName || row.approvedByUsername || "-");
+          const approvalStatus =
+            held ? "On hold"
+            : normalizeText(row.approvedAt) ?
+              `Approved${normalizeText(row.approvedByUsername) ? ` by ${normalizeText(row.approvedByUsername)}` : ""}`
+            : "Pending admin approval";
+          const reportEaglesId = normalizeText(row.eaglesId || studentEaglesId);
           const tr = document.createElement("tr");
           tr.innerHTML = `
-          <td class="table-col-student-number" data-performance-col="studentNumber">${studentNumberText}</td>
-          <td data-performance-col="eaglesId">${escapeHtml(row.eaglesId || "")}</td>
-          <td data-performance-col="fullName">${escapeHtml(row.fullName || "")}</td>
-          <td data-performance-col="englishName">${escapeHtml(row.englishName || "")}</td>
+          <td data-performance-col="hold"><label class="small"><input type="checkbox" data-pt-report-hold="${escapeHtml(row.id)}"${held ? " checked" : ""}> Hold</label></td>
           <td data-performance-col="generatedAt">${escapeHtml(formatDate(row.generatedAt))}</td>
-          <td data-performance-col="className">${row.className || ""}</td>
-          <td data-performance-col="quarter">${row.quarter || ""}</td>
-          <td data-performance-col="homeworkCompletionRate">${row.homeworkCompletionRate ?? ""}</td>
-          <td data-performance-col="homeworkOnTimeRate">${row.homeworkOnTimeRate ?? ""}</td>
-          <td data-performance-col="behaviorScore">${row.behaviorScore ?? ""}</td>
-          <td data-performance-col="participationScore">${row.participationScore ?? ""}</td>
-          <td data-performance-col="inClassScore">${row.inClassScore ?? ""}</td>
-          <td class="table-row-options-cell">
-            <details class="row-options-menu">
-              <summary class="row-options-trigger">Options</summary>
-              <div class="row-options-dropdown">
-                <button type="button" class="btn-edit" data-pt-report-edit="${row.id}">Edit</button>
-                <button type="button" class="btn-refresh" data-pt-report-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
-                <button type="button" class="btn-delete" data-pt-report-del="${row.id}">Delete</button>
-              </div>
-            </details>
+          <td data-performance-col="eaglesId">${escapeHtml(reportEaglesId)}</td>
+          <td data-performance-col="teacherName">${escapeHtml(reportTeacher || "-")}</td>
+          <td data-performance-col="approvalStatus">${escapeHtml(approvalStatus)}</td>
+          <td data-performance-col="action" class="table-row-options-cell">
+            <button type="button" class="btn-edit" data-pt-report-edit="${row.id}">Edit</button>
           </td>
         `;
 
@@ -16087,27 +16872,18 @@
             },
           );
 
-          tr.querySelector(`[data-pt-report-del="${row.id}"]`)?.addEventListener(
-            "click",
-            () => {
-              deleteParentTrackingReport(row.id).catch(handleError);
-            },
-          );
-          tr.querySelector(`[data-pt-report-archive="${row.id}"]`)?.addEventListener(
-            "click",
-            () => {
-              const nextArchived = !isTableRecordArchived("performance", row.id);
-              setTableRecordArchived("performance", row.id, nextArchived);
-              renderParentTrackingReportRows(state.tableRows.performance);
+          tr.querySelector(`[data-pt-report-hold="${row.id}"]`)?.addEventListener(
+            "change",
+            (event) => {
+              const target = event.target;
+              const nextHeld = Boolean(target?.checked);
+              setPerformanceReportHeld(row.id, nextHeld);
+              renderParentTrackingReportRows(state.tableRows.performance, student);
               setParentTrackingStatus(
-                nextArchived ?
-                  "Performance report archived."
-                : "Performance report restored.",
+                nextHeld ? "Performance report placed on hold and kept in the approval list." : "Performance report released from hold.",
               );
               setStatus(
-                nextArchived ?
-                  "Performance data archived."
-                : "Performance data restored.",
+                nextHeld ? "Performance report held." : "Performance report released from hold.",
               );
             },
           );
@@ -16150,7 +16926,7 @@
         ) {
           document.getElementById("pt_reportId").value = "";
         }
-        setTableRecordArchived("performance", recordId, false);
+        setPerformanceReportHeld(recordId, false);
         setParentTrackingStatus("Performance report deleted.");
         setStatus("Performance report deleted.");
       }
@@ -16212,17 +16988,26 @@
         renderParentTrackingMetrics(metrics);
         const recipients = parentTrackingRecipientsForStudent(detail);
         parentTrackingFieldSetValue("pt_recipients", recipients.join(", "));
-        renderParentTrackingOutstandingRows(metrics.outstanding, detail);
-        renderParentTrackingHomeworkAnnouncement(detail, metrics);
+        const homeworkBuckets = parentTrackingHomeworkBuckets(
+          metrics,
+          detail.id,
+          classDate,
+        );
+        const currentHomeworkRows = homeworkBuckets.currentWeekHomework;
+        const pastDueHomeworkRows = homeworkBuckets.pastDueHomework;
+        renderParentTrackingCurrentRows(currentHomeworkRows, detail);
+        renderParentTrackingOutstandingRows(pastDueHomeworkRows, detail);
+        renderParentTrackingHomeworkAnnouncement(detail, metrics, classDate);
         renderParentTrackingReportRows(
           parentTrackingReportRowsForStudent(detail, selectedLevel),
+          detail,
         );
         setParentTrackingStatus(
-          `fullName=${normalizeText(detail?.profile?.fullName)} | eaglesId=${normalizeText(detail?.eaglesId)} | records=${metrics.records.length} | outstanding=${metrics.outstanding.length}`,
+          `fullName=${normalizeText(detail?.profile?.fullName)} | eaglesId=${normalizeText(detail?.eaglesId)} | records=${metrics.records.length} | currentWeek=${currentHomeworkRows.length} | pastDue=${pastDueHomeworkRows.length}`,
         );
 
         if (normalizeText(preferredAssignmentId)) {
-          const match = metrics.outstanding.find(
+          const match = [...pastDueHomeworkRows, ...currentHomeworkRows].find(
             (entry) =>
               normalizeText(entry?.id) === normalizeText(preferredAssignmentId),
           );
@@ -16296,12 +17081,29 @@
         const className = fullLevelLabel(selectedLevel);
         const schoolYear = defaultAttendanceSchoolYear(classDate);
         const quarter = quarterFromIsoDate(classDate);
-
-        const outstandingLines = metrics.outstanding.map((row, index) => {
+        const currentHomeworkRows = parentTrackingCurrentSnapshotRows(
+          metrics,
+          selectedStudentRefId,
+          classDate,
+        );
+        const pastDueHomeworkRows = parentTrackingPastDueSnapshotRows(
+          metrics,
+          selectedStudentRefId,
+          classDate,
+        );
+        const currentHomeworkLines = currentHomeworkRows.map((row, index) => {
           const due = normalizeText(row?.dueAt).slice(0, 10) || "-";
           const assignment =
-            normalizeText(row?.assignmentName) || "(untitled assignment)";
-          return `${index + 1}. ${assignment} (due ${due})`;
+            normalizeText(row?.assignmentName) || "(untitled homework)";
+          const link = normalizeText(row?.deepLink);
+          return `${index + 1}. ${assignment} (due ${due})${link ? ` | details ${link}` : ""}`;
+        });
+        const pastDueHomeworkLines = pastDueHomeworkRows.map((row, index) => {
+          const due = normalizeText(row?.dueAt).slice(0, 10) || "-";
+          const assignment =
+            normalizeText(row?.assignmentName) || "(untitled homework)";
+          const link = normalizeText(row?.deepLink);
+          return `${index + 1}. ${assignment} (due ${due})${link ? ` | details ${link}` : ""}`;
         });
 
         const reportNotes = [
@@ -16310,9 +17112,12 @@
           `Class day: ${classDay || "-"}`,
           `Lesson summary: ${lessonSummary}`,
           `Vision status: ${visionStatus}`,
-          outstandingLines.length ?
-            `Outstanding assignments:\n${outstandingLines.join("\n")}`
-          : "Outstanding assignments: none",
+          currentHomeworkLines.length ?
+            `Current week homework:\n${currentHomeworkLines.join("\n")}`
+          : "Current week homework: none",
+          pastDueHomeworkLines.length ?
+            `Past due homework:\n${pastDueHomeworkLines.join("\n")}`
+          : "Past due homework: none",
           `Homework snapshot: ${homeworkAnnouncement || "-"}`,
           comment ? `Teacher comment: ${comment}` : "",
         ]
@@ -16373,10 +17178,39 @@
           Array.isArray(context.recipients) ?
             context.recipients.map((entry) => normalizeText(entry)).filter(Boolean)
           : [];
-        const outstandingAssignments = parentTrackingOutstandingSnapshotRows(
+        const currentHomeworkAssignments = parentTrackingCurrentSnapshotRows(
           context.metrics,
           context.studentRefId,
+          context.classDate,
         );
+        const pastDueHomeworkAssignments = parentTrackingPastDueSnapshotRows(
+          context.metrics,
+          context.studentRefId,
+          context.classDate,
+        );
+        const outstandingAssignments = pastDueHomeworkAssignments;
+        const currentHomeworkLines = currentHomeworkAssignments.map((row, index) => {
+          const due = normalizeText(row?.dueAt).slice(0, 10) || "-";
+          const assignment =
+            normalizeText(row?.assignmentName) || "(untitled homework)";
+          const link = normalizeText(row?.deepLink);
+          return `${index + 1}. ${assignment} | due ${due}${link ? ` | details ${link}` : ""}`;
+        });
+        const pastDueHomeworkLines = pastDueHomeworkAssignments.map((row, index) => {
+          const due = normalizeText(row?.dueAt).slice(0, 10) || "-";
+          const assignment =
+            normalizeText(row?.assignmentName) || "(untitled homework)";
+          const link = normalizeText(row?.deepLink);
+          return `${index + 1}. ${assignment} | due ${due}${link ? ` | details ${link}` : ""}`;
+        });
+        const currentHomeworkSnapshot = {
+          rows: currentHomeworkAssignments,
+          lines: currentHomeworkLines,
+        };
+        const pastDueHomeworkSnapshot = {
+          rows: pastDueHomeworkAssignments,
+          lines: pastDueHomeworkLines,
+        };
         const savedForm = {
           ...rawForm,
           behaviorScore: rubricSummary.behaviorScore,
@@ -16403,6 +17237,10 @@
           homeworkSnapshot,
           recipientsSnapshot,
           outstandingAssignments,
+          currentHomeworkAssignments,
+          pastDueHomeworkAssignments,
+          currentHomeworkSnapshot,
+          pastDueHomeworkSnapshot,
           rubricPayload,
         };
 
@@ -16435,10 +17273,14 @@
                   savedForm.homeworkSnapshot?.currentHomeworkHeader,
                 currentHomeworkSummary:
                   savedForm.homeworkSnapshot?.currentHomeworkSummary,
+                currentHomeworkCount:
+                  savedForm.homeworkSnapshot?.currentHomeworkCount,
                 pastDueHomeworkCount: savedForm.homeworkSnapshot?.pastDueHomeworkCount,
                 pastDueHomeworkSummary:
                   savedForm.homeworkSnapshot?.pastDueHomeworkSummary,
                 recipients: savedForm.recipientsSnapshot,
+                currentHomeworkAssignments: savedForm.currentHomeworkAssignments,
+                pastDueHomeworkAssignments: savedForm.pastDueHomeworkAssignments,
                 outstandingAssignments: savedForm.outstandingAssignments,
               },
               rubricPayload: savedForm.rubricPayload,
@@ -16452,6 +17294,7 @@
             result.student;
           renderParentTrackingReportRows(
             parentTrackingReportRowsForStudent(result.student, context.selectedLevel),
+            result.student,
           );
           if (state.currentStudent?.id === result.student.id) {
             state.currentStudent = result.student;
@@ -16500,31 +17343,40 @@
         rememberParentTrackingLessonSummary();
         const recipientCount = context.recipients.length;
 
-        const outstandingLines =
-          context.metrics.outstanding.length ?
-            context.metrics.outstanding.map((row, index) => {
-              const due = formatDate(row?.dueAt) || "-";
-              const assignment =
-                normalizeText(row?.assignmentName) || "(untitled assignment)";
-              const link = parentTrackingDeepLinkAbsolute(
-                context.studentRefId,
-                normalizeText(row?.id),
-              );
-              return `${index + 1}. ${assignment} | due ${due} | details ${link}`;
-            })
+        const currentHomeworkLines =
+          Array.isArray(context.savedForm?.currentHomeworkSnapshot?.lines) &&
+          context.savedForm.currentHomeworkSnapshot.lines.length ?
+            context.savedForm.currentHomeworkSnapshot.lines
           : ["None"];
-
-        const metricLines = [
-          `Behavior: ${normalizeText(context.savedForm?.behaviorScore) || "-"}`,
-          `Skills: ${normalizeText(context.savedForm?.participationScore) || "-"}`,
-          `Academic: ${normalizeText(context.savedForm?.inClassScore) || "-"}`,
-          `Homework Timeliness %: ${normalizeText(context.savedForm?.homeworkOnTimeRate) || "0"}`,
-          `Assignment Completion %: ${normalizeText(context.savedForm?.homeworkCompletionRate) || "0"}`,
-          `Participation Points: ${normalizeText(context.savedForm?.participationPointsAward) || "0"}`,
+        const pastDueHomeworkLines =
+          Array.isArray(context.savedForm?.pastDueHomeworkSnapshot?.lines) &&
+          context.savedForm.pastDueHomeworkSnapshot.lines.length ?
+            context.savedForm.pastDueHomeworkSnapshot.lines
+          : ["None"];
+        const reportId = normalizeText(context.reportId) || normalizeText(context.savedForm?.reportId);
+        const englishName = normalizeText(context.student.profile?.englishName);
+        const summaryLines = [
+          `Behavior: ${queueRatingSummary(context.savedForm?.behaviorScore)}`,
+          `Skills: ${queueRatingSummary(context.savedForm?.participationScore)}`,
+          `Academic: ${queueRatingSummary(context.savedForm?.inClassScore)}`,
+          `Homework timeliness: ${normalizeText(context.savedForm?.homeworkOnTimeRate) || "-"}`,
+          `Homework completion: ${normalizeText(context.savedForm?.homeworkCompletionRate) || "-"}`,
+          `Participation points: ${normalizeText(context.savedForm?.participationPointsAward) || "-"}`,
+        ];
+        const detailLines = [
+          `Behavior: ${queueRatingDetail(context.savedForm?.behaviorScore)}`,
+          `Skills: ${queueRatingDetail(context.savedForm?.participationScore)}`,
+          `Academic: ${queueRatingDetail(context.savedForm?.inClassScore)}`,
+          `Homework timeliness: ${normalizeText(context.savedForm?.homeworkOnTimeRate) || "-"}`,
+          `Homework completion: ${normalizeText(context.savedForm?.homeworkCompletionRate) || "-"}`,
+          `Participation points: ${normalizeText(context.savedForm?.participationPointsAward) || "-"}`,
         ];
 
         const message = [
-          `Full Name: ${normalizeText(context.student.profile?.fullName)}`,
+          "Performance Report",
+          `Report ID: ${reportId || "-"}`,
+          `Student: ${normalizeText(context.student.profile?.fullName) || "-"}`,
+          `English name: ${englishName || "-"}`,
           `Eagles ID: ${normalizeText(context.student.eaglesId)}`,
           `Class level: ${context.className}`,
           `Class day/date: ${context.classDay || "-"} / ${context.classDate}`,
@@ -16533,14 +17385,20 @@
           `Lesson summary: ${context.lessonSummary}`,
           `Vision status: ${context.visionStatus || "-"}`,
           "",
-          "Performance snapshot:",
-          metricLines.join("\n"),
+          "Summary by category:",
+          ...summaryLines.map((line) => `- ${line}`),
           "",
-          "Outstanding assignments:",
-          outstandingLines.join("\n"),
+          "Rating guide:",
+          ...detailLines.map((line) => `- ${line}`),
+          "",
+          "Current week homework:",
+          currentHomeworkLines.join("\n"),
+          "",
+          "Past due homework:",
+          pastDueHomeworkLines.join("\n"),
           "",
           normalizeText(context.savedForm?.comment) ?
-            `Comment: ${normalizeText(context.savedForm?.comment)}`
+            `Teacher comment: ${normalizeText(context.savedForm?.comment)}`
           : "",
         ]
           .filter(Boolean)
@@ -16559,6 +17417,7 @@
             recipients: context.recipients,
             reportId: normalizeText(context.reportId),
             studentRefId: normalizeText(context.studentRefId),
+            eaglesId: normalizeText(context.student.eaglesId),
             className: normalizeText(context.className),
             schoolYear: normalizeText(context.schoolYear),
             quarter: normalizeText(context.quarter),
@@ -16583,7 +17442,7 @@
               `Performance report saved for admin review (${recipientCount} recipients).`
             : "Performance report saved for admin review. No recipient emails found yet."
           : recipientCount > 0 ?
-            `Performance tracking email queued (${recipientCount} recipients).`
+            `Performance report email queued (${recipientCount} recipients).`
           : "Performance tracking report queued with no recipients. Add emails in Queue Review.",
         );
         setParentTrackingSaveNotice(
@@ -20093,6 +20952,7 @@
 
       installButtonPressFeedback();
       initializeButtonTooltips();
+      wireSharedButtonDecoration();
 
       document.querySelectorAll("[data-menu-toggle]").forEach((toggleBtn) => {
         toggleBtn.addEventListener("click", () => {
@@ -21675,13 +22535,6 @@
           rerenderSortedTable("performance");
         };
         bindById("performanceDataSearch", "input", applyPerformanceDataSearch);
-        bindById("performanceArchiveToggleBtn", "click", () => {
-          try {
-            toggleTableArchivedView("performance");
-          } catch (error) {
-            handleError(error);
-          }
-        });
         bindById("performanceExportXlsxBtn", "click", () => {
           exportVisibleTableRowsToXlsx("performance").catch(handleError);
         });
@@ -22089,9 +22942,10 @@
           const target = event?.target;
           if (!(target instanceof Element)) return;
           const openBtn = target.closest(
-            "button[data-queue-hub-open-panel][data-queue-hub-open-index]",
+            "a[data-queue-hub-open-panel][data-queue-hub-open-index]",
           );
-          if (!(openBtn instanceof HTMLButtonElement)) return;
+          if (!(openBtn instanceof HTMLAnchorElement)) return;
+          event.preventDefault();
           const panelId = normalizeText(
             openBtn.getAttribute("data-queue-hub-open-panel"),
           );

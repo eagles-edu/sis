@@ -135,22 +135,18 @@
     </div>
     <div class="panel" id="authPanel">
       <h1>Student Admin Login</h1>
-      <form id="loginForm">
-        <div class="row">
-          <div class="col-4">
-            <label for="loginUser">Username</label>
-            <input id="loginUser" type="text" autocomplete="username" value="admin">
-          </div>
-          <div class="col-4">
-            <label for="loginPass">Password</label>
-            <input id="loginPass" type="password" autocomplete="current-password">
-          </div>
-          <div class="col-2">
-            <button id="loginBtn" type="submit" class="primary">Login</button>
-          </div>
-          <div class="col-2">
-            <button id="loginClearBtn" type="button" class="danger">Clear</button>
-          </div>
+      <form id="loginForm" class="login-form" novalidate>
+        <div class="form-row">
+          <label for="loginUser">Username</label>
+          <input id="loginUser" type="text" autocomplete="username" value="admin">
+        </div>
+        <div class="form-row">
+          <label for="loginPass">Password</label>
+          <input id="loginPass" type="password" autocomplete="current-password">
+        </div>
+        <div class="actions actions-2">
+          <button id="loginBtn" type="submit" class="primary">Login</button>
+          <button id="loginClearBtn" type="button" class="danger">Clear</button>
         </div>
       </form>
       <div class="login-links">
@@ -290,7 +286,7 @@
                 <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">
                   Hide Menu
                 </button>
-                <button id="overviewRuntimeRestartBtn" type="button" class="primary hidden">
+                <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-blue-action hidden">
                   Self-Heal Runtime
                 </button>
                 <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
@@ -394,7 +390,7 @@
                 <button id="clearFiltersBtn" type="button" class="danger">Clear</button>
               </div>
               <div class="col-2">
-                <button id="refreshBtn" type="button" class="btn-refresh">
+                <button id="refreshBtn" type="button" class="portal-button portal-button-teal-refresh">
                   Refresh
                 </button>
               </div>
@@ -517,7 +513,7 @@
                           </div>
                           <div class="hub-status-wrap">
                             <span id="hubStatusBadge" class="hub-pill pending">Checking...</span>
-                            <button id="hubPingBtn" type="button" class="btn-refresh">
+                            <button id="hubPingBtn" type="button" class="portal-button portal-button-teal-refresh">
                               Ping Hub
                             </button>
                           </div>
@@ -531,10 +527,10 @@
                             <span>Service Control</span>
                           </div>
                           <div class="service-control-actions">
-                            <button id="exerciseMailerServiceRefreshBtn" type="button" class="btn-refresh">
+                            <button id="exerciseMailerServiceRefreshBtn" type="button" class="portal-button portal-button-teal-refresh">
                               Refresh
                             </button>
-                            <button id="exerciseMailerRestartBtn" type="button" class="primary">
+                            <button id="exerciseMailerRestartBtn" type="button" class="portal-button portal-button-blue-action">
                               Restart
                             </button>
                           </div>
@@ -673,16 +669,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </table>
                     </div>
                     <div class="actions actions-4">
-                      <button id="levelReminderSendBtn" type="button" class="primary">
+                      <button id="levelReminderSendBtn" type="button" class="portal-button portal-button-green-action">
                         Send Reminder
                       </button>
-                      <button id="levelReminderSendAllBtn" type="button" class="btn-refresh">
+                      <button id="levelReminderSendAllBtn" type="button" class="portal-button portal-button-blue-action">
                         Send to All Listed
                       </button>
-                      <button id="levelReminderClearBtn" type="button" class="danger">
+                      <button id="levelReminderClearBtn" type="button" class="portal-button portal-button-purple-action">
                         Clear Form
                       </button>
-                      <button id="levelDetailCloseBtn" type="button" class="alt">
+                      <button id="levelDetailCloseBtn" type="button" class="portal-button portal-button-neutral-action">
                         Close Detail
                       </button>
                     </div>
@@ -755,10 +751,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </table>
                       </div>
                       <div class="actions actions-2">
-                        <button id="overviewIncomingExerciseExpandBtn" type="button" class="btn-refresh">
+                        <button id="overviewIncomingExerciseExpandBtn" type="button" class="portal-button portal-button-neutral-action">
                           Show All Statuses
                         </button>
-                        <button id="overviewIncomingExerciseRefreshBtn" type="button" class="btn-refresh">
+                        <button id="overviewIncomingExerciseRefreshBtn" type="button" class="portal-button portal-button-teal-refresh">
                           Reload Queue
                         </button>
                       </div>
@@ -795,13 +791,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </table>
                       </div>
                       <div class="actions actions-3">
-                        <button id="overviewNewsQueueOpenBtn" type="button" class="primary">
+                        <button id="overviewNewsQueueOpenBtn" type="button" class="portal-button portal-button-blue-action">
                           Open News Reports Page
                         </button>
-                        <button id="overviewNewsQueueRefreshBtn" type="button" class="btn-refresh">
+                        <button id="overviewNewsQueueRefreshBtn" type="button" class="portal-button portal-button-teal-refresh">
                           Reload Queue
                         </button>
-                        <button id="overviewNewsQueueQueueHubBtn" type="button" class="alt">
+                        <button id="overviewNewsQueueQueueHubBtn" type="button" class="portal-button portal-button-neutral-action">
                           Open Queue Hub
                         </button>
                       </div>
@@ -817,13 +813,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   save panel order.
                 </p>
                 <div class="actions actions-3">
-                  <button id="queueHubRefreshBtn" type="button" class="btn-refresh">
+                  <button id="queueHubRefreshBtn" type="button" class="portal-button portal-button-teal-refresh">
                     Reload Queue Hub
                   </button>
-                  <button id="queueHubSaveOrderBtn" type="button" class="primary">
+                  <button id="queueHubSaveOrderBtn" type="button" class="portal-button portal-button-green-action">
                     Save Panel Order
                   </button>
-                  <button id="queueHubResetOrderBtn" type="button" class="danger">
+                  <button id="queueHubResetOrderBtn" type="button" class="portal-button portal-button-purple-action">
                     Reset Panel Order
                   </button>
                 </div>
@@ -1378,8 +1374,8 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </div>
                     </div>
                     <div class="progress-report-card card" data-surface-role="card">
-                      <label for="pt_homeworkAnnouncement">Bai tap ve nha this week (auto link)</label>
-                      <input id="pt_homeworkAnnouncement" type="text" readonly placeholder="Auto-generated from assignments when available">
+                      <label for="pt_homeworkAnnouncement">Current week homework (auto link)</label>
+                      <input id="pt_homeworkAnnouncement" type="text" readonly placeholder="Auto-generated from current-week homework when available">
                     </div>
                     <div class="progress-report-layout">
                       <div class="progress-report-card card" data-surface-role="card">
@@ -1805,17 +1801,42 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </div>
                       </div>
                       <div class="progress-report-card card progress-report-span-2" data-surface-role="card">
-                        <h4>Homework Completion</h4>
+                        <h4>Current Week Homework</h4>
                         <p class="small">
-                          Auto list of overdue and incomplete assignments for the
-                          selected class date.
+                          Homework due later this week. Each homework title is a
+                          dynamic link to the record details.
                         </p>
                         <div class="progress-report-table-wrap data-surface" data-surface-role="data-surface">
                           <table class="progress-report-table">
                             <thead>
                               <tr>
                                 <th scope="col">Due</th>
-                                <th scope="col">Assignment detail / link</th>
+                                <th scope="col">Homework item / link</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Link</th>
+                              </tr>
+                            </thead>
+                            <tbody id="pt_currentRows">
+                              <tr>
+                                <td colspan="4">
+                                  Select a student to load homework status.
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="progress-report-card card progress-report-span-2" data-surface-role="card">
+                        <h4>Past Due Homework</h4>
+                        <p class="small">
+                          Homework that is late and should already have been done.
+                        </p>
+                        <div class="progress-report-table-wrap data-surface" data-surface-role="data-surface">
+                          <table class="progress-report-table">
+                            <thead>
+                              <tr>
+                                <th scope="col">Due</th>
+                                <th scope="col">Homework item / link</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Link</th>
                               </tr>
@@ -1823,7 +1844,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                             <tbody id="pt_outstandingRows">
                               <tr>
                                 <td colspan="4">
-                                  Select a student to load assignment status.
+                                  Select a student to load homework status.
                                 </td>
                               </tr>
                             </tbody>
@@ -1860,16 +1881,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       Weekend batch windows: Sat/Sun at 12:00, 15:30, 18:00, 20:15.
                     </p>
                     <div class="assignment-item-builder hidden" id="pt_assignmentDetailPanel">
-                      <h4 id="pt_assignmentDetailTitle">Assignment Details</h4>
+                      <h4 id="pt_assignmentDetailTitle">Homework Details</h4>
                       <pre class="small parent-tracking-detail-body" id="pt_assignmentDetailBody">
-Select an assignment link to inspect details.</pre>
+Select a homework link to inspect details.</pre>
                     </div>
                   </section>
                 </div>
               </div>
 
               <div class="content page-section" data-page="performance-data" data-surface-role="content">
-                <h2>Performance data [view, sort, manage, edit data]</h2>
+                <h2>Performance reports [approval and queue review]</h2>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="performanceSortField">Sort Performance Data By</label>
@@ -1917,10 +1938,9 @@ Select an assignment link to inspect details.</pre>
                     <input id="performanceDataSearch" type="search" placeholder="class, quarter, score, comments">
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="performanceArchiveToggleBtn">Archive</label>
-                    <button id="performanceArchiveToggleBtn" type="button" class="alt">
-                      Show Archived
-                    </button>
+                    <p class="small">
+                      Hold keeps reports in this list. Archive is separate.
+                    </p>
                   </div>
                   <div class="toolbar-field compact">
                     <label for="performanceExportXlsxBtn">Export</label>
@@ -1937,93 +1957,67 @@ Select an assignment link to inspect details.</pre>
                 </div>
                 <div class="table-column-controls data-surface" id="performanceColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
-                  <label><input type="checkbox" data-performance-col-toggle="studentNumber" checked>#</label>
+                  <label><input type="checkbox" data-performance-col-toggle="hold" checked>Hold</label>
+                  <label><input type="checkbox" data-performance-col-toggle="generatedAt" checked>Report Date</label>
                   <label><input type="checkbox" data-performance-col-toggle="eaglesId" checked>Eagles ID</label>
-                  <label><input type="checkbox" data-performance-col-toggle="fullName">Full Name</label>
-                  <label><input type="checkbox" data-performance-col-toggle="englishName">English Name</label>
-                  <label><input type="checkbox" data-performance-col-toggle="generatedAt" checked>Generated</label>
-                  <label><input type="checkbox" data-performance-col-toggle="className" checked>Class</label>
-                  <label><input type="checkbox" data-performance-col-toggle="quarter" checked>Quarter</label>
-                  <label><input type="checkbox" data-performance-col-toggle="homeworkCompletionRate" checked>HW %</label>
-                  <label><input type="checkbox" data-performance-col-toggle="homeworkOnTimeRate" checked>On-Time %</label>
-                  <label><input type="checkbox" data-performance-col-toggle="behaviorScore" checked>Behavior</label>
-                  <label><input type="checkbox" data-performance-col-toggle="participationScore" checked>Participation</label>
-                  <label><input type="checkbox" data-performance-col-toggle="inClassScore" checked>In Class</label>
+                  <label><input type="checkbox" data-performance-col-toggle="teacherName" checked>Teacher</label>
+                  <label><input type="checkbox" data-performance-col-toggle="approvalStatus" checked>Approval Status</label>
+                  <label><input type="checkbox" data-performance-col-toggle="action" checked>Action</label>
                 </div>
                 <div class="performance-data-list data-surface" data-surface-role="data-surface">
                   <p class="small admin-table-summary" id="performanceDataSummary">
-                    Showing performance records.
+                    Showing reports awaiting approval.
                   </p>
                   <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                     <table>
                       <thead>
                         <tr>
-                          <th scope="col" class="table-col-student-number" data-performance-col="studentNumber" data-table-sort="performance" data-sort-field="studentNumber" tabindex="0" aria-sort="none">
-                            #
+                          <th scope="col" data-performance-col="hold">
+                            Hold
+                          </th>
+                          <th scope="col" data-performance-col="generatedAt" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">
+                            Report Date
                           </th>
                           <th scope="col" data-performance-col="eaglesId" data-table-sort="performance" data-sort-field="eaglesId" tabindex="0" aria-sort="none">
                             Eagles ID
                           </th>
-                          <th scope="col" data-performance-col="fullName" data-table-sort="performance" data-sort-field="fullName" tabindex="0" aria-sort="none">
-                            Full Name
+                          <th scope="col" data-performance-col="teacherName">
+                            Teacher
                           </th>
-                          <th scope="col" data-performance-col="englishName">
-                            English Name
+                          <th scope="col" data-performance-col="approvalStatus">
+                            Approval Status
                           </th>
-                          <th scope="col" data-performance-col="generatedAt" data-table-sort="performance" data-sort-field="generatedAt" tabindex="0" aria-sort="none">
-                            Generated
-                          </th>
-                          <th scope="col" data-performance-col="className" data-table-sort="performance" data-sort-field="className" tabindex="0" aria-sort="none">
-                            Class
-                          </th>
-                          <th scope="col" data-performance-col="quarter">Quarter</th>
-                          <th scope="col" data-performance-col="homeworkCompletionRate" data-table-sort="performance" data-sort-field="homeworkCompletionRate" tabindex="0" aria-sort="none">
-                            HW %
-                          </th>
-                          <th scope="col" data-performance-col="homeworkOnTimeRate" data-table-sort="performance" data-sort-field="homeworkOnTimeRate" tabindex="0" aria-sort="none">
-                            On-Time %
-                          </th>
-                          <th scope="col" data-performance-col="behaviorScore" data-table-sort="performance" data-sort-field="behaviorScore" tabindex="0" aria-sort="none">
-                            Behavior
-                          </th>
-                          <th scope="col" data-performance-col="participationScore">
-                            Participation
-                          </th>
-                          <th scope="col" data-performance-col="inClassScore">
-                            In Class
-                          </th>
-                          <th scope="col">Action</th>
+                          <th scope="col" data-performance-col="action">Action</th>
                         </tr>
                       </thead>
                       <tbody id="pt_reportRows">
                         <tr>
-                          <td colspan="13">Select a student to load performance data.</td>
+                          <td colspan="6">Select a student to load performance reports.</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
                 <section class="hidden panel" id="performanceStagedSection" data-surface-role="panel">
-                  <h3>Staged Performance Reports</h3>
+                  <h3>Reports Awaiting Admin Approval</h3>
                   <p class="small" id="performanceStagedSummary">
-                    No staged performance reports.
+                    No reports awaiting approval.
                   </p>
                   <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                     <table>
                       <thead>
                         <tr>
-                          <th scope="col">Generated</th>
-                          <th scope="col">Full Name</th>
+                          <th scope="col">Report Date</th>
                           <th scope="col">Eagles ID</th>
-                          <th scope="col">Class</th>
-                          <th scope="col">Quarter</th>
-                          <th scope="col">Queue State</th>
+                          <th scope="col">Teacher</th>
+                          <th scope="col">Approval Status</th>
+                          <th scope="col">Hold</th>
                           <th scope="col">Action</th>
                         </tr>
                       </thead>
                       <tbody id="performanceStagedRows">
                         <tr>
-                          <td colspan="7">No staged performance reports.</td>
+                          <td colspan="6">No reports awaiting approval.</td>
                         </tr>
                       </tbody>
                     </table>
@@ -2035,27 +2029,27 @@ Select an assignment link to inspect details.</pre>
                   </div>
                 </section>
                 <section class="hidden panel" id="performanceQueueSection" data-surface-role="panel">
-                  <h3>Queued Performance Reports</h3>
+                  <h3>Approved Reports Staged for Email</h3>
                   <details class="data-surface" id="performanceQueueDetails" data-surface-role="data-surface">
                     <summary>
-                      <span>Queue Review</span>
-                      <span class="small" id="performanceQueueSummary">No queued performance reports.</span>
+                      <span>Transmission Queue</span>
+                      <span class="small" id="performanceQueueSummary">No approved reports queued for email.</span>
                     </summary>
                     <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                       <table>
                         <thead>
                           <tr>
-                            <th scope="col">Queued</th>
-                            <th scope="col">Student/Title</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Scheduled</th>
-                            <th scope="col">By</th>
+                            <th scope="col">Queued At</th>
+                            <th scope="col">Eagles ID</th>
+                            <th scope="col">Teacher</th>
+                            <th scope="col">Approval Status</th>
+                            <th scope="col">Queued By</th>
                             <th scope="col">HS/CM</th>
                           </tr>
                         </thead>
                         <tbody id="performanceQueueRows">
                           <tr>
-                            <td colspan="6">No queued performance reports.</td>
+                            <td colspan="6">No approved reports queued for email.</td>
                           </tr>
                         </tbody>
                       </table>
@@ -3174,27 +3168,50 @@ Select an assignment link to inspect details.</pre>
         </button>
       </div>
       <div class="queue-modal-body">
+        <div class="parent-queue-report-hero">
+          <div id="parentQueueItemStudentFullName" class="parent-queue-report-name"></div>
+          <div id="parentQueueItemStudentEnglishName" class="parent-queue-report-english"></div>
+          <div id="parentQueueItemStudentIdentityLine" class="parent-queue-report-identity small"></div>
+        </div>
         <div class="row">
           <div class="col-3">
             <label for="parentQueueItemId">Queue ID</label><input id="parentQueueItemId" type="text" readonly>
           </div>
           <div class="col-3">
-            <label for="parentQueueItemStatus">Status</label><input id="parentQueueItemStatus" type="text" readonly>
+            <label for="parentQueueItemReportId">Report ID</label><input id="parentQueueItemReportId" type="text" readonly>
           </div>
           <div class="col-3">
+            <label for="parentQueueItemEaglesId">Eagles ID</label><input id="parentQueueItemEaglesId" type="text" readonly>
+            <div class="small">
+              <a id="parentQueueItemEaglesDataLink" href="/admin/performance-data" data-page-link="performance-data">Open performance data</a>
+            </div>
+          </div>
+          <div class="col-3">
+            <label for="parentQueueItemStatus">Status</label><input id="parentQueueItemStatus" type="text" readonly>
+          </div>
+          <div class="col-6">
+            <label for="parentQueueItemStudentName">Student</label><input id="parentQueueItemStudentName" type="text" readonly>
+          </div>
+          <div class="col-6">
             <label for="parentQueueItemQueuedAt">Queued</label><input id="parentQueueItemQueuedAt" type="text" readonly>
           </div>
           <div class="col-3">
             <label for="parentQueueItemScheduledFor">Scheduled</label><input id="parentQueueItemScheduledFor" type="text">
           </div>
           <div class="col-6">
-            <label for="parentQueueItemTitle">Title</label><input id="parentQueueItemTitle" type="text">
+            <label for="parentQueueItemTitle">Report Title</label><input id="parentQueueItemTitle" type="text" placeholder="Daily performance report title">
           </div>
           <div class="col-6">
             <label for="parentQueueItemLevel">Level / Class</label><input id="parentQueueItemLevel" type="text">
           </div>
           <div class="col-4">
-            <label for="parentQueueItemExercise">Exercise</label><input id="parentQueueItemExercise" type="text">
+            <label for="parentQueueItemExercise">Class</label><input id="parentQueueItemExercise" type="text" placeholder="Class or level name">
+          </div>
+          <div class="col-12">
+            <label for="parentQueueItemReportSnapshot">Performance Report</label><textarea id="parentQueueItemReportSnapshot" readonly placeholder="Actual performance report, homework context, and email draft"></textarea>
+          </div>
+          <div class="col-12">
+            <label for="parentQueueItemSummary">Summary</label><input id="parentQueueItemSummary" type="text" readonly placeholder="eaglesId=...; day=...; recipients=...">
           </div>
           <div class="col-4">
             <label for="parentQueueItemDueAt">Due</label><input id="parentQueueItemDueAt" type="text">
@@ -3218,7 +3235,8 @@ Select an assignment link to inspect details.</pre>
             <label for="parentQueueItemRecipients">Recipients</label><textarea id="parentQueueItemRecipients" placeholder="comma-separated emails"></textarea>
           </div>
           <div class="col-12">
-            <label for="parentQueueItemMessage">Message</label><textarea id="parentQueueItemMessage" placeholder="queued report message"></textarea>
+            <label for="parentQueueItemMessage">Teacher Comment</label><textarea id="parentQueueItemMessage" placeholder="Use encouraging, non-judgmental language that helps parents support this progress at home."></textarea>
+            <p class="small">This note is the parent-facing teacher comment and becomes part of the email body.</p>
           </div>
           <div class="col-12">
             <label for="parentQueueItemLastError">Last Error</label><textarea id="parentQueueItemLastError" readonly></textarea>

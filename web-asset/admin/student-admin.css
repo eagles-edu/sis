@@ -59,7 +59,7 @@
         --primary-color: var(--portal-color-bd827b1b26);
         --radius-base: 3.667px;
         --radius-pill: 999px;
-        --secondary-color: var(--portal-color-be77b3b86a);
+        --secondary-color: #fbffff;
         --sis-global-text-zoom: 1;
         --success-bg: var(--portal-color-1b2ad6543d);
         --success-border: var(--portal-color-b75eb09de7);
@@ -134,34 +134,6 @@
         margin: 0 auto;
         margin-top: clamp(3rem, 5vw, 4rem);
         padding: 20px;
-      }
-      #authPanel .row {
-        grid-template-columns: 1fr;
-      }
-      #authPanel .row>[class^="col-"],
-      #authPanel .row>[class*=" col-"] {
-        grid-column: span 12;
-      }
-      #authPanel input,
-      #authPanel button {
-        min-height: 48px;
-        padding: 12px 16px;
-      }
-      #authPanel .login-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px 14px;
-        margin-top: 10px;
-      }
-      #authPanel .login-link {
-        color: var(--link-hover);
-        font-size: 0.92rem;
-        font-weight: 700;
-        text-decoration: none;
-      }
-      #authPanel .login-link:hover,
-      #authPanel .login-link:focus-visible {
-        text-decoration: underline;
       }
       h1,
       h2,
@@ -313,15 +285,15 @@
         transform: translateY(-1px);
       }
       button:active:not(:disabled),
-      button.btn-press-feedback:not(:disabled) {
+      button.btn-press-feedback:not(.portal-button):not(:disabled) {
         box-shadow: var(--btn-active-shadow);
         filter: saturate(1.1);
         transform: translateY(0);
       }
-      button.btn-press-feedback:not(:disabled)::before {
+      button.btn-press-feedback:not(.portal-button):not(:disabled)::before {
         animation: button-click-ring 320ms ease-out;
       }
-      button.btn-press-feedback:not(:disabled)::after {
+      button.btn-press-feedback:not(.portal-button):not(:disabled)::after {
         animation: button-click-ripple 320ms ease-out;
       }
       button:focus-visible {
@@ -354,84 +326,94 @@
           transform: scale(1.2);
         }
       }
-      button.primary {
-        --btn-active-shadow:
-          inset 0 2px 10px var(--portal-color-1b4f759bcf), 0 3px 8px var(--portal-color-4961d06ce2);
-        --btn-hover-shadow: 0 10px 18px var(--portal-color-11a8da3fa1);
+      button.primary:not(.portal-button) {
+        --btn-active-shadow: var(--portal-button-shadow-active);
+        --btn-hover-shadow: var(--portal-button-shadow-hover);
         --btn-ripple-color: var(--portal-color-ff50535d27);
-        background: var(--brand);
-        border-color: var(--brand);
-        color: var(--portal-color-d14f901611);
+        background: var(--portal-button-blue-fill);
+        border-color: var(--portal-button-blue-stroke);
+        color: var(--portal-button-blue-ink);
       }
-      button.primary:hover:not(:disabled) {
-        background: var(--portal-color-80f5b9512c);
-        border-color: var(--portal-color-80f5b9512c);
+      button.primary:not(.portal-button):hover:not(:disabled) {
+        background: var(--portal-button-blue-fill-hover);
+        border-color: var(--portal-button-blue-stroke-hover);
+        color: var(--portal-button-blue-ink);
       }
-      button.alt {
-        --btn-active-shadow:
-          inset 0 2px 8px var(--portal-color-3505c4ac4c), 0 2px 7px var(--portal-color-a5b5be78d6);
-        --btn-hover-shadow: 0 9px 16px var(--portal-color-515a32c043);
+      button.alt:not(.portal-button) {
+        --btn-active-shadow: var(--portal-button-shadow-active);
+        --btn-hover-shadow: var(--portal-button-shadow-hover);
         --btn-ripple-color: var(--portal-color-2774a5c299);
-        background: var(--btn-edit-bg);
-        border-color: var(--btn-edit-border);
-        color: var(--btn-edit-text);
+        background: var(--portal-button-neutral-fill);
+        border-color: var(--portal-button-neutral-stroke);
+        color: var(--portal-button-neutral-ink);
       }
-      button.alt:hover:not(:disabled) {
-        background: var(--portal-color-8749aa0320);
-        border-color: var(--portal-color-9b98859584);
+      button.alt:not(.portal-button):hover:not(:disabled) {
+        background: var(--portal-button-neutral-fill-hover);
+        border-color: var(--portal-button-neutral-stroke-hover);
+        color: var(--portal-button-neutral-ink);
       }
-      button.danger {
-        --btn-active-shadow:
-          inset 0 2px 8px var(--portal-color-c559054d76), 0 2px 7px var(--portal-color-f0163600e1);
-        --btn-hover-shadow: 0 9px 16px var(--portal-color-a8c93a3767);
+      button.danger:not(.portal-button) {
+        --btn-active-shadow: var(--portal-button-shadow-active);
+        --btn-hover-shadow: var(--portal-button-shadow-hover);
         --btn-ripple-color: var(--portal-color-1a725bdb9a);
-        background: var(--btn-delete-bg);
-        border-color: var(--btn-delete-border);
-        color: var(--btn-delete-text);
+        background: var(--portal-button-red-fill);
+        border-color: var(--portal-button-red-stroke);
+        color: var(--portal-button-red-ink);
       }
-      button.ghost {
-        background: var(--primary-color);
-        border-color: var(--btn-delete-border);
-        color: var(--secondary-color);
+      button.ghost:not(.portal-button) {
+        background: var(--portal-button-neutral-fill);
+        border-color: var(--portal-button-neutral-stroke);
+        color: var(--portal-button-neutral-ink);
       }
-      button.btn-delete {
-        --btn-active-shadow:
-          inset 0 2px 8px var(--portal-color-c559054d76), 0 2px 7px var(--portal-color-f0163600e1);
-        --btn-hover-shadow: 0 9px 16px var(--portal-color-a8c93a3767);
+      button.btn-delete:not(.portal-button) {
+        --btn-active-shadow: var(--portal-button-shadow-active);
+        --btn-hover-shadow: var(--portal-button-shadow-hover);
         --btn-ripple-color: var(--portal-color-1a725bdb9a);
-        background: var(--btn-delete-bg);
-        border-color: var(--btn-delete-border);
-        color: var(--btn-delete-text);
+        background: var(--portal-button-red-fill);
+        border-color: var(--portal-button-red-stroke);
+        color: var(--portal-button-red-ink);
       }
-      button.btn-edit {
-        --btn-active-shadow:
-          inset 0 2px 8px var(--portal-color-3505c4ac4c), 0 2px 7px var(--portal-color-a5b5be78d6);
-        --btn-hover-shadow: 0 9px 16px var(--portal-color-515a32c043);
+      button.btn-edit:not(.portal-button) {
+        --btn-active-shadow: var(--portal-button-shadow-active);
+        --btn-hover-shadow: var(--portal-button-shadow-hover);
         --btn-ripple-color: var(--portal-color-2774a5c299);
-        background: var(--btn-edit-bg);
-        border-color: var(--btn-edit-border);
-        color: var(--btn-edit-text);
+        background: var(--portal-button-green-fill);
+        border-color: var(--portal-button-green-stroke);
+        color: var(--portal-button-green-ink);
       }
-      button.btn-refresh {
-        --btn-active-shadow:
-          inset 0 2px 8px var(--portal-color-991ebe2c3a), 0 2px 7px var(--portal-color-157650bcd0);
-        --btn-hover-shadow: 0 9px 16px var(--portal-color-9bd5813b2b);
+      button.btn-refresh:not(.portal-button) {
+        --btn-active-shadow: var(--portal-button-shadow-active);
+        --btn-hover-shadow: var(--portal-button-shadow-hover);
         --btn-ripple-color: var(--portal-color-41b1689b86);
-        background: var(--btn-refresh-bg);
-        border-color: var(--btn-refresh-border);
-        color: var(--btn-refresh-text);
+        background: var(--portal-button-teal-fill);
+        border-color: var(--portal-button-teal-stroke);
+        color: var(--portal-button-teal-ink);
       }
-      button:is(.primary, .alt, .danger, .ghost, .btn-refresh, .btn-edit, .btn-delete) {
+      button:is(.primary, .alt, .danger, .ghost, .btn-refresh, .btn-edit, .btn-delete):not(.portal-button) {
         align-items: center;
         display: inline-flex;
         font-size: var(--admin-action-btn-font-size);
         inline-size: min(100%, var(--admin-action-btn-min-inline));
         justify-content: center;
         max-inline-size: min(100%, var(--admin-action-btn-min-inline));
-        min-height: var(--admin-action-btn-min-block);
+        min-height: var(--portal-button-min-block);
         min-width: min(100%, var(--admin-action-btn-min-inline));
         padding: 0 var(--admin-action-btn-inline-padding);
         white-space: nowrap;
+      }
+      .text-zoom-controls button {
+        inline-size: auto !important;
+        max-inline-size: none !important;
+        min-height: 36px !important;
+        min-width: 44px !important;
+        padding: 6px 8px !important;
+      }
+      .queue-modal-nav button {
+        inline-size: auto !important;
+        max-inline-size: none !important;
+        min-height: 32px !important;
+        min-width: 42px !important;
+        padding: 4px 10px !important;
       }
       button[data-button-size="compact"],
       #topSearchExpandBtn,
@@ -791,7 +773,7 @@
       }
       .page-section[data-page="profile"] .actions button {
         font-size: 14px;
-        min-height: 42px;
+        min-height: 48px;
       }
       #profileTabStatus {
         font-size: 13px;
@@ -1004,7 +986,8 @@
       .app-brand-strip {
         align-items: center;
         display: grid;
-        gap: 10px;
+        column-gap: 8px;
+        row-gap: 6px;
         grid-template-columns: auto minmax(0, 1fr) auto;
       }
       .app-header-actions {
@@ -1067,6 +1050,7 @@
       }
       .text-zoom-controls button {
         font-size: 12px;
+        min-height: 36px;
         inline-size: auto;
         min-width: 44px;
         padding: 6px 8px;
@@ -1251,22 +1235,11 @@
         background: var(--portal-color-21fe6cd7d5);
       }
       .actions {
-        display: grid;
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
         gap: 8px;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         margin-top: 8px;
-      }
-      .actions-1 {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .actions-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .actions-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-      .actions-4 {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
       .table-toolbar {
         align-items: flex-end;
@@ -1444,7 +1417,7 @@
       .grade-chart-lane-actions {
         align-items: center;
         display: inline-flex;
-        gap: 6px;
+        gap: 8px;
         margin-left: auto;
       }
       .grade-chart-lane-title {
@@ -2366,7 +2339,7 @@
       .bar-detail-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 8px;
         margin-top: 2px;
       }
       .bar-detail-actions button {
@@ -2632,7 +2605,7 @@
         align-items: center;
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 8px;
         justify-content: flex-end;
       }
       #hubStatusMeta {
@@ -3185,22 +3158,89 @@
         display: none;
       }
       .queue-row-btn {
-        background: transparent;
-        border: none;
+        align-items: center;
+        background: linear-gradient(180deg, var(--portal-action-blue-top), var(--portal-action-blue-bottom));
+        border: 1px solid var(--portal-action-blue-border);
+        border-radius: var(--radius-2);
+        box-shadow: 0 1px 0 var(--portal-color-f8f09f4f88);
+        box-sizing: border-box;
+        color: var(--portal-action-blue-text);
+        display: inline-flex;
+        justify-content: center;
+        min-height: var(--portal-button-min-block);
+        min-width: 0;
+        padding: 0 12px;
+        cursor: pointer;
+        font-size: var(--portal-button-font-size);
+        font-weight: 700;
+        line-height: var(--portal-button-line-height);
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .queue-row-link {
         color: var(--link-color);
         cursor: pointer;
         font-size: 12px;
         font-weight: 700;
-        padding: 0;
+        line-height: 1.35;
         text-decoration: underline;
+      }
+      .queue-row-link-main,
+      .queue-row-link-meta {
+        display: block;
+      }
+      .queue-row-link-meta {
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.25;
+        margin-top: 2px;
+        opacity: 0.88;
+        text-decoration: none;
+      }
+      .queue-row-link:hover,
+      .queue-row-link:focus-visible {
+        color: var(--link-hover);
+        outline: none;
+        text-decoration-thickness: 2px;
+      }
+      html[data-theme="dark"] body.admin-portal-page .queue-row-link {
+        color: var(--portal-login-link-dark);
+      }
+      html[data-theme="dark"] body.admin-portal-page .queue-row-link:hover,
+      html[data-theme="dark"] body.admin-portal-page .queue-row-link:focus-visible {
+        color: var(--portal-color-d7e4ff);
+      }
+      html[data-theme="dark"] body.admin-portal-page .hs-cm-flag {
+        color: #fbffff;
+        text-decoration: underline;
+      }
+      html[data-theme="dark"] body.admin-portal-page .hs-cm-flag.is-yes,
+      html[data-theme="dark"] body.admin-portal-page .hs-cm-flag.is-no {
+        color: #fbffff;
+      }
+      .queue-row-btn:hover:not(:disabled),
+      .queue-row-btn:focus-visible {
+        background: linear-gradient(180deg, var(--portal-action-blue-top-hover), var(--portal-action-blue-bottom-hover));
+        border-color: var(--portal-action-blue-border-hover);
+        box-shadow: var(--portal-button-shadow-hover);
+        color: var(--portal-action-blue-text);
+        outline: none;
+        transform: translateY(-1px);
+      }
+      .queue-row-btn:active:not(:disabled) {
+        background: linear-gradient(180deg, var(--portal-action-blue-top-active), var(--portal-action-blue-bottom-active));
+        border-color: var(--portal-action-blue-border-active);
+        box-shadow: var(--portal-button-shadow-active);
+        color: var(--portal-action-blue-text);
+        transform: translateY(1px);
       }
       button.queue-row-btn[data-news-review-open-week-set] {
         align-items: center;
-        background: var(--btn-refresh-bg);
-        border: 1px solid var(--btn-refresh-border);
+        background: linear-gradient(180deg, var(--portal-action-blue-top), var(--portal-action-blue-bottom));
+        border: 1px solid var(--portal-action-blue-border);
         border-radius: var(--radius-2);
         box-shadow: 0 1px 0 var(--portal-color-f8f09f4f88);
-        color: var(--btn-refresh-text);
+        color: var(--portal-action-blue-text);
         display: inline-flex;
         inline-size: min(100%, var(--admin-button-open-week-set-inline));
         justify-content: center;
@@ -3212,13 +3252,14 @@
         white-space: nowrap;
       }
       button.queue-row-btn[data-news-review-open-week-set]:hover:not(:disabled) {
-        border-color: var(--btn-refresh-border);
-        color: var(--btn-refresh-text);
+        background: linear-gradient(180deg, var(--portal-action-blue-top-hover), var(--portal-action-blue-bottom-hover));
+        border-color: var(--portal-action-blue-border-hover);
+        color: var(--portal-action-blue-text);
       }
       .incoming-disposition-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px;
+        gap: 8px;
       }
       .incoming-disposition-actions button {
         font-size: 11px;
@@ -3339,10 +3380,35 @@
       .news-review-viewer-review label {
         margin-bottom: 0;
       }
-      .news-review-viewer-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+      .parent-queue-report-hero {
+        background: var(--portal-surface-support);
+        border: 1px solid var(--portal-border);
+        border-radius: var(--radius-2);
+        display: grid;
+        gap: 4px;
+        margin-bottom: 10px;
+        padding: 12px 14px;
+      }
+      .parent-queue-report-name {
+        color: var(--ink);
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.15;
+      }
+      .parent-queue-report-english {
+        color: var(--ink-muted);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .parent-queue-report-identity {
+        color: var(--tertiary-color);
+        line-height: 1.35;
+      }
+      .queue-modal-nav button {
+        min-height: 32px !important;
+        min-width: 42px !important;
+        padding: 4px 10px !important;
       }
       .queue-modal-body.data-surface {
         background: var(--portal-surface-support);
@@ -3351,10 +3417,6 @@
         display: grid;
         gap: 8px;
         padding: 10px;
-      }
-      .news-review-viewer-actions button {
-        inline-size: auto;
-        min-width: 132px;
       }
       @media (max-width: 860px) {
         .app-shell {
@@ -3634,10 +3696,6 @@
         }
         .page-section[data-page="news-reports"] .table-scroll-wrap tbody td::before {
           font-size: 10px;
-        }
-        .news-review-viewer-actions button {
-          min-width: 0;
-          width: 100%;
         }
       }
       /* modern CSS reset */

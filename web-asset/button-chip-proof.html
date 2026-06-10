@@ -162,18 +162,8 @@
         gap: 12px;
       }
 
-      .proof-state-row,
-      .proof-inline-row,
-      .proof-container-surface,
-      .proof-distinct-row {
-        align-items: center;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .proof-state-row {
-        justify-content: flex-start;
+      .proof-demo-card--wide {
+        grid-column: 1 / -1;
       }
 
       .proof-container-surface {
@@ -185,13 +175,6 @@
 
       .proof-tooltip-proof {
         position: relative;
-      }
-
-      .proof-tooltip-surface {
-        align-items: center;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
       }
 
       .proof-tooltip-bubble {
@@ -300,24 +283,24 @@
   <body class="button-chip-proof-page">
     <main class="proof-shell">
       <section class="proof-header">
-        <p class="proof-kicker">Phase 2 Review Surface</p>
-        <h1>Portal Button and Chip Proof</h1>
+        <p class="proof-kicker">Button Demo Surface</p>
+        <h1>Portal Button and Chip Demo</h1>
         <p class="proof-copy">
-          This page proves the new normalized button and chip families before portal adoption. Buttons use
+          This page demonstrates the normalized button and chip families before portal adoption. Buttons use
           <code>radius-B -&gt; --portal-radius-button -&gt; var(--radius-3)</code>. Chips use
           <code>radius-C -&gt; --portal-radius-chip -&gt; var(--radius-2)</code>.
         </p>
         <p class="proof-note">
-          Review focus: descriptive class names, no default full-width behavior, stable light/dark appearance, and
+          Demo focus: descriptive class names, no default full-width behavior, stable light/dark appearance, and
           chip geometry remaining distinct from button geometry.
         </p>
       </section>
 
       <section class="proof-theme-grid" aria-label="Light and dark review panels">
         <section class="proof-theme-panel proof-theme-panel--light" aria-labelledby="lightProofTitle">
-          <p class="proof-kicker">Light Mode Surface</p>
+          <p class="proof-kicker">Light Mode Demo</p>
           <h2 id="lightProofTitle">Button and Chip Families</h2>
-          <p class="proof-copy">Normalized controls on a light review surface. Family colors stay fixed.</p>
+          <p class="proof-copy">Normalized controls on a light demo surface. Family colors stay fixed.</p>
 
           <div class="proof-grid">
             <article class="proof-demo-card">
@@ -449,9 +432,9 @@
         </section>
 
         <section class="proof-theme-panel proof-theme-panel--dark" aria-labelledby="darkProofTitle">
-          <p class="proof-kicker">Dark Mode Surface</p>
+          <p class="proof-kicker">Dark Mode Demo</p>
           <h2 id="darkProofTitle">Buttons and Chips Families</h2>
-          <p class="proof-copy">Same buttons and chips palette, geometry, and hierarchy on a dark review surface.</p>
+          <p class="proof-copy">Same buttons and chips palette, geometry, and hierarchy on a dark demo surface.</p>
 
           <div class="proof-grid">
             <article class="proof-demo-card">
@@ -585,11 +568,11 @@
 
       <section class="proof-section" aria-labelledby="buttonStatesTitle">
         <p class="proof-kicker">Button States</p>
-        <h2 id="buttonStatesTitle">Button family overview</h2>
+        <h2 id="buttonStatesTitle">Button family demo</h2>
         <p class="proof-legend">Each family is shown in normal, hover-intent, active-intent, focus-visible, and disabled states.</p>
         <div class="proof-state-grid">
-          <article class="proof-demo-card">
-            <p class="proof-state-label">Blue Action</p>
+          <article class="proof-demo-card proof-demo-card--wide">
+            <p class="proof-state-label">Blue Action Demo</p>
             <div class="proof-state-row">
               <button class="portal-button portal-button-blue-action" type="button"><span class="portal-button__label">Normal</span></button>
               <button class="portal-button portal-button-blue-action proof-force-hover" type="button"><span class="portal-button__label">Hover</span></button>
@@ -704,6 +687,32 @@
                 <span class="portal-button__label">Explicit Full-Width Opt-In</span>
               </button>
             </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="proof-section" aria-labelledby="specialtyTitle">
+        <p class="proof-kicker">Narrow Sizing</p>
+        <h2 id="specialtyTitle">Narrow buttons stay compact, centered, and brief</h2>
+        <p class="proof-legend">These samples cover the 60 x 48 narrow open-week-set copy, the 100 x 48 open-week-set width, and the 112 x 48 compact width.</p>
+        <div class="proof-grid">
+          <article class="proof-demo-card">
+            <p class="proof-state-label">60 x 48 narrow copy</p>
+            <button class="portal-button portal-button-blue-action portal-button-open-week-set" type="button" style="inline-size: 60px; min-inline-size: 60px; max-inline-size: 60px; padding-inline: 8px;" data-button-tooltip-title="Apply style to the current item" aria-label="Apply style to the current item" title="Apply style to the current item">
+              <span class="portal-button__label">Apply<br>Style</span>
+            </button>
+          </article>
+          <article class="proof-demo-card">
+            <p class="proof-state-label">100 x 48 open week set</p>
+            <button class="portal-button portal-button-teal-refresh portal-button-open-week-set" type="button">
+              <span class="portal-button__label">Open Week Set</span>
+            </button>
+          </article>
+          <article class="proof-demo-card">
+            <p class="proof-state-label">112 x 48 compact</p>
+            <button class="portal-button portal-button-blue-action portal-button-compact" type="button" data-button-tooltip-title="Apply style to the current item" aria-label="Apply style to the current item" title="Apply style to the current item">
+              <span class="portal-button__label">Apply Style</span>
+            </button>
           </article>
         </div>
       </section>
