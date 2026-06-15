@@ -40,9 +40,11 @@ function normalizeInteger(value, fallback = 0) {
  * @returns {string}
  */
 function safeIsoDate(value) {
-  if (value === undefined || value === null || value === "") return ""
-  const date = new Date(value)
-  if (!Number.isFinite(date.valueOf())) return ""
+  const text = normalizeText(value)
+  if (!text) return ""
+  const time = Date.parse(text)
+  if (!Number.isFinite(time)) return ""
+  const date = new Date(time)
   return date.toISOString()
 }
 
@@ -179,12 +181,13 @@ Options:
 }
 
 /**
- * @param {Array<Record<string, unknown>> | null | undefined} rows
+ * @param {unknown} rows
  * @returns {number}
  */
 function normalizeCountRow(rows) {
-  if (!Array.isArray(rows) || !rows[0]) return 0
-  return Number.parseInt(String(rows[0].count || 0), 10) || 0
+  if (!Array.isArray(rows) || !rows[0] || typeof rows[0] !== "object") return 0
+  const firstRow = /** @type {Record<string, unknown>} */ (rows[0])
+  return Number.parseInt(String(firstRow.count || 0), 10) || 0
 }
 
 /**
@@ -212,14 +215,23 @@ function readLatestIncomingVacuumSummary(reportDirPath) {
   }
 
   const report = latestReportPath ? readJsonFileSafe(latestReportPath) : null
-  const manualReviewCount = Number.isFinite(Number(report?.manualReviewCount))
-    ? Number(report.manualReviewCount)
-    : Array.isArray(report?.manualReview)
-      ? report.manualReview.length
+  const reportData = report && typeof report === "object" ? /** @type {Record<string, unknown>} */ (report) : null
+  if (!reportData) {
+    return {
+      reportPath: latestReportPath,
+      lastIncomingVacuumAt: "",
+      manualReviewCount: 0,
+    }
+  }
+
+  const manualReviewCount = Number.isFinite(Number(reportData.manualReviewCount))
+    ? Number(reportData.manualReviewCount)
+    : Array.isArray(reportData.manualReview)
+      ? reportData.manualReview.length
       : 0
   return {
     reportPath: latestReportPath,
-    lastIncomingVacuumAt: safeIsoDate(report?.runStartedAt || report?.checkedAt || report?.createdAt),
+    lastIncomingVacuumAt: safeIsoDate(reportData.runStartedAt || reportData.checkedAt || reportData.createdAt),
     manualReviewCount: Math.max(0, Number.parseInt(String(manualReviewCount), 10) || 0),
   }
 }
@@ -301,7 +313,7 @@ async function runHealthCheck(args) {
       studentGradeRecordMissingStudent: normalizeCountRow(orphanGradeStudent),
     }
   } catch (error) {
-    dbError = normalizeText(error?.message) || "db-health-check-failed"
+    dbError = error instanceof Error ? normalizeText(error.message) || "db-health-check-failed" : "db-health-check-failed"
   } finally {
     await prisma.$disconnect()
   }
@@ -389,7 +401,7 @@ async function run() {
 const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
 if (isDirectRun) {
   run().catch((error) => {
-    const message = normalizeText(error?.message) || "Unknown error"
+    const message = error instanceof Error ? normalizeText(error.message) || "Unknown error" : "Unknown error"
     console.error(`[db-health-check] ${message}`)
     process.exitCode = 1
   })

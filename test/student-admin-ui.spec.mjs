@@ -4789,6 +4789,8 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.equal(document.getElementById("pt_participationScore").value, "3")
     assert.equal(document.getElementById("pt_academicScore").value, "5")
   })
+  assert.match(document.getElementById("pt_queueSendBtn").textContent || "", /Approve -> Queue/i)
+  assert.match(document.querySelector('[data-pt-report-approve]')?.textContent || "", /Approve/i)
 
   document.getElementById("pt_comments").value = "Parent should review vocabulary notebook daily."
   document.getElementById("pt_comments").dispatchEvent(new dom.window.Event("input", { bubbles: true }))
@@ -5378,9 +5380,10 @@ test("performance staged reports panel queues a staged report via approve action
 
   await waitFor(() => {
     const stagedRowsText = normalizeText(document.getElementById("performanceStagedRows")?.textContent || "")
-    assert.match(stagedRowsText, /no staged performance reports/i)
+    assert.match(stagedRowsText, /no reports awaiting approval/i)
     const queueRowsText = normalizeText(document.getElementById("performanceQueueRows")?.textContent || "")
-    assert.match(queueRowsText, /starter student class report/i)
+    assert.match(queueRowsText, /starter001/i)
+    assert.match(queueRowsText, /approved \/ staged/i)
   }, 2500)
 
   dom.window.close()

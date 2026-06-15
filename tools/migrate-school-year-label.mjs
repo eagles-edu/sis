@@ -10,6 +10,43 @@ import { getSharedPrismaClient } from "../server/prisma-client-factory.mjs"
 const DEFAULT_FROM_SCHOOL_YEAR = "2025-2026"
 const DEFAULT_TO_SCHOOL_YEAR = "2026-2027"
 
+/**
+ * @typedef {{
+ *   schoolYear?: unknown,
+ * }} SchoolSetupContainer
+ *
+ * @typedef {Record<string, unknown> & {
+ *   schoolSetup?: SchoolSetupContainer,
+ * }} UiSettingsContainer
+ *
+ * @typedef {{
+ *   from: string,
+ *   to: string,
+ *   apply: boolean,
+ *   settingsFile: string,
+ *   help: boolean,
+ * }} ParsedArgs
+ *
+ * @typedef {{
+ *   id: string,
+ *   studentRefId: string,
+ *   className: string,
+ *   quarter: import("@prisma/client").SchoolQuarter,
+ * }} ParentClassReportRow
+ *
+ * @typedef {{
+ *   sourceId: string,
+ *   conflictId: string,
+ *   studentRefId: string,
+ *   className: string,
+ *   quarter: import("@prisma/client").SchoolQuarter,
+ * }} ParentClassReportConflictRow
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
@@ -25,13 +62,7 @@ function isSchoolYearLabel(value) {
 
 /**
  * @param {string[]} [argv]
- * @returns {{
- *   from: string,
- *   to: string,
- *   apply: boolean,
- *   settingsFile: string,
- *   help?: boolean,
- * }}
+ * @returns {ParsedArgs}
  */
 function parseArgs(argv = []) {
   const args = {
@@ -39,6 +70,7 @@ function parseArgs(argv = []) {
     to: DEFAULT_TO_SCHOOL_YEAR,
     apply: false,
     settingsFile: normalizeText(process.env.STUDENT_ADMIN_UI_SETTINGS_FILE) || "runtime-data/admin-ui-settings.json",
+    help: false,
   }
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -113,7 +145,7 @@ function readUiSettings(pathname) {
     if (!normalizeText(raw)) return null
     const parsed = JSON.parse(raw)
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
-    return parsed
+    return /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (parsed))
   } catch {
     return null
   }
@@ -121,14 +153,14 @@ function readUiSettings(pathname) {
 
 /**
  * @param {Record<string, unknown> | null | undefined} payload
- * @returns {Record<string, unknown> | null}
+ * @returns {UiSettingsContainer | null}
  */
 function resolveUiSettingsContainer(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null
   if (payload.uiSettings && typeof payload.uiSettings === "object" && !Array.isArray(payload.uiSettings)) {
-    return payload.uiSettings
+    return /** @type {UiSettingsContainer} */ (/** @type {unknown} */ (payload.uiSettings))
   }
-  return payload
+  return /** @type {UiSettingsContainer} */ (/** @type {unknown} */ (payload))
 }
 
 /**
@@ -147,7 +179,7 @@ function migrateUiSettingsSchoolYear(payload, from, to) {
   const current = normalizeText(container?.schoolSetup?.schoolYear)
   if (current !== from) return { updated: false, payload }
 
-  const nextPayload = JSON.parse(JSON.stringify(source))
+  const nextPayload = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (JSON.parse(JSON.stringify(source))))
   const nextContainer = resolveUiSettingsContainer(nextPayload)
   if (!nextContainer) return { updated: false, payload }
   if (!nextContainer.schoolSetup || typeof nextContainer.schoolSetup !== "object") {
@@ -178,7 +210,7 @@ async function run() {
 
   const prisma = await getSharedPrismaClient()
 
-  /** @type {Array<Record<string, unknown>>} */
+  /** @type {Array<ParentClassReportRow>} */
   const reportRows = await prisma.parentClassReport.findMany({
     where: { schoolYear: from },
     select: {
@@ -190,7 +222,7 @@ async function run() {
     orderBy: [{ generatedAt: "desc" }, { createdAt: "desc" }],
   })
 
-  /** @type {Array<Record<string, unknown>>} */
+  /** @type {Array<ParentClassReportConflictRow>} */
   const reportConflictRows = []
   for (let index = 0; index < reportRows.length; index += 1) {
     const row = reportRows[index]

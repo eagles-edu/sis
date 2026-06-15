@@ -8,11 +8,12 @@ const DEFAULT_TOLERANCE_SECONDS = 1;
 /**
  * Validate CNN article dateline fields.
  *
- * @param {{ url: string, expectedIso: string, toleranceSeconds?: number, signal?: AbortSignal }} opts
- * @param {string} opts.url - Full CNN article URL.
- * @param {string} opts.expectedIso - ISO timestamp to compare against.
- * @param {number} [opts.toleranceSeconds=1] - Allowed difference in seconds.
- * @param {AbortSignal} [opts.signal] - Optional abort signal for fetch.
+ * @param {{
+ *   url: string,
+ *   expectedIso: string,
+ *   toleranceSeconds?: number,
+ *   signal?: AbortSignal,
+ * }} opts
  * @returns {Promise<{ok:boolean, datePublished?:string, dateModified?:string, reason?:string}>}
  */
 export async function validateCnnDateline({
@@ -33,7 +34,8 @@ export async function validateCnnDateline({
     }
     html = await res.text();
   } catch (err) {
-    return { ok: false, reason: `fetch error: ${err.message}` };
+    const message = err instanceof Error ? err.message : String(err);
+    return { ok: false, reason: `fetch error: ${message}` };
   }
 
   const { datePublished, dateModified } = extractDates(html);
@@ -46,7 +48,10 @@ export async function validateCnnDateline({
     return { ok: false, reason: "expectedIso is not a valid ISO timestamp" };
   }
 
-  const matches = [datePublished, dateModified].filter(Boolean).some((iso) =>
+  const datelineCandidates = /** @type {string[]} */ (
+    [datePublished, dateModified].filter((iso) => typeof iso === "string" && iso.length > 0)
+  );
+  const matches = datelineCandidates.some((iso) =>
     withinTolerance(target, new Date(iso).getTime(), toleranceSeconds),
   );
 
@@ -80,6 +85,7 @@ function extractDates(html) {
     return jsonDates;
   }
 
+  /** @param {string} property */
   const meta = (property) => {
     const reg = new RegExp(
       `<meta[^>]+(?:property|name|itemprop)=["']${property}["'][^>]+content=["']([^"']+)["'][^>]*>`,
@@ -91,6 +97,7 @@ function extractDates(html) {
 
   return {
     datePublished:
+      // cspell:ignore pubdate
       meta("article:published_time") ||
       meta("pubdate") ||
       meta("datePublished"),

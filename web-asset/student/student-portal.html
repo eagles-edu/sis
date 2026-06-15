@@ -1671,6 +1671,19 @@
                 </div>
               </section>
 
+              <section id="reportAccessErrorModal" class="portal-modal hidden">
+                <div class="portal-modal-backdrop" id="reportAccessErrorModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
+                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close" type="button">Close</button>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p id="reportAccessErrorModalMessage">LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT</p>
+                  </div>
+                </div>
+              </section>
+
               <section id="newsWeekSetModal" class="portal-modal hidden">
                 <div class="portal-modal-backdrop" id="newsWeekSetModalBackdrop"></div>
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsWeekSetModalTitle">
@@ -1986,6 +1999,7 @@
         dashboard: null,
         overdueHomeworkRows: [],
         pastDueModalOpen: false,
+        reportAccessModalOpen: false,
         newsWeekSetModalOpen: false,
         calendarRows: [],
         newsItems: [],
@@ -2586,7 +2600,7 @@
       function hoistPortalModals() {
         const host = document.body;
         if (!host) return;
-        ["pastDueHomeworkModal", "newsComplianceModal", "newsWeekSetModal"].forEach((id) => {
+        ["pastDueHomeworkModal", "newsComplianceModal", "reportAccessErrorModal", "newsWeekSetModal"].forEach((id) => {
           const modal = field(id);
           if (!modal || modal.parentElement === host) return;
           host.appendChild(modal);
@@ -3610,10 +3624,57 @@
         syncPortalModalBodyState();
       }
 
+      function clearReportAccessErrorMarker() {
+        try {
+          const url = new URL(window.location.href);
+          if (!url.searchParams.has("reportAccessError")) return false;
+          url.searchParams.delete("reportAccessError");
+          const nextSearch = url.searchParams.toString();
+          const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ""}${url.hash}`;
+          window.history.replaceState({}, "", nextUrl);
+          return true;
+        } catch (error) {
+          void error;
+          return false;
+        }
+      }
+
+      function resolvePortalNextTarget() {
+        const rawTarget = t(new URLSearchParams(window.location.search).get("next"));
+        if (!rawTarget) return "";
+        try {
+          const resolved = new URL(rawTarget, window.location.origin);
+          if (resolved.origin !== window.location.origin) return "";
+          if (!resolved.pathname.startsWith("/student")) return "";
+          return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+        } catch (error) {
+          void error;
+          return "";
+        }
+      }
+
+      function setReportAccessErrorModalOpen(open) {
+        const shouldOpen = Boolean(open);
+        state.reportAccessModalOpen = shouldOpen;
+        const modal = field("reportAccessErrorModal");
+        if (!modal) return;
+        modal.classList.toggle("hidden", !shouldOpen);
+        syncPortalModalBodyState();
+      }
+
+      function openReportAccessErrorModalIfNeeded() {
+        const errorCode = t(new URLSearchParams(window.location.search).get("reportAccessError"));
+        if (errorCode !== "account-mismatch") return false;
+        clearReportAccessErrorMarker();
+        setReportAccessErrorModalOpen(true);
+        return true;
+      }
+
       function syncPortalModalBodyState() {
         const hasOpenModal =
           state.pastDueModalOpen ||
           state.newsComplianceModalOpen ||
+          state.reportAccessModalOpen ||
           state.newsWeekSetModalOpen;
         document.body.classList.toggle("modal-open", hasOpenModal);
       }
@@ -3790,6 +3851,30 @@
         return `${day}/${month}/${year} ${hour}:${minute}`;
       }
 
+      function formatPortalWeekdayDateTime(value) {
+        const date = value instanceof Date ? new Date(value.getTime()) : (value ? new Date(value) : null);
+        if (!date || Number.isNaN(date.getTime())) return "Time unavailable";
+        const parts = new Intl.DateTimeFormat("vi-VN", {
+          weekday: "short",
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: PORTAL_TIME_ZONE,
+        }).formatToParts(date);
+        const pick = (type) => parts.find((entry) => entry.type === type)?.value || "";
+        const weekday = pick("weekday");
+        const day = pick("day");
+        const month = pick("month");
+        const year = pick("year");
+        const hour = pick("hour");
+        const minute = pick("minute");
+        if (!day || !month || !year || !hour || !minute) return "Time unavailable";
+        return [weekday, `${day}/${month}/${year}`, `${hour}:${minute}`].filter(Boolean).join(" ");
+      }
+
       function formatPortalWeekRange(startValue = "", endValue = "") {
         const startRaw = t(startValue);
         const endRaw = t(endValue);
@@ -3881,8 +3966,13 @@
         if (titleHref && (!Array.isArray(item.links) || !item.links.length)) {
           const titleLink = document.createElement("a");
           titleLink.href = titleHref;
-          titleLink.target = "_blank";
-          titleLink.rel = "noopener noreferrer";
+          if (item.sameTab === true) {
+            titleLink.removeAttribute("target");
+            titleLink.removeAttribute("rel");
+          } else {
+            titleLink.target = "_blank";
+            titleLink.rel = "noopener noreferrer";
+          }
           titleLink.textContent = item.title || "Detail";
           titleWrap.append(titleLink);
         } else {
@@ -3893,10 +3983,17 @@
         const meta = document.createElement("span");
         meta.className = "detail-meta";
         meta.textContent = item.meta || "";
+        if (normalizeText(item.badgeLabel)) {
+          const badge = document.createElement("span");
+          badge.className = `chip ${chipClassForTone(item.badgeTone)}`;
+          badge.textContent = item.badgeLabel;
+          head.append(titleWrap, meta, badge);
+        } else {
+          head.append(titleWrap, meta);
+        }
         const note = document.createElement("p");
         note.className = "detail-note";
         note.textContent = item.note || "No detail available.";
-        head.append(titleWrap, meta);
         article.append(head, note);
         if (Array.isArray(item.links) && item.links.length) {
           const linksWrap = document.createElement("div");
@@ -3936,6 +4033,56 @@
           start,
           allDay: true,
           classNames: overdue ? ["fc-event-homework-track", "fc-event-homework-overdue"] : ["fc-event-homework-track"],
+        };
+      }
+
+      function normalizeReportSlugPart(value) {
+        const normalized = t(value).toLowerCase();
+        const slug = normalized
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        return slug || "report";
+      }
+
+      function buildStudentReportSlugSegment(row = {}) {
+        const reportId = t(row?.id);
+        if (!reportId) return "";
+        const slug = normalizeReportSlugPart([
+          row?.fullName,
+          row?.englishName,
+          row?.studentName,
+          row?.className,
+          row?.schoolYear,
+          row?.quarter,
+        ].map((entry) => t(entry)).filter(Boolean).join(" "));
+        return `${slug}-${reportId}`;
+      }
+
+      function buildStudentReportViewerUrl(report = {}) {
+        const id = t(report?.id);
+        if (!id) return "";
+        const prefix = t(
+          window.__SIS_STUDENT_REPORT_PAGE_PREFIX || "/student/reports",
+        ).replace(/\/+$/, "");
+        const slugSegment = buildStudentReportSlugSegment(report);
+        return `${prefix}/${encodeURIComponent(slugSegment || id)}`;
+      }
+
+      function reportArchiveChipModel(row = {}, role = "student") {
+        const acknowledgedAt =
+          role === "parent" ? t(row?.parentReviewedAt) : t(row?.studentReviewedAt);
+        if (acknowledgedAt) {
+          return {
+            label: "Reviewed",
+            tone: "ok",
+            note: `Reviewed ${formatPortalDateTime(acknowledgedAt)}`,
+          };
+        }
+        return {
+          label: "New",
+          tone: "warn",
+          note: "New report. Review pending.",
         };
       }
 
@@ -4174,12 +4321,19 @@
               classNames: ["fc-event-report"],
             })),
             primaryTitle: "Latest Reports",
-            primaryItems: reportArchive.slice(0, 8).map((row) => ({
-              title: `${t(row.className) || "Report"} | ${t(row.quarter || "").toUpperCase() || "Quarter"}`,
-              meta: formatPortalDateTime(row.generatedAt),
-              note: t(row.comments) || "No additional report comment was saved.",
-              tone: "good",
-            })),
+            primaryItems: reportArchive.slice(0, 8).map((row) => {
+              const chip = reportArchiveChipModel(row, "student");
+              return {
+                title: `${t(row.className) || "Report"} | ${t(row.quarter || "").toUpperCase() || "Quarter"}`,
+                meta: formatPortalWeekdayDateTime(row.generatedAt || row.generatedDate),
+                note: chip.note,
+                tone: chip.label === "Reviewed" ? "good" : "warn",
+                href: buildStudentReportViewerUrl(row),
+                sameTab: true,
+                badgeLabel: chip.label,
+                badgeTone: chip.tone,
+              };
+            }),
             primaryEmpty: "No performance report archive is available yet.",
             historyTitle: "Report Context",
             historyItems: gradeHistory.slice(0, 10).map((row) => ({
@@ -5774,6 +5928,15 @@
         await api(`${STUDENT_AUTH_PREFIX}/logout`, {
           method: "POST"
         });
+        setReportAccessErrorModalOpen(false);
+      }
+      function handlePortalPostAuthRouteState() {
+        const nextTarget = resolvePortalNextTarget();
+        if (nextTarget) {
+          window.location.assign(nextTarget);
+          return true;
+        }
+        return false;
       }
       async function boot() {
         assertApiOriginConfiguredForStaticPreview();
@@ -5785,7 +5948,9 @@
           if (INITIAL_AUTH_STATE.authenticated) {
             setAuthenticatedView(true);
             setGlobalStatus("Student session active.");
+            if (handlePortalPostAuthRouteState()) return;
             await Promise.all([loadDashboard(), loadCalendar()]);
+            openReportAccessErrorModalIfNeeded();
             setFormStatus("Fill out all sections and submit once per open date.");
           } else {
             setAuthenticatedView(false);
@@ -5798,7 +5963,9 @@
           await api(`${STUDENT_AUTH_PREFIX}/me`);
           setAuthenticatedView(true);
           setGlobalStatus("Student session active.");
+          if (handlePortalPostAuthRouteState()) return;
           await Promise.all([loadDashboard(), loadCalendar()]);
+          openReportAccessErrorModalIfNeeded();
           setFormStatus("Fill out all sections and submit once per open date.");
         } catch (error) {
           if (error && error.status === 401) {
@@ -5843,11 +6010,21 @@
           await login();
           setAuthenticatedView(true);
           setGlobalStatus("Student session active.");
+          if (handlePortalPostAuthRouteState()) return;
           await Promise.all([loadDashboard(), loadCalendar()]);
+          openReportAccessErrorModalIfNeeded();
           setFormStatus("Fill out all sections and submit once per open date.");
         } catch (error) {
           handleError(error);
         }
+      });
+      field("reportAccessErrorModalBackdrop")?.addEventListener("click", () => {
+        setReportAccessErrorModalOpen(false);
+        clearReportAccessErrorMarker();
+      });
+      field("closeReportAccessErrorModalBtn")?.addEventListener("click", () => {
+        setReportAccessErrorModalOpen(false);
+        clearReportAccessErrorMarker();
       });
       field("logoutBtn")?.addEventListener("click", async () => {
         try {
@@ -5906,6 +6083,11 @@
       });
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
+        if (state.reportAccessModalOpen) {
+          setReportAccessErrorModalOpen(false);
+          clearReportAccessErrorMarker();
+          return;
+        }
         if (state.newsComplianceModalOpen) {
           setNewsComplianceModalOpen(false);
           return;

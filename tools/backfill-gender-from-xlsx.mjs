@@ -41,6 +41,10 @@ function normalizePositiveInteger(value) {
   return parsed
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
 function normalizeTextArray(value) {
   if (Array.isArray(value)) {
     return value
@@ -56,9 +60,8 @@ function normalizeTextArray(value) {
 }
 
 /**
- * @template T
- * @param {T[]} values
- * @returns {T[]}
+ * @param {string[]} values
+ * @returns {string[]}
  */
 function dedupeStable(values = []) {
   const seen = new Set()
@@ -168,20 +171,23 @@ function normalizeWorkbookRows(rows = []) {
 }
 
 /**
- * @param {Record<string, unknown> & { SheetNames?: string[], Sheets?: Record<string, unknown> }} workbook
+ * @param {xlsx.WorkBook} workbook
  * @param {string} [preferredSheet]
  * @returns {{ sheetName: string, rows: Array<Record<string, unknown>> }}
  */
 function chooseSheet(workbook, preferredSheet = "") {
   const sheetNames = Array.isArray(workbook?.SheetNames) ? workbook.SheetNames : []
+  const sheets = workbook?.Sheets || {}
   if (!sheetNames.length) return { sheetName: "", rows: [] }
 
   const explicit = normalizeText(preferredSheet)
   if (explicit) {
     const chosen = sheetNames.find((entry) => normalizeLower(entry) === normalizeLower(explicit)) || ""
     if (chosen) {
+      const worksheet = sheets[chosen]
+      if (!worksheet) return { sheetName: chosen, rows: [] }
       const sheetRows = normalizeWorkbookRows(
-        xlsx.utils.sheet_to_json(workbook.Sheets[chosen], { defval: "", raw: false })
+        xlsx.utils.sheet_to_json(/** @type {xlsx.WorkSheet} */ (worksheet), { defval: "", raw: false })
       )
       return { sheetName: chosen, rows: sheetRows }
     }
@@ -189,8 +195,21 @@ function chooseSheet(workbook, preferredSheet = "") {
 
   const ranked = sheetNames
     .map((sheetName, index) => {
+      const worksheet = sheets[sheetName]
+      if (!worksheet) {
+        return {
+          index,
+          sheetName,
+          rows: [],
+          score: 0,
+          rowCount: 0,
+          identityPairCount: 0,
+          studentNumberCount: 0,
+          eaglesIdCount: 0,
+        }
+      }
       const sheetRows = normalizeWorkbookRows(
-        xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "", raw: false })
+        xlsx.utils.sheet_to_json(/** @type {xlsx.WorkSheet} */ (worksheet), { defval: "", raw: false })
       )
       const rowCount = sheetRows.length
       const identityPairCount = countRowsWithIdentityPair(sheetRows)
@@ -280,6 +299,15 @@ async function main() {
 
   const eaglesIds = Array.from(new Set(parsedRows.map((row) => row.eaglesId).filter(Boolean)))
   const prisma = await getSharedPrismaClient()
+  /** @type {Array<{
+   *   id: string,
+   *   eaglesId: string,
+   *   studentNumber: string | number | null,
+   *   profile: {
+   *     studentRefId?: string,
+   *     genderSelections?: string[],
+   *   } | null,
+   * }>} */
   const students = await prisma.student.findMany({
     where: {
       eaglesId: { in: eaglesIds },
@@ -297,7 +325,15 @@ async function main() {
     },
   })
 
-  /** @type {Map<string, Record<string, unknown>>} */
+  /** @type {Map<string, {
+   *   id: string,
+   *   eaglesId: string,
+   *   studentNumber: string | number | null,
+   *   profile: {
+   *     studentRefId?: string,
+   *     genderSelections?: string[],
+   *   } | null,
+   * }>} */
   const studentByEaglesId = new Map(
     students.map((student) => [normalizeLower(student.eaglesId), student])
   )

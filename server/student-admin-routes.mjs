@@ -76,13 +76,26 @@ import {
   getAdminDashboardSummary,
 } from "../src/modules/admin/dashboard-summary.mjs"
 import {
+  acknowledgeParentClassReportReview,
   approveParentClassReport,
-  decodeParentReportCommentBundle,
+  decodeLegacyParentReportCommentBundle,
   deleteParentClassReport,
   generateParentClassReportFromGrades,
-  encodeParentReportCommentBundle,
+  mapParentClassReport,
+  markParentClassReportAwaitingApproval,
+  normalizeParentReportWorkflowState,
+  PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL,
+  PARENT_REPORT_WORKFLOW_STATE_DRAFT,
+  PARENT_REPORT_WORKFLOW_STATE_INCOMING,
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
+  PARENT_REPORT_WORKFLOW_STATE_PUBLISHED,
+  PARENT_REPORT_WORKFLOW_STATE_SUBMITTED,
   saveParentClassReport,
+  startParentClassReportAdminReview,
+  submitParentClassReportForAdminReview,
 } from "../src/modules/admin/parent-reports.mjs"
+import { recordParentClassReportEvent } from "../src/modules/admin/parent-report-events.mjs"
 import {
   deleteAssignmentTemplateById,
   importAssignmentTemplates,
@@ -127,6 +140,7 @@ import {
 } from "../src/modules/admin/student-records.mjs"
 import {
   buildReportCardFilename,
+  buildStudentReportCardPayload,
   generateStudentReportCardPdf,
 } from "./student-report-card-pdf.mjs"
 import { createStudentAdminSessionStore } from "../src/modules/admin/session-store.mjs"
@@ -203,11 +217,15 @@ const PARENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_PARENT_API_PRE
 const PARENT_AUTH_PREFIX = `${PARENT_API_PREFIX}/auth`
 const PARENT_CHILDREN_PATH = `${PARENT_API_PREFIX}/children`
 const PARENT_DASHBOARD_PATH = `${PARENT_API_PREFIX}/dashboard`
+const PARENT_REPORT_PAGE_PREFIX = `${PARENT_PORTAL_PAGE_PATH}/reports`
 const STUDENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_STUDENT_API_PREFIX, "/api/student")
 const STUDENT_AUTH_PREFIX = `${STUDENT_API_PREFIX}/auth`
 const STUDENT_DASHBOARD_PATH = `${STUDENT_API_PREFIX}/dashboard`
 const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
+const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
+const GENERIC_REPORT_ACCESS_PAGE_PREFIX = "/reports/access"
+const REPORT_EVENT_EMAIL_OPEN_PATH = "/api/report-events/email-open.gif"
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
   process.env.STUDENT_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH,
   "/assignment-announcements/volatile"
@@ -215,6 +233,9 @@ const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH = normalizePathPrefix(
 const ADMIN_USER_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_USERS_PREFIX)}/([^/]+)$`)
 const ADMIN_REPORT_CARD_PATH_RE = new RegExp(
   `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/report-card\\.pdf$`
+)
+const ADMIN_REPORT_CARD_SNAPSHOT_PATH_RE = new RegExp(
+  `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/report-card\\.json$`
 )
 const ADMIN_STUDENT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)$`)
 const ADMIN_ATTENDANCE_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/attendance$`)
@@ -232,6 +253,17 @@ const ADMIN_REPORTS_GENERATE_PATH_RE = new RegExp(
 const ADMIN_REPORTS_DELETE_PATH_RE = new RegExp(
   `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/reports/([^/]+)$`
 )
+const ADMIN_REPORTS_WORKFLOW_PATH_RE = new RegExp(
+  `^${escapeRegex(ADMIN_STUDENTS_PREFIX)}/([^/]+)/reports/([^/]+)/workflow$`
+)
+const PARENT_REPORT_ACK_PATH_RE = new RegExp(`^${escapeRegex(PARENT_API_PREFIX)}/reports/([^/]+)/acknowledge$`)
+const STUDENT_REPORT_ACK_PATH_RE = new RegExp(`^${escapeRegex(STUDENT_API_PREFIX)}/reports/([^/]+)/acknowledge$`)
+const GENERIC_REPORT_ACCESS_PAGE_PATH_RE = new RegExp(
+  `^${escapeRegex(GENERIC_REPORT_ACCESS_PAGE_PREFIX)}/([^/]+)$`
+)
+const GENERIC_REPORT_ACCESS_PDF_PATH_RE = new RegExp(
+  `^${escapeRegex(GENERIC_REPORT_ACCESS_PAGE_PREFIX)}/([^/]+)\\.pdf$`
+)
 const ADMIN_PROFILE_SUBMISSION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PROFILE_SUBMISSIONS_PATH)}/([^/]+)$`)
 const ADMIN_NEWS_REPORT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_NEWS_REPORTS_PATH)}/([^/]+)$`)
 const ADMIN_ASSIGNMENT_TEMPLATE_PATH_RE = new RegExp(
@@ -241,6 +273,7 @@ const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-adm
 const ADMIN_HUB_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/portal-hub.html")
 const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
 const ADMIN_ENROLLMENT_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-enrollment.html")
+const REPORT_CARD_PREVIEW_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/report-card.html")
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
 const ADMIN_IMPORT_TEMPLATE_PATH = path.resolve(process.cwd(), "schemas/student-import-template.xlsx")
@@ -265,17 +298,24 @@ const PORTAL_NO_CACHE_HEADERS = Object.freeze({
   Pragma: "no-cache",
   Expires: "0",
 })
+const TRANSPARENT_GIF_BUFFER = Buffer.from("R0lGODlhAQABAPAAAAAAAP///ywAAAAAAQABAAACAUwAOw==", "base64")
 const ADMIN_PAGE_SECTION_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_PAGE_PATH)}/([a-z0-9-]+)$`)
 const ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH_RE = new RegExp(
   `^${escapeRegex(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)}/([a-f0-9]{24})$`
 )
 const ADMIN_POINTS_STUDENT_PATH_RE = new RegExp(`^${escapeRegex(ADMIN_POINTS_STUDENTS_PATH)}/([^/]+)/points$`)
+const ADMIN_REPORT_CARD_PREVIEW_PATH = normalizePathPrefix(
+  process.env.STUDENT_ADMIN_REPORT_CARD_PREVIEW_PATH,
+  "/admin/report-card-preview"
+)
 const PARENT_CHILD_PROFILE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile$`)
 const PARENT_CHILD_PROFILE_DRAFT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-draft$`)
 const PARENT_CHILD_PROFILE_SUBMIT_PATH_RE = new RegExp(`^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/profile-submit$`)
 const PARENT_CHILD_NEWS_CALENDAR_PATH_RE = new RegExp(
   `^${escapeRegex(PARENT_CHILDREN_PATH)}/([^/]+)/news-reports/calendar$`
 )
+const PARENT_REPORT_PAGE_PATH_RE = new RegExp(`^${escapeRegex(PARENT_REPORT_PAGE_PREFIX)}/([^/]+)$`)
+const STUDENT_REPORT_PAGE_PATH_RE = new RegExp(`^${escapeRegex(STUDENT_REPORT_PAGE_PREFIX)}/([^/]+)$`)
 
 const SIS_RUNTIME_CONFIG = getSisConfigSnapshotSync().runtime || {}
 const SESSION_TTL_SECONDS = Math.max(
@@ -1083,6 +1123,92 @@ function sendRedirect(response, statusCode, location) {
   response.end()
 }
 
+function sendPortalNotFoundModal(response, homePath = "") {
+  const safeHomePath = normalizeText(homePath) || "/"
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>404 - Report link not found</title>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <style>
+    html, body {
+      min-height: 100%;
+      margin: 0;
+    }
+    body {
+      align-items: center;
+      background: var(--portal-page-bg);
+      color: var(--portal-text);
+      display: grid;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      justify-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .portal-modal {
+      display: block;
+      position: static;
+    }
+    .portal-modal-dialog {
+      max-width: min(640px, calc(100vw - 24px));
+      width: 100%;
+    }
+    .portal-modal-body {
+      display: grid;
+      gap: 12px;
+    }
+    .portal-modal-actions {
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body class="portal-not-found-page">
+  <section class="portal-modal" aria-labelledby="portalNotFoundTitle">
+    <div class="portal-modal-dialog" role="dialog" aria-modal="true">
+      <div class="portal-modal-head">
+        <h2 id="portalNotFoundTitle">404</h2>
+      </div>
+      <div class="portal-modal-body">
+        <p>Report link not found.</p>
+        <p>The report URL is missing a valid immutable report ID.</p>
+      </div>
+      <div class="portal-modal-actions">
+        <a class="portal-button portal-button-blue-action" href="${escapeHtml(safeHomePath)}">Return home</a>
+      </div>
+    </div>
+  </section>
+</body>
+</html>`
+  sendHtml(response, 404, html, PORTAL_NO_CACHE_HEADERS)
+}
+
+function parseReportViewerRouteSegment(segment = "") {
+  const normalized = normalizeText(segment)
+  if (!normalized) return null
+  const lastHyphenIndex = normalized.lastIndexOf("-")
+  if (lastHyphenIndex <= 0 || lastHyphenIndex >= normalized.length - 1) return null
+  const slug = normalized.slice(0, lastHyphenIndex).trim()
+  const reportId = normalized.slice(lastHyphenIndex + 1).trim()
+  if (!slug || !reportId) return null
+  return {
+    slug,
+    reportId,
+  }
+}
+
+function isReportAccessMismatchError(error) {
+  const statusCode = Number(error?.statusCode || error?.status || 0)
+  if (statusCode !== 403) return false
+  const message = normalizeLower(error?.message || "")
+  return (
+    message.includes("performance report is not linked to this parent account")
+    || message.includes("performance report is not linked to this student account")
+  )
+}
+
 function setHtmlAttribute(html, name, value) {
   const attributeName = normalizeText(name)
   const attributeValue = escapeHtml(value)
@@ -1185,7 +1311,7 @@ function injectParentRuntimeConfig(html, origin, initialAuthState = { authentica
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_PARENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_PARENT_API_PREFIX=${JSON.stringify(PARENT_API_PREFIX)};window.__SIS_PARENT_AUTH_PREFIX=${JSON.stringify(PARENT_AUTH_PREFIX)};window.__SIS_PARENT_CHILDREN_PATH=${JSON.stringify(PARENT_CHILDREN_PATH)};window.__SIS_PARENT_DASHBOARD_PATH=${JSON.stringify(PARENT_DASHBOARD_PATH)};window.__SIS_PARENT_REPORT_PAGE_PREFIX=${JSON.stringify(PARENT_REPORT_PAGE_PREFIX)};window.__SIS_PARENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-parent-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -1217,7 +1343,7 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-student-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -1231,6 +1357,115 @@ function injectPortalHubRuntimeConfig(html) {
     return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
   return `${runtimeConfig}\n${html}`
+}
+
+function injectReportCardPreviewRuntimeConfig(html, reportPayload = {}, origin = "", initialAuthState = { authenticated: false }) {
+  const normalizedAuthState =
+    initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
+  const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_REPORT_CARD_DATA=${JSON.stringify(reportPayload || {})};</script>`
+  const htmlWithAuthState = setHtmlAttribute(html, "data-report-card-preview-state", authStateName)
+  if (html.includes("</head>")) {
+    return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${htmlWithAuthState}`
+}
+
+function injectPortalReportCardRuntimeConfig(html, reportPayload = {}, options = {}) {
+  const runtimeConfig =
+    `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};`
+    + `window.__SIS_REPORT_CARD_DATA=${JSON.stringify(reportPayload || {})};`
+    + `window.__SIS_REPORT_CARD_PORTAL_MODE=${JSON.stringify(true)};`
+    + `window.__SIS_REPORT_CARD_VIEWER_ROLE=${JSON.stringify(normalizeText(options?.viewerRole))};`
+    + `window.__SIS_REPORT_CARD_HOME_PATH=${JSON.stringify(normalizeText(options?.homePath))};`
+    + `</script>`
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${html}`
+}
+
+function buildReportCardPreviewSamplePayload() {
+  return buildStudentReportCardPayload(
+    {
+      eaglesId: "PREVIEW-001",
+      studentNumber: 1001,
+      profile: {
+        fullName: "Preview Student",
+        englishName: "Preview Student",
+        currentGrade: "A2 Flyers",
+      },
+      attendanceRecords: [
+        { attendanceDate: "2026-06-01", status: "present" },
+        { attendanceDate: "2026-06-08", status: "late" },
+        { attendanceDate: "2026-06-15", status: "absent" },
+      ],
+      gradeRecords: [
+        {
+          assignmentName: "Weekend Reading Packet",
+          className: "A2 Flyers",
+          dueAt: "2026-06-10T00:00:00.000Z",
+          submittedAt: "2026-06-09T00:00:00.000Z",
+          score: 8,
+          maxScore: 10,
+          homeworkCompleted: true,
+          homeworkOnTime: true,
+          behaviorScore: 4,
+          participationScore: 5,
+          inClassScore: 4,
+          comments: "Completed on time.",
+          assignmentBundleJson: {
+            items: [
+              { title: "Exercise 1" },
+              { title: "Exercise 2" },
+            ],
+          },
+        },
+        {
+          assignmentName: "Vocab Review",
+          className: "A2 Flyers",
+          dueAt: "2026-06-18T00:00:00.000Z",
+          score: 0,
+          maxScore: 10,
+          homeworkCompleted: false,
+          homeworkOnTime: false,
+          behaviorScore: 3,
+          participationScore: 4,
+          inClassScore: 3,
+          comments: "Pending submission.",
+          assignmentBundleJson: {
+            items: [
+              { title: "Exercise A" },
+              { title: "Exercise B" },
+              { title: "Exercise C" },
+            ],
+          },
+        },
+      ],
+      parentReports: [
+        {
+          id: "preview-report-1",
+          generatedAt: "2026-06-11T00:00:00.000Z",
+          approvedAt: "2026-06-11T00:00:00.000Z",
+          approvedByUsername: "teacher.preview",
+          homeworkCompletionRate: 50,
+          homeworkOnTimeRate: 50,
+          behaviorScore: 4,
+          participationScore: 4.5,
+          inClassScore: 3.5,
+          comments: "Preview fixture report.",
+          className: "A2 Flyers",
+          schoolYear: "2025-2026",
+          quarter: "Q2",
+        },
+      ],
+    },
+    {
+      className: "A2 Flyers",
+      schoolYear: "2025-2026",
+      quarter: "Q2",
+    }
+  )
 }
 
 function resolveAdminPageSlug(pathname) {
@@ -2616,6 +2851,13 @@ function resolveRequestOrigin(request) {
   const protocol = forwardedProto === "https" || secureBySocket ? "https" : "http"
   const host = forwardedHost || normalizeText(request.headers.host) || "localhost"
   return `${protocol}://${host}`
+}
+
+function resolveClientIpAddress(request) {
+  const forwardedForRaw = normalizeText(request.headers["x-forwarded-for"])
+  const forwardedFor = normalizeText(forwardedForRaw.split(",")[0])
+  const socketAddress = normalizeText(request.socket?.remoteAddress)
+  return forwardedFor || socketAddress
 }
 
 function buildAssignmentAnnouncementPreviewUrl(request, token) {
@@ -4404,8 +4646,12 @@ async function backfillLegacyParentReportMetadataRows({
   const updates = []
 
   patchedRows.forEach((row) => {
-    const decoded = decodeParentReportCommentBundle(row?.comments)
-    if (decoded?.metaPayload && typeof decoded.metaPayload === "object") return
+    const decoded = decodeLegacyParentReportCommentBundle(row?.comments)
+    const hasStoredRubric = row?.rubricPayload && typeof row.rubricPayload === "object"
+    const hasStoredMeta = row?.metaPayload && typeof row.metaPayload === "object"
+    const legacyComment = normalizeText(decoded?.comment || row?.comments)
+    if (hasStoredRubric && hasStoredMeta && legacyComment === normalizeText(row?.comments))
+      return
     const gradeKey = [
       normalizeText(row?.studentRefId),
       normalizeText(row?.className),
@@ -4413,20 +4659,23 @@ async function backfillLegacyParentReportMetadataRows({
       normalizeLower(row?.quarter),
     ].join("|")
     const relatedGrades = groupedGrades.get(gradeKey) || []
-    const legacyMetaPayload = buildLegacyReportMetaPayload(row, decoded, relatedGrades)
-    const encodedComments = encodeParentReportCommentBundle(
-      decoded?.comment,
-      decoded?.rubricPayload,
-      legacyMetaPayload
-    )
-    if (!normalizeText(encodedComments) || normalizeText(encodedComments) === normalizeText(row?.comments)) return
-    row.comments = encodedComments
+    const legacyMetaPayload =
+      hasStoredMeta ? row.metaPayload : buildLegacyReportMetaPayload(row, decoded, relatedGrades)
+    const nextRubricPayload =
+      hasStoredRubric ? row.rubricPayload : decoded?.rubricPayload
+    row.comments = legacyComment
+    row.rubricPayload = nextRubricPayload
+    row.metaPayload = legacyMetaPayload
     const reportId = normalizeText(row?.id)
     if (!reportId) return
     updates.push(
       prisma.parentClassReport.update({
         where: { id: reportId },
-        data: { comments: encodedComments },
+        data: {
+          comments: legacyComment || null,
+          rubricPayload: nextRubricPayload || null,
+          metaPayload: legacyMetaPayload || null,
+        },
       })
     )
   })
@@ -4530,28 +4779,57 @@ function serializeGradeRows(rows = [], now = new Date()) {
 function serializeReportRows(rows = []) {
   return (Array.isArray(rows) ? rows : [])
     .map((row, index) => {
-      const generatedAt = parseIsoDateTime(row?.generatedAt)
-      const approvedAt = parseIsoDateTime(row?.approvedAt)
-      const decoded = decodeParentReportCommentBundle(row?.comments)
-      const metaPayload = decoded.metaPayload && typeof decoded.metaPayload === "object" ? decoded.metaPayload : null
+      const normalizedRow = mapParentClassReport(row) || row
+      const generatedAt = parseIsoDateTime(normalizedRow?.generatedAt)
+      const approvedAt = parseIsoDateTime(normalizedRow?.approvedAt)
+      const metaPayload =
+        normalizedRow?.metaPayload && typeof normalizedRow.metaPayload === "object"
+          ? normalizedRow.metaPayload
+          : null
+      const normalizeSnapshotAssignments = (entries) =>
+        (Array.isArray(entries) ? entries : [])
+          .map((entry) => {
+            if (!entry || typeof entry !== "object") return null
+            return {
+              assignmentName: normalizeText(entry.assignmentName),
+              dueAt: normalizeText(entry.dueAt),
+              submittedAt: normalizeText(entry.submittedAt),
+              className: normalizeText(entry.className),
+              quarter: normalizeText(entry.quarter),
+              deepLink: normalizeText(entry.deepLink),
+            }
+          })
+          .filter((entry) => Boolean(entry?.assignmentName || entry?.dueAt || entry?.submittedAt))
       return {
-        id: normalizeText(row?.id) || `report-${index}-${toPortalDateKey(generatedAt)}`,
-        className: normalizeText(row?.className),
-        level: normalizeText(row?.level),
-        schoolYear: normalizeText(row?.schoolYear),
-        quarter: normalizeText(row?.quarter),
+        id: normalizeText(normalizedRow?.id) || `report-${index}-${toPortalDateKey(generatedAt)}`,
+        studentRefId: normalizeText(normalizedRow?.studentRefId),
+        eaglesId: normalizeText(normalizedRow?.eaglesId),
+        fullName: normalizeText(normalizedRow?.fullName),
+        englishName: normalizeText(normalizedRow?.englishName),
+        studentNumber: Number.parseInt(String(normalizedRow?.studentNumber || ""), 10) || null,
+        className: normalizeText(normalizedRow?.className),
+        level: normalizeText(normalizedRow?.level),
+        schoolYear: normalizeText(normalizedRow?.schoolYear),
+        quarter: normalizeText(normalizedRow?.quarter),
+        workflowState: normalizeParentReportWorkflowState(normalizedRow?.workflowState),
         generatedAt: toIsoOrEmpty(generatedAt),
         generatedDate: toPortalDateKey(generatedAt),
         approvedAt: toIsoOrEmpty(approvedAt),
-        homeworkCompletionRate: toFiniteNumberOrNull(row?.homeworkCompletionRate),
-        homeworkOnTimeRate: toFiniteNumberOrNull(row?.homeworkOnTimeRate),
-        behaviorScore: toFiniteNumberOrNull(row?.behaviorScore),
-        participationScore: toFiniteNumberOrNull(row?.participationScore),
-        inClassScore: toFiniteNumberOrNull(row?.inClassScore),
-        participationPointsAward: Number.parseInt(String(row?.participationPointsAward || ""), 10) || 0,
-        approvedByUsername: normalizeText(row?.approvedByUsername),
-        comments: normalizeText(decoded.comment),
-        rubricPayload: decoded.rubricPayload && typeof decoded.rubricPayload === "object" ? decoded.rubricPayload : null,
+        publishedAt: normalizeText(normalizedRow?.publishedAt),
+        notificationQueuedAt: normalizeText(normalizedRow?.notificationQueuedAt),
+        notificationSentAt: normalizeText(normalizedRow?.notificationSentAt),
+        homeworkCompletionRate: toFiniteNumberOrNull(normalizedRow?.homeworkCompletionRate),
+        homeworkOnTimeRate: toFiniteNumberOrNull(normalizedRow?.homeworkOnTimeRate),
+        behaviorScore: toFiniteNumberOrNull(normalizedRow?.behaviorScore),
+        participationScore: toFiniteNumberOrNull(normalizedRow?.participationScore),
+        inClassScore: toFiniteNumberOrNull(normalizedRow?.inClassScore),
+        participationPointsAward: Number.parseInt(String(normalizedRow?.participationPointsAward || ""), 10) || 0,
+        approvedByUsername: normalizeText(normalizedRow?.approvedByUsername),
+        comments: normalizeText(normalizedRow?.comments),
+        rubricPayload:
+          normalizedRow?.rubricPayload && typeof normalizedRow.rubricPayload === "object"
+            ? normalizedRow.rubricPayload
+            : null,
         metaPayload,
         classDate: normalizeText(metaPayload?.classDate),
         classDay: normalizeText(metaPayload?.classDay),
@@ -4564,9 +4842,15 @@ function serializeReportRows(rows = []) {
         currentHomeworkSummary: normalizeText(metaPayload?.currentHomeworkSummary),
         pastDueHomeworkCount: normalizeText(metaPayload?.pastDueHomeworkCount),
         pastDueHomeworkSummary: normalizeText(metaPayload?.pastDueHomeworkSummary),
+        parentReviewedAt: normalizeText(metaPayload?.parentReviewedAt),
+        parentReviewedByUsername: normalizeText(metaPayload?.parentReviewedByUsername || metaPayload?.parentReviewedBy),
+        studentReviewedAt: normalizeText(metaPayload?.studentReviewedAt),
+        studentReviewedByUsername: normalizeText(metaPayload?.studentReviewedByUsername || metaPayload?.studentReviewedBy),
         recipients: Array.isArray(metaPayload?.recipients)
           ? metaPayload.recipients.map((entry) => normalizeText(entry)).filter(Boolean)
           : [],
+        currentHomeworkAssignments: normalizeSnapshotAssignments(metaPayload?.currentHomeworkAssignments),
+        pastDueHomeworkAssignments: normalizeSnapshotAssignments(metaPayload?.pastDueHomeworkAssignments),
         outstandingAssignments: (Array.isArray(metaPayload?.outstandingAssignments)
           ? metaPayload.outstandingAssignments
           : []
@@ -4585,6 +4869,211 @@ function serializeReportRows(rows = []) {
       }
     })
     .filter((row) => row.generatedDate)
+}
+
+function isPortalVisibleReportWorkflowState(value = "") {
+  const normalized = normalizeParentReportWorkflowState(
+    typeof value === "object" && value ? value?.workflowState : value
+  )
+  const approvedAt =
+    typeof value === "object" && value ? normalizeText(value?.approvedAt) : ""
+  if (approvedAt) return true
+  return (
+    normalized === PARENT_REPORT_WORKFLOW_STATE_PUBLISHED
+    || normalized === PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED
+    || normalized === PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT
+  )
+}
+
+async function getParentClassReportRecordById(reportId = "") {
+  const id = normalizeText(reportId)
+  if (!id) return null
+  const prisma = await getSharedPrismaClient()
+  if (!prisma?.parentClassReport?.findUnique) {
+    const error = new Error("Parent report store unavailable")
+    error.statusCode = 503
+    throw error
+  }
+  return prisma.parentClassReport.findUnique({ where: { id } })
+}
+
+async function findFallbackPortalReportRecordById(reportId = "", options = {}) {
+  const id = normalizeText(reportId)
+  if (!id) return null
+  const viewerRole = normalizeLower(options?.viewerRole) === "student" ? "student" : "parent"
+
+  if (viewerRole === "student") {
+    const studentRefId = normalizeText(options?.studentRefId)
+    if (!studentRefId) return null
+    const student = await getStudentByIdWithReportBackfill(studentRefId).catch(() => null)
+    if (!student) return null
+    const matched = Array.isArray(student?.parentReports)
+      ? student.parentReports.find((entry) => normalizeText(entry?.id) === id)
+      : null
+    return matched ? mapParentClassReport(matched) : null
+  }
+
+  const linkedChildren = await listParentLinkedStudents({
+    parentsId: normalizeText(options?.parentsId),
+    parentAccountId: normalizeText(options?.parentAccountId),
+  }).catch(() => [])
+  for (let i = 0; i < linkedChildren.length; i += 1) {
+    const studentRefId = normalizeText(linkedChildren[i]?.studentRefId)
+    if (!studentRefId) continue
+    const student = await getStudentByIdWithReportBackfill(studentRefId).catch(() => null)
+    if (!student) continue
+    const matched = Array.isArray(student?.parentReports)
+      ? student.parentReports.find((entry) => normalizeText(entry?.id) === id)
+      : null
+    if (matched) return mapParentClassReport(matched)
+  }
+  return null
+}
+
+async function findAnyPortalReportRecordById(reportId = "") {
+  const id = normalizeText(reportId)
+  if (!id) return null
+  const students = await listStudents({
+    take: 1000,
+    includeUnenrolled: true,
+  }).catch(() => [])
+  for (let i = 0; i < students.length; i += 1) {
+    const studentRefId = normalizeText(students[i]?.id || students[i]?.studentRefId)
+    if (!studentRefId) continue
+    const student = await getStudentByIdWithReportBackfill(studentRefId).catch(() => null)
+    if (!student) continue
+    const matched = Array.isArray(student?.parentReports)
+      ? student.parentReports.find((entry) => normalizeText(entry?.id) === id)
+      : null
+    if (matched) return mapParentClassReport(matched)
+  }
+  return null
+}
+
+async function markParentClassReportReviewedByViewer(
+  reportId = "",
+  { viewerRole = "", reviewedBy = "", recipientEmail = "", artifactVersion = "", userAgent = "", ipAddress = "" } = {}
+) {
+  const id = normalizeText(reportId)
+  if (!id) {
+    const error = new Error("reportId is required")
+    error.statusCode = 400
+    throw error
+  }
+  const existing = await getParentClassReportRecordById(id)
+  if (!existing) {
+    const error = new Error("Performance report not found")
+    error.statusCode = 404
+    throw error
+  }
+  await recordParentClassReportEvent({
+    reportId: id,
+    artifactVersion:
+      Number.parseInt(String(artifactVersion || existing?.finalArtifactVersion || 0), 10) || 0,
+    eventType: "report_link_clicked",
+    actorType: normalizeLower(viewerRole) === "student" ? "student" : "parent",
+    actorId: normalizeText(reviewedBy),
+    recipientEmail: normalizeLower(recipientEmail),
+    channel: "portal",
+    userAgent: normalizeText(userAgent),
+    ipAddress: normalizeText(ipAddress),
+    metadata: {
+      workflowState: normalizeText(existing?.workflowState),
+    },
+  }).catch(() => null)
+  return existing
+}
+
+async function getAuthorizedReportRecordForViewer(reportId = "", options = {}) {
+  let report = mapParentClassReport(await getParentClassReportRecordById(reportId).catch(() => null))
+  if (!report) {
+    report = await findAnyPortalReportRecordById(reportId)
+  }
+  if (!report) {
+    report = await findFallbackPortalReportRecordById(reportId, options)
+  }
+  if (!report) {
+    const error = new Error("Performance report not found")
+    error.statusCode = 404
+    throw error
+  }
+
+  const viewerRole = normalizeLower(options?.viewerRole) === "student" ? "student" : "parent"
+  const reportStudentRefId = normalizeText(report?.studentRefId)
+  if (!reportStudentRefId) {
+    const error = new Error("Performance report is not linked to a student record")
+    error.statusCode = 404
+    throw error
+  }
+  if (!isPortalVisibleReportWorkflowState(report)) {
+    const error = new Error("Performance report is not published")
+    error.statusCode = 404
+    throw error
+  }
+
+  if (viewerRole === "parent") {
+    const linkedChildren = await listParentLinkedStudents({
+      parentsId: normalizeText(options?.parentsId),
+      parentAccountId: normalizeText(options?.parentAccountId),
+    })
+    const allowed = linkedChildren.some(
+      (child) => normalizeText(child?.studentRefId) === reportStudentRefId
+    )
+    if (!allowed) {
+      const error = new Error("Performance report is not linked to this parent account")
+      error.statusCode = 403
+      throw error
+    }
+  } else if (normalizeText(options?.studentRefId) !== reportStudentRefId) {
+    const error = new Error("Performance report is not linked to this student account")
+    error.statusCode = 403
+    throw error
+  }
+
+  return report
+}
+
+async function buildAuthorizedReportCardPayloadForViewer(reportId = "", options = {}) {
+  const report = await getAuthorizedReportRecordForViewer(reportId, options)
+  const viewerRole = normalizeLower(options?.viewerRole) === "student" ? "student" : "parent"
+  const reportStudentRefId = normalizeText(report?.studentRefId)
+
+  const reviewedReport = mapParentClassReport(
+    await markParentClassReportReviewedByViewer(report.id, {
+      viewerRole,
+      reviewedBy: normalizeText(options?.reviewedBy),
+      recipientEmail: normalizeText(options?.recipientEmail),
+      artifactVersion: normalizeText(options?.artifactVersion),
+      userAgent: normalizeText(options?.userAgent),
+      ipAddress: normalizeText(options?.ipAddress),
+    })
+  )
+  const artifactPayload =
+    reviewedReport?.finalArtifactPayload && typeof reviewedReport.finalArtifactPayload === "object"
+      ? reviewedReport.finalArtifactPayload
+      : null
+  if (artifactPayload) {
+    return artifactPayload
+  }
+
+  const student = await getStudentByIdWithReportBackfill(reportStudentRefId)
+  if (!student) {
+    const error = new Error("Student record not found for report")
+    error.statusCode = 404
+    throw error
+  }
+
+  const studentWithScopedReport = {
+    ...student,
+    parentReports: [reviewedReport],
+  }
+
+  return buildStudentReportCardPayload(studentWithScopedReport, {
+    className: normalizeText(reviewedReport?.className),
+    schoolYear: normalizeText(reviewedReport?.schoolYear),
+    quarter: normalizeText(reviewedReport?.quarter),
+    reportId: normalizeText(reviewedReport?.id),
+  })
 }
 
 function normalizeAssignmentBundleRecord(value = {}) {
@@ -4903,11 +5392,13 @@ async function buildParentDashboardPayload(session = {}) {
       if (!groupedGrades.has(id)) groupedGrades.set(id, [])
       groupedGrades.get(id).push(row)
     })
-    backfilledReportRows.forEach((row) => {
+    backfilledReportRows
+      .filter((row) => isPortalVisibleReportWorkflowState(row))
+      .forEach((row) => {
       const id = normalizeText(row?.studentRefId)
       if (!groupedReports.has(id)) groupedReports.set(id, [])
       groupedReports.get(id).push(row)
-    })
+      })
   const newsSummaries = new Map()
   const newsSnapshots = new Map()
   await Promise.all(
@@ -5016,11 +5507,14 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       ...mappedChild,
       eaglesId: normalizeText(mappedChild.eaglesId) || normalizeText(eaglesId),
     }
+    const visibleReportRows = backfilledReportRows.filter((row) =>
+      isPortalVisibleReportWorkflowState(row)
+    )
     const dashboard = buildChildDashboardSnapshot({
       child,
       attendanceRows,
       gradeRows,
-      reportRows: backfilledReportRows,
+      reportRows: visibleReportRows,
       assignmentTemplates,
     })
     const pointsSummary = pointsLedger?.summary && typeof pointsLedger.summary === "object"
@@ -5928,10 +6422,12 @@ async function handleApiRequest(request, response, pathname, url) {
     const queueId = normalizeText(payload?.queueId)
     const queueType = normalizeQueueType(payload?.queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT)
 
-    if (action === "sendall" || action === "send-all") {
+    if (action === "sendall" || action === "send-all" || action === "sendselected" || action === "send-selected") {
+      const queueIds = Array.isArray(payload?.queueIds) ? payload.queueIds : []
       const result = await sendAllQueuedAnnouncements({
         queueType,
         reviewedByUsername: normalizeText(session?.username),
+        queueIds,
       })
       sendJson(response, 200, result)
       return true
@@ -5982,6 +6478,10 @@ async function handleApiRequest(request, response, pathname, url) {
           message: payload?.message,
           recipients: recipientInput,
           status: payload?.status || NOTIFICATION_QUEUE_STATUS_QUEUED,
+          payloadJson:
+            payload?.payloadJson && typeof payload.payloadJson === "object"
+              ? payload.payloadJson
+              : undefined,
         },
         { reviewedByUsername: normalizeText(session?.username) }
       )
@@ -6333,12 +6833,14 @@ async function handleApiRequest(request, response, pathname, url) {
     const className = normalizeText(url.searchParams.get("className") || "")
     const schoolYear = normalizeText(url.searchParams.get("schoolYear") || "")
     const quarter = normalizeText(url.searchParams.get("quarter") || "")
+    const reportId = normalizeText(url.searchParams.get("reportId") || "")
 
     const student = await getStudentByIdWithReportBackfill(studentRefId)
     const pdfBuffer = await generateStudentReportCardPdf(student, {
       className,
       schoolYear,
       quarter,
+      reportId,
     })
     const filename = buildReportCardFilename(student, {
       className,
@@ -6346,6 +6848,37 @@ async function handleApiRequest(request, response, pathname, url) {
       quarter,
     })
     sendPdf(response, filename, pdfBuffer)
+    return true
+  }
+
+  const reportCardSnapshotPathMatch = pathname.match(ADMIN_REPORT_CARD_SNAPSHOT_PATH_RE)
+  if (reportCardSnapshotPathMatch && method === "GET") {
+    assertStoreEnabled()
+    const studentRefId = decodeURIComponent(reportCardSnapshotPathMatch[1])
+    const className = normalizeText(url.searchParams.get("className") || "")
+    const schoolYear = normalizeText(url.searchParams.get("schoolYear") || "")
+    const quarter = normalizeText(url.searchParams.get("quarter") || "")
+    const reportId = normalizeText(url.searchParams.get("reportId") || "")
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
+    let payload = null
+    if (reportId) {
+      const matchedReport = Array.isArray(student?.parentReports)
+        ? student.parentReports.find((entry) => normalizeText(entry?.id) === reportId)
+        : null
+      const mappedReport = mapParentClassReport(matchedReport)
+      if (mappedReport?.finalArtifactPayload && typeof mappedReport.finalArtifactPayload === "object") {
+        payload = mappedReport.finalArtifactPayload
+      }
+    }
+    if (!payload) {
+      payload = buildStudentReportCardPayload(student, {
+        className,
+        schoolYear,
+        quarter,
+        reportId,
+      })
+    }
+    sendJson(response, 200, payload)
     return true
   }
 
@@ -6458,7 +6991,11 @@ async function handleApiRequest(request, response, pathname, url) {
     assertStoreEnabled()
     const studentRefId = decodeURIComponent(reportPathMatch[1])
     const payload = await parseBody(request)
-    const report = await saveParentClassReport(studentRefId, payload)
+    const report = await saveParentClassReport(studentRefId, {
+      ...payload,
+      updatedByRole: normalizeText(session?.role),
+      updatedByUsername: normalizeText(session?.username),
+    })
     const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { report, student })
     return true
@@ -6469,9 +7006,51 @@ async function handleApiRequest(request, response, pathname, url) {
     assertStoreEnabled()
     const studentRefId = decodeURIComponent(reportGenerateMatch[1])
     const payload = await parseBody(request)
-    const report = await generateParentClassReportFromGrades(studentRefId, payload)
+    const report = await generateParentClassReportFromGrades(studentRefId, {
+      ...payload,
+      updatedByRole: normalizeText(session?.role),
+      updatedByUsername: normalizeText(session?.username),
+    })
     const student = await getStudentByIdWithReportBackfill(studentRefId)
     sendJson(response, 200, { report, student })
+    return true
+  }
+
+  const reportWorkflowMatch = pathname.match(ADMIN_REPORTS_WORKFLOW_PATH_RE)
+  if (reportWorkflowMatch && method === "POST") {
+    assertStoreEnabled()
+    const studentRefId = decodeURIComponent(reportWorkflowMatch[1])
+    const reportId = decodeURIComponent(reportWorkflowMatch[2])
+    const payload = await parseBody(request)
+    const action = normalizeLower(payload?.action)
+    let report = null
+    if (action === "submit") {
+      report = await submitParentClassReportForAdminReview(reportId, {
+        submittedByUsername: normalizeText(session?.username),
+      })
+    } else if (action === "start-review") {
+      assertCanManageUsers(rolePolicy)
+      report = await startParentClassReportAdminReview(reportId, {
+        adminReviewStartedByUsername: normalizeText(session?.username),
+      })
+    } else if (action === "stage") {
+      assertCanManageUsers(rolePolicy)
+      report = await markParentClassReportAwaitingApproval(reportId, {
+        rcDraftedByUsername: normalizeText(session?.username),
+      })
+    } else if (action === "approve-publish") {
+      assertCanManageUsers(rolePolicy)
+      report = await approveParentClassReport(reportId, {
+        studentRefId,
+        approvedByUsername: normalizeText(session?.username),
+      })
+    } else {
+      const error = new Error("Unsupported report workflow action")
+      error.statusCode = 400
+      throw error
+    }
+    const student = await getStudentByIdWithReportBackfill(studentRefId)
+    sendJson(response, 200, { ok: true, action, report, student })
     return true
   }
 
@@ -6579,6 +7158,17 @@ async function handleParentApiRequest(request, response, pathname, url) {
       accountId: parentContext.parentAccountId,
     })
     sendJson(response, 200, payload)
+    return true
+  }
+
+  const parentReportAckMatch = pathname.match(PARENT_REPORT_ACK_PATH_RE)
+  if (parentReportAckMatch && method === "POST") {
+    const reportId = decodeURIComponent(parentReportAckMatch[1])
+    const updated = await acknowledgeParentClassReportReview(reportId, {
+      viewerRole: "parent",
+      reviewedBy: parentContext.parentsId || parentContext.parentAccountId,
+    })
+    sendJson(response, 200, { ok: true, report: updated })
     return true
   }
 
@@ -6793,6 +7383,17 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     return true
   }
 
+  const studentReportAckMatch = pathname.match(STUDENT_REPORT_ACK_PATH_RE)
+  if (studentReportAckMatch && method === "POST") {
+    const reportId = decodeURIComponent(studentReportAckMatch[1])
+    const updated = await acknowledgeParentClassReportReview(reportId, {
+      viewerRole: "student",
+      reviewedBy: normalizeText(session?.eaglesId || session?.username),
+    })
+    sendJson(response, 200, { ok: true, report: updated })
+    return true
+  }
+
   if (method === "GET" && pathname === STUDENT_NEWS_CALENDAR_PATH) {
     const data = await listStudentNewsCalendar(studentRefId, {
       days: url.searchParams.get("days") || "30",
@@ -6860,6 +7461,124 @@ export async function handleStudentAdminRequest(request, response) {
     return true
   }
 
+  if (method === "GET" && pathname === ADMIN_REPORT_CARD_PREVIEW_PATH) {
+    if (!fs.existsSync(REPORT_CARD_PREVIEW_HTML_PATH)) {
+      sendJson(response, 404, { error: "Report card preview page not found" })
+      return true
+    }
+    const initialAuthState = buildAdminInitialAuthState(await peekAdminSession(request))
+    const previewStudentRefId = normalizeText(url.searchParams.get("studentRefId") || "")
+    const className = normalizeText(url.searchParams.get("className") || "")
+    const schoolYear = normalizeText(url.searchParams.get("schoolYear") || "")
+    const quarter = normalizeText(url.searchParams.get("quarter") || "")
+    let reportPayload = buildReportCardPreviewSamplePayload()
+
+    if (previewStudentRefId && initialAuthState.authenticated) {
+      try {
+        const student = await getStudentByIdWithReportBackfill(previewStudentRefId)
+        if (student) {
+          reportPayload = buildStudentReportCardPayload(student, {
+            className: className || reportPayload.scope?.className || "",
+            schoolYear: schoolYear || reportPayload.scope?.schoolYear || "",
+            quarter: quarter || reportPayload.scope?.quarter || "",
+          })
+        }
+      } catch (error) {
+        void error
+      }
+    } else {
+      reportPayload = buildStudentReportCardPayload(
+        {
+          eaglesId: reportPayload.identity?.eaglesId || "PREVIEW-001",
+          studentNumber: reportPayload.identity?.studentNumber || 1001,
+          profile: {
+            fullName: reportPayload.identity?.fullName || "Preview Student",
+            englishName: reportPayload.identity?.englishName || "Preview Student",
+            currentGrade: className || reportPayload.scope?.className || "A2 Flyers",
+          },
+          attendanceRecords: [
+            { attendanceDate: "2026-06-01", status: "present" },
+            { attendanceDate: "2026-06-08", status: "late" },
+            { attendanceDate: "2026-06-15", status: "absent" },
+          ],
+          gradeRecords: [
+            {
+              assignmentName: "Weekend Reading Packet",
+              className: className || reportPayload.scope?.className || "A2 Flyers",
+              dueAt: "2026-06-10T00:00:00.000Z",
+              submittedAt: "2026-06-09T00:00:00.000Z",
+              score: 8,
+              maxScore: 10,
+              homeworkCompleted: true,
+              homeworkOnTime: true,
+              behaviorScore: 4,
+              participationScore: 5,
+              inClassScore: 4,
+              comments: "Completed on time.",
+              assignmentBundleJson: {
+                items: [
+                  { title: "Exercise 1" },
+                  { title: "Exercise 2" },
+                ],
+              },
+            },
+            {
+              assignmentName: "Vocab Review",
+              className: className || reportPayload.scope?.className || "A2 Flyers",
+              dueAt: "2026-06-18T00:00:00.000Z",
+              score: 0,
+              maxScore: 10,
+              homeworkCompleted: false,
+              homeworkOnTime: false,
+              behaviorScore: 3,
+              participationScore: 4,
+              inClassScore: 3,
+              comments: "Pending submission.",
+              assignmentBundleJson: {
+                items: [
+                  { title: "Exercise A" },
+                  { title: "Exercise B" },
+                  { title: "Exercise C" },
+                ],
+              },
+            },
+          ],
+          parentReports: [
+            {
+              id: "preview-report-1",
+              generatedAt: "2026-06-11T00:00:00.000Z",
+              approvedAt: "2026-06-11T00:00:00.000Z",
+              approvedByUsername: "teacher.preview",
+              homeworkCompletionRate: 50,
+              homeworkOnTimeRate: 50,
+              behaviorScore: 4,
+              participationScore: 4.5,
+              inClassScore: 3.5,
+              comments: "Preview fixture report.",
+              className: className || reportPayload.scope?.className || "A2 Flyers",
+              schoolYear: schoolYear || reportPayload.scope?.schoolYear || "2025-2026",
+              quarter: quarter || reportPayload.scope?.quarter || "Q2",
+            },
+          ],
+        },
+        {
+          className: className || reportPayload.scope?.className || "A2 Flyers",
+          schoolYear: schoolYear || reportPayload.scope?.schoolYear || "2025-2026",
+          quarter: quarter || reportPayload.scope?.quarter || "Q2",
+        }
+      )
+    }
+
+    const html = injectReportCardPreviewRuntimeConfig(
+      fs.readFileSync(REPORT_CARD_PREVIEW_HTML_PATH, "utf8"),
+      reportPayload,
+      requestOrigin,
+      initialAuthState,
+    )
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
+    return true
+  }
+
   if (method === "GET" && pathname === ADMIN_ENROLLMENT_PAGE_PATH) {
     if (!fs.existsSync(ADMIN_ENROLLMENT_HTML_PATH)) {
       sendJson(response, 404, { error: "Student enrollment page not found" })
@@ -6870,6 +7589,295 @@ export async function handleStudentAdminRequest(request, response) {
       fs.readFileSync(ADMIN_ENROLLMENT_HTML_PATH, "utf8"),
       requestOrigin,
       initialAuthState,
+    )
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
+    return true
+  }
+
+  if (method === "GET" && pathname === REPORT_EVENT_EMAIL_OPEN_PATH) {
+    const reportId = normalizeText(url.searchParams.get("reportId") || "")
+    if (reportId) {
+      await recordParentClassReportEvent({
+        reportId,
+        artifactVersion: Number.parseInt(String(url.searchParams.get("artifactVersion") || 0), 10) || 0,
+        eventType: "email_opened",
+        actorType: "recipient",
+        actorId: normalizeLower(url.searchParams.get("recipient") || ""),
+        recipientEmail: normalizeLower(url.searchParams.get("recipient") || ""),
+        channel: "email",
+        userAgent: normalizeText(request.headers["user-agent"] || ""),
+        ipAddress: resolveClientIpAddress(request),
+      }).catch(() => null)
+    }
+    response.writeHead(200, {
+      "Content-Type": "image/gif",
+      "Content-Length": String(TRANSPARENT_GIF_BUFFER.length),
+      "Cache-Control": "no-store",
+    })
+    response.end(TRANSPARENT_GIF_BUFFER)
+    return true
+  }
+
+  const genericReportPdfMatch = pathname.match(GENERIC_REPORT_ACCESS_PDF_PATH_RE)
+  if (method === "GET" && genericReportPdfMatch) {
+    const reportRoute = parseReportViewerRouteSegment(
+      decodeURIComponent(`${genericReportPdfMatch[1]}`)
+    )
+    if (!reportRoute) {
+      sendPortalNotFoundModal(response, PARENT_PORTAL_PAGE_PATH)
+      return true
+    }
+    const requestedReportUrl = `${pathname}${url.search}${url.hash}`
+    const parentSession = await peekParentSession(request)
+    const studentSession = await peekStudentSession(request)
+    let authorizedReport = null
+    let viewerRole = ""
+    let actorId = ""
+
+    if (parentSession) {
+      try {
+        authorizedReport = await getAuthorizedReportRecordForViewer(reportRoute.reportId, {
+          viewerRole: "parent",
+          parentsId: normalizeText(parentSession?.parentsId || parentSession?.username),
+          parentAccountId: normalizeText(parentSession?.accountId),
+        })
+        viewerRole = "parent"
+        actorId = normalizeText(parentSession?.parentsId || parentSession?.username)
+      } catch (error) {
+        if (!isReportAccessMismatchError(error)) throw error
+      }
+    }
+    if (!authorizedReport && studentSession) {
+      const studentRefId = await resolveStudentPortalSessionStudentRefId(studentSession)
+      if (studentRefId) {
+        try {
+          authorizedReport = await getAuthorizedReportRecordForViewer(reportRoute.reportId, {
+            viewerRole: "student",
+            studentRefId,
+          })
+          viewerRole = "student"
+          actorId = normalizeText(studentSession?.eaglesId || studentSession?.username)
+        } catch (error) {
+          if (!isReportAccessMismatchError(error)) throw error
+        }
+      }
+    }
+    if (!authorizedReport) {
+      const nextParams = new URLSearchParams()
+      nextParams.set("next", requestedReportUrl)
+      sendRedirect(response, 302, `${PARENT_PORTAL_PAGE_PATH}?${nextParams.toString()}`)
+      return true
+    }
+
+    const student = await getStudentByIdWithReportBackfill(normalizeText(authorizedReport.studentRefId))
+    const pdfBuffer = await generateStudentReportCardPdf(student, {
+      className: normalizeText(authorizedReport.className),
+      schoolYear: normalizeText(authorizedReport.schoolYear),
+      quarter: normalizeText(authorizedReport.quarter),
+      reportId: normalizeText(authorizedReport.id),
+    })
+    await recordParentClassReportEvent({
+      reportId: normalizeText(authorizedReport.id),
+      artifactVersion:
+        Number.parseInt(
+          String(url.searchParams.get("artifactVersion") || authorizedReport.finalArtifactVersion || 0),
+          10
+        ) || 0,
+      eventType: "pdf_downloaded",
+      actorType: viewerRole || "recipient",
+      actorId,
+      recipientEmail: normalizeLower(url.searchParams.get("recipient") || ""),
+      channel: "portal",
+      userAgent: normalizeText(request.headers["user-agent"] || ""),
+      ipAddress: resolveClientIpAddress(request),
+    }).catch(() => null)
+    const filename = buildReportCardFilename(student, {
+      className: normalizeText(authorizedReport.className),
+      schoolYear: normalizeText(authorizedReport.schoolYear),
+      quarter: normalizeText(authorizedReport.quarter),
+    })
+    sendPdf(response, filename, pdfBuffer)
+    return true
+  }
+
+  const genericReportPageMatch = pathname.match(GENERIC_REPORT_ACCESS_PAGE_PATH_RE)
+  if (method === "GET" && genericReportPageMatch) {
+    const reportRoute = parseReportViewerRouteSegment(decodeURIComponent(genericReportPageMatch[1]))
+    if (!reportRoute) {
+      sendPortalNotFoundModal(response, PARENT_PORTAL_PAGE_PATH)
+      return true
+    }
+    const nextSuffix = `${pathname}${url.search}${url.hash}`
+    const parentSession = await peekParentSession(request)
+    if (parentSession) {
+      try {
+        await getAuthorizedReportRecordForViewer(reportRoute.reportId, {
+          viewerRole: "parent",
+          parentsId: normalizeText(parentSession?.parentsId || parentSession?.username),
+          parentAccountId: normalizeText(parentSession?.accountId),
+        })
+        sendRedirect(
+          response,
+          302,
+          `${PARENT_REPORT_PAGE_PREFIX}/${encodeURIComponent(genericReportPageMatch[1])}${url.search}`
+        )
+        return true
+      } catch (error) {
+        if (!isReportAccessMismatchError(error)) throw error
+      }
+    }
+    const studentSession = await peekStudentSession(request)
+    if (studentSession) {
+      const studentRefId = await resolveStudentPortalSessionStudentRefId(studentSession)
+      if (studentRefId) {
+        try {
+          await getAuthorizedReportRecordForViewer(reportRoute.reportId, {
+            viewerRole: "student",
+            studentRefId,
+          })
+          sendRedirect(
+            response,
+            302,
+            `${STUDENT_REPORT_PAGE_PREFIX}/${encodeURIComponent(genericReportPageMatch[1])}${url.search}`
+          )
+          return true
+        } catch (error) {
+          if (!isReportAccessMismatchError(error)) throw error
+        }
+      }
+    }
+    const nextParams = new URLSearchParams()
+    nextParams.set("next", nextSuffix)
+    sendRedirect(response, 302, `${PARENT_PORTAL_PAGE_PATH}?${nextParams.toString()}`)
+    return true
+  }
+
+  const parentReportPageMatch = pathname.match(PARENT_REPORT_PAGE_PATH_RE)
+  if (method === "GET" && parentReportPageMatch) {
+    if (!fs.existsSync(REPORT_CARD_PREVIEW_HTML_PATH)) {
+      sendJson(response, 404, { error: "Report card page not found" })
+      return true
+    }
+    const reportRoute = parseReportViewerRouteSegment(decodeURIComponent(parentReportPageMatch[1]))
+    if (!reportRoute) {
+      sendPortalNotFoundModal(response, PARENT_PORTAL_PAGE_PATH)
+      return true
+    }
+    const requestedReportUrl = `${pathname}${url.search}${url.hash}`
+    let session = null
+    try {
+      session = await requireAuthenticatedParentSession(request, response)
+    } catch (error) {
+      if (Number(error?.statusCode || error?.status) === 401) {
+        const nextParams = new URLSearchParams()
+        nextParams.set("next", requestedReportUrl)
+        sendRedirect(response, 302, `${PARENT_PORTAL_PAGE_PATH}?${nextParams.toString()}`)
+        return true
+      }
+      throw error
+    }
+    let payload
+    try {
+      payload = await buildAuthorizedReportCardPayloadForViewer(reportRoute.reportId, {
+        viewerRole: "parent",
+        parentsId: normalizeText(session?.parentsId || session?.username),
+        parentAccountId: normalizeText(session?.accountId),
+        reviewedBy: normalizeText(session?.parentsId || session?.username),
+        recipientEmail: normalizeText(url.searchParams.get("recipient") || ""),
+        artifactVersion: normalizeText(url.searchParams.get("artifactVersion") || ""),
+        userAgent: normalizeText(request.headers["user-agent"] || ""),
+        ipAddress: resolveClientIpAddress(request),
+      })
+    } catch (error) {
+      if (isReportAccessMismatchError(error)) {
+        sendRedirect(
+          response,
+          302,
+          `${PARENT_PORTAL_PAGE_PATH}?reportAccessError=account-mismatch`,
+        )
+        return true
+      }
+      if (Number(error?.statusCode || error?.status) === 404) {
+        sendPortalNotFoundModal(response, PARENT_PORTAL_PAGE_PATH)
+        return true
+      }
+      throw error
+    }
+    const html = injectPortalReportCardRuntimeConfig(
+      fs.readFileSync(REPORT_CARD_PREVIEW_HTML_PATH, "utf8"),
+      payload,
+      {
+        viewerRole: "parent",
+        homePath: PARENT_PORTAL_PAGE_PATH,
+      }
+    )
+    sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
+    return true
+  }
+
+  const studentReportPageMatch = pathname.match(STUDENT_REPORT_PAGE_PATH_RE)
+  if (method === "GET" && studentReportPageMatch) {
+    if (!fs.existsSync(REPORT_CARD_PREVIEW_HTML_PATH)) {
+      sendJson(response, 404, { error: "Report card page not found" })
+      return true
+    }
+    const reportRoute = parseReportViewerRouteSegment(decodeURIComponent(studentReportPageMatch[1]))
+    if (!reportRoute) {
+      sendPortalNotFoundModal(response, STUDENT_PORTAL_PAGE_PATH)
+      return true
+    }
+    const requestedReportUrl = `${pathname}${url.search}${url.hash}`
+    let session = null
+    try {
+      session = await requireAuthenticatedStudentSession(request, response)
+    } catch (error) {
+      if (Number(error?.statusCode || error?.status) === 401) {
+        const nextParams = new URLSearchParams()
+        nextParams.set("next", requestedReportUrl)
+        sendRedirect(response, 302, `${STUDENT_PORTAL_PAGE_PATH}?${nextParams.toString()}`)
+        return true
+      }
+      throw error
+    }
+    const studentRefId = await resolveStudentPortalSessionStudentRefId(session)
+    if (!studentRefId) {
+      const error = new Error("Student portal account is not linked to a student record")
+      error.statusCode = 403
+      throw error
+    }
+    let payload
+    try {
+      payload = await buildAuthorizedReportCardPayloadForViewer(reportRoute.reportId, {
+        viewerRole: "student",
+        studentRefId,
+        reviewedBy: normalizeText(session?.eaglesId || session?.username),
+        recipientEmail: normalizeText(url.searchParams.get("recipient") || ""),
+        artifactVersion: normalizeText(url.searchParams.get("artifactVersion") || ""),
+        userAgent: normalizeText(request.headers["user-agent"] || ""),
+        ipAddress: resolveClientIpAddress(request),
+      })
+    } catch (error) {
+      if (isReportAccessMismatchError(error)) {
+        sendRedirect(
+          response,
+          302,
+          `${STUDENT_PORTAL_PAGE_PATH}?reportAccessError=account-mismatch`,
+        )
+        return true
+      }
+      if (Number(error?.statusCode || error?.status) === 404) {
+        sendPortalNotFoundModal(response, STUDENT_PORTAL_PAGE_PATH)
+        return true
+      }
+      throw error
+    }
+    const html = injectPortalReportCardRuntimeConfig(
+      fs.readFileSync(REPORT_CARD_PREVIEW_HTML_PATH, "utf8"),
+      payload,
+      {
+        viewerRole: "student",
+        homePath: STUDENT_PORTAL_PAGE_PATH,
+      }
     )
     sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true

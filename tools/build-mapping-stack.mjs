@@ -117,6 +117,15 @@ function escapeHtml(value) {
 }
 
 /**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function normalizeErrorMessage(error) {
+  if (error instanceof Error) return error.message
+  return String(error || "")
+}
+
+/**
  * @returns {Array<{ id: string, label: string, path: string, summary: string }>}
  */
 function getWorkflowDefinitions() {
@@ -152,7 +161,8 @@ function getWorkflowDefinitions() {
  * @param {{ generatedAtIso: string }} input
  * @returns {string}
  */
-function buildMappingPortalHtml({ generatedAtIso }) {
+function buildMappingPortalHtml(input) {
+  const { generatedAtIso } = input
   const generatedAt = escapeHtml(generatedAtIso)
   const workflows = getWorkflowDefinitions()
 
@@ -1048,7 +1058,12 @@ function buildMappingPortalHtml({ generatedAtIso }) {
 `
 }
 
-function buildWorkflowViewerHtml({ generatedAtIso }) {
+/**
+ * @param {{ generatedAtIso: string }} input
+ * @returns {string}
+ */
+function buildWorkflowViewerHtml(input) {
+  const { generatedAtIso } = input
   const generatedAt = escapeHtml(generatedAtIso)
   const workflows = getWorkflowDefinitions()
 
@@ -1412,6 +1427,10 @@ function buildWorkflowViewerHtml({ generatedAtIso }) {
 `
 }
 
+/**
+ * @param {string} name
+ * @returns {void}
+ */
 function ensureOutLink(name) {
   const linkPath = path.join(outDir, name)
   const targetPath = path.join(repoRoot, name)
@@ -1426,7 +1445,7 @@ function ensureOutLink(name) {
     if (!existsSync(linkPath)) symlinkSync(relativeTarget, linkPath, "dir")
     console.log(`[map] linked ${path.relative(repoRoot, linkPath)} -> ${relativeTarget}`)
   } catch (error) {
-    console.warn(`[map] could not create link for ${name}: ${error.message}`)
+    console.warn(`[map] could not create link for ${name}: ${normalizeErrorMessage(error)}`)
   }
 }
 

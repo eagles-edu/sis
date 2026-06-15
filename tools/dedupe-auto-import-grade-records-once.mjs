@@ -28,6 +28,7 @@ function normalizeLower(value) {
  */
 function toDate(value) {
   if (value instanceof Date && !Number.isNaN(value.valueOf())) return value
+  if (typeof value !== "string" && typeof value !== "number") return null
   const parsed = new Date(value)
   if (Number.isNaN(parsed.valueOf())) return null
   return parsed
@@ -69,24 +70,24 @@ function isAutoImportFingerprintRow(row) {
 }
 
 /**
- * @param {Record<string, unknown>} [left]
- * @param {Record<string, unknown>} [right]
+ * @param {Record<string, unknown>} left
+ * @param {Record<string, unknown>} right
  * @returns {number}
  */
 function compareRowsByQuality(left, right) {
-  const leftScore = Number.isFinite(Number(left?.score)) ? Number(left.score) : -1
-  const rightScore = Number.isFinite(Number(right?.score)) ? Number(right.score) : -1
+  const leftScore = Number.isFinite(Number(left.score)) ? Number(left.score) : -1
+  const rightScore = Number.isFinite(Number(right.score)) ? Number(right.score) : -1
   if (leftScore !== rightScore) return rightScore - leftScore
 
-  const leftMaxScore = Number.isFinite(Number(left?.maxScore)) ? Number(left.maxScore) : -1
-  const rightMaxScore = Number.isFinite(Number(right?.maxScore)) ? Number(right.maxScore) : -1
+  const leftMaxScore = Number.isFinite(Number(left.maxScore)) ? Number(left.maxScore) : -1
+  const rightMaxScore = Number.isFinite(Number(right.maxScore)) ? Number(right.maxScore) : -1
   if (leftMaxScore !== rightMaxScore) return rightMaxScore - leftMaxScore
 
-  const leftCreatedAt = toDate(left?.createdAt)?.valueOf() || 0
-  const rightCreatedAt = toDate(right?.createdAt)?.valueOf() || 0
+  const leftCreatedAt = toDate(left.createdAt)?.valueOf() || 0
+  const rightCreatedAt = toDate(right.createdAt)?.valueOf() || 0
   if (leftCreatedAt !== rightCreatedAt) return rightCreatedAt - leftCreatedAt
 
-  return normalizeText(right?.id).localeCompare(normalizeText(left?.id))
+  return normalizeText(right.id).localeCompare(normalizeText(left.id))
 }
 
 /**
@@ -95,21 +96,23 @@ function compareRowsByQuality(left, right) {
  */
 function splitByDuplicateWindow(rows = []) {
   const sorted = [...rows].sort((left, right) => {
-    const leftDueAt = toDate(left?.dueAt)?.valueOf() || 0
-    const rightDueAt = toDate(right?.dueAt)?.valueOf() || 0
+    const leftDueAt = toDate(left.dueAt)?.valueOf() || 0
+    const rightDueAt = toDate(right.dueAt)?.valueOf() || 0
     if (leftDueAt !== rightDueAt) return leftDueAt - rightDueAt
 
-    const leftCreatedAt = toDate(left?.createdAt)?.valueOf() || 0
-    const rightCreatedAt = toDate(right?.createdAt)?.valueOf() || 0
+    const leftCreatedAt = toDate(left.createdAt)?.valueOf() || 0
+    const rightCreatedAt = toDate(right.createdAt)?.valueOf() || 0
     if (leftCreatedAt !== rightCreatedAt) return leftCreatedAt - rightCreatedAt
 
-    return normalizeText(left?.id).localeCompare(normalizeText(right?.id))
+    return normalizeText(left.id).localeCompare(normalizeText(right.id))
   })
 
+  /** @type {Array<Array<Record<string, unknown>>>} */
   const groups = []
+  /** @type {Array<Record<string, unknown>>} */
   let currentGroup = []
   for (const row of sorted) {
-    const dueAt = toDate(row?.dueAt)
+    const dueAt = toDate(row.dueAt)
     if (!dueAt) continue
 
     if (!currentGroup.length) {
@@ -118,7 +121,7 @@ function splitByDuplicateWindow(rows = []) {
     }
 
     const previous = currentGroup[currentGroup.length - 1]
-    const previousDueAt = toDate(previous?.dueAt)
+    const previousDueAt = toDate(previous.dueAt)
     const delta = previousDueAt ? Math.abs(dueAt.valueOf() - previousDueAt.valueOf()) : Number.MAX_SAFE_INTEGER
     if (delta <= DUPLICATE_WINDOW_MS) {
       currentGroup.push(row)

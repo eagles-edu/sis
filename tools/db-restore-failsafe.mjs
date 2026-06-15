@@ -51,6 +51,13 @@ Options:
  *   backupFile?: string,
  *   backupFilename?: string,
  * }} LatestBackupPointer
+ *
+ * @typedef {{
+ *   stdout: import("node:stream").Readable | null,
+ *   stderr: import("node:stream").Readable | null,
+ *   on(event: "error", listener: (error: Error) => void): unknown,
+ *   on(event: "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): unknown,
+ * }} SpawnedCommandProcess
  */
 
 /**
@@ -162,39 +169,50 @@ function parseArgs(argv) {
  */
 function runCommand(command, args, env = process.env) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
+    const child = /** @type {SpawnedCommandProcess} */ (/** @type {unknown} */ (spawn(command, args, {
       env,
       stdio: ["ignore", "pipe", "pipe"],
-    })
+    })))
 
     let stdout = ""
     let stderr = ""
 
     if (child.stdout) {
-      child.stdout.on("data", (chunk) => {
+      child.stdout.on("data", /** @param {Buffer | string} chunk */ (chunk) => {
         stdout += chunk.toString("utf8")
       })
     }
 
     if (child.stderr) {
-      child.stderr.on("data", (chunk) => {
+      child.stderr.on("data", /** @param {Buffer | string} chunk */ (chunk) => {
         stderr += chunk.toString("utf8")
       })
     }
 
-    child.on("error", (error) => {
-      reject(new Error(`Unable to execute ${command}: ${error.message}`))
-    })
-
-    child.on("close", (code, signal) => {
-      if (code === 0) {
-        resolve({ stdout, stderr })
-        return
+    child.on(
+      "error",
+      /** @param {Error} error */
+      (error) => {
+        reject(new Error(`Unable to execute ${command}: ${error.message}`))
       }
-      const suffix = signal ? ` (signal ${signal})` : ""
-      const details = stderr.trim() || stdout.trim()
-      reject(new Error(`${command} exited with code ${code}${suffix}${details ? `: ${details}` : ""}`))
-    })
+    )
+
+    child.on(
+      "close",
+      /**
+       * @param {number | null} code
+       * @param {NodeJS.Signals | null} signal
+       */
+      (code, signal) => {
+        if (code === 0) {
+          resolve({ stdout, stderr })
+          return
+        }
+        const suffix = signal ? ` (signal ${signal})` : ""
+        const details = stderr.trim() || stdout.trim()
+        reject(new Error(`${command} exited with code ${code}${suffix}${details ? `: ${details}` : ""}`))
+      }
+    )
   })
 }
 
@@ -350,6 +368,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`db-restore-failsafe failed: ${error.message}`)
+  const message = error instanceof Error ? error.message : String(error)
+  console.error(`db-restore-failsafe failed: ${message}`)
   process.exit(1)
 })

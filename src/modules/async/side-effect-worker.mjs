@@ -11,7 +11,9 @@ import {
   failAsyncSideEffectJob,
 } from "./side-effect-jobs.mjs"
 import { sendAnnouncementEmail } from "../admin/announcement-email.mjs"
-import { approveParentClassReport } from "../admin/parent-reports.mjs"
+import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
+import { PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT } from "../admin/parent-reports.mjs"
+import { recordParentClassReportEvent } from "../admin/parent-report-events.mjs"
 import {
   buildReportCardFilename,
   generateStudentReportCardPdf,
@@ -68,18 +70,35 @@ export async function processAnnouncementEmailSideEffectJob(job = {}) {
   const announcementPayload = resolveAnnouncementPayload(job)
   const result = await sendAnnouncementEmail(announcementPayload)
   const queueType = normalizeText(payload.queueType || announcementPayload.queueType || "")
-  const reviewedByUsername = normalizeText(payload.reviewedByUsername)
   const reportId = normalizeText(payload.reportId || payload.parentReportId)
-  let approvedParentReport = null
-
-  if (
-    queueType === "parent-report" &&
-    reportId
-  ) {
-    approvedParentReport = await approveParentClassReport(reportId, {
-      approvedByUsername: reviewedByUsername,
-      participationPointsAward: payload.participationPointsAward,
-    })
+  if (queueType === "parent-report" && reportId) {
+    try {
+      const prisma = await getSharedPrismaClient()
+      if (prisma?.parentClassReport?.update) {
+        await prisma.parentClassReport.update({
+          where: { id: reportId },
+          data: {
+            workflowState: PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
+            notificationSentAt: new Date(),
+          },
+        })
+      }
+      await recordParentClassReportEvent({
+        reportId,
+        artifactVersion: Number.parseInt(String(payload.artifactVersion || 0), 10) || 0,
+        eventType: "notification_sent",
+        actorType: "system",
+        actorId: "worker",
+        channel: "email",
+        metadata: {
+          queueId: normalizeText(payload.queueId || job.id),
+          sent: Number.parseInt(String(result.sent || 0), 10) || 0,
+          subject: normalizeText(result.subject),
+        },
+      })
+    } catch (error) {
+      void error
+    }
   }
 
   return {
@@ -90,7 +109,6 @@ export async function processAnnouncementEmailSideEffectJob(job = {}) {
     sent: Number.parseInt(String(result.sent || 0), 10) || 0,
     subject: normalizeText(result.subject),
     deliveryMode: normalizeText(result.deliveryMode || "immediate"),
-    approvedParentReport,
   }
 }
 

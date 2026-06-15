@@ -1,0 +1,31 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "0937‑667‑818" [ref=e4] [cursor=pointer]:
+      - /url: tel:0937667818
+    - link "eagles.edu.vn" [ref=e5] [cursor=pointer]:
+      - /url: https://eagles.edu.vn
+  - generic [ref=e6]:
+    - heading "Student Admin Login" [level=1] [ref=e7]
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: Username
+        - textbox "Username" [ref=e11]: admin
+      - generic [ref=e12]:
+        - generic [ref=e13]: Password
+        - textbox "Password" [ref=e14]
+      - generic [ref=e15]:
+        - button "Login" [ref=e16] [cursor=pointer]
+        - button "Clear" [ref=e17] [cursor=pointer]
+    - generic [ref=e18]:
+      - link "Reset password" [ref=e19] [cursor=pointer]:
+        - /url: mailto:support@eagles.edu.vn?subject=Admin%20password%20reset
+      - link "0937 667 818" [ref=e20] [cursor=pointer]:
+        - /url: tel:0937667818
+    - paragraph [ref=e21]: Session-based secure login is required for all admin API operations.
+    - status [ref=e22]:
+      - text: School setup is unset.
+      - link "Open School Setup" [ref=e23] [cursor=pointer]:
+        - /url: /admin/school-setup#schoolSetupPanel
+      - text: to set the quarter rows before using grades or portals.
+    - paragraph
+  - text: ▲ ▼ ▼ ▼ ▼ ▼ ▼

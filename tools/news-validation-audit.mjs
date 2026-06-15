@@ -20,6 +20,20 @@ const DEFAULT_REVIEWED_BY = "system:news-validation-audit"
 const DEFAULT_STATUSES = ["submitted", "revision-requested"]
 
 /**
+ * @typedef {{
+ *   id?: string,
+ *   studentRefId?: string,
+ *   reportDate?: string,
+ *   reviewStatus?: string,
+ *   reviewNote?: string | null,
+ *   validationIssuesJson?: Record<string, unknown> | null,
+ *   student?: {
+ *     eaglesId?: string | null,
+ *   } | null,
+ * }} NewsReviewItem
+ */
+
+/**
  * @param {unknown} value
  * @returns {string}
  */
@@ -213,7 +227,7 @@ async function main() {
     status: "all",
     take: String(args.take),
   })
-  const items = (Array.isArray(listed?.items) ? listed.items : [])
+  const items = /** @type {Array<NewsReviewItem>} */ (Array.isArray(listed?.items) ? listed.items : [])
     .filter((item) => requestedStatuses.has(normalizeLower(item?.reviewStatus)))
     .filter((item) => normalizeLower(item?.reviewStatus) !== "approved")
 
@@ -222,7 +236,7 @@ async function main() {
     const compliance = await evaluateStudentNewsCompliance(item, { validationConfig })
     if (compliance.passed) continue
     const update = updateStudentNewsValidationIssues(item?.validationIssuesJson, compliance)
-    const reviewNote = mergeStudentNewsReviewNoteWithCompliance(item?.reviewNote, update.issues)
+    const reviewNote = mergeStudentNewsReviewNoteWithCompliance(item?.reviewNote ?? undefined, update.issues)
     findings.push({
       id: normalizeText(item?.id),
       student: normalizeText(item?.student?.eaglesId || item?.studentRefId),

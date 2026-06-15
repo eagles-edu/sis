@@ -11,6 +11,8 @@ import { getConfiguredDatabaseUrlSync, getSisConfigSnapshotSync } from "../admin
  * @typedef {{
  *   prisma?: unknown,
  *   suppressNotifications?: boolean,
+ *   notes?: unknown,
+ *   reviewedByUsername?: unknown,
  * }} ExerciseStoreOptions
  *
  * @typedef {{

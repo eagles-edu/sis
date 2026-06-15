@@ -3,8 +3,8 @@ import fs from "node:fs"
 import test from "node:test"
 
 import {
-  decodeParentReportCommentBundle,
-  encodeParentReportCommentBundle,
+  decodeLegacyParentReportCommentBundle,
+  normalizeParentReportWorkflowState,
   normalizeParentReportRubricPayload,
 } from "../src/modules/admin/parent-reports.mjs"
 
@@ -102,23 +102,23 @@ test("normalizeParentReportRubricPayload keeps digital-reading rubric fields for
   })
 })
 
-test("encode/decode parent report bundle round-trips comments and rubric payload", () => {
-  const encoded = encodeParentReportCommentBundle("Parent note", {
-    skillScores: {
-      pt_skill_questions: "0",
-      pt_skill_logic: "10",
-    },
-    conductScores: {
-      pt_conduct_focus: "2",
-    },
-    recommendations: {
-      pt_rec_listening: "Use timer at home.",
-    },
-  })
-
-  assert.match(encoded || "", /\[\[SIS-RUBRIC-V1:/)
-
-  const decoded = decodeParentReportCommentBundle(encoded)
+test("legacy parent report rubric markers decode into first-class payload shape", () => {
+  const encodedPayload = Buffer.from(
+    JSON.stringify({
+      skillScores: {
+        pt_skill_questions: "0",
+        pt_skill_logic: "10",
+      },
+      conductScores: {
+        pt_conduct_focus: "2",
+      },
+      recommendations: {
+        pt_rec_listening: "Use timer at home.",
+      },
+    }),
+    "utf8"
+  ).toString("base64url")
+  const decoded = decodeLegacyParentReportCommentBundle(`Parent note\n[[SIS-RUBRIC-V1:${encodedPayload}]]`)
   assert.equal(decoded.comment, "Parent note")
   assert.deepEqual(decoded.rubricPayload, {
     skillScores: {
@@ -135,42 +135,43 @@ test("encode/decode parent report bundle round-trips comments and rubric payload
   assert.equal(decoded.metaPayload, null)
 })
 
-test("encode/decode parent report bundle round-trips class-focus and homework snapshot metadata", () => {
-  const encoded = encodeParentReportCommentBundle(
-    "Metadata comment",
-    {
-      skillScores: {
-        pt_skill_questions: "4",
-      },
-    },
-    {
-      classDate: "2026-09-15",
-      classDay: "Tuesday",
-      teacherName: "Ms. Nguyen",
-      lessonSummary: "Reviewed Unit 3 reading and vocabulary strategy.",
-      visionStatus: "needs-check",
-      homeworkAnnouncement: "Homework Past Due | due 2026-09-14",
-      currentHomeworkStatus: "Cần theo dõi",
-      currentHomeworkHeader: "Homework Past Due",
-      currentHomeworkSummary: "Homework Past Due | due 2026-09-14",
-      pastDueHomeworkCount: "2",
-      pastDueHomeworkSummary: "2 bài tập quá hạn cần xử lý ngay.",
-      recipients: ["student@example.com", "parent@example.com"],
-      outstandingAssignments: [
-        {
-          assignmentName: "Homework Past Due",
-          dueAt: "2026-09-14",
-          className: "A2 Flyers",
-          quarter: "q1",
-          deepLink: "https://eagles.edu.vn/homework/hw-1",
+test("legacy parent report bundle markers decode into first-class payload shape", () => {
+  const encodedPayload = Buffer.from(
+    JSON.stringify({
+      rubricPayload: {
+        skillScores: {
+          pt_skill_questions: "4",
         },
-      ],
-    }
+      },
+      metaPayload: {
+        classDate: "2026-09-15",
+        classDay: "Tuesday",
+        teacherName: "Ms. Nguyen",
+        lessonSummary: "Reviewed Unit 3 reading and vocabulary strategy.",
+        visionStatus: "needs-check",
+        homeworkAnnouncement: "Homework Past Due | due 2026-09-14",
+        currentHomeworkStatus: "Cần theo dõi",
+        currentHomeworkHeader: "Homework Past Due",
+        currentHomeworkSummary: "Homework Past Due | due 2026-09-14",
+        pastDueHomeworkCount: "2",
+        pastDueHomeworkSummary: "2 bài tập quá hạn cần xử lý ngay.",
+        recipients: ["student@example.com", "parent@example.com"],
+        outstandingAssignments: [
+          {
+            assignmentName: "Homework Past Due",
+            dueAt: "2026-09-14",
+            className: "A2 Flyers",
+            quarter: "q1",
+            deepLink: "https://eagles.edu.vn/homework/hw-1",
+          },
+        ],
+      },
+    }),
+    "utf8"
+  ).toString("base64url")
+  const decoded = decodeLegacyParentReportCommentBundle(
+    `Metadata comment\n[[SIS-REPORT-BUNDLE-V2:${encodedPayload}]]`
   )
-
-  assert.match(encoded || "", /\[\[SIS-REPORT-BUNDLE-V2:/)
-
-  const decoded = decodeParentReportCommentBundle(encoded)
   assert.equal(decoded.comment, "Metadata comment")
   assert.deepEqual(decoded.rubricPayload, {
     skillScores: {
@@ -204,13 +205,13 @@ test("encode/decode parent report bundle round-trips class-focus and homework sn
   })
 })
 
-test("decodeParentReportCommentBundle handles plain comments and invalid markers", () => {
-  const plain = decodeParentReportCommentBundle("Only plain comment")
+test("decodeLegacyParentReportCommentBundle handles plain comments and invalid markers", () => {
+  const plain = decodeLegacyParentReportCommentBundle("Only plain comment")
   assert.equal(plain.comment, "Only plain comment")
   assert.equal(plain.rubricPayload, null)
   assert.equal(plain.metaPayload, null)
 
-  const invalidMarker = decodeParentReportCommentBundle("Only plain comment\n[[SIS-RUBRIC-V1:not-valid-json]]")
+  const invalidMarker = decodeLegacyParentReportCommentBundle("Only plain comment\n[[SIS-RUBRIC-V1:not-valid-json]]")
   assert.equal(invalidMarker.comment, "Only plain comment")
   assert.equal(invalidMarker.rubricPayload, null)
   assert.equal(invalidMarker.metaPayload, null)
@@ -222,6 +223,47 @@ test("parent report save path keeps legacy participation-points schema fallback 
   assert.match(source, /isUnknownPrismaArgumentError\(error, "participationPointsAward"\)/)
   assert.match(source, /isUnknownPrismaFieldError\(error, "participationPointsAward"\)/)
   assert.match(source, /stripLegacyParentReportFields\(reportData\)/)
+})
+
+test("normalizeParentReportWorkflowState recognizes the implemented report workflow", () => {
+  assert.equal(normalizeParentReportWorkflowState("draft_pr"), "draft_pr")
+  assert.equal(
+    normalizeParentReportWorkflowState("submitted_for_admin_review"),
+    "submitted_for_admin_review"
+  )
+  assert.equal(
+    normalizeParentReportWorkflowState("incoming_admin_review"),
+    "incoming_admin_review"
+  )
+  assert.equal(
+    normalizeParentReportWorkflowState("awaiting_admin_approval"),
+    "awaiting_admin_approval"
+  )
+  assert.equal(normalizeParentReportWorkflowState("published"), "published")
+  assert.equal(
+    normalizeParentReportWorkflowState("notification_queued"),
+    "notification_queued"
+  )
+  assert.equal(
+    normalizeParentReportWorkflowState("notification_sent"),
+    "notification_sent"
+  )
+})
+
+test("parent report workflow module exports submission, staging, approval, and acknowledgement hooks", () => {
+  const source = fs.readFileSync(new URL("../src/modules/admin/parent-reports.mjs", import.meta.url), "utf8")
+  assert.match(source, /export async function submitParentClassReportForAdminReview\(/)
+  assert.match(source, /export async function startParentClassReportAdminReview\(/)
+  assert.match(source, /export async function markParentClassReportAwaitingApproval\(/)
+  assert.match(source, /export async function acknowledgeParentClassReportReview\(/)
+  assert.match(source, /finalArtifactPayload/)
+  assert.match(source, /workflowState/)
+})
+
+test("announcement worker no longer approves parent reports during email send", () => {
+  const source = fs.readFileSync(new URL("../src/modules/async/side-effect-worker.mjs", import.meta.url), "utf8")
+  assert.doesNotMatch(source, /approveParentClassReport/)
+  assert.match(source, /notification_sent/)
 })
 
 test("student news save/list paths keep model-drift fallback guards", () => {
@@ -342,7 +384,7 @@ test("parent routes keep legacy parent-report metadata backfill guards", () => {
   const source = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
   assert.match(source, /function backfillLegacyParentReportMetadataRows\(/)
   assert.match(source, /function buildLegacyReportMetaPayload\(/)
-  assert.match(source, /encodeParentReportCommentBundle\(/)
+  assert.match(source, /decodeLegacyParentReportCommentBundle\(/)
   assert.match(source, /await backfillLegacyParentReportMetadataRows\(\{\s*prisma,\s*reportRows,\s*gradeRows/s)
   assert.match(source, /async function getStudentByIdWithReportBackfill\(/)
 })

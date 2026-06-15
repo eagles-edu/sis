@@ -1,0 +1,1919 @@
+<!-- @format -->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIS Report Template</title>
+  <link rel="icon" href="/web-asset/admin/favicon.ico?=v2" type="image/vnd.microsoft.icon">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script>
+    window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
+  <style>
+    :root {
+      --font-base: system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", sans-serif;
+      --report-max-width: 1440px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-base);
+    }
+
+    .wrap {
+      width: min(100%, var(--report-max-width));
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .section-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .wrap,
+    .section-stack,
+    .report-section,
+    .detail-card,
+    .assignment-detail-card,
+    .review-panel {
+      color: inherit;
+    }
+
+    .app-page-header {
+      display: grid;
+      gap: 14px;
+    }
+
+    .app-sidebar {
+      border-radius: 0 var(--radius-3) var(--radius-3) 0;
+      box-shadow: 0 22px 48px var(--portal-color-b0e4f2e1c7);
+      inset-block: 0;
+      inset-inline-start: 0;
+      margin: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 14px;
+      position: fixed;
+      transform: translateX(calc(-100% - 14px));
+      transition: transform 180ms ease;
+      width: min(86vw, 320px);
+      will-change: transform;
+      z-index: 82;
+    }
+
+    body.menu-open .app-sidebar {
+      transform: translateX(0);
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    body.report-card-portal-mode #appSidebarNav,
+    body.report-card-portal-mode #floatingMenuBtn,
+    body.report-card-portal-mode #menuBackdrop,
+    body.report-card-portal-mode #menuToggleBtn {
+      display: none !important;
+    }
+
+    .menu-backdrop {
+      background: var(--portal-color-05477e89d0);
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      position: fixed;
+      transition: opacity 180ms ease;
+      z-index: 81;
+    }
+
+    body.menu-open .menu-backdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .floating-menu-btn {
+      align-items: center;
+      background: var(--primary-color);
+      block-size: 44px;
+      border: 1px solid var(--portal-color-588c301c36);
+      border-radius: var(--radius-pill);
+      box-shadow: 0 12px 24px var(--portal-color-27bfe87810);
+      color: var(--portal-color-d14f901611);
+      display: inline-flex;
+      inline-size: 44px;
+      inset-block-start: 12px;
+      inset-inline-start: 12px;
+      justify-content: center;
+      padding: 0;
+      position: fixed;
+      z-index: 90;
+    }
+
+    .floating-menu-btn:hover {
+      background: var(--portal-color-91d2ea6cfe);
+      border-color: var(--portal-color-155b35e0df);
+    }
+
+    .floating-menu-btn:focus-visible {
+      outline: 2px solid var(--portal-color-d14f901611);
+      outline-offset: 2px;
+    }
+
+    .app-brand-strip {
+      align-items: center;
+      column-gap: 8px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      row-gap: 6px;
+    }
+
+    .app-brand-logo-wrap {
+      align-items: center;
+      background: var(--portal-surface-card);
+      border: 1px solid var(--portal-border);
+      border-radius: var(--radius-3);
+      display: inline-flex;
+      flex: 0 0 auto;
+      height: 44px;
+      justify-content: center;
+      overflow: hidden;
+      width: 44px;
+    }
+
+    .app-brand-logo {
+      display: block;
+      height: 100%;
+      object-fit: cover;
+      width: 100%;
+    }
+
+    .app-brand-logo-fallback {
+      color: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .app-school-name {
+      color: var(--portal-role-text);
+      font-size: clamp(13px, 1.7vw, 18px);
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      line-height: 1.25;
+      margin: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .app-header-actions {
+      align-items: center;
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+
+    .app-header-menu-toggle {
+      display: none !important;
+    }
+
+    .report-control-line {
+      margin: 0;
+      color: var(--portal-data-label);
+    }
+
+    .report-control-line strong {
+      font: inherit;
+    }
+
+    .sidebar-title,
+    .sidebar-subtitle {
+      margin: 0;
+    }
+
+    .sidebar-subtitle {
+      color: var(--portal-data-label);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .sidebar-links {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sidebar-link {
+      align-items: center;
+      color: inherit;
+      display: flex;
+      font-weight: 700;
+      min-height: 44px;
+      padding: 12px 14px;
+      text-decoration: none;
+    }
+
+    .sidebar-link-label,
+    .sidebar-link-note {
+      display: block;
+    }
+
+    .sidebar-link-note {
+      color: var(--portal-data-label);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+
+    .report-meta {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .meta-item {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .meta-label {
+      display: block;
+      color: var(--portal-data-label);
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .meta-value {
+      display: block;
+      color: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .report-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .report-section {
+      display: grid;
+      gap: 12px;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .section-title {
+      margin: 0;
+      color: var(--portal-role-text);
+      font-size: 1.05rem;
+      line-height: 1.2;
+    }
+
+    .section-note {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .summary-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .report-meta > [data-surface-role="panel"],
+    .summary-grid > [data-surface-role="panel"],
+    .assignment-summary-stack > [data-surface-role="panel"],
+    .assignment-detail-stack > [data-surface-role="panel"],
+    .report-section > [data-surface-role="panel"],
+    .review-panel[data-surface-role="panel"] {
+      margin-top: 0;
+    }
+
+    .summary-card {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .summary-label {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .summary-value {
+      margin: 0;
+      color: inherit;
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .summary-subtitle {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .detail-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .assignment-layout {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: minmax(0, 0.33fr) minmax(0, 0.67fr);
+      align-items: start;
+    }
+
+    .assignment-summary-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .assignment-square-card {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .assignment-square-label {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .assignment-square-value {
+      margin: 0;
+      color: inherit;
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .assignment-square-value.is-warning {
+    }
+
+    .assignment-square-subtitle {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .assignment-detail-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .assignment-detail-card {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .exercise-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .exercise-item {
+      display: grid;
+      gap: 6px;
+      padding: 10px 0;
+    }
+
+    .exercise-item:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .exercise-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .exercise-title {
+      margin: 0;
+      color: inherit;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .exercise-meta {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .exercise-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .detail-card {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .detail-card h3 {
+      margin: 0;
+      color: inherit;
+      font-size: 0.98rem;
+      line-height: 1.25;
+    }
+
+    .list-block {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .list-item {
+      display: grid;
+      gap: 4px;
+      padding: 10px 0;
+    }
+
+    .list-item:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .item-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .item-title {
+      margin: 0;
+      color: inherit;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .item-meta,
+    .item-body {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .report-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .metric-table-wrap {
+      overflow: auto;
+    }
+
+    .metric-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    .metric-table th,
+    .metric-table td {
+      padding: 12px 14px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--portal-border);
+      text-align: left;
+      line-height: 1.45;
+    }
+
+    .metric-table th {
+      color: var(--portal-data-label);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .metric-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .metric-title {
+      margin: 0 0 4px;
+      color: inherit;
+      font-weight: 700;
+    }
+
+    .metric-text,
+    .metric-note {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 13px;
+    }
+
+    .review-panel {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .review-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+
+    .review-lines {
+      display: grid;
+      gap: 10px;
+    }
+
+    .review-line {
+      display: grid;
+      gap: 6px;
+    }
+
+    .review-label {
+      color: var(--portal-data-label);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .review-field {
+      min-height: 44px;
+      padding: 10px 12px;
+    }
+
+    .review-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .review-actions button,
+    .review-actions label {
+      font: inherit;
+    }
+
+    .review-toggle {
+      display: inline-flex;
+      align-items: center;
+      color: inherit;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .review-toggle input {
+      margin: 0;
+    }
+
+    .wire-note {
+      margin: 0;
+      color: var(--portal-data-label);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .app-school-name,
+    .report-control-line strong,
+    .metric-table td,
+    .review-actions {
+      color: inherit;
+    }
+
+    html[data-theme="dark"] body.report-template-page .app-school-name,
+    html[data-theme="dark"] body.report-template-page .section-title,
+    html[data-theme="dark"] body.report-template-page .metric-title,
+    html[data-theme="dark"] body.report-template-page .exercise-title,
+    html[data-theme="dark"] body.report-template-page .item-title,
+    html[data-theme="dark"] body.report-template-page .detail-card h3,
+    html[data-theme="dark"] body.report-template-page .meta-value,
+    html[data-theme="dark"] body.report-template-page .summary-value,
+    html[data-theme="dark"] body.report-template-page .assignment-square-value,
+    html[data-theme="dark"] body.report-template-page .review-field,
+    html[data-theme="dark"] body.report-template-page .report-control-line strong {
+      color: var(--portal-role-text) !important;
+    }
+
+    .text-zoom-controls .global-text-label,
+    .text-zoom-controls .zoom-label {
+      color: var(--portal-data-label);
+    }
+
+    .floating-menu-icon,
+    .floating-menu-icon::before,
+    .floating-menu-icon::after {
+      background: var(--portal-color-d14f901611);
+      border-radius: 2px;
+      content: "";
+      display: block;
+      height: 2px;
+      transition:
+        transform 160ms ease,
+        opacity 160ms ease;
+      width: 18px;
+    }
+
+    .floating-menu-icon {
+      position: relative;
+    }
+
+    .floating-menu-icon::before {
+      left: 0;
+      position: absolute;
+      top: -6px;
+    }
+
+    .floating-menu-icon::after {
+      left: 0;
+      position: absolute;
+      top: 6px;
+    }
+
+    body.menu-open .floating-menu-icon {
+      background: transparent;
+    }
+
+    body.menu-open .floating-menu-icon::before {
+      transform: translateY(6px) rotate(45deg);
+    }
+
+    body.menu-open .floating-menu-icon::after {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+
+    /* Keep the page class locally declared so editor diagnostics resolve it. */
+    @media (max-width: 1080px) {
+      .app-brand-strip {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .app-header-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+      }
+
+      .app-brand-logo-wrap {
+        height: 38px;
+        width: 38px;
+      }
+
+      .app-school-name {
+        font-size: clamp(11px, 3.8vw, 14px);
+      }
+
+      .report-meta,
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .review-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .app-page-header {
+        padding: 8px 10px 8px 60px;
+      }
+
+      .menu-toggle-btn {
+        background: var(--menu-header-bg);
+        border: 1px solid var(--menu-border);
+        color: inherit;
+        inline-size: auto;
+        min-inline-size: clamp(74px, 24vw, 102px);
+        padding-inline: 8px;
+      }
+
+      .app-header-menu-toggle {
+        display: inline-flex;
+        justify-self: end;
+        max-inline-size: 160px;
+      }
+
+      .text-zoom-controls {
+        justify-content: flex-start;
+      }
+
+      #globalTextZoomControls {
+        gap: 4px;
+      }
+
+      .text-zoom-controls .global-text-label {
+        display: none;
+      }
+
+      .text-zoom-controls button {
+        min-inline-size: 0;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .wrap {
+        padding: 12px;
+      }
+
+      .report-meta,
+      .summary-grid,
+      .detail-grid,
+      .assignment-layout {
+        grid-template-columns: 1fr;
+      }
+      
+    }
+  </style>
+</head>
+<body class="admin-portal-page page report-template-page" id="top" data-surface-role="page">
+  <button id="floatingMenuBtn" type="button" class="floating-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+    <span class="floating-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+  <div class="wrap">
+    <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation" data-surface-role="panel">
+      <h2 class="sidebar-title">Report Menu</h2>
+      <p class="sidebar-subtitle">Jump to any section in the report.</p>
+      <nav class="sidebar-links" aria-label="Report section links">
+        <a class="sidebar-link card" href="#report-identity" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Identity</span>
+            <span class="sidebar-link-note">Student and control details</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#summary-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Attendance</span>
+            <span class="sidebar-link-note">Summary metrics</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#current-homework-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Current Homework</span>
+            <span class="sidebar-link-note">Active assignments</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#past-due-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Past Due</span>
+            <span class="sidebar-link-note">Outstanding work</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#metrics-note-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Rubric</span>
+            <span class="sidebar-link-note">How to read the report</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#metrics-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Detailed Results</span>
+            <span class="sidebar-link-note">Full rubric table</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#review-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Parent Review</span>
+            <span class="sidebar-link-note">Confirmation details</span>
+          </span>
+        </a>
+        <a class="sidebar-link card" href="#student-review-title" data-surface-role="card">
+          <span>
+            <span class="sidebar-link-label">Student Review</span>
+            <span class="sidebar-link-note">Student confirmation</span>
+          </span>
+        </a>
+      </nav>
+    </aside>
+    <div class="header-bar" data-surface-role="content">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+
+  <main class="section-stack" id="appMain" data-surface-role="content">
+    <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
+      <div class="app-brand-strip">
+        <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+          <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
+          <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
+        </div>
+        <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
+        <div class="app-header-actions">
+          <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">
+            Hide Menu
+          </button>
+          <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-blue-action hidden">
+            Self-Heal Runtime
+          </button>
+          <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
+            <span class="portal-theme-toggle__icon" aria-hidden="true" id="adminThemeToggleIcon" data-theme-icon="moon">
+              <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <mask id="theme_moon_cutout">
+                    <rect width="24" height="24" fill="#fff" />
+                    <circle cx="12.95" cy="7.95" r="10.1" fill="#000" />
+                  </mask>
+                </defs>
+                <g fill="currentColor">
+                  <circle cx="10.8" cy="13.2" r="10.3" mask="url(#theme_moon_cutout)">
+                    <animateTransform attributeName="transform" dur="4.8s" repeatCount="indefinite" type="rotate" values="-2 12 12;2 12 12;-2 12 12" />
+                  </circle>
+                  <path d="M17.65 3.75L18.62 6.68L21.7 6.68L19.21 8.49L20.16 11.42L17.65 9.6L15.14 11.42L16.09 8.49L13.6 6.68L16.68 6.68L17.65 3.75Z" opacity="0.95">
+                    <animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" values="0.3;0.92;0.3" />
+                  </path>
+                  <path d="M9.95 8L10.62 10.02L12.75 10.02L11.03 11.27L11.69 13.28L9.95 12.02L8.22 13.28L8.88 11.27L7.15 10.02L9.28 10.02L9.95 8Z" opacity="0.78">
+                    <animate attributeName="opacity" begin="0.35s" dur="2.2s" repeatCount="indefinite" values="0.24;0.82;0.24" />
+                  </path>
+                </g>
+              </svg>
+              <svg class="portal-theme-toggle__icon-sun" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g stroke="currentColor" stroke-linecap="round" stroke-width="1.8">
+                  <g opacity="0.92">
+                    <animateTransform attributeName="transform" dur="14s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+                    <path d="M12 1.75V4.25" />
+                    <path d="M12 19.75V22.25" />
+                    <path d="M1.75 12H4.25" />
+                    <path d="M19.75 12H22.25" />
+                    <path d="M4.75 4.75L6.52 6.52" />
+                    <path d="M17.48 17.48L19.25 19.25" />
+                    <path d="M17.48 6.52L19.25 4.75" />
+                    <path d="M4.75 19.25L6.52 17.48" />
+                  </g>
+                  <circle cx="12" cy="12" fill="currentColor" r="4.6">
+                    <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="4.15;4.8;4.15" />
+                  </circle>
+                  <circle cx="12" cy="12" opacity="0.24" r="7.1">
+                    <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="6.1;7.9;6.1" />
+                    <animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0.24;0.08;0.24" />
+                  </circle>
+                </g>
+              </svg>
+            </span>
+            <span class="portal-theme-toggle__label" id="adminThemeToggleLabel">Dark</span>
+          </button>
+          <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
+            <span class="small global-text-label">Global Text</span>
+            <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
+              A-
+            </button>
+            <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">
+              A+
+            </button>
+            <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">
+              Reset
+            </button>
+            <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="content report-identity-section" id="report-identity" data-surface-role="content">
+      <p class="section-note report-control-line">
+        Control number: <strong data-field="control-number">[[control number]]</strong>
+        · Snapshot ID: <strong data-field="snapshot-id">[[snapshot id]]</strong>
+        · Captured at: <strong data-field="snapshot-captured-at">[[full timestamp]]</strong>
+      </p>
+      <div>
+        <p class="section-note">ID row</p>
+        <div class="report-meta">
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Full name</span>
+            <span class="meta-value" data-field="student-name">[[full name]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">eaglesId</span>
+            <span class="meta-value" data-field="eagles-id">[[eaglesId]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">English name</span>
+            <span class="meta-value" data-field="english-name">[[English name]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Day date</span>
+            <span class="meta-value" data-field="day-date">[[day date]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Class</span>
+            <span class="meta-value" data-field="scope-class-name">[[class]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">School year</span>
+            <span class="meta-value" data-field="scope-school-year">[[school year]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Quarter</span>
+            <span class="meta-value" data-field="scope-quarter">[[quarter]]</span>
+          </div>
+          <div class="meta-item panel" data-surface-role="panel">
+            <span class="meta-label">Snapshot source</span>
+            <span class="meta-value" data-field="snapshot-source">[[snapshot source]]</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="metric-snapshot-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="metric-snapshot-title" class="section-title">Metric snapshot</h2>
+          <p class="section-note">Immutable performance metrics captured for this report card snapshot.</p>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Homework completion %</p>
+          <p class="summary-value" data-field="metric-homework-completion">[[0]]</p>
+          <p class="summary-subtitle">Saved completion rate for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Homework on-time %</p>
+          <p class="summary-value" data-field="metric-homework-on-time">[[0]]</p>
+          <p class="summary-subtitle">Saved timeliness rate for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Behavior</p>
+          <p class="summary-value" data-field="metric-behavior">[[0]]</p>
+          <p class="summary-subtitle">Saved behavior score for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Skills</p>
+          <p class="summary-value" data-field="metric-participation">[[0]]</p>
+          <p class="summary-subtitle">Saved skills score for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Academic</p>
+          <p class="summary-value" data-field="metric-in-class">[[0]]</p>
+          <p class="summary-subtitle">Saved academic / in-class score for this report snapshot.</p>
+        </article>
+        <article class="summary-card panel" data-surface-role="panel">
+          <p class="summary-label">Participation points</p>
+          <p class="summary-value" data-field="metric-participation-points">[[0]]</p>
+          <p class="summary-subtitle">Saved participation points for this report snapshot.</p>
+        </article>
+      </div>
+      <div class="detail-card panel" data-surface-role="panel">
+        <h3>Teacher snapshot</h3>
+        <p class="item-body" data-field="metric-teacher-summary">[[Teacher summary]]</p>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="summary-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="summary-title" class="section-title">Attendance summary</h2>
+        </div>
+      </div>
+
+      <p class="section-note">Short, scan-friendly metrics for the main report signals.</p>
+
+      <div class="summary-grid">
+        <article class="summary-card panel" data-report-summary="attendance" data-surface-role="panel">
+          <p class="summary-label">Attendance</p>
+          <p class="summary-value" data-field="attendance-rate">[[--%]]</p>
+          <p class="summary-subtitle">A quick view of participation and follow-through.</p>
+        </article>
+        <article class="summary-card panel" data-report-summary="absences" data-surface-role="panel">
+          <p class="summary-label">Absences</p>
+          <p class="summary-value" data-field="absence-count">[[0]]</p>
+          <p class="summary-subtitle">Total missed sessions in the report window.</p>
+        </article>
+        <article class="summary-card panel" data-report-summary="tardy" data-surface-role="panel">
+          <p class="summary-label">Tardy</p>
+          <p class="summary-value" data-field="tardy-count">[[0]]</p>
+          <p class="summary-subtitle">Late arrivals or incomplete on-time check-ins.</p>
+        </article>
+        <article class="summary-card panel" data-report-summary="attendance-percent" data-surface-role="panel">
+          <p class="summary-label">Attendance %</p>
+          <p class="summary-value" data-field="attendance-percent">[[--%]]</p>
+          <p class="summary-subtitle">Overall attendance rate for the current window.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="current-homework-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="current-homework-title" class="section-title">Current homework</h2>
+          <p class="section-note">Assignments currently active for the student.</p>
+        </div>
+      </div>
+
+      <div class="assignment-layout">
+        <div class="assignment-summary-stack">
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Assignments</p>
+            <p class="assignment-square-value is-good" id="current-assignment-count">[[1]]</p>
+            <p class="assignment-square-subtitle">Active assignments in the current window.</p>
+          </article>
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Exercises</p>
+            <p class="assignment-square-value" id="current-exercise-count">[[8]]</p>
+            <p class="assignment-square-subtitle">Exercises attached to the active assignment.</p>
+          </article>
+        </div>
+
+        <div class="assignment-detail-stack">
+          <article class="assignment-detail-card panel" data-report-homework="current" data-surface-role="panel">
+            <h3 data-report-homework-title>[[Current assignment title]]</h3>
+            <p class="item-meta" data-report-homework-meta>[[Subject]] · [[Teacher]]</p>
+            <p class="item-body" data-report-homework-note>[[Short note about the assignment and expectations.]]</p>
+            <ul class="exercise-list" data-report-homework-exercises="current">
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Assigned</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Pending</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Submitted</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="past-due-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="past-due-title" class="section-title">Past due homework</h2>
+          <p class="section-note">Assignments that still need attention.</p>
+        </div>
+      </div>
+
+      <div class="assignment-layout">
+        <div class="assignment-summary-stack">
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Assignments</p>
+            <p class="assignment-square-value is-warning" id="past-assignment-count">[[2]]</p>
+            <p class="assignment-square-subtitle">Outstanding assignment groups still open.</p>
+          </article>
+          <article class="assignment-square-card panel" data-surface-role="panel">
+            <p class="assignment-square-label">Exercises</p>
+            <p class="assignment-square-value is-warning" id="past-exercise-count">[[6]]</p>
+            <p class="assignment-square-subtitle">Exercises still pending or needing resubmission.</p>
+          </article>
+        </div>
+
+        <div class="assignment-detail-stack">
+          <article class="assignment-detail-card panel" data-report-homework="past-due" data-surface-role="panel">
+            <h3 data-report-homework-title>[[Past due assignment title]]</h3>
+            <p class="item-meta" data-report-homework-meta>[[Subject]] · [[Teacher]]</p>
+            <p class="item-body" data-report-homework-note>[[What is missing, plus any follow-up note.]]</p>
+            <ul class="exercise-list" data-report-homework-exercises="past-due">
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Pending</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Submitted</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+              <li class="exercise-item">
+                <div class="exercise-head">
+                  <p class="exercise-title">[[Exercise title]]</p>
+                  <span class="report-chip">Assigned</span>
+                </div>
+                <p class="exercise-meta">[[Exercise detail or instruction.]]</p>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="metrics-note-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="metrics-note-title" class="section-title">Rubric explanation</h2>
+          <p class="section-note" data-report-rubric-note>Scoring interpretation for the rubric rows below.</p>
+        </div>
+      </div>
+
+      <div class="detail-card panel" data-surface-role="panel">
+        <h3 data-report-rubric-title>How to read the rubric</h3>
+        <p class="item-body" data-report-rubric-body>
+          This template renders the immutable rubric snapshot from the saved report payload. Each row carries the prompt, the score with its explanation, and any recommendation for success.
+        </p>
+      </div>
+    </section>
+
+    <section class="content report-section" aria-labelledby="metrics-title" data-surface-role="content">
+      <div class="section-head">
+        <div>
+          <h2 id="metrics-title" class="section-title">Detailed results</h2>
+          <p class="section-note">Use this table for the rubric prompt, the result score plus explanation, and the recommendation block.</p>
+        </div>
+      </div>
+
+      <div class="metric-table-wrap card" data-surface-role="card">
+        <table class="metric-table" aria-describedby="metrics-note">
+          <thead>
+            <tr>
+              <th scope="col">Rubric prompt</th>
+              <th scope="col">Result score and explanation</th>
+              <th scope="col">Comment / recommendations for success</th>
+            </tr>
+          </thead>
+          <tbody id="report-rubric-body">
+            <tr>
+              <td>
+                <p class="metric-title">Uses computer or phone daily to read international news</p>
+                <p class="metric-text">Flyers and above only.</p>
+              </td>
+              <td>[[Yes / No / N/A]] · [[Short evaluation sentence.]]</td>
+              <td>[[Suggested parent follow-up or teacher note.]]</td>
+            </tr>
+            <tr>
+              <td>
+                <p class="metric-title">Exhibits skill</p>
+                <p class="metric-text">Target threshold is below 50 percent.</p>
+              </td>
+              <td>[[Below / At / Above]] · [[Short evaluation sentence.]]</td>
+              <td>[[Suggested support step.]]</td>
+            </tr>
+            <tr>
+              <td>
+                <p class="metric-title">Attendance and participation</p>
+                <p class="metric-text">General follow-through across the report window.</p>
+              </td>
+              <td>[[Short value]] · [[Short evaluation sentence.]]</td>
+              <td>[[Suggested support step.]]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="metrics-note" class="wire-note">
+        These rows are populated from the immutable saved report snapshot.
+      </p>
+    </section>
+
+    <div class="review-grid">
+      <section class="content report-section" aria-labelledby="review-title" data-surface-role="content">
+        <div class="section-head">
+          <div>
+            <h2 id="review-title" class="section-title">Parent review</h2>
+            <p class="section-note">Records date and time when a parent or guardian confirms review.</p>
+          </div>
+        </div>
+
+        <div class="review-panel panel" data-surface-role="panel">
+          <div class="review-lines">
+            <div class="review-line">
+              <span class="review-label">Reviewed by</span>
+              <div class="review-field card" data-field="parent-reviewed-by" data-surface-role="card">[[parent name or reviewer]]</div>
+            </div>
+            <div class="review-line">
+              <span class="review-label">Reviewed at</span>
+              <div class="review-field card" data-field="parent-reviewed-at" data-surface-role="card">[[date and time]]</div>
+            </div>
+          </div>
+          <div class="review-actions">
+            <label class="review-toggle">
+              <input type="checkbox" name="parentReviewed">
+              Mark reviewed
+            </label>
+              <button id="parentReviewActionBtn" type="button" class="primary">Record parent review</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content report-section" aria-labelledby="student-review-title" data-surface-role="content">
+        <div class="section-head">
+          <div>
+            <h2 id="student-review-title" class="section-title">Student review</h2>
+            <p class="section-note">Records date and time when the student confirms review.</p>
+          </div>
+        </div>
+
+        <div class="review-panel panel" data-surface-role="panel">
+          <div class="review-lines">
+            <div class="review-line">
+              <span class="review-label">Reviewed by</span>
+              <div class="review-field card" data-field="student-reviewed-by" data-surface-role="card">[[student name or reviewer]]</div>
+            </div>
+            <div class="review-line">
+              <span class="review-label">Reviewed at</span>
+              <div class="review-field card" data-field="student-reviewed-at" data-surface-role="card">[[date and time]]</div>
+            </div>
+          </div>
+          <div class="review-actions">
+            <label class="review-toggle">
+              <input type="checkbox" name="studentReviewed">
+              Mark reviewed
+            </label>
+              <button id="studentReviewActionBtn" type="button" class="primary">Record student review</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script>
+    window.SIS_REPORT_CARD_SAMPLE_DATA = {
+      identity: {
+        controlNumber: 1001,
+        eaglesId: "PREVIEW-001",
+        studentNumber: 1001,
+        fullName: "Preview Student",
+        englishName: "Preview Student",
+        dayDate: "2026-06-11",
+        reportDate: "2026-06-11",
+      },
+      scope: {
+        className: "A2\u00A0Flyers",
+        schoolYear: "2025-2026",
+        quarter: "Q2",
+      },
+      attendance: {
+        total: 3,
+        absences: 1,
+        tardy: 1,
+        percent: "66.67%",
+        rate: "66.67%",
+      },
+      currentHomework: {
+        title: "Weekend Reading Packet",
+        subject: "A2\u00A0Flyers",
+        teacher: "Teacher",
+        note: "Preview assignment details.",
+        assignmentsCount: 1,
+        exercisesCount: 2,
+        exercises: [
+          { title: "Exercise 1", detail: "Read and answer questions.", status: "Assigned" },
+          { title: "Exercise 2", detail: "Read and answer questions.", status: "Pending" },
+        ],
+      },
+      pastDueHomework: {
+        title: "Vocab Review",
+        subject: "A2\u00A0Flyers",
+        teacher: "Teacher",
+        note: "Outstanding work details.",
+        assignmentsCount: 1,
+        exercisesCount: 3,
+        exercises: [
+          { title: "Exercise A", detail: "Pending submission.", status: "Pending" },
+          { title: "Exercise B", detail: "Pending submission.", status: "Pending" },
+          { title: "Exercise C", detail: "Pending submission.", status: "Submitted" },
+        ],
+      },
+      rubric: {
+        title: "How to read the rubric",
+        note: "Scoring interpretation for the rubric rows below.",
+        body: "This template renders the immutable rubric snapshot from the saved report payload. Each row carries the prompt, the score with its explanation, and any recommendation for success.",
+        rows: [
+          {
+            prompt: "Homework completion",
+            resultScore: "50",
+            resultExplanation: "Average completion across the selected scope.",
+            recommendation: "Review incomplete assignments and reinforce deadlines.",
+          },
+          {
+            prompt: "Homework on-time",
+            resultScore: "50",
+            resultExplanation: "Submission timing against due dates.",
+            recommendation: "Confirm due-date awareness and home support.",
+          },
+          {
+            prompt: "Behavior",
+            resultScore: "4",
+            resultExplanation: "Teacher-scored behavior signal.",
+            recommendation: "Follow up on conduct notes where needed.",
+          },
+        ],
+      },
+      parentReview: {
+        reviewedBy: "teacher.preview",
+        reviewedAt: "2026-06-11",
+      },
+      studentReview: {
+        reviewedBy: "Preview Student",
+        reviewedAt: "2026-06-11",
+      },
+      snapshot: {
+        source: "preview-sample",
+        reportId: "preview-report-001",
+        studentRefId: "PREVIEW-001",
+        capturedAt: "2026-06-11T00:00:00.000Z",
+        capturedAtDisplay: "2026-06-11 07:00:00 GMT+07:00",
+        approvedAt: "2026-06-11T02:30:00.000Z",
+        approvedAtDisplay: "2026-06-11 09:30:00 GMT+07:00",
+        className: "A2 Flyers",
+        schoolYear: "2025-2026",
+        quarter: "Q2",
+      },
+    };
+
+    /* Shared portal theme toggle wiring. */
+    (() => {
+      const root = document.documentElement
+      const themeToggle = document.getElementById("adminThemeToggle")
+      const themeIcon = document.getElementById("adminThemeToggleIcon")
+      const themeLabel = document.getElementById("adminThemeToggleLabel")
+      const themeState = window.SIS_PORTAL_THEME
+
+      function getPreferredTheme() {
+        return root.dataset.theme === "dark" || root.dataset.theme === "light"
+          ? root.dataset.theme
+          : "light"
+      }
+
+      function syncThemeToggle(theme) {
+        if (!themeToggle || !themeIcon) return
+        const isDark = theme === "dark"
+        themeToggle.setAttribute("aria-pressed", String(isDark))
+        themeToggle.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme")
+        themeIcon.setAttribute("data-theme-icon", isDark ? "sun" : "moon")
+        if (themeLabel) {
+          themeLabel.textContent = isDark ? "Light" : "Dark"
+        }
+      }
+
+      function applyTheme(theme) {
+        const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "light" ? "light" : "dark")
+        root.dataset.theme = next
+        syncThemeToggle(next)
+      }
+
+      syncThemeToggle(getPreferredTheme())
+      themeToggle?.addEventListener("click", () => {
+        applyTheme(themeState?.toggleTheme ? themeState.toggleTheme("dark") : (getPreferredTheme() === "dark" ? "light" : "dark"))
+      })
+    })();
+
+    (() => {
+      const isPortalMode = window.__SIS_REPORT_CARD_PORTAL_MODE === true
+      const viewerRole = String(window.__SIS_REPORT_CARD_VIEWER_ROLE || "").trim().toLowerCase() === "parent" ? "parent" : "student"
+      const homePath = String(window.__SIS_REPORT_CARD_HOME_PATH || "").trim()
+
+      if (isPortalMode) {
+        document.body.classList.remove("admin-portal-page")
+        document.body.classList.add(viewerRole === "parent" ? "parent-portal-page" : "student-portal-page")
+        document.body.classList.add("report-card-portal-mode")
+        document.body.dataset.reportCardViewerRole = viewerRole
+
+        const portalMarkup = viewerRole === "parent" ? `
+          <button id="parentMenuBtn" class="floating-menu-btn" type="button" aria-label="Mở điều hướng">
+            <span class="floating-menu-icon" aria-hidden="true"></span>
+          </button>
+          <aside id="parentSideNav" class="side-nav" aria-label="Điều hướng cổng phụ huynh">
+            <div class="side-brand">
+              <strong>Bảng điều khiển dành cho phụ huynh</strong>
+              <span>Tổng quan kết quả học tập của học sinh</span>
+            </div>
+            <nav class="side-links">
+              <a class="side-link active" href="#report-identity" data-view-target="dashboard" data-page-target="home">Trang chủ</a>
+              <a class="side-link" href="#summary-title" data-view-target="dashboard" data-page-target="attendance-calendar">Điểm danh lớp học (SYTD)</a>
+              <a class="side-link" href="#current-homework-title" data-view-target="dashboard" data-page-target="current-homework">Bài tập về nhà hiện tại</a>
+              <a class="side-link" href="#past-due-title" data-view-target="dashboard" data-page-target="past-due-homework">Bài tập về nhà quá hạn</a>
+              <a class="side-link" href="#metrics-note-title" data-view-target="dashboard" data-page-target="rubric">Bảng chấm điểm</a>
+              <a class="side-link" href="#metrics-title" data-view-target="dashboard" data-page-target="rubric-results">Kết quả chấm điểm</a>
+              <a class="side-link" href="#review-title" data-view-target="dashboard" data-page-target="parent-review">Xác nhận của phụ huynh</a>
+              <a class="side-link" href="#student-review-title" data-view-target="dashboard" data-page-target="student-review">Xác nhận của học sinh</a>
+            </nav>
+          </aside>
+          <button id="parentNavScrim" class="nav-scrim" type="button" aria-label="Đóng điều hướng"></button>
+        ` : `
+          <button id="menuBtn" class="floating-menu-btn" type="button" aria-label="Open navigation">
+            <span class="floating-menu-icon" aria-hidden="true"></span>
+          </button>
+          <aside id="sideNav" class="side-nav" aria-label="Student navigation">
+            <div class="side-brand">
+              <strong>Student Dashboard</strong>
+              <span>English learning and daily media reports</span>
+            </div>
+            <nav class="side-links">
+              <a class="side-link active" href="#report-identity" data-view-target="home" data-page-target="home">Home</a>
+              <a class="side-link" href="#summary-title" data-view-target="home" data-page-target="attendance-calendar">Attendance Calendar SYTD</a>
+              <a class="side-link" href="#current-homework-title" data-view-target="home" data-page-target="current-homework">Current Homework</a>
+              <a class="side-link" href="#past-due-title" data-view-target="home" data-page-target="past-due-homework">Past Due Homework</a>
+              <a class="side-link" href="#metrics-note-title" data-view-target="home" data-page-target="rubric">Rubric</a>
+              <a class="side-link" href="#metrics-title" data-view-target="home" data-page-target="rubric-results">Detailed Results</a>
+              <a class="side-link" href="#review-title" data-view-target="home" data-page-target="parent-review">Parent Review</a>
+              <a class="side-link" href="#student-review-title" data-view-target="home" data-page-target="student-review">Student Review</a>
+            </nav>
+          </aside>
+          <button id="navOverlay" class="nav-overlay" type="button" aria-label="Close navigation"></button>
+        `
+
+        document.body.insertAdjacentHTML("afterbegin", portalMarkup)
+
+        const menuBtnEl = document.getElementById(viewerRole === "parent" ? "parentMenuBtn" : "menuBtn")
+        const navEl = document.getElementById(viewerRole === "parent" ? "parentSideNav" : "sideNav")
+        const overlayEl = document.getElementById(viewerRole === "parent" ? "parentNavScrim" : "navOverlay")
+        const navLinks = Array.from(navEl?.querySelectorAll("a[href^='#']") || [])
+
+        function setMenuOpen(open) {
+          const shouldOpen = Boolean(open)
+          navEl?.classList.toggle("open", shouldOpen)
+          document.body.classList.toggle("menu-open", shouldOpen)
+        }
+
+        menuBtnEl?.addEventListener("click", () => {
+          setMenuOpen(!navEl?.classList.contains("open"))
+        })
+        overlayEl?.addEventListener("click", () => {
+          setMenuOpen(false)
+        })
+        navLinks.forEach((link) => link.addEventListener("click", () => {
+          setMenuOpen(false)
+        }))
+
+        document.addEventListener("click", (event) => {
+          if (!document.body.classList.contains("menu-open")) return
+          const target = event.target
+          if (!(target instanceof Element)) return
+          if (navEl?.contains(target)) return
+          if (menuBtnEl?.contains(target)) return
+          if (overlayEl?.contains(target)) return
+          setMenuOpen(false)
+        })
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key !== "Escape") return
+          setMenuOpen(false)
+        })
+
+        window.addEventListener("resize", () => {
+          if (window.innerWidth >= 768) {
+            setMenuOpen(false)
+          }
+        })
+
+        setMenuOpen(false)
+        void homePath
+        return
+      }
+
+      const menuToggleBtnEl = document.getElementById("menuToggleBtn")
+      const floatingMenuBtnEl = document.getElementById("floatingMenuBtn")
+      const menuBackdropEl = document.getElementById("menuBackdrop")
+      const sidebarEl = document.getElementById("appSidebarNav")
+      const sidebarLinks = Array.from(document.querySelectorAll("#appSidebarNav a[href^='#']"))
+
+      function updateMenuToggleButtonLabel() {
+        const menuOpen = document.body.classList.contains("menu-open")
+        if (menuToggleBtnEl)
+          menuToggleBtnEl.textContent = menuOpen ? "Close Menu" : "Menu"
+        if (floatingMenuBtnEl) {
+          floatingMenuBtnEl.setAttribute("aria-expanded", menuOpen ? "true" : "false")
+          floatingMenuBtnEl.setAttribute(
+            "aria-label",
+            menuOpen ? "Close navigation menu" : "Open navigation menu",
+          )
+        }
+      }
+
+      const toggleNavigationMenu = () => {
+        document.body.classList.toggle("menu-open")
+        updateMenuToggleButtonLabel()
+      }
+
+      menuToggleBtnEl?.addEventListener("click", toggleNavigationMenu)
+      floatingMenuBtnEl?.addEventListener("click", toggleNavigationMenu)
+      menuBackdropEl?.addEventListener("click", () => {
+        document.body.classList.remove("menu-open")
+        updateMenuToggleButtonLabel()
+      })
+      sidebarLinks.forEach((link) => link.addEventListener("click", () => {
+        document.body.classList.remove("menu-open")
+        updateMenuToggleButtonLabel()
+      }))
+
+      document.addEventListener("click", (event) => {
+        if (!document.body.classList.contains("menu-open")) return
+        const target = event.target
+        if (!(target instanceof Element)) return
+        if (sidebarEl?.contains(target)) return
+        if (menuToggleBtnEl?.contains(target)) return
+        if (floatingMenuBtnEl?.contains(target)) return
+        document.body.classList.remove("menu-open")
+        updateMenuToggleButtonLabel()
+      })
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return
+        document.body.classList.remove("menu-open")
+        updateMenuToggleButtonLabel()
+      })
+
+      window.addEventListener("resize", () => {
+        updateMenuToggleButtonLabel()
+      })
+
+      document.body.classList.remove("menu-open")
+      updateMenuToggleButtonLabel()
+    })();
+
+    /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
+    (async () => {
+      const initialSource =
+        window.REPORT_CARD_DATA
+        || window.SIS_REPORT_CARD_DATA
+        || window.__SIS_REPORT_CARD_DATA
+        || null
+
+      const search = new URLSearchParams(window.location.search || "")
+      const studentRefId = String(search.get("studentRefId") || "").trim()
+      const className = String(search.get("className") || "").trim()
+      const schoolYear = String(search.get("schoolYear") || "").trim()
+      const quarter = String(search.get("quarter") || "").trim()
+      const reportId = String(search.get("reportId") || "").trim()
+      const queueId = String(search.get("queueId") || "").trim()
+      const apiOrigin = String(search.get("apiOrigin") || window.__SIS_ADMIN_API_ORIGIN || "").trim()
+      const queuedSnapshotStorageKey = queueId ? `sis.reportCardPreview.${queueId}` : ""
+
+      function readQueuedSnapshot() {
+        if (!queuedSnapshotStorageKey) return null
+        try {
+          const raw = window.localStorage.getItem(queuedSnapshotStorageKey)
+          if (!raw) return null
+          const parsed = JSON.parse(raw)
+          return parsed && typeof parsed === "object" ? parsed : null
+        } catch (error) {
+          void error
+          return null
+        }
+      }
+
+      async function fetchCurrentSnapshot() {
+        if (!studentRefId) return null
+        const params = new URLSearchParams()
+        if (className) params.set("className", className)
+        if (schoolYear) params.set("schoolYear", schoolYear)
+        if (quarter) params.set("quarter", quarter)
+        if (reportId) params.set("reportId", reportId)
+        const endpoint =
+          `${apiOrigin}/api/admin/students/${encodeURIComponent(studentRefId)}/report-card.json`
+          + (params.size ? `?${params.toString()}` : "")
+        const response = await fetch(endpoint, {
+          credentials: "include",
+          headers: { accept: "application/json" },
+        })
+        if (!response.ok) throw new Error(`Unable to load report snapshot (${response.status})`)
+        return response.json()
+      }
+
+      let source = readQueuedSnapshot() || initialSource
+      if (!source && studentRefId) {
+        try {
+          source = await fetchCurrentSnapshot()
+        } catch (error) {
+          void error
+        }
+      }
+      if (!source || typeof source !== "object") {
+        source = window.SIS_REPORT_CARD_SAMPLE_DATA
+      }
+      if (!source || typeof source !== "object") return
+
+      const report = source.report || source
+      const identity = report.identity || {}
+      const scope = report.scope || {}
+      const snapshot = report.snapshot || {}
+      const attendance = report.attendance || {}
+      const metrics = report.metrics || {}
+      const currentHomework = report.currentHomework || {}
+      const pastDueHomework = report.pastDueHomework || report.outstandingHomework || {}
+      const rubric = report.rubric || {}
+      const parentReview = report.parentReview || {}
+      const studentReview = report.studentReview || {}
+      const portalMode = window.__SIS_REPORT_CARD_PORTAL_MODE === true
+
+      const toDisplay = (value, fallback = "—") => {
+        if (value === undefined || value === null || value === "") return fallback
+        return String(value)
+      }
+
+      const setText = (selector, value, fallback = "—") => {
+        const node = document.querySelector(selector)
+        if (!node) return
+        node.textContent = toDisplay(value, fallback)
+      }
+
+      const setSectionValue = (sectionSelector, value, fallback = "—") => {
+        const section = document.querySelector(sectionSelector)
+        if (!section) return
+        const valueNode = section.querySelector(".summary-value")
+        if (valueNode) valueNode.textContent = toDisplay(value, fallback)
+      }
+
+      const renderExerciseList = (selector, exercises) => {
+        const list = document.querySelector(selector)
+        if (!list || !Array.isArray(exercises) || !exercises.length) return
+        list.textContent = ""
+        exercises.forEach((exercise) => {
+          const item = document.createElement("li")
+          item.className = "exercise-item"
+
+          const head = document.createElement("div")
+          head.className = "exercise-head"
+
+          const title = document.createElement("p")
+          title.className = "exercise-title"
+          title.textContent = toDisplay(exercise?.title || exercise?.name || exercise?.assignmentName)
+
+          const status = document.createElement("span")
+          status.className = "report-chip"
+          status.textContent = toDisplay(exercise?.status || exercise?.state || "Pending")
+
+          head.append(title, status)
+
+          const meta = document.createElement("p")
+          meta.className = "exercise-meta"
+          meta.textContent = toDisplay(exercise?.detail || exercise?.note || exercise?.description)
+
+          item.append(head, meta)
+          list.appendChild(item)
+        })
+      }
+
+      const renderHomeworkSection = (kind, payload) => {
+        const section = document.querySelector(`[data-report-homework="${kind}"]`)
+        if (!section || !payload) return
+
+        const titleNode = section.querySelector("[data-report-homework-title]")
+        const metaNode = section.querySelector("[data-report-homework-meta]")
+        const noteNode = section.querySelector("[data-report-homework-note]")
+        const exercisesSelector = `[data-report-homework-exercises="${kind}"]`
+
+        if (titleNode) titleNode.textContent = toDisplay(payload.title || payload.assignmentName || payload.name)
+        if (metaNode) {
+          const subject = toDisplay(payload.subject || payload.className || payload.course)
+          const teacher = toDisplay(payload.teacher || payload.owner || payload.assignee)
+          metaNode.textContent = `${subject} · ${teacher}`
+        }
+        if (noteNode) noteNode.textContent = toDisplay(payload.note || payload.summary || payload.description)
+        renderExerciseList(exercisesSelector, payload.exercises || payload.items || [])
+      }
+
+      const renderRubricRows = (rows) => {
+        const tbody = document.getElementById("report-rubric-body")
+        if (!tbody || !Array.isArray(rows) || !rows.length) return
+        tbody.textContent = ""
+        rows.forEach((row) => {
+          const tr = document.createElement("tr")
+          const metricCell = document.createElement("td")
+          const resultCell = document.createElement("td")
+          const recommendationCell = document.createElement("td")
+
+          const metricTitle = document.createElement("p")
+          metricTitle.className = "metric-title"
+          metricTitle.textContent = toDisplay(row?.prompt || row?.metric || row?.title)
+
+          const metricText = document.createElement("p")
+          metricText.className = "metric-text"
+          metricText.textContent = toDisplay(row?.resultExplanation || row?.detail || row?.subtitle)
+
+          metricCell.append(metricTitle, metricText)
+          const resultScore = toDisplay(row?.resultScore || row?.observedResult || row?.result || row?.observed)
+          const resultExplanation = toDisplay(row?.resultExplanation || row?.detail || row?.summary || row?.interpretation)
+          resultCell.textContent = `${resultScore}${resultExplanation ? ` · ${resultExplanation}` : ""}`
+          recommendationCell.textContent = toDisplay(row?.recommendation || row?.actionNote || row?.action || row?.note)
+
+          tr.append(metricCell, resultCell, recommendationCell)
+          tbody.appendChild(tr)
+        })
+      }
+
+      setText('[data-field="control-number"]', report.controlNumber || identity.controlNumber)
+      setText('[data-field="student-name"]', identity.fullName || report.fullName || report.studentName)
+      setText('[data-field="eagles-id"]', identity.eaglesId || report.eaglesId)
+      setText('[data-field="english-name"]', identity.englishName || report.englishName)
+      setText('[data-field="day-date"]', identity.dayDate || report.dayDate || report.reportDate)
+      setText('[data-field="scope-class-name"]', scope.className || snapshot.className)
+      setText('[data-field="scope-school-year"]', scope.schoolYear || snapshot.schoolYear)
+      setText('[data-field="scope-quarter"]', scope.quarter || snapshot.quarter)
+      setText('[data-field="snapshot-id"]', snapshot.reportId || report.reportId)
+      setText('[data-field="snapshot-captured-at"]', snapshot.capturedAtDisplay || snapshot.capturedAt || report.generatedAt)
+      setText('[data-field="snapshot-source"]', snapshot.source || (report.latestParentReport ? "saved-parent-report" : "derived-current-records"))
+      setText('[data-field="metric-homework-completion"]', metrics.homeworkCompletionRate)
+      setText('[data-field="metric-homework-on-time"]', metrics.homeworkOnTimeRate)
+      setText('[data-field="metric-behavior"]', metrics.behaviorScore)
+      setText('[data-field="metric-participation"]', metrics.participationScore)
+      setText('[data-field="metric-in-class"]', metrics.inClassScore)
+      setText('[data-field="metric-participation-points"]', metrics.participationPointsAward)
+      setText(
+        '[data-field="metric-teacher-summary"]',
+        [
+          `Teacher: ${toDisplay(metrics.teacherName)}`,
+          `Lesson summary: ${toDisplay(metrics.lessonSummary)}`,
+          `Vision status: ${toDisplay(metrics.visionStatus)}`,
+          `Teacher comment: ${toDisplay(metrics.teacherComment)}`,
+        ].join(" | ")
+      )
+
+      setSectionValue('[data-report-summary="attendance"]', attendance.rate || report.attendanceRate)
+      setSectionValue('[data-report-summary="absences"]', attendance.absences ?? report.absenceCount)
+      setSectionValue('[data-report-summary="tardy"]', attendance.tardy ?? report.tardyCount)
+      setSectionValue('[data-report-summary="attendance-percent"]', attendance.percent || report.attendancePercent)
+
+      setText("#current-assignment-count", currentHomework.assignmentsCount ?? currentHomework.assignmentCount ?? report.currentAssignmentCount)
+      setText("#current-exercise-count", currentHomework.exercisesCount ?? currentHomework.exerciseCount ?? report.currentExerciseCount)
+      setText("#past-assignment-count", pastDueHomework.assignmentsCount ?? pastDueHomework.assignmentCount ?? report.pastAssignmentCount)
+      setText("#past-exercise-count", pastDueHomework.exercisesCount ?? pastDueHomework.exerciseCount ?? report.pastExerciseCount)
+
+      renderHomeworkSection("current", currentHomework)
+      renderHomeworkSection("past-due", pastDueHomework)
+
+      setText('[data-report-rubric-note]', rubric.note || report.rubricNote)
+      setText('[data-report-rubric-title]', rubric.title || report.rubricTitle)
+      setText('[data-report-rubric-body]', rubric.body || report.rubricBody)
+      renderRubricRows(rubric.rows || report.rubricRows || [])
+
+      setText('[data-field="parent-reviewed-by"]', parentReview.reviewedBy || report.parentReviewedBy)
+      setText('[data-field="parent-reviewed-at"]', parentReview.reviewedAt || report.parentReviewedAt)
+      setText('[data-field="student-reviewed-by"]', studentReview.reviewedBy || report.studentReviewedBy)
+      setText('[data-field="student-reviewed-at"]', studentReview.reviewedAt || report.studentReviewedAt)
+
+      if (portalMode) {
+        const viewerRole =
+          String(window.__SIS_REPORT_CARD_VIEWER_ROLE || "").trim().toLowerCase() === "parent"
+            ? "parent"
+            : "student"
+        const reportIdentifier = toDisplay(snapshot.reportId || report.reportId, "")
+        const parentActionBtn = document.getElementById("parentReviewActionBtn")
+        const studentActionBtn = document.getElementById("studentReviewActionBtn")
+        const parentToggle = document.querySelector('input[name="parentReviewed"]')
+        const studentToggle = document.querySelector('input[name="studentReviewed"]')
+        const activeActionBtn = viewerRole === "parent" ? parentActionBtn : studentActionBtn
+        const activeToggle = viewerRole === "parent" ? parentToggle : studentToggle
+        const activeReviewedAtField = document.querySelector(
+          viewerRole === "parent" ? '[data-field="parent-reviewed-at"]' : '[data-field="student-reviewed-at"]'
+        )
+        const activeReviewedByField = document.querySelector(
+          viewerRole === "parent" ? '[data-field="parent-reviewed-by"]' : '[data-field="student-reviewed-by"]'
+        )
+        const activeReviewState =
+          viewerRole === "parent"
+            ? (parentReview.reviewedAt || report.parentReviewedAt)
+            : (studentReview.reviewedAt || report.studentReviewedAt)
+
+        if (viewerRole === "parent") {
+          studentActionBtn?.classList.add("hidden")
+          studentToggle?.closest(".review-toggle")?.classList.add("hidden")
+        } else {
+          parentActionBtn?.classList.add("hidden")
+          parentToggle?.closest(".review-toggle")?.classList.add("hidden")
+        }
+
+        if (activeToggle instanceof HTMLInputElement) {
+          activeToggle.checked = Boolean(activeReviewState)
+        }
+        if (activeActionBtn instanceof HTMLButtonElement) {
+          if (activeReviewState) {
+            activeActionBtn.textContent = "Review recorded"
+            activeActionBtn.disabled = true
+          }
+          activeActionBtn.addEventListener("click", async () => {
+            if (!reportIdentifier || activeActionBtn.disabled) return
+            if (activeToggle instanceof HTMLInputElement && !activeToggle.checked) {
+              activeToggle.checked = true
+            }
+            activeActionBtn.disabled = true
+            const originalText = activeActionBtn.textContent
+            activeActionBtn.textContent = "Recording..."
+            try {
+              const endpoint =
+                viewerRole === "parent"
+                  ? `/api/parent/reports/${encodeURIComponent(reportIdentifier)}/acknowledge`
+                  : `/api/student/reports/${encodeURIComponent(reportIdentifier)}/acknowledge`
+              const response = await fetch(endpoint, {
+                method: "POST",
+                credentials: "include",
+                headers: { accept: "application/json" },
+              })
+              if (!response.ok) {
+                throw new Error(`Unable to record review (${response.status})`)
+              }
+              const payload = await response.json()
+              const nextReport = payload?.report || {}
+              if (activeReviewedAtField) {
+                activeReviewedAtField.textContent = toDisplay(
+                  viewerRole === "parent" ? nextReport.parentReviewedAt : nextReport.studentReviewedAt
+                )
+              }
+              if (activeReviewedByField) {
+                activeReviewedByField.textContent = toDisplay(
+                  viewerRole === "parent"
+                    ? nextReport.parentReviewedByUsername
+                    : nextReport.studentReviewedByUsername
+                )
+              }
+              activeActionBtn.textContent = "Review recorded"
+            } catch (error) {
+              activeActionBtn.disabled = false
+              activeActionBtn.textContent = originalText
+              window.alert(error?.message || String(error))
+              return
+            }
+          })
+        }
+      }
+    })();
+  </script>
+    <footer class="hub-footer" aria-label="Site footer">
+      <p class="hub-footer__copy">
+        © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+      </p>
+      <p class="hub-footer__action">
+        <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+      </p>
+    </footer>
+  </div>
+  <script>
+    (() => {
+      const year = new Date().getFullYear()
+      document.querySelectorAll("[data-copyright-year]").forEach((el) => {
+        const start = Number.parseInt(el.getAttribute("data-start"), 10)
+        el.textContent = Number.isFinite(start) && start < year ? `${start}–${year}` : String(year)
+      })
+    })();
+  </script>
+</body>
+</html>

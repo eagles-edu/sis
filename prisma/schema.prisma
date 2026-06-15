@@ -360,9 +360,24 @@ model ParentClassReport {
   participationScore     Float?
   inClassScore           Float?
   participationPointsAward Int?
+  workflowState          String        @default("draft_pr")
+  submittedAt            DateTime?
+  submittedByUsername    String?
+  adminReviewStartedAt   DateTime?
+  adminReviewStartedByUsername String?
+  rcDraftedAt            DateTime?
+  rcDraftedByUsername    String?
   approvedAt             DateTime?
   approvedByUsername     String?
+  publishedAt            DateTime?
+  notificationQueuedAt   DateTime?
+  notificationSentAt     DateTime?
+  finalArtifactVersion   Int           @default(0)
+  finalArtifactPayload   Json?
+  finalArtifactFrozenAt  DateTime?
   comments               String?
+  rubricPayload          Json?
+  metaPayload            Json?
   generatedAt            DateTime      @default(now())
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
@@ -370,7 +385,27 @@ model ParentClassReport {
   @@unique([studentRefId, className, schoolYear, quarter, enrollmentPeriodId])
   @@index([enrollmentPeriodId])
   @@index([level, schoolYear, quarter])
+  @@index([workflowState, schoolYear, quarter, generatedAt])
   @@index([approvedAt])
+}
+
+model ParentClassReportEvent {
+  id              String   @id @default(cuid())
+  reportId        String
+  artifactVersion Int?
+  eventType       String
+  eventAt         DateTime @default(now())
+  actorType       String?
+  actorId         String?
+  recipientEmail  String?
+  channel         String?
+  userAgent       String?
+  ipHash          String?
+  metadataJson    Json?
+
+  @@index([reportId, eventAt])
+  @@index([eventType, eventAt])
+  @@index([recipientEmail, eventAt])
 }
 
 model StudentPointsAdjustment {

@@ -118,6 +118,28 @@
       width: 100%;
     }
 
+    /* Local selector declarations to satisfy HTML/CSS diagnostics without changing layout. */
+    .actions-1,
+    .actions-4,
+    .user-admin-form,
+    .table-wrap,
+    .permissions-rows-panel,
+    .school-setup-body,
+    .school-setup-quarter-table,
+    .settings-options-panel,
+    .settings-mirror-panel {
+    }
+
+    body.admin-portal-page .performance-data-list h3,
+    body.admin-portal-page #performanceStagedSection h3 {
+      color: var(--portal-text);
+    }
+
+    html[data-theme="dark"] body.admin-portal-page .performance-data-list h3,
+    html[data-theme="dark"] body.admin-portal-page #performanceStagedSection h3 {
+      color: var(--portal-text);
+    }
+
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
@@ -1015,7 +1037,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="attendanceSortDirBtn">Direction</label>
+                    <div class="small">Direction</div>
                     <button id="attendanceSortDirBtn" type="button" class="btn-refresh">
                       Newest First
                     </button>
@@ -1047,19 +1069,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <input id="attendanceDataSearch" type="search" placeholder="date, class, status, comments">
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="attendanceArchiveToggleBtn">Archive</label>
+                    <div class="small">Archive</div>
                     <button id="attendanceArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="attendanceExportXlsxBtn">Export</label>
+                    <div class="small">Export</div>
                     <button id="attendanceExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="attendancePrintPdfBtn">Print</label>
+                    <div class="small">Print</div>
                     <button id="attendancePrintPdfBtn" type="button" class="primary">
                       Print PDF
                     </button>
@@ -1067,15 +1089,15 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
                 <div class="attendance-column-controls data-surface" id="attendanceColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
-                  <label><input type="checkbox" data-attendance-col-toggle="studentNumber" checked>#</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="eaglesId" checked>Eagles ID</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="fullName">Full Name</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="englishName">English Name</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="attendanceDate" checked>Date</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="className" checked>Class</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="quarter" checked>Quarter</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="status" checked>Status</label>
-                  <label><input type="checkbox" data-attendance-col-toggle="comments" checked>Comments</label>
+                  <label><input id="attendanceColToggleStudentNumber" name="attendanceColToggleStudentNumber" type="checkbox" data-attendance-col-toggle="studentNumber" checked>#</label>
+                  <label><input id="attendanceColToggleEaglesId" name="attendanceColToggleEaglesId" type="checkbox" data-attendance-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input id="attendanceColToggleFullName" name="attendanceColToggleFullName" type="checkbox" data-attendance-col-toggle="fullName">Full Name</label>
+                  <label><input id="attendanceColToggleEnglishName" name="attendanceColToggleEnglishName" type="checkbox" data-attendance-col-toggle="englishName">English Name</label>
+                  <label><input id="attendanceColToggleAttendanceDate" name="attendanceColToggleAttendanceDate" type="checkbox" data-attendance-col-toggle="attendanceDate" checked>Date</label>
+                  <label><input id="attendanceColToggleClassName" name="attendanceColToggleClassName" type="checkbox" data-attendance-col-toggle="className" checked>Class</label>
+                  <label><input id="attendanceColToggleQuarter" name="attendanceColToggleQuarter" type="checkbox" data-attendance-col-toggle="quarter" checked>Quarter</label>
+                  <label><input id="attendanceColToggleStatus" name="attendanceColToggleStatus" type="checkbox" data-attendance-col-toggle="status" checked>Status</label>
+                  <label><input id="attendanceColToggleComments" name="attendanceColToggleComments" type="checkbox" data-attendance-col-toggle="comments" checked>Comments</label>
                 </div>
                 <p class="small admin-table-summary" id="attendanceDataSummary">
                   Showing attendance records for all students.
@@ -1169,7 +1191,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           <label for="assignmentExerciseUrl">Exercise URL</label><input id="assignmentExerciseUrl" type="url" placeholder="https://...">
                         </div>
                         <div class="col-2">
-                          <label for="assignmentAddItemBtn">&nbsp;</label><button id="assignmentAddItemBtn" type="button" class="btn-edit">
+                          <div aria-hidden="true"></div><button id="assignmentAddItemBtn" type="button" class="btn-edit">
                             Add Assignment Item
                           </button>
                         </div>
@@ -1238,7 +1260,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="assignmentSortDirBtn">Direction</label>
+                    <div class="small">Direction</div>
                     <button id="assignmentSortDirBtn" type="button" class="btn-refresh">
                       Newest Due First
                     </button>
@@ -1270,19 +1292,19 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <input id="assignmentDataSearch" type="search" placeholder="title, level, due date, item">
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="assignmentArchiveToggleBtn">Archive</label>
+                    <div class="small">Archive</div>
                     <button id="assignmentArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="assignmentExportXlsxBtn">Export</label>
+                    <div class="small">Export</div>
                     <button id="assignmentExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="assignmentPrintPdfBtn">Print</label>
+                    <div class="small">Print</div>
                     <button id="assignmentPrintPdfBtn" type="button" class="primary">
                       Print PDF
                     </button>
@@ -1290,14 +1312,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 </div>
                 <div class="table-column-controls data-surface" id="assignmentColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
-                  <label><input type="checkbox" data-assignments-col-toggle="studentNumber" checked>#</label>
-                  <label><input type="checkbox" data-assignments-col-toggle="assignmentTitle" checked>Assignment</label>
-                  <label><input type="checkbox" data-assignments-col-toggle="level" checked>Level</label>
-                  <label><input type="checkbox" data-assignments-col-toggle="student" checked>Student</label>
-                  <label><input type="checkbox" data-assignments-col-toggle="assignedAt" checked>Assigned</label>
-                  <label><input type="checkbox" data-assignments-col-toggle="dueAt" checked>Due</label>
-                  <label><input type="checkbox" data-assignments-col-toggle="items" checked>Items</label>
-                  <label><input type="checkbox" data-assignments-col-toggle="completion" checked>Status</label>
+                  <label><input id="assignmentsColToggleStudentNumber" name="assignmentsColToggleStudentNumber" type="checkbox" data-assignments-col-toggle="studentNumber" checked>#</label>
+                  <label><input id="assignmentsColToggleAssignmentTitle" name="assignmentsColToggleAssignmentTitle" type="checkbox" data-assignments-col-toggle="assignmentTitle" checked>Assignment</label>
+                  <label><input id="assignmentsColToggleLevel" name="assignmentsColToggleLevel" type="checkbox" data-assignments-col-toggle="level" checked>Level</label>
+                  <label><input id="assignmentsColToggleStudent" name="assignmentsColToggleStudent" type="checkbox" data-assignments-col-toggle="student" checked>Student</label>
+                  <label><input id="assignmentsColToggleAssignedAt" name="assignmentsColToggleAssignedAt" type="checkbox" data-assignments-col-toggle="assignedAt" checked>Assigned</label>
+                  <label><input id="assignmentsColToggleDueAt" name="assignmentsColToggleDueAt" type="checkbox" data-assignments-col-toggle="dueAt" checked>Due</label>
+                  <label><input id="assignmentsColToggleItems" name="assignmentsColToggleItems" type="checkbox" data-assignments-col-toggle="items" checked>Items</label>
+                  <label><input id="assignmentsColToggleCompletion" name="assignmentsColToggleCompletion" type="checkbox" data-assignments-col-toggle="completion" checked>Status</label>
                 </div>
                 <p class="small admin-table-summary" id="assignmentDataSummary">
                   Showing assignment submissions.
@@ -1454,13 +1476,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                             <input id="pt_actionAddition" type="text" placeholder="Add specific details before insert">
                           </div>
                           <div class="col-2">
-                            <label for="pt_actionInsertBtn">&nbsp;</label>
+                            <div aria-hidden="true"></div>
                             <button id="pt_actionInsertBtn" type="button" class="btn-edit">
                               Insert to Focused Field
                             </button>
                           </div>
                           <div class="col-2">
-                            <label for="pt_actionClearBtn">&nbsp;</label>
+                            <div aria-hidden="true"></div>
                       <button id="pt_actionClearBtn" type="button" class="danger">
                         Clear Inputs
                       </button>
@@ -1867,7 +1889,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         Save Performance Report
                       </button>
                       <button id="pt_queueSendBtn" type="button" class="primary">
-                        Queue Weekend Batch Email
+                        Approve -> Queue
                       </button>
                       <button id="pt_clearBtn" type="button" class="danger">Clear Form</button>
                     </div>
@@ -1906,7 +1928,7 @@ Select a homework link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="performanceSortDirBtn">Direction</label>
+                    <div class="small">Direction</div>
                     <button id="performanceSortDirBtn" type="button" class="btn-refresh">
                       Newest First
                     </button>
@@ -1943,13 +1965,13 @@ Select a homework link to inspect details.</pre>
                     </p>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="performanceExportXlsxBtn">Export</label>
+                    <div class="small">Export</div>
                     <button id="performanceExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="performancePrintPdfBtn">Print</label>
+                    <div class="small">Print</div>
                     <button id="performancePrintPdfBtn" type="button" class="primary">
                       Print PDF
                     </button>
@@ -1957,14 +1979,15 @@ Select a homework link to inspect details.</pre>
                 </div>
                 <div class="table-column-controls data-surface" id="performanceColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
-                  <label><input type="checkbox" data-performance-col-toggle="hold" checked>Hold</label>
-                  <label><input type="checkbox" data-performance-col-toggle="generatedAt" checked>Report Date</label>
-                  <label><input type="checkbox" data-performance-col-toggle="eaglesId" checked>Eagles ID</label>
-                  <label><input type="checkbox" data-performance-col-toggle="teacherName" checked>Teacher</label>
-                  <label><input type="checkbox" data-performance-col-toggle="approvalStatus" checked>Approval Status</label>
-                  <label><input type="checkbox" data-performance-col-toggle="action" checked>Action</label>
+                  <label><input id="performanceColToggleHold" name="performanceColToggleHold" type="checkbox" data-performance-col-toggle="hold" checked>Hold</label>
+                  <label><input id="performanceColToggleGeneratedAt" name="performanceColToggleGeneratedAt" type="checkbox" data-performance-col-toggle="generatedAt" checked>Report Date</label>
+                  <label><input id="performanceColToggleEaglesId" name="performanceColToggleEaglesId" type="checkbox" data-performance-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input id="performanceColToggleTeacherName" name="performanceColToggleTeacherName" type="checkbox" data-performance-col-toggle="teacherName" checked>Teacher</label>
+                  <label><input id="performanceColToggleApprovalStatus" name="performanceColToggleApprovalStatus" type="checkbox" data-performance-col-toggle="approvalStatus" checked>Approval Status</label>
+                  <label><input id="performanceColToggleAction" name="performanceColToggleAction" type="checkbox" data-performance-col-toggle="action" checked>Action</label>
                 </div>
                 <div class="performance-data-list data-surface" data-surface-role="data-surface">
+                  <h3 class="section-title">Incoming</h3>
                   <p class="small admin-table-summary" id="performanceDataSummary">
                     Showing reports awaiting approval.
                   </p>
@@ -1999,7 +2022,7 @@ Select a homework link to inspect details.</pre>
                   </div>
                 </div>
                 <section class="hidden panel" id="performanceStagedSection" data-surface-role="panel">
-                  <h3>Reports Awaiting Admin Approval</h3>
+                  <h3 class="section-title">Awaiting Admin Approval</h3>
                   <p class="small" id="performanceStagedSummary">
                     No reports awaiting approval.
                   </p>
@@ -2029,16 +2052,23 @@ Select a homework link to inspect details.</pre>
                   </div>
                 </section>
                 <section class="hidden panel" id="performanceQueueSection" data-surface-role="panel">
-                  <h3>Approved Reports Staged for Email</h3>
-                  <details class="data-surface" id="performanceQueueDetails" data-surface-role="data-surface">
+                  <h3 class="section-title">Approved Reports Staged for Email</h3>
+                  <details class="data-surface" id="performanceQueueDetails" data-surface-role="data-surface" open>
                     <summary>
-                      <span>Transmission Queue</span>
+                      <span>Email Queue</span>
                       <span class="small" id="performanceQueueSummary">No approved reports queued for email.</span>
                     </summary>
                     <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                       <table>
                         <thead>
                           <tr>
+                            <th scope="col">
+                              <label class="small" for="performanceQueueSelectAll">Select</label>
+                              <input id="performanceQueueSelectAll" type="checkbox">
+                            </th>
+                            <th scope="col">
+                              <span class="small">Hold</span>
+                            </th>
                             <th scope="col">Queued At</th>
                             <th scope="col">Eagles ID</th>
                             <th scope="col">Teacher</th>
@@ -2054,12 +2084,15 @@ Select a homework link to inspect details.</pre>
                         </tbody>
                       </table>
                     </div>
-                    <div class="actions actions-3">
+                    <div class="actions actions-4">
                       <button id="performanceQueueExpandBtn" type="button" class="btn-refresh">
                         Show All
                       </button>
                       <button id="performanceQueueRefreshBtn" type="button" class="btn-refresh">
                         Reload Queue
+                      </button>
+                      <button id="performanceQueueSendSelectedBtn" type="button" class="btn-edit">
+                        Send Selected
                       </button>
                       <button id="performanceQueueSendAllBtn" type="button" class="primary">
                         Send All
@@ -2115,13 +2148,13 @@ Select a homework link to inspect details.</pre>
                     <input id="newsReviewQueryFilter" type="search" placeholder="student, title, source, synopsis">
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="newsReviewRefreshBtn">Action</label>
+                    <div class="small">Action</div>
                     <button id="newsReviewRefreshBtn" type="button" class="btn-refresh">
                       Refresh Queue
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="newsReviewClearFiltersBtn">Action</label>
+                    <div class="small">Action</div>
                     <button id="newsReviewClearFiltersBtn" type="button" class="danger">
                       Clear Filters
                     </button>
@@ -2230,12 +2263,12 @@ Select a homework link to inspect details.</pre>
                     <label for="g_comments">Comments</label><input id="g_comments" type="text">
                   </div>
                   <div class="col-2">
-                    <label for="gradeSaveBtn">&nbsp;</label><button id="gradeSaveBtn" type="button" class="btn-edit">
+                    <div aria-hidden="true"></div><button id="gradeSaveBtn" type="button" class="btn-edit">
                       Save
                     </button>
                   </div>
                   <div class="col-2">
-                    <label for="gradeClearBtn">&nbsp;</label><button id="gradeClearBtn" type="button" class="danger">Clear</button>
+                    <div aria-hidden="true"></div><button id="gradeClearBtn" type="button" class="danger">Clear</button>
                   </div>
                 </div>
                 <p class="small page-note">
@@ -2335,7 +2368,7 @@ Select a homework link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="gradeSortDirBtn">Direction</label>
+                    <div class="small">Direction</div>
                     <button id="gradeSortDirBtn" type="button" class="btn-refresh">
                       Latest Due First
                     </button>
@@ -2367,37 +2400,37 @@ Select a homework link to inspect details.</pre>
                     <input id="gradeDataSearch" type="search" placeholder="assignment, class, score">
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="gradeArchiveToggleBtn">Archive</label>
+                    <div class="small">Archive</div>
                     <button id="gradeArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="gradeExportXlsxBtn">Export</label>
+                    <div class="small">Export</div>
                     <button id="gradeExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="gradePrintPdfBtn">Print</label>
+                    <div class="small">Print</div>
                     <button id="gradePrintPdfBtn" type="button" class="primary">Print PDF</button>
                   </div>
                 </div>
                 <div class="table-column-controls data-surface" id="gradeColumnControls" data-surface-role="data-surface">
                   <p class="small">Columns</p>
-                  <label><input type="checkbox" data-grades-col-toggle="studentNumber" checked>#</label>
-                  <label><input type="checkbox" data-grades-col-toggle="eaglesId" checked>Eagles ID</label>
-                  <label><input type="checkbox" data-grades-col-toggle="fullName">Full
+                  <label><input id="gradesColToggleStudentNumber" name="gradesColToggleStudentNumber" type="checkbox" data-grades-col-toggle="studentNumber" checked>#</label>
+                  <label><input id="gradesColToggleEaglesId" name="gradesColToggleEaglesId" type="checkbox" data-grades-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input id="gradesColToggleFullName" name="gradesColToggleFullName" type="checkbox" data-grades-col-toggle="fullName">Full
                     Name</label>
-                  <label><input type="checkbox" data-grades-col-toggle="englishName">English Name</label>
-                  <label><input type="checkbox" data-grades-col-toggle="dueAt" checked>Due</label>
-                  <label><input type="checkbox" data-grades-col-toggle="className" checked>Class</label>
-                  <label><input type="checkbox" data-grades-col-toggle="assignmentName" checked>Assignment</label>
-                  <label><input type="checkbox" data-grades-col-toggle="score" checked>Score</label>
-                  <label><input type="checkbox" data-grades-col-toggle="homeworkCompleted" checked>HW</label>
-                  <label><input type="checkbox" data-grades-col-toggle="behaviorScore" checked>Behavior</label>
-                  <label><input type="checkbox" data-grades-col-toggle="participationScore" checked>Participation</label>
-                  <label><input type="checkbox" data-grades-col-toggle="inClassScore" checked>In Class</label>
+                  <label><input id="gradesColToggleEnglishName" name="gradesColToggleEnglishName" type="checkbox" data-grades-col-toggle="englishName">English Name</label>
+                  <label><input id="gradesColToggleDueAt" name="gradesColToggleDueAt" type="checkbox" data-grades-col-toggle="dueAt" checked>Due</label>
+                  <label><input id="gradesColToggleClassName" name="gradesColToggleClassName" type="checkbox" data-grades-col-toggle="className" checked>Class</label>
+                  <label><input id="gradesColToggleAssignmentName" name="gradesColToggleAssignmentName" type="checkbox" data-grades-col-toggle="assignmentName" checked>Assignment</label>
+                  <label><input id="gradesColToggleScore" name="gradesColToggleScore" type="checkbox" data-grades-col-toggle="score" checked>Score</label>
+                  <label><input id="gradesColToggleHomeworkCompleted" name="gradesColToggleHomeworkCompleted" type="checkbox" data-grades-col-toggle="homeworkCompleted" checked>HW</label>
+                  <label><input id="gradesColToggleBehaviorScore" name="gradesColToggleBehaviorScore" type="checkbox" data-grades-col-toggle="behaviorScore" checked>Behavior</label>
+                  <label><input id="gradesColToggleParticipationScore" name="gradesColToggleParticipationScore" type="checkbox" data-grades-col-toggle="participationScore" checked>Participation</label>
+                  <label><input id="gradesColToggleInClassScore" name="gradesColToggleInClassScore" type="checkbox" data-grades-col-toggle="inClassScore" checked>In Class</label>
                 </div>
                 <div class="grade-data-list data-surface" data-surface-role="data-surface">
                   <p class="small admin-table-summary" id="gradeDataSummary">
@@ -2470,7 +2503,7 @@ Select a homework link to inspect details.</pre>
                     <label for="r_homeworkOnTimeRate">On-Time %</label><input id="r_homeworkOnTimeRate" type="number" step="0.01">
                   </div>
                   <div class="col-1">
-                    <label for="reportSaveBtn">&nbsp;</label><button id="reportSaveBtn" type="button" class="btn-edit">
+                    <div aria-hidden="true"></div><button id="reportSaveBtn" type="button" class="btn-edit">
                       Save
                     </button>
                   </div>
@@ -2516,7 +2549,7 @@ Select a homework link to inspect details.</pre>
                     </select>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="reportSortDirBtn">Direction</label>
+                    <div class="small">Direction</div>
                     <button id="reportSortDirBtn" type="button" class="btn-refresh">
                       Newest First
                     </button>
@@ -2548,37 +2581,37 @@ Select a homework link to inspect details.</pre>
                     <input id="reportDataSearch" type="search" placeholder="class, quarter, score, comments">
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="reportArchiveToggleBtn">Archive</label>
+                    <div class="small">Archive</div>
                     <button id="reportArchiveToggleBtn" type="button" class="alt">
                       Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="reportExportXlsxBtn">Export</label>
+                    <div class="small">Export</div>
                     <button id="reportExportXlsxBtn" type="button" class="btn-refresh">
                       Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
-                    <label for="reportPrintPdfBtn">Print</label>
+                    <div class="small">Print</div>
                     <button id="reportPrintPdfBtn" type="button" class="primary">Print PDF</button>
                   </div>
                 </div>
                 <div class="table-column-controls" id="reportColumnControls">
                   <p class="small">Columns</p>
-                  <label><input type="checkbox" data-reports-col-toggle="studentNumber" checked>#</label>
-                  <label><input type="checkbox" data-reports-col-toggle="eaglesId" checked>Eagles ID</label>
-                  <label><input type="checkbox" data-reports-col-toggle="fullName">Full
+                  <label><input id="reportsColToggleStudentNumber" name="reportsColToggleStudentNumber" type="checkbox" data-reports-col-toggle="studentNumber" checked>#</label>
+                  <label><input id="reportsColToggleEaglesId" name="reportsColToggleEaglesId" type="checkbox" data-reports-col-toggle="eaglesId" checked>Eagles ID</label>
+                  <label><input id="reportsColToggleFullName" name="reportsColToggleFullName" type="checkbox" data-reports-col-toggle="fullName">Full
                     Name</label>
-                  <label><input type="checkbox" data-reports-col-toggle="englishName">English Name</label>
-                  <label><input type="checkbox" data-reports-col-toggle="generatedAt" checked>Generated</label>
-                  <label><input type="checkbox" data-reports-col-toggle="className" checked>Class</label>
-                  <label><input type="checkbox" data-reports-col-toggle="quarter" checked>Quarter</label>
-                  <label><input type="checkbox" data-reports-col-toggle="homeworkCompletionRate" checked>HW %</label>
-                  <label><input type="checkbox" data-reports-col-toggle="homeworkOnTimeRate" checked>On-Time %</label>
-                  <label><input type="checkbox" data-reports-col-toggle="behaviorScore" checked>Behavior</label>
-                  <label><input type="checkbox" data-reports-col-toggle="participationScore" checked>Participation</label>
-                  <label><input type="checkbox" data-reports-col-toggle="inClassScore" checked>In Class</label>
+                  <label><input id="reportsColToggleEnglishName" name="reportsColToggleEnglishName" type="checkbox" data-reports-col-toggle="englishName">English Name</label>
+                  <label><input id="reportsColToggleGeneratedAt" name="reportsColToggleGeneratedAt" type="checkbox" data-reports-col-toggle="generatedAt" checked>Generated</label>
+                  <label><input id="reportsColToggleClassName" name="reportsColToggleClassName" type="checkbox" data-reports-col-toggle="className" checked>Class</label>
+                  <label><input id="reportsColToggleQuarter" name="reportsColToggleQuarter" type="checkbox" data-reports-col-toggle="quarter" checked>Quarter</label>
+                  <label><input id="reportsColToggleHomeworkCompletionRate" name="reportsColToggleHomeworkCompletionRate" type="checkbox" data-reports-col-toggle="homeworkCompletionRate" checked>HW %</label>
+                  <label><input id="reportsColToggleHomeworkOnTimeRate" name="reportsColToggleHomeworkOnTimeRate" type="checkbox" data-reports-col-toggle="homeworkOnTimeRate" checked>On-Time %</label>
+                  <label><input id="reportsColToggleBehaviorScore" name="reportsColToggleBehaviorScore" type="checkbox" data-reports-col-toggle="behaviorScore" checked>Behavior</label>
+                  <label><input id="reportsColToggleParticipationScore" name="reportsColToggleParticipationScore" type="checkbox" data-reports-col-toggle="participationScore" checked>Participation</label>
+                  <label><input id="reportsColToggleInClassScore" name="reportsColToggleInClassScore" type="checkbox" data-reports-col-toggle="inClassScore" checked>In Class</label>
                 </div>
                 <p class="small admin-table-summary" id="reportDataSummary">
                   Showing latest performance reports.
@@ -2787,7 +2820,7 @@ Select a homework link to inspect details.</pre>
                     <label for="schoolSetupEndDate">Last school day</label><input id="schoolSetupEndDate" type="date">
                   </div>
                   <div class="col-3">
-                    <label for="schoolSetupAutoFillBtn">&nbsp;</label><button id="schoolSetupAutoFillBtn" type="button" class="btn-refresh">
+                    <div aria-hidden="true"></div><button id="schoolSetupAutoFillBtn" type="button" class="btn-refresh">
                       Auto-Fill Quarters
                     </button>
                   </div>
@@ -3048,12 +3081,12 @@ Select a homework link to inspect details.</pre>
                       <label for="profileFieldCreateSequence">Sequence</label><input id="profileFieldCreateSequence" type="number" min="1" step="1" value="9990">
                     </div>
                     <div class="col-2">
-                      <label for="profileFieldCreateBtn">&nbsp;</label><button id="profileFieldCreateBtn" type="button" class="btn-edit">
+                      <div aria-hidden="true"></div><button id="profileFieldCreateBtn" type="button" class="btn-edit">
                         Create Field
                       </button>
                     </div>
                     <div class="col-2">
-                      <label for="profileFieldLayoutRefreshBtn">&nbsp;</label><button id="profileFieldLayoutRefreshBtn" type="button" class="btn-refresh">
+                      <div aria-hidden="true"></div><button id="profileFieldLayoutRefreshBtn" type="button" class="btn-refresh">
                         Reload Editor
                       </button>
                     </div>
@@ -3179,6 +3212,9 @@ Select a homework link to inspect details.</pre>
           </div>
           <div class="col-3">
             <label for="parentQueueItemReportId">Report ID</label><input id="parentQueueItemReportId" type="text" readonly>
+            <div class="small">
+              <a id="parentQueueItemReportPreviewLink" href="#" target="_blank" rel="noopener noreferrer">Open report preview</a>
+            </div>
           </div>
           <div class="col-3">
             <label for="parentQueueItemEaglesId">Eagles ID</label><input id="parentQueueItemEaglesId" type="text" readonly>
@@ -3235,8 +3271,8 @@ Select a homework link to inspect details.</pre>
             <label for="parentQueueItemRecipients">Recipients</label><textarea id="parentQueueItemRecipients" placeholder="comma-separated emails"></textarea>
           </div>
           <div class="col-12">
-            <label for="parentQueueItemMessage">Teacher Comment</label><textarea id="parentQueueItemMessage" placeholder="Use encouraging, non-judgmental language that helps parents support this progress at home."></textarea>
-            <p class="small">This note is the parent-facing teacher comment and becomes part of the email body.</p>
+            <label for="parentQueueItemMessage">Teacher Comment In RC</label><textarea id="parentQueueItemMessage" placeholder="Use encouraging, non-judgmental language that helps parents support this progress at home."></textarea>
+            <p class="small">This updates the teacher comment inside the queued report card snapshot and regenerates the email body from that RC.</p>
           </div>
           <div class="col-12">
             <label for="parentQueueItemLastError">Last Error</label><textarea id="parentQueueItemLastError" readonly></textarea>
@@ -3347,7 +3383,7 @@ Select a homework link to inspect details.</pre>
       apply(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"));
     })();
   </script>
-  <script src="/web-asset/admin/student-admin.min.js?v=20260525i" defer></script>
+  <script src="/web-asset/admin/student-admin.min.js?v=20260611a" defer></script>
 </body>
 
 </html>

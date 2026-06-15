@@ -23,6 +23,7 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 4. Inspect route code before assuming auth behavior.
 5. Keep edits ASCII unless the target file already needs Unicode.
 6. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
+7. After any file edit, restart the dev runtime before reporting the task complete.
 
 ## Literal Instruction Terms
 

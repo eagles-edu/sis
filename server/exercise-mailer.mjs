@@ -125,6 +125,8 @@ loadEnvironmentFile()
  * @typedef {{
  *   eaglesId: string
  *   email: string
+ *   sourceSystem: string
+ *   sourceAttemptId: string
  *   pageTitle: string
  *   completedAt: string
  *   recipients: string[]
@@ -698,6 +700,10 @@ function buildSubmissionNotificationKey(payload) {
   return `${actorKey}|${completedAtBucket}`
 }
 
+/**
+ * @param {string} sourceSystem
+ * @returns {boolean}
+ */
 function isBrowserExerciseSource(sourceSystem) {
   return normalizeLower(sourceSystem) === CLOZE_WEB_SOURCE
 }

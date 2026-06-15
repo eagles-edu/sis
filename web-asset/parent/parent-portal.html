@@ -411,6 +411,16 @@
       justify-content: space-between;
     }
 
+    .detail-item-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .detail-item-title a:hover,
+    .detail-item-title a:focus-visible {
+      text-decoration: underline;
+    }
+
     .detail-empty {
       border: 1px dashed var(--line);
       border-radius: var(--radius-2);
@@ -1738,6 +1748,20 @@
                 </div>
               </div>
             </section>
+            <section id="reportAccessErrorModal" class="portal-modal hidden">
+              <div class="portal-modal-backdrop" id="reportAccessErrorModalBackdrop"></div>
+              <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
+                <div class="portal-modal-head">
+                  <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
+                  <button id="closeReportAccessErrorModalBtn" class="portal-modal-close" type="button">
+                    Đóng
+                  </button>
+                </div>
+                <div class="portal-modal-body">
+                  <p id="reportAccessErrorModalMessage">LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT</p>
+                </div>
+              </div>
+            </section>
 
             <section id="gradesYtdCard" class="panel">
               <div class="section-head">
@@ -2591,6 +2615,7 @@
       reportPastDueRows: [],
       pastDueModalOpen: false,
       performanceModalOpen: false,
+      reportAccessModalOpen: false,
       newsWeekSetModalOpen: false,
       reportArchiveRows: [],
       activeReportIndex: 0,
@@ -3098,7 +3123,7 @@
     function hoistPortalModalsToBody() {
       const host = document.body;
       if (!host) return;
-      ["pastDueHomeworkModal", "performanceReportModal", "newsWeekSetModal"].forEach((id) => {
+      ["pastDueHomeworkModal", "performanceReportModal", "reportAccessErrorModal", "newsWeekSetModal"].forEach((id) => {
         const modal = document.getElementById(id);
         if (!modal || modal.parentElement === host) return;
         host.appendChild(modal);
@@ -4556,6 +4581,7 @@
       const hasOpenModal =
         state.pastDueModalOpen ||
         state.performanceModalOpen ||
+        state.reportAccessModalOpen ||
         state.newsWeekSetModalOpen;
       document.body.classList.toggle("modal-open", hasOpenModal);
     }
@@ -4567,6 +4593,75 @@
       if (!modal) return;
       modal.classList.toggle("hidden", !shouldOpen);
       syncPortalModalBodyState();
+    }
+
+    function clearReportAccessErrorMarker() {
+      try {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has("reportAccessError")) return false;
+        url.searchParams.delete("reportAccessError");
+        const nextSearch = url.searchParams.toString();
+        const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ""}${url.hash}`;
+        window.history.replaceState({}, "", nextUrl);
+        return true;
+      } catch (error) {
+        void error;
+        return false;
+      }
+    }
+
+    function resolvePortalNextTarget() {
+      const rawTarget = normalizeText(new URLSearchParams(window.location.search).get("next"));
+      if (!rawTarget) return "";
+      try {
+        const resolved = new URL(rawTarget, window.location.origin);
+        if (resolved.origin !== window.location.origin) return "";
+        if (!resolved.pathname.startsWith("/parent")) return "";
+        return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+      } catch (error) {
+        void error;
+        return "";
+      }
+    }
+
+    function setReportAccessErrorModalOpen(open) {
+      const shouldOpen = Boolean(open);
+      state.reportAccessModalOpen = shouldOpen;
+      const modal = document.getElementById("reportAccessErrorModal");
+      if (!modal) return;
+      modal.classList.toggle("hidden", !shouldOpen);
+      syncPortalModalBodyState();
+    }
+
+    function openReportAccessErrorModalIfNeeded() {
+      const errorCode = normalizeText(new URLSearchParams(window.location.search).get("reportAccessError"));
+      if (errorCode !== "account-mismatch") return false;
+      clearReportAccessErrorMarker();
+      setReportAccessErrorModalOpen(true);
+      return true;
+    }
+
+    function normalizeReportSlugPart(value) {
+      const normalized = normalizeText(value).toLowerCase();
+      const slug = normalized
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      return slug || "report"
+    }
+
+    function buildReportSlugSegment(row = {}) {
+      const reportId = normalizeText(row?.id);
+      if (!reportId) return "";
+      const slug = normalizeReportSlugPart([
+        row?.fullName,
+        row?.englishName,
+        row?.studentName,
+        row?.className,
+        row?.schoolYear,
+        row?.quarter,
+      ].map((entry) => normalizeText(entry)).filter(Boolean).join(" "));
+      return `${slug}-${reportId}`;
     }
 
     function resolveReportAckStorageKey() {
@@ -4604,6 +4699,23 @@
     function resolveReportAcknowledgementEntry(reportId, role = "parent") {
       const id = normalizeText(reportId);
       if (!id) return null;
+      const liveRow =
+        Array.isArray(state.reportArchiveRows) ?
+        state.reportArchiveRows.find((row) => normalizeText(row?.id) === id) || null :
+        null;
+      if (liveRow) {
+        const acknowledgedAt =
+          role === "student" ?
+          normalizeText(liveRow?.studentReviewedAt) :
+          normalizeText(liveRow?.parentReviewedAt);
+        const acknowledgedBy =
+          role === "student" ?
+          normalizeText(liveRow?.studentReviewedByUsername) :
+          normalizeText(liveRow?.parentReviewedByUsername);
+        if (acknowledgedAt || acknowledgedBy) {
+          return { acknowledgedAt, acknowledgedBy };
+        }
+      }
       const entry = state.reportAcknowledgements?.[id];
       if (!entry || typeof entry !== "object") return null;
       const scoped = entry[role];
@@ -4638,6 +4750,32 @@
 
     function isReportAcknowledged(row = {}, role = "parent") {
       return Boolean(resolveReportAcknowledgementEntry(row?.id, role));
+    }
+
+    function buildParentReportViewerUrl(report = {}) {
+      const id = normalizeText(report?.id);
+      if (!id) return "";
+      const prefix = normalizeText(
+        window.__SIS_PARENT_REPORT_PAGE_PREFIX || "/parent/reports",
+      ).replace(/\/+$/, "");
+      const slugSegment = buildReportSlugSegment(report);
+      return `${prefix}/${encodeURIComponent(slugSegment || id)}`;
+    }
+
+    function reportArchiveChipModel(row = {}, role = "parent") {
+      const entry = resolveReportAcknowledgementEntry(row?.id, role);
+      if (entry?.acknowledgedAt) {
+        return {
+          label: "Reviewed",
+          tone: "ok",
+          note: `Reviewed ${formatPortalWeekdayDateTime(entry.acknowledgedAt)}`,
+        };
+      }
+      return {
+        label: "New",
+        tone: "warn",
+        note: "New report. Review pending.",
+      };
     }
 
     function sortedReportArchiveRows(rows = []) {
@@ -4763,21 +4901,16 @@
       }
       root.replaceChildren();
       state.reportArchiveRows.forEach((row, index) => {
-        const entry = resolveReportAcknowledgementEntry(row?.id);
         const reportLabel = `${normalizeText(row?.className) || "Lớp học"} | ${normalizeText(row?.quarter).toUpperCase() || "Kỳ học"}`;
-        const statusLabel =
-          entry ?
-          `Đã xác nhận lúc ${formatPortalDateTime(entry.acknowledgedAt)} (${entry.acknowledgedBy || "Phụ huynh"})` :
-          "Chưa xác nhận xem báo cáo.";
+        const statusChip = reportArchiveChipModel(row, "parent");
         const article = document.createElement("article");
         article.className =
-          entry ? "report-archive-item" : "report-archive-item is-outstanding";
+          statusChip.label === "Reviewed" ? "report-archive-item" : "report-archive-item is-outstanding";
         article.setAttribute("data-report-id", normalizeText(row?.id));
-        const button = document.createElement("button");
-        button.className = "report-archive-link";
-        button.type = "button";
-        button.setAttribute("data-report-index", String(index));
-        button.textContent = reportLabel;
+        const link = document.createElement("a");
+        link.className = "report-archive-link";
+        link.href = buildParentReportViewerUrl(row);
+        link.textContent = reportLabel;
         const meta = document.createElement("span");
         meta.className = "report-archive-meta";
         meta.textContent = formatPortalDateTime(
@@ -4785,8 +4918,11 @@
         );
         const status = document.createElement("span");
         status.className = "report-archive-status";
-        status.textContent = statusLabel;
-        article.append(button, meta, status);
+        status.textContent = statusChip.note;
+        const chip = document.createElement("span");
+        chip.className = `chip ${chipClassForTone(statusChip.tone)}`;
+        chip.textContent = statusChip.label;
+        article.append(link, meta, chip, status);
         root.appendChild(article);
       });
     }
@@ -5666,15 +5802,40 @@
       }
       const head = document.createElement("div");
       head.className = "detail-item-head";
-      const title = document.createElement("strong");
-      title.textContent = item.title || "Chi tiết";
+      const titleWrap = document.createElement("span");
+      titleWrap.className = "detail-item-title";
+      const titleHref = normalizeText(item.href || item.url || "");
+      if (titleHref) {
+        const link = document.createElement("a");
+        link.href = titleHref;
+        if (item.sameTab === true) {
+          link.removeAttribute("target");
+          link.removeAttribute("rel");
+        } else {
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+        }
+        link.textContent = item.title || "Chi tiết";
+        titleWrap.append(link);
+      } else {
+        const title = document.createElement("strong");
+        title.textContent = item.title || "Chi tiết";
+        titleWrap.append(title);
+      }
       const meta = document.createElement("span");
       meta.className = "detail-meta";
       meta.textContent = item.meta || "";
+      if (normalizeText(item.badgeLabel)) {
+        const badge = document.createElement("span");
+        badge.className = `chip ${chipClassForTone(item.badgeTone)}`;
+        badge.textContent = item.badgeLabel;
+        head.append(titleWrap, meta, badge);
+      } else {
+        head.append(titleWrap, meta);
+      }
       const note = document.createElement("p");
       note.className = "detail-note";
       note.textContent = item.note || "Chưa có chi tiết.";
-      head.append(title, meta);
       article.append(head, note);
       return article.outerHTML;
     }
@@ -6817,13 +6978,19 @@
             classNames: ["fc-event-report"],
           })),
           primaryTitle: "Báo cáo mới nhất",
-          primaryItems: reportArchive.slice(0, 8).map((row) => ({
-            title: `${normalizeText(row.className) || "Báo cáo"} | ${normalizeText(row.quarter || "").toUpperCase() || "Kỳ"}`,
-            meta: formatPortalDateTime(row.generatedAt),
-            note: normalizeText(row.comments) ||
-              "Không có nhận xét bổ sung.",
-            tone: "good",
-          })),
+          primaryItems: reportArchive.slice(0, 8).map((row) => {
+            const chip = reportArchiveChipModel(row, "parent");
+            return {
+              title: `${normalizeText(row.className) || "Báo cáo"} | ${normalizeText(row.quarter || "").toUpperCase() || "Kỳ"}`,
+              meta: formatPortalWeekdayDateTime(row.generatedAt || row.generatedDate),
+              note: chip.note,
+              tone: chip.label === "Reviewed" ? "good" : "warn",
+              href: buildParentReportViewerUrl(row),
+              sameTab: true,
+              badgeLabel: chip.label,
+              badgeTone: chip.tone,
+            };
+          }),
           primaryEmpty: "Chưa có báo cáo trong kho lưu trữ.",
           historyTitle: "Ngữ cảnh báo cáo",
           historyItems: gradeHistory.slice(0, 10).map((row) => ({
@@ -7539,6 +7706,8 @@
       document.getElementById("loginCard").classList.add("hidden");
       setActivePortalView("dashboard");
       await hydratePortal({ initialUser: state.me });
+      if (handlePortalPostAuthRouteState()) return;
+      openReportAccessErrorModalIfNeeded();
       setStatus("Đăng nhập thành công.", "ok");
     }
     async function logout() {
@@ -7571,6 +7740,7 @@
       state.newsWeekSetViewerIndex = -1;
       state.activeView = "dashboard";
       state.activeDashboardPage = "home";
+      state.reportAccessModalOpen = false;
       syncPortalModalBodyState();
       updateDraftBadge();
       setStatus("Đã đăng xuất.", "ok");
@@ -7619,6 +7789,14 @@
       );
       setStatus(`Đã gửi duyệt (mã: ${normalizeText(result.submissionId)}).`, "ok");
     }
+    function handlePortalPostAuthRouteState() {
+      const nextTarget = resolvePortalNextTarget();
+      if (nextTarget) {
+        window.location.assign(nextTarget);
+        return true;
+      }
+      return false;
+    }
     async function bootstrap() {
       try {
         assertApiOriginConfiguredForStaticPreview();
@@ -7629,7 +7807,9 @@
             document.documentElement.dataset.parentAuthState = "authenticated";
             document.getElementById("loginCard").classList.add("hidden");
             setActivePortalView("dashboard");
+            if (handlePortalPostAuthRouteState()) return;
             await hydratePortal({ initialUser: state.me });
+            openReportAccessErrorModalIfNeeded();
             scheduleChipTooltipRefresh(document);
           } else {
             document.documentElement.dataset.parentAuthState = "unauthenticated";
@@ -7646,6 +7826,7 @@
         await hydratePortal();
         document.getElementById("loginCard").classList.add("hidden");
         setActivePortalView("dashboard");
+        openReportAccessErrorModalIfNeeded();
         scheduleChipTooltipRefresh(document);
       } catch (error) {
         setStatus(error?.message || "Không thể khởi tạo cổng phụ huynh.", "err");
@@ -7835,10 +8016,37 @@
         setPerformanceReportModalOpen(true, state.activeReportIndex + 1);
       });
     document
-      .getElementById("acknowledgePerformanceReportBtn")
+      .getElementById("reportAccessErrorModalBackdrop")
       ?.addEventListener("click", () => {
+        setReportAccessErrorModalOpen(false);
+        clearReportAccessErrorMarker();
+      });
+    document
+      .getElementById("closeReportAccessErrorModalBtn")
+      ?.addEventListener("click", () => {
+        setReportAccessErrorModalOpen(false);
+        clearReportAccessErrorMarker();
+      });
+    document
+      .getElementById("acknowledgePerformanceReportBtn")
+      ?.addEventListener("click", async () => {
         const active = state.reportArchiveRows[state.activeReportIndex];
         if (!active) return;
+        try {
+          await api(`/api/parent/reports/${encodeURIComponent(normalizeText(active.id))}/acknowledge`, {
+            method: "POST",
+          });
+        } catch (error) {
+          handlePortalError(error);
+          return;
+        }
+        const acknowledgedAt = new Date().toISOString();
+        const acknowledgedBy =
+          normalizeText(state?.me?.parentsId) ||
+          normalizeText(state?.me?.username) ||
+          "Parent";
+        active.parentReviewedAt = acknowledgedAt;
+        active.parentReviewedByUsername = acknowledgedBy;
         markReportAcknowledged(active.id);
         renderPerformanceReportsOverviewCard(selectedDashboardChild());
         renderActivePerformanceReportModal();
@@ -7855,6 +8063,11 @@
       });
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
+      if (state.reportAccessModalOpen) {
+        setReportAccessErrorModalOpen(false);
+        clearReportAccessErrorMarker();
+        return;
+      }
       if (state.performanceModalOpen) {
         setPerformanceReportModalOpen(false);
         return;

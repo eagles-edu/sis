@@ -8,17 +8,25 @@ export function initQueueHubIsland({
   const queueHubPanelsEl = document?.getElementById("queueHubPanels");
   queueHubPanelsEl?.addEventListener("click", (event) => {
     const target = event?.target;
-    if (!(target instanceof Element)) return;
+    const ElementCtor = globalThis.Element;
+    if (typeof ElementCtor !== "function" || !(target instanceof ElementCtor)) return;
     const openLink = target.closest(
       "[data-queue-hub-open-panel][data-queue-hub-open-index]",
     );
-    if (!(openLink instanceof HTMLElement)) return;
+    const HTMLElementCtor = globalThis.HTMLElement;
+    if (typeof HTMLElementCtor !== "function" || !(openLink instanceof HTMLElementCtor)) return;
     const panelId = String(openLink.getAttribute("data-queue-hub-open-panel") || "");
     const rowIndex = Number.parseInt(
       String(openLink.getAttribute("data-queue-hub-open-index") || ""),
       10,
     );
-    if (openLink instanceof HTMLAnchorElement) event.preventDefault();
+    const HTMLAnchorElementCtor = globalThis.HTMLAnchorElement;
+    if (
+      typeof HTMLAnchorElementCtor === "function" &&
+      openLink instanceof HTMLAnchorElementCtor
+    ) {
+      event.preventDefault();
+    }
     if (typeof onQueueHubItemOpen === "function") {
       onQueueHubItemOpen(panelId, Number.isFinite(rowIndex) ? rowIndex : 0);
     }

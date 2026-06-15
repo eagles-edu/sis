@@ -83,6 +83,7 @@
         },
         parentReportQueue: {
           items: [],
+          queuedReportIds: {},
           total: 0,
           hasMore: false,
           showAll: false,
@@ -90,6 +91,7 @@
           savedReportCountHint: 0,
           sourceRows: [],
           stagedRows: [],
+          selectedIds: {},
           pendingStageQueueById: {},
         },
         newsReview: {
@@ -486,7 +488,7 @@
         ["assignmentSendBtn", ["Send Email", "Send Assignment Email"]],
         ["pt_actionInsertBtn", ["Insert Field", "Insert to Focused Field"]],
         ["pt_saveBtn", ["Save Report", "Save Performance Report"]],
-        ["pt_queueSendBtn", ["Queue Email", "Queue Weekend Batch Email"]],
+        ["pt_queueSendBtn", ["Approve -> Queue", "Save for Admin Review"]],
         ["openTabulatorGradesBtn", ["Open Grades", "Open Tabulator Grades Admin"]],
         ["reportGenerateBtn", ["Generate PDF", "Generate from Grade Records"]],
         ["reportCardBtn", ["Report PDF", "Download PDF Report Card"]],
@@ -2693,6 +2695,18 @@
       function normalizeText(value) {
         if (value === undefined || value === null) return "";
         return String(value).trim();
+      }
+
+      function sanitizeDomIdPart(value = "") {
+        const normalized = normalizeText(value)
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/đ/g, "d")
+          .replace(/Đ/g, "D")
+          .replace(/[^a-zA-Z0-9_-]+/g, "_")
+          .replace(/_+/g, "_")
+          .replace(/^_+|_+$/g, "");
+        return normalized || "field";
       }
 
       function normalizeLower(value) {
@@ -9580,10 +9594,7 @@
         });
         const queueBtn = document.getElementById("pt_queueSendBtn");
         if (queueBtn) {
-          queueBtn.textContent =
-            teacherParentTrackingWrite ?
-              "Save for Admin Review"
-            : "Queue Weekend Batch Email";
+          queueBtn.textContent = "Submit for Admin Review";
         }
         const adminDataActionIds = [
           "attendanceArchiveToggleBtn",
@@ -10110,7 +10121,7 @@
           const item = document.createElement("label");
           item.className = "permission-page-item";
           item.innerHTML = `
-          <input type="checkbox" data-perm-page="${roleName}" value="${slug}" ${policy.allowedPages.includes(slug) ? "checked" : ""}>
+          <input type="checkbox" id="perm_${sanitizeDomIdPart(roleName)}_${sanitizeDomIdPart(slug)}" name="perm_${sanitizeDomIdPart(roleName)}_${sanitizeDomIdPart(slug)}" data-perm-page="${roleName}" value="${slug}" ${policy.allowedPages.includes(slug) ? "checked" : ""}>
           <span>${slug}</span>
         `;
           pageList.appendChild(item);
@@ -11877,7 +11888,7 @@
                 student.assignmentNames.join(", ")
               : "";
             tr.innerHTML = `
-            <td><input type="checkbox" class="checkbox-inline" data-remind-student="${student.studentRefId}" ${index < 5 ? "checked" : ""}></td>
+          <td><input type="checkbox" id="remind_student_${sanitizeDomIdPart(student.studentRefId)}" name="remind_student_${sanitizeDomIdPart(student.studentRefId)}" class="checkbox-inline" data-remind-student="${student.studentRefId}" ${index < 5 ? "checked" : ""}></td>
             <td>${student.fullName || ""}</td>
             <td>${student.eaglesId || ""}</td>
             <td>${student.outstandingCount || 0}</td>
@@ -13458,6 +13469,163 @@
         );
       }
 
+      function setQueuedPerformanceReportId(reportId = "", queued = true) {
+        const id = normalizeText(reportId);
+        if (!id) return;
+        const next = {
+          ...(state.parentReportQueue?.queuedReportIds || {}),
+        };
+        if (queued) next[id] = true;
+        else delete next[id];
+        state.parentReportQueue.queuedReportIds = next;
+      }
+
+      function queuedPerformanceReportIdState() {
+        const source =
+          state.parentReportQueue &&
+          state.parentReportQueue.queuedReportIds &&
+          typeof state.parentReportQueue.queuedReportIds === "object" ?
+            state.parentReportQueue.queuedReportIds
+          : {};
+        state.parentReportQueue.queuedReportIds = source;
+        return source;
+      }
+
+      function parentQueueSelectionState() {
+        const selectedIds =
+          state.parentReportQueue && state.parentReportQueue.selectedIds && typeof state.parentReportQueue.selectedIds === "object" ?
+            state.parentReportQueue.selectedIds
+          : {};
+        state.parentReportQueue.selectedIds = selectedIds;
+        return selectedIds;
+      }
+
+      function isParentQueueItemSelected(queueId = "") {
+        const id = normalizeText(queueId);
+        if (!id) return false;
+        return Boolean(parentQueueSelectionState()[id]);
+      }
+
+      function setParentQueueItemSelected(queueId = "", selected = false) {
+        const id = normalizeText(queueId);
+        if (!id) return;
+        const selectedIds = { ...parentQueueSelectionState() };
+        if (selected) selectedIds[id] = true;
+        else delete selectedIds[id];
+        state.parentReportQueue.selectedIds = selectedIds;
+      }
+
+      function clearParentQueueSelection() {
+        state.parentReportQueue.selectedIds = {};
+      }
+
+      function selectedParentQueueItems() {
+        const items = Array.isArray(state.parentReportQueue?.items) ? state.parentReportQueue.items : [];
+        return items.filter((item) => isParentQueueItemSelected(item.id));
+      }
+
+      function setParentQueueSelectionForVisibleRows(selected = false, visibleItems = []) {
+        const items = Array.isArray(visibleItems) ? visibleItems : [];
+        items.forEach((item) => setParentQueueItemSelected(item.id, selected));
+      }
+
+      function updateParentQueueSelectAllState(visibleItems = []) {
+        const selectAllEl = document.getElementById("performanceQueueSelectAll");
+        if (!(selectAllEl instanceof HTMLInputElement)) return;
+        const items = Array.isArray(visibleItems) ? visibleItems : [];
+        const selectedCount = items.filter((item) => isParentQueueItemSelected(item.id)).length;
+        selectAllEl.disabled = !items.length;
+        selectAllEl.checked = Boolean(items.length && selectedCount === items.length);
+        selectAllEl.indeterminate = Boolean(selectedCount > 0 && selectedCount < items.length);
+      }
+
+      async function updateQueuedPerformanceReportHold(queueId = "", nextHeld = false) {
+        const id = normalizeText(queueId);
+        if (!id) throw new Error("Select a queued report item first.");
+        const action = nextHeld ? "hold" : "requeue";
+        const result = await api(ADMIN_NOTIFY_BATCH_STATUS_PATH, {
+          method: "POST",
+          body: {
+            action,
+            queueId: id,
+            queueType: "parent-report",
+          },
+        });
+        await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
+        const latest = result?.item ? normalizeQueueItemForUi(result.item) : null;
+        if (latest) {
+          const idx = state.parentReportQueue.items.findIndex(
+            (entry) => entry.id === latest.id,
+          );
+          state.parentReportQueue.modalIndex = idx >= 0 ? idx : 0;
+        }
+        const modal = document.getElementById("parentQueueModal");
+        if (modal && !modal.classList.contains("hidden")) renderParentQueueModal();
+        const statusMessage =
+          nextHeld ? "Queued performance report moved to hold." : "Queued performance report released from hold.";
+        setParentQueueModalStatus(
+          nextHeld ? "Queue item placed on hold." : "Queue item released from hold.",
+        );
+        setStatus(statusMessage);
+      }
+
+      function buildAdminReportCardPreviewUrl(item = {}) {
+        const reportId = queueItemReportId(item);
+        const queueId = normalizeText(item?.id);
+        const studentRefId = normalizeText(item?.linkedStudentRefId || item?.payloadJson?.studentRefId);
+        const className = normalizeText(item?.level || item?.payloadJson?.className || item?.payloadJson?.metaPayload?.className);
+        const schoolYear = normalizeText(item?.payloadJson?.schoolYear || item?.payloadJson?.metaPayload?.schoolYear);
+        const quarter = normalizeText(item?.payloadJson?.quarter || item?.payloadJson?.metaPayload?.quarter);
+        const targetUrl =
+          window.location.protocol.startsWith("http") ?
+            new URL("/admin/report-card-preview", window.location.origin)
+          : new URL("report-card-preview", window.location.href);
+        const params = targetUrl.searchParams;
+        if (ADMIN_API_ORIGIN) params.set("apiOrigin", ADMIN_API_ORIGIN);
+        if (studentRefId) params.set("studentRefId", studentRefId);
+        if (className) params.set("className", className);
+        if (schoolYear) params.set("schoolYear", schoolYear);
+        if (quarter) params.set("quarter", quarter);
+        if (reportId) params.set("reportId", reportId);
+        if (queueId) params.set("queueId", queueId);
+        targetUrl.search = params.toString();
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+      }
+
+      function persistQueuedReportCardSnapshot(item = {}) {
+        const queueId = normalizeText(item?.id);
+        const snapshot = queueItemReportCardSnapshot(item);
+        if (!queueId || !snapshot) return;
+        try {
+          window.localStorage.setItem(
+            `sis.reportCardPreview.${queueId}`,
+            JSON.stringify(snapshot),
+          );
+        } catch (error) {
+          void error;
+        }
+      }
+
+      function incomingPerformanceRows(rows = []) {
+        const queuedReportIds = new Set([
+          ...Object.keys(queuedPerformanceReportIdState()),
+          ...state.parentReportQueue.items
+            .map((item) => queueItemReportId(item))
+            .filter(Boolean),
+        ]);
+        return (Array.isArray(rows) ? rows : []).filter((row) => {
+          if (!row || typeof row !== "object") return false;
+          if (isPerformanceReportHeld(row.id)) return true;
+          if (row.id && queuedReportIds.has(normalizeText(row.id))) return false;
+          const workflowState = normalizeText(row.workflowState).toLowerCase();
+          return (
+            workflowState === "submitted_for_admin_review"
+            || workflowState === "incoming_admin_review"
+            || workflowState === "awaiting_admin_approval"
+          );
+        });
+      }
+
       function queueItemStudentName(item = {}) {
         const payloadStudent = item?.payloadJson?.student || {};
         return normalizeText(
@@ -13481,11 +13649,195 @@
         );
       }
 
+      function queueItemReportCardSnapshot(item = {}) {
+        const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {};
+        return payload?.reportSnapshot && typeof payload.reportSnapshot === "object" ? payload.reportSnapshot : null;
+      }
+
+      function setQueueItemReportCardSnapshot(item = {}, snapshot = null) {
+        if (!item || typeof item !== "object" || !snapshot || typeof snapshot !== "object")
+          return;
+        if (!item.payloadJson || typeof item.payloadJson !== "object")
+          item.payloadJson = {};
+        item.payloadJson.reportSnapshot = snapshot;
+      }
+
+      function reportCardSnapshotNeedsHydration(report = null) {
+        if (!report || typeof report !== "object") return true;
+        const metrics = report?.metrics && typeof report.metrics === "object" ? report.metrics : null;
+        const rubricRows =
+          report?.rubric && Array.isArray(report.rubric.rows) ? report.rubric.rows : [];
+        if (!metrics) return true;
+        if (!normalizeText(metrics.teacherName) && !normalizeText(metrics.lessonSummary))
+          return true;
+        if (rubricRows.length < 10) return true;
+        return false;
+      }
+
+      async function hydrateQueueItemReportCardSnapshot(item = {}) {
+        const studentRefId = normalizeText(
+          item?.linkedStudentRefId || item?.payloadJson?.studentRefId,
+        );
+        const reportId = queueItemReportId(item);
+        if (!studentRefId || !reportId) return queueItemReportCardSnapshot(item);
+        const nextSnapshot = await fetchPerformanceReportCardSnapshot(studentRefId, {
+          className: normalizeText(
+            item?.payloadJson?.className ||
+              item?.payloadJson?.metaPayload?.className ||
+              item?.exerciseTitle ||
+              item?.level,
+          ),
+          schoolYear: normalizeText(
+            item?.payloadJson?.schoolYear || item?.payloadJson?.metaPayload?.schoolYear,
+          ),
+          quarter: normalizeText(
+            item?.payloadJson?.quarter || item?.payloadJson?.metaPayload?.quarter,
+          ),
+          reportId,
+        }).catch(() => null);
+        if (!nextSnapshot) return queueItemReportCardSnapshot(item);
+        setQueueItemReportCardSnapshot(item, nextSnapshot);
+        persistQueuedReportCardSnapshot(item);
+        return nextSnapshot;
+      }
+
+      function queueReportCardSectionLines(title = "", payload = {}) {
+        const lines = [title];
+        const add = (label, value) => {
+          lines.push(`${label}: ${normalizeText(value) || "-"}`);
+        };
+        add("Title", payload?.title || payload?.assignmentName || payload?.name);
+        add("Subject", payload?.subject || payload?.className || payload?.course);
+        add("Teacher", payload?.teacher || payload?.owner || payload?.assignee);
+        add("Note", payload?.note || payload?.summary || payload?.description);
+        add("Assignments", payload?.assignmentsCount ?? payload?.assignmentCount);
+        add("Exercises", payload?.exercisesCount ?? payload?.exerciseCount);
+        if (Array.isArray(payload?.exercises) && payload.exercises.length) {
+          payload.exercises.forEach((exercise, index) => {
+            const titleText = normalizeText(exercise?.title || exercise?.name || exercise?.assignmentName) || "(untitled)";
+            const detailText = normalizeText(exercise?.detail || exercise?.note || exercise?.description);
+            const statusText = normalizeText(exercise?.status || exercise?.state || "");
+            lines.push(
+              `${index + 1}. ${titleText}${statusText ? ` | ${statusText}` : ""}${detailText ? ` | ${detailText}` : ""}`,
+            );
+          });
+        }
+        return lines;
+      }
+
+      function queueReportCardRubricLines(report = {}) {
+        const rubric = report?.rubric && typeof report.rubric === "object" ? report.rubric : {};
+        const rows = Array.isArray(rubric?.rows) ? rubric.rows : [];
+        if (!rows.length) return ["Rubric: none"];
+        return [
+          "Rubric:",
+          ...rows.map((row, index) => {
+            const prompt = normalizeText(row?.prompt || row?.metric || row?.title) || `Row ${index + 1}`;
+            const score = normalizeText(row?.resultScore || row?.observedResult || row?.result || row?.observed) || "-";
+            const explanation = normalizeText(row?.resultExplanation || row?.detail || row?.summary || row?.interpretation);
+            const recommendation = normalizeText(row?.recommendation || row?.actionNote || row?.action || row?.note) || "-";
+            return `${index + 1}. ${prompt} | rating=${score}${explanation ? ` | meaning=${explanation}` : ""} | comment=${recommendation}`;
+          }),
+        ];
+      }
+
+      function reportCardSnapshotText(report = {}) {
+        if (!report || typeof report !== "object") return "";
+        const identity = report?.identity && typeof report.identity === "object" ? report.identity : {};
+        const scope = report?.scope && typeof report.scope === "object" ? report.scope : {};
+        const snapshot = report?.snapshot && typeof report.snapshot === "object" ? report.snapshot : {};
+        const attendance = report?.attendance && typeof report.attendance === "object" ? report.attendance : {};
+        const metrics = report?.metrics && typeof report.metrics === "object" ? report.metrics : {};
+        const currentHomework = report?.currentHomework && typeof report.currentHomework === "object" ? report.currentHomework : {};
+        const pastDueHomework = report?.pastDueHomework && typeof report.pastDueHomework === "object" ? report.pastDueHomework : {};
+        const parentReview = report?.parentReview && typeof report.parentReview === "object" ? report.parentReview : {};
+        const studentReview = report?.studentReview && typeof report.studentReview === "object" ? report.studentReview : {};
+        return [
+          "Performance Report Snapshot",
+          `Snapshot ID: ${normalizeText(snapshot.reportId) || "-"}`,
+          `Snapshot source: ${normalizeText(snapshot.source) || "-"}`,
+          `Captured at: ${normalizeText(snapshot.capturedAtDisplay || snapshot.capturedAt) || "-"}`,
+          `Approved at: ${normalizeText(snapshot.approvedAtDisplay || snapshot.approvedAt) || "-"}`,
+          `Student: ${normalizeText(identity.fullName) || "-"}`,
+          `English name: ${normalizeText(identity.englishName) || "-"}`,
+          `Eagles ID: ${normalizeText(identity.eaglesId) || "-"}`,
+          `Student number: ${normalizeText(identity.studentNumber) || "-"}`,
+          `Scope: ${[
+            normalizeText(scope.className) || normalizeText(snapshot.className),
+            normalizeText(scope.schoolYear) || normalizeText(snapshot.schoolYear),
+            normalizeText(scope.quarter) || normalizeText(snapshot.quarter),
+          ].filter(Boolean).join(" | ") || "-"}`,
+          `Attendance: total=${normalizeText(attendance.total) || "-"} | absences=${normalizeText(attendance.absences) || "-"} | tardy=${normalizeText(attendance.tardy) || "-"} | percent=${normalizeText(attendance.percent || attendance.rate) || "-"}`,
+          `Metrics: homework completion=${normalizeText(metrics.homeworkCompletionRate) || "-"} | homework on-time=${normalizeText(metrics.homeworkOnTimeRate) || "-"} | behavior=${normalizeText(metrics.behaviorScore) || "-"} | skills=${normalizeText(metrics.participationScore) || "-"} | academic=${normalizeText(metrics.inClassScore) || "-"} | participation points=${normalizeText(metrics.participationPointsAward) || "-"}`,
+          `Teacher snapshot: teacher=${normalizeText(metrics.teacherName) || "-"} | lesson=${normalizeText(metrics.lessonSummary) || "-"} | vision=${normalizeText(metrics.visionStatus) || "-"} | comment=${normalizeText(metrics.teacherComment) || "-"}`,
+          "",
+          ...queueReportCardSectionLines("Current homework:", currentHomework),
+          "",
+          ...queueReportCardSectionLines("Past due homework:", pastDueHomework),
+          "",
+          ...queueReportCardRubricLines(report),
+          "",
+          `Parent review: ${normalizeText(parentReview.reviewedBy) || "-"} | ${normalizeText(parentReview.reviewedAt) || "-"}`,
+          `Student review: ${normalizeText(studentReview.reviewedBy) || "-"} | ${normalizeText(studentReview.reviewedAt) || "-"}`,
+        ]
+          .filter((line, index, lines) => line !== "" || lines[index - 1] !== "")
+          .join("\n");
+      }
+
+      function parentReportTeacherCommentFromSnapshot(report = null) {
+        if (!report || typeof report !== "object") return "";
+        const metrics =
+          report?.metrics && typeof report.metrics === "object" ? report.metrics : {};
+        return normalizeText(metrics.teacherComment);
+      }
+
+      function setParentReportTeacherCommentInSnapshot(report = null, teacherComment = "") {
+        if (!report || typeof report !== "object") return null;
+        const nextComment = normalizeText(teacherComment);
+        const nextMetrics =
+          report?.metrics && typeof report.metrics === "object" ?
+            { ...report.metrics }
+          : {};
+        nextMetrics.teacherComment = nextComment || "-";
+        return {
+          ...report,
+          metrics: nextMetrics,
+        };
+      }
+
+      function parentReportEmailBodyFromSnapshot(report = null) {
+        return normalizeText(reportCardSnapshotText(report));
+      }
+
+      function buildAdminReportCardPreviewUrlFromReportRow(row = {}) {
+        if (!row || typeof row !== "object") return "";
+        const targetUrl =
+          window.location.protocol.startsWith("http") ?
+            new URL("/admin/report-card-preview", window.location.origin)
+          : new URL("report-card-preview", window.location.href);
+        const params = targetUrl.searchParams;
+        if (ADMIN_API_ORIGIN) params.set("apiOrigin", ADMIN_API_ORIGIN);
+        const studentRefId = normalizeText(row.studentRefId);
+        const className = normalizeText(row.className);
+        const schoolYear = normalizeText(row.schoolYear);
+        const quarter = normalizeText(row.quarter);
+        const reportId = normalizeText(row.id);
+        if (studentRefId) params.set("studentRefId", studentRefId);
+        if (className) params.set("className", className);
+        if (schoolYear) params.set("schoolYear", schoolYear);
+        if (quarter) params.set("quarter", quarter);
+        if (reportId) params.set("reportId", reportId);
+        targetUrl.search = params.toString();
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+      }
+
       function queueItemReportSnapshotText(item = {}) {
         const payload = item?.payloadJson && typeof item.payloadJson === "object" ? item.payloadJson : {};
         const meta = payload?.metaPayload && typeof payload.metaPayload === "object" ? payload.metaPayload : {};
         const rubric = payload?.rubricPayload && typeof payload.rubricPayload === "object" ? payload.rubricPayload : {};
+        const reportSnapshot = queueItemReportCardSnapshot(item) || payload?.snapshot || payload?.reportSnapshot || null;
         const reportId = queueItemReportId(item);
+        const reportPreviewUrl = buildAdminReportCardPreviewUrl(item);
         const englishName = queueItemStudentEnglishName(item);
         const fullName = queueItemStudentName(item);
         const eaglesId = queueItemEaglesId(item);
@@ -13495,7 +13847,6 @@
         const teacherName = normalizeText(meta?.teacherName) || "-";
         const visionStatus = normalizeText(meta?.visionStatus) || "-";
         const lessonSummary = normalizeText(meta?.lessonSummary) || "-";
-        const messageText = normalizeText(item?.message);
         const summaryLines = [
           `Behavior: ${queueRatingSummary(item?.payloadJson?.behaviorScore || rubric?.behaviorScore || payload?.behaviorScore)}`,
           `Skills: ${queueRatingSummary(item?.payloadJson?.participationScore || rubric?.participationScore || payload?.participationScore)}`,
@@ -13523,9 +13874,30 @@
             })
             : ["None"]),
         ].join("\n");
+        const snapshotText = reportSnapshot ? reportCardSnapshotText(reportSnapshot) : "";
+        const queueMetadataLines = [
+          `Recipients: ${(Array.isArray(item?.recipients) && item.recipients.length) ? item.recipients.join(", ") : "None"}`,
+          `Queue status: ${normalizeText(item?.status) || "-"}`,
+          `Queued by: ${normalizeText(item?.queuedByUsername) || "-"}`,
+          `Queued at: ${formatDateTime(item?.queuedAt) || "-"}`,
+          `Scheduled for: ${normalizeText(item?.scheduledFor) || "-"}`,
+          `HS reviewed: ${normalizeText(item?.studentReviewedAt) || "-"}${normalizeText(item?.studentReviewedByUsername) ? ` | ${normalizeText(item?.studentReviewedByUsername)}` : ""}`,
+          `CM reviewed: ${normalizeText(item?.parentReviewedAt) || "-"}${normalizeText(item?.parentReviewedByUsername) ? ` | ${normalizeText(item?.parentReviewedByUsername)}` : ""}`,
+          `Last error: ${normalizeText(item?.lastError) || "-"}`,
+        ];
+        if (snapshotText) {
+          return [
+            snapshotText,
+            "",
+            ...queueMetadataLines,
+          ]
+            .filter(Boolean)
+            .join("\n");
+        }
         return [
           "Performance Report",
           `Report ID: ${reportId || "-"}`,
+          `Preview URL: ${reportPreviewUrl || "-"}`,
           `Queue ID: ${normalizeText(item?.id) || "-"}`,
           `Student: ${fullName || "-"}`,
           `English name: ${englishName || "-"}`,
@@ -13537,6 +13909,7 @@
           `Teacher: ${teacherName}`,
           `Vision status: ${visionStatus}`,
           `Lesson summary: ${lessonSummary}`,
+          snapshotText,
           "",
           "Summary by category:",
           ...summaryLines.map((line) => `- ${line}`),
@@ -13548,17 +13921,7 @@
           "",
           homeworkSection("Past due homework:", meta?.pastDueHomeworkAssignments),
           "",
-          `Recipients: ${(Array.isArray(item?.recipients) && item.recipients.length) ? item.recipients.join(", ") : "None"}`,
-          `Queue status: ${normalizeText(item?.status) || "-"}`,
-          `Queued by: ${normalizeText(item?.queuedByUsername) || "-"}`,
-          `Queued at: ${formatDateTime(item?.queuedAt) || "-"}`,
-          `Scheduled for: ${normalizeText(item?.scheduledFor) || "-"}`,
-          `HS reviewed: ${normalizeText(item?.studentReviewedAt) || "-"}${normalizeText(item?.studentReviewedByUsername) ? ` | ${normalizeText(item?.studentReviewedByUsername)}` : ""}`,
-          `CM reviewed: ${normalizeText(item?.parentReviewedAt) || "-"}${normalizeText(item?.parentReviewedByUsername) ? ` | ${normalizeText(item?.parentReviewedByUsername)}` : ""}`,
-          `Last error: ${normalizeText(item?.lastError) || "-"}`,
-          "",
-          "Teacher comment:",
-          messageText || "None",
+          ...queueMetadataLines,
         ]
           .filter(Boolean)
           .join("\n");
@@ -13658,6 +14021,18 @@
         };
         setValue("parentQueueItemId", item.id);
         setValue("parentQueueItemReportId", queueItemReportId(item));
+        const reportPreviewLink = document.getElementById("parentQueueItemReportPreviewLink");
+        if (reportPreviewLink instanceof HTMLAnchorElement) {
+          persistQueuedReportCardSnapshot(item);
+          const previewUrl = buildAdminReportCardPreviewUrl(item);
+          if (previewUrl) {
+            reportPreviewLink.hidden = false;
+            reportPreviewLink.href = previewUrl;
+          } else {
+            reportPreviewLink.hidden = true;
+            reportPreviewLink.removeAttribute("href");
+          }
+        }
         const eaglesId = queueItemEaglesId(item);
         setValue("parentQueueItemEaglesId", eaglesId);
         setValue("parentQueueItemStatus", item.status);
@@ -13710,9 +14085,32 @@
         setValue("parentQueueItemCmReviewedAt", item.parentReviewedAt);
         setValue("parentQueueItemCmReviewedBy", item.parentReviewedByUsername);
         setValue("parentQueueItemRecipients", item.recipients.join(", "));
-        setValue("parentQueueItemMessage", item.message);
+        setValue(
+          "parentQueueItemMessage",
+          parentReportTeacherCommentFromSnapshot(queueItemReportCardSnapshot(item)) || item.message,
+        );
         setValue("parentQueueItemLastError", item.lastError);
         setParentQueueModalStatus("");
+        if (reportCardSnapshotNeedsHydration(queueItemReportCardSnapshot(item))) {
+          hydrateQueueItemReportCardSnapshot(item)
+            .then((snapshot) => {
+              if (!snapshot) return;
+              const activeItem = queueItemByModalIndex();
+              if (!activeItem || normalizeText(activeItem.id) !== normalizeText(item.id))
+                return;
+              setValue("parentQueueItemReportSnapshot", queueItemReportSnapshotText(item));
+              setValue(
+                "parentQueueItemMessage",
+                parentReportTeacherCommentFromSnapshot(snapshot) || item.message,
+              );
+              const refreshedPreviewUrl = buildAdminReportCardPreviewUrl(item);
+              if (reportPreviewLink instanceof HTMLAnchorElement && refreshedPreviewUrl) {
+                reportPreviewLink.hidden = false;
+                reportPreviewLink.href = refreshedPreviewUrl;
+              }
+            })
+            .catch(() => {});
+        }
       }
 
       function openParentQueueModal(index = 0) {
@@ -13751,6 +14149,7 @@
           teacherName: normalizeText(row.teacherName || row.approvedByUsername),
           approvedAt: normalizeText(row.approvedAt),
           approvedByUsername: normalizeText(row.approvedByUsername),
+          workflowState: normalizeText(row.workflowState),
           className: normalizeText(row.className),
           level: normalizeText(row.level || row.classLevel),
           schoolYear: normalizeText(row.schoolYear),
@@ -13798,6 +14197,12 @@
           normalizeQueueItemForUi(entry),
         );
         state.parentReportQueue.items = normalizedItems;
+        state.parentReportQueue.queuedReportIds = Object.fromEntries(
+          normalizedItems
+            .map((item) => queueItemReportId(item))
+            .filter(Boolean)
+            .map((id) => [id, true]),
+        );
         if (queueBlock && Number.isFinite(Number(queueBlock.total))) {
           state.parentReportQueue.total = Number(queueBlock.total) || 0;
         } else {
@@ -13811,15 +14216,17 @@
         }
 
         const visibleCount = normalizedItems.length;
-        summaryEl.textContent = `total=${state.parentReportQueue.total} | showing=${visibleCount}`;
+        const selectedCount = selectedParentQueueItems().length;
+        summaryEl.textContent = `total=${state.parentReportQueue.total} | showing=${visibleCount} | selected=${selectedCount}`;
         expandBtn.textContent =
           state.parentReportQueue.showAll ? "Show First 10" : "Show All";
-        if (detailsEl && !detailsEl.open) detailsEl.open = false;
+        if (detailsEl) detailsEl.open = true;
 
         rowsEl.innerHTML = "";
         if (!normalizedItems.length) {
           rowsEl.innerHTML =
-            '<tr><td colspan="6">No queued performance reports.</td></tr>';
+            '<tr><td colspan="8">No queued performance reports.</td></tr>';
+          updateParentQueueSelectAllState([]);
           return;
         }
 
@@ -13838,7 +14245,11 @@
           const cmYes = Boolean(normalizeText(item.parentReviewedAt));
           const eaglesId = normalizeText(item.eaglesId);
           const teacherName = normalizeText(item.teacherName || item.queuedByUsername || "-");
+          const selected = isParentQueueItemSelected(item.id);
+          const held = normalizeLower(item.status) === "hold";
           tr.innerHTML = `
+          <td><input type="checkbox" data-performance-queue-select="${escapeHtml(item.id)}"${selected ? " checked" : ""}></td>
+          <td><label class="small" for="queue_hold_${sanitizeDomIdPart(item.id)}">Hold</label><input type="checkbox" id="queue_hold_${sanitizeDomIdPart(item.id)}" data-performance-queue-hold="${escapeHtml(item.id)}"${held ? " checked" : ""}></td>
           <td>${escapeHtml(formatDateTime(item.queuedAt))}</td>
           <td><a href="#" class="queue-row-link" data-queue-open="${escapeHtml(item.id)}">${escapeHtml(eaglesId || "(missing id)")}</a></td>
           <td>${escapeHtml(teacherName || "-")}</td>
@@ -13846,12 +14257,23 @@
           <td>${escapeHtml(item.queuedByUsername || "-")}</td>
           <td class="hs-cm-cell">${hsYes ? '<span class="hs-cm-flag is-yes">HS: Y</span>' : '<span class="hs-cm-flag is-no">HS: N</span>'} / ${cmYes ? '<span class="hs-cm-flag is-yes">CM: Y</span>' : '<span class="hs-cm-flag is-no">CM: N</span>'}</td>
         `;
+          tr.querySelector(`[data-performance-queue-select="${item.id}"]`)?.addEventListener("change", (event) => {
+            const target = event.target;
+            setParentQueueItemSelected(item.id, Boolean(target?.checked));
+            updateParentQueueSelectAllState(normalizedItems);
+            summaryEl.textContent = `total=${state.parentReportQueue.total} | showing=${visibleCount} | selected=${selectedParentQueueItems().length}`;
+          });
+          tr.querySelector(`[data-performance-queue-hold="${item.id}"]`)?.addEventListener("change", (event) => {
+            const target = event.target;
+            updateQueuedPerformanceReportHold(item.id, Boolean(target?.checked)).catch(handleError);
+          });
           tr.querySelector(`[data-queue-open="${item.id}"]`)?.addEventListener("click", (event) => {
             event.preventDefault();
             openParentQueueModal(index);
           });
           rowsEl.appendChild(tr);
         });
+        updateParentQueueSelectAllState(normalizedItems);
       }
 
       function renderPerformanceStagedSection(rows = null) {
@@ -13870,16 +14292,28 @@
           Array.isArray(state.parentReportQueue.sourceRows) ?
             state.parentReportQueue.sourceRows
           : [];
-        const queuedByReportId = new Set(
-          (Array.isArray(state.parentReportQueue.items) ?
-            state.parentReportQueue.items
-          : []
-          )
-            .map((item) => normalizeText(item?.linkedReportId))
+        const queuedReportIds = new Set([
+          ...Object.keys(queuedPerformanceReportIdState()),
+          ...state.parentReportQueue.items
+            .map((item) => queueItemReportId(item))
             .filter(Boolean),
+        ]);
+        const queuedByReportId = new Set(
+          Array.from(queuedReportIds).filter(Boolean),
         );
         const stagedRows = sourceRows.filter(
-          (row) => row.id && !queuedByReportId.has(row.id),
+          (row) => {
+            const workflowState = normalizeText(row?.workflowState).toLowerCase();
+            return (
+              row.id
+              && !queuedByReportId.has(normalizeText(row.id))
+              && (
+                workflowState === "submitted_for_admin_review"
+                || workflowState === "incoming_admin_review"
+                || workflowState === "awaiting_admin_approval"
+              )
+            );
+          },
         );
         state.parentReportQueue.stagedRows = stagedRows;
         const savedCountHint = Math.max(
@@ -13915,18 +14349,36 @@
           );
           const tr = document.createElement("tr");
           const held = isPerformanceReportHeld(row.id);
+          const workflowState = normalizeText(row.workflowState).toLowerCase();
+          const actionLabel =
+            workflowState === "awaiting_admin_approval" ?
+              "Approve -> Queue"
+            : workflowState === "incoming_admin_review" ?
+              "Move to AAA"
+            : "Start Admin Review";
           const reportStatus =
             held ? "On hold"
+            : workflowState === "awaiting_admin_approval" ?
+              "Awaiting Admin Approval"
+            : workflowState === "incoming_admin_review" ?
+              "Incoming Admin Review"
+            : workflowState === "submitted_for_admin_review" ?
+              "Submitted for Admin Review"
             : normalizeText(row.approvedAt) ?
               `Approved${normalizeText(row.approvedByUsername) ? ` by ${normalizeText(row.approvedByUsername)}` : ""}`
-            : "Awaiting approval";
+            : "Awaiting review";
+          const previewUrl = buildAdminReportCardPreviewUrlFromReportRow(row);
           tr.innerHTML = `
           <td>${escapeHtml(formatDate(row.generatedAt) || "-")}</td>
           <td>${escapeHtml(row.eaglesId || "")}</td>
           <td>${escapeHtml(row.teacherName || "-")}</td>
           <td>${escapeHtml(reportStatus)}</td>
-          <td><label class="small"><input type="checkbox" data-stage-hold="${escapeHtml(row.id)}"${held ? " checked" : ""}> Hold</label></td>
-          <td><button type="button" class="btn-edit" data-stage-report-id="${escapeHtml(row.id)}"${pending ? " disabled" : ""}>${pending ? "Queueing..." : "Approve -> Queue"}</button></td>
+          <td><label class="small" for="stage_hold_${sanitizeDomIdPart(row.id)}">Hold</label><input type="checkbox" id="stage_hold_${sanitizeDomIdPart(row.id)}" name="stage_hold_${sanitizeDomIdPart(row.id)}" data-stage-hold="${escapeHtml(row.id)}"${held ? " checked" : ""}></td>
+          <td>
+            ${previewUrl ? `<a class="btn-refresh" href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener noreferrer">Preview RC</a>` : ""}
+            <button type="button" class="btn-edit" data-stage-report-id="${escapeHtml(row.id)}"${pending ? " disabled" : ""}>${pending ? "Working..." : actionLabel}</button>
+            <button type="button" class="btn-delete" data-stage-report-delete-id="${escapeHtml(row.id)}"${pending ? " disabled" : ""}>Delete</button>
+          </td>
         `;
           tr.querySelector(`[data-stage-hold="${row.id}"]`)?.addEventListener(
             "change",
@@ -13947,6 +14399,13 @@
             "click",
             () => {
               queueStagedPerformanceReport(row.id).catch(handleError);
+            },
+          );
+          tr.querySelector(`[data-stage-report-delete-id="${row.id}"]`)?.addEventListener(
+            "click",
+            () => {
+              if (!window.confirm("Delete this staged performance report?")) return;
+              deleteParentTrackingReport(row.id).catch(handleError);
             },
           );
           rowsEl.appendChild(tr);
@@ -13980,6 +14439,10 @@
           Array.isArray(result?.items) ?
             result.items.map((entry) => normalizeQueueItemForUi(entry))
           : [];
+        const validIds = new Set(state.parentReportQueue.items.map((entry) => entry.id));
+        state.parentReportQueue.selectedIds = Object.fromEntries(
+          Object.entries(parentQueueSelectionState()).filter(([id]) => validIds.has(id)),
+        );
         state.parentReportQueue.total =
           Number(result?.total || state.parentReportQueue.items.length) || 0;
         state.parentReportQueue.hasMore = Boolean(result?.hasMore);
@@ -13989,6 +14452,29 @@
           items: state.parentReportQueue.items,
         });
         renderPerformanceStagedSection();
+      }
+
+      async function fetchPerformanceReportCardSnapshot(studentRefId = "", filters = {}) {
+        const id = normalizeText(studentRefId);
+        if (!id) return null;
+        const apiOrigin = ADMIN_API_ORIGIN || window.location.origin;
+        const targetUrl = new URL(`/api/admin/students/${encodeURIComponent(id)}/report-card.json`, apiOrigin);
+        const className = normalizeText(filters?.className);
+        const schoolYear = normalizeText(filters?.schoolYear);
+        const quarter = normalizeText(filters?.quarter);
+        const reportId = normalizeText(filters?.reportId);
+        if (className) targetUrl.searchParams.set("className", className);
+        if (schoolYear) targetUrl.searchParams.set("schoolYear", schoolYear);
+        if (quarter) targetUrl.searchParams.set("quarter", quarter);
+        if (reportId) targetUrl.searchParams.set("reportId", reportId);
+        const response = await fetch(targetUrl.toString(), {
+          credentials: "include",
+          headers: { accept: "application/json" },
+        });
+        if (!response.ok) {
+          throw new Error(`Unable to load report snapshot (${response.status})`);
+        }
+        return response.json();
       }
 
       async function queueStagedPerformanceReport(reportId = "") {
@@ -14011,6 +14497,32 @@
         state.parentReportQueue.pendingStageQueueById[id] = true;
         renderPerformanceStagedSection();
         try {
+          const workflowState = normalizeText(stagedRow.workflowState).toLowerCase();
+          if (
+            workflowState === "submitted_for_admin_review"
+            || workflowState === "incoming_admin_review"
+          ) {
+            const action = workflowState === "submitted_for_admin_review" ? "start-review" : "stage";
+            const stagedResult = await api(
+              `/api/admin/students/${encodeURIComponent(studentRefId)}/reports/${encodeURIComponent(id)}/workflow`,
+              {
+                method: "POST",
+                body: { action },
+              },
+            );
+            if (stagedResult?.student?.id) {
+              state.currentStudent = stagedResult.student;
+              fillStudentForm(state.currentStudent);
+            }
+            await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
+            await loadDashboardSummary();
+            setStatus(
+              action === "start-review" ?
+                "Performance report moved into incoming admin review."
+              : "Performance report moved to Awaiting Admin Approval.",
+            );
+            return;
+          }
           const detail = await ensureStudentDetailCached(studentRefId);
           const recipients = parentTrackingRecipientsForStudent(detail);
           const fullName = studentFullName(detail);
@@ -14018,10 +14530,7 @@
             detail?.eaglesId,
             "staged performance report",
           );
-          const studentNumber = requiredStudentNumber(
-            detail?.studentNumber,
-            "staged performance report",
-          );
+          requiredStudentNumber(detail?.studentNumber, "staged performance report");
           const className =
             normalizeText(stagedRow.className) ||
             fullLevelLabel(
@@ -14034,30 +14543,27 @@
           );
           const generatedDate =
             normalizeText(stagedRow.generatedAt).slice(0, 10) || localIsoDate();
-          const metricLines = [
-            `Behavior: ${normalizeText(stagedRow.behaviorScore) || "-"}`,
-            `Skills: ${normalizeText(stagedRow.participationScore) || "-"}`,
-            `Academic: ${normalizeText(stagedRow.inClassScore) || "-"}`,
-            `Homework Timeliness %: ${normalizeText(stagedRow.homeworkOnTimeRate) || "0"}`,
-            `Assignment Completion %: ${normalizeText(stagedRow.homeworkCompletionRate) || "0"}`,
-            `Participation Points: ${normalizeText(stagedRow.participationPointsAward) || "0"}`,
-          ];
-          const messageLines = [
-            `Full Name: ${fullName}`,
-            `Eagles ID: ${studentEaglesId}`,
-            `Student Number: ${studentNumber}`,
-            `Class level: ${className || "-"}`,
-            `Generated: ${generatedDate}`,
-            "",
-            "Performance snapshot:",
-            metricLines.join("\n"),
-            "",
-            normalizeText(stagedRow.comments) ?
-              `Comment: ${normalizeText(stagedRow.comments)}`
-            : "",
-          ]
-            .filter(Boolean)
-            .join("\n");
+          const reportSnapshot = await fetchPerformanceReportCardSnapshot(studentRefId, {
+            className,
+            schoolYear: stagedRow.schoolYear,
+            quarter: stagedRow.quarter,
+            reportId: id,
+          }).catch(() => null);
+          if (!reportSnapshot) {
+            throw new Error("Unable to load the report card snapshot for this approval. Open Preview RC and retry.");
+          }
+          const messageBody = parentReportEmailBodyFromSnapshot(reportSnapshot);
+          if (!messageBody) {
+            throw new Error("Report card snapshot is empty. Queueing stopped.");
+          }
+
+          const approvalResult = await api(
+            `/api/admin/students/${encodeURIComponent(studentRefId)}/reports/${encodeURIComponent(id)}/workflow`,
+            {
+              method: "POST",
+              body: { action: "approve-publish" },
+            },
+          );
 
           await api(ADMIN_NOTIFY_EMAIL_PATH, {
             method: "POST",
@@ -14068,26 +14574,33 @@
               exerciseTitle: className,
               dueAt: generatedDate,
               level,
-              message: messageLines,
+              message: messageBody,
               recipients,
               reportId: id,
               studentRefId,
               eaglesId: studentEaglesId,
+              artifactVersion: normalizeText(
+                approvalResult?.report?.finalArtifactVersion,
+              ),
+              requestOrigin: window.location.origin,
               className: normalizeText(stagedRow.className),
               schoolYear: normalizeText(stagedRow.schoolYear),
               quarter: normalizeText(stagedRow.quarter),
               participationPointsAward: normalizeText(
                 stagedRow.participationPointsAward,
               ),
+              reportSnapshot,
             },
           });
+          setQueuedPerformanceReportId(id, true);
           await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
+          setQueuedPerformanceReportId(id, true);
           await loadDashboardSummary();
           const recipientCount = recipients.length;
           setStatus(
             recipientCount > 0 ?
-              `Staged performance report approved and queued (${recipientCount} recipients).`
-            : "Staged performance report approved and queued with 0 recipients. Add emails in Queue Review.",
+              `Final report approved, published, and queued (${recipientCount} recipients).`
+            : "Final report approved, published, and queued with 0 recipients. Add emails in Queue Review.",
           );
         } finally {
           delete state.parentReportQueue.pendingStageQueueById[id];
@@ -14095,28 +14608,39 @@
         }
       }
 
-      async function holdParentQueueModalItem() {
-        const item = queueItemByModalIndex();
-        if (!item?.id) throw new Error("Select a queued report item first.");
+      async function sendSelectedQueuedParentReports() {
+        if (!canReviewParentQueue())
+          throw new Error("Only admin can send queued performance reports.");
+        const selectedItems = selectedParentQueueItems().filter(
+          (item) => normalizeLower(item?.status) === "queued",
+        );
+        if (!selectedItems.length) {
+          throw new Error("Select one or more queued reports before sending.");
+        }
         const result = await api(ADMIN_NOTIFY_BATCH_STATUS_PATH, {
           method: "POST",
           body: {
-            action: "hold",
-            queueId: item.id,
+            action: "sendSelected",
             queueType: "parent-report",
+            queueIds: selectedItems.map((item) => item.id),
           },
         });
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
-        const latest = result?.item ? normalizeQueueItemForUi(result.item) : null;
-        if (latest) {
-          const idx = state.parentReportQueue.items.findIndex(
-            (entry) => entry.id === latest.id,
-          );
-          state.parentReportQueue.modalIndex = idx >= 0 ? idx : 0;
-        }
-        renderParentQueueModal();
-        setParentQueueModalStatus("Queue item placed on hold.");
-        setStatus("Queued performance report moved to hold.");
+        clearParentQueueSelection();
+        setParentQueueModalStatus(
+          `Send selected completed: sent=${result?.sent || 0}, failed=${result?.failed || 0}`,
+        );
+        setStatus(
+          `Selected performance reports processed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
+        );
+        await loadDashboardSummary();
+      }
+
+      async function holdParentQueueModalItem() {
+        const item = queueItemByModalIndex();
+        if (!item?.id) throw new Error("Select a queued report item first.");
+        const nextHeld = normalizeLower(item.status) !== "hold";
+        await updateQueuedPerformanceReportHold(item.id, nextHeld);
       }
 
       async function editParentQueueModalItem() {
@@ -14128,6 +14652,16 @@
           .split(",")
           .map((entry) => normalizeText(entry))
           .filter(Boolean);
+        const existingSnapshot = queueItemReportCardSnapshot(item);
+        const nextTeacherComment = normalizeText(
+          document.getElementById("parentQueueItemMessage")?.value,
+        );
+        const nextSnapshot = setParentReportTeacherCommentInSnapshot(
+          existingSnapshot,
+          nextTeacherComment,
+        );
+        const nextMessageBody =
+          nextSnapshot ? parentReportEmailBodyFromSnapshot(nextSnapshot) : nextTeacherComment;
         const result = await api(ADMIN_NOTIFY_BATCH_STATUS_PATH, {
           method: "POST",
           body: {
@@ -14149,9 +14683,7 @@
             scheduledFor: normalizeText(
               document.getElementById("parentQueueItemScheduledFor")?.value,
             ),
-            message: normalizeText(
-              document.getElementById("parentQueueItemMessage")?.value,
-            ),
+            message: nextMessageBody,
             recipients,
             status: "queued",
             studentReviewedAt: normalizeText(
@@ -14166,6 +14698,7 @@
             parentReviewedByUsername: normalizeText(
               document.getElementById("parentQueueItemCmReviewedBy")?.value,
             ),
+            payloadJson: nextSnapshot ? { reportSnapshot: nextSnapshot } : undefined,
           },
         });
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
@@ -14205,22 +14738,27 @@
         setStatus("Queued performance report requeued.");
       }
 
-      async function sendAllQueuedParentReports() {
+      async function sendAllQueuedParentReports(queueIds = []) {
         if (!canReviewParentQueue())
           throw new Error("Only admin can send queued performance reports.");
+        const selectedQueueIds = Array.isArray(queueIds) ?
+          queueIds.map((entry) => normalizeText(entry)).filter(Boolean)
+          : [];
         const result = await api(ADMIN_NOTIFY_BATCH_STATUS_PATH, {
           method: "POST",
           body: {
-            action: "sendAll",
+            action: selectedQueueIds.length ? "sendSelected" : "sendAll",
             queueType: "parent-report",
+            queueIds: selectedQueueIds,
           },
         });
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
+        clearParentQueueSelection();
         setParentQueueModalStatus(
-          `Send all completed: sent=${result?.sent || 0}, failed=${result?.failed || 0}`,
+          `${selectedQueueIds.length ? "Send selected" : "Send all"} completed: sent=${result?.sent || 0}, failed=${result?.failed || 0}`,
         );
         setStatus(
-          `Queued performance reports processed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
+          `${selectedQueueIds.length ? "Selected" : "Queued"} performance reports processed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
         );
         await loadDashboardSummary();
       }
@@ -16758,13 +17296,111 @@
         const reports =
           Array.isArray(student?.parentReports) ? student.parentReports : [];
         const eaglesId = normalizeText(student?.eaglesId);
+        const studentRefId = normalizeText(student?.id);
+        const fullName = normalizeText(student?.profile?.fullName);
+        const englishName = normalizeText(student?.profile?.englishName);
+        const studentNumber = parsePositiveInteger(student?.studentNumber);
         return reports
           .filter((row) => levelMatchesParentReport(row, selectedLevel))
           .map((row) => ({
             ...row,
+            studentRefId,
             eaglesId,
+            fullName,
+            englishName,
+            studentNumber,
             teacherName: normalizeText(row?.teacherName || row?.approvedByUsername),
           }));
+      }
+
+      function resolveParentTrackingReportStudentRefId(row = {}, student = null) {
+        return normalizeText(
+          row?.studentRefId ||
+          row?.student?.id ||
+          student?.id ||
+          "",
+        );
+      }
+
+      function resolveParentTrackingReportLevel(row = {}, student = null) {
+        return resolveSystemLevelName(
+          row?.level ||
+            row?.className ||
+            student?.profile?.currentGrade ||
+            "",
+        );
+      }
+
+      async function populateParentTrackingFormFromReportRow(row = {}, student = null) {
+        const reportId = normalizeText(row.id);
+        if (reportId) document.getElementById("pt_reportId").value = reportId;
+
+        const reportClassDate =
+          normalizeText(row.classDate) ||
+          (row.generatedAt ? String(row.generatedAt).slice(0, 10) : "");
+        const reportClassDay = normalizeText(row.classDay);
+        if (reportClassDate) {
+          parentTrackingFieldSetValue("pt_classDate", reportClassDate);
+          parentTrackingFieldSetValue(
+            "pt_classDay",
+            reportClassDay || dayLabelFromIsoDate(reportClassDate),
+          );
+        }
+
+        const persistedTeacherName = normalizeText(row.teacherName);
+        const persistedLessonSummary = normalizeText(row.lessonSummary);
+        const persistedVisionStatus = normalizeText(row.visionStatus);
+        const persistedHomeworkAnnouncement = normalizeText(row.homeworkAnnouncement);
+        if (persistedTeacherName) {
+          persistParentTrackingTeacherNames([
+            persistedTeacherName,
+            ...(state.parentTracking?.teacherNames || []),
+          ]);
+          renderParentTrackingTeacherOptions();
+          parentTrackingFieldSetValue("pt_teacherName", persistedTeacherName);
+        }
+        if (persistedLessonSummary)
+          parentTrackingFieldSetValue("pt_lessonSummary", persistedLessonSummary);
+        setParentTrackingVisionStatus(persistedVisionStatus);
+        parentTrackingFieldSetValue(
+          "pt_participationPointsAward",
+          row.participationPointsAward ?? "",
+        );
+        parentTrackingFieldSetValue("pt_comments", row.comments || "");
+        if (persistedHomeworkAnnouncement) {
+          parentTrackingFieldSetValue(
+            "pt_homeworkAnnouncement",
+            persistedHomeworkAnnouncement,
+          );
+        }
+        applyParentTrackingRubricPayload(row.rubricPayload || null);
+        resetParentTrackingManualMetricsTouched();
+
+        const targetStudentRefId = resolveParentTrackingReportStudentRefId(row, student);
+        let resolvedStudent =
+          student && normalizeText(student.id) === targetStudentRefId ? student : null;
+        if (!resolvedStudent && targetStudentRefId) {
+          resolvedStudent = await loadParentTrackingStudentDetail(targetStudentRefId, { force: true });
+        }
+        if (resolvedStudent?.id) {
+          state.parentTracking.studentDetailsByStudentId[resolvedStudent.id] = resolvedStudent;
+          state.currentStudent = resolvedStudent;
+          fillStudentForm(state.currentStudent);
+          state.parentTracking.selectedStudentId = normalizeText(resolvedStudent.id);
+          parentTrackingFieldSetValue("pt_studentRefId", normalizeText(resolvedStudent.id));
+        } else if (targetStudentRefId) {
+          state.parentTracking.selectedStudentId = targetStudentRefId;
+          parentTrackingFieldSetValue("pt_studentRefId", targetStudentRefId);
+        }
+
+        const targetLevel = resolveParentTrackingReportLevel(row, resolvedStudent || student);
+        if (targetLevel) {
+          state.parentTracking.selectedLevel = targetLevel;
+          parentTrackingFieldSetValue("pt_classLevel", fullLevelLabel(targetLevel));
+          renderParentTrackingLevelTiles();
+        }
+
+        setActivePage("parent-tracking");
       }
 
       function renderParentTrackingReportRows(rows = [], student = null) {
@@ -16778,10 +17414,11 @@
           sortedRows,
           reportRowSearchText,
         );
-        state.visibleTableRows.performance = filteredRows;
+        const visibleIncomingRows = incomingPerformanceRows(filteredRows);
+        state.visibleTableRows.performance = visibleIncomingRows;
         updateTableFilterSummary("performance");
         renderPerformanceStagedSection(filteredRows);
-        if (!filteredRows.length) {
+        if (!visibleIncomingRows.length) {
           rowsEl.innerHTML =
             '<tr><td colspan="6">No performance records for current filters.</td></tr>';
           applyTableColumnVisibility("performance");
@@ -16789,86 +17426,61 @@
         }
 
         rowsEl.innerHTML = "";
-        filteredRows.forEach((row) => {
+        visibleIncomingRows.forEach((row) => {
           const held = isPerformanceReportHeld(row.id);
+          const workflowState = normalizeText(row.workflowState).toLowerCase();
+          const approved = Boolean(normalizeText(row.approvedAt));
+          const pending = Boolean(
+            state.parentReportQueue.pendingStageQueueById?.[row.id],
+          );
+          const approveLabel = "Submit for Admin Review";
           const reportTeacher = normalizeText(row.teacherName || row.approvedByUsername || "-");
           const approvalStatus =
             held ? "On hold"
+            : workflowState === "awaiting_admin_approval" ?
+              "Awaiting Admin Approval"
+            : workflowState === "incoming_admin_review" ?
+              "Incoming Admin Review"
+            : workflowState === "submitted_for_admin_review" ?
+              "Submitted for Admin Review"
             : normalizeText(row.approvedAt) ?
               `Approved${normalizeText(row.approvedByUsername) ? ` by ${normalizeText(row.approvedByUsername)}` : ""}`
             : "Pending admin approval";
           const reportEaglesId = normalizeText(row.eaglesId || studentEaglesId);
           const tr = document.createElement("tr");
           tr.innerHTML = `
-          <td data-performance-col="hold"><label class="small"><input type="checkbox" data-pt-report-hold="${escapeHtml(row.id)}"${held ? " checked" : ""}> Hold</label></td>
+          <td data-performance-col="hold"><label class="small" for="pt_report_hold_${sanitizeDomIdPart(row.id)}">Hold</label><input type="checkbox" id="pt_report_hold_${sanitizeDomIdPart(row.id)}" name="pt_report_hold_${sanitizeDomIdPart(row.id)}" data-pt-report-hold="${escapeHtml(row.id)}"${held ? " checked" : ""}></td>
           <td data-performance-col="generatedAt">${escapeHtml(formatDate(row.generatedAt))}</td>
           <td data-performance-col="eaglesId">${escapeHtml(reportEaglesId)}</td>
           <td data-performance-col="teacherName">${escapeHtml(reportTeacher || "-")}</td>
           <td data-performance-col="approvalStatus">${escapeHtml(approvalStatus)}</td>
           <td data-performance-col="action" class="table-row-options-cell">
             <button type="button" class="btn-edit" data-pt-report-edit="${row.id}">Edit</button>
+            <button type="button" class="primary" data-pt-report-approve="${row.id}"${pending || approved || workflowState !== "draft_pr" ? " disabled" : ""}>${pending ? "Working..." : approved ? "Approved" : approveLabel}</button>
           </td>
         `;
 
           tr.querySelector(`[data-pt-report-edit="${row.id}"]`)?.addEventListener(
             "click",
-            () => {
-              document.getElementById("pt_reportId").value = row.id || "";
-              const reportClassDate =
-                normalizeText(row.classDate) ||
-                (row.generatedAt ? String(row.generatedAt).slice(0, 10) : "");
-              const reportClassDay = normalizeText(row.classDay);
-              if (reportClassDate) {
-                parentTrackingFieldSetValue("pt_classDate", reportClassDate);
-                parentTrackingFieldSetValue(
-                  "pt_classDay",
-                  reportClassDay || dayLabelFromIsoDate(reportClassDate),
-                );
+            async () => {
+              try {
+                await populateParentTrackingFormFromReportRow(row, student);
+                await syncParentTrackingForSelection({});
+                setParentTrackingStatus("Performance record loaded for edit.");
+              } catch (error) {
+                handleError(error);
               }
-              const persistedTeacherName = normalizeText(row.teacherName);
-              const persistedLessonSummary = normalizeText(row.lessonSummary);
-              const persistedVisionStatus = normalizeText(row.visionStatus);
-              const persistedHomeworkAnnouncement = normalizeText(
-                row.homeworkAnnouncement,
-              );
-              if (persistedTeacherName) {
-                persistParentTrackingTeacherNames([
-                  persistedTeacherName,
-                  ...(state.parentTracking?.teacherNames || []),
-                ]);
-                renderParentTrackingTeacherOptions();
-                parentTrackingFieldSetValue("pt_teacherName", persistedTeacherName);
+            },
+          );
+          tr.querySelector(`[data-pt-report-approve="${row.id}"]`)?.addEventListener(
+            "click",
+            async () => {
+              try {
+                await populateParentTrackingFormFromReportRow(row, student);
+                await queueParentTrackingEmail();
+              } catch (error) {
+                handleError(error);
               }
-              if (persistedLessonSummary)
-                parentTrackingFieldSetValue("pt_lessonSummary", persistedLessonSummary);
-              setParentTrackingVisionStatus(persistedVisionStatus);
-              parentTrackingFieldSetValue(
-                "pt_participationPointsAward",
-                row.participationPointsAward ?? "",
-              );
-              parentTrackingFieldSetValue("pt_comments", row.comments || "");
-              applyParentTrackingRubricPayload(row.rubricPayload || null);
-              resetParentTrackingManualMetricsTouched();
-              setActivePage("parent-tracking");
-              syncParentTrackingForSelection({})
-                .then(() => {
-                  if (persistedTeacherName)
-                    parentTrackingFieldSetValue("pt_teacherName", persistedTeacherName);
-                  if (persistedLessonSummary)
-                    parentTrackingFieldSetValue(
-                      "pt_lessonSummary",
-                      persistedLessonSummary,
-                    );
-                  if (persistedHomeworkAnnouncement) {
-                    parentTrackingFieldSetValue(
-                      "pt_homeworkAnnouncement",
-                      persistedHomeworkAnnouncement,
-                    );
-                  }
-                  setParentTrackingVisionStatus(persistedVisionStatus);
-                })
-                .catch(handleError);
-              setParentTrackingStatus("Performance record loaded for edit.");
             },
           );
 
@@ -17310,15 +17922,15 @@
           const fullName = normalizeText(context.student.profile?.fullName);
           const eaglesId = normalizeText(context.student.eaglesId);
           setParentTrackingStatus(
-            "Performance class report saved. Use Queue Send to add it to Queue Review.",
+            "Performance class report saved as draft.",
           );
           setStatus(
-            `Performance report saved. fullName=${fullName} | eaglesId=${eaglesId}. Use Queue Send to add it to Queue Review.`,
+            `Performance report draft saved. fullName=${fullName} | eaglesId=${eaglesId}.`,
           );
           setParentTrackingSaveNotice(
             "Saved Performance Report",
             false,
-            `Saved. fullName=${fullName} | eaglesId=${eaglesId}. This draft does not appear in Queue Review until you click Save for Admin Review.`,
+            `Saved. fullName=${fullName} | eaglesId=${eaglesId}. Submit this draft for admin review when ready.`,
           );
         }
         return {
@@ -17335,127 +17947,49 @@
       async function queueParentTrackingEmail() {
         if (!canWriteData() && currentRoleName() !== "teacher") {
           throw new Error(
-            "Performance tracking email queue is read-only for this role.",
+            "Performance report submission is read-only for this role.",
           );
         }
         const context = await saveParentTrackingReport({ silent: true });
         rememberParentTrackingTeacherName();
         rememberParentTrackingLessonSummary();
-        const recipientCount = context.recipients.length;
-
-        const currentHomeworkLines =
-          Array.isArray(context.savedForm?.currentHomeworkSnapshot?.lines) &&
-          context.savedForm.currentHomeworkSnapshot.lines.length ?
-            context.savedForm.currentHomeworkSnapshot.lines
-          : ["None"];
-        const pastDueHomeworkLines =
-          Array.isArray(context.savedForm?.pastDueHomeworkSnapshot?.lines) &&
-          context.savedForm.pastDueHomeworkSnapshot.lines.length ?
-            context.savedForm.pastDueHomeworkSnapshot.lines
-          : ["None"];
-        const reportId = normalizeText(context.reportId) || normalizeText(context.savedForm?.reportId);
-        const englishName = normalizeText(context.student.profile?.englishName);
-        const summaryLines = [
-          `Behavior: ${queueRatingSummary(context.savedForm?.behaviorScore)}`,
-          `Skills: ${queueRatingSummary(context.savedForm?.participationScore)}`,
-          `Academic: ${queueRatingSummary(context.savedForm?.inClassScore)}`,
-          `Homework timeliness: ${normalizeText(context.savedForm?.homeworkOnTimeRate) || "-"}`,
-          `Homework completion: ${normalizeText(context.savedForm?.homeworkCompletionRate) || "-"}`,
-          `Participation points: ${normalizeText(context.savedForm?.participationPointsAward) || "-"}`,
-        ];
-        const detailLines = [
-          `Behavior: ${queueRatingDetail(context.savedForm?.behaviorScore)}`,
-          `Skills: ${queueRatingDetail(context.savedForm?.participationScore)}`,
-          `Academic: ${queueRatingDetail(context.savedForm?.inClassScore)}`,
-          `Homework timeliness: ${normalizeText(context.savedForm?.homeworkOnTimeRate) || "-"}`,
-          `Homework completion: ${normalizeText(context.savedForm?.homeworkCompletionRate) || "-"}`,
-          `Participation points: ${normalizeText(context.savedForm?.participationPointsAward) || "-"}`,
-        ];
-
-        const message = [
-          "Performance Report",
-          `Report ID: ${reportId || "-"}`,
-          `Student: ${normalizeText(context.student.profile?.fullName) || "-"}`,
-          `English name: ${englishName || "-"}`,
-          `Eagles ID: ${normalizeText(context.student.eaglesId)}`,
-          `Class level: ${context.className}`,
-          `Class day/date: ${context.classDay || "-"} / ${context.classDate}`,
-          `Teacher: ${context.teacherName || "-"}`,
-          "",
-          `Lesson summary: ${context.lessonSummary}`,
-          `Vision status: ${context.visionStatus || "-"}`,
-          "",
-          "Summary by category:",
-          ...summaryLines.map((line) => `- ${line}`),
-          "",
-          "Rating guide:",
-          ...detailLines.map((line) => `- ${line}`),
-          "",
-          "Current week homework:",
-          currentHomeworkLines.join("\n"),
-          "",
-          "Past due homework:",
-          pastDueHomeworkLines.join("\n"),
-          "",
-          normalizeText(context.savedForm?.comment) ?
-            `Teacher comment: ${normalizeText(context.savedForm?.comment)}`
-          : "",
-        ]
-          .filter(Boolean)
-          .join("\n");
-
-        const result = await api(ADMIN_NOTIFY_EMAIL_PATH, {
-          method: "POST",
-          body: {
-            deliveryMode: "weekend-batch",
-            queueType: "parent-report",
-            assignmentTitle: `${normalizeText(context.student.profile?.fullName) || "student"} class report`,
-            exerciseTitle: context.className,
-            dueAt: context.classDate,
-            level: context.selectedLevel,
-            message,
-            recipients: context.recipients,
-            reportId: normalizeText(context.reportId),
-            studentRefId: normalizeText(context.studentRefId),
-            eaglesId: normalizeText(context.student.eaglesId),
-            className: normalizeText(context.className),
-            schoolYear: normalizeText(context.schoolYear),
-            quarter: normalizeText(context.quarter),
-            participationPointsAward: normalizeText(
-              context.savedForm?.participationPointsAward,
-            ),
+        const reportId =
+          normalizeText(context.reportId) || normalizeText(context.savedForm?.reportId);
+        if (!reportId) {
+          throw new Error("Unable to resolve the saved performance report id.");
+        }
+        const result = await api(
+          `/api/admin/students/${encodeURIComponent(normalizeText(context.studentRefId))}/reports/${encodeURIComponent(reportId)}/workflow`,
+          {
+            method: "POST",
+            body: {
+              action: "submit",
+            },
           },
-        });
-
-        const scheduledFor = normalizeText(result?.scheduledFor);
-        const teacherMode = currentRoleName() === "teacher";
+        );
+        if (result?.student?.id) {
+          state.parentTracking.studentDetailsByStudentId[result.student.id] = result.student;
+          if (state.currentStudent?.id === result.student.id) {
+            state.currentStudent = result.student;
+            fillStudentForm(state.currentStudent);
+          }
+        }
+        const fullName = normalizeText(context.student.profile?.fullName);
+        const eaglesId = normalizeText(context.student.eaglesId);
         setParentTrackingStatus(
-          recipientCount > 0 ?
-            scheduledFor ?
-              `Queued for weekend batch: ${scheduledFor} (${recipientCount} recipients).`
-            : `Queued for weekend batch (${recipientCount} recipients).`
-          : "Queued for admin review with 0 recipients. Add emails in Queue Review before Send All.",
+          "Performance report submitted for admin review.",
         );
         setStatus(
-          teacherMode ?
-            recipientCount > 0 ?
-              `Performance report saved for admin review (${recipientCount} recipients).`
-            : "Performance report saved for admin review. No recipient emails found yet."
-          : recipientCount > 0 ?
-            `Performance report email queued (${recipientCount} recipients).`
-          : "Performance tracking report queued with no recipients. Add emails in Queue Review.",
+          `Performance report submitted for admin review. fullName=${fullName} | eaglesId=${eaglesId}.`,
         );
         setParentTrackingSaveNotice(
-          recipientCount > 0 ?
-            "Saved for Admin Review"
-          : "Saved for Admin Review (Recipients Needed)",
+          "Submitted for Admin Review",
           false,
-          recipientCount > 0 ?
-            `Queued successfully. Queue Review now includes this report (${recipientCount} recipients).`
-          : "Queued successfully with 0 recipients. Open Queue Review and add recipient emails before Send All.",
+          "The report is now in the incoming PR review queue.",
         );
         await loadDashboardSummary();
         await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
+        await syncParentTrackingForSelection({});
       }
 
       function clearParentTrackingForm() {
@@ -18284,11 +18818,13 @@
             Array.isArray(field.options) && field.options.length ?
               field.options
             : ["Yes", "No"];
+          let firstOptionId = "";
           options.forEach((option, index) => {
             const item = document.createElement("div");
             item.className = "profile-choice-item card";
             item.dataset.surfaceRole = "card";
             const optionId = `${controlId}_${index}`;
+            if (!firstOptionId) firstOptionId = optionId;
             const input = document.createElement("input");
             input.type = inputType;
             input.id = optionId;
@@ -18302,6 +18838,7 @@
             item.appendChild(optionLabel);
             choiceWrap.appendChild(item);
           });
+          labelEl.htmlFor = firstOptionId || controlId;
           wrapper.appendChild(labelEl);
           wrapper.appendChild(choiceWrap);
           return wrapper;
@@ -18312,6 +18849,7 @@
           textarea.id = controlId;
           textarea.autocomplete = autocompleteValue;
           if (field.placeholderVi) textarea.placeholder = field.placeholderVi;
+          labelEl.htmlFor = controlId;
           wrapper.appendChild(labelEl);
           wrapper.appendChild(textarea);
           return wrapper;
@@ -18340,6 +18878,7 @@
               select.appendChild(option);
             });
           }
+          labelEl.htmlFor = controlId;
           wrapper.appendChild(labelEl);
           wrapper.appendChild(select);
           return wrapper;
@@ -18373,6 +18912,7 @@
 
           fileRow.appendChild(storedInput);
           fileRow.appendChild(fileInput);
+          labelEl.htmlFor = controlId;
           wrapper.appendChild(labelEl);
           wrapper.appendChild(fileRow);
           wrapper.appendChild(caption);
@@ -18387,6 +18927,7 @@
         else input.type = "text";
         input.autocomplete = autocompleteValue;
         if (field.placeholderVi) input.placeholder = field.placeholderVi;
+        labelEl.htmlFor = controlId;
         wrapper.appendChild(labelEl);
         wrapper.appendChild(input);
         return wrapper;
@@ -18696,15 +19237,15 @@
 
           tr.innerHTML = `
           <td>${escapeHtml(field.key)}</td>
-          <td><input type="text" data-layout-key="labelVi" value="${escapeHtml(field.labelVi)}"></td>
-          <td><select data-layout-key="inputType">${inputTypeOptions}</select></td>
-          <td><select data-layout-key="tabId">${tabOptions}</select></td>
-          <td><input type="text" data-layout-key="sectionVi" value="${escapeHtml(field.sectionVi)}"></td>
-          <td><input type="number" min="1" step="1" data-layout-key="sequence" value="${Number(field.sequence || 0)}"></td>
-          <td><input type="number" min="1" max="12" step="1" data-layout-key="width" value="${Number(field.width || 4)}"></td>
-          <td><input type="checkbox" data-layout-key="enabled"${field.enabled ? " checked" : ""}></td>
-          <td><input type="text" data-layout-key="placeholderVi" value="${escapeHtml(field.placeholderVi || "")}"></td>
-          <td><input type="text" data-layout-key="options" value="${escapeHtml((field.options || []).join(" | "))}"></td>
+          <td><input type="text" name="profile-field-label-vi-${sanitizeDomIdPart(field.key)}" data-layout-key="labelVi" value="${escapeHtml(field.labelVi)}"></td>
+          <td><select name="profile-field-input-type-${sanitizeDomIdPart(field.key)}" data-layout-key="inputType">${inputTypeOptions}</select></td>
+          <td><select name="profile-field-tab-id-${sanitizeDomIdPart(field.key)}" data-layout-key="tabId">${tabOptions}</select></td>
+          <td><input type="text" name="profile-field-section-vi-${sanitizeDomIdPart(field.key)}" data-layout-key="sectionVi" value="${escapeHtml(field.sectionVi)}"></td>
+          <td><input type="number" name="profile-field-sequence-${sanitizeDomIdPart(field.key)}" min="1" step="1" data-layout-key="sequence" value="${Number(field.sequence || 0)}"></td>
+          <td><input type="number" name="profile-field-width-${sanitizeDomIdPart(field.key)}" min="1" max="12" step="1" data-layout-key="width" value="${Number(field.width || 4)}"></td>
+          <td><input type="checkbox" name="profile-field-enabled-${sanitizeDomIdPart(field.key)}" data-layout-key="enabled"${field.enabled ? " checked" : ""}></td>
+          <td><input type="text" name="profile-field-placeholder-vi-${sanitizeDomIdPart(field.key)}" data-layout-key="placeholderVi" value="${escapeHtml(field.placeholderVi || "")}"></td>
+          <td><input type="text" name="profile-field-options-${sanitizeDomIdPart(field.key)}" data-layout-key="options" value="${escapeHtml((field.options || []).join(" | "))}"></td>
           <td><button type="button" class="layout-delete-btn btn-delete" data-profile-layout-action="delete"${field.locked ? " disabled" : ""}>Delete</button></td>
         `;
           tbody.appendChild(tr);
@@ -22253,6 +22794,22 @@
             sendAllQueuedParentReports().catch(handleError);
           });
         document
+          .getElementById("performanceQueueSendSelectedBtn")
+          ?.addEventListener("click", () => {
+            sendSelectedQueuedParentReports().catch(handleError);
+          });
+        document
+          .getElementById("performanceQueueSelectAll")
+          ?.addEventListener("change", (event) => {
+            const target = event.target;
+            setParentQueueSelectionForVisibleRows(Boolean(target?.checked), state.parentReportQueue.items);
+            renderPerformanceQueueSection({
+              total: state.parentReportQueue.total,
+              hasMore: state.parentReportQueue.hasMore,
+              items: state.parentReportQueue.items,
+            });
+          });
+        document
           .getElementById("performanceStagedRefreshBtn")
           ?.addEventListener("click", () => {
             loadParentReportQueue({ showAll: state.parentReportQueue.showAll })
@@ -22362,6 +22919,21 @@
               },
               onPerformanceQueueSendAll() {
                 sendAllQueuedParentReports().catch(handleError);
+              },
+              onPerformanceQueueSendSelected() {
+                sendSelectedQueuedParentReports().catch(handleError);
+              },
+              onPerformanceQueueSelectAll(event) {
+                const target = event?.target;
+                setParentQueueSelectionForVisibleRows(
+                  Boolean(target?.checked),
+                  state.parentReportQueue.items,
+                );
+                renderPerformanceQueueSection({
+                  total: state.parentReportQueue.total,
+                  hasMore: state.parentReportQueue.hasMore,
+                  items: state.parentReportQueue.items,
+                });
               },
               onPerformanceStagedRefresh() {
                 loadParentReportQueue({ showAll: state.parentReportQueue.showAll })

@@ -66,6 +66,7 @@ function resolveSmtpAuthMode(value) {
 // @ts-check
 /**
  * @typedef {{
+ *   queueType?: unknown,
  *   assignmentTitle?: unknown,
  *   exerciseTitle?: unknown,
  *   dueAt?: unknown,
@@ -74,8 +75,22 @@ function resolveSmtpAuthMode(value) {
  *   senderName?: unknown,
  *   recipients?: unknown,
  *   allowEmptyRecipients?: unknown,
+ *   reportId?: unknown,
+ *   studentRefId?: unknown,
+ *   className?: unknown,
+ *   schoolYear?: unknown,
+ *   quarter?: unknown,
+ *   artifactVersion?: unknown,
+ *   requestOrigin?: unknown,
+ *   reportSnapshot?: unknown,
  * }} AnnouncementEmailPayload
  */
+
+import { getStudentById } from "./student-roster.mjs"
+import {
+  buildReportCardFilename,
+  generateStudentReportCardPdf,
+} from "../../../server/student-report-card-pdf.mjs"
 
 /** @type {Promise<{ createTransport: Function }> | null} */
 let nodemailerModule = null
@@ -116,6 +131,157 @@ function smtpConfigFromEnv() {
     throw error
   }
   return { host, port, secure, user, pass, from, useAuth, authMode: authMode || (useAuth ? "auth" : "none") }
+}
+
+function escapeHtml(value) {
+  return normalizeText(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+}
+
+function encodeTrackingValue(value) {
+  return encodeURIComponent(normalizeText(value))
+}
+
+function normalizeQueueType(value) {
+  return normalizeLower(value) === "parent-report" ? "parent-report" : "announcement"
+}
+
+function normalizeOrigin(value) {
+  const raw =
+    normalizeText(value)
+    || normalizeText(process.env.STUDENT_ADMIN_PUBLIC_ORIGIN)
+    || normalizeText(process.env.PUBLIC_APP_ORIGIN)
+    || normalizeText(process.env.APP_ORIGIN)
+  if (!raw) return ""
+  return raw.replace(/\/+$/, "")
+}
+
+function normalizeReportSlugPart(value) {
+  const slug = normalizeLower(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  return slug || "report"
+}
+
+function buildReportAccessSlug(payload = {}) {
+  const snapshot =
+    payload?.reportSnapshot && typeof payload.reportSnapshot === "object" ? payload.reportSnapshot : {}
+  const report = snapshot?.report && typeof snapshot.report === "object" ? snapshot.report : snapshot
+  const identity = report?.identity && typeof report.identity === "object" ? report.identity : {}
+  const scope = report?.scope && typeof report.scope === "object" ? report.scope : {}
+  const reportId =
+    normalizeText(payload?.reportId)
+    || normalizeText(report?.reportId)
+    || normalizeText(report?.snapshot?.reportId)
+  const slug = normalizeReportSlugPart([
+    identity?.fullName,
+    identity?.englishName,
+    scope?.className,
+    scope?.schoolYear,
+    scope?.quarter,
+  ].map((entry) => normalizeText(entry)).filter(Boolean).join(" "))
+  return `${slug}-${reportId || "report"}`
+}
+
+function buildTrackedParentReportUrls(payload = {}, recipient = "") {
+  const origin = normalizeOrigin(payload?.requestOrigin)
+  const reportId = normalizeText(payload?.reportId)
+  const artifactVersion = Number.parseInt(String(payload?.artifactVersion || 0), 10) || 0
+  const slug = buildReportAccessSlug(payload)
+  const recipientParam = encodeTrackingValue(recipient)
+  const artifactParam = encodeTrackingValue(String(artifactVersion))
+  const openPixelUrl =
+    origin && reportId
+      ? `${origin}/api/report-events/email-open.gif?reportId=${encodeTrackingValue(reportId)}&recipient=${recipientParam}&artifactVersion=${artifactParam}`
+      : ""
+  const reportUrl =
+    origin && reportId
+      ? `${origin}/reports/access/${encodeURIComponent(slug)}?recipient=${recipientParam}&artifactVersion=${artifactParam}`
+      : ""
+  const pdfUrl =
+    origin && reportId
+      ? `${origin}/reports/access/${encodeURIComponent(slug)}.pdf?recipient=${recipientParam}&artifactVersion=${artifactParam}`
+      : ""
+  return {
+    openPixelUrl,
+    reportUrl,
+    pdfUrl,
+  }
+}
+
+function buildParentReportEmailContent(payload = {}, recipient = "") {
+  const sender = normalizeText(payload.senderName) || "Eagles Student Admin"
+  const assignmentTitle = normalizeText(payload.assignmentTitle) || "Performance report"
+  const level = normalizeText(payload.level || payload.className)
+  const dueAt = normalizeText(payload.dueAt)
+  const customMessage = normalizeText(payload.message)
+  const urls = buildTrackedParentReportUrls(payload, recipient)
+  const subject = [assignmentTitle, level ? `(${level})` : ""].filter(Boolean).join(" ").trim()
+
+  const lines = [
+    `${sender} performance report`,
+    "",
+    `Report: ${assignmentTitle}`,
+    level ? `Class: ${level}` : "",
+    dueAt ? `Report date: ${dueAt}` : "",
+    "",
+    customMessage || "The final report card is ready.",
+    "",
+    urls.reportUrl ? `View final report: ${urls.reportUrl}` : "",
+    urls.pdfUrl ? `Download PDF: ${urls.pdfUrl}` : "",
+  ].filter(Boolean)
+
+  const htmlBlocks = [
+    `<p>${escapeHtml(sender)} performance report</p>`,
+    "<p>",
+    `<strong>Report:</strong> ${escapeHtml(assignmentTitle)}`,
+    level ? `<br><strong>Class:</strong> ${escapeHtml(level)}` : "",
+    dueAt ? `<br><strong>Report date:</strong> ${escapeHtml(dueAt)}` : "",
+    "</p>",
+    `<p>${escapeHtml(customMessage || "The final report card is ready.")}</p>`,
+    urls.reportUrl
+      ? `<p><a href="${escapeHtml(urls.reportUrl)}" style="display:inline-block;padding:10px 16px;background:#1f5fbf;color:#ffffff;text-decoration:none;border-radius:6px;">View final report</a></p>`
+      : "",
+    urls.pdfUrl
+      ? `<p><a href="${escapeHtml(urls.pdfUrl)}" style="display:inline-block;padding:10px 16px;background:#f4f6fb;color:#123055;text-decoration:none;border:1px solid #cbd4e6;border-radius:6px;">Download PDF</a></p>`
+      : "",
+    urls.openPixelUrl
+      ? `<img src="${escapeHtml(urls.openPixelUrl)}" alt="" width="1" height="1" style="display:block;border:0;opacity:0;">`
+      : "",
+  ].filter(Boolean)
+
+  return {
+    subject,
+    text: lines.join("\n"),
+    html: htmlBlocks.join(""),
+  }
+}
+
+async function buildParentReportPdfAttachment(payload = {}) {
+  const studentRefId = normalizeText(payload.studentRefId)
+  const reportId = normalizeText(payload.reportId)
+  if (!studentRefId || !reportId) return []
+  const student = await getStudentById(studentRefId)
+  const pdfBuffer = await generateStudentReportCardPdf(student, {
+    className: normalizeText(payload.className),
+    schoolYear: normalizeText(payload.schoolYear),
+    quarter: normalizeText(payload.quarter),
+    reportId,
+  })
+  const filename = buildReportCardFilename(student, {
+    className: normalizeText(payload.className),
+    schoolYear: normalizeText(payload.schoolYear),
+    quarter: normalizeText(payload.quarter),
+  })
+  return [{
+    filename: normalizeText(filename) || `performance-report-${reportId}.pdf`,
+    content: pdfBuffer,
+    contentType: "application/pdf",
+  }]
 }
 
 /**
@@ -204,7 +370,7 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
  */
 export async function sendAnnouncementEmail(payload = {}) {
   const normalizedPayload = normalizeAnnouncementPayload(payload)
-  const emailContent = buildAnnouncementEmailContent(normalizedPayload)
+  const queueType = normalizeQueueType(payload.queueType)
 
   const nodemailer = await getNodemailer()
   const smtp = smtpConfigFromEnv()
@@ -221,6 +387,32 @@ export async function sendAnnouncementEmail(payload = {}) {
   }
   const transporter = nodemailer.createTransport(transportOptions)
 
+  if (queueType === "parent-report") {
+    const attachments = await buildParentReportPdfAttachment(payload)
+    let sent = 0
+    for (let i = 0; i < normalizedPayload.recipients.length; i += 1) {
+      const recipient = normalizedPayload.recipients[i]
+      const emailContent = buildParentReportEmailContent({ ...payload, ...normalizedPayload }, recipient)
+      await transporter.sendMail({
+        from: smtp.from,
+        to: recipient,
+        subject: emailContent.subject,
+        text: emailContent.text,
+        html: emailContent.html,
+        attachments,
+      })
+      sent += 1
+    }
+
+    return {
+      ok: true,
+      sent,
+      subject: normalizeText(normalizedPayload.assignmentTitle) || "Performance report",
+      deliveryMode: "immediate",
+    }
+  }
+
+  const emailContent = buildAnnouncementEmailContent(normalizedPayload)
   await transporter.sendMail({
     from: smtp.from,
     to: smtp.from,

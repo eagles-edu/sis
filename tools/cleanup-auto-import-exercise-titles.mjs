@@ -7,9 +7,23 @@ import { getSharedPrismaClient } from "../server/prisma-client-factory.mjs"
 
 const AUTO_IMPORTED_EXERCISE_COMMENT_PREFIX = "auto-imported exercise score"
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
+}
+
+/**
+ * @param {unknown} value
+ * @returns {Date | null}
+ */
+function normalizeDate(value) {
+  if (value instanceof Date) return Number.isFinite(value.valueOf()) ? value : null
+  const parsed = new Date(normalizeText(value))
+  return Number.isFinite(parsed.valueOf()) ? parsed : null
 }
 
 /**
@@ -85,6 +99,26 @@ Examples:
 }
 
 /**
+ * @typedef {{
+ *   id?: string,
+ *   studentRefId?: string,
+ *   schoolYear?: string,
+ *   quarter?: string,
+ *   assignmentName?: string,
+ *   className?: string,
+ *   dueAt?: unknown,
+ *   submittedAt?: unknown,
+ *   score?: unknown,
+ *   maxScore?: unknown,
+ *   homeworkCompleted?: unknown,
+ *   homeworkOnTime?: unknown,
+ *   comments?: string | null,
+ *   createdAt?: unknown,
+ *   updatedAt?: unknown,
+ * }} ExerciseImportRow
+ */
+
+/**
  * @param {unknown} value
  * @returns {string}
  */
@@ -131,17 +165,12 @@ function canonicalizeExerciseTitle(value) {
  * @returns {string}
  */
 function isoKey(value) {
-  if (!(value instanceof Date)) {
-    const parsed = new Date(value)
-    if (!Number.isFinite(parsed.valueOf())) return ""
-    return parsed.toISOString()
-  }
-  if (!Number.isFinite(value.valueOf())) return ""
-  return value.toISOString()
+  const parsed = normalizeDate(value)
+  return parsed ? parsed.toISOString() : ""
 }
 
 /**
- * @param {Record<string, unknown>} [row]
+ * @param {ExerciseImportRow} row
  * @param {string} canonicalName
  * @returns {string}
  */
@@ -157,7 +186,7 @@ function recordGroupKey(row, canonicalName) {
 }
 
 /**
- * @param {Record<string, unknown>} [row]
+ * @param {ExerciseImportRow} [row]
  * @returns {number[]}
  */
 function scoreRecordRank(row) {
@@ -165,9 +194,9 @@ function scoreRecordRank(row) {
   const maxScore = Number(row?.maxScore)
   const completed = row?.homeworkCompleted === true ? 1 : 0
   const onTime = row?.homeworkOnTime === true ? 1 : 0
-  const submittedAtMs = Number.isFinite(new Date(row?.submittedAt).valueOf()) ? new Date(row.submittedAt).valueOf() : 0
-  const updatedAtMs = Number.isFinite(new Date(row?.updatedAt).valueOf()) ? new Date(row.updatedAt).valueOf() : 0
-  const createdAtMs = Number.isFinite(new Date(row?.createdAt).valueOf()) ? new Date(row.createdAt).valueOf() : 0
+  const submittedAtMs = normalizeDate(row?.submittedAt)?.valueOf() || 0
+  const updatedAtMs = normalizeDate(row?.updatedAt)?.valueOf() || 0
+  const createdAtMs = normalizeDate(row?.createdAt)?.valueOf() || 0
   const commentsLen = normalizeText(row?.comments).length
 
   return [
@@ -199,7 +228,7 @@ function compareRanksDesc(leftRow, rightRow) {
 }
 
 /**
- * @param {Array<Record<string, unknown>>} [rows]
+ * @param {Array<ExerciseImportRow>} [rows]
  * @returns {string[]}
  */
 function selectDuplicateDeletes(rows = []) {
@@ -211,6 +240,7 @@ function selectDuplicateDeletes(rows = []) {
     groups.get(key).push(row)
   })
 
+  /** @type {string[]} */
   const deleteIds = []
   groups.forEach((items) => {
     if (!Array.isArray(items) || items.length <= 1) return
@@ -264,7 +294,7 @@ async function run() {
     },
   })
 
-  /** @type {Array<{ id: string, assignmentName: string, className: string }>} */
+  /** @type {Array<{ id: string, assignmentName: string, className: string, beforeAssignment: string, beforeClass: string }>} */
   const updates = []
   rows.forEach((row) => {
     const originalAssignment = normalizeText(row?.assignmentName)
@@ -354,7 +384,7 @@ async function run() {
 }
 
 run().catch((error) => {
-  const message = normalizeText(error?.message) || "Unknown error"
+  const message = error instanceof Error ? normalizeText(error.message) : normalizeText(error) || "Unknown error"
   console.error(`[cleanup-auto-import] ${message}`)
   process.exitCode = 1
 })

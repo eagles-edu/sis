@@ -180,32 +180,33 @@ export function buildArchiveDateRange(startDateText, endDateText) {
  * @returns {DatasetDefinition[]}
  */
 function datasetDefinitions(options = {}) {
+  /** @type {DatasetDefinition[]} */
   const definitions = [
-    {
+    /** @type {DatasetDefinition} */ ({
       key: "studentAttendance",
       model: "studentAttendance",
       filterMode: "schoolYear",
       description: "Attendance rows for target school year",
       whereDescription: "schoolYear = <target>",
       studentRefFields: ["studentRefId"],
-    },
-    {
+    }),
+    /** @type {DatasetDefinition} */ ({
       key: "studentGradeRecord",
       model: "studentGradeRecord",
       filterMode: "schoolYear",
       description: "Grade records for target school year",
       whereDescription: "schoolYear = <target>",
       studentRefFields: ["studentRefId"],
-    },
-    {
+    }),
+    /** @type {DatasetDefinition} */ ({
       key: "parentClassReport",
       model: "parentClassReport",
       filterMode: "schoolYear",
       description: "Parent class reports for target school year",
       whereDescription: "schoolYear = <target>",
       studentRefFields: ["studentRefId"],
-    },
-    {
+    }),
+    /** @type {DatasetDefinition} */ ({
       key: "exerciseSubmission",
       model: "exerciseSubmission",
       filterMode: "dateRange",
@@ -213,8 +214,8 @@ function datasetDefinitions(options = {}) {
       description: "Exercise submissions completed inside target school-year date window",
       whereDescription: "completedAt >= <startDate> and completedAt < <endExclusive>",
       studentRefFields: ["studentRefId"],
-    },
-    {
+    }),
+    /** @type {DatasetDefinition} */ ({
       key: "incomingExerciseResult",
       model: "incomingExerciseResult",
       filterMode: "dateRange",
@@ -222,8 +223,8 @@ function datasetDefinitions(options = {}) {
       description: "Incoming exercise queue results completed inside target school-year date window",
       whereDescription: "completedAt >= <startDate> and completedAt < <endExclusive>",
       studentRefFields: ["matchedStudentRefId"],
-    },
-    {
+    }),
+    /** @type {DatasetDefinition} */ ({
       key: "studentNewsReport",
       model: "studentNewsReport",
       filterMode: "dateRange",
@@ -231,11 +232,11 @@ function datasetDefinitions(options = {}) {
       description: "Student news reports whose reportDate is inside target school-year date window",
       whereDescription: "reportDate >= <startDate> and reportDate < <endExclusive>",
       studentRefFields: ["studentRefId"],
-    },
+    }),
   ]
 
   if (!options.excludePoints) {
-    definitions.push({
+    definitions.push(/** @type {DatasetDefinition} */ ({
       key: "studentPointsAdjustment",
       model: "studentPointsAdjustment",
       filterMode: "dateRange",
@@ -243,11 +244,11 @@ function datasetDefinitions(options = {}) {
       description: "Student points adjustments applied inside target school-year date window",
       whereDescription: "appliedAt >= <startDate> and appliedAt < <endExclusive>",
       studentRefFields: ["studentRefId"],
-    })
+    }))
   }
 
   if (!options.excludeNotifications) {
-    definitions.push({
+    definitions.push(/** @type {DatasetDefinition} */ ({
       key: "adminNotificationQueue",
       model: "adminNotificationQueue",
       filterMode: "dateRange",
@@ -255,11 +256,11 @@ function datasetDefinitions(options = {}) {
       description: "Admin notification queue items created inside target school-year date window",
       whereDescription: "createdAt >= <startDate> and createdAt < <endExclusive>",
       studentRefFields: [],
-    })
+    }))
   }
 
   if (!options.excludeParentProfile) {
-    definitions.push({
+    definitions.push(/** @type {DatasetDefinition} */ ({
       key: "parentProfileSubmissionQueue",
       model: "parentProfileSubmissionQueue",
       filterMode: "submittedOrCreatedRange",
@@ -267,7 +268,7 @@ function datasetDefinitions(options = {}) {
       whereDescription:
         "submittedAt in range OR (submittedAt is null AND createdAt in range)",
       studentRefFields: ["studentRefId"],
-    })
+    }))
   }
 
   return definitions
@@ -284,8 +285,10 @@ function buildDatasetWhere(dataset, context) {
   }
 
   if (dataset.filterMode === "dateRange") {
+    const dateField = dataset.dateField
+    if (!dateField) throw new Error(`Missing date field for dataset: ${dataset.key}`)
     return {
-      [dataset.dateField]: {
+      [dateField]: {
         gte: context.startDate,
         lt: context.endExclusive,
       },
@@ -316,7 +319,7 @@ function buildDatasetWhere(dataset, context) {
     }
   }
 
-  throw new Error(`Unsupported dataset filter mode: ${dataset.filterMode}`)
+  throw new Error("Unsupported dataset filter mode")
 }
 
 /**
@@ -362,7 +365,7 @@ function combineWhere(left, right) {
  *   options?: Record<string, unknown>,
  *   runId?: string,
  *   datasets?: DatasetSummary[],
- *   studentSnapshot?: Record<string, unknown>,
+ *   studentSnapshot?: StudentSnapshotSummary,
  *   errors?: string[],
  *   archivePath?: string,
  *   manifestPath?: string,
@@ -371,12 +374,32 @@ function combineWhere(left, right) {
  * @typedef {{
  *   key: string,
  *   model: string,
- *   filterMode: "schoolYear" | "dateRange" | "submittedOrCreatedRange",
- *   dateField?: string,
+ *   filterMode: "schoolYear",
  *   description: string,
  *   whereDescription: string,
  *   studentRefFields: string[],
- * }} DatasetDefinition
+ * }} SchoolYearDatasetDefinition
+ *
+ * @typedef {{
+ *   key: string,
+ *   model: string,
+ *   filterMode: "dateRange",
+ *   dateField: string,
+ *   description: string,
+ *   whereDescription: string,
+ *   studentRefFields: string[],
+ * }} DateRangeDatasetDefinition
+ *
+ * @typedef {{
+ *   key: string,
+ *   model: string,
+ *   filterMode: "submittedOrCreatedRange",
+ *   description: string,
+ *   whereDescription: string,
+ *   studentRefFields: string[],
+ * }} SubmittedOrCreatedRangeDatasetDefinition
+ *
+ * @typedef {SchoolYearDatasetDefinition | DateRangeDatasetDefinition | SubmittedOrCreatedRangeDatasetDefinition} DatasetDefinition
  *
  * @typedef {{
  *   schoolYear: string,
@@ -389,7 +412,6 @@ function combineWhere(left, right) {
  * }} RolloverDateRange
  *
  * @typedef {{
- *   command: "help" | "archive" | "inspect",
  *   schoolYear: string,
  *   startDate: string,
  *   endDate: string,
@@ -404,12 +426,36 @@ function combineWhere(left, right) {
  *   limit: number,
  *   match: string,
  *   json: boolean,
- * }} RolloverArgs
+ * }} RolloverArgsBase
+ *
+ * @typedef {RolloverArgsBase & { command: "help" }} HelpArgs
+ * @typedef {RolloverArgsBase & { command: "archive" }} ArchiveArgs
+ * @typedef {RolloverArgsBase & { command: "inspect" }} InspectArgs
+ * @typedef {HelpArgs | ArchiveArgs | InspectArgs} RolloverArgs
  *
  * @typedef {ArchiveManifest & {
  *   archivePath: string,
  *   manifestPath: string,
  * }} ArchiveManifestRow
+ *
+ * @typedef {{
+ *   rowCount: number,
+ *   archivedFile: string,
+ *   archivedFileSizeBytes: number,
+ *   lineSha256: string,
+ *   firstId: string,
+ *   lastId: string,
+ * }} StudentSnapshotSummary
+ *
+ * @typedef {{
+ *   findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>>,
+ *   count(options: Record<string, unknown>): Promise<number>,
+ *   deleteMany(options: Record<string, unknown>): Promise<{ count?: number }>,
+ * }} PrismaDatasetDelegate
+ *
+ * @typedef {{
+ *   findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>>,
+ * }} PrismaStudentDelegate
  */
 
 /**
@@ -476,7 +522,7 @@ async function streamRowsToGzipNdjson(filePath, rows) {
 }
 
 /**
- * @param {{ findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>> }} prismaModel
+ * @param {PrismaDatasetDelegate} prismaModel
  * @param {Record<string, unknown>} where
  * @param {number} batchSize
  * @returns {Promise<Array<Record<string, unknown>>>}
@@ -527,9 +573,9 @@ function collectStudentRefs(rows, studentRefFields = []) {
 
 /**
  * @param {{
- *   prisma: Record<string, unknown>,
- *   datasets: Array<Record<string, unknown>>,
- *   context: Record<string, unknown>,
+ *   prisma: unknown,
+ *   datasets: DatasetDefinition[],
+ *   context: RolloverDateRange,
  *   archiveDir: string,
  *   batchSize: number,
  *   apply: boolean,
@@ -537,22 +583,22 @@ function collectStudentRefs(rows, studentRefFields = []) {
  * @returns {Promise<{ datasetSummaries: DatasetSummary[], allStudentRefs: Set<string> }>}
  */
 async function archiveDatasets({ prisma, datasets, context, archiveDir, batchSize, apply }) {
+  /** @type {Record<string, PrismaDatasetDelegate>} */
+  const prismaDb = /** @type {Record<string, PrismaDatasetDelegate>} */ (prisma)
   /** @type {DatasetSummary[]} */
   const datasetSummaries = []
   /** @type {Set<string>} */
   const allStudentRefs = new Set()
 
   for (let index = 0; index < datasets.length; index += 1) {
-    /** @type {DatasetDefinition} */
     const dataset = datasets[index]
-    const prismaModel = prisma?.[dataset.model]
+    const prismaModel = prismaDb[dataset.model]
     if (!prismaModel?.count || !prismaModel?.findMany) {
       throw new Error(`Prisma model delegate unavailable: ${dataset.model}`)
     }
 
     const where = buildDatasetWhere(dataset, context)
     const totalRows = await prismaModel.count({ where })
-    /** @type {DatasetSummary} */
     const summary = {
       key: dataset.key,
       model: dataset.model,
@@ -605,13 +651,15 @@ async function archiveDatasets({ prisma, datasets, context, archiveDir, batchSiz
 
 /**
  * @param {{
- *   prisma: { student: { findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>> } },
+ *   prisma: unknown,
  *   archiveDir: string,
  *   studentRefIds: Set<string>,
  * }} input
- * @returns {Promise<DatasetSummary>}
+ * @returns {Promise<StudentSnapshotSummary>}
  */
 async function archiveStudentSnapshot({ prisma, archiveDir, studentRefIds }) {
+  /** @type {{ student: PrismaStudentDelegate }} */
+  const studentPrisma = /** @type {{ student: PrismaStudentDelegate }} */ (prisma)
   const refIds = Array.from(studentRefIds)
   if (!refIds.length) {
     return {
@@ -624,7 +672,7 @@ async function archiveStudentSnapshot({ prisma, archiveDir, studentRefIds }) {
     }
   }
 
-  const rows = await prisma.student.findMany({
+  const rows = await studentPrisma.student.findMany({
     where: {
       id: {
         in: refIds,
@@ -666,7 +714,7 @@ async function archiveStudentSnapshot({ prisma, archiveDir, studentRefIds }) {
 }
 
 /**
- * @param {{ findMany(options: Record<string, unknown>): Promise<Array<Record<string, unknown>>>, deleteMany(options: Record<string, unknown>): Promise<{ count?: number }> }} prismaModel
+ * @param {PrismaDatasetDelegate} prismaModel
  * @param {Record<string, unknown>} where
  * @param {number} batchSize
  * @returns {Promise<number>}
@@ -707,22 +755,23 @@ async function purgeDatasetRows(prismaModel, where, batchSize) {
 
 /**
  * @param {{
- *   prisma: Record<string, unknown>,
- *   datasets: Array<Record<string, unknown>>,
- *   context: Record<string, unknown>,
+ *   prisma: unknown,
+ *   datasets: DatasetDefinition[],
+ *   context: RolloverDateRange,
  *   batchSize: number,
  *   datasetSummaries: DatasetSummary[],
  * }} input
  * @returns {Promise<void>}
  */
 async function purgeArchivedDatasets({ prisma, datasets, context, batchSize, datasetSummaries }) {
+  /** @type {Record<string, PrismaDatasetDelegate>} */
+  const prismaDb = /** @type {Record<string, PrismaDatasetDelegate>} */ (prisma)
   for (let index = 0; index < datasets.length; index += 1) {
-    /** @type {DatasetDefinition} */
     const dataset = datasets[index]
     const summary = datasetSummaries[index]
     if (!summary || summary.rowCount < 1) continue
 
-    const prismaModel = prisma?.[dataset.model]
+    const prismaModel = prismaDb[dataset.model]
     if (!prismaModel?.deleteMany || !prismaModel?.count || !prismaModel?.findMany) {
       throw new Error(`Prisma model delegate unavailable for purge: ${dataset.model}`)
     }
@@ -737,9 +786,9 @@ async function purgeArchivedDatasets({ prisma, datasets, context, batchSize, dat
 }
 
 /**
- * @param {ArchiveManifest[]} rows
+ * @param {ArchiveManifestRow[]} rows
  * @param {{ schoolYear?: string, run?: string }} [filters]
- * @returns {ArchiveManifest[]}
+ * @returns {ArchiveManifestRow[]}
  */
 function filterManifestRows(rows, { schoolYear = "", run = "" } = {}) {
   const targetYear = parseSchoolYearLabel(schoolYear) || ""
@@ -856,26 +905,6 @@ async function previewArchivedDatasetRows(datasetPath, { limit, match }) {
 
 /**
  * @param {string[]} [argv]
- * @returns {{
- *   command: "help" | "archive" | "inspect",
- *   schoolYear: string,
- *   startDate: string,
- *   endDate: string,
- *   archiveRoot: string,
- *   batchSize: number,
- *   apply: boolean,
- *   excludePoints: boolean,
- *   excludeNotifications: boolean,
- *   excludeParentProfile: boolean,
- *   run: string,
- *   dataset: string,
- *   limit: number,
- *   match: string,
- *   json: boolean,
- * }}
- */
-/**
- * @param {string[]} [argv]
  * @returns {RolloverArgs}
  */
 export function parseCliArgs(argv = []) {
@@ -883,7 +912,8 @@ export function parseCliArgs(argv = []) {
   const firstToken = normalizeLower(tokens[0])
 
   if (!firstToken || firstToken === "--help" || firstToken === "-h" || firstToken === "help") {
-    return {
+    /** @type {HelpArgs} */
+    const helpArgs = {
       command: "help",
       schoolYear: "",
       startDate: "",
@@ -900,13 +930,16 @@ export function parseCliArgs(argv = []) {
       match: "",
       json: false,
     }
+    return helpArgs
   }
 
-  const command = firstToken
-  if (!["archive", "inspect"].includes(command)) {
+  if (!["archive", "inspect"].includes(firstToken)) {
     throw new Error(`Unknown command: ${tokens[0]}`)
   }
+  /** @type {"archive" | "inspect"} */
+  const command = /** @type {"archive" | "inspect"} */ (firstToken)
 
+  /** @type {RolloverArgs} */
   const parsed = {
     command,
     schoolYear: "",
@@ -1029,11 +1062,7 @@ export function parseCliArgs(argv = []) {
 }
 
 /**
- * @param {{ schoolYear: string, startDate: string, endDate: string }} args
- * @returns {{ schoolYear: string, startDate: Date, endDate: Date, endExclusive: Date, startDateText: string, endDateText: string, endExclusiveDateText: string }}
- */
-/**
- * @param {Pick<RolloverArgs, "schoolYear" | "startDate" | "endDate">} args
+ * @param {Pick<ArchiveArgs, "schoolYear" | "startDate" | "endDate">} args
  * @returns {RolloverDateRange}
  */
 function assertArchiveArgs(args) {
@@ -1049,20 +1078,17 @@ function assertArchiveArgs(args) {
 }
 
 /**
- * @param {ArchiveManifest} [manifest]
- * @returns {Record<string, unknown>}
- */
-/**
  * @param {ArchiveManifest | undefined} [manifest]
  * @returns {Record<string, unknown>}
  */
-function toCompactSummary(manifest = {}) {
-  const datasets = Array.isArray(manifest?.datasets) ? manifest.datasets : []
+function toCompactSummary(manifest) {
+  const source = manifest || {}
+  const datasets = Array.isArray(source.datasets) ? source.datasets : []
   return {
-    schoolYear: normalizeText(manifest?.schoolYear),
-    runId: normalizeText(manifest?.runId),
-    createdAt: normalizeText(manifest?.createdAt),
-    status: normalizeText(manifest?.status),
+    schoolYear: normalizeText(source.schoolYear),
+    runId: normalizeText(source.runId),
+    createdAt: normalizeText(source.createdAt),
+    status: normalizeText(source.status),
     datasets: datasets.map((entry) => ({
       key: normalizeText(entry?.key),
       rowCount: Number.parseInt(String(entry?.rowCount || 0), 10) || 0,
@@ -1070,32 +1096,12 @@ function toCompactSummary(manifest = {}) {
       remainingCount: Number.parseInt(String(entry?.remainingCount || 0), 10) || 0,
       archivedFile: normalizeText(entry?.archivedFile),
     })),
-    archivePath: normalizeText(manifest?.archivePath),
+    archivePath: normalizeText(source.archivePath),
   }
 }
 
 /**
- * @param {{
- *   command: "archive",
- *   schoolYear: string,
- *   startDate: string,
- *   endDate: string,
- *   archiveRoot: string,
- *   batchSize: number,
- *   apply: boolean,
- *   excludePoints: boolean,
- *   excludeNotifications: boolean,
- *   excludeParentProfile: boolean,
- *   run: string,
- *   dataset: string,
- *   limit: number,
- *   match: string,
- *   json: boolean,
- * }} args
- * @returns {Promise<Record<string, unknown>>}
- */
-/**
- * @param {Extract<RolloverArgs, { command: "archive" }>} args
+ * @param {ArchiveArgs} args
  * @returns {Promise<Record<string, unknown>>}
  */
 async function runArchiveCommand(args) {
@@ -1120,6 +1126,7 @@ async function runArchiveCommand(args) {
 
   const prisma = await getSharedPrismaClient()
 
+  /** @type {ArchiveManifest} */
   const manifest = {
     version: 1,
     command: "archive",
@@ -1214,7 +1221,8 @@ async function runArchiveCommand(args) {
   } catch (error) {
     manifest.status = "failed"
     manifest.completedAt = nowIso()
-    manifest.errors = [normalizeText(error?.message || error)]
+    const message = error instanceof Error ? error.message : String(error)
+    manifest.errors = [normalizeText(message)]
 
     if (args.apply) {
       await ensureDirectory(path.dirname(manifestPath))
@@ -1228,27 +1236,7 @@ async function runArchiveCommand(args) {
 }
 
 /**
- * @param {{
- *   command: "inspect",
- *   schoolYear: string,
- *   startDate: string,
- *   endDate: string,
- *   archiveRoot: string,
- *   batchSize: number,
- *   apply: boolean,
- *   excludePoints: boolean,
- *   excludeNotifications: boolean,
- *   excludeParentProfile: boolean,
- *   run: string,
- *   dataset: string,
- *   limit: number,
- *   match: string,
- *   json: boolean,
- * }} args
- * @returns {Promise<Record<string, unknown>>}
- */
-/**
- * @param {Extract<RolloverArgs, { command: "inspect" }>} args
+ * @param {InspectArgs} args
  * @returns {Promise<Record<string, unknown>>}
  */
 async function runInspectCommand(args) {
@@ -1272,9 +1260,10 @@ async function runInspectCommand(args) {
     throw new Error("No archive run found for requested filters")
   }
 
-  const selected = filtered[0]
+  const selected = /** @type {ArchiveManifestRow} */ (filtered[0])
   const datasetName = normalizeText(args.dataset)
-  const dataset = (Array.isArray(selected?.datasets) ? selected.datasets : []).find(
+  /** @type {DatasetSummary | undefined} */
+  const dataset = (Array.isArray(selected.datasets) ? selected.datasets : []).find(
     (entry) => normalizeText(entry?.key) === datasetName
   )
   if (!dataset) {
@@ -1313,23 +1302,23 @@ async function runInspectCommand(args) {
  * @param {Record<string, unknown>} result
  * @returns {void}
  */
-/**
- * @param {Record<string, unknown>} result
- * @returns {void}
- */
 function renderHumanReadable(result) {
   if (!result || typeof result !== "object") {
     console.log(JSON.stringify(result, null, 2))
     return
   }
 
-  if (normalizeLower(result.command) === "inspect") {
+  const command = normalizeLower(result.command)
+
+  if (command === "inspect") {
+    /** @type {Array<{ schoolYear?: string, runId?: string, status?: string, datasets?: Array<{ key?: string, rowCount?: number, purgedCount?: number, remainingCount?: number }> }>} */
     const runs = Array.isArray(result.runs) ? result.runs : []
     if (!normalizeText(result.dataset)) {
       console.log(`Archive root: ${normalizeText(result.archiveRoot)}`)
       console.log(`Runs: ${runs.length}`)
       runs.forEach((run) => {
         console.log(`- ${run.schoolYear} / ${run.runId} / ${run.status}`)
+        /** @type {Array<{ key?: string, rowCount?: number, purgedCount?: number, remainingCount?: number }>} */
         const datasets = Array.isArray(run.datasets) ? run.datasets : []
         datasets.forEach((dataset) => {
           console.log(
@@ -1341,9 +1330,11 @@ function renderHumanReadable(result) {
     }
   }
 
-  if (normalizeLower(result.mode) === "apply" || normalizeLower(result.mode) === "dry-run") {
-    console.log(`${result.mode.toUpperCase()} school-year rollover`)
+  const mode = normalizeText(result.mode)
+  if (mode === "apply" || mode === "dry-run") {
+    console.log(`${mode.toUpperCase()} school-year rollover`)
     console.log(`School year: ${normalizeText(result.schoolYear)}`)
+    /** @type {{ startDate?: string, endDate?: string }} */
     const window = result.dateWindow || {}
     console.log(`Date window: ${normalizeText(window.startDate)} to ${normalizeText(window.endDate)} (inclusive)`)
     if (normalizeText(result.archiveDir)) console.log(`Archive: ${normalizeText(result.archiveDir)}`)
@@ -1391,7 +1382,7 @@ async function main(argv = process.argv.slice(2)) {
     return
   }
 
-  throw new Error(`Unknown command: ${args.command}`)
+  throw new Error("Unknown command")
 }
 
 const isEntrypoint = process.argv[1]

@@ -6,11 +6,17 @@ import {
 } from "../async/side-effect-jobs.mjs"
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
+import {
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
+} from "./parent-reports.mjs"
+import { recordParentClassReportEvent } from "./parent-report-events.mjs"
 
 /**
  * @typedef {{
  *   queueType?: unknown,
  *   deliveryMode?: unknown,
+ *   status?: unknown,
  *   recipients?: unknown,
  *   assignmentTitle?: unknown,
  *   exerciseTitle?: unknown,
@@ -34,6 +40,7 @@ import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
  * @typedef {{
  *   queueType?: unknown,
  *   deliveryMode?: unknown,
+ *   status?: unknown,
  *   recipients?: unknown,
  *   assignmentTitle?: unknown,
  *   exerciseTitle?: unknown,
@@ -264,6 +271,64 @@ function normalizeAnnouncementPayload(payload = {}, options = {}) {
   }
 }
 
+function parentReportSnapshotText(report = {}) {
+  if (!report || typeof report !== "object") return ""
+  const identity = report?.identity && typeof report.identity === "object" ? report.identity : {}
+  const scope = report?.scope && typeof report.scope === "object" ? report.scope : {}
+  const snapshot = report?.snapshot && typeof report.snapshot === "object" ? report.snapshot : {}
+  const attendance = report?.attendance && typeof report.attendance === "object" ? report.attendance : {}
+  const metrics = report?.metrics && typeof report.metrics === "object" ? report.metrics : {}
+  const rubric = report?.rubric && typeof report.rubric === "object" ? report.rubric : {}
+  const rubricRows = Array.isArray(rubric.rows) ? rubric.rows : []
+  const lines = [
+    "Performance Report Snapshot",
+    `Snapshot ID: ${normalizeText(snapshot.reportId) || "-"}`,
+    `Snapshot source: ${normalizeText(snapshot.source) || "-"}`,
+    `Captured at: ${normalizeText(snapshot.capturedAtDisplay || snapshot.capturedAt) || "-"}`,
+    `Approved at: ${normalizeText(snapshot.approvedAtDisplay || snapshot.approvedAt) || "-"}`,
+    `Student: ${normalizeText(identity.fullName) || "-"}`,
+    `English name: ${normalizeText(identity.englishName) || "-"}`,
+    `Eagles ID: ${normalizeText(identity.eaglesId) || "-"}`,
+    `Student number: ${normalizeText(identity.studentNumber) || "-"}`,
+    `Scope: ${[
+      normalizeText(scope.className) || normalizeText(snapshot.className),
+      normalizeText(scope.schoolYear) || normalizeText(snapshot.schoolYear),
+      normalizeText(scope.quarter) || normalizeText(snapshot.quarter),
+    ].filter(Boolean).join(" | ") || "-"}`,
+    `Attendance: total=${normalizeText(attendance.total) || "-"} | absences=${normalizeText(attendance.absences) || "-"} | tardy=${normalizeText(attendance.tardy) || "-"} | percent=${normalizeText(attendance.percent || attendance.rate) || "-"}`,
+    `Metrics: homework completion=${normalizeText(metrics.homeworkCompletionRate) || "-"} | homework on-time=${normalizeText(metrics.homeworkOnTimeRate) || "-"} | behavior=${normalizeText(metrics.behaviorScore) || "-"} | skills=${normalizeText(metrics.participationScore) || "-"} | academic=${normalizeText(metrics.inClassScore) || "-"} | participation points=${normalizeText(metrics.participationPointsAward) || "-"}`,
+    `Teacher snapshot: teacher=${normalizeText(metrics.teacherName) || "-"} | lesson=${normalizeText(metrics.lessonSummary) || "-"} | vision=${normalizeText(metrics.visionStatus) || "-"} | comment=${normalizeText(metrics.teacherComment) || "-"}`,
+  ]
+  if (rubricRows.length) {
+    lines.push("", "Rubric:")
+    rubricRows.forEach((row, index) => {
+      const prompt = normalizeText(row?.prompt || row?.metric || row?.title) || `Row ${index + 1}`
+      const score = normalizeText(row?.resultScore || row?.observedResult || row?.result || row?.observed) || "-"
+      const explanation = normalizeText(row?.resultExplanation || row?.detail || row?.summary || row?.interpretation)
+      const recommendation = normalizeText(row?.recommendation || row?.actionNote || row?.action || row?.note) || "-"
+      lines.push(
+        `${index + 1}. ${prompt} | rating=${score}${explanation ? ` | meaning=${explanation}` : ""} | comment=${recommendation}`
+      )
+    })
+  }
+  return lines.filter(Boolean).join("\n")
+}
+
+function parentReportEmailBodyFromPayload(payload = {}) {
+  const reportSnapshot =
+    payload?.reportSnapshot && typeof payload.reportSnapshot === "object" ? payload.reportSnapshot : null
+  if (!reportSnapshot) return ""
+  return normalizeText(parentReportSnapshotText(reportSnapshot))
+}
+
+function normalizeQueueMessage(payload = {}, normalizedPayload = {}) {
+  if (normalizeQueueType(payload.queueType) === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT) {
+    const reportCardBody = parentReportEmailBodyFromPayload(payload)
+    if (reportCardBody) return reportCardBody
+  }
+  return normalizeText(normalizedPayload.message)
+}
+
 /**
  * @param {QueueRecordLike} [record]
  * @returns {{
@@ -354,6 +419,22 @@ async function getNotificationQueuePrismaClient() {
   }
 }
 
+async function updateParentReportNotificationState(reportId = "", patch = {}) {
+  const id = normalizeText(reportId)
+  if (!id) return null
+  try {
+    const prisma = await getSharedPrismaClient()
+    if (!prisma?.parentClassReport?.update) return null
+    return await prisma.parentClassReport.update({
+      where: { id },
+      data: patch,
+    })
+  } catch (error) {
+    void error
+    return null
+  }
+}
+
 function isQueueTableMissingError(error) {
   const code = normalizeUpper(error?.code)
   if (code === "P2021") return true
@@ -406,7 +487,7 @@ function buildQueuedAnnouncementEntry(payload = {}, options = {}) {
     exerciseTitle: normalizedPayload.exerciseTitle,
     level: normalizedPayload.level,
     dueAt: normalizedPayload.dueAt,
-    message: normalizedPayload.message,
+    message: normalizeQueueMessage(payload, normalizedPayload),
     senderName: normalizedPayload.senderName,
     queuedByUsername: normalizeText(options.queuedByUsername || payload.queuedByUsername),
     reviewedByUsername: "",
@@ -508,6 +589,24 @@ export async function listQueuedAnnouncements({ queueType = "", take = 10, inclu
  * }>}
  */
 export async function queueAnnouncementEmail(payload = {}, options = {}) {
+  const queueType = normalizeQueueType(payload.queueType)
+  const reportId = normalizeText(payload?.reportId || payload?.parentReportId)
+  if (queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT && reportId) {
+    const prisma = await getSharedPrismaClient().catch(() => null)
+    if (prisma?.parentClassReport?.findUnique) {
+      const report = await prisma.parentClassReport.findUnique({ where: { id: reportId } })
+      const workflowState = normalizeLower(report?.workflowState)
+      if (
+        workflowState !== "published"
+        && workflowState !== "notification_queued"
+        && workflowState !== "notification_sent"
+      ) {
+        const error = new Error("Performance report must be published before notification queueing")
+        error.statusCode = 409
+        throw error
+      }
+    }
+  }
   const totalUnsent = await countQueuedAnnouncements()
   if (totalUnsent >= EMAIL_BATCH_QUEUE_LIMIT) {
     const error = new Error("Weekend email batch queue is full")
@@ -552,6 +651,24 @@ export async function queueAnnouncementEmail(payload = {}, options = {}) {
     }
   )
   EMAIL_BATCH_LAST_KNOWN_SIZE = totalUnsent + 1
+  if (queueType === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT && reportId) {
+    await updateParentReportNotificationState(reportId, {
+      workflowState: PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
+      notificationQueuedAt: new Date(),
+    })
+    await recordParentClassReportEvent({
+      reportId,
+      artifactVersion: Number.parseInt(String(payload?.artifactVersion || 0), 10) || 0,
+      eventType: "notification_queued",
+      actorType: "system",
+      actorId: normalizeText(options?.queuedByUsername || payload?.queuedByUsername || "system"),
+      channel: "email",
+      metadata: {
+        queueId: saved.id,
+        recipientCount: Array.isArray(payload?.recipients) ? payload.recipients.length : 0,
+      },
+    })
+  }
 
   return {
     ok: true,
@@ -782,15 +899,26 @@ export async function updateQueuedAnnouncement(queueId, updates = {}, options = 
  *   queued?: number,
  * }>}
  */
-export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername = "" } = {}) {
+export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUsername = "", queueIds = null } = {}) {
+  const queueIdsProvided = Array.isArray(queueIds)
+  const selectedQueueIds = Array.from(
+    new Set(
+      (queueIdsProvided ? queueIds : [])
+        .map((entry) => normalizeText(entry))
+        .filter(Boolean)
+    )
+  )
   const source = await listQueuedAnnouncements({
     queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
     includeSent: false,
     statuses: [NOTIFICATION_QUEUE_STATUS_QUEUED],
     take: 1000,
   })
+  const filteredItems = queueIdsProvided ?
+    source.items.filter((item) => selectedQueueIds.includes(normalizeText(item.id)))
+    : source.items
 
-  if (!source.items.length) {
+  if (!filteredItems.length) {
     EMAIL_BATCH_LAST_RUN_AT = nowIso()
     EMAIL_BATCH_LAST_RESULT = "manual-send sent=0 failed=0"
     EMAIL_BATCH_LAST_ERROR = ""
@@ -803,8 +931,8 @@ export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUse
     }
   }
 
-  for (let i = 0; i < source.items.length; i += 1) {
-    const item = source.items[i]
+  for (let i = 0; i < filteredItems.length; i += 1) {
+    const item = filteredItems[i]
     await enqueueAsyncSideEffectJob(
       ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL,
       {
@@ -813,13 +941,20 @@ export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUse
         reviewedByUsername: normalizeText(reviewedByUsername),
         participationPointsAward: item?.payloadJson?.participationPointsAward,
         reportId: normalizeText(item?.payloadJson?.reportId || item?.reportId),
+        reportSnapshot:
+          item?.payloadJson?.reportSnapshot && typeof item.payloadJson.reportSnapshot === "object"
+            ? item.payloadJson.reportSnapshot
+            : null,
         announcementPayload: {
           recipients: item.recipients,
           assignmentTitle: item.assignmentTitle,
           exerciseTitle: item.exerciseTitle,
           dueAt: item.dueAt,
           level: item.level,
-          message: item.message,
+          message:
+            normalizeQueueType(item.queueType) === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT
+              ? parentReportEmailBodyFromPayload(item?.payloadJson || {}) || item.message
+              : item.message,
           senderName: item.senderName,
         },
       },
@@ -828,15 +963,15 @@ export async function sendAllQueuedAnnouncements({ queueType = "", reviewedByUse
   }
 
   EMAIL_BATCH_LAST_RUN_AT = nowIso()
-  EMAIL_BATCH_LAST_RESULT = `manual-send queued=${source.items.length}`
+  EMAIL_BATCH_LAST_RESULT = `manual-send queued=${filteredItems.length}`
   EMAIL_BATCH_LAST_ERROR = ""
 
   return {
     ok: true,
     queueType: queueType || NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
-    processed: source.items.length,
+    processed: filteredItems.length,
     sent: 0,
     failed: 0,
-    queued: source.items.length,
+    queued: filteredItems.length,
   }
 }

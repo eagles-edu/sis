@@ -24,25 +24,158 @@ export {
   saveStudentNewsReport,
 } from "../src/modules/admin/student-news-submissions.mjs"
 
+/**
+ * @typedef {{
+ *   profile?: Record<string, unknown>
+ *   email?: unknown
+ *   studentNumber?: unknown
+ *   eaglesId?: unknown
+ *   [key: string]: unknown
+ * }} StudentImportLike
+ *
+ * @typedef {StudentImportLike & {
+ *   profile?: Record<string, unknown>
+ * }} ImportComparableState
+ *
+ * @typedef {{
+ *   eaglesId: string | null,
+ *   studentNumber: number | null,
+ *   fullName: string | null,
+ *   englishName: string | null,
+ *   email: string | null,
+ * }} StudentImportRowFields
+ *
+ * @typedef {{
+ *   rowNumber: number,
+ *   phase: string,
+ *   message: string,
+ *   fields: StudentImportRowFields,
+ * }} StudentImportErrorEntry
+ *
+ * @typedef {{
+ *   rowNumber: number,
+ *   status: string,
+ *   studentRefId?: string,
+ *   changedCount?: number,
+ *   changedFields?: string[],
+ *   phase?: string,
+ *   fields: StudentImportRowFields,
+ *   message?: string,
+ * }} StudentImportRowResult
+ *
+ * @typedef {StudentImportRowResult & {
+ *   phase?: string,
+ *   message?: string,
+ * }} StudentImportLogEntry
+ *
+ * @typedef {{
+ *   rowNumber: number,
+ *   message: string,
+ * }} StudentImportValidationError
+ *
+ * @typedef {{
+ *   rows: Array<Record<string, unknown>>,
+ *   autoFilledEaglesIds: number,
+ *   autoFilledStudentNumbers: number,
+ * }} StudentImportPreparedRows
+ *
+ * @typedef {{
+ *   rows: Array<Record<string, unknown>>,
+ *   autoFilledEaglesIds: number,
+ *   autoFilledStudentNumbers: number,
+ *   requireExplicitIdentity: boolean,
+ *   errors: StudentImportValidationError[],
+ * }} StudentImportValidationResult
+ *
+ * @typedef {{
+ *   sourceFormId: string,
+ *   sourceUrl: string | null,
+ *   fullName: string | null,
+ *   englishName: string | null,
+ *   memberSince: string | null,
+ *   exercisePoints: number | null,
+ *   parentsId: string | null,
+ *   photoUrl: string | null,
+ *   genderSelections: string[],
+ *   studentPhone: string | null,
+ *   studentEmail: string | null,
+ *   hobbies: string | null,
+ *   dobText: string | null,
+ *   birthOrder: number | null,
+ *   siblingBrothers: number | null,
+ *   siblingSisters: number | null,
+ *   ethnicity: string | null,
+ *   languagesAtHome: string[],
+ *   otherLanguage: string | null,
+ *   schoolName: string | null,
+ *   currentGrade: string | null,
+ *   currentSchoolGrade: string | null,
+ *   motherName: string | null,
+ *   motherEmail: string | null,
+ *   motherPhone: string | null,
+ *   motherEmergencyContact: string | null,
+ *   motherMessenger: string | null,
+ *   fatherName: string | null,
+ *   fatherEmail: string | null,
+ *   fatherPhone: string | null,
+ *   fatherEmergencyContact: string | null,
+ *   fatherMessenger: string | null,
+ *   streetAddress: string | null,
+ *   newAddress: string | null,
+ *   wardDistrict: string | null,
+ *   city: string | null,
+ *   postCode: string | null,
+ *   hasGlasses: string | null,
+ *   hadEyeExam: string | null,
+ *   lastEyeExamDateText: string | null,
+ *   prescriptionMedicine: string | null,
+ *   prescriptionDetails: string | null,
+ *   learningDisorders: string[],
+ *   learningDisorderDetails: string | null,
+ *   drugAllergies: string | null,
+ *   foodEnvironmentalAllergies: string | null,
+ *   vaccinesChildhoodUpToDate: string | null,
+ *   hadCovidPositive: string | null,
+ *   covidNegativeDateText: string | null,
+ *   covidShotAlready: string | null,
+ *   covidVaccinesUpToDate: string | null,
+ *   covidShotHistory: string[],
+ *   mostRecentCovidShotDate: string | null,
+ *   feverMedicineAllowed: string[],
+ *   whiteOilAllowed: string | null,
+ *   signatureFullName: string | null,
+ *   signatureEmail: string | null,
+ *   extraComments: string | null,
+ *   requiredValidationOk: boolean | null,
+ *   rawFormPayload: Record<string, unknown> | null,
+ *   normalizedFormPayload: Record<string, unknown> | null,
+ * }} StudentProfilePayload
+ */
+
+/** @param {unknown} value @returns {string} */
 function normalizeText(value) {
   if (value === undefined || value === null) return ""
   return String(value).trim()
 }
 
+/** @param {unknown} value @returns {string} */
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+/** @param {unknown} value @returns {string | null} */
 function normalizeNullableText(value) {
   const text = normalizeText(value)
   return text || null
 }
 
+/** @param {unknown} value @returns {string | null} */
 function normalizeNullableEmail(value) {
   const text = normalizeLower(value)
   return text || null
 }
 
+/** @param {unknown} value @returns {string[]} */
 function normalizeTextArray(value) {
   if (Array.isArray(value)) {
     return value
@@ -57,6 +190,7 @@ function normalizeTextArray(value) {
     .filter(Boolean)
 }
 
+/** @param {unknown} value @returns {string} */
 function canonicalizeGenderSelection(value) {
   const raw = normalizeText(value)
   const token = normalizeLower(raw)
@@ -68,9 +202,11 @@ function canonicalizeGenderSelection(value) {
   return raw
 }
 
+/** @param {unknown} value @returns {string[]} */
 function normalizeGenderSelections(value) {
   const selections = normalizeTextArray(value).map((entry) => canonicalizeGenderSelection(entry))
   const seen = new Set()
+  /** @type {string[]} */
   const deduped = []
   selections.forEach((entry) => {
     const key = normalizeLower(entry)
@@ -81,6 +217,7 @@ function normalizeGenderSelections(value) {
   return deduped
 }
 
+/** @param {unknown} value @returns {number | null} */
 function normalizeInteger(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -88,18 +225,21 @@ function normalizeInteger(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/** @param {unknown} value @returns {number | null} */
 function normalizePositiveInteger(value) {
   const parsed = normalizeInteger(value)
-  if (!Number.isFinite(parsed) || parsed < 1) return null
+  if (parsed === null || !Number.isFinite(parsed) || parsed < 1) return null
   return parsed
 }
 
+/** @param {unknown} value @returns {number | null} */
 function normalizeFloat(value) {
   if (value === undefined || value === null || value === "") return null
   const parsed = Number.parseFloat(String(value))
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/** @param {unknown} value @returns {boolean | null} */
 function normalizeBoolean(value) {
   if (value === undefined || value === null || value === "") return null
   if (typeof value === "boolean") return value
@@ -117,6 +257,7 @@ const FIXED_TIME_ZONE_OFFSET_MINUTES = 7 * 60
 const FIXED_TIME_ZONE_OFFSET_MS = FIXED_TIME_ZONE_OFFSET_MINUTES * 60 * 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
+/** @param {unknown} value @returns {Date | null} */
 function normalizeDate(value) {
   const text = normalizeText(value)
   if (!text) return null
@@ -125,20 +266,24 @@ function normalizeDate(value) {
   return parsed
 }
 
+/** @param {Date} value @returns {Date} */
 function shiftToFixedTimeZone(value) {
   return new Date(value.getTime() + FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/** @param {Date} value @returns {Date} */
 function shiftFromFixedTimeZone(value) {
   return new Date(value.getTime() - FIXED_TIME_ZONE_OFFSET_MS)
 }
 
+/** @param {unknown} value @param {Date} [fallback=new Date()] @returns {Date} */
 function normalizeDateValue(value, fallback = new Date()) {
   const parsed = value instanceof Date ? new Date(value.getTime()) : parseDateOrNull(value)
   if (parsed instanceof Date && !Number.isNaN(parsed.valueOf())) return parsed
   return fallback instanceof Date ? new Date(fallback.getTime()) : new Date()
 }
 
+/** @param {unknown} value @returns {Date | null} */
 function parseLocalDateOnly(value) {
   const text = normalizeText(value)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null
@@ -154,6 +299,7 @@ function parseLocalDateOnly(value) {
   return date
 }
 
+/** @param {unknown} value @returns {string} */
 function normalizeHttpUrl(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -168,6 +314,7 @@ function normalizeHttpUrl(value) {
   }
 }
 
+/** @param {unknown} value @returns {string | null} */
 function normalizeQuarter(value) {
   const text = normalizeLower(value)
   if (!text) return null
@@ -178,6 +325,7 @@ function normalizeQuarter(value) {
   return null
 }
 
+/** @param {unknown} value @returns {string} */
 function normalizeAttendanceStatus(value) {
   const text = normalizeLower(value)
   if (!text) return "present"
@@ -188,24 +336,34 @@ function normalizeAttendanceStatus(value) {
   return "present"
 }
 
+/** @param {Array<unknown>} values @returns {number | null} */
 function average(values) {
-  const numeric = values.filter((entry) => Number.isFinite(entry))
+  const numeric = values
+    .map((entry) => Number(entry))
+    .filter((entry) => Number.isFinite(entry))
   if (!numeric.length) return null
   const total = numeric.reduce((sum, entry) => sum + entry, 0)
   return Number((total / numeric.length).toFixed(2))
 }
 
+/** @param {unknown} numerator @param {unknown} denominator @returns {number | null} */
 function percentage(numerator, denominator) {
-  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return null
-  return Number(((numerator / denominator) * 100).toFixed(2))
+  const n = Number(numerator)
+  const d = Number(denominator)
+  if (!Number.isFinite(n) || !Number.isFinite(d) || d <= 0) return null
+  return Number(((n / d) * 100).toFixed(2))
 }
+
+/** @param {unknown} value @returns {Date | null} */
 function parseDateOrNull(value) {
   if (!value) return null
+  if (typeof value !== "string" && typeof value !== "number" && !(value instanceof Date)) return null
   const date = new Date(value)
   if (Number.isNaN(date.valueOf())) return null
   return date
 }
 
+/** @param {unknown} value @returns {string} */
 function toLocalIsoDate(value) {
   const date = value instanceof Date ? value : parseDateOrNull(value)
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return ""
@@ -216,6 +374,7 @@ function toLocalIsoDate(value) {
   return `${year}-${month}-${day}`
 }
 
+/** @param {unknown} left @param {unknown} right @returns {number} */
 function compareKnownLevelOrder(left, right) {
   const leftCanonical = canonicalizeLevel(left)
   const rightCanonical = canonicalizeLevel(right)
@@ -231,23 +390,31 @@ function compareKnownLevelOrder(left, right) {
   return leftCanonical.localeCompare(rightCanonical)
 }
 
+/**
+ * @param {unknown} condition
+ * @param {number} status
+ * @param {string} message
+ */
 function assertWithStatus(condition, status, message) {
   if (condition) return
-  const error = new Error(message)
+  const error = /** @type {Error & { statusCode?: number }} */ (new Error(message))
   error.statusCode = status
   throw error
 }
 
+/** @param {unknown} eaglesId @returns {string} */
 function buildExternalKey(eaglesId) {
   return `sid:${normalizeLower(eaglesId)}`
 }
 
+/** @param {unknown} studentNumber @returns {string} */
 function buildEaglesIdFromNumber(studentNumber) {
   const normalized = normalizePositiveInteger(studentNumber)
   if (!normalized) return ""
   return `SIS-${String(normalized).padStart(6, "0")}`
 }
 
+/** @param {unknown} baseEaglesId @param {Set<string>} reservedEaglesIdKeys @returns {string} */
 function buildUniqueEaglesIdCandidate(baseEaglesId, reservedEaglesIdKeys) {
   const base = normalizeText(baseEaglesId)
   if (!base) return ""
@@ -265,6 +432,7 @@ const STUDENT_NUMBER_START = Math.max(
   normalizePositiveInteger(process.env.STUDENT_NUMBER_START) || 100
 )
 
+/** @param {unknown} value @param {boolean} [fallback=false] @returns {boolean} */
 function resolveBooleanFlag(value, fallback = false) {
   if (value === undefined || value === null || value === "") return fallback
   if (typeof value === "boolean") return value
@@ -320,6 +488,7 @@ const LEVEL_DEFINITIONS = [
   },
 ]
 
+/** @param {unknown} value @returns {string} */
 function normalizeLevelKey(value) {
   return normalizeLower(value).replace(/[^a-z0-9]/g, "")
 }
@@ -336,6 +505,7 @@ const LEVEL_ALIAS_MAP = (() => {
   return map
 })()
 
+/** @param {unknown} value @returns {string} */
 function canonicalizeLevel(value) {
   const text = normalizeText(value)
   if (!text) return ""
@@ -343,6 +513,7 @@ function canonicalizeLevel(value) {
   return LEVEL_ALIAS_MAP.get(key) || text
 }
 
+/** @param {unknown} value @returns {number} */
 function knownLevelIndex(value) {
   const canonical = canonicalizeLevel(value)
   return LEVEL_DEFINITIONS.findIndex(
@@ -350,6 +521,7 @@ function knownLevelIndex(value) {
   )
 }
 
+/** @param {unknown} value @returns {string[]} */
 function resolveLevelVariants(value) {
   const text = normalizeText(value)
   if (!text) return []
@@ -361,10 +533,15 @@ function resolveLevelVariants(value) {
   return Array.from(new Set([definition.canonical, ...(definition.aliases || [])]))
 }
 
+/** @returns {string} */
 function nowIso() {
   return new Date().toISOString()
 }
 
+/**
+ * @param {StudentImportLike} [payload={}]
+ * @returns {StudentProfilePayload}
+ */
 function normalizeProfilePayload(payload = {}) {
   const sourceFormId = normalizeText(payload.sourceFormId) || "admin-manual"
 
@@ -428,14 +605,18 @@ function normalizeProfilePayload(payload = {}) {
     signatureEmail: normalizeNullableEmail(payload.signatureEmail),
     extraComments: normalizeNullableText(payload.extraComments),
     requiredValidationOk: normalizeBoolean(payload.requiredValidationOk),
-    rawFormPayload: payload.rawFormPayload && typeof payload.rawFormPayload === "object" ? payload.rawFormPayload : null,
+    rawFormPayload:
+      payload.rawFormPayload && typeof payload.rawFormPayload === "object"
+        ? /** @type {Record<string, unknown>} */ (payload.rawFormPayload)
+        : null,
     normalizedFormPayload:
       payload.normalizedFormPayload && typeof payload.normalizedFormPayload === "object"
-        ? payload.normalizedFormPayload
+        ? /** @type {Record<string, unknown>} */ (payload.normalizedFormPayload)
         : null,
   }
 }
 
+/** @type {Promise<import("@prisma/client").PrismaClient> | null} */
 let prismaClientPromise = null
 
 /**
@@ -452,7 +633,7 @@ export function isStudentAdminStoreEnabled() {
 
 async function getPrismaClient() {
   if (!isStudentAdminStoreEnabled()) {
-    const error = new Error("Student admin store is disabled")
+    const error = /** @type {Error & { statusCode?: number }} */ (new Error("Student admin store is disabled"))
     error.statusCode = 503
     throw error
   }
@@ -468,10 +649,17 @@ async function getPrismaClient() {
   }
 }
 
+/** @param {unknown} value @returns {number} */
 function normalizeStudentNumberFloor(value = STUDENT_NUMBER_START) {
   return Math.max(100, normalizePositiveInteger(value) || STUDENT_NUMBER_START)
 }
 
+/**
+ * @param {Array<{ studentNumber?: unknown }>} [rows=[]]
+ * @param {number} [floor=STUDENT_NUMBER_START]
+ * @returns {number}
+ */
+/** @param {Array<{ studentNumber?: unknown }>} [rows=[]] @param {unknown} [floor=STUDENT_NUMBER_START] @returns {number} */
 function maxStudentNumberFromRows(rows = [], floor = STUDENT_NUMBER_START) {
   const minimum = normalizeStudentNumberFloor(floor)
   return rows.reduce((highest, row) => {
@@ -480,6 +668,11 @@ function maxStudentNumberFromRows(rows = [], floor = STUDENT_NUMBER_START) {
   }, minimum - 1)
 }
 
+/**
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
+ * @param {unknown} [floor=STUDENT_NUMBER_START]
+ * @returns {Promise<number>}
+ */
 async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_START) {
   const minimum = normalizeStudentNumberFloor(floor)
   const rows = await client.student.findMany({
@@ -491,10 +684,21 @@ async function resolveNextStudentNumberForClient(client, floor = STUDENT_NUMBER_
   return Math.max(minimum, highest + 1)
 }
 
+/**
+ * @param {StudentImportLike} [payload={}]
+ * @returns {number | null}
+ */
+/** @param {StudentImportLike} [payload={}] @returns {number | null} */
 function requestedStudentNumberFromPayload(payload = {}) {
   return normalizePositiveInteger(payload?.studentNumber)
 }
 
+/**
+ * @param {Record<string, unknown>} row
+ * @param {string[]} aliases
+ * @returns {unknown}
+ */
+/** @param {Record<string, unknown>} row @param {string[]} aliases @returns {unknown} */
 function getImportValue(row, aliases) {
   const aliasSet = new Set(aliases.map((entry) => normalizeLower(entry)))
   const entries = Object.entries(row || {})
@@ -505,6 +709,11 @@ function getImportValue(row, aliases) {
   return ""
 }
 
+/**
+ * @param {Record<string, unknown>} row
+ * @returns {{ eaglesId: string, studentNumber: number | null, email: string, profile: Record<string, unknown> }}
+ */
+/** @param {Record<string, unknown>} row @returns {{ eaglesId: string, studentNumber: number | null, email: string, profile: Record<string, unknown> }} */
 function mapImportRowToStudentPayload(row) {
   const eaglesId = normalizeText(getImportValue(row, ["eaglesId"]))
   const studentNumber = normalizePositiveInteger(getImportValue(row, ["studentNumber"]))
@@ -601,6 +810,7 @@ function mapImportRowToStudentPayload(row) {
   }
 }
 
+/** @param {unknown} value @returns {boolean} */
 function hasBackfillImportValue(value) {
   if (Array.isArray(value)) return value.length > 0
   if (typeof value === "number") return Number.isFinite(value)
@@ -609,11 +819,17 @@ function hasBackfillImportValue(value) {
   return Boolean(normalizeText(value))
 }
 
+/**
+ * @param {StudentImportLike} [importPayload={}]
+ * @param {StudentImportLike} [existingStudent={}]
+ * @returns {{ eaglesId: string, studentNumber: number | null, email: string, profile: Record<string, unknown> }}
+ */
+/** @param {StudentImportLike} [importPayload={}] @param {StudentImportLike} [existingStudent={}] @returns {{ eaglesId: string, studentNumber: number | null, email: string, profile: Record<string, unknown> }} */
 function mergeImportPayloadForBackfill(importPayload = {}, existingStudent = {}) {
-  const incoming = importPayload && typeof importPayload === "object" ? importPayload : {}
-  const existing = existingStudent && typeof existingStudent === "object" ? existingStudent : {}
-  const incomingProfile = incoming.profile && typeof incoming.profile === "object" ? incoming.profile : {}
-  const existingProfile = existing.profile && typeof existing.profile === "object" ? existing.profile : {}
+  const incoming = importPayload && typeof importPayload === "object" ? /** @type {StudentImportLike} */ (importPayload) : {}
+  const existing = existingStudent && typeof existingStudent === "object" ? /** @type {StudentImportLike} */ (existingStudent) : {}
+  const incomingProfile = incoming.profile && typeof incoming.profile === "object" ? /** @type {Record<string, unknown>} */ (incoming.profile) : {}
+  const existingProfile = existing.profile && typeof existing.profile === "object" ? /** @type {Record<string, unknown>} */ (existing.profile) : {}
 
   const mergedProfile = { ...existingProfile }
   Object.entries(incomingProfile).forEach(([key, value]) => {
@@ -639,6 +855,7 @@ function mergeImportPayloadForBackfill(importPayload = {}, existingStudent = {})
   }
 }
 
+/** @param {unknown} leftValue @param {unknown} rightValue @returns {boolean} */
 function valuesEqualForImportDiff(leftValue, rightValue) {
   if (Array.isArray(leftValue) || Array.isArray(rightValue)) {
     const left = Array.isArray(leftValue) ? leftValue.map((entry) => normalizeText(entry)).filter(Boolean) : []
@@ -660,15 +877,17 @@ function valuesEqualForImportDiff(leftValue, rightValue) {
   return normalizeText(leftValue) === normalizeText(rightValue)
 }
 
+/** @param {ImportComparableState | null} [beforeState={}] @param {ImportComparableState | null} [afterState={}] @returns {string[]} */
 function collectImportChangedFieldNames(beforeState = {}, afterState = {}) {
+  /** @type {string[]} */
   const changed = []
   const scalarKeys = ["email", "studentNumber"]
   scalarKeys.forEach((key) => {
     if (!valuesEqualForImportDiff(beforeState?.[key], afterState?.[key])) changed.push(key)
   })
 
-  const beforeProfile = beforeState?.profile && typeof beforeState.profile === "object" ? beforeState.profile : {}
-  const afterProfile = afterState?.profile && typeof afterState.profile === "object" ? afterState.profile : {}
+  const beforeProfile = beforeState?.profile && typeof beforeState.profile === "object" ? /** @type {Record<string, unknown>} */ (beforeState.profile) : {}
+  const afterProfile = afterState?.profile && typeof afterState.profile === "object" ? /** @type {Record<string, unknown>} */ (afterState.profile) : {}
   const profileKeys = Array.from(new Set([...Object.keys(beforeProfile), ...Object.keys(afterProfile)])).sort(
     (left, right) => left.localeCompare(right)
   )
@@ -679,8 +898,9 @@ function collectImportChangedFieldNames(beforeState = {}, afterState = {}) {
   return changed
 }
 
+/** @param {StudentImportLike} [row={}] @returns {StudentImportRowFields} */
 function summarizeImportRowFields(row = {}) {
-  const profile = row?.profile && typeof row.profile === "object" ? row.profile : {}
+  const profile = row?.profile && typeof row.profile === "object" ? /** @type {Record<string, unknown>} */ (row.profile) : {}
   return {
     eaglesId: normalizeText(row?.eaglesId) || null,
     studentNumber: normalizePositiveInteger(row?.studentNumber),
@@ -690,6 +910,11 @@ function summarizeImportRowFields(row = {}) {
   }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [mappedRows=[]]
+ * @param {{ existingRows?: Array<{ eaglesId?: unknown, studentNumber?: unknown }>, studentNumberStart?: unknown }} [options={}]
+ * @returns {StudentImportPreparedRows}
+ */
 function applyImportIdentityDefaults(
   mappedRows = [],
   {
@@ -712,6 +937,7 @@ function applyImportIdentityDefaults(
     if (number) reservedStudentNumbers.add(number)
   })
 
+  /** @type {Array<Record<string, unknown>>} */
   const rows = (Array.isArray(mappedRows) ? mappedRows : []).map((row) => ({ ...(row || {}) }))
   rows.forEach((row) => {
     const idKey = normalizeLower(row?.eaglesId)
@@ -774,6 +1000,11 @@ function applyImportIdentityDefaults(
   }
 }
 
+/**
+ * @param {Array<Record<string, unknown>>} [mappedRows=[]]
+ * @param {{ existingRows?: Array<{ eaglesId?: unknown, studentNumber?: unknown }>, studentNumberStart?: unknown, requireExplicitIdentity?: unknown }} [options={}]
+ * @returns {StudentImportValidationResult}
+ */
 function validateImportRowsForIdentity(
   mappedRows = [],
   {
@@ -782,8 +1013,10 @@ function validateImportRowsForIdentity(
     requireExplicitIdentity = IMPORT_STRICT_IDENTITY_REQUIRED,
   } = {}
 ) {
+  /** @type {Array<Record<string, unknown>>} */
   const mapped = (Array.isArray(mappedRows) ? mappedRows : []).map((row) => ({ ...(row || {}) }))
   const strictMode = requireExplicitIdentity !== false
+  /** @type {StudentImportPreparedRows} */
   const prepared = strictMode
     ? {
         rows: mapped,
@@ -798,6 +1031,7 @@ function validateImportRowsForIdentity(
   const existingIdentityByEaglesId = new Map()
   const rowErrors = new Map()
 
+  /** @param {number} rowNumber @param {string} message */
   const setRowError = (rowNumber, message) => {
     if (!Number.isInteger(rowNumber) || rowNumber < 1) return
     if (!normalizeText(message)) return
@@ -865,6 +1099,7 @@ function validateImportRowsForIdentity(
     }
   }
 
+  /** @type {StudentImportValidationError[]} */
   const errors = Array.from(rowErrors.entries())
     .sort((left, right) => left[0] - right[0])
     .map(([rowNumber, message]) => ({ rowNumber, message }))
@@ -878,6 +1113,12 @@ function validateImportRowsForIdentity(
   }
 }
 
+/**
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
+ * @param {unknown} studentNumber
+ * @param {string} [excludedStudentId=""]
+ * @returns {Promise<void>}
+ */
 async function assertStudentNumberIsUniqueForClient(client, studentNumber, excludedStudentId = "") {
   const normalizedNumber = normalizePositiveInteger(studentNumber)
   if (!normalizedNumber) return
@@ -896,11 +1137,18 @@ async function assertStudentNumberIsUniqueForClient(client, studentNumber, exclu
   assertWithStatus(!duplicate, 409, "studentNumber already exists")
 }
 
+/**
+ * @param {import("@prisma/client").PrismaClient | import("@prisma/client").Prisma.TransactionClient} client
+ * @param {StudentImportLike & { profile?: Record<string, unknown> }} [payload={}]
+ * @param {string} [studentRefId=""]
+ * @returns {Promise<{ action: string, studentRefId: string }>}
+ */
 async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   const eaglesId = normalizeText(payload.eaglesId)
   assertWithStatus(Boolean(eaglesId), 400, "eaglesId is required")
 
   const studentEmail = normalizeNullableEmail(payload.email)
+  /** @type {StudentProfilePayload} */
   const profilePayload = normalizeProfilePayload(payload.profile || {})
   const profileEmail = profilePayload.studentEmail || null
   const persistedEmail = profileEmail || studentEmail
@@ -910,6 +1158,7 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   if (requestedId) {
     const existing = await client.student.findUnique({ where: { id: requestedId } })
     assertWithStatus(Boolean(existing), 404, "Student not found")
+    if (!existing) throw new Error("Student not found")
     assertWithStatus(
       normalizeLower(eaglesId) === normalizeLower(existing.eaglesId),
       409,
@@ -948,11 +1197,11 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
 
     await client.studentProfile.upsert({
       where: { studentRefId: student.id },
-      update: profilePayload,
-      create: {
+      update: /** @type {import("@prisma/client").Prisma.StudentProfileUpdateInput} */ (profilePayload),
+      create: /** @type {import("@prisma/client").Prisma.StudentProfileUncheckedCreateInput} */ ({
         studentRefId: student.id,
         ...profilePayload,
-      },
+      }),
     })
 
     return {
@@ -977,10 +1226,10 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
   })
 
   await client.studentProfile.create({
-    data: {
+    data: /** @type {import("@prisma/client").Prisma.StudentProfileUncheckedCreateInput} */ ({
       studentRefId: student.id,
       ...profilePayload,
-    },
+    }),
   })
 
   return {
@@ -990,15 +1239,18 @@ async function saveStudentWithClient(client, payload = {}, studentRefId = "") {
 }
 
 /**
- * @param {Record<string, unknown>} [payload]
- * @param {string} [studentRefId]
- * @param {{ skipFilterCacheInvalidation?: boolean }} [options]
+ * @param {StudentImportLike & { profile?: Record<string, unknown> }} [payload={}]
+ * @param {string} [studentRefId=""]
+ * @param {{ skipFilterCacheInvalidation?: boolean }} [options={}]
  * @returns {Promise<{ action: string, student: unknown }>}
  */
 async function saveStudent(payload = {}, studentRefId = "", options = {}) {
   const prisma = await getPrismaClient()
   const skipFilterCacheInvalidation = options.skipFilterCacheInvalidation === true
-  const result = await prisma.$transaction((tx) => saveStudentWithClient(tx, payload, studentRefId))
+  const result = await prisma.$transaction(
+    /** @param {import("@prisma/client").Prisma.TransactionClient} tx */
+    (tx) => saveStudentWithClient(tx, payload, studentRefId),
+  )
 
   if (!skipFilterCacheInvalidation) {
     await invalidateLevelAndSchoolFiltersCache()
@@ -1019,15 +1271,18 @@ async function deleteStudent(studentRefId) {
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
 
-  await prisma.$transaction(async (tx) => {
-    await tx.parentClassReport.deleteMany({ where: { studentRefId: id } })
-    await tx.studentGradeRecord.deleteMany({ where: { studentRefId: id } })
-    await tx.studentAttendance.deleteMany({ where: { studentRefId: id } })
-    await tx.exerciseSubmission.deleteMany({ where: { studentRefId: id } })
-    await tx.studentIntakeSubmission.deleteMany({ where: { studentRefId: id } })
-    await tx.studentProfile.deleteMany({ where: { studentRefId: id } })
-    await tx.student.delete({ where: { id } })
-  })
+  await prisma.$transaction(
+    /** @param {import("@prisma/client").Prisma.TransactionClient} tx */
+    async (tx) => {
+      await tx.parentClassReport.deleteMany({ where: { studentRefId: id } })
+      await tx.studentGradeRecord.deleteMany({ where: { studentRefId: id } })
+      await tx.studentAttendance.deleteMany({ where: { studentRefId: id } })
+      await tx.exerciseSubmission.deleteMany({ where: { studentRefId: id } })
+      await tx.studentIntakeSubmission.deleteMany({ where: { studentRefId: id } })
+      await tx.studentProfile.deleteMany({ where: { studentRefId: id } })
+      await tx.student.delete({ where: { id } })
+    },
+  )
 
   await invalidateLevelAndSchoolFiltersCache()
 
@@ -1052,6 +1307,24 @@ async function deleteStudent(studentRefId) {
  *   logs: Array<Record<string, unknown>>,
  * }>}
  */
+/**
+ * @param {Array<Record<string, unknown>>} [rows=[]]
+ * @returns {Promise<{
+ *   processed: number,
+ *   created: number,
+ *   updated: number,
+ *   failed: number,
+ *   autoFilledEaglesIds: number,
+ *   autoFilledStudentNumbers: number,
+ *   strictIdentity: boolean,
+ *   committed: boolean,
+ *   partiallyCommitted: boolean,
+ *   errors: StudentImportErrorEntry[],
+ *   rowResults: StudentImportRowResult[],
+ *   logFields: string[],
+ *   logs: StudentImportLogEntry[],
+ * }>}
+ */
 async function importStudentsFromRows(rows = []) {
   assertWithStatus(Array.isArray(rows), 400, "rows must be an array")
   assertWithStatus(rows.length > 0, 400, "rows cannot be empty")
@@ -1064,6 +1337,7 @@ async function importStudentsFromRows(rows = []) {
     },
   })
 
+  /** @type {Array<Record<string, unknown>>} */
   const mappedRows = rows.map((row) => mapImportRowToStudentPayload(row))
   const validation = validateImportRowsForIdentity(mappedRows, {
     existingRows,
@@ -1074,6 +1348,7 @@ async function importStudentsFromRows(rows = []) {
   const autoFilledStudentNumbers = validation.autoFilledStudentNumbers
   const strictIdentity = validation.requireExplicitIdentity
   const preflightErrors = Array.isArray(validation.errors) ? validation.errors : []
+  /** @type {Map<number, StudentImportValidationError>} */
   const preflightErrorByRow = new Map()
   preflightErrors.forEach((entry) => {
     const rowNumber = Number.parseInt(String(entry?.rowNumber), 10)
@@ -1083,8 +1358,11 @@ async function importStudentsFromRows(rows = []) {
 
   let created = 0
   let updated = 0
+  /** @type {StudentImportErrorEntry[]} */
   const errors = []
+  /** @type {StudentImportRowResult[]} */
   const rowResults = []
+  /** @type {StudentImportLogEntry[]} */
   const rowLogs = []
 
   for (let i = 0; i < preparedRows.length; i += 1) {
@@ -1103,9 +1381,8 @@ async function importStudentsFromRows(rows = []) {
       }
       errors.push(entry)
       rowResults.push({
-        rowNumber,
-        status: "rejected",
         ...entry,
+        status: "rejected",
       })
       rowLogs.push({
         rowNumber,
@@ -1118,7 +1395,7 @@ async function importStudentsFromRows(rows = []) {
     }
 
     try {
-      const outcome = await prisma.$transaction(async (tx) => {
+      const outcome = await prisma.$transaction(/** @param {import("@prisma/client").Prisma.TransactionClient} tx */ async (tx) => {
         const existing = await tx.student.findFirst({
           where: {
             eaglesId: {
@@ -1131,7 +1408,16 @@ async function importStudentsFromRows(rows = []) {
           },
         })
 
-        const payload = existing ? mergeImportPayloadForBackfill(preparedRow, existing) : preparedRow
+        const existingForBackfill = existing
+          ? {
+              ...existing,
+              profile: existing.profile || {},
+            }
+          : null
+        const payload = existingForBackfill
+          ? mergeImportPayloadForBackfill(preparedRow, existingForBackfill)
+          : preparedRow
+        /** @type {ImportComparableState | null} */
         const beforeState = existing
           ? {
               email: existing.email,
@@ -1141,16 +1427,19 @@ async function importStudentsFromRows(rows = []) {
           : null
         const saved = await saveStudentWithClient(tx, payload, normalizeText(existing?.id))
 
-        return {
+        /** @type {{ saved: { action: string, studentRefId: string }, payload: Record<string, unknown>, changedFields: string[] }} */
+        const result = {
           saved,
           payload,
           changedFields: existing ? collectImportChangedFieldNames(beforeState, payload) : [],
         }
+        return result
       })
 
       if (outcome.saved.action === "created") created += 1
       if (outcome.saved.action === "updated") updated += 1
 
+      /** @type {StudentImportRowResult} */
       const successEntry = {
         rowNumber,
         status: outcome.saved.action,
@@ -1164,7 +1453,7 @@ async function importStudentsFromRows(rows = []) {
       rowResults.push(successEntry)
       rowLogs.push(successEntry)
     } catch (error) {
-      const message = normalizeText(error?.message || error) || "Import failed"
+      const message = normalizeText(error instanceof Error ? error.message : error) || "Import failed"
       const entry = {
         rowNumber,
         phase: "write",
@@ -1173,9 +1462,8 @@ async function importStudentsFromRows(rows = []) {
       }
       errors.push(entry)
       rowResults.push({
-        rowNumber,
-        status: "rejected",
         ...entry,
+        status: "rejected",
       })
       rowLogs.push({
         rowNumber,

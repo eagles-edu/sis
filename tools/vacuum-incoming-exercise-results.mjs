@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 // @ts-check
 
-import fs from "node:fs"
-import path from "node:path"
-import process from "node:process"
+import * as fs from "node:fs"
+import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { getSharedPrismaClient } from "../server/prisma-client-factory.mjs"
@@ -16,11 +15,53 @@ const STATUS_QUEUED = "queued"
 const STATUS_TEMPORARY = "temporary"
 const STATUS_RESOLVED = "resolved"
 const STATUS_ARCHIVED = "archived"
-const ALL_ACTIVE_STATUSES = Object.freeze([STATUS_QUEUED, STATUS_TEMPORARY])
+const ALL_ACTIVE_STATUSES = [STATUS_QUEUED, STATUS_TEMPORARY]
 const DEFAULT_REPORT_DIR = "runtime-data/maintenance-reports"
 const DEFAULT_REVIEWED_BY = "system:incoming-vacuum"
 const DEFAULT_PURGE_DAYS = 45
 const DEFAULT_REPORT_RETENTION_DAYS = 30
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   status: string,
+ *   submittedEaglesId: string,
+ *   submittedEmail: string | null,
+ *   pageTitle: string,
+ *   completedAt: unknown,
+ *   totalQuestions: unknown,
+ *   correctCount: unknown,
+ *   pendingCount: unknown,
+ *   incorrectCount: unknown,
+ *   createdAt: unknown,
+ * }} IncomingExerciseResultRow
+ *
+ * @typedef {{
+ *   id: string,
+ *   eaglesId: string,
+ * }} StudentCandidate
+ *
+ * @typedef {{
+ *   id: string,
+ *   status: string,
+ *   submittedEaglesId: string,
+ *   submittedEmail: string,
+ *   pageTitle: string,
+ *   completedAt: string,
+ *   totalQuestions: number,
+ *   correctCount: number,
+ *   pendingCount: number,
+ *   incorrectCount: number,
+ *   createdAt: string,
+ * }} VacuumResultSnapshot
+ *
+ * @typedef {VacuumResultSnapshot & {
+ *   action: "delete" | "manual" | "resolve",
+ *   reason: string,
+ *   malformed: boolean,
+ *   studentCandidate: StudentCandidate | null,
+ * }} VacuumReportItem
+ */
 
 /**
  * @param {unknown} value
@@ -167,6 +208,11 @@ Examples:
  * @returns {string}
  */
 function toIso(value) {
+  if (value instanceof Date) {
+    if (!Number.isFinite(value.valueOf())) return ""
+    return value.toISOString()
+  }
+  if (typeof value !== "string" && typeof value !== "number") return ""
   const date = new Date(value)
   if (!Number.isFinite(date.valueOf())) return ""
   return date.toISOString()
@@ -318,7 +364,7 @@ async function resolveStudentCandidate(prisma, row = {}) {
 
 /**
  * @param {Record<string, unknown>} [row]
- * @returns {Record<string, unknown>}
+ * @returns {VacuumResultSnapshot}
  */
 function resultSnapshot(row = {}) {
   return {
@@ -393,6 +439,7 @@ function classifyAction(row, context = {}) {
  */
 function timestampLabel() {
   const date = new Date()
+  /** @param {number} value */
   const pad2 = (value) => String(value).padStart(2, "0")
   return [
     date.getUTCFullYear(),
@@ -544,13 +591,13 @@ async function collectOrphanSignals(prisma) {
 async function runVacuum(args) {
   const prisma = await getSharedPrismaClient()
   const now = new Date()
-  /** @type {Array<Record<string, unknown>>} */
+  /** @type {Array<VacuumReportItem>} */
   const reportItems = []
-  /** @type {Array<Record<string, unknown>>} */
+  /** @type {Array<VacuumReportItem>} */
   const manualReview = []
-  /** @type {Array<Record<string, unknown>>} */
+  /** @type {Array<{ id: string, studentRefId: string, eaglesId: string, reason: string }>} */
   const resolvedItems = []
-  /** @type {Array<Record<string, unknown>>} */
+  /** @type {Array<{ id: string, reason: string }>} */
   const deletedItems = []
   let mode = "dry-run"
   let purgedResolvedCount = 0
@@ -559,7 +606,7 @@ async function runVacuum(args) {
   let orphanSignals
 
   try {
-    const activeRows = await prisma.incomingExerciseResult.findMany({
+    const activeRows = /** @type {Array<IncomingExerciseResultRow>} */ (await prisma.incomingExerciseResult.findMany({
       where: {
         status: {
           in: ALL_ACTIVE_STATUSES,
@@ -580,14 +627,14 @@ async function runVacuum(args) {
         incorrectCount: true,
         createdAt: true,
       },
-    })
+    }))
 
     /** @type {Map<string, string>} */
     const keepByFingerprint = new Map()
     /** @type {Set<string>} */
     const duplicateIds = new Set()
     for (let index = 0; index < activeRows.length; index += 1) {
-      const row = /** @type {Record<string, unknown>} */ (activeRows[index])
+      const row = activeRows[index]
       const key = incomingFingerprint(row)
       if (!keepByFingerprint.has(key)) {
         keepByFingerprint.set(key, row.id)
@@ -597,7 +644,7 @@ async function runVacuum(args) {
     }
 
     for (let index = 0; index < activeRows.length; index += 1) {
-      const row = /** @type {Record<string, unknown>} */ (activeRows[index])
+      const row = activeRows[index]
       const id = normalizeText(row.id)
       const isDuplicate = duplicateIds.has(id)
       const candidate = isDuplicate ? { student: null, reason: "duplicate-incoming" } : await resolveStudentCandidate(prisma, row)
@@ -653,10 +700,11 @@ async function runVacuum(args) {
               reason: item.reason,
             })
           } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : ""
             manualReview.push({
               ...item,
               action: "manual",
-              reason: `resolve-failed:${normalizeText(error?.message) || "unknown-error"}`,
+              reason: `resolve-failed:${normalizeText(errorMessage) || "unknown-error"}`,
             })
           }
           continue
@@ -779,12 +827,13 @@ async function run() {
   console.log(JSON.stringify(summary, null, 2))
 }
 
-const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+const nodeProcess = globalThis.process
+const isDirectRun = nodeProcess.argv[1] && fileURLToPath(import.meta.url) === path.resolve(nodeProcess.argv[1])
 if (isDirectRun) {
   run().catch((error) => {
     const message = normalizeText(error?.message) || "Unknown error"
     console.error(`[incoming-vacuum] ${message}`)
-    process.exitCode = 1
+    nodeProcess.exitCode = 1
   })
 }
 

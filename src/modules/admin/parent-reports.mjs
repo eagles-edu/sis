@@ -3,6 +3,8 @@
 
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
+import { buildStudentReportCardPayload } from "../../../server/student-report-card-pdf.mjs"
+import { recordParentClassReportEvent } from "./parent-report-events.mjs"
 
 /**
  * @param {unknown} value
@@ -119,6 +121,50 @@ function assertWithStatus(condition, status, message) {
   const error = new Error(message)
   error.statusCode = status
   throw error
+}
+
+export const PARENT_REPORT_WORKFLOW_STATE_DRAFT = "draft_pr"
+export const PARENT_REPORT_WORKFLOW_STATE_SUBMITTED = "submitted_for_admin_review"
+export const PARENT_REPORT_WORKFLOW_STATE_INCOMING = "incoming_admin_review"
+export const PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL = "awaiting_admin_approval"
+export const PARENT_REPORT_WORKFLOW_STATE_APPROVED_FINAL = "approved_final"
+export const PARENT_REPORT_WORKFLOW_STATE_PUBLISHED = "published"
+export const PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED = "notification_queued"
+export const PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT = "notification_sent"
+
+const PARENT_REPORT_IMMUTABLE_WORKFLOW_STATES = new Set([
+  PARENT_REPORT_WORKFLOW_STATE_PUBLISHED,
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
+])
+
+const PARENT_REPORT_VISIBLE_WORKFLOW_STATES = new Set([
+  PARENT_REPORT_WORKFLOW_STATE_PUBLISHED,
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
+  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
+])
+
+export function normalizeParentReportWorkflowState(value) {
+  const normalized = normalizeLower(value)
+  if (normalized === PARENT_REPORT_WORKFLOW_STATE_SUBMITTED) return PARENT_REPORT_WORKFLOW_STATE_SUBMITTED
+  if (normalized === PARENT_REPORT_WORKFLOW_STATE_INCOMING) return PARENT_REPORT_WORKFLOW_STATE_INCOMING
+  if (normalized === PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL)
+    return PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL
+  if (normalized === PARENT_REPORT_WORKFLOW_STATE_APPROVED_FINAL)
+    return PARENT_REPORT_WORKFLOW_STATE_APPROVED_FINAL
+  if (normalized === PARENT_REPORT_WORKFLOW_STATE_PUBLISHED) return PARENT_REPORT_WORKFLOW_STATE_PUBLISHED
+  if (normalized === PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED)
+    return PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED
+  if (normalized === PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT)
+    return PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT
+  return PARENT_REPORT_WORKFLOW_STATE_DRAFT
+}
+
+export function isParentReportPortalVisible(record = null) {
+  if (parseDateOrNull(record?.approvedAt)) return true
+  return PARENT_REPORT_VISIBLE_WORKFLOW_STATES.has(
+    normalizeParentReportWorkflowState(record?.workflowState)
+  )
 }
 
 const LEVEL_DEFINITIONS = [
@@ -370,35 +416,6 @@ function normalizeParentReportMetaPayload(value = {}) {
 }
 
 /**
- * @param {string} [comment]
- * @param {Record<string, unknown> | null} [rubricPayload]
- * @param {Record<string, unknown> | null} [metaPayload]
- * @returns {string}
- */
-export function encodeParentReportCommentBundle(comment = "", rubricPayload = null, metaPayload = null) {
-  const normalizedComment = normalizeNullableText(comment)
-  const normalizedRubricPayload = normalizeParentReportRubricPayload(rubricPayload)
-  const normalizedMetaPayload = normalizeParentReportMetaPayload(metaPayload)
-  if (!normalizedRubricPayload && !normalizedMetaPayload) return normalizedComment
-  if (normalizedRubricPayload && !normalizedMetaPayload) {
-    const encodedRubricPayload = Buffer.from(JSON.stringify(normalizedRubricPayload), "utf8").toString("base64url")
-    if (!encodedRubricPayload) return normalizedComment
-    const marker = `[[SIS-RUBRIC-V1:${encodedRubricPayload}]]`
-    return normalizedComment ? `${normalizedComment}\n${marker}` : marker
-  }
-  const encodedPayload = Buffer.from(
-    JSON.stringify({
-      rubricPayload: normalizedRubricPayload,
-      metaPayload: normalizedMetaPayload,
-    }),
-    "utf8"
-  ).toString("base64url")
-  if (!encodedPayload) return normalizedComment
-  const marker = `[[SIS-REPORT-BUNDLE-V2:${encodedPayload}]]`
-  return normalizedComment ? `${normalizedComment}\n${marker}` : marker
-}
-
-/**
  * @param {string} [value]
  * @returns {{
  *   comment: string | null,
@@ -410,7 +427,7 @@ export function encodeParentReportCommentBundle(comment = "", rubricPayload = nu
  *   metaPayload: Record<string, unknown> | null,
  * }}
  */
-export function decodeParentReportCommentBundle(value = "") {
+export function decodeLegacyParentReportCommentBundle(value = "") {
   const rawText = normalizeText(value)
   if (!rawText) return { comment: null, rubricPayload: null, metaPayload: null }
 
@@ -468,13 +485,43 @@ export function decodeParentReportCommentBundle(value = "") {
  */
 export function mapParentClassReport(report) {
   if (!report) return report
-  const decoded = decodeParentReportCommentBundle(report.comments)
-  const metaPayload = decoded.metaPayload && typeof decoded.metaPayload === "object" ? decoded.metaPayload : null
+  const decoded = decodeLegacyParentReportCommentBundle(report.comments)
+  const rubricPayload =
+    report?.rubricPayload && typeof report.rubricPayload === "object"
+      ? normalizeParentReportRubricPayload(report.rubricPayload)
+      : decoded.rubricPayload
+  const metaPayload =
+    report?.metaPayload && typeof report.metaPayload === "object"
+      ? normalizeParentReportMetaPayload(report.metaPayload)
+      : decoded.metaPayload && typeof decoded.metaPayload === "object"
+        ? decoded.metaPayload
+        : null
   return {
     ...report,
     enrollmentPeriodId: normalizeText(report?.enrollmentPeriodId),
-    comments: decoded.comment,
-    rubricPayload: decoded.rubricPayload,
+    workflowState: normalizeParentReportWorkflowState(report?.workflowState),
+    submittedAt: parseDateOrNull(report?.submittedAt)?.toISOString?.() || normalizeText(report?.submittedAt),
+    submittedByUsername: normalizeText(report?.submittedByUsername),
+    adminReviewStartedAt:
+      parseDateOrNull(report?.adminReviewStartedAt)?.toISOString?.() || normalizeText(report?.adminReviewStartedAt),
+    adminReviewStartedByUsername: normalizeText(report?.adminReviewStartedByUsername),
+    rcDraftedAt: parseDateOrNull(report?.rcDraftedAt)?.toISOString?.() || normalizeText(report?.rcDraftedAt),
+    rcDraftedByUsername: normalizeText(report?.rcDraftedByUsername),
+    publishedAt: parseDateOrNull(report?.publishedAt)?.toISOString?.() || normalizeText(report?.publishedAt),
+    notificationQueuedAt:
+      parseDateOrNull(report?.notificationQueuedAt)?.toISOString?.()
+      || normalizeText(report?.notificationQueuedAt),
+    notificationSentAt:
+      parseDateOrNull(report?.notificationSentAt)?.toISOString?.() || normalizeText(report?.notificationSentAt),
+    finalArtifactVersion: normalizeInteger(report?.finalArtifactVersion) || 0,
+    finalArtifactFrozenAt:
+      parseDateOrNull(report?.finalArtifactFrozenAt)?.toISOString?.() || normalizeText(report?.finalArtifactFrozenAt),
+    finalArtifactPayload:
+      report?.finalArtifactPayload && typeof report.finalArtifactPayload === "object"
+        ? report.finalArtifactPayload
+        : null,
+    comments: normalizeNullableText(decoded.comment ?? report?.comments),
+    rubricPayload,
     metaPayload,
     ...(metaPayload || {}),
   }
@@ -555,6 +602,20 @@ async function getPrismaClient() {
   return getSharedPrismaClient()
 }
 
+function isApprovedReportRecord(record = null) {
+  return Boolean(parseDateOrNull(record?.approvedAt))
+}
+
+function isImmutableParentReportRecord(record = null) {
+  return PARENT_REPORT_IMMUTABLE_WORKFLOW_STATES.has(
+    normalizeParentReportWorkflowState(record?.workflowState)
+  )
+}
+
+function parentReportLifecycleActor(username = "") {
+  return normalizeText(username) || "system"
+}
+
 /**
  * @param {string} studentRefId
  * @param {Record<string, unknown>} [payload]
@@ -609,18 +670,30 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     participationScore: normalizeFloat(payload.participationScore),
     inClassScore: normalizeFloat(payload.inClassScore),
     participationPointsAward,
-    comments: encodeParentReportCommentBundle(payload.comments, normalizedRubricPayload, normalizedMetaPayload),
+    comments: normalizeNullableText(payload.comments),
+    rubricPayload: normalizedRubricPayload,
+    metaPayload: normalizedMetaPayload,
     generatedAt: normalizeDate(payload.generatedAt) || new Date(),
   }
+  const requestedWorkflowState = normalizeParentReportWorkflowState(payload.workflowState)
   const reportId = normalizeText(payload.id)
 
   if (reportId) {
     const existing = await prisma.parentClassReport.findUnique({ where: { id: reportId } })
     assertWithStatus(Boolean(existing), 404, "Parent report not found")
     assertWithStatus(existing.studentRefId === studentRef, 403, "Parent report does not belong to student")
+    assertWithStatus(!isImmutableParentReportRecord(existing), 409, "Published parent reports are immutable")
+    if (normalizeLower(payload.updatedByRole) === "teacher") {
+      assertWithStatus(
+        normalizeParentReportWorkflowState(existing.workflowState) === PARENT_REPORT_WORKFLOW_STATE_DRAFT,
+        409,
+        "Submitted parent reports are read-only for teachers"
+      )
+    }
     if (!reportData.enrollmentPeriodId) {
       reportData.enrollmentPeriodId = normalizeNullableText(existing.enrollmentPeriodId)
     }
+    reportData.workflowState = requestedWorkflowState || normalizeParentReportWorkflowState(existing.workflowState)
 
     let updatedReport
     try {
@@ -635,6 +708,16 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
         data: stripLegacyParentReportFields(reportData),
       })
     }
+    await recordParentClassReportEvent({
+      reportId,
+      artifactVersion: normalizeInteger(updatedReport?.finalArtifactVersion) || 0,
+      eventType: "pr_draft_saved",
+      actorType: "admin",
+      actorId: normalizeText(payload.updatedByUsername || payload.submittedByUsername || payload.teacherName || "system"),
+      metadata: {
+        workflowState: normalizeParentReportWorkflowState(updatedReport?.workflowState),
+      },
+    })
     return mapParentClassReport(updatedReport)
   }
 
@@ -645,6 +728,31 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
     })
     reportData.enrollmentPeriodId = normalizeNullableText(period?.id)
   }
+
+  const existingScopedReport = await prisma.parentClassReport.findFirst({
+    where: {
+      studentRefId: studentRef,
+      className,
+      schoolYear,
+      quarter,
+      enrollmentPeriodId: reportData.enrollmentPeriodId,
+    },
+  })
+  if (existingScopedReport) {
+    if (normalizeLower(payload.updatedByRole) === "teacher") {
+      assertWithStatus(
+        normalizeParentReportWorkflowState(existingScopedReport.workflowState) === PARENT_REPORT_WORKFLOW_STATE_DRAFT,
+        409,
+        "Submitted parent reports are read-only for teachers"
+      )
+    }
+    assertWithStatus(
+      !isImmutableParentReportRecord(existingScopedReport),
+      409,
+      "Published parent reports are immutable"
+    )
+  }
+  reportData.workflowState = requestedWorkflowState || PARENT_REPORT_WORKFLOW_STATE_DRAFT
 
   let upsertedReport
   try {
@@ -684,6 +792,16 @@ export async function saveParentClassReport(studentRefId, payload = {}) {
       },
     })
   }
+  await recordParentClassReportEvent({
+    reportId: normalizeText(upsertedReport?.id),
+    artifactVersion: normalizeInteger(upsertedReport?.finalArtifactVersion) || 0,
+    eventType: "pr_draft_saved",
+    actorType: "admin",
+    actorId: normalizeText(payload.updatedByUsername || payload.submittedByUsername || payload.teacherName || "system"),
+    metadata: {
+      workflowState: normalizeParentReportWorkflowState(upsertedReport?.workflowState),
+    },
+  })
   return mapParentClassReport(upsertedReport)
 }
 
@@ -702,6 +820,7 @@ export async function deleteParentClassReport(studentRefId, reportId) {
   const existing = await prisma.parentClassReport.findUnique({ where: { id } })
   assertWithStatus(Boolean(existing), 404, "Parent report not found")
   assertWithStatus(existing.studentRefId === studentRef, 403, "Parent report does not belong to student")
+  assertWithStatus(!isImmutableParentReportRecord(existing), 409, "Published parent reports are immutable")
 
   await prisma.parentClassReport.delete({ where: { id } })
   return { deleted: true, id }
@@ -764,6 +883,159 @@ export async function generateParentClassReportFromGrades(studentRefId, payload 
   return saveParentClassReport(studentRef, reportPayload)
 }
 
+async function loadReportWithStudentContext(prisma, reportId) {
+  const report = await prisma.parentClassReport.findUnique({ where: { id: reportId } })
+  assertWithStatus(Boolean(report), 404, "Parent report not found")
+  const student = await prisma.student.findUnique({
+    where: { id: report.studentRefId },
+    include: {
+      attendanceRecords: true,
+      gradeRecords: true,
+      parentReports: true,
+      profile: true,
+    },
+  })
+  assertWithStatus(Boolean(student), 404, "Student record not found for report")
+  return { report, student }
+}
+
+export async function submitParentClassReportForAdminReview(reportId, payload = {}) {
+  const prisma = await getPrismaClient()
+  const id = normalizeText(reportId)
+  assertWithStatus(Boolean(id), 400, "reportId is required")
+  const existing = await prisma.parentClassReport.findUnique({ where: { id } })
+  assertWithStatus(Boolean(existing), 404, "Parent report not found")
+  assertWithStatus(
+    normalizeParentReportWorkflowState(existing.workflowState) === PARENT_REPORT_WORKFLOW_STATE_DRAFT,
+    409,
+    "Only draft reports can be submitted for admin review"
+  )
+  const submittedByUsername = parentReportLifecycleActor(payload.submittedByUsername)
+  const updated = await prisma.parentClassReport.update({
+    where: { id },
+    data: {
+      workflowState: PARENT_REPORT_WORKFLOW_STATE_SUBMITTED,
+      submittedAt: new Date(),
+      submittedByUsername,
+    },
+  })
+  await recordParentClassReportEvent({
+    reportId: id,
+    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || 0,
+    eventType: "pr_submitted",
+    actorType: "teacher",
+    actorId: submittedByUsername,
+    metadata: { workflowState: PARENT_REPORT_WORKFLOW_STATE_SUBMITTED },
+  })
+  return mapParentClassReport(updated)
+}
+
+export async function startParentClassReportAdminReview(reportId, payload = {}) {
+  const prisma = await getPrismaClient()
+  const id = normalizeText(reportId)
+  assertWithStatus(Boolean(id), 400, "reportId is required")
+  const existing = await prisma.parentClassReport.findUnique({ where: { id } })
+  assertWithStatus(Boolean(existing), 404, "Parent report not found")
+  const currentState = normalizeParentReportWorkflowState(existing.workflowState)
+  assertWithStatus(
+    currentState === PARENT_REPORT_WORKFLOW_STATE_SUBMITTED
+      || currentState === PARENT_REPORT_WORKFLOW_STATE_INCOMING,
+    409,
+    "Only submitted reports can enter admin review"
+  )
+  const reviewedBy = parentReportLifecycleActor(payload.adminReviewStartedByUsername)
+  const updated = await prisma.parentClassReport.update({
+    where: { id },
+    data: {
+      workflowState: PARENT_REPORT_WORKFLOW_STATE_INCOMING,
+      adminReviewStartedAt: existing.adminReviewStartedAt || new Date(),
+      adminReviewStartedByUsername: normalizeText(existing.adminReviewStartedByUsername) || reviewedBy,
+    },
+  })
+  await recordParentClassReportEvent({
+    reportId: id,
+    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || 0,
+    eventType: "admin_review_started",
+    actorType: "admin",
+    actorId: reviewedBy,
+    metadata: { workflowState: PARENT_REPORT_WORKFLOW_STATE_INCOMING },
+  })
+  return mapParentClassReport(updated)
+}
+
+export async function markParentClassReportAwaitingApproval(reportId, payload = {}) {
+  const prisma = await getPrismaClient()
+  const id = normalizeText(reportId)
+  assertWithStatus(Boolean(id), 400, "reportId is required")
+  const existing = await prisma.parentClassReport.findUnique({ where: { id } })
+  assertWithStatus(Boolean(existing), 404, "Parent report not found")
+  const currentState = normalizeParentReportWorkflowState(existing.workflowState)
+  assertWithStatus(
+    currentState === PARENT_REPORT_WORKFLOW_STATE_SUBMITTED
+      || currentState === PARENT_REPORT_WORKFLOW_STATE_INCOMING
+      || currentState === PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL,
+    409,
+    "Only submitted reports can move into awaiting approval"
+  )
+  const draftedBy = parentReportLifecycleActor(payload.rcDraftedByUsername || payload.adminReviewStartedByUsername)
+  const updated = await prisma.parentClassReport.update({
+    where: { id },
+    data: {
+      workflowState: PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL,
+      adminReviewStartedAt: existing.adminReviewStartedAt || new Date(),
+      adminReviewStartedByUsername: normalizeText(existing.adminReviewStartedByUsername) || draftedBy,
+      rcDraftedAt: new Date(),
+      rcDraftedByUsername: draftedBy,
+    },
+  })
+  await recordParentClassReportEvent({
+    reportId: id,
+    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || 0,
+    eventType: "admin_rc_draft_saved",
+    actorType: "admin",
+    actorId: draftedBy,
+    metadata: { workflowState: PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL },
+  })
+  return mapParentClassReport(updated)
+}
+
+export async function acknowledgeParentClassReportReview(reportId, payload = {}) {
+  const prisma = await getPrismaClient()
+  const id = normalizeText(reportId)
+  assertWithStatus(Boolean(id), 400, "reportId is required")
+  const existing = await prisma.parentClassReport.findUnique({ where: { id } })
+  assertWithStatus(Boolean(existing), 404, "Parent report not found")
+  assertWithStatus(isParentReportPortalVisible(existing), 403, "Performance report is not published")
+  const actorType = normalizeLower(payload.viewerRole) === "student" ? "student" : "parent"
+  const reviewedBy = parentReportLifecycleActor(payload.reviewedBy)
+  const reviewedAt = new Date()
+  const nextMeta = {
+    ...(existing?.metaPayload && typeof existing.metaPayload === "object" ? existing.metaPayload : {}),
+  }
+  if (actorType === "student") {
+    nextMeta.studentReviewedAt = reviewedAt.toISOString()
+    nextMeta.studentReviewedByUsername = reviewedBy
+  } else {
+    nextMeta.parentReviewedAt = reviewedAt.toISOString()
+    nextMeta.parentReviewedByUsername = reviewedBy
+  }
+  const updated = await prisma.parentClassReport.update({
+    where: { id },
+    data: {
+      metaPayload: nextMeta,
+    },
+  })
+  await recordParentClassReportEvent({
+    reportId: id,
+    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || 0,
+    eventType: actorType === "student" ? "student_review_acknowledged" : "parent_review_acknowledged",
+    actorType,
+    actorId: reviewedBy,
+    metadata: { workflowState: normalizeParentReportWorkflowState(updated?.workflowState) },
+  })
+  return mapParentClassReport(updated)
+}
+
 /**
  * @param {string} reportId
  * @param {Record<string, unknown>} [payload]
@@ -773,27 +1045,41 @@ export async function approveParentClassReport(reportId, payload = {}) {
   const prisma = await getPrismaClient()
   const id = normalizeText(reportId)
   assertWithStatus(Boolean(id), 400, "reportId is required")
-
-  const existing = await prisma.parentClassReport.findUnique({ where: { id } })
-  assertWithStatus(Boolean(existing), 404, "Parent report not found")
   const expectedStudentRefId = normalizeText(payload.studentRefId)
+  const { report: existing, student } = await loadReportWithStudentContext(prisma, id)
   if (expectedStudentRefId) {
     assertWithStatus(existing.studentRefId === expectedStudentRefId, 403, "Parent report does not belong to student")
   }
+  const currentState = normalizeParentReportWorkflowState(existing.workflowState)
+  assertWithStatus(
+    currentState === PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL
+      || currentState === PARENT_REPORT_WORKFLOW_STATE_APPROVED_FINAL
+      || currentState === PARENT_REPORT_WORKFLOW_STATE_PUBLISHED
+      || currentState === PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED
+      || currentState === PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
+    409,
+    "Performance report must be awaiting admin approval before final approval"
+  )
 
-  const data = {}
-  if (!parseDateOrNull(existing?.approvedAt)) {
-    data.approvedAt = new Date()
-  }
+  const artifactPayload = buildStudentReportCardPayload(student, {
+    className: normalizeText(existing.className),
+    schoolYear: normalizeText(existing.schoolYear),
+    quarter: normalizeText(existing.quarter),
+    reportId: id,
+  })
+  const approvedAt = parseDateOrNull(existing?.approvedAt) || new Date()
   const approvedByUsername = normalizeNullableText(payload.approvedByUsername)
-  if (approvedByUsername && !normalizeText(existing?.approvedByUsername)) {
-    data.approvedByUsername = approvedByUsername
-  }
-  if (Object.prototype.hasOwnProperty.call(payload, "participationPointsAward")) {
-    data.participationPointsAward = normalizeReportParticipationPoints(payload.participationPointsAward)
-  }
-  if (!Object.keys(data).length) return mapParentClassReport(existing)
+  const nextVersion = Math.max(1, normalizeInteger(existing?.finalArtifactVersion) || 0) + 1
   let updated
+  const data = {
+    approvedAt,
+    approvedByUsername: approvedByUsername || normalizeNullableText(existing?.approvedByUsername),
+    workflowState: PARENT_REPORT_WORKFLOW_STATE_PUBLISHED,
+    publishedAt: parseDateOrNull(existing?.publishedAt) || new Date(),
+    finalArtifactVersion: nextVersion,
+    finalArtifactPayload: artifactPayload,
+    finalArtifactFrozenAt: new Date(),
+  }
   try {
     updated = await prisma.parentClassReport.update({
       where: { id },
@@ -801,12 +1087,26 @@ export async function approveParentClassReport(reportId, payload = {}) {
     })
   } catch (error) {
     if (!isLegacyParentReportParticipationPointsSchemaError(error)) throw error
-    const legacyData = stripLegacyParentReportFields(data)
-    if (!Object.keys(legacyData).length) return mapParentClassReport(existing)
     updated = await prisma.parentClassReport.update({
       where: { id },
-      data: legacyData,
+      data: stripLegacyParentReportFields(data),
     })
   }
+  await recordParentClassReportEvent({
+    reportId: id,
+    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || nextVersion,
+    eventType: "admin_approved_final",
+    actorType: "admin",
+    actorId: parentReportLifecycleActor(approvedByUsername),
+    metadata: { workflowState: PARENT_REPORT_WORKFLOW_STATE_APPROVED_FINAL },
+  })
+  await recordParentClassReportEvent({
+    reportId: id,
+    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || nextVersion,
+    eventType: "report_published",
+    actorType: "system",
+    actorId: "system",
+    metadata: { workflowState: PARENT_REPORT_WORKFLOW_STATE_PUBLISHED },
+  })
   return mapParentClassReport(updated)
 }

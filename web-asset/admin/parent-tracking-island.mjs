@@ -17,6 +17,8 @@ export function initParentTrackingIsland({
   onOverviewIncomingExerciseRefresh,
   onPerformanceQueueRefresh,
   onPerformanceQueueSendAll,
+  onPerformanceQueueSendSelected,
+  onPerformanceQueueSelectAll,
   onPerformanceStagedRefresh,
   onParentQueueClose,
   onParentQueuePrev,
@@ -28,11 +30,9 @@ export function initParentTrackingIsland({
   onParentQueueModalClick,
 } = {}) {
   const view = document?.defaultView || null;
-  const ElementCtor = view?.Element || null;
   const HTMLTextAreaElementCtor = view?.HTMLTextAreaElement || null;
   const HTMLInputElementCtor = view?.HTMLInputElement || null;
   const HTMLSelectElementCtor = view?.HTMLSelectElement || null;
-  const HTMLButtonElementCtor = view?.HTMLButtonElement || null;
 
   function isInstanceOf(value, ctor) {
     return typeof ctor === "function" && value instanceof ctor;
@@ -115,6 +115,12 @@ export function initParentTrackingIsland({
   });
   document?.getElementById("performanceQueueSendAllBtn")?.addEventListener("click", () => {
     if (typeof onPerformanceQueueSendAll === "function") onPerformanceQueueSendAll();
+  });
+  document?.getElementById("performanceQueueSendSelectedBtn")?.addEventListener("click", () => {
+    if (typeof onPerformanceQueueSendSelected === "function") onPerformanceQueueSendSelected();
+  });
+  document?.getElementById("performanceQueueSelectAll")?.addEventListener("change", (event) => {
+    if (typeof onPerformanceQueueSelectAll === "function") onPerformanceQueueSelectAll(event);
   });
   document?.getElementById("performanceStagedRefreshBtn")?.addEventListener("click", () => {
     if (typeof onPerformanceStagedRefresh === "function") onPerformanceStagedRefresh();

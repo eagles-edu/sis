@@ -20,6 +20,15 @@ function normalizeText(value) {
 }
 
 /**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function normalizeErrorMessage(error) {
+  if (error instanceof Error) return normalizeText(error.message)
+  return normalizeText(error)
+}
+
+/**
  * @returns {string}
  */
 function resolveWorkerId() {
@@ -64,7 +73,7 @@ async function updateAnnouncementQueueItem(job, result, failure = null) {
       queueId,
       {
         status: "queued",
-        lastError: normalizeText(failure?.message || failure),
+        lastError: normalizeErrorMessage(failure),
         attempts: (Number.parseInt(String(job.attempts || 0), 10) || 0),
       },
       {
@@ -119,7 +128,7 @@ async function runWorkerOnce() {
       if (job.jobType === ASYNC_SIDE_EFFECT_JOB_TYPE_ANNOUNCEMENT_EMAIL) {
         await updateAnnouncementQueueItem(job, null, error)
       } else {
-        console.warn(`[async-side-effects] job ${job.id} failed: ${normalizeText(error?.message || error)}`)
+        console.warn(`[async-side-effects] job ${job.id} failed: ${normalizeErrorMessage(error)}`)
       }
       void failure
     },
@@ -144,7 +153,7 @@ export async function startAsyncSideEffectsWorker() {
 
   const timer = setInterval(() => {
     run().catch((error) => {
-      console.error(`[async-side-effects] worker loop failed: ${normalizeText(error?.message || error)}`)
+      console.error(`[async-side-effects] worker loop failed: ${normalizeErrorMessage(error)}`)
     })
   }, pollIntervalMs)
   if (typeof timer.unref === "function") timer.unref()
@@ -160,7 +169,7 @@ const invokedDirectly = process.argv[1] && fileURLToPath(import.meta.url) === pa
 
 if (invokedDirectly) {
   startAsyncSideEffectsWorker().catch((error) => {
-    console.error(`[async-side-effects] worker start failed: ${normalizeText(error?.message || error)}`)
+    console.error(`[async-side-effects] worker start failed: ${normalizeErrorMessage(error)}`)
     process.exitCode = 1
   })
 }

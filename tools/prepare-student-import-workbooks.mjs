@@ -18,6 +18,21 @@ const FILLED_TEMPLATE_OUTPUT = "docs/students/student-import-template.filled-exa
 const STUDENT_NUMBER_FLOOR = 100
 
 /**
+ * @typedef {Record<string, unknown>} WorkbookRow
+ *
+ * @typedef {{
+ *   rows: WorkbookRow[],
+ *   rowsMissingEaglesIdBefore: number[],
+ *   rowsMissingStudentNumberBefore: number[],
+ *   rowsMissingEaglesIdAfter: number[],
+ *   rowsMissingStudentNumberAfter: number[],
+ *   rowsMovedLegacyIdFromStudentNumber: number[],
+ *   rowsWithAutoFilledEaglesId: number[],
+ *   rowsWithAutoFilledStudentNumber: number[],
+ * }} IdentityFixesResult
+ */
+
+/**
  * @param {unknown} value
  * @returns {string}
  */
@@ -75,15 +90,16 @@ function readWorkbookRows(filePath) {
   const workbook = xlsx.readFile(filePath)
   const firstSheetName = workbook.SheetNames[0]
   const sheet = workbook.Sheets[firstSheetName]
-  const headerRow = (xlsx.utils.sheet_to_json(sheet, {
+  const headerMatrix = /** @type {Array<Array<unknown>>} */ (xlsx.utils.sheet_to_json(sheet, {
     header: 1,
     blankrows: false,
     raw: false,
-  })[0] || []).map((entry) => normalizeText(entry))
-  const rows = xlsx.utils.sheet_to_json(sheet, {
+  }))
+  const headerRow = (headerMatrix[0] || []).map(/** @param {unknown} entry */ (entry) => normalizeText(entry))
+  const rows = /** @type {WorkbookRow[]} */ (xlsx.utils.sheet_to_json(sheet, {
     defval: "",
     raw: false,
-  })
+  }))
   return {
     firstSheetName,
     headerRow,
@@ -108,11 +124,12 @@ function readSchemaHeaders(schemaFile) {
  * @returns {Record<string, string[]>}
  */
 function buildHeaderAliasMap(schemaHeaders) {
+  /** @type {Record<string, string[]>} */
   const map = Object.fromEntries(
     schemaHeaders.map((header) => [header, [header]])
   )
 
-  const pushAlias = (header, ...aliases) => {
+  const pushAlias = /** @param {string} header @param {...string} aliases */ (header, ...aliases) => {
     if (!map[header]) map[header] = [header]
     aliases.forEach((alias) => {
       if (!alias) return
@@ -132,7 +149,7 @@ function buildHeaderAliasMap(schemaHeaders) {
  * @returns {unknown}
  */
 function rowValueByAliases(row, aliases = []) {
-  const aliasSet = new Set(aliases.map((entry) => normalizeHeader(entry)))
+  const aliasSet = new Set(aliases.map(/** @param {string} entry */ (entry) => normalizeHeader(entry)))
   for (const [key, value] of Object.entries(row || {})) {
     if (!aliasSet.has(normalizeHeader(key))) continue
     if (typeof value === "string") return value.trim()
@@ -150,6 +167,7 @@ function rowValueByAliases(row, aliases = []) {
 function buildOrderedRows(rows, schemaHeaders, aliasMap) {
   return (Array.isArray(rows) ? rows : [])
     .map((row) => {
+      /** @type {WorkbookRow} */
       const next = {}
       schemaHeaders.forEach((header) => {
         next[header] = rowValueByAliases(row, aliasMap[header] || [header])
@@ -191,10 +209,14 @@ function ensureUniqueEaglesId(baseId, usedKeys) {
  * }}
  */
 function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
+  /** @type {WorkbookRow[]} */
   const dataRows = Array.isArray(rows) ? rows.map((row) => ({ ...row })) : []
 
+  /** @type {number[]} */
   const rowsMissingEaglesIdBefore = []
+  /** @type {number[]} */
   const rowsMissingStudentNumberBefore = []
+  /** @type {number[]} */
   const rowsMovedLegacyIdFromStudentNumber = []
 
   dataRows.forEach((row, index) => {
@@ -212,12 +234,15 @@ function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
   })
 
   const usedNumbers = new Set(
-    dataRows
-      .map((row) => normalizePositiveInteger(row["studentNumber"]))
-      .filter((value) => Number.isInteger(value) && value > 0)
+    /** @type {number[]} */ (
+      dataRows
+        .map((row) => normalizePositiveInteger(row["studentNumber"]))
+        .filter((value) => value !== null && Number.isInteger(value) && value > 0)
+    )
   )
   let nextStudentNumber = Math.max(floor - 1, ...(usedNumbers.size ? [...usedNumbers] : [0]))
 
+  /** @type {number[]} */
   const rowsWithAutoFilledStudentNumber = []
   dataRows.forEach((row, index) => {
     const current = normalizeText(row["studentNumber"])
@@ -231,10 +256,13 @@ function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
   })
 
   const usedEaglesIdKeys = new Set(
-    dataRows
-      .map((row) => normalizeHeader(row["eaglesId"]))
-      .filter(Boolean)
+    /** @type {string[]} */ (
+      dataRows
+        .map((row) => normalizeHeader(row["eaglesId"]))
+        .filter(Boolean)
+    )
   )
+  /** @type {number[]} */
   const rowsWithAutoFilledEaglesId = []
 
   dataRows.forEach((row, index) => {
@@ -252,7 +280,9 @@ function applyIdentityFixes(rows, floor = STUDENT_NUMBER_FLOOR) {
     rowsWithAutoFilledEaglesId.push(index + 2)
   })
 
+  /** @type {number[]} */
   const rowsMissingEaglesIdAfter = []
+  /** @type {number[]} */
   const rowsMissingStudentNumberAfter = []
   dataRows.forEach((row, index) => {
     if (!normalizeText(row["eaglesId"])) rowsMissingEaglesIdAfter.push(index + 2)
@@ -305,6 +335,7 @@ function writeBlankTemplate(filePath, schemaHeaders) {
  * @returns {void}
  */
 function writeFilledExampleTemplate(filePath, schemaHeaders) {
+  /** @type {Array<Record<string, string>>} */
   const baseRows = [
     {
       "fullNameStudent": "Nguyen Anh Minh",
@@ -347,6 +378,7 @@ function writeFilledExampleTemplate(filePath, schemaHeaders) {
   ]
 
   const rows = baseRows.map((row) => {
+    /** @type {Record<string, unknown>} */
     const ordered = {}
     schemaHeaders.forEach((header) => {
       ordered[header] = header in row ? row[header] : ""
@@ -365,16 +397,7 @@ function writeFilledExampleTemplate(filePath, schemaHeaders) {
  *   schemaHeaders: string[],
  *   aliasMap: Record<string, string[]>,
  *   orderedRows: Array<Record<string, unknown>>,
- *   identityFixed: {
- *     rows: Array<Record<string, unknown>>,
- *     rowsMissingEaglesIdBefore: number[],
- *     rowsMissingStudentNumberBefore: number[],
- *     rowsMissingEaglesIdAfter: number[],
- *     rowsMissingStudentNumberAfter: number[],
- *     rowsMovedLegacyIdFromStudentNumber: number[],
- *     rowsWithAutoFilledEaglesId: number[],
- *     rowsWithAutoFilledStudentNumber: number[],
- *   },
+ *   identityFixed: IdentityFixesResult,
  * }} input
  * @returns {Record<string, unknown>}
  */

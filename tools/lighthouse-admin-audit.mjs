@@ -21,16 +21,26 @@ const ROUTES = [
 ]
 
 /**
+ * @typedef {{
+ *   stdout: import("node:stream").Readable,
+ *   stderr: import("node:stream").Readable,
+ *   kill(signal?: NodeJS.Signals | number): boolean,
+ *   on(event: "error", listener: (error: Error) => void): unknown,
+ *   on(event: "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): unknown,
+ * }} SpawnedProcess
+ */
+
+/**
  * @param {string[]} [args]
  * @param {number} [timeoutMs]
  * @returns {Promise<{ stdout: string, stderr: string }>}
  */
 function runCommand(args = [], timeoutMs = LIGHTHOUSE_TIMEOUT_MS) {
   return new Promise((resolve, reject) => {
-    const child = spawn("npx", args, {
+    const child = /** @type {SpawnedProcess} */ (/** @type {unknown} */ (spawn("npx", args, {
       stdio: ["ignore", "pipe", "pipe"],
       env: process.env,
-    })
+    })))
 
     let stdout = ""
     let stderr = ""
@@ -49,12 +59,12 @@ function runCommand(args = [], timeoutMs = LIGHTHOUSE_TIMEOUT_MS) {
       stderr += chunk.toString("utf8")
     })
 
-    child.on("error", (error) => {
+    child.on("error", /** @param {Error} error */ (error) => {
       clearTimeout(timer)
       reject(error)
     })
 
-    child.on("close", (code) => {
+    child.on("close", /** @param {number | null} code */ (code) => {
       clearTimeout(timer)
       if (timedOut) {
         reject(new Error(`lighthouse command timed out after ${timeoutMs}ms`))
@@ -83,7 +93,8 @@ function parseLighthouseJson(rawOutput = "") {
     const start = trimmed.indexOf("{")
     const end = trimmed.lastIndexOf("}")
     if (start < 0 || end <= start) {
-      throw new Error(`unable to parse lighthouse JSON output: ${error.message}`, { cause: error })
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`unable to parse lighthouse JSON output: ${message}`, { cause: error })
     }
     return JSON.parse(trimmed.slice(start, end + 1))
   }
@@ -116,8 +127,8 @@ async function auditRoute(routePath = "") {
     `--chrome-flags=${CHROME_FLAGS}`,
   ]
   const { stdout } = await runCommand(args)
-  const report = parseLighthouseJson(stdout)
-  const score = Number(report?.categories?.performance?.score || 0) * 100
+  const report = /** @type {{ categories?: { performance?: { score?: unknown } } }} */ (parseLighthouseJson(stdout))
+  const score = Number(report.categories?.performance?.score || 0) * 100
   return {
     url,
     score,

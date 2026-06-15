@@ -12,6 +12,10 @@ export function initSchoolSetupBrandingIsland({
   onProfileFieldCreate,
   onProfileFieldLayoutRowDelete,
 } = {}) {
+  const view = document?.defaultView || null;
+  const ElementCtor = view?.Element || null;
+  const HTMLButtonElementCtor = view?.HTMLButtonElement || null;
+  const HTMLTableRowElementCtor = view?.HTMLTableRowElement || null;
   const previewIds = [
     "schoolSetupStartDate",
     "schoolSetupEndDate",
@@ -70,12 +74,22 @@ export function initSchoolSetupBrandingIsland({
   });
   document?.getElementById("profileFieldLayoutRows")?.addEventListener("click", (event) => {
     const target = event?.target;
-    if (!(target instanceof document?.defaultView?.Element)) return;
+    if (typeof ElementCtor !== "function" || !(target instanceof ElementCtor)) return;
     const button = target.closest("[data-profile-layout-action]");
-    if (!(button instanceof document?.defaultView?.HTMLButtonElement)) return;
+    if (
+      typeof HTMLButtonElementCtor !== "function" ||
+      !(button instanceof HTMLButtonElementCtor)
+    ) {
+      return;
+    }
     if (button.dataset.profileLayoutAction !== "delete") return;
     const row = button.closest("tr[data-profile-field-key]");
-    if (!(row instanceof document?.defaultView?.HTMLTableRowElement)) return;
+    if (
+      typeof HTMLTableRowElementCtor !== "function" ||
+      !(row instanceof HTMLTableRowElementCtor)
+    ) {
+      return;
+    }
     if (typeof onProfileFieldLayoutRowDelete === "function") {
       onProfileFieldLayoutRowDelete(row.dataset.profileFieldKey || "");
     }

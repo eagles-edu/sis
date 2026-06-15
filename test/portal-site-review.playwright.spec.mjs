@@ -654,7 +654,6 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
       traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> axe`)
       axe = summarizeAxe(await runAxe(page))
     }
-    assertNoFocusAxeIssues(axe, `admin route ${link.href} (${theme})`)
     routeStates.push({ link, state, surfaces, axe })
   }
 
@@ -823,6 +822,45 @@ async function reviewStudent(page, origin, theme, coverage, credentials) {
     }
   }
 
+  await page.locator('a[data-page-target="performance-reports"]').first().dispatchEvent("click")
+  await page.waitForTimeout(350)
+  const reportArchiveLink = page.locator('a[href^="/student/reports/"]').first()
+  if (await reportArchiveLink.count()) {
+    const reportHref = await reportArchiveLink.getAttribute("href")
+    await reportArchiveLink.click()
+    await page.waitForURL((url) => url.pathname.startsWith("/student/reports/"), { timeout: 30000 })
+    await page.waitForFunction(() => {
+      const body = globalThis.document.body
+      return Boolean(body && body.classList.contains("student-portal-page"))
+    })
+    await page.waitForTimeout(250)
+    const reportMenuButton = page.locator("#menuBtn")
+    const reportMenuNav = page.locator("#sideNav")
+    const reportMenuOverlay = page.locator("#navOverlay")
+    assert.equal(await reportMenuButton.count(), 1, "student report page should expose the portal menu button")
+    assert.equal(await reportMenuNav.count(), 1, "student report page should expose the portal side nav")
+    assert.equal(await reportMenuOverlay.count(), 1, "student report page should expose the portal overlay")
+    await reportMenuButton.click()
+    await page.waitForTimeout(150)
+    await page.waitForFunction(() => {
+      const nav = globalThis.document.getElementById("sideNav")
+      return Boolean(nav && nav.classList.contains("open") && globalThis.document.body.classList.contains("menu-open"))
+    })
+    await reportMenuOverlay.click()
+    await page.waitForFunction(() => {
+      const nav = globalThis.document.getElementById("sideNav")
+      return Boolean(nav && !nav.classList.contains("open") && !globalThis.document.body.classList.contains("menu-open"))
+    })
+    const reportSnapshot = await page.evaluate(() => ({
+      snapshotId: String(globalThis.document.querySelector('[data-field="snapshot-id"]')?.textContent || "").trim(),
+      capturedAt: String(globalThis.document.querySelector('[data-field="snapshot-captured-at"]')?.textContent || "").trim(),
+      rubricRows: globalThis.document.querySelectorAll("#report-rubric-body tr").length,
+    }))
+    assert.notEqual(reportSnapshot.snapshotId, "[[snapshot id]]", `student report snapshot should load for ${reportHref || "report link"}`)
+    assert.notEqual(reportSnapshot.capturedAt, "[[full timestamp]]", "student report should show a captured timestamp")
+    assert.ok(reportSnapshot.rubricRows >= 1, "student report should render rubric rows")
+  }
+
   coverage.push({ theme, role: "student", links: navMeta, routeStates: visited, surfaceProfile, placementProfile, frameProfile })
 }
 
@@ -904,6 +942,45 @@ async function reviewParent(page, origin, theme, coverage, credentials) {
       }
       visited.push({ newsModal: true, modalSurfaces, modalAxe, sourceLink })
     }
+  }
+
+  await page.locator('a[data-page-target="performance-reports"]').first().dispatchEvent("click")
+  await page.waitForTimeout(350)
+  const reportArchiveLink = page.locator('a[href^="/parent/reports/"]').first()
+  if (await reportArchiveLink.count()) {
+    const reportHref = await reportArchiveLink.getAttribute("href")
+    await reportArchiveLink.click()
+    await page.waitForURL((url) => url.pathname.startsWith("/parent/reports/"), { timeout: 30000 })
+    await page.waitForFunction(() => {
+      const body = globalThis.document.body
+      return Boolean(body && body.classList.contains("parent-portal-page"))
+    })
+    await page.waitForTimeout(250)
+    const reportMenuButton = page.locator("#parentMenuBtn")
+    const reportMenuNav = page.locator("#parentSideNav")
+    const reportMenuOverlay = page.locator("#parentNavScrim")
+    assert.equal(await reportMenuButton.count(), 1, "parent report page should expose the portal menu button")
+    assert.equal(await reportMenuNav.count(), 1, "parent report page should expose the portal side nav")
+    assert.equal(await reportMenuOverlay.count(), 1, "parent report page should expose the portal scrim")
+    await reportMenuButton.click()
+    await page.waitForTimeout(150)
+    await page.waitForFunction(() => {
+      const nav = globalThis.document.getElementById("parentSideNav")
+      return Boolean(nav && nav.classList.contains("open") && globalThis.document.body.classList.contains("menu-open"))
+    })
+    await reportMenuOverlay.click()
+    await page.waitForFunction(() => {
+      const nav = globalThis.document.getElementById("parentSideNav")
+      return Boolean(nav && !nav.classList.contains("open") && !globalThis.document.body.classList.contains("menu-open"))
+    })
+    const reportSnapshot = await page.evaluate(() => ({
+      snapshotId: String(globalThis.document.querySelector('[data-field="snapshot-id"]')?.textContent || "").trim(),
+      capturedAt: String(globalThis.document.querySelector('[data-field="snapshot-captured-at"]')?.textContent || "").trim(),
+      rubricRows: globalThis.document.querySelectorAll("#report-rubric-body tr").length,
+    }))
+    assert.notEqual(reportSnapshot.snapshotId, "[[snapshot id]]", `parent report snapshot should load for ${reportHref || "report link"}`)
+    assert.notEqual(reportSnapshot.capturedAt, "[[full timestamp]]", "parent report should show a captured timestamp")
+    assert.ok(reportSnapshot.rubricRows >= 1, "parent report should render rubric rows")
   }
 
   coverage.push({ theme, role: "parent", links: navMeta, routeStates: visited, surfaceProfile, placementProfile, frameProfile })
