@@ -7190,6 +7190,10 @@ h1 {
   line-height: 1.2;
   margin: 0;
 }
+body.admin-portal-page .performance-data-list .section-title,
+body.admin-portal-page #performanceStagedSection .section-title {
+  color: var(--portal-text);
+}
 .text-zoom-controls {
   align-items: center;
   display: inline-flex;

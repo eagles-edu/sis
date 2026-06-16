@@ -13741,12 +13741,39 @@
         ];
       }
 
+      function normalizeAttendanceSummary(attendanceReport = {}, report = {}) {
+        const source = attendanceReport && typeof attendanceReport === "object" ? attendanceReport : {};
+        const total = source.total ?? report.attendanceTotal ?? report.totalAttendance ?? null;
+        const absences =
+          source.absences ??
+          source.absenceCount ??
+          report.absenceCount ??
+          report.absences ??
+          report.absentCount ??
+          null;
+        const tardy =
+          source.tardy ??
+          source.tardyCount ??
+          report.tardyCount ??
+          report.tardy ??
+          null;
+        const attendancePercent =
+          source.percent ??
+          source.rate ??
+          source.attendanceRate ??
+          source.attendancePercent ??
+          report.attendanceRate ??
+          report.attendancePercent ??
+          null;
+        return { total, absences, tardy, attendancePercent };
+      }
+
       function reportCardSnapshotText(report = {}) {
         if (!report || typeof report !== "object") return "";
         const identity = report?.identity && typeof report.identity === "object" ? report.identity : {};
         const scope = report?.scope && typeof report.scope === "object" ? report.scope : {};
         const snapshot = report?.snapshot && typeof report.snapshot === "object" ? report.snapshot : {};
-        const attendance = report?.attendance && typeof report.attendance === "object" ? report.attendance : {};
+        const attendance = normalizeAttendanceSummary(report?.attendance, report);
         const metrics = report?.metrics && typeof report.metrics === "object" ? report.metrics : {};
         const currentHomework = report?.currentHomework && typeof report.currentHomework === "object" ? report.currentHomework : {};
         const pastDueHomework = report?.pastDueHomework && typeof report.pastDueHomework === "object" ? report.pastDueHomework : {};
@@ -13767,7 +13794,7 @@
             normalizeText(scope.schoolYear) || normalizeText(snapshot.schoolYear),
             normalizeText(scope.quarter) || normalizeText(snapshot.quarter),
           ].filter(Boolean).join(" | ") || "-"}`,
-          `Attendance: total=${normalizeText(attendance.total) || "-"} | absences=${normalizeText(attendance.absences) || "-"} | tardy=${normalizeText(attendance.tardy) || "-"} | percent=${normalizeText(attendance.percent || attendance.rate) || "-"}`,
+          `Attendance: total=${normalizeText(attendance.total) || "-"} | absences=${normalizeText(attendance.absences) || "-"} | tardy=${normalizeText(attendance.tardy) || "-"} | percent=${normalizeText(attendance.attendancePercent) || "-"}`,
           `Metrics: homework completion=${normalizeText(metrics.homeworkCompletionRate) || "-"} | homework on-time=${normalizeText(metrics.homeworkOnTimeRate) || "-"} | behavior=${normalizeText(metrics.behaviorScore) || "-"} | skills=${normalizeText(metrics.participationScore) || "-"} | academic=${normalizeText(metrics.inClassScore) || "-"} | participation points=${normalizeText(metrics.participationPointsAward) || "-"}`,
           `Teacher snapshot: teacher=${normalizeText(metrics.teacherName) || "-"} | lesson=${normalizeText(metrics.lessonSummary) || "-"} | vision=${normalizeText(metrics.visionStatus) || "-"} | comment=${normalizeText(metrics.teacherComment) || "-"}`,
           "",

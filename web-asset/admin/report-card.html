@@ -1656,7 +1656,7 @@
       const identity = report.identity || {}
       const scope = report.scope || {}
       const snapshot = report.snapshot || {}
-      const attendance = report.attendance || {}
+      const attendance = normalizeAttendanceSummary(report.attendance, report)
       const metrics = report.metrics || {}
       const currentHomework = report.currentHomework || {}
       const pastDueHomework = report.pastDueHomework || report.outstandingHomework || {}
@@ -1681,6 +1681,33 @@
         if (!section) return
         const valueNode = section.querySelector(".summary-value")
         if (valueNode) valueNode.textContent = toDisplay(value, fallback)
+      }
+
+      function normalizeAttendanceSummary(attendanceReport = {}, report = {}) {
+        const source = attendanceReport && typeof attendanceReport === "object" ? attendanceReport : {}
+        const total = source.total ?? report.attendanceTotal ?? report.totalAttendance ?? null
+        const absences =
+          source.absences ??
+          source.absenceCount ??
+          report.absenceCount ??
+          report.absences ??
+          report.absentCount ??
+          null
+        const tardy =
+          source.tardy ??
+          source.tardyCount ??
+          report.tardyCount ??
+          report.tardy ??
+          null
+        const attendancePercent =
+          source.percent ??
+          source.rate ??
+          source.attendanceRate ??
+          source.attendancePercent ??
+          report.attendanceRate ??
+          report.attendancePercent ??
+          null
+        return { total, absences, tardy, attendancePercent }
       }
 
       const renderExerciseList = (selector, exercises) => {
@@ -1788,10 +1815,10 @@
         ].join(" | ")
       )
 
-      setSectionValue('[data-report-summary="attendance"]', attendance.rate || report.attendanceRate)
-      setSectionValue('[data-report-summary="absences"]', attendance.absences ?? report.absenceCount)
-      setSectionValue('[data-report-summary="tardy"]', attendance.tardy ?? report.tardyCount)
-      setSectionValue('[data-report-summary="attendance-percent"]', attendance.percent || report.attendancePercent)
+      setSectionValue('[data-report-summary="attendance"]', attendance.attendancePercent)
+      setSectionValue('[data-report-summary="absences"]', attendance.absences)
+      setSectionValue('[data-report-summary="tardy"]', attendance.tardy)
+      setSectionValue('[data-report-summary="attendance-percent"]', attendance.attendancePercent)
 
       setText("#current-assignment-count", currentHomework.assignmentsCount ?? currentHomework.assignmentCount ?? report.currentAssignmentCount)
       setText("#current-exercise-count", currentHomework.exercisesCount ?? currentHomework.exerciseCount ?? report.currentExerciseCount)

@@ -11,7 +11,7 @@ import {
   buildStudentPortalCalendarTracks,
   parseSpreadsheetRowsFromUploadPayload,
 } from "../server/student-admin-routes.mjs"
-import { generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
+import { buildStudentReportCardPayload, generateStudentReportCardPdf } from "../server/student-report-card-pdf.mjs"
 
 const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.json`
 const ADMIN_HTML_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
@@ -635,6 +635,39 @@ test("generateStudentReportCardPdf counts late attendance as present in the summ
     fs.rmSync(pdfPath, { force: true })
     fs.rmSync(txtPath, { force: true })
   }
+})
+
+test("buildStudentReportCardPayload exposes attendance summary in both legacy and current shapes", () => {
+  const payload = buildStudentReportCardPayload(
+    {
+      eaglesId: "S001",
+      studentNumber: 1001,
+      profile: { fullName: "Jane Student" },
+      attendanceRecords: [
+        { status: "present" },
+        { status: "late" },
+        { status: "absent" },
+      ],
+      gradeRecords: [],
+      parentReports: [],
+    },
+    {
+      className: "English",
+      schoolYear: "2026-2027",
+      quarter: "q1",
+    },
+  )
+
+  assert.equal(payload.attendance.total, 3)
+  assert.equal(payload.attendance.present, 2)
+  assert.equal(payload.attendance.absences, 1)
+  assert.equal(payload.attendance.tardy, 1)
+  assert.equal(payload.attendance.rate, "66.67%")
+  assert.equal(payload.attendance.percent, "66.67%")
+  assert.equal(payload.attendance.attendanceRate, "66.67%")
+  assert.equal(payload.attendance.attendancePercent, "66.67%")
+  assert.equal(payload.attendance.absenceCount, 1)
+  assert.equal(payload.attendance.tardyCount, 1)
 })
 
 test("buildChildDashboardSnapshot counts late attendance as present", () => {

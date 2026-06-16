@@ -236,6 +236,24 @@ function summarizeAttendance(attendanceRecords) {
   return summary
 }
 
+function buildAttendanceSection(attendanceSummary, attendanceRate) {
+  return {
+    total: attendanceSummary.total,
+    present: attendanceSummary.present,
+    absent: attendanceSummary.absent,
+    late: attendanceSummary.late,
+    excused: attendanceSummary.excused,
+    absences: attendanceSummary.absent,
+    tardy: attendanceSummary.late,
+    percent: attendanceRate,
+    rate: attendanceRate,
+    attendanceRate,
+    attendancePercent: attendanceRate,
+    absenceCount: attendanceSummary.absent,
+    tardyCount: attendanceSummary.late,
+  }
+}
+
 function summarizeGrades(gradeRecords) {
   const homeworkTotal = gradeRecords.length
   const homeworkCompleted = gradeRecords.filter((entry) => {
@@ -574,13 +592,7 @@ export function buildStudentReportCardPayload(student, filters = {}) {
       schoolYear: normalizeText(filters.schoolYear),
       quarter: normalizeText(filters.quarter),
     },
-    attendance: {
-      total: attendanceSummary.total,
-      absences: attendanceSummary.absent,
-      tardy: attendanceSummary.late,
-      percent: attendanceRate,
-      rate: attendanceRate,
-    },
+    attendance: buildAttendanceSection(attendanceSummary, attendanceRate),
     currentHomework: {
       title: currentHomeworkSnapshot.title || "Current assignment",
       subject: currentHomeworkSnapshot.subject || normalizeText(filters.className),

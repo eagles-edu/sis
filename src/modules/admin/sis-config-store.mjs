@@ -117,6 +117,13 @@ const DEFAULT_SCHOOL_PROFILE = Object.freeze({
  *   source: string,
  *   meta: SnapshotMeta,
  * }} LoadedSisConfigSnapshot
+ * @typedef {Error & {
+ *   statusCode?: number,
+ *   filePath?: string,
+ *   line?: number,
+ *   column?: number,
+ *   source?: string,
+ * }} SisConfigError
  * @typedef {LoadedSisConfigSnapshot & {
  *   fileMtimeIso: string,
  *   legacyMtimeIso: string,
@@ -212,6 +219,15 @@ function isExamplePlaceholderHostname(hostname) {
 }
 
 /**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorMessage(error) {
+  if (error instanceof Error) return normalizeText(error.message)
+  return normalizeText(error)
+}
+
+/**
  * @param {{
  *   filePath?: string,
  *   raw?: string | null,
@@ -245,6 +261,7 @@ function assertValidRuntimeDatabaseUrl({
     : filePath
       ? ` in ${filePath}`
       : ""
+  /** @type {SisConfigError} */
   const error = new Error(
     `Invalid databaseUrl${locationSuffix}: example.* hosts are not allowed (found host ${parsedUrl.hostname})`
   )
@@ -346,7 +363,8 @@ function normalizeSchoolSetupQuarters(value) {
 
 function defaultLevelTileStyle(levelName = "") {
   const normalized = normalizeLower(levelName)
-  const theme = DEFAULT_LEVEL_THEME_BY_LEVEL.get(normalized) || null
+  const themeEntry = DEFAULT_LEVEL_THEME_BY_LEVEL.get(normalized)
+  const theme = typeof themeEntry === "string" ? null : (themeEntry || null)
   return {
     title: DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL.get(normalized) || normalizeText(levelName),
     bgColor: normalizeText(theme?.color),
@@ -746,7 +764,7 @@ export async function getSisConfigMirrorHealthSnapshot() {
       present: filePresent,
       source: fileLoaded?.source || "missing",
       updatedAt: normalizeText(fileLoaded?.updatedAt),
-      error: normalizeText(fileSnapshot.error?.message || fileSnapshot.error),
+      error: errorMessage(fileSnapshot.error),
     },
     db: {
       present: dbPresent,
