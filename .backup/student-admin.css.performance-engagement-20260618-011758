@@ -2913,7 +2913,7 @@
         display: grid;
         gap: 10px;
         min-width: 0;
-        padding: 14px;
+        padding: 10px;
       }
       .performance-engagement-day-list {
         display: grid;
@@ -2921,6 +2921,9 @@
       }
       .performance-engagement-day-card {
         align-items: start;
+        background: var(--portal-surface-card);
+        border: 1px solid var(--portal-border);
+        border-radius: var(--radius-2);
         color: inherit;
         cursor: pointer;
         display: grid;

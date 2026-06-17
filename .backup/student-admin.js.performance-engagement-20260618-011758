@@ -4599,9 +4599,8 @@
           button.type = "button";
           button.className =
             normalizeText(state.performanceEngagement.selectedDayKey) === normalizeText(day.dayKey) ?
-              "performance-engagement-day-card card is-active"
-            : "performance-engagement-day-card card";
-          button.dataset.surfaceRole = "card";
+              "performance-engagement-day-card is-active"
+            : "performance-engagement-day-card";
           const classNames = Array.from(day.classNames).filter(Boolean).join(", ");
           button.innerHTML = `
             <strong>${escapeHtml(day.classDay || "Day")}</strong>

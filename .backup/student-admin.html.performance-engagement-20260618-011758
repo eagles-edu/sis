@@ -2114,12 +2114,12 @@ Select a homework link to inspect details.</pre>
                   </div>
                 </div>
                 <div class="performance-engagement-grid">
-                  <section class="performance-engagement-home panel" data-surface-role="panel">
+                  <section class="performance-engagement-home data-surface" data-surface-role="data-surface">
                     <h3 class="section-title">Class days</h3>
                     <p class="small" id="performanceEngagementHomeSummary">Loading class day list...</p>
                     <div id="performanceEngagementDayList" class="performance-engagement-day-list"></div>
                   </section>
-                  <section class="performance-engagement-detail panel" data-surface-role="panel">
+                  <section class="performance-engagement-detail data-surface" data-surface-role="data-surface">
                     <h3 class="section-title">Tracked metric table</h3>
                     <p class="small" id="performanceEngagementTableSummary">Select a class day to inspect the tracked rows.</p>
                     <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
