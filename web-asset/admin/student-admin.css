@@ -3,15 +3,15 @@
         --border: var(--portal-border);
         --border-strong: var(--portal-border-strong);
         --brand: var(--tertiary-color);
-        --btn-delete-bg: var(--portal-color-039996725e);
-        --btn-delete-border: var(--portal-color-763bbb26ad);
-        --btn-delete-text: var(--portal-color-323093c4da);
-        --btn-edit-bg: var(--portal-color-437c03ed17);
-        --btn-edit-border: var(--portal-color-9b98859584);
-        --btn-edit-text: var(--portal-color-4643f99d7f);
-        --btn-refresh-bg: var(--portal-color-3d608aab85);
-        --btn-refresh-border: var(--portal-color-4b848cb5df);
-        --btn-refresh-text: var(--portal-color-7801470977);
+        --btn-delete-bg: var(--portal-button-red-fill);
+        --btn-delete-border: var(--portal-button-red-stroke);
+        --btn-delete-text: var(--portal-button-red-ink);
+        --btn-edit-bg: var(--portal-button-green-fill);
+        --btn-edit-border: var(--portal-button-green-stroke);
+        --btn-edit-text: var(--portal-button-green-ink);
+        --btn-refresh-bg: var(--portal-button-teal-fill);
+        --btn-refresh-border: var(--portal-button-teal-stroke);
+        --btn-refresh-text: var(--portal-button-teal-ink);
         --admin-button-full-inline: 160px;
         --admin-button-compact-inline: 112px;
         --admin-button-specialty-inline: 60px;
@@ -31,45 +31,45 @@
         --admin-chip-border-bottom-width: 3px;
         --chart-grid: var(--secondary-color);
         --chart-text: var(--portal-chart-axis-label);
-        --danger: var(--portal-color-bd827b1b26);
-        --danger-bg: var(--portal-color-55a7dc028b);
-        --danger-border: var(--portal-color-75e50d3433);
-        --danger-color: var(--portal-color-bd827b1b26);
+        --danger: var(--portal-status-bad-text);
+        --danger-bg: var(--portal-status-bad-bg);
+        --danger-border: var(--portal-status-bad-border);
+        --danger-color: var(--portal-status-bad-text);
         --font-base:
           system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         --font-header: system-ui, -apple-system, blinkmacsystemfont, "Segoe UI Variable", "Segoe UI", roboto, "Noto Sans", ubuntu, cantarell, "Liberation Sans", "DejaVu Sans", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         --icon-color-on-dk: var(--portal-color-469978e86b);
         --icon-color-on-lt: var(--portal-color-e4eca72dfb);
-        --info-bg: var(--portal-color-7133576b43);
-        --info-border: var(--portal-color-08145c4aa5);
-        --info-color: var(--portal-color-c8b4c9efb7);
+        --info-bg: var(--portal-status-info-bg);
+        --info-border: var(--portal-status-info-border);
+        --info-color: var(--portal-status-info-text);
         --ink: var(--text-color);
         --ink-muted: var(--text-muted);
         --level-detail-btn-bg: var(--tertiary-color);
-        --level-detail-btn-border: var(--portal-color-e45f66b6fc);
+        --level-detail-btn-border: var(--portal-control-border);
         --level-detail-btn-text: var(--icon-color-on-dk);
         --link-aaa: var(--portal-color-bd827b1b26);
         --link-active: var(--primary-color);
         --link-color: var(--link-aaa);
         --link-hover: var(--tertiary-color);
-        --link-visited: var(--portal-color-dcaac7c975);
+        --link-visited: var(--portal-button-purple-stroke);
         --menu-border: var(--portal-border);
-        --pager-hover-background: var(--portal-color-d14f901611);
+        --pager-hover-background: var(--portal-surface-card);
         --pager-text-color: var(--text-color);
         --primary-color: var(--portal-color-bd827b1b26);
         --radius-base: 3.667px;
         --radius-pill: 999px;
         --secondary-color: #fbffff;
         --sis-global-text-zoom: 1;
-        --success-bg: var(--portal-color-1b2ad6543d);
-        --success-border: var(--portal-color-b75eb09de7);
-        --success-color: var(--portal-color-0c79f2d461);
+        --success-bg: var(--portal-status-good-bg);
+        --success-border: var(--portal-status-good-border);
+        --success-color: var(--portal-status-good-text);
         --tertiary-color: var(--portal-color-45756b2b73);
         --text-color: var(--portal-text);
         --text-muted: var(--portal-text-soft);
-        --warning-bg: var(--portal-color-51f08e7078);
-        --warning-border: var(--portal-color-81a116a7df);
-        --warning-color: var(--portal-color-0b88d7b8bd);
+        --warning-bg: var(--portal-status-warn-bg);
+        --warning-border: var(--portal-status-warn-border);
+        --warning-color: var(--portal-status-warn-text);
         --radius-1: var(--radius-base);
         --radius-2: calc(var(--radius-base) * 2);
         --radius-3: calc(var(--radius-base) * 3);
@@ -465,10 +465,6 @@
       .profile-info-tabs {
         display: grid;
         gap: 10px;
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        padding: 0;
       }
       .profile-tab-nav {
         -webkit-overflow-scrolling: touch;
@@ -487,7 +483,6 @@
       }
       .profile-tab-nav button {
         align-items: center;
-        border: 1px solid transparent;
         border-radius: var(--radius-pill);
         box-sizing: border-box;
         display: inline-flex;
@@ -601,11 +596,6 @@
       .profile-info-group {
         display: grid;
         gap: 8px;
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        padding: 0;
-        margin: 0;
       }
       .profile-info-group-head {
         align-items: baseline;
@@ -671,11 +661,6 @@
       .profile-field-group {
         display: grid;
         gap: 8px;
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        padding: 0;
-        margin: 0;
       }
       .profile-field-group h3 {
         font-size: 14px;
@@ -1148,7 +1133,8 @@
         overflow: auto;
       }
       #studentListPanel hr {
-        border: 0 !important;
+        border-style: solid !important;
+        border-width: 1px 0 0 !important;
         border-top: 1px solid var(--border-strong) !important;
         margin: 12px 0 !important;
       }
@@ -1633,7 +1619,6 @@
       .table-column-controls input[type="checkbox"],
       .attendance-column-controls input[type="checkbox"] {
         accent-color: var(--tertiary-color);
-        border: 0;
         inline-size: auto;
         margin: 0;
         min-width: 0;
@@ -1689,11 +1674,8 @@
       }
       .row-options-trigger {
         align-items: center;
-        background: transparent;
-        border: 0;
         border-radius: var(--radius-2);
         box-sizing: border-box;
-        color: var(--text-color);
         cursor: pointer;
         display: inline-flex;
         font-size: 12px;
@@ -1752,7 +1734,6 @@
         transform: rotate(180deg);
       }
       .row-options-dropdown {
-        background: transparent;
         border-radius: var(--radius-2);
         display: grid;
         gap: 4px;
@@ -1980,8 +1961,6 @@
       }
       .system-health-loading {
         backdrop-filter: none;
-        background: transparent;
-        border: 0;
         border-radius: var(--radius-2);
         display: grid;
         gap: 10px;
@@ -2526,9 +2505,9 @@
       }
       .portal-theme-toggle {
         align-items: center;
-        background: transparent;
-        border-color: transparent;
-        box-shadow: none;
+        background: var(--portal-button-surface);
+        border: 1px solid var(--portal-button-border);
+        box-shadow: var(--portal-role-shadow-soft);
         color: var(--ink);
         display: inline-flex;
         flex: 0 0 auto;
@@ -2538,9 +2517,9 @@
         padding: 0;
       }
       .portal-theme-toggle:hover:not(:disabled) {
-        background: var(--portal-color-57b962ee7c);
-        border-color: transparent;
-        box-shadow: none;
+        background: var(--portal-button-surface-hover);
+        border-color: var(--portal-button-border-hover);
+        box-shadow: var(--portal-control-shadow-hover);
         filter: none;
         transform: none;
       }
@@ -2922,6 +2901,108 @@
         overflow: hidden;
         padding: 10px;
       }
+      .performance-engagement-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+        margin-top: 10px;
+      }
+      .performance-engagement-home,
+      .performance-engagement-detail {
+        box-sizing: border-box;
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+        padding: 10px;
+      }
+      .performance-engagement-day-list {
+        display: grid;
+        gap: 8px;
+      }
+      .performance-engagement-day-card {
+        align-items: start;
+        background: var(--portal-surface-card);
+        border: 1px solid var(--portal-border);
+        border-radius: var(--radius-2);
+        color: inherit;
+        cursor: pointer;
+        display: grid;
+        gap: 4px;
+        padding: 10px 12px;
+        text-align: left;
+        transition:
+          border-color 160ms ease,
+          box-shadow 160ms ease,
+          transform 160ms ease;
+      }
+      .performance-engagement-day-card:hover,
+      .performance-engagement-day-card:focus-visible,
+      .performance-engagement-day-card.is-active {
+        border-color: var(--portal-ods-accent-border);
+        box-shadow: 0 10px 24px var(--portal-color-b0e4f2e1c7);
+        transform: translateY(-1px);
+      }
+      .performance-engagement-day-card strong {
+        font-size: 14px;
+        font-weight: 800;
+      }
+      .performance-engagement-day-card span {
+        display: block;
+        line-height: 1.35;
+      }
+      .performance-engagement-table {
+        border-collapse: collapse;
+        min-width: 900px;
+        width: 100%;
+      }
+      .performance-engagement-table th,
+      .performance-engagement-table td {
+        border: 1px solid var(--portal-ods-accent-border);
+        line-height: 1.35;
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      .performance-engagement-table th {
+        background: transparent;
+        color: var(--portal-ods-accent-border);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .performance-engagement-table tbody tr:hover {
+        background: var(--portal-ods-accent-warning-bg);
+      }
+      .performance-engagement-table tbody tr:hover > :is(th, td),
+      .performance-engagement-table tbody tr:focus-within > :is(th, td) {
+        background: var(--portal-ods-accent-warning-bg);
+      }
+      .performance-engagement-table td.performance-engagement-reviewed-cell {
+        font-weight: 700;
+      }
+      .performance-engagement-table td.performance-engagement-reviewed-cell.is-parent {
+        background: var(--portal-ods-accent-bad-bg);
+        color: var(--portal-ods-accent-bad-text);
+      }
+      .performance-engagement-table td.performance-engagement-reviewed-cell.is-student {
+        background: var(--portal-ods-accent-good-bg);
+        color: var(--portal-ods-accent-good-text);
+      }
+      .performance-engagement-table td.performance-engagement-status-cell.is-no {
+        background: var(--portal-ods-accent-bad-bg);
+        color: var(--portal-ods-accent-bad-text);
+        font-weight: 700;
+      }
+      .performance-engagement-table td.performance-engagement-status-cell.is-yes,
+      .performance-engagement-table td.performance-engagement-event-cell.is-set {
+        background: var(--portal-ods-accent-good-bg);
+        color: var(--portal-ods-accent-good-text);
+      }
+      .performance-engagement-table td.performance-engagement-status-cell.is-empty,
+      .performance-engagement-table td.performance-engagement-event-cell.is-empty {
+        background: transparent;
+      }
       .progress-report-table {
         border-collapse: collapse;
         font-size: 12px;
@@ -3132,9 +3213,6 @@
       }
       .parent-tracking-link-btn {
         align-items: center;
-        background: transparent;
-        border: none;
-        color: var(--link-color);
         cursor: pointer;
         display: inline-flex;
         font-size: 12px;
@@ -3542,7 +3620,8 @@
           padding: 8px 6px;
         }
         .progress-report-rubric-table td {
-          border: 0;
+          border: 1px solid var(--border-strong);
+          border-radius: var(--radius-2);
           display: block;
           padding: 0;
         }
@@ -3592,6 +3671,12 @@
         }
         #performanceQueueDetails .table-scroll-wrap table {
           min-width: 680px;
+        }
+        .performance-engagement-grid {
+          grid-template-columns: 1fr;
+        }
+        .performance-engagement-table {
+          min-width: 760px;
         }
         #levelDetailPanel .actions,
         #overviewIncomingExerciseSection .actions,
@@ -3645,7 +3730,6 @@
         }
         .page-section[data-page="news-reports"] .table-scroll-wrap tbody td {
           align-items: start;
-          border: 0;
           display: grid;
           gap: 8px;
           grid-template-columns: minmax(112px, 40%) minmax(0, 1fr);
@@ -3732,22 +3816,12 @@
         border-color: var(--portal-dark-border);
         color: var(--portal-dark-text);
       }
-      html[data-theme="dark"] body.admin-portal-page :where(.profile-info-group,
-        .profile-field-group) {
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        padding: 0;
-      }
       html[data-theme="dark"] body.admin-portal-page :where(.muted, .small, .page-note, .admin-table-summary, .profile-summary-kicker, .profile-summary-subline, .profile-summary-chip-label, .grade-chart-summary, .parent-tracking-detail-body) {
         color: var(--portal-dark-text-soft);
       }
       html[data-theme="dark"] body.admin-portal-page :where(.app-brand-logo-wrap, .sidebar-logo-wrap) {
         background: var(--portal-dark-surface-soft) !important;
         border-color: var(--portal-dark-border) !important;
-      }
-      html[data-theme="dark"] body.admin-portal-page .system-health-loading-pulse {
-        color: var(--portal-color-7e4f1499c9);
       }
       @keyframes system-health-pulse {
         to {

@@ -62,7 +62,9 @@
   --menu-bg: #f7faff;
   --menu-border: #d7dfea;
   --menu-header-bg: #eef3ff;
+  --menu-link-active-border: #8ab0e6;
   --menu-link-active-bg: #edf4ff;
+  --menu-link-active-text: #0a2f66;
   --menu-link-bg: #fff;
   --ok: #1f7a4f;
   --ok-bg: #e8f8ef;
@@ -148,6 +150,15 @@
   --portal-status-warn-bg: #fff3d8;
   --portal-status-warn-border: #e5cb66;
   --portal-status-warn-text: #6a4a00;
+  --portal-ods-accent-border: #000000;
+  --portal-ods-accent-bad-bg: #ff0000;
+  --portal-ods-accent-bad-text: #000000;
+  --portal-ods-accent-good-bg: #3cb371;
+  --portal-ods-accent-good-text: #000000;
+  --portal-ods-accent-neutral-bg: #666666;
+  --portal-ods-accent-neutral-text: #ffffff;
+  --portal-ods-accent-warning-bg: #ffffcc;
+  --portal-ods-accent-warning-text: #333333;
   --portal-stat-card-bg-start: #edf3fa;
   --portal-stat-card-bg-end: #f7faff;
   --portal-stat-card-border: rgba(115, 136, 163, 0.96);
@@ -528,6 +539,14 @@ html[data-theme="dark"] {
   --portal-status-warn-bg: rgba(240, 176, 95, 0.14);
   --portal-status-warn-border: rgba(240, 176, 95, 0.34);
   --portal-status-warn-text: #ffe0b6;
+  --portal-ods-accent-bad-bg: #ff0000;
+  --portal-ods-accent-bad-text: #000000;
+  --portal-ods-accent-good-bg: #3cb371;
+  --portal-ods-accent-good-text: #000000;
+  --portal-ods-accent-neutral-bg: #666666;
+  --portal-ods-accent-neutral-text: #ffffff;
+  --portal-ods-accent-warning-bg: #ffffcc;
+  --portal-ods-accent-warning-text: #333333;
   --portal-support-message: var(--portal-dark-text-soft);
   --portal-assignment-head-bg: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-card) 88%, var(--portal-status-good-border) 12%), var(--portal-dark-card));
   --portal-calendar-status-bad-bg: #d92d20;
@@ -1357,9 +1376,10 @@ html[data-theme="dark"] body.page {
 }
 body.student-portal-page .card,
 body.parent-portal-page .card,
-body.admin-portal-page .card {
+body.admin-portal-page .card,
+body.report-template-page .card {
   background: var(--portal-surface-card);
-  border-color: var(--portal-border);
+  border: 1px solid var(--portal-border);
   color: var(--portal-text);
 }
 html[data-theme="dark"] body.admin-portal-page textarea.card {
@@ -1375,16 +1395,43 @@ body.admin-portal-page .data-surface {
   border-color: var(--portal-border);
   color: var(--portal-text);
 }
+body:is(.student-points-page, .student-enrollment-page, .grades-tabulator-page, .report-template-page, .student-portal-page, .parent-portal-page, .admin-portal-page) :is(.table-wrap, .table-scroll-wrap, .data-surface, .metric-table-wrap, .progress-report-table-wrap, .queue-table-wrap, .profile-layout-table-wrap, .user-admin-table) table {
+  border-collapse: collapse;
+  width: 100%;
+}
+table tbody tr {
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+table tbody tr:hover > :is(th, td),
+table tbody tr:focus-within > :is(th, td) {
+  background: color-mix(in srgb, var(--portal-surface-support) 78%, #ffffff 22%);
+}
+body:is(.student-points-page, .student-enrollment-page, .grades-tabulator-page, .report-template-page, .student-portal-page, .parent-portal-page, .admin-portal-page) :is(.table-wrap, .table-scroll-wrap, .data-surface, .metric-table-wrap, .progress-report-table-wrap, .queue-table-wrap, .profile-layout-table-wrap, .user-admin-table) table :is(th, td) {
+  border-bottom: 1px solid var(--portal-border);
+}
+body.report-template-page .metric-table :is(th, td) {
+  border: 1px solid var(--portal-border);
+}
+html[data-theme="dark"] body.admin-portal-page .metric-table :is(th, td) {
+  border-color: var(--portal-dark-border);
+}
 body.student-portal-page .panel,
 body.parent-portal-page .panel,
 body.admin-portal-page .panel,
-body.admin-portal-page .wrap .panel {
+body.admin-portal-page .wrap .panel,
+body.report-template-page .panel {
   background: var(--portal-surface-card);
   border-color: var(--portal-border);
   color: var(--portal-text);
   margin-top: 10px;
   min-width: 0;
   padding: 14px;
+}
+body.report-template-page :is(.content, .panel, .card, .data-surface) {
+  border: 1px solid var(--portal-border) !important;
+}
+html[data-theme="dark"] body.report-template-page :is(.content, .panel, .card, .data-surface) {
+  border-color: var(--portal-dark-border) !important;
 }
 body.student-portal-page [data-surface-role="panel"],
 body.parent-portal-page [data-surface-role="panel"],
@@ -1444,9 +1491,11 @@ html[data-theme="dark"] body.admin-portal-page td {
 body.student-portal-page .card > :not(:first-child),
 body.parent-portal-page .card > :not(:first-child),
 body.admin-portal-page .card > :not(:first-child),
+body.report-template-page .card > :not(:first-child),
 body.student-portal-page .panel > :not(:first-child),
 body.parent-portal-page .panel > :not(:first-child),
 body.admin-portal-page .panel > :not(:first-child),
+body.report-template-page .panel > :not(:first-child),
 body.student-portal-page .content > :not(:first-child),
 body.parent-portal-page .content > :not(:first-child),
 body.admin-portal-page .content > :not(:first-child) {
@@ -1474,6 +1523,200 @@ body.admin-portal-page .wrap .panel {
   min-width: 0;
   padding: 12px;
 }
+body.admin-portal-page :where(.profile-tabs-shell,
+  .profile-info-tabs) {
+  background: var(--portal-role-panel-bg);
+  border: 1px solid var(--portal-role-border);
+  border-radius: var(--radius-3);
+  box-shadow: var(--portal-role-shadow);
+  color: var(--portal-role-text);
+}
+body.admin-portal-page :where(.profile-info-summary,
+  .profile-info-panel,
+  .profile-layout-editor) {
+  background: var(--portal-role-card-bg);
+  border: 1px solid var(--portal-role-border);
+  border-radius: var(--radius-3);
+  box-shadow: var(--portal-role-shadow);
+  color: var(--portal-role-text);
+}
+body.admin-portal-page :where(.profile-info-group,
+  .profile-field-group) {
+  background: var(--portal-role-card-bg);
+  border: 1px solid var(--portal-role-border);
+  border-radius: var(--radius-2);
+  box-shadow: var(--portal-role-shadow);
+  color: var(--portal-role-text);
+  padding: 12px;
+}
+body.admin-portal-page .profile-tab-nav button {
+  background: var(--portal-button-surface);
+  border: 1px solid var(--portal-button-border);
+  color: var(--portal-text);
+}
+body.admin-portal-page .profile-tab-nav button:hover:not(:disabled),
+body.admin-portal-page .profile-tab-nav button:focus-visible {
+  background: var(--portal-button-surface-hover);
+  border-color: var(--portal-button-border-hover);
+  color: var(--portal-text);
+}
+body.admin-portal-page .profile-tab-nav button.active {
+  background: var(--portal-button-surface-hover);
+  border-color: var(--portal-button-border-hover);
+  color: var(--portal-text);
+}
+body.admin-portal-page .profile-choice-item input[type="checkbox"],
+body.admin-portal-page .profile-choice-item input[type="radio"] {
+  background: var(--portal-role-card-bg);
+  border: 1px solid var(--portal-role-border);
+}
+body.admin-portal-page .profile-layout-editor {
+  background: var(--portal-role-card-bg);
+  border: 1px solid var(--portal-role-border);
+}
+body.admin-portal-page .row-options-trigger,
+body.student-enrollment-page .history-rail__button,
+body.admin-portal-page .parent-tracking-link-btn {
+  background: var(--portal-button-surface);
+  border: 1px solid var(--portal-button-border);
+  border-radius: var(--radius-2);
+  box-shadow: var(--portal-role-shadow-soft);
+  color: var(--portal-text);
+}
+body.admin-portal-page .row-options-dropdown {
+  background: var(--portal-role-card-bg);
+  border: 1px solid var(--portal-role-border);
+  box-shadow: var(--portal-role-shadow);
+  color: var(--portal-text);
+}
+body.admin-portal-page .row-options-trigger:hover,
+body.admin-portal-page .row-options-trigger:focus-visible,
+body.student-enrollment-page .history-rail__button:hover,
+body.student-enrollment-page .history-rail__button:focus-visible,
+body.admin-portal-page .parent-tracking-link-btn:hover,
+body.admin-portal-page .parent-tracking-link-btn:focus-visible {
+  background: var(--portal-button-surface-hover);
+  border-color: var(--portal-button-border-hover);
+  color: var(--portal-text);
+}
+body.admin-portal-page .system-health-loading {
+  background: var(--portal-role-panel-bg);
+  border: 1px solid var(--portal-role-border);
+  box-shadow: var(--portal-role-shadow);
+}
+body.grades-tabulator-page {
+  background: linear-gradient(180deg, var(--portal-role-card-bg) 0%, var(--portal-page-bg) 38%, var(--portal-role-panel-bg) 100%);
+  color: var(--portal-text);
+}
+html[data-theme="dark"] body.grades-tabulator-page {
+  background: linear-gradient(180deg, var(--portal-role-panel-bg) 0%, var(--portal-page-bg) 38%, var(--portal-role-card-bg) 100%);
+  color: var(--portal-dark-text);
+}
+body.grades-tabulator-page .tabulator {
+  background: var(--portal-role-card-bg);
+  border: 1px solid var(--portal-role-border);
+  color: var(--portal-text);
+}
+body.grades-tabulator-page .grade-tabulator-shell {
+  background: var(--portal-role-card-bg);
+  border: 1px solid var(--portal-role-border);
+  border-radius: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  width: 100%;
+}
+body.grades-tabulator-page .grade-tabulator {
+  width: 100%;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator {
+  background: transparent;
+  border: 1px solid var(--portal-role-border);
+  color: var(--portal-grade-table-text);
+  font-size: 0.92rem;
+  width: 100%;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-header,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-footer,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table {
+  color: var(--portal-grade-table-text);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-header,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-footer,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col {
+  background: var(--portal-role-panel-bg);
+  border-color: var(--portal-role-border);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row {
+  background: var(--portal-role-card-bg);
+  border-bottom: 1px solid var(--portal-role-border);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
+  background: color-mix(in srgb, var(--portal-role-card-bg) 92%, #ffffff 8%);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row:hover {
+  background: color-mix(in srgb, var(--portal-role-panel-bg) 82%, #ffffff 18%);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
+  background: color-mix(in srgb, var(--portal-status-good-bg) 84%, #ffffff 16%);
+  box-shadow: inset 4px 0 0 var(--portal-status-good-border);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-open {
+  background: var(--portal-status-amber-bg);
+  box-shadow: inset 4px 0 0 #a86400;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
+  background: color-mix(in srgb, var(--portal-status-amber-bg) 82%, #ffffff 18%);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
+  background: var(--portal-status-good-bg);
+  box-shadow: inset 4px 0 0 #1f7a47;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
+  background: color-mix(in srgb, var(--portal-status-good-bg) 82%, #ffffff 18%);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-late {
+  background: var(--portal-status-revise-bg);
+  box-shadow: inset 4px 0 0 #55389f;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
+  background: color-mix(in srgb, var(--portal-status-revise-bg) 82%, #ffffff 18%);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
+  background: var(--portal-status-bad-bg);
+  box-shadow: inset 4px 0 0 #b23a2e;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
+  background: color-mix(in srgb, var(--portal-status-bad-bg) 82%, #ffffff 18%);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell {
+  border-right-color: var(--portal-role-border);
+  box-sizing: border-box;
+  line-height: 1.2;
+  padding: 0.28rem 0.36rem;
+  vertical-align: top;
+  white-space: normal;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell:last-child {
+  border-right-color: var(--portal-role-border);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 0.24rem 0.36rem;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title {
+  color: var(--portal-grade-table-text);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+body.grades-tabulator-page .table-modal-backdrop {
+  border: 0;
+}
 body.student-points-page {
   background: var(--portal-page-bg);
   color: var(--portal-text);
@@ -1483,6 +1726,19 @@ body.student-points-page .mini,
 body.student-points-page .field label,
 body.student-points-page .status {
   color: var(--portal-text-soft);
+}
+body.student-points-page .field label {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+body.student-points-page .mini {
+  font-size: 0.82rem;
+  line-height: 1.35;
+  margin-top: 8px;
+}
+body.student-points-page .status {
+  margin: 0;
+  min-height: 1.4em;
 }
 body.student-points-page #loginPanel .login-link {
   color: var(--primary-color);
@@ -1520,19 +1776,178 @@ body.student-points-page .status.ok {
 body.student-points-page th,
 body.student-points-page td {
   border-bottom: 1px solid var(--portal-border);
+  font-size: 0.92rem;
+  line-height: 1.35;
 }
 body.student-points-page th button {
   background: transparent;
   border: 0;
   color: inherit;
+  font-weight: 700;
 }
 body.student-points-page .pill {
   background: var(--portal-pill-bg);
   border: 1px solid var(--portal-pill-border);
+  border-radius: 999px;
   color: var(--portal-pill-text);
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 2px 9px;
+}
+.portal-ods-good {
+  background: var(--portal-ods-accent-good-bg);
+  color: var(--portal-ods-accent-good-text);
+}
+.portal-ods-bad {
+  background: var(--portal-ods-accent-bad-bg);
+  color: var(--portal-ods-accent-bad-text);
+}
+.portal-ods-neutral {
+  background: var(--portal-ods-accent-neutral-bg);
+  color: var(--portal-ods-accent-neutral-text);
+}
+.portal-ods-warning {
+  background: var(--portal-ods-accent-warning-bg);
+  color: var(--portal-ods-accent-warning-text);
+}
+.portal-ods-border {
+  border-color: var(--portal-ods-accent-border);
+}
+body.student-enrollment-page .status,
+body.grades-tabulator-page .status {
+  color: var(--portal-text-soft);
+  margin: 0;
+  min-height: 1.2rem;
+}
+body.student-enrollment-page .history-rail__button {
+  appearance: none;
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+  padding: 0 6px;
+  width: auto;
+}
+body.student-enrollment-page .app-brand-kicker,
+body.student-enrollment-page .app-page-subtitle,
+body.student-enrollment-page .app-school-name,
+body.student-enrollment-page .enrollment-summary-label,
+body.student-enrollment-page .enrollment-summary-note,
+body.student-enrollment-page .enrollment-history-modal__kicker,
+body.student-enrollment-page .enrollment-history-modal__title,
+body.student-enrollment-page .enrollment-history-modal__summary,
+body.student-enrollment-page .enrollment-history-period__line,
+body.student-enrollment-page .enrollment-history-period__note,
+body.student-enrollment-page .enrollment-history-empty,
+body.student-enrollment-page .student-ident small,
+body.student-enrollment-page .text-zoom-controls .global-text-label,
+body.student-enrollment-page .text-zoom-controls .zoom-label {
+  color: var(--portal-text-soft);
+}
+body.student-enrollment-page .app-brand-kicker {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+body.student-enrollment-page .app-school-name {
+  color: var(--portal-text);
+  font-size: clamp(1rem, 1rem + 0.6vw, 1.25rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+body.student-enrollment-page .app-page-subtitle {
+  font-size: 0.92rem;
+  line-height: 1.45;
+  max-width: 72ch;
+}
+body.student-enrollment-page .enrollment-summary-label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+body.student-enrollment-page .enrollment-summary-note,
+body.student-enrollment-page .enrollment-history-modal__summary,
+body.student-enrollment-page .enrollment-history-period__line,
+body.student-enrollment-page .enrollment-history-empty {
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+body.student-enrollment-page .enrollment-history-modal__kicker {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+body.student-enrollment-page .enrollment-history-modal__title {
+  font-size: clamp(1.05rem, 1rem + 0.5vw, 1.35rem);
+  line-height: 1.25;
+}
+body.student-enrollment-page .student-ident small {
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+body.student-enrollment-page .text-zoom-controls .global-text-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+body.student-enrollment-page .text-zoom-controls .zoom-label {
+  font-size: 0.84rem;
+}
+body.student-enrollment-page .status.is-error,
+body.grades-tabulator-page .status.is-error {
+  color: var(--portal-status-bad-text);
+}
+body.grades-tabulator-page .metric-card h2 {
+  color: var(--portal-text-soft);
+  font-size: clamp(0.74rem, 3.6vw, 0.84rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  margin: 0;
+  text-transform: uppercase;
+}
+body.grades-tabulator-page .metric-card p {
+  color: var(--portal-text);
+  font-size: 1.08rem;
+  font-weight: 700;
+  margin: 0.18rem 0 0;
+}
+body.grades-tabulator-page .grid-title {
+  color: var(--portal-text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+body.grades-tabulator-page .distribution-dialog h2 {
+  font-size: clamp(1rem, 1rem + 0.4vw, 1.2rem);
+  line-height: 1.2;
+  margin: 0;
+}
+body.grades-tabulator-page .distribution-dialog-meta,
+body.grades-tabulator-page .distribution-dialog-hint {
+  color: var(--portal-text-soft);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin: 0;
+}
+body.grades-tabulator-page .distribution-zoom-label {
+  color: var(--portal-text-soft);
 }
 body.admin-portal-page .system-health-loading-pulse {
   color: var(--primary-color);
+}
+html[data-theme="dark"] body.admin-portal-page .system-health-loading-pulse {
+  color: var(--portal-dark-theme-toggle-ink);
 }
 body.student-portal-page .side-nav,
 body.parent-portal-page .side-nav {
@@ -1541,10 +1956,10 @@ body.parent-portal-page .side-nav {
 }
 body.student-portal-page .homework-card,
 body.parent-portal-page .homework-card {
-  background: transparent;
-  border: 0;
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--radius-3);
   margin-top: 10px;
-  padding: 0;
 }
 body.student-portal-page .homework-square,
 body.parent-portal-page .homework-square {
@@ -1944,7 +2359,7 @@ body.parent-portal-page .grade-tabulator {
 body.student-portal-page .grade-tabulator-shell .tabulator,
 body.parent-portal-page .grade-tabulator-shell .tabulator {
   background: transparent;
-  border: none;
+  border: 1px solid var(--portal-grade-table-border);
   color: var(--portal-grade-table-text);
   font-size: 0.92rem;
   width: 100%;
@@ -3475,8 +3890,18 @@ html[data-theme="dark"] body.admin-portal-page .panel {
   border-color: var(--portal-dark-border) !important;
   color: var(--portal-dark-text) !important;
 }
+html[data-theme="dark"] body.admin-portal-page .card {
+  background: var(--portal-neutral-card-dark) !important;
+  border-color: var(--portal-dark-border) !important;
+  color: var(--portal-dark-text) !important;
+}
 html[data-theme="dark"] body.student-portal-page .panel.homework-card,
 html[data-theme="dark"] body.parent-portal-page .panel.homework-card {
+  background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border);
+}
+html[data-theme="dark"] body.student-portal-page .homework-card,
+html[data-theme="dark"] body.parent-portal-page .homework-card {
   background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border);
 }
@@ -3961,8 +4386,9 @@ html[data-theme="light"] body.parent-portal-page .metric.metric-amber {
   --metric-text: var(--portal-status-amber-text);
 }
 body.parent-portal-page .homework-card {
-  background: transparent;
-  border: 0;
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--radius-3);
   margin-top: 10px;
 }
 body.student-portal-page .quick-links,
@@ -6021,8 +6447,41 @@ html[data-theme="dark"] body.student-points-page th,
 html[data-theme="dark"] body.student-points-page td {
   border-bottom-color: var(--portal-table-dark-border);
 }
+html[data-theme="dark"] body:is(.student-points-page, .student-enrollment-page, .grades-tabulator-page, .report-template-page, .student-portal-page, .parent-portal-page, .admin-portal-page) :is(.table-wrap, .table-scroll-wrap, .data-surface, .metric-table-wrap, .progress-report-table-wrap, .queue-table-wrap, .profile-layout-table-wrap, .user-admin-table) table :is(th, td) {
+  border-bottom-color: var(--portal-dark-border-strong);
+}
+html[data-theme="dark"] body:is(.student-points-page, .student-enrollment-page, .grades-tabulator-page, .report-template-page, .student-portal-page, .parent-portal-page, .admin-portal-page) :is(.table-wrap, .table-scroll-wrap, .data-surface, .metric-table-wrap, .progress-report-table-wrap, .queue-table-wrap, .profile-layout-table-wrap, .user-admin-table) table tbody tr:hover > :is(th, td),
+html[data-theme="dark"] body:is(.student-points-page, .student-enrollment-page, .grades-tabulator-page, .report-template-page, .student-portal-page, .parent-portal-page, .admin-portal-page) :is(.table-wrap, .table-scroll-wrap, .data-surface, .metric-table-wrap, .progress-report-table-wrap, .queue-table-wrap, .profile-layout-table-wrap, .user-admin-table) table tbody tr:focus-within > :is(th, td) {
+  background: color-mix(in srgb, var(--portal-dark-surface-support) 84%, #ffffff 16%);
+}
 html[data-theme="dark"] body.student-points-page #loginPanel .login-link {
   color: var(--portal-login-link-dark);
+}
+html[data-theme="dark"] body.student-enrollment-page .status,
+html[data-theme="dark"] body.grades-tabulator-page .status {
+  color: var(--portal-dark-text-soft);
+}
+html[data-theme="dark"] body.student-enrollment-page .app-brand-kicker,
+html[data-theme="dark"] body.student-enrollment-page .app-page-subtitle,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-summary-label,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-summary-note,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-history-modal__kicker,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-history-modal__title,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-history-modal__summary,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-history-period__line,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-history-period__note,
+html[data-theme="dark"] body.student-enrollment-page .enrollment-history-empty,
+html[data-theme="dark"] body.student-enrollment-page .student-ident small,
+html[data-theme="dark"] body.student-enrollment-page .text-zoom-controls .global-text-label,
+html[data-theme="dark"] body.student-enrollment-page .text-zoom-controls .zoom-label {
+  color: var(--portal-dark-text-soft);
+}
+html[data-theme="dark"] body.student-enrollment-page .app-school-name {
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.grades-tabulator-page .metric-card p,
+html[data-theme="dark"] body.grades-tabulator-page .grid-title {
+  color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .student-overview-title,
 html[data-theme="dark"] body.parent-portal-page .parent-overview-title,
@@ -6995,8 +7454,8 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
 }
 .menu-link.active {
   background: var(--menu-link-active-bg);
-  border-color: var(--portal-color-9a49c7aede);
-  color: var(--portal-color-3c582210ea);
+  border-color: var(--menu-link-active-border);
+  color: var(--menu-link-active-text);
 }
 .menu-sub-links {
   display: grid;
@@ -7190,9 +7649,158 @@ h1 {
   line-height: 1.2;
   margin: 0;
 }
+.section-note {
+  color: var(--portal-text-soft);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  margin: 0;
+}
 body.admin-portal-page .performance-data-list .section-title,
-body.admin-portal-page #performanceStagedSection .section-title {
+body.admin-portal-page #performanceStagedSection .section-title,
+body.admin-portal-page #performanceQueueSection .section-title {
   color: var(--portal-text);
+}
+html[data-theme="dark"] body.admin-portal-page .performance-data-list .section-title,
+html[data-theme="dark"] body.admin-portal-page #performanceStagedSection .section-title,
+html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section-title {
+  color: var(--portal-dark-text);
+}
+.report-control-line {
+  color: var(--portal-data-label);
+  margin: 0;
+}
+.report-control-line strong {
+  font: inherit;
+}
+.app-sidebar {
+  box-shadow: var(--portal-panel-shadow);
+}
+body.report-template-page .section-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+.sidebar-title {
+  color: var(--portal-role-text);
+  font-size: clamp(1.02rem, 1.8vw, 1.14rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0;
+}
+.metric-table th {
+  color: var(--portal-data-label);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.metric-table td {
+  color: var(--portal-role-text);
+}
+html[data-theme="dark"] body.admin-portal-page .metric-table th {
+  color: var(--portal-dark-text-soft);
+}
+html[data-theme="dark"] body.admin-portal-page .metric-table td {
+  color: var(--portal-dark-text);
+}
+body.report-template-page .summary-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+body.report-template-page .summary-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+}
+.summary-label {
+  color: var(--portal-data-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.summary-value {
+  color: inherit;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  margin: 0;
+}
+.summary-subtitle {
+  color: var(--portal-data-label);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+}
+.detail-card h3,
+.item-title,
+.metric-title {
+  color: inherit;
+  font-weight: 700;
+  margin: 0;
+}
+.detail-card h3 {
+  font-size: 0.98rem;
+  line-height: 1.25;
+}
+.item-title {
+  line-height: 1.35;
+}
+.item-meta,
+.item-body,
+.metric-text,
+.metric-note {
+  color: var(--portal-data-label);
+  font-size: 13px;
+  margin: 0;
+}
+.item-meta,
+.item-body {
+  line-height: 1.45;
+}
+.review-label {
+  color: var(--portal-data-label);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.review-field {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+.report-chip {
+  align-items: center;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  line-height: 1;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+html[data-theme="dark"] .app-school-name,
+html[data-theme="dark"] .section-title,
+html[data-theme="dark"] .sidebar-title,
+html[data-theme="dark"] .metric-title,
+html[data-theme="dark"] .exercise-title,
+html[data-theme="dark"] .item-title,
+html[data-theme="dark"] .detail-card h3,
+html[data-theme="dark"] .meta-value,
+html[data-theme="dark"] .summary-value,
+html[data-theme="dark"] .assignment-square-value,
+html[data-theme="dark"] .review-field,
+html[data-theme="dark"] .report-control-line strong {
+  color: var(--portal-role-text) !important;
+}
+.text-zoom-controls .zoom-label {
+  color: var(--portal-data-label);
 }
 .text-zoom-controls {
   align-items: center;
@@ -7212,7 +7820,7 @@ body.admin-portal-page #performanceStagedSection .section-title {
   white-space: nowrap;
 }
 .zoom-label {
-  color: #244165;
+  color: var(--portal-data-label);
   font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
   font-size: 11px;
 }

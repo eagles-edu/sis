@@ -187,6 +187,17 @@ function buildReportAccessSlug(payload = {}) {
   return `${slug}-${reportId || "report"}`
 }
 
+function buildReportDayText(value = "") {
+  const text = normalizeText(value)
+  if (!text) return ""
+  const date = new Date(text)
+  if (Number.isNaN(date.valueOf())) return ""
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(date)
+}
+
 function buildTrackedParentReportUrls(payload = {}, recipient = "") {
   const origin = normalizeOrigin(payload?.requestOrigin)
   const reportId = normalizeText(payload?.reportId)
@@ -194,17 +205,18 @@ function buildTrackedParentReportUrls(payload = {}, recipient = "") {
   const slug = buildReportAccessSlug(payload)
   const recipientParam = encodeTrackingValue(recipient)
   const artifactParam = encodeTrackingValue(String(artifactVersion))
+  const sourceParam = encodeTrackingValue("email")
   const openPixelUrl =
     origin && reportId
       ? `${origin}/api/report-events/email-open.gif?reportId=${encodeTrackingValue(reportId)}&recipient=${recipientParam}&artifactVersion=${artifactParam}`
       : ""
   const reportUrl =
     origin && reportId
-      ? `${origin}/reports/access/${encodeURIComponent(slug)}?recipient=${recipientParam}&artifactVersion=${artifactParam}`
+      ? `${origin}/reports/access/${encodeURIComponent(slug)}?recipient=${recipientParam}&artifactVersion=${artifactParam}&source=${sourceParam}&button=${encodeTrackingValue("open-report")}`
       : ""
   const pdfUrl =
     origin && reportId
-      ? `${origin}/reports/access/${encodeURIComponent(slug)}.pdf?recipient=${recipientParam}&artifactVersion=${artifactParam}`
+      ? `${origin}/reports/access/${encodeURIComponent(slug)}.pdf?recipient=${recipientParam}&artifactVersion=${artifactParam}&source=${sourceParam}&button=${encodeTrackingValue("download-pdf")}`
       : ""
   return {
     openPixelUrl,
@@ -218,33 +230,33 @@ function buildParentReportEmailContent(payload = {}, recipient = "") {
   const assignmentTitle = normalizeText(payload.assignmentTitle) || "Performance report"
   const level = normalizeText(payload.level || payload.className)
   const dueAt = normalizeText(payload.dueAt)
-  const customMessage = normalizeText(payload.message)
   const urls = buildTrackedParentReportUrls(payload, recipient)
+  const reportDay = buildReportDayText(dueAt)
   const subject = [assignmentTitle, level ? `(${level})` : ""].filter(Boolean).join(" ").trim()
 
   const lines = [
-    `${sender} performance report`,
+    `Hello,`,
     "",
-    `Report: ${assignmentTitle}`,
-    level ? `Class: ${level}` : "",
-    dueAt ? `Report date: ${dueAt}` : "",
+    `Your report card is ready.`,
+    dueAt ? `Day: ${reportDay || "-"}` : "",
+    dueAt ? `Date: ${dueAt}` : "",
     "",
-    customMessage || "The final report card is ready.",
+    `Open the saved report or download the PDF using the links below.`,
     "",
-    urls.reportUrl ? `View final report: ${urls.reportUrl}` : "",
-    urls.pdfUrl ? `Download PDF: ${urls.pdfUrl}` : "",
+    `Saved report: ${urls.reportUrl || "-"}`,
+    `Download PDF: ${urls.pdfUrl || "-"}`,
   ].filter(Boolean)
 
   const htmlBlocks = [
-    `<p>${escapeHtml(sender)} performance report</p>`,
+    `<p>Hello,</p>`,
     "<p>",
-    `<strong>Report:</strong> ${escapeHtml(assignmentTitle)}`,
-    level ? `<br><strong>Class:</strong> ${escapeHtml(level)}` : "",
-    dueAt ? `<br><strong>Report date:</strong> ${escapeHtml(dueAt)}` : "",
+    `<strong>Your report card is ready.</strong>`,
+    dueAt ? `<br><strong>Day:</strong> ${escapeHtml(reportDay || "-")}` : "",
+    dueAt ? `<br><strong>Date:</strong> ${escapeHtml(dueAt)}` : "",
     "</p>",
-    `<p>${escapeHtml(customMessage || "The final report card is ready.")}</p>`,
+    "<p>Open the saved report or download the PDF using the buttons below.</p>",
     urls.reportUrl
-      ? `<p><a href="${escapeHtml(urls.reportUrl)}" style="display:inline-block;padding:10px 16px;background:#1f5fbf;color:#ffffff;text-decoration:none;border-radius:6px;">View final report</a></p>`
+      ? `<p><a href="${escapeHtml(urls.reportUrl)}" style="display:inline-block;padding:10px 16px;background:#1f5fbf;color:#ffffff;text-decoration:none;border-radius:6px;">Open Saved Report</a></p>`
       : "",
     urls.pdfUrl
       ? `<p><a href="${escapeHtml(urls.pdfUrl)}" style="display:inline-block;padding:10px 16px;background:#f4f6fb;color:#123055;text-decoration:none;border:1px solid #cbd4e6;border-radius:6px;">Download PDF</a></p>`

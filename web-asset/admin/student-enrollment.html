@@ -81,56 +81,9 @@
       min-width: 0;
     }
 
-    .app-brand-kicker {
-      color: var(--portal-text-soft);
-      font-size: 0.74rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .app-school-name {
-      color: var(--portal-text);
-      font-size: clamp(1rem, 1rem + 0.6vw, 1.25rem);
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      line-height: 1.2;
-      margin: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .app-page-subtitle {
-      color: var(--portal-text-soft);
-      font-size: 0.92rem;
-      line-height: 1.45;
-      margin: 0;
-      max-width: 72ch;
-    }
-
-    .status {
-      margin: 0;
-      min-height: 1.4em;
-    }
-
-    .status.is-error {
-      color: var(--portal-status-danger-text);
-    }
-
-    .status:empty {
-      display: none;
-    }
-
     #sessionRequiredPanel {
       justify-self: center;
       width: min(100%, var(--portal-login-panel-max-width));
-    }
-
-    #sessionRequiredPanel h2 {
-      margin: 0 0 10px;
     }
 
     .session-required-actions {
@@ -219,25 +172,11 @@
       margin: 0;
     }
 
-    .enrollment-summary-label {
-      color: var(--portal-text-soft);
-      font-size: 0.76rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
     .enrollment-summary-value {
       font-size: clamp(1.4rem, 1rem + 0.95vw, 1.75rem);
       font-variant-numeric: tabular-nums;
       font-weight: 900;
       line-height: 1.05;
-    }
-
-    .enrollment-summary-note {
-      color: var(--portal-text-soft);
-      font-size: 0.84rem;
-      line-height: 1.35;
     }
 
     .status-cell-stack {
@@ -302,11 +241,6 @@
       font-size: 0.98rem;
     }
 
-    .student-ident small {
-      color: var(--portal-text-soft);
-      font-size: 0.8rem;
-    }
-
     .student-ident small:first-of-type {
       max-inline-size: 52%;
       overflow-wrap: normal;
@@ -356,9 +290,6 @@
     .history-rail__button {
       appearance: none;
       align-items: center;
-      background: transparent !important;
-      border: 0 !important;
-      box-shadow: none !important;
       color: var(--portal-text) !important;
       display: inline-flex;
       justify-content: center;
@@ -376,9 +307,6 @@
     .history-rail__button:hover,
     .history-rail__button:active,
     .history-rail__button:focus-visible {
-      background: transparent !important;
-      border: 0 !important;
-      box-shadow: none !important;
       transform: none !important;
     }
 
@@ -530,21 +458,6 @@
       justify-content: space-between;
     }
 
-    .enrollment-history-modal__kicker {
-      color: var(--portal-text-soft);
-      font-size: 0.74rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      margin: 0 0 4px;
-      text-transform: uppercase;
-    }
-
-    .enrollment-history-modal__title {
-      font-size: clamp(1.05rem, 1rem + 0.5vw, 1.35rem);
-      line-height: 1.25;
-      margin: 0;
-    }
-
     .enrollment-history-modal__close {
       background: var(--portal-surface-soft);
       border: 1px solid var(--portal-border);
@@ -552,13 +465,6 @@
       min-height: 36px;
       padding-inline: 10px;
       white-space: nowrap;
-    }
-
-    .enrollment-history-modal__summary {
-      color: var(--portal-text-soft);
-      font-size: 0.9rem;
-      line-height: 1.45;
-      margin: 0;
     }
 
     .enrollment-history-modal__list {
@@ -583,29 +489,13 @@
       gap: 4px;
     }
 
-    .enrollment-history-period__line {
-      color: var(--portal-text-soft);
-      font-size: 0.84rem;
-      line-height: 1.35;
-      margin: 0;
-    }
-
     .enrollment-history-period__note {
       background: var(--portal-surface-soft);
       border: 1px solid var(--portal-border);
       border-radius: var(--radius-2);
       color: var(--portal-text);
-      font-size: 0.84rem;
-      line-height: 1.45;
       margin: 0;
       padding: 8px 10px;
-    }
-
-    .enrollment-history-empty {
-      color: var(--portal-text-soft);
-      font-size: 0.9rem;
-      line-height: 1.45;
-      margin: 0;
     }
 
     .header-bar,
@@ -627,17 +517,6 @@
     html[data-theme="dark"] thead th,
     html[data-theme="dark"] .enrollment-summary-value {
       color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .app-brand-kicker,
-    html[data-theme="dark"] .app-page-subtitle,
-    html[data-theme="dark"] .status:not(.is-error),
-    html[data-theme="dark"] .student-ident small,
-    html[data-theme="dark"] .history-line,
-    html[data-theme="dark"] .enrollment-summary-label,
-    html[data-theme="dark"] .enrollment-summary-note,
-    html[data-theme="dark"] .text-zoom-controls .zoom-label {
-      color: var(--portal-dark-text-soft);
     }
 
     html[data-theme="dark"] .portal-theme-card,
@@ -759,7 +638,6 @@
 
       tbody td {
         align-items: start;
-        border: 0;
         display: grid;
         gap: 4px;
         grid-template-columns: minmax(112px, 40%) minmax(0, 1fr);
@@ -839,7 +717,7 @@
     }
   </style>
 </head>
-  <body class="admin-portal-page page" id="top">
+  <body class="admin-portal-page page student-enrollment-page" id="top">
   <div class="wrap">
     <div class="enrollment-shell portal-center-column">
       <div class="header-bar">
@@ -847,7 +725,7 @@
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
       <section id="sessionRequiredPanel" class="panel portal-theme-card hidden" aria-label="Admin session required" data-surface-role="panel">
-        <h2>Admin session required</h2>
+        <h2 class="section-title">Admin session required</h2>
         <p class="app-page-subtitle">
           Enrollment uses the current admin session. Sign in through the main admin page, then return here.
         </p>
@@ -864,7 +742,7 @@
         <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
         <div class="app-shell">
           <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
-            <h2>Navigation</h2>
+            <h2 class="section-title">Navigation</h2>
             <div class="sidebar-logo-wrap" id="sidebarLogoWrap">
               <img id="sidebarLogoImg" src="data:," alt="School logo" class="hidden">
               <span id="sidebarLogoFallback" class="sidebar-logo-fallback">SIS</span>

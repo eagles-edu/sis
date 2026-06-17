@@ -115,17 +115,6 @@
       min-width: 0;
     }
 
-    .hero h1 {
-      font-size: 1.35rem;
-      margin: 0;
-    }
-
-    .hero p {
-      color: var(--ink-soft);
-      font-size: 1rem;
-      margin: 0.25rem 0 0;
-    }
-
     .hero-actions {
       align-items: center;
       display: flex;
@@ -174,17 +163,6 @@
       border-color: var(--line);
       color: var(--ink);
       font-weight: 600;
-    }
-
-    .status {
-      color: var(--ink-soft);
-      font-size: 1rem;
-      margin: 0.55rem 0 0;
-      min-height: 1.2rem;
-    }
-
-    .status.is-error {
-      color: var(--bad);
     }
 
     .status.is-warn {
@@ -244,8 +222,7 @@
     }
 
     html[data-theme="dark"] .field label,
-    html[data-theme="dark"] .hero p,
-    html[data-theme="dark"] .status {
+    html[data-theme="dark"] .section-note {
       color: var(--ink-soft);
     }
 
@@ -279,27 +256,6 @@
       border-radius: 12px;
       box-sizing: border-box;
       padding: 0.45rem 0.6rem;
-    }
-
-    .metric-card h2 {
-      color: var(--ink-soft);
-      font-size: 1.35rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .metric-card p {
-      color: var(--ink);
-      font-size: 1.08rem;
-      font-weight: 700;
-      margin: 0.18rem 0 0;
-    }
-
-    html[data-theme="dark"] .metric-card p,
-    html[data-theme="dark"] .grid-title {
-      color: var(--ink);
     }
 
     #gradeGrid {
@@ -347,7 +303,6 @@
     }
 
     .table-modal-backdrop {
-      border: 0;
       cursor: pointer;
       inset: 0;
       position: fixed;
@@ -405,7 +360,7 @@
 
     .tabulator {
       background: transparent;
-      border: none;
+      border: 1px solid var(--line);
       font-size: 0.98rem;
       max-width: 100%;
       min-width: 0;
@@ -1312,29 +1267,15 @@
       }
     }
 
-    @media (max-width: 480px) {
-      .metric-card h2 {
-        font-size: clamp(0.74rem, 3.6vw, 0.84rem);
-        letter-spacing: 0.01em;
-        line-height: 1.1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .metric-card p {
-        font-size: clamp(0.92rem, 4.2vw, 1rem);
-      }
-    }
   </style>
 </head>
 
-<body>
+<body class="grades-tabulator-page">
   <main class="page-shell portal-center-column">
     <div class="top-stack">
       <section class="hero portal-theme-panel">
-        <h1>Grades Tabulator</h1>
-        <p>Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
+        <h1 class="section-title">Grades Tabulator</h1>
+        <p class="section-note">Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
         <div class="hero-actions">
           <a class="chip-link" href="/admin?page=grades-data">Back to Grades Admin</a>
           <button class="btn primary" id="reloadBtn" type="button">Reload SIS Grade Data</button>

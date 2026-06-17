@@ -281,7 +281,7 @@ function parentReportSnapshotText(report = {}) {
   const rubric = report?.rubric && typeof report.rubric === "object" ? report.rubric : {}
   const rubricRows = Array.isArray(rubric.rows) ? rubric.rows : []
   const lines = [
-    "Performance Report Snapshot",
+    "Report Card Snapshot",
     `Snapshot ID: ${normalizeText(snapshot.reportId) || "-"}`,
     `Snapshot source: ${normalizeText(snapshot.source) || "-"}`,
     `Captured at: ${normalizeText(snapshot.capturedAtDisplay || snapshot.capturedAt) || "-"}`,

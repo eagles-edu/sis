@@ -69,17 +69,6 @@
       margin-top: 10px;
     }
 
-    h1 {
-      margin: 0;
-      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-      letter-spacing: 0.02em;
-    }
-
-    .sub {
-      margin: 4px 0 0;
-      font-size: 0.95rem;
-    }
-
     .row {
       display: grid;
       gap: 12px;
@@ -90,8 +79,6 @@
       display: grid;
       gap: 6px;
     }
-
-    .field label { font-size: 0.8rem; }
 
     .c2 {
       grid-column: span 2;
@@ -124,12 +111,6 @@
       transform: translateY(-1px);
     }
 
-    .status {
-      margin: 0;
-      font-size: 0.9rem;
-      min-height: 1.4em;
-    }
-
     .chart-wrap {
       width: 100%;
       height: 280px;
@@ -143,16 +124,12 @@
       border-collapse: collapse;
     }
 
-    th, td { text-align: left; padding: 9px 8px; font-size: 0.92rem; }
-    th button { padding: 0; font-weight: 700; }
+    th, td { text-align: left; padding: 9px 8px; }
 
     .table-wrap {
       overflow: auto;
       border-radius: 12px;
     }
-
-    .pill { display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 0.78rem; }
-    .mini { font-size: 0.82rem; margin-top: 8px; }
 
     .hidden {
       display: none;
@@ -173,9 +150,9 @@
 <body class="student-points-page">
   <div class="app portal-center-column">
     <section class="card portal-theme-card">
-      <h1>Points Management</h1>
-      <p class="sub">School YTD trend + student point ledger controls.</p>
-      <p id="globalStatus" class="status">Checking admin session...</p>
+      <h1 class="section-title">Points Management</h1>
+      <p class="section-note">School YTD trend + student point ledger controls.</p>
+      <p id="globalStatus" class="small status">Checking admin session...</p>
     </section>
 
     <section id="loginPanel" class="card portal-theme-card hidden" aria-label="Admin login">
@@ -222,7 +199,7 @@
         <div class="chart-wrap panel">
           <svg id="ytdChart" viewBox="0 0 900 260" width="100%" height="100%" aria-hidden="true"></svg>
         </div>
-        <p id="chartSummary" class="mini">No data loaded.</p>
+        <p id="chartSummary" class="section-note">No data loaded.</p>
       </div>
 
       <div class="card portal-theme-card">
@@ -277,12 +254,12 @@
             </tbody>
           </table>
         </div>
-        <p id="studentSummary" class="mini">No data loaded.</p>
+        <p id="studentSummary" class="section-note">No data loaded.</p>
       </div>
 
       <div class="card portal-theme-card">
-        <h2 style="margin:0 0 8px; font-size:1.1rem;">Selected Student Ledger</h2>
-        <p id="ledgerSummary" class="mini">Select a student to view recent points events.</p>
+        <h2 class="section-title">Selected Student Ledger</h2>
+        <p id="ledgerSummary" class="section-note">Select a student to view recent points events.</p>
         <div class="table-wrap panel">
           <table>
             <thead>

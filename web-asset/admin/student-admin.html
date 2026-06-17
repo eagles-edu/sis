@@ -234,6 +234,9 @@
                   <a href="/admin/performance-data" class="menu-link menu-sublink" data-page-link="performance-data" data-admin-submenu="tracking-data">
                     Performance data
                   </a>
+                  <a href="/admin/performance-engagement" class="menu-link menu-sublink" data-page-link="performance-engagement" data-admin-submenu="tracking-data">
+                    RC engagement
+                  </a>
                 </div>
                 <a href="/admin/news-reports" class="menu-link" data-page-link="news-reports">
                   News Reports
@@ -2092,6 +2095,59 @@ Select a homework link to inspect details.</pre>
                 </section>
               </div>
 
+              <div class="content page-section" data-page="performance-engagement" data-surface-role="content">
+                <h2>RC engagement [day list and tracked metrics]</h2>
+                <div class="table-toolbar">
+                  <div class="toolbar-field">
+                    <label for="performanceEngagementSearch">Search engagement rows</label>
+                    <input id="performanceEngagementSearch" type="search" placeholder="class day, student, parent, email, metrics">
+                  </div>
+                  <div class="toolbar-field compact">
+                    <div class="small">Selected day</div>
+                    <p class="small" id="performanceEngagementSelectedDaySummary">No class day selected.</p>
+                  </div>
+                  <div class="toolbar-field compact">
+                    <div class="small">Reload</div>
+                    <button id="performanceEngagementReloadBtn" type="button" class="btn-refresh">
+                      Reload RC engagement
+                    </button>
+                  </div>
+                </div>
+                <div class="performance-engagement-grid">
+                  <section class="performance-engagement-home data-surface" data-surface-role="data-surface">
+                    <h3 class="section-title">Class days</h3>
+                    <p class="small" id="performanceEngagementHomeSummary">Loading class day list...</p>
+                    <div id="performanceEngagementDayList" class="performance-engagement-day-list"></div>
+                  </section>
+                  <section class="performance-engagement-detail data-surface" data-surface-role="data-surface">
+                    <h3 class="section-title">Tracked metric table</h3>
+                    <p class="small" id="performanceEngagementTableSummary">Select a class day to inspect the tracked rows.</p>
+                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                      <table class="performance-engagement-table">
+                        <thead>
+                          <tr>
+                            <th scope="col" data-performance-engagement-sort="reviewed" tabindex="0" aria-sort="none">reviewed</th>
+                            <th scope="col" data-performance-engagement-sort="id" tabindex="0" aria-sort="none">Id</th>
+                            <th scope="col" data-performance-engagement-sort="englishName" tabindex="0" aria-sort="none">english-name</th>
+                            <th scope="col" data-performance-engagement-sort="level" tabindex="0" aria-sort="none">level</th>
+                            <th scope="col" data-performance-engagement-sort="sentOkReturned" tabindex="0" aria-sort="none">sent-ok_returned</th>
+                            <th scope="col" data-performance-engagement-sort="emailOpened" tabindex="0" aria-sort="none">Email-opened?</th>
+                            <th scope="col" data-performance-engagement-sort="linkClicked" tabindex="0" aria-sort="none">Link-clicked</th>
+                            <th scope="col" data-performance-engagement-sort="pdfDownloaded" tabindex="0" aria-sort="none">Pdf-downloaded</th>
+                            <th scope="col" data-performance-engagement-sort="acknowledged" tabindex="0" aria-sort="none">acknowledged</th>
+                          </tr>
+                        </thead>
+                        <tbody id="performanceEngagementRows">
+                          <tr>
+                            <td colspan="9">Select a class day to load engagement rows.</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
               <div class="content page-section" data-page="news-reports" data-surface-role="content">
                 <h2>Student news reports [review queue]</h2>
                 <div class="table-toolbar">
@@ -3232,9 +3288,6 @@ Select a homework link to inspect details.</pre>
           </div>
           <div class="col-4">
             <label for="parentQueueItemExercise">Class</label><input id="parentQueueItemExercise" type="text" placeholder="Class or level name">
-          </div>
-          <div class="col-12">
-            <label for="parentQueueItemReportSnapshot">Performance Report</label><textarea id="parentQueueItemReportSnapshot" readonly placeholder="Actual performance report, homework context, and email draft"></textarea>
           </div>
           <div class="col-12">
             <label for="parentQueueItemSummary">Summary</label><input id="parentQueueItemSummary" type="text" readonly placeholder="eaglesId=...; day=...; recipients=...">

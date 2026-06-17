@@ -945,9 +945,6 @@
     }
 
     .grade-tabulator-shell {
-      background: var(--portal-grade-table-shell-bg);
-      border: 1px solid var(--portal-grade-table-border);
-      border-radius: 12px;
       box-sizing: border-box;
       overflow: hidden;
       width: 100%;
@@ -955,142 +952,6 @@
 
     .grade-tabulator {
       width: 100%;
-    }
-
-    .grade-tabulator-shell .tabulator {
-      background: transparent;
-      border: none;
-      color: var(--portal-grade-table-text);
-      font-size: 0.92rem;
-      width: 100%;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-header,
-    .grade-tabulator-shell .tabulator .tabulator-footer,
-    .grade-tabulator-shell .tabulator .tabulator-col,
-    .grade-tabulator-shell .tabulator .tabulator-cell,
-    .grade-tabulator-shell .tabulator .tabulator-row,
-    .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
-    .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table {
-      color: var(--portal-grade-table-text);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-header,
-    .grade-tabulator-shell .tabulator .tabulator-footer,
-    .grade-tabulator-shell .tabulator .tabulator-col {
-      background: var(--portal-grade-table-header-bg);
-      border-color: var(--portal-grade-table-border);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row {
-      background: var(--portal-grade-table-row-bg, var(--portal-color-c659d630ce));
-      border-bottom: 1px solid var(--portal-grade-table-border);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
-      background: var(--portal-grade-table-row-even-bg, var(--portal-color-24f3dafd18));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row:hover {
-      background: var(--portal-grade-table-row-hover-bg, var(--portal-color-2cdb084429));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
-      background: var(--portal-grade-table-current-row-bg, var(--portal-color-cf801561d7));
-      box-shadow: inset 4px 0 0 var(--portal-grade-table-current-row-accent);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-open {
-      background: var(--portal-grade-table-row-open-bg, var(--portal-color-e273abe831));
-      box-shadow: inset 4px 0 0 var(--portal-color-10fe7b83d5);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
-      background: var(--portal-grade-table-row-open-hover-bg, var(--portal-color-f6cf2589bd));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
-      background: var(--portal-grade-table-row-completed-bg, var(--portal-color-31b5e68729));
-      box-shadow: inset 4px 0 0 var(--portal-color-1c5b3b4180);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
-      background: var(--portal-grade-table-row-completed-hover-bg, var(--portal-color-5526919828));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-late {
-      background: var(--portal-grade-table-row-late-bg, var(--portal-color-422e89e498));
-      box-shadow: inset 4px 0 0 var(--portal-color-82f80f783f);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
-      background: var(--portal-grade-table-row-late-hover-bg, var(--portal-color-c899a97281));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
-      background: var(--portal-grade-table-row-missed-bg, var(--portal-color-4a1e07fc47));
-      box-shadow: inset 4px 0 0 var(--portal-color-d07e7e7d52);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
-      background: var(--portal-grade-table-row-missed-hover-bg, var(--portal-color-b72cf2de92));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-cell {
-      border-right-color: var(--portal-grade-table-border);
-      box-sizing: border-box;
-      line-height: 1.2;
-      padding: 0.28rem 0.36rem;
-      vertical-align: top;
-      white-space: normal;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-cell:last-child {
-      border-right-color: var(--portal-grade-table-border);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content {
-      box-sizing: border-box;
-      min-height: 100%;
-      padding: 0.24rem 0.36rem;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title {
-      color: var(--portal-grade-table-text);
-      font-size: 0.92rem;
-      font-weight: 800;
-      line-height: 1.2;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-content {
-      box-sizing: border-box;
-      padding: 0.1rem 0.16rem 0.08rem;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-title {
-      align-items: stretch;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      height: 100%;
-      justify-content: stretch;
-      min-height: 4.8rem;
-      padding: 0.02rem 0;
     }
 
     .grade-exercise-cell {
@@ -1202,50 +1063,6 @@
       color: var(--portal-dark-text-soft);
     }
 
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
-      background: var(--portal-grade-table-row-bg, var(--portal-color-0a4767016c));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row:hover {
-      background: var(--portal-grade-table-row-hover-bg, var(--portal-color-f8af596fb2));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
-      background: var(--portal-grade-table-current-row-bg, var(--portal-color-2526d46483));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open {
-      background: var(--portal-grade-table-row-open-bg, var(--portal-color-c684a558ca));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
-      background: var(--portal-grade-table-row-open-hover-bg, var(--portal-color-1c77cc184c));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
-      background: var(--portal-grade-table-row-completed-bg, var(--portal-color-8e84576524));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
-      background: var(--portal-grade-table-row-completed-hover-bg, var(--portal-color-628daaa478));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late {
-      background: var(--portal-grade-table-row-late-bg, var(--portal-color-b514a5be40));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
-      background: var(--portal-grade-table-row-late-hover-bg, var(--portal-color-f18c37b592));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
-      background: var(--portal-grade-table-row-missed-bg, var(--portal-color-5ff93edc43));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
-      background: var(--portal-grade-table-row-missed-hover-bg, var(--portal-color-0077beaeb3));
-    }
     /* portal-critical-theme:end */
     @media (min-width: 720px) {
       .grade-quarter-stats {

@@ -23,31 +23,22 @@
     }
 
     body {
+      font-family: var(--font-base);
       margin: 0;
       min-height: 100vh;
-      font-family: var(--font-base);
     }
 
     .wrap {
-      width: min(100%, var(--report-max-width));
-      margin: 0 auto;
-      padding: 18px;
       display: grid;
       gap: 14px;
+      margin: 0 auto;
+      padding: 18px;
+      width: min(100%, var(--report-max-width));
     }
 
     .section-stack {
       display: grid;
       gap: 14px;
-    }
-
-    .wrap,
-    .section-stack,
-    .report-section,
-    .detail-card,
-    .assignment-detail-card,
-    .review-panel {
-      color: inherit;
     }
 
     .app-page-header {
@@ -57,7 +48,6 @@
 
     .app-sidebar {
       border-radius: 0 var(--radius-3) var(--radius-3) 0;
-      box-shadow: 0 22px 48px var(--portal-color-b0e4f2e1c7);
       inset-block: 0;
       inset-inline-start: 0;
       margin: 0;
@@ -88,7 +78,6 @@
     }
 
     .menu-backdrop {
-      background: var(--portal-color-05477e89d0);
       inset: 0;
       opacity: 0;
       pointer-events: none;
@@ -104,12 +93,8 @@
 
     .floating-menu-btn {
       align-items: center;
-      background: var(--primary-color);
       block-size: 44px;
-      border: 1px solid var(--portal-color-588c301c36);
       border-radius: var(--radius-pill);
-      box-shadow: 0 12px 24px var(--portal-color-27bfe87810);
-      color: var(--portal-color-d14f901611);
       display: inline-flex;
       inline-size: 44px;
       inset-block-start: 12px;
@@ -120,13 +105,7 @@
       z-index: 90;
     }
 
-    .floating-menu-btn:hover {
-      background: var(--portal-color-91d2ea6cfe);
-      border-color: var(--portal-color-155b35e0df);
-    }
-
     .floating-menu-btn:focus-visible {
-      outline: 2px solid var(--portal-color-d14f901611);
       outline-offset: 2px;
     }
 
@@ -136,12 +115,10 @@
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
       row-gap: 6px;
-    }
+  }
 
     .app-brand-logo-wrap {
       align-items: center;
-      background: var(--portal-surface-card);
-      border: 1px solid var(--portal-border);
       border-radius: var(--radius-3);
       display: inline-flex;
       flex: 0 0 auto;
@@ -149,25 +126,23 @@
       justify-content: center;
       overflow: hidden;
       width: 44px;
-    }
+  }
 
     .app-brand-logo {
       display: block;
       height: 100%;
       object-fit: cover;
       width: 100%;
-    }
+  }
 
     .app-brand-logo-fallback {
-      color: inherit;
       font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-    }
+  }
 
     .app-school-name {
-      color: var(--portal-role-text);
       font-size: clamp(13px, 1.7vw, 18px);
       font-weight: 800;
       letter-spacing: 0.05em;
@@ -178,7 +153,7 @@
       text-overflow: ellipsis;
       text-transform: uppercase;
       white-space: nowrap;
-    }
+  }
 
     .app-header-actions {
       align-items: center;
@@ -187,129 +162,87 @@
       gap: 8px;
       justify-content: flex-end;
       min-width: 0;
-    }
+  }
 
     .app-header-menu-toggle {
       display: none !important;
-    }
-
-    .report-control-line {
-      margin: 0;
-      color: var(--portal-data-label);
-    }
-
-    .report-control-line strong {
-      font: inherit;
-    }
+  }
 
     .sidebar-title,
     .sidebar-subtitle {
       margin: 0;
-    }
+  }
 
     .sidebar-subtitle {
-      color: var(--portal-data-label);
       font-size: 12px;
       line-height: 1.45;
-    }
+  }
 
     .sidebar-links {
       display: grid;
       gap: 8px;
-    }
+  }
 
     .sidebar-link {
       align-items: center;
-      color: inherit;
       display: flex;
       font-weight: 700;
       min-height: 44px;
       padding: 12px 14px;
       text-decoration: none;
-    }
+  }
 
     .sidebar-link-label,
     .sidebar-link-note {
       display: block;
-    }
+  }
 
     .sidebar-link-note {
-      color: var(--portal-data-label);
       font-size: 12px;
       font-weight: 600;
       line-height: 1.35;
       margin-top: 2px;
-    }
+  }
 
     .report-meta {
       display: grid;
       gap: 8px;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
+  }
 
     .meta-item {
       display: grid;
       gap: 4px;
       min-width: 0;
       padding: 12px;
-    }
+  }
 
     .meta-label {
       display: block;
-      color: var(--portal-data-label);
-      margin-bottom: 4px;
       font-size: 12px;
       font-weight: 700;
-      text-transform: uppercase;
       letter-spacing: 0.04em;
-    }
+      margin-bottom: 4px;
+      text-transform: uppercase;
+  }
 
     .meta-value {
       display: block;
-      color: inherit;
       font-size: 15px;
       font-weight: 700;
       line-height: 1.35;
       word-break: break-word;
-    }
+  }
 
     .report-stack {
       display: grid;
       gap: 14px;
-    }
+  }
 
     .report-section {
       display: grid;
       gap: 12px;
-    }
-
-    .section-head {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: baseline;
-    }
-
-    .section-title {
-      margin: 0;
-      color: var(--portal-role-text);
-      font-size: 1.05rem;
-      line-height: 1.2;
-    }
-
-    .section-note {
-      margin: 0;
-      color: var(--portal-data-label);
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .summary-grid {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
+  }
 
     .report-meta > [data-surface-role="panel"],
     .summary-grid > [data-surface-role="panel"],
@@ -318,478 +251,326 @@
     .report-section > [data-surface-role="panel"],
     .review-panel[data-surface-role="panel"] {
       margin-top: 0;
-    }
-
-    .summary-card {
-      display: grid;
-      gap: 8px;
-      min-width: 0;
-      padding: 14px;
-    }
-
-    .summary-label {
-      margin: 0;
-      color: var(--portal-data-label);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .summary-value {
-      margin: 0;
-      color: inherit;
-      font-size: 1.6rem;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .summary-subtitle {
-      margin: 0;
-      color: var(--portal-data-label);
-      font-size: 13px;
-      line-height: 1.45;
-    }
+  }
 
     .detail-grid {
       display: grid;
       gap: 12px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  }
 
     .assignment-layout {
+      align-items: start;
       display: grid;
       gap: 12px;
       grid-template-columns: minmax(0, 0.33fr) minmax(0, 0.67fr);
-      align-items: start;
-    }
+  }
 
     .assignment-summary-stack {
       display: grid;
       gap: 12px;
-    }
+  }
 
     .assignment-square-card {
       display: grid;
       gap: 8px;
       min-width: 0;
       padding: 14px;
-    }
+  }
 
     .assignment-square-label {
-      margin: 0;
-      color: var(--portal-data-label);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.04em;
+      margin: 0;
       text-transform: uppercase;
-    }
+  }
 
     .assignment-square-value {
-      margin: 0;
-      color: inherit;
       font-size: 2rem;
       font-weight: 900;
       line-height: 1;
-    }
-
-    .assignment-square-value.is-warning {
-    }
+      margin: 0;
+  }
 
     .assignment-square-subtitle {
-      margin: 0;
-      color: var(--portal-data-label);
       font-size: 13px;
       line-height: 1.45;
-    }
+      margin: 0;
+  }
 
     .assignment-detail-stack {
       display: grid;
       gap: 12px;
-    }
+  }
 
     .assignment-detail-card {
       display: grid;
       gap: 10px;
       min-width: 0;
       padding: 14px;
-    }
+  }
 
     .exercise-list {
       display: grid;
       gap: 8px;
+      list-style: none;
       margin: 0;
       padding: 0;
-      list-style: none;
-    }
+  }
 
     .exercise-item {
       display: grid;
       gap: 6px;
       padding: 10px 0;
-    }
+  }
 
     .exercise-item:first-child {
       border-top: 0;
       padding-top: 0;
-    }
+  }
 
     .exercise-head {
+      align-items: baseline;
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
       gap: 8px;
-      align-items: baseline;
-    }
+      justify-content: space-between;
+  }
 
     .exercise-title {
-      margin: 0;
-      color: inherit;
       font-weight: 700;
       line-height: 1.35;
-    }
+      margin: 0;
+  }
 
     .exercise-meta {
-      margin: 0;
-      color: var(--portal-data-label);
       font-size: 13px;
       line-height: 1.45;
-    }
+      margin: 0;
+  }
 
     .exercise-status-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-    }
+  }
 
     .detail-card {
       display: grid;
       gap: 10px;
       min-width: 0;
       padding: 14px;
-    }
-
-    .detail-card h3 {
-      margin: 0;
-      color: inherit;
-      font-size: 0.98rem;
-      line-height: 1.25;
-    }
+  }
 
     .list-block {
       display: grid;
       gap: 8px;
+      list-style: none;
       margin: 0;
       padding: 0;
-      list-style: none;
-    }
+  }
 
     .list-item {
       display: grid;
       gap: 4px;
       padding: 10px 0;
-    }
+  }
 
     .list-item:first-child {
       border-top: 0;
       padding-top: 0;
-    }
+  }
 
     .item-head {
+      align-items: baseline;
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
       gap: 8px;
-      align-items: baseline;
-    }
-
-    .item-title {
-      margin: 0;
-      color: inherit;
-      font-weight: 700;
-      line-height: 1.35;
-    }
-
-    .item-meta,
-    .item-body {
-      margin: 0;
-      color: var(--portal-data-label);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .report-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 12px;
-      font-weight: 700;
-      line-height: 1;
-      white-space: nowrap;
-    }
+      justify-content: space-between;
+  }
 
     .metric-table-wrap {
       overflow: auto;
-    }
+  }
 
     .metric-table {
-      width: 100%;
       border-collapse: collapse;
       min-width: 760px;
-    }
+      width: 100%;
+  }
 
-    .metric-table th,
     .metric-table td {
-      padding: 12px 14px;
-      vertical-align: top;
-      border-bottom: 1px solid var(--portal-border);
-      text-align: left;
       line-height: 1.45;
-    }
-
-    .metric-table th {
-      color: var(--portal-data-label);
-      font-size: 12px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .metric-table tr:last-child td {
-      border-bottom: 0;
-    }
-
-    .metric-title {
-      margin: 0 0 4px;
-      color: inherit;
-      font-weight: 700;
-    }
-
-    .metric-text,
-    .metric-note {
-      margin: 0;
-      color: var(--portal-data-label);
-      font-size: 13px;
-    }
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+  }
 
     .review-panel {
       display: grid;
       gap: 12px;
       min-width: 0;
       padding: 14px;
-    }
+  }
 
     .review-grid {
+      align-items: start;
       display: grid;
       gap: 12px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items: start;
-    }
+  }
 
     .review-lines {
       display: grid;
       gap: 10px;
-    }
+  }
 
     .review-line {
       display: grid;
       gap: 6px;
-    }
-
-    .review-label {
-      color: var(--portal-data-label);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .review-field {
-      min-height: 44px;
-      padding: 10px 12px;
-    }
+  }
 
     .review-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-    }
+  }
 
     .review-actions button,
     .review-actions label {
       font: inherit;
-    }
+  }
 
     .review-toggle {
-      display: inline-flex;
       align-items: center;
-      color: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      font-weight: 700;
       gap: 8px;
       padding: 10px 12px;
-      cursor: pointer;
-      font-weight: 700;
-    }
+  }
 
     .review-toggle input {
       margin: 0;
-    }
+  }
 
     .wire-note {
-      margin: 0;
-      color: var(--portal-data-label);
       font-size: 12px;
       line-height: 1.45;
-    }
-
-    .app-school-name,
-    .report-control-line strong,
-    .metric-table td,
-    .review-actions {
-      color: inherit;
-    }
-
-    html[data-theme="dark"] body.report-template-page .app-school-name,
-    html[data-theme="dark"] body.report-template-page .section-title,
-    html[data-theme="dark"] body.report-template-page .metric-title,
-    html[data-theme="dark"] body.report-template-page .exercise-title,
-    html[data-theme="dark"] body.report-template-page .item-title,
-    html[data-theme="dark"] body.report-template-page .detail-card h3,
-    html[data-theme="dark"] body.report-template-page .meta-value,
-    html[data-theme="dark"] body.report-template-page .summary-value,
-    html[data-theme="dark"] body.report-template-page .assignment-square-value,
-    html[data-theme="dark"] body.report-template-page .review-field,
-    html[data-theme="dark"] body.report-template-page .report-control-line strong {
-      color: var(--portal-role-text) !important;
-    }
-
-    .text-zoom-controls .global-text-label,
-    .text-zoom-controls .zoom-label {
-      color: var(--portal-data-label);
-    }
+      margin: 0;
+  }
 
     .floating-menu-icon,
     .floating-menu-icon::before,
     .floating-menu-icon::after {
-      background: var(--portal-color-d14f901611);
       border-radius: 2px;
       content: "";
       display: block;
       height: 2px;
-      transition:
+      width: 18px;
+
+transition:
         transform 160ms ease,
         opacity 160ms ease;
-      width: 18px;
-    }
+  }
 
     .floating-menu-icon {
       position: relative;
-    }
+  }
 
     .floating-menu-icon::before {
       left: 0;
       position: absolute;
       top: -6px;
-    }
+  }
 
     .floating-menu-icon::after {
       left: 0;
       position: absolute;
       top: 6px;
-    }
-
-    body.menu-open .floating-menu-icon {
-      background: transparent;
-    }
+  }
 
     body.menu-open .floating-menu-icon::before {
       transform: translateY(6px) rotate(45deg);
-    }
+  }
 
     body.menu-open .floating-menu-icon::after {
       transform: translateY(-6px) rotate(-45deg);
-    }
+  }
 
     /* Keep the page class locally declared so editor diagnostics resolve it. */
     @media (max-width: 1080px) {
       .app-brand-strip {
         grid-template-columns: auto minmax(0, 1fr);
-      }
+    }
 
       .app-header-actions {
         grid-column: 1 / -1;
         justify-content: flex-start;
-      }
+    }
 
       .app-brand-logo-wrap {
         height: 38px;
         width: 38px;
-      }
+    }
 
       .app-school-name {
         font-size: clamp(11px, 3.8vw, 14px);
-      }
+    }
 
       .report-meta,
       .summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    }
 
       .review-grid {
         grid-template-columns: 1fr;
-      }
     }
+  }
 
     @media (max-width: 820px) {
       .app-page-header {
         padding: 8px 10px 8px 60px;
-      }
+    }
 
       .menu-toggle-btn {
-        background: var(--menu-header-bg);
-        border: 1px solid var(--menu-border);
-        color: inherit;
         inline-size: auto;
         min-inline-size: clamp(74px, 24vw, 102px);
         padding-inline: 8px;
-      }
+    }
 
       .app-header-menu-toggle {
         display: inline-flex;
         justify-self: end;
         max-inline-size: 160px;
-      }
+    }
 
       .text-zoom-controls {
         justify-content: flex-start;
-      }
+    }
 
       #globalTextZoomControls {
         gap: 4px;
-      }
-
-      .text-zoom-controls .global-text-label {
-        display: none;
-      }
+    }
 
       .text-zoom-controls button {
         min-inline-size: 0;
-      }
     }
+  }
 
     @media (max-width: 700px) {
       .wrap {
         padding: 12px;
-      }
+    }
 
       .report-meta,
       .summary-grid,
       .detail-grid,
       .assignment-layout {
         grid-template-columns: 1fr;
-      }
-      
     }
+  }
   </style>
 </head>
 <body class="admin-portal-page page report-template-page" id="top" data-surface-role="page">
@@ -1686,6 +1467,12 @@
       function normalizeAttendanceSummary(attendanceReport = {}, report = {}) {
         const source = attendanceReport && typeof attendanceReport === "object" ? attendanceReport : {}
         const total = source.total ?? report.attendanceTotal ?? report.totalAttendance ?? null
+        const presentRaw =
+          source.present ??
+          source.presentCount ??
+          report.presentCount ??
+          report.present ??
+          null
         const absences =
           source.absences ??
           source.absenceCount ??
@@ -1707,13 +1494,29 @@
           report.attendanceRate ??
           report.attendancePercent ??
           null
-        return { total, absences, tardy, attendancePercent }
+        const present =
+          presentRaw !== null && presentRaw !== undefined && presentRaw !== "" ?
+            presentRaw
+          : Number.isFinite(Number(total)) && Number.isFinite(Number(absences)) ?
+            Math.max(0, Number(total) - Number(absences))
+          : null
+        const attendanceDays =
+          Number.isFinite(Number(present)) ? `${Number(present)} day${Number(present) === 1 ? "" : "s"}`
+          : null
+        return { total, present, absences, tardy, attendancePercent, attendanceDays }
       }
 
       const renderExerciseList = (selector, exercises) => {
         const list = document.querySelector(selector)
-        if (!list || !Array.isArray(exercises) || !exercises.length) return
         list.textContent = ""
+        if (!list) return
+        if (!Array.isArray(exercises) || !exercises.length) {
+          const item = document.createElement("li")
+          item.className = "exercise-item"
+          item.textContent = "No exercises in this section."
+          list.appendChild(item)
+          return
+        }
         exercises.forEach((exercise) => {
           const item = document.createElement("li")
           item.className = "exercise-item"
@@ -1815,7 +1618,7 @@
         ].join(" | ")
       )
 
-      setSectionValue('[data-report-summary="attendance"]', attendance.attendancePercent)
+      setSectionValue('[data-report-summary="attendance"]', attendance.attendanceDays)
       setSectionValue('[data-report-summary="absences"]', attendance.absences)
       setSectionValue('[data-report-summary="tardy"]', attendance.tardy)
       setSectionValue('[data-report-summary="attendance-percent"]', attendance.attendancePercent)

@@ -76,6 +76,9 @@ import {
   getAdminDashboardSummary,
 } from "../src/modules/admin/dashboard-summary.mjs"
 import {
+  listPerformanceEngagementData,
+} from "../src/modules/admin/performance-engagement.mjs"
+import {
   acknowledgeParentClassReportReview,
   approveParentClassReport,
   decodeLegacyParentReportCommentBundle,
@@ -173,6 +176,7 @@ const ADMIN_PAGE_SECTIONS = [
   "assignments-data",
   "parent-tracking",
   "performance-data",
+  "performance-engagement",
   "grades",
   "grades-data",
   "news-reports",
@@ -4952,7 +4956,16 @@ async function findAnyPortalReportRecordById(reportId = "") {
 
 async function markParentClassReportReviewedByViewer(
   reportId = "",
-  { viewerRole = "", reviewedBy = "", recipientEmail = "", artifactVersion = "", userAgent = "", ipAddress = "" } = {}
+  {
+    viewerRole = "",
+    reviewedBy = "",
+    recipientEmail = "",
+    artifactVersion = "",
+    userAgent = "",
+    ipAddress = "",
+    source = "",
+    button = "",
+  } = {}
 ) {
   const id = normalizeText(reportId)
   if (!id) {
@@ -4979,6 +4992,8 @@ async function markParentClassReportReviewedByViewer(
     ipAddress: normalizeText(ipAddress),
     metadata: {
       workflowState: normalizeText(existing?.workflowState),
+      source: normalizeText(source),
+      button: normalizeText(button),
     },
   }).catch(() => null)
   return existing
@@ -5052,10 +5067,6 @@ async function buildAuthorizedReportCardPayloadForViewer(reportId = "", options 
     reviewedReport?.finalArtifactPayload && typeof reviewedReport.finalArtifactPayload === "object"
       ? reviewedReport.finalArtifactPayload
       : null
-  if (artifactPayload) {
-    return artifactPayload
-  }
-
   const student = await getStudentByIdWithReportBackfill(reportStudentRefId)
   if (!student) {
     const error = new Error("Student record not found for report")
@@ -5068,12 +5079,20 @@ async function buildAuthorizedReportCardPayloadForViewer(reportId = "", options 
     parentReports: [reviewedReport],
   }
 
-  return buildStudentReportCardPayload(studentWithScopedReport, {
+  const livePayload = buildStudentReportCardPayload(studentWithScopedReport, {
     className: normalizeText(reviewedReport?.className),
     schoolYear: normalizeText(reviewedReport?.schoolYear),
     quarter: normalizeText(reviewedReport?.quarter),
     reportId: normalizeText(reviewedReport?.id),
   })
+  if (artifactPayload) {
+    return {
+      ...artifactPayload,
+      attendance: livePayload.attendance,
+    }
+  }
+
+  return livePayload
 }
 
 function normalizeAssignmentBundleRecord(value = {}) {
@@ -6860,6 +6879,12 @@ async function handleApiRequest(request, response, pathname, url) {
     const quarter = normalizeText(url.searchParams.get("quarter") || "")
     const reportId = normalizeText(url.searchParams.get("reportId") || "")
     const student = await getStudentByIdWithReportBackfill(studentRefId)
+    const livePayload = buildStudentReportCardPayload(student, {
+      className,
+      schoolYear,
+      quarter,
+      reportId,
+    })
     let payload = null
     if (reportId) {
       const matchedReport = Array.isArray(student?.parentReports)
@@ -6867,16 +6892,14 @@ async function handleApiRequest(request, response, pathname, url) {
         : null
       const mappedReport = mapParentClassReport(matchedReport)
       if (mappedReport?.finalArtifactPayload && typeof mappedReport.finalArtifactPayload === "object") {
-        payload = mappedReport.finalArtifactPayload
+        payload = {
+          ...mappedReport.finalArtifactPayload,
+          attendance: livePayload.attendance,
+        }
       }
     }
     if (!payload) {
-      payload = buildStudentReportCardPayload(student, {
-        className,
-        schoolYear,
-        quarter,
-        reportId,
-      })
+      payload = livePayload
     }
     sendJson(response, 200, payload)
     return true
@@ -7471,6 +7494,7 @@ export async function handleStudentAdminRequest(request, response) {
     const className = normalizeText(url.searchParams.get("className") || "")
     const schoolYear = normalizeText(url.searchParams.get("schoolYear") || "")
     const quarter = normalizeText(url.searchParams.get("quarter") || "")
+    const reportId = normalizeText(url.searchParams.get("reportId") || "")
     let reportPayload = buildReportCardPreviewSamplePayload()
 
     if (previewStudentRefId && initialAuthState.authenticated) {
@@ -7481,6 +7505,7 @@ export async function handleStudentAdminRequest(request, response) {
             className: className || reportPayload.scope?.className || "",
             schoolYear: schoolYear || reportPayload.scope?.schoolYear || "",
             quarter: quarter || reportPayload.scope?.quarter || "",
+            reportId,
           })
         }
       } catch (error) {
@@ -7618,6 +7643,22 @@ export async function handleStudentAdminRequest(request, response) {
     return true
   }
 
+  if (method === "GET" && pathname === "/api/admin/performance-engagement") {
+    const session = await requireAuthenticatedSession(request, response)
+    const role = normalizeLower(session?.role)
+    if (role && role !== "admin" && role !== "teacher") {
+      const error = new Error("Forbidden")
+      error.statusCode = 403
+      throw error
+    }
+    const payload = await listPerformanceEngagementData({
+      dateFrom: normalizeText(url.searchParams.get("dateFrom") || ""),
+      dateTo: normalizeText(url.searchParams.get("dateTo") || ""),
+    })
+    sendJson(response, 200, payload)
+    return true
+  }
+
   const genericReportPdfMatch = pathname.match(GENERIC_REPORT_ACCESS_PDF_PATH_RE)
   if (method === "GET" && genericReportPdfMatch) {
     const reportRoute = parseReportViewerRouteSegment(
@@ -7690,6 +7731,10 @@ export async function handleStudentAdminRequest(request, response) {
       channel: "portal",
       userAgent: normalizeText(request.headers["user-agent"] || ""),
       ipAddress: resolveClientIpAddress(request),
+      metadata: {
+        source: normalizeText(url.searchParams.get("source") || ""),
+        button: normalizeText(url.searchParams.get("button") || ""),
+      },
     }).catch(() => null)
     const filename = buildReportCardFilename(student, {
       className: normalizeText(authorizedReport.className),
@@ -7715,6 +7760,8 @@ export async function handleStudentAdminRequest(request, response) {
           viewerRole: "parent",
           parentsId: normalizeText(parentSession?.parentsId || parentSession?.username),
           parentAccountId: normalizeText(parentSession?.accountId),
+          source: normalizeText(url.searchParams.get("source") || ""),
+          button: normalizeText(url.searchParams.get("button") || ""),
         })
         sendRedirect(
           response,
@@ -7734,6 +7781,8 @@ export async function handleStudentAdminRequest(request, response) {
           await getAuthorizedReportRecordForViewer(reportRoute.reportId, {
             viewerRole: "student",
             studentRefId,
+            source: normalizeText(url.searchParams.get("source") || ""),
+            button: normalizeText(url.searchParams.get("button") || ""),
           })
           sendRedirect(
             response,
@@ -7787,6 +7836,8 @@ export async function handleStudentAdminRequest(request, response) {
         artifactVersion: normalizeText(url.searchParams.get("artifactVersion") || ""),
         userAgent: normalizeText(request.headers["user-agent"] || ""),
         ipAddress: resolveClientIpAddress(request),
+        source: normalizeText(url.searchParams.get("source") || ""),
+        button: normalizeText(url.searchParams.get("button") || ""),
       })
     } catch (error) {
       if (isReportAccessMismatchError(error)) {
@@ -7855,6 +7906,8 @@ export async function handleStudentAdminRequest(request, response) {
         artifactVersion: normalizeText(url.searchParams.get("artifactVersion") || ""),
         userAgent: normalizeText(request.headers["user-agent"] || ""),
         ipAddress: resolveClientIpAddress(request),
+        source: normalizeText(url.searchParams.get("source") || ""),
+        button: normalizeText(url.searchParams.get("button") || ""),
       })
     } catch (error) {
       if (isReportAccessMismatchError(error)) {

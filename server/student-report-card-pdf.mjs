@@ -168,6 +168,19 @@ function selectRecords(student, filters = {}) {
   }
 }
 
+function selectAttendanceRecordsForReport(student, filters = {}) {
+  const className = normalizeText(filters.className)
+  const schoolYear = normalizeText(filters.schoolYear)
+
+  return Array.isArray(student?.attendanceRecords)
+    ? student.attendanceRecords.filter((record) => {
+        if (className && !sameText(record?.className, className)) return false
+        if (schoolYear && !sameText(record?.schoolYear, schoolYear)) return false
+        return true
+      })
+    : []
+}
+
 async function loadPhotoBuffer(photoUrl) {
   const value = normalizeText(photoUrl)
   if (!value) return null
@@ -220,7 +233,16 @@ function summarizeAttendance(attendanceRecords) {
     present: 0,
     absent: 0,
     late: 0,
+    tardy10: 0,
+    tardy30: 0,
     excused: 0,
+  }
+
+  const parseTardyMinutes = (value) => {
+    const matched = normalizeText(value).match(/(\d+)/)
+    if (!matched) return 0
+    const minutes = Number.parseInt(matched[1], 10)
+    return Number.isFinite(minutes) ? minutes : 0
   }
 
   attendanceRecords.forEach((entry) => {
@@ -229,6 +251,8 @@ function summarizeAttendance(attendanceRecords) {
     else if (status === "late") {
       summary.present += 1
       summary.late += 1
+      if (parseTardyMinutes(entry.comments) >= 30) summary.tardy30 += 1
+      else summary.tardy10 += 1
     } else if (status === "absent") summary.absent += 1
     else if (status === "excused") summary.excused += 1
   })
@@ -245,12 +269,16 @@ function buildAttendanceSection(attendanceSummary, attendanceRate) {
     excused: attendanceSummary.excused,
     absences: attendanceSummary.absent,
     tardy: attendanceSummary.late,
+    tardy10: attendanceSummary.tardy10,
+    tardy30: attendanceSummary.tardy30,
     percent: attendanceRate,
     rate: attendanceRate,
     attendanceRate,
     attendancePercent: attendanceRate,
     absenceCount: attendanceSummary.absent,
     tardyCount: attendanceSummary.late,
+    tardy10Count: attendanceSummary.tardy10,
+    tardy30Count: attendanceSummary.tardy30,
   }
 }
 
@@ -451,7 +479,7 @@ export function buildStudentReportCardPayload(student, filters = {}) {
   const identity = assertStudentIdentity(student, "report-card payload")
   const profile = /** @type {Record<string, unknown>} */ (student?.profile || {})
   const selected = selectRecords(student, filters)
-  const attendanceSummary = summarizeAttendance(selected.attendanceRecords)
+  const attendanceSummary = summarizeAttendance(selectAttendanceRecordsForReport(student, filters))
   const gradeSummary = summarizeGrades(selected.gradeRecords)
   const latestParentReport = selected.parentReports
     .slice()
@@ -631,6 +659,7 @@ export function buildStudentReportCardPayload(student, filters = {}) {
       reviewedAt: studentReviewedAt ? formatDateTime(studentReviewedAt) : "",
     },
     snapshot: {
+      schemaVersion: 2,
       source: latestParentReport ? "saved-parent-report" : "derived-current-records",
       reportId: normalizeText(latestParentReport?.id),
       studentRefId: normalizeText(student?.id),
@@ -727,7 +756,7 @@ export async function generateStudentReportCardPdf(student, filters = {}) {
   const identity = assertStudentIdentity(student, "report-card PDF")
   const profile = /** @type {Record<string, unknown>} */ (student?.profile || {})
   const selected = selectRecords(student, filters)
-  const attendanceSummary = summarizeAttendance(selected.attendanceRecords)
+  const attendanceSummary = summarizeAttendance(selectAttendanceRecordsForReport(student, filters))
   const gradeSummary = summarizeGrades(selected.gradeRecords)
   const latestParentReport = selected.parentReports[0] || null
 
