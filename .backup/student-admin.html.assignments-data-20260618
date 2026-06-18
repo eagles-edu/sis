@@ -744,7 +744,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <span>Intake Queue</span>
                         <span class="small" id="overviewIncomingExerciseSummary">No anonymous exercise submissions.</span>
                       </summary>
-                      <div class="table-scroll-wrap card assignment-item-table-wrap">
+                      <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                         <table>
                           <thead>
                             <tr>
@@ -1184,20 +1184,20 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           <label for="assignmentExerciseUrl">Exercise URL</label><input id="assignmentExerciseUrl" type="url" placeholder="https://...">
                         </div>
                         <div class="col-2">
-                          <div aria-hidden="true"></div><button id="assignmentAddItemBtn" type="button" class="portal-button portal-button-green-action">
-                            Add Item
+                          <div aria-hidden="true"></div><button id="assignmentAddItemBtn" type="button" class="btn-edit">
+                            Add Assignment Item
                           </button>
                         </div>
                       </div>
                       <div class="actions actions-3">
-                        <button id="assignmentLoadTitlesBtn" type="button" class="portal-button portal-button-teal-refresh">
-                          Refresh Titles
+                        <button id="assignmentLoadTitlesBtn" type="button" class="btn-refresh">
+                          Refresh Exercise Titles
                         </button>
-                        <button id="assignmentSaveTemplateBtn" type="button" class="portal-button portal-button-green-action">
-                          Save
+                        <button id="assignmentSaveTemplateBtn" type="button" class="btn-edit">
+                          Save Assignment
                         </button>
-                        <button id="assignmentDeleteTemplateBtn" type="button" class="portal-button portal-button-red-action">
-                          Delete
+                        <button id="assignmentDeleteTemplateBtn" type="button" class="btn-delete">
+                          Delete Assignment
                         </button>
                       </div>
                       <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
@@ -1219,14 +1219,14 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </div>
                     </div>
                     <div class="actions actions-3">
-                      <button id="assignmentSendBtn" type="button" class="portal-button portal-button-blue-action">
-                        Send Email
+                      <button id="assignmentSendBtn" type="button" class="primary">
+                        Send Assignment Email
                       </button>
-                      <button id="assignmentResetBtn" type="button" class="portal-button portal-button-purple-action">
-                        Clear
+                      <button id="assignmentResetBtn" type="button" class="danger">
+                        Clear Form
                       </button>
-                      <button id="assignmentReloadTemplatesBtn" type="button" class="portal-button portal-button-teal-refresh">
-                        Reload
+                      <button id="assignmentReloadTemplatesBtn" type="button" class="btn-refresh">
+                        Reload Assignments
                       </button>
                     </div>
                     <p class="small page-note">
@@ -1286,20 +1286,20 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Archive</div>
-                    <button id="assignmentArchiveToggleBtn" type="button" class="portal-button portal-button-amber-info portal-button-compact">
-                      Archived
+                    <button id="assignmentArchiveToggleBtn" type="button" class="alt">
+                      Show Archived
                     </button>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Export</div>
-                    <button id="assignmentExportXlsxBtn" type="button" class="portal-button portal-button-teal-refresh portal-button-compact">
-                      Export
+                    <button id="assignmentExportXlsxBtn" type="button" class="btn-refresh">
+                      Export XLSX
                     </button>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Print</div>
-                    <button id="assignmentPrintPdfBtn" type="button" class="portal-button portal-button-blue-action portal-button-compact">
-                      Print
+                    <button id="assignmentPrintPdfBtn" type="button" class="primary">
+                      Print PDF
                     </button>
                   </div>
                 </div>
@@ -1317,7 +1317,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                 <p class="small admin-table-summary" id="assignmentDataSummary">
                   Showing assignment submissions.
                 </p>
-                <div class="table-scroll-wrap card assignments-data-table-wrap">
+                <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
                   <table>
                     <thead>
                       <tr>

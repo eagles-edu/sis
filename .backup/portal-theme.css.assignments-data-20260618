@@ -602,8 +602,7 @@ html[data-theme="dark"] body {
   color: var(--portal-dark-text);
 }
 .portal-button,
-a.portal-button,
-summary.portal-button {
+a.portal-button {
   --portal-button-fill: var(--portal-button-neutral-fill);
   --portal-button-fill-hover: var(--portal-button-neutral-fill-hover);
   --portal-button-fill-active: var(--portal-button-neutral-fill-active);
@@ -645,8 +644,7 @@ summary.portal-button {
   white-space: nowrap;
 }
 .portal-button:hover:not(:disabled):not(.is-disabled),
-a.portal-button:hover:not(.is-disabled),
-summary.portal-button:hover {
+a.portal-button:hover:not(.is-disabled) {
   background: var(--portal-button-fill-hover);
   border-color: var(--portal-button-stroke-hover);
   box-shadow: var(--portal-button-shadow-hover);
@@ -656,9 +654,8 @@ summary.portal-button:hover {
 }
 .portal-button:active:not(:disabled):not(.is-disabled),
 .portal-button.is-active,
-a.portal-button:active:not(:disabled):not(.is-disabled),
-a.portal-button.is-active,
-summary.portal-button:active {
+a.portal-button:active:not(.is-disabled),
+a.portal-button.is-active {
   background: var(--portal-button-fill-active);
   border-color: var(--portal-button-stroke-active);
   box-shadow: var(--portal-button-shadow-active);
@@ -668,21 +665,17 @@ summary.portal-button:active {
 .portal-button:focus-visible,
 .portal-button.proof-force-focus,
 a.portal-button:focus-visible,
-a.portal-button.proof-force-focus,
-summary.portal-button:focus-visible,
-summary.portal-button.proof-force-focus {
+a.portal-button.proof-force-focus {
   box-shadow: var(--portal-button-shadow-focus);
   outline: none;
 }
 .portal-button.is-current,
-a.portal-button.is-current,
-summary.portal-button.is-current {
+a.portal-button.is-current {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), var(--portal-button-shadow-focus);
 }
 .portal-button:disabled,
 .portal-button.is-disabled,
-a.portal-button.is-disabled,
-summary.portal-button.is-disabled {
+a.portal-button.is-disabled {
   background: var(--portal-button-disabled-fill);
   border-color: var(--portal-button-disabled-stroke);
   box-shadow: none;
@@ -736,10 +729,6 @@ summary.portal-button.is-disabled {
   word-break: normal;
   text-wrap: balance;
 }
-.portal-button summary::-webkit-details-marker,
-summary.portal-button::-webkit-details-marker {
-  display: none;
-}
 .portal-button.is-loading,
 .portal-chip.is-loading,
 a.portal-button.is-loading,
@@ -763,26 +752,12 @@ a.portal-chip.is-loading .portal-chip__icon {
   --portal-button-ink-hover: var(--portal-button-blue-ink);
   --portal-button-ink-active: var(--portal-button-blue-ink);
 }
-.portal-button-blue-action,
-summary.portal-button.portal-button-blue-action {
-  --portal-button-fill: var(--portal-button-blue-fill);
-  --portal-button-fill-hover: var(--portal-button-blue-fill-hover);
-  --portal-button-fill-active: var(--portal-button-blue-fill-active);
-  --portal-button-stroke: var(--portal-button-blue-stroke);
-  --portal-button-stroke-hover: var(--portal-button-blue-stroke-hover);
-  --portal-button-stroke-active: var(--portal-button-blue-stroke-active);
-  --portal-button-ink: var(--portal-button-blue-ink);
-  --portal-button-ink-hover: var(--portal-button-blue-ink);
-  --portal-button-ink-active: var(--portal-button-blue-ink);
-}
 .portal-button-blue-action:hover:not(:disabled):not(.is-disabled),
 .portal-button-blue-action:focus-visible,
 a.portal-button-blue-action:hover:not(.is-disabled),
 a.portal-button-blue-action:focus-visible,
 button.portal-button-blue-action:hover:not(:disabled):not(.is-disabled),
-button.portal-button-blue-action:focus-visible,
-summary.portal-button.portal-button-blue-action:hover,
-summary.portal-button.portal-button-blue-action:focus-visible {
+button.portal-button-blue-action:focus-visible {
   background: var(--portal-button-fill-hover) !important;
   border-color: var(--portal-button-stroke-hover) !important;
   box-shadow: var(--portal-button-shadow-hover) !important;
@@ -790,26 +765,13 @@ summary.portal-button.portal-button-blue-action:focus-visible {
 }
 .portal-button-blue-action:active:not(:disabled):not(.is-disabled),
 a.portal-button-blue-action:active:not(.is-disabled),
-button.portal-button-blue-action:active:not(:disabled):not(.is-disabled),
-summary.portal-button.portal-button-blue-action:active {
+button.portal-button-blue-action:active:not(:disabled):not(.is-disabled) {
   background: var(--portal-button-fill-active) !important;
   border-color: var(--portal-button-stroke-active) !important;
   box-shadow: var(--portal-button-shadow-active) !important;
   color: var(--portal-button-ink-active) !important;
 }
 .portal-button-red-action {
-  --portal-button-fill: var(--portal-button-red-fill);
-  --portal-button-fill-hover: var(--portal-button-red-fill-hover);
-  --portal-button-fill-active: var(--portal-button-red-fill-active);
-  --portal-button-stroke: var(--portal-button-red-stroke);
-  --portal-button-stroke-hover: var(--portal-button-red-stroke-hover);
-  --portal-button-stroke-active: var(--portal-button-red-stroke-active);
-  --portal-button-ink: var(--portal-button-red-ink);
-  --portal-button-ink-hover: var(--portal-button-red-ink);
-  --portal-button-ink-active: var(--portal-button-red-ink);
-}
-.portal-button-red-action,
-summary.portal-button.portal-button-red-action {
   --portal-button-fill: var(--portal-button-red-fill);
   --portal-button-fill-hover: var(--portal-button-red-fill-hover);
   --portal-button-fill-active: var(--portal-button-red-fill-active);
@@ -831,31 +793,7 @@ summary.portal-button.portal-button-red-action {
   --portal-button-ink-hover: var(--portal-button-green-ink);
   --portal-button-ink-active: var(--portal-button-green-ink);
 }
-.portal-button-green-action,
-summary.portal-button.portal-button-green-action {
-  --portal-button-fill: var(--portal-button-green-fill);
-  --portal-button-fill-hover: var(--portal-button-green-fill-hover);
-  --portal-button-fill-active: var(--portal-button-green-fill-active);
-  --portal-button-stroke: var(--portal-button-green-stroke);
-  --portal-button-stroke-hover: var(--portal-button-green-stroke-hover);
-  --portal-button-stroke-active: var(--portal-button-green-stroke-active);
-  --portal-button-ink: var(--portal-button-green-ink);
-  --portal-button-ink-hover: var(--portal-button-green-ink);
-  --portal-button-ink-active: var(--portal-button-green-ink);
-}
 .portal-button-purple-action {
-  --portal-button-fill: var(--portal-button-purple-fill);
-  --portal-button-fill-hover: var(--portal-button-purple-fill-hover);
-  --portal-button-fill-active: var(--portal-button-purple-fill-active);
-  --portal-button-stroke: var(--portal-button-purple-stroke);
-  --portal-button-stroke-hover: var(--portal-button-purple-stroke-hover);
-  --portal-button-stroke-active: var(--portal-button-purple-stroke-active);
-  --portal-button-ink: var(--portal-button-purple-ink);
-  --portal-button-ink-hover: var(--portal-button-purple-ink);
-  --portal-button-ink-active: var(--portal-button-purple-ink);
-}
-.portal-button-purple-action,
-summary.portal-button.portal-button-purple-action {
   --portal-button-fill: var(--portal-button-purple-fill);
   --portal-button-fill-hover: var(--portal-button-purple-fill-hover);
   --portal-button-fill-active: var(--portal-button-purple-fill-active);
@@ -877,18 +815,6 @@ summary.portal-button.portal-button-purple-action {
   --portal-button-ink-hover: var(--portal-button-neutral-ink);
   --portal-button-ink-active: var(--portal-button-neutral-ink);
 }
-.portal-button-neutral-action,
-summary.portal-button.portal-button-neutral-action {
-  --portal-button-fill: var(--portal-button-neutral-fill);
-  --portal-button-fill-hover: var(--portal-button-neutral-fill-hover);
-  --portal-button-fill-active: var(--portal-button-neutral-fill-active);
-  --portal-button-stroke: var(--portal-button-neutral-stroke);
-  --portal-button-stroke-hover: var(--portal-button-neutral-stroke-hover);
-  --portal-button-stroke-active: var(--portal-button-neutral-stroke-active);
-  --portal-button-ink: var(--portal-button-neutral-ink);
-  --portal-button-ink-hover: var(--portal-button-neutral-ink);
-  --portal-button-ink-active: var(--portal-button-neutral-ink);
-}
 .portal-button-teal-refresh {
   --portal-button-fill: var(--portal-button-teal-fill);
   --portal-button-fill-hover: var(--portal-button-teal-fill-hover);
@@ -900,31 +826,7 @@ summary.portal-button.portal-button-neutral-action {
   --portal-button-ink-hover: var(--portal-button-teal-ink);
   --portal-button-ink-active: var(--portal-button-teal-ink);
 }
-.portal-button-teal-refresh,
-summary.portal-button.portal-button-teal-refresh {
-  --portal-button-fill: var(--portal-button-teal-fill);
-  --portal-button-fill-hover: var(--portal-button-teal-fill-hover);
-  --portal-button-fill-active: var(--portal-button-teal-fill-active);
-  --portal-button-stroke: var(--portal-button-teal-stroke);
-  --portal-button-stroke-hover: var(--portal-button-teal-stroke-hover);
-  --portal-button-stroke-active: var(--portal-button-teal-stroke-active);
-  --portal-button-ink: var(--portal-button-teal-ink);
-  --portal-button-ink-hover: var(--portal-button-teal-ink);
-  --portal-button-ink-active: var(--portal-button-teal-ink);
-}
 .portal-button-amber-info {
-  --portal-button-fill: var(--portal-button-amber-fill);
-  --portal-button-fill-hover: var(--portal-button-amber-fill-hover);
-  --portal-button-fill-active: var(--portal-button-amber-fill-active);
-  --portal-button-stroke: var(--portal-button-amber-stroke);
-  --portal-button-stroke-hover: var(--portal-button-amber-stroke-hover);
-  --portal-button-stroke-active: var(--portal-button-amber-stroke-active);
-  --portal-button-ink: var(--portal-button-amber-ink);
-  --portal-button-ink-hover: var(--portal-button-amber-ink);
-  --portal-button-ink-active: var(--portal-button-amber-ink);
-}
-.portal-button-amber-info,
-summary.portal-button.portal-button-amber-info {
   --portal-button-fill: var(--portal-button-amber-fill);
   --portal-button-fill-hover: var(--portal-button-amber-fill-hover);
   --portal-button-fill-active: var(--portal-button-amber-fill-active);
@@ -1672,7 +1574,7 @@ body.admin-portal-page .profile-layout-editor {
   background: var(--portal-role-card-bg);
   border: 1px solid var(--portal-role-border);
 }
-body.admin-portal-page .row-options-trigger:not(.portal-button),
+body.admin-portal-page .row-options-trigger,
 body.student-enrollment-page .history-rail__button,
 body.admin-portal-page .parent-tracking-link-btn {
   background: var(--portal-button-surface);
@@ -1687,8 +1589,8 @@ body.admin-portal-page .row-options-dropdown {
   box-shadow: var(--portal-role-shadow);
   color: var(--portal-text);
 }
-body.admin-portal-page .row-options-trigger:not(.portal-button):hover,
-body.admin-portal-page .row-options-trigger:not(.portal-button):focus-visible,
+body.admin-portal-page .row-options-trigger:hover,
+body.admin-portal-page .row-options-trigger:focus-visible,
 body.student-enrollment-page .history-rail__button:hover,
 body.student-enrollment-page .history-rail__button:focus-visible,
 body.admin-portal-page .parent-tracking-link-btn:hover,
