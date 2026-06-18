@@ -2087,12 +2087,6 @@ Select a homework link to inspect details.</pre>
                       <button id="performanceQueueSendSelectedBtn" type="button" class="btn-edit">
                         Send Selected
                       </button>
-                      <button id="performanceQueueUnqueueSelectedBtn" type="button" class="btn-refresh">
-                        Un-queue Selected
-                      </button>
-                      <button id="performanceQueueDeleteSelectedBtn" type="button" class="btn-delete">
-                        Delete Selected
-                      </button>
                       <button id="performanceQueueSendAllBtn" type="button" class="primary">
                         Send All
                       </button>

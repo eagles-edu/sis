@@ -32,7 +32,6 @@ import {
 import {
   getEmailBatchQueueRuntimeStatus,
   getEmailBatchQueueStatus,
-  deleteQueuedAnnouncement,
   listQueuedAnnouncements,
   nowIso,
   nextWeekendBatchDispatchAt,
@@ -49,7 +48,6 @@ import {
   NOTIFICATION_QUEUE_TYPE_PARENT_REPORT,
   queueAnnouncementEmail,
   sendAllQueuedAnnouncements,
-  unqueueQueuedAnnouncement,
   updateQueuedAnnouncement,
 } from "../src/modules/admin/notification-queue.mjs"
 import {
@@ -6463,20 +6461,6 @@ async function handleApiRequest(request, response, pathname, url) {
         { reviewedByUsername: normalizeText(session?.username) }
       )
       sendJson(response, 200, { ok: true, action: "hold", item: updated })
-      return true
-    }
-
-    if (action === "delete") {
-      const result = await deleteQueuedAnnouncement(queueId)
-      sendJson(response, 200, { ok: true, action: "delete", ...result })
-      return true
-    }
-
-    if (action === "unqueue") {
-      const result = await unqueueQueuedAnnouncement(queueId, {
-        returnedByUsername: normalizeText(session?.username),
-      })
-      sendJson(response, 200, { ok: true, action: "unqueue", ...result })
       return true
     }
 

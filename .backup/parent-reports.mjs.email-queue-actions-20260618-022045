@@ -138,13 +138,6 @@ const PARENT_REPORT_IMMUTABLE_WORKFLOW_STATES = new Set([
   PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
 ])
 
-const PARENT_REPORT_REQUEUEABLE_WORKFLOW_STATES = new Set([
-  PARENT_REPORT_WORKFLOW_STATE_APPROVED_FINAL,
-  PARENT_REPORT_WORKFLOW_STATE_PUBLISHED,
-  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
-  PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
-])
-
 const PARENT_REPORT_VISIBLE_WORKFLOW_STATES = new Set([
   PARENT_REPORT_WORKFLOW_STATE_PUBLISHED,
   PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
@@ -1114,51 +1107,6 @@ export async function approveParentClassReport(reportId, payload = {}) {
     actorType: "system",
     actorId: "system",
     metadata: { workflowState: PARENT_REPORT_WORKFLOW_STATE_PUBLISHED },
-  })
-  return mapParentClassReport(updated)
-}
-
-/**
- * @param {string} reportId
- * @param {Record<string, unknown>} [payload]
- * @returns {Promise<Record<string, unknown> | null>}
- */
-export async function returnParentClassReportToAwaitingApproval(reportId, payload = {}) {
-  const prisma = await getPrismaClient()
-  const id = normalizeText(reportId)
-  assertWithStatus(Boolean(id), 400, "reportId is required")
-  const existing = await prisma.parentClassReport.findUnique({ where: { id } })
-  assertWithStatus(Boolean(existing), 404, "Parent report not found")
-  const currentState = normalizeParentReportWorkflowState(existing.workflowState)
-  assertWithStatus(
-    PARENT_REPORT_REQUEUEABLE_WORKFLOW_STATES.has(currentState),
-    409,
-    "Performance report must be approved before returning to approval queue"
-  )
-  const returnedBy = parentReportLifecycleActor(
-    payload.returnedByUsername || payload.reviewedByUsername || payload.updatedByUsername
-  )
-  const updated = await prisma.parentClassReport.update({
-    where: { id },
-    data: {
-      workflowState: PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL,
-      approvedAt: null,
-      approvedByUsername: null,
-      publishedAt: null,
-      notificationQueuedAt: null,
-      notificationSentAt: null,
-    },
-  })
-  await recordParentClassReportEvent({
-    reportId: id,
-    artifactVersion: normalizeInteger(updated?.finalArtifactVersion) || 0,
-    eventType: "admin_returned_to_approval_queue",
-    actorType: "admin",
-    actorId: returnedBy,
-    metadata: {
-      workflowState: PARENT_REPORT_WORKFLOW_STATE_AWAITING_APPROVAL,
-      previousWorkflowState: currentState,
-    },
   })
   return mapParentClassReport(updated)
 }

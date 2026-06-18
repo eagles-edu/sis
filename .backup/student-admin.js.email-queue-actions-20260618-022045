@@ -4602,9 +4602,11 @@
               "performance-engagement-day-card card is-active"
             : "performance-engagement-day-card card";
           button.dataset.surfaceRole = "card";
+          const classNames = Array.from(day.classNames).filter(Boolean).join(", ");
           button.innerHTML = `
             <strong>${escapeHtml(day.classDay || "Day")}</strong>
             <span>${escapeHtml(day.classDate || "-")}</span>
+            <span class="small">${escapeHtml(classNames || "No class name")}</span>
             <span class="small">${escapeHtml(`reports=${day.reports.size} | rows=${day.rowCount} | opens=${day.openCount} | clicks=${day.clickCount} | pdf=${day.pdfCount}`)}</span>
           `;
           button.addEventListener("click", () => {
@@ -14707,6 +14709,7 @@
           <td>
             ${previewUrl ? `<a class="btn-refresh" href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener noreferrer">Preview RC</a>` : ""}
             <button type="button" class="btn-edit" data-stage-report-id="${escapeHtml(row.id)}"${pending ? " disabled" : ""}>${pending ? "Working..." : actionLabel}</button>
+            <button type="button" class="btn-delete" data-stage-report-delete-id="${escapeHtml(row.id)}"${pending ? " disabled" : ""}>Delete</button>
           </td>
         `;
           tr.querySelector(`[data-stage-hold="${row.id}"]`)?.addEventListener(
@@ -14728,6 +14731,13 @@
             "click",
             () => {
               queueStagedPerformanceReport(row.id).catch(handleError);
+            },
+          );
+          tr.querySelector(`[data-stage-report-delete-id="${row.id}"]`)?.addEventListener(
+            "click",
+            () => {
+              if (!window.confirm("Delete this staged performance report?")) return;
+              deleteParentTrackingReport(row.id).catch(handleError);
             },
           );
           rowsEl.appendChild(tr);
@@ -14978,58 +14988,6 @@
           `Selected performance reports processed (sent=${result?.sent || 0}, failed=${result?.failed || 0}).`,
         );
         await loadDashboardSummary();
-      }
-
-      async function deleteSelectedQueuedParentReports() {
-        if (!canManageUsers())
-          throw new Error("Only admin can delete queued performance reports.");
-        const selectedItems = selectedParentQueueItems().filter((item) => Boolean(item?.id));
-        if (!selectedItems.length) {
-          throw new Error("Select one or more queued reports before deleting.");
-        }
-        if (!window.confirm(`Delete ${selectedItems.length} selected queued report(s)?`)) return;
-        await Promise.all(
-          selectedItems.map((item) =>
-            api(ADMIN_NOTIFY_BATCH_STATUS_PATH, {
-              method: "POST",
-              body: {
-                action: "delete",
-                queueId: item.id,
-                queueType: "parent-report",
-              },
-            }),
-          ),
-        );
-        clearParentQueueSelection();
-        await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
-        renderPerformanceStagedSection(state.visibleTableRows?.performance || []);
-        setStatus(`Deleted queued performance reports (${selectedItems.length}).`);
-      }
-
-      async function unqueueSelectedQueuedParentReports() {
-        if (!canManageUsers())
-          throw new Error("Only admin can return queued performance reports to AAA.");
-        const selectedItems = selectedParentQueueItems().filter((item) => Boolean(item?.id));
-        if (!selectedItems.length) {
-          throw new Error("Select one or more queued reports before un-queueing.");
-        }
-        if (!window.confirm(`Return ${selectedItems.length} selected queued report(s) to AAA?`)) return;
-        await Promise.all(
-          selectedItems.map((item) =>
-            api(ADMIN_NOTIFY_BATCH_STATUS_PATH, {
-              method: "POST",
-              body: {
-                action: "unqueue",
-                queueId: item.id,
-                queueType: "parent-report",
-              },
-            }),
-          ),
-        );
-        clearParentQueueSelection();
-        await loadParentReportQueue({ showAll: state.parentReportQueue.showAll });
-        renderPerformanceStagedSection(state.visibleTableRows?.performance || []);
-        setStatus(`Returned queued performance reports to AAA (${selectedItems.length}).`);
       }
 
       async function holdParentQueueModalItem() {
@@ -23195,16 +23153,6 @@
             sendSelectedQueuedParentReports().catch(handleError);
           });
         document
-          .getElementById("performanceQueueUnqueueSelectedBtn")
-          ?.addEventListener("click", () => {
-            unqueueSelectedQueuedParentReports().catch(handleError);
-          });
-        document
-          .getElementById("performanceQueueDeleteSelectedBtn")
-          ?.addEventListener("click", () => {
-            deleteSelectedQueuedParentReports().catch(handleError);
-          });
-        document
           .getElementById("performanceQueueSelectAll")
           ?.addEventListener("change", (event) => {
             const target = event.target;
@@ -23335,12 +23283,6 @@
               },
               onPerformanceQueueSendSelected() {
                 sendSelectedQueuedParentReports().catch(handleError);
-              },
-              onPerformanceQueueUnqueueSelected() {
-                unqueueSelectedQueuedParentReports().catch(handleError);
-              },
-              onPerformanceQueueDeleteSelected() {
-                deleteSelectedQueuedParentReports().catch(handleError);
               },
               onPerformanceQueueSelectAll(event) {
                 const target = event?.target;

@@ -4602,9 +4602,11 @@
               "performance-engagement-day-card card is-active"
             : "performance-engagement-day-card card";
           button.dataset.surfaceRole = "card";
+          const classNames = Array.from(day.classNames).filter(Boolean).join(", ");
           button.innerHTML = `
             <strong>${escapeHtml(day.classDay || "Day")}</strong>
             <span>${escapeHtml(day.classDate || "-")}</span>
+            <span class="small">${escapeHtml(classNames || "No class name")}</span>
             <span class="small">${escapeHtml(`reports=${day.reports.size} | rows=${day.rowCount} | opens=${day.openCount} | clicks=${day.clickCount} | pdf=${day.pdfCount}`)}</span>
           `;
           button.addEventListener("click", () => {

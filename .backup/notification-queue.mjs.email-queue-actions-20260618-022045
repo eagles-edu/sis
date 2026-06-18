@@ -9,7 +9,6 @@ import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 import {
   PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_QUEUED,
   PARENT_REPORT_WORKFLOW_STATE_NOTIFICATION_SENT,
-  returnParentClassReportToAwaitingApproval,
 } from "./parent-reports.mjs"
 import { recordParentClassReportEvent } from "./parent-report-events.mjs"
 
@@ -885,94 +884,6 @@ export async function updateQueuedAnnouncement(queueId, updates = {}, options = 
       updated.payloadJson = payload
       EMAIL_BATCH_QUEUE[index] = updated
       return mapQueueRecord(updated)
-    }
-  )
-}
-
-/**
- * @param {unknown} queueId
- * @returns {Promise<{ deleted: true, id: string }>}
- */
-export async function deleteQueuedAnnouncement(queueId) {
-  const id = normalizeText(queueId)
-  if (!id) {
-    const error = new Error("queueId is required")
-    error.statusCode = 400
-    throw error
-  }
-
-  return runQueueDbOperation(
-    async (prisma) => {
-      const existing = await prisma.adminNotificationQueue.findUnique({ where: { id } })
-      if (!existing) {
-        const error = new Error("Queue item not found")
-        error.statusCode = 404
-        throw error
-      }
-      await prisma.adminNotificationQueue.delete({ where: { id } })
-      return { deleted: true, id }
-    },
-    async () => {
-      const index = EMAIL_BATCH_QUEUE.findIndex((entry) => normalizeText(entry.id) === id)
-      if (index < 0) {
-        const error = new Error("Queue item not found")
-        error.statusCode = 404
-        throw error
-      }
-      EMAIL_BATCH_QUEUE.splice(index, 1)
-      return { deleted: true, id }
-    }
-  )
-}
-
-/**
- * @param {unknown} queueId
- * @param {{ returnedByUsername?: unknown }} [options]
- * @returns {Promise<{ deleted: true, id: string, report: Record<string, unknown> | null }>}
- */
-export async function unqueueQueuedAnnouncement(queueId, options = {}) {
-  const id = normalizeText(queueId)
-  if (!id) {
-    const error = new Error("queueId is required")
-    error.statusCode = 400
-    throw error
-  }
-
-  return runQueueDbOperation(
-    async (prisma) => {
-      const existing = await prisma.adminNotificationQueue.findUnique({ where: { id } })
-      if (!existing) {
-        const error = new Error("Queue item not found")
-        error.statusCode = 404
-        throw error
-      }
-      const reportId = normalizeText(existing.reportId || existing?.payloadJson?.reportId)
-      let report = null
-      if (reportId && normalizeQueueType(existing.queueType) === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT) {
-        report = await returnParentClassReportToAwaitingApproval(reportId, {
-          returnedByUsername: options.returnedByUsername,
-        })
-      }
-      await prisma.adminNotificationQueue.delete({ where: { id } })
-      return { deleted: true, id, report }
-    },
-    async () => {
-      const index = EMAIL_BATCH_QUEUE.findIndex((entry) => normalizeText(entry.id) === id)
-      if (index < 0) {
-        const error = new Error("Queue item not found")
-        error.statusCode = 404
-        throw error
-      }
-      const existing = mapQueueRecord(EMAIL_BATCH_QUEUE[index])
-      const reportId = normalizeText(existing.reportId || existing?.payloadJson?.reportId)
-      let report = null
-      if (reportId && normalizeQueueType(existing.queueType) === NOTIFICATION_QUEUE_TYPE_PARENT_REPORT) {
-        report = await returnParentClassReportToAwaitingApproval(reportId, {
-          returnedByUsername: options.returnedByUsername,
-        })
-      }
-      EMAIL_BATCH_QUEUE.splice(index, 1)
-      return { deleted: true, id, report }
     }
   )
 }

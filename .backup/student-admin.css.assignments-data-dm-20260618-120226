@@ -1752,21 +1752,6 @@
         padding: 0 10px;
         white-space: nowrap;
       }
-      html[data-theme="dark"] body.admin-portal-page .row-options-dropdown {
-        background: var(--portal-surface-card);
-        border: 1px solid var(--portal-border);
-        box-shadow: 0 10px 24px var(--portal-color-0f0f0f66);
-      }
-      html[data-theme="dark"] body.admin-portal-page .row-options-dropdown button {
-        background: var(--portal-chart-surface-soft);
-        border-color: var(--portal-border);
-        color: var(--portal-dark-text);
-      }
-      html[data-theme="dark"] body.admin-portal-page .row-options-dropdown button:hover,
-      html[data-theme="dark"] body.admin-portal-page .row-options-dropdown button:focus-visible {
-        background: var(--portal-chart-surface);
-        color: var(--portal-dark-text);
-      }
       .section-label {
         color: var(--ink-muted);
         font-size: 12px;
@@ -2799,13 +2784,6 @@
         color: var(--link-color);
         overflow-wrap: anywhere;
         text-decoration: underline;
-      }
-      html[data-theme="dark"] body.admin-portal-page .assignment-item-link {
-        color: var(--portal-login-link-dark);
-      }
-      html[data-theme="dark"] body.admin-portal-page .assignment-item-link:hover,
-      html[data-theme="dark"] body.admin-portal-page .assignment-item-link:focus-visible {
-        color: var(--portal-color-d7e4ff);
       }
       .assignment-completion-pill {
         align-items: center;
