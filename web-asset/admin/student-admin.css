@@ -102,7 +102,7 @@
         box-sizing: border-box;
       }
       body {
-        font-family: var(--font-base);
+        font-family: var(--font-base, system-ui, -apple-system, sans-serif);
         margin: 0;
       }
       body.admin-auth-booting .wrap {
@@ -1285,11 +1285,11 @@
       }
       .tabulator-entry-btn {
         align-items: center;
-        background: var(--portal-color-e32e5ac3d5);
-        border: 1px solid var(--portal-color-e32e5ac3d5);
-        border-radius: var(--radius-pill);
+        background: var(--portal-button-amber-fill);
+        border: 1px solid var(--portal-button-amber-stroke);
+        border-radius: var(--portal-radius-button);
         box-sizing: border-box;
-        color: var(--portal-color-ec28aed7ca);
+        color: var(--portal-button-amber-ink);
         cursor: pointer;
         display: inline-flex;
         font-size: 12px;
@@ -1304,8 +1304,8 @@
         width: fit-content;
       }
       .tabulator-entry-btn:hover {
-        background: var(--portal-color-5647dd626d);
-        border-color: var(--portal-color-5647dd626d);
+        background: var(--portal-button-amber-fill-hover);
+        border-color: var(--portal-button-amber-stroke-hover);
       }
       .grade-chart-periods {
         -webkit-overflow-scrolling: touch;
@@ -1317,26 +1317,21 @@
         padding-bottom: 4px;
       }
       .grade-chart-period-btn {
-        background: var(--portal-color-d14f901611);
-        border: 1px solid var(--portal-color-64f144942a);
-        border-radius: var(--radius-pill);
-        color: var(--portal-color-25a7b86435);
+        border-radius: var(--portal-radius-button);
         cursor: pointer;
-        font-size: 11px;
-        font-weight: 700;
         inline-size: auto;
         letter-spacing: 0.03em;
         margin: 0;
+        max-inline-size: none;
         min-width: 0;
-        padding: 7px 10px;
+        min-inline-size: 0;
+        padding-inline: var(--portal-button-inline-padding);
         text-transform: uppercase;
         white-space: nowrap;
+        width: auto;
       }
       .grade-chart-period-btn.is-active {
-        background: var(--portal-color-e32e5ac3d5);
-        border-color: var(--portal-color-e32e5ac3d5);
         box-shadow: 0 3px 8px var(--portal-color-9121bb2e26);
-        color: var(--portal-color-469978e86b);
       }
       .grade-chart-filter-grid {
         display: grid;
@@ -1409,7 +1404,7 @@
         margin-left: auto;
       }
       .grade-chart-lane-title {
-        color: var(--portal-text);
+        color: var(--portal-role-text);
         font-size: 13px;
         font-weight: 700;
         line-height: 1.25;
@@ -1428,9 +1423,9 @@
       .grade-chart-expand-btn {
         background: var(--portal-chart-surface-soft);
         border: 1px solid var(--portal-border);
-        border-radius: var(--radius-pill);
+        border-radius: var(--portal-radius-button) !important;
         box-sizing: border-box;
-        color: var(--portal-text);
+        color: var(--portal-role-text);
         cursor: pointer;
         font-size: 10px;
         font-weight: 700;
@@ -1553,7 +1548,7 @@
         justify-content: space-between;
       }
       .grade-chart-modal-title {
-        color: var(--portal-text);
+        color: var(--portal-role-text);
         font-size: 14px;
         margin: 0;
       }
@@ -1765,10 +1760,12 @@
         padding-inline-start: 2px;
         padding-inline-end: 6px;
       }
-      .page-section[data-page="assignments-data"] .assignments-data-table-wrap table tbody tr:hover > :is(th, td) {
-        background: var(--portal-neutral-panel-dark) !important;
-      }
+      .page-section[data-page="assignments-data"] .assignments-data-table-wrap table tbody tr:hover > :is(th, td),
       .page-section[data-page="assignments-data"] .assignments-data-table-wrap table tbody tr:focus-within > :is(th, td) {
+        background: color-mix(in srgb, var(--portal-surface-support) 78%, #ffffff 22%);
+      }
+      html[data-theme="dark"] body.admin-portal-page .page-section[data-page="assignments-data"] .assignments-data-table-wrap table tbody tr:hover > :is(th, td),
+      html[data-theme="dark"] body.admin-portal-page .page-section[data-page="assignments-data"] .assignments-data-table-wrap table tbody tr:focus-within > :is(th, td) {
         background: var(--portal-neutral-panel-dark) !important;
       }
       .page-section[data-page="assignments-data"] .row-options-menu {
@@ -3102,11 +3099,11 @@
       }
       .pt-score-legend-btn {
         align-items: center;
-        background: var(--portal-color-2d8370cc89);
-        border: 1px solid var(--portal-color-1fafc2b5c0);
-        border-radius: 999px;
+        background: var(--portal-button-amber-fill);
+        border: 1px solid var(--portal-button-amber-stroke);
+        border-radius: var(--portal-radius-button);
         box-sizing: border-box;
-        color: var(--portal-color-bd73054f6d);
+        color: var(--portal-button-amber-ink);
         cursor: pointer;
         display: inline-flex;
         font-size: 10px;
@@ -3120,8 +3117,8 @@
         width: 17px;
       }
       .pt-score-legend-btn:hover {
-        background: var(--portal-color-9548739191);
-        border-color: var(--portal-color-ccfa40c9d0);
+        background: var(--portal-button-amber-fill-hover);
+        border-color: var(--portal-button-amber-stroke-hover);
       }
       .pt-score-legend-popover {
         background: var(--portal-color-c659d630ce);

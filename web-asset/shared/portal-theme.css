@@ -48,15 +48,15 @@
   --hub-theme-panel-bg-support: #edf3fa;
   --hub-theme-panel-border: rgba(6, 11, 20, 0.67);
   --hub-theme-panel-shadow: none;
-  --hub-theme-text: #212121;
-  --hub-theme-text-soft: #414141;
+  --hub-theme-text: #000000;
+  --hub-theme-text-soft: #2b2b2b;
   --hub-prefooter-button-bg: #f1f5ff;
   --hub-prefooter-button-border: #9bb5df;
   --hub-prefooter-button-text: #214072;
   --hub-prefooter-button-hover-bg: #f3f8ff;
   --hub-prefooter-button-hover-border: #6f97cb;
-  --ink: #212121;
-  --ink-soft: #414141;
+  --ink: #000000;
+  --ink-soft: #2b2b2b;
   --line: #7388a3;
   --line-strong: #5f7391;
   --menu-bg: #f7faff;
@@ -94,35 +94,38 @@
   --portal-chart-axis-label: var(--portal-text-soft);
   --portal-chart-surface: var(--portal-surface-card);
   --portal-chart-surface-soft: var(--portal-surface-support);
-  --portal-dark-bg: #1a1c1f;
+  --portal-dark-bg: #000000;
   --portal-dark-border: rgba(255, 255, 255, 0.42);
   --portal-dark-border-strong: rgba(255, 255, 255, 0.36);
-  --portal-dark-card: #3c4248;
-  --portal-dark-card-deep: #25292c;
-  --portal-dark-card-soft: #484f56;
+  --portal-dark-card: #4c4c4c;
+  --portal-dark-card-deep: #3b3c3e;
+  --portal-dark-card-soft: #525252;
   --portal-dark-field-bg: #272c2f;
   --portal-dark-field-border: #aeb7c5;
   --portal-dark-field-active-bg: #4b5157;
   --portal-dark-field-active-border: #c8d0da;
   --portal-dark-field-placeholder: #58657a;
   --portal-dark-field-text: var(--secondary-color);
-  --portal-dark-page-bg: linear-gradient(180deg, #1a1c1f 0%, #25292c 100%);
-  --portal-dark-panel: #25292c;
-  --portal-dark-panel-soft: #31363a;
+  --portal-dark-page-bg: #000000;
+  --portal-dark-panel: #3b3c3e;
+  --portal-dark-panel-soft: #525252;
   --portal-dark-radius: var(--radius-3);
-  --portal-dark-surface-card: linear-gradient(180deg, rgba(60, 66, 72, 0.98) 0%, rgba(49, 54, 58, 0.98) 100%);
-	--portal-dark-surface-panel: linear-gradient(180deg, rgba(46, 46, 48, 0.98), rgb(49 49 49 / 99%));
-  --portal-dark-surface-soft: #3c4248;
-  --portal-dark-surface-support: #484f56;
+  --portal-dark-surface-card: #4c4c4c;
+  --portal-dark-surface-panel: #3b3c3e;
+  --portal-dark-surface-soft: #525252;
+  --portal-dark-surface-support: var(--portal-dark-surface-soft);
   --portal-dark-text: #FBFFFF;
-  --portal-dark-text-soft: #c9ced4;
+  --portal-dark-text-soft: #e5f5ff;
+  --portal-dark-link: var(--portal-dark-text-soft);
+  --portal-dark-link-hover: #ffffff;
+  --portal-dark-link-active: #fff0f2;
   --portal-dark-theme-toggle-icon-bg: rgba(255, 255, 255, 0.12);
   --portal-dark-theme-toggle-ink: #ffd76a;
   --portal-data-label: var(--portal-text-soft);
   --portal-field-placeholder: #6b7f97;
   --portal-login-form-max-width: 430px;
   --portal-login-link: var(--brand-2);
-  --portal-login-link-dark: #d7e4ff;
+  --portal-login-link-dark: var(--portal-dark-link);
   --portal-login-panel-max-width: 550px;
   --portal-page-bg-base: #e8eef4;
   --portal-page-bg: #e8eef4;
@@ -259,7 +262,7 @@
   --portal-radio-control-bg: #fff;
   --portal-radio-control-border: #9db0cc;
   --portal-score-bar-fill: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
-  --portal-svg-accent-soft-fill: rgba(62, 123, 192, 0.15);
+  --portal-svg-accent-soft-fill: rgba(62, 123, 192, 0.24);
   --portal-table-dark-border: rgba(255, 255, 255, 0.14);
   --portal-theme-toggle-focus-ring: 0 0 0 3px rgba(47, 91, 227, 0.2);
   --portal-theme-toggle-hover-border: rgba(15, 22, 41, 1);
@@ -273,17 +276,17 @@
   --portal-neutral-content-dark: #2d2d2d;
   --portal-neutral-panel-dark: #3b3c3e;
   --portal-neutral-card-dark: #4c4c4c;
-  --portal-neutral-support-dark: #5d5d5d;
-  --portal-neutral-chart-dark: #5d5d5d;
-  --portal-neutral-table-dark: #5d5d5d;
-  --portal-neutral-message-dark: #5d5d5d;
+  --portal-neutral-support-dark: var(--portal-dark-surface-soft);
+  --portal-neutral-chart-dark: var(--portal-neutral-support-dark);
+  --portal-neutral-table-dark: var(--portal-neutral-support-dark);
+  --portal-neutral-message-dark: var(--portal-neutral-support-dark);
   --portal-neutral-alert-dark: #9f9f9f;
   --portal-surface-card: #fcfdff;
   --portal-surface-panel: var(--portal-neutral-panel-light);
   --portal-surface-soft: var(--portal-neutral-panel-light);
   --portal-surface-support: #f1f4f8;
-  --portal-text: #212121;
-  --portal-text-soft: #313131;
+  --portal-text: #000000;
+  --portal-text-soft: #2b2b2b;
   --portal-text-zoom: 1;
   --portal-role-content-bg: var(--portal-neutral-content-light);
   --portal-role-panel-bg: var(--portal-surface-panel);
@@ -380,10 +383,10 @@
   --portal-button-neutral-ink: #17345e;
   --portal-button-teal-fill: #0d8aa6;
   --portal-button-teal-fill-hover: #13a0c0;
-  --portal-button-teal-fill-active: #0a7590;
+  --portal-button-teal-fill-active: #00aad4;
   --portal-button-teal-stroke: #005e8d;
   --portal-button-teal-stroke-hover: #0072a8;
-  --portal-button-teal-stroke-active: #004d74;
+  --portal-button-teal-stroke-active: #1a9ee0;
   --portal-button-teal-ink: #fbffff;
   --portal-button-amber-fill: #f3bf52;
   --portal-button-amber-fill-hover: #ffd069;
@@ -454,7 +457,7 @@ html[data-theme="dark"] body.portal-hub-page {
   --hub-surface-border: rgba(115, 136, 163, 0.96);
   --hub-surface-shadow: 0 10px 26px rgba(19, 35, 61, 0.1);
   --hub-surface-text: #FBFFFF;
-  --hub-surface-text-soft: #f2f4f7;
+  --hub-surface-text-soft: var(--hub-theme-text-soft);
   --hub-theme-banner-border: rgba(255, 255, 255, 0.1);
   --hub-theme-banner-text: var(--secondary-color);
   --hub-theme-card-admin-border-soft: rgba(181, 0, 16, 0.26);
@@ -462,18 +465,18 @@ html[data-theme="dark"] body.portal-hub-page {
   --hub-theme-card-student-border-soft: rgba(123, 153, 214, 0.6);
   --hub-theme-card-subtitle: #f2f4f7;
   --hub-theme-card-title: #f7f8fa;
-  --hub-theme-link: #b4c4ea;
+  --hub-theme-link: var(--hub-surface-text-soft);
   --hub-theme-page-bg-body: #000000;
   --hub-theme-page-bg-end: #000000;
   --hub-theme-page-bg-glow: transparent;
   --hub-theme-page-bg-mid: #000000;
   --hub-theme-page-bg-start: #000000;
-  --hub-theme-panel-bg: #31363a;
-  --hub-theme-panel-bg-footer: #25292c;
-  --hub-theme-panel-bg-hero: #3c4248;
-  --hub-theme-panel-bg-section: #31363a;
-  --hub-theme-panel-bg-soft: #3c4248;
-  --hub-theme-panel-bg-support: #484f56;
+  --hub-theme-panel-bg: var(--portal-neutral-panel-dark);
+  --hub-theme-panel-bg-footer: var(--hub-theme-panel-bg-soft);
+  --hub-theme-panel-bg-hero: var(--portal-neutral-panel-dark);
+  --hub-theme-panel-bg-section: var(--portal-neutral-panel-dark);
+  --hub-theme-panel-bg-soft: var(--portal-neutral-support-dark);
+  --hub-theme-panel-bg-support: var(--hub-theme-panel-bg-soft);
   --hub-theme-panel-border: rgba(255, 255, 255, 0.2);
   --hub-theme-panel-shadow: none;
   --hub-theme-text: #FBFFFF;
@@ -487,22 +490,7 @@ body {
   color: var(--ink);
   margin: 0;
   min-height: 100%;
-  font-family:
-    system-ui,
-    -apple-system,
-    blinkmacsystemfont,
-    "Segoe UI Variable",
-    "Segoe UI",
-    roboto,
-    "Noto Sans",
-    ubuntu,
-    cantarell,
-    "Liberation Sans",
-    "DejaVu Sans",
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Noto Color Emoji",
-    sans-serif;
+  font-family: var(--font-base, system-ui, -apple-system, sans-serif);
 }
 body {
   -webkit-tap-highlight-color: transparent;
@@ -515,30 +503,30 @@ html[data-theme="dark"] {
   --portal-chart-surface: var(--portal-dark-surface-card);
   --portal-chart-surface-soft: var(--portal-dark-surface-support);
   --portal-data-label: var(--portal-dark-text-soft);
-  --portal-status-bad-bg: rgba(242, 138, 149, 0.12);
-  --portal-status-bad-border: rgba(242, 138, 149, 0.34);
-  --portal-status-bad-text: #ffd8dd;
-  --portal-status-good-bg: rgba(124, 214, 164, 0.14);
-  --portal-status-good-border: rgba(124, 214, 164, 0.34);
-  --portal-status-good-text: #dff7e9;
-  --portal-status-amber-bg: rgba(240, 176, 95, 0.16);
-  --portal-status-amber-border: rgba(240, 176, 95, 0.72);
-  --portal-status-amber-text: #ffe0b6;
-  --portal-status-info-bg: rgba(106, 164, 255, 0.14);
-  --portal-status-info-border: rgba(106, 164, 255, 0.34);
-  --portal-status-info-text: #FBFFFF;
-  --portal-status-neutral-bg: linear-gradient(180deg, rgba(58, 61, 68, 0.96), rgba(49, 52, 58, 0.98));
+  --portal-status-bad-bg: #ff2e3f;
+  --portal-status-bad-border: #8a1f1c;
+  --portal-status-bad-text: #8a1f1c;
+  --portal-status-good-bg: #218021;
+  --portal-status-good-border: #005224;
+  --portal-status-good-text: #005224;
+  --portal-status-amber-bg: #ffd063;
+  --portal-status-amber-border: #6a4a00;
+  --portal-status-amber-text: #6a4a00;
+  --portal-status-info-bg: #6aa4ff;
+  --portal-status-info-border: #1d5fbb;
+  --portal-status-info-text: #fbffff;
+  --portal-status-neutral-bg: #4c4c4c;
   --portal-status-neutral-border: var(--portal-dark-border);
-  --portal-status-neutral-text: var(--portal-dark-text-soft);
-  --portal-status-peer-bg: rgba(106, 164, 255, 0.14);
-  --portal-status-peer-border: rgba(106, 164, 255, 0.34);
-  --portal-status-peer-text: #FBFFFF;
+  --portal-status-neutral-text: #fbffff;
+  --portal-status-peer-bg: #6aa4ff;
+  --portal-status-peer-border: #1d5fbb;
+  --portal-status-peer-text: #fbffff;
   --portal-status-revise-bg: #55389f;
   --portal-status-revise-border: #3f2977;
   --portal-status-revise-text: #FBFFFF;
-  --portal-status-warn-bg: rgba(240, 176, 95, 0.14);
-  --portal-status-warn-border: rgba(240, 176, 95, 0.34);
-  --portal-status-warn-text: #ffe0b6;
+  --portal-status-warn-bg: #ffd063;
+  --portal-status-warn-border: #6a4a00;
+  --portal-status-warn-text: #6a4a00;
   --portal-ods-accent-bad-bg: #ff0000;
   --portal-ods-accent-bad-text: #000000;
   --portal-ods-accent-good-bg: #3cb371;
@@ -566,8 +554,8 @@ html[data-theme="dark"] {
   --portal-field-state-edited: #9ab9e0;
   --portal-field-state-muted: var(--portal-dark-text-soft);
   --portal-field-invalid-shadow: 0 0 0 1px rgba(242, 138, 149, 0.22);
-  --portal-homework-link: #b4c4ea;
-  --portal-homework-link-hover: #d7e4ff;
+  --portal-homework-link: #e5f5ff;
+  --portal-homework-link-hover: #ffffff;
   --portal-homework-square-border: var(--portal-dark-border);
   --portal-homework-square-text: var(--portal-dark-text);
   --portal-metric-border: var(--portal-dark-border);
@@ -583,15 +571,20 @@ html[data-theme="dark"] {
   --portal-radio-control-bg: var(--portal-dark-field-bg);
   --portal-radio-control-border: var(--portal-dark-field-border);
   --portal-score-bar-fill: linear-gradient(90deg, #f39c12 0%, #3ba853 100%);
-  --portal-svg-accent-soft-fill: rgba(62, 123, 192, 0.15);
+  --portal-svg-accent-soft-fill: rgba(62, 123, 192, 0.28);
   --portal-table-dark-border: rgba(255, 255, 255, 0.14);
   --portal-theme-toggle-focus-ring: 0 0 0 3px rgba(47, 91, 227, 0.2);
   --portal-theme-toggle-hover-border: rgba(15, 22, 41, 1);
   --portal-theme-toggle-hover-border-dark: rgba(255, 215, 106, 0.42);
+  --portal-role-content-bg: var(--portal-neutral-content-dark);
   --portal-role-panel-bg: var(--portal-dark-surface-panel);
   --portal-role-card-bg: var(--portal-dark-surface-card);
   --portal-role-border: var(--portal-dark-border);
   --portal-role-text: var(--portal-dark-text);
+  --portal-surface-card: var(--portal-dark-surface-card);
+  --portal-surface-panel: var(--portal-dark-surface-panel);
+  --portal-surface-soft: var(--portal-dark-surface-soft);
+  --portal-surface-support: var(--portal-dark-surface-support);
   --portal-role-shadow: var(--portal-panel-shadow);
   --portal-role-shadow-strong: var(--portal-panel-shadow-strong);
   --portal-role-shadow-soft: var(--portal-panel-shadow-soft);
@@ -1329,14 +1322,7 @@ html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .portal-l
 }
 html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
 body.admin-portal-page.admin-auth-booting .wrap,
-html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col,
-html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col {
-  gap: 1rem;
-}
-html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
-body.admin-portal-page.admin-auth-booting .wrap,
-html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .main-col,
-html[data-student-auth-state="unauthenticated"] body.student-portal-page .main-col {
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap {
   box-sizing: border-box;
   margin-inline: auto;
   max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
@@ -1410,9 +1396,7 @@ body.admin-portal-page .wrap {
 html[data-theme="dark"] body.student-portal-page .portal-shell,
 html[data-theme="dark"] body.parent-portal-page .portal-layout,
 html[data-theme="dark"] body.student-portal-page .card,
-html[data-theme="dark"] body.student-portal-page .panel,
-html[data-theme="dark"] body.parent-portal-page .card,
-html[data-theme="dark"] body.parent-portal-page .panel {
+html[data-theme="dark"] body.parent-portal-page .card {
   color: var(--portal-dark-text);
 }
 .portal-text {
@@ -1448,13 +1432,15 @@ html[data-theme="dark"] body.page {
 }
 .portal-theme-panel,
 .portal-theme-card,
-.portal-theme-soft-card {
+.portal-theme-soft-card,
+.portal-theme-table-shell {
   border: 1px solid var(--portal-role-border);
   color: var(--portal-role-text);
 }
 .portal-theme-panel,
 .portal-theme-card,
-.portal-theme-soft-card {
+.portal-theme-soft-card,
+.portal-theme-table-shell {
   box-sizing: border-box;
 }
 .portal-theme-panel {
@@ -1465,6 +1451,20 @@ html[data-theme="dark"] body.page {
 .portal-theme-soft-card {
   background: var(--portal-role-card-bg);
   box-shadow: var(--portal-role-shadow);
+}
+.portal-theme-table-shell {
+  background: var(--portal-grade-table-shell-bg, var(--portal-role-card-bg));
+  box-shadow: var(--portal-role-shadow);
+}
+.portal-theme-chart-shell,
+.portal-theme-dialog,
+.portal-theme-tooltip {
+  background: var(--portal-role-card-bg);
+  box-shadow: var(--portal-role-shadow);
+}
+.portal-theme-chart-shell,
+.portal-theme-dialog {
+  overflow: hidden;
 }
 .portal-theme-overlay {
   background: var(--portal-modal-backdrop);
@@ -1479,6 +1479,11 @@ body.report-template-page .card {
   background: var(--portal-surface-card);
   border: 1px solid var(--portal-border);
   color: var(--portal-text);
+}
+html[data-theme="dark"] body.parent-portal-page .card {
+  background: var(--portal-neutral-card-dark);
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.admin-portal-page textarea.card {
   background: var(--portal-surface-card);
@@ -1513,8 +1518,7 @@ body.report-template-page .metric-table :is(th, td) {
 html[data-theme="dark"] body.admin-portal-page .metric-table :is(th, td) {
   border-color: var(--portal-dark-border);
 }
-body.student-portal-page .panel,
-body.parent-portal-page .panel,
+body.student-portal-page .card,
 body.admin-portal-page .panel,
 body.admin-portal-page .wrap .panel,
 body.report-template-page .panel {
@@ -1590,8 +1594,7 @@ body.student-portal-page .card > :not(:first-child),
 body.parent-portal-page .card > :not(:first-child),
 body.admin-portal-page .card > :not(:first-child),
 body.report-template-page .card > :not(:first-child),
-body.student-portal-page .panel > :not(:first-child),
-body.parent-portal-page .panel > :not(:first-child),
+body.student-portal-page .card > :not(:first-child),
 body.admin-portal-page .panel > :not(:first-child),
 body.report-template-page .panel > :not(:first-child),
 body.student-portal-page .content > :not(:first-child),
@@ -1599,18 +1602,10 @@ body.parent-portal-page .content > :not(:first-child),
 body.admin-portal-page .content > :not(:first-child) {
   margin-top: 12px;
 }
-body.student-portal-page .panel.homework-card,
-body.parent-portal-page .panel.homework-card {
+body.student-portal-page .card.homework-card,
+body.parent-portal-page .card.homework-card {
   background: var(--portal-surface-card);
   border-color: var(--portal-border);
-}
-body.student-portal-page .topbar,
-body.parent-portal-page .hero,
-body.parent-portal-page .topbar,
-body.student-portal-page .hero {
-  background: linear-gradient(180deg, #f4f8ff 0%, #eef3fb 100%);
-  border-color: #98adca;
-  color: #102f5f;
 }
 body.admin-portal-page .panel,
 body.admin-portal-page .wrap .panel {
@@ -1705,19 +1700,37 @@ body.admin-portal-page .system-health-loading {
 body.grades-tabulator-page {
   background: linear-gradient(180deg, var(--portal-role-card-bg) 0%, var(--portal-page-bg) 38%, var(--portal-role-panel-bg) 100%);
   color: var(--portal-text);
+  --portal-grade-table-shell-bg: var(--portal-role-card-bg);
+  --portal-grade-table-border: var(--portal-role-border);
+  --portal-grade-table-current-row-accent: var(--brand);
+  --portal-grade-table-current-row-bg: color-mix(in srgb, var(--portal-status-good-bg) 84%, #ffffff 16%);
+  --portal-grade-table-header-bg: var(--portal-role-panel-bg);
+  --portal-grade-table-row-bg: var(--portal-role-card-bg);
+  --portal-grade-table-row-completed-bg: var(--portal-status-good-bg);
+  --portal-grade-table-row-completed-hover-bg: color-mix(in srgb, var(--portal-status-good-bg) 82%, #ffffff 18%);
+  --portal-grade-table-row-even-bg: color-mix(in srgb, var(--portal-role-card-bg) 92%, #ffffff 8%);
+  --portal-grade-table-row-hover-bg: color-mix(in srgb, var(--portal-role-panel-bg) 82%, #ffffff 18%);
+  --portal-grade-table-row-late-bg: color-mix(in srgb, var(--portal-status-bad-bg) 82%, #ffffff 18%);
+  --portal-grade-table-row-late-hover-bg: color-mix(in srgb, var(--portal-status-bad-bg) 72%, #ffffff 28%);
+  --portal-grade-table-row-missed-bg: var(--portal-status-bad-bg);
+  --portal-grade-table-row-missed-hover-bg: color-mix(in srgb, var(--portal-status-bad-bg) 82%, #ffffff 18%);
+  --portal-grade-table-row-open-bg: var(--portal-status-amber-bg);
+  --portal-grade-table-row-open-hover-bg: color-mix(in srgb, var(--portal-status-amber-bg) 82%, #ffffff 18%);
+  --portal-grade-table-text: var(--portal-text);
 }
 html[data-theme="dark"] body.grades-tabulator-page {
   background: linear-gradient(180deg, var(--portal-role-panel-bg) 0%, var(--portal-page-bg) 38%, var(--portal-role-card-bg) 100%);
   color: var(--portal-dark-text);
+  --portal-grade-table-shell-bg: var(--portal-role-card-bg);
+  --portal-grade-table-border: var(--portal-dark-border);
+  --portal-grade-table-text: var(--portal-dark-text);
+  --portal-grade-table-row-late-bg: color-mix(in srgb, #b23a2e 22%, var(--portal-dark-card) 78%);
+  --portal-grade-table-row-late-hover-bg: color-mix(in srgb, #b23a2e 28%, var(--portal-dark-surface-support) 72%);
 }
-body.grades-tabulator-page .tabulator {
-  background: var(--portal-role-card-bg);
-  border: 1px solid var(--portal-role-border);
-  color: var(--portal-text);
-}
-body.grades-tabulator-page .grade-tabulator-shell {
-  background: var(--portal-role-card-bg);
-  border: 1px solid var(--portal-role-border);
+body.grades-tabulator-page .grade-tabulator-shell,
+body.grades-tabulator-page .portal-theme-table-shell {
+  background: var(--portal-grade-table-shell-bg);
+  border: 1px solid var(--portal-grade-table-border);
   border-radius: 12px;
   box-sizing: border-box;
   overflow: hidden;
@@ -1726,91 +1739,264 @@ body.grades-tabulator-page .grade-tabulator-shell {
 body.grades-tabulator-page .grade-tabulator {
   width: 100%;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator {
-  background: transparent;
-  border: 1px solid var(--portal-role-border);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator {
+  background: var(--portal-grade-table-shell-bg);
+  border: 1px solid var(--portal-grade-table-border);
+  border-radius: 12px;
+  box-sizing: border-box;
   color: var(--portal-grade-table-text);
-  font-size: 0.92rem;
+  font-size: 0.98rem;
+  overflow: hidden;
   width: 100%;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-header,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-header .tabulator-frozen,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-footer,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col.tabulator-frozen,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col.tabulator-frozen-left,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col.tabulator-frozen-right,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-header,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-header .tabulator-frozen,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-footer,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col.tabulator-frozen,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col.tabulator-frozen-left,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col.tabulator-frozen-right,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-cell,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-responsive-collapse,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-responsive-collapse table {
+  color: var(--portal-grade-table-text);
 }
 body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-header,
 body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-footer,
 body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col,
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell,
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row,
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse,
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-responsive-collapse table {
-  color: var(--portal-grade-table-text);
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-header,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-footer,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col {
+  background: var(--portal-surface-support);
+  border-color: var(--portal-grade-table-border);
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-header,
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-footer,
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col {
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-tableholder,
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-table,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-tableholder,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-table {
   background: var(--portal-role-panel-bg);
-  border-color: var(--portal-role-border);
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row {
-  background: var(--portal-role-card-bg);
-  border-bottom: 1px solid var(--portal-role-border);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row {
+  background-color: var(--portal-grade-table-row-bg) !important;
+  border-bottom: 1px solid var(--portal-grade-table-border);
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
-  background: color-mix(in srgb, var(--portal-role-card-bg) 92%, #ffffff 8%);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.tabulator-row-even {
+  background-color: var(--portal-grade-table-row-even-bg) !important;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row:hover {
-  background: color-mix(in srgb, var(--portal-role-panel-bg) 82%, #ffffff 18%);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row:hover,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row:hover {
+  background-color: var(--portal-grade-table-row-hover-bg) !important;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
-  background: color-mix(in srgb, var(--portal-status-good-bg) 84%, #ffffff 16%);
-  box-shadow: inset 4px 0 0 var(--portal-status-good-border);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-current-quarter {
+  background-color: var(--portal-grade-table-current-row-bg) !important;
+  box-shadow: inset 4px 0 0 var(--portal-grade-table-current-row-accent);
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-open {
-  background: var(--portal-status-amber-bg);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-open,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-open {
+  background-color: var(--portal-grade-table-row-open-bg) !important;
   box-shadow: inset 4px 0 0 #a86400;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
-  background: color-mix(in srgb, var(--portal-status-amber-bg) 82%, #ffffff 18%);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-open:hover {
+  background-color: var(--portal-grade-table-row-open-hover-bg) !important;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
-  background: var(--portal-status-good-bg);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-completed {
+  background-color: var(--portal-grade-table-row-completed-bg) !important;
   box-shadow: inset 4px 0 0 #1f7a47;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
-  background: color-mix(in srgb, var(--portal-status-good-bg) 82%, #ffffff 18%);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-completed:hover {
+  background-color: var(--portal-grade-table-row-completed-hover-bg) !important;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-late {
-  background: var(--portal-status-revise-bg);
-  box-shadow: inset 4px 0 0 #55389f;
-}
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
-  background: color-mix(in srgb, var(--portal-status-revise-bg) 82%, #ffffff 18%);
-}
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
-  background: var(--portal-status-bad-bg);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-late,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-late {
+  background-color: var(--portal-grade-table-row-late-bg) !important;
   box-shadow: inset 4px 0 0 #b23a2e;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
-  background: color-mix(in srgb, var(--portal-status-bad-bg) 82%, #ffffff 18%);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-late:hover {
+  background-color: var(--portal-grade-table-row-late-hover-bg) !important;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell {
-  border-right-color: var(--portal-role-border);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-missed {
+  background-color: var(--portal-grade-table-row-missed-bg) !important;
+  box-shadow: inset 4px 0 0 #b23a2e;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-missed:hover {
+  background-color: var(--portal-grade-table-row-missed-hover-bg) !important;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-cell {
+  background: transparent;
+  border-right-color: var(--portal-grade-table-border);
   box-sizing: border-box;
   line-height: 1.2;
   padding: 0.28rem 0.36rem;
   vertical-align: top;
   white-space: normal;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell:last-child {
-  border-right-color: var(--portal-role-border);
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col-resize-handle,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col-resize-handle {
+  background: color-mix(in srgb, var(--portal-grade-table-border) 74%, transparent);
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content {
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell:last-child,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-cell:last-child {
+  border-right-color: var(--portal-grade-table-border);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col .tabulator-col-content {
   box-sizing: border-box;
   min-height: 100%;
   padding: 0.24rem 0.36rem;
 }
-body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title {
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-col .tabulator-col-title {
   color: var(--portal-grade-table-text);
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 800;
   line-height: 1.2;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-tooltip,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-tooltip {
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-grade-table-border);
+  border-radius: 10px;
+  color: var(--portal-grade-table-text);
+  font-weight: 600;
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell a,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-cell a {
+  color: var(--portal-homework-link);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-cell a:hover,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-cell a:hover {
+  color: var(--portal-homework-link-hover);
+}
+body.grades-tabulator-page .grade-tabulator-shell .tabulator .tabulator-row.is-stat-row .tabulator-cell,
+body.grades-tabulator-page .portal-theme-table-shell.tabulator .tabulator-row.is-stat-row .tabulator-cell {
+  background: var(--portal-surface-support) !important;
+  color: var(--portal-grade-table-text);
+  font-weight: 600;
+}
+body.grades-tabulator-page .assignment-head {
+  background: var(--portal-assignment-head-bg);
+  border: 1px solid var(--portal-grade-table-border);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--portal-grade-table-border) 20%, transparent);
+}
+body.grades-tabulator-page .assignment-title-text,
+body.grades-tabulator-page .distribution-dialog h2,
+body.grades-tabulator-page .collapse-label,
+body.grades-tabulator-page .grid-title {
+  color: var(--portal-text);
+}
+body.grades-tabulator-page .assignment-sub,
+body.grades-tabulator-page .assignment-sub.core-sub,
+body.grades-tabulator-page .distribution-mini-meta,
+body.grades-tabulator-page .distribution-dialog-meta,
+body.grades-tabulator-page .distribution-dialog-hint,
+body.grades-tabulator-page .distribution-zoom-label,
+body.grades-tabulator-page .collapse-value,
+body.grades-tabulator-page .detail-empty-copy,
+body.grades-tabulator-page .dim,
+body.grades-tabulator-page .group-meta,
+body.grades-tabulator-page .section-note,
+body.grades-tabulator-page .stat-chip {
+  color: var(--portal-support-message);
+}
+body.grades-tabulator-page .detail-empty-title,
+body.grades-tabulator-page .app-school-name,
+body.grades-tabulator-page .app-brand-logo-fallback {
+  color: var(--portal-text);
+}
+body.grades-tabulator-page .header-action-btn {
+  border-color: transparent;
+  color: var(--portal-primary-text-strong);
+}
+body.grades-tabulator-page .header-action-btn.plus {
+  background: linear-gradient(180deg, var(--portal-action-green-top) 0%, var(--portal-action-green-bottom) 100%);
+  border-color: var(--portal-action-green-border);
+  color: var(--portal-action-green-text);
+}
+body.grades-tabulator-page .header-action-btn.minus {
+  background: linear-gradient(180deg, var(--portal-action-red-top) 0%, var(--portal-action-red-bottom) 100%);
+  border-color: var(--portal-action-red-border);
+  color: var(--portal-action-red-text);
+}
+body.grades-tabulator-page .exercise-cell.ontime {
+  background: var(--portal-status-good-bg);
+  border-color: var(--portal-status-good-border);
+  color: var(--portal-status-good-text);
+}
+body.grades-tabulator-page .exercise-cell.late {
+  background: var(--portal-status-warn-bg);
+  border-color: var(--portal-status-warn-border);
+  color: var(--portal-status-warn-text);
+}
+body.grades-tabulator-page .exercise-cell.notdone {
+  background: var(--portal-status-bad-bg);
+  border-color: var(--portal-status-bad-border);
+  color: var(--portal-status-bad-text);
+}
+body.grades-tabulator-page .distribution-mini:not(.portal-button),
+body.grades-tabulator-page .tabulator-responsive-collapse,
+body.grades-tabulator-page .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
+  background: var(--portal-surface-support);
+  border-color: var(--portal-grade-table-border);
+  color: var(--portal-grade-table-text);
+}
+body.grades-tabulator-page .distribution-mini.portal-button {
+  color: var(--portal-primary-text-strong);
+}
+body.grades-tabulator-page .distribution-mini-meta {
+  color: var(--portal-primary-text-strong);
+}
+body.grades-tabulator-page .collapse-item,
+body.grades-tabulator-page .distribution-close,
+body.grades-tabulator-page .distribution-expand,
+body.grades-tabulator-page .distribution-zoom-btn,
+body.grades-tabulator-page .tabulator-tooltip {
+  background: var(--portal-surface-card);
+  border-color: var(--portal-grade-table-border);
+  color: var(--portal-grade-table-text);
+}
+body.grades-tabulator-page .distribution-mini-chart svg line {
+  stroke: var(--portal-primary-text-strong);
+}
+body.grades-tabulator-page .distribution-mini-chart svg polyline,
+body.grades-tabulator-page .distribution-mini-chart svg circle {
+  stroke: var(--portal-primary-text-strong);
+}
+body.grades-tabulator-page .distribution-mini-chart svg polyline {
+  fill: none;
+}
+body.grades-tabulator-page .distribution-mini-chart svg circle {
+  fill: var(--portal-primary-text-strong);
+}
+body.grades-tabulator-page .distribution-dialog h2 {
+  color: var(--portal-role-text);
+}
+body.grades-tabulator-page .distribution-dialog-meta,
+body.grades-tabulator-page .distribution-dialog-hint,
+body.grades-tabulator-page .distribution-zoom-label {
+  color: var(--portal-support-message);
 }
 body.grades-tabulator-page .table-modal-backdrop {
   border: 0;
@@ -1913,6 +2099,9 @@ body.student-points-page .pill {
 }
 body.student-enrollment-page .status,
 body.grades-tabulator-page .status {
+  background: var(--portal-status-neutral-bg);
+  border: 1px solid var(--portal-status-neutral-border);
+  border-radius: 10px;
   color: var(--portal-text-soft);
   margin: 0;
   min-height: 1.2rem;
@@ -1920,6 +2109,7 @@ body.grades-tabulator-page .status {
 body.student-enrollment-page .history-rail__button {
   appearance: none;
   align-items: center;
+  box-sizing: border-box;
   display: inline-flex;
   justify-content: center;
   min-height: 0;
@@ -2003,7 +2193,14 @@ body.student-enrollment-page .text-zoom-controls .zoom-label {
 }
 body.student-enrollment-page .status.is-error,
 body.grades-tabulator-page .status.is-error {
+  background: var(--portal-status-bad-bg);
+  border-color: var(--portal-status-bad-border);
   color: var(--portal-status-bad-text);
+}
+body.grades-tabulator-page .status.is-warn {
+  background: var(--portal-status-warn-bg);
+  border-color: var(--portal-status-warn-border);
+  color: var(--portal-status-warn-text);
 }
 body.grades-tabulator-page .metric-card h2 {
   color: var(--portal-text-soft);
@@ -2033,13 +2230,13 @@ body.grades-tabulator-page .distribution-dialog h2 {
 }
 body.grades-tabulator-page .distribution-dialog-meta,
 body.grades-tabulator-page .distribution-dialog-hint {
-  color: var(--portal-text-soft);
+  color: var(--portal-support-message);
   font-size: 0.9rem;
   line-height: 1.35;
   margin: 0;
 }
 body.grades-tabulator-page .distribution-zoom-label {
-  color: var(--portal-text-soft);
+  color: var(--portal-support-message);
 }
 body.admin-portal-page .system-health-loading-pulse {
   color: var(--primary-color);
@@ -2202,7 +2399,7 @@ body.parent-portal-page .queue-compact-datetime-time {
 }
 body.student-portal-page .queue-table-wrap,
 body.parent-portal-page .queue-table-wrap {
-  background: var(--portal-surface-card);
+  background: var(--portal-surface-support);
   border: 1px solid var(--line);
   border-radius: var(--radius-2);
   box-sizing: border-box;
@@ -2411,7 +2608,7 @@ body.parent-portal-page .portal-modal-body {
   --fc-event-bg-color: #edf4ff;
   --fc-event-border-color: #83a8de;
   --fc-event-text-color: #173b78;
-  background: var(--portal-surface-card);
+  background: var(--portal-surface-support);
   border-color: var(--portal-border);
   color: var(--portal-text);
 }
@@ -2458,6 +2655,7 @@ body.student-portal-page .grade-tabulator-shell .tabulator,
 body.parent-portal-page .grade-tabulator-shell .tabulator {
   background: transparent;
   border: 1px solid var(--portal-grade-table-border);
+  box-sizing: border-box;
   color: var(--portal-grade-table-text);
   font-size: 0.92rem;
   width: 100%;
@@ -2947,7 +3145,7 @@ body.parent-portal-page .chip-link:focus-visible {
 }
 body.student-portal-page .queue-table-wrap,
 body.parent-portal-page .queue-table-wrap {
-  background: var(--portal-surface-card) !important;
+  background: var(--portal-surface-support) !important;
   border: 1px solid var(--portal-border) !important;
 }
 body.student-portal-page .detail-empty,
@@ -3720,8 +3918,9 @@ html[data-theme="dark"] body.admin-portal-page {
   --portal-chart-surface: var(--portal-neutral-chart-dark);
   --portal-chart-surface-soft: var(--portal-neutral-table-dark);
   --portal-dark-text: #FBFFFF;
-  --portal-dark-text-soft: #f9faff;
+  --portal-dark-text-soft: #e5f5ff;
   --portal-support-message: #FBFFFF;
+  --portal-grade-table-shell-bg: var(--portal-neutral-panel-dark);
   --portal-surface-card: var(--portal-role-card-bg);
   --portal-surface-panel: var(--portal-role-panel-bg);
   --portal-surface-soft: var(--portal-role-data-surface-bg);
@@ -3944,9 +4143,6 @@ html[data-theme="dark"] body.parent-portal-page {
   --portal-grade-table-text: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.student-portal-page .card,
-html[data-theme="dark"] body.student-portal-page .panel,
-html[data-theme="dark"] body.student-portal-page .topbar,
-html[data-theme="dark"] body.student-portal-page .hero,
 html[data-theme="dark"] body.student-portal-page .side-nav,
 html[data-theme="dark"] body.student-portal-page .side-brand,
 html[data-theme="dark"] body.student-portal-page .side-link,
@@ -3962,9 +4158,6 @@ html[data-theme="dark"] body.student-portal-page .identity-item,
 html[data-theme="dark"] body.student-portal-page .metric,
 html[data-theme="dark"] body.student-portal-page .homework-card-shell,
 html[data-theme="dark"] body.parent-portal-page .card,
-html[data-theme="dark"] body.parent-portal-page .panel,
-html[data-theme="dark"] body.parent-portal-page .topbar,
-html[data-theme="dark"] body.parent-portal-page .hero,
 html[data-theme="dark"] body.parent-portal-page .side-nav,
 html[data-theme="dark"] body.parent-portal-page .side-brand,
 html[data-theme="dark"] body.parent-portal-page .side-link,
@@ -3988,13 +4181,18 @@ html[data-theme="dark"] body.admin-portal-page .panel {
   border-color: var(--portal-dark-border) !important;
   color: var(--portal-dark-text) !important;
 }
+html[data-theme="dark"] body.student-portal-page .queue-table-wrap,
+html[data-theme="dark"] body.parent-portal-page .queue-table-wrap {
+  background: var(--portal-dark-surface-support) !important;
+  border-color: var(--portal-dark-border) !important;
+}
 html[data-theme="dark"] body.admin-portal-page .card {
   background: var(--portal-neutral-card-dark) !important;
   border-color: var(--portal-dark-border) !important;
   color: var(--portal-dark-text) !important;
 }
-html[data-theme="dark"] body.student-portal-page .panel.homework-card,
-html[data-theme="dark"] body.parent-portal-page .panel.homework-card {
+html[data-theme="dark"] body.student-portal-page .card.homework-card,
+html[data-theme="dark"] body.parent-portal-page .card.homework-card {
   background: var(--portal-dark-surface-card);
   border-color: var(--portal-dark-border);
 }
@@ -4010,10 +4208,6 @@ html[data-theme="dark"] body.student-portal-page .side-nav,
 html[data-theme="dark"] body.student-portal-page .side-brand,
 html[data-theme="dark"] body.parent-portal-page .side-nav,
 html[data-theme="dark"] body.parent-portal-page .side-brand,
-html[data-theme="dark"] body.student-portal-page .topbar,
-html[data-theme="dark"] body.student-portal-page .hero,
-html[data-theme="dark"] body.parent-portal-page .topbar,
-html[data-theme="dark"] body.parent-portal-page .hero,
 html[data-theme="dark"] body.admin-portal-page .wrap .panel {
   background: var(--portal-neutral-panel-dark);
   border-color: var(--portal-dark-border);
@@ -4040,18 +4234,21 @@ body.parent-portal-page #parentOverviewSummary {
   margin: 0.9rem 0;
 }
 body.parent-portal-page #parentOverviewSummary {
-  background: none;
-  background-color: transparent;
+  background: var(--portal-surface-panel);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--radius-3);
+  box-shadow: var(--portal-role-shadow);
+  box-sizing: border-box;
   color: var(--portal-text);
   display: block;
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1.12;
-  margin: 0.9rem 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 0;
+  padding: 12px 14px;
+  white-space: normal;
+  word-break: break-word;
 }
 html[data-theme="dark"] body.parent-portal-page #parentOverviewSummary {
   color: var(--portal-dark-text);
@@ -4062,7 +4259,11 @@ body.parent-portal-page .parent-overview-title-head {
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1.12;
-  margin: 0.9rem 0;
+  margin: 0;
+}
+html[data-theme="dark"] body:is(.student-portal-page, .parent-portal-page) :is(h1, h2, h3, h4, h5, h6),
+html[data-theme="dark"] body:is(.student-portal-page, .parent-portal-page) :is(.student-overview-title, .parent-overview-title-head, .homework-card-label, .homework-content-title, .identity-label, .detail-item-head strong, .section-head h2, .section-head h3, .section-title) {
+  color: #000000 !important;
 }
 body.student-portal-page .homework-card-label,
 body.parent-portal-page .homework-card-label {
@@ -4258,7 +4459,7 @@ body.parent-portal-page .link-btn {
   text-align: center;
   text-decoration: none;
 }
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn),
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn),
 body.admin-portal-page .link-btn {
   align-items: center;
   background: #f1f5ff;
@@ -4273,8 +4474,8 @@ body.admin-portal-page .link-btn {
   text-align: center;
   text-decoration: none;
 }
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):hover:not(:disabled),
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):focus-visible,
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):hover:not(:disabled),
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):focus-visible,
 body.admin-portal-page .link-btn:hover:not(:disabled),
 body.admin-portal-page .link-btn:focus-visible {
   background: #f3f8ff;
@@ -4283,7 +4484,7 @@ body.admin-portal-page .link-btn:focus-visible {
   outline: none;
   transform: translateY(-1px);
 }
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):disabled,
+body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.primary):not(.alt):not(.btn-edit):not(.btn-delete):not(.danger):not(.ghost):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):disabled,
 body.admin-portal-page .link-btn:disabled {
   box-shadow: none;
   cursor: not-allowed;
@@ -4373,7 +4574,7 @@ body.student-portal-page #appPanel {
   gap: 12px;
   min-width: 0;
 }
-body.parent-portal-page .panel {
+body.parent-portal-page .card {
   margin-top: 10px;
   min-width: 0;
 }
@@ -4873,7 +5074,7 @@ body.parent-portal-page .quick-link-select {
   border-radius: var(--radius-2);
   box-sizing: border-box;
   display: grid;
-  font-size: 13px;
+  font-size: clamp(0.95rem, 0.25vw + 0.9rem, 1.08rem);
   gap: 6px;
   min-height: 46px;
   padding: 10px 12px;
@@ -4892,7 +5093,7 @@ body.parent-portal-page .quick-link-select select {
   border: 0;
   border-radius: 0;
   color: inherit;
-  font-size: inherit;
+  font-size: clamp(1rem, 0.35vw + 0.95rem, 1.16rem);
   line-height: 1.25;
   min-height: 0;
   padding: 0;
@@ -5525,7 +5726,6 @@ body.parent-portal-page .report-archive-link {
   text-underline-offset: 2px;
 }
 html[data-theme="dark"] body.parent-portal-page .toolbar,
-html[data-theme="dark"] body.parent-portal-page .panel,
 html[data-theme="dark"] body.parent-portal-page .metric,
 html[data-theme="dark"] body.parent-portal-page .homework-card-shell,
 html[data-theme="dark"] body.parent-portal-page .report-head-card,
@@ -5542,7 +5742,10 @@ html[data-theme="dark"] body.parent-portal-page .metric.bad {
   color: var(--portal-dark-text);
 }
 html[data-theme="dark"] body.parent-portal-page .report-archive-link {
-  color: #b4c4ea;
+  color: var(--portal-dark-link);
+}
+html[data-theme="dark"] body.parent-portal-page .report-archive-link:active {
+  color: var(--portal-dark-link-active);
 }
 body.parent-portal-page .report-head-value {
   font-size: 13px;
@@ -5752,6 +5955,7 @@ body.parent-portal-page .report-modal-ack-status.is-reviewed {
   }
   body.student-portal-page .quick-link-select select,
   body.parent-portal-page .quick-link-select select {
+    font-size: clamp(1.05rem, 0.45vw + 1rem, 1.24rem);
     min-height: 44px;
   }
 }
@@ -6433,7 +6637,7 @@ html[data-theme="dark"] body.admin-portal-page :where(#authPanel input, #authPan
 html[data-theme="dark"] body.student-portal-page #loginPanel .login-link,
 html[data-theme="dark"] body.parent-portal-page #loginCard .login-link,
 html[data-theme="dark"] body.admin-portal-page #authPanel .login-link {
-  color: var(--portal-login-link-dark);
+  color: var(--portal-dark-link);
 }
 body.student-portal-page #loginPanel :is(h1, h2),
 body.parent-portal-page #loginCard :is(h1, h2),
@@ -6503,13 +6707,17 @@ html[data-theme="dark"] .env-badge[data-env="production"] {
 }
 html[data-theme="dark"] body.student-portal-page .homework-link,
 html[data-theme="dark"] body.parent-portal-page .homework-link {
-  color: #b4c4ea;
+  color: var(--portal-dark-link);
 }
 html[data-theme="dark"] body.student-portal-page .homework-link:hover,
 html[data-theme="dark"] body.student-portal-page .homework-link:focus-visible,
 html[data-theme="dark"] body.parent-portal-page .homework-link:hover,
 html[data-theme="dark"] body.parent-portal-page .homework-link:focus-visible {
-  color: #eef4ff;
+  color: var(--portal-dark-link-hover);
+}
+html[data-theme="dark"] body.student-portal-page .homework-link:active,
+html[data-theme="dark"] body.parent-portal-page .homework-link:active {
+  color: var(--portal-dark-link-active);
 }
 html[data-theme="dark"] body.student-portal-page .metric.warn,
 html[data-theme="dark"] body.parent-portal-page .metric.metric-blue {
@@ -6553,7 +6761,7 @@ html[data-theme="dark"] body:is(.student-points-page, .student-enrollment-page, 
   background: color-mix(in srgb, var(--portal-dark-surface-support) 84%, #ffffff 16%);
 }
 html[data-theme="dark"] body.student-points-page #loginPanel .login-link {
-  color: var(--portal-login-link-dark);
+  color: var(--portal-dark-link);
 }
 html[data-theme="dark"] body.student-enrollment-page .status,
 html[data-theme="dark"] body.grades-tabulator-page .status {
@@ -6577,9 +6785,63 @@ html[data-theme="dark"] body.student-enrollment-page .text-zoom-controls .zoom-l
 html[data-theme="dark"] body.student-enrollment-page .app-school-name {
   color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.grades-tabulator-page .app-school-name,
+html[data-theme="dark"] body.grades-tabulator-page .app-brand-logo-fallback,
+html[data-theme="dark"] body.grades-tabulator-page .assignment-title-text,
+html[data-theme="dark"] body.grades-tabulator-page .collapse-label,
+html[data-theme="dark"] body.grades-tabulator-page .detail-empty-title,
 html[data-theme="dark"] body.grades-tabulator-page .metric-card p,
 html[data-theme="dark"] body.grades-tabulator-page .grid-title {
   color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.grades-tabulator-page .metric-card h2,
+html[data-theme="dark"] body.grades-tabulator-page .assignment-sub,
+html[data-theme="dark"] body.grades-tabulator-page .assignment-sub.core-sub,
+html[data-theme="dark"] body.grades-tabulator-page .collapse-value,
+html[data-theme="dark"] body.grades-tabulator-page .detail-empty-copy,
+html[data-theme="dark"] body.grades-tabulator-page .dim,
+html[data-theme="dark"] body.grades-tabulator-page .distribution-dialog-meta,
+html[data-theme="dark"] body.grades-tabulator-page .distribution-dialog-hint,
+html[data-theme="dark"] body.grades-tabulator-page .distribution-zoom-label,
+html[data-theme="dark"] body.grades-tabulator-page .group-meta,
+html[data-theme="dark"] body.grades-tabulator-page .section-note,
+html[data-theme="dark"] body.grades-tabulator-page .stat-chip {
+  color: var(--portal-dark-text-soft);
+}
+html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-meta {
+  color: var(--portal-primary-text-strong);
+}
+html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg line {
+  stroke: var(--portal-primary-text-strong);
+}
+html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg polyline,
+html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg circle {
+  stroke: var(--portal-primary-text-strong);
+}
+html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg polyline {
+  fill: none;
+}
+html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg circle {
+  fill: var(--portal-primary-text-strong);
+}
+html[data-theme="dark"] body.grades-tabulator-page .exercise-cell.ontime {
+  background: color-mix(in srgb, #1f7a47 26%, var(--portal-dark-card) 74%);
+  border-color: rgba(57, 211, 102, 0.48);
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.grades-tabulator-page .exercise-cell.late {
+  background: color-mix(in srgb, #55389f 24%, var(--portal-dark-card) 76%);
+  border-color: rgba(163, 131, 255, 0.5);
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.grades-tabulator-page .exercise-cell.notdone {
+  background: color-mix(in srgb, #b23a2e 24%, var(--portal-dark-card) 76%);
+  border-color: rgba(255, 132, 121, 0.5);
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.grades-tabulator-page .score-bar {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border);
 }
 html[data-theme="dark"] body.student-portal-page .student-overview-title,
 html[data-theme="dark"] body.parent-portal-page .parent-overview-title,
@@ -6621,11 +6883,14 @@ html[data-theme="dark"] body.parent-portal-page .report-archive-item.is-outstand
 html[data-theme="dark"] body.parent-portal-page .report-archive-link {
   background: transparent !important;
   border-color: transparent !important;
-  color: #b4c4ea !important;
+  color: var(--portal-dark-link) !important;
 }
 html[data-theme="dark"] body.parent-portal-page .report-archive-link:hover,
 html[data-theme="dark"] body.parent-portal-page .report-archive-link:focus-visible {
-  color: #eef4ff !important;
+  color: var(--portal-dark-link-hover) !important;
+}
+html[data-theme="dark"] body.parent-portal-page .report-archive-link:active {
+  color: var(--portal-dark-link-active) !important;
 }
 html[data-theme="dark"] body.parent-portal-page .report-head-card h5,
 html[data-theme="dark"] body.parent-portal-page .report-block h5,
@@ -6744,15 +7009,6 @@ a {
   display: block;
 }
 .shell {
-  box-sizing: border-box;
-  display: grid;
-  gap: 12px;
-  margin: 0 auto;
-  max-width: 1440px;
-  padding: 16px;
-  width: 100%;
-}
-.main-col {
   box-sizing: border-box;
   display: grid;
   gap: 12px;
@@ -7615,8 +7871,9 @@ body.modal-open {
 .hero,
 .topbar {
   align-items: center;
-  background: linear-gradient(180deg, #f4f8ff 0%, #eef3fb 100%);
-  border-color: var(--border-dg);
+  background: var(--portal-role-content-bg);
+  border-color: var(--portal-role-border);
+  color: var(--portal-role-text);
   display: grid;
   gap: 8px;
   padding: 6px 64px 6px 12px;
@@ -7919,7 +8176,7 @@ html[data-theme="dark"] .report-control-line strong {
 }
 .zoom-label {
   color: var(--portal-data-label);
-  font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+  font-family: var(--font-base, system-ui, -apple-system, sans-serif);
   font-size: 11px;
 }
 .floating-menu-btn {
@@ -8433,9 +8690,6 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   .shell {
     padding: 16px;
   }
-  .main-col {
-    padding: 16px;
-  }
 }
 @media (min-width: 960px) {
   .portal-grid {
@@ -8465,9 +8719,6 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 @media (max-width: 639px) {
   .shell {
     margin: 12px auto;
-    padding: 12px;
-  }
-  .main-col {
     padding: 12px;
   }
   .hero,
@@ -8509,9 +8760,6 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 }
 @media (max-width: 820px) {
   .shell {
-    padding: 12px;
-  }
-  .main-col {
     padding: 12px;
   }
   .hero,
@@ -8571,12 +8819,12 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 }
 .footer-text {
   color: var(--text-tertiary);
-  font-family: var(--font-body);
+  font-family: var(--font-base, system-ui, -apple-system, sans-serif);
   font-size: 0.95rem;
 }
 .footer-tagline {
   color: var(--phoenix-orange);
-  font-family: var(--font-brand);
+  font-family: var(--font-base, system-ui, -apple-system, sans-serif);
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -8742,7 +8990,7 @@ body.student-portal-page .header-bar a:hover {
 /* Generated portal color registry: central SSOT for page-local color literals. */
 :root {
   --portal-color-000d003e64: #f3f4f6;
-  --portal-color-0077beaeb3: color-mix(in srgb, #b23a2e 24%, #484f56 76%);
+  --portal-color-0077beaeb3: color-mix(in srgb, #b23a2e 24%, #525252 76%);
   --portal-color-01768eaf2d: rgba(240, 176, 95, 0.42);
   --portal-color-0288ae9c5c: #dde5f2;
   --portal-color-039996725e: #fbe9ea;
@@ -8750,7 +8998,7 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-05477e89d0: rgba(12, 22, 39, 0.4);
   --portal-color-069bc807ea: rgba(240, 176, 95, 0.18);
   --portal-color-08145c4aa5: #3a87ad;
-  --portal-color-0a4767016c: #3c4248;
+  --portal-color-0a4767016c: #4c4c4c;
   --portal-color-0b88d7b8bd: #66008e;
   --portal-color-0c609735cb: #849ec4;
   --portal-color-0c79f2d461: #0f6d2a;
@@ -8768,7 +9016,7 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-1b4f759bcf: rgba(0, 0, 0, 0.35);
   --portal-color-1b8d818ad2: #143157;
   --portal-color-1c5b3b4180: #1f7a47;
-  --portal-color-1c77cc184c: color-mix(in srgb, #484f56 64%, #a86400 36%);
+  --portal-color-1c77cc184c: color-mix(in srgb, #525252 64%, #a86400 36%);
   --portal-color-1d89e3bf1e: #516991;
   --portal-color-1f6f13263d: #bbb;
   --portal-color-1fafc2b5c0: #8ea9cc;
@@ -8777,7 +9025,7 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-23882d0d91: #fbecec;
   --portal-color-243de7efde: #86ade4;
   --portal-color-24f3dafd18: #fbfcff;
-  --portal-color-2526d46483: color-mix(in srgb, #484f56 72%, #ffffff 28%);
+  --portal-color-2526d46483: color-mix(in srgb, #525252 72%, #ffffff 28%);
   --portal-color-254f75671f: rgba(255, 255, 255, 0);
   --portal-color-25a7b86435: #19406d;
   --portal-color-25d88c9a84: #2a9361;
@@ -8851,8 +9099,8 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-5bdf769798: #244165;
   --portal-color-5ce4c7c743: #e1e8f4;
   --portal-color-5f0caed72f: #9fb8d8;
-  --portal-color-5ff93edc43: color-mix(in srgb, #b23a2e 18%, #3c4248 82%);
-  --portal-color-628daaa478: color-mix(in srgb, #1f7a47 24%, #484f56 76%);
+  --portal-color-5ff93edc43: color-mix(in srgb, #b23a2e 18%, #4c4c4c 82%);
+  --portal-color-628daaa478: color-mix(in srgb, #1f7a47 24%, #525252 76%);
   --portal-color-64f144942a: #b6c8e4;
   --portal-color-66a08ca4d4: #415b84;
   --portal-color-6773f1a111: #e18825;
@@ -8882,7 +9130,7 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-87bbb79e2e: #9eb7dd;
   --portal-color-8aa2dbb5d9: #eef4ff;
   --portal-color-8e5456173c: #96abc9;
-  --portal-color-8e84576524: color-mix(in srgb, #1f7a47 18%, #3c4248 82%);
+  --portal-color-8e84576524: color-mix(in srgb, #1f7a47 18%, #4c4c4c 82%);
   --portal-color-8f0ff52e0d: rgba(20, 35, 68, 0.2);
   --portal-color-8ff5c44654: #d8dee9;
   --portal-color-90f12f5115: #445f89;
@@ -8923,7 +9171,7 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-b0e4f2e1c7: rgba(12, 21, 40, 0.32);
   --portal-color-b204248b5d: #ddd;
   --portal-color-b245852d50: #1d2f4a;
-  --portal-color-b514a5be40: color-mix(in srgb, #484f56 72%, #55389f 28%);
+  --portal-color-b514a5be40: color-mix(in srgb, #525252 72%, #55389f 28%);
   --portal-color-b52559cb1c: rgba(242, 138, 149, 0.42);
   --portal-color-b6a2764085: #c1d0e4;
   --portal-color-b7090b879b: #7a8ca9;
@@ -8943,7 +9191,7 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-c3656bda4a: #0f1d33;
   --portal-color-c559054d76: rgba(120, 0, 12, 0.35);
   --portal-color-c659d630ce: #ffffff;
-  --portal-color-c684a558ca: color-mix(in srgb, #484f56 74%, #a86400 26%);
+  --portal-color-c684a558ca: color-mix(in srgb, #525252 74%, #a86400 26%);
   --portal-color-c7238605a6: rgba(0,0,0,0.1);
   --portal-color-c736538b33: #7bc48f;
   --portal-color-c82f339b4e: #f8fbff;
@@ -8990,11 +9238,11 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-efc4ce6dd0: #0f452c;
   --portal-color-f0163600e1: rgba(181, 0, 16, 0.2);
   --portal-color-f145d41978: #8ea4c0;
-  --portal-color-f18c37b592: color-mix(in srgb, #484f56 62%, #55389f 38%);
+  --portal-color-f18c37b592: color-mix(in srgb, #525252 62%, #55389f 38%);
   --portal-color-f549e07556: #1f2d45;
   --portal-color-f5531c30a5: #123866;
   --portal-color-f6cf2589bd: #ffe4a3;
-  --portal-color-f8af596fb2: color-mix(in srgb, #484f56 82%, #ffffff 18%);
+  --portal-color-f8af596fb2: color-mix(in srgb, #525252 82%, #ffffff 18%);
   --portal-color-f8f09f4f88: rgba(12, 31, 63, 0.08);
   --portal-color-f901fae8ae: #f0b05f;
   --portal-color-fac29d76ac: #d0d7e2;

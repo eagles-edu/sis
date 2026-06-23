@@ -7,88 +7,52 @@
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <title>The Eagles Club SIS Grades Table</title>
   <link rel="stylesheet" href="../vendor/tabulatorz/tabulator.min.css">
+  <script src="/web-asset/shared/portal-theme-state.js"></script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <script>
     (() => {
-      try {
-        const savedTheme = localStorage.getItem("sis-theme");
-        document.documentElement.dataset.theme =
-          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
-      } catch {
-        document.documentElement.dataset.theme = "light";
-      }
+      window.SIS_PORTAL_THEME?.initTheme("light");
     })();
   </script>
   <style>
-    :root {
-      --bg: var(--portal-page-bg);
-      --card: var(--portal-surface-card);
-      --card-soft: var(--portal-surface-support);
-      --panel: var(--portal-surface-panel);
-      --ink: var(--portal-text);
-      --ink-soft: var(--portal-text-soft);
-      --accent: var(--portal-action-blue-top);
-      --accent-soft: var(--portal-surface-support);
-      --line: var(--portal-border);
-      --ok: var(--portal-status-good-text);
-      --warn: var(--portal-status-warn-text);
-      --bad: var(--portal-status-bad-text);
-      color-scheme: light;
-    }
-
-    html[data-theme="dark"] {
-      --bg: var(--portal-dark-page-bg);
-      --card: var(--portal-dark-surface-card);
-      --card-soft: var(--portal-dark-surface-support);
-      --panel: var(--portal-dark-surface-panel);
-      --ink: var(--portal-dark-text);
-      --ink-soft: var(--portal-dark-text-soft);
-      --accent: var(--portal-status-info-border);
-      --accent-soft: var(--portal-dark-surface-support);
-      --line: var(--portal-dark-border);
-      --ok: var(--portal-status-good-text);
-      --warn: var(--portal-status-warn-text);
-      --bad: var(--portal-status-bad-text);
-      color-scheme: dark;
-    }
-
     * {
       box-sizing: border-box;
     }
 
     body {
-      background: linear-gradient(180deg, var(--card) 0%, var(--bg) 38%, var(--card-soft) 100%);
-      color: var(--ink);
-      font-family: "Manrope", "Avenir Next", "Segoe UI", "Noto Sans", sans-serif;
+      color: var(--portal-role-text);
+      font-family:  var(--font-base, system-ui, -apple-system, sans-serif);
       line-height: 1.4;
       margin: 0;
       min-height: 100vh;
     }
 
-    html[data-theme="dark"] body {
-      background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 38%, var(--card) 100%);
+    body.grades-tabulator-page {
+      background: var(--portal-page-bg);
+      padding-block: 0;
     }
 
-    .page-shell {
-      box-sizing: border-box;
+    html[data-theme="dark"] body.grades-tabulator-page {
+      background: var(--portal-dark-page-bg);
+    }
+
+    .wrap {
       display: grid;
-      gap: 0.75rem;
-      margin: 24px auto;
-      padding: 16px;
-      --portal-center-column-max: 1460px;
-      width: min(1460px, calc(100% - 32px));
-    }
-
-    .page-shell>* {
-      min-width: 0;
-    }
-
-    .top-stack {
-      display: grid;
-      gap: 0.75rem;
+      gap: 14px;
       margin: 0 auto;
+      max-width: 1440px;
+      padding: 18px;
+      width: min(100%, 1440px);
+    }
+
+    .wrap > * {
       min-width: 0;
-      width: min(1040px, 100%);
+    }
+
+    .section-stack,
+    .app-page-header {
+      display: grid;
+      gap: 14px;
     }
 
     .hero,
@@ -100,15 +64,15 @@
 
     .hero.portal-theme-panel,
     .control-card.portal-theme-panel {
-      background: var(--panel);
-      border-color: var(--line);
-      color: var(--ink);
+      background: var(--portal-surface-panel);
+      border-color: var(--portal-border);
+      color: var(--portal-role-text);
     }
 
     .grid-card.portal-theme-card {
-      background: var(--card);
-      border-color: var(--line);
-      color: var(--ink);
+      background: var(--portal-surface-card);
+      border-color: var(--portal-border);
+      color: var(--portal-role-text);
     }
 
     .grid-card {
@@ -123,14 +87,14 @@
       margin-top: 0.65rem;
     }
 
-    .btn,
+    .btn:not(.portal-button),
     .chip-link {
       align-items: center;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 999px;
+      background: var(--portal-surface-card);
+      border: 1px solid var(--portal-border);
+      border-radius: var(--portal-radius-button);
       box-sizing: border-box;
-      color: var(--ink);
+      color: var(--portal-role-text);
       cursor: pointer;
       display: inline-flex;
       font: inherit;
@@ -152,21 +116,27 @@
       cursor: pointer;
     }
 
-    .btn.primary {
+    .btn:not(.portal-button).primary {
       background: linear-gradient(180deg, var(--portal-action-blue-top) 0%, var(--portal-action-blue-bottom) 100%);
       border-color: var(--portal-action-blue-border);
       color: var(--portal-action-blue-text);
     }
 
-    .btn.subtle {
-      background: var(--card-soft);
-      border-color: var(--line);
-      color: var(--ink);
+    .btn.subtle:not(.portal-button) {
+      background: var(--portal-surface-support);
+      border-color: var(--portal-border);
+      color: var(--portal-role-text);
       font-weight: 600;
     }
 
-    .status.is-warn {
-      color: var(--warn);
+    .section-note {
+      margin: 0;
+    }
+
+    .status {
+      margin: 0;
+      padding: 0.56rem 0.7rem;
+      min-block-size: calc(1.5em + 1.12rem);
     }
 
     .status a {
@@ -184,22 +154,45 @@
     }
 
     .period-btn {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 999px;
+      inline-size: auto;
+      border-radius: var(--portal-radius-button);
       box-sizing: border-box;
-      color: var(--ink);
-      cursor: pointer;
-      font: inherit;
-      min-height: 2rem;
-      padding: 0.25rem 0.75rem;
+      flex: 0 0 auto;
+      max-inline-size: none;
+      min-inline-size: 0;
+      transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        box-shadow 120ms ease,
+        color 120ms ease,
+        transform 120ms ease;
+      width: auto;
     }
 
-    .period-btn.is-active {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-      color: var(--tertiary-color);
-      font-weight: 700;
+    body.admin-portal-page .period-btn.is-active,
+    body.admin-portal-page .period-btn[aria-pressed="true"] {
+      background: linear-gradient(180deg, var(--portal-button-teal-fill-hover) 0%, var(--portal-button-teal-fill-active) 100%);
+      border-color: #06486f;
+      border-width: 2px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+        0 0 0 1px rgba(6, 72, 111, 0.28),
+        0 10px 18px rgba(8, 22, 40, 0.14);
+      color: var(--portal-button-teal-ink);
+      font-weight: 900;
+      letter-spacing: 0.015em;
+      text-shadow: 0 1px 0 rgba(0, 44, 69, 0.28);
+      transform: translateY(-1px);
+    }
+
+    html[data-theme="dark"] body.admin-portal-page .period-btn.is-active,
+    html[data-theme="dark"] body.admin-portal-page .period-btn[aria-pressed="true"] {
+      border-color: #8ceeff;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+        0 0 0 1px rgba(140, 238, 255, 0.42),
+        0 10px 18px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
     }
 
     .control-grid {
@@ -214,25 +207,20 @@
     }
 
     .field label {
-      color: var(--ink-soft);
+      color: var(--portal-support-message);
       font-size: 1rem;
       font-weight: 700;
       letter-spacing: 0.01em;
       text-transform: uppercase;
     }
 
-    html[data-theme="dark"] .field label,
-    html[data-theme="dark"] .section-note {
-      color: var(--ink-soft);
-    }
-
     .field select,
     .field input {
-      background: var(--panel);
-      border: 1px solid var(--line);
+      background: var(--portal-surface-panel);
+      border: 1px solid var(--portal-border);
       border-radius: 10px;
       box-sizing: border-box;
-      color: var(--ink);
+      color: var(--portal-role-text);
       font: inherit;
       min-height: 2.15rem;
       padding: 0.38rem 0.55rem;
@@ -241,7 +229,7 @@
 
     .field select:disabled,
     .field input:disabled {
-      background: var(--panel);
+      background: var(--portal-surface-panel);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -259,10 +247,8 @@
     }
 
     #gradeGrid {
-      border-radius: 12px;
       box-sizing: border-box;
       min-height: 480px;
-      max-width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
       resize: vertical;
@@ -279,11 +265,11 @@
     }
 
     .grid-title {
-      color: var(--ink);
       font-size: 1rem;
       font-weight: 700;
       letter-spacing: 0.01em;
       margin: 0;
+      min-width: 0;
     }
 
     .grid-actions {
@@ -293,13 +279,110 @@
       gap: 0.45rem;
     }
 
-    .grid-actions .btn:disabled {
+    .grid-actions > .portal-button {
+      flex: 1 1 12rem;
+      inline-size: auto;
+      max-inline-size: 100%;
+      min-width: 0;
+      min-inline-size: 0;
+      width: auto;
+    }
+
+    .grid-actions .btn:not(.portal-button):disabled {
       cursor: not-allowed;
       opacity: 0.62;
     }
 
+    @media (min-width: 1081px) {
+      .grid-head {
+        flex-wrap: nowrap;
+      }
+
+      .grid-actions {
+        flex-wrap: nowrap;
+        margin-left: auto;
+      }
+    }
+
+    .app-brand-strip {
+      align-items: center;
+      column-gap: 8px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      row-gap: 6px;
+    }
+
+    .app-brand-logo-wrap {
+      align-items: center;
+      border-radius: var(--radius-3);
+      display: inline-flex;
+      flex: 0 0 auto;
+      height: 44px;
+      justify-content: center;
+      overflow: hidden;
+      width: 44px;
+    }
+
+    .app-brand-logo-wrap img {
+      display: block;
+      height: 100%;
+      object-fit: cover;
+      width: 100%;
+    }
+
+    .app-brand-logo-fallback {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .app-school-name {
+      font-size: clamp(13px, 1.7vw, 18px);
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      line-height: 1.25;
+      margin: 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .app-header-actions {
+      align-items: center;
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+
+    .app-header-menu-toggle,
+    #overviewRuntimeRestartBtn {
+      display: none !important;
+    }
+
+    .text-zoom-controls {
+      align-items: center;
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+
+    #globalTextZoomControls {
+      gap: 4px;
+    }
+
+    .text-zoom-controls button {
+      min-inline-size: 0;
+    }
+
     .table-modal-backdrop[hidden] {
-      display: none;
+      display: none !important;
     }
 
     .table-modal-backdrop {
@@ -342,14 +425,12 @@
     }
 
     .detail-empty-title {
-      color: var(--ink);
       font-size: 1rem;
       font-weight: 700;
       line-height: 1.2;
     }
 
     .detail-empty-copy {
-      color: var(--ink-soft);
       font-size: 0.95rem;
       line-height: 1.45;
     }
@@ -359,8 +440,6 @@
     }
 
     .tabulator {
-      background: transparent;
-      border: 1px solid var(--line);
       font-size: 0.98rem;
       max-width: 100%;
       min-width: 0;
@@ -374,14 +453,7 @@
     }
 
     .tabulator .tabulator-col {
-      background: var(--panel);
-      border-bottom: 1px solid var(--line);
-      border-right-color: var(--line);
       box-sizing: border-box;
-    }
-
-    .tabulator .tabulator-col:last-child {
-      border-right-color: var(--line);
     }
 
     .tabulator .tabulator-col .tabulator-col-content {
@@ -405,7 +477,6 @@
 
     .tabulator .tabulator-col .tabulator-col-title {
       box-sizing: border-box;
-      color: var(--ink);
       font-size: 1rem;
       font-weight: 700;
       line-height: 1.2;
@@ -445,73 +516,7 @@
       padding-right: 0;
     }
 
-    .tabulator .tabulator-row {
-      border-bottom: 1px solid var(--line);
-      border-bottom-color: var(--line);
-    }
-
-    .tabulator .tabulator-row:hover {
-      background: var(--card-soft);
-    }
-
-    .tabulator .tabulator-row.tabulator-row-even {
-      background: var(--card);
-    }
-
-    html[data-theme="dark"] .tabulator {
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-header,
-    html[data-theme="dark"] .tabulator .tabulator-footer,
-    html[data-theme="dark"] .tabulator .tabulator-col,
-    html[data-theme="dark"] .tabulator .tabulator-cell,
-    html[data-theme="dark"] .tabulator .tabulator-row,
-    html[data-theme="dark"] .tabulator .tabulator-responsive-collapse,
-    html[data-theme="dark"] .tabulator .tabulator-responsive-collapse table {
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-cell a,
-    html[data-theme="dark"] .tabulator .tabulator-col-title,
-    html[data-theme="dark"] .tabulator .tabulator-footer .tabulator-page {
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-row {
-      background: var(--portal-dark-surface-card);
-      border-bottom-color: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-cell,
-    html[data-theme="dark"] .tabulator .tabulator-col {
-      border-right-color: var(--portal-dark-surface-soft);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-row.tabulator-row-odd {
-      background: var(--portal-dark-surface-card);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-row.tabulator-row-even {
-      background: var(--portal-dark-surface-card);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
-      background: var(--portal-dark-surface-support);
-      border-right-color: var(--portal-dark-surface-soft);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-row:hover {
-      background: var(--portal-dark-surface-support);
-    }
-
-    html[data-theme="dark"] .tabulator .tabulator-cell.tabulator-frozen.tabulator-frozen-right,
-    html[data-theme="dark"] .tabulator .tabulator-col.tabulator-frozen.tabulator-frozen-right {
-      border-left: 2px solid var(--portal-dark-surface-soft) !important;
-    }
-
     .group-meta {
-      color: var(--ink-soft);
       font-size: 0.9rem;
       margin-left: 0.45rem;
     }
@@ -542,7 +547,6 @@
     }
 
     .assignment-sub {
-      color: var(--ink-soft);
       display: block;
       font-size: 1rem;
       font-weight: 700;
@@ -588,10 +592,8 @@
 
     .header-action-btn {
       appearance: none;
-      border: 1px solid transparent;
       border-radius: 5px;
       box-sizing: border-box;
-      color: var(--portal-action-blue-text);
       cursor: pointer;
       font-size: 0.86rem;
       font-weight: 800;
@@ -601,30 +603,18 @@
       width: 100%;
     }
 
-    .header-action-btn.plus {
-      background: linear-gradient(180deg, var(--portal-action-green-top) 0%, var(--portal-action-green-bottom) 100%);
-      border-color: var(--portal-action-green-border);
-      color: var(--portal-action-green-text);
-    }
-
-    .header-action-btn.minus {
-      background: linear-gradient(180deg, var(--portal-action-red-top) 0%, var(--portal-action-red-bottom) 100%);
-      border-color: var(--portal-action-red-border);
-      color: var(--portal-action-red-text);
-    }
-
     .header-action-btn:hover {
       filter: brightness(1.05);
     }
 
     .header-action-btn:focus-visible {
-      outline: 2px solid var(--accent);
+      outline: 2px solid var(--portal-status-info-border);
       outline-offset: 1px;
     }
 
     .tabulator .tabulator-col.assignment-col,
     .tabulator .tabulator-col.core-col {
-      background: var(--panel);
+      background: var(--portal-surface-panel);
     }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-content,
@@ -635,8 +625,6 @@
 
     .assignment-head {
       align-items: center;
-      background: var(--card);
-      border: 1px solid var(--line);
       border-radius: 6px;
       box-sizing: border-box;
       display: flex;
@@ -650,7 +638,7 @@
     }
 
     .assignment-head.elective {
-      border: 1px solid var(--accent);
+      border: 1px solid var(--portal-status-info-border);
     }
 
     .assignment-head.megs {
@@ -658,13 +646,12 @@
     }
 
     .assignment-head.core {
-      border: 1px solid var(--line);
+      border: 1px solid var(--portal-border);
       justify-content: space-between;
     }
 
     .assignment-title-text {
       align-self: center;
-      color: var(--ink);
       display: block;
       font-size: 1rem;
       font-weight: 700;
@@ -713,26 +700,7 @@
       width: 100%;
     }
 
-    .exercise-cell.ontime {
-      background: var(--portal-status-good-bg);
-      border-color: var(--portal-status-good-border);
-      color: var(--portal-status-good-text);
-    }
-
-    .exercise-cell.late {
-      background: var(--portal-status-warn-bg);
-      border-color: var(--portal-status-warn-border);
-      color: var(--portal-status-warn-text);
-    }
-
-    .exercise-cell.notdone {
-      background: var(--portal-status-bad-bg);
-      border-color: var(--portal-status-bad-border);
-      color: var(--portal-status-bad-text);
-    }
-
     .stat-chip {
-      color: var(--ink-soft);
       display: block;
       font-size: 0.96rem;
       font-weight: 600;
@@ -740,51 +708,39 @@
     }
 
     .assignment-sub.core-sub {
-      color: var(--ink-soft);
       font-size: 0.92rem;
       font-weight: 700;
     }
 
-    html[data-theme="dark"] .assignment-title-text,
-    html[data-theme="dark"] .grid-title {
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .assignment-col.elective-col .assignment-title-text {
-      color: var(--portal-dark-text);
-    }
-
-    html[data-theme="dark"] .assignment-sub,
-    html[data-theme="dark"] .assignment-sub.core-sub,
-    html[data-theme="dark"] .distribution-mini-meta,
-    html[data-theme="dark"] .distribution-dialog-head h2,
-    html[data-theme="dark"] .distribution-dialog-meta,
-    html[data-theme="dark"] .dim {
-      color: var(--portal-dark-text-soft);
-    }
-
-    html[data-theme="dark"] .score-bar {
-      background: var(--portal-dark-surface-support);
-      border-color: var(--portal-dark-border);
-    }
-
     .distribution-mini {
+      inline-size: 100%;
       border-radius: 8px;
       box-sizing: border-box;
       cursor: pointer;
       display: grid;
       gap: 0.14rem;
+      max-inline-size: none;
+      min-inline-size: 0;
       padding: 0.14rem 0.2rem;
       width: 100%;
+      transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        box-shadow 120ms ease,
+        color 120ms ease,
+        transform 120ms ease;
     }
 
     .distribution-mini:hover {
-      filter: brightness(0.99);
+      transform: translateY(-1px);
     }
 
     .distribution-mini:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
+      outline: none;
+    }
+
+    .distribution-mini:active {
+      transform: translateY(1px);
     }
 
     .distribution-mini-chart {
@@ -800,31 +756,19 @@
       width: 100%;
     }
 
-    .distribution-mini-chart svg line {
-      stroke: var(--line);
-    }
-
     .distribution-mini-chart svg polyline {
-      fill: none;
-      stroke: var(--accent);
       stroke-linecap: round;
       stroke-linejoin: round;
     }
 
+    .distribution-mini-chart svg line,
+    .distribution-mini-chart svg polyline,
     .distribution-mini-chart svg circle {
-      fill: var(--accent);
-    }
-
-    html[data-theme="dark"] .distribution-mini-chart svg line {
-      stroke: var(--portal-dark-border);
-    }
-
-    html[data-theme="dark"] .distribution-mini-chart svg polyline {
-      stroke: var(--portal-dark-text);
+      stroke: var(--portal-primary-text-strong);
+      fill: var(--portal-primary-text-strong);
     }
 
     .distribution-mini-meta {
-      color: var(--ink-soft);
       display: block;
       font-size: 0.9rem;
       font-weight: 700;
@@ -886,7 +830,6 @@
     }
 
     .distribution-dialog-head h2 {
-      color: var(--ink);
       font-size: 1.12rem;
       letter-spacing: 0.01em;
       margin: 0;
@@ -898,42 +841,19 @@
       gap: 0.4rem;
     }
 
-    .distribution-close {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-sizing: border-box;
-      color: var(--ink);
-      cursor: pointer;
-      font-size: 0.78rem;
-      font-weight: 700;
-      padding: 0.3rem 0.56rem;
-    }
-
-    .distribution-close:hover {
-      background: var(--card-soft);
-      border-color: var(--line);
-    }
-
+    .distribution-close,
     .distribution-expand {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 8px;
+      inline-size: auto;
+      border-radius: var(--portal-radius-button) !important;
       box-sizing: border-box;
-      color: var(--ink);
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 700;
+      min-inline-size: 0;
       padding: 0.3rem 0.56rem;
-    }
-
-    .distribution-expand:hover {
-      background: var(--card-soft);
-      border-color: var(--line);
     }
 
     .distribution-dialog-meta {
-      color: var(--ink-soft);
       font-size: 0.92rem;
       line-height: 1.3;
       margin: 0;
@@ -947,22 +867,16 @@
     }
 
     .distribution-zoom-btn {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 8px;
+      inline-size: auto;
+      border-radius: var(--portal-radius-button) !important;
       box-sizing: border-box;
-      color: var(--ink);
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 700;
       min-height: 2rem;
+      min-inline-size: 0;
       min-width: 2rem;
       padding: 0.2rem 0.45rem;
-    }
-
-    .distribution-zoom-btn:hover {
-      background: var(--card-soft);
-      border-color: var(--line);
     }
 
     .distribution-zoom-range {
@@ -973,7 +887,6 @@
     }
 
     .distribution-zoom-label {
-      color: var(--ink-soft);
       font-size: 0.86rem;
       font-weight: 700;
       min-width: 3.2rem;
@@ -1005,12 +918,12 @@
     }
 
     .distribution-modal-chart .dist-grid {
-      stroke: var(--line);
+      stroke: var(--portal-border);
       stroke-width: 1;
     }
 
     .distribution-modal-chart .dist-axis {
-      stroke: var(--ink-soft);
+      stroke: var(--portal-support-message);
       stroke-width: 1.4;
     }
 
@@ -1020,7 +933,7 @@
 
     .distribution-modal-chart .dist-line {
       fill: none;
-      stroke: var(--accent);
+      stroke: var(--portal-status-info-border);
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 2.2;
@@ -1028,31 +941,31 @@
 
     .distribution-modal-chart .dist-point {
       cursor: pointer;
-      fill: var(--accent);
-      stroke: var(--panel);
+      fill: var(--portal-status-info-border);
+      stroke: var(--portal-surface-panel);
       stroke-width: 1.5;
     }
 
     .distribution-modal-chart .dist-point.is-active {
       fill: var(--portal-status-warn-border);
-      stroke: var(--ink);
+      stroke: var(--portal-role-text);
       stroke-width: 1.8;
     }
 
     .distribution-modal-chart .dist-point:focus-visible {
-      outline: 2px solid var(--accent);
+      outline: 2px solid var(--portal-status-info-border);
       outline-offset: 1px;
     }
 
     .distribution-modal-chart .dist-label {
-      fill: var(--ink-soft);
+      fill: var(--portal-support-message);
       font-size: 1rem;
       font-weight: 700;
       text-anchor: middle;
     }
 
     .distribution-modal-chart .dist-y-label {
-      fill: var(--ink-soft);
+      fill: var(--portal-support-message);
       font-size: 1rem;
       font-weight: 600;
       text-anchor: end;
@@ -1073,7 +986,6 @@
     }
 
     .distribution-dialog-hint {
-      color: var(--ink-soft);
       font-size: 0.88rem;
       margin: 0;
     }
@@ -1083,16 +995,11 @@
     }
 
     .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
-      background: var(--card-soft);
-      border-right: 1px solid var(--line);
       box-sizing: border-box;
-      color: var(--ink);
       text-align: center;
     }
 
     .tabulator-responsive-collapse {
-      background: var(--card-soft);
-      border-top: 1px dashed var(--line);
       box-sizing: border-box;
       padding: 0.42rem 0.5rem;
     }
@@ -1103,8 +1010,6 @@
     }
 
     .collapse-item {
-      background: var(--card);
-      border: 1px solid var(--line);
       border-radius: 8px;
       box-sizing: border-box;
       display: grid;
@@ -1115,20 +1020,12 @@
     }
 
     .collapse-label {
-      color: var(--ink);
       font-weight: 700;
     }
 
     .collapse-value {
-      color: var(--ink-soft);
       min-width: 0;
       overflow-wrap: anywhere;
-    }
-
-    .tabulator-row.is-stat-row .tabulator-cell {
-      background: var(--card-soft) !important;
-      color: var(--ink);
-      font-weight: 600;
     }
 
     body.is-compact .tabulator {
@@ -1145,14 +1042,12 @@
     }
 
     .dim {
-      color: var(--ink-soft);
       font-size: 1rem;
     }
 
     @media (min-width: 760px) {
-      .page-shell {
-        margin: 24px auto;
-        padding: 16px;
+      .wrap {
+        padding: 18px;
       }
 
       .control-grid {
@@ -1173,22 +1068,64 @@
         font-size: 1rem;
       }
 
-      .grid-actions .btn {
+      .grid-actions .btn:not(.portal-button) {
         min-height: 1.9rem;
         padding: 0.26rem 0.66rem;
       }
     }
 
-    @media (max-width: 760px) {
-      .page-shell {
-        box-sizing: border-box;
-        margin: 24px auto;
-        padding: 16px;
-        width: min(100%, calc(100% - 32px));
+    @media (max-width: 820px) {
+      .app-page-header {
+        padding: 8px 10px 8px 60px;
       }
 
-      .top-stack {
-        width: 100%;
+      .app-brand-strip {
+        gap: 8px;
+        grid-template-columns: auto minmax(0, 1fr);
+        row-gap: 6px;
+      }
+
+      .app-header-actions {
+        grid-column: 1 / -1;
+      }
+
+      .app-brand-logo-wrap {
+        height: 38px;
+        width: 38px;
+      }
+
+      .app-school-name {
+        font-size: clamp(11px, 3.8vw, 14px);
+      }
+
+      .menu-toggle-btn {
+        inline-size: auto;
+        min-inline-size: clamp(74px, 24vw, 102px);
+        padding-inline: 8px;
+      }
+
+      .app-header-menu-toggle {
+        display: inline-flex !important;
+        justify-self: end;
+        max-inline-size: 160px;
+      }
+
+      .text-zoom-controls {
+        justify-content: flex-start;
+      }
+
+      #globalTextZoomControls {
+        gap: 4px;
+      }
+
+      .text-zoom-controls button {
+        min-inline-size: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .wrap {
+        padding: 12px;
       }
 
       .grid-head {
@@ -1200,10 +1137,19 @@
       }
 
       .grid-actions {
+        align-items: stretch;
         width: 100%;
       }
 
-      .grid-actions .btn {
+      .grid-actions > .portal-button {
+        flex: 1 1 100%;
+        inline-size: auto;
+        max-inline-size: 100%;
+        min-inline-size: 0;
+        width: 100%;
+      }
+
+      .grid-actions .btn:not(.portal-button) {
         flex: 1 1 auto;
       }
 
@@ -1270,28 +1216,100 @@
   </style>
 </head>
 
-<body class="grades-tabulator-page">
-  <main class="page-shell portal-center-column">
-    <div class="top-stack">
-      <section class="hero portal-theme-panel">
-        <h1 class="section-title">Grades Tabulator</h1>
-        <p class="section-note">Mobile-first SIS grade matrix with class-level filtering, assignment columns, and exercise completion analytics.</p>
-        <div class="hero-actions">
-          <a class="chip-link" href="/admin?page=grades-data">Back to Grades Admin</a>
-          <button class="btn primary" id="reloadBtn" type="button">Reload SIS Grade Data</button>
+<body class="admin-portal-page page grades-tabulator-page" id="top" data-surface-role="page">
+  <div class="wrap">
+    <div class="header-bar" data-surface-role="content">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+    <main class="section-stack" id="appMain" data-surface-role="content">
+      <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
+        <div class="app-brand-strip">
+          <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+            <img id="appBrandLogo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+            <span id="appBrandLogoFallback" class="app-brand-logo-fallback hidden">SIS</span>
+          </div>
+          <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
+          <div class="app-header-actions">
+            <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">
+              Hide Menu
+            </button>
+            <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-blue-action hidden">
+              Self-Heal Runtime
+            </button>
+            <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
+              <span class="portal-theme-toggle__icon" aria-hidden="true" id="adminThemeToggleIcon" data-theme-icon="moon">
+                <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <mask id="theme_moon_cutout">
+                      <rect width="24" height="24" fill="#fff" />
+                      <circle cx="12.95" cy="7.95" r="10.1" fill="#000" />
+                    </mask>
+                  </defs>
+                  <g fill="currentColor">
+                    <circle cx="10.8" cy="13.2" r="10.3" mask="url(#theme_moon_cutout)">
+                      <animateTransform attributeName="transform" dur="4.8s" repeatCount="indefinite" type="rotate" values="-2 12 12;2 12 12;-2 12 12" />
+                    </circle>
+                    <path d="M17.65 3.75L18.62 6.68L21.7 6.68L19.21 8.49L20.16 11.42L17.65 9.6L15.14 11.42L16.09 8.49L13.6 6.68L16.68 6.68L17.65 3.75Z" opacity="0.95">
+                      <animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" values="0.3;0.92;0.3" />
+                    </path>
+                    <path d="M9.95 8L10.62 10.02L12.75 10.02L11.03 11.27L11.69 13.28L9.95 12.02L8.22 13.28L8.88 11.27L7.15 10.02L9.28 10.02L9.95 8Z" opacity="0.78">
+                      <animate attributeName="opacity" begin="0.35s" dur="2.2s" repeatCount="indefinite" values="0.24;0.82;0.24" />
+                    </path>
+                  </g>
+                </svg>
+                <svg class="portal-theme-toggle__icon-sun" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g stroke="currentColor" stroke-linecap="round" stroke-width="1.8">
+                    <g opacity="0.92">
+                      <animateTransform attributeName="transform" dur="14s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
+                      <path d="M12 1.75V4.25" />
+                      <path d="M12 19.75V22.25" />
+                      <path d="M1.75 12H4.25" />
+                      <path d="M19.75 12H22.25" />
+                      <path d="M4.75 4.75L6.52 6.52" />
+                      <path d="M17.48 17.48L19.25 19.25" />
+                      <path d="M17.48 6.52L19.25 4.75" />
+                      <path d="M4.75 19.25L6.52 17.48" />
+                    </g>
+                    <circle cx="12" cy="12" fill="currentColor" r="4.6">
+                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="4.15;4.8;4.15" />
+                    </circle>
+                    <circle cx="12" cy="12" opacity="0.24" r="7.1">
+                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="6.1;7.9;6.1" />
+                      <animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0.24;0.08;0.24" />
+                    </circle>
+                  </g>
+                </svg>
+              </span>
+              <span class="portal-theme-toggle__label" id="adminThemeToggleLabel">Dark</span>
+            </button>
+            <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
+              <span class="small global-text-label">Global Text</span>
+              <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
+                A-
+              </button>
+              <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">
+                A+
+              </button>
+              <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">
+                Reset
+              </button>
+              <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
+            </div>
+          </div>
         </div>
         <p class="status is-warn hidden" id="schoolSetupWarning"></p>
-        <p class="status" id="statusLine">Booting grade interface...</p>
-      </section>
+      </div>
 
+    <div class="content" data-surface-role="content">
       <section class="control-card portal-theme-panel">
         <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
-          <button type="button" class="period-btn" data-period="week">Week</button>
-          <button type="button" class="period-btn" data-period="quarter">Quarter</button>
-          <button type="button" class="period-btn" data-period="qtd">QTD</button>
-          <button type="button" class="period-btn" data-period="sytd">SYTD</button>
-          <button type="button" class="period-btn" data-period="archive">Archive</button>
-          <button type="button" class="period-btn" data-period="custom">Custom</button>
+          <button type="button" class="period-btn portal-button portal-button-teal-refresh" data-period="week">Week</button>
+          <button type="button" class="period-btn portal-button portal-button-teal-refresh" data-period="quarter">Quarter</button>
+          <button type="button" class="period-btn portal-button portal-button-teal-refresh" data-period="qtd">QTD</button>
+          <button type="button" class="period-btn portal-button portal-button-teal-refresh" data-period="sytd">SYTD</button>
+          <button type="button" class="period-btn portal-button portal-button-teal-refresh" data-period="archive">Archive</button>
+          <button type="button" class="period-btn portal-button portal-button-teal-refresh" data-period="custom">Custom</button>
         </div>
         <div class="control-grid">
           <div class="field">
@@ -1341,7 +1359,9 @@
           </div>
         </div>
       </section>
+    </div>
 
+    <div class="content" data-surface-role="content">
       <section class="metrics" aria-label="Grade data snapshot">
         <article class="metric-card portal-theme-card">
           <h2>Rows</h2>
@@ -1364,47 +1384,59 @@
           <p id="metricCompletion">n/a</p>
         </article>
       </section>
+      <p class="status" id="statusLine">Booting grade interface...</p>
     </div>
 
-    <section id="gradeGridCard" class="grid-card portal-theme-card">
-      <div class="grid-head">
-        <p class="grid-title">Interactive Matrix</p>
-        <div class="grid-actions">
-          <button class="btn subtle" id="tableModalBtn" type="button">Open table modal</button>
-          <button class="btn subtle" id="toggleCompactBtn" type="button">Dense rows: Off</button>
-          <button class="btn subtle" id="resetColumnsBtn" type="button">Reset columns</button>
+    <div class="content" data-surface-role="content">
+      <section id="gradeGridCard" class="grid-card portal-theme-card">
+        <div class="grid-head">
+          <p class="grid-title">Interactive Matrix</p>
+          <div class="grid-actions">
+            <button class="btn subtle portal-button portal-button-blue-action" id="tableModalBtn" type="button">Open table modal</button>
+            <button class="btn subtle portal-button portal-button-neutral-action" id="toggleCompactBtn" type="button">Dense rows: Off</button>
+            <button class="btn subtle portal-button portal-button-teal-refresh" id="resetColumnsBtn" type="button">Reset columns</button>
+          </div>
         </div>
-      </div>
-      <div id="gradeGrid" class="panel"></div>
-      <p class="dim" id="rangeHint"></p>
-    </section>
+        <div id="gradeGrid" class="portal-theme-table-shell"></div>
+        <p class="dim" id="rangeHint"></p>
+      </section>
+    </div>
+    <footer class="hub-footer" aria-label="Site footer">
+      <p class="hub-footer__copy">
+        © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+      </p>
+      <p class="hub-footer__action">
+        <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+      </p>
+    </footer>
   </main>
+  </div>
 
   <button id="tableModalBackdrop" class="table-modal-backdrop portal-theme-overlay-strong" type="button" hidden data-close-table-modal="true" aria-label="Close table modal"></button>
 
   <div id="distributionModal" class="distribution-modal" hidden>
     <div class="distribution-modal-backdrop portal-theme-overlay" data-close-distribution-modal="true"></div>
-    <section id="distributionDialog" class="distribution-dialog card is-fullscreen" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
+    <section id="distributionDialog" class="distribution-dialog portal-theme-dialog" role="dialog" aria-modal="true" aria-labelledby="distributionModalTitle">
       <div class="distribution-dialog-head">
         <h2 id="distributionModalTitle">Grade Distribution Detail</h2>
         <div class="distribution-dialog-actions">
-          <button id="distributionModalExpand" class="distribution-expand" type="button" aria-label="Toggle full screen chart modal">Windowed</button>
-          <button id="distributionModalClose" class="distribution-close" type="button" aria-label="Close distribution chart">Close</button>
+          <button id="distributionModalExpand" class="distribution-expand portal-button portal-button-neutral-action" type="button" aria-label="Toggle full screen chart modal">Full screen</button>
+          <button id="distributionModalClose" class="distribution-close portal-button portal-button-neutral-action" type="button" aria-label="Close distribution chart">Close</button>
         </div>
       </div>
       <p id="distributionModalMeta" class="distribution-dialog-meta">Hover points to inspect each label and count.</p>
       <div class="distribution-toolbar" role="toolbar" aria-label="Distribution chart zoom controls">
-        <button id="distributionZoomOut" class="distribution-zoom-btn" type="button" aria-label="Zoom out chart">-</button>
-        <button id="distributionZoomIn" class="distribution-zoom-btn" type="button" aria-label="Zoom in chart">+</button>
-        <button id="distributionZoomReset" class="distribution-zoom-btn" type="button" aria-label="Reset chart zoom">Reset</button>
+        <button id="distributionZoomOut" class="distribution-zoom-btn portal-button portal-button-neutral-action" type="button" aria-label="Zoom out chart">-</button>
+        <button id="distributionZoomIn" class="distribution-zoom-btn portal-button portal-button-neutral-action" type="button" aria-label="Zoom in chart">+</button>
+        <button id="distributionZoomReset" class="distribution-zoom-btn portal-button portal-button-neutral-action" type="button" aria-label="Reset chart zoom">Reset</button>
         <input id="distributionZoomRange" class="distribution-zoom-range" type="range" min="1" max="6" step="0.1" value="1" aria-label="Chart zoom level">
         <span id="distributionZoomLabel" class="distribution-zoom-label">100%</span>
       </div>
-      <div id="distributionChartShell" class="distribution-chart-shell panel">
+      <div id="distributionChartShell" class="distribution-chart-shell portal-theme-soft-card">
         <div id="distributionChartScroll" class="distribution-chart-scroll">
           <svg id="distributionModalChart" class="distribution-modal-chart" viewBox="0 0 760 360" preserveAspectRatio="none"></svg>
         </div>
-        <div id="distributionModalHover" class="distribution-hover card" hidden></div>
+        <div id="distributionModalHover" class="distribution-hover portal-theme-tooltip" hidden></div>
       </div>
       <p class="distribution-dialog-hint">Hover points for values. Use slider, +/- buttons, or mouse wheel to zoom.</p>
     </section>
@@ -1432,7 +1464,7 @@
         distributionModalZoom: 1,
         distributionModalBaseWidth: 760,
         distributionModalBaseHeight: 360,
-        distributionModalFullscreen: true,
+        distributionModalFullscreen: false,
         tableModalOpen: false,
         letterGradeRanges: [],
         uiSettingsMeta: null,
@@ -1481,6 +1513,35 @@
           maxPercent: 59.99
         }),
       ])
+      ;(() => {
+        const root = document.documentElement
+        const themeToggle = document.getElementById("adminThemeToggle")
+        const themeIcon = document.getElementById("adminThemeToggleIcon")
+        const themeLabel = document.getElementById("adminThemeToggleLabel")
+        const themeState = window.SIS_PORTAL_THEME
+
+        function syncThemeToggle(theme) {
+          if (!themeToggle || !themeIcon) return
+          const isDark = theme === "dark"
+          themeToggle.setAttribute("aria-pressed", String(isDark))
+          themeToggle.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme")
+          themeIcon.setAttribute("data-theme-icon", isDark ? "sun" : "moon")
+          if (themeLabel) {
+            themeLabel.textContent = isDark ? "Light" : "Dark"
+          }
+        }
+
+        function applyTheme(theme) {
+          const next = themeState?.setTheme ? themeState.setTheme(theme) : (theme === "dark" ? "dark" : "light")
+          root.dataset.theme = next
+          syncThemeToggle(next)
+        }
+
+        themeToggle?.addEventListener("click", () => {
+          applyTheme(themeState?.toggleTheme ? themeState.toggleTheme("light") : (root.dataset.theme === "dark" ? "light" : "dark"))
+        })
+        applyTheme(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"))
+      })()
       const API_ORIGIN = resolveApiOrigin()
       const TODAY_ISO = localIsoDate(new Date())
       let SYSTEM_CURRENT_SCHOOL_YEAR = resolveSystemCurrentSchoolYear()
@@ -2279,13 +2340,13 @@
           .join(" ")
         const circles = series.points
           .map((point) => (
-            `<circle cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\" fill=\"var(--accent)\"></circle>`
+            `<circle cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\" fill=\"var(--portal-status-info-border)\"></circle>`
           ))
           .join("")
         return (
           `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\" aria-hidden=\"true\">` +
-          `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"var(--line)\" stroke-width=\"1\"></line>` +
-          `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"var(--accent)\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>` +
+          `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"var(--portal-border)\" stroke-width=\"1\"></line>` +
+          `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"var(--portal-status-info-border)\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>` +
           `${circles}` +
           `</svg>`
         )
@@ -2523,7 +2584,7 @@
         const elements = distributionModalElements()
         if (!elements.modal) return
         state.distributionModalZoom = DISTRIBUTION_ZOOM_MIN
-        setDistributionDialogFullscreen(true)
+        setDistributionDialogFullscreen(false)
         updateDistributionZoomUi()
         state.distributionModalPayload = normalized
         if (elements.title) {
@@ -2703,7 +2764,7 @@
         }
         const button = document.createElement("button")
         button.type = "button"
-        button.className = "distribution-mini portal-theme-soft-card"
+        button.className = "distribution-mini portal-button portal-button-blue-action"
         button.title = `${payload.summaryText} | Click for detail chart`
         button.setAttribute("aria-label", `Open distribution chart for ${payload.assignmentTitle}`)
         button.innerHTML =
@@ -4672,7 +4733,9 @@
       function syncPeriodButtons() {
         document.querySelectorAll("[data-period]").forEach((button) => {
           const period = normalizeLower(button.getAttribute("data-period"))
-          button.classList.toggle("is-active", period === state.filters.period)
+          const isActive = period === state.filters.period
+          button.classList.toggle("is-active", isActive)
+          button.setAttribute("aria-pressed", String(isActive))
         })
       }
 

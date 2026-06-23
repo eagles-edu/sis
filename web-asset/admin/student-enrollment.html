@@ -35,7 +35,7 @@
       color: var(--portal-text);
       display: flex;
       flex-direction: column;
-      font-family: var(--font-base);
+      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
       margin: 0;
       min-height: 100vh;
     }
@@ -343,7 +343,7 @@
       display: none !important;
     }
 
-    .history-rail__menu button {
+    .history-rail__menu button:not(.portal-button) {
       background: #1d4999 !important;
       border: 1px solid var(--portal-border) !important;
       color: var(--secondary-color)#f9faff !important;
@@ -719,7 +719,7 @@
 </head>
   <body class="admin-portal-page page student-enrollment-page" id="top">
   <div class="wrap">
-    <div class="enrollment-shell portal-center-column">
+    <div class="enrollment-shell content portal-center-column">
       <div class="header-bar">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
@@ -1251,7 +1251,7 @@
               <span class="history-rail__dots" aria-hidden="true">⋮</span>
             </button>
             <div class="history-rail__menu hidden" data-history-menu role="menu" aria-label="History actions">
-              <button type="button" data-history-open role="menuitem">Open history note</button>
+              <button type="button" class="portal-button portal-button-blue-action" data-history-open role="menuitem">Open history note</button>
             </div>
           </div>
         `;

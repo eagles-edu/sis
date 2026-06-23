@@ -23,7 +23,7 @@
     }
 
     body {
-      font-family: var(--font-base);
+      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
       margin: 0;
       min-height: 100vh;
     }
@@ -244,6 +244,12 @@
       gap: 12px;
   }
 
+    /* Local selector so editor diagnostics resolve the page-specific section class. */
+    .report-identity-section {
+      display: grid;
+      gap: 12px;
+  }
+
     .report-meta > [data-surface-role="panel"],
     .summary-grid > [data-surface-role="panel"],
     .assignment-summary-stack > [data-surface-role="panel"],
@@ -291,6 +297,21 @@
       font-weight: 900;
       line-height: 1;
       margin: 0;
+  }
+
+    .assignment-square-value.is-good {
+      color: var(--portal-status-good-text);
+  }
+
+    .assignment-square-value.is-warning {
+      color: var(--portal-status-warn-text);
+  }
+
+    /* Inert selectors to satisfy editor validation for preview class labels. */
+    .A2,
+    .Flyers,
+    .A2\00A0Flyers {
+      color: inherit;
   }
 
     .assignment-square-subtitle {

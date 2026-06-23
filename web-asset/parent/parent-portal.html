@@ -35,12 +35,24 @@
   <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
-      background: var(--portal-page-bg);
+      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
     }
 
-    body.parent-portal-page {
-      background: var(--portal-page-bg);
-      color: var(--portal-text);
+    body.parent-portal-page main.portal-main {
+      box-sizing: border-box;
+      display: grid;
+      gap: 12px;
+      margin: 0 auto;
+      max-width: 1440px;
+      padding: 16px;
+      width: 100%;
+    }
+
+    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page main.portal-main {
+      gap: 1rem;
+      margin-inline: auto;
+      max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
+      width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
     }
 
     html[data-parent-auth-state="booting"] body.parent-portal-page {
@@ -55,83 +67,8 @@
   </style>
   <title>Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club</title>
   <style>
-    /* VS Code selector resolution anchors; shared styles live in portal-theme.min.css. */
-    .alt {}
-    .portal-action-strip {}
-    .quick-link-select {}
-    .quick-link-select__label {}
-    .portal-action-strip__actions {}
-    .portal-action-btn {}
-    .portal-action-btn--brand {}
-    .portal-action-btn--danger {}
-    .identity-value {}
-    .homework-card-content {}
-    .summary-title {}
-    .queue-summary-stack {}
-    .queue-summary-chips {}
-    .queue-summary-chip {}
-    .queue-summary-chip-label {}
-    .queue-summary-chip-count {}
-    .is-peer {}
-    .is-status {}
-    .detail-copy {}
-    .homework-modal-table {}
-    .square-number {}
-    .square-percent-symbol {}
-    .queue-compact-datetime {}
-    .queue-compact-datetime-date {}
-    .queue-compact-datetime-time {}
-    .login-links {}
-    .login-link {}
-    .field-hint {}
-    .queue-table-wrap table.news-queue-table td:nth-child(3) .chip,
-    table.news-queue-table td:nth-child(3) .chip {}
-    .queue-table-wrap table.news-queue-table .queue-row-btn,
-    table.news-queue-table .queue-row-btn {}
-    .queue-table-wrap table.news-queue-table th,
-    .queue-table-wrap table.news-queue-table td {
-      padding: 4px 6px;
-    }
-    table.news-queue-table td:nth-child(3) .chip {
-      min-inline-size: 0;
-    }
-    table.news-queue-table .queue-row-btn {
-      min-height: 28px;
-    }
-
-    #performanceReportHeader,
-    #performanceReportHomeworkBlock,
-    #performanceReportAttendanceBlock,
-    .report-grade-block,
-    #performanceReportModalSections {
-      grid-column: 1 / -1;
-    }
-
-    body.parent-portal-page #performanceReportsList {
-      display: none;
-    }
-
-    /* Report modal chrome is centralized in portal-theme.min.css. */
-    #newsWeekSetModal .portal-modal-close {}
-    #newsWeekSetModal button {}
-    #newsWeekSetModal input,
-    #newsWeekSetModal textarea {}
-
-    @media (max-width: 520px) {
-      .homework-card-shell {
-        gap: 8px;
-        grid-template-columns: 86px minmax(0, 1fr);
-      }
-
-      .attendance-overview-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      #performanceReportAttendanceMetrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
+    /* portal-critical-theme:start */
+    /* Layout-only utilities; shared portal-theme.css owns the visual system. */
     .hidden {
       display: none !important;
     }
@@ -168,182 +105,32 @@
       gap: 6px;
     }
 
-    /* portal-critical-theme:start */
-    .profile-group {
-      background: var(--portal-surface-card);
-      border: 1px solid var(--portal-border);
-      border-radius: 12px;
-      padding: 10px;
-    }
-
-    .profile-group p {
-      color: var(--ink-soft);
-      font-size: 12px;
-      line-height: 1.35;
-      margin: 3px 0 0;
-    }
-
-    .field-row {
-      animation: rise 180ms ease;
-      border-top: 1px solid var(--line);
-      display: grid;
-      gap: 8px;
-      padding: 10px 0;
-    }
-
-    .field-row:first-of-type {
-      border-top: none;
-      padding-top: 8px;
-    }
-
-    .field-row.locked {
-      background: var(--portal-surface-support);
-      border: 1px solid var(--portal-border);
-      border-radius: 10px;
-      border-top: none;
-      margin-top: 8px;
-      padding: 10px;
-    }
-
-    .field-row.edited input,
-    .field-row.edited textarea {
-      background: var(--portal-surface-card);
-      border-color: var(--portal-border-strong);
-    }
-
-    .field-row.edited {
-      background: var(--portal-surface-card);
-      border: 1px solid var(--portal-border);
-      border-radius: 10px;
-      border-top: none;
-      margin-top: 8px;
-      padding: 10px;
-    }
-
-    .field-label {
-      color: var(--ink-soft);
-      font-size: 0.8rem;
-      font-weight: 700;
-      line-height: 1.2;
-      margin: 0;
-    }
-
-    .required-marker {
-      color: var(--brand);
-      font-weight: 800;
-    }
-
-    .field-meta {
-      color: var(--ink-soft);
-      font-size: 11px;
-      line-height: 1.35;
-      margin: 0;
-    }
-
-    .field-state {
-      color: var(--portal-field-state-info);
-      font-size: 11px;
-      font-weight: 600;
-      line-height: 1.35;
-      margin: 0;
-    }
-
-    .field-state:empty {
+    #performanceReportsList {
       display: none;
     }
 
-    .choice-group {
-      background: var(--portal-surface-support);
-      border: 1px solid var(--portal-border);
-      border-radius: 10px;
-      display: grid;
-      gap: 6px;
-      margin: 0;
-      padding: 8px 10px;
+    #performanceReportHeader,
+    #performanceReportHomeworkBlock,
+    #performanceReportAttendanceBlock,
+    .report-grade-block,
+    #performanceReportModalSections {
+      grid-column: 1 / -1;
     }
 
-    .choice-group:disabled {
-      background: var(--portal-surface-support);
-      border-color: var(--line);
-      color: var(--portal-text-soft);
-    }
+    @media (max-width: 520px) {
+      .homework-card-shell {
+        gap: 8px;
+        grid-template-columns: 86px minmax(0, 1fr);
+      }
 
-    .choice-option {
-      align-items: center;
-      color: var(--ink);
-      cursor: pointer;
-      display: flex;
-      font-size: 14px;
-      font-weight: 500;
-      gap: 8px;
-      letter-spacing: 0;
-      margin: 0;
-      text-transform: none;
-    }
+      .attendance-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
 
-    .choice-option input[type="checkbox"],
-    .choice-option input[type="radio"] {
-      accent-color: var(--brand-2);
-      background: var(--portal-radio-control-bg);
-      border: 1px solid var(--portal-radio-control-border);
-      border-radius: 4px;
-      box-sizing: border-box;
-      height: 18px;
-      margin: 0;
-      min-height: 18px;
-      padding: 0;
-      width: 18px;
+      #performanceReportAttendanceMetrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
-
-    .choice-option input[type="radio"] {
-      border-radius: 50%;
-    }
-
-    .choice-option input:disabled {
-      cursor: not-allowed;
-    }
-
-    .field-row.locked .field-state {
-      color: var(--portal-field-state-locked);
-    }
-
-    .field-row.edited .field-state {
-      color: var(--portal-field-state-edited);
-    }
-
-    .field-row.signature-muted .field-label {
-      color: var(--portal-field-state-muted);
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .field-row.signature-muted input,
-    .field-row.signature-muted textarea {
-      background: var(--portal-surface-card);
-      color: var(--portal-text-soft);
-      font-size: 13px;
-    }
-
-    .draft-actions {
-      backdrop-filter: blur(6px);
-      border: 1px solid var(--portal-border);
-      border-radius: 12px;
-      bottom: 8px;
-      display: grid;
-      gap: 8px;
-      margin-top: 12px;
-      padding: 10px;
-      position: sticky;
-      background: var(--portal-surface-card);
-    }
-
-    .detail-copy {
-      margin: 0;
-      color: var(--ink-soft);
-      font-size: 0.92rem;
-      line-height: 1.45;
-    }
-    /* portal-critical-theme:end */
 
     .profile-groups {
       display: grid;
@@ -355,13 +142,12 @@
       line-height: 1.2;
       margin: 0;
     }
+
     .field-header {
       align-items: start;
       display: grid;
       gap: 6px;
     }
-
-    .required-marker { font-weight: 800; }
 
     .detail-layout {
       display: grid;
@@ -378,838 +164,9 @@
       gap: 10px;
     }
 
-    /* portal-critical-theme:start */
-    .detail-item {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-2);
-      padding: 10px;
-      background: var(--portal-surface-card);
-      display: grid;
-      gap: 6px;
-    }
-
-    .detail-item.warn {
-      border-color: var(--portal-status-info-border);
-      background: var(--portal-status-info-bg);
-    }
-
-    .detail-item.bad {
-      border-color: var(--portal-status-bad-border);
-      background: var(--portal-status-bad-bg);
-    }
-
-    .detail-item.good {
-      border-color: var(--portal-status-good-border);
-      background: var(--portal-status-good-bg);
-    }
-
-    .detail-item-head {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: baseline;
-      justify-content: space-between;
-    }
-
-    .detail-item-title a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .detail-item-title a:hover,
-    .detail-item-title a:focus-visible {
-      text-decoration: underline;
-    }
-
-    .detail-empty {
-      border: 1px dashed var(--line);
-      border-radius: var(--radius-2);
-      padding: 12px;
-      color: var(--ink-soft);
-      background: var(--portal-surface-support);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .detail-calendar-shell {
-      min-height: 380px;
-    }
-
-    .assignment-head {
-      align-items: center;
-      background: var(--portal-assignment-head-bg);
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      box-sizing: border-box;
-      display: flex;
-      flex: 1 1 auto;
-      flex-direction: column;
-      gap: 0.1rem;
-      height: auto;
-      justify-content: space-between;
-      padding: 0.18rem 0.2rem;
-      width: 100%;
-    }
-
-    .assignment-head.core {
-      border: 1px solid var(--line);
-      justify-content: space-between;
-    }
-
-    .header-action-row {
-      align-items: center;
-      display: inline-flex;
-      gap: 0.18rem;
-      justify-content: flex-start;
-      width: 100%;
-    }
-
-    .header-action-btn {
-      align-items: center;
-      box-sizing: border-box;
-      display: inline-flex;
-      flex: 0 0 auto;
-      font-size: 0.76rem;
-      font-weight: 900;
-      height: 1.18rem;
-      justify-content: center;
-      line-height: 1;
-      min-width: 1.18rem;
-      padding: 0 0.2rem;
-      text-align: center;
-    }
-
-    .header-action-btn.plus {
-    }
-
-    .header-action-btn.minus {
-    }
-
-    .assignment-title-text {
-      align-self: center;
-      color: var(--ink);
-      display: block;
-      font-size: 0.96rem;
-      font-weight: 800;
-      line-height: 1.18;
-      overflow: hidden;
-      text-align: center;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-    }
-
-    .assignment-head.core .assignment-title-text {
-      font-size: 0.93rem;
-      font-weight: 800;
-      line-height: 1.15;
-    }
-
-    .assignment-sub {
-      color: var(--ink-soft);
-      display: block;
-      font-size: 0.82rem;
-      font-weight: 700;
-      line-height: 1.08;
-      margin-top: 0;
-      max-width: 100%;
-      overflow: hidden;
-      text-align: center;
-      text-overflow: ellipsis;
-      text-transform: none;
-      white-space: nowrap;
-    }
-
-    .assignment-sub.core-sub {
-      color: var(--ink-soft);
-      font-size: 0.76rem;
-      font-weight: 700;
-    }
-
-    .grade-quarter-cell {
-      display: grid;
-      gap: 0.1rem;
-      min-width: 0;
-    }
-
-    .grade-quarter-title {
-      font-size: 0.93rem;
-      font-weight: 800;
-      line-height: 1.15;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-quarter-pill {
-      align-items: center;
-      display: inline-flex;
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      line-height: 1;
-      padding: 0.18rem 0.5rem;
-      text-transform: uppercase;
-      width: fit-content;
-    }
-
-    .grade-quarter-meta {
-      color: var(--ink-soft);
-      font-size: 0.76rem;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-quarter-summary {
-      display: grid;
-      gap: 0.45rem;
-      min-width: 0;
-    }
-
-    .grade-quarter-range {
-      color: var(--ink-soft);
-      font-size: 0.76rem;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-quarter-stats {
-      display: grid;
-      gap: 0.3rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      min-width: 0;
-    }
-
-    .grade-quarter-stat {
-      box-sizing: border-box;
-      display: grid;
-      gap: 0.06rem;
-      min-width: 0;
-      padding: 0.32rem 0.42rem;
-    }
-
-    .grade-quarter-stat-label {
-      color: var(--ink-soft);
-      font-size: 0.66rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      line-height: 1.1;
-      text-transform: uppercase;
-    }
-
-    .grade-quarter-stat-value {
-      font-size: 0.88rem;
-      font-weight: 800;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    .quarter-board {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-    }
-
-    .quarter-board-shell {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-      min-width: 0;
-    }
-
-    .quarter-board-copy {
-      display: grid;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .quarter-board-actions {
-      align-items: flex-end;
-      display: grid;
-      gap: 8px;
-      justify-items: end;
-      min-width: 0;
-    }
-
-    .quarter-board-card {
-      box-sizing: border-box;
-      display: grid;
-      gap: 12px;
-      min-width: 0;
-      padding: 14px;
-    }
-
-    .quarter-board-maintenance-card {
-      min-width: 0;
-    }
-
-    .quarter-board-card.is-current {
-    }
-
-    .quarter-board-head {
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .quarter-board-title {
-      font-size: 1.16rem;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      margin: 0;
-    }
-
-    .quarter-board-meta {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      color: var(--ink);
-      font-size: 1rem;
-      font-weight: 800;
-      line-height: 1.25;
-      margin: 4px 0 0;
-    }
-
-    .quarter-board-meta-chip {
-      align-items: center;
-      box-sizing: border-box;
-      display: inline-flex;
-      line-height: 1;
-      padding: 0.34rem 0.7rem;
-      white-space: nowrap;
-    }
-
-    .quarter-board-meta-quarter {
-      font-size: 1.08rem;
-      font-weight: 900;
-      letter-spacing: 0.02em;
-    }
-
-    .quarter-board-meta-range {
-      font-size: 0.94rem;
-      font-weight: 800;
-    }
-
-    .quarter-board-meta-count {
-      font-size: 0.92rem;
-      font-weight: 900;
-    }
-
-    .quarter-board-current-pill {
-      align-items: center;
-      display: inline-flex;
-      font-size: 0.86rem;
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      padding: 0.34rem 0.82rem;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .quarter-board-stats {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .quarter-board-entries {
-      display: grid;
-      gap: 8px;
-    }
-
-    .quarter-board-empty {
-      font-size: 0.92rem;
-      line-height: 1.4;
-      padding: 10px 12px;
-    }
-
-    .quarter-board-entry {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: minmax(0, 1fr);
-      padding: 10px 12px;
-    }
-
-    .quarter-board-entry-main {
-      display: grid;
-      gap: 3px;
-      min-width: 0;
-    }
-
-    .quarter-board-entry-title {
-      font-size: 0.98rem;
-      font-weight: 800;
-      line-height: 1.22;
-      margin: 0;
-      overflow-wrap: anywhere;
-    }
-
-    .quarter-board-entry-meta {
-      color: var(--ink-soft);
-      font-size: 0.84rem;
-      line-height: 1.35;
-    }
-
-    .quarter-board-entry-score {
-      align-items: flex-start;
-      display: inline-flex;
-      flex-direction: column;
-      gap: 0.14rem;
-      justify-content: center;
-      min-width: 4.8rem;
-      text-align: right;
-    }
-
-    .quarter-board-entry-score-main {
-      font-size: 1rem;
-      font-weight: 800;
-      line-height: 1.1;
-    }
-
-    .quarter-board-entry-score-sub {
-      color: var(--ink-soft);
-      font-size: 0.8rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .quarter-board-entry.is-open .quarter-board-entry-score-main {
-    }
-
-    .quarter-board-maintenance {
-      display: grid;
-      gap: 0.9rem;
-      align-items: start;
-      justify-items: stretch;
-      padding: 1.25rem;
-      text-align: left;
-    }
-
-    .quarter-board-maintenance-figure {
-      width: 100%;
-      margin: 0;
-    }
-
-    .quarter-board-maintenance-figure img {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-width: 100%;
-    }
-
-    .quarter-board-maintenance-copy {
-      display: grid;
-      gap: 0.6rem;
-      justify-items: start;
-      max-width: 46rem;
-    }
-
-    .quarter-board-maintenance-title {
-      margin: 0;
-      font-size: 1.12rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-    }
-
-    .quarter-board-maintenance-lead,
-    .quarter-board-maintenance-note {
-      margin: 0;
-      color: var(--ink-soft);
-    }
-
-    .grade-quarter-picker {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .grade-quarter-picker-btn {
-      align-items: center;
-      background: var(--portal-surface-support);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--ink);
-      cursor: pointer;
-      display: inline-flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 0.06rem;
-      font-size: 0.82rem;
-      font-weight: 900;
-      line-height: 1.05;
-      min-width: 4.2rem;
-      padding: 0.34rem 0.68rem;
-      transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease,
-        color 0.15s ease,
-        box-shadow 0.15s ease,
-        transform 0.15s ease;
-    }
-
-    .grade-quarter-picker-btn:hover {
-      background: var(--portal-quarter-button-hover-bg);
-      border-color: var(--portal-quarter-button-hover-border);
-      transform: translateY(-1px);
-    }
-
-    .grade-quarter-picker-btn.is-current {
-      border-color: var(--brand);
-      box-shadow: var(--portal-quarter-button-current-shadow);
-    }
-
-    .grade-quarter-picker-btn.is-active,
-    .grade-quarter-picker-btn[aria-pressed="true"] {
-      background: var(--portal-quarter-button-active-bg);
-      border-color: var(--portal-quarter-button-active-border);
-      color: var(--portal-quarter-button-active-text);
-      box-shadow: var(--portal-quarter-button-active-shadow);
-      transform: translateY(-1px);
-    }
-
-    .grade-quarter-picker-btn:focus-visible {
-      outline: 2px solid var(--brand);
-      outline-offset: 2px;
-    }
-
-    .grade-quarter-picker-btn-label {
-      display: block;
-      font-size: 0.84rem;
-      font-weight: 900;
-      line-height: 1.05;
-      text-align: center;
-    }
-
-    .grade-quarter-picker-btn-sub {
-      display: block;
-      font-size: 0.62rem;
-      font-weight: 800;
-      line-height: 1.05;
-      opacity: 0.8;
-      text-align: center;
-      text-transform: none;
-    }
-
-    .grade-quarter-picked-summary {
-      display: grid;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .grade-tabulator-shell {
-      background: var(--portal-grade-table-shell-bg);
-      border: 1px solid var(--portal-grade-table-border);
-      border-radius: 12px;
-      box-sizing: border-box;
-      overflow: hidden;
-      width: 100%;
-    }
-
-    .grade-tabulator {
-      width: 100%;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-cell {
-      border-right-color: var(--portal-grade-table-border);
-      box-sizing: border-box;
-      line-height: 1.2;
-      padding: 0.28rem 0.36rem;
-      vertical-align: top;
-      white-space: normal;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-cell:last-child {
-      border-right-color: var(--portal-grade-table-border);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-content {
-      box-sizing: border-box;
-      min-height: 100%;
-      padding: 0.24rem 0.36rem;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col .tabulator-col-title {
-      color: var(--portal-grade-table-text);
-      font-size: 0.92rem;
-      font-weight: 800;
-      line-height: 1.2;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-content,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-content {
-      box-sizing: border-box;
-      padding: 0.1rem 0.16rem 0.08rem;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-quarter-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-summary-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-exercise-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-class-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-date-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-status-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-score-col .tabulator-col-title,
-    .grade-tabulator-shell .tabulator .tabulator-col.grade-comment-col .tabulator-col-title {
-      align-items: stretch;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      height: 100%;
-      justify-content: stretch;
-      min-height: 4.8rem;
-      padding: 0.02rem 0;
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row {
-      background: var(--portal-grade-table-row-bg, var(--portal-color-c659d630ce));
-      border-bottom: 1px solid var(--portal-grade-table-border);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
-      background: var(--portal-grade-table-row-even-bg, var(--portal-color-24f3dafd18));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row:hover {
-      background: var(--portal-grade-table-row-hover-bg, var(--portal-color-2cdb084429));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
-      background: var(--portal-grade-table-current-row-bg, var(--portal-color-cf801561d7));
-      box-shadow: inset 4px 0 0 var(--portal-grade-table-current-row-accent);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-open {
-      background: var(--portal-grade-table-row-open-bg, var(--portal-color-e273abe831));
-      box-shadow: inset 4px 0 0 var(--portal-color-10fe7b83d5);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
-      background: var(--portal-grade-table-row-open-hover-bg, var(--portal-color-f6cf2589bd));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
-      background: var(--portal-grade-table-row-completed-bg, var(--portal-color-31b5e68729));
-      box-shadow: inset 4px 0 0 var(--portal-color-1c5b3b4180);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
-      background: var(--portal-grade-table-row-completed-hover-bg, var(--portal-color-5526919828));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-late {
-      background: var(--portal-grade-table-row-late-bg, var(--portal-color-422e89e498));
-      box-shadow: inset 4px 0 0 var(--portal-color-82f80f783f);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
-      background: var(--portal-grade-table-row-late-hover-bg, var(--portal-color-c899a97281));
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
-      background: var(--portal-grade-table-row-missed-bg, var(--portal-color-4a1e07fc47));
-      box-shadow: inset 4px 0 0 var(--portal-color-d07e7e7d52);
-    }
-
-    .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
-      background: var(--portal-grade-table-row-missed-hover-bg, var(--portal-color-b72cf2de92));
-    }
-
-    .grade-exercise-cell {
-      display: grid;
-      gap: 0.08rem;
-      min-width: 0;
-    }
-
-    .grade-exercise-title {
-      font-size: 0.88rem;
-      font-weight: 800;
-      line-height: 1.12;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-exercise-meta {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      line-height: 1.18;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-status-pill {
-      align-items: center;
-      box-sizing: border-box;
-      display: inline-flex;
-      font-size: 0.74rem;
-      font-weight: 800;
-      gap: 0.28rem;
-      justify-content: center;
-      line-height: 1;
-      padding: 0.22rem 0.52rem;
-      text-transform: uppercase;
-      width: fit-content;
-    }
-
-    .grade-status-pill.is-good {
-    }
-
-    .grade-status-pill.is-warn {
-    }
-
-    .grade-status-pill.is-bad {
-    }
-
-    .grade-status-pill.is-late {
-    }
-
-    .grade-status-stack {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.28rem;
-      justify-content: flex-start;
-    }
-
-    .grade-exercise-score {
-      box-sizing: border-box;
-      display: grid;
-      gap: 0.08rem;
-      align-items: center;
-      justify-items: center;
-      min-width: 5rem;
-      padding: 0.32rem 0.42rem;
-      text-align: center;
-    }
-
-    .grade-exercise-score.is-open {
-    }
-
-    .grade-exercise-score-main {
-      font-size: 0.94rem;
-      font-weight: 800;
-      line-height: 1.1;
-    }
-
-    .grade-exercise-score-sub {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .grade-exercise-comment {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    html[data-theme="dark"] .grade-exercise-score {
-    }
-
-    html[data-theme="dark"] .grade-exercise-score.is-open {
-    }
-
-    html[data-theme="dark"] .grade-exercise-score-sub,
-    html[data-theme="dark"] .grade-exercise-meta,
-    html[data-theme="dark"] .grade-exercise-comment {
-      color: var(--portal-dark-text-soft);
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row,
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.tabulator-row-even {
-      background: var(--portal-grade-table-row-bg, var(--portal-color-0a4767016c));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row:hover {
-      background: var(--portal-grade-table-row-hover-bg, var(--portal-color-f8af596fb2));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-current-quarter {
-      background: var(--portal-grade-table-current-row-bg, var(--portal-color-2526d46483));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open {
-      background: var(--portal-grade-table-row-open-bg, var(--portal-color-c684a558ca));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-open:hover {
-      background: var(--portal-grade-table-row-open-hover-bg, var(--portal-color-1c77cc184c));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed {
-      background: var(--portal-grade-table-row-completed-bg, var(--portal-color-8e84576524));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-completed:hover {
-      background: var(--portal-grade-table-row-completed-hover-bg, var(--portal-color-628daaa478));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late {
-      background: var(--portal-grade-table-row-late-bg, var(--portal-color-b514a5be40));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-late:hover {
-      background: var(--portal-grade-table-row-late-hover-bg, var(--portal-color-f18c37b592));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed {
-      background: var(--portal-grade-table-row-missed-bg, var(--portal-color-5ff93edc43));
-    }
-
-    html[data-theme="dark"] .grade-tabulator-shell .tabulator .tabulator-row.is-missed:hover {
-      background: var(--portal-grade-table-row-missed-hover-bg, var(--portal-color-0077beaeb3));
-    }
-    /* portal-critical-theme:end */
-    @media (min-width: 720px) {
-      .grade-quarter-stats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 430px) {
-      .env-badge {
-        display: none;
-      }
-
-      .hero-line {
-        grid-template-columns: minmax(0, 1fr);
-        align-items: start;
-      }
-
-      .hero-actions {
-        justify-content: flex-start;
-        flex-wrap: wrap;
-        width: 100%;
-      }
-
-      .text-zoom-controls {
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        max-width: 100%;
-      }
-    }
-
-    @media (max-width: 399px) {
-      .toolbar-actions {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 959px) {
-
-      .c3,
-      .c4,
-      .c6 {
-        grid-column: span 12;
-      }
-    }
+    .grade-quarter-picker-btn {}
+    .grade-tabulator-shell .tabulator .tabulator-row.is-open {}
+    .quarter-board-card {}
 
     @media (min-width: 720px) {
       .toolbar {
@@ -1260,9 +217,6 @@
       }
     }
 
-    @media (min-width: 1000px) and (max-width: 1280px) {
-    }
-
     @media (max-width: 560px) {
       .section-head,
       .queue-summary-head {
@@ -1270,8 +224,8 @@
         text-align: center;
       }
 
-      .section-head>*,
-      .queue-summary-head>* {
+      .section-head > *,
+      .queue-summary-head > * {
         margin-inline: auto;
         text-align: center;
       }
@@ -1288,35 +242,11 @@
         transform: translateY(0);
       }
     }
-    html[data-parent-auth-state="authenticated"] body.parent-portal-page #loginCard {
-      display: none !important;
-    }
-
-    html[data-parent-auth-state="authenticated"] body.parent-portal-page #portalCard {
-      display: block !important;
-    }
-
-    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard {
-      display: block !important;
-    }
-
-    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCard {
-      display: none !important;
-    }
-
-    html[data-parent-auth-state="booting"] body.parent-portal-page #overviewPanel,
-    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #overviewPanel {
-      display: none !important;
-    }
-
-    html[data-parent-auth-state="authenticated"] body.parent-portal-page #overviewPanel {
-      display: grid !important;
-    }
-
+    /* portal-critical-theme:end */
   </style>
 </head>
 
-<body class="parent-portal-page">
+<body class="parent-portal-page" id="top">
   <div class="portal-layout portal-shell">
     <aside id="parentSideNav" class="side-nav" aria-label="Điều hướng cổng phụ huynh">
       <div class="side-brand">
@@ -1341,12 +271,12 @@
 
     <button id="parentNavScrim" class="nav-scrim" type="button" aria-label="Đóng điều hướng"></button>
 
-    <main class="main-col" data-surface-role="content">
+    <main class="portal-main">
       <div class="header-bar">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
-      <section class="card hero" data-surface-role="content">
+      <section class="content hero" data-surface-role="content">
         <button id="parentMenuBtn" class="floating-menu-btn" type="button" aria-label="Mở điều hướng">
           <span class="floating-menu-icon" aria-hidden="true"></span>
         </button>
@@ -1365,13 +295,13 @@
               </span>
             </button>
             <div class="text-zoom-controls" role="toolbar" aria-label="Điều khiển cỡ chữ">
-              <button id="parentTextZoomDownBtn" type="button" aria-label="Giảm cỡ chữ">
+              <button id="parentTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Giảm cỡ chữ">
                 A-
               </button>
-              <button id="parentTextZoomUpBtn" type="button" aria-label="Tăng cỡ chữ">
+              <button id="parentTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Tăng cỡ chữ">
                 A+
               </button>
-              <button id="parentTextZoomResetBtn" type="button" aria-label="Đặt lại cỡ chữ">
+              <button id="parentTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Đặt lại cỡ chữ">
                 Đặt lại
               </button>
             </div>
@@ -1379,7 +309,7 @@
         </div>
       </section>
 
-      <section class="card" id="loginCard">
+      <section class="panel" id="loginCard" data-surface-role="panel">
         <div class="section-head">
           <h2>Đăng nhập</h2>
           <div class="security-badge">
@@ -1407,7 +337,7 @@
         </div>
         <p id="loginStatus" class="status"></p>
       </section>
-      <section class="card hidden" id="portalCard">
+      <section class="content hidden" id="portalCard" data-surface-role="content">
         <div class="portal-grid">
           <div class="portal-col">
             <div class="toolbar" id="overviewPanel">
@@ -1416,7 +346,7 @@
               </div>
             </div>
 
-            <section class="panel" id="identityPanel">
+            <section class="panel" id="identityPanel" data-surface-role="panel">
               <div class="section-head">
                 <h3>Thông tin định danh học sinh</h3>
                 <span class="chip chip-lock">Chỉ xem</span>
@@ -1454,7 +384,7 @@
               </div>
             </section>
 
-            <section id="metricsPanel" class="panel">
+            <section id="metricsPanel" class="panel" data-surface-role="panel">
               <div class="section-head">
                 <h3>Tổng quan nhanh</h3>
                 <span class="chip chip-neutral" id="snapshotBadge">Chưa có dữ liệu</span>
@@ -1462,7 +392,7 @@
               <div class="metrics" id="dashboardMetrics"></div>
             </section>
 
-            <section id="pastDueHomeworkCard" class="panel homework-card">
+            <section id="pastDueHomeworkCard" class="panel homework-card" data-surface-role="panel">
               <h3 class="homework-card-label">Bài tập về nhà quá hạn</h3>
               <div class="homework-card-shell">
                 <div id="pastDueHomeworkBadge" class="homework-square is-clear">
@@ -1471,7 +401,7 @@
                 </div>
                 <div class="homework-card-content">
                   <h4 class="homework-content-title">Bài tập về nhà quá hạn</h4>
-                  <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn" type="button">
+                  <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-neutral-action" type="button">
                     Xem danh sách chưa đầy đủ
                   </button>
                   <p class="hint" id="pastDueHomeworkSummary">Chưa có dữ liệu.</p>
@@ -1479,7 +409,7 @@
               </div>
             </section>
 
-            <section id="newsQueueCard" class="panel queue-panel">
+            <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
               <div id="newsQueueDetails">
                 <div class="queue-summary-head">
                   <span class="queue-summary-stack">
@@ -1487,7 +417,7 @@
                     <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
                   </span>
                 </div>
-                <div class="queue-table-wrap">
+                <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
                   <table class="news-queue-table">
                     <thead>
                       <tr>
@@ -1516,7 +446,7 @@
               </div>
             </section>
 
-            <section id="currentHomeworkCard" class="panel homework-card">
+            <section id="currentHomeworkCard" class="panel homework-card" data-surface-role="panel">
               <h3 class="homework-card-label">Bài tập về nhà hiện tại</h3>
               <div class="homework-card-shell">
                 <div id="currentHomeworkBadge" class="homework-square is-none">
@@ -1538,7 +468,7 @@
               <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
                 <div class="portal-modal-head">
                   <h4 id="pastDueHomeworkModalTitle">Bài tập về nhà quá hạn</h4>
-                  <button id="closePastDueHomeworkModalBtn" class="portal-modal-close" type="button">
+                  <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">
                     Đóng
                   </button>
                 </div>
@@ -1560,10 +490,10 @@
                 <div class="portal-modal-head">
                   <h4 id="newsWeekSetModalTitle">Trình xem báo cáo tin tức học sinh</h4>
                   <div class="actions">
-                    <button id="newsWeekSetModalPrevBtn" type="button" aria-label="Báo cáo trước">←</button>
+                    <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Báo cáo trước">←</button>
                     <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                    <button id="newsWeekSetModalNextBtn" type="button" aria-label="Báo cáo kế tiếp">→</button>
-                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close" type="button">Đóng</button>
+                    <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Báo cáo kế tiếp">→</button>
+                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Đóng</button>
                   </div>
                 </div>
                 <div class="portal-modal-body">
@@ -1630,13 +560,13 @@
                   </div>
                 </div>
                 <div class="portal-modal-actions">
-                  <button id="newsWeekSetModalCloseActionBtn" type="button">Đóng</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-neutral-action">Đóng</button>
                 </div>
                 <p id="newsWeekSetModalStatus" class="hint">Trình xem đã sẵn sàng.</p>
               </div>
             </section>
 
-            <section id="attendanceCalendarCard" class="panel">
+            <section id="attendanceCalendarCard" class="panel" data-surface-role="panel">
               <div class="section-head">
                 <h3>Hồ sơ điểm danh lớp học</h3>
               </div>
@@ -1652,7 +582,7 @@
               <p class="hint" id="attendanceCalendarSummary">Chưa có dữ liệu.</p>
             </section>
 
-            <section id="performanceReportsCard" class="panel">
+            <section id="performanceReportsCard" class="panel" data-surface-role="panel">
               <div class="section-head">
                 <h3>Lưu trữ báo cáo kết quả học tập của học sinh</h3>
               </div>
@@ -1666,9 +596,9 @@
                 <div class="portal-modal-head">
                   <h4 id="performanceReportModalTitle">Báo cáo kết quả học tập</h4>
                   <div class="report-modal-nav">
-                    <button id="performanceReportPrevBtn" type="button">Trước</button>
-                    <button id="performanceReportNextBtn" type="button">Tiếp</button>
-                    <button id="closePerformanceReportModalBtn" class="portal-modal-close" type="button">
+                    <button id="performanceReportPrevBtn" type="button" class="portal-button portal-button-neutral-action">Trước</button>
+                    <button id="performanceReportNextBtn" type="button" class="portal-button portal-button-neutral-action">Tiếp</button>
+                    <button id="closePerformanceReportModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">
                       Đóng
                     </button>
                   </div>
@@ -1713,7 +643,7 @@
                           </div>
                           <div class="homework-card-content">
                             <h4 class="homework-content-title">Bài tập về nhà quá hạn</h4>
-                            <button id="reportPastDueHomeworkPreviewBtn" class="homework-modal-btn" type="button">
+                            <button id="reportPastDueHomeworkPreviewBtn" class="homework-modal-btn portal-button portal-button-neutral-action" type="button">
                               Xem danh sách chưa đầy đủ
                             </button>
                             <p class="hint" id="reportPastDueHomeworkSummary">
@@ -1728,7 +658,7 @@
                   <section class="report-grade-block">
                     <h5>Điểm YTD</h5>
                     <div class="report-grade-card">
-                      <div id="performanceReportGradesTable" class="report-grades-table"></div>
+                    <div id="performanceReportGradesTable" class="report-grades-table data-surface" data-surface-role="data-surface"></div>
                     </div>
                     <p id="performanceReportGradesHint" class="report-grades-hint hidden">
                       Chưa có dữ liệu điểm để hiển thị.
@@ -1753,7 +683,7 @@
               <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
                 <div class="portal-modal-head">
                   <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
-                  <button id="closeReportAccessErrorModalBtn" class="portal-modal-close" type="button">
+                  <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">
                     Đóng
                   </button>
                 </div>
@@ -1763,14 +693,14 @@
               </div>
             </section>
 
-            <section id="gradesYtdCard" class="panel">
+            <section id="gradesYtdCard" class="panel" data-surface-role="panel">
               <div class="section-head">
                 <h3>Điểm YTD</h3>
               </div>
               <p class="hint" id="gradesYtdSummary">Chưa có dữ liệu.</p>
             </section>
 
-            <section id="recommendationsCard" class="panel">
+            <section id="recommendationsCard" class="panel" data-surface-role="panel">
               <div class="section-head">
                 <h3>Khuyến nghị học tập</h3>
               </div>
@@ -1783,17 +713,17 @@
 
       </section>
 
-      <section class="card hidden" id="portalDetailCard">
+      <section class="content hidden" id="portalDetailCard" data-surface-role="content">
         <div class="section-head">
           <h2 id="portalDetailTitle">Chi tiết học sinh</h2>
           <div class="actions">
-            <button id="portalDetailBackToMainBtn" type="button">Back to Main</button>
+            <button id="portalDetailBackToMainBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
           </div>
         </div>
         <p id="portalDetailLead" class="detail-copy">Đang tải chi tiết học sinh...</p>
         <div class="metrics" id="portalDetailMetrics"></div>
         <div class="detail-layout">
-          <section class="panel detail-calendar-panel">
+          <section class="panel detail-calendar-panel" data-surface-role="panel">
             <div class="section-head">
               <h3 id="portalDetailCalendarTitle">Lịch</h3>
             </div>
@@ -1801,12 +731,12 @@
             <div id="portalDetailCalendarGrid" class="calendar-shell" aria-live="polite"></div>
           </section>
 
-          <section class="panel">
+          <section class="panel" data-surface-role="panel">
             <div class="section-head">
               <h3 id="portalDetailPrimaryTitle">Trọng tâm hiện tại</h3>
             </div>
             <div id="portalDetailPrimaryList" class="detail-list"></div>
-            <div id="portalDetailPrimaryTable" class="queue-table-wrap hidden">
+            <div id="portalDetailPrimaryTable" class="queue-table-wrap data-surface hidden" data-surface-role="data-surface">
               <table class="news-queue-table">
                 <thead>
                   <tr>
@@ -1826,7 +756,7 @@
             </div>
           </section>
 
-          <section class="panel">
+          <section class="panel" data-surface-role="panel">
             <div class="section-head">
               <h3 id="portalDetailHistoryTitle">Lịch sử gần đây</h3>
             </div>
@@ -1836,18 +766,18 @@
         <p id="portalDetailStatus" class="status"></p>
       </section>
 
-      <section class="card hidden" id="childPageCard">
+      <section class="content hidden" id="childPageCard" data-surface-role="content">
         <div class="section-head">
           <h2>Trang học sinh: Biểu mẫu cập nhật hồ sơ</h2>
           <div class="toolbar-actions">
-            <button id="backToDashboardBtn" type="button">Back to Main</button>
+            <button id="backToDashboardBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
             <button id="logoutBtnChild" type="button" class="alt">Đăng xuất</button>
           </div>
         </div>
         <p id="childPageBadge" class="hint">
           Chọn học sinh từ Bảng điều khiển để chỉnh sửa hồ sơ.
         </p>
-        <section class="panel" id="profilePanel">
+        <section class="panel" id="profilePanel" data-surface-role="panel">
           <div class="section-head">
             <h3>Biểu mẫu cập nhật hồ sơ</h3>
             <span class="chip chip-neutral" id="draftCountBadge">0 mục chưa lưu</span>
@@ -1862,7 +792,7 @@
         </section>
 
         <div class="draft-actions" id="draftActions">
-          <button id="saveDraftBtn" type="button">Lưu nháp</button>
+          <button id="saveDraftBtn" type="button" class="portal-button portal-button-blue-action">Lưu nháp</button>
           <button id="submitReviewBtn" type="button" class="primary">
             Gửi duyệt
           </button>
@@ -1872,6 +802,15 @@
       </section>
     </main>
   </div>
+
+  <footer class="hub-footer" aria-label="Site footer">
+    <p class="hub-footer__copy">
+      © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+    </p>
+    <p class="hub-footer__action">
+      <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+    </p>
+  </footer>
 
   <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
   <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>

@@ -2910,7 +2910,7 @@ function sendAssignmentAnnouncementPreview(response, entry) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Assignment announcement preview</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2a3a; line-height: 1.45; }
+    body { var(--font-base, system-ui, -apple-system, sans-serif); margin: 24px; color: #1f2a3a; line-height: 1.45; }
     .card { border: 1px solid #cad4e3; border-radius: 10px; padding: 16px; max-width: 900px; }
     h1 { margin: 0 0 8px; }
     .meta { color: #5f6d87; font-size: 13px; margin-bottom: 12px; }

@@ -44,6 +44,13 @@ test("student-admin uses shared theme tokens for chart and support surfaces", ()
   )
 })
 
+test("shared theme light text defaults to black", () => {
+  const source = readFile("web-asset/shared/portal-theme.css")
+  assert.match(source, /--hub-theme-text:\s*#000000;/, "portal-theme.css should keep hub text black")
+  assert.match(source, /--ink:\s*#000000;/, "portal-theme.css should keep ink black")
+  assert.match(source, /--portal-text:\s*#000000;/, "portal-theme.css should keep portal text black")
+})
+
 test("student-admin school title stays dark text", () => {
   const source = readFile("web-asset/admin/student-admin.css")
   const titleBlock = sliceBetween(
@@ -61,7 +68,7 @@ test("student-admin school title stays readable in dark mode", () => {
   const darkTitleBlock = sliceBetween(
     source,
     "html[data-theme=\"dark\"] body.admin-portal-page .app-school-name {",
-    "      html[data-theme=\"dark\"] body.admin-portal-page .mini-list,",
+    "      html[data-theme=\"dark\"] body.admin-portal-page .chart-svg {",
     "student-admin.css dark app-school-name",
   )
   assertIncludesAll(
@@ -130,5 +137,81 @@ test("grades-tabulator chart render uses shared portal tokens", () => {
       "#d7e3f6",
     ],
     "grades-tabulator.html buildDistributionSparklineSvg",
+  )
+})
+
+test("grades-tabulator table chrome stays on the shared table shell", () => {
+  const source = readFile("web-asset/admin/grades-tabulator.html")
+  assert.match(
+    source,
+    /id="gradeGrid" class="portal-theme-table-shell"/,
+    "grades-tabulator.html should use the shared portal table shell class",
+  )
+
+  const shellBlock = sliceBetween(source, "#gradeGrid {", ".grid-head {", "grades-tabulator table shell")
+  assertExcludesAll(
+    shellBlock,
+    ["background:", "border:", "box-shadow:", "color:"],
+    "grades-tabulator table shell",
+  )
+
+  assertExcludesAll(
+    source,
+    [
+      "html[data-theme=\"dark\"] .tabulator {",
+      "html[data-theme=\"dark\"] .tabulator .tabulator-header,",
+      "html[data-theme=\"dark\"] .tabulator .tabulator-cell,",
+      ".tabulator .tabulator-row:hover {",
+    ],
+    "grades-tabulator table chrome",
+  )
+})
+
+test("grades-tabulator reuses the shared admin chrome skeleton", () => {
+  const source = readFile("web-asset/admin/grades-tabulator.html")
+  for (const token of [
+    '<div class="header-bar" data-surface-role="content">',
+    '<div class="wrap">',
+    '<main class="section-stack" id="appMain" data-surface-role="content">',
+    '<div class="content app-page-header" id="appPageHeader" data-surface-role="content">',
+    '<div class="content" data-surface-role="content">',
+    '<section class="control-card portal-theme-panel">',
+    '<section class="metrics" aria-label="Grade data snapshot">',
+    '<section id="gradeGridCard" class="grid-card portal-theme-card">',
+    '<div class="app-brand-strip">',
+    '<h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>',
+    '<button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">',
+    '<button class="portal-theme-toggle" id="adminThemeToggle"',
+    '<div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">',
+    '<button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">',
+    '<footer class="hub-footer" aria-label="Site footer">',
+  ]) {
+    assert.ok(source.includes(token), `grades-tabulator.html should include ${token}`)
+  }
+
+  assert.match(
+    source,
+    /width:\s*min\(100%, var\(--portal-center-column-max, 1040px\)\);/,
+    "grades-tabulator.html should use the shared center column width",
+  )
+})
+
+test("grades-tabulator inherits shared dark text instead of redefining it locally", () => {
+  const source = readFile("web-asset/admin/grades-tabulator.html")
+  assertExcludesAll(
+    source,
+    [
+      "html[data-theme=\"dark\"] .field label",
+      "html[data-theme=\"dark\"] .section-note",
+      "html[data-theme=\"dark\"] .assignment-title-text",
+      "html[data-theme=\"dark\"] .grid-title",
+      "html[data-theme=\"dark\"] .assignment-col.elective-col .assignment-title-text",
+      "html[data-theme=\"dark\"] .assignment-sub",
+      "html[data-theme=\"dark\"] .distribution-mini-meta",
+      "html[data-theme=\"dark\"] .distribution-dialog-head h2",
+      "html[data-theme=\"dark\"] .distribution-dialog-meta",
+      "html[data-theme=\"dark\"] .dim",
+    ],
+    "grades-tabulator.html dark text overrides",
   )
 })

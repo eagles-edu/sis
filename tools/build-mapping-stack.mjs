@@ -196,7 +196,7 @@ function buildMappingPortalHtml(input) {
           radial-gradient(circle at top right, #d4efe8 0, transparent 42%),
           radial-gradient(circle at 10% 80%, #f9dec8 0, transparent 30%),
           linear-gradient(130deg, #f0f5f3, #f9fbfa);
-        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        font-family:  var(--font-base, system-ui, -apple-system, sans-serif);
       }
 
       .shell {
@@ -1094,7 +1094,7 @@ function buildWorkflowViewerHtml(input) {
         background:
           radial-gradient(circle at top right, #d4efe8 0, transparent 42%),
           linear-gradient(130deg, #f0f5f3, #f9fbfa);
-        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        font-family:  var(--font-base, system-ui, -apple-system, sans-serif);
       }
 
       .shell {

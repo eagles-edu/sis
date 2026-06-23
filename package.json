@@ -1,6 +1,6 @@
 {
   "name": "sis",
-  "version": "0.0.1.10",
+  "version": "0.0.1.54",
   "description": "SIS service workspace",
   "private": true,
   "type": "module",
@@ -108,7 +108,7 @@
     "html-validate-markdown": "^5.2.0",
     "html-validate-vue": "^8.3.1",
     "jsdom": "^24.1.0",
-    "playwright": "^1.60.0",
+    "playwright": "^1.61.0",
     "postcss-html": "^1.8.1",
     "prettier": "^3.8.3",
     "prisma": "^7.8.0",

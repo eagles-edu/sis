@@ -27,17 +27,30 @@
   <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
-      background: var(--portal-page-bg);
+      font-family:  var(--font-base, system-ui, -apple-system, sans-serif);
     }
 
-    body.student-portal-page {
-      background: var(--portal-page-bg);
-      color: var(--portal-text);
+    body.student-portal-page main.portal-main {
+      box-sizing: border-box;
+      display: grid;
+      gap: 12px;
+      margin: 0 auto;
+      max-width: 1440px;
+      padding: 16px;
+      width: 100%;
+    }
+
+    html[data-student-auth-state="unauthenticated"] body.student-portal-page main.portal-main {
+      gap: 1rem;
+      margin-inline: auto;
+      max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
+      width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
     }
   </style>
   <title>Student Portal</title>
 
   <style>
+    /* portal-critical-theme:start */
     /* VS Code selector resolution anchors; shared styles live in portal-theme.min.css. */
     .actions,
     .actions-2,
@@ -72,7 +85,6 @@
     .identity-list,
     .identity-value,
     .login-form,
-    .main-col,
     .metrics,
     .nav-overlay,
     .panel,
@@ -259,9 +271,7 @@
         display: grid;
         gap: 6px;
         grid-template-columns: minmax(0, 1fr);
-        border: 1px solid var(--line-strong);
         border-radius: var(--radius-2);
-        background: var(--portal-surface-support);
         padding: 8px;
       }
 
@@ -299,45 +309,6 @@
       gap: 6px;
     }
 
-    /* portal-critical-theme:start */
-    .queue-compact-datetime {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1px;
-      line-height: 1.1;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .queue-compact-datetime-date {
-      font-weight: 700;
-    }
-
-    .queue-compact-datetime-time {
-      font-size: 11px;
-      color: var(--ink-soft);
-    }
-
-    .field.is-invalid label {
-      color: var(--portal-status-bad-text);
-    }
-
-    .field.is-invalid input,
-    .field.is-invalid textarea {
-      border-color: var(--portal-status-bad-border);
-      box-shadow: var(--portal-field-invalid-shadow);
-      background: var(--portal-status-bad-bg);
-    }
-
-    .field-validation-message {
-      margin: 2px 0 0;
-      font-size: 12px;
-      line-height: 1.35;
-      color: var(--portal-status-bad-text);
-    }
-    /* portal-critical-theme:end */
-
     .c3 {
       grid-column: span 3;
     }
@@ -363,18 +334,15 @@
 
     .homework-modal-table th,
     .homework-modal-table td {
-      border-bottom: 1px solid var(--line);
       text-align: left;
       padding: 8px 6px;
       vertical-align: top;
     }
 
     .homework-modal-table th {
-      color: var(--portal-text-soft);
       font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.04em;
-      text-transform: uppercase;
     }
 
     .homework-modal-table td:first-child,
@@ -405,665 +373,10 @@
       gap: 10px;
     }
 
-    /* portal-critical-theme:start */
-    .detail-copy {
-      margin: 0;
-      color: var(--ink-soft);
-      font-size: 0.92rem;
-      line-height: 1.45;
-    }
+    .grade-quarter-picker-btn {}
+    .grade-tabulator-shell .tabulator .tabulator-row.is-open {}
+    .quarter-board-card {}
 
-    .detail-hint {
-      margin: 4px 0 0;
-      color: var(--ink-soft);
-      font-size: 0.82rem;
-      line-height: 1.35;
-    }
-
-    .detail-item-head {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-
-    .detail-item-title {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .detail-item-title a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .detail-item-title a:hover,
-    .detail-item-title a:focus-visible {
-      text-decoration: underline;
-    }
-
-    .detail-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .detail-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: var(--portal-surface-support);
-      color: inherit;
-      text-decoration: none;
-      font-size: 0.78rem;
-      line-height: 1.2;
-      word-break: break-word;
-    }
-
-    .detail-link:hover,
-    .detail-link:focus-visible {
-      border-color: var(--portal-border-strong);
-      text-decoration: none;
-    }
-
-    .detail-item .detail-note {
-      margin: 0;
-      font-size: 0.82rem;
-      line-height: 1.35;
-    }
-
-    .detail-calendar-shell {
-      min-height: 380px;
-    }
-
-    .assignment-head {
-      align-items: center;
-      background: var(--portal-assignment-head-bg);
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      box-sizing: border-box;
-      display: flex;
-      flex: 1 1 auto;
-      flex-direction: column;
-      gap: 0.1rem;
-      height: auto;
-      justify-content: space-between;
-      padding: 0.18rem 0.2rem;
-      width: 100%;
-    }
-
-    .assignment-head.core {
-      border: 1px solid var(--line);
-      justify-content: space-between;
-    }
-
-    .header-action-row {
-      align-items: center;
-      display: inline-flex;
-      gap: 0.18rem;
-      justify-content: flex-start;
-      width: 100%;
-    }
-
-    .header-action-btn {
-      align-items: center;
-      box-sizing: border-box;
-      display: inline-flex;
-      flex: 0 0 auto;
-      font-size: 0.76rem;
-      font-weight: 900;
-      height: 1.18rem;
-      justify-content: center;
-      line-height: 1;
-      min-width: 1.18rem;
-      padding: 0 0.2rem;
-      text-align: center;
-    }
-
-    .header-action-btn.plus {
-    }
-
-    .header-action-btn.minus {
-    }
-
-    .assignment-title-text {
-      align-self: center;
-      color: var(--ink);
-      display: block;
-      font-size: 0.96rem;
-      font-weight: 800;
-      line-height: 1.18;
-      overflow: hidden;
-      text-align: center;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-    }
-
-    .assignment-head.core .assignment-title-text {
-      font-size: 0.93rem;
-      font-weight: 800;
-      line-height: 1.15;
-    }
-
-    .assignment-sub {
-      color: var(--ink-soft);
-      display: block;
-      font-size: 0.82rem;
-      font-weight: 700;
-      line-height: 1.08;
-      margin-top: 0;
-      max-width: 100%;
-      overflow: hidden;
-      text-align: center;
-      text-overflow: ellipsis;
-      text-transform: none;
-      white-space: nowrap;
-    }
-
-    .assignment-sub.core-sub {
-      color: var(--ink-soft);
-      font-size: 0.76rem;
-      font-weight: 700;
-    }
-
-    .grade-quarter-cell {
-      display: grid;
-      gap: 0.1rem;
-      min-width: 0;
-    }
-
-    .grade-quarter-title {
-      font-size: 0.93rem;
-      font-weight: 800;
-      line-height: 1.15;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-quarter-pill {
-      align-items: center;
-      display: inline-flex;
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      line-height: 1;
-      padding: 0.18rem 0.5rem;
-      text-transform: uppercase;
-      width: fit-content;
-    }
-
-    .grade-quarter-meta {
-      color: var(--ink-soft);
-      font-size: 0.76rem;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-quarter-summary {
-      display: grid;
-      gap: 0.45rem;
-      min-width: 0;
-    }
-
-    .grade-quarter-range {
-      color: var(--ink-soft);
-      font-size: 0.76rem;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-quarter-stats {
-      display: grid;
-      gap: 0.3rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      min-width: 0;
-    }
-
-    .grade-quarter-stat {
-      box-sizing: border-box;
-      display: grid;
-      gap: 0.06rem;
-      min-width: 0;
-      padding: 0.32rem 0.42rem;
-    }
-
-    .grade-quarter-stat-label {
-      color: var(--ink-soft);
-      font-size: 0.66rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      line-height: 1.1;
-      text-transform: uppercase;
-    }
-
-    .grade-quarter-stat-value {
-      font-size: 0.88rem;
-      font-weight: 800;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    .quarter-board {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-    }
-
-    .quarter-board-shell {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-      min-width: 0;
-    }
-
-    .quarter-board-copy {
-      display: grid;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .quarter-board-actions {
-      align-items: flex-end;
-      display: grid;
-      gap: 8px;
-      justify-items: end;
-      min-width: 0;
-    }
-
-    .quarter-board-card {
-      box-sizing: border-box;
-      display: grid;
-      gap: 12px;
-      min-width: 0;
-      padding: 14px;
-    }
-
-    .quarter-board-maintenance-card {
-      min-width: 0;
-    }
-
-    .quarter-board-card.is-current {
-    }
-
-    .quarter-board-head {
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .quarter-board-title {
-      font-size: 1.16rem;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      margin: 0;
-    }
-
-    .quarter-board-meta {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      color: var(--ink);
-      font-size: 1rem;
-      font-weight: 800;
-      line-height: 1.25;
-      margin: 4px 0 0;
-    }
-
-    .quarter-board-meta-chip {
-      align-items: center;
-      display: inline-flex;
-      line-height: 1;
-      padding: 0.34rem 0.7rem;
-      white-space: nowrap;
-    }
-
-    .quarter-board-meta-quarter {
-      font-size: 1.08rem;
-      font-weight: 900;
-      letter-spacing: 0.02em;
-    }
-
-    .quarter-board-meta-range {
-      font-size: 0.94rem;
-      font-weight: 800;
-    }
-
-    .quarter-board-meta-count {
-      font-size: 0.92rem;
-      font-weight: 900;
-    }
-
-    .quarter-board-current-pill {
-      align-items: center;
-      display: inline-flex;
-      font-size: 0.86rem;
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      padding: 0.34rem 0.82rem;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .quarter-board-stats {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .quarter-board-entries {
-      display: grid;
-      gap: 8px;
-    }
-
-    .quarter-board-empty {
-      font-size: 0.92rem;
-      line-height: 1.4;
-      padding: 10px 12px;
-    }
-
-    .quarter-board-entry {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: minmax(0, 1fr);
-      padding: 10px 12px;
-    }
-
-    .quarter-board-entry-main {
-      display: grid;
-      gap: 3px;
-      min-width: 0;
-    }
-
-    .quarter-board-entry-title {
-      font-size: 0.98rem;
-      font-weight: 800;
-      line-height: 1.22;
-      margin: 0;
-      overflow-wrap: anywhere;
-    }
-
-    .quarter-board-entry-meta {
-      color: var(--ink-soft);
-      font-size: 0.84rem;
-      line-height: 1.35;
-    }
-
-    .quarter-board-entry-score {
-      align-items: flex-start;
-      display: inline-flex;
-      flex-direction: column;
-      gap: 0.14rem;
-      justify-content: center;
-      min-width: 4.8rem;
-      text-align: right;
-    }
-
-    .quarter-board-entry-score-main {
-      font-size: 1rem;
-      font-weight: 800;
-      line-height: 1.1;
-    }
-
-    .quarter-board-entry-score-sub {
-      color: var(--ink-soft);
-      font-size: 0.8rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .quarter-board-entry.is-open .quarter-board-entry-score-main {
-    }
-
-    .quarter-board-maintenance {
-      display: grid;
-      gap: 0.9rem;
-      align-items: start;
-      justify-items: stretch;
-      padding: 1.25rem;
-      text-align: left;
-    }
-
-    .quarter-board-maintenance-figure {
-      width: 100%;
-      margin: 0;
-    }
-
-    .quarter-board-maintenance-figure img {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-width: 100%;
-    }
-
-    .quarter-board-maintenance-copy {
-      display: grid;
-      gap: 0.6rem;
-      justify-items: start;
-      max-width: 46rem;
-    }
-
-    .quarter-board-maintenance-title {
-      margin: 0;
-      font-size: 1.12rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-    }
-
-    .quarter-board-maintenance-lead,
-    .quarter-board-maintenance-note {
-      margin: 0;
-      color: var(--ink-soft);
-    }
-
-    .grade-quarter-picker {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .grade-quarter-picker-btn {
-      align-items: center;
-      background: var(--portal-surface-support);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--ink);
-      cursor: pointer;
-      display: inline-flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 0.06rem;
-      font-size: 0.82rem;
-      font-weight: 900;
-      line-height: 1.05;
-      min-width: 4.2rem;
-      padding: 0.34rem 0.68rem;
-      transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease,
-        color 0.15s ease,
-        box-shadow 0.15s ease,
-        transform 0.15s ease;
-    }
-
-    .grade-quarter-picker-btn:hover {
-      background: var(--portal-quarter-button-hover-bg);
-      border-color: var(--portal-quarter-button-hover-border);
-      transform: translateY(-1px);
-    }
-
-    .grade-quarter-picker-btn.is-current {
-      border-color: var(--brand);
-      box-shadow: var(--portal-quarter-button-current-shadow);
-    }
-
-    .grade-quarter-picker-btn.is-active,
-    .grade-quarter-picker-btn[aria-pressed="true"] {
-      background: var(--portal-quarter-button-active-bg);
-      border-color: var(--portal-quarter-button-active-border);
-      color: var(--portal-quarter-button-active-text);
-      box-shadow: var(--portal-quarter-button-active-shadow);
-      transform: translateY(-1px);
-    }
-
-    .grade-quarter-picker-btn:focus-visible {
-      outline: 2px solid var(--brand);
-      outline-offset: 2px;
-    }
-
-    .grade-quarter-picker-btn-label {
-      display: block;
-      font-size: 0.84rem;
-      font-weight: 900;
-      line-height: 1.05;
-      text-align: center;
-    }
-
-    .grade-quarter-picker-btn-sub {
-      display: block;
-      font-size: 0.62rem;
-      font-weight: 800;
-      line-height: 1.05;
-      opacity: 0.8;
-      text-align: center;
-      text-transform: none;
-    }
-
-    .grade-quarter-picked-summary {
-      display: grid;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .grade-tabulator-shell {
-      box-sizing: border-box;
-      overflow: hidden;
-      width: 100%;
-    }
-
-    .grade-tabulator {
-      width: 100%;
-    }
-
-    .grade-exercise-cell {
-      display: grid;
-      gap: 0.08rem;
-      min-width: 0;
-    }
-
-    .grade-exercise-title {
-      font-size: 0.88rem;
-      font-weight: 800;
-      line-height: 1.12;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-exercise-meta {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      line-height: 1.18;
-      overflow-wrap: anywhere;
-    }
-
-    .grade-status-pill {
-      align-items: center;
-      box-sizing: border-box;
-      display: inline-flex;
-      font-size: 0.74rem;
-      font-weight: 800;
-      gap: 0.28rem;
-      justify-content: center;
-      line-height: 1;
-      padding: 0.22rem 0.52rem;
-      text-transform: uppercase;
-      width: fit-content;
-    }
-
-    .grade-status-pill.is-good {
-    }
-
-    .grade-status-pill.is-warn {
-    }
-
-    .grade-status-pill.is-bad {
-    }
-
-    .grade-status-pill.is-late {
-    }
-
-    .grade-status-stack {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.28rem;
-      justify-content: flex-start;
-    }
-
-    .grade-exercise-score {
-      box-sizing: border-box;
-      display: grid;
-      gap: 0.08rem;
-      align-items: center;
-      justify-items: center;
-      min-width: 5rem;
-      padding: 0.32rem 0.42rem;
-      text-align: center;
-    }
-
-    .grade-exercise-score.is-open {
-    }
-
-    .grade-exercise-score-main {
-      font-size: 0.94rem;
-      font-weight: 800;
-      line-height: 1.1;
-    }
-
-    .grade-exercise-score-sub {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .grade-exercise-comment {
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
-    }
-
-    html[data-theme="dark"] .quarter-board-card.is-current {
-    }
-
-    html[data-theme="dark"] .quarter-board-meta-range {
-    }
-
-    html[data-theme="dark"] .grade-quarter-stat {
-    }
-
-    html[data-theme="dark"] .grade-exercise-score {
-    }
-
-    html[data-theme="dark"] .grade-exercise-score.is-open {
-    }
-
-    html[data-theme="dark"] .grade-exercise-score-sub,
-    html[data-theme="dark"] .grade-exercise-meta,
-    html[data-theme="dark"] .grade-exercise-comment {
-      color: var(--portal-dark-text-soft);
-    }
-
-    /* portal-critical-theme:end */
     @media (min-width: 720px) {
       .grade-quarter-stats {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1093,13 +406,11 @@
 
       0%,
       49% {
-        filter: saturate(1);
         transform: scale(1);
       }
 
       50%,
       100% {
-        filter: saturate(1.35) brightness(1.06);
         transform: scale(1.015);
       }
     }
@@ -1108,11 +419,9 @@
 
       0%,
       100% {
-        box-shadow: inset 0 0 0 2px var(--portal-status-bad-border);
       }
 
       50% {
-        box-shadow: inset 0 0 0 3px var(--portal-status-bad-text);
       }
     }
 
@@ -1253,11 +562,11 @@
     html[data-student-auth-state="unauthenticated"] body.student-portal-page #appPanel {
       display: none !important;
     }
-
+    /* portal-critical-theme:end */
   </style>
 </head>
 
-<body class="student-portal-page">
+<body class="student-portal-page" id="top">
   <div class="portal-shell">
     <aside id="sideNav" class="side-nav" aria-label="Student navigation">
       <div class="side-brand">
@@ -1281,12 +590,12 @@
 
     <button id="navOverlay" class="nav-overlay" type="button" aria-label="Close navigation"></button>
 
-    <main class="main-col" data-surface-role="content">
+    <main class="portal-main">
       <div class="header-bar">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer noopenner">eagles.edu.vn</a>
       </div>
-      <section class="card topbar" data-surface-role="content">
+      <section class="content topbar" data-surface-role="content">
         <button id="menuBtn" class="floating-menu-btn" type="button" aria-label="Open navigation">
           <span class="floating-menu-icon" aria-hidden="true"></span>
         </button>
@@ -1305,15 +614,15 @@
               </span>
             </button>
             <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
-              <button id="studentTextZoomDownBtn" type="button" aria-label="Decrease text size">A-</button>
-              <button id="studentTextZoomUpBtn" type="button" aria-label="Increase text size">A+</button>
-              <button id="studentTextZoomResetBtn" type="button" aria-label="Reset text size">Reset</button>
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Decrease text size">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Increase text size">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Reset text size">Reset</button>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="card" id="loginPanel">
+      <section class="panel" id="loginPanel" data-surface-role="panel">
         <div class="section-head">
           <h2>STUDENT LOG-IN</h2>
           <div class="security-badge">
@@ -1343,7 +652,7 @@
       </section>
 
       <section id="appPanel" class="hidden">
-        <section id="studentHomeCard" class="card">
+        <section id="studentHomeCard" class="content" data-surface-role="content">
           <div class="portal-grid">
             <div id="studentHomeGrid" class="portal-col">
               <div id="overviewPanel" class="toolbar">
@@ -1351,12 +660,12 @@
                   <p id="studentOverviewSummary" class="student-overview-title">Loading student dashboard...</p>
                 </div>
                 <div class="toolbar-actions">
-                  <button id="reloadBtn" type="button">Tải lại</button>
+                  <button id="reloadBtn" type="button" class="portal-button portal-button-blue-action">Tải lại</button>
                   <button id="logoutBtn" type="button" class="alt">Đăng xuất</button>
                 </div>
               </div>
 
-              <section id="identityPanel" class="panel">
+              <section id="identityPanel" class="panel" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Thông tin định danh học sinh</h3>
                   <span class="chip chip-lock">Chỉ xem</span>
@@ -1382,7 +691,7 @@
                 </div>
               </section>
 
-              <section id="metricsPanel" class="panel">
+              <section id="metricsPanel" class="panel" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Quick Overview</h3>
                   <span id="snapshotBadge" class="chip chip-neutral">No data yet</span>
@@ -1390,7 +699,7 @@
                 <div id="dashboardMetrics" class="metrics"></div>
               </section>
 
-              <section id="pastDueHomeworkCard" class="panel homework-card">
+              <section id="pastDueHomeworkCard" class="panel homework-card" data-surface-role="panel">
                 <h3 class="homework-card-label">Past Due Homework</h3>
                 <div class="homework-card-shell">
                   <div id="pastDueHomeworkBadge" class="homework-square is-clear">
@@ -1399,13 +708,13 @@
                   </div>
                   <div class="homework-card-content">
                     <h4 class="homework-content-title">Overdue items</h4>
-                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn" type="button">Open overdue list</button>
+                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-neutral-action" type="button">Open overdue list</button>
                     <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
                   </div>
                 </div>
               </section>
 
-              <section id="newsQueueCard" class="panel queue-panel">
+              <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
                 <div id="newsQueueDetails">
                   <div class="queue-summary-head">
                   <span class="queue-summary-stack">
@@ -1413,7 +722,7 @@
                     <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
                   </span>
                   </div>
-                  <div class="queue-table-wrap">
+                  <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
                     <table class="news-queue-table">
                       <thead>
                         <tr>
@@ -1432,13 +741,13 @@
                     </table>
                   </div>
                   <div class="actions actions-2">
-                    <button id="openNewsPageBtn" type="button">Open News Page</button>
+                    <button id="openNewsPageBtn" type="button" class="portal-button portal-button-blue-action">Open News Page</button>
                     <button id="newsQueueRefreshBtn" type="button" class="btn-refresh">Refresh</button>
                   </div>
                 </div>
               </section>
 
-              <section id="currentHomeworkCard" class="panel homework-card">
+              <section id="currentHomeworkCard" class="panel homework-card" data-surface-role="panel">
                 <h3 class="homework-card-label">Current Homework</h3>
                 <div class="homework-card-shell">
                   <div id="currentHomeworkBadge" class="homework-square is-none">
@@ -1458,7 +767,7 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="pastDueHomeworkModalTitle">Bài tập chưa hoàn thành</h4>
-                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close" type="button">Dong</button>
+                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Dong</button>
                   </div>
                   <table class="homework-modal-table">
                     <thead>
@@ -1477,13 +786,13 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsComplianceModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="newsComplianceModalTitle">Revision Required</h4>
-                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close" type="button">Close</button>
+                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="newsComplianceModalSummary" class="hint">Fix the listed fields and submit again.</p>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newsComplianceModalCloseActionBtn" type="button">Close</button>
+                    <button id="newsComplianceModalCloseActionBtn" type="button" class="portal-button portal-button-neutral-action">Close</button>
                   </div>
                 </div>
               </section>
@@ -1493,7 +802,7 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
-                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close" type="button">Close</button>
+                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="reportAccessErrorModalMessage">LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT</p>
@@ -1507,10 +816,10 @@
                   <div class="portal-modal-head">
                     <h4 id="newsWeekSetModalTitle">Student News Report Viewer</h4>
                     <div class="actions">
-                      <button id="newsWeekSetModalPrevBtn" type="button" aria-label="Previous report">←</button>
+                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Previous report">←</button>
                       <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                      <button id="newsWeekSetModalNextBtn" type="button" aria-label="Next report">→</button>
-                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close" type="button">Close</button>
+                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Next report">→</button>
+                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Close</button>
                     </div>
                   </div>
                   <div class="portal-modal-body">
@@ -1578,13 +887,13 @@
                   </div>
                   <div class="portal-modal-actions">
                     <button id="newsWeekSetModalSubmitBtn" type="button" class="primary">Submit</button>
-                    <button id="newsWeekSetModalCloseActionBtn" type="button">Close</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-neutral-action">Close</button>
                   </div>
                   <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
                 </div>
               </section>
 
-              <section id="attendanceCalendarCard" class="panel">
+              <section id="attendanceCalendarCard" class="panel" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Attendance Calendar SYTD</h3>
                 </div>
@@ -1592,28 +901,28 @@
                 <p id="attendanceCalendarSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="performanceReportsCard" class="panel">
+              <section id="performanceReportsCard" class="panel" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Performance Reports SYTD Archive</h3>
                 </div>
                 <p id="performanceReportsSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="gradesYtdCard" class="panel">
+              <section id="gradesYtdCard" class="panel" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Grades YTD</h3>
                 </div>
                 <p id="gradesYtdSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="recommendationsCard" class="panel">
+              <section id="recommendationsCard" class="panel" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Recommendations for Success</h3>
                 </div>
                 <p id="recommendationsSummary" class="hint">No data yet.</p>
               </section>
 
-              <section id="quickLinksPanel" class="panel" style="display:none">
+              <section id="quickLinksPanel" class="panel" style="display:none" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Liên kết nhanh</h3>
                 </div>
@@ -1624,17 +933,17 @@
           </div>
         </section>
 
-        <section id="studentDetailPageCard" class="card hidden">
+        <section id="studentDetailPageCard" class="content hidden" data-surface-role="content">
           <div class="section-head">
             <h2 id="studentDetailTitle">Student Detail</h2>
             <div class="actions">
-              <button id="studentDetailBackToMainBtn" type="button">Back to Main</button>
+              <button id="studentDetailBackToMainBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
             </div>
           </div>
           <p id="studentDetailLead" class="detail-copy">Loading student detail...</p>
           <div id="studentDetailMetrics" class="metrics detail-metrics"></div>
           <div class="detail-layout">
-            <section class="panel detail-calendar-panel">
+            <section class="panel detail-calendar-panel" data-surface-role="panel">
               <div class="section-head">
                 <h3 id="studentDetailCalendarTitle">Calendar</h3>
               </div>
@@ -1642,7 +951,7 @@
               <div id="studentDetailCalendarGrid" class="calendar-shell detail-calendar-shell" aria-live="polite"></div>
             </section>
 
-            <section class="panel">
+            <section class="panel" data-surface-role="panel">
               <div class="section-head">
                 <h3 id="studentDetailPrimaryTitle">Current Focus</h3>
               </div>
@@ -1650,7 +959,7 @@
               <div id="studentDetailPrimaryList" class="detail-list"></div>
             </section>
 
-            <section class="panel">
+            <section class="panel" data-surface-role="panel">
               <div class="section-head">
                 <h3 id="studentDetailHistoryTitle">Recent History</h3>
               </div>
@@ -1660,16 +969,16 @@
           </div>
         </section>
 
-        <section id="newsPageCard" class="card hidden">
+        <section id="newsPageCard" class="content hidden" data-surface-role="content">
           <div class="section-head">
             <h2>Daily News Report</h2>
             <div class="news-actions">
-              <button id="backToHomeBtn" type="button">Back to Main</button>
-              <button id="logoutBtnNews" type="button">Logout</button>
+              <button id="backToHomeBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
+              <button id="logoutBtnNews" type="button" class="portal-button portal-button-red-action">Logout</button>
             </div>
           </div>
           <div class="news-layout">
-            <section id="studentCalendar" class="panel">
+            <section id="studentCalendar" class="panel" data-surface-role="panel">
               <h2>Your View Month Calendar</h2>
               <p id="calendarTitle" class="sub calendar-range">Your View timeline</p>
               <div class="legend">
@@ -1684,7 +993,7 @@
               <div id="calendarGrid" class="calendar-shell" aria-live="polite"></div>
             </section>
 
-            <section id="newsQueuePanel" class="panel queue-panel">
+            <section id="newsQueuePanel" class="panel queue-panel" data-surface-role="panel">
               <div id="newsPageQueueDetails">
                 <div class="queue-summary-head">
                   <span class="queue-summary-stack">
@@ -1692,7 +1001,7 @@
                     <span id="newsPageQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
                   </span>
                 </div>
-                <div class="queue-table-wrap">
+                <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
                   <table class="news-queue-table">
                     <thead>
                       <tr>
@@ -1713,7 +1022,7 @@
               </div>
             </section>
 
-            <section id="newsReportFormCard" class="panel">
+            <section id="newsReportFormCard" class="panel" data-surface-role="panel">
               <h2>Media Report Form</h2>
               <div class="row">
                 <div class="field c3">
@@ -1780,7 +1089,7 @@
 
                 <div class="field c12 actions">
                   <button id="submitBtn" class="primary" type="button">Submit Report</button>
-                  <button id="openNewsComplianceModalBtn" type="button" class="hidden">View validation details</button>
+                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-neutral-action hidden">View validation details</button>
                 </div>
               </div>
               <p id="formStatus" class="status">Waiting for calendar window. </p>
@@ -1789,11 +1098,20 @@
         </section>
       </section>
 
-      <section class="card status-strip">
+      <section class="content status-strip" data-surface-role="content">
         <p id="globalStatus" class="status">Checking student session...</p>
       </section>
     </main>
   </div>
+
+  <footer class="hub-footer" aria-label="Site footer">
+    <p class="hub-footer__copy">
+      © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+    </p>
+    <p class="hub-footer__action">
+      <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+    </p>
+  </footer>
 
   <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
   <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>

@@ -611,6 +611,113 @@
         });
       }
 
+      const ROW_OPTIONS_VIEWPORT_MARGIN = 12;
+      const ROW_OPTIONS_MENU_GAP = 4;
+      const ROW_OPTIONS_FLOATING_Z_INDEX = 1200;
+      let rowOptionsLayoutFrame = 0;
+
+      function clearRowOptionsDropdownLayout(menuEl) {
+        if (!(menuEl instanceof HTMLDetailsElement)) return;
+        const dropdownEl = menuEl.querySelector(".row-options-dropdown");
+        if (!(dropdownEl instanceof HTMLElement)) return;
+        dropdownEl.style.position = "";
+        dropdownEl.style.inset = "";
+        dropdownEl.style.top = "";
+        dropdownEl.style.left = "";
+        dropdownEl.style.right = "";
+        dropdownEl.style.bottom = "";
+        dropdownEl.style.maxWidth = "";
+        dropdownEl.style.maxHeight = "";
+        dropdownEl.style.overflowY = "";
+        dropdownEl.style.zIndex = "";
+        dropdownEl.style.transformOrigin = "";
+      }
+
+      function positionRowOptionsDropdown(menuEl) {
+        if (!(menuEl instanceof HTMLDetailsElement) || !menuEl.open) {
+          clearRowOptionsDropdownLayout(menuEl);
+          return;
+        }
+
+        const triggerEl = menuEl.querySelector(".row-options-trigger");
+        const dropdownEl = menuEl.querySelector(".row-options-dropdown");
+        if (!(triggerEl instanceof HTMLElement) || !(dropdownEl instanceof HTMLElement)) return;
+
+        const triggerRect = triggerEl.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+
+        dropdownEl.style.position = "fixed";
+        dropdownEl.style.inset = "auto";
+        dropdownEl.style.zIndex = String(ROW_OPTIONS_FLOATING_Z_INDEX);
+        dropdownEl.style.maxWidth = `${Math.max(0, viewportWidth - ROW_OPTIONS_VIEWPORT_MARGIN * 2)}px`;
+        dropdownEl.style.maxHeight = `${Math.max(0, viewportHeight - ROW_OPTIONS_VIEWPORT_MARGIN * 2)}px`;
+        dropdownEl.style.overflowY = "auto";
+        dropdownEl.style.transformOrigin = "top right";
+
+        const dropdownRect = dropdownEl.getBoundingClientRect();
+        const dropdownWidth = Math.min(
+          dropdownRect.width || dropdownEl.offsetWidth || 116,
+          Math.max(0, viewportWidth - ROW_OPTIONS_VIEWPORT_MARGIN * 2),
+        );
+        const dropdownHeight = Math.min(
+          dropdownRect.height || dropdownEl.offsetHeight || 0,
+          Math.max(0, viewportHeight - ROW_OPTIONS_VIEWPORT_MARGIN * 2),
+        );
+        const spaceAbove = Math.max(0, triggerRect.top - ROW_OPTIONS_VIEWPORT_MARGIN);
+        const spaceBelow = Math.max(0, viewportHeight - triggerRect.bottom - ROW_OPTIONS_VIEWPORT_MARGIN);
+        const openAbove = dropdownHeight > spaceBelow && spaceAbove > spaceBelow;
+        const preferredTop = openAbove ?
+          triggerRect.top - dropdownHeight - ROW_OPTIONS_MENU_GAP
+          : triggerRect.bottom + ROW_OPTIONS_MENU_GAP;
+        const top = Math.max(
+          ROW_OPTIONS_VIEWPORT_MARGIN,
+          Math.min(preferredTop, viewportHeight - dropdownHeight - ROW_OPTIONS_VIEWPORT_MARGIN),
+        );
+        const preferredLeft = triggerRect.right - dropdownWidth;
+        const left = Math.max(
+          ROW_OPTIONS_VIEWPORT_MARGIN,
+          Math.min(preferredLeft, viewportWidth - dropdownWidth - ROW_OPTIONS_VIEWPORT_MARGIN),
+        );
+
+        dropdownEl.style.top = `${Math.round(top)}px`;
+        dropdownEl.style.left = `${Math.round(left)}px`;
+        dropdownEl.style.right = "auto";
+        dropdownEl.style.bottom = "auto";
+        dropdownEl.style.transformOrigin = openAbove ? "bottom right" : "top right";
+      }
+
+      function scheduleRowOptionsDropdownLayout() {
+        if (rowOptionsLayoutFrame) return;
+        rowOptionsLayoutFrame = window.requestAnimationFrame(() => {
+          rowOptionsLayoutFrame = 0;
+          document.querySelectorAll(".row-options-menu").forEach((menuEl) => {
+            positionRowOptionsDropdown(menuEl);
+          });
+        });
+      }
+
+      function wireRowOptionsDropdownLayout() {
+        if (window.__SIS_ADMIN_ROW_OPTIONS_LAYOUT_BOUND__) return;
+        document.addEventListener(
+          "toggle",
+          (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLDetailsElement)) return;
+            if (!target.classList.contains("row-options-menu")) return;
+            if (target.open) {
+              scheduleRowOptionsDropdownLayout();
+            } else {
+              clearRowOptionsDropdownLayout(target);
+            }
+          },
+          true,
+        );
+        document.addEventListener("scroll", scheduleRowOptionsDropdownLayout, true);
+        window.addEventListener("resize", scheduleRowOptionsDropdownLayout);
+        window.__SIS_ADMIN_ROW_OPTIONS_LAYOUT_BOUND__ = true;
+      }
+
       function wireSharedButtonDecoration() {
         if (!hasLiveDom()) return;
         decorateSharedButtons();
@@ -5982,7 +6089,7 @@
     <meta charset="utf-8">
     <title>${escapeHtml(tableLabelForKey(tableKey))} Data Export</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 20px; color: #222; }
+      body { font-family:  var(--font-base, system-ui, -apple-system, sans-serif); margin: 20px; color: #222; }
       h1 { margin: 0 0 8px; font-size: 20px; }
       p { margin: 0 0 14px; font-size: 12px; color: #555; }
       table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -5998,7 +6105,7 @@
       <thead><tr>${headerHtml}</tr></thead>
       <tbody>${bodyHtml}</tbody>
     </table>
-`);
+`)
         popup.document.write("</bo" + "dy></ht" + "ml>");
         popup.document.close();
         popup.focus();
@@ -21890,6 +21997,7 @@
       installButtonPressFeedback();
       initializeButtonTooltips();
       wireSharedButtonDecoration();
+      wireRowOptionsDropdownLayout();
 
       document.querySelectorAll("[data-menu-toggle]").forEach((toggleBtn) => {
         toggleBtn.addEventListener("click", () => {
