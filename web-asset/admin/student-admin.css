@@ -328,45 +328,6 @@
           transform: scale(1.2);
         }
       }
-      button.primary:not(.portal-button) {
-        --btn-active-shadow: var(--portal-button-shadow-active);
-        --btn-hover-shadow: var(--portal-button-shadow-hover);
-        --btn-ripple-color: var(--portal-color-ff50535d27);
-        background: var(--portal-button-blue-fill);
-        border-color: var(--portal-button-blue-stroke);
-        color: var(--portal-button-blue-ink);
-      }
-      button.primary:not(.portal-button):hover:not(:disabled) {
-        background: var(--portal-button-blue-fill-hover);
-        border-color: var(--portal-button-blue-stroke-hover);
-        color: var(--portal-button-blue-ink);
-      }
-      button.alt:not(.portal-button) {
-        --btn-active-shadow: var(--portal-button-shadow-active);
-        --btn-hover-shadow: var(--portal-button-shadow-hover);
-        --btn-ripple-color: var(--portal-color-2774a5c299);
-        background: var(--portal-button-neutral-fill);
-        border-color: var(--portal-button-neutral-stroke);
-        color: var(--portal-button-neutral-ink);
-      }
-      button.alt:not(.portal-button):hover:not(:disabled) {
-        background: var(--portal-button-neutral-fill-hover);
-        border-color: var(--portal-button-neutral-stroke-hover);
-        color: var(--portal-button-neutral-ink);
-      }
-      button.danger:not(.portal-button) {
-        --btn-active-shadow: var(--portal-button-shadow-active);
-        --btn-hover-shadow: var(--portal-button-shadow-hover);
-        --btn-ripple-color: var(--portal-color-1a725bdb9a);
-        background: var(--portal-button-red-fill);
-        border-color: var(--portal-button-red-stroke);
-        color: var(--portal-button-red-ink);
-      }
-      button.ghost:not(.portal-button) {
-        background: var(--portal-button-neutral-fill);
-        border-color: var(--portal-button-neutral-stroke);
-        color: var(--portal-button-neutral-ink);
-      }
       button.btn-delete:not(.portal-button) {
         --btn-active-shadow: var(--portal-button-shadow-active);
         --btn-hover-shadow: var(--portal-button-shadow-hover);
@@ -391,7 +352,7 @@
         border-color: var(--portal-button-teal-stroke);
         color: var(--portal-button-teal-ink);
       }
-      button:is(.primary, .alt, .danger, .ghost, .btn-refresh, .btn-edit, .btn-delete):not(.portal-button) {
+      button:is(.btn-refresh, .btn-edit, .btn-delete):not(.portal-button) {
         align-items: center;
         display: inline-flex;
         font-size: var(--admin-action-btn-font-size);

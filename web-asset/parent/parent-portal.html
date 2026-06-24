@@ -265,7 +265,7 @@
         <a class="side-link" href="#portalDetailCard" data-view-target="dashboard" data-page-target="recommendations">Các khuyến nghị để đạt được thành công trong học tập</a>
       </nav>
       <div class="side-actions">
-        <button id="parentNavLogoutBtn" type="button" class="alt">Đăng xuất</button>
+        <button id="parentNavLogoutBtn" type="button" class="portal-button portal-button-red-action">Đăng xuất</button>
       </div>
     </aside>
 
@@ -329,7 +329,10 @@
             <input id="parentPassword" type="password" autocomplete="current-password" placeholder="Mật khẩu dùng chung phụ huynh - học sinh">
             <p class="field-hint">Nhập đúng mật khẩu hiện hành của tài khoản.</p>
           </div>
-          <button id="loginBtn" class="primary" type="submit">Đăng nhập</button>
+          <div class="login-actions">
+            <button id="loginBtn" class="portal-button portal-button-blue-action" type="submit">Đăng nhập</button>
+            <button id="loginClearBtn" class="portal-button portal-button-purple-action" type="reset">Clear</button>
+          </div>
         </form>
         <div class="login-links">
           <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Parent%20portal%20password%20reset">Reset password</a>
@@ -340,11 +343,7 @@
       <section class="content hidden" id="portalCard" data-surface-role="content">
         <div class="portal-grid">
           <div class="portal-col">
-            <div class="toolbar" id="overviewPanel">
-              <div class="form-row">
-                <p id="parentOverviewSummary" class="parent-overview-title-head">Đang tải bảng điều khiển học sinh... </p>
-              </div>
-            </div>
+            <h3 id="parentOverviewSummary" class="panel parent-overview-title-head" data-surface-role="panel">Đang tải bảng điều khiển học sinh...</h3>
 
             <section class="panel" id="identityPanel" data-surface-role="panel">
               <div class="section-head">
@@ -364,19 +363,19 @@
               </div>
               <p id="studentIdentity" class="hint">Đang tải thông tin học sinh...</p>
               <div class="identity-list">
-                <div class="identity-item">
+                <div class="identity-item portal-theme-card">
                   <span class="identity-label">Eagles ID</span>
                   <span id="studentEaglesIdValue" class="identity-value">-</span>
                 </div>
-                <div class="identity-item">
+                <div class="identity-item portal-theme-card">
                   <span class="identity-label">Mã số học sinh</span>
                   <span id="studentNumberValue" class="identity-value">-</span>
                 </div>
-                <div class="identity-item">
+                <div class="identity-item portal-theme-card">
                   <span class="identity-label">Họ và tên</span>
                   <span id="studentNameValue" class="identity-value">-</span>
                 </div>
-                <div class="identity-item">
+                <div class="identity-item portal-theme-card">
                   <span class="identity-label">Lớp hiện tại</span>
                   <span id="studentGradeValue" class="identity-value">-</span>
                   <span id="immutableGrade" class="identity-value hidden">-</span>
@@ -412,10 +411,10 @@
             <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
               <div id="newsQueueDetails">
                 <div class="queue-summary-head">
-                  <span class="queue-summary-stack">
-                    <span class="summary-title">Hàng chờ báo cáo tin tức</span>
+                  <div class="queue-summary-stack">
+                    <h3 class="summary-title">Hàng chờ báo cáo tin tức</h3>
                     <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
-                  </span>
+                  </div>
                 </div>
                 <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
                   <table class="news-queue-table">
@@ -436,10 +435,10 @@
                   </table>
                 </div>
                 <div class="actions actions-2">
-                  <button id="openNewsQueueDetailBtn" type="button" class="primary">
+                  <button id="openNewsQueueDetailBtn" type="button" class="portal-button portal-button-blue-action">
                     Xem chi tiết
                   </button>
-                  <button id="refreshNewsQueueBtn" type="button" class="btn-refresh">
+                  <button id="refreshNewsQueueBtn" type="button" class="portal-button portal-button-teal-refresh">
                     Tải lại
                   </button>
                 </div>
@@ -658,7 +657,7 @@
                   <section class="report-grade-block">
                     <h5>Điểm YTD</h5>
                     <div class="report-grade-card">
-                    <div id="performanceReportGradesTable" class="report-grades-table data-surface" data-surface-role="data-surface"></div>
+                    <div id="performanceReportGradesTable" class="report-grades-table portal-theme-table-shell data-surface" data-surface-role="data-surface"></div>
                     </div>
                     <p id="performanceReportGradesHint" class="report-grades-hint hidden">
                       Chưa có dữ liệu điểm để hiển thị.
@@ -669,7 +668,7 @@
                     <div id="performanceReportAttendanceMetrics" class="metrics report-metrics"></div>
                   </section>
                   <div class="report-modal-ack">
-                    <button id="acknowledgePerformanceReportBtn" type="button" class="primary">
+                    <button id="acknowledgePerformanceReportBtn" type="button" class="portal-button portal-button-blue-action">
                       Đã xem
                     </button>
                     <span id="performanceReportAckStatus" class="report-modal-ack-status">Chưa xác nhận.</span>
@@ -771,7 +770,7 @@
           <h2>Trang học sinh: Biểu mẫu cập nhật hồ sơ</h2>
           <div class="toolbar-actions">
             <button id="backToDashboardBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
-            <button id="logoutBtnChild" type="button" class="alt">Đăng xuất</button>
+            <button id="logoutBtnChild" type="button" class="portal-button portal-button-red-action">Đăng xuất</button>
           </div>
         </div>
         <p id="childPageBadge" class="hint">
@@ -793,24 +792,23 @@
 
         <div class="draft-actions" id="draftActions">
           <button id="saveDraftBtn" type="button" class="portal-button portal-button-blue-action">Lưu nháp</button>
-          <button id="submitReviewBtn" type="button" class="primary">
+          <button id="submitReviewBtn" type="button" class="portal-button portal-button-blue-action">
             Gửi duyệt
           </button>
         </div>
 
         <p id="childPageStatus" class="status"></p>
       </section>
+      <footer class="hub-footer" aria-label="Site footer">
+        <p class="hub-footer__copy">
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
+        </p>
+        <p class="hub-footer__action">
+          <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+        </p>
+      </footer>
     </main>
   </div>
-
-  <footer class="hub-footer" aria-label="Site footer">
-    <p class="hub-footer__copy">
-      © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
-    </p>
-    <p class="hub-footer__action">
-      <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
-    </p>
-  </footer>
 
   <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
   <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
@@ -3412,7 +3410,7 @@
 
     function metricCard(label, value, tone = "") {
       const card = document.createElement("div");
-      card.className = "metric";
+      card.className = "metric portal-theme-card";
       if (tone) card.classList.add(`metric-${tone}`);
       const keyNode = document.createElement("div");
       keyNode.className = "k";
@@ -4735,7 +4733,7 @@
 
     function buildDetailItemMarkup(item = {}) {
       const article = document.createElement("article");
-      article.className = "detail-item";
+      article.className = "detail-item portal-theme-card";
       if (normalizeText(item?.tone)) {
         article.classList.add(item.tone);
       }
@@ -5504,7 +5502,7 @@
         const requiredReports = weeklyMinimumNewsReports();
         const latestDate = normalizeText(item?.latestReportDate || item?.reports?.[0]?.reportDate);
         const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
-        return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${requiredReports}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${requiredReports}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn portal-button portal-button-blue-action" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
       }).join("");
       scheduleChipTooltipRefresh(body);
     }
@@ -6816,6 +6814,10 @@
     document.getElementById("loginForm")?.addEventListener("submit", (event) => {
       event.preventDefault();
       login().catch((error) => setStatus(error.message, "err"));
+    });
+    document.getElementById("loginForm")?.addEventListener("reset", () => {
+      setStatus("", "");
+      requestAnimationFrame(() => document.getElementById("parentsId")?.focus());
     });
     document.getElementById("logoutBtn")?.addEventListener("click", () => {
       logout().catch((error) => setStatus(error.message, "err"));

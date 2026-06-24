@@ -550,10 +550,6 @@
           const classesToAdd = new Set();
           const stripLegacyActionClasses = () => {
             button.classList.remove(
-              "primary",
-              "alt",
-              "danger",
-              "ghost",
               "btn-refresh",
               "btn-edit",
               "btn-delete",
@@ -580,18 +576,12 @@
           } else if (classList.contains("btn-refresh")) {
             stripLegacyActionClasses();
             add("portal-button", "portal-button-teal-refresh");
-          } else if (classList.contains("btn-delete") || classList.contains("danger")) {
+          } else if (classList.contains("btn-delete")) {
             stripLegacyActionClasses();
             add("portal-button", "portal-button-red-action");
           } else if (classList.contains("btn-edit")) {
             stripLegacyActionClasses();
             add("portal-button", "portal-button-green-action");
-          } else if (classList.contains("primary")) {
-            stripLegacyActionClasses();
-            add("portal-button", "portal-button-blue-action");
-          } else if (classList.contains("alt") || classList.contains("ghost")) {
-            stripLegacyActionClasses();
-            add("portal-button", "portal-button-neutral-action");
           }
 
           if (
@@ -12859,7 +12849,7 @@
           options.push({
             action: "create-account",
             label: "Create New User",
-            className: "primary",
+            className: "portal-button portal-button-blue-action",
           });
           options.push({ action: "save-temp", label: "Temp", className: "btn-edit" });
           options.push({
@@ -12879,7 +12869,7 @@
           options.push({
             action: "create-account",
             label: "Create New User",
-            className: "primary",
+            className: "portal-button portal-button-blue-action",
           });
           options.push({
             action: "requeue",
@@ -12903,7 +12893,7 @@
           options.push({
             action: "create-account",
             label: "Create New User",
-            className: "primary",
+            className: "portal-button portal-button-blue-action",
           });
           options.push({
             action: "requeue",
@@ -17959,7 +17949,7 @@
           <td data-performance-col="approvalStatus">${escapeHtml(approvalStatus)}</td>
           <td data-performance-col="action" class="table-row-options-cell">
             <button type="button" class="btn-edit" data-pt-report-edit="${row.id}">Edit</button>
-            <button type="button" class="primary" data-pt-report-approve="${row.id}"${pending || approved || workflowState !== "draft_pr" ? " disabled" : ""}>${pending ? "Working..." : approved ? "Approved" : approveLabel}</button>
+            <button type="button" class="portal-button portal-button-green-action" data-pt-report-approve="${row.id}"${pending || approved || workflowState !== "draft_pr" ? " disabled" : ""}>${pending ? "Working..." : approved ? "Approved" : approveLabel}</button>
           </td>
         `;
 

@@ -54,4 +54,22 @@
       });
     });
   };
+
+  root.updateCopyrightYears = function updateCopyrightYears(rootNode = document) {
+    const year = new Date().getFullYear();
+    rootNode.querySelectorAll("[data-copyright-year]").forEach((el) => {
+      const start = Number.parseInt(el.getAttribute("data-start"), 10);
+      el.textContent = Number.isFinite(start) && start < year ? `${start}–${year}` : String(year);
+    });
+  };
+
+  const runCopyrightYearUpdate = () => {
+    root.updateCopyrightYears?.(document);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", runCopyrightYearUpdate, { once: true });
+  } else {
+    runCopyrightYearUpdate();
+  }
 })();

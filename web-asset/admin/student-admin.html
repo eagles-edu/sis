@@ -157,8 +157,8 @@
           <input id="loginPass" type="password" autocomplete="current-password">
         </div>
         <div class="actions actions-2">
-          <button id="loginBtn" type="submit" class="primary">Login</button>
-          <button id="loginClearBtn" type="button" class="danger">Clear</button>
+          <button id="loginBtn" type="submit" class="portal-button portal-button-blue-action">Login</button>
+          <button id="loginClearBtn" type="button" class="portal-button portal-button-purple-action">Clear</button>
         </div>
       </form>
       <div class="login-links">
@@ -283,7 +283,7 @@
             </div>
           </nav>
           <div class="sidebar-actions">
-            <button id="sidebarLogoutBtn" type="button" class="danger ghost">
+            <button id="sidebarLogoutBtn" type="button" class="portal-button portal-button-red-action">
               Logout
             </button>
           </div>
@@ -292,10 +292,10 @@
         <main class="section-stack" id="appMain" data-surface-role="content">
           <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
             <div class="app-brand-strip">
-              <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+              <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
                 <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
                 <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
-              </div>
+              </a>
               <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
               <div class="app-header-actions">
                 <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">
@@ -351,13 +351,13 @@
                 </button>
                 <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
                   <span class="small global-text-label">Global Text</span>
-                  <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
+                  <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="decrease" aria-label="Decrease global text size">
                     A-
                   </button>
-                  <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">
+                  <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="increase" aria-label="Increase global text size">
                     A+
                   </button>
-                  <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">
+                  <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="reset" aria-label="Reset global text size">
                     Reset
                   </button>
                   <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
@@ -396,13 +396,13 @@
                 <input id="familyPhone" type="tel" placeholder="parent emergency phone">
               </div>
               <div class="col-2">
-                <button id="searchBtn" type="button" class="primary">Search</button>
+                <button id="searchBtn" type="button" class="portal-button portal-button-blue-action">Search</button>
               </div>
               <div class="col-2">
-                <button id="familyBtn" type="button" class="primary">Find Family</button>
+                <button id="familyBtn" type="button" class="portal-button portal-button-blue-action">Find Family</button>
               </div>
               <div class="col-2">
-                <button id="clearFiltersBtn" type="button" class="danger">Clear</button>
+                <button id="clearFiltersBtn" type="button" class="portal-button portal-button-purple-action">Clear</button>
               </div>
               <div class="col-2">
                 <button id="refreshBtn" type="button" class="portal-button portal-button-teal-refresh">
@@ -410,7 +410,7 @@
                 </button>
               </div>
               <div class="col-2">
-                <button id="logoutBtn" type="button" class="danger">Logout</button>
+                <button id="logoutBtn" type="button" class="portal-button portal-button-red-action">Logout</button>
               </div>
               <div class="col-12">
                 <p class="small" id="topSearchScopeHint">
@@ -484,12 +484,12 @@
                   <input id="importFile" type="file" accept=".csv,.tsv,.xlsx,.xls,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
                 </div>
                 <div class="col-3">
-                  <button id="importTemplateBtn" type="button" class="primary">
+                  <button id="importTemplateBtn" type="button" class="portal-button portal-button-blue-action">
                     Download Template
                   </button>
                 </div>
                 <div class="col-3">
-                  <button id="importBtn" type="button" class="primary">Import File</button>
+                  <button id="importBtn" type="button" class="portal-button portal-button-blue-action">Import File</button>
                 </div>
               </div>
               <p class="small">
@@ -690,7 +690,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="levelReminderSendAllBtn" type="button" class="portal-button portal-button-blue-action">
                         Send to All Listed
                       </button>
-                      <button id="levelReminderClearBtn" type="button" class="portal-button portal-button-purple-action">
+                <button id="levelReminderClearBtn" type="button" class="portal-button portal-button-purple-action">
                         Clear Form
                       </button>
                       <button id="levelDetailCloseBtn" type="button" class="portal-button portal-button-neutral-action">
@@ -859,7 +859,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                     <button id="profileEditInfoBtn" type="button" class="btn-edit">
                       Edit Info
                     </button>
-                    <button id="profileCreateInfoBtn" type="button" class="primary">
+                    <button id="profileCreateInfoBtn" type="button" class="portal-button portal-button-blue-action">
                       New Form
                     </button>
                     <button id="profileRefreshInfoBtn" type="button" class="btn-refresh">
@@ -885,16 +885,16 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <div class="profile-editor-toolbar">
                         <h3>New / Edit Form</h3>
                         <div class="actions actions-2">
-                          <button id="profileBackToInfoBtn" type="button" class="alt">
+                          <button id="profileBackToInfoBtn" type="button" class="portal-button portal-button-neutral-action">
                             Back to Info
                           </button>
                         </div>
                       </div>
                       <div class="profile-tab-nav" id="profileTabNav" role="tablist" aria-orientation="horizontal" aria-label="Student profile form tabs"></div>
                       <div class="actions actions-4">
-                        <button id="newBtn" type="button" class="primary">Create New</button>
-                        <button id="studentClearBtn" type="button" class="danger">Clear Form</button>
-                        <button id="saveBtn" type="submit" class="primary">
+                        <button id="newBtn" type="button" class="portal-button portal-button-blue-action">Create New</button>
+                        <button id="studentClearBtn" type="button" class="portal-button portal-button-purple-action">Clear Form</button>
+                        <button id="saveBtn" type="submit" class="portal-button portal-button-green-action">
                           Save / Update
                         </button>
                         <button id="deleteBtn" type="button" class="btn-delete">
@@ -941,13 +941,13 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </div>
                     </div>
                     <div class="actions actions-3">
-                      <button id="attendanceLandingSaveAllBtn" type="button" class="primary">
+                      <button id="attendanceLandingSaveAllBtn" type="button" class="portal-button portal-button-green-action">
                         Save Level Attendance
                       </button>
                       <button id="attendanceLandingReloadBtn" type="button" class="btn-refresh">
                         Reload Level Data
                       </button>
-                      <button id="attendanceClearBtn" type="button" class="danger">Clear</button>
+                      <button id="attendanceClearBtn" type="button" class="portal-button portal-button-purple-action">Clear</button>
                     </div>
                     <p class="small" id="attendanceLandingSummary">
                       Select a class level. Today's default status is Absent.
@@ -1063,7 +1063,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Archive</div>
-                    <button id="attendanceArchiveToggleBtn" type="button" class="alt">
+                    <button id="attendanceArchiveToggleBtn" type="button" class="portal-button portal-button-amber-info">
                       Show Archived
                     </button>
                   </div>
@@ -1075,7 +1075,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Print</div>
-                    <button id="attendancePrintPdfBtn" type="button" class="primary">
+                    <button id="attendancePrintPdfBtn" type="button" class="portal-button portal-button-blue-action">
                       Print PDF
                     </button>
                   </div>
@@ -1476,7 +1476,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                           </div>
                           <div class="col-2">
                             <div aria-hidden="true"></div>
-                      <button id="pt_actionClearBtn" type="button" class="danger">
+                      <button id="pt_actionClearBtn" type="button" class="portal-button portal-button-purple-action">
                         Clear Inputs
                       </button>
                           </div>
@@ -1881,10 +1881,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       <button id="pt_saveBtn" type="button" class="btn-edit">
                         Save Performance Report
                       </button>
-                      <button id="pt_queueSendBtn" type="button" class="primary">
+                      <button id="pt_queueSendBtn" type="button" class="portal-button portal-button-blue-action">
                         Approve -> Queue
                       </button>
-                      <button id="pt_clearBtn" type="button" class="danger">Clear Form</button>
+                      <button id="pt_clearBtn" type="button" class="portal-button portal-button-purple-action">Clear Form</button>
                     </div>
                     <input id="pt_reportId" type="hidden">
                     <div id="pt_saveNotice" class="parent-tracking-save-notice hidden" role="status" aria-live="polite"></div>
@@ -1965,7 +1965,7 @@ Select a homework link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Print</div>
-                    <button id="performancePrintPdfBtn" type="button" class="primary">
+                    <button id="performancePrintPdfBtn" type="button" class="portal-button portal-button-blue-action">
                       Print PDF
                     </button>
                   </div>
@@ -2093,7 +2093,7 @@ Select a homework link to inspect details.</pre>
                       <button id="performanceQueueDeleteSelectedBtn" type="button" class="btn-delete">
                         Delete Selected
                       </button>
-                      <button id="performanceQueueSendAllBtn" type="button" class="primary">
+                      <button id="performanceQueueSendAllBtn" type="button" class="portal-button portal-button-blue-action">
                         Send All
                       </button>
                     </div>
@@ -2207,7 +2207,7 @@ Select a homework link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Action</div>
-                    <button id="newsReviewClearFiltersBtn" type="button" class="danger">
+                    <button id="newsReviewClearFiltersBtn" type="button" class="portal-button portal-button-purple-action">
                       Clear Filters
                     </button>
                   </div>
@@ -2320,7 +2320,7 @@ Select a homework link to inspect details.</pre>
                     </button>
                   </div>
                   <div class="col-2">
-                    <div aria-hidden="true"></div><button id="gradeClearBtn" type="button" class="danger">Clear</button>
+                    <div aria-hidden="true"></div><button id="gradeClearBtn" type="button" class="portal-button portal-button-purple-action">Clear</button>
                   </div>
                 </div>
                 <p class="small page-note">
@@ -2453,7 +2453,7 @@ Select a homework link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Archive</div>
-                    <button id="gradeArchiveToggleBtn" type="button" class="alt">
+                    <button id="gradeArchiveToggleBtn" type="button" class="portal-button portal-button-amber-info">
                       Show Archived
                     </button>
                   </div>
@@ -2465,7 +2465,7 @@ Select a homework link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Print</div>
-                    <button id="gradePrintPdfBtn" type="button" class="primary">Print PDF</button>
+                    <button id="gradePrintPdfBtn" type="button" class="portal-button portal-button-blue-action">Print PDF</button>
                   </div>
                 </div>
                 <div class="table-column-controls data-surface" id="gradeColumnControls" data-surface-role="data-surface">
@@ -2580,10 +2580,10 @@ Select a homework link to inspect details.</pre>
                   <button id="reportGenerateBtn" type="button" class="btn-refresh">
                     Generate from Grade Records
                   </button>
-                  <button id="reportCardBtn" type="button" class="primary">
+                  <button id="reportCardBtn" type="button" class="portal-button portal-button-blue-action">
                     Download PDF Report Card
                   </button>
-                  <button id="reportClearBtn" type="button" class="danger">Clear Report Form</button>
+                  <button id="reportClearBtn" type="button" class="portal-button portal-button-purple-action">Clear Report Form</button>
                 </div>
                 <h3>Performance data [view, sort, manage, edit data]</h3>
                 <div class="table-toolbar">
@@ -2634,7 +2634,7 @@ Select a homework link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Archive</div>
-                    <button id="reportArchiveToggleBtn" type="button" class="alt">
+                    <button id="reportArchiveToggleBtn" type="button" class="portal-button portal-button-amber-info">
                       Show Archived
                     </button>
                   </div>
@@ -2646,7 +2646,7 @@ Select a homework link to inspect details.</pre>
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Print</div>
-                    <button id="reportPrintPdfBtn" type="button" class="primary">Print PDF</button>
+                    <button id="reportPrintPdfBtn" type="button" class="portal-button portal-button-blue-action">Print PDF</button>
                   </div>
                 </div>
                 <div class="table-column-controls" id="reportColumnControls">
@@ -2719,7 +2719,7 @@ Select a homework link to inspect details.</pre>
                   <strong>Find Family</strong> to list matching students.
                 </p>
                 <div class="actions actions-3">
-                  <button id="familyClearResultBtn" type="button" class="danger">
+                  <button id="familyClearResultBtn" type="button" class="portal-button portal-button-purple-action">
                     Clear Result
                   </button>
                 </div>
@@ -2748,7 +2748,7 @@ Select a homework link to inspect details.</pre>
                       <input id="u_password" type="password" autocomplete="new-password" placeholder="required for new user">
                     </div>
                     <div class="col-2">
-                      <button id="userSaveBtn" type="submit" class="primary">
+                      <button id="userSaveBtn" type="submit" class="portal-button portal-button-green-action">
                         Save User
                       </button>
                     </div>
@@ -2758,7 +2758,7 @@ Select a homework link to inspect details.</pre>
                       </button>
                     </div>
                     <div class="col-2">
-                      <button id="userClearBtn" type="button" class="danger">Clear Form</button>
+                      <button id="userClearBtn" type="button" class="portal-button portal-button-purple-action">Clear Form</button>
                     </div>
                     <div class="col-2">
                       <button id="userRefreshBtn" type="button" class="btn-refresh">
@@ -2803,10 +2803,10 @@ Select a homework link to inspect details.</pre>
                   <button id="permissionsReloadBtn" type="button" class="btn-refresh">
                     Reload Permissions
                   </button>
-                  <button id="permissionsSaveBtn" type="button" class="primary">
+                  <button id="permissionsSaveBtn" type="button" class="portal-button portal-button-green-action">
                     Save Permissions
                   </button>
-                  <button id="permissionsResetBtn" type="button" class="danger">Reset Form</button>
+                  <button id="permissionsResetBtn" type="button" class="portal-button portal-button-purple-action">Reset Form</button>
                 </div>
               </div>
 
@@ -2828,7 +2828,7 @@ Select a homework link to inspect details.</pre>
                     <input id="schoolSetupLogoFile" type="file" accept=".svg,.jpg,.jpeg,.png,.webp,image/svg+xml,image/jpeg,image/png,image/webp">
                     <input id="schoolSetupLogoDataUrl" type="hidden">
                     <div class="actions actions-3">
-                      <button id="schoolSetupLogoClearBtn" type="button" class="danger">
+                      <button id="schoolSetupLogoClearBtn" type="button" class="portal-button portal-button-purple-action">
                         Clear Logo
                       </button>
                       <span></span>
@@ -3008,10 +3008,10 @@ Select a homework link to inspect details.</pre>
                 </table>
                 </div>
                 <div class="actions actions-3">
-                  <button id="schoolSetupSaveBtn" type="button" class="primary">
+                  <button id="schoolSetupSaveBtn" type="button" class="portal-button portal-button-green-action">
                     Save School Setup
                   </button>
-                  <button id="schoolSetupResetBtn" type="button" class="btn-refresh">
+                  <button id="schoolSetupResetBtn" type="button" class="portal-button portal-button-purple-action">
                     Reload Saved Setup
                   </button>
                   <span></span>
@@ -3164,10 +3164,10 @@ Select a homework link to inspect details.</pre>
                     </table>
                   </div>
                   <div class="actions actions-3">
-                    <button id="profileFieldLayoutApplyBtn" type="button" class="primary">
+                    <button id="profileFieldLayoutApplyBtn" type="button" class="portal-button portal-button-green-action">
                       Apply Layout Changes
                     </button>
-                    <button id="profileFieldLayoutResetBtn" type="button" class="btn-delete">
+                    <button id="profileFieldLayoutResetBtn" type="button" class="portal-button portal-button-purple-action">
                       Reset Layout to Default
                     </button>
                     <span></span>
@@ -3202,10 +3202,10 @@ Select a homework link to inspect details.</pre>
                     <button id="attendanceLevelApplyBtn" type="button" class="btn-edit">
                       Apply Global Style
                     </button>
-                    <button id="attendanceLevelClearImageBtn" type="button" class="danger">
+                    <button id="attendanceLevelClearImageBtn" type="button" class="portal-button portal-button-purple-action">
                       Remove Image
                     </button>
-                    <button id="attendanceLevelResetBtn" type="button" class="btn-delete">
+                    <button id="attendanceLevelResetBtn" type="button" class="portal-button portal-button-purple-action">
                       Reset Level Style
                     </button>
                   </div>
@@ -3214,10 +3214,10 @@ Select a homework link to inspect details.</pre>
                   </p>
                 </div>
                 <div class="actions">
-                  <button id="settingsSaveBtn" type="button" class="primary">
+                  <button id="settingsSaveBtn" type="button" class="portal-button portal-button-green-action">
                     Save Settings
                   </button>
-                  <button id="settingsResetBtn" type="button" class="btn-refresh">Reset Settings</button>
+                  <button id="settingsResetBtn" type="button" class="portal-button portal-button-purple-action">Reset Settings</button>
                   <span></span>
                 </div>
                 <p class="small" id="settingsStatus"></p>
@@ -3230,7 +3230,7 @@ Select a homework link to inspect details.</pre>
         </main>
         <footer class="hub-footer" aria-label="Site footer">
           <p class="hub-footer__copy">
-            © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+            © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
           </p>
           <p class="hub-footer__action">
             <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
@@ -3244,9 +3244,9 @@ Select a homework link to inspect details.</pre>
     <div class="queue-modal-card">
       <div class="queue-modal-header">
         <div class="queue-modal-nav">
-        <button id="parentQueuePrevBtn" type="button" class="alt">&larr;</button>
+        <button id="parentQueuePrevBtn" type="button" class="portal-button portal-button-neutral-action">&larr;</button>
           <span id="parentQueueModalIndex">0 / 0</span>
-          <button id="parentQueueNextBtn" type="button" class="alt">&rarr;</button>
+          <button id="parentQueueNextBtn" type="button" class="portal-button portal-button-neutral-action">&rarr;</button>
         </div>
         <button id="parentQueueCloseBtn" type="button" class="btn-delete">
           Close
@@ -3329,12 +3329,12 @@ Select a homework link to inspect details.</pre>
         </div>
       </div>
       <div class="queue-modal-actions">
-        <button id="parentQueueHoldBtn" type="button" class="alt">Hold</button>
+        <button id="parentQueueHoldBtn" type="button" class="portal-button portal-button-amber-info">Hold</button>
         <button id="parentQueueEditBtn" type="button" class="btn-edit">Edit</button>
         <button id="parentQueueRequeueBtn" type="button" class="btn-refresh">
           Requeue
         </button>
-        <button id="parentQueueSendAllBtn" type="button" class="primary">
+        <button id="parentQueueSendAllBtn" type="button" class="portal-button portal-button-blue-action">
           Send All
         </button>
       </div>
@@ -3349,11 +3349,11 @@ Select a homework link to inspect details.</pre>
       <div class="queue-modal-header">
         <div class="queue-modal-nav">
           <strong>Student News Report Viewer</strong>
-          <button id="newsReviewViewerPrevBtn" type="button" class="alt" aria-label="Previous report">
+          <button id="newsReviewViewerPrevBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Previous report">
             &larr;
           </button>
           <span id="newsReviewViewerIndex">0 / 0</span>
-          <button id="newsReviewViewerNextBtn" type="button" class="alt" aria-label="Next report">
+          <button id="newsReviewViewerNextBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Next report">
             &rarr;
           </button>
         </div>
@@ -3365,7 +3365,7 @@ Select a homework link to inspect details.</pre>
         <button id="newsReviewViewerApproveBtn" type="button" class="btn-edit">
           Approve
         </button>
-        <button id="newsReviewViewerRevisionBtn" type="button" class="danger">
+        <button id="newsReviewViewerRevisionBtn" type="button" class="portal-button portal-button-red-action">
           Request Revision
         </button>
       </div>

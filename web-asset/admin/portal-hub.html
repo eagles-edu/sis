@@ -428,7 +428,7 @@
 
       <footer class="hub-footer" aria-label="Site footer">
         <p class="hub-footer__copy">
-          © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
         </p>
         <p class="hub-footer__action">
           <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
@@ -441,17 +441,6 @@
           defaultSize: 28,
           path: "/web-asset/icons/web-component/svgs/",
         });
-      </script>
-      <script>
-        ;
-        (() => {
-          "use strict"
-          const year = new Date().getFullYear() // NEW: get current year
-          document.querySelectorAll("[data-copyright-year]").forEach((el) => {
-            const start = parseInt(el.getAttribute("data-start"), 10) // NEW: optional start year
-            el.textContent = Number.isFinite(start) && start < year ? `${start}–${year}` : String(year) // NEW: write year/range
-          })
-        })()
       </script>
     </main>
   </div>

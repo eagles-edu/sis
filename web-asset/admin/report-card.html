@@ -662,10 +662,10 @@ transition:
   <main class="section-stack" id="appMain" data-surface-role="content">
     <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
       <div class="app-brand-strip">
-        <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+        <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
           <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
           <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
-        </div>
+        </a>
         <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
         <div class="app-header-actions">
           <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">
@@ -722,15 +722,15 @@ transition:
           </button>
           <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
             <span class="small global-text-label">Global Text</span>
-            <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
-              A-
-            </button>
-            <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">
-              A+
-            </button>
-            <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">
-              Reset
-            </button>
+              <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="decrease" aria-label="Decrease global text size">
+                A-
+              </button>
+              <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="increase" aria-label="Increase global text size">
+                A+
+              </button>
+              <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="reset" aria-label="Reset global text size">
+                Reset
+              </button>
             <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
           </div>
         </div>
@@ -1061,7 +1061,7 @@ transition:
               <input type="checkbox" name="parentReviewed">
               Mark reviewed
             </label>
-              <button id="parentReviewActionBtn" type="button" class="primary">Record parent review</button>
+              <button id="parentReviewActionBtn" type="button" class="portal-button portal-button-green-action">Record parent review</button>
           </div>
         </div>
       </section>
@@ -1090,7 +1090,7 @@ transition:
               <input type="checkbox" name="studentReviewed">
               Mark reviewed
             </label>
-              <button id="studentReviewActionBtn" type="button" class="primary">Record student review</button>
+              <button id="studentReviewActionBtn" type="button" class="portal-button portal-button-green-action">Record student review</button>
           </div>
         </div>
       </section>
@@ -1238,6 +1238,14 @@ transition:
         document.body.classList.add(viewerRole === "parent" ? "parent-portal-page" : "student-portal-page")
         document.body.classList.add("report-card-portal-mode")
         document.body.dataset.reportCardViewerRole = viewerRole
+        const brandLogoLinkEl = document.getElementById("appBrandLogoWrap")
+        if (brandLogoLinkEl instanceof HTMLAnchorElement) {
+          brandLogoLinkEl.href = viewerRole === "parent" ? "/parent" : "/student"
+          brandLogoLinkEl.setAttribute(
+            "aria-label",
+            viewerRole === "parent" ? "Go to parent dashboard" : "Go to student dashboard"
+          )
+        }
 
         const portalMarkup = viewerRole === "parent" ? `
           <button id="parentMenuBtn" class="floating-menu-btn" type="button" aria-label="Mở điều hướng">
@@ -1750,21 +1758,12 @@ transition:
   </script>
     <footer class="hub-footer" aria-label="Site footer">
       <p class="hub-footer__copy">
-        © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+        © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
       </p>
       <p class="hub-footer__action">
         <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
       </p>
     </footer>
   </div>
-  <script>
-    (() => {
-      const year = new Date().getFullYear()
-      document.querySelectorAll("[data-copyright-year]").forEach((el) => {
-        const start = Number.parseInt(el.getAttribute("data-start"), 10)
-        el.textContent = Number.isFinite(start) && start < year ? `${start}–${year}` : String(year)
-      })
-    })();
-  </script>
 </body>
 </html>

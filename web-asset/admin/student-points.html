@@ -167,7 +167,7 @@
         </div>
         <div class="field c4">
           <label for="loginBtn">&nbsp;</label>
-          <button id="loginBtn" class="primary" type="button">Sign In</button>
+          <button id="loginBtn" class="portal-button portal-button-blue-action" type="button">Sign In</button>
         </div>
       </div>
       <div class="login-links">
@@ -193,7 +193,7 @@
           </div>
           <div class="field c3">
             <label>
-            <button id="logoutBtn" type="button" class="danger">Logout</button>&nbsp;</label>
+            <button id="logoutBtn" type="button" class="portal-button portal-button-red-action">Logout</button>&nbsp;</label>
           </div>
         </div>
         <div class="chart-wrap panel">
@@ -238,12 +238,12 @@
           <table>
             <thead>
               <tr>
-                <th scope="col"><button type="button" class="alt" data-sort="studentNumber">#</button></th>
-                <th scope="col"><button type="button" class="alt" data-sort="eaglesId">Eagles ID</button></th>
-                <th scope="col"><button type="button" class="alt" data-sort="fullName">Name</button></th>
-                <th scope="col"><button type="button" class="alt" data-sort="level">Level</button></th>
-                <th scope="col"><button type="button" class="alt" data-sort="totalPoints">Points</button></th>
-                <th scope="col"><button type="button" class="alt" data-sort="lastActivityAt">Last Activity</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-neutral-action" data-sort="studentNumber">#</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-neutral-action" data-sort="eaglesId">Eagles ID</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-neutral-action" data-sort="fullName">Name</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-neutral-action" data-sort="level">Level</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-neutral-action" data-sort="totalPoints">Points</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-neutral-action" data-sort="lastActivityAt">Last Activity</button></th>
                 <th scope="col">Action</th>
               </tr>
             </thead>
@@ -404,8 +404,8 @@
             <td>${Number(row.totalPoints || 0)}</td>
             <td>${t(row.lastActivityAt).slice(0, 10) || "-"}</td>
             <td>
-              <button type="button" class="alt" data-open-ledger="${t(row.studentRefId)}">Ledger</button>
-              <button type="button" class="primary" data-edit-total="${t(row.studentRefId)}">Set Total</button>
+              <button type="button" class="portal-button portal-button-amber-info" data-open-ledger="${t(row.studentRefId)}">Ledger</button>
+              <button type="button" class="portal-button portal-button-green-action" data-edit-total="${t(row.studentRefId)}">Set Total</button>
             </td>
           `;
           tr.querySelector(`[data-open-ledger="${row.studentRefId}"]`)?.addEventListener("click", () => {

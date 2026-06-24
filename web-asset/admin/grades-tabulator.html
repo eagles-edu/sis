@@ -1225,10 +1225,10 @@
     <main class="section-stack" id="appMain" data-surface-role="content">
       <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
         <div class="app-brand-strip">
-          <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+          <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
             <img id="appBrandLogo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
             <span id="appBrandLogoFallback" class="app-brand-logo-fallback hidden">SIS</span>
-          </div>
+          </a>
           <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
           <div class="app-header-actions">
             <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">
@@ -1285,13 +1285,13 @@
             </button>
             <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
               <span class="small global-text-label">Global Text</span>
-              <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
+              <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="decrease" aria-label="Decrease global text size">
                 A-
               </button>
-              <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">
+              <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="increase" aria-label="Increase global text size">
                 A+
               </button>
-              <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">
+              <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="reset" aria-label="Reset global text size">
                 Reset
               </button>
               <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
@@ -1403,7 +1403,7 @@
     </div>
     <footer class="hub-footer" aria-label="Site footer">
       <p class="hub-footer__copy">
-        © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+        © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
       </p>
       <p class="hub-footer__action">
         <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>

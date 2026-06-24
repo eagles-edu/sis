@@ -773,17 +773,17 @@
               </div>
             </nav>
             <div class="sidebar-actions">
-              <button id="logoutBtn" type="button" class="danger ghost hidden">Logout</button>
+              <button id="logoutBtn" type="button" class="portal-button portal-button-red-action hidden">Logout</button>
             </div>
           </aside>
 
           <main id="appMain" class="section-stack" aria-label="Enrollment workspace">
             <section class="content app-page-header" aria-label="Enrollment page header" data-surface-role="content">
               <div class="app-brand-strip">
-                <div class="app-brand-logo-wrap" id="appBrandLogoWrap">
+                <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
                   <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
                   <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
-                </div>
+                </a>
                 <div class="app-brand-copy">
                   <p class="app-brand-kicker">Administration</p>
                   <h1 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h1>
@@ -825,9 +825,9 @@
                   </button>
                   <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
                     <span class="global-text-label">Text</span>
-                    <button id="globalTextZoomDownBtn" type="button" class="alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">A-</button>
-                    <button id="globalTextZoomUpBtn" type="button" class="alt" data-text-zoom-action="increase" aria-label="Increase global text size">A+</button>
-                    <button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">100%</button>
+                    <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="decrease" aria-label="Decrease global text size">A-</button>
+                    <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="increase" aria-label="Increase global text size">A+</button>
+                    <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="reset" aria-label="Reset global text size">100%</button>
                     <span class="zoom-label" data-text-zoom-label>100%</span>
                   </div>
                 </div>
@@ -911,7 +911,7 @@
               <p class="enrollment-history-modal__kicker">History</p>
               <h2 id="enrollmentHistoryModalTitle" class="enrollment-history-modal__title">Student history note</h2>
             </div>
-            <button type="button" class="ghost enrollment-history-modal__close"
+            <button type="button" class="portal-button portal-button-immutable-chrome enrollment-history-modal__close"
             data-history-close tabindex="-1">Close</button>
           </div>
           <p id="enrollmentHistoryModalSummary" class="enrollment-history-modal__summary"></p>
@@ -920,7 +920,7 @@
       </div>
       <footer class="hub-footer" aria-label="Site footer">
         <p class="hub-footer__copy">
-          © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
         </p>
         <p class="hub-footer__action">
           <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
@@ -928,18 +928,6 @@
       </footer>
     </div>
   </div>
-  <script>
-    ;
-    (() => {
-      "use strict"
-      const year = new Date().getFullYear()
-      document.querySelectorAll("[data-copyright-year]").forEach((el) => {
-        const start = parseInt(el.getAttribute("data-start"), 10)
-        el.textContent = Number.isFinite(start) && start < year ? `${start}–${year}` : String(year)
-      })
-    })()
-  </script>
-
   <script>
     (() => {
       const IS_JSDOM_ENV = /\bjsdom\b/i.test(String(window.navigator?.userAgent || ""));
@@ -1492,7 +1480,7 @@
                   </select>
                   <select data-level aria-label="Target level"></select>
                   <select data-reason aria-label="Unenrollment reason"></select>
-                  <button type="button" class="primary" data-apply>Apply</button>
+                  <button type="button" class="portal-button portal-button-blue-action" data-apply>Apply</button>
                   <div class="action-comment-row">
                     <textarea data-comment class="comment-input action-comment" rows="1" placeholder="Comment" aria-label="Enrollment comment"></textarea>
                     ${historyRailHtml(row)}

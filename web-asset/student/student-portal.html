@@ -642,7 +642,10 @@
             <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mật khẩu dùng chung phụ huynh - học sinh">
             <p class="field-hint">Enter the current password for your account.</p>
           </div>
-          <button id="loginBtn" class="primary" type="submit">Submit</button>
+          <div class="login-actions">
+            <button id="loginBtn" class="primary" type="submit">Submit</button>
+            <button id="loginClearBtn" class="portal-button portal-button-purple-action" type="reset">Clear</button>
+          </div>
         </form>
         <div class="login-links">
           <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20portal%20password%20reset">Reset password</a>
@@ -655,14 +658,10 @@
         <section id="studentHomeCard" class="content" data-surface-role="content">
           <div class="portal-grid">
             <div id="studentHomeGrid" class="portal-col">
-              <div id="overviewPanel" class="toolbar">
-                <div class="form-row">
-                  <p id="studentOverviewSummary" class="student-overview-title">Loading student dashboard...</p>
-                </div>
-                <div class="toolbar-actions">
-                  <button id="reloadBtn" type="button" class="portal-button portal-button-blue-action">Tải lại</button>
-                  <button id="logoutBtn" type="button" class="alt">Đăng xuất</button>
-                </div>
+              <h3 id="studentOverviewSummary" class="panel student-overview-title" data-surface-role="panel">Loading student dashboard...</h3>
+              <div class="toolbar-actions">
+                <button id="reloadBtn" type="button" class="portal-button portal-button-blue-action">Tải lại</button>
+                <button id="logoutBtn" type="button" class="alt">Đăng xuất</button>
               </div>
 
               <section id="identityPanel" class="panel" data-surface-role="panel">
@@ -672,19 +671,19 @@
                 </div>
                 <p id="studentIdentity" class="hint">Loading student metrics...</p>
                 <div class="identity-list">
-                  <div class="identity-item">
+                  <div class="identity-item portal-theme-card">
                     <span class="identity-label">Eagles ID</span>
                     <span id="studentEaglesIdValue" class="identity-value">-</span>
                   </div>
-                  <div class="identity-item">
+                  <div class="identity-item portal-theme-card">
                     <span class="identity-label">Mã học sinh</span>
                     <span id="studentNumberValue" class="identity-value">-</span>
                   </div>
-                  <div class="identity-item">
+                  <div class="identity-item portal-theme-card">
                     <span class="identity-label">Họ và tên</span>
                     <span id="studentNameValue" class="identity-value">-</span>
                   </div>
-                  <div class="identity-item">
+                  <div class="identity-item portal-theme-card">
                     <span class="identity-label">Lớp hiện tại</span>
                     <span id="studentGradeValue" class="identity-value">-</span>
                   </div>
@@ -716,11 +715,11 @@
 
               <section id="newsQueueCard" class="panel queue-panel" data-surface-role="panel">
                 <div id="newsQueueDetails">
-                  <div class="queue-summary-head">
-                  <span class="queue-summary-stack">
-                    <span class="summary-title">News Report Queue</span>
+                <div class="queue-summary-head">
+                  <div class="queue-summary-stack">
+                    <h3 class="summary-title">News Report Queue</h3>
                     <span id="newsQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
-                  </span>
+                  </div>
                   </div>
                   <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
                     <table class="news-queue-table">
@@ -996,10 +995,10 @@
             <section id="newsQueuePanel" class="panel queue-panel" data-surface-role="panel">
               <div id="newsPageQueueDetails">
                 <div class="queue-summary-head">
-                  <span class="queue-summary-stack">
-                    <span class="summary-title">News Report Queue</span>
+                  <div class="queue-summary-stack">
+                    <h3 class="summary-title">News Report Queue</h3>
                     <span id="newsPageQueueSummary" class="queue-summary-chips" aria-live="polite"></span>
-                  </span>
+                  </div>
                 </div>
                 <div class="queue-table-wrap data-surface" data-surface-role="data-surface">
                   <table class="news-queue-table">
@@ -1101,17 +1100,16 @@
       <section class="content status-strip" data-surface-role="content">
         <p id="globalStatus" class="status">Checking student session...</p>
       </section>
+      <footer class="hub-footer" aria-label="Site footer">
+        <p class="hub-footer__copy">
+          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
+        </p>
+        <p class="hub-footer__action">
+          <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+        </p>
+      </footer>
     </main>
   </div>
-
-  <footer class="hub-footer" aria-label="Site footer">
-    <p class="hub-footer__copy">
-      © <span data-copyright-year=""></span> The Eagles American English Club Ltd. All rights reserved.
-    </p>
-    <p class="hub-footer__action">
-      <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
-    </p>
-  </footer>
 
   <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
   <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
@@ -2654,7 +2652,8 @@
 
       function metricCard(label, value, tone = "") {
         const article = document.createElement("article");
-        article.className = tone ? `metric ${t(tone)}` : "metric";
+        article.className = "metric portal-theme-card";
+        if (tone) article.classList.add(`metric-${tone}`);
         const key = document.createElement("div");
         key.className = "k";
         key.textContent = t(label);
@@ -3089,7 +3088,7 @@
 
       function buildDetailItemMarkup(item = {}) {
         const article = document.createElement("article");
-        article.className = "detail-item";
+        article.className = "detail-item portal-theme-card";
         if (item?.tone) {
           article.classList.add(item.tone);
         }
@@ -5152,6 +5151,10 @@
         } catch (error) {
           handleError(error);
         }
+      });
+      field("loginForm")?.addEventListener("reset", () => {
+        setFormStatus("");
+        requestAnimationFrame(() => field("loginEaglesId")?.focus());
       });
       field("reportAccessErrorModalBackdrop")?.addEventListener("click", () => {
         setReportAccessErrorModalOpen(false);
