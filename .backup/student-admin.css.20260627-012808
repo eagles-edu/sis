@@ -3952,8 +3952,7 @@
       html[data-theme="dark"] body.admin-portal-page :where(input, textarea:not(.card))::placeholder {
         color: var(--portal-dark-field-placeholder);
       }
-      html[data-theme="dark"] body.admin-portal-page :where(h1, h2, h3, h4, strong, label, th, td),
-      html[data-theme="dark"] body.admin-portal-page summary:not(.portal-button) {
+      html[data-theme="dark"] body.admin-portal-page :where(h1, h2, h3, h4, strong, label, summary, th, td) {
         color: inherit;
       }
       html[data-theme="dark"] body.admin-portal-page :where(table, thead, tbody, tr, th, td, .table-scroll-wrap table) {

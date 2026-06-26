@@ -881,12 +881,6 @@ summary.portal-button.portal-button-info {
   --portal-button-ink-hover: var(--portal-button-amber-ink);
   --portal-button-ink-active: var(--portal-button-amber-ink);
 }
-.portal-button-info.portal-button-amber-ink-dark,
-summary.portal-button.portal-button-info.portal-button-amber-ink-dark {
-  --portal-button-ink: #212121;
-  --portal-button-ink-hover: #212121;
-  --portal-button-ink-active: #212121;
-}
 .portal-button-immutable-chrome,
 summary.portal-button.portal-button-immutable-chrome {
   --portal-button-fill: var(--portal-button-chrome-fill);

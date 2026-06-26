@@ -125,61 +125,6 @@ remove_managed_paths() {
   done
 }
 
-wipe_target_contents() {
-  local target_root="$1"
-
-  if [[ ! -d "$target_root" ]]; then
-    return 0
-  fi
-
-  if [[ ! -w "$target_root" ]]; then
-    echo "target root is not writable: $target_root" >&2
-    return 1
-  fi
-
-  log "emptying ${target_root}"
-  find "$target_root" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
-}
-
-wipe_test_target_contents() {
-  local env_backup=""
-  local runtime_file_backup_dir=""
-  local restore_env=0
-  local restore_runtime_files=0
-
-  if [[ -f "${TEST_ROOT}/.env.test" ]]; then
-    env_backup="$(mktemp)"
-    cp -a "${TEST_ROOT}/.env.test" "${env_backup}"
-    restore_env=1
-  fi
-
-  runtime_file_backup_dir="$(mktemp -d)"
-  for rel_path in "${TEST_PRESERVED_RUNTIME_FILES[@]}"; do
-    if [[ -f "${TEST_ROOT}/${rel_path}" ]]; then
-      mkdir -p "${runtime_file_backup_dir}/$(dirname "${rel_path}")"
-      cp -a "${TEST_ROOT}/${rel_path}" "${runtime_file_backup_dir}/${rel_path}"
-      restore_runtime_files=1
-    fi
-  done
-
-  wipe_target_contents "$TEST_ROOT"
-
-  if [[ "${restore_env}" -eq 1 ]]; then
-    cp -a "${env_backup}" "${TEST_ROOT}/.env.test"
-    rm -f "${env_backup}"
-  fi
-
-  if [[ "${restore_runtime_files}" -eq 1 ]]; then
-    for rel_path in "${TEST_PRESERVED_RUNTIME_FILES[@]}"; do
-      if [[ -f "${runtime_file_backup_dir}/${rel_path}" ]]; then
-        mkdir -p "${TEST_ROOT}/$(dirname "${rel_path}")"
-        cp -a "${runtime_file_backup_dir}/${rel_path}" "${TEST_ROOT}/${rel_path}"
-      fi
-    done
-  fi
-  rm -rf "${runtime_file_backup_dir}"
-}
-
 sync_file_map() {
   local source_root="$1"
   local target_root="$2"
@@ -233,18 +178,17 @@ TEST_RUNTIME_CODE_FILES=(
 )
 
 TEST_RUNTIME_DATA_FILES=(
+  "runtime-data/admin-ui-settings.json"
 )
 
 TEST_PRESERVED_RUNTIME_FILES=(
   "SIS_CONFIG.json"
-  "runtime-data/admin-ui-settings.json"
 )
 
 TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
-  "web-asset/admin/report-card.html|web-asset/admin/report-card.html"
   "web-asset/admin/grades-tabulator.html|web-asset/admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|web-asset/admin/student-points.html"
   "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
@@ -294,7 +238,6 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|sis-admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|sis-admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
-  "web-asset/admin/portal-hub.html|index.html"
   "web-asset/admin/grades-tabulator.html|sis-admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|sis-admin/student-points.html"
   "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
@@ -645,6 +588,18 @@ build_admin_assets() {
 }
 
 sync_test_runtime_assets() {
+  local managed_paths=(
+    "favicon.ico"
+    "web-asset/admin"
+    "web-asset/parent"
+    "web-asset/student"
+    "web-asset/shared"
+    "web-asset/images"
+    "web-asset/icons"
+    "web-asset/vendor"
+  )
+
+  remove_managed_paths "$TEST_ROOT" "${managed_paths[@]}"
   log "syncing strict runtime asset whitelist into ${TEST_ROOT}"
   sync_file_map "$REPO_ROOT" "$TEST_ROOT" TEST_RUNTIME_WEBFILE_MAP
 }
@@ -709,6 +664,16 @@ EOF
 }
 
 sync_test_public_assets() {
+  local managed_paths=(
+    "favicon.ico"
+    "index.html"
+    "sis-admin"
+    "sis-parent"
+    "sis-student"
+    "web-asset"
+  )
+
+  remove_managed_paths "$TEST_PUBLIC_ROOT" "${managed_paths[@]}"
   log "syncing strict public_html asset whitelist into ${TEST_PUBLIC_ROOT}"
   sync_file_map "$REPO_ROOT" "$TEST_PUBLIC_ROOT" TEST_PUBLIC_WEBFILE_MAP
 }
@@ -934,12 +899,18 @@ restart_test_runtime() {
 main() {
   log "file mirror only; git commit matching is not part of the test sync contract"
   build_admin_assets
-  wipe_test_target_contents
-  wipe_target_contents "$TEST_PUBLIC_ROOT"
   run_sync
   log "syncing test runtime web assets into ${TEST_ROOT}"
   sync_test_runtime_assets
   cleanup_test_backup_artifacts
+  if [[ "$MODE" != "boot-prep" ]]; then
+    log "syncing test public mirror into ${TEST_PUBLIC_ROOT}"
+    sync_test_public_assets
+    sync_test_public_html_index
+  else
+    log "skip public_html sync for mode=boot-prep"
+    log "skip public web asset sync for mode=boot-prep"
+  fi
   ensure_test_runtime_env_contract
   align_test_env_from_dev_source
   ensure_test_redis_env
@@ -950,14 +921,6 @@ main() {
   fi
   if should_restart_runtime; then
     restart_test_runtime
-    if [[ "$MODE" != "boot-prep" ]]; then
-      log "syncing test public mirror into ${TEST_PUBLIC_ROOT}"
-      sync_test_public_assets
-      sync_test_public_html_index
-    else
-      log "skip public_html sync for mode=boot-prep"
-      log "skip public web asset sync for mode=boot-prep"
-    fi
     verify_test_public_html_index
     verify_test_public_assets
     verify_test_runtime_routes "$TEST_ROUTE_MATRIX"

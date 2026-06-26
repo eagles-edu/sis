@@ -44,11 +44,11 @@ LIVE_RUNTIME_CODE_FILES=(
 )
 
 LIVE_RUNTIME_DATA_FILES=(
+  "runtime-data/admin-ui-settings.json"
 )
 
 LIVE_PRESERVED_RUNTIME_FILES=(
   "SIS_CONFIG.json"
-  "runtime-data/admin-ui-settings.json"
 )
 
 LIVE_RUNTIME_WEBFILE_MAP=(

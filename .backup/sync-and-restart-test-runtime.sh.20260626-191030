@@ -141,45 +141,6 @@ wipe_target_contents() {
   find "$target_root" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 }
 
-wipe_test_target_contents() {
-  local env_backup=""
-  local runtime_file_backup_dir=""
-  local restore_env=0
-  local restore_runtime_files=0
-
-  if [[ -f "${TEST_ROOT}/.env.test" ]]; then
-    env_backup="$(mktemp)"
-    cp -a "${TEST_ROOT}/.env.test" "${env_backup}"
-    restore_env=1
-  fi
-
-  runtime_file_backup_dir="$(mktemp -d)"
-  for rel_path in "${TEST_PRESERVED_RUNTIME_FILES[@]}"; do
-    if [[ -f "${TEST_ROOT}/${rel_path}" ]]; then
-      mkdir -p "${runtime_file_backup_dir}/$(dirname "${rel_path}")"
-      cp -a "${TEST_ROOT}/${rel_path}" "${runtime_file_backup_dir}/${rel_path}"
-      restore_runtime_files=1
-    fi
-  done
-
-  wipe_target_contents "$TEST_ROOT"
-
-  if [[ "${restore_env}" -eq 1 ]]; then
-    cp -a "${env_backup}" "${TEST_ROOT}/.env.test"
-    rm -f "${env_backup}"
-  fi
-
-  if [[ "${restore_runtime_files}" -eq 1 ]]; then
-    for rel_path in "${TEST_PRESERVED_RUNTIME_FILES[@]}"; do
-      if [[ -f "${runtime_file_backup_dir}/${rel_path}" ]]; then
-        mkdir -p "${TEST_ROOT}/$(dirname "${rel_path}")"
-        cp -a "${runtime_file_backup_dir}/${rel_path}" "${TEST_ROOT}/${rel_path}"
-      fi
-    done
-  fi
-  rm -rf "${runtime_file_backup_dir}"
-}
-
 sync_file_map() {
   local source_root="$1"
   local target_root="$2"
@@ -233,11 +194,11 @@ TEST_RUNTIME_CODE_FILES=(
 )
 
 TEST_RUNTIME_DATA_FILES=(
+  "runtime-data/admin-ui-settings.json"
 )
 
 TEST_PRESERVED_RUNTIME_FILES=(
   "SIS_CONFIG.json"
-  "runtime-data/admin-ui-settings.json"
 )
 
 TEST_RUNTIME_WEBFILE_MAP=(
@@ -934,7 +895,7 @@ restart_test_runtime() {
 main() {
   log "file mirror only; git commit matching is not part of the test sync contract"
   build_admin_assets
-  wipe_test_target_contents
+  wipe_target_contents "$TEST_ROOT"
   wipe_target_contents "$TEST_PUBLIC_ROOT"
   run_sync
   log "syncing test runtime web assets into ${TEST_ROOT}"

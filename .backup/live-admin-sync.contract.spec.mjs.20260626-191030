@@ -46,9 +46,6 @@ test("live admin sync wrapper is pinned to the live admin host and refreshes Pri
   assert.match(liveScript, /emptying live public root/)
   assert.match(liveScript, /verify_live_roots_cleared/)
   assert.match(liveScript, /verify_live_sync_whitelist/)
-  assert.match(liveScript, /tools\/db-backup-failsafe\.mjs/)
-  assert.match(liveScript, /backing up postgres into/)
-  assert.match(liveScript, /"postgresBackupDir": "\$\{db_snapshot_dir\}"/)
   assert.match(liveScript, /sync_live_runtime_data_files\(\)/)
   assert.match(liveScript, /sync_live_public_html_index\(\)/)
   assert.match(liveScript, /verify_live_public_html_index\(\)/)
@@ -73,7 +70,7 @@ test("package scripts expose the live admin sync entrypoints", () => {
 test("live portal docs advertise the backup bundle and admin origin", () => {
   assert.match(liveLinksDoc, /\/home\/eagles\/dockerz\/backups\/live-admin\//)
   assert.match(liveLinksDoc, /https:\/\/admin\.eagles\.edu\.vn/)
-  assert.match(liveLinksDoc, /refreshes Prisma[\s\S]*`db:generate`[\s\S]*`db:migrate:deploy`/i)
+  assert.match(liveLinksDoc, /refreshes Prisma[\s\S]*`db:generate` \+ `db:migrate:deploy`/i)
 })
 
 test("live nginx config mirrors the test parent route shape", () => {
@@ -98,16 +95,14 @@ test("test and live sync wrappers share the same strict whitelist sources", () =
 })
 
 test("test and live sync wrappers keep immutable runtime files separate from mirrored runtime data", () => {
-  assert.deepEqual(extractQuotedEntries(testScript, "TEST_RUNTIME_DATA_FILES"), [])
+  assert.match(testScript, /TEST_RUNTIME_DATA_FILES=\([\s\S]*"runtime-data\/admin-ui-settings\.json"/)
   assert.deepEqual(extractQuotedEntries(liveScript, "LIVE_RUNTIME_DATA_FILES"), [])
-  assert.match(testScript, /TEST_PRESERVED_RUNTIME_FILES=\([\s\S]*"runtime-data\/admin-ui-settings\.json"/)
   assert.match(liveScript, /LIVE_PRESERVED_RUNTIME_FILES=\([\s\S]*"runtime-data\/admin-ui-settings\.json"/)
 })
 
 test("test and live sync wrappers preserve their expected immutable runtime files", () => {
   assert.deepEqual(extractQuotedEntries(testScript, "TEST_PRESERVED_RUNTIME_FILES"), [
     "SIS_CONFIG.json",
-    "runtime-data/admin-ui-settings.json",
   ])
   assert.deepEqual(extractQuotedEntries(liveScript, "LIVE_PRESERVED_RUNTIME_FILES"), [
     "SIS_CONFIG.json",

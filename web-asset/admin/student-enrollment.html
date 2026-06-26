@@ -736,7 +736,7 @@
       </section>
 
       <div id="app" class="hidden">
-        <button id="floatingMenuBtn" type="button" class="floating-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+        <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
           <span class="floating-menu-icon" aria-hidden="true"></span>
         </button>
         <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
@@ -773,7 +773,7 @@
               </div>
             </nav>
             <div class="sidebar-actions">
-              <button id="logoutBtn" type="button" class="portal-button portal-button-red-action hidden">Logout</button>
+              <button id="logoutBtn" type="button" class="portal-button portal-button-danger hidden">Logout</button>
             </div>
           </aside>
 
@@ -792,7 +792,7 @@
                   </p>-->
                 </div>
                 <div class="app-header-actions">
-                  <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
+                  <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
                     <span class="portal-theme-toggle__icon" aria-hidden="true" id="adminThemeToggleIcon" data-theme-icon="moon">
                       <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <defs>
@@ -825,9 +825,9 @@
                   </button>
                   <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
                     <span class="global-text-label">Text</span>
-                    <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="decrease" aria-label="Decrease global text size">A-</button>
-                    <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="increase" aria-label="Increase global text size">A+</button>
-                    <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="reset" aria-label="Reset global text size">100%</button>
+                    <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">A-</button>
+                    <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="increase" aria-label="Increase global text size">A+</button>
+                    <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning" data-text-zoom-action="reset" aria-label="Reset global text size">100%</button>
                     <span class="zoom-label" data-text-zoom-label>100%</span>
                   </div>
                 </div>
@@ -877,7 +877,7 @@
                 </div>
                 <div class="field c2">
                   <label for="refreshBtn">&nbsp;</label>
-                  <button id="refreshBtn" type="button" class="btn-refresh">Refresh</button>
+                  <button id="refreshBtn" type="button" class="portal-button portal-button-refresh">Refresh</button>
                 </div>
               </div>
             </section>
@@ -1239,7 +1239,7 @@
               <span class="history-rail__dots" aria-hidden="true">⋮</span>
             </button>
             <div class="history-rail__menu hidden" data-history-menu role="menu" aria-label="History actions">
-              <button type="button" class="portal-button portal-button-blue-action" data-history-open role="menuitem">Open history note</button>
+              <button type="button" class="portal-button portal-button-info" data-history-open role="menuitem">Open history note</button>
             </div>
           </div>
         `;
@@ -1480,7 +1480,7 @@
                   </select>
                   <select data-level aria-label="Target level"></select>
                   <select data-reason aria-label="Unenrollment reason"></select>
-                  <button type="button" class="portal-button portal-button-blue-action" data-apply>Apply</button>
+                  <button type="button" class="portal-button portal-button-affirm" data-apply>Apply</button>
                   <div class="action-comment-row">
                     <textarea data-comment class="comment-input action-comment" rows="1" placeholder="Comment" aria-label="Enrollment comment"></textarea>
                     ${historyRailHtml(row)}

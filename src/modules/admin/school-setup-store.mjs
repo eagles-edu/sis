@@ -1,6 +1,5 @@
 // @ts-check
 
-import fs from "node:fs"
 import path from "node:path"
 
 import { getSisConfigSnapshotSync } from "./sis-config-store.mjs"
@@ -47,45 +46,12 @@ export function readSchoolSetupSnapshot() {
       schoolSetupState: normalizeText(schoolSetup.schoolSetupState) || "missing",
     }
   }
-
-  if (!fs.existsSync(filePath)) {
-    return {
-      filePath,
-      schoolYear: "",
-      startDate: "",
-      endDate: "",
-      schoolSetupState: "missing",
-    }
-  }
-
-  try {
-    const raw = fs.readFileSync(filePath, "utf8")
-    const parsed = raw ? JSON.parse(raw) : {}
-    const uiSettings =
-      parsed && typeof parsed === "object" && !Array.isArray(parsed) && parsed.uiSettings && typeof parsed.uiSettings === "object"
-        ? parsed.uiSettings
-        : parsed
-    const legacySchoolSetup =
-      uiSettings && typeof uiSettings === "object" && !Array.isArray(uiSettings) && uiSettings.schoolSetup && typeof uiSettings.schoolSetup === "object"
-        ? uiSettings.schoolSetup
-        : {}
-
-    return {
-      filePath,
-      schoolYear: normalizeSchoolYear(legacySchoolSetup.schoolYear),
-      startDate: normalizeIsoDate(legacySchoolSetup.startDate),
-      endDate: normalizeIsoDate(legacySchoolSetup.endDate),
-      schoolSetupState: normalizeText(legacySchoolSetup.schoolSetupState) || "missing",
-    }
-  } catch (error) {
-    return {
-      filePath,
-      schoolYear: "",
-      startDate: "",
-      endDate: "",
-      schoolSetupState: "invalid",
-      error: normalizeText(error?.message || error),
-    }
+  return {
+    filePath,
+    schoolYear: "",
+    startDate: "",
+    endDate: "",
+    schoolSetupState: "missing",
   }
 }
 

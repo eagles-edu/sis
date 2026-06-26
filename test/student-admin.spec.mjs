@@ -1095,7 +1095,7 @@ test("GET /admin returns HTML UI", async () => {
   assert.match(responseHtml, /<link[^>]*rel="preload"[^>]*href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?v=[^"]+)?"[^>]*as="style"/i)
   assert.match(responseHtml, /rel="preload"[\s\S]*href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?v=[^"]+)?"[\s\S]*as="style"/i)
   assert.match(responseHtml, /src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?v=[^"]+)?"\s+defer/i)
-  assert.match(responseHtml, /<button class="portal-theme-toggle" id="adminThemeToggle" type="button"[^>]*aria-label="Switch to dark theme"/i)
+  assert.match(responseHtml, /<button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button"[^>]*aria-label="Switch to dark theme"/i)
   assert.match(responseHtml, /<span class="portal-theme-toggle__icon"[^>]*id="adminThemeToggleIcon"[^>]*data-theme-icon="moon"/i)
   assert.match(responseHtml, /<svg class="portal-theme-toggle__icon-moon"[\s\S]*?<svg class="portal-theme-toggle__icon-sun"/i)
   assert.doesNotMatch(responseHtml, /<svg-icon\b/i)

@@ -1667,6 +1667,9 @@
       .page-section[data-page="assignments-data"] .row-options-menu {
         min-inline-size: 112px;
       }
+      .page-section[data-page="assignments-data"] .row-options-trigger.portal-button {
+        color: #212121;
+      }
       .page-section[data-page="assignments-data"] .row-options-dropdown button.portal-button {
         inline-size: 100%;
         max-inline-size: none;
@@ -3952,8 +3955,7 @@
       html[data-theme="dark"] body.admin-portal-page :where(input, textarea:not(.card))::placeholder {
         color: var(--portal-dark-field-placeholder);
       }
-      html[data-theme="dark"] body.admin-portal-page :where(h1, h2, h3, h4, strong, label, th, td),
-      html[data-theme="dark"] body.admin-portal-page summary:not(.portal-button) {
+      html[data-theme="dark"] body.admin-portal-page :where(h1, h2, h3, h4, strong, label, summary, th, td) {
         color: inherit;
       }
       html[data-theme="dark"] body.admin-portal-page :where(table, thead, tbody, tr, th, td, .table-scroll-wrap table) {

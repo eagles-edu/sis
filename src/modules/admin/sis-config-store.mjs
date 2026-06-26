@@ -4,7 +4,6 @@ import fs from "node:fs"
 import path from "node:path"
 
 const SIS_CONFIG_FILE_NAME = "SIS_CONFIG.json"
-const LEGACY_UI_SETTINGS_FILE_NAME = "runtime-data/admin-ui-settings.json"
 const SIS_CONFIG_MIRROR_ID = "sis-config"
 const DEFAULT_WEEKLY_MINIMUM_REPORTS = 5
 const DEFAULT_ADMIN_SESSION_TTL_SECONDS = 28800
@@ -126,7 +125,6 @@ const DEFAULT_SCHOOL_PROFILE = Object.freeze({
  * }} SisConfigError
  * @typedef {LoadedSisConfigSnapshot & {
  *   fileMtimeIso: string,
- *   legacyMtimeIso: string,
  * }} CachedSisConfigSnapshot
  * @typedef {{
  *   exists: boolean,
@@ -329,13 +327,6 @@ function shouldPreferSisConfigFileOverDatabase() {
   return Boolean(normalizeText(process.env.SIS_CONFIG_FILE)) || nodeEnv === "development" || nodeEnv === "test"
 }
 
-function resolveLegacyUiSettingsFilePath() {
-  return path.resolve(
-    process.cwd(),
-    normalizeText(process.env.STUDENT_ADMIN_UI_SETTINGS_FILE) || LEGACY_UI_SETTINGS_FILE_NAME,
-  )
-}
-
 /**
  * @param {unknown} value
  * @returns {PlainObject}
@@ -475,11 +466,8 @@ function normalizeNewsReportsConfig(source = {}) {
 
 function normalizeSisConfigPayload(source = {}) {
   const candidate = toPlainObject(source)
-  const legacyWrappedUiSettings =
-    candidate.uiSettings && typeof candidate.uiSettings === "object" && !Array.isArray(candidate.uiSettings)
-  const rawUiSettings = legacyWrappedUiSettings ? candidate.uiSettings : candidate.uiSettings || candidate
   return {
-    uiSettings: normalizeUiSettings(rawUiSettings),
+    uiSettings: normalizeUiSettings(candidate.uiSettings || candidate),
     runtime: normalizeRuntimeConfig(candidate.runtime || candidate.db || candidate.database || candidate),
     newsReports: normalizeNewsReportsConfig(candidate.newsReports || candidate.newsReportPolicy || candidate),
     environment: normalizeRuntimeEnvironment(candidate.environment),
@@ -652,18 +640,6 @@ function normalizeLoadedSnapshot(source = {}, filePath = "", sourceKind = "file"
   }
 }
 
-/**
- * @param {unknown} snapshot
- */
-function legacyUiSettingsEnvelopeFromSnapshot(snapshot = {}) {
-  const source = toPlainObject(snapshot)
-  return {
-    uiSettings: normalizeUiSettings(source.uiSettings || {}),
-    updatedAt: normalizeText(source.updatedAt) || nowIso(),
-    updatedBy: normalizeText(source.updatedBy) || null,
-  }
-}
-
 /** @returns {LoadedSisConfigSnapshot} */
 function buildDefaultSnapshot() {
   return normalizeLoadedSnapshot({
@@ -686,13 +662,10 @@ let cachedSnapshot = null
 function cachedSnapshotMatchesFiles(cached = null) {
   if (!cached || typeof cached !== "object") return false
   const filePath = resolveSisConfigFilePath()
-  const legacyPath = resolveLegacyUiSettingsFilePath()
   const fileSnapshot = parseJsonFile(filePath)
-  const legacySnapshot = parseJsonFile(legacyPath)
   return (
     normalizeText(cached.filePath) === filePath &&
-    normalizeText(cached.fileMtimeIso) === normalizeText(fileSnapshot.mtimeIso) &&
-    normalizeText(cached.legacyMtimeIso) === normalizeText(legacySnapshot.mtimeIso)
+    normalizeText(cached.fileMtimeIso) === normalizeText(fileSnapshot.mtimeIso)
   )
 }
 
@@ -835,9 +808,7 @@ async function writeSnapshotFiles(snapshot = {}) {
     source: source.source || "file",
   })
   const currentFileState = parseJsonFile(resolveSisConfigFilePath())
-  const currentLegacyState = parseJsonFile(resolveLegacyUiSettingsFilePath())
   backupCorruptJsonFileIfNeeded(resolveSisConfigFilePath(), currentFileState)
-  backupCorruptJsonFileIfNeeded(resolveLegacyUiSettingsFilePath(), currentLegacyState)
   writeJsonFileAtomic(resolveSisConfigFilePath(), {
     uiSettings: normalized.uiSettings,
     runtime: normalized.runtime,
@@ -846,22 +817,20 @@ async function writeSnapshotFiles(snapshot = {}) {
     updatedAt: normalized.updatedAt || nowIso(),
     updatedBy: normalized.updatedBy || null,
   })
-  writeJsonFileAtomic(resolveLegacyUiSettingsFilePath(), legacyUiSettingsEnvelopeFromSnapshot(normalized))
   await upsertMirrorToDatabase(normalized)
   const fileState = parseJsonFile(resolveSisConfigFilePath())
-  const legacyState = parseJsonFile(resolveLegacyUiSettingsFilePath())
   cachedSnapshot = {
     ...normalized,
     source: "file",
     fileMtimeIso: fileState.mtimeIso,
-    legacyMtimeIso: legacyState.mtimeIso,
   }
   return cachedSnapshot
 }
 
 /**
- * Loads the SIS config from disk, repairs it from the DB mirror when needed,
- * and keeps the DB mirror aligned with the newest valid snapshot.
+ * Loads the SIS config from the current SIS JSON snapshot and the DB mirror,
+ * repairs either side when needed, and keeps both mirrored copies aligned with
+ * the newest valid snapshot.
  *
  * @param {{ refresh?: boolean }} [options]
  * @returns {Promise<CachedSisConfigSnapshot>}
@@ -872,11 +841,8 @@ export async function ensureSisConfigLoaded(options = {}) {
   }
 
   const filePath = resolveSisConfigFilePath()
-  const legacyPath = resolveLegacyUiSettingsFilePath()
   const fileSnapshot = parseJsonFile(filePath)
-  const legacySnapshot = parseJsonFile(legacyPath)
   const dbSnapshot = await readMirrorFromDatabase()
-  const legacyParsed = toPlainObject(legacySnapshot.parsed)
   const fileParsed = toPlainObject(fileSnapshot.parsed)
   const dbParsed = toPlainObject(dbSnapshot)
   const preferSisConfigFile = shouldPreferSisConfigFileOverDatabase()
@@ -887,14 +853,6 @@ export async function ensureSisConfigLoaded(options = {}) {
     databaseUrl: toPlainObject(fileParsed.runtime).databaseUrl || "",
     source: "file",
   })
-  if (legacySnapshot.parsed) {
-    assertValidRuntimeDatabaseUrl({
-      filePath: legacyPath,
-      raw: legacySnapshot.raw,
-      databaseUrl: toPlainObject(legacyParsed.runtime).databaseUrl || "",
-      source: "legacy",
-    })
-  }
   if (!preferSisConfigFile && dbSnapshot) {
     assertValidRuntimeDatabaseUrl({
       filePath,
@@ -904,17 +862,10 @@ export async function ensureSisConfigLoaded(options = {}) {
   }
 
   const fileLoaded = fileSnapshot.parsed ? normalizeLoadedSnapshot(fileSnapshot.parsed, filePath, "file") : null
-  const legacyLoaded = legacySnapshot.parsed ?
-    normalizeLoadedSnapshot({
-      uiSettings: legacyParsed.uiSettings || legacySnapshot.parsed,
-      updatedAt: legacyParsed.updatedAt || legacySnapshot.mtimeIso,
-      updatedBy: legacyParsed.updatedBy || "",
-    }, legacyPath, "legacy") :
-    null
 
   let latest = null
   if (preferSisConfigFile) {
-    latest = fileLoaded || legacyLoaded || buildDefaultSnapshot()
+    latest = fileLoaded || dbSnapshot || buildDefaultSnapshot()
   } else {
     const candidates = [fileLoaded, dbSnapshot].filter(Boolean)
     latest = candidates[0] || null
@@ -932,7 +883,7 @@ export async function ensureSisConfigLoaded(options = {}) {
       }
     }
     if (!latest) {
-      latest = legacyLoaded || buildDefaultSnapshot()
+      latest = buildDefaultSnapshot()
     }
   }
 
@@ -947,7 +898,6 @@ export async function ensureSisConfigLoaded(options = {}) {
 
   const latestSourceIsDatabase = latest.source === "database"
   const fileMatchesSnapshot = !fileSnapshot.parsed || rawSnapshotComparisonKey(fileSnapshot.parsed) === snapshotComparisonKey(snapshot)
-  const legacyMatchesSnapshot = !legacySnapshot.parsed || rawLegacyEnvelopeComparisonKey(legacySnapshot.parsed) === rawLegacyEnvelopeComparisonKey(legacyUiSettingsEnvelopeFromSnapshot(snapshot))
   const dbMatchesSnapshot = !dbSnapshot || rawSnapshotComparisonKey({
     uiSettings: dbSnapshot.uiSettings,
     runtime: dbSnapshot.runtime,
@@ -961,16 +911,8 @@ export async function ensureSisConfigLoaded(options = {}) {
     (!preferSisConfigFile && latestSourceIsDatabase) ||
     !fileMatchesSnapshot ||
     (fileLoaded && compareIsoValues(snapshot.updatedAt, fileLoaded.updatedAt) > 0)
-  const legacyNeedsWrite =
-    !legacySnapshot.exists ||
-    legacySnapshot.error ||
-    (!preferSisConfigFile && latestSourceIsDatabase) ||
-    latest.source === "file" ||
-    !legacyMatchesSnapshot ||
-    (legacyLoaded && compareIsoValues(snapshot.updatedAt, legacyLoaded.updatedAt) > 0)
 
   backupCorruptJsonFileIfNeeded(filePath, fileSnapshot)
-  backupCorruptJsonFileIfNeeded(legacyPath, legacySnapshot)
 
   if (fileNeedsWrite) {
     writeJsonFileAtomic(filePath, {
@@ -983,17 +925,11 @@ export async function ensureSisConfigLoaded(options = {}) {
     })
   }
 
-  if (legacyNeedsWrite) {
-    writeJsonFileAtomic(legacyPath, legacyUiSettingsEnvelopeFromSnapshot(snapshot))
-  }
-
   const mirrorNeedsWrite =
     !dbSnapshot ||
     (!preferSisConfigFile && latestSourceIsDatabase) ||
     latest.source === "file" ||
-    (preferSisConfigFile && latest.source === "legacy") ||
     fileNeedsWrite ||
-    legacyNeedsWrite ||
     !dbMatchesSnapshot ||
     compareIsoValues(snapshot.updatedAt, dbSnapshot.updatedAt) !== 0
   if (mirrorNeedsWrite) {
@@ -1005,7 +941,6 @@ export async function ensureSisConfigLoaded(options = {}) {
     source: latest.source || "file",
     filePath,
     fileMtimeIso: parseJsonFile(filePath).mtimeIso,
-    legacyMtimeIso: parseJsonFile(legacyPath).mtimeIso,
     meta: snapshotMetaFromUiSettings(snapshot.uiSettings),
   }
   return cachedSnapshot
@@ -1013,8 +948,6 @@ export async function ensureSisConfigLoaded(options = {}) {
 
 export function getSisConfigSnapshotSync() {
   const fileSnapshot = parseJsonFile(resolveSisConfigFilePath())
-  const legacySnapshot = parseJsonFile(resolveLegacyUiSettingsFilePath())
-  const legacyParsed = toPlainObject(legacySnapshot.parsed)
   const fileParsed = toPlainObject(fileSnapshot.parsed)
 
   if (fileSnapshot.parsed) {
@@ -1025,19 +958,10 @@ export function getSisConfigSnapshotSync() {
       source: "file",
     })
   }
-  if (legacySnapshot.parsed) {
-    assertValidRuntimeDatabaseUrl({
-      filePath: resolveLegacyUiSettingsFilePath(),
-      raw: legacySnapshot.raw,
-      databaseUrl: toPlainObject(legacyParsed.runtime).databaseUrl || "",
-      source: "legacy",
-    })
-  }
   if (
     cachedSnapshot
     && normalizeText(cachedSnapshot.filePath) === resolveSisConfigFilePath()
     && normalizeText(cachedSnapshot.fileMtimeIso) === normalizeText(fileSnapshot.mtimeIso)
-    && normalizeText(cachedSnapshot.legacyMtimeIso) === normalizeText(legacySnapshot.mtimeIso)
   ) {
     return cachedSnapshot
   }
@@ -1045,26 +969,12 @@ export function getSisConfigSnapshotSync() {
     cachedSnapshot = {
       ...normalizeLoadedSnapshot(fileSnapshot.parsed, resolveSisConfigFilePath(), "file"),
       fileMtimeIso: fileSnapshot.mtimeIso,
-      legacyMtimeIso: legacySnapshot.mtimeIso,
-    }
-    return cachedSnapshot
-  }
-  if (legacySnapshot.parsed) {
-    cachedSnapshot = {
-      ...normalizeLoadedSnapshot({
-        uiSettings: legacyParsed.uiSettings || legacySnapshot.parsed,
-        updatedAt: legacyParsed.updatedAt || legacySnapshot.mtimeIso,
-        updatedBy: legacyParsed.updatedBy || "",
-      }, resolveSisConfigFilePath(), "legacy"),
-      fileMtimeIso: fileSnapshot.mtimeIso,
-      legacyMtimeIso: legacySnapshot.mtimeIso,
     }
     return cachedSnapshot
   }
   cachedSnapshot = {
     ...buildDefaultSnapshot(),
     fileMtimeIso: fileSnapshot.mtimeIso,
-    legacyMtimeIso: legacySnapshot.mtimeIso,
   }
   return cachedSnapshot
 }

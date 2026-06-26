@@ -1409,6 +1409,206 @@ test("parent portal grades YTD renders a quarter board without a calendar", asyn
   dom.window.close()
 })
 
+test("parent portal grades YTD uses the setup-defined quarter when a stored label is stale", async () => {
+  const fixedNow = "2025-11-15T09:00:00.000Z"
+  const dom = await createParentPortalDom(
+    async (resource, init = {}) => {
+      const urlText = toUrlText(resource)
+      const method = String(init.method || "GET").toUpperCase()
+      const parsed = new URL(urlText, "http://preview.invalid")
+      const pathname = parsed.pathname
+
+      if (pathname === "/api/parent/auth/me" && method === "GET") {
+        return jsonTextResponse(200, {
+          authenticated: true,
+          user: { parentsId: "cmkramer001", role: "parent" },
+        })
+      }
+
+      if (pathname === "/api/parent/children" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          items: [
+            {
+              eaglesId: "vi001",
+              eaglesRefId: "s-vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              englishName: "Student One",
+              currentGrade: "A2 Flyers",
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/dashboard" && method === "GET") {
+        return jsonTextResponse(200, {
+          ok: true,
+          children: [
+            {
+              eaglesId: "vi001",
+              studentNumber: 101,
+              fullName: "Student One",
+              currentGrade: "A2 Flyers",
+              attendance: { total: 20, present: 18, absent: 1, late: 1, excused: 0 },
+              assignments: { total: 2, pending: 1, overdue: 0, completed: 1 },
+              grades: { averageScorePercent: 88 },
+              performance: { reportCount: 1 },
+              schoolSetup: {
+                startDate: "2025-08-01",
+                endDate: "2026-07-31",
+                schoolYear: "2025-2026",
+                quarters: [
+                  { quarter: "q1", startDate: "2025-08-01", endDate: "2025-10-31" },
+                  { quarter: "q2", startDate: "2025-11-01", endDate: "2026-01-31" },
+                  { quarter: "q3", startDate: "2026-02-01", endDate: "2026-04-30" },
+                  { quarter: "q4", startDate: "2026-05-01", endDate: "2026-07-31" },
+                ],
+              },
+              details: {
+                currentHomework: [],
+                overdueHomework: [],
+                assignmentHistory: [
+                  {
+                    id: "q1-complete",
+                    assignmentName: "Reading Log",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-10",
+                    dueAt: "2025-09-10T00:00:00.000Z",
+                    scorePercent: 92,
+                    comments: "Submitted cleanly and on time.",
+                    status: "completed",
+                    homeworkCompleted: true,
+                    homeworkOnTime: true,
+                    quarter: "q1",
+                  },
+                  {
+                    id: "q2-stale-label",
+                    assignmentName: "Quarter Two Draft",
+                    className: "A2 Flyers",
+                    dueDate: "2025-11-20",
+                    dueAt: "2025-11-20T00:00:00.000Z",
+                    comments: "Stored label is stale, setup date should win.",
+                    status: "pending",
+                    homeworkCompleted: false,
+                    homeworkOnTime: false,
+                    quarter: "q1",
+                  },
+                ],
+                attendanceHistory: [],
+                gradeHistory: [
+                  {
+                    id: "q1-complete",
+                    assignmentName: "Reading Log",
+                    className: "A2 Flyers",
+                    dueDate: "2025-09-10",
+                    dueAt: "2025-09-10T00:00:00.000Z",
+                    scorePercent: 92,
+                    comments: "Submitted cleanly and on time.",
+                    status: "completed",
+                    homeworkCompleted: true,
+                    homeworkOnTime: true,
+                    quarter: "q1",
+                  },
+                  {
+                    id: "q2-stale-label",
+                    assignmentName: "Quarter Two Draft",
+                    className: "A2 Flyers",
+                    dueDate: "2025-11-20",
+                    dueAt: "2025-11-20T00:00:00.000Z",
+                    comments: "Stored label is stale, setup date should win.",
+                    status: "pending",
+                    homeworkCompleted: false,
+                    homeworkOnTime: false,
+                    quarter: "q1",
+                  },
+                ],
+                reportArchive: [],
+              },
+            },
+          ],
+        })
+      }
+
+      if (pathname === "/api/parent/children/vi001/profile" && method === "GET") {
+        return jsonTextResponse(200, {
+          child: {
+            eaglesId: "vi001",
+            studentNumber: 101,
+            fullName: "Student One",
+            currentGrade: "A2 Flyers",
+          },
+          profile: {},
+          lockedFields: [],
+          immutableFields: ["eaglesId", "studentNumber"],
+        })
+      }
+
+      return jsonTextResponse(404, { error: "Not found" })
+    },
+    "http://127.0.0.1:8787/parent/portal",
+    {
+      fixedNow,
+      initialAuthState: {
+        authenticated: true,
+        user: {
+          parentsId: "cmkramer001",
+          role: "parent",
+        },
+      },
+    }
+  )
+
+  const document = dom.window.document
+
+  await settleDomAsync(dom, 6, 30)
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalCard").classList.contains("hidden"), false)
+  }, 5000)
+
+  document.querySelector('a[data-page-target="grades-ytd"]').click()
+
+  await waitFor(() => {
+    assert.equal(document.getElementById("portalDetailCard").classList.contains("hidden"), false)
+    const activeButton = Array.from(document.querySelectorAll(".grade-quarter-picker-btn")).find(
+      (button) => button.getAttribute("aria-pressed") === "true"
+    )
+    assert.match(activeButton?.textContent || "", /Q2/i)
+  }, 5000)
+
+  Array.from(document.querySelectorAll(".grade-quarter-picker-btn"))
+    .find((button) => /Q2/i.test(button.textContent || ""))
+    ?.click()
+
+  await waitFor(() => {
+    const grid = document.getElementById("portalDetailCalendarGrid")
+    assert.match(grid?.textContent || "", /Quarter Two Draft/i)
+    assert.doesNotMatch(grid?.textContent || "", /Reading Log/i)
+  }, 5000)
+
+  const q2State = await dom.window.eval(`(() => {
+    const grid = document.getElementById("portalDetailCalendarGrid");
+    const rows = Array.from(grid?.querySelectorAll(".tabulator-row:not(.tabulator-header-row)") || []).map((row) => ({
+      text: row.textContent || "",
+      className: row.className || "",
+    }));
+    return {
+      activeQuarter: Array.from(document.querySelectorAll(".grade-quarter-picker-btn")).find((button) =>
+        button.getAttribute("aria-pressed") === "true"
+      )?.textContent || "",
+      rows,
+    };
+  })()`)
+
+  assert.match(q2State.activeQuarter || "", /Q2/i)
+  assert.ok(q2State.rows.some((row) => /Quarter Two Draft/i.test(row.text)))
+  assert.ok(!q2State.rows.some((row) => /Reading Log/i.test(row.text)))
+
+  await settleDomAsync(dom)
+  dom.window.close()
+})
+
 test("parent portal grades YTD still renders when rows carry explicit quarter codes", async () => {
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
@@ -2272,7 +2472,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
   dom.window.close()
 })
 
-test("parent portal grade/class fallback ignores immutable eagles level when public-school field is missing", async () => {
+test("parent portal grade/class resolver ignores immutable eagles level when public-school field is missing", async () => {
   const dom = await createParentPortalDom(
     async (resource, init = {}) => {
       const urlText = toUrlText(resource)

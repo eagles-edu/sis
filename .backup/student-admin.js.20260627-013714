@@ -11144,7 +11144,7 @@
           <td data-assignments-col="completion">${assignmentCompletionPillHtml(template)}</td>
           <td class="table-row-options-cell">
             <details class="row-options-menu">
-              <summary class="row-options-trigger portal-button portal-button-info portal-button-amber-ink-dark portal-button-compact">Actions</summary>
+              <summary class="row-options-trigger portal-button portal-button-info portal-button-compact">Actions</summary>
               <div class="row-options-dropdown">
                 <button type="button" class="portal-button portal-button-affirm portal-button-compact" data-template-edit="${template.id}">Edit</button>
                 <button type="button" class="portal-button portal-button-info portal-button-compact" data-template-archive="${template.id}">${archived ? "Restore" : "Archive"}</button>

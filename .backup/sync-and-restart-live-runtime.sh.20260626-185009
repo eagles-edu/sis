@@ -44,18 +44,17 @@ LIVE_RUNTIME_CODE_FILES=(
 )
 
 LIVE_RUNTIME_DATA_FILES=(
+  "runtime-data/admin-ui-settings.json"
 )
 
 LIVE_PRESERVED_RUNTIME_FILES=(
   "SIS_CONFIG.json"
-  "runtime-data/admin-ui-settings.json"
 )
 
 LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|web-asset/admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|web-asset/admin/portal-hub.html"
-  "web-asset/admin/report-card.html|web-asset/admin/report-card.html"
   "web-asset/admin/grades-tabulator.html|web-asset/admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|web-asset/admin/student-points.html"
   "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"
@@ -105,7 +104,6 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.html|sis-admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|sis-admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
-  "web-asset/admin/portal-hub.html|index.html"
   "web-asset/admin/grades-tabulator.html|sis-admin/grades-tabulator.html"
   "web-asset/admin/student-points.html|sis-admin/student-points.html"
   "web-asset/admin/assignment-controls-island.mjs|web-asset/admin/assignment-controls-island.mjs"

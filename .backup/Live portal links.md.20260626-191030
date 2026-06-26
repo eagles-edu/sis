@@ -1,0 +1,225 @@
+# Use these from repo root
+
+- `cd /home/eagles/dockerz/sis`
+- `npm run runtimes:restart`
+
+wORKING **With sync + restart**
+
+- `cd /home/eagles/dockerz/sis`
+- `npm run sync:full:sis-root:restart-runtimes`
+        **or**
+- `npm run sync:full:sis-public-root:restart-runtimes`
+
+a **Live admin backup + clean sync**
+
+- `cd /home/eagles/dockerz/sis`
+- `npm run sync:live:admin:check`
+- `npm run sync:live:admin:backup`
+- `npm run sync:live:admin:full`
+
+The live helper takes a restorable backup bundle under `/home/eagles/dockerz/backups/live-admin/` before any write step.
+It mirrors the same strict whitelist model as test, preserves `runtime-data/admin-ui-settings.json` and
+`SIS_CONFIG.json` across the wipe, derives `public_html/index.html` from `web-asset/admin/portal-hub.html` with the
+live admin origin, clears only the managed live roots after backup, verifies that the cleared roots are empty,
+repopulates the same whitelist, then verifies the synced file hashes and live public index. It pins the runtime to
+`https://admin.eagles.edu.vn` and refreshes Prisma (`db:generate` + `db:migrate:deploy`).
+
+## Test operation
+
+Use these HTTP probes when you want to test each runtime after restarting it.
+
+- **Live runtime health**: `curl -fsS http://127.0.0.1:8787/healthz` (runs after `npm start`/live restart).
+- **Dev runtime health**: `curl -fsS http://127.0.0.1:8788/healthz` (runs after `npm run dev`/dev restart).
+
+a **Bidirectional portal mirror (admin/parent/student html)**
+
+- `cd /home/eagles/dockerz/sis`
+- `npm run sync:portal:check`
+- `npm run sync:portal:dev-to-live`
+- `npm run sync:portal:live-to-dev`
+
+## Live portal links
+
+**Student**: <https://admin.eagles.edu.vn/student>
+
+**Parent**: <https://admin.eagles.edu.vn/parent>
+
+**Admin**: <https://admin.eagles.edu.vn/admin/students>
+
+**Admin**: [def]
+
+## Test portal links (test.eagles.edu.vn)
+
+The test host routes the public hub directly to the portal pages:
+
+**hub**: <https://test.eagles.edu.vn/>
+
+**Student**: <https://test.eagles.edu.vn/student>
+
+**Parent**: <https://test.eagles.edu.vn/parent>
+
+**Admin**: [def]
+
+**Local preview (after runtime is running on :8786)**
+
+- `http://127.0.0.1:8786/admin?apiOrigin=http://127.0.0.1:8786`
+- `http://127.0.0.1:8786/parent?apiOrigin=http://127.0.0.1:8786`
+- `http://127.0.0.1:8786/student?apiOrigin=http://127.0.0.1:8786`
+
+- `http://127.0.0.1:8788?apiOrigin=http://127.0.0.1:8788`
+- `http://127.0.0.1:8788/admin?apiOrigin=http://127.0.0.1:8788`
+- `http://127.0.0.1:8788/parent?apiOrigin=http://127.0.0.1:8788`
+- `http://127.0.0.1:8788/student?apiOrigin=http://127.0.0.1:8788`
+- `http://127.0.0.1:8788/admin/points-management?apiOrigin=http://127.0.0.1:8788`
+
+a **Runtime start / restart (test mode)**
+
+- `cd /home/eagles/dockerz/sis`
+- `pkill -f "node server/exercise-mailer.mjs" || true`
+- `SIS_ENV_FILE=.env.test NODE_ENV=test EXERCISE_MAILER_PORT=8786 node server/exercise-mailer.mjs`
+- `curl -fsS http://127.0.0.1:8786/healthz` (should return `ok` once runtime is live)
+
+## Test portal sync
+
+Mirror the repo into the clean test runtime with the strict whitelist, then let the wrapper rebuild Prisma and restart the service.
+
+The test sync whitelist is the same file set as the dev-side portal/runtime whitelist;
+only the destination roots and test route mapping differ. That set includes the compiled
+admin assets, shared portal assets, vendored calendar/grid assets, and the portal HTML
+pages that the runtime serves. The public mirror also carries the admin grade surfaces
+(`grades-tabulator.html` and `student-points.html`) so test and live share the same
+public shape. The live wrapper now follows the same whitelist source of truth and adds
+its own cleared-root verification before sync plus post-sync hash verification after
+repopulation.
+
+- `tools/sync-and-restart-test-runtime.sh boot-prep` (strict runtime sync into
+  `/home/test.eagles.edu.vn/sis`, env seeding, `npm ci --omit=dev`, `prisma generate`,
+  and `prisma migrate deploy`).
+- `tools/sync-and-restart-test-runtime.sh public` (strict runtime sync, strict
+  `public_html` mirror, service restart, and health probe).
+- `tools/sync-and-restart-test-runtime.sh restart-only` (strict runtime sync, strict
+  `public_html` mirror, Prisma refresh, service restart, and health probe, but no
+  admin asset build).
+- `curl -fsS https://test.eagles.edu.vn/student` (swap `parent`/`admin`/`student`
+   as needed) to confirm the public HTML reflects the sync.
+
+The authoritative file whitelist lives in [docs/ffs.md](./ffs.md) and matches the
+wrapper exactly.
+
+## Test DB restore helper
+
+Use the dedicated helper to restore canonical test data into `sis-test` from `.sto/sis-live.dump`.
+
+```bash
+cd /home/eagles/dockerz/sis
+tools/restore-test-db-from-live-dump.sh --verify-only
+tools/restore-test-db-from-live-dump.sh --yes
+```
+
+Equivalent npm commands:
+
+- `npm run db:test:restore:verify`
+- `npm run db:test:restore`
+
+## Test runtime sync-and-restart helper
+
+Run the new helper from the repo root whenever you need to refresh the test runtime, Prisma artifacts, and HTML mirrors
+in lockstep, just like the live script:
+
+```bash
+cd /home/eagles/dockerz/sis
+tools/sync-and-restart-test-runtime.sh <full|public|restart-only>
+```
+
+- `full`: runs the strict runtime whitelist sync, the strict public mirror sync,
+   refreshes Prisma (`db:generate` +  `db:migrate:deploy`) under
+   `/home/test.eagles.edu.vn/sis`, restarts `exercise-mailer-test.service`, and probes
+  `http://127.0.0.1:8786/healthz`.
+- `public`: runs the strict runtime whitelist sync and strict public mirror sync, then restarts + loopback health probe.
+- `restart-only`: runs the strict runtime whitelist sync and strict public mirror sync, skips the admin asset build,
+  refreshes Prisma, then restarts + loopback health probe.
+
+The script assumes `.env.test` points at `sis-test`. Check `journalctl -u exercise-mailer-test.service` if you need
+confirmation after running the helper.
+
+## Dev runtime links (127.0.0.1:8788)
+
+- `npm run dev:restart`
+- `curl -fsS http://127.0.0.1:8788/healthz` returned status: ok
+- /healthz reports runtimeSelfHeal.enabled: true
+
+**Runtime root / portal hub**: <http://127.0.0.1:8788/>
+
+**Admin**: <http://127.0.0.1:8788/admin>
+
+**Parent**: <http://127.0.0.1:8788/parent>
+
+**Student**: <http://127.0.0.1:8788/student>
+
+**Legacy admin alias**: <http://127.0.0.1:8788/admin/students>
+
+### Hub tunables
+
+- `--hub-page-bg-start`, `--hub-page-bg-mid`, `--hub-page-bg-end`
+- `--hub-panel-border`
+- `--hub-panel-bg`
+
+## Live API bases
+
+- **Student API**: <https://admin.eagles.edu.vn/api/student>
+
+- **Parent API**: <https://admin.eagles.edu.vn/api/parent>
+
+- **Admin API**: <https://admin.eagles.edu.vn/api/admin>
+
+## Use two servers at once
+
+### Start API/runtime on 8788
+
+`cd /home/eagles/dockerz/sis` `npm run dev`
+
+> Start static preview server from the same repo root on 8789 (VS Code Live Server is fine), or CLI `cd
+/home/eagles/dockerz/sis` `python3 -m http.server 8789 --bind 127.0.0.1`
+
+## Important notes
+
+### Codified sync + restart workflow
+
+`cd /home/eagles/dockerz/sis`
+
+`npm run sync:full:sis-root:restart-runtimes`
+
+---
+
+`cd /home/eagles/dockerz/sis`
+
+`npm run sync:full:sis-public-root:restart-runtimes`
+
+### Restart runtimes only (no sync)
+
+`cd /home/eagles/dockerz/sis`
+
+`npm run runtimes:restart`
+
+### Reference
+
+**Added sync-and-restart-runtimes.sh to enforce:**
+
+- sync mode (full or public)
+- live restart + health check (:8787)
+- dev restart + health check (:8788)
+
+**Added npm commands in package.json:**
+
+- npm run sync:full:sis-root:restart-runtimes
+- npm run sync:full:sis-public-root:restart-runtimes
+- npm run runtimes:restart
+
+_Documented workflow in ffs.md and Live portal links.txt._
+
+**Runtime state now:**
+
+- **Live** :8787 is listening and /healthz returns ok.
+- **Dev** :8788 is listening and /healthz returns ok.
+
+[def]: https://test.eagles.edu.vn/

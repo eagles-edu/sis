@@ -30,7 +30,7 @@
 
     .wrap {
       display: grid;
-      gap: 14px;
+      gap: 12px;
       margin: 0 auto;
       padding: 18px;
       width: min(100%, var(--report-max-width));
@@ -38,12 +38,12 @@
 
     .section-stack {
       display: grid;
-      gap: 14px;
+      gap: 12px;
     }
 
     .app-page-header {
       display: grid;
-      gap: 14px;
+      gap: 12px;
     }
 
     .app-sidebar {
@@ -92,21 +92,8 @@
     }
 
     .floating-menu-btn {
-      align-items: center;
-      block-size: 44px;
-      border-radius: var(--radius-pill);
-      display: inline-flex;
-      inline-size: 44px;
-      inset-block-start: 12px;
       inset-inline-start: 12px;
-      justify-content: center;
-      padding: 0;
-      position: fixed;
-      z-index: 90;
-    }
-
-    .floating-menu-btn:focus-visible {
-      outline-offset: 2px;
+      inset-inline-end: auto;
     }
 
     .app-brand-strip {
@@ -595,7 +582,7 @@ transition:
   </style>
 </head>
 <body class="admin-portal-page page report-template-page" id="top" data-surface-role="page">
-  <button id="floatingMenuBtn" type="button" class="floating-menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+  <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
     <span class="floating-menu-icon" aria-hidden="true"></span>
   </button>
   <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
@@ -668,13 +655,13 @@ transition:
         </a>
         <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
         <div class="app-header-actions">
-          <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">
+          <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome">
             Hide Menu
           </button>
-          <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-blue-action hidden">
+          <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden">
             Self-Heal Runtime
           </button>
-          <button class="portal-theme-toggle" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
+          <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
             <span class="portal-theme-toggle__icon" aria-hidden="true" id="adminThemeToggleIcon" data-theme-icon="moon">
               <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
@@ -722,13 +709,13 @@ transition:
           </button>
           <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
             <span class="small global-text-label">Global Text</span>
-              <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="decrease" aria-label="Decrease global text size">
+              <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
                 A-
               </button>
-              <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="increase" aria-label="Increase global text size">
+              <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="increase" aria-label="Increase global text size">
                 A+
               </button>
-              <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" data-text-zoom-action="reset" aria-label="Reset global text size">
+              <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning" data-text-zoom-action="reset" aria-label="Reset global text size">
                 Reset
               </button>
             <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
@@ -1061,7 +1048,7 @@ transition:
               <input type="checkbox" name="parentReviewed">
               Mark reviewed
             </label>
-              <button id="parentReviewActionBtn" type="button" class="portal-button portal-button-green-action">Record parent review</button>
+              <button id="parentReviewActionBtn" type="button" class="portal-button portal-button-affirm">Record parent review</button>
           </div>
         </div>
       </section>
@@ -1090,7 +1077,7 @@ transition:
               <input type="checkbox" name="studentReviewed">
               Mark reviewed
             </label>
-              <button id="studentReviewActionBtn" type="button" class="portal-button portal-button-green-action">Record student review</button>
+              <button id="studentReviewActionBtn" type="button" class="portal-button portal-button-affirm">Record student review</button>
           </div>
         </div>
       </section>
@@ -1248,7 +1235,7 @@ transition:
         }
 
         const portalMarkup = viewerRole === "parent" ? `
-          <button id="parentMenuBtn" class="floating-menu-btn" type="button" aria-label="Mở điều hướng">
+          <button id="parentMenuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button" aria-label="Mở điều hướng">
             <span class="floating-menu-icon" aria-hidden="true"></span>
           </button>
           <aside id="parentSideNav" class="side-nav" aria-label="Điều hướng cổng phụ huynh">
@@ -1267,9 +1254,9 @@ transition:
               <a class="side-link" href="#student-review-title" data-view-target="dashboard" data-page-target="student-review">Xác nhận của học sinh</a>
             </nav>
           </aside>
-          <button id="parentNavScrim" class="nav-scrim" type="button" aria-label="Đóng điều hướng"></button>
+          <button id="parentNavScrim" class="nav-scrim portal-button portal-button-immutable-chrome" type="button" aria-label="Đóng điều hướng"></button>
         ` : `
-          <button id="menuBtn" class="floating-menu-btn" type="button" aria-label="Open navigation">
+          <button id="menuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button" aria-label="Open navigation">
             <span class="floating-menu-icon" aria-hidden="true"></span>
           </button>
           <aside id="sideNav" class="side-nav" aria-label="Student navigation">
@@ -1288,7 +1275,7 @@ transition:
               <a class="side-link" href="#student-review-title" data-view-target="home" data-page-target="student-review">Student Review</a>
             </nav>
           </aside>
-          <button id="navOverlay" class="nav-overlay" type="button" aria-label="Close navigation"></button>
+          <button id="navOverlay" class="nav-overlay portal-button portal-button-immutable-chrome" type="button" aria-label="Close navigation"></button>
         `
 
         document.body.insertAdjacentHTML("afterbegin", portalMarkup)

@@ -49,7 +49,7 @@
     }
 
     html[data-parent-auth-state="unauthenticated"] body.parent-portal-page main.portal-main {
-      gap: 1rem;
+      gap: 12px;
       margin-inline: auto;
       max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
       width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
@@ -265,11 +265,11 @@
         <a class="side-link" href="#portalDetailCard" data-view-target="dashboard" data-page-target="recommendations">Các khuyến nghị để đạt được thành công trong học tập</a>
       </nav>
       <div class="side-actions">
-        <button id="parentNavLogoutBtn" type="button" class="portal-button portal-button-red-action">Đăng xuất</button>
+        <button id="parentNavLogoutBtn" type="button" class="portal-button portal-button-danger">Đăng xuất</button>
       </div>
     </aside>
 
-    <button id="parentNavScrim" class="nav-scrim" type="button" aria-label="Đóng điều hướng"></button>
+    <button id="parentNavScrim" class="nav-scrim portal-button portal-button-immutable-chrome" type="button" aria-label="Đóng điều hướng"></button>
 
     <main class="portal-main">
       <div class="header-bar">
@@ -277,7 +277,7 @@
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
       <section class="content hero" data-surface-role="content">
-        <button id="parentMenuBtn" class="floating-menu-btn" type="button" aria-label="Mở điều hướng">
+        <button id="parentMenuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button" aria-label="Mở điều hướng">
           <span class="floating-menu-icon" aria-hidden="true"></span>
         </button>
         <div class="hero-line">
@@ -289,19 +289,19 @@
           </div>
           <div class="hero-actions">
             <span id="envBadgeParent" class="env-badge" aria-live="polite"></span>
-            <button class="portal-theme-toggle" id="parentThemeToggle" type="button" aria-pressed="false" aria-label="Chuyển sang giao diện tối">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="parentThemeToggle" type="button" aria-pressed="false" aria-label="Chuyển sang giao diện tối">
               <span class="portal-theme-toggle__icon" aria-hidden="true">
                 <svg-icon name="theme-moon" size="110%" id="parentThemeToggleIcon"></svg-icon>
               </span>
             </button>
             <div class="text-zoom-controls" role="toolbar" aria-label="Điều khiển cỡ chữ">
-              <button id="parentTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Giảm cỡ chữ">
+              <button id="parentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" aria-label="Giảm cỡ chữ">
                 A-
               </button>
-              <button id="parentTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Tăng cỡ chữ">
+              <button id="parentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" aria-label="Tăng cỡ chữ">
                 A+
               </button>
-              <button id="parentTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Đặt lại cỡ chữ">
+              <button id="parentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" aria-label="Đặt lại cỡ chữ">
                 Đặt lại
               </button>
             </div>
@@ -330,8 +330,8 @@
             <p class="field-hint">Nhập đúng mật khẩu hiện hành của tài khoản.</p>
           </div>
           <div class="login-actions">
-            <button id="loginBtn" class="portal-button portal-button-blue-action" type="submit">Đăng nhập</button>
-            <button id="loginClearBtn" class="portal-button portal-button-purple-action" type="reset">Clear</button>
+            <button id="loginBtn" class="portal-button portal-button-primary" type="submit">Đăng nhập</button>
+            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset">Clear</button>
           </div>
         </form>
         <div class="login-links">
@@ -400,8 +400,8 @@
                 </div>
                 <div class="homework-card-content">
                   <h4 class="homework-content-title">Bài tập về nhà quá hạn</h4>
-                  <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-neutral-action" type="button">
-                    Xem danh sách chưa đầy đủ
+                  <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-info" type="button" title="Xem danh sách bài tập về nhà quá hạn" aria-label="Xem danh sách bài tập về nhà quá hạn">
+                    Xem quá hạn
                   </button>
                   <p class="hint" id="pastDueHomeworkSummary">Chưa có dữ liệu.</p>
                 </div>
@@ -435,10 +435,10 @@
                   </table>
                 </div>
                 <div class="actions actions-2">
-                  <button id="openNewsQueueDetailBtn" type="button" class="portal-button portal-button-blue-action">
+                  <button id="openNewsQueueDetailBtn" type="button" class="portal-button portal-button-primary">
                     Xem chi tiết
                   </button>
-                  <button id="refreshNewsQueueBtn" type="button" class="portal-button portal-button-teal-refresh">
+                  <button id="refreshNewsQueueBtn" type="button" class="portal-button portal-button-refresh">
                     Tải lại
                   </button>
                 </div>
@@ -467,7 +467,7 @@
               <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
                 <div class="portal-modal-head">
                   <h4 id="pastDueHomeworkModalTitle">Bài tập về nhà quá hạn</h4>
-                  <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">
+                  <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">
                     Đóng
                   </button>
                 </div>
@@ -489,10 +489,10 @@
                 <div class="portal-modal-head">
                   <h4 id="newsWeekSetModalTitle">Trình xem báo cáo tin tức học sinh</h4>
                   <div class="actions">
-                    <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Báo cáo trước">←</button>
+                    <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-alt" aria-label="Báo cáo trước">←</button>
                     <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                    <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Báo cáo kế tiếp">→</button>
-                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Đóng</button>
+                    <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt" aria-label="Báo cáo kế tiếp">→</button>
+                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Đóng</button>
                   </div>
                 </div>
                 <div class="portal-modal-body">
@@ -559,7 +559,7 @@
                   </div>
                 </div>
                 <div class="portal-modal-actions">
-                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-neutral-action">Đóng</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-immutable-chrome">Đóng</button>
                 </div>
                 <p id="newsWeekSetModalStatus" class="hint">Trình xem đã sẵn sàng.</p>
               </div>
@@ -595,9 +595,9 @@
                 <div class="portal-modal-head">
                   <h4 id="performanceReportModalTitle">Báo cáo kết quả học tập</h4>
                   <div class="report-modal-nav">
-                    <button id="performanceReportPrevBtn" type="button" class="portal-button portal-button-neutral-action">Trước</button>
-                    <button id="performanceReportNextBtn" type="button" class="portal-button portal-button-neutral-action">Tiếp</button>
-                    <button id="closePerformanceReportModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">
+                    <button id="performanceReportPrevBtn" type="button" class="portal-button portal-button-alt">Trước</button>
+                    <button id="performanceReportNextBtn" type="button" class="portal-button portal-button-alt">Tiếp</button>
+                    <button id="closePerformanceReportModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">
                       Đóng
                     </button>
                   </div>
@@ -642,8 +642,8 @@
                           </div>
                           <div class="homework-card-content">
                             <h4 class="homework-content-title">Bài tập về nhà quá hạn</h4>
-                            <button id="reportPastDueHomeworkPreviewBtn" class="homework-modal-btn portal-button portal-button-neutral-action" type="button">
-                              Xem danh sách chưa đầy đủ
+                            <button id="reportPastDueHomeworkPreviewBtn" class="homework-modal-btn portal-button portal-button-info" type="button" title="Xem danh sách bài tập về nhà quá hạn" aria-label="Xem danh sách bài tập về nhà quá hạn">
+                              Xem quá hạn
                             </button>
                             <p class="hint" id="reportPastDueHomeworkSummary">
                               Không có bài tập quá hạn.
@@ -668,7 +668,7 @@
                     <div id="performanceReportAttendanceMetrics" class="metrics report-metrics"></div>
                   </section>
                   <div class="report-modal-ack">
-                    <button id="acknowledgePerformanceReportBtn" type="button" class="portal-button portal-button-blue-action">
+                    <button id="acknowledgePerformanceReportBtn" type="button" class="portal-button portal-button-affirm">
                       Đã xem
                     </button>
                     <span id="performanceReportAckStatus" class="report-modal-ack-status">Chưa xác nhận.</span>
@@ -682,7 +682,7 @@
               <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
                 <div class="portal-modal-head">
                   <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
-                  <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">
+                  <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">
                     Đóng
                   </button>
                 </div>
@@ -716,7 +716,7 @@
         <div class="section-head">
           <h2 id="portalDetailTitle">Chi tiết học sinh</h2>
           <div class="actions">
-            <button id="portalDetailBackToMainBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
+            <button id="portalDetailBackToMainBtn" type="button" class="portal-button portal-button-alt">Back to Main</button>
           </div>
         </div>
         <p id="portalDetailLead" class="detail-copy">Đang tải chi tiết học sinh...</p>
@@ -769,8 +769,8 @@
         <div class="section-head">
           <h2>Trang học sinh: Biểu mẫu cập nhật hồ sơ</h2>
           <div class="toolbar-actions">
-            <button id="backToDashboardBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
-            <button id="logoutBtnChild" type="button" class="portal-button portal-button-red-action">Đăng xuất</button>
+            <button id="backToDashboardBtn" type="button" class="portal-button portal-button-alt">Back to Main</button>
+            <button id="logoutBtnChild" type="button" class="portal-button portal-button-danger">Đăng xuất</button>
           </div>
         </div>
         <p id="childPageBadge" class="hint">
@@ -791,8 +791,8 @@
         </section>
 
         <div class="draft-actions" id="draftActions">
-          <button id="saveDraftBtn" type="button" class="portal-button portal-button-blue-action">Lưu nháp</button>
-          <button id="submitReviewBtn" type="button" class="portal-button portal-button-blue-action">
+          <button id="saveDraftBtn" type="button" class="portal-button portal-button-affirm">Lưu nháp</button>
+          <button id="submitReviewBtn" type="button" class="portal-button portal-button-primary">
             Gửi duyệt
           </button>
         </div>
@@ -2667,8 +2667,8 @@
       const safeLabel = escapeHtml(normalizedLabel);
       return (
         `<span class="header-action-row" role="group" aria-label="${safeLabel} column controls" data-header-label="${safeLabel}">` +
-        `<button class="header-action-btn plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
-        `<button class="header-action-btn minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
+        `<button class="header-action-btn portal-button portal-button-immutable-chrome plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
+        `<button class="header-action-btn portal-button portal-button-immutable-chrome minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
           `</span>`
       );
     }
@@ -2851,16 +2851,17 @@
         let hasClassificationIssues = false;
         source.forEach((row) => {
           const rowDateValue = row?.submittedDate || row?.submittedAt || row?.dueDate || row?.dueAt;
-          const rowDate = rowDateValue instanceof Date ? rowDateValue : normalizeText(rowDateValue);
+          const rowDate = rowDateValue instanceof Date ? rowDateValue.toISOString() : normalizeText(rowDateValue);
+          const resolvedQuarter = resolveQuarterInfo(rowDate, schoolSetup);
           const explicitQuarter = normalizeText(row?.quarter || row?.quarterCode || row?.quarterLabel).toLowerCase();
-          const quarter = /^q[1-4]$/.test(explicitQuarter) ? {
+          const quarter = resolvedQuarter || (/^q[1-4]$/.test(explicitQuarter) ? {
             quarter: Number.parseInt(explicitQuarter.slice(1), 10) || 0,
             key: explicitQuarter,
             quarterLabel: explicitQuarter.toUpperCase(),
             displayLabel: explicitQuarter.toUpperCase(),
             startDate: "",
             endDate: "",
-          } : resolveQuarterInfo(rowDate, schoolSetup);
+          } : null);
           if (!quarter?.quarter) {
             hasClassificationIssues = true;
             return;
@@ -3149,9 +3150,9 @@
       const tableHost = document.createElement("div");
       tableHost.className = "grade-tabulator-shell";
       const quarterButtons = new Map();
-      let activeQuarterCode = normalizeText(quarterState.currentQuarter?.quarterCode) || normalizeText(quarterState.currentQuarterCode) || normalizeText(groups[0]?.quarterCode) || "";
-      if (!groups.some((group) => normalizeText(group.quarterCode) === activeQuarterCode)) {
-        activeQuarterCode = normalizeText(groups.find((group) => Array.isArray(group.rows) && group.rows.length)?.quarterCode) || normalizeText(groups[0]?.quarterCode) || "";
+      let activeQuarterCode = normalizeText(quarterState.currentQuarter?.quarterCode) || normalizeText(quarterState.currentQuarterCode) || "";
+      if (!activeQuarterCode) {
+        activeQuarterCode = normalizeText(groups[0]?.quarterCode) || "";
       }
 
       function resolveGroup(code = activeQuarterCode) {
@@ -5502,7 +5503,7 @@
         const requiredReports = weeklyMinimumNewsReports();
         const latestDate = normalizeText(item?.latestReportDate || item?.reports?.[0]?.reportDate);
         const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
-          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${requiredReports}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn portal-button portal-button-blue-action" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${requiredReports}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn portal-button portal-button-info portal-button-open-week-set" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Mở tuần báo cáo</button></td>\n          </tr>`;
       }).join("");
       scheduleChipTooltipRefresh(body);
     }

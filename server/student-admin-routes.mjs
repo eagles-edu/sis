@@ -1182,7 +1182,7 @@ function sendPortalNotFoundModal(response, homePath = "") {
         <p>The report URL is missing a valid immutable report ID.</p>
       </div>
       <div class="portal-modal-actions">
-        <a class="portal-button portal-button-blue-action" href="${escapeHtml(safeHomePath)}">Return home</a>
+        <a class="portal-button portal-button-primary" href="${escapeHtml(safeHomePath)}">Return home</a>
       </div>
     </div>
   </section>
@@ -2445,32 +2445,14 @@ function uiSettingsMetaFromPayload(payload = {}) {
 
 function readPersistedUiSettings() {
   const snapshot = getSisConfigSnapshotSync()
-  const legacySchoolSetup = readSchoolSetupSnapshot()
   const configSchoolSetup = snapshot?.uiSettings?.schoolSetup && typeof snapshot.uiSettings.schoolSetup === "object" ?
     snapshot.uiSettings.schoolSetup :
     null
-  const hasMeaningfulConfigSchoolSetup =
-    Boolean(normalizeText(configSchoolSetup?.schoolYear)) ||
-    Boolean(normalizeText(configSchoolSetup?.startDate)) ||
-    Boolean(normalizeText(configSchoolSetup?.endDate)) ||
-    (Array.isArray(configSchoolSetup?.quarters) && configSchoolSetup.quarters.length > 0)
-  const mergedSchoolSetup = hasMeaningfulConfigSchoolSetup ?
-    configSchoolSetup :
-    (legacySchoolSetup && typeof legacySchoolSetup === "object"
-      ? {
-          schoolYear: normalizeText(legacySchoolSetup.schoolYear),
-          startDate: normalizeText(legacySchoolSetup.startDate),
-          endDate: normalizeText(legacySchoolSetup.endDate),
-          schoolSetupState: normalizeText(legacySchoolSetup.schoolSetupState) || "missing",
-          quarters: Array.isArray(configSchoolSetup?.quarters) ? configSchoolSetup.quarters : [],
-          letterGradeRanges: Array.isArray(configSchoolSetup?.letterGradeRanges) ? configSchoolSetup.letterGradeRanges : [],
-        }
-      : null)
   return {
     uiSettings: snapshot?.uiSettings
       ? {
           ...snapshot.uiSettings,
-          schoolSetup: mergedSchoolSetup || snapshot.uiSettings.schoolSetup || null,
+          schoolSetup: configSchoolSetup || snapshot.uiSettings.schoolSetup || null,
         }
       : null,
     sisConfig: {
@@ -4204,15 +4186,18 @@ export function buildChildDashboardSnapshot({
   gradeRows = [],
   reportRows = [],
   assignmentTemplates = [],
+  schoolSetup = null,
 } = {}) {
-  const schoolSetup = normalizeSchoolSetupSnapshot(readPersistedUiSettings()?.uiSettings?.schoolSetup)
+  const resolvedSchoolSetup = normalizeSchoolSetupSnapshot(
+    schoolSetup || readPersistedUiSettings()?.uiSettings?.schoolSetup
+  )
   const details = buildChildDashboardDetails({
     child,
     attendanceRows,
     gradeRows,
     reportRows,
     assignmentTemplates,
-    schoolSetup,
+    schoolSetup: resolvedSchoolSetup,
   })
   const attendance = {
     total: attendanceRows.length,
@@ -4268,8 +4253,8 @@ export function buildChildDashboardSnapshot({
       averageScorePercent: averageScore,
     },
     performance,
-    schoolSetup,
-    schoolSetupState: normalizeText(schoolSetup?.schoolSetupState) || "maintenance",
+    schoolSetup: resolvedSchoolSetup,
+    schoolSetupState: normalizeText(resolvedSchoolSetup?.schoolSetupState) || "maintenance",
     details,
   }
 }
@@ -5436,6 +5421,8 @@ async function buildParentDashboardPayload(session = {}) {
       }
     })
   )
+  const persistedConfig = await ensureSisConfigLoaded()
+  const schoolSetup = persistedConfig?.uiSettings?.schoolSetup || null
 
     return {
       ok: true,
@@ -5458,6 +5445,7 @@ async function buildParentDashboardPayload(session = {}) {
           gradeRows: groupedGrades.get(child.studentRefId) || [],
           reportRows: groupedReports.get(child.studentRefId) || [],
           assignmentTemplates,
+          schoolSetup,
         })
         return {
           ...snapshot,
@@ -5522,6 +5510,8 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       reportRows,
       gradeRows,
     })
+    const persistedConfig = await ensureSisConfigLoaded()
+    const schoolSetup = persistedConfig?.uiSettings?.schoolSetup || null
 
     const mappedChild = mapStudentToParentChildSummary(student || { id, eaglesId })
     const child = {
@@ -5537,6 +5527,7 @@ async function buildStudentDashboardPayload({ studentRefId = "", eaglesId = "" }
       gradeRows,
       reportRows: visibleReportRows,
       assignmentTemplates,
+      schoolSetup,
     })
     const pointsSummary = pointsLedger?.summary && typeof pointsLedger.summary === "object"
       ? pointsLedger.summary

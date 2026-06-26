@@ -1286,7 +1286,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </div>
                   <div class="toolbar-field compact">
                     <div class="small">Archive</div>
-                    <button id="assignmentArchiveToggleBtn" type="button" class="portal-button portal-button-info portal-button-amber-ink-dark portal-button-compact">
+                    <button id="assignmentArchiveToggleBtn" type="button" class="portal-button portal-button-info portal-button-compact">
                       Archived
                     </button>
                   </div>

@@ -969,12 +969,12 @@
       }
       .floating-menu-btn {
         align-items: center;
-        background: var(--primary-color);
+        background: var(--tertiary-color,  #002786);
         block-size: 44px;
-        border: 1px solid var(--portal-color-588c301c36);
+        border: 1px solid var(--secondary-color, #fbffff);
         border-radius: var(--radius-pill);
         box-shadow: 0 12px 24px var(--portal-color-27bfe87810);
-        color: var(--portal-color-d14f901611);
+        color: var(--secondary-color);
         display: inline-flex;
         inline-size: 44px;
         inset-block-start: 12px;

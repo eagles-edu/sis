@@ -41,7 +41,7 @@
     }
 
     html[data-student-auth-state="unauthenticated"] body.student-portal-page main.portal-main {
-      gap: 1rem;
+      gap: 12px;
       margin-inline: auto;
       max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
       width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
@@ -55,7 +55,6 @@
     .actions,
     .actions-2,
     .active,
-    .alt,
     .attendance-overview-grid,
     .attendance-square-k,
     .attendance-square-v,
@@ -63,7 +62,6 @@
     .brand-logo,
     .brand-logo-wrap,
     .brand-logo-wrap--sm,
-    .btn-refresh,
     .calendar-empty,
     .calendar-shell,
     .card,
@@ -97,10 +95,16 @@
     .portal-modal-close,
     .portal-modal-dialog,
     .portal-modal-head,
+    .portal-button-alt,
+    .portal-button-danger,
+    .portal-button-immutable-chrome,
+    .portal-button-info,
+    .portal-button-primary,
+    .portal-button-refresh,
+    .portal-button-warning,
     .portal-shell,
     .portal-theme-toggle,
     .portal-theme-toggle__icon,
-    .primary,
     .security-badge,
     .security-badge__caption,
     .security-badge__icon,
@@ -108,7 +112,6 @@
     .side-brand,
     .side-links,
     .side-nav,
-    .student-overview-title,
     .sub,
     .topbar {}
 
@@ -214,16 +217,6 @@
       font-size: 11px;
     }
 
-    .queue-table-wrap table.news-queue-table .queue-row-btn,
-    table.news-queue-table .queue-row-btn {
-      box-sizing: border-box;
-      font-size: 11px;
-      line-height: 1.1;
-      min-height: 28px;
-      padding: 3px 8px;
-      white-space: nowrap;
-    }
-
     table.news-queue-table td:nth-child(3) .chip {
       min-inline-size: 0;
     }
@@ -287,12 +280,6 @@
       .queue-table-wrap table.news-queue-table tbody td:nth-child(1) {
         font-weight: 700;
       }
-
-      .queue-table-wrap table.news-queue-table tbody td:nth-child(5) .queue-row-btn {
-        width: 100%;
-        box-sizing: border-box;
-      }
-
       .queue-table-wrap table.news-queue-table tbody td[colspan] {
         display: block;
         text-align: center;
@@ -434,12 +421,6 @@
       }
     }
 
-    @media (max-width: 399px) {
-      .toolbar-actions {
-        grid-template-columns: 1fr;
-      }
-    }
-
     @media (max-width: 430px) {
       .env-badge {
         display: none;
@@ -482,10 +463,6 @@
       .toolbar {
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: end;
-      }
-
-      .toolbar-actions {
-        display: flex;
       }
 
       .fc .fc-daygrid-day-frame {
@@ -584,11 +561,11 @@
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="recommendations">Recommendations for Success</a>
       </nav>
       <div class="side-actions">
-        <button id="studentNavLogoutBtn" type="button" class="alt">Log Out</button>
+        <button id="studentNavLogoutBtn" type="button" class="portal-button portal-button-danger">Log Out</button>
       </div>
     </aside>
 
-    <button id="navOverlay" class="nav-overlay" type="button" aria-label="Close navigation"></button>
+    <button id="navOverlay" class="nav-overlay portal-button portal-button-immutable-chrome" type="button" aria-label="Close navigation"></button>
 
     <main class="portal-main">
       <div class="header-bar">
@@ -596,7 +573,7 @@
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer noopenner">eagles.edu.vn</a>
       </div>
       <section class="content topbar" data-surface-role="content">
-        <button id="menuBtn" class="floating-menu-btn" type="button" aria-label="Open navigation">
+        <button id="menuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome" type="button" aria-label="Open navigation">
           <span class="floating-menu-icon" aria-hidden="true"></span>
         </button>
         <div class="topbar-head">
@@ -608,15 +585,15 @@
           </div>
           <div class="header-actions">
             <span id="envBadge" class="env-badge" aria-live="polite"></span>
-            <button class="portal-theme-toggle" id="studentThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
               <span class="portal-theme-toggle__icon" aria-hidden="true">
                 <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
               </span>
             </button>
             <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
-              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Decrease text size">A-</button>
-              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Increase text size">A+</button>
-              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Reset text size">Reset</button>
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" aria-label="Decrease text size">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" aria-label="Increase text size">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" aria-label="Reset text size">Reset</button>
             </div>
           </div>
         </div>
@@ -643,8 +620,8 @@
             <p class="field-hint">Enter the current password for your account.</p>
           </div>
           <div class="login-actions">
-            <button id="loginBtn" class="primary" type="submit">Submit</button>
-            <button id="loginClearBtn" class="portal-button portal-button-purple-action" type="reset">Clear</button>
+            <button id="loginBtn" class="portal-button portal-button-primary" type="submit">Submit</button>
+            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset">Clear</button>
           </div>
         </form>
         <div class="login-links">
@@ -658,16 +635,18 @@
         <section id="studentHomeCard" class="content" data-surface-role="content">
           <div class="portal-grid">
             <div id="studentHomeGrid" class="portal-col">
-              <h3 id="studentOverviewSummary" class="panel student-overview-title" data-surface-role="panel">Loading student dashboard...</h3>
-              <div class="toolbar-actions">
-                <button id="reloadBtn" type="button" class="portal-button portal-button-blue-action">Tải lại</button>
-                <button id="logoutBtn" type="button" class="alt">Đăng xuất</button>
-              </div>
+              <h3 id="studentOverviewSummary" class="panel" data-surface-role="panel">Loading student dashboard...</h3>
 
               <section id="identityPanel" class="panel" data-surface-role="panel">
                 <div class="section-head">
                   <h3>Thông tin định danh học sinh</h3>
                   <span class="chip chip-lock">Chỉ xem</span>
+                </div>
+                <div class="portal-action-strip portal-action-strip--card">
+                  <div class="portal-action-strip__actions">
+                    <button id="reloadBtn" type="button" class="portal-action-btn portal-action-btn--brand">Tải lại</button>
+                    <button id="logoutBtn" type="button" class="portal-action-btn portal-action-btn--danger">Đăng xuất</button>
+                  </div>
                 </div>
                 <p id="studentIdentity" class="hint">Loading student metrics...</p>
                 <div class="identity-list">
@@ -707,7 +686,7 @@
                   </div>
                   <div class="homework-card-content">
                     <h4 class="homework-content-title">Overdue items</h4>
-                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-neutral-action" type="button">Open overdue list</button>
+                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-info" type="button">Open overdue list</button>
                     <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
                   </div>
                 </div>
@@ -740,8 +719,8 @@
                     </table>
                   </div>
                   <div class="actions actions-2">
-                    <button id="openNewsPageBtn" type="button" class="portal-button portal-button-blue-action">Open News Page</button>
-                    <button id="newsQueueRefreshBtn" type="button" class="btn-refresh">Refresh</button>
+                    <button id="openNewsPageBtn" type="button" class="portal-button portal-button-primary">Open News Page</button>
+                    <button id="newsQueueRefreshBtn" type="button" class="portal-button portal-button-refresh">Refresh</button>
                   </div>
                 </div>
               </section>
@@ -766,7 +745,7 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="pastDueHomeworkModalTitle">Bài tập chưa hoàn thành</h4>
-                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Dong</button>
+                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Dong</button>
                   </div>
                   <table class="homework-modal-table">
                     <thead>
@@ -785,13 +764,13 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsComplianceModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="newsComplianceModalTitle">Revision Required</h4>
-                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Close</button>
+                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="newsComplianceModalSummary" class="hint">Fix the listed fields and submit again.</p>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newsComplianceModalCloseActionBtn" type="button" class="portal-button portal-button-neutral-action">Close</button>
+                    <button id="newsComplianceModalCloseActionBtn" type="button" class="portal-button portal-button-immutable-chrome">Close</button>
                   </div>
                 </div>
               </section>
@@ -801,7 +780,7 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
-                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Close</button>
+                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="reportAccessErrorModalMessage">LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT</p>
@@ -815,10 +794,10 @@
                   <div class="portal-modal-head">
                     <h4 id="newsWeekSetModalTitle">Student News Report Viewer</h4>
                     <div class="actions">
-                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Previous report">←</button>
+                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-alt" aria-label="Previous report">←</button>
                       <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-neutral-action" aria-label="Next report">→</button>
-                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-neutral-action" type="button">Close</button>
+                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt" aria-label="Next report">→</button>
+                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Close</button>
                     </div>
                   </div>
                   <div class="portal-modal-body">
@@ -885,8 +864,8 @@
                     </div>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newsWeekSetModalSubmitBtn" type="button" class="primary">Submit</button>
-                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-neutral-action">Close</button>
+                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-primary">Submit</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-immutable-chrome">Close</button>
                   </div>
                   <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
                 </div>
@@ -936,7 +915,7 @@
           <div class="section-head">
             <h2 id="studentDetailTitle">Student Detail</h2>
             <div class="actions">
-              <button id="studentDetailBackToMainBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
+              <button id="studentDetailBackToMainBtn" type="button" class="portal-button portal-button-alt">Back to Main</button>
             </div>
           </div>
           <p id="studentDetailLead" class="detail-copy">Loading student detail...</p>
@@ -972,8 +951,8 @@
           <div class="section-head">
             <h2>Daily News Report</h2>
             <div class="news-actions">
-              <button id="backToHomeBtn" type="button" class="portal-button portal-button-neutral-action">Back to Main</button>
-              <button id="logoutBtnNews" type="button" class="portal-button portal-button-red-action">Logout</button>
+              <button id="backToHomeBtn" type="button" class="portal-button portal-button-alt">Back to Main</button>
+              <button id="logoutBtnNews" type="button" class="portal-button portal-button-danger">Logout</button>
             </div>
           </div>
           <div class="news-layout">
@@ -1087,8 +1066,8 @@
                 </div>
 
                 <div class="field c12 actions">
-                  <button id="submitBtn" class="primary" type="button">Submit Report</button>
-                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-neutral-action hidden">View validation details</button>
+                  <button id="submitBtn" class="portal-button portal-button-primary" type="button">Submit Report</button>
+                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden">View validation details</button>
                 </div>
               </div>
               <p id="formStatus" class="status">Waiting for calendar window. </p>
@@ -1911,8 +1890,8 @@
         const safeLabel = escapeHtml(normalizedLabel);
         return (
           `<span class="header-action-row" role="group" aria-label="${safeLabel} column controls" data-header-label="${safeLabel}">` +
-          `<button class="header-action-btn plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
-          `<button class="header-action-btn minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
+          `<button class="header-action-btn portal-button portal-button-immutable-chrome plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
+          `<button class="header-action-btn portal-button portal-button-immutable-chrome minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
           `</span>`
         );
       }
@@ -2095,16 +2074,17 @@
         let hasClassificationIssues = false;
         source.forEach((row) => {
           const rowDateValue = row?.dueDate || row?.dueAt || row?.submittedDate || row?.submittedAt;
-          const rowDate = rowDateValue instanceof Date ? rowDateValue : t(rowDateValue);
+          const rowDate = rowDateValue instanceof Date ? rowDateValue.toISOString() : t(rowDateValue);
+          const resolvedQuarter = resolveQuarterInfo(rowDate, schoolSetup);
           const explicitQuarter = t(row?.quarter || row?.quarterCode || row?.quarterLabel).toLowerCase();
-          const quarter = /^q[1-4]$/.test(explicitQuarter) ? {
+          const quarter = resolvedQuarter || (/^q[1-4]$/.test(explicitQuarter) ? {
             quarter: Number.parseInt(explicitQuarter.slice(1), 10) || 0,
             key: explicitQuarter,
             quarterLabel: explicitQuarter.toUpperCase(),
             displayLabel: explicitQuarter.toUpperCase(),
             startDate: "",
             endDate: "",
-          } : resolveQuarterInfo(rowDate, schoolSetup);
+          } : null);
           if (!quarter?.quarter) {
             hasClassificationIssues = true;
             return;
@@ -2393,9 +2373,9 @@
         const tableHost = document.createElement("div");
         tableHost.className = "grade-tabulator-shell";
         const quarterButtons = new Map();
-        let activeQuarterCode = t(quarterState.currentQuarter?.quarterCode) || t(quarterState.currentQuarterCode) || t(groups[0]?.quarterCode) || "";
-        if (!groups.some((group) => t(group.quarterCode) === activeQuarterCode)) {
-          activeQuarterCode = t(groups.find((group) => Array.isArray(group.rows) && group.rows.length)?.quarterCode) || t(groups[0]?.quarterCode) || "";
+        let activeQuarterCode = t(quarterState.currentQuarter?.quarterCode) || t(quarterState.currentQuarterCode) || "";
+        if (!activeQuarterCode) {
+          activeQuarterCode = t(groups[0]?.quarterCode) || "";
         }
 
         function resolveGroup(code = activeQuarterCode) {
@@ -4439,7 +4419,7 @@
           );
           const latestDate = t(item?.latestReportDate || item?.reports?.[0]?.reportDate);
           const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
-          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${weeklyMinimumNewsReports()}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
+          return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${weeklyMinimumNewsReports()}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn portal-button portal-button-info portal-button-open-week-set" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
         }).join("");
       }
 

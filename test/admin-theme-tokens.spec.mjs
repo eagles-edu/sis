@@ -126,7 +126,7 @@ test("grades-tabulator chart render uses shared portal tokens", () => {
   )
   assertIncludesAll(
     sparklineBlock,
-    ["var(--accent)", "var(--line)"],
+    ["var(--portal-status-info-border)", "var(--portal-border)"],
     "grades-tabulator.html buildDistributionSparklineSvg",
   )
   assertExcludesAll(
@@ -180,10 +180,10 @@ test("grades-tabulator reuses the shared admin chrome skeleton", () => {
     '<section id="gradeGridCard" class="grid-card portal-theme-card">',
     '<div class="app-brand-strip">',
     '<h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>',
-    '<button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle">',
-    '<button class="portal-theme-toggle" id="adminThemeToggle"',
+    '<button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome">',
+    '<button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle"',
     '<div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">',
-    '<button id="globalTextZoomResetBtn" type="button" class="alt" data-text-zoom-action="reset" aria-label="Reset global text size">',
+    '<button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning" data-text-zoom-action="reset" aria-label="Reset global text size">',
     '<footer class="hub-footer" aria-label="Site footer">',
   ]) {
     assert.ok(source.includes(token), `grades-tabulator.html should include ${token}`)
@@ -191,8 +191,8 @@ test("grades-tabulator reuses the shared admin chrome skeleton", () => {
 
   assert.match(
     source,
-    /width:\s*min\(100%, var\(--portal-center-column-max, 1040px\)\);/,
-    "grades-tabulator.html should use the shared center column width",
+    /width:\s*min\(100%, 1440px\);/,
+    "grades-tabulator.html should keep the fixed report-shell width contract",
   )
 })
 
