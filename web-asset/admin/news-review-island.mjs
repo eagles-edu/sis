@@ -10,6 +10,8 @@ export function initNewsReviewIsland({
   onNewsReviewClearFilters,
   onNewsReviewOpenWeekSet,
   onNewsReviewCloseViewer,
+  onNewsReviewEditViewer,
+  onNewsReviewSaveViewer,
   onNewsReviewShiftViewer,
   onNewsReviewApplyViewerAction,
 } = {}) {
@@ -116,6 +118,16 @@ export function initNewsReviewIsland({
     ?.getElementById("newsReviewViewerCloseBtn")
     ?.addEventListener("click", () => {
       if (typeof onNewsReviewCloseViewer === "function") onNewsReviewCloseViewer();
+    });
+  document
+    ?.getElementById("newsReviewViewerEditBtn")
+    ?.addEventListener("click", () => {
+      if (typeof onNewsReviewEditViewer === "function") onNewsReviewEditViewer();
+    });
+  document
+    ?.getElementById("newsReviewViewerSaveBtn")
+    ?.addEventListener("click", () => {
+      if (typeof onNewsReviewSaveViewer === "function") onNewsReviewSaveViewer();
     });
   document
     ?.getElementById("newsReviewViewerPrevBtn")

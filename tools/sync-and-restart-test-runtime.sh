@@ -20,6 +20,7 @@ TEST_PUBLIC_HEALTH_URL="${SIS_TEST_PUBLIC_HEALTH_URL:-}"
 TEST_HEALTH_DELAY="${SIS_TEST_HEALTH_DELAY:-5}"
 TEST_NODE_BIN="${SIS_TEST_NODE_BIN:-/home/eagles/node-v20.19.4-linux-x64/bin/node}"
 TEST_PRIMARY_ORIGIN="${SIS_TEST_PRIMARY_ORIGIN:-https://test.eagles.edu.vn}"
+TEST_BACKUP_ROOT="${SIS_TEST_BACKUP_ROOT:-/home/eagles/dockerz/backups/test-runtime}"
 LIVE_ROOT_CANONICAL="${SIS_LIVE_ROOT_CANONICAL:-/home/admin.eagles.edu.vn/sis}"
 DEV_ROOT_CANONICAL="${SIS_DEV_ROOT_CANONICAL:-/home/eagles/dockerz/sis}"
 TEST_PUBLIC_ROOT="${SIS_TEST_PUBLIC_ROOT:-/home/test.eagles.edu.vn/public_html}"
@@ -70,6 +71,53 @@ fi
 
 log() {
   printf '[sync-test] %s\n' "$*"
+}
+
+backup_test_state() {
+  local timestamp
+  timestamp="$(date +%Y%m%d-%H%M%S)"
+  local bundle_dir="${TEST_BACKUP_ROOT}/test-sync-${timestamp}"
+  local runtime_snapshot_dir="${bundle_dir}/runtime"
+  local public_snapshot_dir="${bundle_dir}/public_html"
+  local vhost_snapshot_dir="${bundle_dir}/vhost"
+
+  log "creating test backup bundle at ${bundle_dir}"
+  mkdir -p "${runtime_snapshot_dir}" "${public_snapshot_dir}" "${vhost_snapshot_dir}"
+
+  if [[ -d "${TEST_ROOT}" ]]; then
+    rsync -a --delete --exclude='node_modules' --exclude='.git' --exclude='*.BAK-*' "${TEST_ROOT}/" "${runtime_snapshot_dir}/"
+  fi
+
+  if [[ -d "${TEST_PUBLIC_ROOT}" ]]; then
+    rsync -a --delete --exclude='*.BAK-*' "${TEST_PUBLIC_ROOT}/" "${public_snapshot_dir}/"
+  fi
+
+  if [[ -e "/etc/nginx/sites-enabled/test.eagles.edu.vn.conf" ]]; then
+    cp -a "/etc/nginx/sites-enabled/test.eagles.edu.vn.conf" "${vhost_snapshot_dir}/sites-enabled-test.eagles.edu.vn.conf"
+  fi
+  if [[ -e "/etc/nginx/sites-available/test.eagles.edu.vn.conf" ]]; then
+    cp -a "/etc/nginx/sites-available/test.eagles.edu.vn.conf" "${vhost_snapshot_dir}/sites-available-test.eagles.edu.vn.conf"
+  fi
+  if [[ -e "${REPO_ROOT}/deploy/nginx/test.eagles.edu.vn.conf" ]]; then
+    cp -a "${REPO_ROOT}/deploy/nginx/test.eagles.edu.vn.conf" "${vhost_snapshot_dir}/repo-test.eagles.edu.vn.conf"
+  fi
+
+  cat > "${bundle_dir}/manifest.json" <<EOF
+{
+  "createdAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "repoRoot": "${REPO_ROOT}",
+  "testRoot": "${TEST_ROOT}",
+  "testPublicRoot": "${TEST_PUBLIC_ROOT}",
+  "testOrigin": "${TEST_PRIMARY_ORIGIN}",
+  "bundleDir": "${bundle_dir}",
+  "runtimeSnapshotDir": "${runtime_snapshot_dir}",
+  "publicSnapshotDir": "${public_snapshot_dir}",
+  "vhostSnapshotDir": "${vhost_snapshot_dir}",
+  "databaseManagedByPrisma": true
+}
+EOF
+
+  log "test backup bundle ready: ${bundle_dir}"
 }
 
 verify_portal_sync_proof() {
@@ -180,6 +228,17 @@ wipe_test_target_contents() {
   rm -rf "${runtime_file_backup_dir}"
 }
 
+verify_test_preserved_runtime_files() {
+  local rel_path=""
+  for rel_path in "${TEST_PRESERVED_RUNTIME_FILES[@]}"; do
+    if [[ -f "${TEST_ROOT}/${rel_path}" ]]; then
+      log "preserved immutable present: ${rel_path}"
+    else
+      log "preserved immutable missing after wipe restore: ${rel_path}"
+    fi
+  done
+}
+
 sync_file_map() {
   local source_root="$1"
   local target_root="$2"
@@ -269,6 +328,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
+  "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -319,6 +379,7 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
+  "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -754,6 +815,9 @@ const html = fs.readFileSync(targetIndexPath, "utf8")
 const contract = JSON.parse(process.env.ROUTE_CONTRACT_JSON || "{}")
 const requiredSnippets = [
   "https://test.eagles.edu.vn",
+  '<script src="/web-asset/shared/portal-theme-state.js"></script>',
+  '<link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">',
+  '<img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">',
   `window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(contract.adminPagePath || "/admin")}`,
   `window.__SIS_PARENT_PORTAL_PAGE_PATH=${JSON.stringify(contract.parentPortalPagePath || "/parent/portal")}`,
   `window.__SIS_STUDENT_PORTAL_PAGE_PATH=${JSON.stringify(contract.studentPortalPagePath || "/student/portal")}`,
@@ -785,6 +849,7 @@ verify_test_public_assets() {
     "${target_public_root}/web-asset/shared/portal-navigation.js"
     "${target_public_root}/web-asset/shared/maintenance.svg"
     "${target_public_root}/web-asset/shared/secure-network.svg"
+    "${target_public_root}/web-asset/shared/secure-network-white.svg"
     "${target_public_root}/web-asset/images/logo.svg"
     "${target_public_root}/web-asset/images/eggs-chicks.svg"
     "${target_public_root}/web-asset/images/starters.svg"
@@ -934,7 +999,9 @@ restart_test_runtime() {
 main() {
   log "file mirror only; git commit matching is not part of the test sync contract"
   build_admin_assets
+  backup_test_state
   wipe_test_target_contents
+  verify_test_preserved_runtime_files
   wipe_target_contents "$TEST_PUBLIC_ROOT"
   run_sync
   log "syncing test runtime web assets into ${TEST_ROOT}"

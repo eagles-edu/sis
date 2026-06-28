@@ -115,6 +115,7 @@
           viewerItems: [],
           viewerIndex: -1,
           viewerStudentKey: "",
+          viewerEditMode: false,
           filters: {
             status: "all",
             setAction: "all",
@@ -7418,6 +7419,33 @@
         statusEl.textContent = normalizeText(message) || "Viewer is ready.";
       }
 
+      function setNewsReviewViewerEditMode(shouldEdit = false) {
+        state.newsReview.viewerEditMode = Boolean(shouldEdit);
+        const activeReport = newsReviewViewerCurrentItem();
+        if (activeReport) renderNewsReviewViewer(activeReport);
+        syncNewsReviewViewerControls(activeReport);
+        setNewsReviewViewerStatus(
+          shouldEdit ? "Edit mode enabled. Save to persist changes." : "Viewer is ready."
+        );
+      }
+
+      function newsReviewViewerDraftPayload() {
+        return {
+          sourceLink: normalizeText(document.getElementById("newsReviewViewerSourceLink")?.value),
+          articleTitle: normalizeText(document.getElementById("newsReviewViewerArticleTitle")?.value),
+          byline: normalizeText(document.getElementById("newsReviewViewerByline")?.value),
+          articleDateline: normalizeText(document.getElementById("newsReviewViewerArticleDateline")?.value),
+          leadSynopsis: normalizeText(document.getElementById("newsReviewViewerLeadSynopsis")?.value),
+          actionActor: normalizeText(document.getElementById("newsReviewViewerActionActor")?.value),
+          actionAffected: normalizeText(document.getElementById("newsReviewViewerActionAffected")?.value),
+          actionWhere: normalizeText(document.getElementById("newsReviewViewerActionWhere")?.value),
+          actionWhat: normalizeText(document.getElementById("newsReviewViewerActionWhat")?.value),
+          actionWhy: normalizeText(document.getElementById("newsReviewViewerActionWhy")?.value),
+          biasAssessment: normalizeText(document.getElementById("newsReviewViewerBiasAssessment")?.value),
+          reviewNote: normalizeText(document.getElementById("newsReviewViewerNote")?.value),
+        };
+      }
+
       function syncNewsReviewViewerControls(report = null) {
         const items =
           Array.isArray(state.newsReview?.viewerItems) ?
@@ -7442,6 +7470,7 @@
         const activeReport = index >= 0 ? items[index] : null;
         const activeReportId = normalizeText(activeReport?.id);
         if (activeReportId) state.newsReview.viewerReportId = activeReportId;
+        const editing = Boolean(state.newsReview?.viewerEditMode);
 
         const indexEl = document.getElementById("newsReviewViewerIndex");
         if (indexEl)
@@ -7450,15 +7479,31 @@
 
         const prevBtn = document.getElementById("newsReviewViewerPrevBtn");
         if (prevBtn instanceof HTMLButtonElement)
-          prevBtn.disabled = !items.length || index <= 0;
+          prevBtn.disabled = editing || !items.length || index <= 0;
         const nextBtn = document.getElementById("newsReviewViewerNextBtn");
         if (nextBtn instanceof HTMLButtonElement)
-          nextBtn.disabled = !items.length || index < 0 || index >= items.length - 1;
+          nextBtn.disabled = editing || !items.length || index < 0 || index >= items.length - 1;
 
         const canReview = canManageUsers();
         const pendingAction = normalizeText(
           state.newsReview?.pendingById?.[activeReportId],
         );
+        const reportStatus =
+          normalizeLower(normalizeText(activeReport?.reviewStatus)) ||
+          STUDENT_NEWS_REVIEW_STATUS_SUBMITTED;
+        const canEditReport = canReview && Boolean(activeReportId) && reportStatus !== "approved";
+        const editBtn = document.getElementById("newsReviewViewerEditBtn");
+        if (editBtn instanceof HTMLButtonElement) {
+          editBtn.disabled = !canEditReport || Boolean(pendingAction);
+          editBtn.textContent = editing ? "Cancel" : "Edit";
+        }
+        const saveBtn = document.getElementById("newsReviewViewerSaveBtn");
+        if (saveBtn instanceof HTMLButtonElement) {
+          saveBtn.classList.toggle("hidden", !editing);
+          saveBtn.hidden = !editing;
+          saveBtn.disabled = !canEditReport || Boolean(pendingAction);
+          saveBtn.textContent = pendingAction === "save" ? "Saving..." : "Save";
+        }
         const noteField = document.getElementById("newsReviewViewerNote");
         if (noteField instanceof HTMLTextAreaElement) {
           if (document.activeElement !== noteField) {
@@ -7469,14 +7514,14 @@
 
         const approveBtn = document.getElementById("newsReviewViewerApproveBtn");
         if (approveBtn instanceof HTMLButtonElement) {
-          approveBtn.disabled = !canReview || !activeReportId || Boolean(pendingAction);
+          approveBtn.disabled = !canReview || !activeReportId || Boolean(pendingAction) || editing || !canEditReport;
           approveBtn.textContent =
             pendingAction === "approve" ? "Approving..." : "Approve";
         }
         const revisionBtn = document.getElementById("newsReviewViewerRevisionBtn");
         if (revisionBtn instanceof HTMLButtonElement) {
           revisionBtn.disabled =
-            !canReview || !activeReportId || Boolean(pendingAction);
+            !canReview || !activeReportId || Boolean(pendingAction) || editing || !canEditReport;
           revisionBtn.textContent =
             pendingAction === "revision-requested" ? "Saving..." : "Request Revision";
         }
@@ -7485,6 +7530,7 @@
       function renderNewsReviewViewer(report = null) {
         const bodyEl = document.getElementById("newsReviewViewerBody");
         if (!bodyEl) return;
+        const editing = Boolean(state.newsReview?.viewerEditMode);
         if (!report || typeof report !== "object") {
           bodyEl.innerHTML = '<p class="small">Report details are unavailable.</p>';
           syncNewsReviewViewerControls(null);
@@ -7511,6 +7557,19 @@
           { preferEnglish: true, wrapName: true, includeStudentNumber: true },
         );
 
+        const readOnlyAttr = editing ? "" : " readonly";
+        const fieldModeHint = editing ? "Editing enabled" : "Read only";
+        const renderInput = (id, label, value, type = "text", placeholder = "") => `
+          <div class="news-review-viewer-block card" data-surface-role="card">
+            <label for="${escapeHtml(id)}">${escapeHtml(label)}</label>
+            <input id="${escapeHtml(id)}" class="card" data-surface-role="card" type="${escapeHtml(type)}" value="${escapeHtml(normalizeText(value))}"${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""}${readOnlyAttr}>
+          </div>`;
+        const renderTextarea = (id, label, value, rows = 3, placeholder = "") => `
+          <div class="news-review-viewer-block card" data-surface-role="card">
+            <label for="${escapeHtml(id)}">${escapeHtml(label)}</label>
+            <textarea id="${escapeHtml(id)}" class="card" data-surface-role="card" rows="${rows}"${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""}${readOnlyAttr}>${escapeHtml(normalizeText(value))}</textarea>
+          </div>`;
+
         bodyEl.innerHTML = `
         <div class="news-review-viewer-grid">
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Report ID</strong><span>${escapeHtml(normalizeText(report?.id))}</span></div>
@@ -7519,20 +7578,25 @@
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Level</strong><span>${escapeHtml(fullLevelLabel(student?.level || report?.level || ""))}</span></div>
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Report Date</strong><span>${escapeHtml(formatDate(report?.reportDate))}</span></div>
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Reviewed</strong><span>${escapeHtml(formatDateTime(report?.reviewedAt || report?.submittedAt || ""))} ${normalizeText(report?.reviewedByUsername) ? `| ${escapeHtml(normalizeText(report?.reviewedByUsername))}` : ""}</span></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Article</strong><span>${escapeHtml(normalizeText(report?.articleTitle))}</span></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Source</strong><span><a href="${escapeHtml(normalizeText(report?.sourceLink || "#"))}" target="_blank" rel="noopener noreferrer">${escapeHtml(normalizeText(report?.sourceLink || "-"))}</a></span></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Byline</strong><span>${escapeHtml(normalizeText(report?.byline || "-"))}</span></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Dateline</strong><span>${escapeHtml(normalizeText(report?.articleDateline || "-"))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Mode</strong><span>${escapeHtml(fieldModeHint)}</span></div>
         </div>
-        <div class="news-review-viewer-block card" data-surface-role="card"><strong>Lead Synopsis</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.leadSynopsis || "-"))}</div></div>
         <div class="news-review-viewer-grid">
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Actor</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionActor || "-"))}</div></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Affected</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionAffected || "-"))}</div></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Where</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhere || "-"))}</div></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action What</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhat || "-"))}</div></div>
+          ${renderInput("newsReviewViewerSourceLink", "Source", report?.sourceLink || "", "url", "https://...")}
+          ${renderInput("newsReviewViewerArticleTitle", "Article", report?.articleTitle || "")}
+          ${renderInput("newsReviewViewerByline", "Byline", report?.byline || "")}
+          ${renderInput("newsReviewViewerArticleDateline", "Dateline", report?.articleDateline || "")}
         </div>
-        <div class="news-review-viewer-block card" data-surface-role="card"><strong>Action Why</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.actionWhy || "-"))}</div></div>
-        <div class="news-review-viewer-block card" data-surface-role="card"><strong>Bias Assessment</strong><div class="news-review-viewer-long">${escapeHtml(normalizeText(report?.biasAssessment || "-"))}</div></div>
+        ${renderTextarea("newsReviewViewerLeadSynopsis", "Lead Synopsis", report?.leadSynopsis || "", 4)}
+        <div class="news-review-viewer-grid">
+          ${renderInput("newsReviewViewerActionActor", "Action Actor", report?.actionActor || "")}
+          ${renderInput("newsReviewViewerActionAffected", "Action Affected", report?.actionAffected || "")}
+          ${renderInput("newsReviewViewerActionWhere", "Action Where", report?.actionWhere || "")}
+          ${renderTextarea("newsReviewViewerActionWhat", "Action What", report?.actionWhat || "", 3)}
+        </div>
+        <div class="news-review-viewer-grid">
+          ${renderTextarea("newsReviewViewerActionWhy", "Action Why", report?.actionWhy || "", 3)}
+          ${renderTextarea("newsReviewViewerBiasAssessment", "Bias Assessment", report?.biasAssessment || "", 3)}
+        </div>
         ${complianceBlockHtml}
       `;
         syncNewsReviewViewerControls(report);
@@ -7547,6 +7611,7 @@
         state.newsReview.viewerItems = [];
         state.newsReview.viewerIndex = -1;
         state.newsReview.viewerStudentKey = "";
+        state.newsReview.viewerEditMode = false;
         syncNewsReviewViewerControls(null);
         setNewsReviewViewerStatus("");
       }
@@ -7608,6 +7673,7 @@
         state.newsReview.viewerStudentKey = normalizeText(
           weekSet?.student?.studentRefId || weekSet?.student?.eaglesId,
         );
+        state.newsReview.viewerEditMode = false;
         const activeItem = newsReviewViewerCurrentItem() || viewerItems[0] || null;
         state.newsReview.viewerReportId = normalizeText(activeItem?.id);
         renderNewsReviewViewer(activeItem);
@@ -7651,6 +7717,7 @@
           ...options,
           reportId: id,
         });
+        state.newsReview.viewerEditMode = false;
         if (!(options && options.silentStatus))
           setNewsReviewViewerStatus(`Opened report ${id}.`);
       }
@@ -7712,7 +7779,7 @@
         const id = normalizeText(reportId);
         const normalizedAction = normalizeLower(action);
         if (!id) throw new Error("Missing news report id.");
-        if (!["approve", "revision-requested"].includes(normalizedAction)) {
+        if (!["approve", "revision-requested", "save"].includes(normalizedAction)) {
           throw new Error("Unsupported news review action.");
         }
         const hasReviewNoteOverride =
@@ -7724,6 +7791,8 @@
           : normalizeText(
               noteField instanceof HTMLTextAreaElement ? noteField.value : "",
             );
+        const editPayload =
+          normalizedAction === "save" ? newsReviewViewerDraftPayload() : {};
         state.newsReview.pendingById[id] = normalizedAction;
         renderNewsReviewRows();
         if (
@@ -7739,6 +7808,7 @@
             body: {
               action: normalizedAction,
               reviewNote,
+              ...editPayload,
             },
           });
           await loadNewsReviewQueue();
@@ -7750,7 +7820,9 @@
             });
           }
           const actionLabel =
-            normalizedAction === "approve" ? "approved" : "marked for revision";
+            normalizedAction === "approve" ? "approved"
+            : normalizedAction === "save" ? "saved"
+            : "marked for revision";
           setStatus(`News report ${id} ${actionLabel}.`);
         } finally {
           delete state.newsReview.pendingById[id];
@@ -22083,6 +22155,31 @@
           .getElementById("newsReviewViewerCloseBtn")
           ?.addEventListener("click", () => closeNewsReviewViewer());
         document
+          .getElementById("newsReviewViewerEditBtn")
+          ?.addEventListener("click", () => {
+            const activeReport = newsReviewViewerCurrentItem();
+            if (!activeReport) return;
+            if (
+              (normalizeLower(normalizeText(activeReport?.reviewStatus)) ||
+                STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) ===
+              "approved"
+            ) {
+              return;
+            }
+            setNewsReviewViewerEditMode(!state.newsReview.viewerEditMode);
+          });
+        document
+          .getElementById("newsReviewViewerSaveBtn")
+          ?.addEventListener("click", () => {
+            applyNewsReviewAction(
+              normalizeText(newsReviewViewerCurrentItem()?.id),
+              "save",
+              {
+                keepViewerOpen: true,
+              },
+            ).catch(handleError);
+          });
+        document
           .getElementById("newsReviewViewerPrevBtn")
           ?.addEventListener("click", () => shiftNewsReviewViewer(-1));
         document
@@ -22179,6 +22276,27 @@
               },
               onNewsReviewCloseViewer() {
                 closeNewsReviewViewer();
+              },
+              onNewsReviewEditViewer() {
+                const activeReport = newsReviewViewerCurrentItem();
+                if (!activeReport) return;
+                if (
+                  (normalizeLower(normalizeText(activeReport?.reviewStatus)) ||
+                    STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) ===
+                  "approved"
+                ) {
+                  return;
+                }
+                setNewsReviewViewerEditMode(!state.newsReview.viewerEditMode);
+              },
+              onNewsReviewSaveViewer() {
+                applyNewsReviewAction(
+                  normalizeText(newsReviewViewerCurrentItem()?.id),
+                  "save",
+                  {
+                    keepViewerOpen: true,
+                  },
+                ).catch(handleError);
               },
               onNewsReviewShiftViewer(direction) {
                 shiftNewsReviewViewer(direction);

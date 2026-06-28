@@ -900,14 +900,14 @@
               <section id="newsWeekSetModal" class="portal-modal hidden">
                 <div class="portal-modal-backdrop" id="newsWeekSetModalBackdrop"></div>
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsWeekSetModalTitle">
-                  <div class="portal-modal-head">
-                    <h4 id="newsWeekSetModalTitle">Student News Report Viewer</h4>
-                    <div class="actions">
-                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-alt" aria-label="Previous report">←</button>
+                  <div class="portal-modal-head queue-modal-header">
+                    <div class="actions news-week-set-modal-nav queue-modal-nav">
+                      <strong id="newsWeekSetModalTitle">Student News Report Viewer</strong>
+                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-alt" aria-label="Previous report">&lt;</button>
                       <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt" aria-label="Next report">→</button>
-                      <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Close</button>
+                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt" aria-label="Next report">&gt;</button>
                     </div>
+                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="newsWeekSetModalMeta" class="hint">Open a week set to review and resubmit reports.</p>
@@ -1174,8 +1174,8 @@
                   <textarea id="biasAssessment"></textarea>
                 </div>
 
-                <div class="field c12 actions">
-                  <button id="checkBtn" class="portal-button portal-button-alt" type="button">Check Report</button>
+                <div class="field c12 actions student-news-form-actions">
+                  <button id="checkBtn" class="portal-button portal-button-info" type="button">Check Report</button>
                   <button id="submitBtn" class="portal-button portal-button-primary" type="button">Submit Report</button>
                   <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden">View check details</button>
                 </div>

@@ -44,6 +44,24 @@ function normalizeNullableText(value) {
 
 /**
  * @param {unknown} value
+ * @returns {string}
+ */
+function normalizeHttpUrl(value) {
+  const text = normalizeText(value)
+  if (!text) return ""
+  try {
+    const parsed = new URL(text)
+    const protocol = normalizeLower(parsed.protocol)
+    if (protocol !== "http:" && protocol !== "https:") return ""
+    return parsed.toString()
+  } catch (error) {
+    void error
+    return ""
+  }
+}
+
+/**
+ * @param {unknown} value
  * @returns {number | null}
  */
 function normalizeInteger(value) {
@@ -559,6 +577,66 @@ function resolveStudentNewsReviewActionStatus(payload = {}) {
 }
 
 /**
+ * @param {Record<string, unknown>} [payload]
+ * @returns {{
+ *   sourceLink: string,
+ *   articleTitle: string,
+ *   byline: string,
+ *   articleDateline: string,
+ *   leadSynopsis: string,
+ *   actionActor: string,
+ *   actionAffected: string,
+ *   actionWhere: string,
+ *   actionWhat: string,
+ *   actionWhy: string,
+ *   biasAssessment: string,
+ * }}
+ */
+function normalizeStudentNewsReviewEditablePayload(payload = {}) {
+  const sourceLink = normalizeHttpUrl(payload?.sourceLink)
+  const articleTitle = normalizeText(payload?.articleTitle)
+  const byline = normalizeText(payload?.byline)
+  const articleDateline = normalizeText(payload?.articleDateline)
+  const leadSynopsis = normalizeText(payload?.leadSynopsis)
+  const actionActor = normalizeText(payload?.actionActor)
+  const actionAffected = normalizeText(payload?.actionAffected)
+  const actionWhere = normalizeText(payload?.actionWhere)
+  const actionWhat = normalizeText(payload?.actionWhat)
+  const actionWhy = normalizeText(payload?.actionWhy)
+  const biasAssessment = normalizeText(payload?.biasAssessment)
+  assertWithStatus(
+    Boolean(
+      sourceLink &&
+        articleTitle &&
+        byline &&
+        articleDateline &&
+        leadSynopsis &&
+        actionActor &&
+        actionAffected &&
+        actionWhere &&
+        actionWhat &&
+        actionWhy &&
+        biasAssessment,
+    ),
+    400,
+    "All report fields are required.",
+  )
+  return {
+    sourceLink,
+    articleTitle,
+    byline,
+    articleDateline,
+    leadSynopsis,
+    actionActor,
+    actionAffected,
+    actionWhere,
+    actionWhat,
+    actionWhy,
+    biasAssessment,
+  }
+}
+
+/**
  * @param {unknown} value
  * @returns {Date | null}
  */
@@ -825,8 +903,9 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   const prisma = await getSharedPrismaClient()
   const id = normalizeText(reportId)
   assertWithStatus(Boolean(id), 400, "reportId is required")
+  const action = normalizeLower(payload?.action || payload?.status)
   const reviewStatus = resolveStudentNewsReviewActionStatus(payload)
-  assertWithStatus(Boolean(reviewStatus), 400, "Unsupported news review action")
+  assertWithStatus(Boolean(action), 400, "Unsupported news review action")
 
   const now = new Date()
   const reviewNote = normalizeNullableText(
@@ -837,15 +916,6 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
     payload?.validationIssuesJson && typeof payload.validationIssuesJson === "object" && !Array.isArray(payload.validationIssuesJson)
       ? normalizeValidationIssueMap(/** @type {Record<string, unknown>} */ (payload.validationIssuesJson))
       : null
-  const updateData = {
-    reviewStatus,
-    reviewNote,
-    reviewedByUsername,
-    reviewedAt: now,
-  }
-  if (normalizedValidationIssues && Object.keys(normalizedValidationIssues).length) {
-    updateData.validationIssuesJson = normalizedValidationIssues
-  }
 
   /** @type {Record<string, unknown> | null} */
   let existingReport = null
@@ -874,6 +944,95 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
       readStudentNewsFallbackEntries().find((entry) => normalizeText(entry?.id) === id) || null
   }
   assertWithStatus(Boolean(existingReport), 404, "Student news report not found")
+
+  if (action === "save") {
+    assertWithStatus(
+      normalizeStudentNewsReviewStatus(existingReport?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED) !== STUDENT_NEWS_REVIEW_STATUS_APPROVED,
+      403,
+      "Approved news reports cannot be edited",
+    )
+    const editablePayload = normalizeStudentNewsReviewEditablePayload(payload)
+    const existingValidationIssues =
+      existingReport?.validationIssuesJson && typeof existingReport.validationIssuesJson === "object" && !Array.isArray(existingReport.validationIssuesJson)
+        ? normalizeValidationIssueMap(/** @type {Record<string, unknown>} */ (existingReport.validationIssuesJson))
+        : {}
+    const compliance = await evaluateStudentNewsCompliance(editablePayload, {
+      validationConfig: options?.validationConfig || {},
+    })
+    const updatedIssues = updateStudentNewsValidationIssues(existingValidationIssues, compliance)
+    const mergedReviewNote = mergeStudentNewsReviewNoteWithCompliance(reviewNote, updatedIssues.issues)
+    const nextReviewNote = stripAwaitingReReviewMarker(mergedReviewNote)
+    const updateData = {
+      ...editablePayload,
+      reviewNote: nextReviewNote,
+      validationIssuesJson: updatedIssues.issues,
+    }
+
+    /** @type {Record<string, unknown> | null} */
+    let updatedReport = null
+    if (!fallbackOnly && hasPrismaDelegateMethod(prisma, "studentNewsReport", "update")) {
+      try {
+        updatedReport = await prisma.studentNewsReport.update({
+          where: { id },
+          data: updateData,
+          select: buildStudentNewsReviewSelect({ includeReviewFields: true }),
+        })
+      } catch (error) {
+        if (
+          isStudentNewsReportSchemaUnavailableError(error)
+          || isStudentNewsReviewSchemaUnavailableError(error)
+        ) {
+          // Fall back to file-backed persistence when review schema delegates are unavailable.
+        } else if (normalizeText(error?.code).toUpperCase() === "P2025") {
+          assertWithStatus(false, 404, "Student news report not found")
+        } else {
+          throw error
+        }
+      }
+    }
+
+    if (!updatedReport) {
+      const studentRefId = normalizeText(existingReport?.studentRefId)
+      const reportDateKey = normalizeText(toLocalIsoDate(existingReport?.reportDate))
+      assertWithStatus(Boolean(studentRefId), 404, "Student news report not found")
+      assertWithStatus(Boolean(reportDateKey), 404, "Student news report not found")
+      const fallbackSaved = upsertStudentNewsReportInFallbackStore(studentRefId, reportDateKey, {
+        ...existingReport,
+        id,
+        ...editablePayload,
+        reviewNote: nextReviewNote,
+        validationIssuesJson: updatedIssues.issues,
+      })
+      updatedReport = {
+        ...existingReport,
+        ...fallbackSaved,
+        id,
+        studentRefId,
+        reportDate: existingReport?.reportDate || parseLocalDateOnly(reportDateKey) || new Date(reportDateKey),
+      }
+    }
+
+    const studentByRefId = await loadStudentNewsReviewStudentMap(prisma, [normalizeText(updatedReport?.studentRefId)])
+    const item = mapStudentNewsReviewItem(updatedReport, {
+      studentByRefId,
+    })
+
+    return {
+      generatedAt: new Date().toISOString(),
+      item,
+    }
+  }
+
+  assertWithStatus(Boolean(reviewStatus), 400, "Unsupported news review action")
+  const updateData = {
+    reviewStatus,
+    reviewNote,
+    reviewedByUsername,
+    reviewedAt: now,
+  }
+  if (normalizedValidationIssues && Object.keys(normalizedValidationIssues).length) {
+    updateData.validationIssuesJson = normalizedValidationIssues
+  }
 
   /** @type {Record<string, unknown> | null} */
   let updatedReport = null

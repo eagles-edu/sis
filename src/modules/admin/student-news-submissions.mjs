@@ -633,10 +633,14 @@ async function findExistingStudentNewsReport(prisma, studentRefId, reportDateDat
 async function buildStudentNewsClientItem(row, { validationConfig = {} } = {}) {
   const mapped = mapStudentNewsReportRow(row)
   const validationPayload = buildStudentNewsValidationPayload(mapped)
-  const [minimumRequirements, compliance] = await Promise.all([
-    evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig }),
-    evaluateStudentNewsCompliance(validationPayload, { validationConfig }),
-  ])
+  const minimumRequirements = await evaluateStudentNewsMinimumRequirements(validationPayload, {
+    validationConfig,
+  })
+  const storedValidationIssues = normalizeValidationIssueMap(mapped?.validationIssuesJson)
+  const useStoredValidation = validationConfig && validationConfig.__useStoredValidation === true
+  const compliance = useStoredValidation
+    ? buildStoredStudentNewsComplianceState(storedValidationIssues)
+    : await evaluateStudentNewsCompliance(validationPayload, { validationConfig })
   return {
     ...mapped,
     currentMmrPassed: minimumRequirements.passed === true,
@@ -646,6 +650,43 @@ async function buildStudentNewsClientItem(row, { validationConfig = {} } = {}) {
     warningTasks: Array.isArray(compliance.warningTasks) ? compliance.warningTasks : [],
     dateSatisfied: hasStudentNewsDateSatisfied(mapped),
     reportDateLocked: Boolean(mapped.reportDateLockedAt),
+  }
+}
+
+function buildStoredStudentNewsComplianceState(storedValidationIssues = {}) {
+  const issueMap = normalizeValidationIssueMap(storedValidationIssues)
+  const warningFields = {}
+  const warningTasks = []
+
+  Object.keys(issueMap).forEach((fieldKey) => {
+    const entry = issueMap[fieldKey]
+    if (!entry || normalizeLower(entry.status) === "fixed") return
+    warningFields[fieldKey] = {
+      message: normalizeText(entry.message),
+      score: Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
+      threshold: Number.isFinite(Number(entry.threshold)) ? Number(entry.threshold) : null,
+    }
+    warningTasks.push({
+      field: fieldKey,
+      label: normalizeText(entry.label || fieldKey),
+      steps: Array.isArray(entry.steps) ? entry.steps : [],
+      criterion: normalizeText(entry.criterion),
+      score: Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
+      threshold: Number.isFinite(Number(entry.threshold)) ? Number(entry.threshold) : null,
+    })
+  })
+
+  return {
+    passed: Object.keys(warningFields).length === 0,
+    failedFields: warningFields,
+    warningFields,
+    revisionTasks: warningTasks,
+    warningTasks,
+    details: {
+      skipped: true,
+      reason: "stored-validation-state",
+    },
+    config: {},
   }
 }
 
@@ -866,7 +907,15 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
     reports = listStudentNewsReportsFromFallbackStore(id, fallbackRange)
   }
 
-  const mappedReports = await Promise.all(reports.map((entry) => buildStudentNewsClientItem(entry)))
+  const mappedReports = await Promise.all(
+    reports.map((entry) =>
+      buildStudentNewsClientItem(entry, {
+        validationConfig: {
+          __useStoredValidation: true,
+        },
+      })
+    )
+  )
   const calendar = buildStudentNewsCalendarRows({
     now: nowDate,
     reports: mappedReports,

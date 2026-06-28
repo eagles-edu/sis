@@ -81,6 +81,7 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
+  "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -131,6 +132,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
   "web-asset/shared/maintenance.svg|web-asset/shared/maintenance.svg"
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
+  "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -450,6 +452,21 @@ verify_live_public_html_index() {
 
   if ! grep -Fq "https://admin.eagles.edu.vn" "${target_index_path}"; then
     echo "live public index missing live admin origin: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq '<script src="/web-asset/shared/portal-theme-state.js"></script>' "${target_index_path}"; then
+    echo "live public index missing shared theme state asset link: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq '<link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">' "${target_index_path}"; then
+    echo "live public index missing shared theme stylesheet link: ${target_index_path}" >&2
+    return 1
+  fi
+
+  if ! grep -Fq '<img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">' "${target_index_path}"; then
+    echo "live public index missing root-safe logo asset link: ${target_index_path}" >&2
     return 1
   fi
 
