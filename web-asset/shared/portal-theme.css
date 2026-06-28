@@ -3113,6 +3113,20 @@ body.parent-portal-page .detail-link {
   text-decoration: none;
   word-break: break-word;
 }
+body.student-portal-page .detail-item-title,
+body.parent-portal-page .detail-item-title {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  min-width: 0;
+}
+body.student-portal-page .detail-links,
+body.parent-portal-page .detail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
 body.student-portal-page .detail-link:hover,
 body.student-portal-page .detail-link:focus-visible,
 body.parent-portal-page .detail-link:hover,
@@ -4690,6 +4704,7 @@ body.parent-portal-page #newsWeekSetModal .queue-modal-header {
   padding: 14px 18px;
 }
 body.student-portal-page #newsWeekSetModal .queue-modal-nav,
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav,
 body.parent-portal-page #newsWeekSetModal .queue-modal-nav {
   align-items: center;
   display: inline-flex;
@@ -4703,6 +4718,7 @@ body.parent-portal-page #newsWeekSetModal .queue-modal-nav {
   white-space: nowrap;
 }
 body.student-portal-page #newsWeekSetModal .queue-modal-nav > strong,
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav > strong,
 body.parent-portal-page #newsWeekSetModal .queue-modal-nav > strong {
   color: #fff;
   flex: 1 1 auto;
@@ -4714,6 +4730,7 @@ body.parent-portal-page #newsWeekSetModal .queue-modal-nav > strong {
   white-space: nowrap;
 }
 body.student-portal-page #newsWeekSetModal .queue-modal-nav > .hint,
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav > .hint,
 body.parent-portal-page #newsWeekSetModal .queue-modal-nav > .hint {
   color: #fff;
   display: inline-flex;
@@ -4722,6 +4739,7 @@ body.parent-portal-page #newsWeekSetModal .queue-modal-nav > .hint {
   white-space: nowrap;
 }
 body.student-portal-page #newsWeekSetModal .queue-modal-nav button,
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button,
 body.parent-portal-page #newsWeekSetModal .queue-modal-nav button {
   background: #9ca4ae !important;
   background-image: none !important;
@@ -4740,6 +4758,8 @@ body.parent-portal-page #newsWeekSetModal .queue-modal-nav button {
 }
 body.student-portal-page #newsWeekSetModal .queue-modal-nav button:hover:not(:disabled),
 body.student-portal-page #newsWeekSetModal .queue-modal-nav button:focus-visible,
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button:hover:not(:disabled),
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button:focus-visible,
 body.parent-portal-page #newsWeekSetModal .queue-modal-nav button:hover:not(:disabled),
 body.parent-portal-page #newsWeekSetModal .queue-modal-nav button:focus-visible {
   background: #a8b0b9 !important;
@@ -4766,6 +4786,7 @@ body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
     flex-direction: row;
   }
   body.student-portal-page #newsWeekSetModal .queue-modal-nav,
+  body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav,
   body.parent-portal-page #newsWeekSetModal .queue-modal-nav {
     flex-wrap: nowrap;
     justify-content: flex-start;
@@ -4779,14 +4800,17 @@ body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
     padding: 12px 14px;
   }
   body.student-portal-page #newsWeekSetModal .queue-modal-nav,
+  body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav,
   body.parent-portal-page #newsWeekSetModal .queue-modal-nav {
     gap: 6px;
   }
   body.student-portal-page #newsWeekSetModal .queue-modal-nav > strong,
+  body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav > strong,
   body.parent-portal-page #newsWeekSetModal .queue-modal-nav > strong {
     font-size: 15px;
   }
   body.student-portal-page #newsWeekSetModal .queue-modal-nav button,
+  body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button,
   body.parent-portal-page #newsWeekSetModal .queue-modal-nav button {
     height: 48px;
     min-height: 48px;
