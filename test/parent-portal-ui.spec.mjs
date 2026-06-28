@@ -1835,6 +1835,13 @@ test("parent portal news queue chips use canonical Approved/Waiting/Revise label
           immutableFields: ["eaglesId", "studentNumber"],
         })
       }
+      if (pathname === "/api/parent/reports/report-new/acknowledge" && method === "POST") {
+        return jsonTextResponse(200, {
+          ok: true,
+          acknowledgedAt: "2026-05-10T10:00:00.000Z",
+          acknowledgedBy: "cmkramer001",
+        })
+      }
       return jsonTextResponse(404, { error: "Not found" })
     },
     "http://127.0.0.1:8787/parent/portal"
@@ -2416,7 +2423,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
     assert.match(normalizeText(document.getElementById("reportCurrentHomeworkHeader")?.textContent), /Homework Past Due/i)
     assert.match(normalizeText(document.getElementById("reportCurrentHomeworkBadgeValue")?.textContent), /theo dõi|theo doi/i)
     assert.match(normalizeText(document.getElementById("reportCurrentHomeworkSummary")?.textContent), /Homework Past Due/i)
-    assert.match(normalizeText(document.getElementById("reportPastDueHomeworkPreviewBtn")?.textContent), /Xem danh sách chưa đầy đủ/i)
+    assert.match(normalizeText(document.getElementById("reportPastDueHomeworkPreviewBtn")?.textContent), /Xem quá hạn/i)
     assert.match(normalizeText(document.getElementById("reportPastDueHomeworkSummary")?.textContent), /2 bài tập quá hạn/i)
     assert.match(normalizeText(document.getElementById("performanceReportAttendanceMetrics")?.textContent), /Hồ sơ điểm danh lớp học|Chuyên cần|Lớp đã học/i)
     assert.equal(document.getElementById("performanceReportGradesHint")?.classList.contains("hidden"), true)

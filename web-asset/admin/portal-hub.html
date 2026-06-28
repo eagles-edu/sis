@@ -20,6 +20,10 @@
   <title>Cổng Thông Tin Sinh Viên The Eagles American English Club Ltd</title>
   <style>
     body.portal-hub-page {
+      --hub-panel-bg: var(--portal-surface-card);
+      --hub-panel-bg-support: var(--portal-surface-support);
+      --hub-panel-bg-section: var(--portal-surface-panel);
+      --hub-panel-border: var(--portal-border);
       --hub-card-aspect: 1.7;
       --hub-card-gap: 12px;
       --hub-card-icon-size: clamp(42px, 3.2vw, 52px);
@@ -40,6 +44,7 @@
       --hub-space-2: calc(var(--hub-space-1) * var(--hub-phi));
       --hub-space-3: calc(var(--hub-space-2) * var(--hub-phi));
       --hub-space-4: calc(var(--hub-space-3) * var(--hub-phi));
+      background: var(--hub-theme-page-bg-body);
     }
 
     html[data-theme="dark"] body.portal-hub-page {
@@ -69,6 +74,12 @@
       display: grid;
       gap: var(--hub-space-2);
       grid-template-columns: minmax(0, 1.618fr) minmax(12rem, 1fr);
+    }
+
+    body.portal-hub-page .hero-actions {
+      align-items: center;
+      display: flex;
+      justify-content: flex-end;
     }
 
     body.portal-hub-page .hero-brand {
@@ -138,6 +149,11 @@
     body.portal-hub-page .portal-grid {
       gap: var(--hub-space-2);
       grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(16.5rem, 27vw, 22rem)), 1fr));
+    }
+
+    body.portal-hub-page .hero-brand {
+      align-items: start;
+      gap: var(--hub-space-2);
     }
 
     body.portal-hub-page .portal-card {

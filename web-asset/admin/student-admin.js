@@ -6747,24 +6747,25 @@
 
       function newsReviewChipClass(status = "") {
         const colorToken = newsReviewStatusColorToken(status);
-        if (colorToken === "green") return "chip-ok";
-        if (colorToken === "red") return "chip-bad";
-        if (colorToken === "purple") return "chip-revise";
-        if (colorToken === "blue") return "chip-open";
-        if (colorToken === "teal" || colorToken === "turquoise") return "chip-checked";
-        return "chip-warn";
+        if (colorToken === "green") return "portal-chip-green-status";
+        if (colorToken === "red") return "portal-chip-red-status";
+        if (colorToken === "purple") return "portal-chip-purple-status";
+        if (colorToken === "blue") return "portal-chip-blue-status";
+        if (colorToken === "teal" || colorToken === "turquoise") return "portal-chip-teal-status";
+        if (colorToken === "amber") return "portal-chip-amber-status";
+        return "portal-chip-neutral-status";
       }
 
       function newsReviewStatusChipHtml(status = "") {
         const label = newsReviewStatusLabel(status);
-        return `<span class="chip ${newsReviewChipClass(status)}">${escapeHtml(label)}</span>`;
+        return `<span class="portal-chip ${newsReviewChipClass(status)}">${escapeHtml(label)}</span>`;
       }
 
       function newsReviewSetActionChipHtml(setAction = "") {
         const colorToken = newsReviewSetActionColorToken(setAction);
         const chipClass = newsReviewChipClass(colorToken);
         const label = newsReviewSetActionLabel(setAction);
-        return `<span class="chip ${chipClass}">${escapeHtml(label)}</span>`;
+        return `<span class="portal-chip ${chipClass}">${escapeHtml(label)}</span>`;
       }
 
       const NEWS_REVIEW_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";

@@ -237,7 +237,7 @@ test("AssignmentTemplate Prisma model and admin route surface exist in the contr
   assert.match(routes, /ADMIN_ASSIGNMENT_TEMPLATE_PATH_RE/)
 })
 
-test("student news compliance save path returns soft-save success payload and keeps resubmission failures in waiting state", () => {
+test("student news save/check flow lives in the submissions module with separate draft-check and submit paths", () => {
   const store = fs.readFileSync(new URL("../server/student-admin-store.mjs", import.meta.url), "utf8")
   const compliance = fs.readFileSync(new URL("../src/modules/admin/student-news-compliance.mjs", import.meta.url), "utf8")
   const submissions = fs.readFileSync(new URL("../src/modules/admin/student-news-submissions.mjs", import.meta.url), "utf8")
@@ -245,7 +245,6 @@ test("student news compliance save path returns soft-save success payload and ke
 
   assert.match(store, /from "\.\.\/src\/modules\/admin\/student-news-submissions\.mjs"/)
   assert.doesNotMatch(store, /student-news-compliance\.mjs/)
-  assert.doesNotMatch(store, /throw statusErrorWithPayload\(\s*422,/)
   assert.doesNotMatch(store, /export function buildStudentNewsComplianceBlock\(/)
   assert.doesNotMatch(store, /export async function evaluateStudentNewsCompliance\(/)
   assert.doesNotMatch(store, /export function normalizeValidationIssueMap\(/)
@@ -262,6 +261,7 @@ test("student news compliance save path returns soft-save success payload and ke
   assert.match(submissions, /export function resolveStudentNewsSubmissionWindow\(/)
   assert.match(submissions, /export function buildStudentNewsCalendarRows\(/)
   assert.match(submissions, /export async function listStudentNewsCalendar\(/)
+  assert.match(submissions, /export async function saveStudentNewsDraftCheck\(/)
   assert.match(submissions, /export async function saveStudentNewsReport\(/)
   assert.match(compliance, /export function buildStudentNewsComplianceBlock\(/)
   assert.match(compliance, /export function normalizeValidationIssueMap\(/)
@@ -269,23 +269,28 @@ test("student news compliance save path returns soft-save success payload and ke
   assert.match(compliance, /export function updateStudentNewsValidationIssues\(/)
   assert.match(compliance, /FIXED PER COMPLIANCE RESOLUTION ON SAVE/)
   assert.doesNotMatch(store, /saved:\s*true/)
-  assert.doesNotMatch(store, /complianceFailed:\s*hasFailures/)
-  assert.doesNotMatch(store, /const isResubmission = Boolean\(existing\)/)
-  assert.doesNotMatch(store, /const reviewStatus = hasFailures && !isResubmission/)
-  assert.doesNotMatch(store, /STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED/)
-  assert.doesNotMatch(store, /STUDENT_NEWS_REVIEW_STATUS_SUBMITTED/)
-  assert.doesNotMatch(store, /Status remains waiting for admin review\./)
+  assert.match(store, /saveStudentNewsDraftCheck/)
+  assert.doesNotMatch(store, /persistStudentNewsReport/)
+  assert.doesNotMatch(store, /dateSatisfiedAt/)
+  assert.doesNotMatch(store, /firstSubmittedAt/)
   assert.doesNotMatch(store, /validationIssuesJson:\s*updatedIssues\.issues/)
   assert.match(submissions, /saved:\s*true/)
-  assert.match(submissions, /complianceFailed:\s*hasFailures/)
-  assert.match(submissions, /const isResubmission = Boolean\(existing\)/)
-  assert.match(submissions, /const reviewStatus = hasFailures && !isResubmission/)
+  assert.match(submissions, /complianceFailed:\s*!mmrPassed/)
+  assert.match(submissions, /mmrPassedAt/)
+  assert.match(submissions, /dateSatisfiedAt/)
+  assert.match(submissions, /reportDateLockedAt/)
+  assert.match(submissions, /firstSubmittedAt/)
+  assert.match(submissions, /requiredTasks/)
+  assert.match(submissions, /warningTasks/)
   assert.match(submissions, /STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED/)
   assert.match(submissions, /STUDENT_NEWS_REVIEW_STATUS_SUBMITTED/)
-  assert.match(submissions, /Status remains waiting for admin review\./)
+  assert.match(submissions, /Minimum requirements have not been met\. Run Check first\./)
+  assert.match(submissions, /Today's report date is satisfied and locked/)
   assert.match(submissions, /validationIssuesJson:\s*updatedIssues\.issues/)
 
   assert.match(routes, /error\.payload/)
+  assert.match(routes, /STUDENT_NEWS_REPORTS_CHECK_PATH/)
+  assert.match(routes, /saveStudentNewsDraftCheck/)
   assert.match(routes, /column `\(not available\)` does not exist in the current database/)
   assert.match(routes, /Database schema mismatch detected/)
 })
@@ -1344,6 +1349,7 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /II\.E\.i\./i)
   assert.match(html, /__SIS_STUDENT_DASHBOARD_PATH/i)
   assert.match(html, /__SIS_STUDENT_NEWS_REPORTS_PATH/i)
+  assert.match(html, /__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH/i)
   assert.match(html, /__SIS_STUDENT_NEWS_CALENDAR_PATH/i)
   assert.match(html, /http:\/\/127\.0\.0\.1:8788/i)
   assert.match(html, /function assertApiOriginConfiguredForStaticPreview\(\)/i)
@@ -2728,6 +2734,29 @@ test("student news endpoints return 503 when admin store disabled", async () => 
   assert.ok([403, 503].includes(submitRes.status))
   const submitBody = await submitRes.json()
   assert.match(submitBody.error, /(store is disabled|not linked)/i)
+
+  const checkRes = await fetchLocal(port, "/api/student/news-reports/check", {
+    method: "POST",
+    headers: {
+      Cookie: studentSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      reportDate: "2026-03-11",
+      sourceLink: "https://example.com/news",
+      articleTitle: "Sample title",
+      leadSynopsis: "Lead summary",
+      actionActor: "Actor",
+      actionAffected: "Affected group",
+      actionWhere: "Location",
+      actionWhat: "Event details",
+      actionWhy: "Cause details.",
+      biasAssessment: "No bias detected.",
+    }),
+  })
+  assert.ok([403, 503].includes(checkRes.status))
+  const checkBody = await checkRes.json()
+  assert.match(checkBody.error, /(store is disabled|not linked)/i)
 })
 
 test("points endpoints return 503 when admin store disabled", async () => {

@@ -529,7 +529,7 @@
     }
 
     .score-bar {
-      background: var(--portal-status-info-bg);
+      background: var(--portal-status-good-bg);
       border: 1px solid var(--portal-status-info-border);
       border-radius: 999px;
       box-sizing: border-box;
@@ -544,6 +544,18 @@
       display: block;
       height: 100%;
       width: 0;
+    }
+
+    .status.is-warn {
+      background: var(--portal-status-warn-bg);
+      border: 1px solid var(--portal-status-warn-border);
+      color: var(--portal-status-warn-text);
+    }
+
+    .status.is-bad {
+      background: var(--portal-status-bad-bg);
+      border: 1px solid var(--portal-status-bad-border);
+      color: var(--portal-status-bad-text);
     }
 
     .assignment-sub {

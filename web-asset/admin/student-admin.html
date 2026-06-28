@@ -37,6 +37,24 @@
       color: var(--portal-text);
     }
 
+    body.admin-portal-page.page {
+      background-color: var(--portal-page-bg);
+      background-image:
+        radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, transparent 60%),
+        radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, transparent 58%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 42%);
+      background-attachment: fixed;
+    }
+
+    html[data-theme="dark"] body.admin-portal-page.page {
+      background-color: var(--portal-dark-page-bg);
+      background-image:
+        radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, transparent 58%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 42%);
+      background-attachment: fixed;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -141,11 +159,11 @@
       <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
       <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
     </div>
-    <div class="panel" id="authBootPanel" aria-live="polite">
+    <div class="panel" id="authBootPanel" aria-live="polite" style="background-color: transparent; background-image: linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);">
       <h1>Loading Admin</h1>
       <p class="small">Checking your session...</p>
     </div>
-    <div class="panel" id="authPanel">
+    <div class="panel" id="authPanel" style="background-color: transparent; background-image: linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);">
       <h1>Student Admin Login</h1>
       <form id="loginForm" class="login-form" novalidate>
         <div class="form-row">
@@ -3244,11 +3262,11 @@ Select a homework link to inspect details.</pre>
     <div class="queue-modal-card">
       <div class="queue-modal-header">
         <div class="queue-modal-nav">
-          <button id="parentQueuePrevBtn" type="button" class="portal-button portal-button-alt">&larr;</button>
+          <button id="parentQueuePrevBtn" type="button" class="portal-button portal-button-alt" aria-label="Previous item">&lt;</button>
           <span id="parentQueueModalIndex">0 / 0</span>
-          <button id="parentQueueNextBtn" type="button" class="portal-button portal-button-alt">&rarr;</button>
+          <button id="parentQueueNextBtn" type="button" class="portal-button portal-button-alt" aria-label="Next item">&gt;</button>
         </div>
-        <button id="parentQueueCloseBtn" type="button" class="portal-button portal-button-immutable-chrome">
+        <button id="parentQueueCloseBtn" type="button" class="portal-button portal-button-warning">
           Close
         </button>
       </div>
@@ -3350,14 +3368,14 @@ Select a homework link to inspect details.</pre>
         <div class="queue-modal-nav">
           <strong>Student News Report Viewer</strong>
           <button id="newsReviewViewerPrevBtn" type="button" class="portal-button portal-button-alt" aria-label="Previous report">
-            &larr;
+            &lt;
           </button>
           <span id="newsReviewViewerIndex">0 / 0</span>
           <button id="newsReviewViewerNextBtn" type="button" class="portal-button portal-button-alt" aria-label="Next report">
-            &rarr;
+            &gt;
           </button>
         </div>
-        <button id="newsReviewViewerCloseBtn" type="button" class="portal-button portal-button-immutable-chrome">
+        <button id="newsReviewViewerCloseBtn" type="button" class="portal-button portal-button-warning">
           Close
         </button>
       </div>
@@ -3391,7 +3409,7 @@ Select a homework link to inspect details.</pre>
             Select a lane to inspect trendline detail.
           </p>
         </div>
-        <button id="gradeChartModalCloseBtn" type="button" class="portal-button portal-button-immutable-chrome">
+        <button id="gradeChartModalCloseBtn" type="button" class="portal-button portal-button-warning">
           Close
         </button>
       </div>

@@ -14,6 +14,8 @@ import {
   updateStudentNewsValidationIssues,
 } from "./student-news-compliance.mjs"
 
+const STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED = "submitted"
+
 /**
  * @param {unknown} value
  * @returns {string}
@@ -586,6 +588,7 @@ function buildStudentNewsReviewSelect({ includeReviewFields = true } = {}) {
     actionWhy: true,
     biasAssessment: true,
     submittedAt: true,
+    submissionState: true,
     student: {
       select: {
         id: true,
@@ -674,6 +677,7 @@ export async function listStudentNewsReportsForReview({
   const toDate = normalizeStudentNewsReviewDateFilter(dateTo)
 
   const where = {}
+  where.submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
   if (requestedStudentRefId) where.studentRefId = requestedStudentRefId
   if (fromDate || toDate) {
     where.reportDate = {}
@@ -700,6 +704,7 @@ export async function listStudentNewsReportsForReview({
       if (isStudentNewsReviewSchemaUnavailableError(error)) {
         reviewSchemaUnavailable = true
         const legacyWhere = { ...where }
+        delete legacyWhere.submissionState
         delete legacyWhere.reviewStatus
         try {
           reportRows = await prisma.studentNewsReport.findMany({
@@ -725,6 +730,10 @@ export async function listStudentNewsReportsForReview({
     const fromDateKey = fromDate ? toLocalIsoDate(fromDate) : ""
     const toDateKey = toDate ? toLocalIsoDate(toDate) : ""
     reportRows = readStudentNewsFallbackEntries()
+      .filter((entry) => {
+        const submissionState = normalizeLower(entry?.submissionState)
+        return !submissionState || submissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+      })
       .filter((entry) => !requestedStudentRefId || normalizeText(entry?.studentRefId) === requestedStudentRefId)
       .filter((entry) => !fromDateKey || normalizeText(entry?.reportDate) >= fromDateKey)
       .filter((entry) => !toDateKey || normalizeText(entry?.reportDate) <= toDateKey)

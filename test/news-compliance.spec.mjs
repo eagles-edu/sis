@@ -80,7 +80,7 @@ test(
 )
 
 test(
-  "evaluateStudentNewsCompliance enforces dateline timezone literal with full text and GMT offset",
+  "evaluateStudentNewsCompliance downgrades dateline timezone literal mismatch to a warning",
   { concurrency: false },
   async () => {
     const result = await withMockedFetch(ARTICLE_HTML, () =>
@@ -103,7 +103,9 @@ test(
       )
     )
 
-    assert.equal(Boolean(result.failedFields.articleDateline), true)
+    assert.equal(result.passed, true)
+    assert.equal(result.failedFields.articleDateline, undefined)
+    assert.equal(Boolean(result.warningFields.articleDateline), true)
   }
 )
 
@@ -119,7 +121,7 @@ test("student news compliance module exposes the compliance API surface", () => 
 })
 
 test(
-  "evaluateStudentNewsCompliance applies lead synopsis threshold at 0.50",
+  "evaluateStudentNewsCompliance downgrades low lead synopsis similarity to a warning",
   { concurrency: false },
   async () => {
     const result = await withMockedFetch(ARTICLE_HTML, () =>
@@ -141,8 +143,39 @@ test(
       )
     )
 
-    assert.equal(Boolean(result.failedFields.leadSynopsis), true)
-    assert.equal(result.failedFields.leadSynopsis.threshold, 0.5)
+    assert.equal(result.passed, true)
+    assert.equal(result.failedFields.leadSynopsis, undefined)
+    assert.equal(Boolean(result.warningFields.leadSynopsis), true)
+    assert.equal(result.warningFields.leadSynopsis.threshold, 0.45)
+  }
+)
+
+test(
+  "evaluateStudentNewsCompliance keeps blank byline as a revision-grade failure",
+  { concurrency: false },
+  async () => {
+    const result = await withMockedFetch(ARTICLE_HTML, () =>
+      evaluateStudentNewsCompliance(
+        basePayload({
+          byline: "",
+        }),
+        {
+          validationConfig: {
+            allowedDomains: ["bbc.com", "cnn.com"],
+            thresholds: {
+              articleTitle: 0.7,
+              byline: 0.7,
+              articleDateline: 0.7,
+              leadSynopsis: 0.5,
+            },
+          },
+        }
+      )
+    )
+
+    assert.equal(result.passed, false)
+    assert.equal(result.failedFields.byline?.message, "Byline must contain data.")
+    assert.equal(result.warningFields.byline, undefined)
   }
 )
 

@@ -374,9 +374,12 @@
       .queue-modal-nav button {
         inline-size: auto !important;
         max-inline-size: none !important;
-        min-height: 32px !important;
-        min-width: 42px !important;
-        padding: 4px 10px !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        min-height: 36px !important;
+        min-width: 48px !important;
+        padding: 4px 12px !important;
       }
       @media (prefers-reduced-motion: reduce) {
         button {
@@ -815,84 +818,8 @@
         gap: 12px;
         grid-template-columns: minmax(0, 1fr);
       }
-      .app-sidebar {
-        border-radius: 0 var(--radius-3) var(--radius-3) 0;
-        box-shadow: 0 22px 48px var(--portal-color-b0e4f2e1c7);
-        inset-block: 0;
-        inset-inline-start: 0;
-        margin: 0;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        position: fixed;
-        transform: translateX(calc(-100% - 14px));
-        transition: transform 180ms ease;
-        width: min(86vw, 320px);
-        will-change: transform;
-        z-index: 82;
-      }
-      body.menu-open .app-sidebar {
-        transform: translateX(0);
-      }
-      body.menu-open {
-        overflow: hidden;
-      }
-      .menu-backdrop {
-        background: var(--portal-color-05477e89d0);
-        inset: 0;
-        opacity: 0;
-        pointer-events: none;
-        position: fixed;
-        transition: opacity 180ms ease;
-        z-index: 81;
-      }
-      body.menu-open .menu-backdrop {
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .floating-menu-btn {
-        inset-inline-start: 12px;
-        inset-inline-end: auto;
-      }
-      .floating-menu-icon,
-      .floating-menu-icon::before,
-      .floating-menu-icon::after {
-        background: var(--portal-color-d14f901611);
-        border-radius: 2px;
-        content: "";
-        display: block;
-        height: 2px;
-        width: 18px;
-        transition:
-          transform 160ms ease,
-          opacity 160ms ease;
-      }
-      .floating-menu-icon {
-        position: relative;
-      }
-      .floating-menu-icon::before {
-        left: 0;
-        position: absolute;
-        top: -6px;
-      }
-      .floating-menu-icon::after {
-        left: 0;
-        position: absolute;
-        top: 6px;
-      }
-      body.menu-open .floating-menu-icon {
-        background: transparent;
-      }
-      body.menu-open .floating-menu-icon::before {
-        transform: translateY(6px) rotate(45deg);
-      }
-      body.menu-open .floating-menu-icon::after {
-        transform: translateY(-6px) rotate(-45deg);
-      }
       body.menu-collapsed .app-shell {
         grid-template-columns: minmax(0, 1fr);
-      }
-      body.menu-collapsed .app-sidebar {
-        transform: translateX(calc(-100% - 14px));
       }
       .app-page-header {
         padding: 10px 12px 10px 64px;
@@ -974,42 +901,6 @@
         color: var(--portal-color-5bdf769798);
         font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
         font-size: 11px;
-      }
-      .sidebar-logo-wrap {
-        align-items: center;
-        background: var(--portal-color-d14f901611);
-        border: 1px solid var(--portal-color-106784249d);
-        border-radius: var(--radius-3);
-        box-sizing: border-box;
-        display: flex;
-        justify-content: center;
-        margin: 0 0 8px;
-        min-height: 78px;
-        overflow: hidden;
-        padding: 6px;
-        width: 100%;
-      }
-      .sidebar-logo-wrap img {
-        display: block;
-        max-height: 72px;
-        max-width: 100%;
-        object-fit: contain;
-      }
-      .sidebar-logo-fallback {
-        color: var(--portal-color-f5531c30a5);
-        font-size: 15px;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-      .sidebar-actions {
-        border-top: 1px solid var(--border);
-        margin-top: 10px;
-        padding-top: 10px;
-      }
-      .sidebar-actions button {
-        box-sizing: border-box;
-        width: 100%;
       }
       .page-section {
         display: none;
@@ -1799,34 +1690,34 @@
         white-space: nowrap;
       }
       .chip-neutral {
-        background: #dfeaff;
-        border-color: #5877a3;
-        color: #12345b;
+        background: var(--portal-status-info-bg);
+        border-color: var(--portal-status-info-border);
+        color: var(--portal-status-info-text);
       }
       .chip-ok {
-        background: #d8f2e3;
-        border-color: #287a4f;
-        color: #0f452c;
+        background: var(--portal-status-good-bg);
+        border-color: var(--portal-status-good-border);
+        color: var(--portal-status-good-text);
       }
       .chip-warn {
-        background: #ffe9c7;
-        border-color: #b16d00;
-        color: #5b3500;
+        background: var(--portal-status-warn-bg);
+        border-color: var(--portal-status-warn-border);
+        color: var(--portal-status-warn-text);
       }
       .chip-open {
-        background: #d8edff;
-        border-color: #2d78b4;
-        color: #093a63;
+        background: var(--portal-status-info-bg);
+        border-color: var(--portal-status-info-border);
+        color: var(--portal-status-info-text);
       }
       .chip-revise {
-        background: #eadcff;
-        border-color: #7348b5;
-        color: #351267;
+        background: var(--portal-status-revise-bg);
+        border-color: var(--portal-status-revise-border);
+        color: var(--portal-status-revise-text);
       }
       .chip-bad {
-        background: #ffd8dd;
-        border-color: #ad2c3c;
-        color: #67101d;
+        background: var(--portal-status-bad-bg);
+        border-color: var(--portal-status-bad-border);
+        color: var(--portal-status-bad-text);
       }
       .chip-checked {
         background: #cef4ef;
@@ -3333,7 +3224,7 @@
         margin: 0;
         text-transform: uppercase;
       }
-      .news-review-viewer-block span,
+      .news-review-viewer-block span:not(.portal-chip),
       .news-review-viewer-long {
         color: var(--ink);
         font-size: 13px;
@@ -3384,9 +3275,12 @@
         line-height: 1.35;
       }
       .queue-modal-nav button {
-        min-height: 32px !important;
-        min-width: 42px !important;
-        padding: 4px 10px !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        min-height: 36px !important;
+        min-width: 48px !important;
+        padding: 4px 12px !important;
       }
       .queue-modal-body.data-surface {
         background: var(--portal-surface-support);
@@ -3399,9 +3293,6 @@
       @media (max-width: 860px) {
         .app-shell {
           grid-template-columns: 1fr;
-        }
-        .app-sidebar {
-          width: min(92vw, 320px);
         }
         .progress-report-layout {
           grid-template-columns: 1fr;
@@ -3688,7 +3579,7 @@
       html[data-theme="dark"] body.admin-portal-page :where(.wrap) {
         background: transparent;
       }
-      html[data-theme="dark"] body.admin-portal-page :where(.panel, .app-sidebar, .attendance-student-panel, .overview-group > details, .level-detail-panel) {
+      html[data-theme="dark"] body.admin-portal-page :where(.panel:not(.app-sidebar), .attendance-student-panel, .overview-group > details, .level-detail-panel) {
         background: var(--portal-surface-panel);
         border-color: var(--portal-dark-border);
         border-radius: var(--portal-dark-radius);
@@ -3939,7 +3830,7 @@
         color: var(--portal-dark-text);
       }
       html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block strong,
-      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block span,
+      html[data-theme="dark"] body.admin-portal-page .news-review-viewer-block span:not(.portal-chip),
       html[data-theme="dark"] body.admin-portal-page .news-review-viewer-long,
       html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label {
         color: var(--portal-dark-text);

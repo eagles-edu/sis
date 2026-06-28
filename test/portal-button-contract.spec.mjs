@@ -89,8 +89,9 @@ test("admin portal sources use the shared semantic button contract", () => {
   assert.match(adminHtml, /class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle"/)
   assert.match(adminHtml, /id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning"/)
   assert.match(adminHtml, /id="queueHubSaveOrderBtn" type="button" class="portal-button portal-button-primary"/)
-  assert.match(adminHtml, /id="newsReviewViewerCloseBtn" type="button" class="portal-button portal-button-immutable-chrome"/)
-  assert.match(adminHtml, /id="gradeChartModalCloseBtn" type="button" class="portal-button portal-button-immutable-chrome"/)
+  assert.match(adminHtml, /id="parentQueueCloseBtn" type="button" class="portal-button portal-button-warning"/)
+  assert.match(adminHtml, /id="newsReviewViewerCloseBtn" type="button" class="portal-button portal-button-warning"/)
+  assert.match(adminHtml, /id="gradeChartModalCloseBtn" type="button" class="portal-button portal-button-warning"/)
   assert.match(adminHtml, /class="portal-button portal-button-info pt-score-legend-btn"/)
 
   assert.match(adminJs, /className = "portal-button portal-button-primary system-health-action-btn"/)

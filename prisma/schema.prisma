@@ -440,6 +440,14 @@ model StudentNewsReport {
   actionWhat    String
   actionWhy     String
   biasAssessment String?
+  submissionState String @default("submitted")
+  draftCheckedAt DateTime?
+  mmrPassedAt DateTime?
+  dateSatisfiedAt DateTime?
+  reportDateLockedAt DateTime?
+  firstSubmittedAt DateTime?
+  lastSubmittedAt DateTime?
+  editableUntil DateTime?
   submittedAt   DateTime @default(now())
   reviewStatus  String   @default("submitted")
   reviewNote    String?
@@ -453,6 +461,7 @@ model StudentNewsReport {
   @@index([enrollmentPeriodId])
   @@index([reportDate, submittedAt])
   @@index([reviewStatus, reportDate, submittedAt])
+  @@index([submissionState, reportDate, submittedAt])
   @@index([reviewedAt])
 }
 

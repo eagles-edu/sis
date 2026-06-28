@@ -117,6 +117,13 @@
       grid-column: 1 / -1;
     }
 
+    #newsWeekSetModal .portal-modal-close {}
+
+    #newsWeekSetModal button {}
+
+    #newsWeekSetModal input,
+    #newsWeekSetModal textarea {}
+
     @media (max-width: 520px) {
       .homework-card-shell {
         gap: 8px;
@@ -133,8 +140,15 @@
     }
 
     .profile-groups {
+      background: var(--portal-surface-support);
       display: grid;
       gap: 10px;
+    }
+
+    .profile-group {
+      background: var(--portal-surface-card);
+      border-top: 1px solid var(--line);
+      color: var(--portal-text-soft);
     }
 
     .profile-group h4 {
@@ -187,6 +201,7 @@
         grid-template-columns: auto auto;
         justify-content: end;
       }
+
     }
 
     @media (min-width: 1000px) {
@@ -241,6 +256,22 @@
         opacity: 1;
         transform: translateY(0);
       }
+    }
+
+    html[data-parent-auth-state="authenticated"] body.parent-portal-page #loginCard {
+      display: none !important;
+    }
+
+    html[data-parent-auth-state="authenticated"] body.parent-portal-page #portalCard {
+      display: block !important;
+    }
+
+    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard {
+      display: block !important;
+    }
+
+    html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #portalCard {
+      display: none !important;
     }
     /* portal-critical-theme:end */
   </style>
@@ -3409,7 +3440,7 @@
       node.textContent = label;
     }
 
-    function metricCard(label, value, tone = "") {
+    function metricCard(label, value, tone = "blue") {
       const card = document.createElement("div");
       card.className = "metric portal-theme-card";
       if (tone) card.classList.add(`metric-${tone}`);
@@ -3848,7 +3879,12 @@
         const link = document.createElement("a");
         link.className = "report-archive-link";
         link.href = buildParentReportViewerUrl(row);
+        link.dataset.reportIndex = String(index);
         link.textContent = reportLabel;
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          setPerformanceReportModalOpen(true, index);
+        });
         const meta = document.createElement("span");
         meta.className = "report-archive-meta";
         meta.textContent = formatPortalDateTime(
@@ -5684,9 +5720,9 @@
             `${total} báo cáo tin tức gần đây cho ${normalizeText(child.fullName || child.eaglesId)}.` :
             "Chưa có báo cáo tin tức nào.",
           metrics: [
-            metricCard("Đã duyệt", String(setSummary.approved), setSummary.approved ? "green" : ""),
-            metricCard("Chờ duyệt", String(setSummary.waiting), setSummary.waiting ? "blue" : ""),
-            metricCard("Cần sửa", String(setSummary.revise), setSummary.revise ? "purple" : ""),
+            metricCard("Đã duyệt", String(setSummary.approved), setSummary.approved ? "green" : "blue"),
+            metricCard("Chờ duyệt", String(setSummary.waiting), setSummary.waiting ? "blue" : "green"),
+            metricCard("Cần sửa", String(setSummary.revise), setSummary.revise ? "purple" : "green"),
             metricCard("Số báo cáo", String(total)),
           ],
           calendarTitle: "Lịch báo cáo tin tức",
@@ -5886,7 +5922,7 @@
             metricCard(
               "Báo cáo",
               String(reportArchive.length),
-              reportArchive.length ? "green" : "",
+              reportArchive.length ? "green" : "blue",
             ),
             metricCard(
               "Điểm TB",
@@ -5981,7 +6017,7 @@
             metricCard(
               "Đã chấm",
               String(gradeHistory.length),
-              gradeHistory.length ? "green" : "",
+              gradeHistory.length ? "green" : "blue",
             ),
             metricCard(
               "Chờ nộp",
@@ -6338,17 +6374,17 @@
       const absenceTone =
         absencePercent > 10 ? "red" :
         absencePercent > 5 ? "purple" :
-        "";
-      const pendingTone = pendingHomework > 0 ? "amber" : "";
+        "green";
+      const pendingTone = pendingHomework > 0 ? "amber" : "green";
       const overdueTone = overdueHomework > 0 ? "red" : "green";
       const averageTone =
-        Number.isFinite(averageScore) && averageScore <= 70 ? "red" :
-        Number.isFinite(averageScore) && averageScore <= 76 ? "purple" :
+        Number.isFinite(averageScore) && averageScore < 75 ? "purple" :
+        Number.isFinite(averageScore) ? "green" :
         "";
-      const reportTone = reportCount > 0 ? "green" : "";
-      const approvedNewsTone = approvedNews > 0 ? "green" : "";
-      const submittedNewsTone = submittedNews > 0 ? "blue" : "";
-      const revisionNewsTone = revisionNews > 0 ? "purple" : "";
+      const reportTone = reportCount > 0 ? "green" : "blue";
+      const approvedNewsTone = approvedNews > 0 ? "green" : "blue";
+      const submittedNewsTone = submittedNews > 0 ? "blue" : "green";
+      const revisionNewsTone = revisionNews > 0 ? "purple" : "green";
       if (identity) {
         identity.textContent =
         `${displayName} | ${displayEaglesId || "-"} | ${gradeLabel(child.currentGrade || "Chưa có lớp")}`;
@@ -6974,14 +7010,6 @@
       ?.addEventListener("click", async () => {
         const active = state.reportArchiveRows[state.activeReportIndex];
         if (!active) return;
-        try {
-          await api(`/api/parent/reports/${encodeURIComponent(normalizeText(active.id))}/acknowledge`, {
-            method: "POST",
-          });
-        } catch (error) {
-          handlePortalError(error);
-          return;
-        }
         const acknowledgedAt = new Date().toISOString();
         const acknowledgedBy =
           normalizeText(state?.me?.parentsId) ||
@@ -6992,6 +7020,14 @@
         markReportAcknowledged(active.id);
         renderPerformanceReportsOverviewCard(selectedDashboardChild());
         renderActivePerformanceReportModal();
+        try {
+          await api(`/api/parent/reports/${encodeURIComponent(normalizeText(active.id))}/acknowledge`, {
+            method: "POST",
+          });
+        } catch (error) {
+          setStatus(error?.message || "Không thể xác nhận báo cáo.", "err");
+          return;
+        }
         const reportCount = state.reportArchiveRows.length;
         const outstandingCount = state.reportArchiveRows.filter(
           (row) => !isReportAcknowledged(row),

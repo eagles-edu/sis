@@ -18,6 +18,7 @@ import {
 import {
   isStudentAdminStoreEnabled,
   listStudentNewsCalendar,
+  saveStudentNewsDraftCheck,
   saveStudentNewsReport,
 } from "./student-admin-store.mjs"
 import {
@@ -228,6 +229,7 @@ const STUDENT_API_PREFIX = normalizePathPrefix(process.env.STUDENT_STUDENT_API_P
 const STUDENT_AUTH_PREFIX = `${STUDENT_API_PREFIX}/auth`
 const STUDENT_DASHBOARD_PATH = `${STUDENT_API_PREFIX}/dashboard`
 const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
+const STUDENT_NEWS_REPORTS_CHECK_PATH = `${STUDENT_API_PREFIX}/news-reports/check`
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
 const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
 const GENERIC_REPORT_ACCESS_PAGE_PREFIX = "/reports/access"
@@ -1349,7 +1351,7 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-student-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -1530,6 +1532,7 @@ export function getStudentAdminRuntimeStatus() {
     studentAuthPrefix: STUDENT_AUTH_PREFIX,
     studentDashboardPath: STUDENT_DASHBOARD_PATH,
     studentNewsReportsPath: STUDENT_NEWS_REPORTS_PATH,
+    studentNewsReportsCheckPath: STUDENT_NEWS_REPORTS_CHECK_PATH,
     studentNewsCalendarPath: STUDENT_NEWS_CALENDAR_PATH,
     notifyBatchQueue: getEmailBatchQueueRuntimeStatus(),
     pageDefaultSlug: ADMIN_PAGE_DEFAULT_SLUG,
@@ -7444,6 +7447,16 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const payload = await parseBody(request)
     const validationConfig = resolveStudentNewsValidationConfigFromSettings()
     const result = await saveStudentNewsReport(studentRefId, payload, {
+      validationConfig,
+    })
+    sendJson(response, 200, result)
+    return true
+  }
+
+  if (method === "POST" && pathname === STUDENT_NEWS_REPORTS_CHECK_PATH) {
+    const payload = await parseBody(request)
+    const validationConfig = resolveStudentNewsValidationConfigFromSettings()
+    const result = await saveStudentNewsDraftCheck(studentRefId, payload, {
       validationConfig,
     })
     sendJson(response, 200, result)

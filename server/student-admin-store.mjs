@@ -21,6 +21,7 @@ export {
   normalizeStudentNewsReviewStatus,
   resolveStudentNewsStatusColor,
   resolveStudentNewsSubmissionWindow,
+  saveStudentNewsDraftCheck,
   saveStudentNewsReport,
 } from "../src/modules/admin/student-news-submissions.mjs"
 

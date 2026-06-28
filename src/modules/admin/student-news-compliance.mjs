@@ -1498,12 +1498,161 @@ function datelineHasExplicitUpdatedCue(value = "") {
 }
 
 /**
+ * @param {Record<string, unknown>} [failedFields]
+ * @param {string[]} [allowedDomains]
+ * @returns {Array<Record<string, unknown>>}
+ */
+function buildTasksFromFailedFields(failedFields = {}, allowedDomains = []) {
+  return Object.keys(
+    failedFields && typeof failedFields === "object" && !Array.isArray(failedFields)
+      ? failedFields
+      : {}
+  ).map((fieldKey) =>
+    buildStudentNewsFieldRevisionTask(fieldKey, {
+      allowedDomains,
+    })
+  )
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} [payload]
+ * @param {Record<string, unknown> | null | undefined} [options]
+ * @returns {{
+ *   passed: boolean,
+ *   failedFields: Record<string, Record<string, unknown>>,
+ *   requiredTasks: Array<Record<string, unknown>>,
+ *   config: ReturnType<typeof normalizeStudentNewsValidationConfig>,
+ * }}
+ */
+export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {}) {
+  const config = normalizeStudentNewsValidationConfig(options?.validationConfig || {})
+  const normalizedSourceLink = normalizeHttpUrl(payload?.sourceLink)
+  const rawSourceLink = normalizeText(payload?.sourceLink)
+  const articleTitle = normalizeText(payload?.articleTitle)
+  const byline = normalizeText(payload?.byline)
+  const articleDateline = normalizeText(payload?.articleDateline)
+  const leadSynopsis = normalizeText(payload?.leadSynopsis)
+  const actionActor = normalizeText(payload?.actionActor)
+  const actionAffected = normalizeText(payload?.actionAffected)
+  const actionWhere = normalizeText(payload?.actionWhere)
+  const actionWhat = normalizeText(payload?.actionWhat)
+  const actionWhy = normalizeText(payload?.actionWhy)
+  const biasAssessment = normalizeText(payload?.biasAssessment)
+  const failedFields = {}
+
+  if (!rawSourceLink) {
+    failedFields.sourceLink = {
+      message: "Source must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!normalizedSourceLink) {
+    failedFields.sourceLink = {
+      message: "Source must be a valid full story URL (http/https).",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!articleTitle) {
+    failedFields.articleTitle = {
+      message: "Article title must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!byline) {
+    failedFields.byline = {
+      message: "Byline must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!articleDateline) {
+    failedFields.articleDateline = {
+      message: "Dateline must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!leadSynopsis) {
+    failedFields.leadSynopsis = {
+      message: "Lead synopsis must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!actionActor) {
+    failedFields.actionActor = {
+      message: "Action actor must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!actionAffected) {
+    failedFields.actionAffected = {
+      message: "Action affected must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!actionWhere) {
+    failedFields.actionWhere = {
+      message: "Action location must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!actionWhat) {
+    failedFields.actionWhat = {
+      message: "Action description must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!actionWhy) {
+    failedFields.actionWhy = {
+      message: "Action reason must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!isSentenceLike(actionWhy)) {
+    failedFields.actionWhy = {
+      message: "Action reason must be at least one sentence.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+  if (!biasAssessment) {
+    failedFields.biasAssessment = {
+      message: "Bias assessment must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!isSentenceLike(biasAssessment)) {
+    failedFields.biasAssessment = {
+      message: "Bias assessment must be at least one sentence.",
+      score: 0,
+      threshold: 1,
+    }
+  }
+
+  return {
+    passed: Object.keys(failedFields).length === 0,
+    failedFields,
+    requiredTasks: buildTasksFromFailedFields(failedFields, config.allowedDomains),
+    config,
+  }
+}
+
+/**
  * @param {Record<string, unknown> | null | undefined} [payload]
  * @param {Record<string, unknown> | null | undefined} [options]
  * @returns {Promise<{
  *   passed: boolean,
  *   failedFields: Record<string, Record<string, unknown>>,
+ *   warningFields: Record<string, Record<string, unknown>>,
  *   revisionTasks: Array<Record<string, unknown>>,
+ *   warningTasks: Array<Record<string, unknown>>,
  *   details: Record<string, unknown>,
  *   config: ReturnType<typeof normalizeStudentNewsValidationConfig>,
  * }>}
@@ -1514,7 +1663,9 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     return {
       passed: true,
       failedFields: {},
+      warningFields: {},
       revisionTasks: [],
+      warningTasks: [],
       details: {
         skipped: true,
         reason: "validation-disabled",
@@ -1535,11 +1686,24 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   const actionWhy = normalizeText(payload?.actionWhy)
   const biasAssessment = normalizeText(payload?.biasAssessment)
   const failedFields = {}
+  const warningFields = {}
   const validationDetails = {}
+  const preferredThresholds = {
+    articleTitle: config.thresholds.articleTitle,
+    byline: config.thresholds.byline,
+    articleDateline: Math.min(config.thresholds.articleDateline, 0.6),
+    leadSynopsis: Math.min(config.thresholds.leadSynopsis, 0.45),
+  }
 
   const sourceHostname = hostnameFromUrl(normalizedSourceLink || rawSourceLink)
   const allowedDomains = Array.isArray(config.allowedDomains) ? config.allowedDomains : []
-  if (!sourceHostname) {
+  if (!rawSourceLink) {
+    failedFields.sourceLink = {
+      message: "Source must contain data.",
+      threshold: 1,
+      score: 0,
+    }
+  } else if (!sourceHostname) {
     failedFields.sourceLink = {
       message: "Source must be a valid full story URL (http/https).",
       threshold: 1,
@@ -1554,7 +1718,7 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     }
     if (!sourceAllowed) {
       const allowedSourceText = allowedDomains.join(", ")
-      failedFields.sourceLink = {
+      warningFields.sourceLink = {
         message: `Source domain is not allowed. Approved sources: ${allowedSourceText || STUDENT_NEWS_DEFAULT_ALLOWED_SOURCE_DOMAINS.join(", ")}.`,
         threshold: 1,
         score: 0,
@@ -1564,8 +1728,8 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
 
   const metadata = await fetchStudentNewsArticleMetadata(normalizedSourceLink || rawSourceLink)
   validationDetails.metadata = metadata
-  if (!metadata.ok) {
-    failedFields.sourceLink = failedFields.sourceLink || {
+  if (!metadata.ok && !failedFields.sourceLink) {
+    warningFields.sourceLink = warningFields.sourceLink || {
       message: normalizeText(metadata.error) || "Unable to fetch source URL.",
       threshold: 1,
       score: 0,
@@ -1575,14 +1739,20 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   const titleScore = studentNewsTextSimilarityScore(articleTitle, metadata?.title)
   validationDetails.articleTitle = {
     score: titleScore,
-    threshold: config.thresholds.articleTitle,
+    threshold: preferredThresholds.articleTitle,
     fetchedTitle: normalizeText(metadata?.title),
   }
-  if (!articleTitle || titleScore < config.thresholds.articleTitle) {
+  if (!articleTitle) {
     failedFields.articleTitle = {
+      message: "Article title must contain data.",
+      score: titleScore,
+      threshold: 1,
+    }
+  } else if (titleScore < preferredThresholds.articleTitle) {
+    warningFields.articleTitle = {
       message: "Article title does not closely match source title.",
       score: titleScore,
-      threshold: config.thresholds.articleTitle,
+      threshold: preferredThresholds.articleTitle,
     }
   }
 
@@ -1592,16 +1762,22 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   const bylineFinalScore = Math.max(bylineScore, bylineOrgScore)
   validationDetails.byline = {
     score: bylineFinalScore,
-    threshold: config.thresholds.byline,
+    threshold: preferredThresholds.byline,
     fetchedByline: normalizeText(metadata?.byline),
     organizationFallback: orgFallback,
     fallbackScore: bylineOrgScore,
   }
-  if (!byline || bylineFinalScore < config.thresholds.byline) {
+  if (!byline) {
     failedFields.byline = {
+      message: "Byline must contain data.",
+      score: bylineFinalScore,
+      threshold: 1,
+    }
+  } else if (bylineFinalScore < preferredThresholds.byline) {
+    warningFields.byline = {
       message: "Byline must match fetched author or source organization.",
       score: bylineFinalScore,
-      threshold: config.thresholds.byline,
+      threshold: preferredThresholds.byline,
     }
   }
 
@@ -1648,7 +1824,7 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   const descriptorMismatch = hasLiteralTimezone && !hasFullTimezoneDescriptor
   validationDetails.articleDateline = {
     score: datelineScore,
-    threshold: config.thresholds.articleDateline,
+    threshold: preferredThresholds.articleDateline,
     fetchedDateline: datelineTarget,
     fetchedUpdatedDateline,
     requiresUpdatedToken,
@@ -1673,87 +1849,133 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     strictTimezoneOffsetRequired,
     descriptorMismatch,
   }
-  if (
-    !articleDateline
-    || !datelinePassesThreshold
+  const datelineWarns =
+    !datelinePassesThreshold
     || (!relaxedDatelineEquivalent && requiresUpdatedToken && !hasUpdatedToken)
     || strictTimezoneOffsetRequired
     || descriptorMismatch
     || (!relaxedDatelineEquivalent && missingRequiredOffset && !hasLiteralTimezone)
-  ) {
+  if (!articleDateline) {
     failedFields.articleDateline = {
+      message: "Dateline must contain data.",
+      score: datelineScore,
+      threshold: 1,
+    }
+  } else if (datelineWarns) {
+    warningFields.articleDateline = {
       message: "Dateline must reflect visible publish/updated time and timezone requirements.",
       score: datelineScore,
-      threshold: config.thresholds.articleDateline,
+      threshold: preferredThresholds.articleDateline,
     }
   }
 
   const leadScore = studentNewsTextSimilarityScore(leadSynopsis, metadata?.firstParagraph)
   validationDetails.leadSynopsis = {
     score: leadScore,
-    threshold: config.thresholds.leadSynopsis,
+    threshold: preferredThresholds.leadSynopsis,
     fetchedLead: normalizeText(metadata?.firstParagraph),
   }
-  if (!leadSynopsis || leadScore < config.thresholds.leadSynopsis) {
+  if (!leadSynopsis) {
     failedFields.leadSynopsis = {
+      message: "Lead synopsis must contain data.",
+      score: leadScore,
+      threshold: 1,
+    }
+  } else if (leadScore < preferredThresholds.leadSynopsis) {
+    warningFields.leadSynopsis = {
       message: "Lead synopsis must align with the first paragraph of the source article.",
       score: leadScore,
-      threshold: config.thresholds.leadSynopsis,
+      threshold: preferredThresholds.leadSynopsis,
     }
   }
 
-  if (!hasNounLikePhrase(actionActor)) {
+  if (!actionActor) {
     failedFields.actionActor = {
-      message: "Action actor must include a noun or noun phrase.",
+      message: "Action actor must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!hasNounLikePhrase(actionActor)) {
+    warningFields.actionActor = {
+      message: "Action actor should include a noun or noun phrase.",
       score: 0,
       threshold: 1,
     }
   }
-  if (!hasNounLikePhrase(actionAffected)) {
+  if (!actionAffected) {
     failedFields.actionAffected = {
-      message: "Action affected must include a noun or noun phrase.",
+      message: "Action affected must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!hasNounLikePhrase(actionAffected)) {
+    warningFields.actionAffected = {
+      message: "Action affected should include a noun or noun phrase.",
       score: 0,
       threshold: 1,
     }
   }
-  if (!hasNounLikePhrase(actionWhere)) {
+  if (!actionWhere) {
     failedFields.actionWhere = {
-      message: "Action location must include a place (city/country/location phrase).",
+      message: "Action location must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!hasNounLikePhrase(actionWhere)) {
+    warningFields.actionWhere = {
+      message: "Action location should include a place (city/country/location phrase).",
       score: 0,
       threshold: 1,
     }
   }
-  if (!isSentenceLike(actionWhat)) {
+  if (!actionWhat) {
     failedFields.actionWhat = {
-      message: "Action description must be at least one sentence.",
+      message: "Action description must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!isSentenceLike(actionWhat)) {
+    warningFields.actionWhat = {
+      message: "Action description should be at least one phrase or sentence.",
       score: 0,
       threshold: 1,
     }
   }
-  if (!isSentenceLike(actionWhy)) {
+  if (!actionWhy) {
     failedFields.actionWhy = {
-      message: "Action reason must be at least one sentence.",
+      message: "Action reason must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!isSentenceLike(actionWhy)) {
+    warningFields.actionWhy = {
+      message: "Action reason should be at least one sentence.",
       score: 0,
       threshold: 1,
     }
   }
-  if (!isSentenceLike(biasAssessment)) {
+  if (!biasAssessment) {
     failedFields.biasAssessment = {
-      message: "Bias assessment must be at least one sentence.",
+      message: "Bias assessment must contain data.",
+      score: 0,
+      threshold: 1,
+    }
+  } else if (!isSentenceLike(biasAssessment)) {
+    warningFields.biasAssessment = {
+      message: "Bias assessment should be at least one sentence.",
       score: 0,
       threshold: 1,
     }
   }
 
-  const revisionTasks = Object.keys(failedFields).map((fieldKey) =>
-    buildStudentNewsFieldRevisionTask(fieldKey, {
-      allowedDomains,
-    })
-  )
+  const revisionTasks = buildTasksFromFailedFields(failedFields, allowedDomains)
+  const warningTasks = buildTasksFromFailedFields(warningFields, allowedDomains)
   return {
     passed: Object.keys(failedFields).length === 0,
     failedFields,
+    warningFields,
     revisionTasks,
+    warningTasks,
     details: validationDetails,
     config,
   }

@@ -8,6 +8,7 @@ import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import {
   addAwaitingReReviewMarker,
   evaluateStudentNewsCompliance,
+  evaluateStudentNewsMinimumRequirements,
   mergeStudentNewsReviewNoteWithCompliance,
   normalizeValidationIssueMap,
   resolveStudentNewsAwaitingReReview,
@@ -219,6 +220,22 @@ function assertWithStatus(condition, status, message) {
 }
 
 /**
+ * @param {number} status
+ * @param {string} message
+ * @param {Record<string, unknown>} [payload]
+ * @returns {never}
+ */
+function throwWithStatusPayload(status, message, payload = {}) {
+  /** @type {Error & { statusCode?: number, payload?: Record<string, unknown> }} */
+  const error = new Error(message)
+  error.statusCode = status
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    error.payload = payload
+  }
+  throw error
+}
+
+/**
  * @param {unknown} prisma
  * @param {string} delegateName
  * @param {string} methodName
@@ -267,6 +284,18 @@ async function getPrismaClient() {
 const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"
 const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"
 const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"
+const STUDENT_NEWS_SUBMISSION_STATE_DRAFT = "draft"
+const STUDENT_NEWS_SUBMISSION_STATE_READY = "ready"
+const STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED = "submitted"
+
+function normalizeStudentNewsSubmissionState(value, fallback = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED) {
+  const token = normalizeLower(value)
+  if (!token) return fallback
+  if (token === STUDENT_NEWS_SUBMISSION_STATE_DRAFT) return STUDENT_NEWS_SUBMISSION_STATE_DRAFT
+  if (token === STUDENT_NEWS_SUBMISSION_STATE_READY) return STUDENT_NEWS_SUBMISSION_STATE_READY
+  if (token === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED) return STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+  return fallback
+}
 /** @type {Record<string, string>} */
 const STUDENT_NEWS_REVIEW_STATUS_COLOR = {
   [STUDENT_NEWS_REVIEW_STATUS_APPROVED]: "green",
@@ -366,6 +395,261 @@ export function resolveStudentNewsSubmissionWindow(now = new Date()) {
 }
 
 /**
+ * @param {Record<string, unknown>} [payload]
+ * @returns {{
+ *   sourceLink: string,
+ *   articleTitle: string,
+ *   byline: string,
+ *   articleDateline: string,
+ *   leadSynopsis: string,
+ *   actionActor: string,
+ *   actionAffected: string,
+ *   actionWhere: string,
+ *   actionWhat: string,
+ *   actionWhy: string,
+ *   biasAssessment: string,
+ *   reportDateText: string,
+ * }}
+ */
+function normalizeStudentNewsPayload(payload = {}) {
+  const sourceLinkRaw = clampText(payload?.sourceLink, STUDENT_NEWS_FIELD_MAX_LENGTHS.sourceLink).value
+  return {
+    sourceLink: normalizeHttpUrl(sourceLinkRaw) || sourceLinkRaw,
+    articleTitle: clampText(payload?.articleTitle, STUDENT_NEWS_FIELD_MAX_LENGTHS.articleTitle).value,
+    byline: clampText(payload?.byline, STUDENT_NEWS_FIELD_MAX_LENGTHS.byline).value,
+    articleDateline: clampText(payload?.articleDateline, STUDENT_NEWS_FIELD_MAX_LENGTHS.articleDateline).value,
+    leadSynopsis: clampText(payload?.leadSynopsis, STUDENT_NEWS_FIELD_MAX_LENGTHS.leadSynopsis).value,
+    actionActor: clampText(payload?.actionActor, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionActor).value,
+    actionAffected: clampText(payload?.actionAffected, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionAffected).value,
+    actionWhere: clampText(payload?.actionWhere, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhere).value,
+    actionWhat: clampText(payload?.actionWhat, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhat).value,
+    actionWhy: clampText(payload?.actionWhy, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhy).value,
+    biasAssessment: clampText(payload?.biasAssessment, STUDENT_NEWS_FIELD_MAX_LENGTHS.biasAssessment).value,
+    reportDateText: normalizeText(payload?.reportDate),
+  }
+}
+
+/**
+ * @param {Record<string, unknown>} [report]
+ * @returns {{
+ *   sourceLink: string,
+ *   articleTitle: string,
+ *   byline: string,
+ *   articleDateline: string,
+ *   leadSynopsis: string,
+ *   actionActor: string,
+ *   actionAffected: string,
+ *   actionWhere: string,
+ *   actionWhat: string,
+ *   actionWhy: string,
+ *   biasAssessment: string,
+ * }}
+ */
+function buildStudentNewsValidationPayload(report = {}) {
+  return {
+    sourceLink: normalizeText(report?.sourceLink),
+    articleTitle: normalizeText(report?.articleTitle),
+    byline: normalizeText(report?.byline),
+    articleDateline: normalizeText(report?.articleDateline),
+    leadSynopsis: normalizeText(report?.leadSynopsis),
+    actionActor: normalizeText(report?.actionActor),
+    actionAffected: normalizeText(report?.actionAffected),
+    actionWhere: normalizeText(report?.actionWhere),
+    actionWhat: normalizeText(report?.actionWhat),
+    actionWhy: normalizeText(report?.actionWhy),
+    biasAssessment: normalizeText(report?.biasAssessment),
+  }
+}
+
+/**
+ * @param {unknown} reportDate
+ * @returns {Date | null}
+ */
+function resolveStudentNewsEditableUntil(reportDate) {
+  const parsed = reportDate instanceof Date ? reportDate : parseLocalDateOnly(reportDate)
+  if (!(parsed instanceof Date) || Number.isNaN(parsed.valueOf())) return null
+  const currentWeekStart = startOfWeekSunday(parsed)
+  return new Date(currentWeekStart.getTime() + (ONE_DAY_MS * 7))
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} report
+ * @returns {boolean}
+ */
+function hasStudentNewsDateSatisfied(report) {
+  return Boolean(
+    normalizeText(report?.dateSatisfiedAt)
+    || normalizeText(report?.mmrPassedAt)
+    || normalizeStudentNewsSubmissionState(report?.submissionState, "") === STUDENT_NEWS_SUBMISSION_STATE_READY
+    || normalizeStudentNewsSubmissionState(report?.submissionState, "") === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+  )
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} existing
+ * @param {Date} nowDate
+ * @param {string} reportDateText
+ * @param {ReturnType<typeof resolveStudentNewsSubmissionWindow>} window
+ * @returns {void}
+ */
+function assertStudentNewsEditability(existing, nowDate, reportDateText, window) {
+  if (!existing) {
+    assertWithStatus(reportDateText === window.reportDate, 403, "News report for this date is locked")
+    return
+  }
+  const existingStatus = normalizeStudentNewsReviewStatus(
+    existing.reviewStatus,
+    STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  )
+  const isApproved = existingStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED
+  assertWithStatus(!isApproved, 403, "Approved news reports cannot be edited")
+
+  const satisfied = hasStudentNewsDateSatisfied(existing)
+  if (!satisfied) {
+    assertWithStatus(reportDateText === window.reportDate, 403, "News report for this date is locked")
+    return
+  }
+
+  const editableUntil =
+    parseDateOrNull(existing.editableUntil)
+    || resolveStudentNewsEditableUntil(existing.reportDate)
+  assertWithStatus(
+    editableUntil instanceof Date && !Number.isNaN(editableUntil.valueOf()) && nowDate < editableUntil,
+    403,
+    "News report for this date is locked"
+  )
+}
+
+/**
+ * @param {import("@prisma/client").PrismaClient} prisma
+ * @param {string} studentRefId
+ * @param {Date} reportDateDate
+ * @param {string} reportDateText
+ * @returns {Promise<{ existing: Record<string, unknown> | null, fallbackOnly: boolean }>}
+ */
+async function findExistingStudentNewsReport(prisma, studentRefId, reportDateDate, reportDateText) {
+  const reportDateRangeStart = new Date(reportDateDate.getTime())
+  const reportDateRangeEnd = new Date(reportDateRangeStart.getTime() + ONE_DAY_MS)
+  const select = {
+    id: true,
+    reportDate: true,
+    enrollmentPeriodId: true,
+    reviewStatus: true,
+    reviewNote: true,
+    validationIssuesJson: true,
+    draftCheckedAt: true,
+    mmrPassedAt: true,
+    dateSatisfiedAt: true,
+    reportDateLockedAt: true,
+    firstSubmittedAt: true,
+    lastSubmittedAt: true,
+    editableUntil: true,
+    submittedAt: true,
+    submissionState: true,
+    reviewedAt: true,
+    reviewedByUsername: true,
+  }
+
+  /** @type {Record<string, unknown> | null} */
+  let existing = null
+  let fallbackOnly = false
+  if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")) {
+    try {
+      existing = await prisma.studentNewsReport.findUnique({
+        where: {
+          studentRefId_reportDate: {
+            studentRefId,
+            reportDate: reportDateDate,
+          },
+        },
+        select,
+      })
+    } catch (error) {
+      if (
+        isStudentNewsReportSchemaUnavailableError(error)
+        || isStudentNewsReviewSchemaUnavailableError(error)
+      ) {
+        fallbackOnly = true
+      } else {
+        throw error
+      }
+    }
+  } else {
+    fallbackOnly = true
+  }
+
+  if (!existing && hasPrismaDelegateMethod(prisma, "studentNewsReport", "findFirst")) {
+    try {
+      existing = await prisma.studentNewsReport.findFirst({
+        where: {
+          studentRefId,
+          reportDate: {
+            gte: reportDateRangeStart,
+            lt: reportDateRangeEnd,
+          },
+        },
+        orderBy: {
+          submittedAt: "desc",
+        },
+        select,
+      })
+      if (existing) fallbackOnly = false
+    } catch (error) {
+      if (
+        isStudentNewsReportSchemaUnavailableError(error)
+        || isStudentNewsReviewSchemaUnavailableError(error)
+      ) {
+        fallbackOnly = true
+      } else {
+        throw error
+      }
+    }
+  }
+
+  if (fallbackOnly && !existing) {
+    const fallbackExisting = listStudentNewsReportsFromFallbackStore(studentRefId, {
+      startDate: reportDateText,
+      endDate: reportDateText,
+    })
+    existing = Array.isArray(fallbackExisting) ? fallbackExisting[0] || null : null
+  }
+
+  return { existing, fallbackOnly }
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {{ validationConfig?: Record<string, unknown> }} [options]
+ * @returns {Promise<ReturnType<typeof mapStudentNewsReportRow> & {
+ *   currentMmrPassed: boolean,
+ *   mmrFailedFields: Record<string, unknown>,
+ *   requiredTasks: unknown[],
+ *   warningFields: Record<string, unknown>,
+ *   warningTasks: unknown[],
+ *   dateSatisfied: boolean,
+ *   reportDateLocked: boolean,
+ * }>}
+ */
+async function buildStudentNewsClientItem(row, { validationConfig = {} } = {}) {
+  const mapped = mapStudentNewsReportRow(row)
+  const validationPayload = buildStudentNewsValidationPayload(mapped)
+  const [minimumRequirements, compliance] = await Promise.all([
+    evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig }),
+    evaluateStudentNewsCompliance(validationPayload, { validationConfig }),
+  ])
+  return {
+    ...mapped,
+    currentMmrPassed: minimumRequirements.passed === true,
+    mmrFailedFields: minimumRequirements.failedFields || {},
+    requiredTasks: Array.isArray(minimumRequirements.requiredTasks) ? minimumRequirements.requiredTasks : [],
+    warningFields: compliance.warningFields || {},
+    warningTasks: Array.isArray(compliance.warningTasks) ? compliance.warningTasks : [],
+    dateSatisfied: hasStudentNewsDateSatisfied(mapped),
+    reportDateLocked: Boolean(mapped.reportDateLockedAt),
+  }
+}
+
+/**
  * @param {Record<string, unknown> | null | undefined} [row]
  * @returns {{
  *   id: string,
@@ -382,6 +666,14 @@ export function resolveStudentNewsSubmissionWindow(now = new Date()) {
  *   actionWhat: string,
  *   actionWhy: string,
  *   biasAssessment: string,
+ *   submissionState: string,
+ *   draftCheckedAt: string,
+ *   mmrPassedAt: string,
+ *   dateSatisfiedAt: string,
+ *   reportDateLockedAt: string,
+ *   firstSubmittedAt: string,
+ *   lastSubmittedAt: string,
+ *   editableUntil: string,
  *   submittedAt: string,
  *   reviewStatus: string,
  *   awaitingReReview: boolean,
@@ -400,6 +692,7 @@ export function mapStudentNewsReportRow(row = {}) {
   const leadSynopsis = normalizeText(row?.leadSynopsis || row?.summary)
   const biasAssessment = normalizeText(row?.biasAssessment || row?.reflection)
   const reviewStatus = normalizeStudentNewsReviewStatus(row?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+  const submissionState = normalizeStudentNewsSubmissionState(row?.submissionState, STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED)
   const awaitingReReview = resolveStudentNewsAwaitingReReview(row)
   const validationIssues = normalizeValidationIssueMap(
     /** @type {Record<string, unknown> | null | undefined} */ (row?.validationIssuesJson)
@@ -426,6 +719,14 @@ export function mapStudentNewsReportRow(row = {}) {
     actionWhat: normalizeText(row?.actionWhat),
     actionWhy: normalizeText(row?.actionWhy),
     biasAssessment,
+    submissionState,
+    draftCheckedAt: parseDateOrNull(row?.draftCheckedAt)?.toISOString?.() || "",
+    mmrPassedAt: parseDateOrNull(row?.mmrPassedAt)?.toISOString?.() || "",
+    dateSatisfiedAt: parseDateOrNull(row?.dateSatisfiedAt)?.toISOString?.() || "",
+    reportDateLockedAt: parseDateOrNull(row?.reportDateLockedAt)?.toISOString?.() || "",
+    firstSubmittedAt: parseDateOrNull(row?.firstSubmittedAt)?.toISOString?.() || "",
+    lastSubmittedAt: parseDateOrNull(row?.lastSubmittedAt)?.toISOString?.() || "",
+    editableUntil: parseDateOrNull(row?.editableUntil)?.toISOString?.() || "",
     submittedAt: parseDateOrNull(row?.submittedAt)?.toISOString?.() || "",
     reviewStatus,
     awaitingReReview,
@@ -458,6 +759,7 @@ export function mapStudentNewsReportRow(row = {}) {
  */
 export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], days = STUDENT_NEWS_DEFAULT_DAYS } = {}) {
   const targetDays = normalizeStudentNewsDays(days)
+  const nowDate = parseDateOrNull(now) || new Date()
   const window = resolveStudentNewsSubmissionWindow(now)
   const byDate = new Map(
     (Array.isArray(reports) ? reports : [])
@@ -468,26 +770,46 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
       .map((entry) => [entry.reportDate, entry])
   )
   const rows = []
-  const todayStart = startOfDay(parseDateOrNull(now) || new Date())
+  const todayStart = startOfDay(nowDate)
   for (let offset = 0; offset < targetDays; offset += 1) {
     const day = addDays(todayStart, -offset)
     const date = toLocalIsoDate(day)
     const saved = byDate.get(date) || null
     const isOpenDate = Boolean(window?.isOpen) && date === window.reportDate
+    const editableUntil = parseDateOrNull(saved?.editableUntil)
+    const canEditSaved = Boolean(editableUntil instanceof Date && !Number.isNaN(editableUntil.valueOf()) && nowDate < editableUntil)
+    const submissionState = normalizeStudentNewsSubmissionState(saved?.submissionState, "")
     const status = saved
-      ? "completed"
+      ? submissionState === STUDENT_NEWS_SUBMISSION_STATE_DRAFT
+        ? "draft"
+        : submissionState === STUDENT_NEWS_SUBMISSION_STATE_READY
+          ? "ready"
+          : "completed"
       : isOpenDate
         ? "open"
         : "missed"
-    const statusColor = saved ? resolveStudentNewsStatusColor(saved?.reviewStatus) : status === "completed" ? "green" : status === "open" ? "amber" : "red"
+    const statusColor = saved
+      ? submissionState === STUDENT_NEWS_SUBMISSION_STATE_DRAFT
+        ? "blue"
+        : submissionState === STUDENT_NEWS_SUBMISSION_STATE_READY
+          ? "turquoise"
+          : resolveStudentNewsStatusColor(saved?.reviewStatus)
+      : status === "open"
+        ? "amber"
+        : "red"
     rows.push({
       date,
       status,
       color: statusColor,
       statusColor,
       reviewStatus: saved?.reviewStatus || "",
+      submissionState: saved?.submissionState || "",
       awaitingReReview: saved?.awaitingReReview === true,
-      canSubmit: status === "open",
+      canSubmit: saved
+        ? status === "draft"
+          ? isOpenDate
+          : canEditSaved
+        : status === "open",
       submittedAt: normalizeText(saved?.submittedAt),
     })
   }
@@ -503,7 +825,7 @@ export function buildStudentNewsCalendarRows({ now = new Date(), reports = [], d
  *   days: number,
  *   window: ReturnType<typeof resolveStudentNewsSubmissionWindow>,
  *   openReport: ReturnType<typeof mapStudentNewsReportRow> | null,
- *   statusSummary: { submitted: number, approved: number, revisionRequested: number },
+ *   statusSummary: { draft: number, ready: number, submitted: number, approved: number, revisionRequested: number },
  *   items: Array<ReturnType<typeof mapStudentNewsReportRow>>,
  *   calendar: Array<ReturnType<typeof buildStudentNewsCalendarRows>[number]>,
  * }>}
@@ -544,7 +866,7 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
     reports = listStudentNewsReportsFromFallbackStore(id, fallbackRange)
   }
 
-  const mappedReports = reports.map((entry) => mapStudentNewsReportRow(entry))
+  const mappedReports = await Promise.all(reports.map((entry) => buildStudentNewsClientItem(entry)))
   const calendar = buildStudentNewsCalendarRows({
     now: nowDate,
     reports: mappedReports,
@@ -554,13 +876,22 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
   const openReport = mappedReports.find((entry) => normalizeText(entry.reportDate) === window.reportDate) || null
   const statusSummary = mappedReports.reduce(
     (acc, entry) => {
+      const submissionState = normalizeStudentNewsSubmissionState(entry?.submissionState, STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED)
+      if (submissionState === STUDENT_NEWS_SUBMISSION_STATE_DRAFT) {
+        acc.draft += 1
+        return acc
+      }
+      if (submissionState === STUDENT_NEWS_SUBMISSION_STATE_READY) {
+        acc.ready += 1
+        return acc
+      }
       const status = normalizeStudentNewsReviewStatus(entry?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
       if (status === STUDENT_NEWS_REVIEW_STATUS_APPROVED) acc.approved += 1
       else if (status === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED) acc.revisionRequested += 1
       else acc.submitted += 1
       return acc
     },
-    { submitted: 0, approved: 0, revisionRequested: 0 }
+    { draft: 0, ready: 0, submitted: 0, approved: 0, revisionRequested: 0 }
   )
 
   return {
@@ -579,142 +910,16 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
  * @param {string} studentRefId
  * @param {Record<string, unknown>} [payload]
  * @param {{ now?: unknown, validationConfig?: Record<string, unknown> }} [options]
- * @returns {Promise<{ generatedAt: string, item: ReturnType<typeof mapStudentNewsReportRow> }>}
+ * @param {"check" | "submit"} mode
+ * @returns {Promise<Record<string, unknown>>}
  */
-export async function saveStudentNewsReport(
-  studentRefId,
-  payload = {},
-  { now = new Date(), validationConfig = {} } = {}
-) {
+async function persistStudentNewsReport(studentRefId, payload = {}, { now = new Date(), validationConfig = {} } = {}, mode) {
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
 
-  const sourceLinkRaw = clampText(payload?.sourceLink, STUDENT_NEWS_FIELD_MAX_LENGTHS.sourceLink).value
-  const sourceLink = normalizeHttpUrl(sourceLinkRaw) || sourceLinkRaw
-  const articleTitle = clampText(payload?.articleTitle, STUDENT_NEWS_FIELD_MAX_LENGTHS.articleTitle).value
-  const byline = clampText(payload?.byline, STUDENT_NEWS_FIELD_MAX_LENGTHS.byline).value
-  const articleDateline = clampText(payload?.articleDateline, STUDENT_NEWS_FIELD_MAX_LENGTHS.articleDateline).value
-  const leadSynopsis = clampText(payload?.leadSynopsis, STUDENT_NEWS_FIELD_MAX_LENGTHS.leadSynopsis).value
-  const actionActor = clampText(payload?.actionActor, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionActor).value
-  const actionAffected = clampText(payload?.actionAffected, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionAffected).value
-  const actionWhere = clampText(payload?.actionWhere, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhere).value
-  const actionWhat = clampText(payload?.actionWhat, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhat).value
-  const actionWhy = clampText(payload?.actionWhy, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhy).value
-  const biasAssessment = clampText(payload?.biasAssessment, STUDENT_NEWS_FIELD_MAX_LENGTHS.biasAssessment).value
-  const reportDateText = normalizeText(payload?.reportDate)
-
-  const window = resolveStudentNewsSubmissionWindow(now)
-  assertWithStatus(Boolean(reportDateText), 400, "reportDate is required")
-  const reportDate = parseLocalDateOnly(reportDateText)
-  assertWithStatus(reportDate instanceof Date && !Number.isNaN(reportDate.valueOf()), 400, "Invalid reportDate")
-  const reportDateDate = /** @type {Date} */ (reportDate)
-  const reportDateRangeStart = new Date(reportDateDate.getTime())
-  const reportDateRangeEnd = new Date(reportDateRangeStart.getTime() + 24 * 60 * 60 * 1000)
-
-  /** @type {Record<string, unknown> | null} */
-  let existing = null
-  let fallbackOnly = false
-  if (hasPrismaDelegateMethod(prisma, "studentNewsReport", "findUnique")) {
-    try {
-      existing = await prisma.studentNewsReport.findUnique({
-        where: {
-          studentRefId_reportDate: {
-            studentRefId: id,
-            reportDate: reportDateDate,
-          },
-        },
-        select: {
-          id: true,
-          reportDate: true,
-          enrollmentPeriodId: true,
-          reviewStatus: true,
-          reviewNote: true,
-          validationIssuesJson: true,
-        },
-      })
-    } catch (error) {
-      if (
-        isStudentNewsReportSchemaUnavailableError(error)
-        || isStudentNewsReviewSchemaUnavailableError(error)
-      ) {
-        fallbackOnly = true
-      } else {
-        throw error
-      }
-    }
-  } else {
-    fallbackOnly = true
-  }
-
-  if (!existing && hasPrismaDelegateMethod(prisma, "studentNewsReport", "findFirst")) {
-    try {
-      existing = await prisma.studentNewsReport.findFirst({
-        where: {
-          studentRefId: id,
-          reportDate: {
-            gte: reportDateRangeStart,
-            lt: reportDateRangeEnd,
-          },
-        },
-        orderBy: {
-          submittedAt: "desc",
-        },
-        select: {
-          id: true,
-          reportDate: true,
-          enrollmentPeriodId: true,
-          reviewStatus: true,
-          reviewNote: true,
-          validationIssuesJson: true,
-        },
-      })
-      if (existing) fallbackOnly = false
-    } catch (error) {
-      if (
-        isStudentNewsReportSchemaUnavailableError(error)
-        || isStudentNewsReviewSchemaUnavailableError(error)
-      ) {
-        fallbackOnly = true
-      } else {
-        throw error
-      }
-    }
-  }
-
-  if (fallbackOnly && !existing) {
-    const fallbackExisting = listStudentNewsReportsFromFallbackStore(id, {
-      startDate: reportDateText,
-      endDate: reportDateText,
-    })
-    existing = Array.isArray(fallbackExisting) ? fallbackExisting[0] || null : null
-  }
-
-  if (!existing) {
-    assertWithStatus(reportDateText === window.reportDate, 403, "News report for this date is locked")
-  }
-
-  if (existing) {
-    const existingStatus = normalizeStudentNewsReviewStatus(
-      existing.reviewStatus,
-      STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
-    )
-    const nowDate = parseDateOrNull(now) || new Date()
-    const currentWeekStart = startOfWeekSunday(nowDate)
-    const weeklyResubmitCutoff = new Date(currentWeekStart.getTime() + (ONE_DAY_MS * 7))
-    const isBeforeWeeklyResubmitCutoff = nowDate < weeklyResubmitCutoff
-    // const isCurrentWeekReportDate = reportDate >= currentWeekStart && reportDate < weeklyResubmitCutoff
-    const isCurrentWeekReportDate = reportDateDate >= currentWeekStart && reportDateDate < weeklyResubmitCutoff
-    const isApproved = existingStatus === STUDENT_NEWS_REVIEW_STATUS_APPROVED
-    assertWithStatus(
-      isBeforeWeeklyResubmitCutoff && isCurrentWeekReportDate,
-      403,
-      "News report for this date is locked"
-    )
-    assertWithStatus(!isApproved, 403, "Approved news reports cannot be edited")
-  }
-
-  const compliance = await evaluateStudentNewsCompliance({
+  const normalizedPayload = normalizeStudentNewsPayload(payload)
+  const {
     sourceLink,
     articleTitle,
     byline,
@@ -726,9 +931,35 @@ export async function saveStudentNewsReport(
     actionWhat,
     actionWhy,
     biasAssessment,
-  }, {
-    validationConfig,
-  })
+    reportDateText,
+  } = normalizedPayload
+
+  const window = resolveStudentNewsSubmissionWindow(now)
+  assertWithStatus(Boolean(reportDateText), 400, "reportDate is required")
+  const reportDate = parseLocalDateOnly(reportDateText)
+  assertWithStatus(reportDate instanceof Date && !Number.isNaN(reportDate.valueOf()), 400, "Invalid reportDate")
+  const reportDateDate = /** @type {Date} */ (reportDate)
+  const nowDate = parseDateOrNull(now) || new Date()
+  const { existing, fallbackOnly } = await findExistingStudentNewsReport(prisma, id, reportDateDate, reportDateText)
+  assertStudentNewsEditability(existing, nowDate, reportDateText, window)
+
+  const validationPayload = {
+    sourceLink,
+    articleTitle,
+    byline,
+    articleDateline,
+    leadSynopsis,
+    actionActor,
+    actionAffected,
+    actionWhere,
+    actionWhat,
+    actionWhy,
+    biasAssessment,
+  }
+  const [minimumRequirements, compliance] = await Promise.all([
+    evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig }),
+    evaluateStudentNewsCompliance(validationPayload, { validationConfig }),
+  ])
   const previousIssues = normalizeValidationIssueMap(
     /** @type {Record<string, unknown> | null | undefined} */ (existing?.validationIssuesJson)
   )
@@ -737,20 +968,84 @@ export async function saveStudentNewsReport(
     /** @type {string | undefined} */ (existing?.reviewNote),
     updatedIssues.issues
   )
-  const hasFailures = Object.keys(compliance.failedFields || {}).length > 0
-  const isResubmission = Boolean(existing)
+  const mmrPassed = minimumRequirements.passed === true
   const existingStatus = normalizeStudentNewsReviewStatus(
     existing?.reviewStatus,
     STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  )
+  const existingSubmissionState = normalizeStudentNewsSubmissionState(
+    existing?.submissionState,
+    normalizeText(existing?.firstSubmittedAt || existing?.submittedAt)
+      ? STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+      : STUDENT_NEWS_SUBMISSION_STATE_DRAFT
   )
   let reviewNote = stripAwaitingReReviewMarker(mergedReviewNote)
   if (existingStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED) {
     reviewNote = addAwaitingReReviewMarker(reviewNote)
   }
-  const submittedAt = new Date()
-  const reviewStatus = hasFailures && !isResubmission
-    ? STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
-    : STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+
+  const submittedAt = new Date(nowDate.getTime())
+  let reviewStatus = existingStatus
+  let submissionState = existingSubmissionState
+  let draftCheckedAt = parseDateOrNull(existing?.draftCheckedAt)
+  let mmrPassedAt = parseDateOrNull(existing?.mmrPassedAt)
+  let dateSatisfiedAt = parseDateOrNull(existing?.dateSatisfiedAt)
+  let reportDateLockedAt = parseDateOrNull(existing?.reportDateLockedAt)
+  let firstSubmittedAt = parseDateOrNull(existing?.firstSubmittedAt)
+  let lastSubmittedAt = parseDateOrNull(existing?.lastSubmittedAt)
+  let editableUntil = parseDateOrNull(existing?.editableUntil)
+  const computedEditableUntil = resolveStudentNewsEditableUntil(reportDateDate)
+
+  if (mode === "check") {
+    draftCheckedAt = submittedAt
+    if (mmrPassed) {
+      if (!(mmrPassedAt instanceof Date)) mmrPassedAt = submittedAt
+      if (!(dateSatisfiedAt instanceof Date)) dateSatisfiedAt = submittedAt
+      if (!(reportDateLockedAt instanceof Date)) reportDateLockedAt = submittedAt
+      if (!(editableUntil instanceof Date) && computedEditableUntil instanceof Date) editableUntil = computedEditableUntil
+      submissionState = firstSubmittedAt instanceof Date
+        ? STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+        : STUDENT_NEWS_SUBMISSION_STATE_READY
+    } else if (firstSubmittedAt instanceof Date) {
+      submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+    } else if (dateSatisfiedAt instanceof Date || mmrPassedAt instanceof Date) {
+      submissionState = STUDENT_NEWS_SUBMISSION_STATE_READY
+    } else {
+      submissionState = STUDENT_NEWS_SUBMISSION_STATE_DRAFT
+    }
+  } else {
+    const hasSatisfiedDate =
+      mmrPassedAt instanceof Date
+      || dateSatisfiedAt instanceof Date
+      || reportDateLockedAt instanceof Date
+      || existingSubmissionState === STUDENT_NEWS_SUBMISSION_STATE_READY
+      || existingSubmissionState === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+    if (!mmrPassed || !hasSatisfiedDate) {
+      throwWithStatusPayload(409, "Minimum requirements have not been met. Run Check first.", {
+        saved: false,
+        item: existing ? await buildStudentNewsClientItem(existing, { validationConfig }) : null,
+        mmrPassed: false,
+        mmrFailedFields: minimumRequirements.failedFields || {},
+        warningFields: compliance.warningFields || {},
+        requiredTasks: minimumRequirements.requiredTasks || [],
+        warningTasks: compliance.warningTasks || [],
+        submissionState: existingSubmissionState,
+        dateSatisfied: Boolean(dateSatisfiedAt),
+        reportDateLocked: Boolean(reportDateLockedAt),
+      })
+    }
+    if (!(reportDateLockedAt instanceof Date)) reportDateLockedAt = submittedAt
+    if (!(mmrPassedAt instanceof Date)) mmrPassedAt = submittedAt
+    if (!(dateSatisfiedAt instanceof Date)) dateSatisfiedAt = submittedAt
+    if (!(editableUntil instanceof Date) && computedEditableUntil instanceof Date) editableUntil = computedEditableUntil
+    if (!(firstSubmittedAt instanceof Date)) firstSubmittedAt = submittedAt
+    lastSubmittedAt = submittedAt
+    submissionState = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+    reviewStatus = existingStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
+      ? STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED
+      : STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+  }
+
   let enrollmentPeriodId = normalizeText(payload?.enrollmentPeriodId)
   if (!enrollmentPeriodId && normalizeText(existing?.enrollmentPeriodId)) {
     enrollmentPeriodId = normalizeText(existing?.enrollmentPeriodId)
@@ -762,6 +1057,7 @@ export async function saveStudentNewsReport(
     })
     enrollmentPeriodId = normalizeText(period?.id)
   }
+
   const reportData = {
     enrollmentPeriodId: enrollmentPeriodId || null,
     sourceLink,
@@ -776,6 +1072,14 @@ export async function saveStudentNewsReport(
     actionWhy,
     biasAssessment: normalizeNullableText(biasAssessment),
     submittedAt,
+    submissionState,
+    draftCheckedAt,
+    mmrPassedAt,
+    dateSatisfiedAt,
+    reportDateLockedAt,
+    firstSubmittedAt,
+    lastSubmittedAt,
+    editableUntil,
     reviewStatus,
     reviewNote: normalizeNullableText(reviewNote),
     validationIssuesJson: updatedIssues.issues,
@@ -786,11 +1090,7 @@ export async function saveStudentNewsReport(
   /** @type {Record<string, unknown> | null} */
   let saved = null
   const existingId = normalizeText(existing?.id)
-  if (
-    !fallbackOnly
-    && existingId
-    && hasPrismaDelegateMethod(prisma, "studentNewsReport", "update")
-  ) {
+  if (!fallbackOnly && existingId && hasPrismaDelegateMethod(prisma, "studentNewsReport", "update")) {
     try {
       saved = await prisma.studentNewsReport.update({
         where: { id: existingId },
@@ -809,11 +1109,7 @@ export async function saveStudentNewsReport(
       }
     }
   }
-  if (
-    !saved
-    && !fallbackOnly
-    && hasPrismaDelegateMethod(prisma, "studentNewsReport", "upsert")
-  ) {
+  if (!saved && !fallbackOnly && hasPrismaDelegateMethod(prisma, "studentNewsReport", "upsert")) {
     try {
       saved = await prisma.studentNewsReport.upsert({
         where: {
@@ -845,6 +1141,13 @@ export async function saveStudentNewsReport(
     const fallbackSaved = upsertStudentNewsReportInFallbackStore(id, reportDateText, {
       ...reportData,
       submittedAt: submittedAt.toISOString(),
+      draftCheckedAt: draftCheckedAt?.toISOString?.() || null,
+      mmrPassedAt: mmrPassedAt?.toISOString?.() || null,
+      dateSatisfiedAt: dateSatisfiedAt?.toISOString?.() || null,
+      reportDateLockedAt: reportDateLockedAt?.toISOString?.() || null,
+      firstSubmittedAt: firstSubmittedAt?.toISOString?.() || null,
+      lastSubmittedAt: lastSubmittedAt?.toISOString?.() || null,
+      editableUntil: editableUntil?.toISOString?.() || null,
       reviewedAt: null,
       reviewedByUsername: null,
     })
@@ -855,28 +1158,57 @@ export async function saveStudentNewsReport(
     }
   }
 
-  const mappedItem = mapStudentNewsReportRow(saved)
-  const hasResubmissionFailures = hasFailures && isResubmission
-  const responseMessage = hasResubmissionFailures
-    ? "Saved with compliance guidance. Status remains waiting for admin review."
-    : hasFailures
-      ? "Saved and marked for revision. Update flagged fields and save again."
-      : "Report saved."
-  const responsePayload = {
+  const mappedItem = await buildStudentNewsClientItem(saved, { validationConfig })
+  const responseMessage = mode === "check"
+    ? mmrPassed
+      ? !(existing?.mmrPassedAt)
+        ? "Minimum requirements met. Today's report date is satisfied and locked. You may keep improving before submit."
+        : "Draft saved. Minimum requirements still met."
+      : `Draft saved. ${Object.keys(minimumRequirements.failedFields || {}).length} required fixes remain.`
+    : "Submitted. You may continue improving until Sunday 00:00."
+
+  return {
     generatedAt: new Date().toISOString(),
     window,
     saved: true,
     message: responseMessage,
-    complianceFailed: hasFailures,
     item: mappedItem,
-    failedFields: compliance.failedFields,
-    revisionTasks: compliance.revisionTasks,
+    mmrPassed,
+    mmrFailedFields: minimumRequirements.failedFields || {},
+    warningFields: compliance.warningFields || {},
+    requiredTasks: minimumRequirements.requiredTasks || [],
+    warningTasks: compliance.warningTasks || [],
+    submissionState,
+    dateSatisfied: Boolean(dateSatisfiedAt),
+    reportDateLocked: Boolean(reportDateLockedAt),
+    firstSubmittedAt: parseDateOrNull(firstSubmittedAt)?.toISOString?.() || "",
     fixedFields: updatedIssues.newlyFixed,
     allowedSources: compliance?.config?.allowedDomains || [],
     validation: compliance.details,
+    complianceFailed: !mmrPassed,
+    failedFields: minimumRequirements.failedFields || {},
+    revisionTasks: minimumRequirements.requiredTasks || [],
   }
+}
 
-  return responsePayload
+/**
+ * @param {string} studentRefId
+ * @param {Record<string, unknown>} [payload]
+ * @param {{ now?: unknown, validationConfig?: Record<string, unknown> }} [options]
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export async function saveStudentNewsDraftCheck(studentRefId, payload = {}, options = {}) {
+  return persistStudentNewsReport(studentRefId, payload, options, "check")
+}
+
+/**
+ * @param {string} studentRefId
+ * @param {Record<string, unknown>} [payload]
+ * @param {{ now?: unknown, validationConfig?: Record<string, unknown> }} [options]
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export async function saveStudentNewsReport(studentRefId, payload = {}, options = {}) {
+  return persistStudentNewsReport(studentRefId, payload, options, "submit")
 }
 
 export {

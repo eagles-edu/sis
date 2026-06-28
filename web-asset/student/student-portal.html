@@ -130,6 +130,88 @@
       padding: 10px 12px;
     }
 
+    .submit-success-modal {
+      z-index: 1250;
+    }
+
+    .submit-success-confetti {
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      position: fixed;
+      z-index: 0;
+    }
+
+    .submit-success-confetti-piece {
+      animation: submit-success-confetti-fall linear infinite;
+      background: var(--piece-color, var(--portal-status-good-border));
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+      height: var(--piece-height, 14px);
+      left: var(--piece-left, 50%);
+      opacity: .92;
+      position: absolute;
+      top: -12vh;
+      transform: translate3d(0, 0, 0) rotate(var(--piece-rotate-start, 0deg));
+      width: var(--piece-width, 10px);
+    }
+
+    .submit-success-dialog {
+      max-inline-size: min(92vw, 420px);
+      text-align: center;
+    }
+
+    .submit-success-body {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      padding-block: 10px 4px;
+    }
+
+    .submit-success-mark {
+      align-items: center;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--portal-status-good-bg) 88%, #fff 12%), var(--portal-status-good-bg));
+      block-size: 72px;
+      border: 2px solid var(--portal-status-good-border);
+      border-radius: 999px;
+      box-shadow: 0 16px 30px rgba(21, 95, 63, 0.18);
+      color: var(--portal-status-good-text);
+      display: inline-flex;
+      font-size: 36px;
+      font-weight: 900;
+      inline-size: 72px;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .submit-success-title {
+      font-size: 1.18rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    .submit-success-copy {
+      margin: 0;
+      max-inline-size: 28ch;
+    }
+
+    @keyframes submit-success-confetti-fall {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -8vh, 0) rotate(var(--piece-rotate-start, 0deg));
+      }
+
+      8% {
+        opacity: .96;
+      }
+
+      100% {
+        opacity: .88;
+        transform: translate3d(var(--piece-drift, 0px), 120vh, 0) rotate(var(--piece-rotate-end, 360deg));
+      }
+    }
+
     .row {
       display: grid;
       gap: 10px;
@@ -763,11 +845,19 @@
                 <div class="portal-modal-backdrop" id="newsComplianceModalBackdrop"></div>
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsComplianceModalTitle">
                   <div class="portal-modal-head">
-                    <h4 id="newsComplianceModalTitle">Revision Required</h4>
+                    <h4 id="newsComplianceModalTitle">Check Report</h4>
                     <button id="closeNewsComplianceModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Close</button>
                   </div>
                   <div class="portal-modal-body">
-                    <p id="newsComplianceModalSummary" class="hint">Fix the listed fields and submit again.</p>
+                    <p id="newsComplianceModalSummary" class="hint">Draft saved.</p>
+                    <div class="field">
+                      <h5>Required Before Submit</h5>
+                      <ul id="newsComplianceRequiredList" class="hint"></ul>
+                    </div>
+                    <div class="field">
+                      <h5>Warnings / Improve for Extra Points</h5>
+                      <ul id="newsComplianceWarningList" class="hint"></ul>
+                    </div>
                   </div>
                   <div class="portal-modal-actions">
                     <button id="newsComplianceModalCloseActionBtn" type="button" class="portal-button portal-button-immutable-chrome">Close</button>
@@ -784,6 +874,25 @@
                   </div>
                   <div class="portal-modal-body">
                     <p id="reportAccessErrorModalMessage">LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT</p>
+                  </div>
+                </div>
+              </section>
+
+              <section id="submitSuccessModal" class="portal-modal submit-success-modal hidden">
+                <div class="portal-modal-backdrop" id="submitSuccessModalBackdrop"></div>
+                <div id="submitSuccessConfetti" class="submit-success-confetti" aria-hidden="true"></div>
+                <div class="portal-modal-dialog submit-success-dialog" role="dialog" aria-modal="true" aria-labelledby="submitSuccessModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="submitSuccessModalTitle">Successfully submitted</h4>
+                    <button id="closeSubmitSuccessModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">Close</button>
+                  </div>
+                  <div class="portal-modal-body submit-success-body">
+                    <div class="submit-success-mark" aria-hidden="true">✓</div>
+                    <p class="submit-success-title">Your media report has been submitted.</p>
+                    <p class="hint submit-success-copy">Confetti will keep celebrating until you close this message.</p>
+                  </div>
+                  <div class="portal-modal-actions">
+                    <button id="submitSuccessModalOkBtn" type="button" class="portal-button portal-button-primary">OK</button>
                   </div>
                 </div>
               </section>
@@ -1066,8 +1175,9 @@
                 </div>
 
                 <div class="field c12 actions">
+                  <button id="checkBtn" class="portal-button portal-button-alt" type="button">Check Report</button>
                   <button id="submitBtn" class="portal-button portal-button-primary" type="button">Submit Report</button>
-                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden">View validation details</button>
+                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden">View check details</button>
                 </div>
               </div>
               <p id="formStatus" class="status">Waiting for calendar window. </p>
@@ -1097,6 +1207,7 @@
       const STUDENT_AUTH_PREFIX = window.__SIS_STUDENT_AUTH_PREFIX || "/api/student/auth";
       const STUDENT_DASHBOARD_PATH = window.__SIS_STUDENT_DASHBOARD_PATH || "/api/student/dashboard";
       const STUDENT_NEWS_REPORTS_PATH = window.__SIS_STUDENT_NEWS_REPORTS_PATH || "/api/student/news-reports";
+      const STUDENT_NEWS_REPORTS_CHECK_PATH = window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH || "/api/student/news-reports/check";
       const STUDENT_NEWS_CALENDAR_PATH = window.__SIS_STUDENT_NEWS_CALENDAR_PATH || "/api/student/news-reports/calendar";
       const RUNTIME_ENV = (window.__SIS_RUNTIME_ENV || "").toLowerCase() || "development";
       const PORTAL_TIME_ZONE = "Asia/Ho_Chi_Minh";
@@ -1131,8 +1242,16 @@
         textZoomPct: TEXT_ZOOM_DEFAULT,
         newsFieldErrors: {},
         newsRevisionTasks: [],
+        newsWarningFields: {},
+        newsWarningTasks: [],
+        newsCurrentMmrPassed: false,
+        newsSubmissionState: "",
+        newsDateSatisfied: false,
+        newsReportDateLocked: false,
         newsComplianceModalOpen: false,
         newsComplianceSummary: "",
+        submitSuccessModalOpen: false,
+        submitSuccessConfettiBuilt: false,
         detailGradeTable: null,
       };
       const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
@@ -1414,14 +1533,21 @@
         });
       }
 
-      function applyNewsFieldValidationUi(failedFieldMap = {}, revisionTasks = []) {
+      function hasNewsWarnings() {
+        return Object.keys(state.newsWarningFields || {}).length > 0 || (Array.isArray(state.newsWarningTasks) && state.newsWarningTasks.length > 0);
+      }
+
+      function applyNewsFieldValidationUi(failedFieldMap = {}, revisionTasks = [], warningFieldMap = {}, warningTasks = []) {
         clearNewsFieldValidationUi();
         const failed = normalizeFailedFieldMap(failedFieldMap);
+        const warnings = normalizeFailedFieldMap(warningFieldMap);
         state.newsFieldErrors = failed;
         state.newsRevisionTasks = Array.isArray(revisionTasks) ? revisionTasks : [];
+        state.newsWarningFields = warnings;
+        state.newsWarningTasks = Array.isArray(warningTasks) ? warningTasks : [];
         const hasFailed = Object.keys(failed).length > 0;
-        setNewsComplianceModalCtaVisible(hasFailed);
-        if (!hasFailed) {
+        setNewsComplianceModalCtaVisible(hasFailed || hasNewsWarnings());
+        if (!hasFailed && !hasNewsWarnings()) {
           state.newsComplianceSummary = "";
           setNewsComplianceModalOpen(false);
         }
@@ -1487,14 +1613,50 @@
 
       function renderNewsComplianceModalFromState(summaryText = "") {
         const summary = field("newsComplianceModalSummary");
-        if (!summary) return;
-        if (!hasNewsFieldValidationErrors()) {
+        const requiredList = field("newsComplianceRequiredList");
+        const warningList = field("newsComplianceWarningList");
+        if (!summary || !requiredList || !warningList) return;
+        if (!hasNewsFieldValidationErrors() && !hasNewsWarnings()) {
           setNewsComplianceModalOpen(false);
           return;
         }
-        const defaultSummary = "Saved and marked for revision. Fix the listed fields and submit again.";
+        const defaultSummary = "Draft saved.";
         state.newsComplianceSummary = t(summaryText) || t(state.newsComplianceSummary) || defaultSummary;
         summary.textContent = state.newsComplianceSummary;
+        requiredList.replaceChildren();
+        warningList.replaceChildren();
+        const requiredTasks = Array.isArray(state.newsRevisionTasks) ? state.newsRevisionTasks : [];
+        const warningTasks = Array.isArray(state.newsWarningTasks) ? state.newsWarningTasks : [];
+        const requiredFields = Object.keys(state.newsFieldErrors || {});
+        const warningFields = Object.keys(state.newsWarningFields || {});
+        if (!requiredFields.length && !requiredTasks.length) {
+          const item = document.createElement("li");
+          item.textContent = "No required fixes. Submit is available when the current draft still meets MMR.";
+          requiredList.appendChild(item);
+        } else {
+          (requiredTasks.length ? requiredTasks : requiredFields.map((fieldKey) => ({ field: fieldKey }))).forEach((task) => {
+            const item = document.createElement("li");
+            const fieldKey = t(task?.field);
+            const fieldEntry = state.newsFieldErrors?.[fieldKey] || {};
+            const steps = Array.isArray(task?.steps) ? task.steps.map((step) => t(step)).filter(Boolean) : [];
+            item.textContent = [t(fieldEntry.message), ...steps].filter(Boolean).join(" | ") || fieldKey;
+            requiredList.appendChild(item);
+          });
+        }
+        if (!warningFields.length && !warningTasks.length) {
+          const item = document.createElement("li");
+          item.textContent = "No warnings right now.";
+          warningList.appendChild(item);
+        } else {
+          (warningTasks.length ? warningTasks : warningFields.map((fieldKey) => ({ field: fieldKey }))).forEach((task) => {
+            const item = document.createElement("li");
+            const fieldKey = t(task?.field);
+            const fieldEntry = state.newsWarningFields?.[fieldKey] || {};
+            const steps = Array.isArray(task?.steps) ? task.steps.map((step) => t(step)).filter(Boolean) : [];
+            item.textContent = [t(fieldEntry.message), ...steps].filter(Boolean).join(" | ") || fieldKey;
+            warningList.appendChild(item);
+          });
+        }
         setNewsComplianceModalOpen(true);
       }
 
@@ -1712,7 +1874,7 @@
       function hoistPortalModals() {
         const host = document.body;
         if (!host) return;
-        ["pastDueHomeworkModal", "newsComplianceModal", "reportAccessErrorModal", "newsWeekSetModal"].forEach((id) => {
+        ["pastDueHomeworkModal", "newsComplianceModal", "reportAccessErrorModal", "submitSuccessModal", "newsWeekSetModal"].forEach((id) => {
           const modal = field(id);
           if (!modal || modal.parentElement === host) return;
           host.appendChild(modal);
@@ -2630,7 +2792,7 @@
         node.textContent = label;
       }
 
-      function metricCard(label, value, tone = "") {
+      function metricCard(label, value, tone = "blue") {
         const article = document.createElement("article");
         article.className = "metric portal-theme-card";
         if (tone) article.classList.add(`metric-${tone}`);
@@ -2789,8 +2951,54 @@
           state.pastDueModalOpen ||
           state.newsComplianceModalOpen ||
           state.reportAccessModalOpen ||
+          state.submitSuccessModalOpen ||
           state.newsWeekSetModalOpen;
         document.body.classList.toggle("modal-open", hasOpenModal);
+      }
+
+      function buildSubmitSuccessConfetti() {
+        if (state.submitSuccessConfettiBuilt) return;
+        const host = field("submitSuccessConfetti");
+        if (!host) return;
+        const palette = [
+          "#ffd54f",
+          "#2f5be3",
+          "#39b86f",
+          "#ff7a59",
+          "#8e61ff",
+          "#1ecad3",
+        ];
+        for (let index = 0; index < 28; index += 1) {
+          const piece = document.createElement("span");
+          const left = `${4 + ((index * 97) % 92)}%`;
+          const width = 8 + ((index * 5) % 8);
+          const height = 10 + ((index * 7) % 10);
+          const drift = `${((index % 2 === 0 ? 1 : -1) * (18 + ((index * 11) % 52)))}px`;
+          const duration = `${4.8 + ((index * 13) % 18) / 10}s`;
+          const delay = `${-((index * 17) % 33) / 10}s`;
+          piece.className = "submit-success-confetti-piece";
+          piece.style.setProperty("--piece-color", palette[index % palette.length]);
+          piece.style.setProperty("--piece-left", left);
+          piece.style.setProperty("--piece-width", `${width}px`);
+          piece.style.setProperty("--piece-height", `${height}px`);
+          piece.style.setProperty("--piece-drift", drift);
+          piece.style.setProperty("--piece-rotate-start", `${(index * 29) % 180}deg`);
+          piece.style.setProperty("--piece-rotate-end", `${220 + ((index * 41) % 380)}deg`);
+          piece.style.animationDuration = duration;
+          piece.style.animationDelay = delay;
+          host.appendChild(piece);
+        }
+        state.submitSuccessConfettiBuilt = true;
+      }
+
+      function setSubmitSuccessModalOpen(open) {
+        const shouldOpen = Boolean(open);
+        state.submitSuccessModalOpen = shouldOpen;
+        const modal = field("submitSuccessModal");
+        if (!modal) return;
+        if (shouldOpen) buildSubmitSuccessConfetti();
+        modal.classList.toggle("hidden", !shouldOpen);
+        syncPortalModalBodyState();
       }
 
       function renderCurrentHomeworkOverviewCard(child = {}, pendingHomework = 0) {
@@ -3418,7 +3626,7 @@
               `${reportArchive.length} performance report archive item(s) are available for review.` :
               "No performance reports are available yet.",
             metrics: [
-              metricCard("Reports", String(reportArchive.length), reportArchive.length ? "good" : ""),
+              metricCard("Reports", String(reportArchive.length), reportArchive.length ? "good" : "blue"),
               metricCard("Average", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
               metricCard("Pending", String(parseNumber(assignments.pending)), parseNumber(assignments.pending) ? "warn" : "good"),
               metricCard("Overdue", String(parseNumber(assignments.overdue)), parseNumber(assignments.overdue) ? "bad" : "good"),
@@ -3486,7 +3694,7 @@
               "No grade history is available yet.",
             metrics: [
               metricCard("Average", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", Number.isFinite(averageScore) && averageScore < 75 ? "warn" : "good"),
-              metricCard("Graded", String(gradeHistory.length), gradeHistory.length ? "good" : ""),
+              metricCard("Graded", String(gradeHistory.length), gradeHistory.length ? "good" : "blue"),
               metricCard("Pending", String(parseNumber(assignments.pending)), parseNumber(assignments.pending) ? "warn" : "good"),
               metricCard("Completed", String(parseNumber(assignments.completed)), "good"),
             ],
@@ -3736,17 +3944,17 @@
           null :
           Number(grades.averageScorePercent);
         const reportCount = parseNumber(performance.reportCount);
-        const absenceTone = absencePercent > 10 ? "bad" : absencePercent > 5 ? "warn" : "";
-        const pendingTone = pendingHomework > 0 ? "amber" : "";
+        const absenceTone = absencePercent > 10 ? "bad" : absencePercent > 5 ? "warn" : "good";
+        const pendingTone = pendingHomework > 0 ? "amber" : "good";
         const overdueTone = overdueHomework > 0 ? "bad" : "good";
         const scoreTone = Number.isFinite(averageScore) && averageScore < 70 ? "bad" : Number.isFinite(averageScore) && averageScore < 80 ? "warn" : "good";
         const newsSummary = news.statusSummary || {};
         const approvedNews = parseNumber(newsSummary.approved);
         const waitingNews = parseNumber(newsSummary.submitted);
         const reviseNews = parseNumber(newsSummary.revisionRequested);
-        const reportTone = reportCount > 0 ? "good" : "";
-        const waitingTone = waitingNews > 0 ? "blue" : "";
-        const reviseTone = reviseNews > 0 ? "purple" : "";
+        const reportTone = reportCount > 0 ? "good" : "blue";
+        const waitingTone = waitingNews > 0 ? "blue" : "good";
+        const reviseTone = reviseNews > 0 ? "purple" : "good";
         const displayEaglesId = t(child.eaglesId);
         const displayName = t(child.englishName || child.fullName || child.eaglesId);
         identity.textContent = `${displayName} | ${displayEaglesId} | ${gradeLabel(child.currentGrade || "No class")}`;
@@ -3764,7 +3972,7 @@
           metricCard("Homework Overdue", String(overdueHomework), overdueTone),
           metricCard("Average Score", Number.isFinite(averageScore) ? formatPercent(averageScore) : "-", scoreTone),
           metricCard("Performance Reports", String(reportCount), reportTone),
-          metricCard("News Approved", String(approvedNews), approvedNews ? "good" : ""),
+          metricCard("News Approved", String(approvedNews), approvedNews ? "good" : "blue"),
           metricCard("News Waiting", String(waitingNews), waitingTone),
           metricCard("News Revise", String(reviseNews), reviseTone),
         );
@@ -3818,6 +4026,8 @@
         const normalizedStatus = normalizeLower(status);
         const normalizedReview = normalizeNewsReviewStatusToken(reviewStatus);
         if (normalizedReview === "revision-requested") return "revise";
+        if (normalizedStatus === "ready") return "ready";
+        if (normalizedStatus === "draft") return "draft";
         if (normalizedStatus === "open") return "open";
         if (normalizedStatus === "missed") return "none-submitted";
         if (awaitingReReview === true) return "waiting";
@@ -3832,6 +4042,8 @@
         if (token === "approved") return "Approved";
         if (token === "waiting") return "Waiting";
         if (token === "revise") return "Revise";
+        if (token === "ready") return "Ready";
+        if (token === "draft") return "Draft";
         if (token === "submitted") return "Submitted";
         if (token === "open") return "Open";
         return "None Submitted";
@@ -3841,6 +4053,8 @@
         const token = resolveNewsChipToken(status, reviewStatus, awaitingReReview);
         if (token === "approved") return "green";
         if (token === "revise") return "revise";
+        if (token === "ready") return "turquoise";
+        if (token === "draft") return "blue";
         if (token === "submitted") return "amber";
         if (token === "waiting") return "purple";
         if (token === "open") return "blue";
@@ -3864,6 +4078,8 @@
         if (normalizedReview === "approved") return "Approved";
         if (awaitingReReview === true) return "Waiting";
         if (normalizedReview === "revision-requested") return "Revise";
+        if (normalizedStatus === "ready") return "Ready";
+        if (normalizedStatus === "draft") return "Draft";
         if (normalizedStatus === "completed") return "Submitted";
         if (normalizedStatus === "open") return "Open";
         return "None Submitted";
@@ -4571,18 +4787,27 @@
         setInputValue("actionWhat", report?.actionWhat);
         setInputValue("actionWhy", report?.actionWhy);
         setInputValue("biasAssessment", report?.biasAssessment);
-        const failedFromIssues = pendingFailedFieldsFromIssues(
-          report?.validationIssuesJson,
-        );
+        state.newsCurrentMmrPassed = report?.currentMmrPassed === true;
+        state.newsSubmissionState = t(report?.submissionState);
+        state.newsDateSatisfied = report?.dateSatisfied === true || Boolean(t(report?.dateSatisfiedAt));
+        state.newsReportDateLocked = report?.reportDateLocked === true || Boolean(t(report?.reportDateLockedAt));
+        const failedFromIssues = resolveFailedFieldMapFromCompliancePayload({
+          failedFields: report?.mmrFailedFields,
+          item: report,
+        });
+        const warningFieldMap = normalizeFailedFieldMap(report?.warningFields || {});
+        const requiredTasks = Array.isArray(report?.requiredTasks) ? report.requiredTasks : [];
+        const warningTasks = Array.isArray(report?.warningTasks) ? report.warningTasks : [];
         if (
           preserveExistingValidation &&
           !Object.keys(failedFromIssues).length &&
-          hasNewsFieldValidationErrors()
+          !Object.keys(warningFieldMap).length &&
+          (hasNewsFieldValidationErrors() || hasNewsWarnings())
         ) {
           setNewsComplianceModalCtaVisible(true);
           return;
         }
-        applyNewsFieldValidationUi(failedFromIssues, []);
+        applyNewsFieldValidationUi(failedFromIssues, requiredTasks, warningFieldMap, warningTasks);
       }
 
       function buildStudentCalendarEvents(calendar = []) {
@@ -4735,12 +4960,13 @@
 
       function resolveNewsCalendarStatus(row = {}) {
         const status = normalizeLower(row?.status);
-        if (status === "completed" || status === "open" || status === "missed") return status;
+        if (status === "completed" || status === "open" || status === "missed" || status === "ready" || status === "draft") return status;
         if (status === "approved" || status === "waiting" || status === "submitted" || status === "revise")
           return "completed";
         if (status === "none-submitted") return "missed";
         const color = normalizeLower(row?.color);
         if (color === "green") return "completed";
+        if (color === "teal" || color === "turquoise") return "ready";
         if (color === "purple") return "completed";
         if (
           color === "amber" ||
@@ -4763,7 +4989,7 @@
         const statusEntry = state.calendarStatusByDate.get(dateStr);
         const status = typeof statusEntry === "object" && statusEntry !== null ? statusEntry.status : statusEntry;
         const color = typeof statusEntry === "object" && statusEntry !== null ? statusEntry.color : "";
-        if (status === "completed" || status === "open" || status === "missed") {
+        if (status === "completed" || status === "open" || status === "missed" || status === "ready" || status === "draft") {
           classes.push(`calendar-day-${status}`);
           if (color) classes.push(`calendar-day-${color}`);
         }
@@ -4782,6 +5008,8 @@
           dayEl.classList.toggle("calendar-day-completed", classList.includes("calendar-day-completed"));
           dayEl.classList.toggle("calendar-day-open", classList.includes("calendar-day-open"));
           dayEl.classList.toggle("calendar-day-missed", classList.includes("calendar-day-missed"));
+          dayEl.classList.toggle("calendar-day-ready", classList.includes("calendar-day-ready"));
+          dayEl.classList.toggle("calendar-day-draft", classList.includes("calendar-day-draft"));
           dayEl.classList.toggle("calendar-day-green", classList.includes("calendar-day-green"));
           dayEl.classList.toggle("calendar-day-amber", classList.includes("calendar-day-amber"));
           dayEl.classList.toggle("calendar-day-blue", classList.includes("calendar-day-blue"));
@@ -4880,11 +5108,22 @@
       }
 
       function updateSubmitAvailability() {
+        const checkBtn = field("checkBtn");
         const btn = field("submitBtn");
+        const hasReportDate = Boolean(t(field("reportDate")?.value));
+        if (checkBtn instanceof HTMLButtonElement) {
+          checkBtn.disabled = !hasReportDate;
+        }
         if (!btn) return;
         const windowInfo = state.window || {};
-        const canSubmit = Boolean(t(windowInfo.reportDate));
+        const canSubmit = Boolean(t(windowInfo.reportDate)) && state.newsCurrentMmrPassed === true;
         btn.disabled = !canSubmit;
+      }
+
+      function markNewsDraftDirty() {
+        if (!t(field("reportDate")?.value)) return;
+        state.newsCurrentMmrPassed = false;
+        updateSubmitAvailability();
       }
       async function loadDashboard() {
         state.dashboard = await api(STUDENT_DASHBOARD_PATH);
@@ -4911,25 +5150,19 @@
         updateSubmitAvailability();
       }
 
-      function isComplianceSoftSavePayload(payload = null) {
-        return (
-          payload &&
-          typeof payload === "object" &&
-          payload.saved === true &&
-          payload.complianceFailed === true
-        );
-      }
-      async function handleNewsComplianceSoftSave(payloadBody = {}, options = {}) {
+      async function handleNewsCheckResult(payloadBody = {}, options = {}) {
         const reopenReportDate = t(options?.reopenReportDate).slice(0, 10);
         const summaryMessage =
           t(payloadBody?.message) ||
           t(options?.messageFallback) ||
-          "Saved with compliance guidance. Update flagged fields and submit again.";
+          "Draft saved.";
         const failedFieldMap = resolveFailedFieldMapFromCompliancePayload(payloadBody);
         const revisionTasks = resolveRevisionTasksFromCompliancePayload(
           payloadBody,
           failedFieldMap,
         );
+        const warningFieldMap = normalizeFailedFieldMap(payloadBody?.warningFields || {});
+        const warningTasks = Array.isArray(payloadBody?.warningTasks) ? payloadBody.warningTasks : [];
         if (payloadBody?.item) {
           applyOpenReport(payloadBody.item, {
             preserveExistingValidation: true,
@@ -4938,10 +5171,13 @@
         applyNewsFieldValidationUi(
           failedFieldMap,
           revisionTasks,
+          warningFieldMap,
+          warningTasks,
         );
         setFormStatus(
           summaryMessage,
           false,
+          payloadBody?.mmrPassed === true,
         );
         state.newsComplianceSummary = summaryMessage;
         renderNewsComplianceModalFromState(summaryMessage);
@@ -4956,10 +5192,21 @@
             silentStatus: true,
           });
         }
-        if (hasNewsFieldValidationErrors()) {
+        if (hasNewsFieldValidationErrors() || hasNewsWarnings()) {
           renderNewsComplianceModalFromState(summaryMessage);
         }
       }
+
+      async function checkNewsPayload(payload = {}, options = {}) {
+        const reportDate = t(payload?.reportDate);
+        if (!reportDate) throw new Error("Report date is locked.");
+        const saved = await api(STUDENT_NEWS_REPORTS_CHECK_PATH, {
+          method: "POST",
+          body: payload,
+        });
+        await handleNewsCheckResult(saved, options);
+      }
+
       async function submitNewsPayload(payload = {}, options = {}) {
         const reportDate = t(payload?.reportDate);
         if (!reportDate) throw new Error("Report date is locked.");
@@ -4969,13 +5216,12 @@
             method: "POST",
             body: payload,
           });
-          if (isComplianceSoftSavePayload(saved)) {
-            await handleNewsComplianceSoftSave(saved, {
-              reopenReportDate
-            });
-            return;
-          }
-          applyNewsFieldValidationUi({}, []);
+          applyNewsFieldValidationUi(
+            {},
+            [],
+            normalizeFailedFieldMap(saved?.warningFields || {}),
+            Array.isArray(saved?.warningTasks) ? saved.warningTasks : [],
+          );
           setFormStatus(t(saved?.message) || "Report saved.", false, true);
           if (saved?.item) applyOpenReport(saved.item);
           await Promise.all([loadDashboard(), loadCalendar()]);
@@ -4984,13 +5230,14 @@
               silentStatus: true,
             });
           }
+          setSubmitSuccessModalOpen(true);
         } catch (error) {
-          if (error?.status === 422 && error?.payload?.saved === true) {
+          if (error?.payload && typeof error.payload === "object") {
             const payloadBody =
               error.payload && typeof error.payload === "object" ?
               error.payload :
               {};
-            await handleNewsComplianceSoftSave(payloadBody, {
+            await handleNewsCheckResult(payloadBody, {
               reopenReportDate,
               messageFallback: t(error.message),
             });
@@ -5001,6 +5248,10 @@
       }
       async function submitReport() {
         await submitNewsPayload(reportPayload());
+      }
+
+      async function checkReport() {
+        await checkNewsPayload(reportPayload());
       }
       async function submitNewsWeekSetModalCurrentItem() {
         const active = newsWeekSetViewerCurrentItem();
@@ -5065,7 +5316,7 @@
             if (handlePortalPostAuthRouteState()) return;
             await Promise.all([loadDashboard(), loadCalendar()]);
             openReportAccessErrorModalIfNeeded();
-            setFormStatus("Fill out all sections and submit once per open date.");
+            setFormStatus("Use Check Report to save a draft. Submit unlocks after MMR passes.");
           } else {
             setAuthenticatedView(false);
             setGlobalStatus("Sign in to submit daily news reports.");
@@ -5080,7 +5331,7 @@
           if (handlePortalPostAuthRouteState()) return;
           await Promise.all([loadDashboard(), loadCalendar()]);
           openReportAccessErrorModalIfNeeded();
-          setFormStatus("Fill out all sections and submit once per open date.");
+          setFormStatus("Use Check Report to save a draft. Submit unlocks after MMR passes.");
         } catch (error) {
           if (error && error.status === 401) {
             setAuthenticatedView(false);
@@ -5206,6 +5457,10 @@
           clearReportAccessErrorMarker();
           return;
         }
+        if (state.submitSuccessModalOpen) {
+          setSubmitSuccessModalOpen(false);
+          return;
+        }
         if (state.newsComplianceModalOpen) {
           setNewsComplianceModalOpen(false);
           return;
@@ -5246,6 +5501,15 @@
       field("newsComplianceModalCloseActionBtn")?.addEventListener("click", () => {
         setNewsComplianceModalOpen(false);
       });
+      field("submitSuccessModalBackdrop")?.addEventListener("click", () => {
+        setSubmitSuccessModalOpen(false);
+      });
+      field("closeSubmitSuccessModalBtn")?.addEventListener("click", () => {
+        setSubmitSuccessModalOpen(false);
+      });
+      field("submitSuccessModalOkBtn")?.addEventListener("click", () => {
+        setSubmitSuccessModalOpen(false);
+      });
       field("newsWeekSetModalBackdrop")?.addEventListener("click", () => {
         closeNewsWeekSetModal();
       });
@@ -5267,9 +5531,17 @@
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));
       field("studentTextZoomUpBtn")?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP));
       field("studentTextZoomResetBtn")?.addEventListener("click", () => applyPortalTextZoom(TEXT_ZOOM_DEFAULT));
+      NEWS_FORM_FIELD_IDS.forEach((fieldId) => {
+        field(fieldId)?.addEventListener("input", () => {
+          markNewsDraftDirty();
+        });
+      });
       applyPortalTextZoom(TEXT_ZOOM_DEFAULT);
       field("submitBtn")?.addEventListener("click", () => {
         submitReport().catch(handleError);
+      });
+      field("checkBtn")?.addEventListener("click", () => {
+        checkReport().catch(handleError);
       });
       boot().catch(handleError);
     })();

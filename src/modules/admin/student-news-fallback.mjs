@@ -158,6 +158,24 @@ function normalizeStudentNewsReviewStatus(value, fallback = STUDENT_NEWS_REVIEW_
   return fallback
 }
 
+const STUDENT_NEWS_SUBMISSION_STATE_DRAFT = "draft"
+const STUDENT_NEWS_SUBMISSION_STATE_READY = "ready"
+const STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED = "submitted"
+
+/**
+ * @param {unknown} value
+ * @param {string} [fallback]
+ * @returns {string}
+ */
+function normalizeStudentNewsSubmissionState(value, fallback = STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED) {
+  const token = normalizeLower(value)
+  if (!token) return fallback
+  if (token === STUDENT_NEWS_SUBMISSION_STATE_DRAFT) return STUDENT_NEWS_SUBMISSION_STATE_DRAFT
+  if (token === STUDENT_NEWS_SUBMISSION_STATE_READY) return STUDENT_NEWS_SUBMISSION_STATE_READY
+  if (token === STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED) return STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED
+  return fallback
+}
+
 /**
  * @param {unknown} value
  * @returns {string}
@@ -269,6 +287,7 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
   const actionWhat = normalizeText(entry?.actionWhat)
   const actionWhy = normalizeText(entry?.actionWhy)
   const reviewStatus = normalizeStudentNewsReviewStatus(entry?.reviewStatus, STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+  const submissionState = normalizeStudentNewsSubmissionState(entry?.submissionState, STUDENT_NEWS_SUBMISSION_STATE_SUBMITTED)
   const reviewNote = normalizeNullableText(entry?.reviewNote)
   const reviewedAt = parseDateOrNull(entry?.reviewedAt)?.toISOString?.() || ""
   const reviewedByUsername = normalizeNullableText(entry?.reviewedByUsername)
@@ -292,6 +311,14 @@ function normalizeStudentNewsFallbackEntry(entry = {}) {
     actionWhat,
     actionWhy,
     biasAssessment: normalizeNullableText(entry?.biasAssessment),
+    submissionState,
+    draftCheckedAt: parseDateOrNull(entry?.draftCheckedAt)?.toISOString?.() || "",
+    mmrPassedAt: parseDateOrNull(entry?.mmrPassedAt)?.toISOString?.() || "",
+    dateSatisfiedAt: parseDateOrNull(entry?.dateSatisfiedAt)?.toISOString?.() || "",
+    reportDateLockedAt: parseDateOrNull(entry?.reportDateLockedAt)?.toISOString?.() || "",
+    firstSubmittedAt: parseDateOrNull(entry?.firstSubmittedAt)?.toISOString?.() || "",
+    lastSubmittedAt: parseDateOrNull(entry?.lastSubmittedAt)?.toISOString?.() || "",
+    editableUntil: parseDateOrNull(entry?.editableUntil)?.toISOString?.() || "",
     reviewStatus,
     reviewNote,
     reviewedAt,
@@ -391,10 +418,11 @@ function upsertStudentNewsReportInFallbackStore(studentRefId, reportDate, payloa
     reportDate: dateKey,
     createdAt: normalizeText(existing?.createdAt) || now,
     updatedAt: now,
-    reviewStatus: STUDENT_NEWS_REVIEW_STATUS_SUBMITTED,
-    reviewNote: null,
-    reviewedAt: null,
-    reviewedByUsername: null,
+    submissionState: normalizeStudentNewsSubmissionState(payload?.submissionState, normalizeStudentNewsSubmissionState(existing?.submissionState)),
+    reviewStatus: normalizeText(payload?.reviewStatus) ? payload.reviewStatus : normalizeText(existing?.reviewStatus) || STUDENT_NEWS_REVIEW_STATUS_SUBMITTED,
+    reviewNote: payload?.reviewNote === undefined ? existing?.reviewNote || null : payload.reviewNote,
+    reviewedAt: payload?.reviewedAt === undefined ? existing?.reviewedAt || null : payload.reviewedAt,
+    reviewedByUsername: payload?.reviewedByUsername === undefined ? existing?.reviewedByUsername || null : payload.reviewedByUsername,
   })
   assertWithStatus(Boolean(normalized), 500, "Unable to persist student news report")
   if (index >= 0) source[index] = normalized
