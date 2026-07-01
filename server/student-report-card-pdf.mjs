@@ -48,6 +48,14 @@ function sameText(value, expected) {
   return left === right
 }
 
+function matchesOptionalScopedText(value, expected) {
+  const normalizedExpected = normalizeLower(expected)
+  if (!normalizedExpected) return true
+  const normalizedValue = normalizeLower(value)
+  if (!normalizedValue) return true
+  return normalizedValue === normalizedExpected
+}
+
 function sanitizeFilePart(value, fallback) {
   const normalized = normalizeText(value)
   if (!normalized) return fallback
@@ -144,8 +152,8 @@ function selectRecords(student, filters = {}) {
   const reportId = normalizeText(filters.reportId)
 
   const matches = (record) => {
-    if (className && !sameText(record.className, className)) return false
-    if (schoolYear && !sameText(record.schoolYear, schoolYear)) return false
+    if (!matchesOptionalScopedText(record.className, className)) return false
+    if (!matchesOptionalScopedText(record.schoolYear, schoolYear)) return false
     if (quarter && !sameText(record.quarter, quarter)) return false
     return true
   }
@@ -174,8 +182,8 @@ function selectAttendanceRecordsForReport(student, filters = {}) {
 
   return Array.isArray(student?.attendanceRecords)
     ? student.attendanceRecords.filter((record) => {
-        if (className && !sameText(record?.className, className)) return false
-        if (schoolYear && !sameText(record?.schoolYear, schoolYear)) return false
+        if (!matchesOptionalScopedText(record?.className, className)) return false
+        if (!matchesOptionalScopedText(record?.schoolYear, schoolYear)) return false
         return true
       })
     : []

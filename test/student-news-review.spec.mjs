@@ -53,3 +53,10 @@ test("student news admin review keeps admin statuses unchanged and only excludes
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"/)
 })
+
+test("student news revision requests reopen editing for a 15-day deadline", () => {
+  const source = fs.readFileSync(new URL("../src/modules/admin/student-news-review.mjs", import.meta.url), "utf8")
+  assert.match(source, /function resolveStudentNewsRevisionEditableUntil\(now = new Date\(\)\)/)
+  assert.match(source, /return endOfDay\(addDays\(now, 15\)\)/)
+  assert.match(source, /if \(reviewStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED\) \{\s*updateData\.editableUntil = resolveStudentNewsRevisionEditableUntil\(now\)/)
+})

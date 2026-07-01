@@ -4,6 +4,7 @@ import fs from "node:fs"
 
 import {
   evaluateStudentNewsCompliance,
+  evaluateStudentNewsMinimumRequirements,
   mergeStudentNewsReviewNoteWithCompliance,
   normalizeValidationIssueMap,
   updateStudentNewsValidationIssues,
@@ -178,6 +179,38 @@ test(
     assert.equal(result.warningFields.byline, undefined)
   }
 )
+
+test("student news validation rejects homepage-only source links", async () => {
+  const minimum = evaluateStudentNewsMinimumRequirements(
+    basePayload({
+      sourceLink: "https://www.bbc.com/",
+    }),
+    {
+      validationConfig: {
+        allowedDomains: ["bbc.com", "cnn.com"],
+      },
+    }
+  )
+  assert.equal(
+    minimum.failedFields.sourceLink?.message,
+    "Source must link to the exact article, not only the site home page."
+  )
+
+  const compliance = await evaluateStudentNewsCompliance(
+    basePayload({
+      sourceLink: "https://www.cnn.com/",
+    }),
+    {
+      validationConfig: {
+        allowedDomains: ["bbc.com", "cnn.com"],
+      },
+    }
+  )
+  assert.equal(
+    compliance.failedFields.sourceLink?.message,
+    "Source must link to the exact article, not only the site home page."
+  )
+})
 
 test(
   "BBC liveblog fallback supplies title and lead when primary fetch fails",

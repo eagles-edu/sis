@@ -622,7 +622,7 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
       ".grade-chart-shell",
       ".grade-chart-empty",
       "#newsReviewViewerModal .queue-modal-card",
-      "#newsReviewViewerBody a",
+      "#newsReviewViewerBody .news-review-viewer-block",
       "#newsReviewViewerNote",
       ".news-review-note-line.pending",
       ".news-review-note-line.fixed",
@@ -670,19 +670,31 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
     })
     const modalSurfaces = await snapshotSurfaces(page, [
       "#newsReviewViewerModal",
-      "#newsReviewViewerBody a",
+      "#newsReviewViewerBody .news-review-viewer-block",
       "#newsReviewViewerNote",
       ".news-review-note-line.pending",
       ".news-review-note-line.fixed",
     ])
     const modalAxe = summarizeAxe(await runAxe(page))
     assertNoFocusAxeIssues(modalAxe, `admin news modal (${theme})`)
-    const sourceLink = await page.locator("#newsReviewViewerBody a").first().evaluate((node) => {
-      const cs = getComputedStyle(node)
-      return { color: cs.color, text: node.textContent || "" }
-    })
-    assert.notEqual(sourceLink.color, "rgb(33, 33, 33)", "admin modal source link should not use body text color in dark mode")
-    routeStates.push({ link: { href: "/admin/news-reports", text: "News Reports" }, modalSurfaces, modalAxe, sourceLink })
+    const viewerBlock = await page
+      .locator("#newsReviewViewerBody .news-review-viewer-block")
+      .first()
+      .evaluate((node) => {
+        const cs = getComputedStyle(node)
+        return { bg: cs.backgroundColor, color: cs.color, text: node.textContent || "" }
+      })
+    assert.notEqual(
+      viewerBlock.bg,
+      "rgba(0, 0, 0, 0)",
+      "admin modal viewer block should use a surfaced card background in dark mode",
+    )
+    assert.notEqual(
+      viewerBlock.color,
+      "rgb(33, 33, 33)",
+      "admin modal viewer block should not use body text color in dark mode",
+    )
+    routeStates.push({ link: { href: "/admin/news-reports", text: "News Reports" }, modalSurfaces, modalAxe, viewerBlock })
   }
 
   await page.goto(`${origin}/admin/grades-data`, { waitUntil: "domcontentloaded" })

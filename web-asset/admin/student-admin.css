@@ -21,16 +21,17 @@
         --admin-button-min-block: 48px;
         --admin-button-inline-padding: 14px;
         --admin-action-btn-font-size: 12px;
-        --admin-action-btn-inline-padding: var(--admin-button-inline-padding);
-        --admin-action-btn-min-block: var(--admin-button-min-block);
-        --admin-action-btn-min-inline: var(--admin-button-full-inline);
-        --admin-chip-inline: 120px;
-        --admin-chip-height: 32px;
-        --admin-chip-font-size: 12px;
-        --admin-chip-font-weight: 800;
-        --admin-chip-inline-padding: 10px;
-        --admin-chip-border-width: 2px;
-        --admin-chip-border-bottom-width: 3px;
+      --admin-action-btn-inline-padding: var(--admin-button-inline-padding);
+      --admin-action-btn-min-block: var(--admin-button-min-block);
+      --admin-action-btn-min-inline: var(--admin-button-full-inline);
+      --admin-chip-inline: 120px;
+      --admin-chip-height: 32px;
+      --chip-height: 30px;
+      --admin-chip-font-size: 12px;
+      --admin-chip-font-weight: 800;
+      --admin-chip-inline-padding: 10px;
+      --admin-chip-border-width: 2px;
+      --admin-chip-border-bottom-width: 3px;
         --chart-grid: var(--secondary-color);
         --chart-text: var(--portal-chart-axis-label);
         --danger: var(--portal-status-bad-text);
@@ -348,7 +349,7 @@
         --btn-active-shadow: var(--portal-button-shadow-active);
         --btn-hover-shadow: var(--portal-button-shadow-hover);
         --btn-ripple-color: var(--portal-color-41b1689b86);
-        background: var(--portal-button-teal-fill);
+        background-: var(--portal-button-teal-fill);
         border-color: var(--portal-button-teal-stroke);
         color: var(--portal-button-teal-ink);
       }
@@ -1105,6 +1106,7 @@
       }
       .grade-chart-period-btn {
         border-radius: var(--portal-radius-button);
+        box-sizing: border-box;
         cursor: pointer;
         inline-size: auto;
         letter-spacing: 0.03em;
@@ -1663,8 +1665,11 @@
       }
       .chip {
         align-items: center;
+        --chip-height: 30px;
+        --chip-min-ar: 0;
         background: #e2edff;
-        border: var(--admin-chip-border-width) solid #5f7ca6;
+        border: solid #5f7ca6;
+        border-width: 2px 2px 3px;
         border-bottom-width: var(--admin-chip-border-bottom-width);
         border-radius: 999px;
         box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
@@ -1675,49 +1680,49 @@
         font-size: var(--admin-chip-font-size);
         font-weight: var(--admin-chip-font-weight);
         gap: 6px;
-        height: var(--admin-chip-height);
-        inline-size: var(--admin-chip-inline);
+        height: var(--chip-height);
+        inline-size: auto;
         justify-content: center;
         line-height: 1;
-        max-inline-size: var(--admin-chip-inline);
+        max-inline-size: 100%;
         min-height: 0;
-        min-inline-size: var(--admin-chip-inline);
+        min-inline-size: 0;
         overflow: hidden;
-        padding: 0 var(--admin-chip-inline-padding);
+        padding: 0 10px;
         text-align: center;
         text-overflow: ellipsis;
         text-transform: none;
         white-space: nowrap;
       }
       .chip-neutral {
-        background: var(--portal-status-info-bg);
-        border-color: var(--portal-status-info-border);
-        color: var(--portal-status-info-text);
+        background: #dfeaff;
+        border-color: #5877a3;
+        color: #12345b;
       }
       .chip-ok {
-        background: var(--portal-status-good-bg);
-        border-color: var(--portal-status-good-border);
-        color: var(--portal-status-good-text);
+        background: #d8f2e3;
+        border-color: #287a4f;
+        color: #0f452c;
       }
       .chip-warn {
-        background: var(--portal-status-warn-bg);
-        border-color: var(--portal-status-warn-border);
-        color: var(--portal-status-warn-text);
+        background: #ffe9c7;
+        border-color: #b16d00;
+        color: #5b3500;
       }
       .chip-open {
-        background: var(--portal-status-info-bg);
-        border-color: var(--portal-status-info-border);
-        color: var(--portal-status-info-text);
+        background: #d8edff;
+        border-color: #2d78b4;
+        color: #093a63;
       }
       .chip-revise {
-        background: var(--portal-status-revise-bg);
-        border-color: var(--portal-status-revise-border);
-        color: var(--portal-status-revise-text);
+        background: #eadcff;
+        border-color: #7348b5;
+        color: #351267;
       }
       .chip-bad {
-        background: var(--portal-status-bad-bg);
-        border-color: var(--portal-status-bad-border);
-        color: var(--portal-status-bad-text);
+        background: #ffd8dd;
+        border-color: #ad2c3c;
+        color: #67101d;
       }
       .chip-checked {
         background: #cef4ef;
@@ -2288,7 +2293,7 @@
       .level-chip.panelbg-fly {
         --chip-bg: var(--portal-color-edb7fe91a8);
         --chip-border: var(--portal-color-0a4767016c);
-        --chip-text: var(--portal-status-good-text);
+        --chip-text: var(--portal-status-good-border);
       }
       .level-chip.panelbg-key {
         --chip-bg: var(--portal-color-709e6795a7);

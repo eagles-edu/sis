@@ -189,6 +189,11 @@ log() {
   printf '[sync-live] %s\n' "$*"
 }
 
+check_admin_asset_build_parity() {
+  log "checking admin asset build parity"
+  (cd "${REPO_ROOT}" && npm run build:admin-assets:check)
+}
+
 verify_portal_sync_proof() {
   log "verifying portal parity proof"
   (cd "${REPO_ROOT}" && tools/verify-portal-sync-proof.sh \
@@ -513,6 +518,17 @@ verify_live_sync_whitelist() {
   check_whitelist_drift
 }
 
+verify_live_preserved_runtime_files() {
+  local rel_path=""
+  for rel_path in "${LIVE_PRESERVED_RUNTIME_FILES[@]}"; do
+    if [[ -f "${LIVE_ROOT}/${rel_path}" ]]; then
+      log "preserved immutable present: ${rel_path}"
+    else
+      log "preserved immutable missing after wipe restore: ${rel_path}"
+    fi
+  done
+}
+
 backup_live_state() {
   local timestamp
   timestamp="$(date +%Y%m%d-%H%M%S)"
@@ -599,6 +615,16 @@ EOF
 build_admin_assets() {
   log "building admin assets before live sync"
   (cd "${REPO_ROOT}" && npm run build:admin-assets)
+}
+
+cleanup_live_backup_artifacts() {
+  if [[ ! -d "${LIVE_ROOT}" ]]; then
+    log "skip backup artifact cleanup (live root missing)"
+    return 0
+  fi
+
+  log "removing backup artifacts from ${LIVE_ROOT}"
+  "${LIVE_WRITE_PREFIX[@]}" find "${LIVE_ROOT}" -type f -name '*.BAK-*' -delete
 }
 
 sync_runtime_code_trees() {
@@ -876,24 +902,28 @@ verify_live_routes() {
 }
 
 run_check_only() {
+  log "file mirror only; git commit matching is not part of the live sync contract"
   log "checking live whitelist drift"
   check_whitelist_drift
   log "checking public hub index derivation"
   verify_live_public_html_index
-  log "checking admin asset build parity"
-  (cd "${REPO_ROOT}" && npm run build:admin-assets:check)
+  check_admin_asset_build_parity
   log "checking live route coverage"
   verify_live_routes
 }
 
 run_apply() {
+  log "file mirror only; git commit matching is not part of the live sync contract"
   backup_live_state
   build_admin_assets
+  check_admin_asset_build_parity
   wipe_live_target_contents
+  verify_live_preserved_runtime_files
   verify_live_roots_cleared
   sync_runtime_code_trees
   sync_live_runtime_data_files
   sync_live_runtime_assets
+  cleanup_live_backup_artifacts
   sync_live_public_assets
   sync_live_public_html_index
   ensure_live_dependencies

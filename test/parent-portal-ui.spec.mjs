@@ -9,11 +9,15 @@ const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-t
 const PARENT_PORTAL_HTML = fs.readFileSync(PARENT_PORTAL_HTML_PATH, "utf8")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const PARENT_PORTAL_HTML_FOR_TEST = PARENT_PORTAL_HTML
+  .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
+  .replace(/<link rel="stylesheet" href="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
+  .replace(/<link rel="stylesheet" href="\.\.\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
   .replace(/<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/shared\/portal-navigation\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
+  .replace(/<script src="\.\.\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
   .replace(/<head>/i, `<head><style>${SHARED_THEME}</style>`)
 
@@ -2410,7 +2414,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
   assert.match(normalizeText(reportLinks[0]?.textContent), /Q2/i)
   assert.match(normalizeText(reportLinks[1]?.textContent), /Q1/i)
 
-  reportLinks[0].dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+  reportLinks[0].dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
     assert.equal(document.getElementById("performanceReportModal").classList.contains("hidden"), false)
@@ -2443,7 +2447,7 @@ test("parent portal report archive sorts newest first and clears outstanding aft
 
   document
     .getElementById("reportPastDueHomeworkPreviewBtn")
-    ?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+    ?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
     assert.equal(document.getElementById("pastDueHomeworkModal").classList.contains("hidden"), false)
@@ -2454,21 +2458,21 @@ test("parent portal report archive sorts newest first and clears outstanding aft
 
   document
     .getElementById("closePastDueHomeworkModalBtn")
-    ?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+    ?.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
 
-  document.getElementById("performanceReportNextBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+  document.getElementById("performanceReportNextBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
     assert.match(normalizeText(document.getElementById("performanceReportModalTitle")?.textContent), /2\/2/i)
   })
 
-  document.getElementById("performanceReportPrevBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+  document.getElementById("performanceReportPrevBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
     assert.match(normalizeText(document.getElementById("performanceReportModalTitle")?.textContent), /1\/2/i)
   })
 
-  document.getElementById("acknowledgePerformanceReportBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }))
+  document.getElementById("acknowledgePerformanceReportBtn").dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true, cancelable: true }))
 
   await waitFor(() => {
     assert.match(normalizeText(document.getElementById("performanceReportAckStatus")?.textContent), /acknowledged on|Đã xác nhận lúc/i)

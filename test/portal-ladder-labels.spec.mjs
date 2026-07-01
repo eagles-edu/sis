@@ -44,7 +44,7 @@ test("portal ladder surfaces are labeled explicitly in markup", () => {
   assert.match(studentAdminHtml, /<div class="performance-data-list data-surface" data-surface-role="data-surface">/)
   assert.match(studentAdminHtml, /<section class="hidden panel" id="performanceStagedSection" data-surface-role="panel">/)
   assert.match(studentAdminHtml, /<section class="hidden panel" id="performanceQueueSection" data-surface-role="panel">/)
-  assert.match(studentAdminHtml, /<details class="data-surface" id="performanceQueueDetails" data-surface-role="data-surface">/)
+  assert.match(studentAdminHtml, /<details class="data-surface" id="performanceQueueDetails" data-surface-role="data-surface"(?: open)?>/)
   assert.match(studentAdminHtml, /<div class="content page-section" data-page="news-reports" data-surface-role="content">/)
   assert.match(studentAdminHtml, /<div class="table-scroll-wrap data-surface news-review-table-wrap" data-surface-role="data-surface">[\s\S]*?<tbody id="newsReviewRows">/)
   assert.match(studentAdminHtml, /<div id="newsReviewViewerModal" class="queue-modal hidden" role="dialog" aria-modal="true" aria-label="Student news report detail viewer">[\s\S]*?<div class="queue-modal-card content" data-surface-role="content">/)

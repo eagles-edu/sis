@@ -79,7 +79,7 @@ test("parent portal surfaces follow the shared portal theme tokens", () => {
     sliceBetween(shared, "body.parent-portal-page .profile-group {", "body.parent-portal-page .profile-group p {", "parent shared profile-group"),
     sliceBetween(shared, "body.parent-portal-page .field-row {", "body.parent-portal-page .field-row:first-of-type {", "parent shared field-row"),
     sliceBetween(shared, "body.parent-portal-page .choice-group {", "body.parent-portal-page .choice-group:disabled {", "parent shared choice-group"),
-    sliceBetween(shared, "body.parent-portal-page .draft-actions {", "body.parent-portal-page :is(#backToDashboardBtn, #saveDraftBtn, #parentTextZoomDownBtn, #parentTextZoomUpBtn, #parentTextZoomResetBtn) {", "parent shared draft-actions"),
+    sliceBetween(shared, "body.parent-portal-page .draft-actions {", "body.parent-portal-page :where(.portal-modal, #newsWeekSetModal, #performanceReportModal) :where(input, textarea, select)::placeholder {", "parent shared draft-actions"),
   ].join("\n")
 
   assertExcludesAll(
@@ -204,8 +204,13 @@ test("semantic status palettes stay on shared portal tokens", () => {
     ],
     "student-admin status palette",
   )
+  const studentAdminStatusBlocks = [
+    sliceBetween(studentAdmin, ".queue-hub-order-dirty {", ".stats-grid {", "student-admin queue hub status"),
+    sliceBetween(studentAdmin, ".system-health-item {", ".system-health-mirror-card {", "student-admin system health status"),
+    sliceBetween(studentAdmin, ".hub-pill {", ".hub-pill.connected {", "student-admin hub pill status"),
+  ].join("\n")
   assertExcludesAll(
-    studentAdmin,
+    studentAdminStatusBlocks,
     ["#d7f2e1", "#ffe9c7", "#ffd9de", "#dfeaff", "#70b68e"],
     "student-admin legacy status colors",
   )

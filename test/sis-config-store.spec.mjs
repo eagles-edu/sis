@@ -93,7 +93,7 @@ function writeRichSisConfigFixture(filePath, { updatedAt = "2026-05-01T00:00:00.
   )
 }
 
-test("saveSisConfigSnapshot writes config and legacy mirror", async () => {
+test("saveSisConfigSnapshot writes config and leaves the legacy mirror untouched", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
@@ -130,16 +130,13 @@ test("saveSisConfigSnapshot writes config and legacy mirror", async () => {
     assert.equal(saved.newsReports.weeklyMinimumReports, 5)
     assert.equal(saved.uiSettings.levelTileStylesByLevel["A1 Movers"].title, "Class level title")
     assert.equal(fs.existsSync(sisConfigPath), true)
-    assert.equal(fs.existsSync(legacyPath), true)
+    assert.equal(fs.existsSync(legacyPath), false)
 
     const configJson = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
-    const legacyJson = JSON.parse(fs.readFileSync(legacyPath, "utf8"))
     assert.equal(configJson.uiSettings.schoolSetup.schoolYear, "2026-2027")
     assert.equal(configJson.runtime.databaseUrl, "postgresql://user:pass@localhost:5432/sis")
     assert.equal(configJson.newsReports.weeklyMinimumReports, 5)
     assert.equal(configJson.uiSettings.levelTileStylesByLevel["A1 Movers"].bgColor, "#002786")
-    assert.equal(legacyJson.uiSettings.schoolSetup.schoolYear, "2026-2027")
-    assert.equal(legacyJson.updatedBy, "tester")
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
     delete process.env.SIS_CONFIG_FILE
@@ -473,7 +470,7 @@ test("sis config loader reinjects relative logo and six level image paths when m
   }
 })
 
-test("ensureSisConfigLoaded restores the config snapshot when it is present", async () => {
+test("ensureSisConfigLoaded restores the config snapshot without rewriting the legacy mirror", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
@@ -530,8 +527,8 @@ test("ensureSisConfigLoaded restores the config snapshot when it is present", as
     const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
     const restoredLegacy = JSON.parse(fs.readFileSync(legacyPath, "utf8"))
     assert.equal(restoredConfig.uiSettings.schoolSetup.schoolYear, "2025-2026")
-    assert.equal(restoredLegacy.uiSettings.schoolSetup.schoolYear, "2025-2026")
-    assert.equal(restoredLegacy.updatedBy, "config")
+    assert.equal(restoredLegacy.uiSettings.schoolSetup.schoolYear, "2026-2027")
+    assert.equal(restoredLegacy.updatedBy, "legacy")
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
     delete process.env.SIS_CONFIG_FILE
@@ -540,7 +537,7 @@ test("ensureSisConfigLoaded restores the config snapshot when it is present", as
   }
 })
 
-test("ensureSisConfigLoaded recreates a missing SIS config from the DB mirror shape", async () => {
+test("ensureSisConfigLoaded falls back to the default snapshot when the SIS config is missing", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
@@ -574,15 +571,17 @@ test("ensureSisConfigLoaded recreates a missing SIS config from the DB mirror sh
     const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
     const snapshot = await mod.ensureSisConfigLoaded({ refresh: true })
 
-    assert.equal(snapshot.source, "legacy")
-    assert.equal(snapshot.uiSettings.schoolProfile.schoolName, "The Eagles Club")
+    assert.equal(snapshot.source, "default")
+    assert.equal(snapshot.uiSettings.schoolProfile.schoolName, "")
     assert.equal(snapshot.uiSettings.schoolProfile.logoDataUrl, "web-asset/images/logo.svg")
     assert.equal(snapshot.uiSettings.levelTileStylesByLevel["A2 KET"].imageDataUrl, "web-asset/images/ket.svg")
     assert.equal(fs.existsSync(sisConfigPath), true)
 
     const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
-    assert.equal(restoredConfig.uiSettings.schoolProfile.phone, "0937667818")
+    const restoredLegacy = JSON.parse(fs.readFileSync(legacyPath, "utf8"))
+    assert.equal(restoredConfig.uiSettings.schoolProfile.phone, "")
     assert.equal(restoredConfig.uiSettings.levelTileStylesByLevel["B1 PET"].imageDataUrl, "web-asset/images/pet.svg")
+    assert.equal(restoredLegacy.updatedBy, "legacy")
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
     delete process.env.SIS_CONFIG_FILE
@@ -591,7 +590,7 @@ test("ensureSisConfigLoaded recreates a missing SIS config from the DB mirror sh
   }
 })
 
-test("ensureSisConfigLoaded recreates a missing legacy mirror from SIS config", async () => {
+test("ensureSisConfigLoaded leaves a missing legacy mirror missing while loading SIS config", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
@@ -610,11 +609,7 @@ test("ensureSisConfigLoaded recreates a missing legacy mirror from SIS config", 
     assert.equal(snapshot.uiSettings.schoolProfile.schoolName, "The Eagles Club")
     assert.equal(snapshot.uiSettings.schoolProfile.logoDataUrl, "web-asset/images/logo.svg")
     assert.equal(snapshot.uiSettings.levelTileStylesByLevel["A1 Movers"].imageDataUrl, "web-asset/images/movers.svg")
-    assert.equal(fs.existsSync(legacyPath), true)
-
-    const restoredLegacy = JSON.parse(fs.readFileSync(legacyPath, "utf8"))
-    assert.equal(restoredLegacy.uiSettings.schoolProfile.publicSite, "https://eagles.edu.vn")
-    assert.equal(restoredLegacy.uiSettings.levelTileStylesByLevel["Eggs & Chicks"].imageDataUrl, "web-asset/images/eggs-chicks.svg")
+    assert.equal(fs.existsSync(legacyPath), false)
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
     delete process.env.SIS_CONFIG_FILE
@@ -623,7 +618,7 @@ test("ensureSisConfigLoaded recreates a missing legacy mirror from SIS config", 
   }
 })
 
-test("ensureSisConfigLoaded backs up a corrupt SIS config before restoring from legacy", async () => {
+test("ensureSisConfigLoaded backs up a corrupt SIS config before writing the default snapshot", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
@@ -650,16 +645,16 @@ test("ensureSisConfigLoaded backs up a corrupt SIS config before restoring from 
     const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
     const snapshot = await mod.ensureSisConfigLoaded({ refresh: true })
 
-    assert.equal(snapshot.source, "legacy")
-    assert.equal(snapshot.uiSettings.schoolSetup.schoolYear, "2026-2027")
+    assert.equal(snapshot.source, "default")
+    assert.equal(snapshot.uiSettings.schoolSetup.schoolYear, "")
 
     const backupName = fs.readdirSync(tempDir).find((entry) => entry.startsWith("SIS_CONFIG.json.BAK-"))
     assert.ok(backupName, "expected SIS_CONFIG backup to be created")
     assert.equal(fs.readFileSync(path.join(tempDir, backupName), "utf8"), "{ not-json")
 
     const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
-    assert.equal(restoredConfig.uiSettings.schoolSetup.schoolYear, "2026-2027")
-    assert.equal(restoredConfig.updatedBy, "legacy")
+    assert.equal(restoredConfig.uiSettings.schoolSetup.schoolYear, "")
+    assert.equal(restoredConfig.updatedBy, null)
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
     delete process.env.SIS_CONFIG_FILE
@@ -668,7 +663,7 @@ test("ensureSisConfigLoaded backs up a corrupt SIS config before restoring from 
   }
 })
 
-test("ensureSisConfigLoaded backs up a corrupt legacy mirror before restoring from SIS config", async () => {
+test("ensureSisConfigLoaded ignores a corrupt legacy mirror while restoring SIS config", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   process.env.SIS_CONFIG_FILE = sisConfigPath
   process.env.STUDENT_ADMIN_UI_SETTINGS_FILE = legacyPath
@@ -706,12 +701,9 @@ test("ensureSisConfigLoaded backs up a corrupt legacy mirror before restoring fr
     assert.equal(snapshot.uiSettings.schoolSetup.schoolYear, "2026-2027")
 
     const backupName = fs.readdirSync(path.dirname(legacyPath)).find((entry) => entry.startsWith("admin-ui-settings.json.BAK-"))
-    assert.ok(backupName, "expected legacy backup to be created")
-    assert.equal(fs.readFileSync(path.join(path.dirname(legacyPath), backupName), "utf8"), "{ not-json")
+    assert.equal(backupName, undefined)
 
-    const restoredLegacy = JSON.parse(fs.readFileSync(legacyPath, "utf8"))
-    assert.equal(restoredLegacy.uiSettings.schoolSetup.schoolYear, "2026-2027")
-    assert.equal(restoredLegacy.updatedBy, "config")
+    assert.equal(fs.readFileSync(legacyPath, "utf8"), "{ not-json")
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
     delete process.env.SIS_CONFIG_FILE

@@ -168,6 +168,26 @@ function endOfDay(value = new Date()) {
 }
 
 /**
+ * @param {unknown} [value]
+ * @param {number} [days]
+ * @returns {Date}
+ */
+function addDays(value = new Date(), days = 0) {
+  const date = startOfDay(value)
+  const shifted = shiftToFixedTimeZone(date)
+  shifted.setUTCDate(shifted.getUTCDate() + (Number.parseInt(String(days), 10) || 0))
+  return shiftFromFixedTimeZone(shifted)
+}
+
+/**
+ * @param {unknown} [now]
+ * @returns {Date}
+ */
+function resolveStudentNewsRevisionEditableUntil(now = new Date()) {
+  return endOfDay(addDays(now, 15))
+}
+
+/**
  * @param {boolean} condition
  * @param {number} status
  * @param {string} message
@@ -1030,6 +1050,9 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
     reviewedByUsername,
     reviewedAt: now,
   }
+  if (reviewStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED) {
+    updateData.editableUntil = resolveStudentNewsRevisionEditableUntil(now)
+  }
   if (normalizedValidationIssues && Object.keys(normalizedValidationIssues).length) {
     updateData.validationIssuesJson = normalizedValidationIssues
   }
@@ -1071,6 +1094,10 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
       id,
       reviewStatus,
       reviewNote,
+      editableUntil:
+        updateData.editableUntil instanceof Date ?
+          updateData.editableUntil.toISOString()
+        : existingReport?.editableUntil || null,
       validationIssuesJson:
         updateData.validationIssuesJson
         || existingValidationIssues

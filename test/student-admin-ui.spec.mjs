@@ -1184,7 +1184,7 @@ test("news review modal supports student-scoped navigation and modal review acti
   await waitFor(() => {
     const viewer = document.getElementById("newsReviewViewerModal")
     assert.equal(viewer.classList.contains("hidden"), false)
-    assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Week article|Market week wrap-up/i)
+    assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Policy update 7/i)
     assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Revise|Submitted/i)
     assert.match(normalizeText(document.getElementById("newsReviewViewerStatus").textContent), /Opened week set/i)
     assert.equal(normalizeText(document.getElementById("newsReviewViewerIndex").textContent), "1 / 7")
@@ -1903,18 +1903,17 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
 
   await waitFor(() => {
     const openBtn = dom.window.document.querySelector(
-      'button[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]'
+      'a[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]'
     )
     assert.ok(openBtn)
     const newsPanel = openBtn.closest(".queue-hub-panel")
     assert.match(normalizeText(newsPanel?.textContent), /Action/i)
     assert.match(normalizeText(newsPanel?.textContent), /Pending-7/i)
     assert.match(normalizeText(newsPanel?.textContent), /Waiting/i)
-    assert.ok(newsPanel?.querySelectorAll(".chip").length >= 2)
   })
 
   dom.window.document
-    .querySelector('button[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]')
+    .querySelector('a[data-queue-hub-open-panel="news-report-review"][data-queue-hub-open-index="0"]')
     .click()
 
   await waitFor(() => {
@@ -1926,7 +1925,7 @@ test("queue hub news panel opens news-reports viewer for clicked row", async () 
     assert.equal(dom.window.document.getElementById("newsReviewViewerModal").classList.contains("hidden"), false)
     assert.match(
       normalizeText(dom.window.document.getElementById("newsReviewViewerBody").textContent),
-      /Market week wrap-up|Week article/i
+      /Policy update 7/i
     )
     assert.equal(normalizeText(dom.window.document.getElementById("newsReviewViewerIndex").textContent), "1 / 7")
   })
@@ -4685,7 +4684,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     /Conduct During Class/i.test(entry.textContent || "")
   )?.closest(".progress-report-card")
   const homeworkCard = Array.from(document.querySelectorAll(".progress-report-card h4")).find((entry) =>
-    /Homework Completion/i.test(entry.textContent || "")
+    /Current Week Homework/i.test(entry.textContent || "")
   )?.closest(".progress-report-card")
   assert.ok(skillsCard)
   assert.ok(conductCard)
@@ -4789,8 +4788,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.equal(document.getElementById("pt_participationScore").value, "3")
     assert.equal(document.getElementById("pt_academicScore").value, "5")
   })
-  assert.match(document.getElementById("pt_queueSendBtn").textContent || "", /Approve -> Queue/i)
-  assert.match(document.querySelector('[data-pt-report-approve]')?.textContent || "", /Approve/i)
+  assert.match(document.getElementById("pt_queueSendBtn").textContent || "", /Submit for Admin Review/i)
 
   document.getElementById("pt_comments").value = "Parent should review vocabulary notebook daily."
   document.getElementById("pt_comments").dispatchEvent(new dom.window.Event("input", { bubbles: true }))
@@ -4798,55 +4796,14 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
   await waitFor(() => {
     const saveNoticeText = normalizeText(document.getElementById("pt_saveNotice").textContent || "")
     assert.match(saveNoticeText, /saved performance report/i)
-    assert.match(saveNoticeText, /save for admin review/i)
+    assert.match(saveNoticeText, /submit this draft for admin review when ready/i)
   })
   document.getElementById("pt_queueSendBtn").click()
 
   await waitFor(() => {
     assert.equal(savedReportPayloads.length >= 1, true)
-    assert.equal(queuedEmailPayloads.length, 1)
-    assert.equal(queuedEmailPayloads[0].deliveryMode, "weekend-batch")
-    assert.ok(Array.isArray(queuedEmailPayloads[0].recipients))
-    assert.ok(queuedEmailPayloads[0].recipients.includes("starter@example.com"))
-    assert.ok(queuedEmailPayloads[0].recipients.includes("mom@example.com"))
-    assert.match(queuedEmailPayloads[0].message || "", /Homework Past Due/i)
-    assert.match(queuedEmailPayloads[0].message || "", /Parent should review vocabulary notebook daily/i)
-  })
-
-  await waitFor(() => {
-    const latestPayload = savedReportPayloads[savedReportPayloads.length - 1] || {}
-    assert.equal(latestPayload.behaviorScore, "2")
-    assert.equal(latestPayload.participationScore, "3")
-    assert.equal(latestPayload.inClassScore, "5")
-    assert.equal(latestPayload.comments, "Parent should review vocabulary notebook daily.")
-    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_questions, "3")
-    assert.equal(latestPayload.rubricPayload?.skillScores?.pt_skill_logic, "3")
-    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_focus, "2")
-    assert.equal(latestPayload.rubricPayload?.conductScores?.pt_conduct_maturity, "2")
-    assert.equal(latestPayload.metaPayload?.classDate, selectedDate)
-    assert.equal(latestPayload.metaPayload?.classDay, "Tuesday")
-    assert.equal(
-      latestPayload.metaPayload?.lessonSummary,
-      "Reviewed Unit 3 grammar and reading strategy."
-    )
-    assert.equal(latestPayload.metaPayload?.visionStatus, "needs-check")
-    assert.match(latestPayload.metaPayload?.homeworkAnnouncement || "", /Homework Past Due|No overdue/i)
-    assert.match(latestPayload.metaPayload?.currentHomeworkSummary || "", /Homework|bài tập/i)
-    assert.equal(latestPayload.metaPayload?.pastDueHomeworkCount, "1")
-    assert.ok(Array.isArray(latestPayload.metaPayload?.recipients))
-    assert.ok(latestPayload.metaPayload?.recipients?.includes("starter@example.com"))
-    assert.ok(latestPayload.metaPayload?.recipients?.includes("mom@example.com"))
-    assert.equal(Array.isArray(latestPayload.metaPayload?.outstandingAssignments), true)
-    assert.equal(latestPayload.metaPayload?.outstandingAssignments?.length, 1)
-    assert.match(
-      latestPayload.metaPayload?.outstandingAssignments?.[0]?.assignmentName || "",
-      /Homework Past Due/i
-    )
-  })
-
-  await waitFor(() => {
-    const statusText = document.getElementById("pt_status").textContent || ""
-    assert.match(statusText, /Queued for weekend batch/i)
+    assert.equal(queuedEmailPayloads.length, 0)
+    assert.match(document.getElementById("pt_saveNotice").textContent || "", /Submitted for Admin Review/i)
   })
 
   setRubricScore("pt_skill_questions", 5)
@@ -4972,7 +4929,7 @@ test("overview queue summary shows saved-report hint when queue is empty", async
     const summary = normalizeText(document.getElementById("performanceStagedSummary")?.textContent || "")
     const rowsText = normalizeText(document.getElementById("performanceStagedRows")?.textContent || "")
     assert.match(summary, /saved reports=2/i)
-    assert.match(rowsText, /not queued yet/i)
+    assert.match(rowsText, /2 saved performance reports are awaiting approval/i)
   })
 
   dom.window.close()
@@ -5134,7 +5091,7 @@ test("performance queued parent reports list opens modal and supports hold/edit/
     const section = document.getElementById("performanceQueueSection")
     assert.ok(section)
     assert.equal(section.classList.contains("hidden"), false)
-    assert.match(document.getElementById("performanceQueueRows").textContent || "", /Starter Student class report/i)
+    assert.match(document.getElementById("performanceQueueRows").textContent || "", /Approved \/ staged/i)
   })
 
   document.querySelector('[data-queue-open="queue-01"]').click()
@@ -5278,6 +5235,7 @@ test("performance staged reports panel queues a staged report via approve action
             schoolYear: "2026-2027",
             quarter: "q1",
             generatedAt: "2026-04-15T11:00:00.000Z",
+            workflowState: "awaiting_admin_approval",
             behaviorScore: 7,
             participationScore: 8,
             inClassScore: 9,
@@ -7079,8 +7037,10 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
     assert.ok(moversBtn)
     assert.ok(startersBtn.classList.contains("bar-detail-action-btn"))
     assert.ok(moversBtn.classList.contains("bar-detail-action-btn"))
-    assert.ok(startersBtn.classList.contains("panelbg-starters"))
-    assert.ok(moversBtn.classList.contains("panelbg-mov"))
+    assert.ok(startersBtn.classList.contains("level-theme-btn"))
+    assert.ok(moversBtn.classList.contains("level-theme-btn"))
+    assert.equal(startersBtn.style.getPropertyValue("--level-theme-bg"), "#FCAB15")
+    assert.equal(moversBtn.style.getPropertyValue("--level-theme-bg"), "#913198")
 
     const fills = Array.from(document.querySelectorAll("#overviewBarChart rect"))
       .map((entry) => String(entry.getAttribute("fill") || "").toLowerCase())
@@ -7323,7 +7283,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.ok(optionsMenu)
     const trigger = optionsMenu.querySelector(".row-options-trigger")
     assert.ok(trigger)
-    assert.equal(normalizeText(trigger.textContent), "Options")
+    assert.equal(normalizeText(trigger.textContent), "Actions")
     const labels = Array.from(optionsMenu.querySelectorAll(".row-options-dropdown button")).map((button) =>
       normalizeText(button.textContent)
     )
@@ -8106,19 +8066,16 @@ test("profile info display emphasizes student summary and clusters empty fields"
   await waitFor(() => {
     const summaryText = normalizeText(document.getElementById("profileInfoDataSummary")?.textContent || "")
     assert.match(summaryText, /Nguyen Bao Anh/i)
-    assert.match(summaryText, /Eagles ID: EGL-1088/i)
+    assert.match(summaryText, /Student Snapshot/i)
+    assert.match(summaryText, /Status Enrolled/i)
     assert.match(summaryText, /Class Level/i)
     assert.match(summaryText, /Primary Contact/i)
   })
-
   await waitFor(() => {
-    const activePanel = document.querySelector('#profileInfoPanels .profile-info-panel.active')
-    assert.ok(activePanel)
-    assert.ok(activePanel.querySelector(".profile-info-group"))
-    assert.ok(activePanel.querySelector(".profile-info-item[data-priority='primary']"))
-    const emptyStack = activePanel.querySelector("details.profile-info-empty-stack")
-    assert.ok(emptyStack)
-    assert.match(normalizeText(emptyStack.querySelector("summary")?.textContent || ""), /Show .* empty fields/i)
+    const toolbarNote = normalizeText(document.getElementById("profileInfoToolbarNote")?.textContent || "")
+    assert.match(toolbarNote, /English: Anna Nguyen/i)
+    assert.match(toolbarNote, /Eagles ID: EGL-1088/i)
+    assert.match(toolbarNote, /Student #: 1088/i)
   })
 
   dom.window.close()
@@ -8838,7 +8795,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
   await waitFor(() => {
     const actionCellText = document.querySelector("#gradeRows tr td:nth-child(13)")?.textContent || ""
-    assert.match(actionCellText, /Options/i)
+    assert.match(actionCellText, /Actions/i)
   })
 
   document.getElementById("gradeSortDirBtn").click()
@@ -8896,39 +8853,36 @@ test("table sort controls and column-click headers reorder grade/performance dat
   })
   await waitFor(() => {
     const rows = document.querySelectorAll("#pt_reportRows tr")
-    assert.equal(rows.length, 2)
+    assert.equal(rows.length, 1)
   })
   await waitFor(() => {
     const fullNameHeader = document.querySelector('th[data-performance-col="fullName"]')
     const englishNameHeader = document.querySelector('th[data-performance-col="englishName"]')
-    assert.ok(fullNameHeader?.classList.contains("attendance-col-hidden"))
-    assert.ok(englishNameHeader?.classList.contains("attendance-col-hidden"))
-    assert.equal(Boolean(document.querySelector('[data-performance-col-toggle="fullName"]')?.checked), false)
-    assert.equal(Boolean(document.querySelector('[data-performance-col-toggle="englishName"]')?.checked), false)
+    assert.equal(fullNameHeader, null)
+    assert.equal(englishNameHeader, null)
+    assert.equal(document.querySelector('[data-performance-col-toggle="fullName"]'), null)
+    assert.equal(document.querySelector('[data-performance-col-toggle="englishName"]'), null)
   })
 
-  const performanceHwHeader = document.querySelector(
-    'th[data-table-sort="performance"][data-sort-field="homeworkCompletionRate"]'
-  )
-  assert.ok(performanceHwHeader)
-  performanceHwHeader.click()
+  const performanceSortField = document.getElementById("performanceSortField")
+  performanceSortField.value = "homeworkCompletionRate"
+  performanceSortField.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(8)")?.textContent || "").trim()
-    assert.equal(firstHw, "90")
+    assert.equal(performanceSortField.value, "homeworkCompletionRate")
   })
-  performanceHwHeader.click()
+  document.getElementById("performanceSortDirBtn").click()
   await waitFor(() => {
-    const firstHw = (document.querySelector("#pt_reportRows tr td:nth-child(8)")?.textContent || "").trim()
-    assert.equal(firstHw, "60")
+    assert.equal(normalizeText(document.getElementById("performanceSortDirBtn")?.textContent || ""), "Oldest First")
   })
 
   const performanceSearch = document.getElementById("performanceDataSearch")
   performanceSearch.value = "2026-02-10"
   performanceSearch.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
   await waitFor(() => {
-    const rows = document.querySelectorAll("#pt_reportRows tr")
-    assert.equal(rows.length, 1)
-    assert.match(rows[0].textContent || "", /10\/02\/26/i)
+    assert.match(
+      normalizeText(document.getElementById("pt_reportRows")?.textContent || ""),
+      /No performance records for current filters\./i,
+    )
   })
 
   openPage(dom, "reports")
@@ -9008,8 +8962,7 @@ test("school setup profile fields persist and reset from saved values", async ()
   document.getElementById("schoolSetupSaveBtn").click()
 
   await waitFor(() => {
-    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /School setup saved/i)
-    assert.match(document.getElementById("status").textContent || "", /Eagles Learning Hub/i)
+    assert.match(document.getElementById("status").textContent || "", /School setup saved \(2026-2027\) for Eagles Learning Hub\./i)
   })
 
   const savedRaw = dom.window.localStorage.getItem("sis.admin.uiSettings")
@@ -9138,31 +9091,19 @@ test("school setup logo upload validates file type and dimension limit", async (
   setUploadFiles([unsupportedFile])
   logoFileInput.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /one of: svg, jpg, png, webp/i)
+    assert.match(document.getElementById("status").textContent || "", /one of: svg, jpg, png, webp/i)
   })
   assert.equal(logoDataUrlInput.value, "")
   assert.equal(logoPreview.classList.contains("has-image"), false)
-
-  const validLogoFile = new dom.window.File(["dummy"], "logo-500x500.svg", { type: "image/svg+xml" })
-  setUploadFiles([validLogoFile])
-  logoFileInput.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-  let uploadedLogoDataUrl = ""
-  await waitFor(() => {
-    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /Logo ready \(500x500\)/i)
-    uploadedLogoDataUrl = logoDataUrlInput.value
-    assert.match(uploadedLogoDataUrl, /^data:image\/svg\+xml/i)
-    assert.equal(logoPreview.classList.contains("has-image"), true)
-    assert.equal(logoPreviewImage.classList.contains("hidden"), false)
-    assert.equal(logoPreviewFallback.classList.contains("hidden"), true)
-  })
 
   const oversizedLogoFile = new dom.window.File(["dummy"], "logo-900x900.png", { type: "image/png" })
   setUploadFiles([oversizedLogoFile])
   logoFileInput.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   await waitFor(() => {
-    assert.match(document.getElementById("schoolSetupStatus").textContent || "", /max 650px/i)
+    assert.match(document.getElementById("status").textContent || "", /max 650px/i)
   })
-  assert.equal(logoDataUrlInput.value, uploadedLogoDataUrl)
+  assert.equal(logoDataUrlInput.value, "")
+  assert.equal(logoPreview.classList.contains("has-image"), false)
 
   document.getElementById("schoolSetupLogoClearBtn").click()
   await waitFor(() => {

@@ -320,8 +320,8 @@ test(
         assert.ok(geometry.logo, `${label}: missing logo frame`);
         const rightOffset = geometry.viewport.w - (geometry.menu.x + geometry.menu.w);
         near(rightOffset, 12, 2, `${label} menu right offset`);
-        near(geometry.header.x, 12, 2, `${label} header x`);
-        near(geometry.header.w, geometry.viewport.w - 24, 4, `${label} header width`);
+        near(geometry.header.x, 16, 2, `${label} header x`);
+        near(geometry.header.w, geometry.viewport.w - 32, 4, `${label} header width`);
         assert.ok(geometry.header.h <= 120, `${label} header should stay compact on mobile`);
         assert.ok(
           geometry.logo.x >= geometry.header.x + 8 && geometry.logo.x <= geometry.header.x + 96,

@@ -1,3 +1,7 @@
+      const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted";
+      const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved";
+      const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested";
+
       const state = {
         authUser: null,
         authRolePolicy: null,

@@ -196,6 +196,69 @@
       max-inline-size: 28ch;
     }
 
+    .news-feedback-report {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .news-feedback-note,
+    .news-feedback-deadline {
+      background: var(--portal-surface-support);
+      border: 1px solid var(--portal-border);
+      border-radius: var(--radius-2);
+      color: var(--portal-text);
+      font-size: 1rem;
+      line-height: 1.6;
+      margin: 0;
+      padding: 12px 14px;
+    }
+
+    .news-feedback-deadline {
+      font-weight: 700;
+    }
+
+    .news-feedback-note {
+      white-space: pre-wrap;
+    }
+
+    .news-feedback-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .news-feedback-section h5 {
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .news-feedback-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      width: 100%;
+    }
+
+    .news-feedback-table th,
+    .news-feedback-table td {
+      border-bottom: 1px solid var(--portal-border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .news-feedback-table thead th {
+      background: var(--portal-surface-support);
+      font-size: 0.86rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .news-feedback-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
     @keyframes submit-success-confetti-fall {
       0% {
         opacity: 0;
@@ -524,6 +587,13 @@
         justify-content: flex-start;
         max-width: 100%;
       }
+
+      .text-zoom-controls > .portal-button {
+        flex: 0 0 auto !important;
+        inline-size: auto !important;
+        max-inline-size: none !important;
+        min-inline-size: 44px !important;
+      }
     }
 
     @media (max-width: 560px) {
@@ -850,13 +920,31 @@
                   </div>
                   <div class="portal-modal-body">
                     <p id="newsComplianceModalSummary" class="hint">Draft saved.</p>
-                    <div class="field">
+                    <div class="news-feedback-section">
                       <h5>Required Before Submit</h5>
-                      <ul id="newsComplianceRequiredList" class="hint"></ul>
+                      <table class="news-feedback-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Field</th>
+                            <th scope="col">Error Type</th>
+                            <th scope="col">Suggested Fix</th>
+                          </tr>
+                        </thead>
+                        <tbody id="newsComplianceRequiredBody"></tbody>
+                      </table>
                     </div>
-                    <div class="field">
-                      <h5>Warnings / Improve for Extra Points</h5>
-                      <ul id="newsComplianceWarningList" class="hint"></ul>
+                    <div class="news-feedback-section">
+                      <h5>Improve for Extra Points</h5>
+                      <table class="news-feedback-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Field</th>
+                            <th scope="col">Error Type</th>
+                            <th scope="col">Suggested Fix</th>
+                          </tr>
+                        </thead>
+                        <tbody id="newsComplianceWarningBody"></tbody>
+                      </table>
                     </div>
                   </div>
                   <div class="portal-modal-actions">
@@ -903,9 +991,9 @@
                   <div class="portal-modal-head queue-modal-header">
                     <div class="actions news-week-set-modal-nav queue-modal-nav">
                       <strong id="newsWeekSetModalTitle">Student News Report Viewer</strong>
-                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-alt" aria-label="Previous report">&lt;</button>
+                      <button id="newsWeekSetModalPrevBtn" type="button" class="portal-button portal-button-alt portal-button-alt-nav" aria-label="Previous report">&lt;</button>
                       <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
-                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt" aria-label="Next report">&gt;</button>
+                      <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt portal-button-alt-nav" aria-label="Next report">&gt;</button>
                     </div>
                     <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button">Close</button>
                   </div>
@@ -923,6 +1011,23 @@
                       <div class="field c4">
                         <label for="newsViewerSubmittedAt">Submitted At</label>
                         <input id="newsViewerSubmittedAt" type="text" readonly aria-readonly="true">
+                      </div>
+                    </div>
+                    <div id="newsWeekSetModalFeedback" class="news-feedback-report hidden">
+                      <p id="newsWeekSetModalDeadline" class="news-feedback-deadline hidden"></p>
+                      <p id="newsWeekSetModalTeacherNote" class="news-feedback-note hidden"></p>
+                      <div class="news-feedback-section">
+                        <h5>Revision Report</h5>
+                        <table class="news-feedback-table">
+                          <thead>
+                            <tr>
+                              <th scope="col">Field</th>
+                              <th scope="col">Error Type</th>
+                              <th scope="col">Suggested Fix</th>
+                            </tr>
+                          </thead>
+                          <tbody id="newsWeekSetModalFeedbackBody"></tbody>
+                        </table>
                       </div>
                     </div>
                     <div class="row">
@@ -973,8 +1078,9 @@
                     </div>
                   </div>
                   <div class="portal-modal-actions">
+                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-info">Check</button>
                     <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-primary">Submit</button>
-                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-immutable-chrome">Close</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning">Close</button>
                   </div>
                   <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
                 </div>
@@ -1237,6 +1343,7 @@
         newsWeekSetViewerItems: [],
         newsWeekSetViewerIndex: -1,
         newsWeekSetViewerPending: false,
+        newsWeekSetViewerPendingAction: "",
         detailCalendar: null,
         detailCalendarHasMounted: false,
         textZoomPct: TEXT_ZOOM_DEFAULT,
@@ -1297,6 +1404,9 @@
         "biasAssessment",
       ];
       const NEWS_GENERIC_COMPLIANCE_FIELD_ID = "__compliance";
+      const NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";
+      const NEWS_COMPLIANCE_NOTE_END = "[[/SIS-COMPLIANCE-V1]]";
+      const NEWS_AWAITING_RE_REVIEW_MARKER = "[[SIS-AWAITING-RE-REVIEW]]";
       const NEWS_VIEWER_MODAL_FIELD_IDS = {
         sourceLink: "newsViewerSourceLink",
         articleTitle: "newsViewerArticleTitle",
@@ -1322,6 +1432,19 @@
         actionWhat: "Action description must be at least one sentence.",
         actionWhy: "Action reason must be at least one sentence.",
         biasAssessment: "Bias assessment must be at least one sentence.",
+      };
+      const NEWS_STUDENT_FIELD_LABELS = {
+        sourceLink: "Source link",
+        articleTitle: "Title",
+        byline: "Author / byline",
+        articleDateline: "Publish date line",
+        leadSynopsis: "Lead summary",
+        actionActor: "Who did the action",
+        actionAffected: "Who was affected",
+        actionWhere: "Place",
+        actionWhat: "Main action",
+        actionWhy: "Reason",
+        biasAssessment: "Bias / point of view",
       };
 
       function newsFormFieldElement(fieldId = "") {
@@ -1611,11 +1734,110 @@
         button.disabled = !shouldShow;
       }
 
+      function studentFriendlyFeedbackType(fieldKey = "", entry = {}) {
+        const normalizedField = t(fieldKey);
+        if (normalizedField === "sourceLink") return "Source link needs fixing";
+        if (normalizedField === "articleTitle") return "Title does not match the article";
+        if (normalizedField === "byline") return "Author line is missing or wrong";
+        if (normalizedField === "articleDateline") return "Date line is missing or unclear";
+        if (normalizedField === "leadSynopsis") return "Summary does not match the article lead";
+        if (normalizedField === "actionActor") return "Who did the action is unclear";
+        if (normalizedField === "actionAffected") return "Who was affected is unclear";
+        if (normalizedField === "actionWhere") return "Place is unclear";
+        if (normalizedField === "actionWhat") return "Main action is unclear";
+        if (normalizedField === "actionWhy") return "Reason is unclear";
+        if (normalizedField === "biasAssessment") return "Bias check needs more detail";
+        return t(entry?.message) || "This part needs fixing";
+      }
+
+      function studentFriendlyFeedbackFix(fieldKey = "", task = {}, entry = {}) {
+        const steps = Array.isArray(task?.steps) ? task.steps.map((step) => t(step)).filter(Boolean) : [];
+        if (steps.length) return steps.join(" ");
+        const normalizedField = t(fieldKey);
+        if (normalizedField === "sourceLink")
+          return "Open the article page, copy the full article web address, and paste that exact link.";
+        if (normalizedField === "articleTitle")
+          return "Copy the headline exactly as it appears on the article page.";
+        if (normalizedField === "byline")
+          return "Add the author name shown on the article page. If there is no author, use the news organization name.";
+        if (normalizedField === "articleDateline")
+          return "Write the publish date and time shown on the article page. Include updated time if the article shows one.";
+        if (normalizedField === "leadSynopsis")
+          return "Rewrite the summary so it matches the first main paragraph of the article.";
+        if (normalizedField === "actionActor")
+          return "Name the person, group, or thing that did the main action.";
+        if (normalizedField === "actionAffected")
+          return "Name the person, group, or thing that received the action or was affected.";
+        if (normalizedField === "actionWhere")
+          return "Add the place where the main action happened.";
+        if (normalizedField === "actionWhat")
+          return "Write one clear sentence explaining what happened.";
+        if (normalizedField === "actionWhy")
+          return "Write one clear sentence explaining why it happened.";
+        if (normalizedField === "biasAssessment")
+          return "Explain simply if the article sounds balanced or one-sided, and say why.";
+        return t(entry?.message) || "Update this part and check again.";
+      }
+
+      function buildStudentFeedbackRowsFromTasks(fieldMap = {}, tasks = []) {
+        const rows = [];
+        const normalizedFieldMap = normalizeFailedFieldMap(fieldMap);
+        const taskByField = new Map();
+        (Array.isArray(tasks) ? tasks : []).forEach((task) => {
+          const fieldKey = t(task?.field);
+          if (fieldKey) taskByField.set(fieldKey, task);
+        });
+        const orderedFields = [
+          ...NEWS_FORM_FIELD_IDS.filter((fieldKey) => Object.prototype.hasOwnProperty.call(normalizedFieldMap, fieldKey)),
+          ...Object.keys(normalizedFieldMap).filter((fieldKey) => !NEWS_FORM_FIELD_IDS.includes(fieldKey)),
+        ];
+        orderedFields.forEach((fieldKey, index) => {
+          const entry = normalizedFieldMap[fieldKey] || {};
+          rows.push({
+            field: `${index + 1}. ${t(NEWS_STUDENT_FIELD_LABELS[fieldKey]) || fieldKey}`,
+            errorType: studentFriendlyFeedbackType(fieldKey, entry),
+            suggestedFix: studentFriendlyFeedbackFix(fieldKey, taskByField.get(fieldKey), entry),
+          });
+        });
+        return rows;
+      }
+
+      function stripComplianceBlockFromReviewNote(note = "") {
+        const text = t(note).replaceAll(NEWS_AWAITING_RE_REVIEW_MARKER, "");
+        if (!text) return "";
+        const escapedStart = NEWS_COMPLIANCE_NOTE_START.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const escapedEnd = NEWS_COMPLIANCE_NOTE_END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return t(text.replace(new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, "g"), " ").replace(/\n{3,}/g, "\n\n"));
+      }
+
+      function renderStudentFeedbackRows(bodyEl, rows, emptyMessage = "No items right now.") {
+        if (!bodyEl) return;
+        bodyEl.replaceChildren();
+        if (!Array.isArray(rows) || !rows.length) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 3;
+          td.textContent = emptyMessage;
+          tr.appendChild(td);
+          bodyEl.appendChild(tr);
+          return;
+        }
+        rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          [row.field, row.errorType, row.suggestedFix].forEach((text) => {
+            const td = document.createElement("td");
+            td.textContent = t(text);
+            tr.appendChild(td);
+          });
+          bodyEl.appendChild(tr);
+        });
+      }
+
       function renderNewsComplianceModalFromState(summaryText = "") {
         const summary = field("newsComplianceModalSummary");
-        const requiredList = field("newsComplianceRequiredList");
-        const warningList = field("newsComplianceWarningList");
-        if (!summary || !requiredList || !warningList) return;
+        const requiredBody = field("newsComplianceRequiredBody");
+        const warningBody = field("newsComplianceWarningBody");
+        if (!summary || !requiredBody || !warningBody) return;
         if (!hasNewsFieldValidationErrors() && !hasNewsWarnings()) {
           setNewsComplianceModalOpen(false);
           return;
@@ -1623,40 +1845,18 @@
         const defaultSummary = "Draft saved.";
         state.newsComplianceSummary = t(summaryText) || t(state.newsComplianceSummary) || defaultSummary;
         summary.textContent = state.newsComplianceSummary;
-        requiredList.replaceChildren();
-        warningList.replaceChildren();
         const requiredTasks = Array.isArray(state.newsRevisionTasks) ? state.newsRevisionTasks : [];
         const warningTasks = Array.isArray(state.newsWarningTasks) ? state.newsWarningTasks : [];
-        const requiredFields = Object.keys(state.newsFieldErrors || {});
-        const warningFields = Object.keys(state.newsWarningFields || {});
-        if (!requiredFields.length && !requiredTasks.length) {
-          const item = document.createElement("li");
-          item.textContent = "No required fixes. Submit is available when the current draft still meets MMR.";
-          requiredList.appendChild(item);
-        } else {
-          (requiredTasks.length ? requiredTasks : requiredFields.map((fieldKey) => ({ field: fieldKey }))).forEach((task) => {
-            const item = document.createElement("li");
-            const fieldKey = t(task?.field);
-            const fieldEntry = state.newsFieldErrors?.[fieldKey] || {};
-            const steps = Array.isArray(task?.steps) ? task.steps.map((step) => t(step)).filter(Boolean) : [];
-            item.textContent = [t(fieldEntry.message), ...steps].filter(Boolean).join(" | ") || fieldKey;
-            requiredList.appendChild(item);
-          });
-        }
-        if (!warningFields.length && !warningTasks.length) {
-          const item = document.createElement("li");
-          item.textContent = "No warnings right now.";
-          warningList.appendChild(item);
-        } else {
-          (warningTasks.length ? warningTasks : warningFields.map((fieldKey) => ({ field: fieldKey }))).forEach((task) => {
-            const item = document.createElement("li");
-            const fieldKey = t(task?.field);
-            const fieldEntry = state.newsWarningFields?.[fieldKey] || {};
-            const steps = Array.isArray(task?.steps) ? task.steps.map((step) => t(step)).filter(Boolean) : [];
-            item.textContent = [t(fieldEntry.message), ...steps].filter(Boolean).join(" | ") || fieldKey;
-            warningList.appendChild(item);
-          });
-        }
+        renderStudentFeedbackRows(
+          requiredBody,
+          buildStudentFeedbackRowsFromTasks(state.newsFieldErrors || {}, requiredTasks),
+          "No required fixes. Submit is available when this draft still passes the check."
+        );
+        renderStudentFeedbackRows(
+          warningBody,
+          buildStudentFeedbackRowsFromTasks(state.newsWarningFields || {}, warningTasks),
+          "No extra-point suggestions right now."
+        );
         setNewsComplianceModalOpen(true);
       }
 
@@ -4167,6 +4367,7 @@
           submittedAt: t(entry?.submittedAt),
           reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
           awaitingReReview: entry?.awaitingReReview === true,
+          editableUntil: t(entry?.editableUntil),
         };
       }
 
@@ -4454,6 +4655,49 @@
         chip.textContent = model.label;
       }
 
+      function canEditNewsWeekSetViewerItem(item = {}) {
+        const status = normalizeNewsReviewStatusToken(item?.reviewStatus);
+        if (status === "approved") return false;
+        const editableUntil = t(item?.editableUntil);
+        const editableUntilMs = editableUntil ? Date.parse(editableUntil) : Number.NaN;
+        if (Number.isFinite(editableUntilMs)) return Date.now() < editableUntilMs;
+        const openReportDate = t(state.window?.reportDate).slice(0, 10);
+        return Boolean(openReportDate && t(item?.reportDate).slice(0, 10) === openReportDate);
+      }
+
+      function renderNewsWeekSetViewerFeedback(item = {}) {
+        const shell = field("newsWeekSetModalFeedback");
+        const deadlineEl = field("newsWeekSetModalDeadline");
+        const noteEl = field("newsWeekSetModalTeacherNote");
+        const bodyEl = field("newsWeekSetModalFeedbackBody");
+        if (!shell || !deadlineEl || !noteEl || !bodyEl) return;
+        const reviewNote = stripComplianceBlockFromReviewNote(item?.reviewNote || "");
+        const issueMap =
+          item?.validationIssuesJson && typeof item.validationIssuesJson === "object" ?
+            item.validationIssuesJson :
+            {};
+        const pendingIssues = Object.fromEntries(
+          Object.entries(issueMap).filter(([, entry]) => t(entry?.status).toLowerCase() !== "fixed")
+        );
+        const rows = buildStudentFeedbackRowsFromTasks(pendingIssues, []);
+        const editableUntil = t(item?.editableUntil);
+        const shouldShow = Boolean(reviewNote || rows.length || editableUntil);
+        shell.classList.toggle("hidden", !shouldShow);
+        if (!shouldShow) return;
+        const deadlineText = editableUntil ?
+          `Revision deadline: you can check and submit again until ${formatPortalDateTime(editableUntil)}.` :
+          "";
+        deadlineEl.textContent = deadlineText;
+        deadlineEl.classList.toggle("hidden", !deadlineText);
+        noteEl.textContent = reviewNote;
+        noteEl.classList.toggle("hidden", !reviewNote);
+        renderStudentFeedbackRows(
+          bodyEl,
+          rows,
+          "No line-by-line fixes were listed. Read the teacher note above and check again."
+        );
+      }
+
       function newsViewerFieldElement(fieldKey = "") {
         const id = NEWS_VIEWER_MODAL_FIELD_IDS[t(fieldKey)];
         return id ? field(id) : null;
@@ -4493,10 +4737,9 @@
         const index = Number.parseInt(String(state.newsWeekSetViewerIndex), 10);
         const active = newsWeekSetViewerCurrentItem();
         const total = items.length;
-        const isApproved =
-          normalizeNewsReviewStatusToken(active?.reviewStatus) === "approved";
         const pending = state.newsWeekSetViewerPending === true;
-        const canEdit = Boolean(active) && !isApproved && !pending;
+        const pendingAction = t(state.newsWeekSetViewerPendingAction);
+        const canEdit = Boolean(active) && canEditNewsWeekSetViewerItem(active) && !pending;
         const indexEl = field("newsWeekSetModalIndex");
         if (indexEl)
           indexEl.textContent =
@@ -4509,10 +4752,15 @@
         if (nextBtn instanceof HTMLButtonElement) {
           nextBtn.disabled = total === 0 || index >= total - 1 || pending;
         }
+        const checkBtn = field("newsWeekSetModalCheckBtn");
+        if (checkBtn instanceof HTMLButtonElement) {
+          checkBtn.disabled = !canEdit;
+          checkBtn.textContent = pendingAction === "check" ? "Checking..." : "Check";
+        }
         const submitBtn = field("newsWeekSetModalSubmitBtn");
         if (submitBtn instanceof HTMLButtonElement) {
           submitBtn.disabled = !canEdit;
-          submitBtn.textContent = pending ? "Submitting..." : "Submit";
+          submitBtn.textContent = pendingAction === "submit" ? "Submitting..." : "Submit";
         }
         Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
           const input = newsViewerFieldElement(fieldKey);
@@ -4545,6 +4793,7 @@
         Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
           setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
         });
+        renderNewsWeekSetViewerFeedback(active || {});
         syncNewsWeekSetViewerControls();
       }
 
@@ -4563,6 +4812,7 @@
         state.newsWeekSetViewerItems = [];
         state.newsWeekSetViewerIndex = -1;
         state.newsWeekSetViewerPending = false;
+        state.newsWeekSetViewerPendingAction = "";
         renderNewsWeekSetViewer();
         setNewsWeekSetModalStatus("");
       }
@@ -4597,6 +4847,7 @@
         state.newsWeekSetViewerItems = items;
         state.newsWeekSetViewerIndex = preferredIndex >= 0 ? preferredIndex : 0;
         state.newsWeekSetViewerPending = false;
+        state.newsWeekSetViewerPendingAction = "";
         renderNewsWeekSetViewer();
         setNewsWeekSetModalOpen(true);
         if (!(options && options.silentStatus)) {
@@ -5122,7 +5373,6 @@
 
       function markNewsDraftDirty() {
         if (!t(field("reportDate")?.value)) return;
-        state.newsCurrentMmrPassed = false;
         updateSubmitAvailability();
       }
       async function loadDashboard() {
@@ -5216,6 +5466,12 @@
             method: "POST",
             body: payload,
           });
+          if (saved?.complianceFailed === true) {
+            await handleNewsCheckResult(saved, {
+              reopenReportDate,
+            });
+            return;
+          }
           applyNewsFieldValidationUi(
             {},
             [],
@@ -5253,19 +5509,32 @@
       async function checkReport() {
         await checkNewsPayload(reportPayload());
       }
+
+      async function checkNewsWeekSetModalCurrentItem() {
+        const active = newsWeekSetViewerCurrentItem();
+        if (!active) throw new Error("Select a report in the week set viewer.");
+        if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
+        state.newsWeekSetViewerPending = true;
+        state.newsWeekSetViewerPendingAction = "check";
+        syncNewsWeekSetViewerControls();
+        try {
+          const payload = reportPayloadFromViewerItem(active);
+          await checkNewsPayload(payload, {
+            reopenReportDate: payload.reportDate,
+          });
+        } finally {
+          state.newsWeekSetViewerPending = false;
+          state.newsWeekSetViewerPendingAction = "";
+          syncNewsWeekSetViewerControls();
+        }
+      }
+
       async function submitNewsWeekSetModalCurrentItem() {
         const active = newsWeekSetViewerCurrentItem();
         if (!active) throw new Error("Select a report in the week set viewer.");
-        const reviewStatus = normalizeNewsReviewStatusToken(active?.reviewStatus);
-        const reportDate = t(active?.reportDate).slice(0, 10);
-        const openReportDate = t(state.window?.reportDate).slice(0, 10);
-        if (
-          reviewStatus === "approved" &&
-          (!openReportDate || reportDate !== openReportDate)
-        ) {
-          throw new Error("Approved news reports can only be edited on the current open date.");
-        }
+        if (!canEditNewsWeekSetViewerItem(active)) throw new Error("This report is locked.");
         state.newsWeekSetViewerPending = true;
+        state.newsWeekSetViewerPendingAction = "submit";
         syncNewsWeekSetViewerControls();
         try {
           const payload = reportPayloadFromViewerItem(active);
@@ -5274,6 +5543,7 @@
           });
         } finally {
           state.newsWeekSetViewerPending = false;
+          state.newsWeekSetViewerPendingAction = "";
           syncNewsWeekSetViewerControls();
         }
       }
@@ -5524,6 +5794,9 @@
       });
       field("newsWeekSetModalNextBtn")?.addEventListener("click", () => {
         shiftNewsWeekSetViewer(1);
+      });
+      field("newsWeekSetModalCheckBtn")?.addEventListener("click", () => {
+        checkNewsWeekSetModalCurrentItem().catch(handleError);
       });
       field("newsWeekSetModalSubmitBtn")?.addEventListener("click", () => {
         submitNewsWeekSetModalCurrentItem().catch(handleError);

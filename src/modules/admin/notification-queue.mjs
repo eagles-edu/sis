@@ -443,6 +443,18 @@ function isQueueTableMissingError(error) {
   return message.includes("adminnotificationqueue")
 }
 
+function isQueueDatabaseAuthFailureError(error) {
+  const code = normalizeUpper(error?.code)
+  if (code === "P1000") return true
+  const message = normalizeLower(error?.message || error)
+  return (
+    message.includes("authentication failed against the database server") ||
+    message.includes("provided database credentials") ||
+    message.includes("invalid `prisma.adminnotificationqueue.") ||
+    message.includes("invalid `prisma.adminnotificationqueue`")
+  )
+}
+
 function markQueueDatabaseFallback(error) {
   EMAIL_QUEUE_DB_DISABLED = true
   EMAIL_BATCH_LAST_ERROR = normalizeText(error?.message || error)
@@ -458,7 +470,7 @@ async function runQueueDbOperation(handler, fallbackHandler) {
   try {
     return await handler(prisma)
   } catch (error) {
-    if (isQueueTableMissingError(error)) {
+    if (isQueueTableMissingError(error) || isQueueDatabaseAuthFailureError(error)) {
       markQueueDatabaseFallback(error)
       return fallbackHandler()
     }

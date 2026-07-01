@@ -396,9 +396,9 @@
   --portal-button-neutral-stroke-hover: #6484b2;
   --portal-button-neutral-stroke-active: #4e6f9d;
   --portal-button-neutral-ink: #17345e;
-  --portal-button-teal-fill: #0d8aa6;
-  --portal-button-teal-fill-hover: #13a0c0;
-  --portal-button-teal-fill-active: #00aad4;
+  --portal-button-teal-fill: #007b97;
+  --portal-button-teal-fill-hover: #0093b4;
+  --portal-button-teal-fill-active: #00647c;
   --portal-button-teal-stroke: #005e8d;
   --portal-button-teal-stroke-hover: #0072a8;
   --portal-button-teal-stroke-active: #1a9ee0;
@@ -484,6 +484,10 @@ html[data-theme="dark"] body.portal-hub-page {
   --hub-theme-card-subtitle: #f2f4f7;
   --hub-theme-card-title: #f7f8fa;
   --hub-theme-link: var(--hub-surface-text-soft);
+  --hub-theme-wash:
+    radial-gradient(860px 400px at 12% 8%, rgba(255, 255, 255, 0.08), transparent 58%),
+    radial-gradient(640px 320px at 92% 0%, rgba(255, 255, 255, 0.04), transparent 56%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(16, 18, 22, 0.24));
   --hub-theme-page-bg-body: #000000;
   --hub-theme-page-bg-end: #000000;
   --hub-theme-page-bg-glow: transparent;
@@ -710,6 +714,16 @@ summary.portal-button.is-disabled {
   --portal-button-max-inline: var(--portal-button-open-week-set-inline);
   --portal-button-min-inline: var(--portal-button-open-week-set-inline);
 }
+.portal-button-alt-nav {
+  block-size: 48px;
+  --portal-button-font-size: 18px;
+  --portal-button-inline-padding: 12px;
+  --portal-button-line-height: 1;
+  --portal-button-max-inline: 48px;
+  --portal-button-min-block: 48px;
+  --portal-button-min-inline: 48px;
+  max-block-size: 48px;
+}
 .portal-button__icon,
 .portal-chip__icon {
   align-items: center;
@@ -903,9 +917,9 @@ summary.portal-button.portal-button-immutable-chrome {
   --portal-button-ink-active: var(--portal-button-chrome-ink);
 }
 @media (max-width: 639px) {
-  .portal-button:not(.portal-button-immutable-chrome),
-  a.portal-button:not(.portal-button-immutable-chrome),
-  summary.portal-button:not(.portal-button-immutable-chrome) {
+  .portal-button:not(.portal-button-immutable-chrome):not(.portal-button-alt-nav),
+  a.portal-button:not(.portal-button-immutable-chrome):not(.portal-button-alt-nav),
+  summary.portal-button:not(.portal-button-immutable-chrome):not(.portal-button-alt-nav) {
     inline-size: 100%;
     max-inline-size: none;
     min-inline-size: 100%;
@@ -2003,10 +2017,10 @@ body.grades-tabulator-page .tabulator .tabulator-row .tabulator-cell.tabulator-r
   color: var(--portal-grade-table-text);
 }
 body.grades-tabulator-page .distribution-mini.portal-button {
-  color: var(--portal-primary-text-strong);
+  color: var(--portal-button-amber-ink);
 }
 body.grades-tabulator-page .distribution-mini-meta {
-  color: var(--portal-primary-text-strong);
+  color: var(--portal-button-amber-ink);
 }
 body.grades-tabulator-page .collapse-item,
 body.grades-tabulator-page .distribution-close,
@@ -4306,6 +4320,9 @@ html[data-theme="dark"] body.admin-portal-page .card {
   border-color: var(--portal-dark-border) !important;
   color: var(--portal-dark-text) !important;
 }
+html[data-theme="dark"] body.admin-portal-page .content {
+  color: var(--portal-dark-text) !important;
+}
 html[data-theme="dark"] body.student-portal-page .card.homework-card,
 html[data-theme="dark"] body.parent-portal-page .card.homework-card {
   background: var(--portal-dark-surface-panel);
@@ -4698,7 +4715,7 @@ body.parent-portal-page #newsWeekSetModal .queue-modal-header {
   background: #2f2c2c;
   border-radius: 14px;
   display: flex;
-  gap: 8px;
+  gap: 14px;
   justify-content: space-between;
   margin: -16px -16px 0;
   padding: 14px 18px;
@@ -4738,42 +4755,11 @@ body.parent-portal-page #newsWeekSetModal .queue-modal-nav > .hint {
   margin: 0;
   white-space: nowrap;
 }
-body.student-portal-page #newsWeekSetModal .queue-modal-nav button,
-body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button,
-body.parent-portal-page #newsWeekSetModal .queue-modal-nav button {
-  background: #9ca4ae !important;
-  background-image: none !important;
-  border: 1px solid #9ca4ae;
-  border-radius: 12px;
-  box-shadow: none;
-  color: #304156;
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1;
-  height: 48px;
-  min-height: 48px;
-  min-width: 48px;
-  padding: 4px 12px;
-  transform: none;
-}
-body.student-portal-page #newsWeekSetModal .queue-modal-nav button:hover:not(:disabled),
-body.student-portal-page #newsWeekSetModal .queue-modal-nav button:focus-visible,
-body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button:hover:not(:disabled),
-body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button:focus-visible,
-body.parent-portal-page #newsWeekSetModal .queue-modal-nav button:hover:not(:disabled),
-body.parent-portal-page #newsWeekSetModal .queue-modal-nav button:focus-visible {
-  background: #a8b0b9 !important;
-  background-image: none !important;
-  border-color: #a8b0b9;
-  box-shadow: none;
-  color: #253348;
-  outline: none;
-  transform: none;
-}
 body.student-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn,
 body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
   flex: 0 0 auto;
   inline-size: auto;
+  margin-inline-start: 14px;
   min-height: 52px;
   min-width: 176px;
   padding-inline: 28px;
@@ -4809,16 +4795,9 @@ body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
   body.parent-portal-page #newsWeekSetModal .queue-modal-nav > strong {
     font-size: 15px;
   }
-  body.student-portal-page #newsWeekSetModal .queue-modal-nav button,
-  body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav button,
-  body.parent-portal-page #newsWeekSetModal .queue-modal-nav button {
-    height: 48px;
-    min-height: 48px;
-    min-width: 48px;
-    padding-inline: 12px;
-  }
   body.student-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn,
   body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
+    margin-inline-start: 10px;
     min-height: 48px;
     min-width: 132px;
     padding-inline: 22px;
@@ -6285,11 +6264,33 @@ html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-miss
 html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-missed .fc-event-time {
   color: #ffe3e6 !important;
 }
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-status-purple,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-status-purple {
+  background: #f3ecff !important;
+  border-color: #a48ad8 !important;
+  color: #000000 !important;
+}
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-status-purple .fc-event-main,
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-status-purple .fc-event-title,
+html[data-theme="dark"] body.student-portal-page .fc .fc-event.fc-event-news-status-purple .fc-event-time,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-status-purple .fc-event-main,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-status-purple .fc-event-title,
+html[data-theme="dark"] body.parent-portal-page .fc .fc-event.fc-event-news-status-purple .fc-event-time {
+  color: #000000 !important;
+}
 body.student-portal-page .fc .fc-event.fc-event-review-track,
 body.parent-portal-page .fc .fc-event.fc-event-review-track {
   background: #c84ac8 !important;
   border-color: #9a8cdc !important;
-  color: #45317d !important;
+  color: #000000 !important;
+}
+body.student-portal-page .fc .fc-event.fc-event-review-track .fc-event-main,
+body.student-portal-page .fc .fc-event.fc-event-review-track .fc-event-title,
+body.student-portal-page .fc .fc-event.fc-event-review-track .fc-event-time,
+body.parent-portal-page .fc .fc-event.fc-event-review-track .fc-event-main,
+body.parent-portal-page .fc .fc-event.fc-event-review-track .fc-event-title,
+body.parent-portal-page .fc .fc-event.fc-event-review-track .fc-event-time {
+  color: #000000 !important;
 }
 body.student-portal-page .fc .fc-event.fc-event-homework-track,
 body.parent-portal-page .fc .fc-event.fc-event-homework-track {
@@ -6733,9 +6734,21 @@ html[data-theme="dark"] body.student-points-page {
   background: var(--portal-dark-page-bg);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 42%);
   color: var(--portal-dark-text);
+  color-scheme: dark;
+  --portal-student-points-muted-text: #c5d4e1;
 }
 html[data-theme="dark"] body.student-points-page .card {
   background: var(--portal-dark-surface-card);
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.student-points-page .chart-wrap.panel {
+  background: var(--portal-dark-surface-panel);
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.student-points-page .table-wrap.panel {
+  background: var(--portal-dark-surface-panel);
   border-color: var(--portal-dark-border);
   color: var(--portal-dark-text);
 }
@@ -6743,7 +6756,7 @@ html[data-theme="dark"] body.student-points-page .sub,
 html[data-theme="dark"] body.student-points-page .mini,
 html[data-theme="dark"] body.student-points-page .field label,
 html[data-theme="dark"] body.student-points-page .status {
-  color: var(--portal-dark-text-soft);
+  color: var(--portal-student-points-muted-text) !important;
 }
 html[data-theme="dark"] body.student-points-page th,
 html[data-theme="dark"] body.student-points-page td {
@@ -6759,9 +6772,15 @@ html[data-theme="dark"] body:is(.student-points-page, .student-enrollment-page, 
 html[data-theme="dark"] body.student-points-page #loginPanel .login-link {
   color: var(--portal-dark-link);
 }
+html[data-theme="dark"] body.student-points-page :is(input, select, textarea) {
+  -webkit-text-fill-color: var(--portal-dark-field-text);
+}
 html[data-theme="dark"] body.student-enrollment-page .status,
 html[data-theme="dark"] body.grades-tabulator-page .status {
   color: var(--portal-dark-text-soft);
+}
+html[data-theme="dark"] body.grades-tabulator-page .status:not(.is-warn):not(.is-bad):not(.is-error) {
+  color: #c5d4e1 !important;
 }
 html[data-theme="dark"] body.student-enrollment-page .app-brand-kicker,
 html[data-theme="dark"] body.student-enrollment-page .app-page-subtitle,
@@ -6805,7 +6824,7 @@ html[data-theme="dark"] body.grades-tabulator-page .stat-chip {
   color: var(--portal-dark-text-soft);
 }
 html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-meta {
-  color: var(--portal-primary-text-strong);
+  color: var(--portal-button-amber-ink);
 }
 html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg line {
   stroke: var(--portal-primary-text-strong);
@@ -7721,7 +7740,7 @@ body.portal-hub-page .section-kicker {
 }
 body.portal-hub-page .hub-prefooter {
   align-items: center;
-  background: var(--hub-surface-support);
+  background: var(--hub-surface-content);
   border-color: var(--hub-surface-border);
   box-shadow: var(--hub-surface-shadow);
   display: flex;
@@ -7971,6 +7990,7 @@ body.admin-portal-page .app-sidebar {
   border: 1px solid var(--portal-border);
   border-radius: 0 var(--radius-3) var(--radius-3) 0;
   box-shadow: 0 22px 48px rgba(12, 21, 40, 0.28);
+  box-sizing: border-box;
   display: grid;
   gap: 12px;
   inset-block: 0;
@@ -8067,6 +8087,7 @@ body.admin-portal-page .menu-group-btn {
   align-items: center;
   background: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 86%, var(--brand) 14%), var(--menu-header-bg));
   border: 0;
+  box-sizing: border-box;
   color: var(--portal-role-text);
   display: flex;
   font-size: 11px;
@@ -8214,7 +8235,10 @@ body.admin-portal-page .floating-menu-btn {
   border: none;
   cursor: pointer;
   inset: 0;
+  inline-size: auto;
   margin: 0;
+  max-inline-size: none;
+  min-inline-size: 0;
   opacity: 0;
   padding: 0;
   pointer-events: none;

@@ -192,6 +192,25 @@ function hostnameFromUrl(value) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function hasSpecificArticlePath(value) {
+  const text = normalizeText(value)
+  if (!text) return false
+  try {
+    const parsed = new URL(text)
+    const protocol = normalizeLower(parsed.protocol)
+    if (protocol !== "http:" && protocol !== "https:") return false
+    const pathname = normalizeText(parsed.pathname)
+    return Boolean(pathname && pathname !== "/")
+  } catch (error) {
+    void error
+    return false
+  }
+}
+
+/**
  * @param {unknown} hostname
  * @param {unknown} allowedDomain
  * @returns {boolean}
@@ -1176,11 +1195,11 @@ function buildStudentNewsFieldRevisionTask(fieldKey = "", context = {}) {
       field: fieldKey,
       label: STUDENT_NEWS_FIELD_LABELS[fieldKey],
       steps: [
-        `Use a full story URL (http/https) from an approved source: ${allowedSourcesText}.`,
-        "Open the URL and confirm it loads the specific article (not homepage).",
-        "Paste the exact URL including its path and save again.",
+        `Open the real article page from an approved source: ${allowedSourcesText}.`,
+        "Do not use only the site home page such as bbc.com or cnn.com.",
+        "Copy the full web address for that article and paste it again.",
       ],
-      criterion: `Hostname must match approved sources (${allowedSourcesText}).`,
+      criterion: `Hostname must match approved sources (${allowedSourcesText}) and the URL must open a specific article page.`,
     }
   }
   if (fieldKey === "articleTitle") {
@@ -1552,6 +1571,12 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
       score: 0,
       threshold: 1,
     }
+  } else if (!hasSpecificArticlePath(normalizedSourceLink)) {
+    failedFields.sourceLink = {
+      message: "Source must link to the exact article, not only the site home page.",
+      score: 0,
+      threshold: 1,
+    }
   }
   if (!articleTitle) {
     failedFields.articleTitle = {
@@ -1706,6 +1731,12 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
   } else if (!sourceHostname) {
     failedFields.sourceLink = {
       message: "Source must be a valid full story URL (http/https).",
+      threshold: 1,
+      score: 0,
+    }
+  } else if (!hasSpecificArticlePath(normalizedSourceLink)) {
+    failedFields.sourceLink = {
+      message: "Source must link to the exact article, not only the site home page.",
       threshold: 1,
       score: 0,
     }

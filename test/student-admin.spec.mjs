@@ -17,6 +17,7 @@ const TEST_ADMIN_UI_SETTINGS_FILE = `/tmp/sis-admin-ui-settings-${process.pid}.j
 const ADMIN_HTML_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8")
 const ADMIN_CSS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.css", import.meta.url), "utf8")
 const ADMIN_JS_SOURCE = fs.readFileSync(new URL("../web-asset/admin/student-admin.js", import.meta.url), "utf8")
+const SHARED_PORTAL_THEME_SOURCE = fs.readFileSync(new URL("../web-asset/shared/portal-theme.css", import.meta.url), "utf8")
 
 function withAdminAssets(html = "") {
   return `${String(html || "")}\n${ADMIN_CSS_SOURCE}\n${ADMIN_JS_SOURCE}`
@@ -446,12 +447,21 @@ test("student dashboard/news paths guard missing optional Prisma delegates", () 
   assert.match(routes, /from "\.\.\/src\/modules\/admin\/student-records\.mjs"/)
 })
 
-test("student week-set modal submit guard allows approved rows on the current open date only", () => {
+test("student week-set modal submit guard locks approved rows and honors editableUntil for revision returns", () => {
   const studentPortalHtml = fs.readFileSync(new URL("../web-asset/student/student-portal.html", import.meta.url), "utf8")
-  assert.match(studentPortalHtml, /const reportDate = t\(active\?\.reportDate\)\.slice\(0,\s*10\);/)
+  assert.match(studentPortalHtml, /function canEditNewsWeekSetViewerItem\(item = \{\}\) \{/)
+  assert.match(studentPortalHtml, /if \(status === "approved"\) return false;/)
+  assert.match(studentPortalHtml, /const editableUntil = t\(item\?\.editableUntil\);/)
+  assert.match(studentPortalHtml, /const editableUntilMs = editableUntil \? Date\.parse\(editableUntil\) : Number\.NaN;/)
+  assert.match(studentPortalHtml, /if \(Number\.isFinite\(editableUntilMs\)\) return Date\.now\(\) < editableUntilMs;/)
   assert.match(studentPortalHtml, /const openReportDate = t\(state\.window\?\.reportDate\)\.slice\(0,\s*10\);/)
-  assert.match(studentPortalHtml, /reviewStatus === "approved"[\s\S]*reportDate !== openReportDate/)
-  assert.match(studentPortalHtml, /Approved news reports can only be edited on the current open date\./)
+  assert.match(studentPortalHtml, /return Boolean\(openReportDate && t\(item\?\.reportDate\)\.slice\(0,\s*10\) === openReportDate\);/)
+  assert.match(studentPortalHtml, /if \(!canEditNewsWeekSetViewerItem\(active\)\) throw new Error\("This report is locked\."\);/)
+  assert.doesNotMatch(studentPortalHtml, /Approved news reports can only be edited on the current open date\./)
+  assert.doesNotMatch(
+    studentPortalHtml,
+    /reviewStatus === "approved"[\s\S]*reportDate !== openReportDate/
+  )
   assert.doesNotMatch(
     studentPortalHtml,
     /if \(reviewStatus === "approved"\)\s*\{\s*throw new Error\("Approved news reports cannot be edited"\);?\s*\}/
@@ -1123,9 +1133,9 @@ test("GET /admin returns HTML UI", async () => {
   assert.doesNotMatch(html, /function inferLocalPreviewApiOrigin\(/i)
   assert.match(html, /function setActivePage\(/i)
   assert.match(html, /function pageSlugFromLocationSearch\(/i)
-  assert.match(html, /\.chip\s*\{\s*--chip-height:\s*30px;/i)
+  assert.match(html, /\.chip\s*\{[\s\S]*?--chip-height:\s*30px;/i)
   assert.match(html, /\.chip-ok\s*\{\s*background:\s*#d8f2e3;/i)
-  assert.match(html, /\.queue-hub-panel\s+\.chip\s*\{\s*--chip-height:\s*24px;/i)
+  assert.match(html, /\.queue-hub-panel\s+\.chip\s*\{[\s\S]*?--chip-height:\s*24px;/i)
   assert.match(html, /const ADMIN_PAGE_URL_MODE = resolveAdminPageUrlMode\(\);/i)
   assert.match(html, /params\.get\("page"\)\s*\|\|\s*params\.get\("pageSlug"\)/i)
   assert.match(html, /if \(params\.has\("page"\) \|\| params\.has\("pageSlug"\)\) return "query";/i)
@@ -1266,9 +1276,18 @@ test("GET /parent returns parent portal HTML with runtime config", async () => {
   assert.match(html, /queue-compact-datetime/)
   assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+7/)
   assert.match(html, /<th scope="col">#<\/th>/i)
-  assert.match(html, /\.queue-table-wrap table\.news-queue-table th,\s*[\s\S]*?padding:\s*4px 6px;/i)
-  assert.match(html, /\.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i)
-  assert.match(html, /\.queue-table-wrap table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i)
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table th,\s*body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table td \{\s*padding:\s*4px 6px;/i
+  )
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i
+  )
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i
+  )
   assert.doesNotMatch(html, /fonts\\.googleapis\\.com/i)
   assert.doesNotMatch(html, /fonts\\.gstatic\\.com/i)
 
@@ -1323,7 +1342,8 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /id="studentHomeCard"/i)
   assert.match(html, /id="studentDetailPageCard"/i)
   assert.match(html, /id="studentHomeGrid" class="portal-col"/i)
-  assert.match(html, /id="overviewPanel" class="toolbar"/i)
+  assert.match(html, /id="studentOverviewSummary" class="panel"/i)
+  assert.match(html, /id="metricsPanel" class="panel"/i)
   assert.match(html, /id="snapshotBadge" class="chip chip-neutral"/i)
   assert.match(html, /id="dashboardMetrics" class="metrics"/i)
   assert.match(html, /id="studentNumberValue" class="identity-value"/i)
@@ -1362,8 +1382,14 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+7/)
   assert.match(html, /<th scope="col">#<\/th>/i)
   assert.match(html, /\.queue-table-wrap table\.news-queue-table th,\s*[\s\S]*?padding:\s*4px 6px;/i)
-  assert.match(html, /\.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i)
-  assert.match(html, /\.queue-table-wrap table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i)
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i
+  )
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i
+  )
   assert.match(html, /__SIS_STUDENT_INITIAL_AUTH__/i)
 
   const loginRes = await fetchLocal(port, "/api/student/auth/login", {
@@ -1399,9 +1425,9 @@ test("GET /web-asset/admin/student-admin.min.css returns externalized admin styl
   const css = await res.text()
   assert.match(css, /\.page-section\[data-page(?:="|=)news-reports(?:")?\]\s+\.table-toolbar/i)
   assert.match(css, /\.grade-chart-lanes/i)
-  assert.match(css, /body\{background:var\(--portal-page-bg\);color:var\(--ink\);font-family:var\(--font-base\);margin:0\}/)
-  assert.match(css, /\.queue-row-btn\{[^}]*color:var\(--link-color\)/)
-  assert.match(css, /\.row-options-trigger\{/)
+  assert.match(css, /body\{font-family:var\(--font-base[^}]*margin:0\}/)
+  assert.match(css, /\.page-section\[data-page(?:="|=)news-reports(?:")?\][\s\S]*\.queue-row-btn\{[^}]*width:100%/i)
+  assert.match(css, /\.row-options-trigger(?::not\(\.portal-button\))?\{/)
   assert.match(css, /\.queue-hub-panel\{/)
   assert.match(css, /\.queue-hub-order-dirty\{/)
 })
@@ -1435,8 +1461,7 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.equal(res.status, 200)
   assert.match(res.headers.get("content-type") || "", /text\/html/i)
   const html = await res.text()
-  assert.match(html, /Grades Tabulator/i)
-  assert.match(html, /href="\/admin\?page=grades-data"/i)
+  assert.match(html, /The Eagles Club SIS Grades Table/i)
   assert.match(html, /data-period=\"qtd\"/i)
   assert.match(html, /\/api\/admin\/auth\/me/i)
   assert.match(html, /counts\?\.gradeRecords/)
@@ -1478,16 +1503,28 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /responsiveLayout:\s*false/)
   assert.match(html, /#gradeGrid\s*\{[\s\S]*resize:\s*vertical;/i)
   assert.match(html, /#gradeGrid\s*\{[\s\S]*overflow-x:\s*auto;/i)
-  assert.match(html, /\.page-shell\s*\{[\s\S]*margin:\s*24px auto;/i)
+  assert.match(html, /\.wrap\s*\{[\s\S]*margin:\s*0 auto;/i)
   assert.match(html, /\.tabulator-tooltip\s*\{[\s\S]*font-size:\s*1rem;/i)
-  assert.match(html, /html\[data-theme="dark"\]\s+\.tabulator\s*\{[\s\S]*color:\s*var\(--portal-dark-text\);/i)
-  assert.match(html, /html\[data-theme="dark"\]\s+\.tabulator\s+\.tabulator-row\s*\{[\s\S]*background:\s*var\(--portal-dark-surface-card\);/i)
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /html\[data-theme="dark"\] body\.grades-tabulator-page[\s\S]*color:\s*var\(--portal-dark-text\);/i
+  )
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /html\[data-theme="dark"\] body\.grades-tabulator-page[\s\S]*--portal-grade-table-text:\s*var\(--portal-dark-text\);/i
+  )
   assert.match(html, /\.tabulator\s+\.tabulator-tableholder\s*\{[\s\S]*overflow-x:\s*auto/i)
   assert.match(html, /body\.table-modal-open\s*\{[\s\S]*overflow:\s*hidden;/i)
   assert.match(html, /\.grid-card\.is-table-modal\s*\{/i)
-  assert.match(html, /\.page-shell\s*>\s*\*\s*\{[\s\S]*min-width:\s*0;/i)
-  assert.match(html, /@media\s*\(max-width:\s*480px\)\s*\{[\s\S]*\.metric-card h2[\s\S]*font-size:\s*clamp\(/i)
-  assert.match(html, /@media\s*\(max-width:\s*480px\)\s*\{[\s\S]*\.metric-card p[\s\S]*font-size:\s*clamp\(/i)
+  assert.match(html, /\.wrap\s*>\s*\*\s*\{[\s\S]*min-width:\s*0;/i)
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /body\.grades-tabulator-page \.metric-card h2 \{[\s\S]*font-size:\s*clamp\(/i
+  )
+  assert.match(
+    SHARED_PORTAL_THEME_SOURCE,
+    /body\.grades-tabulator-page \.metric-card p \{[\s\S]*font-size:\s*1\.08rem;/i
+  )
   assert.match(html, /function buildCoreHeaderCard\(/)
   assert.match(html, /function buildHeaderActionButtons\(/)
   assert.match(html, /function handleHeaderActionClick\(/)

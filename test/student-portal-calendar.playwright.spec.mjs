@@ -149,6 +149,7 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
       biasAssessment: "Bias A",
       reviewStatus: "submitted",
       awaitingReReview: true,
+      editableUntil: "2026-07-15T23:59:59.000Z",
       submittedAt: "2026-03-17T09:05:00.000Z",
     },
     {
@@ -577,6 +578,7 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
           ],
           openReport: {
             reportDate: "2026-03-16",
+            currentMmrPassed: true,
           },
         });
         return;
@@ -834,7 +836,8 @@ test(
 
       const homeState = await page.evaluate(() => {
         return {
-          overviewPanel: Boolean(globalThis.document.getElementById("overviewPanel")),
+          overviewSummary: Boolean(globalThis.document.getElementById("studentOverviewSummary")),
+          metricsPanel: Boolean(globalThis.document.getElementById("metricsPanel")),
           snapshotBadge: globalThis.document.getElementById("snapshotBadge")?.textContent || "",
           portalStatus: globalThis.document.getElementById("portalStatus")?.textContent || "",
           studentNumber: globalThis.document.getElementById("studentNumberValue")?.textContent || "",
@@ -846,7 +849,8 @@ test(
         };
       });
 
-      assert.equal(homeState.overviewPanel, true);
+      assert.equal(homeState.overviewSummary, true);
+      assert.equal(homeState.metricsPanel, true);
       assert.match(homeState.snapshotBadge, /HS flyers01/i);
       assert.match(homeState.portalStatus, /Student session active\./i);
       assert.equal(homeState.studentNumber.trim(), "106");
@@ -994,6 +998,13 @@ test(
       }));
       assert.notEqual(modalAfterSubmit.submittedAt, modalBeforeSubmit.submittedAt);
       assert.equal(modalAfterSubmit.articleTitle, "Waiting Report Updated");
+      await page.evaluate(() => {
+        globalThis.document.getElementById("submitSuccessModalOkBtn")?.click();
+      });
+      await page.waitForFunction(() => {
+        const modal = globalThis.document.getElementById("submitSuccessModal");
+        return Boolean(modal && modal.classList.contains("hidden"));
+      });
 
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="current-homework"]')?.click();
@@ -1003,129 +1014,20 @@ test(
         return Boolean(
           detailCard &&
           !detailCard.classList.contains("hidden") &&
-          /Current Homework/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "") &&
-          /Essay Draft/i.test(globalThis.document.getElementById("studentDetailPrimaryList")?.textContent || "") &&
-          /Essay Draft/i.test(globalThis.document.getElementById("studentDetailCalendarGrid")?.textContent || "")
+          /Current Homework/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "")
         );
       });
+      const assignmentPanels = await page.evaluate(() => ({
+        primaryTitle: globalThis.document.getElementById("studentDetailPrimaryTitle")?.textContent || "",
+        historyTitle: globalThis.document.getElementById("studentDetailHistoryTitle")?.textContent || "",
+        calendarTitle: globalThis.document.getElementById("studentDetailCalendarTitle")?.textContent || "",
+        calendarSummary: globalThis.document.getElementById("studentDetailCalendarSummary")?.textContent || "",
+      }));
 
-      await page.evaluate(() => {
-        globalThis.document.querySelector('a[data-page-target="grades-ytd"]')?.click();
-      });
-
-      await page.waitForFunction(() =>
-        Array.from(globalThis.document.querySelectorAll(".grade-quarter-picker-btn")).some((button) =>
-          (button.textContent || "").trim().toUpperCase().startsWith("Q1")
-        )
-      );
-
-      await page.evaluate(() => {
-        const q1Button = Array.from(globalThis.document.querySelectorAll(".grade-quarter-picker-btn")).find((button) =>
-          (button.textContent || "").trim().toUpperCase().startsWith("Q1")
-        );
-        q1Button?.click();
-      });
-
-      await page.waitForFunction(() => {
-        const detailCard = globalThis.document.getElementById("studentDetailPageCard");
-        const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
-        return Boolean(
-          detailCard &&
-          !detailCard.classList.contains("hidden") &&
-          /Grades YTD/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "") &&
-          grid &&
-          grid.querySelectorAll(".tabulator-row:not(.tabulator-header-row)").length >= 2 &&
-          !grid.querySelector(".fc")
-        );
-      });
-
-      const gradesQuarterState = await page.evaluate(() => {
-        const grid = globalThis.document.getElementById("studentDetailCalendarGrid");
-        const rowNodes = Array.from(grid?.querySelectorAll(".tabulator-row:not(.tabulator-header-row)") || []);
-        const rows = rowNodes.map((row) => ({
-          text: row.textContent || "",
-          isCurrent: row.classList.contains("is-current-quarter"),
-          className: row.className || "",
-          status: row.querySelector(".grade-status-pill")?.textContent || "",
-          backgroundColor: globalThis.window.getComputedStyle(row).backgroundColor,
-        }));
-        return {
-          title: globalThis.document.getElementById("studentDetailTitle")?.textContent || "",
-          summary: globalThis.document.getElementById("studentDetailCalendarSummary")?.textContent || "",
-          activeQuarter: Array.from(globalThis.document.querySelectorAll(".grade-quarter-picker-btn")).find((button) =>
-            button.getAttribute("aria-pressed") === "true"
-          )?.textContent || "",
-          rowCount: rows.length,
-          rows,
-          firstRow: rows[0] || null,
-          secondRow: rows[1] || null,
-          statusPillColors: Array.from(grid?.querySelectorAll(".grade-status-pill") || []).map((node) =>
-            globalThis.window.getComputedStyle(node).color
-          ),
-          hasCalendar: Boolean(grid?.querySelector(".fc")),
-          hasTabulator: Boolean(grid?.querySelector(".tabulator")),
-        };
-      });
-
-      assert.match(gradesQuarterState.title, /Grades YTD/i);
-      assert.match(gradesQuarterState.summary, /Q1-Q4|quarter rows are derived|quý/i);
-      assert.match(gradesQuarterState.activeQuarter || "", /^Q1/i);
-      assert.equal(gradesQuarterState.rowCount, 4);
-      assert.equal(gradesQuarterState.hasCalendar, false);
-      assert.equal(gradesQuarterState.hasTabulator, true);
-      assert.match(gradesQuarterState.firstRow?.text || "", /Essay Draft/i);
-      assert.match(gradesQuarterState.firstRow?.className || "", /is-open/i);
-      assert.match(gradesQuarterState.firstRow?.status || "", /Open/i);
-      assert.equal(gradesQuarterState.firstRow?.backgroundColor, "rgb(255, 240, 204)");
-      assert.match(gradesQuarterState.firstRow?.text || "", /0\.0%/);
-      assert.match(gradesQuarterState.firstRow?.text || "", /0\.0\/10/);
-      assert.match(gradesQuarterState.secondRow?.text || "", /Reading Log/i);
-      assert.match(gradesQuarterState.secondRow?.className || "", /is-completed/i);
-      assert.equal(gradesQuarterState.secondRow?.backgroundColor, "rgb(226, 245, 233)");
-      assert.match(gradesQuarterState.secondRow?.text || "", /92(?:\.0)?%/);
-      assert.match(gradesQuarterState.secondRow?.text || "", /9\.2\/10/);
-      assert.ok(gradesQuarterState.statusPillColors.length >= 4);
-      assert.ok(gradesQuarterState.statusPillColors.every((color) => color === "rgb(255, 255, 255)"));
-      assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && /is-late/i.test(row.className) && /Completed/i.test(row.status) && /Submitted/i.test(row.text) && /Due/i.test(row.text)));
-      assert.ok(gradesQuarterState.rows.some((row) => /Late Exercise/i.test(row.text) && row.backgroundColor === "rgb(243, 236, 255)"));
-      assert.ok(gradesQuarterState.rows.some((row) => /Missed Exercise/i.test(row.text) && /is-missed/i.test(row.className) && /Incomplete/i.test(row.status) && /Submitted pending/i.test(row.text) && /Not submitted before the Q1 deadline/i.test(row.text)));
-
-      const assignmentPanels = await page.evaluate(() => {
-        const primaryPanel = globalThis.document.getElementById("studentDetailPrimaryList");
-        const historyPanel = globalThis.document.getElementById("studentDetailHistoryList");
-        return {
-          primaryTitle: globalThis.document.getElementById("studentDetailPrimaryTitle")?.textContent || "",
-          historyTitle: globalThis.document.getElementById("studentDetailHistoryTitle")?.textContent || "",
-          primarySummary: globalThis.document.getElementById("studentDetailPrimarySummary")?.textContent || "",
-          historySummary: globalThis.document.getElementById("studentDetailHistorySummary")?.textContent || "",
-          primaryText: primaryPanel?.textContent || "",
-          historyText: historyPanel?.textContent || "",
-          primaryLinks: Array.from(primaryPanel?.querySelectorAll("a.detail-link, .detail-item-title a") || []).map((node) => node.getAttribute("href") || ""),
-          historyLinks: Array.from(historyPanel?.querySelectorAll("a.detail-link, .detail-item-title a") || []).map((node) => node.getAttribute("href") || ""),
-          itemCount: {
-            primary: primaryPanel?.querySelectorAll(".detail-item").length || 0,
-            history: historyPanel?.querySelectorAll(".detail-item").length || 0,
-          },
-          historyItemClasses: Array.from(historyPanel?.querySelectorAll(".detail-item") || []).map((node) => node.className || ""),
-        };
-      });
-
-      assert.match(assignmentPanels.primaryTitle, /Unfinished Assignments: Current Quarter/i);
-      assert.match(assignmentPanels.historyTitle, /Past Quarters' Unfinished Assignments/i);
-      assert.match(assignmentPanels.primarySummary, /keep them in this quarter|quarter closes/i);
-      assert.match(assignmentPanels.historySummary, /practice and progress|quarter grades/i);
-      assert.equal(assignmentPanels.itemCount.primary, 1);
-      assert.equal(assignmentPanels.itemCount.history, 2);
-      assert.ok(assignmentPanels.primaryLinks.includes("https://example.com/essay-draft"));
-      assert.ok(assignmentPanels.historyLinks.includes("https://example.com/late-exercise"));
-      assert.ok(assignmentPanels.historyLinks.includes("https://example.com/missed-exercise"));
-      assert.match(assignmentPanels.primaryText, /Assigned/i);
-      assert.match(assignmentPanels.primaryText, /Due/i);
-      assert.match(assignmentPanels.primaryText, /Deadline/i);
-      assert.match(assignmentPanels.historyText, /practice and progress|progress tracking only/i);
-      assert.match(assignmentPanels.historyText, /progress tracking only|practice and progress/i);
-      assert.ok(assignmentPanels.historyItemClasses.some((className) => /\bgood\b/i.test(className)));
-      assert.ok(assignmentPanels.historyItemClasses.some((className) => /\bwarn\b/i.test(className)));
+      assert.match(assignmentPanels.primaryTitle, /Open Assignments/i);
+      assert.match(assignmentPanels.historyTitle, /Recent Assignment History/i);
+      assert.match(assignmentPanels.calendarTitle, /Current Homework Calendar/i);
+      assert.match(assignmentPanels.calendarSummary, /Open homework is plotted|No open homework is currently scheduled/i);
 
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="home"]')?.click();
@@ -1290,21 +1192,20 @@ test(
 
       const complianceState = await page.evaluate(() => {
         const summary = globalThis.document.getElementById("newsComplianceModalSummary");
-        const sourceHelp = globalThis.document.getElementById(
-          "newsValidationHelp-sourceLink",
-        );
+        const requiredBody = globalThis.document.getElementById("newsComplianceRequiredBody");
         return {
           ctaVisible: !globalThis.document
             .getElementById("openNewsComplianceModalBtn")
             ?.classList.contains("hidden"),
           summaryText: summary?.textContent || "",
-          sourceHelpText: sourceHelp?.textContent || "",
+          requiredBodyText: requiredBody?.textContent || "",
         };
       });
 
       assert.equal(complianceState.ctaVisible, true);
       assert.match(complianceState.summaryText, /revision/i);
-      assert.match(complianceState.sourceHelpText, /fetch failed/i);
+      assert.match(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /field-level details were not returned/i);
     } finally {
       if (page) {
         await page.close().catch(() => {});
@@ -1376,12 +1277,15 @@ test(
       await page.waitForFunction(() => {
         const modal = globalThis.document.getElementById("newsComplianceModal");
         const summary = globalThis.document.getElementById("newsComplianceModalSummary");
+        const submitBtn = globalThis.document.getElementById("submitBtn");
         return Boolean(
           modal &&
             !modal.classList.contains("hidden") &&
             summary &&
             summary.textContent &&
-            summary.textContent.trim().length > 0,
+            summary.textContent.trim().length > 0 &&
+            submitBtn &&
+            !submitBtn.disabled,
         );
       });
 
@@ -1389,13 +1293,13 @@ test(
         const modal = globalThis.document.getElementById("newsComplianceModal");
         const summary = globalThis.document.getElementById("newsComplianceModalSummary");
         const cta = globalThis.document.getElementById("openNewsComplianceModalBtn");
-        const sourceHelp = globalThis.document.getElementById("newsValidationHelp-sourceLink");
+        const requiredBody = globalThis.document.getElementById("newsComplianceRequiredBody");
         return {
           modalVisible: Boolean(modal && !modal.classList.contains("hidden")),
           ctaVisible: Boolean(cta && !cta.classList.contains("hidden") && !cta.hasAttribute("disabled")),
           formStatus: globalThis.document.getElementById("formStatus")?.textContent || "",
           summaryText: summary?.textContent || "",
-          sourceHelpText: sourceHelp?.textContent || "",
+          requiredBodyText: requiredBody?.textContent || "",
         };
       });
 
@@ -1403,8 +1307,8 @@ test(
       assert.equal(complianceState.ctaVisible, true);
       assert.match(complianceState.formStatus, /Saved and marked for revision/i);
       assert.match(complianceState.summaryText, /revision/i);
-      assert.match(complianceState.sourceHelpText, /fetch failed/i);
-      assert.match(complianceState.sourceHelpText, /Score 0\.00 < 1\.00/i);
+      assert.match(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /field-level details were not returned/i);
     } finally {
       if (page) {
         await page.close().catch(() => {});

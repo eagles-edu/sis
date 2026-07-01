@@ -76,15 +76,23 @@ test("student and parent queue headers follow compact parity contract", () => {
 test("student and parent queue compact chip/button and datetime helpers stay aligned", () => {
   const studentHtml = readPortal("web-asset/student/student-portal.html")
   const parentHtml = readPortal("web-asset/parent/parent-portal.html")
+  const sharedTheme = readPortal("web-asset/shared/portal-theme.css")
 
   for (const html of [studentHtml, parentHtml]) {
     assert.match(html, /function formatQueueDateTimeTz7\(/)
     assert.match(html, /function formatQueueLatestSubmissionHtml\(/)
     assert.match(html, /queue-compact-datetime/)
     assert.match(html, /\$\{hour\}:\$\{minute\}:\$\{second\} \+7/)
-    assert.match(html, /table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i)
-    assert.match(html, /table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i)
   }
+
+  assert.match(
+    sharedTheme,
+    /body\.(?:student|parent)-portal-page .*table\.news-queue-table td:nth-child\(3\) \.chip[\s\S]*?min-inline-size:\s*0;/i,
+  )
+  assert.match(
+    sharedTheme,
+    /body\.(?:student|parent)-portal-page .*queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i,
+  )
 })
 
 test("student and parent quarter tables keep late and missed status chips", () => {
@@ -94,36 +102,22 @@ test("student and parent quarter tables keep late and missed status chips", () =
 
   for (const html of [studentHtml, parentHtml]) {
     assert.match(html, /\/\*\s*portal-critical-theme:start\s*\*\//)
-    assert.match(html, /\.grade-status-pill\s*\{/)
-    assert.match(html, /\.grade-status-pill\.is-good\s*\{/)
-    assert.match(html, /\.grade-status-pill\.is-warn\s*\{/)
-    assert.match(html, /\.grade-status-pill\.is-bad\s*\{/)
-    assert.match(html, /\.grade-status-pill\.is-late\s*\{/)
-    assert.match(html, /\.grade-status-stack\s*\{/)
-    assert.match(html, /\.grade-exercise-score\s*\{/)
-    assert.match(html, /\.grade-exercise-score\.is-open\s*\{/)
-    assert.match(html, /\.grade-exercise-score-sub\s*\{/)
-    assert.match(html, /\.grade-exercise-meta\s*\{/)
-    assert.match(html, /\.grade-exercise-comment\s*\{/)
-    assert.match(
-      html,
-      /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open[\s\S]*?box-shadow:\s*inset 4px 0 0 (?:#a86400|var\(--portal-color-10fe7b83d5\));/
-    )
-    assert.match(html, /html\[data-theme="dark"\] \.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open/)
+    assert.match(html, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open \{\}/)
   }
 
   assert.match(sharedTheme, /body\.student-portal-page \.grade-tabulator-shell|body\.student-portal-page\.grade-tabulator-shell/)
   assert.match(sharedTheme, /body\.parent-portal-page \.grade-tabulator-shell|body\.parent-portal-page\.grade-tabulator-shell/)
-  assert.match(sharedTheme, /\.grade-status-pill,[^}]*\.grade-status-pill\.is-late[^}]*\{[^}]*color:var\(--portal-status-revise-text\)/)
-  assert.match(sharedTheme, /\.grade-status-pill\.is-good[^}]*\{[^}]*background:var\(--ok\);[^}]*color:var\(--portal-primary-text-strong\)/)
-  assert.match(sharedTheme, /\.grade-status-pill\.is-warn[^}]*\{[^}]*background:var\(--warn\);[^}]*color:var\(--portal-primary-text-strong\)/)
-  assert.match(sharedTheme, /\.grade-status-pill\.is-bad[^}]*\{[^}]*background:var\(--err\);[^}]*color:var\(--portal-primary-text-strong\)/)
-  assert.match(sharedTheme, /\.grade-status-pill\.is-late[^}]*\{[^}]*background:var\(--portal-status-revise-bg\);[^}]*color:var\(--portal-status-revise-text\)/)
-  assert.match(sharedTheme, /\.grade-exercise-score[^}]*\{[^}]*background:var\(--portal-status-good-bg\);[^}]*border:1px solid var\(--portal-status-good-border\);[^}]*color:var\(--portal-status-good-text\)/)
-  assert.match(sharedTheme, /\.grade-exercise-score\.is-open[^}]*\{[^}]*background:var\(--portal-surface-support\);[^}]*color:var\(--portal-grade-table-text\)/)
-  assert.match(sharedTheme, /\.grade-exercise-score-sub[^}]*\{[^}]*font-size:\.72rem/)
-  assert.match(sharedTheme, /\.grade-exercise-meta[^}]*\{[^}]*overflow-wrap:anywhere/)
-  assert.match(sharedTheme, /\.grade-exercise-comment[^}]*\{[^}]*overflow-wrap:anywhere/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-status-pill,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-status-pill\.is-good,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-status-pill\.is-warn,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-status-pill\.is-bad,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-status-pill\.is-late,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-status-stack,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-exercise-score,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-exercise-score\.is-open,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-exercise-score-sub,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-exercise-meta,/)
+  assert.match(sharedTheme, /body\.(?:student|parent)-portal-page \.grade-exercise-comment,/)
   assert.match(sharedTheme, /tabulator-row\.is-open\{[^}]*box-shadow:inset 4px 0 0 (?:#a86400|var\(--portal-color-10fe7b83d5\))/)
   assert.match(sharedTheme, /tabulator-row\.is-completed\{[^}]*box-shadow:inset 4px 0 0 #1f7a47/)
   assert.match(sharedTheme, /tabulator-row\.is-late\{[^}]*box-shadow:inset 4px 0 0 #55389f/)

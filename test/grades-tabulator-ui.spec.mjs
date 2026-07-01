@@ -7,8 +7,14 @@ import { JSDOM } from "jsdom"
 const TABULATOR_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/grades-tabulator.html")
 const TABULATOR_HTML = fs
   .readFileSync(TABULATOR_HTML_PATH, "utf8")
+  .replace(/<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>\s*/i, "")
   .replace(/<link[^>]*tabulator\.min\.css[^>]*>\s*/i, "")
+  .replace(/<link rel="stylesheet" href="\.\.\/vendor\/tabulatorz\/tabulator\.min\.css">\s*/i, "")
+  .replace(/<link[^>]*portal-theme\.min\.css[^>]*>\s*/i, "")
   .replace(/<script src="\.\.\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
+const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.min.css")
+const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
+const TABULATOR_HTML_FOR_TEST = TABULATOR_HTML.replace("</head>", `<style>${SHARED_THEME}</style></head>`)
 const TABULATOR_UI_PREFS_KEY = "sis.grades-tabulator.ui-prefs.v1"
 const ADMIN_UI_SETTINGS_KEY = "sis.admin.uiSettings"
 
@@ -136,7 +142,7 @@ function makeTabulatorFetchHandler({
 }
 
 async function createTabulatorDom(fetchHandler, url, options = {}) {
-  const dom = new JSDOM(TABULATOR_HTML, {
+  const dom = new JSDOM(TABULATOR_HTML_FOR_TEST, {
     runScripts: "dangerously",
     resources: "usable",
     pretendToBeVisual: true,
