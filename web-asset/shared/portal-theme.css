@@ -62,9 +62,29 @@
   --menu-bg: #f7faff;
   --menu-border: #d7dfea;
   --menu-header-bg: #eef3ff;
-  --menu-link-active-border: #8ab0e6;
-  --menu-link-active-bg: #edf4ff;
-  --menu-link-active-text: #0a2f66;
+  --menu-link-pressed-border: #315faa;
+  --menu-link-pressed-bg: #9fc0fb;
+  --menu-link-pressed-text: #062247;
+  --menu-link-hover-border: #4e7fcd;
+  --menu-link-hover-bg: #cfe1ff;
+  --menu-link-hover-text: #082e66;
+  --menu-link-active-border: #33a997;
+  --menu-link-active-bg: #c9f3ea;
+  --menu-link-active-text: #0a554d;
+  --menu-group-pressed-bg: #dbe8fd;
+  --menu-group-pressed-text: #082754;
+  --menu-button-bg: #eef3ff;
+  --menu-button-border: #c0d1ea;
+  --menu-button-text: #10294d;
+  --menu-button-hover-border: #3f74cb;
+  --menu-button-hover-bg: #9fc4ff;
+  --menu-button-hover-text: #06244f;
+  --menu-button-active-border: #1b9a88;
+  --menu-button-active-bg: #84eadb;
+  --menu-button-active-text: #063f38;
+  --menu-button-pressed-border: #2c58a3;
+  --menu-button-pressed-bg: #78a7f0;
+  --menu-button-pressed-text: #041d40;
   --menu-link-bg: #fff;
   --ok: #1f7a4f;
   --ok-bg: #e8f8ef;
@@ -1215,9 +1235,29 @@ body.admin-portal-page {
   --menu-bg: var(--portal-neutral-card-light);
   --menu-border: var(--portal-border);
   --menu-header-bg: var(--portal-neutral-support-light);
-  --menu-link-active-bg: color-mix(in srgb, var(--portal-neutral-card-light) 72%, var(--brand) 28%);
-  --menu-link-active-border: var(--portal-border-strong);
-  --menu-link-active-text: var(--portal-text);
+  --menu-link-pressed-bg: color-mix(in srgb, var(--portal-neutral-card-light) 14%, var(--portal-action-blue-top-active) 86%);
+  --menu-link-pressed-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-action-blue-border-active) 90%);
+  --menu-link-pressed-text: #f9fcff;
+  --menu-link-hover-bg: color-mix(in srgb, var(--portal-neutral-card-light) 24%, var(--portal-action-blue-top) 76%);
+  --menu-link-hover-border: color-mix(in srgb, var(--portal-border-strong) 12%, var(--portal-action-blue-border) 88%);
+  --menu-link-hover-text: #051f44;
+  --menu-link-active-bg: color-mix(in srgb, var(--portal-neutral-card-light) 20%, var(--portal-button-teal-fill-hover) 80%);
+  --menu-link-active-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-button-teal-stroke) 90%);
+  --menu-link-active-text: #073f37;
+  --menu-group-pressed-bg: color-mix(in srgb, var(--portal-neutral-support-light) 58%, var(--portal-action-blue-top) 42%);
+  --menu-group-pressed-text: #082754;
+  --menu-button-bg: var(--portal-neutral-support-light);
+  --menu-button-border: color-mix(in srgb, var(--portal-border) 88%, #c7d8f0 12%);
+  --menu-button-text: #10294d;
+  --menu-button-hover-bg: color-mix(in srgb, var(--portal-neutral-card-light) 22%, var(--portal-action-blue-top) 78%);
+  --menu-button-hover-border: color-mix(in srgb, var(--portal-border-strong) 12%, var(--portal-action-blue-border) 88%);
+  --menu-button-hover-text: #051f44;
+  --menu-button-active-bg: color-mix(in srgb, var(--portal-neutral-card-light) 18%, var(--portal-button-teal-fill-hover) 82%);
+  --menu-button-active-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-button-teal-stroke) 90%);
+  --menu-button-active-text: #073f37;
+  --menu-button-pressed-bg: color-mix(in srgb, var(--portal-neutral-card-light) 14%, var(--portal-action-blue-top-active) 86%);
+  --menu-button-pressed-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-action-blue-border-active) 90%);
+  --menu-button-pressed-text: #f9fcff;
   --menu-link-bg: var(--portal-neutral-card-light);
   --panel: var(--portal-role-panel-bg);
   --surface-1: var(--portal-role-card-bg);
@@ -2798,6 +2838,30 @@ body.parent-portal-page .identity-list {
 }
 body.student-portal-page,
 body.parent-portal-page {
+  --menu-bg: var(--portal-neutral-card-light);
+  --menu-border: var(--portal-border);
+  --menu-header-bg: var(--portal-neutral-support-light);
+  --menu-link-pressed-bg: color-mix(in srgb, var(--portal-neutral-card-light) 14%, var(--portal-action-blue-top-active) 86%);
+  --menu-link-pressed-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-action-blue-border-active) 90%);
+  --menu-link-pressed-text: #f9fcff;
+  --menu-link-hover-bg: color-mix(in srgb, var(--portal-neutral-card-light) 24%, var(--portal-action-blue-top) 76%);
+  --menu-link-hover-border: color-mix(in srgb, var(--portal-border-strong) 12%, var(--portal-action-blue-border) 88%);
+  --menu-link-hover-text: #051f44;
+  --menu-link-active-bg: color-mix(in srgb, var(--portal-neutral-card-light) 20%, var(--portal-button-teal-fill-hover) 80%);
+  --menu-link-active-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-button-teal-stroke) 90%);
+  --menu-link-active-text: #073f37;
+  --menu-button-bg: var(--portal-neutral-support-light);
+  --menu-button-border: color-mix(in srgb, var(--portal-border) 88%, #c7d8f0 12%);
+  --menu-button-text: #10294d;
+  --menu-button-hover-bg: color-mix(in srgb, var(--portal-neutral-card-light) 22%, var(--portal-action-blue-top) 78%);
+  --menu-button-hover-border: color-mix(in srgb, var(--portal-border-strong) 12%, var(--portal-action-blue-border) 88%);
+  --menu-button-hover-text: #051f44;
+  --menu-button-active-bg: color-mix(in srgb, var(--portal-neutral-card-light) 18%, var(--portal-button-teal-fill-hover) 82%);
+  --menu-button-active-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-button-teal-stroke) 90%);
+  --menu-button-active-text: #073f37;
+  --menu-button-pressed-bg: color-mix(in srgb, var(--portal-neutral-card-light) 14%, var(--portal-action-blue-top-active) 86%);
+  --menu-button-pressed-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-action-blue-border-active) 90%);
+  --menu-button-pressed-text: #f9fcff;
   --portal-grade-table-shell-bg: var(--portal-surface-card);
   --portal-grade-table-border: var(--line);
   --portal-grade-table-current-row-accent: var(--brand);
@@ -4098,6 +4162,33 @@ html[data-theme="dark"] body.admin-portal-page {
   color: var(--portal-dark-text);
   color-scheme: dark;
 }
+html[data-theme="dark"] body.student-portal-page,
+html[data-theme="dark"] body.parent-portal-page {
+  --menu-bg: var(--portal-dark-surface-panel);
+  --menu-border: var(--portal-dark-border);
+  --menu-header-bg: color-mix(in srgb, var(--portal-dark-surface-support) 86%, #ffffff 14%);
+  --menu-link-pressed-bg: color-mix(in srgb, var(--portal-dark-surface-support) 10%, var(--portal-action-blue-top-active) 90%);
+  --menu-link-pressed-border: color-mix(in srgb, var(--portal-dark-border-strong) 8%, #8ab6ff 92%);
+  --menu-link-pressed-text: #f7fbff;
+  --menu-link-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 12%, var(--portal-action-blue-top) 88%);
+  --menu-link-hover-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #a7c8ff 90%);
+  --menu-link-hover-text: #f8fbff;
+  --menu-link-active-bg: color-mix(in srgb, var(--portal-dark-surface-support) 16%, var(--portal-button-teal-fill-hover) 84%);
+  --menu-link-active-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #7ee6d9 90%);
+  --menu-link-active-text: #f0fffc;
+  --menu-button-bg: color-mix(in srgb, var(--portal-dark-surface-support) 86%, #ffffff 14%);
+  --menu-button-border: color-mix(in srgb, var(--portal-dark-border-strong) 28%, #8fb7ff 72%);
+  --menu-button-text: #f4f8ff;
+  --menu-button-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 12%, var(--portal-action-blue-top) 88%);
+  --menu-button-hover-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #a7c8ff 90%);
+  --menu-button-hover-text: #f8fbff;
+  --menu-button-active-bg: color-mix(in srgb, var(--portal-dark-surface-support) 16%, var(--portal-button-teal-fill-hover) 84%);
+  --menu-button-active-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #7ee6d9 90%);
+  --menu-button-active-text: #f0fffc;
+  --menu-button-pressed-bg: color-mix(in srgb, var(--portal-dark-surface-support) 10%, var(--portal-action-blue-top-active) 90%);
+  --menu-button-pressed-border: color-mix(in srgb, var(--portal-dark-border-strong) 8%, #8ab6ff 92%);
+  --menu-button-pressed-text: #f7fbff;
+}
 html[data-theme="dark"] body.admin-portal-page {
   --background-color: var(--portal-neutral-page-dark);
   --bg: var(--portal-neutral-page-dark);
@@ -4123,9 +4214,29 @@ html[data-theme="dark"] body.admin-portal-page {
   --menu-bg: var(--portal-dark-surface-panel);
   --menu-border: var(--portal-dark-border);
   --menu-header-bg: color-mix(in srgb, var(--portal-dark-surface-support) 86%, #ffffff 14%);
-  --menu-link-active-bg: color-mix(in srgb, var(--portal-dark-surface-support) 74%, #ffffff 26%);
-  --menu-link-active-border: var(--portal-dark-border-strong);
-  --menu-link-active-text: var(--portal-dark-text);
+  --menu-link-pressed-bg: color-mix(in srgb, var(--portal-dark-surface-support) 10%, var(--portal-action-blue-top-active) 90%);
+  --menu-link-pressed-border: color-mix(in srgb, var(--portal-dark-border-strong) 8%, #8ab6ff 92%);
+  --menu-link-pressed-text: #f7fbff;
+  --menu-link-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 12%, var(--portal-action-blue-top) 88%);
+  --menu-link-hover-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #a7c8ff 90%);
+  --menu-link-hover-text: #f8fbff;
+  --menu-link-active-bg: color-mix(in srgb, var(--portal-dark-surface-support) 16%, var(--portal-button-teal-fill-hover) 84%);
+  --menu-link-active-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #7ee6d9 90%);
+  --menu-link-active-text: #f0fffc;
+  --menu-group-pressed-bg: color-mix(in srgb, var(--portal-dark-surface-support) 56%, var(--portal-action-blue-top) 44%);
+  --menu-group-pressed-text: #f4f8ff;
+  --menu-button-bg: color-mix(in srgb, var(--portal-dark-surface-support) 86%, #ffffff 14%);
+  --menu-button-border: color-mix(in srgb, var(--portal-dark-border-strong) 28%, #8fb7ff 72%);
+  --menu-button-text: #f4f8ff;
+  --menu-button-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 12%, var(--portal-action-blue-top) 88%);
+  --menu-button-hover-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #a7c8ff 90%);
+  --menu-button-hover-text: #f8fbff;
+  --menu-button-active-bg: color-mix(in srgb, var(--portal-dark-surface-support) 16%, var(--portal-button-teal-fill-hover) 84%);
+  --menu-button-active-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #7ee6d9 90%);
+  --menu-button-active-text: #f0fffc;
+  --menu-button-pressed-bg: color-mix(in srgb, var(--portal-dark-surface-support) 10%, var(--portal-action-blue-top-active) 90%);
+  --menu-button-pressed-border: color-mix(in srgb, var(--portal-dark-border-strong) 8%, #8ab6ff 92%);
+  --menu-button-pressed-text: #f7fbff;
   --menu-link-bg: var(--portal-dark-surface-support);
   --panel: var(--portal-role-panel-bg);
   --surface-1: var(--portal-role-card-bg);
@@ -7932,10 +8043,12 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
 }
 .menu-group-btn {
   align-items: center;
-  background: var(--menu-header-bg);
-  border: 0;
-  border-radius: 0;
-  color: var(--text-color);
+  background: var(--menu-button-bg);
+  border: 1px solid var(--menu-button-border);
+  border-radius: var(--radius-2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  color: var(--menu-button-text);
+  cursor: pointer;
   display: inline-flex;
   font-size: 11px;
   font-weight: 700;
@@ -7945,6 +8058,41 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   padding: 10px 12px;
   text-align: left;
   text-transform: uppercase;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+  width: 100%;
+}
+.menu-group-btn:hover,
+.menu-group-btn:focus-visible {
+  background: var(--menu-button-hover-bg);
+  border-color: var(--menu-button-hover-border);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 10px 22px rgba(12, 21, 40, 0.16);
+  color: var(--menu-button-hover-text);
+  outline: none;
+  transform: translateY(-1px);
+}
+.menu-group.expanded .menu-group-btn {
+  background: var(--menu-button-active-bg);
+  border-color: var(--menu-button-active-border);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.26),
+    0 0 0 1px color-mix(in srgb, var(--menu-button-active-border) 72%, transparent);
+  color: var(--menu-button-active-text);
+}
+.menu-group-btn:active {
+  background: var(--menu-button-pressed-bg);
+  border-color: var(--menu-button-pressed-border);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--menu-button-pressed-border) 72%, transparent);
+  color: var(--menu-button-pressed-text);
+  transform: translateY(0);
 }
 .menu-group-links {
   display: none;
@@ -7962,6 +8110,12 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   font-size: 12px;
   padding: 8px 10px;
   text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 .menu-link-top {
   align-items: center;
@@ -7978,6 +8132,13 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   font-weight: 600;
 }
 .menu-link.active {
+  background: var(--menu-link-active-bg);
+  border-color: var(--menu-link-active-border);
+  color: var(--menu-link-active-text);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+.menu-link.active:hover,
+.menu-link.active:focus-visible {
   background: var(--menu-link-active-bg);
   border-color: var(--menu-link-active-border);
   color: var(--menu-link-active-text);
@@ -8003,17 +8164,45 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   min-height: 36px;
   padding: 8px 10px;
   text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 .side-link:hover,
 .side-link:focus-visible {
-  background: var(--menu-link-active-bg);
-  border-color: #b7cae3;
+  background: var(--menu-link-hover-bg);
+  border-color: var(--menu-link-hover-border);
+  box-shadow: 0 10px 22px rgba(12, 21, 40, 0.14);
+  color: var(--menu-link-hover-text);
   outline: none;
+  transform: translateY(-1px);
 }
 .side-link.active {
   background: var(--menu-link-active-bg);
-  border-color: #90acd4;
-  color: #0f2545;
+  border-color: var(--menu-link-active-border);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 0 0 1px color-mix(in srgb, var(--menu-link-active-border) 66%, transparent);
+  color: var(--menu-link-active-text);
+  font-weight: 800;
+}
+.side-link.active:hover,
+.side-link.active:focus-visible {
+  background: var(--menu-link-active-bg);
+  border-color: var(--menu-link-active-border);
+  color: var(--menu-link-active-text);
+}
+.side-link:active {
+  background: var(--menu-link-pressed-bg);
+  border-color: var(--menu-link-pressed-border);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.14),
+    0 0 0 1px color-mix(in srgb, var(--menu-link-pressed-border) 70%, transparent);
+  color: var(--menu-link-pressed-text);
+  transform: translateY(0);
 }
 .menu-group-btn::after {
   border-bottom: 2px solid currentColor;
@@ -8131,10 +8320,12 @@ html[data-theme="dark"] body.admin-portal-page .menu-group {
 }
 body.admin-portal-page .menu-group-btn {
   align-items: center;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 86%, var(--brand) 14%), var(--menu-header-bg));
-  border: 0;
+  background: var(--menu-button-bg);
+  border: 1px solid var(--menu-button-border);
+  border-radius: var(--radius-2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
   box-sizing: border-box;
-  color: var(--portal-role-text);
+  color: var(--menu-button-text);
   display: flex;
   font-size: 11px;
   font-weight: 800;
@@ -8148,23 +8339,40 @@ body.admin-portal-page .menu-group-btn {
 }
 body.admin-portal-page .menu-group-btn:hover,
 body.admin-portal-page .menu-group-btn:focus-visible {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--portal-surface-card) 72%, var(--brand) 28%), var(--menu-link-active-bg));
-  color: var(--portal-role-text);
+  background: var(--menu-button-hover-bg);
+  border-color: var(--menu-button-hover-border);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 10px 22px rgba(12, 21, 40, 0.16);
+  color: var(--menu-button-hover-text);
   outline: none;
+  transform: translateY(-1px);
+}
+body.admin-portal-page .menu-group-btn:active {
+  background: var(--menu-button-pressed-bg);
+  border-color: var(--menu-button-pressed-border);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--menu-button-pressed-border) 72%, transparent);
+  color: var(--menu-button-pressed-text);
+  transform: translateY(0);
 }
 html[data-theme="dark"] body.admin-portal-page .menu-group-btn {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-support) 84%, #ffffff 16%), var(--menu-header-bg));
-  color: var(--portal-dark-text);
+  background: var(--menu-button-bg);
+  border-color: var(--menu-button-border);
+  color: var(--menu-button-text);
 }
 html[data-theme="dark"] body.admin-portal-page .menu-group-btn:hover,
 html[data-theme="dark"] body.admin-portal-page .menu-group-btn:focus-visible {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--portal-dark-surface-support) 70%, #ffffff 30%), var(--menu-link-active-bg));
+  background: var(--menu-button-hover-bg);
 }
 body.admin-portal-page .menu-group.expanded .menu-group-btn {
-  border-bottom: 1px solid var(--portal-border);
-}
-html[data-theme="dark"] body.admin-portal-page .menu-group.expanded .menu-group-btn {
-  border-bottom-color: var(--portal-dark-border);
+  background: var(--menu-button-active-bg);
+  border-color: var(--menu-button-active-border);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.26),
+    0 0 0 1px color-mix(in srgb, var(--menu-button-active-border) 72%, transparent);
+  color: var(--menu-button-active-text);
 }
 body.admin-portal-page .menu-group-links {
   background: var(--portal-role-data-surface-bg);
@@ -8195,18 +8403,36 @@ body.admin-portal-page .menu-link {
 }
 body.admin-portal-page .menu-link:hover,
 body.admin-portal-page .menu-link:focus-visible {
-  background: var(--menu-link-active-bg);
-  border-color: var(--menu-link-active-border);
-  box-shadow: 0 8px 18px rgba(12, 21, 40, 0.12);
-  color: var(--menu-link-active-text);
+  background: var(--menu-link-hover-bg);
+  border-color: var(--menu-link-hover-border);
+  box-shadow: 0 8px 18px rgba(12, 21, 40, 0.14);
+  color: var(--menu-link-hover-text);
   outline: none;
   transform: translateY(-1px);
 }
 body.admin-portal-page .menu-link.active {
   background: var(--menu-link-active-bg);
   border-color: var(--menu-link-active-border);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.32),
+    0 0 0 1px color-mix(in srgb, var(--menu-link-active-border) 68%, transparent);
   color: var(--menu-link-active-text);
+  font-weight: 800;
+}
+body.admin-portal-page .menu-link.active:hover,
+body.admin-portal-page .menu-link.active:focus-visible {
+  background: var(--menu-link-active-bg);
+  border-color: var(--menu-link-active-border);
+  color: var(--menu-link-active-text);
+}
+body.admin-portal-page .menu-link:active {
+  background: var(--menu-link-pressed-bg);
+  border-color: var(--menu-link-pressed-border);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--menu-link-pressed-border) 70%, transparent);
+  color: var(--menu-link-pressed-text);
+  transform: translateY(0);
 }
 html[data-theme="dark"] body.admin-portal-page .menu-link {
   background: var(--portal-dark-surface-support);
@@ -8222,13 +8448,9 @@ body.admin-portal-page .menu-link.menu-link-top {
   min-height: 44px;
 }
 body.admin-portal-page .menu-sub-links {
-  border-inline-start: 1px solid var(--portal-border);
   gap: 6px;
   margin: 2px 0 0 10px;
   padding: 0 0 0 10px;
-}
-html[data-theme="dark"] body.admin-portal-page .menu-sub-links {
-  border-inline-start-color: var(--portal-dark-border);
 }
 body.admin-portal-page .menu-sublink {
   font-size: 11px;
@@ -8695,6 +8917,121 @@ html[data-theme="dark"] .field-hint {
 }
 .floating-menu-icon {
   position: relative;
+}
+.floating-menu-btn,
+.menu-toggle-btn {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+body.student-portal-page .floating-menu-btn,
+body.parent-portal-page .floating-menu-btn,
+body.admin-portal-page .floating-menu-btn,
+body.admin-portal-page .menu-toggle-btn {
+  background: var(--menu-button-bg) !important;
+  border-color: var(--menu-button-border) !important;
+  color: var(--menu-button-text) !important;
+}
+body.student-portal-page .floating-menu-btn:hover,
+body.student-portal-page .floating-menu-btn:focus-visible,
+body.parent-portal-page .floating-menu-btn:hover,
+body.parent-portal-page .floating-menu-btn:focus-visible,
+body.admin-portal-page .floating-menu-btn:hover,
+body.admin-portal-page .floating-menu-btn:focus-visible,
+body.admin-portal-page .menu-toggle-btn:hover,
+body.admin-portal-page .menu-toggle-btn:focus-visible {
+  background: var(--menu-button-hover-bg) !important;
+  border-color: var(--menu-button-hover-border) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 12px 24px rgba(12, 21, 40, 0.22) !important;
+  color: var(--menu-button-hover-text) !important;
+  outline: none;
+  transform: translateY(-1px);
+}
+body.student-portal-page .floating-menu-btn:active,
+body.parent-portal-page .floating-menu-btn:active,
+body.admin-portal-page .floating-menu-btn:active,
+body.admin-portal-page .menu-toggle-btn:active,
+body.menu-open.student-portal-page .floating-menu-btn,
+body.menu-open.parent-portal-page .floating-menu-btn,
+body.menu-open.admin-portal-page .floating-menu-btn,
+body.menu-open.admin-portal-page .menu-toggle-btn {
+  background: var(--menu-button-active-bg) !important;
+  border-color: var(--menu-button-active-border) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.26),
+    0 0 0 1px color-mix(in srgb, var(--menu-button-active-border) 72%, transparent) !important;
+  color: var(--menu-button-active-text) !important;
+}
+body.student-portal-page .floating-menu-btn:active,
+body.parent-portal-page .floating-menu-btn:active,
+body.admin-portal-page .floating-menu-btn:active,
+body.admin-portal-page .menu-toggle-btn:active {
+  background: var(--menu-button-pressed-bg) !important;
+  border-color: var(--menu-button-pressed-border) !important;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--menu-button-pressed-border) 72%, transparent) !important;
+  color: var(--menu-button-pressed-text) !important;
+  transform: translateY(0);
+}
+body.student-portal-page .side-link:hover,
+body.student-portal-page .side-link:focus-visible,
+body.parent-portal-page .side-link:hover,
+body.parent-portal-page .side-link:focus-visible {
+  background: var(--menu-link-hover-bg) !important;
+  border-color: var(--menu-link-hover-border) !important;
+  color: var(--menu-link-hover-text) !important;
+}
+body.student-portal-page .side-link.active,
+body.student-portal-page .side-link.active:hover,
+body.student-portal-page .side-link.active:focus-visible,
+body.parent-portal-page .side-link.active,
+body.parent-portal-page .side-link.active:hover,
+body.parent-portal-page .side-link.active:focus-visible {
+  background: var(--menu-link-active-bg) !important;
+  border-color: var(--menu-link-active-border) !important;
+  color: var(--menu-link-active-text) !important;
+}
+body.student-portal-page .side-link:active,
+body.parent-portal-page .side-link:active {
+  background: var(--menu-link-pressed-bg) !important;
+  border-color: var(--menu-link-pressed-border) !important;
+  color: var(--menu-link-pressed-text) !important;
+}
+html[data-theme="dark"] body.student-portal-page .side-link:hover,
+html[data-theme="dark"] body.student-portal-page .side-link:focus-visible,
+html[data-theme="dark"] body.parent-portal-page .side-link:hover,
+html[data-theme="dark"] body.parent-portal-page .side-link:focus-visible,
+html[data-theme="dark"] body.admin-portal-page .menu-link:hover,
+html[data-theme="dark"] body.admin-portal-page .menu-link:focus-visible {
+  background: var(--menu-link-hover-bg) !important;
+  border-color: var(--menu-link-hover-border) !important;
+  color: var(--menu-link-hover-text) !important;
+}
+html[data-theme="dark"] body.student-portal-page .side-link.active,
+html[data-theme="dark"] body.student-portal-page .side-link.active:hover,
+html[data-theme="dark"] body.student-portal-page .side-link.active:focus-visible,
+html[data-theme="dark"] body.parent-portal-page .side-link.active,
+html[data-theme="dark"] body.parent-portal-page .side-link.active:hover,
+html[data-theme="dark"] body.parent-portal-page .side-link.active:focus-visible,
+html[data-theme="dark"] body.admin-portal-page .menu-link.active,
+html[data-theme="dark"] body.admin-portal-page .menu-link.active:hover,
+html[data-theme="dark"] body.admin-portal-page .menu-link.active:focus-visible {
+  background: var(--menu-link-active-bg) !important;
+  border-color: var(--menu-link-active-border) !important;
+  color: var(--menu-link-active-text) !important;
+}
+html[data-theme="dark"] body.student-portal-page .side-link:active,
+html[data-theme="dark"] body.parent-portal-page .side-link:active,
+html[data-theme="dark"] body.admin-portal-page .menu-link:active {
+  background: var(--menu-link-pressed-bg) !important;
+  border-color: var(--menu-link-pressed-border) !important;
+  color: var(--menu-link-pressed-text) !important;
 }
 .floating-menu-icon::before {
   left: 0;

@@ -1318,6 +1318,64 @@ box-shadow:
 </head>
 
 <body class="admin-portal-page page grades-tabulator-page" id="top" data-surface-role="page">
+  <button id="floatingMenuBtn" type="button" class="floating-menu-btn portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+    <span class="floating-menu-icon" aria-hidden="true"></span>
+  </button>
+  <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
+  <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
+    <div class="sidebar-logo-wrap">
+      <img src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+    </div>
+    <h2>Admin Navigation</h2>
+    <p class="small">Grades tools and related admin pages.</p>
+    <nav class="menu-groups" id="navMenu">
+      <a href="/admin" class="menu-link menu-link-top">Overview</a>
+      <a href="/admin/queue-hub" class="menu-link menu-link-top">Queue Hub</a>
+      <a href="/admin/profile" class="menu-link menu-link-top">Profile</a>
+      <div class="menu-group expanded" data-menu-group="tracking">
+        <button type="button" class="menu-group-btn" data-menu-toggle="tracking">Tracking</button>
+        <div class="menu-group-links">
+          <a href="/admin/attendance" class="menu-link">Attendance</a>
+          <div class="menu-sub-links">
+            <a href="/admin/attendance-admin" class="menu-link menu-sublink">Attendance data</a>
+          </div>
+          <a href="/admin/assignments" class="menu-link">Assignments</a>
+          <div class="menu-sub-links">
+            <a href="/admin/assignments-data" class="menu-link menu-sublink">Assignments data</a>
+          </div>
+          <a href="/admin/grades" class="menu-link">Grades</a>
+          <div class="menu-sub-links">
+            <a href="/admin/grades-data" class="menu-link menu-sublink">Grades data</a>
+            <a href="/web-asset/admin/grades-tabulator.html" id="gradeTableMenuLink" class="menu-link menu-sublink active" aria-current="page">Grade table</a>
+          </div>
+          <a href="/admin/parent-tracking" class="menu-link">Performance</a>
+          <div class="menu-sub-links">
+            <a href="/admin/performance-data" class="menu-link menu-sublink">Performance data</a>
+            <a href="/admin/performance-engagement" class="menu-link menu-sublink">Performance engagement</a>
+          </div>
+          <a href="/admin/news-reports" class="menu-link">News reports</a>
+          <a href="/admin/reports" class="menu-link">Reports</a>
+        </div>
+      </div>
+      <div class="menu-group" data-menu-group="support">
+        <button type="button" class="menu-group-btn" data-menu-toggle="support">Support</button>
+        <div class="menu-group-links">
+          <a href="/admin/family" class="menu-link">Family</a>
+        </div>
+      </div>
+      <div class="menu-group" data-menu-group="admin">
+        <button type="button" class="menu-group-btn" data-menu-toggle="admin">Admin</button>
+        <div class="menu-group-links">
+          <a href="/admin/enrollment" class="menu-link">Enrollment</a>
+          <a href="/admin/student-admin" class="menu-link">Student admin</a>
+          <a href="/admin/school-setup" class="menu-link">School setup</a>
+          <a href="/admin/users" class="menu-link">Users</a>
+          <a href="/admin/permissions" class="menu-link">Permissions</a>
+          <a href="/admin/settings" class="menu-link">Settings</a>
+        </div>
+      </div>
+    </nav>
+  </aside>
   <div class="wrap">
     <div class="header-bar" data-surface-role="content">
       <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
@@ -1326,14 +1384,14 @@ box-shadow:
     <main class="section-stack" id="appMain" data-surface-role="content">
       <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
         <div class="app-brand-strip">
-          <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="admin" aria-label="Go to admin dashboard">
+          <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
             <img id="appBrandLogo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
             <span id="appBrandLogoFallback" class="app-brand-logo-fallback hidden">SIS</span>
           </a>
           <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
           <div class="app-header-actions">
-            <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome">
-              Hide Menu
+            <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
+              Menu
             </button>
             <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden">
               Self-Heal Runtime
@@ -5075,6 +5133,65 @@ box-shadow:
         }, 190)
         window.addEventListener("resize", handleResize)
       }
+      function updateMenuToggleButtons() {
+        const menuOpen = document.body.classList.contains("menu-open")
+        const menuToggleBtn = document.getElementById("menuToggleBtn")
+        const floatingMenuBtn = document.getElementById("floatingMenuBtn")
+        if (menuToggleBtn) {
+          menuToggleBtn.textContent = menuOpen ? "Close Menu" : "Menu"
+          menuToggleBtn.setAttribute("aria-expanded", menuOpen ? "true" : "false")
+          menuToggleBtn.setAttribute(
+            "aria-label",
+            menuOpen ? "Close navigation menu" : "Open navigation menu",
+          )
+        }
+        if (floatingMenuBtn) {
+          floatingMenuBtn.setAttribute("aria-expanded", menuOpen ? "true" : "false")
+          floatingMenuBtn.setAttribute(
+            "aria-label",
+            menuOpen ? "Close navigation menu" : "Open navigation menu",
+          )
+        }
+      }
+      function setMenuOpen(shouldOpen) {
+        document.body.classList.toggle("menu-open", Boolean(shouldOpen))
+        updateMenuToggleButtons()
+      }
+      function bindMenuControls() {
+        const gradeTableMenuLink = document.getElementById("gradeTableMenuLink")
+        if (gradeTableMenuLink) {
+          gradeTableMenuLink.setAttribute(
+            "href",
+            `${window.location.pathname}${window.location.search || ""}`,
+          )
+        }
+        document
+          .querySelectorAll("[data-menu-toggle]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              const group = button.closest("[data-menu-group]")
+              if (!group) return
+              group.classList.toggle("expanded")
+            })
+          })
+        document
+          .querySelectorAll("#appSidebarNav a.menu-link")
+          .forEach((link) => {
+            link.addEventListener("click", () => {
+              setMenuOpen(false)
+            })
+          })
+        document.getElementById("floatingMenuBtn")?.addEventListener("click", () => {
+          setMenuOpen(!document.body.classList.contains("menu-open"))
+        })
+        document.getElementById("menuToggleBtn")?.addEventListener("click", () => {
+          setMenuOpen(!document.body.classList.contains("menu-open"))
+        })
+        document.getElementById("menuBackdrop")?.addEventListener("click", () => {
+          setMenuOpen(false)
+        })
+        updateMenuToggleButtons()
+      }
       async function bootstrapRows() {
         if (state.loading) return
         state.loading = true
@@ -5104,6 +5221,7 @@ box-shadow:
           applyFilterQueryOverrides()
           applyCurrentSchoolYearDefault()
           applyCurrentQuarterDefault()
+          bindMenuControls()
           bindControls()
           bindTableModalControls()
           bindDistributionModalControls()
