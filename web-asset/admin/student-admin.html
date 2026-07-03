@@ -146,7 +146,6 @@
     .settings-options-panel,
     .settings-mirror-panel {
     }
-
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
@@ -309,7 +308,7 @@
         <main class="section-stack" id="appMain" data-surface-role="content">
           <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
             <div class="app-brand-strip">
-              <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
+              <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="admin" aria-label="Go to admin dashboard">
                 <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
                 <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
               </a>
@@ -467,7 +466,7 @@
                 </div>
                 <div class="top-search-meta">
                   <p class="small" id="topSearchCount">0 results</p>
-                  <button id="topSearchExpandBtn" type="button" class="hidden">
+                  <button id="topSearchExpandBtn" type="button" class="hidden portal-button portal-button-info">
                     Show All
                   </button>
                 </div>
@@ -864,10 +863,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
               </div>
 
               <div class="content page-section" data-page="profile" data-surface-role="content">
-                <h2>Student Profile (linked to individual)</h2>
+                <h2>Student Profile</h2>
                 <p class="small page-note">
-                  Profile information is shown in a compact read view. Use
-                  <strong>Edit Info</strong> to open the New/Edit form page.
+                  View one student at a time, then switch to edit or create mode from the controls below.
                 </p>
                 <div class="profile-info-toolbar">
                   <h3>Student Info</h3>
@@ -924,7 +922,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
               </div>
 
               <div class="content page-section" data-page="attendance" data-surface-role="content">
-                <h2>Attendance [input]</h2>
+                <h2>Attendance</h2>
+                <p class="small page-note">
+                  Record today's attendance by class level and save the daily roll.
+                </p>
                 <div id="attendanceLandingSection" class="attendance-landing-grid">
                   <section class="attendance-level-panel panel" data-surface-role="panel">
                     <h3>Class Levels</h3>
@@ -990,9 +991,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
               </div>
 
               <div class="content page-section" data-page="attendance-admin" data-surface-role="content">
-                <h2 id="attendanceAdminSection">
-                  Attendance data [view, sort, manage, edit data]
-                </h2>
+                <h2 id="attendanceAdminSection">Attendance data</h2>
+                <p class="small page-note">
+                  Review attendance rows, sort by student or date, and edit saved records.
+                </p>
                 <div class="attendance-landing-grid">
                   <section class="attendance-level-panel panel" data-surface-role="panel">
                     <h3>Class Levels</h3>
@@ -1150,7 +1152,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
               </div>
 
               <div class="content page-section" data-page="assignments" data-surface-role="content">
-                <h2>Assignments [input]</h2>
+                <h2>Assignments</h2>
                 <p class="small page-note">
                   Assignments are sent by class level. Select a class tile, add one or
                   more exercise items, then save and send.
@@ -1256,7 +1258,10 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
               </div>
 
               <div class="content page-section" data-page="assignments-data" data-surface-role="content">
-                <h2>Assignments data [view, sort, manage, edit data]</h2>
+                <h2>Assignments data</h2>
+                <p class="small page-note">
+                  Review assignment rows, sort submissions, and manage archived items.
+                </p>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="assignmentSortField">Sort Assignment Data By</label>
@@ -1369,7 +1374,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
               </div>
 
               <div class="content page-section" data-page="parent-tracking" data-surface-role="content">
-                <h2>Performance reports [input]</h2>
+                <h2>Performance reports</h2>
                 <p class="small page-note">
                   Teacher-facing report builder. Student and family visibility is
                   delivered through the scheduled email message.
@@ -1922,7 +1927,10 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section" data-page="performance-data" data-surface-role="content">
-                <h2>Performance reports [approval and queue review]</h2>
+                <h2>Performance data</h2>
+                <p class="small page-note">
+                  Review queued performance reports, approve them, and manage the email queue.
+                </p>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="performanceSortField">Sort Performance Data By</label>
@@ -2119,10 +2127,13 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section" data-page="performance-engagement" data-surface-role="content">
-                <h2>RC engagement [day list and tracked metrics]</h2>
+                <h2>RC engagement</h2>
+                <p class="small page-note">
+                  Inspect class-day engagement rows and the tracked delivery metrics.
+                </p>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
-                    <label for="performanceEngagementSearch">Search engagement rows</label>
+                    <label class="bm-p25rem" for="performanceEngagementSearch">Search engagement rows</label>
                     <input id="performanceEngagementSearch" type="search" placeholder="class day, student, parent, email, metrics">
                   </div>
                   <div class="toolbar-field compact">
@@ -2130,9 +2141,8 @@ Select a homework link to inspect details.</pre>
                     <p class="small" id="performanceEngagementSelectedDaySummary">No class day selected.</p>
                   </div>
                   <div class="toolbar-field compact">
-                    <div class="small">Reload</div>
                     <button id="performanceEngagementReloadBtn" type="button" class="portal-button portal-button-refresh">
-                      Reload RC engagement
+                      Reload
                     </button>
                   </div>
                 </div>
@@ -2172,7 +2182,10 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section" data-page="news-reports" data-surface-role="content">
-                <h2>Student news reports [review queue]</h2>
+                <h2>News Reports</h2>
+                <p class="small page-note">
+                  Review student news reports, check status, and stage approvals for follow-up.
+                </p>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="newsReviewStatusFilter">Status</label>
@@ -2270,7 +2283,7 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section" data-page="grades" data-surface-role="content">
-                <h2>Grades [input]</h2>
+                <h2>Grades</h2>
                 <p class="section-label">Grades input</p>
                 <div class="row">
                   <input id="g_id" type="hidden">
@@ -2347,7 +2360,16 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section" data-page="grades-data" data-surface-role="content">
-                <h2>Grades data [view, sort, manage, edit data]</h2>
+                <h2>Grades data</h2>
+                <p class="small page-note">
+                  Review grade rows, sort results, and manage archived entries.
+                </p>
+                <p class="small page-note">
+                  Need the table-first view? Open
+                  <a href="/web-asset/admin/grades-tabulator.html?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788&currentSchoolYear=2026-2027&schoolYear=2026-2027&quarter=q2&period=sytd">Grades Tabulator</a>
+                  for the full matrix layout, then jump back to
+                  <a href="/admin/profile">Student Profile</a> when you need the student record view.
+                </p>
                 <section class="grade-chart-shell panel" id="gradeChartShell" data-surface-role="panel">
                   <div class="grade-chart-head">
                     <h3>Grades Pulse (mobile-first)</h3>
@@ -2547,7 +2569,10 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="panel page-section" data-page="reports">
-                <h2>All Reports [input-output]</h2>
+                <h2>All Reports</h2>
+                <p class="small page-note">
+                  Create performance reports, generate PDF cards, and review stored report rows.
+                </p>
                 <p class="section-label">Performance Report Input</p>
                 <div class="row">
                   <input id="r_id" type="hidden">
@@ -2602,7 +2627,7 @@ Select a homework link to inspect details.</pre>
                   </button>
                   <button id="reportClearBtn" type="button" class="portal-button portal-button-warning">Clear Report Form</button>
                 </div>
-                <h3>Performance data [view, sort, manage, edit data]</h3>
+                <h3>Performance data</h3>
                 <div class="table-toolbar">
                   <div class="toolbar-field">
                     <label for="reportSortField">Sort Performance Data By</label>
@@ -2744,7 +2769,10 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section hidden" id="userAdminPanel" data-page="users" data-surface-role="content">
-                <h2>Admin User Management</h2>
+                <h2>Users</h2>
+                <p class="small page-note">
+                  Create admin and teacher accounts, update roles, and remove access when needed.
+                </p>
                 <div class="panel user-admin-form" data-surface-role="panel">
                 <form id="userForm">
                   <div class="row">
@@ -2807,7 +2835,7 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section hidden" id="permissionsPanel" data-page="permissions" data-surface-role="content">
-                <h2>Role Permissions Matrix</h2>
+                <h2>Permissions</h2>
                 <p class="small page-note">
                   Define starting page and exposed sections/functions for
                   <strong>admin</strong>, <strong>teacher</strong>,
@@ -3041,7 +3069,7 @@ Select a homework link to inspect details.</pre>
               </div>
 
               <div class="content page-section hidden" id="settingsPanel" data-page="settings" data-surface-role="content">
-                <h2>Admin Settings</h2>
+                <h2>Settings</h2>
                 <p class="small page-note">
                   Toggle optional features for this deployment profile.
                 </p>
@@ -3157,6 +3185,11 @@ Select a homework link to inspect details.</pre>
                     <div class="col-2">
                       <div aria-hidden="true"></div><button id="profileFieldLayoutRefreshBtn" type="button" class="portal-button portal-button-refresh">
                         Reload Editor
+                      </button>
+                    </div>
+                    <div class="col-2">
+                      <div aria-hidden="true"></div><button id="profileFieldLayoutExpandBtn" type="button" class="portal-button portal-button-info" aria-pressed="false" onclick="window.__SIS_PROFILE_LAYOUT_TOGGLE__?.()">
+                        Expand List
                       </button>
                     </div>
                   </div>

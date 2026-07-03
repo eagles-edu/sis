@@ -13,6 +13,14 @@ const studentAdminJs = fs.readFileSync(
   path.resolve(rootDir, "web-asset/admin/student-admin.js"),
   "utf8",
 )
+const studentAdminCss = fs.readFileSync(
+  path.resolve(rootDir, "web-asset/admin/student-admin.css"),
+  "utf8",
+)
+const sharedPortalThemeCss = fs.readFileSync(
+  path.resolve(rootDir, "web-asset/shared/portal-theme.css"),
+  "utf8",
+)
 
 test("portal ladder surfaces are labeled explicitly in markup", () => {
   assert.match(hubHtml, /<body class="portal-hub-page" id="top" data-surface-role="page">/)
@@ -30,6 +38,7 @@ test("portal ladder surfaces are labeled explicitly in markup", () => {
   assert.match(studentAdminHtml, /<select id="filterSchool" data-surface-role="card">/)
   assert.match(studentAdminHtml, /<div class="col-12" id="topSearchResultsPanel" data-surface-role="panel">/)
   assert.match(studentAdminHtml, /<div class="list-box top-search-results-box data-surface" data-surface-role="data-surface">/)
+  assert.match(studentAdminHtml, /<button id="topSearchExpandBtn" type="button" class="hidden portal-button portal-button-info">/)
   assert.match(studentAdminHtml, /<div class="panel" id="studentListPanel" data-surface-role="panel">/)
   assert.match(studentAdminHtml, /<div class="list-box data-surface" data-surface-role="data-surface">/)
   assert.match(studentAdminHtml, /<div class="content page-section" data-page="student-admin" data-surface-role="content">/)
@@ -113,6 +122,22 @@ test("portal ladder surfaces are labeled explicitly in markup", () => {
   assert.match(studentAdminJs, /<article class="profile-summary-primary card" data-surface-role="card">/)
   assert.match(studentAdminJs, /<div class="table-scroll-wrap data-surface" data-surface-role="data-surface">/)
   assert.match(studentAdminJs, /<article class="grade-chart-lane data-surface" data-grade-chart-lane=/)
+  assert.match(studentAdminJs, /function studentDisplayLevel\(student = \{\}\) \{/)
+  assert.match(studentAdminJs, /student\?\.currentEnrollment\?\.level \|\|/)
+  assert.match(studentAdminJs, /const levelName = studentDisplayLevel\(student\);/)
+  assert.match(studentAdminJs, /function scrollProfileSurfaceIntoView\(\) \{/)
+  assert.match(studentAdminJs, /function openStudentProfileFromList\(studentRefId = ""\) \{/)
+  assert.match(studentAdminJs, /setActivePage\("profile"\);\s*scrollProfileSurfaceIntoView\(\);/s)
+  assert.match(studentAdminJs, /tr\.addEventListener\("click", \(\) => openStudentProfileFromList\(student\.id\)\);/)
+  assert.match(studentAdminJs, /button\.className = `portal-button portal-button-primary profile-tab-button\$\{isActive \? " active" : ""\}`;/)
+  assert.doesNotMatch(studentAdminJs, /const chipStyle = \[/)
+  assert.doesNotMatch(studentAdminJs, /const chipAttrs = `style="\$\{escapeHtml\(chipStyle\)\}"`;/)
+  assert.doesNotMatch(studentAdminJs, /<span class="\$\{classes\}" \$\{chipAttrs\}>/)
+  assert.match(sharedPortalThemeCss, /body\.admin-portal-page \.level-chip \{/)
+  assert.match(sharedPortalThemeCss, /body\.admin-portal-page \.level-chip\.panelbg-fly \{/)
+  assert.match(sharedPortalThemeCss, /body\.admin-portal-page \.level-chip\.panelbg-private \{/)
+  assert.doesNotMatch(studentAdminCss, /\.level-chip \{/)
+  assert.doesNotMatch(studentAdminCss, /\.level-chip\.panelbg-fly \{/)
   assert.match(studentAdminJs, /panelEl\.className = `queue-hub-panel panel/)
   assert.match(studentAdminJs, /panelEl\.dataset\.surfaceRole = "panel";/)
   assert.match(studentAdminJs, /select\.dataset\.surfaceRole = "card";/)
@@ -121,4 +146,32 @@ test("portal ladder surfaces are labeled explicitly in markup", () => {
   assert.match(studentAdminJs, /item\.className = "profile-choice-item card";\s*item\.dataset\.surfaceRole = "card";/s)
   assert.match(studentAdminJs, /panel\.dataset\.surfaceRole = "panel";/)
   assert.match(studentAdminJs, /card\.className = "permission-role-card card";\s*card\.dataset\.surfaceRole = "card";/s)
+  assert.match(studentAdminCss, /\.page-section \.actions > :is\(button, a, summary, \.portal-button, \.link-btn\) \{/)
+  assert.match(studentAdminCss, /\.top-search-open-btn,\s+\.portal-button-open-week-set,\s+\.queue-row-btn \{/)
+  assert.doesNotMatch(studentAdminCss, /#topSearchExpandBtn \{[\s\S]*min-height: 36px;/s)
+  assert.match(studentAdminCss, /\.page-section\[data-page="profile"\] \.actions button \{\s*font-size: 14px;\s*min-height: 48px;/s)
+  assert.match(
+    sharedPortalThemeCss,
+    /body\.admin-portal-page \.profile-tab-nav button \{\s*background: var\(--portal-button-fill\);\s*border: 1px solid var\(--portal-button-stroke\);\s*color: var\(--portal-button-ink\);/s,
+  )
+  assert.doesNotMatch(sharedPortalThemeCss, /body\.admin-portal-page \.profile-tab-nav button \{[^}]*box-shadow: none;/s)
+  assert.match(
+    sharedPortalThemeCss,
+    /body\.admin-portal-page \.profile-tab-nav button:hover:not\(:disabled\),\s*body\.admin-portal-page \.profile-tab-nav button:focus-visible \{\s*background: var\(--portal-button-fill-hover\);\s*border-color: var\(--portal-button-stroke-hover\);\s*color: var\(--portal-button-ink-hover\);/s,
+  )
+  assert.match(
+    sharedPortalThemeCss,
+    /html\[data-theme="dark"\] body\.admin-portal-page .profile-tab-nav button \{\s*background: var\(--portal-button-fill\);\s*border-color: var\(--portal-button-stroke\);\s*color: var\(--portal-button-ink\);/s,
+  )
+  assert.match(
+    studentAdminCss,
+    /\.profile-tab-nav \.profile-tab-button \{[\s\S]*min-inline-size: var\(--portal-button-inline\);/s,
+  )
+  assert.match(studentAdminCss, /\.profile-tab-nav button \{[\s\S]*flex: 0 0 auto;[\s\S]*width: auto;/s)
+  assert.doesNotMatch(studentAdminCss, /\.profile-tab-nav \{[^}]*overflow-x: auto;/s)
+  assert.doesNotMatch(studentAdminCss, /\.profile-tab-nav \{[^}]*scroll-snap-type: x proximity;/s)
+  assert.doesNotMatch(studentAdminCss, /\.profile-tab-nav button \{[^}]*border-radius: var\(--radius-pill\);/s)
+  assert.doesNotMatch(sharedPortalThemeCss, /profile-tab-nav button \{[^}]*portal-status-info-bg/s)
+  assert.match(studentAdminCss, /\.page-section\[data-page="news-reports"\] \.table-toolbar button \{/)
+  assert.doesNotMatch(studentAdminCss, /\.page-section\[data-page="news-reports"\] \.table-toolbar button \{[^}]*width: 100%;/s)
 })

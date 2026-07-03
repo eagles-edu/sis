@@ -525,8 +525,8 @@ html[data-theme="dark"] {
   --portal-chart-surface: var(--portal-dark-surface-card);
   --portal-chart-surface-soft: var(--portal-dark-surface-support);
   --portal-data-label: var(--portal-dark-text-soft);
-  --portal-status-bad-bg: #ff2e3f;
-  --portal-status-bad-border: #8a1f1c;
+  --portal-status-bad-bg: #a50102;
+  --portal-status-bad-border: #710602;
   --portal-status-bad-text: #8a1f1c;
   --portal-status-good-bg: #218021;
   --portal-status-good-border: #005224;
@@ -1055,6 +1055,94 @@ button.portal-chip-interactive.is-active {
   border-color: var(--portal-chip-interactive-stroke-active);
   color: var(--portal-chip-interactive-ink);
   transform: translateY(1px);
+}
+body.admin-portal-page .level-chip {
+  --chip-bg: var(--portal-chip-neutral-fill);
+  --chip-border: var(--portal-chip-neutral-stroke);
+  --chip-text: var(--portal-chip-neutral-ink);
+  align-items: center;
+  background: var(--chip-bg);
+  border: var(--portal-chip-border-width) solid var(--chip-border);
+  border-radius: 999px;
+  box-shadow: 0 1px 0 rgba(11, 32, 60, 0.22);
+  box-sizing: border-box;
+  color: var(--chip-text);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 11px;
+  letter-spacing: -0.05px;
+  font-weight: 800;
+  gap: 6px;
+  height: 30px;
+  inline-size: var(--portal-chip-inline);
+  justify-content: center;
+  line-height: 1;
+  max-inline-size: var(--portal-chip-inline);
+  min-height: 0;
+  min-inline-size: var(--portal-chip-min-inline);
+  overflow: hidden;
+  padding: 0 10px;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+body.admin-portal-page .level-chip.panelbg-eggs-chicks {
+  --chip-bg: var(--portal-color-cbfc8005b4);
+  --chip-border: #b60001;
+  --chip-text: var(--portal-color-469978e86b);
+}
+body.admin-portal-page .level-chip.panelbg-starters {
+  --chip-bg: var(--portal-color-03b5721e8c);
+  --chip-border: #d28100;
+  --chip-text: var(--portal-status-amber-text);
+}
+body.admin-portal-page .level-chip.panelbg-mov {
+  --chip-bg: var(--portal-color-46586438f4);
+  --chip-border: #67076e;
+  --chip-text: var(--portal-color-469978e86b);
+}
+body.admin-portal-page .level-chip.panelbg-fly {
+  --chip-bg: var(--portal-color-edb7fe91a8);
+  --chip-border: #8bab46;
+  --chip-text: #0b1220;
+}
+body.admin-portal-page .level-chip.panelbg-key {
+  --chip-bg: var(--portal-color-709e6795a7);
+  --chip-border: #006475;
+  --chip-text: #0b1220;
+}
+body.admin-portal-page .level-chip.panelbg-pet {
+  --chip-bg: var(--portal-color-9c1eaddb49);
+  --chip-border: #981228;
+  --chip-text: var(--portal-color-469978e86b);
+}
+body.admin-portal-page .level-chip.panelbg-ielts {
+  --chip-bg: var(--portal-color-fd15f49e34);
+  --chip-border: #75061a;
+  --chip-text: var(--portal-color-469978e86b);
+}
+body.admin-portal-page .level-chip.panelbg-tayk {
+  --chip-bg: var(--portal-color-312c8e26c3);
+  --chip-border: #6e0000;
+  --chip-text: var(--portal-color-469978e86b);
+}
+body.admin-portal-page .level-chip.panelbg-private {
+  --chip-bg: var(--tertiary-color);
+  --chip-border: #00005c;
+  --chip-text: var(--portal-color-469978e86b);
+}
+body.admin-portal-page .level-chip.level-chip-standard {
+  justify-content: center;
+}
+body.admin-portal-page .level-chip::before {
+  display: none;
+}
+body.admin-portal-page a.level-chip:hover,
+body.admin-portal-page a.level-chip:focus-visible,
+body.admin-portal-page a .level-chip:hover,
+body.admin-portal-page a .level-chip:focus-visible {
+  cursor: pointer;
 }
 @keyframes portal-button-chip-spin {
   from {
@@ -1697,20 +1785,20 @@ body.admin-portal-page :where(.profile-info-group,
   padding: 12px;
 }
 body.admin-portal-page .profile-tab-nav button {
-  background: var(--portal-button-surface);
-  border: 1px solid var(--portal-button-border);
-  color: var(--portal-text);
+  background: var(--portal-button-fill);
+  border: 1px solid var(--portal-button-stroke);
+  color: var(--portal-button-ink);
 }
 body.admin-portal-page .profile-tab-nav button:hover:not(:disabled),
 body.admin-portal-page .profile-tab-nav button:focus-visible {
-  background: var(--portal-button-surface-hover);
-  border-color: var(--portal-button-border-hover);
-  color: var(--portal-text);
+  background: var(--portal-button-fill-hover);
+  border-color: var(--portal-button-stroke-hover);
+  color: var(--portal-button-ink-hover);
 }
 body.admin-portal-page .profile-tab-nav button.active {
-  background: var(--portal-button-surface-hover);
-  border-color: var(--portal-button-border-hover);
-  color: var(--portal-text);
+  background: var(--portal-button-fill);
+  border-color: var(--portal-button-stroke);
+  color: var(--portal-button-ink);
 }
 body.admin-portal-page .profile-choice-item input[type="checkbox"],
 body.admin-portal-page .profile-choice-item input[type="radio"] {
@@ -1963,7 +2051,6 @@ body.grades-tabulator-page .grid-title {
 }
 body.grades-tabulator-page .assignment-sub,
 body.grades-tabulator-page .assignment-sub.core-sub,
-body.grades-tabulator-page .distribution-mini-meta,
 body.grades-tabulator-page .distribution-dialog-meta,
 body.grades-tabulator-page .distribution-dialog-hint,
 body.grades-tabulator-page .distribution-zoom-label,
@@ -2009,40 +2096,17 @@ body.grades-tabulator-page .exercise-cell.notdone {
   border-color: var(--portal-status-bad-border);
   color: var(--portal-status-bad-text);
 }
-body.grades-tabulator-page .distribution-mini:not(.portal-button),
 body.grades-tabulator-page .tabulator-responsive-collapse,
 body.grades-tabulator-page .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
   background: var(--portal-surface-support);
   border-color: var(--portal-grade-table-border);
   color: var(--portal-grade-table-text);
 }
-body.grades-tabulator-page .distribution-mini.portal-button {
-  color: var(--portal-button-amber-ink);
-}
-body.grades-tabulator-page .distribution-mini-meta {
-  color: var(--portal-button-amber-ink);
-}
 body.grades-tabulator-page .collapse-item,
-body.grades-tabulator-page .distribution-close,
-body.grades-tabulator-page .distribution-expand,
-body.grades-tabulator-page .distribution-zoom-btn,
 body.grades-tabulator-page .tabulator-tooltip {
   background: var(--portal-surface-card);
   border-color: var(--portal-grade-table-border);
   color: var(--portal-grade-table-text);
-}
-body.grades-tabulator-page .distribution-mini-chart svg line {
-  stroke: var(--portal-primary-text-strong);
-}
-body.grades-tabulator-page .distribution-mini-chart svg polyline,
-body.grades-tabulator-page .distribution-mini-chart svg circle {
-  stroke: var(--portal-primary-text-strong);
-}
-body.grades-tabulator-page .distribution-mini-chart svg polyline {
-  fill: none;
-}
-body.grades-tabulator-page .distribution-mini-chart svg circle {
-  fill: var(--portal-primary-text-strong);
 }
 body.grades-tabulator-page .distribution-dialog h2 {
   color: var(--portal-role-text);
@@ -3085,8 +3149,8 @@ body.parent-portal-page .detail-item {
 }
 body.student-portal-page .detail-item.portal-theme-card.warn,
 body.parent-portal-page .detail-item.portal-theme-card.warn {
-  border-color: var(--portal-status-info-border) !important;
-  background: var(--portal-status-info-bg) !important;
+  border-color: #480178 !important;
+  background: #740191 !important;
 }
 body.student-portal-page .detail-item.portal-theme-card.bad,
 body.parent-portal-page .detail-item.portal-theme-card.bad {
@@ -4099,24 +4163,22 @@ body.admin-portal-page .profile-tab-nav {
   box-shadow: none;
 }
 body.admin-portal-page .profile-tab-nav button {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-status-info-border);
-  color: var(--portal-status-info-text);
-  box-shadow: none;
+  background: var(--portal-button-fill);
+  border-color: var(--portal-button-stroke);
+  color: var(--portal-button-ink);
 }
 body.admin-portal-page .profile-tab-nav button:hover:not(:disabled),
 body.admin-portal-page .profile-tab-nav button:focus-visible {
-  background: var(--portal-button-surface-hover);
-  border-color: var(--portal-control-border);
-  color: var(--portal-status-info-text);
-  outline: 2px solid var(--portal-control-border);
+  background: var(--portal-button-fill-hover);
+  border-color: var(--portal-button-stroke-hover);
+  color: var(--portal-button-ink-hover);
+  outline: 2px solid var(--portal-button-stroke-hover);
   outline-offset: 1px;
 }
 body.admin-portal-page .profile-tab-nav button.active {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-control-border);
-  color: var(--portal-status-info-text);
-  box-shadow: inset 0 0 0 1px var(--portal-control-border);
+  background: var(--portal-button-fill);
+  border-color: var(--portal-button-stroke);
+  color: var(--portal-button-ink);
 }
 body.admin-portal-page :where(.profile-summary-primary,
   .profile-summary-chip,
@@ -4198,18 +4260,18 @@ html[data-theme="dark"] body.admin-portal-page :where(.profile-summary-primary,
   box-shadow: none;
 }
 html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-status-info-border);
-  color: var(--portal-status-info-text);
+  background: var(--portal-button-fill);
+  border-color: var(--portal-button-stroke);
+  color: var(--portal-button-ink);
 }
 html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button:hover:not(:disabled),
 html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button:focus-visible,
 html[data-theme="dark"] body.admin-portal-page .profile-tab-nav button.active {
-  background: var(--portal-status-info-bg);
-  border-color: var(--portal-status-info-border);
-  color: var(--portal-status-info-text);
-  box-shadow: inset 0 0 0 1px var(--portal-status-info-border);
-  outline: 2px solid var(--portal-status-info-border);
+  background: #4683ff;
+  border-color: var(--portal-button-stroke-hover);
+  color: #fbffff;
+  font-size: 1.15rem;
+  outline: 2px solid var(--portal-button-stroke-hover);
   outline-offset: 1px;
 }
 html[data-theme="dark"] body.admin-portal-page :where(.profile-info-toolbar h3,
@@ -4629,7 +4691,7 @@ body.parent-portal-page .link-btn {
   text-align: center;
   text-decoration: none;
 }
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn),
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn),
 body.admin-portal-page .link-btn {
   align-items: center;
   background: #f1f5ff;
@@ -4644,8 +4706,8 @@ body.admin-portal-page .link-btn {
   text-align: center;
   text-decoration: none;
 }
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):hover:not(:disabled),
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):focus-visible,
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):hover:not(:disabled),
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):focus-visible,
 body.admin-portal-page .link-btn:hover:not(:disabled),
 body.admin-portal-page .link-btn:focus-visible {
   background: #f3f8ff;
@@ -4654,7 +4716,7 @@ body.admin-portal-page .link-btn:focus-visible {
   outline: none;
   transform: translateY(-1px);
 }
-body.admin-portal-page button:not(.portal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):disabled,
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):disabled,
 body.admin-portal-page .link-btn:disabled {
   box-shadow: none;
   cursor: not-allowed;
@@ -6823,22 +6885,6 @@ html[data-theme="dark"] body.grades-tabulator-page .section-note,
 html[data-theme="dark"] body.grades-tabulator-page .stat-chip {
   color: var(--portal-dark-text-soft);
 }
-html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-meta {
-  color: var(--portal-button-amber-ink);
-}
-html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg line {
-  stroke: var(--portal-primary-text-strong);
-}
-html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg polyline,
-html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg circle {
-  stroke: var(--portal-primary-text-strong);
-}
-html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg polyline {
-  fill: none;
-}
-html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-chart svg circle {
-  fill: var(--portal-primary-text-strong);
-}
 html[data-theme="dark"] body.grades-tabulator-page .exercise-cell.ontime {
   background: color-mix(in srgb, #1f7a47 26%, var(--portal-dark-card) 74%);
   border-color: rgba(57, 211, 102, 0.48);
@@ -8263,7 +8309,7 @@ body.modal-open {
   color: var(--portal-role-text);
   display: grid;
   gap: 8px;
-  padding: 6px 64px 6px 12px;
+  padding: 6px 28px;
 }
 body.portal-hub-page .hero,
 body.portal-hub-page .section-card {
@@ -8396,7 +8442,7 @@ body:is(.student-portal-page, .parent-portal-page) :is(.toolbar, .panel, .card, 
   font-size: 21px;
   font-weight: 700;
   line-height: 1.2;
-  margin: 0;
+  margin: 0 0 8px 0;
   text-transform: none;
 }
 body:is(.student-portal-page, .parent-portal-page) :is(.toolbar, .panel, .card, .detail-card, .report-head-card, .report-grade-block, .report-band, .report-archive-item) > h3 {
@@ -9409,7 +9455,7 @@ body.student-portal-page div.header-bar {
   /*padding-block: 6px;
   padding-inline: calc(var(--hub-space-2) * 1.9);*/
   inline-size: 100%;
-  padding: .75rem 1.66rem;
+  padding: .75rem 1rem;
 }
 body.portal-hub-page .header-bar a,
 body.admin-portal-page .header-bar a,

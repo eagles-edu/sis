@@ -17,7 +17,7 @@
   <style>
     * {
       box-sizing: border-box;
-    }
+  }
 
     body {
       color: var(--portal-role-text);
@@ -25,16 +25,16 @@
       line-height: 1.4;
       margin: 0;
       min-height: 100vh;
-    }
+  }
 
     body.grades-tabulator-page {
       background: var(--portal-page-bg);
       padding-block: 0;
-    }
+  }
 
     html[data-theme="dark"] body.grades-tabulator-page {
       background: var(--portal-dark-page-bg);
-    }
+  }
 
     .wrap {
       display: grid;
@@ -43,41 +43,41 @@
       max-width: 1440px;
       padding: 18px;
       width: min(100%, 1440px);
-    }
+  }
 
     .wrap > * {
       min-width: 0;
-    }
+  }
 
     .section-stack,
     .app-page-header {
       display: grid;
       gap: 14px;
-    }
+  }
 
     .hero,
     .control-card,
     .grid-card {
       border-radius: 14px;
       padding: 0.8rem;
-    }
+  }
 
     .hero.portal-theme-panel,
     .control-card.portal-theme-panel {
       background: var(--portal-surface-panel);
       border-color: var(--portal-border);
       color: var(--portal-role-text);
-    }
+  }
 
     .grid-card.portal-theme-card {
       background: var(--portal-surface-card);
       border-color: var(--portal-border);
       color: var(--portal-role-text);
-    }
+  }
 
     .grid-card {
       min-width: 0;
-    }
+  }
 
     .hero-actions {
       align-items: center;
@@ -85,7 +85,7 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-top: 0.65rem;
-    }
+  }
 
     .btn:not(.portal-button),
     .chip-link {
@@ -102,109 +102,112 @@
       min-height: 2rem;
       padding: 0.3rem 0.8rem;
       text-decoration: none;
-    }
+  }
 
     html[data-theme="dark"] .field select,
     html[data-theme="dark"] .field input {
       background: var(--portal-dark-field-bg);
       border-color: var(--portal-dark-field-border);
       color: var(--portal-dark-field-text);
-    }
+  }
 
     .chip-link:hover,
     .chip-link:focus-visible {
       cursor: pointer;
-    }
+  }
 
     .btn:not(.portal-button).primary {
       background: linear-gradient(180deg, var(--portal-action-blue-top) 0%, var(--portal-action-blue-bottom) 100%);
       border-color: var(--portal-action-blue-border);
       color: var(--portal-action-blue-text);
-    }
+  }
 
     .btn.subtle:not(.portal-button) {
       background: var(--portal-surface-support);
       border-color: var(--portal-border);
       color: var(--portal-role-text);
       font-weight: 600;
-    }
+  }
 
     .section-note {
       margin: 0;
-    }
+  }
 
     .status {
       margin: 0;
-      padding: 0.56rem 0.7rem;
       min-block-size: calc(1.5em + 1.12rem);
-    }
+      padding: 0.56rem 0.7rem;
+  }
 
     .status a {
       color: inherit;
       font-weight: 700;
       text-decoration: underline;
       text-underline-offset: 0.14em;
-    }
+  }
 
     .periods {
       display: flex;
       flex-wrap: wrap;
       gap: 0.45rem;
       margin-bottom: 0.65rem;
-    }
+  }
 
     .period-btn {
-      inline-size: auto;
       border-radius: var(--portal-radius-button);
       box-sizing: border-box;
       flex: 0 0 auto;
+      inline-size: auto;
       max-inline-size: none;
       min-inline-size: 0;
-      transition:
+      width: auto;
+
+transition:
         background-color 120ms ease,
         border-color 120ms ease,
         box-shadow 120ms ease,
         color 120ms ease,
         transform 120ms ease;
-      width: auto;
-    }
+  }
 
     body.admin-portal-page .period-btn.is-active,
     body.admin-portal-page .period-btn[aria-pressed="true"] {
       background: linear-gradient(180deg, var(--portal-button-teal-fill-hover) 0%, var(--portal-button-teal-fill-active) 100%);
       border-color: #06486f;
       border-width: 2px;
-      box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.24),
-        0 0 0 1px rgba(6, 72, 111, 0.28),
-        0 10px 18px rgba(8, 22, 40, 0.14);
       color: var(--portal-button-teal-ink);
       font-weight: 900;
       letter-spacing: 0.015em;
       text-shadow: 0 1px 0 rgba(0, 44, 69, 0.28);
       transform: translateY(-1px);
-    }
+
+box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+        0 0 0 1px rgba(6, 72, 111, 0.28),
+        0 10px 18px rgba(8, 22, 40, 0.14);
+  }
 
     html[data-theme="dark"] body.admin-portal-page .period-btn.is-active,
     html[data-theme="dark"] body.admin-portal-page .period-btn[aria-pressed="true"] {
       border-color: #8ceeff;
-      box-shadow:
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+
+box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.18),
         0 0 0 1px rgba(140, 238, 255, 0.42),
         0 10px 18px rgba(0, 0, 0, 0.2);
-      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
-    }
+  }
 
     .control-grid {
       display: grid;
       gap: 0.55rem;
       grid-template-columns: 1fr;
-    }
+  }
 
     .field {
       display: grid;
       gap: 0.3rem;
-    }
+  }
 
     .field label {
       color: var(--portal-support-message);
@@ -212,7 +215,7 @@
       font-weight: 700;
       letter-spacing: 0.01em;
       text-transform: uppercase;
-    }
+  }
 
     .field select,
     .field input {
@@ -225,26 +228,26 @@
       min-height: 2.15rem;
       padding: 0.38rem 0.55rem;
       width: 100%;
-    }
+  }
 
     .field select:disabled,
     .field input:disabled {
       background: var(--portal-surface-panel);
       cursor: not-allowed;
       opacity: 0.6;
-    }
+  }
 
     .metrics {
       display: grid;
       gap: 0.5rem;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  }
 
     .metric-card {
       border-radius: 12px;
       box-sizing: border-box;
       padding: 0.45rem 0.6rem;
-    }
+  }
 
     #gradeGrid {
       box-sizing: border-box;
@@ -253,7 +256,7 @@
       overflow-y: hidden;
       resize: vertical;
       width: 100%;
-    }
+  }
 
     .grid-head {
       align-items: center;
@@ -262,7 +265,7 @@
       gap: 0.5rem;
       justify-content: space-between;
       margin-bottom: 0.55rem;
-    }
+  }
 
     .grid-title {
       font-size: 1rem;
@@ -270,39 +273,39 @@
       letter-spacing: 0.01em;
       margin: 0;
       min-width: 0;
-    }
+  }
 
     .grid-actions {
       align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 0.45rem;
-    }
+  }
 
     .grid-actions > .portal-button {
       flex: 1 1 12rem;
       inline-size: auto;
       max-inline-size: 100%;
-      min-width: 0;
       min-inline-size: 0;
+      min-width: 0;
       width: auto;
-    }
+  }
 
     .grid-actions .btn:not(.portal-button):disabled {
       cursor: not-allowed;
       opacity: 0.62;
-    }
+  }
 
     @media (min-width: 1081px) {
       .grid-head {
         flex-wrap: nowrap;
-      }
+    }
 
       .grid-actions {
         flex-wrap: nowrap;
         margin-left: auto;
-      }
     }
+  }
 
     .app-brand-strip {
       align-items: center;
@@ -310,7 +313,7 @@
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
       row-gap: 6px;
-    }
+  }
 
     .app-brand-logo-wrap {
       align-items: center;
@@ -321,21 +324,21 @@
       justify-content: center;
       overflow: hidden;
       width: 44px;
-    }
+  }
 
     .app-brand-logo-wrap img {
       display: block;
       height: 100%;
       object-fit: cover;
       width: 100%;
-    }
+  }
 
     .app-brand-logo-fallback {
       font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-    }
+  }
 
     .app-school-name {
       font-size: clamp(13px, 1.7vw, 18px);
@@ -348,7 +351,7 @@
       text-overflow: ellipsis;
       text-transform: uppercase;
       white-space: nowrap;
-    }
+  }
 
     .app-header-actions {
       align-items: center;
@@ -357,12 +360,12 @@
       gap: 8px;
       justify-content: flex-end;
       min-width: 0;
-    }
+  }
 
     .app-header-menu-toggle,
     #overviewRuntimeRestartBtn {
       display: none !important;
-    }
+  }
 
     .text-zoom-controls {
       align-items: center;
@@ -371,26 +374,26 @@
       gap: 8px;
       justify-content: flex-end;
       min-width: 0;
-    }
+  }
 
     #globalTextZoomControls {
       gap: 4px;
-    }
+  }
 
     .text-zoom-controls button {
       min-inline-size: 0;
-    }
+  }
 
     .table-modal-backdrop[hidden] {
       display: none !important;
-    }
+  }
 
     .table-modal-backdrop {
       cursor: pointer;
       inset: 0;
       position: fixed;
       z-index: 2700;
-    }
+  }
 
     .grid-card.is-table-modal {
       box-sizing: border-box;
@@ -404,57 +407,57 @@
       position: fixed;
       width: auto;
       z-index: 2800;
-    }
+  }
 
     .grid-card.is-table-modal #gradeGrid {
       height: 100%;
       max-height: none;
       min-height: 0;
       resize: none;
-    }
+  }
 
     .grade-grid-maintenance {
       display: grid;
       gap: 0.45rem;
       justify-items: start;
-    }
+  }
 
     .grade-grid-maintenance img {
       height: 72px;
       width: 72px;
-    }
+  }
 
     .detail-empty-title {
       font-size: 1rem;
       font-weight: 700;
       line-height: 1.2;
-    }
+  }
 
     .detail-empty-copy {
       font-size: 0.95rem;
       line-height: 1.45;
-    }
+  }
 
     body.table-modal-open {
       overflow: hidden;
-    }
+  }
 
     .tabulator {
       font-size: 0.98rem;
       max-width: 100%;
       min-width: 0;
       width: 100%;
-    }
+  }
 
     .tabulator .tabulator-tableholder {
       max-width: 100%;
       overflow-x: auto !important;
       width: 100%;
-    }
+  }
 
     .tabulator .tabulator-col {
       box-sizing: border-box;
-    }
+  }
 
     .tabulator .tabulator-col .tabulator-col-content {
       align-items: stretch;
@@ -465,7 +468,7 @@
       justify-content: flex-start;
       min-height: 100%;
       padding: 0.12rem 0.24rem 0.16rem;
-    }
+  }
 
     .tabulator .tabulator-col-title-holder {
       box-sizing: border-box;
@@ -473,14 +476,14 @@
       flex: 1 1 auto;
       height: 100%;
       width: 100%;
-    }
+  }
 
     .tabulator .tabulator-col .tabulator-col-title {
       box-sizing: border-box;
       font-size: 1rem;
       font-weight: 700;
       line-height: 1.2;
-    }
+  }
 
     .tabulator-tooltip {
       box-sizing: border-box;
@@ -489,7 +492,7 @@
       max-width: min(32rem, 84vw);
       padding: 0.35rem 0.52rem;
       white-space: normal;
-    }
+  }
 
     .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-content .tabulator-col-sorter {
       align-items: flex-end;
@@ -506,27 +509,27 @@
       right: auto;
       top: auto;
       width: 100%;
-    }
+  }
 
     .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable.tabulator-col-sorter-element .tabulator-col-content .tabulator-col-sorter {
       pointer-events: auto;
-    }
+  }
 
     .tabulator .tabulator-col:not(.tabulator-col-group).tabulator-sortable .tabulator-col-title {
       padding-right: 0;
-    }
+  }
 
     .group-meta {
       font-size: 0.9rem;
       margin-left: 0.45rem;
-    }
+  }
 
     .score-chip {
       align-items: center;
       display: inline-flex;
       gap: 0.4rem;
       min-width: 6.6rem;
-    }
+  }
 
     .score-bar {
       background: var(--portal-status-good-bg);
@@ -537,26 +540,26 @@
       height: 0.38rem;
       overflow: hidden;
       width: 3.3rem;
-    }
+  }
 
     .score-bar-fill {
       background: var(--portal-score-bar-fill);
       display: block;
       height: 100%;
       width: 0;
-    }
+  }
 
     .status.is-warn {
       background: var(--portal-status-warn-bg);
       border: 1px solid var(--portal-status-warn-border);
       color: var(--portal-status-warn-text);
-    }
+  }
 
     .status.is-bad {
       background: var(--portal-status-bad-bg);
       border: 1px solid var(--portal-status-bad-border);
       color: var(--portal-status-bad-text);
-    }
+  }
 
     .assignment-sub {
       display: block;
@@ -571,14 +574,14 @@
       text-overflow: ellipsis;
       text-transform: none;
       white-space: nowrap;
-    }
+  }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-content,
     .tabulator .tabulator-col.assignment-col .tabulator-col-title-holder,
     .tabulator .tabulator-col.core-col .tabulator-col-content,
     .tabulator .tabulator-col.core-col .tabulator-col-title-holder {
       height: 100%;
-    }
+  }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-title,
     .tabulator .tabulator-col.core-col .tabulator-col-title {
@@ -591,7 +594,7 @@
       justify-content: stretch;
       min-height: 5.45rem;
       padding: 0.06rem 0;
-    }
+  }
 
     .header-action-row {
       box-sizing: border-box;
@@ -600,7 +603,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       margin-bottom: 0.14rem;
       width: 100%;
-    }
+  }
 
     .header-action-btn {
       appearance: none;
@@ -613,27 +616,27 @@
       min-height: 1.05rem;
       padding: 0.08rem 0;
       width: 100%;
-    }
+  }
 
     .header-action-btn:hover {
       filter: brightness(1.05);
-    }
+  }
 
     .header-action-btn:focus-visible {
       outline: 2px solid var(--portal-status-info-border);
       outline-offset: 1px;
-    }
+  }
 
     .tabulator .tabulator-col.assignment-col,
     .tabulator .tabulator-col.core-col {
       background: var(--portal-surface-panel);
-    }
+  }
 
     .tabulator .tabulator-col.assignment-col .tabulator-col-content,
     .tabulator .tabulator-col.core-col .tabulator-col-content {
       box-sizing: border-box;
       padding: 0.1rem 0.16rem 0.08rem;
-    }
+  }
 
     .assignment-head {
       align-items: center;
@@ -647,20 +650,20 @@
       justify-content: space-between;
       padding: 0.2rem 0.22rem;
       width: 100%;
-    }
+  }
 
     .assignment-head.elective {
       border: 1px solid var(--portal-status-info-border);
-    }
+  }
 
     .assignment-head.megs {
       border: 1px solid var(--portal-status-warn-border);
-    }
+  }
 
     .assignment-head.core {
       border: 1px solid var(--portal-border);
       justify-content: space-between;
-    }
+  }
 
     .assignment-title-text {
       align-self: center;
@@ -673,30 +676,30 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       width: 100%;
-    }
+  }
 
     .assignment-head.core .assignment-title-text {
       font-size: 0.98rem;
       font-weight: 700;
       line-height: 1.15;
-    }
+  }
 
     .assignment-col.elective-col .assignment-title-text {
       color: var(--tertiary-color);
-    }
+  }
 
     .tabulator .tabulator-cell.student-number-col {
       box-sizing: border-box;
       line-height: 1.1;
       white-space: normal;
-    }
+  }
 
     .student-number-wrap {
       display: block;
       overflow-wrap: anywhere;
       white-space: normal;
       word-break: break-word;
-    }
+  }
 
     .exercise-cell {
       border: 1px solid transparent;
@@ -710,48 +713,66 @@
       min-width: 0;
       padding: 0.2rem 0.35rem;
       width: 100%;
-    }
+  }
 
     .stat-chip {
       display: block;
       font-size: 0.96rem;
       font-weight: 600;
       line-height: 1.2;
-    }
+  }
 
     .assignment-sub.core-sub {
       font-size: 0.92rem;
       font-weight: 700;
-    }
+  }
 
-    .distribution-mini {
-      inline-size: 100%;
-      border-radius: 8px;
+    .distribution-mini-button {
+      --distribution-mini-button-bg: var(--portal-button-blue-fill);
+      --distribution-mini-button-bg-hover: var(--portal-button-blue-fill-hover);
+      --distribution-mini-button-bg-active: var(--portal-button-blue-fill-active);
+      --distribution-mini-button-border: var(--portal-button-blue-stroke);
+      --distribution-mini-button-border-hover: var(--portal-button-blue-stroke-hover);
+      --distribution-mini-button-border-active: var(--portal-button-blue-stroke-active);
+      --distribution-mini-button-ink: #fbffff;
+      --distribution-mini-button-trend: #ffd34f;
+      --distribution-mini-button-trend-baseline: #ffd34f;
+      align-items: center;
+      background: var(--distribution-mini-button-bg);
+      border-color: var(--distribution-mini-button-border);
+      box-shadow: none;
       box-sizing: border-box;
+      color: var(--distribution-mini-button-ink);
       cursor: pointer;
       display: grid;
       gap: 0.14rem;
+      inline-size: 100%;
+      justify-items: center;
       max-inline-size: none;
       min-inline-size: 0;
       padding: 0.14rem 0.2rem;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
       width: 100%;
-      transition:
-        background-color 120ms ease,
-        border-color 120ms ease,
-        box-shadow 120ms ease,
-        color 120ms ease,
-        transform 120ms ease;
     }
 
-    .distribution-mini:hover {
+    .distribution-mini-button:hover {
+      background: var(--distribution-mini-button-bg-hover);
+      border-color: var(--distribution-mini-button-border-hover);
+      color: var(--distribution-mini-button-ink);
       transform: translateY(-1px);
     }
 
-    .distribution-mini:focus-visible {
+    .distribution-mini-button:focus-visible {
+      background: var(--distribution-mini-button-bg-hover);
+      border-color: var(--distribution-mini-button-border-hover);
+      color: var(--distribution-mini-button-ink);
       outline: none;
     }
 
-    .distribution-mini:active {
+    .distribution-mini-button:active {
+      background: var(--distribution-mini-button-bg-active);
+      border-color: var(--distribution-mini-button-border-active);
+      color: var(--distribution-mini-button-ink);
       transform: translateY(1px);
     }
 
@@ -768,20 +789,38 @@
       width: 100%;
     }
 
-    .distribution-mini-chart svg polyline {
+    .distribution-mini-chart svg .distribution-mini-trendline {
+      fill: none;
+      stroke: var(--distribution-mini-button-ink);
       stroke-linecap: round;
       stroke-linejoin: round;
     }
 
-    .distribution-mini-chart svg line,
-    .distribution-mini-chart svg polyline,
-    .distribution-mini-chart svg circle {
-      stroke: var(--portal-primary-text-strong);
-      fill: var(--portal-primary-text-strong);
+    .distribution-mini-chart svg .distribution-mini-trendline-baseline {
+      stroke: var(--distribution-mini-button-trend-baseline);
+      stroke-linecap: round;
+    }
+
+    .distribution-mini-chart svg .distribution-mini-trendpoint {
+      fill: var(--distribution-mini-button-trend);
+      stroke: var(--distribution-mini-button-trend);
+    }
+
+    html[data-theme="dark"] body.grades-tabulator-page .distribution-mini-button {
+      --distribution-mini-button-bg: var(--portal-button-blue-fill);
+      --distribution-mini-button-bg-hover: var(--portal-button-blue-fill-hover);
+      --distribution-mini-button-bg-active: var(--portal-button-blue-fill-active);
+      --distribution-mini-button-border: var(--portal-button-blue-stroke);
+      --distribution-mini-button-border-hover: var(--portal-button-blue-stroke-hover);
+      --distribution-mini-button-border-active: var(--portal-button-blue-stroke-active);
+      --distribution-mini-button-ink: #fbffff;
+      --distribution-mini-button-trend: #ffd34f;
+      --distribution-mini-button-trend-baseline: #ffd34f;
     }
 
     .distribution-mini-meta {
       display: block;
+      color: inherit;
       font-size: 0.9rem;
       font-weight: 700;
       letter-spacing: 0.02em;
@@ -792,7 +831,7 @@
 
     .distribution-modal[hidden] {
       display: none;
-    }
+  }
 
     .distribution-modal {
       align-items: center;
@@ -800,15 +839,15 @@
       display: flex;
       inset: 0;
       justify-content: center;
-      padding: 0.65rem;
+      padding: 0.6rem;
       position: fixed;
       z-index: 3000;
-    }
+  }
 
     .distribution-modal-backdrop {
       inset: 0;
       position: absolute;
-    }
+  }
 
     .distribution-dialog {
       border-radius: 14px;
@@ -816,13 +855,14 @@
       display: grid;
       gap: 0.6rem;
       grid-template-rows: auto auto auto 1fr auto;
-      height: min(96vh, 1080px);
-      max-height: 96vh;
+      height: calc(100vh - 1.2rem);
+      max-height: calc(100vh - 1.2rem);
       overflow: hidden;
       padding: 0.9rem;
       position: relative;
-      width: min(96vw, 1640px);
-    }
+      width: calc(100vw - 1.2rem);
+      max-width: calc(100vw - 1.2rem);
+  }
 
     .distribution-dialog.is-fullscreen {
       border-radius: 0;
@@ -832,78 +872,75 @@
       max-width: 100vw;
       padding: 0.75rem 0.85rem;
       width: 100vw;
-    }
+  }
 
     .distribution-dialog-head {
       align-items: center;
       display: flex;
+      flex-direction: column;
       gap: 0.5rem;
-      justify-content: space-between;
-    }
+      justify-content: flex-start;
+      width: 100%;
+  }
 
     .distribution-dialog-head h2 {
       font-size: 1.12rem;
       letter-spacing: 0.01em;
       margin: 0;
-    }
+  }
 
     .distribution-dialog-actions {
       align-items: center;
-      display: inline-flex;
+      display: grid;
       gap: 0.4rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 100%;
+  }
+
+    .distribution-dialog-actions > .portal-button {
+      min-inline-size: 0;
     }
 
-    .distribution-close,
-    .distribution-expand {
-      inline-size: auto;
-      border-radius: var(--portal-radius-button) !important;
-      box-sizing: border-box;
-      cursor: pointer;
-      font-size: 0.78rem;
-      font-weight: 700;
-      min-inline-size: 0;
-      padding: 0.3rem 0.56rem;
+    .distribution-toolbar {
+      align-items: stretch;
+      display: grid;
+      gap: 0.4rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      width: 100%;
+  }
+
+    .distribution-zoom-btn {
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1;
     }
 
     .distribution-dialog-meta {
       font-size: 0.92rem;
       line-height: 1.3;
       margin: 0;
-    }
+  }
 
     .distribution-toolbar {
       align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 0.42rem;
-    }
-
-    .distribution-zoom-btn {
-      inline-size: auto;
-      border-radius: var(--portal-radius-button) !important;
-      box-sizing: border-box;
-      cursor: pointer;
-      font-size: 0.78rem;
-      font-weight: 700;
-      min-height: 2rem;
-      min-inline-size: 0;
-      min-width: 2rem;
-      padding: 0.2rem 0.45rem;
-    }
+  }
 
     .distribution-zoom-range {
       accent-color: var(--tertiary-color);
-      flex: 1 1 220px;
-      max-width: 420px;
-      min-width: 180px;
-    }
+      grid-column: 1 / -1;
+      width: 100%;
+  }
 
     .distribution-zoom-label {
       font-size: 0.86rem;
       font-weight: 700;
+      grid-column: 1 / -1;
       min-width: 3.2rem;
       text-align: right;
-    }
+  }
 
     .distribution-chart-shell {
       border-radius: 11px;
@@ -912,14 +949,14 @@
       overflow: hidden;
       padding: 0.32rem;
       position: relative;
-    }
+  }
 
     .distribution-chart-scroll {
       box-sizing: border-box;
       height: 100%;
       overflow: auto;
       width: 100%;
-    }
+  }
 
     .distribution-modal-chart {
       display: block;
@@ -927,21 +964,21 @@
       min-height: 100%;
       min-width: 100%;
       width: 960px;
-    }
+  }
 
     .distribution-modal-chart .dist-grid {
       stroke: var(--portal-border);
       stroke-width: 1;
-    }
+  }
 
     .distribution-modal-chart .dist-axis {
       stroke: var(--portal-support-message);
       stroke-width: 1.4;
-    }
+  }
 
     .distribution-modal-chart .dist-area {
       fill: var(--portal-svg-accent-soft-fill);
-    }
+  }
 
     .distribution-modal-chart .dist-line {
       fill: none;
@@ -949,6 +986,14 @@
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 2.2;
+  }
+
+    html[data-theme="dark"] body.grades-tabulator-page .distribution-modal-chart .dist-area {
+      fill: rgba(251, 255, 255, 0.5);
+    }
+
+    html[data-theme="dark"] body.grades-tabulator-page .distribution-modal-chart .dist-line {
+      stroke: #fbffff;
     }
 
     .distribution-modal-chart .dist-point {
@@ -956,32 +1001,32 @@
       fill: var(--portal-status-info-border);
       stroke: var(--portal-surface-panel);
       stroke-width: 1.5;
-    }
+  }
 
     .distribution-modal-chart .dist-point.is-active {
       fill: var(--portal-status-warn-border);
       stroke: var(--portal-role-text);
       stroke-width: 1.8;
-    }
+  }
 
     .distribution-modal-chart .dist-point:focus-visible {
       outline: 2px solid var(--portal-status-info-border);
       outline-offset: 1px;
-    }
+  }
 
     .distribution-modal-chart .dist-label {
       fill: var(--portal-support-message);
       font-size: 1rem;
       font-weight: 700;
       text-anchor: middle;
-    }
+  }
 
     .distribution-modal-chart .dist-y-label {
       fill: var(--portal-support-message);
       font-size: 1rem;
       font-weight: 600;
       text-anchor: end;
-    }
+  }
 
     .distribution-hover {
       border-radius: 8px;
@@ -995,31 +1040,31 @@
       top: 0;
       transform: translate(-50%, -108%);
       white-space: nowrap;
-    }
+  }
 
     .distribution-dialog-hint {
       font-size: 0.88rem;
       margin: 0;
-    }
+  }
 
     body.distribution-modal-open {
       overflow: hidden;
-    }
+  }
 
     .tabulator .tabulator-row .tabulator-cell.tabulator-responsive-collapse-toggle {
       box-sizing: border-box;
       text-align: center;
-    }
+  }
 
     .tabulator-responsive-collapse {
       box-sizing: border-box;
       padding: 0.42rem 0.5rem;
-    }
+  }
 
     .collapse-list {
       display: grid;
       gap: 0.28rem;
-    }
+  }
 
     .collapse-item {
       border-radius: 8px;
@@ -1029,129 +1074,144 @@
       gap: 0.42rem;
       grid-template-columns: minmax(5.8rem, auto) 1fr;
       padding: 0.28rem 0.4rem;
-    }
+  }
 
     .collapse-label {
       font-weight: 700;
-    }
+  }
 
     .collapse-value {
       min-width: 0;
       overflow-wrap: anywhere;
-    }
+  }
 
     body.is-compact .tabulator {
       font-size: 1rem;
-    }
+  }
 
     body.is-compact .tabulator .tabulator-col.assignment-col .tabulator-col-title {
       min-height: 5.25rem;
-    }
+  }
 
     body.is-compact .exercise-cell {
       font-size: 1rem;
       padding: 0.16rem 0.28rem;
-    }
+  }
 
     .dim {
       font-size: 1rem;
-    }
+  }
 
     @media (min-width: 760px) {
       .wrap {
         padding: 18px;
+    }
+
+      .distribution-dialog-head {
+        align-items: center;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .distribution-dialog-actions {
+        grid-template-columns: repeat(2, minmax(0, max-content));
+        width: auto;
+      }
+
+      .distribution-dialog-actions > .portal-button {
+        width: auto;
       }
 
       .control-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
+    }
 
       .metrics {
         grid-template-columns: repeat(5, minmax(0, 1fr));
-      }
     }
+  }
 
     @media (max-width: 1080px) {
       .tabulator .tabulator-col.assignment-col .tabulator-col-title {
         min-height: 5rem;
-      }
+    }
 
       .assignment-title-text {
         font-size: 1rem;
-      }
+    }
 
       .grid-actions .btn:not(.portal-button) {
         min-height: 1.9rem;
         padding: 0.26rem 0.66rem;
-      }
     }
+  }
 
     @media (max-width: 820px) {
       .app-page-header {
-        padding: 8px 10px 8px 60px;
-      }
+        padding: 8px 10px;
+    }
 
       .app-brand-strip {
         gap: 8px;
         grid-template-columns: auto minmax(0, 1fr);
         row-gap: 6px;
-      }
+    }
 
       .app-header-actions {
         grid-column: 1 / -1;
-      }
+    }
 
       .app-brand-logo-wrap {
         height: 38px;
         width: 38px;
-      }
+    }
 
       .app-school-name {
         font-size: clamp(11px, 3.8vw, 14px);
-      }
+    }
 
       .menu-toggle-btn {
         inline-size: auto;
         min-inline-size: clamp(74px, 24vw, 102px);
         padding-inline: 8px;
-      }
+    }
 
       .app-header-menu-toggle {
         display: inline-flex !important;
         justify-self: end;
         max-inline-size: 160px;
-      }
+    }
 
       .text-zoom-controls {
         justify-content: flex-start;
-      }
+    }
 
       #globalTextZoomControls {
         gap: 4px;
-      }
+    }
 
       .text-zoom-controls button {
         min-inline-size: 0;
-      }
     }
+  }
 
     @media (max-width: 760px) {
       .wrap {
         padding: 12px;
-      }
+    }
 
       .grid-head {
         gap: 0.4rem;
-      }
+    }
 
       .grid-title {
         font-size: 1rem;
-      }
+    }
 
       .grid-actions {
         align-items: stretch;
         width: 100%;
-      }
+    }
 
       .grid-actions > .portal-button {
         flex: 1 1 100%;
@@ -1159,71 +1219,100 @@
         max-inline-size: 100%;
         min-inline-size: 0;
         width: 100%;
-      }
+    }
 
       .grid-actions .btn:not(.portal-button) {
         flex: 1 1 auto;
-      }
+    }
 
       .grid-card.is-table-modal {
         inset: 0.3rem;
         max-height: calc(100vh - 0.6rem);
-      }
+    }
 
       .tabulator .tabulator-col.assignment-col .tabulator-col-title {
         align-items: stretch;
         min-height: 4.8rem;
         padding: 0.04rem 0;
-      }
+    }
 
       .assignment-head {
         padding: 0.16rem 0.18rem;
-      }
+    }
 
       .exercise-cell {
         font-size: 1rem;
-      }
+    }
 
       .collapse-item {
         gap: 0.18rem;
         grid-template-columns: 1fr;
-      }
+    }
 
       .distribution-dialog {
         box-sizing: border-box;
-        height: min(95vh, 920px);
-        max-height: 95vh;
+        height: calc(100vh - 1.2rem);
+        max-height: calc(100vh - 1.2rem);
         padding: 0.6rem;
-        width: 100%;
-      }
+        width: calc(100vw - 1.2rem);
+    }
 
       .distribution-dialog.is-fullscreen {
         padding: 0.45rem 0.5rem;
+    }
+
+      .distribution-dialog-head {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
       }
 
       .distribution-dialog-head h2 {
         font-size: 1rem;
+    }
+
+      .distribution-dialog-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+      }
+
+      .distribution-dialog-actions > .portal-button {
+        width: 100%;
+      }
+
+      .distribution-modal .distribution-close,
+      .distribution-modal .distribution-expand,
+      .distribution-modal .distribution-zoom-btn {
+        max-inline-size: none;
+        min-inline-size: 0;
+        width: 100%;
+      }
+
+      .distribution-modal .distribution-zoom-btn {
+        min-block-size: 48px;
+        padding-inline: 0.4rem;
       }
 
       .distribution-toolbar {
+        grid-template-columns: auto auto auto 1fr auto;
         gap: 0.3rem;
-      }
+    }
 
       .distribution-zoom-range {
-        flex: 1 1 100%;
+        grid-column: auto;
+        min-width: 180px;
         max-width: none;
-        order: 2;
-      }
+    }
 
       .distribution-chart-shell {
         min-height: 260px;
-      }
+    }
 
       .distribution-modal-chart {
         height: 360px;
         width: 760px;
-      }
     }
+  }
 
   </style>
 </head>
@@ -1237,7 +1326,7 @@
     <main class="section-stack" id="appMain" data-surface-role="content">
       <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
         <div class="app-brand-strip">
-          <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
+          <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="admin" aria-label="Go to admin dashboard">
             <img id="appBrandLogo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
             <span id="appBrandLogoFallback" class="app-brand-logo-fallback hidden">SIS</span>
           </a>
@@ -1314,6 +1403,12 @@
       </div>
 
     <div class="content" data-surface-role="content">
+      <div class="app-brand-copy">
+        <h1 class="section-title">Grades Table</h1>
+        <p class="section-note">
+          Inspect grades and stats across exercises classes, students, and the school-wide cohort.
+        </p>
+      </div>
       <section class="control-card portal-theme-panel">
         <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
           <button type="button" class="period-btn portal-button portal-button-alt" data-period="week">Week</button>
@@ -1372,7 +1467,6 @@
         </div>
       </section>
     </div>
-
     <div class="content" data-surface-role="content">
       <section class="metrics" aria-label="Grade data snapshot">
         <article class="metric-card portal-theme-card">
@@ -1433,13 +1527,13 @@
         <h2 id="distributionModalTitle">Grade Distribution Detail</h2>
         <div class="distribution-dialog-actions">
           <button id="distributionModalExpand" class="distribution-expand portal-button portal-button-alt" type="button" aria-label="Toggle full screen chart modal">Full screen</button>
-          <button id="distributionModalClose" class="distribution-close portal-button portal-button-immutable-chrome" type="button" aria-label="Close distribution chart">Close</button>
+          <button id="distributionModalClose" class="distribution-close portal-button portal-button-warning" type="button" aria-label="Close distribution chart">Close</button>
         </div>
       </div>
       <p id="distributionModalMeta" class="distribution-dialog-meta">Hover points to inspect each label and count.</p>
       <div class="distribution-toolbar" role="toolbar" aria-label="Distribution chart zoom controls">
-        <button id="distributionZoomOut" class="distribution-zoom-btn portal-button portal-button-alt" type="button" aria-label="Zoom out chart">-</button>
-        <button id="distributionZoomIn" class="distribution-zoom-btn portal-button portal-button-alt" type="button" aria-label="Zoom in chart">+</button>
+        <button id="distributionZoomOut" class="distribution-zoom-btn portal-button portal-button-alt portal-button-alt-nav" type="button" aria-label="Zoom out chart">-</button>
+        <button id="distributionZoomIn" class="distribution-zoom-btn portal-button portal-button-alt portal-button-alt-nav" type="button" aria-label="Zoom in chart">+</button>
         <button id="distributionZoomReset" class="distribution-zoom-btn portal-button portal-button-warning" type="button" aria-label="Reset chart zoom">Reset</button>
         <input id="distributionZoomRange" class="distribution-zoom-range" type="range" min="1" max="6" step="0.1" value="1" aria-label="Chart zoom level">
         <span id="distributionZoomLabel" class="distribution-zoom-label">100%</span>
@@ -2352,13 +2446,13 @@
           .join(" ")
         const circles = series.points
           .map((point) => (
-            `<circle cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\" fill=\"var(--portal-status-info-border)\"></circle>`
+            `<circle class=\"distribution-mini-trendpoint\" cx=\"${point.x.toFixed(2)}\" cy=\"${point.y.toFixed(2)}\" r=\"1.65\"></circle>`
           ))
           .join("")
         return (
           `<svg viewBox=\"0 0 ${width} ${height}\" preserveAspectRatio=\"none\" aria-hidden=\"true\">` +
-          `<line x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke=\"var(--portal-border)\" stroke-width=\"1\"></line>` +
-          `<polyline points=\"${pointsText}\" fill=\"none\" stroke=\"var(--portal-status-info-border)\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></polyline>` +
+          `<line class=\"distribution-mini-trendline-baseline\" x1=\"2\" y1=\"${baselineY}\" x2=\"${width - 2}\" y2=\"${baselineY}\" stroke-width=\"1\"></line>` +
+          `<polyline class=\"distribution-mini-trendline\" points=\"${pointsText}\" stroke-width=\"1.7\"></polyline>` +
           `${circles}` +
           `</svg>`
         )
@@ -2558,10 +2652,10 @@
         elements.chart.setAttribute("viewBox", `0 0 ${width} ${height}`)
         elements.chart.innerHTML =
           `<g>${gridLines.join("")}</g>` +
-          `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${plotBottom.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${plotBottom.toFixed(2)}\"></line>` +
+          `<line class=\"dist-axis distribution-mini-trendline-baseline\" x1=\"${series.marginLeft}\" y1=\"${plotBottom.toFixed(2)}\" x2=\"${(width - series.marginRight).toFixed(2)}\" y2=\"${plotBottom.toFixed(2)}\"></line>` +
           `<line class=\"dist-axis\" x1=\"${series.marginLeft}\" y1=\"${series.marginTop}\" x2=\"${series.marginLeft}\" y2=\"${plotBottom.toFixed(2)}\"></line>` +
           `<path class=\"dist-area\" d=\"${areaPath}\"></path>` +
-          `<polyline class=\"dist-line\" points=\"${linePoints}\"></polyline>` +
+          `<polyline class=\"dist-line distribution-mini-trendline\" points=\"${linePoints}\"></polyline>` +
           `${circles}` +
           `${xLabels}`
         state.distributionModalBaseWidth = width
@@ -2776,7 +2870,7 @@
         }
         const button = document.createElement("button")
         button.type = "button"
-        button.className = "distribution-mini portal-button portal-button-info"
+        button.className = "distribution-mini-button portal-button portal-button-immutable-chrome"
         button.title = `${payload.summaryText} | Click for detail chart`
         button.setAttribute("aria-label", `Open distribution chart for ${payload.assignmentTitle}`)
         button.innerHTML =

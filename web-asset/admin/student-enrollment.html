@@ -287,10 +287,13 @@
       padding-top: 2px;
     }
 
-    .history-rail__button {
+    body.student-enrollment-page .history-rail__button {
       appearance: none;
       align-items: center;
-      color: var(--portal-text) !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      color: inherit !important;
       display: inline-flex;
       justify-content: center;
       min-height: 0 !important;
@@ -299,23 +302,26 @@
       width: auto;
     }
 
-    html[data-theme="dark"] .history-rail__button,
-    html[data-theme="dark"] .history-rail__button .history-rail__dots {
+    html[data-theme="dark"] body.student-enrollment-page .history-rail__button,
+    html[data-theme="dark"] body.student-enrollment-page .history-rail__button .history-rail__dots {
       color: var(--secondary-color) !important;
     }
 
-    .history-rail__button:hover,
-    .history-rail__button:active,
-    .history-rail__button:focus-visible {
+    body.student-enrollment-page .history-rail__button:hover,
+    body.student-enrollment-page .history-rail__button:active,
+    body.student-enrollment-page .history-rail__button:focus-visible {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
       transform: none !important;
     }
 
-    .history-rail__button:focus-visible {
+    body.student-enrollment-page .history-rail__button:focus-visible {
       outline: 2px solid var(--portal-border-strong);
       outline-offset: 2px;
     }
 
-    .history-rail__button .history-rail__dots {
+    body.student-enrollment-page .history-rail__button .history-rail__dots {
       color: inherit;
       display: inline-flex;
       font-size: 1.2rem;
@@ -780,7 +786,7 @@
           <main id="appMain" class="section-stack" aria-label="Enrollment workspace">
             <section class="content app-page-header" aria-label="Enrollment page header" data-surface-role="content">
               <div class="app-brand-strip">
-                <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
+                <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="admin" aria-label="Go to admin dashboard">
                   <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
                   <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
                 </a>
@@ -1235,11 +1241,11 @@
         const studentName = normalizeText(row?.profile?.fullName || row?.profile?.englishName || row?.eaglesId || "Student");
         return `
           <div class="history-rail">
-            <button type="button" class="history-rail__button" data-history-toggle aria-haspopup="menu" aria-expanded="false" aria-label="Open history menu for ${escapeHtml(studentName)}">
+            <button type="button" class="history-rail__button" data-history-toggle data-button-tooltip-title="menu" aria-haspopup="menu" aria-expanded="false" aria-label="Open history menu for ${escapeHtml(studentName)}">
               <span class="history-rail__dots" aria-hidden="true">⋮</span>
             </button>
             <div class="history-rail__menu hidden" data-history-menu role="menu" aria-label="History actions">
-              <button type="button" class="portal-button portal-button-info" data-history-open role="menuitem">Open history note</button>
+              <button type="button" class="portal-button portal-button-info" data-history-open role="menuitem">Notes</button>
             </div>
           </div>
         `;

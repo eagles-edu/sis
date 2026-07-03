@@ -49,6 +49,7 @@
         profileFormConfig: null,
         profileActiveTab: "profile",
         profileMode: "info",
+        profileLayoutExpanded: false,
         assignmentTemplates: [],
         exerciseTitles: [],
         exerciseCatalog: [],
@@ -249,7 +250,7 @@
       let buttonTooltipRoot = null;
       let buttonTooltipBound = false;
       const BUTTON_TOOLTIP_SELECTOR =
-        'button:not([data-button-tooltip="off"]):not(.history-rail__button)';
+        'button:not([data-button-tooltip="off"]):not(.history-rail__button):not(.top-search-open-btn)';
 
       function tooltipTextForButton(buttonEl) {
         if (!(buttonEl instanceof HTMLButtonElement)) return "";
@@ -6244,12 +6245,24 @@
         return theme.className || "";
       }
 
+      function studentDisplayLevel(student = {}) {
+        return resolveSystemLevelName(
+          student?.profile?.currentGrade ||
+            student?.currentEnrollment?.level ||
+            student?.currentGrade ||
+            student?.classLevel ||
+            student?.level ||
+            "",
+        );
+      }
+
       function levelBadgeHtml(levelName, { full = false, variant = "" } = {}) {
         const label = full ? fullLevelLabel(levelName) : shortLevelLabel(levelName);
         const variantToken = normalizeText(variant)
           .toLowerCase()
           .replace(/[^a-z0-9_-]/g, "");
-        const chipClass = levelChipClass(levelName);
+        const theme = getLevelTheme(levelName);
+        const chipClass = theme.className || "";
         const classes = ["level-chip", chipClass, "level-chip-standard"].filter(Boolean).join(" ");
         if (variantToken === "standard") {
           return `<span class="${classes}">${escapeHtml(label)}</span>`;
@@ -18563,12 +18576,30 @@
         return `${nameToken} ${eaglesId}${studentNumberToken}`.trim();
       }
 
-      function openStudentFromTopSearchResults(studentRefId = "") {
+      function scrollProfileSurfaceIntoView() {
+        const profileSection = document.querySelector(
+          '.page-section[data-page="profile"]',
+        );
+        if (
+          !profileSection ||
+          typeof profileSection.scrollIntoView !== "function"
+        )
+          return;
+        window.requestAnimationFrame(() => {
+          profileSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      }
+
+      function openStudentProfileFromList(studentRefId = "") {
         const id = normalizeText(studentRefId);
         if (!id) return;
         loadStudentDetail(id)
           .then(() => {
             setActivePage("profile");
+            scrollProfileSurfaceIntoView();
             setStatus("Student loaded into Profile.");
           })
           .catch(handleError);
@@ -18731,16 +18762,17 @@
             tr.classList.add("active");
           const fullName = studentFullName(student);
           const englishName = studentEnglishName(student);
+          const levelName = studentDisplayLevel(student);
           tr.innerHTML = `
           <td>${student.eaglesId || ""}</td>
           <td>${escapeHtml(fullName)}</td>
           <td>${escapeHtml(englishName)}</td>
-          <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
-          <td><button type="button" class="portal-button portal-button-info top-search-open-btn">Open Profile</button></td>
+          <td>${levelBadgeHtml(levelName, { variant: "standard" })}</td>
+          <td><button type="button" class="portal-button portal-button-info top-search-open-btn" data-button-tooltip="off">Open Profile</button></td>
         `;
           const open = (event) => {
             if (event) event.stopPropagation();
-            openStudentFromTopSearchResults(student.id);
+            openStudentProfileFromList(student.id);
           };
           tr.addEventListener("click", open);
           tr.querySelector(".top-search-open-btn")?.addEventListener("click", open);
@@ -18776,14 +18808,15 @@
           const tr = document.createElement("tr");
           if (state.currentStudent && state.currentStudent.id === student.id)
             tr.classList.add("active");
+          const levelName = studentDisplayLevel(student);
           tr.innerHTML = `
           <td>${student.eaglesId || ""}</td>
           <td>${escapeHtml(studentFullName(student))}</td>
           <td>${escapeHtml(studentEnglishName(student))}</td>
-          <td>${levelBadgeHtml(student.profile?.currentGrade || "", { variant: "standard" })}</td>
+          <td>${levelBadgeHtml(levelName, { variant: "standard" })}</td>
           <td class="school-col-cell">${student.profile?.schoolName || ""}</td>
         `;
-          tr.addEventListener("click", () => loadStudentDetail(student.id));
+          tr.addEventListener("click", () => openStudentProfileFromList(student.id));
           tbody.appendChild(tr);
         });
 
@@ -19104,6 +19137,33 @@
         el.textContent = normalizeText(message);
       }
 
+      function syncProfileFieldLayoutEditorMode() {
+        const editor = document.querySelector(".profile-layout-editor");
+        const expandBtn = document.getElementById("profileFieldLayoutExpandBtn");
+        const expanded = Boolean(state.profileLayoutExpanded);
+        editor?.classList.toggle("profile-layout-editor--expanded", expanded);
+        if (expandBtn instanceof HTMLButtonElement) {
+          expandBtn.setAttribute("aria-pressed", expanded ? "true" : "false");
+          expandBtn.textContent = expanded ? "Collapse List" : "Expand List";
+        }
+      }
+
+      function setProfileFieldLayoutEditorExpanded(expanded = false) {
+        state.profileLayoutExpanded = Boolean(expanded);
+        syncProfileFieldLayoutEditorMode();
+        setProfileLayoutStatus(
+          state.profileLayoutExpanded ?
+            "Layout editor expanded to full-height mode."
+          : "Layout editor returned to compact mode.",
+        );
+      }
+
+      if (typeof window !== "undefined") {
+        window.__SIS_PROFILE_LAYOUT_TOGGLE__ = () => {
+          setProfileFieldLayoutEditorExpanded(!state.profileLayoutExpanded);
+        };
+      }
+
       function bindProfileTabKeyboardNav(navEl, activeTabId, onSelectTab) {
         if (!navEl) return;
         navEl.onkeydown = (event) => {
@@ -19383,7 +19443,7 @@
           const button = document.createElement("button");
           button.type = "button";
           button.id = tabButtonId;
-          button.className = isActive ? "active" : "";
+          button.className = `portal-button portal-button-primary profile-tab-button${isActive ? " active" : ""}`;
           button.setAttribute("role", "tab");
           button.setAttribute("aria-selected", isActive ? "true" : "false");
           button.setAttribute("aria-controls", tabPanelId);
@@ -19446,6 +19506,7 @@
 
         populateProfileLevelOptions();
         applyUiSettings();
+        syncProfileFieldLayoutEditorMode();
         if (state.profileMode === "edit") {
           setProfileTabStatus(
             `${fields.length} fields rendered across ${tabs.length} tabs.`,
@@ -19505,7 +19566,7 @@
           const button = document.createElement("button");
           button.type = "button";
           button.id = tabButtonId;
-          button.className = isActive ? "active" : "";
+          button.className = `portal-button portal-button-primary profile-tab-button${isActive ? " active" : ""}`;
           button.setAttribute("role", "tab");
           button.setAttribute("aria-selected", isActive ? "true" : "false");
           button.setAttribute("aria-controls", tabPanelId);
@@ -22664,6 +22725,11 @@
           ?.addEventListener("click", () => {
             renderProfileFieldLayoutEditor();
             setProfileLayoutStatus("Layout editor reloaded.");
+          });
+        document
+          .getElementById("profileFieldLayoutExpandBtn")
+          ?.addEventListener("click", () => {
+            setProfileFieldLayoutEditorExpanded(!state.profileLayoutExpanded);
           });
         document
           .getElementById("profileFieldCreateBtn")
