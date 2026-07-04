@@ -12843,7 +12843,7 @@
           options.push({
             action: "requeue",
             label: "Requeue",
-            className: "portal-button portal-button-refresh",
+            className: "portal-button portal-button-teal-refresh",
           });
           options.push({
             action: "archive",
@@ -12867,7 +12867,7 @@
           options.push({
             action: "requeue",
             label: "Requeue",
-            className: "portal-button portal-button-refresh",
+            className: "portal-button portal-button-teal-refresh",
           });
           options.push({ action: "delete", label: "Delete", className: "portal-button portal-button-danger" });
           return options;

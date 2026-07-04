@@ -15,15 +15,17 @@ test("student and parent portals use the shared semantic button contract", () =>
   for (const html of [studentHtml, parentHtml]) {
     assert.doesNotMatch(html, /class="primary"/)
     assert.doesNotMatch(html, /class="alt"/)
-    assert.doesNotMatch(html, /class="btn-refresh"/)
+    assert.doesNotMatch(html, /\bbtn-refresh\b/)
     assert.doesNotMatch(html, /portal-button-neutral-action/)
     assert.doesNotMatch(html, /portal-button-blue-action/)
     assert.doesNotMatch(html, /portal-button-red-action/)
     assert.doesNotMatch(html, /portal-button-green-action/)
     assert.doesNotMatch(html, /portal-button-purple-action/)
-    assert.doesNotMatch(html, /portal-button-teal-refresh/)
+    assert.doesNotMatch(html, /\bportal-button-refresh\b/)
+    assert.doesNotMatch(html, /\bportal-action-btn--utility\b/)
     assert.doesNotMatch(html, /portal-button-amber-info/)
     assert.match(html, /portal-button-immutable-chrome/)
+    assert.match(html, /portal-button-teal-refresh/)
     assert.match(html, /portal-button-info portal-button-open-week-set/)
   }
 
@@ -32,7 +34,8 @@ test("student and parent portals use the shared semantic button contract", () =>
   assert.match(studentHtml, /id="menuBtn" class="floating-menu-btn portal-button portal-button-immutable-chrome"/)
   assert.match(studentHtml, /class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle"/)
   assert.match(studentHtml, /id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning"/)
-  assert.match(studentHtml, /id="newsQueueRefreshBtn" type="button" class="portal-button portal-button-refresh"/)
+  assert.match(studentHtml, /id="newsQueueRefreshBtn" type="button" class="portal-button portal-button-teal-refresh"/)
+  assert.match(studentHtml, /id="logoutBtn" type="button" class="portal-button portal-button-danger"/)
   assert.match(studentHtml, /class="header-action-btn portal-button portal-button-immutable-chrome plus"/)
 
   assert.match(parentHtml, /id="parentNavLogoutBtn" type="button" class="portal-button portal-button-danger"/)
@@ -41,6 +44,8 @@ test("student and parent portals use the shared semantic button contract", () =>
   assert.match(parentHtml, /id="parentTextZoomResetBtn" type="button" class="portal-button portal-button-warning"/)
   assert.match(parentHtml, /id="saveDraftBtn" type="button" class="portal-button portal-button-affirm"/)
   assert.match(parentHtml, /id="submitReviewBtn" type="button" class="portal-button portal-button-primary"/)
+  assert.match(parentHtml, /id="openChildPageBtn" type="button" class="portal-button portal-button-primary"/)
+  assert.match(parentHtml, /id="logoutBtn" type="button" class="portal-button portal-button-danger"/)
   assert.match(parentHtml, /class="header-action-btn portal-button portal-button-immutable-chrome plus"/)
 
   for (const semanticClass of [
@@ -50,6 +55,7 @@ test("student and parent portals use the shared semantic button contract", () =>
     "portal-button-affirm",
     "portal-button-alt",
     "portal-button-refresh",
+    "portal-button-teal-refresh",
     "portal-button-info",
     "portal-button-immutable-chrome",
   ]) {
@@ -62,6 +68,8 @@ test("student and parent portals use the shared semantic button contract", () =>
   assert.doesNotMatch(sharedTheme, /body\.parent-portal-page button\.alt/)
   assert.doesNotMatch(sharedTheme, /body\.student-portal-page button\.btn-refresh/)
   assert.doesNotMatch(sharedTheme, /body\.parent-portal-page button\.btn-refresh/)
+  assert.doesNotMatch(sharedTheme, /body\.student-portal-page button\.portal-button-refresh/)
+  assert.doesNotMatch(sharedTheme, /body\.parent-portal-page button\.portal-button-refresh/)
 })
 
 test("admin portal sources use the shared semantic button contract", () => {
@@ -70,12 +78,13 @@ test("admin portal sources use the shared semantic button contract", () => {
   const adminRoutes = readPortal("server/student-admin-routes.mjs")
 
   for (const source of [adminHtml, adminJs, adminRoutes]) {
+    assert.doesNotMatch(source, /\bportal-action-btn--utility\b/)
     assert.doesNotMatch(source, /portal-button-neutral-action/)
     assert.doesNotMatch(source, /portal-button-blue-action/)
     assert.doesNotMatch(source, /portal-button-red-action/)
     assert.doesNotMatch(source, /portal-button-green-action/)
     assert.doesNotMatch(source, /portal-button-purple-action/)
-    assert.doesNotMatch(source, /portal-button-teal-refresh/)
+    assert.doesNotMatch(source, /portal-button-refresh/)
     assert.doesNotMatch(source, /portal-button-amber-info/)
     assert.doesNotMatch(source, /\bbtn-refresh\b/)
     assert.doesNotMatch(source, /\bbtn-edit\b/)
@@ -93,6 +102,9 @@ test("admin portal sources use the shared semantic button contract", () => {
   assert.match(adminHtml, /id="newsReviewViewerCloseBtn" type="button" class="portal-button portal-button-warning"/)
   assert.match(adminHtml, /id="gradeChartModalCloseBtn" type="button" class="portal-button portal-button-warning"/)
   assert.match(adminHtml, /class="portal-button portal-button-info pt-score-legend-btn"/)
+  assert.match(adminHtml, /hub-prefooter__link portal-button portal-button-alt/)
+  assert.match(adminHtml, /href="mailto:admin@eagles.edu.vn"/)
+  assert.match(adminHtml, /href="\/admin"/)
 
   assert.match(adminJs, /className = "portal-button portal-button-primary system-health-action-btn"/)
   assert.match(adminJs, /class="queue-row-btn portal-button portal-button-info portal-button-open-week-set"/)
