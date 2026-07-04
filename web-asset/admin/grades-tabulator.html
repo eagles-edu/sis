@@ -154,8 +154,20 @@
   }
 
     .period-btn {
+      --portal-button-fill: var(--portal-button-neutral-fill);
+      --portal-button-fill-hover: var(--portal-button-neutral-fill-hover);
+      --portal-button-fill-active: var(--portal-button-neutral-fill-active);
+      --portal-button-stroke: var(--portal-button-neutral-stroke);
+      --portal-button-stroke-hover: var(--portal-button-neutral-stroke-hover);
+      --portal-button-stroke-active: var(--portal-button-neutral-stroke-active);
+      --portal-button-ink: var(--portal-button-neutral-ink);
+      --portal-button-ink-hover: var(--portal-button-neutral-ink);
+      --portal-button-ink-active: var(--portal-button-neutral-ink);
+      background: var(--portal-button-neutral-fill);
+      border: 1px solid var(--portal-button-neutral-stroke);
       border-radius: var(--portal-radius-button);
       box-sizing: border-box;
+      color: var(--portal-button-neutral-ink);
       flex: 0 0 auto;
       inline-size: auto;
       max-inline-size: none;
@@ -170,12 +182,39 @@ transition:
         transform 120ms ease;
   }
 
+    body.admin-portal-page .period-btn:hover,
+    body.admin-portal-page .period-btn:focus-visible {
+      background: var(--portal-button-neutral-fill-hover);
+      border-color: var(--portal-button-neutral-stroke-hover);
+      color: var(--portal-button-neutral-ink);
+      transform: translateY(-1px);
+
+box-shadow:
+        0 10px 18px rgba(8, 22, 40, 0.14);
+  }
+
+    body.admin-portal-page .period-btn:active {
+      background: var(--portal-button-neutral-fill-active);
+      border-color: var(--portal-button-neutral-stroke-active);
+      color: var(--portal-button-neutral-ink);
+      transform: translateY(0);
+    }
+
     body.admin-portal-page .period-btn.is-active,
     body.admin-portal-page .period-btn[aria-pressed="true"] {
-      background: linear-gradient(180deg, var(--portal-button-teal-fill-hover) 0%, var(--portal-button-teal-fill-active) 100%);
-      border-color: #06486f;
+      --portal-button-fill: linear-gradient(180deg, var(--portal-button-teal-fill) 0%, var(--portal-button-teal-fill-active) 100%) !important;
+      --portal-button-fill-hover: linear-gradient(180deg, var(--portal-button-teal-fill-hover) 0%, var(--portal-button-teal-fill) 100%) !important;
+      --portal-button-fill-active: linear-gradient(180deg, var(--portal-button-teal-fill-active) 0%, var(--portal-button-teal-fill-active) 100%) !important;
+      --portal-button-stroke: #006f94 !important;
+      --portal-button-stroke-hover: #0a7fa0 !important;
+      --portal-button-stroke-active: #075b78 !important;
+      --portal-button-ink: #fbffff !important;
+      --portal-button-ink-hover: #fbffff !important;
+      --portal-button-ink-active: #fbffff !important;
+      background: linear-gradient(180deg, var(--portal-button-teal-fill) 0%, var(--portal-button-teal-fill-active) 100%);
+      border: 2px solid #006f94 !important;
       border-width: 2px;
-      color: var(--portal-button-teal-ink);
+      color: #fbffff !important;
       font-weight: 900;
       letter-spacing: 0.015em;
       text-shadow: 0 1px 0 rgba(0, 44, 69, 0.28);
@@ -186,6 +225,22 @@ box-shadow:
         0 0 0 1px rgba(6, 72, 111, 0.28),
         0 10px 18px rgba(8, 22, 40, 0.14);
   }
+
+    body.admin-portal-page .period-btn.is-active:hover,
+    body.admin-portal-page .period-btn.is-active:focus-visible,
+    body.admin-portal-page .period-btn[aria-pressed="true"]:hover,
+    body.admin-portal-page .period-btn[aria-pressed="true"]:focus-visible {
+      background: linear-gradient(180deg, var(--portal-button-teal-fill-hover) 0%, var(--portal-button-teal-fill) 100%);
+      border-color: #0a7fa0 !important;
+      color: #fbffff !important;
+    }
+
+    body.admin-portal-page .period-btn.is-active:active,
+    body.admin-portal-page .period-btn[aria-pressed="true"]:active {
+      background: linear-gradient(180deg, var(--portal-button-teal-fill-active) 0%, var(--portal-button-teal-fill-active) 100%);
+      border-color: #075b78 !important;
+      color: #fbffff !important;
+    }
 
     html[data-theme="dark"] body.admin-portal-page .period-btn.is-active,
     html[data-theme="dark"] body.admin-portal-page .period-btn[aria-pressed="true"] {
@@ -607,11 +662,17 @@ box-shadow:
 
     .header-action-btn {
       appearance: none;
+      align-items: center;
+      background: linear-gradient(180deg, var(--portal-button-neutral-fill) 0%, var(--portal-button-neutral-fill-active) 100%);
+      border: 1px solid var(--portal-button-neutral-stroke);
       border-radius: 5px;
       box-sizing: border-box;
+      color: var(--portal-button-neutral-ink);
       cursor: pointer;
+      display: inline-flex;
       font-size: 0.86rem;
       font-weight: 800;
+      justify-content: center;
       line-height: 1;
       min-height: 1.05rem;
       padding: 0.08rem 0;
@@ -619,6 +680,7 @@ box-shadow:
   }
 
     .header-action-btn:hover {
+      border-color: currentColor;
       filter: brightness(1.05);
   }
 
@@ -1323,55 +1385,54 @@ box-shadow:
   </button>
   <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
   <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation">
-    <div class="sidebar-logo-wrap">
+    <div class="sidebar-logo-wrap" id="sidebarLogoWrap">
       <img src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
     </div>
-    <h2>Admin Navigation</h2>
-    <p class="small">Grades tools and related admin pages.</p>
+    <h2>Navigation</h2>
     <nav class="menu-groups" id="navMenu">
-      <a href="/admin" class="menu-link menu-link-top">Overview</a>
-      <a href="/admin/queue-hub" class="menu-link menu-link-top">Queue Hub</a>
-      <a href="/admin/profile" class="menu-link menu-link-top">Profile</a>
+      <a href="/admin" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+      <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
+      <a href="/admin/profile" class="menu-link menu-link-top" data-page-link="profile">STUDENTS</a>
       <div class="menu-group expanded" data-menu-group="tracking">
-        <button type="button" class="menu-group-btn" data-menu-toggle="tracking">Tracking</button>
+        <button type="button" class="menu-group-btn" data-menu-toggle="tracking">TRACKING</button>
         <div class="menu-group-links">
-          <a href="/admin/attendance" class="menu-link">Attendance</a>
-          <div class="menu-sub-links">
-            <a href="/admin/attendance-admin" class="menu-link menu-sublink">Attendance data</a>
+          <a href="/admin/attendance" class="menu-link" data-page-link="attendance">Attendance</a>
+          <div id="attendanceAdminSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/attendance-admin" class="menu-link menu-sublink" data-page-link="attendance-admin" data-admin-submenu="tracking-data">Attendance data</a>
           </div>
-          <a href="/admin/assignments" class="menu-link">Assignments</a>
-          <div class="menu-sub-links">
-            <a href="/admin/assignments-data" class="menu-link menu-sublink">Assignments data</a>
+          <a href="/admin/assignments" class="menu-link" data-page-link="assignments">Assignments</a>
+          <div id="assignmentDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/assignments-data" class="menu-link menu-sublink" data-page-link="assignments-data" data-admin-submenu="tracking-data">Assignments data</a>
           </div>
-          <a href="/admin/grades" class="menu-link">Grades</a>
-          <div class="menu-sub-links">
-            <a href="/admin/grades-data" class="menu-link menu-sublink">Grades data</a>
-            <a href="/web-asset/admin/grades-tabulator.html" id="gradeTableMenuLink" class="menu-link menu-sublink active" aria-current="page">Grade table</a>
+          <a href="/admin/grades" class="menu-link" data-page-link="grades">Grades</a>
+          <div id="gradesDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">Grades data</a>
+            <a href="/web-asset/admin/grades-tabulator.html" id="gradeTableMenuLink" class="menu-link menu-sublink active" data-page-link="grades-data" data-admin-submenu="tracking-data" aria-current="page">Grade table</a>
           </div>
-          <a href="/admin/parent-tracking" class="menu-link">Performance</a>
-          <div class="menu-sub-links">
-            <a href="/admin/performance-data" class="menu-link menu-sublink">Performance data</a>
-            <a href="/admin/performance-engagement" class="menu-link menu-sublink">Performance engagement</a>
+          <a href="/admin/parent-tracking" class="menu-link" data-page-link="parent-tracking">Performance</a>
+          <div id="performanceDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+            <a href="/admin/performance-data" class="menu-link menu-sublink" data-page-link="performance-data" data-admin-submenu="tracking-data">Performance data</a>
+            <a href="/admin/performance-engagement" class="menu-link menu-sublink" data-page-link="performance-engagement" data-admin-submenu="tracking-data">RC engagement</a>
           </div>
-          <a href="/admin/news-reports" class="menu-link">News reports</a>
-          <a href="/admin/reports" class="menu-link">Reports</a>
+          <a href="/admin/news-reports" class="menu-link" data-page-link="news-reports">News Reports</a>
+          <a href="/admin/reports" class="menu-link" data-page-link="reports">All Reports</a>
         </div>
       </div>
       <div class="menu-group" data-menu-group="support">
-        <button type="button" class="menu-group-btn" data-menu-toggle="support">Support</button>
+        <button type="button" class="menu-group-btn" data-menu-toggle="support">SUPPORT</button>
         <div class="menu-group-links">
-          <a href="/admin/family" class="menu-link">Family</a>
+          <a href="/admin/family" class="menu-link" data-page-link="family">Family Lookup</a>
         </div>
       </div>
       <div class="menu-group" data-menu-group="admin">
-        <button type="button" class="menu-group-btn" data-menu-toggle="admin">Admin</button>
+        <button type="button" class="menu-group-btn" data-menu-toggle="admin">ADMINISTRATION</button>
         <div class="menu-group-links">
-          <a href="/admin/enrollment" class="menu-link">Enrollment</a>
-          <a href="/admin/student-admin" class="menu-link">Student admin</a>
-          <a href="/admin/school-setup" class="menu-link">School setup</a>
-          <a href="/admin/users" class="menu-link">Users</a>
-          <a href="/admin/permissions" class="menu-link">Permissions</a>
-          <a href="/admin/settings" class="menu-link">Settings</a>
+          <a href="/admin/enrollment" class="menu-link" data-page-link="enrollment">Enrollment</a>
+          <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">Student Admin</a>
+          <a href="/admin/school-setup" class="menu-link" data-page-link="school-setup">School Setup</a>
+          <a href="/admin/users" class="menu-link" data-page-link="users">Users</a>
+          <a href="/admin/permissions" class="menu-link" data-page-link="permissions">Permissions</a>
+          <a href="/admin/settings" class="menu-link" data-page-link="settings">Settings</a>
         </div>
       </div>
     </nav>
@@ -4900,6 +4961,20 @@ box-shadow:
           const isActive = period === state.filters.period
           button.classList.toggle("is-active", isActive)
           button.setAttribute("aria-pressed", String(isActive))
+          if (isActive) {
+            button.style.background = "linear-gradient(180deg, #007b97 0%, #00647c 100%)"
+            button.style.border = "2px solid #006f94"
+            button.style.color = "#fbffff"
+            button.style.boxShadow =
+              "inset 0 0 0 1px rgba(255, 255, 255, 0.24), 0 0 0 1px rgba(6, 72, 111, 0.28), 0 10px 18px rgba(8, 22, 40, 0.14)"
+            button.style.fontWeight = "900"
+          } else {
+            button.style.removeProperty("background")
+            button.style.removeProperty("border")
+            button.style.removeProperty("color")
+            button.style.removeProperty("box-shadow")
+            button.style.removeProperty("font-weight")
+          }
         })
       }
 
@@ -5158,13 +5233,6 @@ box-shadow:
         updateMenuToggleButtons()
       }
       function bindMenuControls() {
-        const gradeTableMenuLink = document.getElementById("gradeTableMenuLink")
-        if (gradeTableMenuLink) {
-          gradeTableMenuLink.setAttribute(
-            "href",
-            `${window.location.pathname}${window.location.search || ""}`,
-          )
-        }
         document
           .querySelectorAll("[data-menu-toggle]")
           .forEach((button) => {

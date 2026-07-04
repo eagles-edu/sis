@@ -170,6 +170,10 @@
       gap: 8px;
   }
 
+    .admin-mobile-menu {
+      display: none;
+    }
+
     .sidebar-link {
       align-items: center;
       display: flex;
@@ -542,6 +546,15 @@ transition:
         padding: 8px 10px;
     }
 
+      .admin-mobile-menu {
+        display: grid;
+        gap: 10px;
+      }
+
+      .report-section-menu {
+        display: none;
+      }
+
       .menu-toggle-btn {
         inline-size: auto;
         min-inline-size: clamp(74px, 24vw, 102px);
@@ -588,9 +601,56 @@ transition:
   <div id="menuBackdrop" class="menu-backdrop" aria-hidden="true"></div>
   <div class="wrap">
     <aside class="panel app-sidebar" id="appSidebarNav" aria-label="Main navigation" data-surface-role="panel">
+      <nav class="menu-groups admin-mobile-menu" id="navMenu" aria-label="Admin navigation">
+        <a href="/admin" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+        <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
+        <a href="/admin/profile" class="menu-link menu-link-top" data-page-link="profile">STUDENTS</a>
+        <div class="menu-group expanded" data-menu-group="tracking">
+          <button type="button" class="menu-group-btn" aria-expanded="true">TRACKING</button>
+          <div class="menu-group-links">
+            <a href="/admin/attendance" class="menu-link" data-page-link="attendance">Attendance</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/attendance-admin" class="menu-link menu-sublink" data-page-link="attendance-admin" data-admin-submenu="tracking-data">Attendance data</a>
+            </div>
+            <a href="/admin/assignments" class="menu-link" data-page-link="assignments">Assignments</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/assignments-data" class="menu-link menu-sublink" data-page-link="assignments-data" data-admin-submenu="tracking-data">Assignments data</a>
+            </div>
+            <a href="/admin/grades" class="menu-link" data-page-link="grades">Grades</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">Grades data</a>
+              <a href="/web-asset/admin/grades-tabulator.html" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">Grade table</a>
+            </div>
+            <a href="/admin/parent-tracking" class="menu-link" data-page-link="parent-tracking">Performance</a>
+            <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
+              <a href="/admin/performance-data" class="menu-link menu-sublink" data-page-link="performance-data" data-admin-submenu="tracking-data">Performance data</a>
+              <a href="/admin/performance-engagement" class="menu-link menu-sublink" data-page-link="performance-engagement" data-admin-submenu="tracking-data">RC engagement</a>
+            </div>
+            <a href="/admin/news-reports" class="menu-link" data-page-link="news-reports">News Reports</a>
+            <a href="/admin/reports" class="menu-link" data-page-link="reports">All Reports</a>
+          </div>
+        </div>
+        <div class="menu-group expanded" data-menu-group="support">
+          <button type="button" class="menu-group-btn" aria-expanded="true">SUPPORT</button>
+          <div class="menu-group-links">
+            <a href="/admin/family" class="menu-link" data-page-link="family">Family Lookup</a>
+          </div>
+        </div>
+        <div class="menu-group expanded" data-menu-group="admin">
+          <button type="button" class="menu-group-btn" aria-expanded="true">ADMINISTRATION</button>
+          <div class="menu-group-links">
+            <a href="/admin/enrollment" class="menu-link" data-page-link="enrollment">Enrollment</a>
+            <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">Student Admin</a>
+            <a href="/admin/school-setup" class="menu-link" data-page-link="school-setup">School Setup</a>
+            <a href="/admin/users" class="menu-link" data-page-link="users">Users</a>
+            <a href="/admin/permissions" class="menu-link" data-page-link="permissions">Permissions</a>
+            <a href="/admin/settings" class="menu-link" data-page-link="settings">Settings</a>
+          </div>
+        </div>
+      </nav>
       <h2 class="sidebar-title">Report Menu</h2>
       <p class="sidebar-subtitle">Jump to any section in the report.</p>
-      <nav class="sidebar-links" aria-label="Report section links">
+      <nav class="sidebar-links report-section-menu" aria-label="Report section links">
         <a class="sidebar-link card" href="#report-identity" data-surface-role="card">
           <span>
             <span class="sidebar-link-label">Identity</span>

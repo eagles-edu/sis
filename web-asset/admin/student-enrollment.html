@@ -755,26 +755,61 @@
             </div>
             <p class="small">Shared admin navigation keeps standalone pages aligned with the rest of the portal.</p>
             <nav class="menu-groups" id="navMenu">
-              <a href="/admin" class="menu-link menu-link-top">DASHBOARD</a>
-              <a href="/admin/profile" class="menu-link menu-link-top">STUDENTS</a>
+              <a href="/admin" class="menu-link menu-link-top" data-page-link="overview">DASHBOARD</a>
+              <a href="/admin/queue-hub" class="menu-link menu-link-top" data-page-link="queue-hub">QUEUE HUB</a>
+              <a href="/admin/profile" class="menu-link menu-link-top" data-page-link="profile">STUDENTS</a>
               <div class="menu-group expanded" data-menu-group="tracking">
                 <button type="button" class="menu-group-btn" aria-expanded="true">TRACKING</button>
                 <div class="menu-group-links">
-                  <a href="/admin/attendance" class="menu-link">Attendance</a>
-                  <a href="/admin/assignments" class="menu-link">Assignments</a>
-                  <a href="/admin/grades" class="menu-link">Grades</a>
-                  <a href="/admin/parent-tracking" class="menu-link">Performance</a>
-                  <a href="/admin/news-reports" class="menu-link">News Reports</a>
-                  <a href="/admin/reports" class="menu-link">All Reports</a>
+                  <a href="/admin/attendance" class="menu-link" data-page-link="attendance">Attendance</a>
+                  <div id="attendanceAdminSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/attendance-admin" class="menu-link menu-sublink" data-page-link="attendance-admin" data-admin-submenu="tracking-data">
+                      Attendance data
+                    </a>
+                  </div>
+                  <a href="/admin/assignments" class="menu-link" data-page-link="assignments">Assignments</a>
+                  <div id="assignmentDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/assignments-data" class="menu-link menu-sublink" data-page-link="assignments-data" data-admin-submenu="tracking-data">
+                      Assignments data
+                    </a>
+                  </div>
+                  <a href="/admin/grades" class="menu-link" data-page-link="grades">Grades</a>
+                  <div id="gradesDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">
+                      Grades data
+                    </a>
+                    <a href="/web-asset/admin/grades-tabulator.html" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">
+                      Grade table
+                    </a>
+                  </div>
+                  <a href="/admin/parent-tracking" class="menu-link" data-page-link="parent-tracking">Performance</a>
+                  <div id="performanceDataSubmenu" class="menu-sub-links" data-admin-submenu-group="tracking-data">
+                    <a href="/admin/performance-data" class="menu-link menu-sublink" data-page-link="performance-data" data-admin-submenu="tracking-data">
+                      Performance data
+                    </a>
+                    <a href="/admin/performance-engagement" class="menu-link menu-sublink" data-page-link="performance-engagement" data-admin-submenu="tracking-data">
+                      RC engagement
+                    </a>
+                  </div>
+                  <a href="/admin/news-reports" class="menu-link" data-page-link="news-reports">News Reports</a>
+                  <a href="/admin/reports" class="menu-link" data-page-link="reports">All Reports</a>
+                </div>
+              </div>
+              <div class="menu-group expanded" data-menu-group="support">
+                <button type="button" class="menu-group-btn" aria-expanded="true">SUPPORT</button>
+                <div class="menu-group-links">
+                  <a href="/admin/family" class="menu-link" data-page-link="family">Family Lookup</a>
                 </div>
               </div>
               <div class="menu-group expanded" data-menu-group="admin">
                 <button type="button" class="menu-group-btn" aria-expanded="true">ADMINISTRATION</button>
                 <div class="menu-group-links">
-                  <a href="/admin/enrollment" class="menu-link active" aria-current="page">Enrollment</a>
-                  <a href="/admin/school-setup" class="menu-link">School Setup</a>
-                  <a href="/admin/student-admin" class="menu-link">Student Admin</a>
-                  <a href="/admin/settings" class="menu-link">Settings</a>
+                  <a href="/admin/enrollment" class="menu-link active" data-page-link="enrollment" aria-current="page">Enrollment</a>
+                  <a href="/admin/student-admin" class="menu-link" data-page-link="student-admin">Student Admin</a>
+                  <a href="/admin/school-setup" class="menu-link" data-page-link="school-setup">School Setup</a>
+                  <a href="/admin/users" class="menu-link" data-page-link="users">Users</a>
+                  <a href="/admin/permissions" class="menu-link" data-page-link="permissions">Permissions</a>
+                  <a href="/admin/settings" class="menu-link" data-page-link="settings">Settings</a>
                 </div>
               </div>
             </nav>

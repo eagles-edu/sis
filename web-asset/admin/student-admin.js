@@ -1744,7 +1744,7 @@
       function setStatus(message, isError = false) {
         const text = normalizeText(message);
         if (statusEl) {
-          statusEl.style.color = isError ? "#bd2f2f" : "#5f6d87";
+          statusEl.style.color = isError ? "#bd2f2f" : "var(--portal-status-muted-text)";
           statusEl.textContent = text;
         }
         const authPanelEl = document.getElementById("authPanel");
@@ -1752,7 +1752,7 @@
           authPanelEl && !authPanelEl.classList.contains("hidden"),
         );
         if (authStatusEl) {
-          authStatusEl.style.color = isError ? "#bd2f2f" : "#5f6d87";
+          authStatusEl.style.color = isError ? "#bd2f2f" : "var(--portal-status-muted-text)";
           authStatusEl.textContent = authVisible ? text : "";
         }
       }
@@ -6224,6 +6224,28 @@
           : "#f5f8ff";
       }
 
+      function levelSurfaceStyle(theme = {}, { includeDot = false } = {}) {
+        const bgColor = normalizeText(theme?.color || "#002786");
+        const borderColor = normalizeText(theme?.borderColor || shiftHexColor(bgColor, -42));
+        const textColor = normalizeText(theme?.textColor || preferredContrastText(bgColor));
+        const tokens = [
+          `--chip-bg:${bgColor}`,
+          `--chip-border:${borderColor}`,
+          `--chip-text:${textColor}`,
+        ];
+        if (includeDot) {
+          tokens.push(`--chip-dot:${toRgba(textColor, 0.95)}`);
+        }
+        return tokens.join(";");
+      }
+
+      function tileTitleBackground(theme = {}) {
+        const textColor = normalizeLower(theme?.textColor);
+        return textColor === "#0b1220" ?
+            "rgba(255, 255, 255, 0.28)"
+          : "rgba(0, 0, 0, 0.24)";
+      }
+
       function getLevelTheme(levelName) {
         const canonical = resolveSystemLevelName(levelName);
         const canonicalKey = levelNameKey(canonical);
@@ -6264,10 +6286,11 @@
         const theme = getLevelTheme(levelName);
         const chipClass = theme.className || "";
         const classes = ["level-chip", chipClass, "level-chip-standard"].filter(Boolean).join(" ");
+        const style = levelSurfaceStyle(theme);
         if (variantToken === "standard") {
-          return `<span class="${classes}">${escapeHtml(label)}</span>`;
+          return `<span class="${classes}" style="${style}">${escapeHtml(label)}</span>`;
         }
-        return `<span class="${classes.replace(/\blevel-chip-standard\b/, "").trim()}">${escapeHtml(label)}</span>`;
+        return `<span class="${classes.replace(/\blevel-chip-standard\b/, "").trim()}" style="${style}">${escapeHtml(label)}</span>`;
       }
 
       function resetSectionLevelAccents() {
@@ -7432,7 +7455,7 @@
       function setNewsReviewViewerStatus(message = "", isError = false) {
         const statusEl = document.getElementById("newsReviewViewerStatus");
         if (!statusEl) return;
-        statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
+        statusEl.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
         statusEl.textContent = normalizeText(message) || "Viewer is ready.";
       }
 
@@ -7991,6 +8014,19 @@
         } catch (error) {
           void error;
           return "";
+        }
+      }
+
+      function shouldPreserveAdminApiOriginParam() {
+        if (!ADMIN_API_ORIGIN) return false;
+        if (isStaticAdminPreviewMode()) return true;
+        if (!window.location.protocol.startsWith("http")) return true;
+        try {
+          return new URL(ADMIN_API_ORIGIN, window.location.origin).origin !==
+            window.location.origin;
+        } catch (error) {
+          void error;
+          return true;
         }
       }
 
@@ -9053,7 +9089,7 @@
             "";
         }
         if (statusEl) {
-          statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
+          statusEl.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
           const defaultMessage = normalizedSetup.schoolSetupState === "ok" ?
             `School year ${normalizedSetup.schoolYear}: ${normalizedSetup.startDate} to ${normalizedSetup.endDate}. Quarter rows are ready to save.` :
             "School setup is incomplete until quarter rows are auto-filled and saved.";
@@ -9702,7 +9738,7 @@
         params.delete("page");
         params.delete("pageSlug");
         if (slug !== DEFAULT_ADMIN_PAGE_SLUG) params.set("page", slug);
-        if (ADMIN_API_ORIGIN && !params.has("apiOrigin")) {
+        if (shouldPreserveAdminApiOriginParam() && !params.has("apiOrigin")) {
           params.set("apiOrigin", ADMIN_API_ORIGIN);
         }
         const query = params.toString();
@@ -9714,7 +9750,7 @@
         const params = new URLSearchParams(window.location.search || "");
         params.delete("page");
         params.delete("pageSlug");
-        if (ADMIN_API_ORIGIN && !params.has("apiOrigin")) {
+        if (shouldPreserveAdminApiOriginParam() && !params.has("apiOrigin")) {
           params.set("apiOrigin", ADMIN_API_ORIGIN);
         }
         const query = params.toString();
@@ -10666,7 +10702,7 @@
       function setAssignmentStatus(message, isError = false) {
         const el = document.getElementById("assignmentStatus");
         if (!el) return;
-        el.style.color = isError ? "#b3262d" : "#5f6d87";
+        el.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
         el.textContent = normalizeText(message) || "No assignments loaded.";
       }
 
@@ -10774,12 +10810,17 @@
         levels.forEach((levelName) => {
           const canonicalLevel = resolveSystemLevelName(levelName);
           const config = attendanceLevelTileConfig(canonicalLevel);
+          const theme = getLevelTheme(canonicalLevel);
           const tile = document.createElement("button");
           tile.type = "button";
           tile.className = "attendance-level-tile";
           if (levelNamesMatch(canonicalLevel, selectedLevel))
             tile.classList.add("active");
           tile.style.backgroundColor = config.bgColor;
+          tile.style.color = theme.textColor;
+          tile.style.borderColor = theme.borderColor;
+          tile.style.setProperty("--attendance-level-title-color", theme.textColor);
+          tile.style.setProperty("--attendance-level-title-bg", tileTitleBackground(theme));
           if (config.imageDataUrl) {
             const safeUrl = config.imageDataUrl.replace(/"/g, "%22");
             tile.style.backgroundImage = `url("${safeUrl}")`;
@@ -11773,7 +11814,7 @@
       function setLevelDetailStatus(message, isError = false) {
         const el = document.getElementById("levelDetailStatus");
         if (!el) return;
-        el.style.color = isError ? "#b3262d" : "#5f6d87";
+        el.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
         el.textContent = normalizeText(message);
       }
 
@@ -12654,7 +12695,7 @@
           "overviewIncomingExerciseActionStatus",
         );
         if (!statusEl) return;
-        statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
+        statusEl.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
         statusEl.textContent =
           normalizeText(message) || "Disposition actions are available per queue row.";
       }
@@ -13116,7 +13157,7 @@
       function setQueueHubStatus(message = "", isError = false) {
         const statusEl = document.getElementById("queueHubStatus");
         if (!statusEl) return;
-        statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
+        statusEl.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
         statusEl.textContent =
           normalizeText(message) || "Queue hub data not loaded yet.";
       }
@@ -13871,7 +13912,7 @@
       function setParentQueueModalStatus(message, isError = false) {
         const statusEl = document.getElementById("parentQueueModalStatus");
         if (!statusEl) return;
-        statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
+        statusEl.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
         statusEl.textContent =
           normalizeText(message) || "Review queued performance reports before sending.";
       }
@@ -14006,7 +14047,8 @@
             new URL("/admin/report-card-preview", window.location.origin)
           : new URL("report-card-preview", window.location.href);
         const params = targetUrl.searchParams;
-        if (ADMIN_API_ORIGIN) params.set("apiOrigin", ADMIN_API_ORIGIN);
+        if (shouldPreserveAdminApiOriginParam())
+          params.set("apiOrigin", ADMIN_API_ORIGIN);
         if (studentRefId) params.set("studentRefId", studentRefId);
         if (className) params.set("className", className);
         if (schoolYear) params.set("schoolYear", schoolYear);
@@ -14269,7 +14311,8 @@
             new URL("/admin/report-card-preview", window.location.origin)
           : new URL("report-card-preview", window.location.href);
         const params = targetUrl.searchParams;
-        if (ADMIN_API_ORIGIN) params.set("apiOrigin", ADMIN_API_ORIGIN);
+        if (shouldPreserveAdminApiOriginParam())
+          params.set("apiOrigin", ADMIN_API_ORIGIN);
         const studentRefId = normalizeText(row.studentRefId);
         const className = normalizeText(row.className);
         const schoolYear = normalizeText(row.schoolYear);
@@ -14340,7 +14383,8 @@
             new URL("/admin/performance-data", window.location.origin)
           : new URL("performance-data", window.location.href);
         const targetParams = targetUrl.searchParams;
-        if (ADMIN_API_ORIGIN) targetParams.set("apiOrigin", ADMIN_API_ORIGIN);
+        if (shouldPreserveAdminApiOriginParam())
+          targetParams.set("apiOrigin", ADMIN_API_ORIGIN);
         const normalizedEaglesId = normalizeText(eaglesId);
         if (normalizedEaglesId) targetParams.set("eaglesId", normalizedEaglesId);
         targetUrl.search = targetParams.toString();
@@ -15419,7 +15463,7 @@
       function setParentTrackingStatus(message, isError = false) {
         const statusEl = document.getElementById("pt_status");
         if (!statusEl) return;
-        statusEl.style.color = isError ? "#b3262d" : "#5f6d87";
+        statusEl.style.color = isError ? "#b3262d" : "var(--portal-status-muted-text)";
         statusEl.textContent =
           normalizeText(message) ||
           "Weekend batch windows: Sat/Sun at 12:00, 15:30, 18:00, 20:15.";
@@ -17599,6 +17643,7 @@
         levels.forEach((levelName) => {
           const canonicalLevel = resolveSystemLevelName(levelName);
           if (!canonicalLevel) return;
+          const theme = getLevelTheme(canonicalLevel);
           const tile = document.createElement("button");
           tile.type = "button";
           tile.className = "attendance-level-tile";
@@ -17607,6 +17652,10 @@
             tile.classList.add("active");
           const config = attendanceLevelTileConfig(canonicalLevel);
           tile.style.backgroundColor = config.bgColor;
+          tile.style.color = theme.textColor;
+          tile.style.borderColor = theme.borderColor;
+          tile.style.setProperty("--attendance-level-title-color", theme.textColor);
+          tile.style.setProperty("--attendance-level-title-bg", tileTitleBackground(theme));
           if (config.imageDataUrl) {
             const safeUrl = config.imageDataUrl.replace(/"/g, "%22");
             tile.style.backgroundImage = `url("${safeUrl}")`;
@@ -19126,14 +19175,14 @@
       function setProfileLayoutStatus(message, isError = false) {
         const el = document.getElementById("profileFieldLayoutStatus");
         if (!el) return;
-        el.style.color = isError ? "#bd2f2f" : "#5f6d87";
+        el.style.color = isError ? "#bd2f2f" : "var(--portal-status-muted-text)";
         el.textContent = normalizeText(message);
       }
 
       function setProfileTabStatus(message, isError = false) {
         const el = document.getElementById("profileTabStatus");
         if (!el) return;
-        el.style.color = isError ? "#bd2f2f" : "#5f6d87";
+        el.style.color = isError ? "#bd2f2f" : "var(--portal-status-muted-text)";
         el.textContent = normalizeText(message);
       }
 
@@ -20698,6 +20747,7 @@
           levels.forEach((level) => {
             const canonicalLevel = resolveSystemLevelName(level);
             const config = attendanceLevelTileConfig(canonicalLevel);
+            const theme = getLevelTheme(canonicalLevel);
             const tile = document.createElement("button");
             tile.type = "button";
             tile.className = "attendance-level-tile";
@@ -20706,6 +20756,10 @@
             tile.setAttribute("data-level", canonicalLevel);
             tile.setAttribute("aria-label", fullLevelLabel(canonicalLevel));
             tile.style.backgroundColor = config.bgColor;
+            tile.style.color = theme.textColor;
+            tile.style.borderColor = theme.borderColor;
+            tile.style.setProperty("--attendance-level-title-color", theme.textColor);
+            tile.style.setProperty("--attendance-level-title-bg", tileTitleBackground(theme));
             if (config.imageDataUrl) {
               const safeUrl = config.imageDataUrl.replace(/"/g, "%22");
               tile.style.backgroundImage = `url("${safeUrl}")`;
@@ -24045,7 +24099,8 @@
             new URL("/web-asset/admin/grades-tabulator.html", window.location.origin) :
             new URL("grades-tabulator.html", window.location.href);
         const targetParams = targetUrl.searchParams;
-        if (ADMIN_API_ORIGIN) targetParams.set("apiOrigin", ADMIN_API_ORIGIN);
+        if (shouldPreserveAdminApiOriginParam())
+          targetParams.set("apiOrigin", ADMIN_API_ORIGIN);
         params.forEach((value, key) => {
           targetParams.set(key, value);
         });
