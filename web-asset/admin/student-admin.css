@@ -781,6 +781,7 @@
       }
       .profile-layout-editor td input,
       .profile-layout-editor td select {
+        box-sizing: border-box;
         font-size: 12px;
         min-width: 0;
         padding: 4px 6px;
@@ -838,6 +839,7 @@
         width: 5.25rem;
       }
       .profile-layout-editor td .layout-delete-btn {
+        box-sizing: border-box;
         font-size: 12px;
         padding: 4px 6px;
         width: 100%;
