@@ -8,6 +8,7 @@ export function initNewsReviewIsland({
   onNewsReviewQueryChange,
   onNewsReviewRefresh,
   onNewsReviewClearFilters,
+  onNewsReviewApproveQueue,
   onNewsReviewOpenWeekSet,
   onNewsReviewCloseViewer,
   onNewsReviewEditViewer,
@@ -88,6 +89,13 @@ export function initNewsReviewIsland({
     ?.addEventListener("click", () => {
       if (typeof onNewsReviewClearFilters === "function") {
         onNewsReviewClearFilters();
+      }
+    });
+  document
+    ?.getElementById("newsReviewApproveQueueBtn")
+    ?.addEventListener("click", () => {
+      if (typeof onNewsReviewApproveQueue === "function") {
+        onNewsReviewApproveQueue();
       }
     });
   rowsEl?.addEventListener("click", (event) => {

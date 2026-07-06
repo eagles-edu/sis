@@ -2241,6 +2241,12 @@ Select a homework link to inspect details.</pre>
                       Clear Filters
                     </button>
                   </div>
+                  <div class="toolbar-field compact">
+                    <div class="small">Action</div>
+                    <button id="newsReviewApproveQueueBtn" type="button" class="portal-button portal-button-affirm">
+                      Approve All in Queue
+                    </button>
+                  </div>
                 </div>
                 <p class="small admin-table-summary" id="newsReviewSummary">
                   Submitted news reports are ready for review.
@@ -3123,6 +3129,20 @@ Select a homework link to inspect details.</pre>
                       <label for="settingWeeklyMinimumReports">News reports required / week</label>
                       <input id="settingWeeklyMinimumReports" type="number" min="1" step="1" value="5">
                     </div>
+                    <div class="col-4">
+                      <label for="settingNewsAutoApproveDelayHours">News auto-approve delay (hours)</label>
+                      <input id="settingNewsAutoApproveDelayHours" type="number" min="1" step="1" value="16">
+                    </div>
+                    <div class="col-4">
+                      <label for="settingNewsAutoApproveEnabled">News auto-approve mode</label>
+                      <div class="checkbox-inline-group">
+                        <label class="checkbox-inline">
+                          <input id="settingNewsAutoApproveEnabled" type="checkbox" checked>
+                          <span>Enable 16-hour MMR auto-approval</span>
+                        </label>
+                      </div>
+                      <p class="small">Turn this off for legacy mode so submitted reports go back into the admin approval queue.</p>
+                    </div>
                   </div>
                 </div>
                 <div class="profile-layout-editor panel" data-surface-role="panel">
@@ -3488,7 +3508,7 @@ Select a homework link to inspect details.</pre>
       apply(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"));
     })();
   </script>
-  <script src="/web-asset/admin/student-admin.min.js?v=20260611a" defer></script>
+  <script src="/web-asset/admin/student-admin.min.js?v=20260706b" defer></script>
 </body>
 
 </html>

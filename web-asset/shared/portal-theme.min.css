@@ -213,13 +213,10 @@ body.parent-portal-page [data-surface-role="panel"],body.student-portal-page [da
 body.admin-portal-page td,body.admin-portal-page th{border-bottom:1px solid var(--border-strong)!important}
 html[data-theme="dark"] body.admin-portal-page td,html[data-theme="dark"] body.admin-portal-page th{border-bottom-color:var(--portal-dark-border-strong)!important}
 body.admin-portal-page .card > :not(:first-child),
-body.admin-portal-page .content > :not(:first-child),
 body.admin-portal-page .panel > :not(:first-child),
 body.parent-portal-page .card > :not(:first-child),
-body.parent-portal-page .content > :not(:first-child),
 body.report-template-page .card > :not(:first-child),
-body.report-template-page .panel > :not(:first-child),body.student-portal-page .card > :not(:first-child),
-body.student-portal-page .content > :not(:first-child){margin-top:12px}
+body.report-template-page .panel > :not(:first-child),body.student-portal-page .card > :not(:first-child){margin-top:12px}
 body.parent-portal-page .card.homework-card,body.student-portal-page .card.homework-card{background:var(--portal-surface-card);border-color:var(--portal-border)}body.admin-portal-page .panel,
 body.admin-portal-page .wrap .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-3);color:var(--ink);min-width:0;padding:12px}body.admin-portal-page :where(.profile-tabs-shell,
   .profile-info-tabs){background:var(--portal-role-panel-bg);border:1px solid var(--portal-role-border);border-radius:var(--radius-3);box-shadow:var(--portal-role-shadow);color:var(--portal-role-text)}body.admin-portal-page :where(.profile-info-summary,
@@ -1416,7 +1413,7 @@ html[data-theme="dark"] .status{color:var(--portal-dark-text-soft)!important}.te
 .menu-toggle-btn{transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,color .16s ease,transform .16s ease}
 body.admin-portal-page .floating-menu-btn,
 body.admin-portal-page .menu-toggle-btn,
-body.parent-portal-page .floating-menu-btn,body.student-portal-page .floating-menu-btn{background:var(--menu-button-bg)!important;border-color:var(--menu-button-border)!important;color:var(--menu-button-text)!important}
+body.parent-portal-page .floating-menu-btn,body.student-portal-page .floating-menu-btn{background:var(--tertiary-color)!important;border-color:var(--menu-button-border)!important;color:var(--menu-button-text)!important}
 body.admin-portal-page .floating-menu-btn:focus-visible,
 body.admin-portal-page .floating-menu-btn:hover,
 body.admin-portal-page .menu-toggle-btn:focus-visible,

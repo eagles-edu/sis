@@ -101,6 +101,7 @@
         },
         newsReview: {
           sourceReports: [],
+          allItems: [],
           items: [],
           total: 0,
           hasMore: false,
@@ -114,6 +115,7 @@
             revise: 0,
             checked: 0,
           },
+          bulkApprovePending: false,
           pendingById: {},
           viewerReportId: "",
           viewerWeekSetId: "",
@@ -2996,6 +2998,8 @@
         },
         newsReports: {
           weeklyMinimumReports: 5,
+          autoApproveEnabled: true,
+          autoApproveDelayHours: 16,
         },
       };
       const QUEUE_HUB_PANEL_IDS = Object.freeze([
@@ -7324,10 +7328,49 @@
         return summary;
       }
 
+      function newsReviewBulkApprovableReportIds(sets = null) {
+        const source =
+          Array.isArray(sets) ? sets
+          : Array.isArray(state.newsReview?.allItems) ? state.newsReview.allItems
+          : Array.isArray(state.newsReview?.items) ? state.newsReview.items
+          : [];
+        const ids = [];
+        const seen = new Set();
+        source.forEach((weekSet) => {
+          const reports = Array.isArray(weekSet?.reports) ? weekSet.reports : [];
+          reports.forEach((report) => {
+            const reportId = normalizeText(report?.id);
+            const reviewStatus =
+              normalizeLower(normalizeText(report?.reviewStatus)) ||
+              STUDENT_NEWS_REVIEW_STATUS_SUBMITTED;
+            if (!reportId || reviewStatus !== STUDENT_NEWS_REVIEW_STATUS_SUBMITTED)
+              return;
+            if (state.newsReview?.pendingById?.[reportId] || seen.has(reportId)) return;
+            seen.add(reportId);
+            ids.push(reportId);
+          });
+        });
+        return ids;
+      }
+
+      function syncNewsReviewBulkApproveButton() {
+        const buttonEl = document.getElementById("newsReviewApproveQueueBtn");
+        if (!(buttonEl instanceof HTMLButtonElement)) return;
+        const pending = Boolean(state.newsReview?.bulkApprovePending);
+        const reportIds = newsReviewBulkApprovableReportIds();
+        const count = reportIds.length;
+        buttonEl.disabled = pending || !canManageUsers() || count < 1;
+        buttonEl.textContent =
+          pending ? "Approving Queue..."
+          : count > 0 ? `Approve All in Queue (${count})`
+          : "Approve All in Queue";
+      }
+
       function renderNewsReviewRows() {
         const summaryEl = document.getElementById("newsReviewSummary");
         const rowsEl = document.getElementById("newsReviewRows");
         if (!summaryEl || !rowsEl) return;
+        syncNewsReviewBulkApproveButton();
         summaryEl.textContent = newsReviewSummaryText();
         const items = sortedNewsReviewWeekSets(state.newsReview?.items);
         rowsEl.innerHTML = "";
@@ -7797,6 +7840,7 @@
         );
         const visibleSets = groupedSets.slice(0, limit);
         state.newsReview.sourceReports = sourceReports;
+        state.newsReview.allItems = groupedSets;
         state.newsReview.items = visibleSets;
         state.newsReview.total = groupedSets.length;
         state.newsReview.hasMore = groupedSets.length > visibleSets.length;
@@ -7874,6 +7918,39 @@
           ) {
             renderNewsReviewViewer(newsReviewViewerCurrentItem());
           }
+        }
+      }
+
+      async function applyNewsReviewBulkApprove() {
+        const reportIds = newsReviewBulkApprovableReportIds();
+        if (!reportIds.length) {
+          throw new Error("No submitted news reports are currently queued.");
+        }
+        state.newsReview.bulkApprovePending = true;
+        renderNewsReviewRows();
+        try {
+          const result = await api(`${ADMIN_NEWS_REPORTS_PATH}/bulk`, {
+            method: "POST",
+            body: {
+              action: "approve",
+              reportIds,
+            },
+          });
+          closeNewsReviewViewer();
+          await loadNewsReviewQueue();
+          const processedCount = Math.max(
+            0,
+            Number.parseInt(String(result?.processedCount || reportIds.length), 10) ||
+              reportIds.length,
+          );
+          setStatus(
+            `Approved ${processedCount} news report${
+              processedCount === 1 ? "" : "s"
+            } from the current queue.`,
+          );
+        } finally {
+          state.newsReview.bulkApprovePending = false;
+          renderNewsReviewRows();
         }
       }
 
@@ -8414,6 +8491,10 @@
 
       function normalizeSisConfig(source = {}) {
         const candidate = source && typeof source === "object" ? source : {};
+        const newsReportsCandidate =
+          candidate.newsReports && typeof candidate.newsReports === "object"
+            ? candidate.newsReports
+            : DEFAULT_SIS_CONFIG.newsReports;
         return {
           runtime: normalizeSisRuntimeConfig(
             candidate.runtime || DEFAULT_SIS_CONFIG.runtime,
@@ -8424,11 +8505,29 @@
                 1,
                 Number.parseInt(
                   String(
-                    candidate.newsReports?.weeklyMinimumReports ||
+                    newsReportsCandidate?.weeklyMinimumReports ||
                       DEFAULT_SIS_CONFIG.newsReports.weeklyMinimumReports,
                   ),
                   10,
                 ) || DEFAULT_SIS_CONFIG.newsReports.weeklyMinimumReports,
+              ),
+            autoApproveEnabled:
+              String(
+                newsReportsCandidate?.autoApproveEnabled ??
+                  DEFAULT_SIS_CONFIG.newsReports.autoApproveEnabled,
+              )
+                .trim()
+                .toLowerCase() !== "false",
+            autoApproveDelayHours:
+              Math.max(
+                1,
+                Number.parseInt(
+                  String(
+                    newsReportsCandidate?.autoApproveDelayHours ||
+                      DEFAULT_SIS_CONFIG.newsReports.autoApproveDelayHours,
+                  ),
+                  10,
+                ) || DEFAULT_SIS_CONFIG.newsReports.autoApproveDelayHours,
               ),
           },
         };
@@ -18506,6 +18605,8 @@
           },
           newsReports: {
             weeklyMinimumReports: document.getElementById("settingWeeklyMinimumReports")?.value,
+            autoApproveEnabled: document.getElementById("settingNewsAutoApproveEnabled")?.checked,
+            autoApproveDelayHours: document.getElementById("settingNewsAutoApproveDelayHours")?.value,
           },
         });
       }
@@ -18528,6 +18629,9 @@
         setValue("settingStudentSessionTtl", runtime.studentSessionTtlSeconds);
         setValue("settingRedisConnectTimeoutMs", runtime.redisConnectTimeoutMs);
         setValue("settingWeeklyMinimumReports", newsReports.weeklyMinimumReports);
+        const autoApproveEnabledEl = document.getElementById("settingNewsAutoApproveEnabled");
+        if (autoApproveEnabledEl) autoApproveEnabledEl.checked = newsReports.autoApproveEnabled !== false;
+        setValue("settingNewsAutoApproveDelayHours", newsReports.autoApproveDelayHours);
       }
 
       async function saveUiSettings() {
@@ -22245,6 +22349,11 @@
             refreshNewsReviewFilterControls();
             loadNewsReviewQueue({ notify: true }).catch(handleError);
           });
+        document
+          .getElementById("newsReviewApproveQueueBtn")
+          ?.addEventListener("click", () => {
+            applyNewsReviewBulkApprove().catch(handleError);
+          });
         newsReviewRowsEl?.addEventListener("click", (event) => {
           const target = event?.target;
           if (!(target instanceof Element)) return;
@@ -22388,6 +22497,9 @@
                 });
                 refreshNewsReviewFilterControls();
                 loadNewsReviewQueue({ notify: true }).catch(handleError);
+              },
+              onNewsReviewApproveQueue() {
+                applyNewsReviewBulkApprove().catch(handleError);
               },
               onNewsReviewOpenWeekSet(weekSetId, reportId = "") {
                 if (!weekSetId) return;

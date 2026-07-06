@@ -212,6 +212,7 @@ const {
   getSisConfigMirrorHealthSnapshot,
 } = await import("../src/modules/admin/sis-config-store.mjs")
 await ensureSisConfigLoaded()
+const { startStudentNewsAutoApprovalLoop } = await import("../src/modules/admin/student-news-auto-approval.mjs")
 
 const {
   isExerciseStoreRequired,
@@ -1868,6 +1869,7 @@ export function startExerciseMailer(options = {}) {
   const host =
     options.host === undefined || options.host === null ? DEFAULT_HOST : String(options.host)
   const selfHealLoop = startRuntimeSelfHealLoop()
+  const studentNewsAutoApprovalLoop = startStudentNewsAutoApprovalLoop()
   setStudentAdminRuntimeHealthProvider(() => buildRuntimeHealthPayload())
 
   const server = http.createServer((request, response) => {
@@ -1900,6 +1902,9 @@ export function startExerciseMailer(options = {}) {
     void closeStudentAdminRuntimeResources().catch(() => {})
     if (selfHealLoop && typeof selfHealLoop.stop === "function") {
       selfHealLoop.stop()
+    }
+    if (studentNewsAutoApprovalLoop && typeof studentNewsAutoApprovalLoop.stop === "function") {
+      studentNewsAutoApprovalLoop.stop()
     }
   })
 

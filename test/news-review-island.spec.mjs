@@ -20,6 +20,7 @@ test("news review island wires filters, actions, and modal controls", async () =
           <input id="newsReviewQueryFilter" type="search">
           <button id="newsReviewRefreshBtn" type="button">Refresh</button>
           <button id="newsReviewClearFiltersBtn" type="button">Clear</button>
+          <button id="newsReviewApproveQueueBtn" type="button">Approve Queue</button>
           <table>
             <tbody id="newsReviewRows">
               <tr data-news-review-week-set-id="week-1">
@@ -74,6 +75,9 @@ test("news review island wires filters, actions, and modal controls", async () =
     onNewsReviewClearFilters() {
       events.push(["clear"])
     },
+    onNewsReviewApproveQueue() {
+      events.push(["approve-queue"])
+    },
     onNewsReviewOpenWeekSet(weekSetId, reportId) {
       events.push(["open", weekSetId, reportId])
     },
@@ -116,6 +120,7 @@ test("news review island wires filters, actions, and modal controls", async () =
   )
   document.getElementById("newsReviewRefreshBtn").click()
   document.getElementById("newsReviewClearFiltersBtn").click()
+  document.getElementById("newsReviewApproveQueueBtn").click()
   document
     .querySelector('button[data-news-review-open-week-set="week-1"]')
     .click()
@@ -144,6 +149,7 @@ test("news review island wires filters, actions, and modal controls", async () =
     ["query", "market"],
     ["refresh"],
     ["clear"],
+    ["approve-queue"],
     ["open", "week-1", "report-1"],
     ["close"],
     ["shift", -1],

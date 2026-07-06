@@ -74,6 +74,7 @@ test("student and parent portals use the shared semantic button contract", () =>
 
 test("admin portal sources use the shared semantic button contract", () => {
   const adminHtml = readPortal("web-asset/admin/student-admin.html")
+  const adminHubHtml = readPortal("web-asset/admin/portal-hub.html")
   const adminJs = readPortal("web-asset/admin/student-admin.js")
   const adminRoutes = readPortal("server/student-admin-routes.mjs")
 
@@ -102,9 +103,9 @@ test("admin portal sources use the shared semantic button contract", () => {
   assert.match(adminHtml, /id="newsReviewViewerCloseBtn" type="button" class="portal-button portal-button-warning"/)
   assert.match(adminHtml, /id="gradeChartModalCloseBtn" type="button" class="portal-button portal-button-warning"/)
   assert.match(adminHtml, /class="portal-button portal-button-info pt-score-legend-btn"/)
-  assert.match(adminHtml, /hub-prefooter__link portal-button portal-button-alt/)
-  assert.match(adminHtml, /href="mailto:admin@eagles.edu.vn"/)
-  assert.match(adminHtml, /href="\/admin"/)
+  assert.match(adminHubHtml, /hub-prefooter__link portal-button portal-button-alt/)
+  assert.match(adminHubHtml, /href="mailto:admin@eagles.edu.vn"/)
+  assert.match(adminHubHtml, /href="\/admin"/)
 
   assert.match(adminJs, /className = "portal-button portal-button-primary system-health-action-btn"/)
   assert.match(adminJs, /class="queue-row-btn portal-button portal-button-info portal-button-open-week-set"/)

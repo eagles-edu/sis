@@ -6,6 +6,11 @@ import { getConfiguredDatabaseUrlSync } from "./sis-config-store.mjs"
 import { resolveEnrollmentPeriodForStudent } from "./enrollment-periods.mjs"
 import { getConfiguredSchoolYear } from "./school-setup-store.mjs"
 import {
+  getStudentNewsAutoApprovalConfigSync,
+  reconcileStudentNewsAutoApprovals,
+  resolveStudentNewsAutoApproveDueAt,
+} from "./student-news-auto-approval.mjs"
+import {
   addAwaitingReReviewMarker,
   evaluateStudentNewsCompliance,
   evaluateStudentNewsMinimumRequirements,
@@ -875,6 +880,7 @@ export async function listStudentNewsCalendar(studentRefId, { now = new Date(), 
   const prisma = await getPrismaClient()
   const id = normalizeText(studentRefId)
   assertWithStatus(Boolean(id), 400, "studentRefId is required")
+  await reconcileStudentNewsAutoApprovals({ studentRefId: id, now })
   const targetDays = normalizeStudentNewsDays(days)
   const nowDate = parseDateOrNull(now) || new Date()
   const todayStart = startOfDay(nowDate)
@@ -1208,13 +1214,20 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
   }
 
   const mappedItem = await buildStudentNewsClientItem(saved, { validationConfig })
+  const autoApproveConfig = getStudentNewsAutoApprovalConfigSync()
+  const autoApproveDueAt =
+    mode === "submit" && reviewStatus === STUDENT_NEWS_REVIEW_STATUS_SUBMITTED
+      ? resolveStudentNewsAutoApproveDueAt(saved, autoApproveConfig)
+      : null
   const responseMessage = mode === "check"
     ? mmrPassed
       ? !(existing?.mmrPassedAt)
         ? "Minimum requirements met. Today's report date is satisfied and locked. You may keep improving before submit."
         : "Draft saved. Minimum requirements still met."
       : `Draft saved. ${Object.keys(minimumRequirements.failedFields || {}).length} required fixes remain.`
-    : "Submitted. You may continue improving until Sunday 00:00."
+    : autoApproveConfig.autoApproveEnabled && autoApproveDueAt instanceof Date && !Number.isNaN(autoApproveDueAt.valueOf())
+      ? `Submitted. Auto-approval is scheduled after ${autoApproveConfig.autoApproveDelayHours} hours while edits remain open until Sunday 00:00.`
+      : "Submitted. You may continue improving until Sunday 00:00."
 
   return {
     generatedAt: new Date().toISOString(),
@@ -1237,6 +1250,9 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     complianceFailed: !mmrPassed,
     failedFields: minimumRequirements.failedFields || {},
     revisionTasks: minimumRequirements.requiredTasks || [],
+    autoApproveEnabled: autoApproveConfig.autoApproveEnabled,
+    autoApproveDelayHours: autoApproveConfig.autoApproveDelayHours,
+    autoApproveDueAt: autoApproveDueAt?.toISOString?.() || "",
   }
 }
 

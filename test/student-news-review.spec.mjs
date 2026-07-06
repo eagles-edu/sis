@@ -7,6 +7,7 @@ import {
   listStudentNewsReportsForReview,
   normalizeStudentNewsReviewStatus,
   normalizeStudentNewsReviewTake,
+  reviewStudentNewsReportsBulk,
   resolveStudentNewsReviewActionStatus,
   resolveStudentNewsStatusColor,
   reviewStudentNewsReport,
@@ -15,6 +16,7 @@ import {
 test("student news review module exposes the review API surface", () => {
   assert.equal(typeof listStudentNewsReportsForReview, "function")
   assert.equal(typeof reviewStudentNewsReport, "function")
+  assert.equal(typeof reviewStudentNewsReportsBulk, "function")
   assert.equal(typeof buildStudentNewsReviewSelect, "function")
   assert.equal(typeof normalizeStudentNewsReviewStatus, "function")
   assert.equal(typeof normalizeStudentNewsReviewTake, "function")
@@ -52,6 +54,9 @@ test("student news admin review keeps admin statuses unchanged and only excludes
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_SUBMITTED = "submitted"/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED = "revision-requested"/)
   assert.match(source, /const STUDENT_NEWS_REVIEW_STATUS_APPROVED = "approved"/)
+  assert.match(source, /await reconcileStudentNewsAutoApprovals\(\)/)
+  assert.match(source, /evaluateStudentNewsAutoApprovalState\(entry/)
+  assert.match(source, /autoApprovalState\?\.enabled && autoApprovalState\.candidate && !autoApprovalState\.due/)
 })
 
 test("student news revision requests reopen editing for a 15-day deadline", () => {
@@ -59,4 +64,21 @@ test("student news revision requests reopen editing for a 15-day deadline", () =
   assert.match(source, /function resolveStudentNewsRevisionEditableUntil\(now = new Date\(\)\)/)
   assert.match(source, /return endOfDay\(addDays\(now, 15\)\)/)
   assert.match(source, /if \(reviewStatus === STUDENT_NEWS_REVIEW_STATUS_REVISION_REQUESTED\) \{\s*updateData\.editableUntil = resolveStudentNewsRevisionEditableUntil\(now\)/)
+})
+
+test("student news bulk review validates report ids before any store work", async () => {
+  await assert.rejects(
+    () => reviewStudentNewsReportsBulk({ action: "approve", reportIds: [] }),
+    (error) => {
+      assert.match(String(error?.message || ""), /reportIds are required/i)
+      return true
+    },
+  )
+  await assert.rejects(
+    () => reviewStudentNewsReportsBulk({ action: "revision-requested", reportIds: ["news-001"] }),
+    (error) => {
+      assert.match(String(error?.message || ""), /unsupported bulk news review action/i)
+      return true
+    },
+  )
 })

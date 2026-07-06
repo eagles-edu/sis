@@ -1,6 +1,11 @@
 // @ts-check
 import { getSharedPrismaClient } from "../../infra/db/prisma-client.mjs"
 import {
+  evaluateStudentNewsAutoApprovalState,
+  getStudentNewsAutoApprovalConfigSync,
+  reconcileStudentNewsAutoApprovals,
+} from "./student-news-auto-approval.mjs"
+import {
   buildStudentNewsFallbackOverlayIndex,
   isStudentNewsReportSchemaUnavailableError,
   isStudentNewsReviewSchemaUnavailableError,
@@ -766,6 +771,7 @@ export async function listStudentNewsReportsForReview({
   take = "200",
 } = {}) {
   const prisma = await getSharedPrismaClient()
+  await reconcileStudentNewsAutoApprovals()
   const limit = normalizeStudentNewsReviewTake(take)
   const requestedStatus = normalizeStudentNewsReviewStatus(status, "all")
   const requestedLevel = canonicalizeLevel(level || "") || ""
@@ -868,7 +874,17 @@ export async function listStudentNewsReportsForReview({
       studentByRefId,
     })
   })
-  const filtered = mapped.filter((entry) => {
+  const autoApprovalConfig = getStudentNewsAutoApprovalConfigSync()
+  const autoApprovalStates = await Promise.all(
+    mapped.map((entry) =>
+      evaluateStudentNewsAutoApprovalState(entry, {
+        config: autoApprovalConfig,
+      })
+    )
+  )
+  const filtered = mapped.filter((entry, index) => {
+    const autoApprovalState = autoApprovalStates[index] || null
+    if (autoApprovalState?.enabled && autoApprovalState.candidate && !autoApprovalState.due) return false
     if (requestedStatus !== "all" && normalizeStudentNewsReviewStatus(entry?.reviewStatus, "") !== requestedStatus) return false
     if (requestedLevel) {
       const entryLevel = canonicalizeLevel(entry?.student?.level || "") || ""
@@ -1125,4 +1141,66 @@ export async function reviewStudentNewsReport(reportId, payload = {}, options = 
   }
 }
 
-export { buildStudentNewsReviewSelect, normalizeStudentNewsReviewStatus, normalizeStudentNewsReviewTake, resolveStudentNewsReviewActionStatus, resolveStudentNewsStatusColor }
+/**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
+function normalizeStudentNewsBulkReportIds(value) {
+  if (!Array.isArray(value)) return []
+  const ids = []
+  const seen = new Set()
+  value.forEach((entry) => {
+    const id = normalizeText(entry)
+    if (!id || seen.has(id)) return
+    seen.add(id)
+    ids.push(id)
+  })
+  return ids
+}
+
+/**
+ * @param {Record<string, unknown>} [payload]
+ * @param {Record<string, unknown>} [options]
+ * @returns {Promise<{
+ *   generatedAt: string,
+ *   action: string,
+ *   processedCount: number,
+ *   reportIds: string[],
+ *   items: Array<Record<string, unknown>>,
+ * }>}
+ */
+export async function reviewStudentNewsReportsBulk(payload = {}, options = {}) {
+  const action = normalizeLower(payload?.action || payload?.status || "approve")
+  assertWithStatus(action === "approve", 400, "Unsupported bulk news review action")
+  const reportIds = normalizeStudentNewsBulkReportIds(payload?.reportIds)
+  assertWithStatus(reportIds.length > 0, 400, "reportIds are required")
+  assertWithStatus(reportIds.length <= 500, 400, "Too many reportIds")
+
+  const reviewPayload = {
+    ...(payload && typeof payload === "object" ? payload : {}),
+    action,
+  }
+  delete reviewPayload.reportIds
+
+  const items = []
+  for (const reportId of reportIds) {
+    const result = await reviewStudentNewsReport(reportId, reviewPayload, options)
+    if (result?.item) items.push(result.item)
+  }
+
+  return {
+    generatedAt: new Date().toISOString(),
+    action,
+    processedCount: items.length,
+    reportIds,
+    items,
+  }
+}
+
+export {
+  buildStudentNewsReviewSelect,
+  normalizeStudentNewsReviewStatus,
+  normalizeStudentNewsReviewTake,
+  resolveStudentNewsReviewActionStatus,
+  resolveStudentNewsStatusColor,
+}

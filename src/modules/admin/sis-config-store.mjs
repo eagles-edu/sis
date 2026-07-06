@@ -6,6 +6,8 @@ import path from "node:path"
 const SIS_CONFIG_FILE_NAME = "SIS_CONFIG.json"
 const SIS_CONFIG_MIRROR_ID = "sis-config"
 const DEFAULT_WEEKLY_MINIMUM_REPORTS = 5
+const DEFAULT_NEWS_REPORT_AUTO_APPROVE_ENABLED = true
+const DEFAULT_NEWS_REPORT_AUTO_APPROVE_DELAY_HOURS = 16
 const DEFAULT_ADMIN_SESSION_TTL_SECONDS = 28800
 const DEFAULT_PARENT_SESSION_TTL_SECONDS = 28800
 const DEFAULT_STUDENT_SESSION_TTL_SECONDS = 86400
@@ -95,6 +97,8 @@ const DEFAULT_SCHOOL_PROFILE = Object.freeze({
  * }} RuntimeConfig
  * @typedef {{
  *   weeklyMinimumReports: number,
+ *   autoApproveEnabled: boolean,
+ *   autoApproveDelayHours: number,
  * }} NewsReportsConfig
  * @typedef {{
  *   uiSettings: UiSettingsConfig,
@@ -142,6 +146,14 @@ function normalizeText(value) {
 
 function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
+}
+
+function normalizeBoolean(value, fallback = false) {
+  const normalized = normalizeLower(value)
+  if (!normalized) return fallback
+  if (["true", "1", "yes", "on", "enabled"].includes(normalized)) return true
+  if (["false", "0", "no", "off", "disabled"].includes(normalized)) return false
+  return fallback
 }
 
 /**
@@ -460,6 +472,19 @@ function normalizeNewsReportsConfig(source = {}) {
     weeklyMinimumReports: toPositiveInt(
       candidate.weeklyMinimumReports ?? candidate.weeklyMinimum ?? process.env.STUDENT_NEWS_WEEKLY_MINIMUM_REPORTS,
       DEFAULT_WEEKLY_MINIMUM_REPORTS,
+    ),
+    autoApproveEnabled: normalizeBoolean(
+      candidate.autoApproveEnabled
+      ?? candidate.autoApproveMmrReports
+      ?? candidate.autoApprovalEnabled
+      ?? process.env.STUDENT_NEWS_AUTO_APPROVE_ENABLED,
+      DEFAULT_NEWS_REPORT_AUTO_APPROVE_ENABLED,
+    ),
+    autoApproveDelayHours: toPositiveInt(
+      candidate.autoApproveDelayHours
+      ?? candidate.autoApprovalDelayHours
+      ?? process.env.STUDENT_NEWS_AUTO_APPROVE_DELAY_HOURS,
+      DEFAULT_NEWS_REPORT_AUTO_APPROVE_DELAY_HOURS,
     ),
   }
 }

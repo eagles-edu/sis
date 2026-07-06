@@ -85,6 +85,8 @@ function writeRichSisConfigFixture(filePath, { updatedAt = "2026-05-01T00:00:00.
       },
       newsReports: {
         weeklyMinimumReports: 5,
+        autoApproveEnabled: true,
+        autoApproveDelayHours: 16,
       },
       updatedAt,
       updatedBy,
@@ -120,6 +122,8 @@ test("saveSisConfigSnapshot writes config and leaves the legacy mirror untouched
         },
         newsReports: {
           weeklyMinimumReports: 5,
+          autoApproveEnabled: false,
+          autoApproveDelayHours: 24,
         },
       },
       "tester",
@@ -128,6 +132,8 @@ test("saveSisConfigSnapshot writes config and leaves the legacy mirror untouched
     assert.equal(saved.uiSettings.multiSchool, true)
     assert.equal(saved.runtime.sessionDriver, "redis")
     assert.equal(saved.newsReports.weeklyMinimumReports, 5)
+    assert.equal(saved.newsReports.autoApproveEnabled, false)
+    assert.equal(saved.newsReports.autoApproveDelayHours, 24)
     assert.equal(saved.uiSettings.levelTileStylesByLevel["A1 Movers"].title, "Class level title")
     assert.equal(fs.existsSync(sisConfigPath), true)
     assert.equal(fs.existsSync(legacyPath), false)
@@ -136,6 +142,8 @@ test("saveSisConfigSnapshot writes config and leaves the legacy mirror untouched
     assert.equal(configJson.uiSettings.schoolSetup.schoolYear, "2026-2027")
     assert.equal(configJson.runtime.databaseUrl, "postgresql://user:pass@localhost:5432/sis")
     assert.equal(configJson.newsReports.weeklyMinimumReports, 5)
+    assert.equal(configJson.newsReports.autoApproveEnabled, false)
+    assert.equal(configJson.newsReports.autoApproveDelayHours, 24)
     assert.equal(configJson.uiSettings.levelTileStylesByLevel["A1 Movers"].bgColor, "#002786")
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
@@ -172,6 +180,8 @@ test("development runtime defaults to an environment-specific SIS config file", 
         },
         newsReports: {
           weeklyMinimumReports: 5,
+          autoApproveEnabled: true,
+          autoApproveDelayHours: 16,
         },
         updatedAt: "2026-05-01T00:00:00.000Z",
         updatedBy: "root",
@@ -239,6 +249,8 @@ test("sis config mirror health ignores nested key order drift", async () => {
     },
     newsReports: {
       weeklyMinimumReports: 5,
+      autoApproveEnabled: true,
+      autoApproveDelayHours: 16,
     },
     environment: "development",
     updatedAt: "2026-05-27T19:44:11.093Z",
@@ -266,6 +278,8 @@ test("sis config mirror health ignores nested key order drift", async () => {
     runtime: fileSnapshot.runtime,
     newsReports: {
       weeklyMinimumReports: 5,
+      autoApproveEnabled: true,
+      autoApproveDelayHours: 16,
     },
     environment: "development",
     updatedAt: "2026-05-27T19:44:11.093Z",
@@ -352,6 +366,8 @@ test("sis config loader fails fast on placeholder example database hosts with li
         },
         newsReports: {
           weeklyMinimumReports: 5,
+          autoApproveEnabled: true,
+          autoApproveDelayHours: 16,
         },
         updatedAt: "2026-05-01T00:00:00.000Z",
         updatedBy: "config",
@@ -405,6 +421,8 @@ test("sis config loader reinjects relative logo and six level image paths when m
         },
         newsReports: {
           weeklyMinimumReports: 5,
+          autoApproveEnabled: true,
+          autoApproveDelayHours: 16,
         },
         updatedAt: "2026-05-01T00:00:00.000Z",
         updatedBy: "config",
@@ -495,6 +513,8 @@ test("ensureSisConfigLoaded restores the config snapshot without rewriting the l
         },
         newsReports: {
           weeklyMinimumReports: 5,
+          autoApproveEnabled: true,
+          autoApproveDelayHours: 16,
         },
         updatedAt: "2026-05-01T00:00:00.000Z",
         updatedBy: "config",
@@ -523,6 +543,8 @@ test("ensureSisConfigLoaded restores the config snapshot without rewriting the l
     assert.equal(snapshot.updatedBy, "config")
     assert.equal(snapshot.runtime.databaseUrl, "postgresql://config-only")
     assert.equal(snapshot.newsReports.weeklyMinimumReports, 5)
+    assert.equal(snapshot.newsReports.autoApproveEnabled, true)
+    assert.equal(snapshot.newsReports.autoApproveDelayHours, 16)
 
     const restoredConfig = JSON.parse(fs.readFileSync(sisConfigPath, "utf8"))
     const restoredLegacy = JSON.parse(fs.readFileSync(legacyPath, "utf8"))
@@ -684,6 +706,8 @@ test("ensureSisConfigLoaded ignores a corrupt legacy mirror while restoring SIS 
         },
         newsReports: {
           weeklyMinimumReports: 5,
+          autoApproveEnabled: true,
+          autoApproveDelayHours: 16,
         },
         updatedAt: "2026-05-01T00:00:00.000Z",
         updatedBy: "config",

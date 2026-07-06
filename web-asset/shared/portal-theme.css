@@ -1782,16 +1782,16 @@ html[data-theme="dark"] body.admin-portal-page th,
 html[data-theme="dark"] body.admin-portal-page td {
   border-bottom-color: var(--portal-dark-border-strong) !important;
 }
+/*body.student-portal-page .content > :not(:first-child),
+body.parent-portal-page .content > :not(:first-child),
+body.admin-portal-page .content > :not(:first-child)*/
 body.student-portal-page .card > :not(:first-child),
 body.parent-portal-page .card > :not(:first-child),
 body.admin-portal-page .card > :not(:first-child),
 body.report-template-page .card > :not(:first-child),
 body.student-portal-page .card > :not(:first-child),
 body.admin-portal-page .panel > :not(:first-child),
-body.report-template-page .panel > :not(:first-child),
-body.student-portal-page .content > :not(:first-child),
-body.parent-portal-page .content > :not(:first-child),
-body.admin-portal-page .content > :not(:first-child) {
+body.report-template-page .panel > :not(:first-child) {
   margin-top: 12px;
 }
 body.student-portal-page .card.homework-card,
@@ -9002,7 +9002,7 @@ body.student-portal-page .floating-menu-btn,
 body.parent-portal-page .floating-menu-btn,
 body.admin-portal-page .floating-menu-btn,
 body.admin-portal-page .menu-toggle-btn {
-  background: var(--menu-button-bg) !important;
+  background: var(--tertiary-color) !important;
   border-color: var(--menu-button-border) !important;
   color: var(--menu-button-text) !important;
 }

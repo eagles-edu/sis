@@ -169,7 +169,9 @@
     "redisConnectTimeoutMs": 5000
   },
   "newsReports": {
-    "weeklyMinimumReports": 5
+    "weeklyMinimumReports": 5,
+    "autoApproveEnabled": true,
+    "autoApproveDelayHours": 16
   },
   "environment": "development",
   "updatedAt": "2026-07-03T09:02:16.913Z",

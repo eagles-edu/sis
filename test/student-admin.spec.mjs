@@ -2042,6 +2042,32 @@ test("teacher cannot apply student news review actions", async () => {
   assert.match(body.error, /Forbidden/i)
 })
 
+test("teacher cannot bulk-approve student news review queue", async () => {
+  const res = await fetchLocal(port, "/api/admin/news-reports/bulk", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      action: "approve",
+      reportIds: ["news-001"],
+    }),
+  })
+  assert.equal(res.status, 403)
+  const body = await res.json()
+  assert.match(body.error, /Forbidden/i)
+})
+
+test("bulk news review route is declared ahead of the single-report matcher", () => {
+  const source = fs.readFileSync(new URL("../server/student-admin-routes.mjs", import.meta.url), "utf8")
+  assert.match(source, /const ADMIN_NEWS_REPORTS_BULK_PATH = `\$\{ADMIN_NEWS_REPORTS_PATH\}\/bulk`/)
+  assert.match(
+    source,
+    /if \(method === "POST" && pathname === ADMIN_NEWS_REPORTS_BULK_PATH\) \{[\s\S]*reviewStudentNewsReportsBulk\(payload, \{/,
+  )
+})
+
 test("teacher cannot create volatile assignment announcement preview", async () => {
   const res = await fetchLocal(port, "/api/admin/assignment-announcements/volatile", {
     method: "POST",
@@ -2161,6 +2187,8 @@ test("admin can persist and reload school setup ui settings", async () => {
       },
       newsReports: {
         weeklyMinimumReports: 5,
+        autoApproveEnabled: false,
+        autoApproveDelayHours: 20,
       },
     },
   }
@@ -2181,6 +2209,8 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(putBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
   assert.equal(putBody.sisConfig.runtime.sessionDriver, "redis")
   assert.equal(putBody.sisConfig.newsReports.weeklyMinimumReports, 5)
+  assert.equal(putBody.sisConfig.newsReports.autoApproveEnabled, false)
+  assert.equal(putBody.sisConfig.newsReports.autoApproveDelayHours, 20)
   assert.equal(putBody.meta.schoolSetupState, "ok")
 
   const getAfter = await fetchLocal(port, "/api/admin/settings/ui", {
@@ -2198,6 +2228,8 @@ test("admin can persist and reload school setup ui settings", async () => {
   assert.equal(afterBody.uiSettings.schoolProfile.logoDataUrl, "data:image/png;base64,AAAA")
   assert.equal(afterBody.sisConfig.runtime.redisUrl, "redis://:secret@localhost:6379/1")
   assert.equal(afterBody.sisConfig.newsReports.weeklyMinimumReports, 5)
+  assert.equal(afterBody.sisConfig.newsReports.autoApproveEnabled, false)
+  assert.equal(afterBody.sisConfig.newsReports.autoApproveDelayHours, 20)
 })
 
 test("admin rejects school setup ui settings without explicit quarters", async () => {

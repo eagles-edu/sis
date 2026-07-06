@@ -113,8 +113,15 @@ import {
 } from "../src/modules/admin/assignment-templates.mjs"
 import {
   listStudentNewsReportsForReview,
+  reviewStudentNewsReportsBulk,
   reviewStudentNewsReport,
 } from "../src/modules/admin/student-news-review.mjs"
+import {
+  buildStudentNewsAutoApprovalSelect,
+  evaluateStudentNewsAutoApprovalState,
+  getStudentNewsAutoApprovalConfigSync,
+  reconcileStudentNewsAutoApprovals,
+} from "../src/modules/admin/student-news-auto-approval.mjs"
 import {
   createAdminUser,
   deleteAdminUserById,
@@ -203,6 +210,7 @@ const ADMIN_UI_SETTINGS_PATH = `${ADMIN_API_PREFIX}/settings/ui`
 const ADMIN_DASHBOARD_PATH = `${ADMIN_API_PREFIX}/dashboard`
 const ADMIN_QUEUE_HUB_PATH = `${ADMIN_API_PREFIX}/queue-hub`
 const ADMIN_NEWS_REPORTS_PATH = `${ADMIN_API_PREFIX}/news-reports`
+const ADMIN_NEWS_REPORTS_BULK_PATH = `${ADMIN_NEWS_REPORTS_PATH}/bulk`
 const ADMIN_EXERCISE_TITLES_PATH = `${ADMIN_API_PREFIX}/exercise-titles`
 const ADMIN_EXPORT_XLSX_PATH = `${ADMIN_API_PREFIX}/exports/xlsx`
 const ADMIN_NOTIFY_EMAIL_PATH = `${ADMIN_API_PREFIX}/notifications/email`
@@ -5607,6 +5615,7 @@ async function buildQueueHubPayload() {
     }),
     (async () => {
       try {
+        await reconcileStudentNewsAutoApprovals()
         const prisma = await getSharedPrismaClient()
         const now = new Date()
         const start = new Date(now)
@@ -5622,14 +5631,7 @@ async function buildQueueHubPayload() {
           orderBy: [{ submittedAt: "desc" }, { reportDate: "desc" }],
           take: 500,
           select: {
-            id: true,
-            studentRefId: true,
-            reportDate: true,
-            submittedAt: true,
-            reviewStatus: true,
-            reviewNote: true,
-            articleTitle: true,
-            sourceLink: true,
+            ...buildStudentNewsAutoApprovalSelect(),
             student: {
               select: {
                 id: true,
@@ -5645,6 +5647,20 @@ async function buildQueueHubPayload() {
               },
             },
           },
+        })
+        const autoApprovalConfig = getStudentNewsAutoApprovalConfigSync()
+        const autoApprovalStates = await Promise.all(
+          rows.map((row) =>
+            evaluateStudentNewsAutoApprovalState(row, {
+              config: autoApprovalConfig,
+              now,
+            })
+          )
+        )
+        const visibleRows = rows.filter((row, index) => {
+          const autoApprovalState = autoApprovalStates[index] || null
+          if (autoApprovalState?.enabled && autoApprovalState.candidate && !autoApprovalState.due) return false
+          return true
         })
 
         const startOfNewsWeek = (value) => {
@@ -5664,7 +5680,7 @@ async function buildQueueHubPayload() {
           return shiftFromFixedTimeZone(shifted)
         }
         const groupedByWeekSet = new Map()
-        rows.forEach((row) => {
+        visibleRows.forEach((row) => {
           const studentRefId = normalizeText(row?.studentRefId)
           const student = row?.student && typeof row.student === "object" ? row.student : {}
           const eaglesId = normalizeText(student?.eaglesId)
@@ -6231,6 +6247,20 @@ async function handleApiRequest(request, response, pathname, url) {
     sendJson(response, 200, {
       ...data,
       weeklyMinimumReports: getWeeklyMinimumReportsSync(),
+    })
+    return true
+  }
+
+  if (method === "POST" && pathname === ADMIN_NEWS_REPORTS_BULK_PATH) {
+    assertStoreEnabled()
+    assertCanManageUsers(rolePolicy)
+    const payload = await parseBody(request)
+    const result = await reviewStudentNewsReportsBulk(payload, {
+      reviewedByUsername: normalizeText(session?.username),
+    })
+    sendJson(response, 200, {
+      ok: true,
+      ...result,
     })
     return true
   }
