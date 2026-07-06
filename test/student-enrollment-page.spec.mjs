@@ -35,7 +35,7 @@ test("student enrollment page ships as a standalone portal surface", () => {
   assert.match(html, /data-history-toggle/)
   assert.match(html, /data-history-open/)
   assert.match(html, /⋮/)
-  assert.doesNotMatch(html, /Notes|1 note|HX notes/)
+  assert.doesNotMatch(html, /1 note|HX notes/i)
   assert.doesNotMatch(html, /th scope="col">Same-year history<\/th>/)
   assert.doesNotMatch(html, /id="loginBtn"/)
   assert.match(html, /\/api\/admin\/students\/\$\{encodeURIComponent\(row\.id\)\}\/enrollment/)

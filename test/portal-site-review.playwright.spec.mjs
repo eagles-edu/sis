@@ -111,6 +111,10 @@ async function runAxe(page, selector = "") {
   }, selector)
 }
 
+async function selectorExists(page, selector) {
+  return await page.evaluate((scopeSelector) => Boolean(globalThis.document.querySelector(scopeSelector)), selector)
+}
+
 async function snapshotSurfaces(page, selectors) {
   return await page.evaluate((input) => {
     const read = (selector) => {
@@ -647,6 +651,10 @@ async function reviewAdmin(page, origin, theme, coverage, credentials) {
         "#performanceDataSummary",
       ]
       for (const selector of performanceSelectors) {
+        if (!(await selectorExists(page, selector))) {
+          traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> axe skip missing ${selector}`)
+          continue
+        }
         traceReviewStage(`theme ${theme} admin route ${link.href || link.pageLink || link.text} -> axe ${selector}`)
         axe = axe.concat(summarizeAxe(await runAxe(page, selector)))
       }

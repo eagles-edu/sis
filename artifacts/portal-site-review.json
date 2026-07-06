@@ -214,112 +214,117 @@
       "links": [
         {
           "text": "DASHBOARD",
-          "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin",
           "pageLink": "overview"
         },
         {
           "text": "QUEUE HUB",
-          "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/queue-hub",
           "pageLink": "queue-hub"
         },
         {
           "text": "STUDENTS",
-          "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/profile",
           "pageLink": "profile"
         },
         {
           "text": "Attendance",
-          "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/attendance",
           "pageLink": "attendance"
         },
         {
           "text": "Attendance data",
-          "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/attendance-admin",
           "pageLink": "attendance-admin"
         },
         {
           "text": "Assignments",
-          "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/assignments",
           "pageLink": "assignments"
         },
         {
           "text": "Assignments data",
-          "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/assignments-data",
           "pageLink": "assignments-data"
         },
         {
           "text": "Grades",
-          "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/grades",
           "pageLink": "grades"
         },
         {
           "text": "Grades data",
-          "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/grades-data",
+          "pageLink": "grades-data"
+        },
+        {
+          "text": "Grade table",
+          "href": "/admin/grades-data",
           "pageLink": "grades-data"
         },
         {
           "text": "Performance",
-          "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/parent-tracking",
           "pageLink": "parent-tracking"
         },
         {
           "text": "Performance data",
-          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/performance-data",
           "pageLink": "performance-data"
         },
         {
           "text": "RC engagement",
-          "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/performance-engagement",
           "pageLink": "performance-engagement"
         },
         {
           "text": "News Reports",
-          "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/news-reports",
           "pageLink": "news-reports"
         },
         {
           "text": "All Reports",
-          "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/reports",
           "pageLink": "reports"
         },
         {
           "text": "Family Lookup",
-          "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/family",
           "pageLink": "family"
         },
         {
           "text": "Enrollment",
-          "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/enrollment",
           "pageLink": "enrollment"
         },
         {
           "text": "Student Admin",
-          "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/student-admin",
           "pageLink": "student-admin"
         },
         {
           "text": "School Setup",
-          "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/school-setup",
           "pageLink": "school-setup"
         },
         {
           "text": "Users",
-          "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/users",
           "pageLink": "users"
         },
         {
           "text": "Permissions",
-          "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/permissions",
           "pageLink": "permissions"
         },
         {
           "text": "Settings",
-          "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/settings",
           "pageLink": "settings"
         },
         {
           "text": "Open performance data",
-          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/performance-data",
           "pageLink": "performance-data"
         }
       ],
@@ -327,7 +332,7 @@
         {
           "link": {
             "text": "DASHBOARD",
-            "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin",
             "pageLink": "overview"
           },
           "state": {
@@ -347,7 +352,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2824
+              "height": 2823
             },
             ".wrap": {
               "selector": ".wrap",
@@ -359,7 +364,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 2776
+              "height": 2775
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -371,7 +376,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 2692
+              "height": 2691
             },
             ".panel": {
               "selector": ".panel",
@@ -401,7 +406,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -437,7 +442,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -463,25 +468,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "td:nth-child(1) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.31 (foreground color: #744300, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "td:nth-child(1) > .panelbg-fly.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.05 (foreground color: #90d3ad, background color: #b5d570, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "td:nth-child(1) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -524,7 +510,7 @@
         {
           "link": {
             "text": "QUEUE HUB",
-            "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/queue-hub",
             "pageLink": "queue-hub"
           },
           "state": {
@@ -544,7 +530,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 3333
+              "height": 3332
             },
             ".wrap": {
               "selector": ".wrap",
@@ -556,7 +542,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 3285
+              "height": 3284
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -568,7 +554,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 3201
+              "height": 3200
             },
             ".panel": {
               "selector": ".panel",
@@ -598,7 +584,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -634,7 +620,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -660,17 +646,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "#queueHubStatus",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #5f6d87, background color: #e3e9f0, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -698,7 +673,7 @@
         {
           "link": {
             "text": "STUDENTS",
-            "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/profile",
             "pageLink": "profile"
           },
           "state": {
@@ -718,7 +693,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 3459
+              "height": 3286
             },
             ".wrap": {
               "selector": ".wrap",
@@ -730,7 +705,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 3411
+              "height": 3238
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -742,7 +717,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 3327
+              "height": 3154
             },
             ".panel": {
               "selector": ".panel",
@@ -772,7 +747,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -808,7 +783,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -834,29 +809,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(4) > td:nth-child(4) > .panelbg-fly.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.05 (foreground color: #90d3ad, background color: #b5d570, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(6) > td:nth-child(4) > .panelbg-fly.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.05 (foreground color: #90d3ad, background color: #b5d570, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.31 (foreground color: #744300, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -884,7 +836,7 @@
         {
           "link": {
             "text": "Attendance",
-            "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/attendance",
             "pageLink": "attendance"
           },
           "state": {
@@ -916,7 +868,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 678
+              "height": 716
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -928,7 +880,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 594
+              "height": 632
             },
             ".panel": {
               "selector": ".panel",
@@ -958,7 +910,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -994,7 +946,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -1047,7 +999,7 @@
         {
           "link": {
             "text": "Attendance data",
-            "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/attendance-admin",
             "pageLink": "attendance-admin"
           },
           "state": {
@@ -1067,7 +1019,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1110
+              "height": 1119
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1079,7 +1031,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1062
+              "height": 1071
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1091,7 +1043,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 978
+              "height": 987
             },
             ".panel": {
               "selector": ".panel",
@@ -1121,7 +1073,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -1157,7 +1109,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -1210,7 +1162,7 @@
         {
           "link": {
             "text": "Assignments",
-            "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/assignments",
             "pageLink": "assignments"
           },
           "state": {
@@ -1242,7 +1194,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1031
+              "height": 1047
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1254,7 +1206,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 947
+              "height": 963
             },
             ".panel": {
               "selector": ".panel",
@@ -1284,7 +1236,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -1320,7 +1272,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -1346,17 +1298,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "#assignmentStatus",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #5f6d87, background color: #e3e9f0, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -1384,7 +1325,7 @@
         {
           "link": {
             "text": "Assignments data",
-            "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/assignments-data",
             "pageLink": "assignments-data"
           },
           "state": {
@@ -1416,7 +1357,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 748
+              "height": 771
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1428,7 +1369,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 664
+              "height": 687
             },
             ".panel": {
               "selector": ".panel",
@@ -1458,7 +1399,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -1494,7 +1435,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -1547,7 +1488,7 @@
         {
           "link": {
             "text": "Grades",
-            "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/grades",
             "pageLink": "grades"
           },
           "state": {
@@ -1579,7 +1520,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 633
+              "height": 639
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1591,7 +1532,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 549
+              "height": 555
             },
             ".panel": {
               "selector": ".panel",
@@ -1621,7 +1562,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -1657,7 +1598,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -1710,7 +1651,7 @@
         {
           "link": {
             "text": "Grades data",
-            "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/grades-data",
             "pageLink": "grades-data"
           },
           "state": {
@@ -1730,7 +1671,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1303
+              "height": 2324
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1742,7 +1683,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1255
+              "height": 2276
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1754,7 +1695,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 1171
+              "height": 2192
             },
             ".panel": {
               "selector": ".panel",
@@ -1784,7 +1725,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -1802,7 +1743,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1378,
-              "height": 497
+              "height": 856
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1813,14 +1754,177 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
-              "width": 671,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerBody .news-review-viewer-block": null,
+            "#newsReviewViewerNote": {
+              "selector": "#newsReviewViewerNote",
+              "id": "newsReviewViewerNote",
+              "className": "card",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".news-review-note-line.pending": null,
+            ".news-review-note-line.fixed": null,
+            "#reloadBtn": null
+          },
+          "axe": [
+            {
+              "id": "page-has-heading-one",
+              "impact": "moderate",
+              "help": "Page should contain a level-one heading",
+              "nodes": [
+                {
+                  "target": "html",
+                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
+                }
+              ]
+            },
+            {
+              "id": "region",
+              "impact": "moderate",
+              "help": "All page content should be contained by landmarks",
+              "nodes": [
+                {
+                  "target": ".header-bar",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "link": {
+            "text": "Grade table",
+            "href": "/admin/grades-data",
+            "pageLink": "grades-data"
+          },
+          "state": {
+            "bodyClass": "admin-portal-page page",
+            "title": "The Eagles Club Student Information System",
+            "htmlTheme": "light",
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. Navigat"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "",
+              "className": "admin-portal-page page",
+              "bg": "rgb(232, 238, 244)",
+              "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 1440,
+              "height": 2324
+            },
+            ".wrap": {
+              "selector": ".wrap",
+              "id": "",
+              "className": "wrap",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "grid",
+              "width": 1440,
+              "height": 2276
+            },
+            ".app-shell": {
+              "selector": ".app-shell",
+              "id": "",
+              "className": "app-shell",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "grid",
+              "width": 1408,
+              "height": 2192
+            },
+            ".panel": {
+              "selector": ".panel",
+              "id": "authBootPanel",
+              "className": "panel hidden",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "linear-gradient(rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%), linear-gradient(rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 48%)",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(95, 115, 145)",
+              "display": "none",
+              "width": 0,
+              "height": 0
+            },
+            ".card": {
+              "selector": ".card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
+              "bg": "rgb(252, 253, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".queue-modal-card": {
+              "selector": ".queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(95, 115, 145)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-shell": {
+              "selector": ".grade-chart-shell",
+              "id": "gradeChartShell",
+              "className": "grade-chart-shell panel",
+              "bg": "rgb(227, 233, 240)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 1378,
+              "height": 856
+            },
+            ".grade-chart-empty": {
+              "selector": ".grade-chart-empty",
+              "id": "",
+              "className": "grade-chart-empty",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerModal .queue-modal-card": {
+              "selector": "#newsReviewViewerModal .queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card content",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -1873,7 +1977,7 @@
         {
           "link": {
             "text": "Performance",
-            "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/parent-tracking",
             "pageLink": "parent-tracking"
           },
           "state": {
@@ -1893,7 +1997,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 3110
+              "height": 3260
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1905,7 +2009,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 3062
+              "height": 3212
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1917,7 +2021,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 2978
+              "height": 3128
             },
             ".panel": {
               "selector": ".panel",
@@ -1947,7 +2051,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -1983,7 +2087,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -2009,17 +2113,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "#pt_status",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #5f6d87, background color: #e3e9f0, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "label-title-only",
               "impact": "serious",
@@ -2066,7 +2159,7 @@
         {
           "link": {
             "text": "Performance data",
-            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/performance-data",
             "pageLink": "performance-data"
           },
           "state": {
@@ -2086,7 +2179,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1813
+              "height": 1881
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2098,7 +2191,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1765
+              "height": 1833
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2110,7 +2203,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 1681
+              "height": 1749
             },
             ".panel": {
               "selector": ".panel",
@@ -2140,7 +2233,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -2176,7 +2269,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -2201,58 +2294,12 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqh1cx7u-33a7a38f\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqeqw6np-e309f1ff\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe66vv5-b42c67aa\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe65ufe-9bdd9d9e\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
             "text": "RC engagement",
-            "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/performance-engagement",
             "pageLink": "performance-engagement"
           },
           "state": {
@@ -2284,7 +2331,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 687
+              "height": 712
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2296,7 +2343,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 603
+              "height": 628
             },
             ".panel": {
               "selector": ".panel",
@@ -2326,7 +2373,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -2362,7 +2409,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -2415,7 +2462,7 @@
         {
           "link": {
             "text": "News Reports",
-            "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/news-reports",
             "pageLink": "news-reports"
           },
           "state": {
@@ -2435,7 +2482,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 9752
+              "height": 8094
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2447,7 +2494,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 9704
+              "height": 8046
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2459,7 +2506,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 9620
+              "height": 7962
             },
             ".panel": {
               "selector": ".panel",
@@ -2489,7 +2536,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -2525,7 +2572,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -2578,7 +2625,7 @@
         {
           "link": {
             "text": "All Reports",
-            "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/reports",
             "pageLink": "reports"
           },
           "state": {
@@ -2598,7 +2645,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1587
+              "height": 1612
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2610,7 +2657,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1539
+              "height": 1564
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2622,7 +2669,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 1455
+              "height": 1480
             },
             ".panel": {
               "selector": ".panel",
@@ -2652,7 +2699,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -2688,7 +2735,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -2714,29 +2761,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(4) > td:nth-child(4) > .panelbg-fly.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.05 (foreground color: #90d3ad, background color: #b5d570, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(6) > td:nth-child(4) > .panelbg-fly.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.05 (foreground color: #90d3ad, background color: #b5d570, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.31 (foreground color: #744300, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -2764,7 +2788,7 @@
         {
           "link": {
             "text": "Family Lookup",
-            "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/family",
             "pageLink": "family"
           },
           "state": {
@@ -2796,7 +2820,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1028
+              "height": 1010
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2808,7 +2832,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 944
+              "height": 926
             },
             ".panel": {
               "selector": ".panel",
@@ -2838,7 +2862,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -2874,7 +2898,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -2900,29 +2924,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(4) > td:nth-child(4) > .panelbg-fly.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.05 (foreground color: #90d3ad, background color: #b5d570, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(6) > td:nth-child(4) > .panelbg-fly.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.05 (foreground color: #90d3ad, background color: #b5d570, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.31 (foreground color: #744300, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "page-has-heading-one",
               "impact": "moderate",
@@ -2950,14 +2951,14 @@
         {
           "link": {
             "text": "Enrollment",
-            "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/enrollment",
             "pageLink": "enrollment"
           },
           "state": {
             "bodyClass": "admin-portal-page page student-enrollment-page",
             "title": "The Eagles Club Student Enrollment",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navigation EL Shared admin navigation k"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navigation TE Shared admin navigation k"
           },
           "surfaces": {
             "body": {
@@ -2970,7 +2971,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "flex",
               "width": 1440,
-              "height": 17858
+              "height": 17067
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2982,7 +2983,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 17810
+              "height": 17019
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2994,7 +2995,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1250,
-              "height": 17610
+              "height": 16843
             },
             ".panel": {
               "selector": ".panel",
@@ -3027,19 +3028,19 @@
               "nodes": [
                 {
                   "target": "tr:nth-child(1) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row:nth-child(1) > .level-chip.level-chip-standard:nth-child(2)",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 },
                 {
                   "target": "tr:nth-child(1) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row--compact.status-chip-row > .level-chip.level-chip-standard",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 },
                 {
                   "target": "tr:nth-child(2) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row--compact.status-chip-row > .level-chip.level-chip-standard",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 },
                 {
                   "target": "tr:nth-child(3) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row--compact.status-chip-row > .level-chip.level-chip-standard",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 }
               ]
             },
@@ -3070,7 +3071,7 @@
         {
           "link": {
             "text": "Student Admin",
-            "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/student-admin",
             "pageLink": "student-admin"
           },
           "state": {
@@ -3090,7 +3091,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1541
+              "height": 1546
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3102,7 +3103,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1493
+              "height": 1498
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3114,7 +3115,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 1409
+              "height": 1414
             },
             ".panel": {
               "selector": ".panel",
@@ -3144,7 +3145,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -3180,7 +3181,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -3206,29 +3207,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "tr:nth-child(1) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(2) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.31 (foreground color: #744300, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(4) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "#studentRows > tr:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.31 (foreground color: #744300, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "label",
               "impact": "critical",
@@ -3278,7 +3256,7 @@
         {
           "link": {
             "text": "School Setup",
-            "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/school-setup",
             "pageLink": "school-setup"
           },
           "state": {
@@ -3298,7 +3276,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 2488
+              "height": 2559
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3310,7 +3288,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 2440
+              "height": 2511
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3322,7 +3300,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 2356
+              "height": 2427
             },
             ".panel": {
               "selector": ".panel",
@@ -3352,7 +3330,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -3388,7 +3366,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -3414,17 +3392,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "#schoolSetupStatus",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.26 (foreground color: #5f6d87, background color: #e3e9f0, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "heading-order",
               "impact": "moderate",
@@ -3463,7 +3430,7 @@
         {
           "link": {
             "text": "Users",
-            "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/users",
             "pageLink": "users"
           },
           "state": {
@@ -3495,7 +3462,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1008
+              "height": 1036
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3507,7 +3474,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 924
+              "height": 952
             },
             ".panel": {
               "selector": ".panel",
@@ -3537,7 +3504,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -3573,7 +3540,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -3626,7 +3593,7 @@
         {
           "link": {
             "text": "Permissions",
-            "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/permissions",
             "pageLink": "permissions"
           },
           "state": {
@@ -3646,7 +3613,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1656
+              "height": 1789
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3658,7 +3625,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1608
+              "height": 1741
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3670,7 +3637,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 1524
+              "height": 1657
             },
             ".panel": {
               "selector": ".panel",
@@ -3700,7 +3667,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -3736,7 +3703,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -3789,7 +3756,7 @@
         {
           "link": {
             "text": "Settings",
-            "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/settings",
             "pageLink": "settings"
           },
           "state": {
@@ -3809,7 +3776,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1952
+              "height": 2156
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3821,7 +3788,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1904
+              "height": 2108
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3833,7 +3800,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 1820
+              "height": 2024
             },
             ".panel": {
               "selector": ".panel",
@@ -3863,7 +3830,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -3899,7 +3866,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -4009,7 +3976,7 @@
         {
           "link": {
             "text": "Open performance data",
-            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/performance-data",
             "pageLink": "performance-data"
           },
           "state": {
@@ -4029,7 +3996,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1813
+              "height": 1881
             },
             ".wrap": {
               "selector": ".wrap",
@@ -4041,7 +4008,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1440,
-              "height": 1765
+              "height": 1833
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -4053,7 +4020,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1408,
-              "height": 1681
+              "height": 1749
             },
             ".panel": {
               "selector": ".panel",
@@ -4083,7 +4050,7 @@
               "selector": ".queue-modal-card",
               "id": "",
               "className": "queue-modal-card",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(95, 115, 145)",
@@ -4119,7 +4086,7 @@
               "selector": "#newsReviewViewerModal .queue-modal-card",
               "id": "",
               "className": "queue-modal-card content",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
@@ -4144,53 +4111,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqh1cx7u-33a7a38f\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqeqw6np-e309f1ff\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe66vv5-b42c67aa\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe65ufe-9bdd9d9e\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -4287,7 +4208,7 @@
         "bodyClass": "student-points-page",
         "title": "Student Points Management",
         "htmlTheme": "light",
-        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-252025"
+        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-262025"
       },
       "pointsSurfaces": {
         "body": {
@@ -4306,7 +4227,7 @@
           "selector": "#loginPanel",
           "id": "loginPanel",
           "className": "card portal-theme-card hidden",
-          "bg": "rgb(255, 255, 255)",
+          "bg": "rgb(251, 255, 255)",
           "bgImage": "none",
           "color": "rgb(0, 0, 0)",
           "border": "rgb(115, 136, 163)",
@@ -4331,7 +4252,7 @@
           "selector": ".panel",
           "id": "",
           "className": "chart-wrap panel",
-          "bg": "rgb(255, 255, 255)",
+          "bg": "rgb(251, 255, 255)",
           "bgImage": "none",
           "color": "rgb(0, 0, 0)",
           "border": "rgb(115, 136, 163)",
@@ -4343,7 +4264,7 @@
           "selector": ".card",
           "id": "",
           "className": "card portal-theme-card",
-          "bg": "rgb(255, 255, 255)",
+          "bg": "rgb(251, 255, 255)",
           "bgImage": "none",
           "color": "rgb(0, 0, 0)",
           "border": "rgb(115, 136, 163)",
@@ -4392,7 +4313,7 @@
         "bodyClass": "admin-portal-page page grades-tabulator-page",
         "title": "The Eagles Club SIS Grades Table",
         "htmlTheme": "light",
-        "bodyText": "0937‑667‑818 eagles.edu.vn SIS THE EAGLES CLUB Hide Menu Self-Heal Runtime Dark Global Text A- A+ Reset 100% Week Quarter QTD SYTD Archive Custom School year Current school year Quarter Q1 Q2 Q3 Q4 Class level All class "
+        "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
       },
       "gradesSurfaces": {
         "body": {
@@ -4405,7 +4326,7 @@
           "border": "rgb(0, 0, 0)",
           "display": "block",
           "width": 1440,
-          "height": 1634
+          "height": 1667
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -4421,17 +4342,6 @@
             {
               "target": "#gradeGrid",
               "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: div[tabindex]"
-            }
-          ]
-        },
-        {
-          "id": "page-has-heading-one",
-          "impact": "moderate",
-          "help": "Page should contain a level-one heading",
-          "nodes": [
-            {
-              "target": "html",
-              "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
             }
           ]
         },
@@ -4522,7 +4432,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1616
+              "height": 1639
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4567,7 +4477,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -4603,7 +4513,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -4648,7 +4558,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 3096
+              "height": 3080
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4693,7 +4603,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -4729,7 +4639,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -4778,7 +4688,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1592
+              "height": 1570
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4823,7 +4733,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -4859,7 +4769,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -4908,7 +4818,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1592
+              "height": 1570
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4953,7 +4863,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -4989,7 +4899,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5038,7 +4948,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1592
+              "height": 1570
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5083,7 +4993,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5119,7 +5029,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5168,7 +5078,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1592
+              "height": 1570
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5213,7 +5123,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5249,7 +5159,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5298,7 +5208,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1136
+              "height": 1114
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5343,7 +5253,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5379,7 +5289,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5412,7 +5322,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1118
+              "height": 1100
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5457,7 +5367,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5493,7 +5403,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5514,7 +5424,7 @@
               "selector": "#newsWeekSetModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5615,7 +5525,7 @@
               "selector": "#newsComplianceModal .portal-modal-dialog",
               "id": "",
               "className": "portal-modal-dialog",
-              "bg": "rgb(255, 255, 255)",
+              "bg": "rgb(251, 255, 255)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgb(202, 215, 234)",
@@ -5846,56 +5756,56 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 335
+          "y": 341
         },
         {
           "selector": "#newsQueueCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 335
+          "y": 341
         },
         {
           "selector": "#currentHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 550
+          "y": 563
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 550
+          "y": 563
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 757
+          "y": 770
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 757
+          "y": 770
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 868
+          "y": 890
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 980
+          "y": 1009
         }
       ],
       "frameProfile": {
@@ -5904,7 +5814,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1313,
+          "h": 1330,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -5914,9 +5824,9 @@
         "topbar": null,
         "grid": {
           "x": 31,
-          "y": 189,
+          "y": 177,
           "w": 1378,
-          "h": 1000,
+          "h": 1029,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",
@@ -6139,112 +6049,117 @@
       "links": [
         {
           "text": "DASHBOARD",
-          "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin",
           "pageLink": "overview"
         },
         {
           "text": "QUEUE HUB",
-          "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/queue-hub",
           "pageLink": "queue-hub"
         },
         {
           "text": "STUDENTS",
-          "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/profile",
           "pageLink": "profile"
         },
         {
           "text": "Attendance",
-          "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/attendance",
           "pageLink": "attendance"
         },
         {
           "text": "Attendance data",
-          "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/attendance-admin",
           "pageLink": "attendance-admin"
         },
         {
           "text": "Assignments",
-          "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/assignments",
           "pageLink": "assignments"
         },
         {
           "text": "Assignments data",
-          "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/assignments-data",
           "pageLink": "assignments-data"
         },
         {
           "text": "Grades",
-          "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/grades",
           "pageLink": "grades"
         },
         {
           "text": "Grades data",
-          "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/grades-data",
+          "pageLink": "grades-data"
+        },
+        {
+          "text": "Grade table",
+          "href": "/admin/grades-data",
           "pageLink": "grades-data"
         },
         {
           "text": "Performance",
-          "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/parent-tracking",
           "pageLink": "parent-tracking"
         },
         {
           "text": "Performance data",
-          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/performance-data",
           "pageLink": "performance-data"
         },
         {
           "text": "RC engagement",
-          "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/performance-engagement",
           "pageLink": "performance-engagement"
         },
         {
           "text": "News Reports",
-          "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/news-reports",
           "pageLink": "news-reports"
         },
         {
           "text": "All Reports",
-          "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/reports",
           "pageLink": "reports"
         },
         {
           "text": "Family Lookup",
-          "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/family",
           "pageLink": "family"
         },
         {
           "text": "Enrollment",
-          "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/enrollment",
           "pageLink": "enrollment"
         },
         {
           "text": "Student Admin",
-          "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/student-admin",
           "pageLink": "student-admin"
         },
         {
           "text": "School Setup",
-          "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/school-setup",
           "pageLink": "school-setup"
         },
         {
           "text": "Users",
-          "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/users",
           "pageLink": "users"
         },
         {
           "text": "Permissions",
-          "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/permissions",
           "pageLink": "permissions"
         },
         {
           "text": "Settings",
-          "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/settings",
           "pageLink": "settings"
         },
         {
           "text": "Open performance data",
-          "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+          "href": "/admin/performance-data",
           "pageLink": "performance-data"
         }
       ],
@@ -6252,7 +6167,7 @@
         {
           "link": {
             "text": "DASHBOARD",
-            "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin",
             "pageLink": "overview"
           },
           "state": {
@@ -6272,7 +6187,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2824
+              "height": 2823
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6284,7 +6199,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 2776
+              "height": 2775
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6296,7 +6211,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 2692
+              "height": 2691
             },
             ".panel": {
               "selector": ".panel",
@@ -6389,21 +6304,6 @@
           },
           "axe": [
             {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "td:nth-child(1) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.23 (foreground color: #6a4a00, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "td:nth-child(1) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -6445,7 +6345,7 @@
         {
           "link": {
             "text": "QUEUE HUB",
-            "href": "/admin/queue-hub?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/queue-hub",
             "pageLink": "queue-hub"
           },
           "state": {
@@ -6465,7 +6365,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 3333
+              "height": 3332
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6477,7 +6377,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 3285
+              "height": 3284
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6489,7 +6389,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 3201
+              "height": 3200
             },
             ".panel": {
               "selector": ".panel",
@@ -6608,7 +6508,7 @@
         {
           "link": {
             "text": "STUDENTS",
-            "href": "/admin/profile?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/profile",
             "pageLink": "profile"
           },
           "state": {
@@ -6628,7 +6528,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 3459
+              "height": 3286
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6640,7 +6540,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 3411
+              "height": 3238
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6652,7 +6552,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 3327
+              "height": 3154
             },
             ".panel": {
               "selector": ".panel",
@@ -6745,29 +6645,6 @@
           },
           "axe": [
             {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.23 (foreground color: #6a4a00, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "#profileTabStatus",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #5f6d87, background color: #2d2d2d, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -6794,7 +6671,7 @@
         {
           "link": {
             "text": "Attendance",
-            "href": "/admin/attendance?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/attendance",
             "pageLink": "attendance"
           },
           "state": {
@@ -6826,7 +6703,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 678
+              "height": 716
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6838,7 +6715,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 594
+              "height": 632
             },
             ".panel": {
               "selector": ".panel",
@@ -6957,8 +6834,171 @@
         {
           "link": {
             "text": "Attendance data",
-            "href": "/admin/attendance-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/attendance-admin",
             "pageLink": "attendance-admin"
+          },
+          "state": {
+            "bodyClass": "admin-portal-page page",
+            "title": "The Eagles Club Student Information System",
+            "htmlTheme": "dark",
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. Navigat"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "",
+              "className": "admin-portal-page page",
+              "bg": "rgb(0, 0, 0)",
+              "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "block",
+              "width": 1440,
+              "height": 1105
+            },
+            ".wrap": {
+              "selector": ".wrap",
+              "id": "",
+              "className": "wrap",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1440,
+              "height": 1057
+            },
+            ".app-shell": {
+              "selector": ".app-shell",
+              "id": "",
+              "className": "app-shell",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1408,
+              "height": 973
+            },
+            ".panel": {
+              "selector": ".panel",
+              "id": "authBootPanel",
+              "className": "panel hidden",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "linear-gradient(rgba(83, 91, 100, 0.94), rgba(55, 63, 72, 0.96)), linear-gradient(rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 48%)",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "none",
+              "width": 0,
+              "height": 0
+            },
+            ".card": {
+              "selector": ".card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".queue-modal-card": {
+              "selector": ".queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-shell": {
+              "selector": ".grade-chart-shell",
+              "id": "gradeChartShell",
+              "className": "grade-chart-shell panel",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-empty": {
+              "selector": ".grade-chart-empty",
+              "id": "",
+              "className": "grade-chart-empty",
+              "bg": "rgb(82, 82, 82)",
+              "bgImage": "none",
+              "color": "rgb(229, 245, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerModal .queue-modal-card": {
+              "selector": "#newsReviewViewerModal .queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card content",
+              "bg": "rgb(45, 45, 45)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerBody .news-review-viewer-block": null,
+            "#newsReviewViewerNote": {
+              "selector": "#newsReviewViewerNote",
+              "id": "newsReviewViewerNote",
+              "className": "card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".news-review-note-line.pending": null,
+            ".news-review-note-line.fixed": null,
+            "#reloadBtn": null
+          },
+          "axe": [
+            {
+              "id": "page-has-heading-one",
+              "impact": "moderate",
+              "help": "Page should contain a level-one heading",
+              "nodes": [
+                {
+                  "target": "html",
+                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
+                }
+              ]
+            },
+            {
+              "id": "region",
+              "impact": "moderate",
+              "help": "All page content should be contained by landmarks",
+              "nodes": [
+                {
+                  "target": ".header-bar",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "link": {
+            "text": "Assignments",
+            "href": "/admin/assignments",
+            "pageLink": "assignments"
           },
           "state": {
             "bodyClass": "admin-portal-page page",
@@ -7119,182 +7159,8 @@
         },
         {
           "link": {
-            "text": "Assignments",
-            "href": "/admin/assignments?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
-            "pageLink": "assignments"
-          },
-          "state": {
-            "bodyClass": "admin-portal-page page",
-            "title": "The Eagles Club Student Information System",
-            "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. Navigat"
-          },
-          "surfaces": {
-            "body": {
-              "selector": "body",
-              "id": "",
-              "className": "admin-portal-page page",
-              "bg": "rgb(0, 0, 0)",
-              "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "block",
-              "width": 1440,
-              "height": 1100
-            },
-            ".wrap": {
-              "selector": ".wrap",
-              "id": "",
-              "className": "wrap",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "grid",
-              "width": 1440,
-              "height": 1031
-            },
-            ".app-shell": {
-              "selector": ".app-shell",
-              "id": "",
-              "className": "app-shell",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "grid",
-              "width": 1408,
-              "height": 947
-            },
-            ".panel": {
-              "selector": ".panel",
-              "id": "authBootPanel",
-              "className": "panel hidden",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "linear-gradient(rgba(83, 91, 100, 0.94), rgba(55, 63, 72, 0.96)), linear-gradient(rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 48%)",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "none",
-              "width": 0,
-              "height": 0
-            },
-            ".card": {
-              "selector": ".card",
-              "id": "",
-              "className": "stat-card stat-card--student card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".queue-modal-card": {
-              "selector": ".queue-modal-card",
-              "id": "",
-              "className": "queue-modal-card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.36)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            ".grade-chart-shell": {
-              "selector": ".grade-chart-shell",
-              "id": "gradeChartShell",
-              "className": "grade-chart-shell panel",
-              "bg": "rgb(59, 60, 62)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".grade-chart-empty": {
-              "selector": ".grade-chart-empty",
-              "id": "",
-              "className": "grade-chart-empty",
-              "bg": "rgb(82, 82, 82)",
-              "bgImage": "none",
-              "color": "rgb(229, 245, 255)",
-              "border": "rgba(255, 255, 255, 0.36)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            "#newsReviewViewerModal .queue-modal-card": {
-              "selector": "#newsReviewViewerModal .queue-modal-card",
-              "id": "",
-              "className": "queue-modal-card content",
-              "bg": "rgb(45, 45, 45)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.36)",
-              "display": "grid",
-              "width": 0,
-              "height": 0
-            },
-            "#newsReviewViewerBody .news-review-viewer-block": null,
-            "#newsReviewViewerNote": {
-              "selector": "#newsReviewViewerNote",
-              "id": "newsReviewViewerNote",
-              "className": "card",
-              "bg": "rgb(76, 76, 76)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
-              "width": 0,
-              "height": 0
-            },
-            ".news-review-note-line.pending": null,
-            ".news-review-note-line.fixed": null,
-            "#reloadBtn": null
-          },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "#assignmentStatus",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.11 (foreground color: #5f6d87, background color: #3b3c3e, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "link": {
             "text": "Assignments data",
-            "href": "/admin/assignments-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/assignments-data",
             "pageLink": "assignments-data"
           },
           "state": {
@@ -7326,7 +7192,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 748
+              "height": 771
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7338,7 +7204,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 664
+              "height": 687
             },
             ".panel": {
               "selector": ".panel",
@@ -7472,7 +7338,7 @@
         {
           "link": {
             "text": "Grades",
-            "href": "/admin/grades?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/grades",
             "pageLink": "grades"
           },
           "state": {
@@ -7504,7 +7370,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 633
+              "height": 639
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7516,7 +7382,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 549
+              "height": 555
             },
             ".panel": {
               "selector": ".panel",
@@ -7635,7 +7501,7 @@
         {
           "link": {
             "text": "Grades data",
-            "href": "/admin/grades-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/grades-data",
             "pageLink": "grades-data"
           },
           "state": {
@@ -7655,7 +7521,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1303
+              "height": 2324
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7667,7 +7533,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1255
+              "height": 2276
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7679,7 +7545,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 1171
+              "height": 2192
             },
             ".panel": {
               "selector": ".panel",
@@ -7727,7 +7593,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1378,
-              "height": 497
+              "height": 856
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7738,8 +7604,171 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 671,
-              "height": 19
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerModal .queue-modal-card": {
+              "selector": "#newsReviewViewerModal .queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card content",
+              "bg": "rgb(45, 45, 45)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsReviewViewerBody .news-review-viewer-block": null,
+            "#newsReviewViewerNote": {
+              "selector": "#newsReviewViewerNote",
+              "id": "newsReviewViewerNote",
+              "className": "card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".news-review-note-line.pending": null,
+            ".news-review-note-line.fixed": null,
+            "#reloadBtn": null
+          },
+          "axe": [
+            {
+              "id": "page-has-heading-one",
+              "impact": "moderate",
+              "help": "Page should contain a level-one heading",
+              "nodes": [
+                {
+                  "target": "html",
+                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
+                }
+              ]
+            },
+            {
+              "id": "region",
+              "impact": "moderate",
+              "help": "All page content should be contained by landmarks",
+              "nodes": [
+                {
+                  "target": ".header-bar",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "link": {
+            "text": "Grade table",
+            "href": "/admin/grades-data",
+            "pageLink": "grades-data"
+          },
+          "state": {
+            "bodyClass": "admin-portal-page page",
+            "title": "The Eagles Club Student Information System",
+            "htmlTheme": "dark",
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. Navigat"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "",
+              "className": "admin-portal-page page",
+              "bg": "rgb(0, 0, 0)",
+              "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "block",
+              "width": 1440,
+              "height": 2324
+            },
+            ".wrap": {
+              "selector": ".wrap",
+              "id": "",
+              "className": "wrap",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1440,
+              "height": 2276
+            },
+            ".app-shell": {
+              "selector": ".app-shell",
+              "id": "",
+              "className": "app-shell",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "grid",
+              "width": 1408,
+              "height": 2192
+            },
+            ".panel": {
+              "selector": ".panel",
+              "id": "authBootPanel",
+              "className": "panel hidden",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "linear-gradient(rgba(83, 91, 100, 0.94), rgba(55, 63, 72, 0.96)), linear-gradient(rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 48%)",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "none",
+              "width": 0,
+              "height": 0
+            },
+            ".card": {
+              "selector": ".card",
+              "id": "",
+              "className": "stat-card stat-card--student card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            ".queue-modal-card": {
+              "selector": ".queue-modal-card",
+              "id": "",
+              "className": "queue-modal-card",
+              "bg": "rgb(76, 76, 76)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".grade-chart-shell": {
+              "selector": ".grade-chart-shell",
+              "id": "gradeChartShell",
+              "className": "grade-chart-shell panel",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "block",
+              "width": 1378,
+              "height": 856
+            },
+            ".grade-chart-empty": {
+              "selector": ".grade-chart-empty",
+              "id": "",
+              "className": "grade-chart-empty",
+              "bg": "rgb(82, 82, 82)",
+              "bgImage": "none",
+              "color": "rgb(229, 245, 255)",
+              "border": "rgba(255, 255, 255, 0.36)",
+              "display": "block",
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -7798,7 +7827,7 @@
         {
           "link": {
             "text": "Performance",
-            "href": "/admin/parent-tracking?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/parent-tracking",
             "pageLink": "parent-tracking"
           },
           "state": {
@@ -7818,7 +7847,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 3110
+              "height": 3260
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7830,7 +7859,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 3062
+              "height": 3212
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7842,7 +7871,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 2978
+              "height": 3128
             },
             ".panel": {
               "selector": ".panel",
@@ -7934,17 +7963,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "#pt_status",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.11 (foreground color: #5f6d87, background color: #3b3c3e, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "label-title-only",
               "impact": "serious",
@@ -7991,7 +8009,7 @@
         {
           "link": {
             "text": "Performance data",
-            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/performance-data",
             "pageLink": "performance-data"
           },
           "state": {
@@ -8011,7 +8029,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1813
+              "height": 1881
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8023,7 +8041,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1765
+              "height": 1833
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8035,7 +8053,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 1681
+              "height": 1749
             },
             ".panel": {
               "selector": ".panel",
@@ -8126,58 +8144,12 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqh1cx7u-33a7a38f\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqeqw6np-e309f1ff\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe66vv5-b42c67aa\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe65ufe-9bdd9d9e\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
             "text": "RC engagement",
-            "href": "/admin/performance-engagement?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/performance-engagement",
             "pageLink": "performance-engagement"
           },
           "state": {
@@ -8209,7 +8181,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 687
+              "height": 712
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8221,7 +8193,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 603
+              "height": 628
             },
             ".panel": {
               "selector": ".panel",
@@ -8340,7 +8312,7 @@
         {
           "link": {
             "text": "News Reports",
-            "href": "/admin/news-reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/news-reports",
             "pageLink": "news-reports"
           },
           "state": {
@@ -8360,7 +8332,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 9752
+              "height": 8094
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8372,7 +8344,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 9704
+              "height": 8046
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8384,7 +8356,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 9620
+              "height": 7962
             },
             ".panel": {
               "selector": ".panel",
@@ -8503,7 +8475,7 @@
         {
           "link": {
             "text": "All Reports",
-            "href": "/admin/reports?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/reports",
             "pageLink": "reports"
           },
           "state": {
@@ -8523,7 +8495,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1587
+              "height": 1612
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8535,7 +8507,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1539
+              "height": 1564
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8547,7 +8519,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 1455
+              "height": 1480
             },
             ".panel": {
               "selector": ".panel",
@@ -8640,25 +8612,6 @@
           },
           "axe": [
             {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.23 (foreground color: #6a4a00, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -8685,7 +8638,7 @@
         {
           "link": {
             "text": "Family Lookup",
-            "href": "/admin/family?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/family",
             "pageLink": "family"
           },
           "state": {
@@ -8717,7 +8670,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1028
+              "height": 1010
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8729,7 +8682,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 944
+              "height": 926
             },
             ".panel": {
               "selector": ".panel",
@@ -8822,25 +8775,6 @@
           },
           "axe": [
             {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.23 (foreground color: #6a4a00, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -8867,14 +8801,14 @@
         {
           "link": {
             "text": "Enrollment",
-            "href": "/admin/enrollment?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/enrollment",
             "pageLink": "enrollment"
           },
           "state": {
             "bodyClass": "admin-portal-page page student-enrollment-page",
             "title": "The Eagles Club Student Enrollment",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navigation EL Shared admin navigation k"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Admin session required Enrollment uses the current admin session. Sign in through the main admin page, then return here. Open Admin Login Back to Profile Navigation TE Shared admin navigation k"
           },
           "surfaces": {
             "body": {
@@ -8887,7 +8821,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "flex",
               "width": 1440,
-              "height": 17858
+              "height": 17067
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8899,7 +8833,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 17810
+              "height": 17019
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8911,7 +8845,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1250,
-              "height": 17610
+              "height": 16843
             },
             ".panel": {
               "selector": ".panel",
@@ -8944,19 +8878,19 @@
               "nodes": [
                 {
                   "target": "tr:nth-child(1) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row:nth-child(1) > .level-chip.level-chip-standard:nth-child(2)",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 },
                 {
                   "target": "tr:nth-child(1) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row--compact.status-chip-row > .level-chip.level-chip-standard",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 },
                 {
                   "target": "tr:nth-child(2) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row--compact.status-chip-row > .level-chip.level-chip-standard",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 },
                 {
                   "target": "tr:nth-child(3) > td[data-label=\"Current status\"] > .status-cell-stack > .status-chip-row--compact.status-chip-row > .level-chip.level-chip-standard",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.43 (foreground color: #f5f8ff, background color: #2d78b4, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
                 }
               ]
             },
@@ -8987,7 +8921,7 @@
         {
           "link": {
             "text": "Student Admin",
-            "href": "/admin/student-admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/student-admin",
             "pageLink": "student-admin"
           },
           "state": {
@@ -9007,7 +8941,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1541
+              "height": 1546
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9019,7 +8953,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1493
+              "height": 1498
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9031,7 +8965,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 1409
+              "height": 1414
             },
             ".panel": {
               "selector": ".panel",
@@ -9123,29 +9057,6 @@
             "#reloadBtn": null
           },
           "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "tr:nth-child(1) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(2) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.23 (foreground color: #6a4a00, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(4) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.67 (foreground color: #f5f8ff, background color: #038e9f, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "#studentRows > tr:nth-child(7) > td:nth-child(4) > .panelbg-starters.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.23 (foreground color: #6a4a00, background color: #fcab15, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
             {
               "id": "label",
               "impact": "critical",
@@ -9195,7 +9106,7 @@
         {
           "link": {
             "text": "School Setup",
-            "href": "/admin/school-setup?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/school-setup",
             "pageLink": "school-setup"
           },
           "state": {
@@ -9215,7 +9126,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 2488
+              "height": 2559
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9227,7 +9138,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 2440
+              "height": 2511
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9239,7 +9150,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 2356
+              "height": 2427
             },
             ".panel": {
               "selector": ".panel",
@@ -9332,17 +9243,6 @@
           },
           "axe": [
             {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "#schoolSetupStatus",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.11 (foreground color: #5f6d87, background color: #3b3c3e, font size: 9.8pt (13px), font weight: normal). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
               "id": "heading-order",
               "impact": "moderate",
               "help": "Heading levels should only increase by one",
@@ -9380,7 +9280,7 @@
         {
           "link": {
             "text": "Users",
-            "href": "/admin/users?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/users",
             "pageLink": "users"
           },
           "state": {
@@ -9412,7 +9312,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1008
+              "height": 1036
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9424,7 +9324,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 924
+              "height": 952
             },
             ".panel": {
               "selector": ".panel",
@@ -9543,7 +9443,7 @@
         {
           "link": {
             "text": "Permissions",
-            "href": "/admin/permissions?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/permissions",
             "pageLink": "permissions"
           },
           "state": {
@@ -9563,7 +9463,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1656
+              "height": 1789
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9575,7 +9475,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1608
+              "height": 1741
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9587,7 +9487,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 1524
+              "height": 1657
             },
             ".panel": {
               "selector": ".panel",
@@ -9706,7 +9606,7 @@
         {
           "link": {
             "text": "Settings",
-            "href": "/admin/settings?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/settings",
             "pageLink": "settings"
           },
           "state": {
@@ -9726,7 +9626,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1952
+              "height": 2156
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9738,7 +9638,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1904
+              "height": 2108
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9750,7 +9650,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 1820
+              "height": 2024
             },
             ".panel": {
               "selector": ".panel",
@@ -9926,7 +9826,7 @@
         {
           "link": {
             "text": "Open performance data",
-            "href": "/admin/performance-data?apiOrigin=http%3A%2F%2F127.0.0.1%3A36911",
+            "href": "/admin/performance-data",
             "pageLink": "performance-data"
           },
           "state": {
@@ -9946,7 +9846,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1813
+              "height": 1881
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9958,7 +9858,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1440,
-              "height": 1765
+              "height": 1833
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9970,7 +9870,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1408,
-              "height": 1681
+              "height": 1749
             },
             ".panel": {
               "selector": ".panel",
@@ -10061,53 +9961,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "label",
-              "impact": "critical",
-              "help": "Form elements must have labels",
-              "nodes": [
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqh1cx7u-33a7a38f\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqeqw6np-e309f1ff\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe66vv5-b42c67aa\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                },
-                {
-                  "target": "input[data-performance-queue-select=\"notify-mqe65ufe-9bdd9d9e\"]",
-                  "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -10204,7 +10058,7 @@
         "bodyClass": "student-points-page",
         "title": "Student Points Management",
         "htmlTheme": "dark",
-        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-252025"
+        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-262025"
       },
       "pointsSurfaces": {
         "body": {
@@ -10309,7 +10163,7 @@
         "bodyClass": "admin-portal-page page grades-tabulator-page",
         "title": "The Eagles Club SIS Grades Table",
         "htmlTheme": "dark",
-        "bodyText": "0937‑667‑818 eagles.edu.vn SIS THE EAGLES CLUB Hide Menu Self-Heal Runtime Light Global Text A- A+ Reset 100% Week Quarter QTD SYTD Archive Custom School year Current school year Quarter Q1 Q2 Q3 Q4 Class level All class"
+        "bodyText": "Navigation DASHBOARD QUEUE HUB STUDENTS TRACKING Attendance Attendance data Assignments Assignments data Grades Grades data Grade table Performance Performance data RC engagement News Reports All Reports SUPPORT Family L"
       },
       "gradesSurfaces": {
         "body": {
@@ -10322,7 +10176,7 @@
           "border": "rgb(251, 255, 255)",
           "display": "block",
           "width": 1440,
-          "height": 1634
+          "height": 1667
         },
         "#reloadBtn": null,
         "#gradesTable": null,
@@ -10338,17 +10192,6 @@
             {
               "target": "#gradeGrid",
               "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: div[tabindex]"
-            }
-          ]
-        },
-        {
-          "id": "page-has-heading-one",
-          "impact": "moderate",
-          "help": "Page should contain a level-one heading",
-          "nodes": [
-            {
-              "target": "html",
-              "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
             }
           ]
         },
@@ -10439,7 +10282,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1616
+              "height": 1639
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10565,7 +10408,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 3096
+              "height": 3080
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10695,7 +10538,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1594
+              "height": 1572
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10825,7 +10668,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1594
+              "height": 1572
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -10955,7 +10798,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1594
+              "height": 1572
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11085,7 +10928,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1594
+              "height": 1572
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11215,7 +11058,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1138
+              "height": 1116
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11329,7 +11172,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1120
+              "height": 1100
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11763,56 +11606,56 @@
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 390
+          "y": 394
         },
         {
           "selector": "#newsQueueCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 390
+          "y": 394
         },
         {
           "selector": "#currentHomeworkCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 684
+          "y": 695
         },
         {
           "selector": "#attendanceCalendarCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 684
+          "y": 695
         },
         {
           "selector": "#performanceReportsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 993
+          "y": 1012
         },
         {
           "selector": "#gradesYtdCard",
           "lane": "right",
           "width": 684,
           "x": 694,
-          "y": 993
+          "y": 1012
         },
         {
           "selector": "#recommendationsCard",
           "lane": "left",
           "width": 684,
           "x": 0,
-          "y": 1123
+          "y": 1150
         },
         {
           "selector": "#portalStatus",
           "lane": "full",
           "width": 1378,
           "x": 0,
-          "y": 1234
+          "y": 1270
         }
       ],
       "frameProfile": {
@@ -11821,7 +11664,7 @@
           "x": 0,
           "y": 24,
           "w": 1440,
-          "h": 1568,
+          "h": 1591,
           "margin": "0px",
           "pt": "16px",
           "pr": "16px",
@@ -11831,9 +11674,9 @@
         "topbar": null,
         "grid": {
           "x": 31,
-          "y": 189,
+          "y": 177,
           "w": 1378,
-          "h": 1254,
+          "h": 1290,
           "margin": "0px",
           "pt": "0px",
           "pr": "0px",

@@ -174,12 +174,29 @@ test("repo app pages do not define raw theme colors in inline style or script bl
         /body\.admin-portal-page\.page\s*\{[\s\S]*?background-attachment:\s*fixed;\s*\}/gs,
       ],
     ],
+    [
+      path.resolve(rootDir, "web-asset/admin/grades-tabulator.html"),
+      [
+        /body\.admin-portal-page \.period-btn\.is-active,\s*body\.admin-portal-page \.period-btn\[aria-pressed="true"\]\s*\{[\s\S]*?\}\s*/gs,
+        /body\.admin-portal-page \.period-btn\.is-active:hover,\s*body\.admin-portal-page \.period-btn\.is-active:focus-visible,\s*body\.admin-portal-page \.period-btn\[aria-pressed="true"\]:hover,\s*body\.admin-portal-page \.period-btn\[aria-pressed="true"\]:focus-visible\s*\{[\s\S]*?\}\s*/gs,
+        /body\.admin-portal-page \.period-btn\.is-active:active,\s*body\.admin-portal-page \.period-btn\[aria-pressed="true"\]:active\s*\{[\s\S]*?\}\s*/gs,
+        /html\[data-theme="dark"\] body\.admin-portal-page \.period-btn\.is-active,\s*html\[data-theme="dark"\] body\.admin-portal-page \.period-btn\[aria-pressed="true"\]\s*\{[\s\S]*?\}\s*/gs,
+        /\.distribution-mini-button\s*\{[\s\S]*?\}\s*/gs,
+        /html\[data-theme="dark"\] body\.grades-tabulator-page \.distribution-mini-button\s*\{[\s\S]*?\}\s*/gs,
+      ],
+    ],
   ])
   const scriptAllowlists = new Map([
     [
       path.resolve(rootDir, "web-asset/student/student-portal.html"),
       [
         /const palette = \[\s*"#ffd54f",\s*"#2f5be3",\s*"#39b86f",\s*"#ff7a59",\s*"#8e61ff",\s*"#1ecad3",\s*\];/s,
+      ],
+    ],
+    [
+      path.resolve(rootDir, "web-asset/admin/grades-tabulator.html"),
+      [
+        /button\.style\.background = "linear-gradient\(180deg, #007b97 0%, #00647c 100%\)"\s*button\.style\.border = "2px solid #006f94"\s*button\.style\.color = "#fbffff"\s*button\.style\.boxShadow =\s*"inset 0 0 0 1px rgba\(255, 255, 255, 0\.24\), 0 0 0 1px rgba\(6, 72, 111, 0\.28\), 0 10px 18px rgba\(8, 22, 40, 0\.14\)"/s,
       ],
     ],
   ])
@@ -378,7 +395,10 @@ test("shared portal theme owns reusable surface roles for columns, panels, cards
   assert.match(gradesTabulatorPortal, /class="distribution-dialog portal-theme-dialog"/)
   assert.match(gradesTabulatorPortal, /class="distribution-chart-shell portal-theme-soft-card"/)
   assert.match(gradesTabulatorPortal, /class="distribution-hover portal-theme-tooltip"/)
-  assert.match(gradesTabulatorPortal, /button\.className = "distribution-mini portal-button portal-button-info"/)
+  assert.match(
+    gradesTabulatorPortal,
+    /button\.className\s*=\s*"distribution-mini-button portal-button portal-button-immutable-chrome"/,
+  )
   for (const selector of [
     /\.hero,\s*\.control-card,\s*\.grid-card\s*\{[^}]*(background|border:\s*1px|box-shadow:)/,
     /\.metric-card\s*\{[^}]*(background|border:\s*1px)/,
@@ -668,10 +688,10 @@ test("shared portal theme keeps student and parent calendars readable in dark mo
     "shared theme should force amber event text to the amber brand color",
   )
   assert.ok(
-    /body\.parent-portal-page \.attendance-square\.is-good,\s*body\.parent-portal-page \.homework-square\.is-complete,\s*body\.student-portal-page \.attendance-square\.is-good,body\.student-portal-page \.homework-square\.is-complete\{--square-bg-start:color-mix\(in srgb,var\(--portal-role-card-bg\) 86%,#349f61 14%\);/s.test(
+    /body\.parent-portal-page \.attendance-square\.is-good,\s*body\.parent-portal-page \.homework-square\.is-complete,\s*body\.student-portal-page \.attendance-square\.is-good,body\.student-portal-page \.homework-square\.is-complete\{[^}]*--square-bg-start:color-mix\(in srgb,var\(--portal-role-card-bg\) 86%,#349f61 14%\);/s.test(
       sharedTheme,
     ) &&
-      /body\.parent-portal-page \.attendance-square\.is-risk,\s*body\.parent-portal-page \.homework-square\.is-arrears,\s*body\.student-portal-page \.attendance-square\.is-risk,body\.student-portal-page \.homework-square\.is-arrears\{--square-bg-start:color-mix\(in srgb,var\(--portal-role-card-bg\) 86%,#cc4452 14%\);/s.test(
+      /body\.parent-portal-page \.attendance-square\.is-risk,\s*body\.parent-portal-page \.homework-square\.is-arrears,\s*body\.student-portal-page \.attendance-square\.is-risk,body\.student-portal-page \.homework-square\.is-arrears\{[^}]*--square-bg-start:color-mix\(in srgb,var\(--portal-role-card-bg\) 86%,#cc4452 14%\);/s.test(
         sharedTheme,
       ),
     "shared theme should keep the summary state chips legible in dark mode",

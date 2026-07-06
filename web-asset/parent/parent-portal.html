@@ -362,11 +362,11 @@
           </div>
           <div class="login-actions">
             <button id="loginBtn" class="portal-button portal-button-primary" type="submit">Đăng nhập</button>
-            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset">Clear</button>
+            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset" title="Xóa nội dung đã nhập" aria-label="Xóa nội dung đã nhập">Xóa</button>
           </div>
         </form>
         <div class="login-links">
-          <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Parent%20portal%20password%20reset">Reset password</a>
+          <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Parent%20portal%20password%20reset" title="Yêu cầu đặt lại mật khẩu" aria-label="Yêu cầu đặt lại mật khẩu">Đặt lại mật khẩu</a>
           <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
         </div>
         <p id="loginStatus" class="status"></p>
@@ -498,7 +498,7 @@
               <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
                 <div class="portal-modal-head">
                   <h4 id="pastDueHomeworkModalTitle">Bài tập về nhà quá hạn</h4>
-                  <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">
+                  <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button">
                     Đóng
                   </button>
                 </div>
@@ -524,7 +524,7 @@
                     <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
                     <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt portal-button-alt-nav" aria-label="Báo cáo kế tiếp">&gt;</button>
                   </div>
-                  <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button">Đóng</button>
+                  <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng trình xem báo cáo tin tức" aria-label="Đóng trình xem báo cáo tin tức">Đóng</button>
                 </div>
                 <div class="portal-modal-body">
                   <p id="newsWeekSetModalMeta" class="hint">Mở một tuần báo cáo để xem các bài đã nộp.</p>
@@ -590,7 +590,7 @@
                   </div>
                 </div>
                 <div class="portal-modal-actions">
-                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning">Đóng</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng trình xem báo cáo tin tức" aria-label="Đóng trình xem báo cáo tin tức">Đóng</button>
                 </div>
                 <p id="newsWeekSetModalStatus" class="hint">Trình xem đã sẵn sàng.</p>
               </div>
@@ -628,7 +628,7 @@
                   <div class="report-modal-nav">
                     <button id="performanceReportPrevBtn" type="button" class="portal-button portal-button-alt">Trước</button>
                     <button id="performanceReportNextBtn" type="button" class="portal-button portal-button-alt">Tiếp</button>
-                    <button id="closePerformanceReportModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">
+                    <button id="closePerformanceReportModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button">
                       Đóng
                     </button>
                   </div>
@@ -713,7 +713,7 @@
               <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
                 <div class="portal-modal-head">
                   <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
-                  <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-immutable-chrome" type="button">
+                  <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button">
                     Đóng
                   </button>
                 </div>
@@ -747,7 +747,7 @@
         <div class="section-head">
           <h2 id="portalDetailTitle">Chi tiết học sinh</h2>
           <div class="actions">
-            <button id="portalDetailBackToMainBtn" type="button" class="portal-button portal-button-alt">Back to Main</button>
+            <button id="portalDetailBackToMainBtn" type="button" class="portal-button portal-button-alt" title="Quay lại bảng điều khiển chính" aria-label="Quay lại bảng điều khiển chính">Quay lại</button>
           </div>
         </div>
         <p id="portalDetailLead" class="detail-copy">Đang tải chi tiết học sinh...</p>
@@ -800,8 +800,8 @@
         <div class="section-head">
           <h2>Trang học sinh: Biểu mẫu cập nhật hồ sơ</h2>
           <div class="toolbar-actions">
-            <button id="backToDashboardBtn" type="button" class="portal-button portal-button-alt">Back to Main</button>
-            <button id="logoutBtnChild" type="button" class="portal-button portal-button-danger">Đăng xuất</button>
+            <button id="backToDashboardBtn" type="button" class="portal-button portal-button-alt" title="Quay lại bảng điều khiển chính" aria-label="Quay lại bảng điều khiển chính">Quay lại</button>
+            <button id="logoutBtnChild" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng phụ huynh" aria-label="Đăng xuất khỏi cổng phụ huynh">Đăng xuất</button>
           </div>
         </div>
         <p id="childPageBadge" class="hint">
@@ -822,20 +822,20 @@
         </section>
 
         <div class="draft-actions" id="draftActions">
-          <button id="saveDraftBtn" type="button" class="portal-button portal-button-affirm">Lưu nháp</button>
-          <button id="submitReviewBtn" type="button" class="portal-button portal-button-primary">
+          <button id="saveDraftBtn" type="button" class="portal-button portal-button-alt" title="Lưu bản nháp hồ sơ" aria-label="Lưu bản nháp hồ sơ">Lưu nháp</button>
+          <button id="submitReviewBtn" type="button" class="portal-button portal-button-primary" title="Gửi hồ sơ để duyệt" aria-label="Gửi hồ sơ để duyệt">
             Gửi duyệt
           </button>
         </div>
 
         <p id="childPageStatus" class="status"></p>
       </section>
-      <footer class="hub-footer" aria-label="Site footer">
+      <footer class="hub-footer" aria-label="Chân trang">
         <p class="hub-footer__copy">
           © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
         </p>
         <p class="hub-footer__action">
-          <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+          <a href="#top" id="back-top" aria-label="Về đầu trang">Về đầu trang</a>
         </p>
       </footer>
     </main>
@@ -2698,8 +2698,8 @@
       const safeLabel = escapeHtml(normalizedLabel);
       return (
         `<span class="header-action-row" role="group" aria-label="${safeLabel} column controls" data-header-label="${safeLabel}">` +
-        `<button class="header-action-btn portal-button portal-button-immutable-chrome plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
-        `<button class="header-action-btn portal-button portal-button-immutable-chrome minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
+        `<button class="header-action-btn portal-button portal-button-alt plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
+        `<button class="header-action-btn portal-button portal-button-alt minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
           `</span>`
       );
     }

@@ -172,6 +172,19 @@ function assertLightChrome(label, style) {
   )
 }
 
+function assertImmutableChromeOrAmber(label, style) {
+  assert.ok(style, `${label} should exist`)
+  if (style.backgroundColor === "rgb(243, 191, 82)") {
+    return
+  }
+  const bg = parseRgb(style.backgroundColor)
+  assert.ok(bg, `${label} should expose a computed background color`)
+  assert.ok(
+    luminance(bg) >= 220,
+    `${label} should stay in the immutable chrome palette or approved amber accent: ${style.backgroundColor}`,
+  )
+}
+
 function assertDarkSurface(label, style) {
   assert.ok(style, `${label} should exist`)
   const bg = parseRgb(style.backgroundColor)
@@ -288,7 +301,7 @@ test("dark theme surfaces do not retain light-mode backgrounds", { skip: resolve
   }
 })
 
-test("grades tabulator buttons and chips use dark-mode surfaces", { skip: resolvePlaywrightSkipReason() }, async () => {
+test("grades tabulator immutable buttons and chips keep shared chrome in dark mode", { skip: resolvePlaywrightSkipReason() }, async () => {
   const server = startStaticServer(8094)
   const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
   const page = await browser.newPage({ viewport: { width: 1440, height: 1600 } })
@@ -319,7 +332,11 @@ test("grades tabulator buttons and chips use dark-mode surfaces", { skip: resolv
         const [label, selector, expectedBackground] = check
         const style = await readStyle(page, selector)
         if (testCase.url === "/web-asset/admin/grades-tabulator.html") {
-          assertNotLight(label, style)
+          if (selector === ".grid-actions .btn.subtle") {
+            assertImmutableChromeOrAmber(label, style)
+          } else {
+            assertLightChrome(label, style)
+          }
         } else {
           assert.ok(style, `${label} should exist`)
           assert.equal(

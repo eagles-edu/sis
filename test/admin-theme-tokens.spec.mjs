@@ -126,8 +126,16 @@ test("grades-tabulator chart render uses shared portal tokens", () => {
   )
   assertIncludesAll(
     sparklineBlock,
-    ["var(--portal-status-info-border)", "var(--portal-border)"],
+    ["distribution-mini-trendline-baseline", "distribution-mini-trendline", "distribution-mini-trendpoint"],
     "grades-tabulator.html buildDistributionSparklineSvg",
+  )
+  assertIncludesAll(
+    source,
+    [
+      ".distribution-modal-chart .dist-grid {\n      stroke: var(--portal-border);",
+      ".distribution-modal-chart .dist-line {\n      fill: none;\n      stroke: var(--portal-status-info-border);",
+    ],
+    "grades-tabulator.html distribution chart token styles",
   )
   assertExcludesAll(
     sparklineBlock,
@@ -180,7 +188,6 @@ test("grades-tabulator reuses the shared admin chrome skeleton", () => {
     '<section id="gradeGridCard" class="grid-card portal-theme-card">',
     '<div class="app-brand-strip">',
     '<h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>',
-    '<button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome">',
     '<button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle"',
     '<div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">',
     '<button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning" data-text-zoom-action="reset" aria-label="Reset global text size">',
@@ -188,6 +195,12 @@ test("grades-tabulator reuses the shared admin chrome skeleton", () => {
   ]) {
     assert.ok(source.includes(token), `grades-tabulator.html should include ${token}`)
   }
+
+  assert.match(
+    source,
+    /<button\s+id="menuToggleBtn"\s+type="button"\s+class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome"[^>]*>/,
+    "grades-tabulator.html should include the shared menu toggle button",
+  )
 
   assert.match(
     source,

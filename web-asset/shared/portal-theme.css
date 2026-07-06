@@ -1711,13 +1711,20 @@ html[data-theme="dark"] body.admin-portal-page .metric-table :is(th, td) {
   border-color: var(--portal-dark-border);
 }
 body.student-portal-page .card,
-body.admin-portal-page .panel,
 body.admin-portal-page .wrap .panel,
 body.report-template-page .panel {
   background: var(--portal-surface-card);
   border-color: var(--portal-border);
   color: var(--portal-text);
   margin-top: 10px;
+  min-width: 0;
+  padding: 14px;
+}
+body.admin-portal-page .panel {
+  background: var(--portal-surface-card);
+  border-color: var(--portal-border);
+  color: var(--portal-text);
+  margin: .9rem 0 1rem 0;
   min-width: 0;
   padding: 14px;
 }
@@ -2785,9 +2792,9 @@ body.parent-portal-page table.news-queue-table .queue-row-btn {
   --portal-button-font-size: 11px;
   --portal-button-inline-padding: 8px;
   --portal-button-line-height: 1.1;
-  --portal-button-min-block: 28px;
+  --portal-button-min-block: 36px;
   box-sizing: border-box;
-  min-height: 28px;
+  min-height: 36px;
   white-space: nowrap;
 }
 body.student-portal-page .homework-link,
