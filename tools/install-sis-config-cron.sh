@@ -5,6 +5,7 @@ SCHEDULE="${SIS_CONFIG_REPAIR_CRON:-*/15 * * * *}"
 RUNTIME_ROOT="${SIS_RUNTIME_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 ENV_FILE="${SIS_ENV_FILE:-${RUNTIME_ROOT}/.env}"
 LOG_DIR="${SIS_LOG_DIR:-${RUNTIME_ROOT}/runtime-data/maintenance-reports}"
+NODE_BIN="${SIS_NODE_BIN:-$(command -v node 2>/dev/null || true)}"
 CHECK_ONLY=0
 CRONTAB_OWNER="${SUDO_USER:-}"
 
@@ -60,6 +61,11 @@ if [[ -z "${SCHEDULE}" ]]; then
   exit 1
 fi
 
+if [[ -z "${NODE_BIN}" ]]; then
+  echo "[install-sis-config-cron] node binary not found" >&2
+  exit 1
+fi
+
 if [[ -z "${CRONTAB_OWNER}" ]]; then
   CRONTAB_OWNER="$(id -un)"
 fi
@@ -83,7 +89,7 @@ crontab_write() {
 mkdir -p "${LOG_DIR}"
 CRON_LOG="${LOG_DIR}/sis-config-repair-cron.log"
 MARKER="# sis-config-repair"
-CRON_CMD="cd ${RUNTIME_ROOT} && DOTENV_CONFIG_PATH=${ENV_FILE} node -r dotenv/config tools/sis-config-repair.mjs >> ${CRON_LOG} 2>&1"
+CRON_CMD="cd ${RUNTIME_ROOT} && DOTENV_CONFIG_PATH=${ENV_FILE} ${NODE_BIN} -r dotenv/config tools/sis-config-repair.mjs >> ${CRON_LOG} 2>&1"
 ENTRY="${SCHEDULE} ${CRON_CMD} ${MARKER}"
 
 if [[ ${CHECK_ONLY} -eq 1 ]]; then
