@@ -24,10 +24,6 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 5. Keep edits ASCII unless the target file already needs Unicode.
 6. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
 7. After any file edit, restart the dev runtime before reporting the task complete.
-8. `SIS_CONFIG.json` at a deployed runtime root is the immutable runtime config contract for that environment.
-9. `development` mode is authoring mode: local dev config files are the source-of-truth and the DB mirror is repaired from them.
-10. `test` and `production` modes are mirror/repaired mode: deployed runtime `SIS_CONFIG.json` is reconciled with the DB mirror and the weaker side is repaired when the other side is valid.
-11. `config/sis-config.test.json` in the repo is a local test fixture path, not the deployed runtime immutable.
 
 ## Literal Instruction Terms
 

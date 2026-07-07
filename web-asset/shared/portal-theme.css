@@ -1307,18 +1307,26 @@ html[data-theme="dark"] body.admin-portal-page #authPanel {
   background-color: transparent;
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
-
-background-image:
-    linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%),
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(45, 45, 45, 0.94) 0%,
+      rgba(59, 60, 62, 0.94) 48%,
+      rgba(76, 76, 76, 0.96) 100%
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);
 }
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
   background-color: transparent;
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
-
-background-image:
-    linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%),
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(45, 45, 45, 0.94) 0%,
+      rgba(59, 60, 62, 0.94) 48%,
+      rgba(76, 76, 76, 0.96) 100%
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);
 }
 html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
@@ -6802,21 +6810,13 @@ html[data-theme="dark"] body.student-portal-page #loginPanel,
 html[data-theme="dark"] body.parent-portal-page #loginCard,
 html[data-theme="dark"] body.admin-portal-page #authPanel,
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background-color: transparent;
+  background: #4c4c4c;
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
-
-background-image:
-    linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);
 }
 html[data-theme="dark"] body.admin-portal-page #authPanel,
 html[data-theme="dark"] body.admin-portal-page #authBootPanel {
-  background-color: transparent !important;
-
-background-image:
-    linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%) !important;
+  background: #4c4c4c !important;
 }
 html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm,
 html[data-theme="dark"] body.parent-portal-page #loginCard .login-form {
@@ -7227,10 +7227,7 @@ body:is(.student-portal-page, .parent-portal-page) .report-band {
 body:is(.student-portal-page, .parent-portal-page) .report-grades-table table,
 body:is(.student-portal-page, .parent-portal-page) #performanceReportGradesTable table {
   background: var(--portal-surface-support);
-}
-body:is(.student-portal-page, .parent-portal-page) #performanceReportModal .portal-modal-dialog {
   box-sizing: border-box;
-  max-height: calc(100vh - 20px);
   padding: 14px;
   width: min(1120px, calc(100vw - 20px));
 }

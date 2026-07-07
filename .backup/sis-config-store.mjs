@@ -334,13 +334,9 @@ function resolveSisConfigFilePath() {
   return path.resolve(process.cwd(), SIS_CONFIG_FILE_NAME)
 }
 
-export function shouldPreferSisConfigFileOverDatabase() {
+function shouldPreferSisConfigFileOverDatabase() {
   const nodeEnv = normalizeRuntimeEnvironment(process.env.NODE_ENV)
-  // Development is authoring mode: the local config file is treated as the source-of-truth.
-  // Test and production are mirror/repaired mode: the newest valid snapshot between
-  // the file and DB mirror is chosen, and the weaker side is repaired as needed.
-  // An explicit SIS_CONFIG_FILE path does not force file precedence in test/prod.
-  return nodeEnv === "development"
+  return Boolean(normalizeText(process.env.SIS_CONFIG_FILE)) || nodeEnv === "development" || nodeEnv === "test"
 }
 
 /**
@@ -892,9 +888,6 @@ export async function ensureSisConfigLoaded(options = {}) {
 
   const fileLoaded = fileSnapshot.parsed ? normalizeLoadedSnapshot(fileSnapshot.parsed, filePath, "file") : null
 
-  // In development we preserve local file authoring semantics. In test and production,
-  // we reconcile the file and DB mirrors by chronology and repair the missing or stale
-  // copy so both sides stay aligned.
   let latest = null
   if (preferSisConfigFile) {
     latest = fileLoaded || dbSnapshot || buildDefaultSnapshot()

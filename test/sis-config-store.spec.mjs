@@ -209,6 +209,37 @@ test("development runtime defaults to an environment-specific SIS config file", 
   }
 })
 
+test("test runtime mirror mode prefers database/source chronology over file precedence", async () => {
+  const priorNodeEnv = process.env.NODE_ENV
+  const priorSisConfigFile = process.env.SIS_CONFIG_FILE
+
+  try {
+    process.env.NODE_ENV = "test"
+    delete process.env.SIS_CONFIG_FILE
+
+    const mod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    assert.equal(mod.shouldPreferSisConfigFileOverDatabase(), false)
+
+    process.env.NODE_ENV = "production"
+    const prodMod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    assert.equal(prodMod.shouldPreferSisConfigFileOverDatabase(), false)
+
+    process.env.NODE_ENV = "development"
+    const devMod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    assert.equal(devMod.shouldPreferSisConfigFileOverDatabase(), true)
+
+    process.env.NODE_ENV = "test"
+    process.env.SIS_CONFIG_FILE = "config/sis-config.test.json"
+    const explicitMod = await freshImport(path.resolve("src/modules/admin/sis-config-store.mjs"))
+    assert.equal(explicitMod.shouldPreferSisConfigFileOverDatabase(), false)
+  } finally {
+    if (priorNodeEnv === undefined) delete process.env.NODE_ENV
+    else process.env.NODE_ENV = priorNodeEnv
+    if (priorSisConfigFile === undefined) delete process.env.SIS_CONFIG_FILE
+    else process.env.SIS_CONFIG_FILE = priorSisConfigFile
+  }
+})
+
 test("sis config mirror health ignores nested key order drift", async () => {
   const { tempDir, sisConfigPath, legacyPath } = makeTempConfigPaths()
   const priorCwd = process.cwd()

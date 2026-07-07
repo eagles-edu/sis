@@ -189,26 +189,15 @@ wipe_target_contents() {
   find "$target_root" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 }
 
-sha256_file() {
-  local target="$1"
-  sha256sum "$target" | awk '{print $1}'
-}
-
 wipe_test_target_contents() {
   local env_backup=""
   local runtime_file_backup_dir=""
-  local env_backup_sha=""
-  local env_restored_sha=""
-  local rel_path=""
-  local backup_sha=""
-  local restored_sha=""
   local restore_env=0
   local restore_runtime_files=0
 
   if [[ -f "${TEST_ROOT}/.env.test" ]]; then
     env_backup="$(mktemp)"
     cp -a "${TEST_ROOT}/.env.test" "${env_backup}"
-    env_backup_sha="$(sha256_file "${env_backup}")"
     restore_env=1
   fi
 
@@ -225,12 +214,6 @@ wipe_test_target_contents() {
 
   if [[ "${restore_env}" -eq 1 ]]; then
     cp -a "${env_backup}" "${TEST_ROOT}/.env.test"
-    env_restored_sha="$(sha256_file "${TEST_ROOT}/.env.test")"
-    if [[ "${env_backup_sha}" != "${env_restored_sha}" ]]; then
-      echo "immutable restore mismatch: .env.test" >&2
-      return 1
-    fi
-    log "preserved immutable hash verified: .env.test"
     rm -f "${env_backup}"
   fi
 
@@ -239,13 +222,6 @@ wipe_test_target_contents() {
       if [[ -f "${runtime_file_backup_dir}/${rel_path}" ]]; then
         mkdir -p "${TEST_ROOT}/$(dirname "${rel_path}")"
         cp -a "${runtime_file_backup_dir}/${rel_path}" "${TEST_ROOT}/${rel_path}"
-        backup_sha="$(sha256_file "${runtime_file_backup_dir}/${rel_path}")"
-        restored_sha="$(sha256_file "${TEST_ROOT}/${rel_path}")"
-        if [[ "${backup_sha}" != "${restored_sha}" ]]; then
-          echo "immutable restore mismatch: ${rel_path}" >&2
-          return 1
-        fi
-        log "preserved immutable hash verified: ${rel_path}"
       fi
     done
   fi
