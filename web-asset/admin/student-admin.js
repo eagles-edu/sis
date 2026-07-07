@@ -2772,7 +2772,7 @@
           ["Pre-A1 Starters", { color: "#FCAB15", className: "panelbg-starters" }],
           ["A1 Movers", { color: "#913198", className: "panelbg-mov" }],
           ["A2 Flyers", { color: "#b5d570", className: "panelbg-fly" }],
-          ["A2 KET", { color: "#038e9f", className: "panelbg-key" }],
+          ["A2 KET", { color: "#038e9f", className: "panelbg-key", textColor: "#fbffff" }],
           ["B1 PET", { color: "#cd1637", className: "panelbg-pet" }],
           ["B2+ IELTS", { color: "#b10128", className: "panelbg-ielts" }],
           ["C1+ TAYK", { color: "#980001", className: "panelbg-tayk" }],
@@ -6262,7 +6262,7 @@
           className: matched?.className || "",
           borderColor: shiftHexColor(color, -42),
           softColor: toRgba(color, 0.18),
-          textColor: preferredContrastText(color),
+          textColor: normalizeText(matched?.textColor) || preferredContrastText(color),
         };
       }
 

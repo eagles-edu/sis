@@ -1282,7 +1282,7 @@ test("GET /parent returns parent portal HTML with runtime config", async () => {
   )
   assert.match(
     SHARED_PORTAL_THEME_SOURCE,
-    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i
+    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*36px;/i
   )
   assert.match(
     SHARED_PORTAL_THEME_SOURCE,
@@ -1384,7 +1384,7 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /\.queue-table-wrap table\.news-queue-table th,\s*[\s\S]*?padding:\s*4px 6px;/i)
   assert.match(
     SHARED_PORTAL_THEME_SOURCE,
-    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i
+    /body\.(?:student|parent)-portal-page \.queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*36px;/i
   )
   assert.match(
     SHARED_PORTAL_THEME_SOURCE,

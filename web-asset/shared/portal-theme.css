@@ -1140,6 +1140,7 @@ body.admin-portal-page .level-chip.panelbg-fly {
 body.admin-portal-page .level-chip.panelbg-key {
   --chip-bg: var(--portal-color-709e6795a7);
   --chip-border: #006475;
+  --chip-text: #fbffff;
 }
 body.admin-portal-page .level-chip.panelbg-pet {
   --chip-bg: var(--portal-color-9c1eaddb49);
@@ -1307,7 +1308,8 @@ html[data-theme="dark"] body.admin-portal-page #authPanel {
   background-color: transparent;
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
-  background-image:
+
+background-image:
     linear-gradient(
       180deg,
       rgba(45, 45, 45, 0.94) 0%,
@@ -1320,7 +1322,8 @@ html[data-theme="dark"] body.admin-portal-page #authBootPanel {
   background-color: transparent;
   border-color: var(--portal-dark-border-strong);
   color: var(--portal-dark-text);
-  background-image:
+
+background-image:
     linear-gradient(
       180deg,
       rgba(45, 45, 45, 0.94) 0%,
@@ -2287,7 +2290,7 @@ body.grades-tabulator-page .status {
   border: 1px solid var(--portal-status-neutral-border);
   border-radius: 10px;
   color: var(--portal-text-soft);
-  margin: 0;
+  margin: 10px 0;
   min-height: 1.2rem;
 }
 body.student-enrollment-page .history-rail__button {
@@ -10011,6 +10014,7 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-82f80f783f: #55389f;
   --portal-color-ff3f35cedc: rgba(47, 57, 76, 0.95);
   --portal-color-8f0ff52e0d: rgba(20, 35, 68, 0.2);
+
   --portal-color-000d003e64: #f3f4f6;
   --portal-color-0077beaeb3: color-mix(in srgb, #b23a2e 24%, #525252 76%);
   --portal-color-05477e89d0: rgba(12, 22, 39, 0.4);
