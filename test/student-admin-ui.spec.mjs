@@ -8700,6 +8700,23 @@ test("table sort controls and column-click headers reorder grade/performance dat
     const lanes = document.querySelectorAll("#gradeChartLanes .grade-chart-lane")
     assert.equal(lanes.length >= 1, true)
   })
+  const firstLane = document.querySelector("#gradeChartLanes .grade-chart-lane")
+  assert.ok(firstLane)
+  const laneHead = firstLane.querySelector(".grade-chart-lane-head")
+  const laneSvgWrap = firstLane.querySelector(".grade-chart-svg-wrap")
+  const laneLegend = firstLane.querySelector(".grade-chart-lane-legend")
+  const domNode = firstLane.ownerDocument.defaultView?.Node
+  assert.ok(laneHead)
+  assert.ok(laneSvgWrap)
+  assert.ok(laneLegend)
+  assert.ok(domNode)
+  assert.ok(
+    laneHead.compareDocumentPosition(laneSvgWrap) & domNode.DOCUMENT_POSITION_FOLLOWING,
+  )
+  assert.ok(
+    laneSvgWrap.compareDocumentPosition(laneLegend) & domNode.DOCUMENT_POSITION_FOLLOWING,
+  )
+  assert.ok(laneSvgWrap.querySelector(".grade-chart-svg"))
   await waitFor(() => {
     const laneLegendText = normalizeText(document.querySelector("#gradeChartLanes .grade-chart-lane-legend")?.textContent || "")
     assert.match(laneLegendText, /Trend/i)

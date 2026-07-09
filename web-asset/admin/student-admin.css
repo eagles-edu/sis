@@ -1337,13 +1337,19 @@
       }
       .grade-chart-svg-wrap {
         -webkit-overflow-scrolling: touch;
+        aspect-ratio: 340 / 108;
+        background: var(--portal-chart-surface);
+        border: 1px solid var(--portal-border);
+        border-radius: var(--radius-2);
+        box-sizing: border-box;
         margin-top: 6px;
         overflow-x: auto;
         overflow-y: hidden;
+        padding: 0;
       }
       .grade-chart-svg {
         display: block;
-        height: 90px;
+        height: 100%;
         min-width: 240px;
         width: 100%;
       }
@@ -2944,7 +2950,7 @@
       .pt-score-legend-popover {
         background: var(--portal-color-c659d630ce);
         border: 1px solid var(--portal-color-5f0caed72f);
-        border-radius: 8px;
+        border-radius: var(--radius-2);
         box-shadow: 0 10px 22px var(--portal-color-426a2e5cc8);
         box-sizing: border-box;
         color: var(--portal-color-a0cebdc6af);
@@ -3009,7 +3015,7 @@
         align-items: center;
         background: var(--portal-color-53432a348e);
         border: 1px solid var(--portal-color-9d851aa3c8);
-        border-radius: 6px;
+        border-radius: var(--radius-2);
         box-sizing: border-box;
         color: var(--portal-color-ad9368f436);
         display: flex;

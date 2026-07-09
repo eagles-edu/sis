@@ -51,6 +51,28 @@ test("shared theme light text defaults to black", () => {
   assert.match(source, /--portal-text:\s*#000000;/, "portal-theme.css should keep portal text black")
 })
 
+test("shared header and footer chrome use the shared radius ladder", () => {
+  const source = readFile("web-asset/shared/portal-theme.css")
+  assertIncludesAll(
+    source,
+    [
+      "border-radius: var(--radius-2);",
+      "body.portal-hub-page .hub-banner {",
+      ".hub-footer {",
+      "body.portal-hub-page div.header-bar,",
+      "body.admin-portal-page div.header-bar,",
+      "body.parent-portal-page div.header-bar,",
+      "body.student-portal-page div.header-bar {",
+    ],
+    "portal-theme.css shared chrome radius",
+  )
+  assertExcludesAll(
+    source,
+    ["border-radius: clamp(4.5px, 0.9cqi, 12px);", "border-radius: clamp(4px, 0.9cqi, 8px);"],
+    "portal-theme.css shared chrome radius",
+  )
+})
+
 test("student-admin school title stays dark text", () => {
   const source = readFile("web-asset/admin/student-admin.css")
   const titleBlock = sliceBetween(
@@ -112,6 +134,20 @@ test("student-points chart render uses shared portal tokens", () => {
   )
 })
 
+test("student-points container chrome uses the shared radius ladder", () => {
+  const source = readFile("web-asset/admin/student-points.html")
+  const cardBlock = sliceBetween(source, ".card {", "#loginPanel {", "student-points.html card chrome")
+  const surfaceBlock = sliceBetween(source, ".chart-wrap {", ".hidden {", "student-points.html surface chrome")
+  const tableBlock = sliceBetween(source, ".table-wrap {", ".hidden {", "student-points.html table chrome")
+
+  assertIncludesAll(cardBlock, ["border-radius: var(--radius-3);"], "student-points.html card chrome")
+  assertIncludesAll(surfaceBlock, ["border-radius: var(--radius-2);"], "student-points.html chart chrome")
+  assertIncludesAll(tableBlock, ["border-radius: var(--radius-2);"], "student-points.html table chrome")
+  assertExcludesAll(cardBlock, ["14px"], "student-points.html card chrome")
+  assertExcludesAll(surfaceBlock, ["12px"], "student-points.html chart chrome")
+  assertExcludesAll(tableBlock, ["12px"], "student-points.html table chrome")
+})
+
 test("grades-tabulator chart render uses shared portal tokens", () => {
   const source = readFile("web-asset/admin/grades-tabulator.html")
   assert.ok(
@@ -148,6 +184,22 @@ test("grades-tabulator chart render uses shared portal tokens", () => {
   )
 })
 
+test("grades-tabulator container chrome uses the shared radius ladder", () => {
+  const source = readFile("web-asset/admin/grades-tabulator.html")
+  const cardBlock = sliceBetween(
+    source,
+    ".hero,\n    .control-card,\n    .grid-card {",
+    ".hero.portal-theme-panel,",
+    "grades-tabulator card chrome",
+  )
+  const metricBlock = sliceBetween(source, ".metric-card {", "#gradeGrid {", "grades-tabulator metric chrome")
+
+  assertIncludesAll(cardBlock, ["border-radius: var(--radius-3);"], "grades-tabulator card chrome")
+  assertIncludesAll(metricBlock, ["border-radius: var(--radius-2);"], "grades-tabulator metric chrome")
+  assertExcludesAll(cardBlock, ["14px"], "grades-tabulator card chrome")
+  assertExcludesAll(metricBlock, ["12px"], "grades-tabulator metric chrome")
+})
+
 test("grades-tabulator table chrome stays on the shared table shell", () => {
   const source = readFile("web-asset/admin/grades-tabulator.html")
   assert.match(
@@ -172,6 +224,33 @@ test("grades-tabulator table chrome stays on the shared table shell", () => {
       ".tabulator .tabulator-row:hover {",
     ],
     "grades-tabulator table chrome",
+  )
+})
+
+test("student-admin score popovers use the shared radius ladder", () => {
+  const source = readFile("web-asset/admin/student-admin.css")
+  const popoverBlock = sliceBetween(
+    source,
+    ".pt-score-legend-popover {",
+    ".pt-score-legend-title {",
+    "student-admin.css score legend popover",
+  )
+  const optionBlock = sliceBetween(
+    source,
+    ".pt-score-radio-option {",
+    ".pt-score-radio-option input[type=\"radio\"] {",
+    "student-admin.css score radio option",
+  )
+
+  assertIncludesAll(popoverBlock, ["border-radius: var(--radius-2);"], "student-admin.css score legend popover")
+  assertIncludesAll(optionBlock, ["border-radius: var(--radius-2);"], "student-admin.css score radio option")
+  assert.ok(
+    !/border-radius:\s*8px;/.test(popoverBlock),
+    "student-admin.css score legend popover should not keep a literal radius",
+  )
+  assert.ok(
+    !/border-radius:\s*6px;/.test(optionBlock),
+    "student-admin.css score radio option should not keep a literal radius",
   )
 })
 

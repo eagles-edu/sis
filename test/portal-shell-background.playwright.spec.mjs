@@ -177,3 +177,101 @@ test(
     }
   },
 )
+
+test(
+  "portal container radii stay on the shared ladder across representative admin surfaces",
+  { skip: skipReason },
+  async () => {
+    const server = createStaticServer(ROOT_DIR)
+    let browser = null
+
+    try {
+      await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve))
+      const address = server.address()
+      const port = typeof address === "object" && address ? address.port : 0
+      browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
+
+      const cases = [
+        {
+          label: "student-points",
+          url: `http://127.0.0.1:${port}/web-asset/admin/student-points.html`,
+          selectors: {
+            outer: ".card",
+            innerA: ".chart-wrap",
+            innerB: ".table-wrap",
+          },
+        },
+        {
+          label: "grades-tabulator",
+          url: `http://127.0.0.1:${port}/web-asset/admin/grades-tabulator.html`,
+          selectors: {
+            outer: ".control-card",
+            innerA: ".metric-card",
+            innerB: ".grid-card",
+          },
+        },
+      ]
+
+      for (const viewport of [
+        { width: 1440, height: 1200, label: "desktop" },
+        { width: 390, height: 844, label: "mobile" },
+      ]) {
+        const page = await browser.newPage({ viewport })
+        for (const testCase of cases) {
+          await page.goto(testCase.url, { waitUntil: "domcontentloaded" })
+          await page.waitForTimeout(100)
+          const metrics = await page.evaluate((input) => {
+            const read = (selector) => {
+              const node = document.querySelector(selector)
+              if (!(node instanceof HTMLElement)) return null
+              const style = getComputedStyle(node)
+              const rect = node.getBoundingClientRect()
+              return {
+                radius: parseFloat(style.borderTopLeftRadius || "0"),
+                width: Math.round(rect.width),
+                height: Math.round(rect.height),
+              }
+            }
+            return {
+              viewportWidth: window.innerWidth,
+              scrollWidth: document.documentElement.scrollWidth,
+              outer: read(input.selectors.outer),
+              innerA: read(input.selectors.innerA),
+              innerB: read(input.selectors.innerB),
+            }
+          }, testCase)
+
+          assert.equal(metrics.viewportWidth, viewport.width, `${viewport.label}/${testCase.label}: viewport width mismatch`)
+          assert.ok(
+            metrics.scrollWidth <= viewport.width + 2,
+            `${viewport.label}/${testCase.label}: should not horizontally overflow`,
+          )
+          assert.ok(metrics.outer, `${viewport.label}/${testCase.label}: missing outer container`)
+          assert.ok(metrics.innerA, `${viewport.label}/${testCase.label}: missing inner A container`)
+          assert.ok(metrics.innerB, `${viewport.label}/${testCase.label}: missing inner B container`)
+          assert.ok(
+            metrics.outer.radius >= metrics.innerA.radius,
+            `${viewport.label}/${testCase.label}: outer radius should be at least as large as inner A`,
+          )
+          assert.ok(
+            metrics.outer.radius >= metrics.innerB.radius,
+            `${viewport.label}/${testCase.label}: outer radius should be at least as large as inner B`,
+          )
+          assert.notEqual(
+            Math.round(metrics.outer.radius),
+            14,
+            `${viewport.label}/${testCase.label}: outer radius should not stay on the old literal`,
+          )
+        }
+        await page.close()
+      }
+    } finally {
+      if (browser) {
+        await browser.close().catch(() => {})
+      }
+      if (server.listening) {
+        await new Promise((resolve) => server.close(resolve))
+      }
+    }
+  },
+)

@@ -7966,7 +7966,7 @@ body.portal-hub-page .hub-banner {
   align-items: center;
   background: var(--hub-banner-bg, var(--primary-color));
   border: 1px solid var(--hub-banner-border, rgba(255, 255, 255, 0.18));
-  border-radius: clamp(4.5px, 0.9cqi, 12px);
+  border-radius: var(--radius-2);
   color: var(--hub-banner-text, var(--secondary-color));
   display: flex;
   font-size: calc(0.72rem * var(--hub-phi));
@@ -9881,7 +9881,7 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   align-items: center;
   background: var(--portal-footer-fill, var(--theme-footer-bg, var(--tertiary-color)));
   border: 1px solid var(--hub-surface-border, var(--paper-border));
-  border-radius: clamp(4.5px, 0.9cqi, 12px);
+  border-radius: var(--radius-2);
   box-sizing: border-box;
   color: var(--portal-footer-ink, var(--theme-footer-text, var(--secondary-color)));
   display: flex;
@@ -9968,7 +9968,7 @@ body.admin-portal-page div.header-bar,
 body.parent-portal-page div.header-bar,
 body.student-portal-page div.header-bar {
   background: var(--portal-header-bar-fill);
-  border-radius: clamp(4px, 0.9cqi, 8px);
+  border-radius: var(--radius-2);
   box-sizing: border-box;
   color: var(--portal-header-bar-ink);
   display: flex;
