@@ -619,7 +619,7 @@ transition:
             <a href="/admin/grades" class="menu-link" data-page-link="grades">Grades</a>
             <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
               <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">Grades data</a>
-              <a href="/web-asset/admin/grades-tabulator.html" class="menu-link menu-sublink" data-admin-submenu="tracking-data">Grade table</a>
+              <a href="/admin/grades-tabulator" class="menu-link menu-sublink" data-page-link="grades-tabulator" data-admin-submenu="tracking-data">Grade table</a>
             </div>
             <a href="/admin/parent-tracking" class="menu-link" data-page-link="parent-tracking">Performance</a>
             <div class="menu-sub-links" data-admin-submenu-group="tracking-data">
@@ -1471,6 +1471,20 @@ transition:
       const apiOrigin = String(search.get("apiOrigin") || window.__SIS_ADMIN_API_ORIGIN || "").trim()
       const queuedSnapshotStorageKey = queueId ? `sis.reportCardPreview.${queueId}` : ""
 
+      function buildAdminRuntimeHref(pathname = "/admin") {
+        const url = new URL(String(pathname || "/admin").trim() || "/admin", window.location.origin)
+        if (apiOrigin) url.searchParams.set("apiOrigin", apiOrigin)
+        return `${url.pathname}${url.search}${url.hash}`
+      }
+
+      function syncAdminNavLinks() {
+        document.querySelectorAll('a[href^="/admin"]').forEach((linkEl) => {
+          const href = String(linkEl.getAttribute("href") || "").trim()
+          if (!href) return
+          linkEl.setAttribute("href", buildAdminRuntimeHref(href))
+        })
+      }
+
       function readQueuedSnapshot() {
         if (!queuedSnapshotStorageKey) return null
         try {
@@ -1513,6 +1527,8 @@ transition:
       if (!source || typeof source !== "object") {
         source = window.SIS_REPORT_CARD_SAMPLE_DATA
       }
+
+      syncAdminNavLinks()
       if (!source || typeof source !== "object") return
 
       const report = source.report || source

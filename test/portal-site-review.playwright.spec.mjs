@@ -550,6 +550,96 @@ async function loginParent(page, origin, credentials) {
   await page.waitForTimeout(2000)
 }
 
+test(
+  "admin performance-data stacks header and footer cleanly at 320px width",
+  { skip: resolvePlaywrightSkipReason() },
+  async () => {
+    const credentials = resolveReviewCredentials()
+    const { startExerciseMailer } = await import("../server/exercise-mailer.mjs")
+    const server = await startExerciseMailer({ transporter: makeMockTransport(), port: 0 })
+    await new Promise((resolve) => server.once("listening", resolve))
+    const address = server.address()
+    const port = typeof address === "object" && address ? address.port : 0
+    const origin = `http://127.0.0.1:${port}`
+    const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
+
+    try {
+      const context = await browser.newContext({ viewport: { width: 320, height: 844 } })
+      const page = await context.newPage()
+      let loginError = null
+      for (const candidate of [
+        credentials.admin,
+        { user: "admin", password: "admin-pass-123" },
+      ]) {
+        try {
+          await loginAdmin(page, origin, candidate)
+          loginError = null
+          break
+        } catch (error) {
+          loginError = error
+        }
+      }
+      if (loginError) throw loginError
+      await page.goto(`${origin}/admin/performance-data?apiOrigin=${encodeURIComponent(origin)}`, {
+        waitUntil: "domcontentloaded",
+      })
+      await page.waitForFunction(() => {
+        const section = globalThis.document.querySelector('.page-section[data-page="performance-data"]')
+        return Boolean(section && section.classList.contains("active"))
+      })
+
+      const layout = await page.evaluate(() => {
+        const rect = (selector) => {
+          const node = globalThis.document.querySelector(selector)
+          if (!(node instanceof globalThis.HTMLElement)) return null
+          const box = node.getBoundingClientRect()
+          return {
+            x: Math.round(box.x),
+            y: Math.round(box.y),
+            w: Math.round(box.width),
+            h: Math.round(box.height),
+          }
+        }
+        const headerLinks = Array.from(globalThis.document.querySelectorAll("div.header-bar a")).map((node) => {
+          if (!(node instanceof globalThis.HTMLElement)) return null
+          const box = node.getBoundingClientRect()
+          return { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width) }
+        }).filter(Boolean)
+        const footerNodes = Array.from(globalThis.document.querySelectorAll(".hub-footer > p")).map((node) => {
+          if (!(node instanceof globalThis.HTMLElement)) return null
+          const box = node.getBoundingClientRect()
+          return { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width) }
+        }).filter(Boolean)
+        return {
+          viewportWidth: globalThis.window.innerWidth,
+          scrollWidth: globalThis.document.documentElement.scrollWidth,
+          header: rect("div.header-bar"),
+          page: rect('.page-section[data-page="performance-data"]'),
+          toolbar: rect('.page-section[data-page="performance-data"] .table-toolbar'),
+          footer: rect(".hub-footer"),
+          headerLinks,
+          footerNodes,
+        }
+      })
+
+      assert.equal(layout.viewportWidth, 320)
+      assert.ok(layout.scrollWidth <= 322, `page should not horizontally overflow at 320px (got ${layout.scrollWidth})`)
+      assert.ok(layout.header && layout.header.h >= 40, "header bar should stay readable on mobile")
+      assert.ok(layout.headerLinks.length >= 2, "header should still expose both contact links")
+      assert.notEqual(layout.headerLinks[0].y, layout.headerLinks[1].y, "header links should stack or wrap on mobile")
+      assert.ok(layout.page && layout.page.w <= 320, "page section should fit the mobile viewport")
+      assert.ok(layout.toolbar && layout.toolbar.w <= 320, "toolbar should stay within the mobile viewport")
+      assert.ok(layout.footer && layout.footer.h >= 70, "footer should remain readable on mobile")
+      assert.ok(layout.footerNodes.length >= 2, "footer should still expose copy and back-to-top action")
+      assert.notEqual(layout.footerNodes[0].y, layout.footerNodes[1].y, "footer copy and action should stack on mobile")
+      await context.close()
+    } finally {
+      await browser.close().catch(() => {})
+      await new Promise((resolve) => server.close(resolve))
+    }
+  },
+)
+
 async function reviewHub(page, origin, theme, coverage) {
   await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" })
   await page.waitForTimeout(250)

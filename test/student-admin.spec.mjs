@@ -1581,7 +1581,72 @@ test("GET /web-asset/admin/grades-tabulator.html returns tabulator page", async 
   assert.match(html, /field:\s*"studentDisplay"[\s\S]*frozen:\s*true/)
   assert.match(html, /function applyTableHeight\(/)
   assert.match(html, /function observeTableHeightResize\(/)
-  assert.match(html, /vendor\/tabulatorz\/tabulator\.min\.js/i)
+  assert.match(html, /\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js/i)
+  assert.match(html, /\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.css/i)
+})
+
+test("GET /admin\\/grades-tabulator returns runtime-served tabulator page", async () => {
+  const res = await fetchLocal(port, `/admin/grades-tabulator?apiOrigin=http://127.0.0.1:${port}`)
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /The Eagles Club SIS Grades Table/i)
+  assert.match(html, /window\.__SIS_ADMIN_PAGE_PATH=/)
+  assert.match(html, /window\.__SIS_ADMIN_API_ORIGIN=/)
+  assert.match(html, /window\.__SIS_ADMIN_INITIAL_AUTH__=/)
+})
+
+test("GET /admin\\?page=grades-tabulator returns runtime-served tabulator page", async () => {
+  const res = await fetchLocal(port, `/admin?page=grades-tabulator&apiOrigin=http://127.0.0.1:${port}`)
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get("content-type") || "", /text\/html/i)
+  const html = await res.text()
+  assert.match(html, /The Eagles Club SIS Grades Table/i)
+  assert.match(html, /window\.__SIS_ADMIN_PAGE_PATH=/)
+})
+
+test("shared admin chrome routes grade table links through /admin instead of static asset paths", () => {
+  const sharedChromeSources = [
+    fs.readFileSync(new URL("../web-asset/admin/student-admin.html", import.meta.url), "utf8"),
+    fs.readFileSync(new URL("../web-asset/admin/student-enrollment.html", import.meta.url), "utf8"),
+    fs.readFileSync(new URL("../web-asset/admin/report-card.html", import.meta.url), "utf8"),
+    fs.readFileSync(new URL("../web-asset/admin/grades-tabulator.html", import.meta.url), "utf8"),
+  ]
+
+  sharedChromeSources.forEach((source) => {
+    assert.doesNotMatch(source, /href="\/web-asset\/admin\/grades-tabulator\.html"/i)
+    assert.match(source, /href="\/admin\/grades-tabulator"/i)
+  })
+})
+
+test("admin runtime helpers preserve apiOrigin across all internal admin anchors", () => {
+  const adminSource = fs.readFileSync(
+    new URL("../web-asset/admin/student-admin.js", import.meta.url),
+    "utf8",
+  )
+  const enrollmentSource = fs.readFileSync(
+    new URL("../web-asset/admin/student-enrollment.html", import.meta.url),
+    "utf8",
+  )
+  const reportCardSource = fs.readFileSync(
+    new URL("../web-asset/admin/report-card.html", import.meta.url),
+    "utf8",
+  )
+  const gradesTabulatorSource = fs.readFileSync(
+    new URL("../web-asset/admin/grades-tabulator.html", import.meta.url),
+    "utf8",
+  )
+
+  assert.match(adminSource, /document\.querySelectorAll\('a\[href\^="\/admin"\]'\)/)
+  assert.match(adminSource, /function shouldPreserveAdminApiOriginParamFor\(apiOrigin = ""\)/)
+  assert.match(adminSource, /function buildAdminRuntimeHrefWithOrigin\(/)
+  assert.match(adminSource, /buildAdminRuntimeHrefWithOrigin\(\s*"\/admin\/school-setup#schoolSetupPanel"/)
+  assert.match(adminSource, /URLSearchParams\(window\.location\.search \|\| ""\)\.has\("apiOrigin"\)/)
+  assert.match(enrollmentSource, /document\.querySelectorAll\('a\[href\^="\/admin"\]'\)/)
+  assert.match(reportCardSource, /document\.querySelectorAll\('a\[href\^="\/admin"\]'\)/)
+  assert.match(gradesTabulatorSource, /document\.querySelectorAll\('a\[href\^="\/admin"\]'\)/)
+  assert.match(gradesTabulatorSource, /const INITIAL_AUTH_STATE =/)
+  assert.match(gradesTabulatorSource, /if \(INITIAL_AUTH_STATE\?\.authenticated === true\)/)
 })
 
 test("GET /web-asset/admin/grades-tabulator-dev.html redirects to consolidated page", async () => {

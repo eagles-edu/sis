@@ -189,6 +189,7 @@ const ADMIN_PAGE_SECTIONS = [
   "performance-engagement",
   "grades",
   "grades-data",
+  "grades-tabulator",
   "news-reports",
   "reports",
   "family",
@@ -289,6 +290,7 @@ const ADMIN_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-adm
 const ADMIN_HUB_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/portal-hub.html")
 const ADMIN_POINTS_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-points.html")
 const ADMIN_ENROLLMENT_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/student-enrollment.html")
+const ADMIN_GRADES_TABULATOR_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/grades-tabulator.html")
 const REPORT_CARD_PREVIEW_HTML_PATH = path.resolve(process.cwd(), "web-asset/admin/report-card.html")
 const PARENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/parent/parent-portal.html")
 const STUDENT_PORTAL_HTML_PATH = path.resolve(process.cwd(), "web-asset/student/student-portal.html")
@@ -1348,6 +1350,18 @@ function injectEnrollmentRuntimeConfig(html, origin, initialAuthState = { authen
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
   const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_ENROLLMENT_PAGE_PATH=${JSON.stringify(ADMIN_ENROLLMENT_PAGE_PATH)};window.__SIS_ADMIN_ENROLLMENT_STUDENTS_PATH=${JSON.stringify(`${ADMIN_ENROLLMENT_PREFIX}/students`)};window.__SIS_ADMIN_ENROLLMENT_REASONS=${JSON.stringify(STUDENT_UNENROLLMENT_REASONS)};window.__SIS_ADMIN_ENROLLMENT_UNENROLLED_ONLY=${JSON.stringify(ENROLLMENT_LEVEL_FILTER_UNENROLLED_ONLY)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
+  if (html.includes("</head>")) {
+    return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
+  }
+  return `${runtimeConfig}\n${htmlWithAuthState}`
+}
+
+function injectGradesTabulatorRuntimeConfig(html, origin, initialAuthState = { authenticated: false }) {
+  const normalizedAuthState =
+    initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
+  const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_AUTH_PREFIX=${JSON.stringify(ADMIN_AUTH_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -7991,12 +8005,25 @@ export async function handleStudentAdminRequest(request, response) {
     pathname === ADMIN_PAGE_PATH ? resolveAdminPageSlugFromQuery(url.searchParams) : ""
   const pageSlug = pageSlugFromQuery || pageSlugFromPath
   if (method === "GET" && pageSlugFromPath) {
+    const initialAuthState = buildAdminInitialAuthState(await peekAdminSession(request))
+    if (pageSlug === "grades-tabulator") {
+      if (!fs.existsSync(ADMIN_GRADES_TABULATOR_HTML_PATH)) {
+        sendJson(response, 404, { error: "Grades tabulator page not found" })
+        return true
+      }
+      const html = injectGradesTabulatorRuntimeConfig(
+        fs.readFileSync(ADMIN_GRADES_TABULATOR_HTML_PATH, "utf8"),
+        requestOrigin,
+        initialAuthState,
+      )
+      sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
+      return true
+    }
     if (!fs.existsSync(ADMIN_HTML_PATH)) {
       sendJson(response, 404, { error: "Student admin page not found" })
       return true
     }
     const htmlSource = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
-    const initialAuthState = buildAdminInitialAuthState(await peekAdminSession(request))
     const html = injectAdminRuntimeConfig(htmlSource, pageSlug, requestOrigin, initialAuthState)
     sendHtml(response, 200, html, PORTAL_NO_CACHE_HEADERS)
     return true

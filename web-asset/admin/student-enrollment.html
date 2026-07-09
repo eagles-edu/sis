@@ -778,7 +778,7 @@
                     <a href="/admin/grades-data" class="menu-link menu-sublink" data-page-link="grades-data" data-admin-submenu="tracking-data">
                       Grades data
                     </a>
-                    <a href="/web-asset/admin/grades-tabulator.html" class="menu-link menu-sublink" data-admin-submenu="tracking-data">
+                    <a href="/admin/grades-tabulator" class="menu-link menu-sublink" data-page-link="grades-tabulator" data-admin-submenu="tracking-data">
                       Grade table
                     </a>
                   </div>
@@ -916,8 +916,7 @@
                     <span>Include unenrolled</span>
                   </div>
                 </div>
-                <div class="field c2">
-                  <label for="refreshBtn">&nbsp;</label>
+                <div class="grid-actions">
                   <button id="refreshBtn" type="button" class="portal-button portal-button-teal-refresh">Refresh</button>
                 </div>
               </div>
@@ -1053,6 +1052,20 @@
         const url = new URL("/admin", window.location.origin);
         if (API_ORIGIN) url.searchParams.set("apiOrigin", API_ORIGIN);
         return `${url.pathname}${url.search}${url.hash}`;
+      }
+
+      function buildAdminRuntimeHref(pathname = "/admin") {
+        const url = new URL(normalizeText(pathname) || "/admin", window.location.origin);
+        if (API_ORIGIN) url.searchParams.set("apiOrigin", API_ORIGIN);
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
+
+      function syncAdminNavLinks() {
+        document.querySelectorAll('a[href^="/admin"]').forEach((linkEl) => {
+          const href = normalizeText(linkEl.getAttribute("href"));
+          if (!href) return;
+          linkEl.setAttribute("href", buildAdminRuntimeHref(href));
+        });
       }
 
       function redirectToAdminLogin() {
@@ -1737,6 +1750,7 @@
         applyGlobalTextZoom();
         renderSchoolBranding(DEFAULT_SCHOOL_PROFILE);
         syncThemeToggle();
+        syncAdminNavLinks();
         if (INITIAL_AUTH.authenticated) {
           setAuthenticated(true);
           await loadBranding();

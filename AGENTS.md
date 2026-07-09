@@ -21,13 +21,14 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 2. Prefer focused diffs over broad rewrites.
 3. Keep code and tests aligned to runtime contracts.
 4. Inspect route code before assuming auth behavior.
-5. Keep edits ASCII unless the target file already needs Unicode.
-6. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
-7. After any file edit, restart the dev runtime before reporting the task complete.
-8. `SIS_CONFIG.json` at a deployed runtime root is the immutable runtime config contract for that environment.
-9. `development` mode is authoring mode: local dev config files are the source-of-truth and the DB mirror is repaired from them.
-10. `test` and `production` modes are mirror/repaired mode: deployed runtime `SIS_CONFIG.json` is reconciled with the DB mirror and the weaker side is repaired when the other side is valid.
-11. `config/sis-config.test.json` in the repo is a local test fixture path, not the deployed runtime immutable.
+5. Before changing a route or router contract, diff the last pushed code, the relevant backups, and the route docs to establish the pre-drift baseline.
+6. Keep edits ASCII unless the target file already needs Unicode.
+7. Before editing, make a backup or verify that a current backup/snapshot already exists for the file.
+8. After any file edit, restart the dev runtime before reporting the task complete.
+9. `SIS_CONFIG.json` at a deployed runtime root is the immutable runtime config contract for that environment.
+10. `development` mode is authoring mode: local dev config files are the source-of-truth and the DB mirror is repaired from them.
+11. `test` and `production` modes are mirror/repaired mode: deployed runtime `SIS_CONFIG.json` is reconciled with the DB mirror and the weaker side is repaired when the other side is valid.
+12. `config/sis-config.test.json` in the repo is a local test fixture path, not the deployed runtime immutable.
 
 ## Literal Instruction Terms
 
@@ -50,6 +51,7 @@ The following words are hard constraints, not emphasis: `all`, `every`, `everyth
 
 - Use English in chat responses unless the user explicitly asks for another language.
 - Interpret the user's words literally and keep the scope narrow; do not widen, reinterpret, or "improve" the request unless the user explicitly asks for that.
+- For portal UI work, browser verification, or rendered-page conclusions, use a full live authenticated browser session that matches the real portal flow. Do not rely on static inspection, unauthenticated page loads, or API-only login as proof of portal behavior.
 - Keep intermediary updates terse.
 - Send one short status update at the start of work, then only ask a question if you are blocked.
 - Do not think out loud or narrate internal reasoning in progress updates.

@@ -383,9 +383,10 @@
         ["assignmentAddItemBtn", ["Add Item", "Add Assignment Item"]],
         ["assignmentLoadTitlesBtn", ["Refresh Titles", "Refresh Exercise Titles"]],
         ["assignmentSendBtn", ["Send Email", "Send Assignment Email"]],
+        ["newsReviewApproveQueueBtn", ["Approve All", "Approve All in Queue"]],
         ["pt_actionInsertBtn", ["Insert Field", "Insert to Focused Field"]],
         ["pt_saveBtn", ["Save Report", "Save Performance Report"]],
-        ["pt_queueSendBtn", ["Approve -> Queue", "Save for Admin Review"]],
+        ["pt_queueSendBtn", ["Submit", "Save for Admin Review"]],
         ["openTabulatorGradesBtn", ["Open Grades", "Open Tabulator Grades Admin"]],
         ["reportGenerateBtn", ["Generate PDF", "Generate from Grade Records"]],
         ["reportCardBtn", ["Report PDF", "Download PDF Report Card"]],
@@ -3231,6 +3232,39 @@
         return localIsoDate(shiftFromFixedTimeZone(date));
       }
 
+      function recentWeekendDateRange(referenceValue = new Date()) {
+        const source = referenceValue instanceof Date ? referenceValue : new Date(referenceValue);
+        if (Number.isNaN(source.valueOf())) return { dateFrom: "", dateTo: "" };
+        const anchor = shiftToFixedTimeZone(source);
+        anchor.setUTCHours(0, 0, 0, 0);
+        const weekendDates = [];
+        [6, 0].forEach((targetWeekday) => {
+          const delta = (anchor.getUTCDay() - targetWeekday + 7) % 7;
+          const current = new Date(anchor.getTime());
+          current.setUTCDate(current.getUTCDate() - delta);
+          const previous = new Date(current.getTime());
+          previous.setUTCDate(previous.getUTCDate() - 7);
+          weekendDates.push(localIsoDate(shiftFromFixedTimeZone(current)));
+          weekendDates.push(localIsoDate(shiftFromFixedTimeZone(previous)));
+        });
+        const dates = Array.from(new Set(weekendDates.filter(Boolean))).sort();
+        return {
+          dateFrom: dates[0] || "",
+          dateTo: dates[dates.length - 1] || "",
+        };
+      }
+
+      function ensureDefaultAttendanceDateRange() {
+        const hasFrom = Boolean(tableFilterValue("attendance", "dateFrom"));
+        const hasTo = Boolean(tableFilterValue("attendance", "dateTo"));
+        if (hasFrom || hasTo) return;
+        const { dateFrom, dateTo } = recentWeekendDateRange();
+        if (!dateFrom && !dateTo) return;
+        setTableFilterValue("attendance", "dateFrom", dateFrom);
+        setTableFilterValue("attendance", "dateTo", dateTo);
+        syncTableFilterInputValues("attendance");
+      }
+
       function createLocalId(prefix = "id") {
         const head = normalizeLower(prefix).replace(/[^a-z0-9]/g, "") || "id";
         const stamp = Date.now().toString(36);
@@ -5168,6 +5202,7 @@
       async function loadAdminDataRowsForTable(tableKey = "") {
         if (!["attendance", "performance", "grades", "reports"].includes(tableKey))
           return;
+        if (tableKey === "attendance") ensureDefaultAttendanceDateRange();
         const candidates = studentsForAdminDataHydration(tableKey);
         if (!candidates.length) {
           state.tableRows[tableKey] = [];
@@ -7362,8 +7397,7 @@
         buttonEl.disabled = pending || !canManageUsers() || count < 1;
         buttonEl.textContent =
           pending ? "Approving Queue..."
-          : count > 0 ? `Approve All in Queue (${count})`
-          : "Approve All in Queue";
+          : "Approve All";
       }
 
       function renderNewsReviewRows() {
@@ -8094,17 +8128,39 @@
         }
       }
 
-      function shouldPreserveAdminApiOriginParam() {
-        if (!ADMIN_API_ORIGIN) return false;
+      function shouldPreserveAdminApiOriginParamFor(apiOrigin = "") {
+        const normalizedOrigin = normalizeText(apiOrigin);
+        if (!normalizedOrigin) return false;
         if (isStaticAdminPreviewMode()) return true;
         if (!window.location.protocol.startsWith("http")) return true;
+        if (new URLSearchParams(window.location.search || "").has("apiOrigin"))
+          return true;
         try {
-          return new URL(ADMIN_API_ORIGIN, window.location.origin).origin !==
+          return new URL(normalizedOrigin, window.location.origin).origin !==
             window.location.origin;
         } catch (error) {
           void error;
           return true;
         }
+      }
+
+      function shouldPreserveAdminApiOriginParam() {
+        return shouldPreserveAdminApiOriginParamFor(ADMIN_API_ORIGIN);
+      }
+
+      function buildAdminRuntimeHrefWithOrigin(
+        href = DEFAULT_ADMIN_PAGE_PATH,
+        apiOrigin = "",
+        adminPagePath = DEFAULT_ADMIN_PAGE_PATH,
+      ) {
+        const targetUrl = new URL(
+          normalizeText(href) || normalizeText(adminPagePath) || DEFAULT_ADMIN_PAGE_PATH,
+          window.location.origin,
+        );
+        if (shouldPreserveAdminApiOriginParamFor(apiOrigin)) {
+          targetUrl.searchParams.set("apiOrigin", normalizeText(apiOrigin));
+        }
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
       }
 
       function compareIsoDateText(left = "", right = "") {
@@ -9211,7 +9267,12 @@
         const message = isUnset ?
           "School setup is unset." :
           "School setup is incomplete or invalid.";
-        return `${message} <a href="/admin/school-setup#schoolSetupPanel" rel="bookmark">Open School Setup</a> to set the quarter rows before using grades or portals.`;
+        const schoolSetupHref = buildAdminRuntimeHrefWithOrigin(
+          "/admin/school-setup#schoolSetupPanel",
+          resolveApiOrigin(),
+          resolveAdminPagePath(),
+        );
+        return `${message} <a href="${schoolSetupHref}" rel="bookmark">Open School Setup</a> to set the quarter rows before using grades or portals.`;
       }
 
       function renderSchoolSetupAccessWarning(setup = schoolSetupState()) {
@@ -9462,6 +9523,7 @@
           "assignments-data",
           "grades",
           "grades-data",
+          "grades-tabulator",
           "parent-tracking",
           "performance-data",
           "performance-engagement",
@@ -9863,11 +9925,24 @@
         return buildPagePathWithPreservedQuery(slug);
       }
 
+      function buildAdminRuntimeHref(href = ADMIN_PAGE_PATH) {
+        return buildAdminRuntimeHrefWithOrigin(
+          href,
+          ADMIN_API_ORIGIN,
+          ADMIN_PAGE_PATH,
+        );
+      }
+
       function refreshMenuLinkTargets() {
         document.querySelectorAll("[data-page-link]").forEach((linkEl) => {
           const slug = normalizeText(linkEl.getAttribute("data-page-link"));
           if (!slug) return;
           linkEl.setAttribute("href", buildPageNavigationHref(slug));
+        });
+        document.querySelectorAll('a[href^="/admin"]').forEach((linkEl) => {
+          const href = normalizeText(linkEl.getAttribute("href"));
+          if (!href) return;
+          linkEl.setAttribute("href", buildAdminRuntimeHref(href));
         });
       }
 
@@ -10142,7 +10217,7 @@
         });
         const queueBtn = document.getElementById("pt_queueSendBtn");
         if (queueBtn) {
-          queueBtn.textContent = "Submit for Admin Review";
+          queueBtn.textContent = "Submit";
         }
         const adminDataActionIds = [
           "attendanceArchiveToggleBtn",
@@ -11374,7 +11449,7 @@
           <td data-assignments-col="completion">${assignmentCompletionPillHtml(template)}</td>
           <td class="table-row-options-cell">
             <details class="row-options-menu">
-              <summary class="row-options-trigger portal-button portal-button-info portal-button-amber-ink-dark portal-button-compact">Actions</summary>
+              <summary class="row-options-trigger portal-button portal-button-primary portal-button-compact tbm01">Actions</summary>
               <div class="row-options-dropdown">
                 <button type="button" class="portal-button portal-button-affirm portal-button-compact" data-template-edit="${template.id}">Edit</button>
                 <button type="button" class="portal-button portal-button-info portal-button-compact" data-template-archive="${template.id}">${archived ? "Restore" : "Archive"}</button>
@@ -20314,13 +20389,13 @@
           );
           if (!exists) clearStudentForm();
         }
-        const activeAdminDataTable = adminDataTableKeyForPage(state.activePage);
-        if (activeAdminDataTable) await loadAdminDataRowsForTable(activeAdminDataTable);
         await refreshAttendanceLanding({
           reloadRows:
             state.activePage === "attendance" ||
             state.activePage === "attendance-admin",
         });
+        const activeAdminDataTable = adminDataTableKeyForPage(state.activePage);
+        if (activeAdminDataTable) await loadAdminDataRowsForTable(activeAdminDataTable);
         await refreshParentTracking({ preserveStudentSelection: true });
         if (state.dashboardSummary) renderDashboardSummary(state.dashboardSummary);
       }
@@ -20949,9 +21024,7 @@
         await Promise.all(
           missing.map(async (student) => {
             try {
-              const detail = await api(
-                `/api/admin/students/${encodeURIComponent(student.id)}`,
-              );
+              const detail = await api(`/api/admin/students/${encodeURIComponent(student.id)}`);
               if (detail && detail.id)
                 state.attendanceLanding.studentDetailsByStudentId[student.id] = detail;
               else
@@ -21510,7 +21583,7 @@
           <td data-attendance-col="comments">${row.comments || ""}</td>
           <td class="table-row-options-cell">
             <details class="row-options-menu">
-              <summary class="row-options-trigger portal-button portal-button-info portal-button-compact">Actions</summary>
+              <summary class="row-options-trigger portal-button portal-button-primary portal-button-compact tbm01">Actions</summary>
               <div class="row-options-dropdown">
                 <button type="button" class="portal-button portal-button-affirm portal-button-compact" data-edit="${row.id}">Edit</button>
                 <button type="button" class="portal-button portal-button-info portal-button-compact" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
@@ -21695,7 +21768,7 @@
           <td data-grades-col="inClassScore">${row.inClassScore ?? ""}</td>
           <td class="table-row-options-cell">
             <details class="row-options-menu">
-              <summary class="row-options-trigger portal-button portal-button-info portal-button-compact">Actions</summary>
+              <summary class="row-options-trigger portal-button portal-button-primary portal-button-compact tbm01">Actions</summary>
               <div class="row-options-dropdown">
                 <button type="button" class="portal-button portal-button-affirm portal-button-compact" data-edit="${row.id}">Edit</button>
                 <button type="button" class="portal-button portal-button-info portal-button-compact" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
@@ -21703,7 +21776,7 @@
               </div>
             </details>
           </td>
-        `;
+        `
           tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
             document.getElementById("g_id").value = row.id;
             document.getElementById("g_className").value = row.className || "";
@@ -21929,7 +22002,7 @@
           <td data-reports-col="inClassScore">${row.inClassScore ?? ""}</td>
           <td class="table-row-options-cell">
             <details class="row-options-menu">
-              <summary class="row-options-trigger portal-button portal-button-info portal-button-compact">Actions</summary>
+              <summary class="row-options-trigger portal-button portal-button-primary portal-button-compact tbm01">Actions</summary>
               <div class="row-options-dropdown">
                 <button type="button" class="portal-button portal-button-affirm portal-button-compact" data-edit="${row.id}">Edit</button>
                 <button type="button" class="portal-button portal-button-info portal-button-compact" data-archive="${row.id}">${archived ? "Restore" : "Archive"}</button>
@@ -21937,7 +22010,7 @@
               </div>
             </details>
           </td>
-        `;
+        `
           tr.querySelector(`[data-edit="${row.id}"]`).addEventListener("click", () => {
             document.getElementById("r_id").value = row.id;
             document.getElementById("r_className").value = row.className || "";
@@ -24206,10 +24279,13 @@
           if (customFrom) params.set("customFrom", customFrom);
           if (customTo) params.set("customTo", customTo);
         }
-        const targetUrl =
-          window.location.protocol.startsWith("http") ?
-            new URL("/web-asset/admin/grades-tabulator.html", window.location.origin) :
-            new URL("grades-tabulator.html", window.location.href);
+        const targetHref =
+          isStaticAdminPreviewMode() ?
+            "/web-asset/admin/grades-tabulator.html"
+          : buildPageNavigationHref("grades-tabulator");
+        const targetUrl = window.location.protocol.startsWith("http") ?
+            new URL(targetHref, window.location.origin)
+          : new URL("grades-tabulator.html", window.location.href);
         const targetParams = targetUrl.searchParams;
         if (shouldPreserveAdminApiOriginParam())
           targetParams.set("apiOrigin", ADMIN_API_ORIGIN);

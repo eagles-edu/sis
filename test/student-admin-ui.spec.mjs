@@ -2369,7 +2369,7 @@ test("tracking data submenus are visible for admin and hidden for teacher", asyn
       { id: "attendanceAdminSubmenu", pageLinks: ["attendance-admin"] },
       { id: "assignmentDataSubmenu", pageLinks: ["assignments-data"] },
       { id: "performanceDataSubmenu", pageLinks: ["performance-data"] },
-      { id: "gradesDataSubmenu", pageLinks: ["grades-data"] },
+      { id: "gradesDataSubmenu", pageLinks: ["grades-data", "grades-tabulator"] },
     ]
     submenuChecks.forEach(({ id, pageLinks }) => {
       const submenu = document.getElementById(id)
@@ -4789,7 +4789,7 @@ test("parent tracking page auto-fills metrics, reuses lesson summary, and queues
     assert.equal(document.getElementById("pt_participationScore").value, "3")
     assert.equal(document.getElementById("pt_academicScore").value, "5")
   })
-  assert.match(document.getElementById("pt_queueSendBtn").textContent || "", /Submit for Admin Review/i)
+  assert.match(document.getElementById("pt_queueSendBtn").textContent || "", /^Submit$/i)
 
   document.getElementById("pt_comments").value = "Parent should review vocabulary notebook daily."
   document.getElementById("pt_comments").dispatchEvent(new dom.window.Event("input", { bubbles: true }))

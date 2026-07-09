@@ -1393,6 +1393,33 @@ body.admin-portal-page #authPanel .actions {
 body.admin-portal-page #authPanel .actions-2 > * {
   flex: 1 1 calc(50% - 6px);
 }
+body.admin-portal-page .row > .grid-actions,
+body.parent-portal-page .row > .grid-actions,
+body.student-portal-page .row > .grid-actions,
+.row > .grid-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 1 / -1;
+  margin-top: 2px;
+}
+body.admin-portal-page .row > .grid-actions > .portal-button,
+body.parent-portal-page .row > .grid-actions > .portal-button,
+body.student-portal-page .row > .grid-actions > .portal-button,
+.row > .grid-actions > .portal-button {
+  flex: 0 0 var(--portal-button-inline);
+  inline-size: var(--portal-button-inline);
+}
+@media (max-width: 860px) {
+  body.admin-portal-page .row > .grid-actions > .portal-button,
+  body.parent-portal-page .row > .grid-actions > .portal-button,
+  body.student-portal-page .row > .grid-actions > .portal-button,
+  .row > .grid-actions > .portal-button {
+    flex: 1 1 160px;
+    inline-size: auto;
+  }
+}
 body.student-portal-page #loginPanel .login-links,
 body.parent-portal-page #loginCard .login-links,
 body.admin-portal-page #authPanel .login-links {
@@ -1891,6 +1918,13 @@ body.admin-portal-page .row-options-dropdown {
   border: 1px solid var(--portal-role-border);
   box-shadow: var(--portal-role-shadow);
   color: var(--portal-text);
+}
+body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .row-options-menu .portal-button,
+body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .table-scroll-wrap tbody td:has(.queue-row-btn) .queue-row-btn {
+  --portal-button-min-block: 36px;
+  box-sizing: border-box;
+  min-block-size: 36px;
+  min-height: 36px;
 }
 body.admin-portal-page .row-options-trigger:not(.portal-button):hover,
 body.admin-portal-page .row-options-trigger:not(.portal-button):focus-visible,
@@ -9708,6 +9742,22 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   .text-zoom-controls .zoom-label {
     display: none;
   }
+  body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .table-row-options-cell,
+  body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .table-scroll-wrap tbody td:has(.queue-row-btn) {
+    background: var(--panel);
+    position: sticky;
+    right: 0;
+    z-index: 2;
+  }
+  body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .table-row-options-cell .row-options-trigger.portal-button,
+  body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .table-scroll-wrap tbody td:has(.queue-row-btn) .queue-row-btn {
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-width: 72px;
+  }
+  body:is(.admin-portal-page, .parent-portal-page, .student-portal-page) .row-options-dropdown {
+    inset-inline-end: 0;
+  }
   .header-actions,
   .hero-actions,
   .app-header-actions {
@@ -9734,9 +9784,44 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     min-width: 40px;
     padding: 3px 6px;
   }
+  body.admin-portal-page div.header-bar {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    justify-content: center;
+    line-height: 1.15;
+    padding: 0.55rem 0.75rem;
+    text-align: center;
+  }
+  body.admin-portal-page div.header-bar a {
+    display: inline-flex;
+    justify-content: center;
+    min-inline-size: 0;
+  }
+  body.admin-portal-page .app-page-header {
+    padding: 6px 8px;
+  }
+  body.admin-portal-page .app-brand-strip {
+    gap: 6px;
+    row-gap: 4px;
+  }
+  body.admin-portal-page .app-header-actions {
+    gap: 4px;
+  }
+  body.admin-portal-page .hub-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+  body.admin-portal-page .hub-footer__copy {
+    white-space: normal;
+  }
+  body.admin-portal-page .hub-footer__action {
+    margin-inline-start: 0;
+    white-space: normal;
+  }
 }
 /* ================================
-    Footer
+   Footer
    ================================ */
 .footer {
   background: var(--footer-background);
@@ -10182,4 +10267,10 @@ body.student-portal-page .header-bar a:hover {
   --portal-color-fbe71060c6: #2d78b4;
   --portal-color-fd15f49e34: #b10128;
   --portal-color-ff50535d27: rgba(255, 255, 255, 0.62);
+}
+.sm-lab-mar {
+  margin: 1rem 0 .55rem 0!important;
+}
+.tbm01 {
+  margin: .25rem 0!important;
 }
