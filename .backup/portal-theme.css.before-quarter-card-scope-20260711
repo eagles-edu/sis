@@ -3761,12 +3761,14 @@ body.parent-portal-page .grade-quarter-stats {
 }
 body.student-portal-page .grade-quarter-stat,
 body.parent-portal-page .grade-quarter-stat {
+  background: var(--portal-surface-support);
+  border: 1px solid var(--line);
+  border-radius: 10px;
   box-sizing: border-box;
   display: grid;
   gap: 0.06rem;
   min-width: 0;
-  min-height: 5.25rem;
-  padding: 0.75rem 0.8rem;
+  padding: 0.32rem 0.42rem;
 }
 body.student-portal-page .grade-quarter-stat-label,
 body.parent-portal-page .grade-quarter-stat-label {
@@ -3792,11 +3794,10 @@ body.parent-portal-page .quarter-board-copy {
 }
 body.student-portal-page .quarter-board-actions,
 body.parent-portal-page .quarter-board-actions {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
+  align-items: flex-end;
+  display: grid;
   gap: 8px;
-  justify-content: flex-end;
+  justify-items: end;
   min-width: 0;
 }
 body.student-portal-page .quarter-board-reset-columns,
@@ -3814,10 +3815,10 @@ body.parent-portal-page .grade-quarter-picker {
 body.student-portal-page .grade-quarter-picker-btn,
 body.parent-portal-page .grade-quarter-picker-btn {
   align-items: center;
-  background: var(--portal-button-amber-fill) !important;
-  border: 1px solid var(--portal-button-amber-stroke) !important;
+  background: var(--portal-surface-support);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--portal-button-amber-ink) !important;
+  color: var(--ink);
   cursor: pointer;
   display: inline-flex;
   flex-direction: column;
@@ -3838,8 +3839,8 @@ transition:
 }
 body.student-portal-page .grade-quarter-picker-btn:hover,
 body.parent-portal-page .grade-quarter-picker-btn:hover {
-  background: var(--portal-button-amber-fill-hover) !important;
-  border-color: var(--portal-button-amber-stroke-hover) !important;
+  background: var(--portal-quarter-button-hover-bg);
+  border-color: var(--portal-quarter-button-hover-border);
   transform: translateY(-1px);
 }
 body.student-portal-page .grade-quarter-picker-btn.is-current,
@@ -3851,11 +3852,10 @@ body.student-portal-page .grade-quarter-picker-btn.is-active,
 body.student-portal-page .grade-quarter-picker-btn[aria-pressed="true"],
 body.parent-portal-page .grade-quarter-picker-btn.is-active,
 body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"] {
-  background: var(--portal-button-amber-stroke) !important;
-  border-color: var(--portal-button-amber-ink) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-button-amber-stroke) 48%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.32);
-  color: var(--secondary-color) !important;
-  font-weight: 950;
+  background: var(--portal-quarter-button-active-bg);
+  border-color: var(--portal-quarter-button-active-border);
+  box-shadow: var(--portal-quarter-button-active-shadow);
+  color: var(--portal-quarter-button-active-text);
   transform: translateY(-1px);
 }
 body.student-portal-page .grade-quarter-picker-btn:focus-visible,
@@ -5688,10 +5688,6 @@ html[data-theme="dark"] body.student-portal-page .detail-empty {
   }
   body.student-portal-page .detail-metrics,
   body.parent-portal-page .report-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  body.student-portal-page .grade-quarter-stats,
-  body.parent-portal-page .grade-quarter-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   body.parent-portal-page #overviewPanel {

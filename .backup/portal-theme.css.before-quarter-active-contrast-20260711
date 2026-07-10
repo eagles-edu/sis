@@ -3851,11 +3851,10 @@ body.student-portal-page .grade-quarter-picker-btn.is-active,
 body.student-portal-page .grade-quarter-picker-btn[aria-pressed="true"],
 body.parent-portal-page .grade-quarter-picker-btn.is-active,
 body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"] {
-  background: var(--portal-button-amber-stroke) !important;
-  border-color: var(--portal-button-amber-ink) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-button-amber-stroke) 48%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.32);
-  color: var(--secondary-color) !important;
-  font-weight: 950;
+  background: var(--portal-button-amber-fill-active) !important;
+  border-color: var(--portal-button-amber-stroke-active) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--portal-button-amber-stroke) 32%, transparent);
+  color: var(--portal-button-amber-ink) !important;
   transform: translateY(-1px);
 }
 body.student-portal-page .grade-quarter-picker-btn:focus-visible,

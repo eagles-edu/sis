@@ -14,19 +14,6 @@ test("sync-and-restart-test-runtime defaults to loopback health and split env ex
   )
 })
 
-test("full test-mirror sync creates a restorable database backup without purging the database", () => {
-  assert.match(script, /TEST_BACKUP_BUNDLE_DIR=""/)
-  assert.match(script, /TEST_DATABASE_BACKUP_DIR=""/)
-  assert.match(script, /backup_test_database\(\)/)
-  assert.match(script, /if \[\[ -f "\$\{TEST_ROOT\}\/\.env\.test" \]\]; then/)
-  assert.match(script, /if \[\[ "\$\{MODE\}" == "full" \]\]; then\s+backup_test_database/s)
-  assert.match(script, /tools\/db-backup-smart\.sh/)
-  assert.match(script, /--runtime-env "\$\{test_env_path\}"/)
-  assert.match(script, /"databaseBackupRequired": \$\(\[\[ "\$\{MODE\}" == "full" \]\]/)
-  assert.match(script, /"mirrorPurgeLeavesDatabaseUntouched": true/)
-  assert.doesNotMatch(script, /dropdb|DROP DATABASE|TRUNCATE|pg_restore/)
-})
-
 test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", () => {
   assert.match(
     script,
@@ -53,6 +40,6 @@ test("sync-and-restart-test-runtime skips Prisma refresh in public mode only", (
   assert.match(script, /log "syncing test public mirror into \$\{TEST_PUBLIC_ROOT\}"/)
   assert.match(
     script,
-    /main\(\) \{\s+log "file mirror sync; full mode includes a restorable test DB backup; git commit matching is not part of the contract"\s+build_admin_assets\s+backup_test_state\s+wipe_test_target_contents\s+verify_test_preserved_runtime_files\s+wipe_target_contents "\$TEST_PUBLIC_ROOT"\s+run_sync/s,
+    /main\(\) \{\s+log "file mirror only; git commit matching is not part of the test sync contract"\s+build_admin_assets\s+backup_test_state\s+wipe_test_target_contents\s+verify_test_preserved_runtime_files\s+wipe_target_contents "\$TEST_PUBLIC_ROOT"\s+run_sync/s,
   )
 })

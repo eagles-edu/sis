@@ -56,7 +56,7 @@ test("portal pages load the shared portal theme stylesheet", () => {
     const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
     assert.match(
       html,
-      /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css(?:\?v=[^"]+)?">/,
+      /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">/,
       `${label} should link the shared portal theme`,
     )
   }
@@ -414,7 +414,12 @@ test("shared portal theme owns reusable surface roles for columns, panels, cards
 })
 
 test("shared portal theme keeps the overview grids at 3x3, not wider", () => {
-  assert.match(sharedTheme, /body\.parent-portal-page \.metrics,body\.student-portal-page \.metrics\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/)
+  assert.ok(
+    sharedTheme.includes(
+      "@media (min-width:720px){\n  body.parent-portal-page .identity-list,body.student-portal-page .identity-list{grid-template-columns:repeat(4,minmax(0,1fr))}body.parent-portal-page .metrics,body.parent-portal-page .report-metrics,body.student-portal-page .detail-metrics,body.student-portal-page .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}",
+    ),
+    "overview metrics should resolve to a 3-column shared grid on wider screens",
+  )
   assert.doesNotMatch(
     sharedTheme,
     /body\.(?:student|parent)-portal-page \.metrics[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\);/s,

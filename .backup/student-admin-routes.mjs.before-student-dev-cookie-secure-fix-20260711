@@ -374,10 +374,7 @@ const STUDENT_SESSION_COOKIE_SAME_SITE =
   || "Strict"
 const STUDENT_SESSION_COOKIE_SECURE = resolveBoolean(
   process.env.STUDENT_STUDENT_SESSION_COOKIE_SECURE,
-  resolveBoolean(
-    process.env.STUDENT_ADMIN_SESSION_COOKIE_SECURE,
-    normalizeText(process.env.NODE_ENV).toLowerCase() === "production"
-  )
+  resolveBoolean(process.env.STUDENT_ADMIN_SESSION_COOKIE_SECURE, normalizeText(process.env.NODE_ENV).toLowerCase() !== "test")
 )
 const SERVICE_CONTROL_ENABLED = resolveBoolean(process.env.STUDENT_ADMIN_SERVICE_CONTROL_ENABLED, true)
 const EXERCISE_MAILER_SERVICE_NAME =

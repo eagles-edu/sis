@@ -60,10 +60,8 @@ EOF
 }
 
 TEST_ROUTE_MATRIX="${SIS_TEST_ROUTE_MATRIX:-$(build_test_route_matrix)}"
-TEST_BACKUP_BUNDLE_DIR=""
-TEST_DATABASE_BACKUP_DIR=""
-# Mirror content is synced by file whitelist; full mode also creates a
-# restorable PostgreSQL backup. Git commit ancestry is not part of the contract.
+# File mirror only: this wrapper syncs content into the test host and does not
+# use git commit ancestry as part of the sync contract.
 if [[ -n "${SIS_TEST_VERBOSE_ENV:-}" ]]; then
   # shellcheck disable=SC2206
   TEST_VERBOSE_ENV=(${SIS_TEST_VERBOSE_ENV})
@@ -82,8 +80,6 @@ backup_test_state() {
   local runtime_snapshot_dir="${bundle_dir}/runtime"
   local public_snapshot_dir="${bundle_dir}/public_html"
   local vhost_snapshot_dir="${bundle_dir}/vhost"
-  TEST_BACKUP_BUNDLE_DIR="${bundle_dir}"
-  TEST_DATABASE_BACKUP_DIR="${bundle_dir}/database"
 
   log "creating test backup bundle at ${bundle_dir}"
   mkdir -p "${runtime_snapshot_dir}" "${public_snapshot_dir}" "${vhost_snapshot_dir}"
@@ -106,10 +102,6 @@ backup_test_state() {
     cp -a "${REPO_ROOT}/deploy/nginx/test.eagles.edu.vn.conf" "${vhost_snapshot_dir}/repo-test.eagles.edu.vn.conf"
   fi
 
-  if [[ "${MODE}" == "full" ]]; then
-    backup_test_database
-  fi
-
   cat > "${bundle_dir}/manifest.json" <<EOF
 {
   "createdAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
@@ -121,33 +113,11 @@ backup_test_state() {
   "runtimeSnapshotDir": "${runtime_snapshot_dir}",
   "publicSnapshotDir": "${public_snapshot_dir}",
   "vhostSnapshotDir": "${vhost_snapshot_dir}",
-  "databaseBackupDir": "${TEST_DATABASE_BACKUP_DIR}",
-  "databaseBackupRequired": $([[ "${MODE}" == "full" ]] && echo true || echo false),
-  "databaseManagedByPrisma": true,
-  "mirrorPurgeLeavesDatabaseUntouched": true
+  "databaseManagedByPrisma": true
 }
 EOF
 
   log "test backup bundle ready: ${bundle_dir}"
-}
-
-backup_test_database() {
-  local test_env_path="${TEST_ROOT}/.env.test"
-
-  if [[ ! -f "${test_env_path}" ]]; then
-    echo "cannot back up test database; missing ${test_env_path}" >&2
-    return 1
-  fi
-
-  mkdir -p "${TEST_DATABASE_BACKUP_DIR}"
-  log "backing up test database into ${TEST_DATABASE_BACKUP_DIR}"
-  (
-    cd "${REPO_ROOT}"
-    tools/db-backup-smart.sh \
-      --runtime-env "${test_env_path}" \
-      --output-dir "${TEST_DATABASE_BACKUP_DIR}" \
-      --no-prune
-  )
 }
 
 verify_portal_sync_proof() {
@@ -1051,7 +1021,7 @@ restart_test_runtime() {
 }
 
 main() {
-  log "file mirror sync; full mode includes a restorable test DB backup; git commit matching is not part of the contract"
+  log "file mirror only; git commit matching is not part of the test sync contract"
   build_admin_assets
   backup_test_state
   wipe_test_target_contents

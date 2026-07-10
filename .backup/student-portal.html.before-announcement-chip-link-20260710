@@ -26,7 +26,7 @@
       });
     }
   </script>
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css?v=20260711a">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css">
   <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
@@ -2266,7 +2266,8 @@
         const safeLabel = escapeHtml(normalizedLabel);
         return (
           `<span class="header-action-row" role="group" aria-label="${safeLabel} column controls" data-header-label="${safeLabel}">` +
-          `<button class="header-action-btn portal-button portal-button-alt" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">Hide</button>` +
+          `<button class="header-action-btn portal-button portal-button-alt plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
+          `<button class="header-action-btn portal-button portal-button-alt minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
           `</span>`
         );
       }
@@ -2328,15 +2329,6 @@
           column.hide();
           notifyQuarterMatrixAction(`${safeLabel} column hidden.`);
         }
-      }
-
-      function resetQuarterTableColumns(table) {
-        const columns = Array.isArray(table?.getColumns?.()) ? table.getColumns() : [];
-        columns.forEach((column) => {
-          column?.show?.();
-          column?.updateDefinition?.({ frozen: false });
-        });
-        notifyQuarterMatrixAction("All grade columns restored.");
       }
 
       function handleHeaderActionClick(event, column) {
@@ -2691,12 +2683,12 @@
 
       function buildQuarterStatBadge(label, value) {
         const card = document.createElement("div");
-        card.className = "metric portal-theme-card metric-blue grade-quarter-stat";
+        card.className = "grade-quarter-stat";
         const key = document.createElement("span");
-        key.className = "k grade-quarter-stat-label";
+        key.className = "grade-quarter-stat-label";
         key.textContent = t(label);
         const metricValue = document.createElement("span");
-        metricValue.className = "v grade-quarter-stat-value";
+        metricValue.className = "grade-quarter-stat-value";
         metricValue.textContent = t(value);
         card.append(key, metricValue);
         return card;
@@ -2746,12 +2738,8 @@
         const meta = document.createElement("p");
         meta.className = "quarter-board-meta";
         copy.append(title, meta);
-        const resetColumnsButton = document.createElement("button");
-        resetColumnsButton.type = "button";
-        resetColumnsButton.className = "quarter-board-reset-columns portal-button portal-button-teal-refresh";
-        resetColumnsButton.textContent = "Reset columns";
-        resetColumnsButton.setAttribute("aria-label", "Show all grade columns");
-        resetColumnsButton.addEventListener("click", () => resetQuarterTableColumns(state.detailGradeTable));
+        const currentPill = document.createElement("span");
+        currentPill.className = "quarter-board-current-pill";
         const actions = document.createElement("div");
         actions.className = "quarter-board-actions";
         const picker = document.createElement("div");
@@ -2793,6 +2781,10 @@
           countChip.className = "quarter-board-meta-chip quarter-board-meta-count";
           countChip.textContent = `${group.total || 0} exercise record(s)`;
           meta.append(quarterChip, rangeChip, countChip);
+          const isCurrentQuarter = group.quarterCode === quarterState.currentQuarterCode;
+          currentPill.hidden = isCurrentQuarter;
+          currentPill.classList.toggle("is-current", isCurrentQuarter);
+          currentPill.textContent = `Selected ${t(group.quarterLabel) || "quarter"}`;
           summary.replaceChildren(
             buildQuarterStatBadge("Exercises", String(group.total || 0)),
             buildQuarterStatBadge("Mean /10", formatScoreOutOfTen(group.meanPercent)),
@@ -2965,7 +2957,7 @@
           const quarterCode = t(group.quarterCode) || `q${group.quarterNumber || 1}`;
           const button = document.createElement("button");
           button.type = "button";
-          button.className = "grade-quarter-picker-btn portal-button-info";
+          button.className = "grade-quarter-picker-btn";
           button.innerHTML = (
             `<span class="grade-quarter-picker-btn-label">${escapeHtml(t(group.quarterLabel) || quarterCode.toUpperCase())}</span>` +
             `<span class="grade-quarter-picker-btn-sub">${escapeHtml(
@@ -2979,7 +2971,7 @@
           picker.append(button);
         });
 
-        actions.append(picker, resetColumnsButton);
+        actions.append(picker, currentPill);
         head.append(copy, actions);
         card.append(head, summary, tableHost);
         shell.append(card);
@@ -3062,8 +3054,6 @@
           row?.url,
           row?.link,
           row?.href,
-          row?.assignmentBundleJson?.items?.[0]?.url,
-          row?.assignmentBundleJson?.exerciseUrls?.[0],
         ];
         for (const candidate of directCandidates) {
           const normalized = normalizePortalLinkUrl(candidate);
@@ -3787,7 +3777,6 @@
               meta: `Due ${formatPortalDate(row.dueAt || row.dueDate)}${t(row.className) ? ` | ${t(row.className)}` : ""}`,
               note: t(row.comments) || "Requires immediate completion and submission.",
               tone: "bad",
-              href: resolveHomeworkAnnouncementUrl(row),
             })),
             primaryEmpty: "No overdue homework requires action right now.",
             historyTitle: "Recent Homework Timeline",
@@ -3867,7 +3856,6 @@
               title: `Report${t(row.className) ? ` | ${t(row.className)}` : ""}`,
               start: t(row.generatedDate),
               allDay: true,
-              url: buildStudentReportViewerUrl(row),
               classNames: ["fc-event-report"],
             })),
             primaryTitle: "Latest Reports",
@@ -3968,7 +3956,6 @@
             title: `Report | ${t(row.className) || "Class"}`,
             start: t(row.generatedDate),
             allDay: true,
-            url: buildStudentReportViewerUrl(row),
             classNames: ["fc-event-report"],
           })),
         ].filter(Boolean);
@@ -5360,14 +5347,9 @@
             const detail = t(info.event.extendedProps?.detail);
             const tooltip = [info.event.title, detail].filter(Boolean).join(" - ");
             if (tooltip) info.el.setAttribute("title", tooltip);
-            const eventUrl = normalizePortalLinkUrl(info.event.url || "");
-            if (eventUrl) {
-              const eventLink = info.el instanceof HTMLAnchorElement ? info.el : info.el.querySelector("a");
-              if (eventLink) {
-                eventLink.href = eventUrl;
-                eventLink.target = "_blank";
-                eventLink.rel = "noopener noreferrer";
-              }
+            if (normalizePortalLinkUrl(info.event.url || "") && info.el instanceof HTMLAnchorElement) {
+              info.el.target = "_blank";
+              info.el.rel = "noopener noreferrer";
             }
           },
         });

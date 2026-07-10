@@ -31,7 +31,7 @@
       });
     }
   </script>
-  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css?v=20260711a">
+  <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
@@ -2696,12 +2696,13 @@
     function buildHeaderActionButtons(label = "Column") {
       const normalizedLabel = normalizeText(label) || "Column";
       const safeLabel = escapeHtml(normalizedLabel);
-        return (
-          `<span class="header-action-row" role="group" aria-label="${safeLabel} column controls" data-header-label="${safeLabel}">` +
-          `<button class="header-action-btn portal-button portal-button-alt" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">Hide</button>` +
+      return (
+        `<span class="header-action-row" role="group" aria-label="${safeLabel} column controls" data-header-label="${safeLabel}">` +
+        `<button class="header-action-btn portal-button portal-button-alt plus" type="button" data-header-action="pin" aria-label="Pin or unpin ${safeLabel} column">+</button>` +
+        `<button class="header-action-btn portal-button portal-button-alt minus" type="button" data-header-action="hide" aria-label="Hide ${safeLabel} column">-</button>` +
           `</span>`
-        );
-      }
+      );
+    }
 
     function notifyQuarterMatrixAction(message, isError = false) {
       const text = normalizeText(message);
@@ -2760,15 +2761,6 @@
         column.hide();
         notifyQuarterMatrixAction(`${safeLabel} column hidden.`);
       }
-    }
-
-    function resetQuarterTableColumns(table) {
-      const columns = Array.isArray(table?.getColumns?.()) ? table.getColumns() : [];
-      columns.forEach((column) => {
-        column?.show?.();
-        column?.updateDefinition?.({ frozen: false });
-      });
-      notifyQuarterMatrixAction("All grade columns restored.");
     }
 
     function handleHeaderActionClick(event, column) {
@@ -3123,12 +3115,12 @@
 
     function buildQuarterStatBadge(label, value) {
       const card = document.createElement("div");
-      card.className = "metric portal-theme-card metric-blue grade-quarter-stat";
+      card.className = "grade-quarter-stat";
       const key = document.createElement("span");
-      key.className = "k grade-quarter-stat-label";
+      key.className = "grade-quarter-stat-label";
       key.textContent = normalizeText(label);
       const metricValue = document.createElement("span");
-      metricValue.className = "v grade-quarter-stat-value";
+      metricValue.className = "grade-quarter-stat-value";
       metricValue.textContent = normalizeText(value);
       card.append(key, metricValue);
       return card;
@@ -3178,12 +3170,8 @@
       const meta = document.createElement("p");
       meta.className = "quarter-board-meta";
       copy.append(title, meta);
-        const resetColumnsButton = document.createElement("button");
-      resetColumnsButton.type = "button";
-      resetColumnsButton.className = "quarter-board-reset-columns portal-button portal-button-teal-refresh";
-      resetColumnsButton.textContent = "Reset columns";
-      resetColumnsButton.setAttribute("aria-label", "Show all grade columns");
-      resetColumnsButton.addEventListener("click", () => resetQuarterTableColumns(state.detailGradeTable));
+        const currentPill = document.createElement("span");
+        currentPill.className = "quarter-board-current-pill";
       const actions = document.createElement("div");
       actions.className = "quarter-board-actions";
       const picker = document.createElement("div");
@@ -3225,6 +3213,10 @@
           countChip.className = "quarter-board-meta-chip quarter-board-meta-count";
           countChip.textContent = `${group.total || 0} exercise record(s)`;
           meta.append(quarterChip, rangeChip, countChip);
+      const isCurrentQuarter = group.quarterCode === quarterState.currentQuarterCode;
+      currentPill.hidden = isCurrentQuarter;
+      currentPill.classList.toggle("is-current", isCurrentQuarter);
+      currentPill.textContent = `Selected ${normalizeText(group.quarterLabel) || "quarter"}`;
           summary.replaceChildren(
             buildQuarterStatBadge("Exercises", String(group.total || 0)),
             buildQuarterStatBadge("Mean /10", formatScoreOutOfTen(group.meanPercent)),
@@ -3397,7 +3389,7 @@
         const quarterCode = normalizeText(group.quarterCode) || `q${group.quarterNumber || 1}`;
         const button = document.createElement("button");
         button.type = "button";
-      button.className = "grade-quarter-picker-btn portal-button-info";
+        button.className = "grade-quarter-picker-btn";
         button.innerHTML = (
           `<span class="grade-quarter-picker-btn-label">${escapeHtml(normalizeText(group.quarterLabel) || quarterCode.toUpperCase())}</span>` +
           `<span class="grade-quarter-picker-btn-sub">${escapeHtml(
@@ -3411,7 +3403,7 @@
         picker.append(button);
       });
 
-      actions.append(picker, resetColumnsButton);
+      actions.append(picker, currentPill);
       head.append(copy, actions);
       card.append(head, summary, tableHost);
       shell.append(card);

@@ -3814,10 +3814,10 @@ body.parent-portal-page .grade-quarter-picker {
 body.student-portal-page .grade-quarter-picker-btn,
 body.parent-portal-page .grade-quarter-picker-btn {
   align-items: center;
-  background: var(--portal-button-amber-fill) !important;
-  border: 1px solid var(--portal-button-amber-stroke) !important;
+  background: var(--portal-surface-support);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--portal-button-amber-ink) !important;
+  color: var(--ink);
   cursor: pointer;
   display: inline-flex;
   flex-direction: column;
@@ -3838,8 +3838,8 @@ transition:
 }
 body.student-portal-page .grade-quarter-picker-btn:hover,
 body.parent-portal-page .grade-quarter-picker-btn:hover {
-  background: var(--portal-button-amber-fill-hover) !important;
-  border-color: var(--portal-button-amber-stroke-hover) !important;
+  background: var(--portal-quarter-button-hover-bg);
+  border-color: var(--portal-quarter-button-hover-border);
   transform: translateY(-1px);
 }
 body.student-portal-page .grade-quarter-picker-btn.is-current,
@@ -3851,11 +3851,10 @@ body.student-portal-page .grade-quarter-picker-btn.is-active,
 body.student-portal-page .grade-quarter-picker-btn[aria-pressed="true"],
 body.parent-portal-page .grade-quarter-picker-btn.is-active,
 body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"] {
-  background: var(--portal-button-amber-stroke) !important;
-  border-color: var(--portal-button-amber-ink) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-button-amber-stroke) 48%, transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.32);
-  color: var(--secondary-color) !important;
-  font-weight: 950;
+  background: var(--portal-quarter-button-active-bg);
+  border-color: var(--portal-quarter-button-active-border);
+  box-shadow: var(--portal-quarter-button-active-shadow);
+  color: var(--portal-quarter-button-active-text);
   transform: translateY(-1px);
 }
 body.student-portal-page .grade-quarter-picker-btn:focus-visible,

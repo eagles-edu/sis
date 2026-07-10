@@ -368,9 +368,6 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
                   dueAt: "2025-09-15T00:00:00.000Z",
                   comments: "Finish the final paragraph and upload the draft.",
                   status: "pending",
-                  assignmentBundleJson: {
-                    items: [{ title: "Essay Draft", url: "https://example.com/essay-draft" }],
-                  },
                 },
               ],
               overdueHomework: [
@@ -1034,19 +1031,6 @@ test(
       assert.match(assignmentPanels.historyTitle, /Recent Assignment History/i);
       assert.match(assignmentPanels.calendarTitle, /Current Homework Calendar/i);
       assert.match(assignmentPanels.calendarSummary, /Open homework is plotted|No open homework is currently scheduled/i);
-      const currentEventState = await page.evaluate(() => {
-        const eventTitle = globalThis.document.querySelector(".fc-event-homework-track:not(.fc-event-homework-overdue) .fc-event-title");
-        const eventLink = eventTitle?.closest("a");
-        const dayCell = eventTitle?.closest("[data-date]");
-        return {
-          title: eventTitle?.textContent || "",
-          href: eventLink?.getAttribute("href") || "",
-          date: dayCell?.getAttribute("data-date") || "",
-        };
-      });
-      assert.equal(currentEventState.title, "Essay Draft");
-      assert.equal(currentEventState.href, "https://example.com/essay-draft");
-      assert.equal(currentEventState.date, "2025-09-15");
 
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="past-due-homework"]')?.click();
@@ -1068,24 +1052,6 @@ test(
       assert.match(overdueEventState.color, /rgb\(125,\s*0,\s*16\)/i);
       assert.equal(overdueEventState.eventHref, "https://example.com/missed-exercise");
       assert.equal(overdueEventState.primaryHref, "https://example.com/missed-exercise");
-
-      await page.evaluate(() => {
-        globalThis.document.querySelector('a[data-page-target="performance-reports"]')?.click();
-      });
-      await page.waitForFunction(() => /Performance Reports SYTD Archive/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || ""));
-      const reportEventState = await page.evaluate(() => {
-        const eventTitle = globalThis.document.querySelector(".fc-event-report .fc-event-title");
-        const eventLink = eventTitle?.closest("a");
-        const dayCell = eventTitle?.closest("[data-date]");
-        return {
-          title: eventTitle?.textContent || "",
-          href: eventLink?.getAttribute("href") || "",
-          date: dayCell?.getAttribute("data-date") || "",
-        };
-      });
-      assert.match(reportEventState.title, /Report\s*\|\s*A2 Flyers/i);
-      assert.equal(reportEventState.href, "/student/reports/a2-flyers-q1-report-1");
-      assert.equal(reportEventState.date, "2026-03-10");
 
       await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="home"]')?.click();

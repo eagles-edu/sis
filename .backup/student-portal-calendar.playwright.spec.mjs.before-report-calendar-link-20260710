@@ -1070,24 +1070,6 @@ test(
       assert.equal(overdueEventState.primaryHref, "https://example.com/missed-exercise");
 
       await page.evaluate(() => {
-        globalThis.document.querySelector('a[data-page-target="performance-reports"]')?.click();
-      });
-      await page.waitForFunction(() => /Performance Reports SYTD Archive/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || ""));
-      const reportEventState = await page.evaluate(() => {
-        const eventTitle = globalThis.document.querySelector(".fc-event-report .fc-event-title");
-        const eventLink = eventTitle?.closest("a");
-        const dayCell = eventTitle?.closest("[data-date]");
-        return {
-          title: eventTitle?.textContent || "",
-          href: eventLink?.getAttribute("href") || "",
-          date: dayCell?.getAttribute("data-date") || "",
-        };
-      });
-      assert.match(reportEventState.title, /Report\s*\|\s*A2 Flyers/i);
-      assert.equal(reportEventState.href, "/student/reports/a2-flyers-q1-report-1");
-      assert.equal(reportEventState.date, "2026-03-10");
-
-      await page.evaluate(() => {
         globalThis.document.querySelector('a[data-page-target="home"]')?.click();
       });
       await page.click("#openNewsPageBtn");
