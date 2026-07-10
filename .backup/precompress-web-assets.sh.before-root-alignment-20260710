@@ -7,8 +7,6 @@ set -eu
 
 ADMIN_ROOT=${ADMIN_ROOT:-/home/admin.eagles.edu.vn/public_html}
 TEST_ROOT=${TEST_ROOT:-/home/test.eagles.edu.vn/public_html}
-ADMIN_RUNTIME_ROOT=${ADMIN_RUNTIME_ROOT:-/home/admin.eagles.edu.vn/sis}
-TEST_RUNTIME_ROOT=${TEST_RUNTIME_ROOT:-/home/test.eagles.edu.vn/sis}
 ADMIN_URL=${ADMIN_URL:-https://admin.eagles.edu.vn/}
 TEST_URL=${TEST_URL:-https://test.eagles.edu.vn/}
 SKIP_VERIFY=${SKIP_VERIFY:-0}
@@ -24,14 +22,12 @@ usage() {
 case "${1:-}" in
     admin)
         MIRROR_LABEL=admin
-        MIRROR_PUBLIC_ROOT=$ADMIN_ROOT
-        MIRROR_RUNTIME_ROOT=$ADMIN_RUNTIME_ROOT
+        MIRROR_ROOT=$ADMIN_ROOT
         MIRROR_URL=$ADMIN_URL
         ;;
     test)
         MIRROR_LABEL=test
-        MIRROR_PUBLIC_ROOT=$TEST_ROOT
-        MIRROR_RUNTIME_ROOT=$TEST_RUNTIME_ROOT
+        MIRROR_ROOT=$TEST_ROOT
         MIRROR_URL=$TEST_URL
         ;;
     -h|--help)
@@ -69,13 +65,8 @@ case "$BROTLI_LEVEL" in
     *) echo "ERROR: BROTLI_LEVEL must be 0-11" >&2; exit 1 ;;
 esac
 
-if [ ! -d "$MIRROR_PUBLIC_ROOT" ]; then
-    echo "ERROR: public root does not exist: $MIRROR_PUBLIC_ROOT" >&2
-    exit 1
-fi
-
-if [ ! -d "$MIRROR_RUNTIME_ROOT/web-asset" ]; then
-    echo "ERROR: runtime web-asset root does not exist: $MIRROR_RUNTIME_ROOT/web-asset" >&2
+if [ ! -d "$MIRROR_ROOT" ]; then
+    echo "ERROR: public root does not exist: $MIRROR_ROOT" >&2
     exit 1
 fi
 
@@ -199,8 +190,7 @@ verify_encoding() {
 
 echo "Precompressing SIS web assets"
 echo "gzip level=$GZIP_LEVEL, Brotli level=$BROTLI_LEVEL"
-compress_root "$MIRROR_RUNTIME_ROOT/web-asset" "$MIRROR_LABEL sis/web-asset"
-compress_root "$MIRROR_PUBLIC_ROOT" "$MIRROR_LABEL public_html"
+compress_root "$MIRROR_ROOT" "$MIRROR_LABEL"
 
 if [ "$SKIP_VERIFY" = "1" ]; then
     echo "[verify] skipped because SKIP_VERIFY=1"

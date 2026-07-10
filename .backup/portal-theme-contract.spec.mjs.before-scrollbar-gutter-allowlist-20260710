@@ -294,8 +294,8 @@ test("security badges use the white secure-network asset in dark mode", () => {
 
 test("portal pages fail closed on local theme ownership outside the explicit structural allowlist", () => {
   const allowlists = new Map([
-  [studentPortalPath, [
-    /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
+    [studentPortalPath, [
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
       /body\.student-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
       /\.queue-table-wrap\s*\{[\s\S]*?background:\s*var\(--portal-surface-card\);\s*\}/gs,
@@ -309,8 +309,8 @@ test("portal pages fail closed on local theme ownership outside the explicit str
       /body\.parent-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
     ]],
-  [adminPortalPath, [
-    /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*scrollbar-gutter:\s*stable;\s*\}/gs,
+    [adminPortalPath, [
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
       /body\s*\{\s*margin:\s*0;\s*min-height:\s*100vh;\s*font-family:\s*var\(--font-base,\s*system-ui,\s*-apple-system,\s*sans-serif\);\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /:root\s*\{\s*--font-base:[\s\S]*?\}/gs,
       /html\[data-theme="dark"\]\s+body\.admin-portal-page\.page\s*\{[\s\S]*?background-attachment:\s*fixed;\s*\}/gs,

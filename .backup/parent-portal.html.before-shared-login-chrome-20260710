@@ -303,7 +303,7 @@
     <button id="parentNavScrim" class="nav-scrim portal-button portal-button-immutable-chrome" type="button" aria-label="Đóng điều hướng"></button>
 
     <main class="portal-main">
-      <div class="header-bar portal-login-header">
+      <div class="header-bar">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
@@ -830,7 +830,7 @@
 
         <p id="childPageStatus" class="status"></p>
       </section>
-      <footer class="hub-footer portal-login-footer" aria-label="Chân trang">
+      <footer class="hub-footer" aria-label="Chân trang">
         <p class="hub-footer__copy">
           © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
         </p>

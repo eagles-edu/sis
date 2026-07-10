@@ -294,8 +294,8 @@ test("security badges use the white secure-network asset in dark mode", () => {
 
 test("portal pages fail closed on local theme ownership outside the explicit structural allowlist", () => {
   const allowlists = new Map([
-  [studentPortalPath, [
-    /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
+    [studentPortalPath, [
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
       /body\.student-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
       /\.queue-table-wrap\s*\{[\s\S]*?background:\s*var\(--portal-surface-card\);\s*\}/gs,
@@ -309,8 +309,8 @@ test("portal pages fail closed on local theme ownership outside the explicit str
       /body\.parent-portal-page\s*\{\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
     ]],
-  [adminPortalPath, [
-    /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*scrollbar-gutter:\s*stable;\s*\}/gs,
+    [adminPortalPath, [
+      /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*\}/gs,
       /body\s*\{\s*margin:\s*0;\s*min-height:\s*100vh;\s*font-family:\s*var\(--font-base,\s*system-ui,\s*-apple-system,\s*sans-serif\);\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /:root\s*\{\s*--font-base:[\s\S]*?\}/gs,
       /html\[data-theme="dark"\]\s+body\.admin-portal-page\.page\s*\{[\s\S]*?background-attachment:\s*fixed;\s*\}/gs,
@@ -478,8 +478,9 @@ test("shared portal theme keeps admin today snapshot cards LM=DM for the stat-ca
 
 test("shared portal theme keeps unauthenticated header bars aligned to the login panel width", () => {
   assert.ok(
-    sharedTheme.includes(".portal-login-header") &&
-      sharedTheme.includes(".portal-login-footer") &&
+    sharedTheme.includes('html[data-parent-auth-state="unauthenticated"] body.parent-portal-page div.header-bar') &&
+      sharedTheme.includes('html[data-student-auth-state="unauthenticated"] body.student-portal-page div.header-bar') &&
+      sharedTheme.includes('body.parent-portal-page .hub-footer') &&
       sharedTheme.includes('box-sizing:border-box') &&
       sharedTheme.includes('max-inline-size:var(--portal-login-panel-max-width)') &&
       sharedTheme.includes('width:min(100%,var(--portal-login-panel-max-width))'),

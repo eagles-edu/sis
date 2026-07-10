@@ -83,6 +83,20 @@
       display: none !important;
     }
 
+    body.admin-auth-booting #authBootPanel,
+    body.admin-auth-booting #authPanel {
+      position: fixed;
+      left: 50%;
+      top: 16px;
+      transform: translateX(-50%);
+      width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+      z-index: 30;
+    }
+
+    body.admin-auth-booting #authPanel {
+      justify-self: unset;
+    }
+
     body.admin-auth-booting #app {
       display: block !important;
       visibility: hidden;
@@ -162,11 +176,24 @@
     .settings-options-panel,
     .settings-mirror-panel {
     }
-
+  </style>
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
+  <style>
     body.admin-portal-page .wrap {
       box-sizing: border-box;
       margin-inline: auto;
       width: min(100%, 1440px);
+    }
+
+    body.admin-portal-page #authPanel,
+    body.admin-portal-page #authBootPanel {
+      left: 50%;
+      position: fixed;
+      top: clamp(3rem, 5vw, 4rem);
+      transform: translateX(-50%);
+      width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+      z-index: 30;
     }
 
     body.admin-portal-page #authBootPanel {
@@ -189,22 +216,19 @@
       display: none !important;
     }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
 </head>
 
 <body class="admin-portal-page admin-auth-booting page">
   <div class="wrap">
-    <div class="portal-login-shell" id="authShell">
-      <div class="header-bar portal-login-header">
-        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
-        <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
-      </div>
-      <div class="panel hidden" id="authBootPanel" aria-live="polite">
-        <h1>Loading Admin</h1>
-        <p class="small">Checking your session...</p>
-      </div>
-      <div class="panel" id="authPanel">
+    <div class="header-bar">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+    <div class="panel" id="authBootPanel" aria-live="polite" style="background-color: transparent; background-image: linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);">
+      <h1>Loading Admin</h1>
+      <p class="small">Checking your session...</p>
+    </div>
+    <div class="panel" id="authPanel" style="background-color: transparent; background-image: linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);">
       <h1>Student Admin Login</h1>
       <form id="loginForm" class="login-form" novalidate>
         <div class="form-row">
@@ -229,15 +253,6 @@
       </p>
       <div id="authSchoolSetupWarning" class="school-setup-access-warning hidden" data-school-setup-access-warning role="status" aria-live="polite"></div>
       <p class="small" id="authStatus" aria-live="polite"></p>
-      </div>
-      <footer class="hub-footer portal-login-footer" id="authFooter" aria-label="Admin login footer">
-        <p class="hub-footer__copy">
-          © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
-        </p>
-        <p class="hub-footer__action">
-          <a href="#top" id="authBackTop">Về đầu trang</a>
-        </p>
-      </footer>
     </div>
 
     <div id="app" class="hidden">

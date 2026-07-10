@@ -1278,25 +1278,6 @@ function setInitialActivePageSection(html, pageSlug) {
   })
 }
 
-function setInitialAdminAuthState(html, authenticated) {
-  const toggleById = (source, id, hidden) => source.replace(
-    new RegExp(`(<[^>]+\\bid="${escapeRegex(id)}"[^>]*>)`, "i"),
-    (_match, openingTag) => {
-      const classMatch = openingTag.match(/\bclass="([^"]*)"/i)
-      const tokens = new Set(normalizeText(classMatch?.[1]).split(/\s+/u).filter(Boolean))
-      if (hidden) tokens.add("hidden")
-      else tokens.delete("hidden")
-      const classValue = Array.from(tokens).join(" ")
-      if (classMatch) return openingTag.replace(classMatch[0], `class="${classValue}"`)
-      return openingTag.replace(/>$/, ` class="${classValue}">`)
-    },
-  )
-
-  let nextHtml = toggleById(html, "authBootPanel", true)
-  nextHtml = toggleById(nextHtml, "authPanel", authenticated)
-  return toggleById(nextHtml, "app", !authenticated)
-}
-
 function setInitialAdminLayoutState(html, pageSlug) {
   const normalizedSlug = normalizeLower(pageSlug)
   if (!ADMIN_PAGE_SECTION_SET.has(normalizedSlug)) return html
@@ -1417,10 +1398,9 @@ const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process
       "admin-portal-page page"
     : "admin-portal-page admin-auth-booting page"
   const htmlWithBodyClass = setBodyClass(htmlWithAuthState, bodyClassName)
-  const htmlWithInitialAuth = setInitialAdminAuthState(htmlWithBodyClass, normalizedAuthState.authenticated)
-  const htmlWithInitialSection = normalizedAuthState.authenticated ?
-    setInitialAdminLayoutState(setInitialActivePageSection(htmlWithInitialAuth, pageSlug), pageSlug)
-    : htmlWithInitialAuth
+ const htmlWithInitialSection = normalizedAuthState.authenticated ?
+    setInitialAdminLayoutState(setInitialActivePageSection(htmlWithBodyClass, pageSlug), pageSlug)
+    : htmlWithBodyClass
   if (html.includes("</head>")) {
     return htmlWithInitialSection.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }

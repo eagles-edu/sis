@@ -734,7 +734,7 @@
     <button id="navOverlay" class="nav-overlay portal-button portal-button-immutable-chrome" type="button" title="Đóng điều hướng" aria-label="Đóng điều hướng"></button>
 
     <main class="portal-main">
-      <div class="header-bar portal-login-header">
+      <div class="header-bar">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer noopenner">eagles.edu.vn</a>
       </div>
@@ -1309,7 +1309,7 @@
       <section class="content status-strip" data-surface-role="content">
         <p id="globalStatus" class="status">Checking student session...</p>
       </section>
-      <footer class="hub-footer portal-login-footer" aria-label="Site footer">
+      <footer class="hub-footer" aria-label="Site footer">
         <p class="hub-footer__copy">
           © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
         </p>

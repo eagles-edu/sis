@@ -1576,6 +1576,9 @@ body.admin-portal-page.admin-auth-booting .portal-login-footer .hub-footer__acti
   flex: 0 0 auto;
   white-space: nowrap;
 }
+html[data-admin-auth-state="authenticated"] .portal-login-footer {
+  display: none !important;
+}
 html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
 body.admin-portal-page.admin-auth-booting .wrap,
 html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap {
@@ -1590,6 +1593,9 @@ body.admin-portal-page .portal-login-shell {
   margin-inline: auto;
   max-inline-size: var(--portal-login-panel-max-width);
   width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+}
+html[data-admin-auth-state="authenticated"] body.admin-portal-page #authShell {
+  display: none !important;
 }
 body.admin-portal-page .portal-login-shell #authBootPanel,
 body.admin-portal-page .portal-login-shell #authPanel {
@@ -9844,7 +9850,6 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     gap: 4px 10px;
     justify-content: center;
     line-height: 1.15;
-    min-block-size: 40px;
     padding: 0.55rem 0.75rem;
     text-align: center;
   }
@@ -10044,11 +10049,6 @@ body.student-portal-page div.header-bar {
   /*border: 1px solid rgb(255 255 255 / 18%);*/
   /*padding-block: 6px;
 padding-inline: calc(var(--hub-space-2) * 1.9);*/
-}
-@media (max-width: 430px) {
-  body.admin-portal-page .portal-login-header {
-    min-block-size: 40px !important;
-  }
 }
 body.portal-hub-page .header-bar a,
 body.admin-portal-page .header-bar a,

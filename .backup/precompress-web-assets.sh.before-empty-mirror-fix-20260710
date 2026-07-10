@@ -7,8 +7,6 @@ set -eu
 
 ADMIN_ROOT=${ADMIN_ROOT:-/home/admin.eagles.edu.vn/public_html}
 TEST_ROOT=${TEST_ROOT:-/home/test.eagles.edu.vn/public_html}
-ADMIN_RUNTIME_ROOT=${ADMIN_RUNTIME_ROOT:-/home/admin.eagles.edu.vn/sis}
-TEST_RUNTIME_ROOT=${TEST_RUNTIME_ROOT:-/home/test.eagles.edu.vn/sis}
 ADMIN_URL=${ADMIN_URL:-https://admin.eagles.edu.vn/}
 TEST_URL=${TEST_URL:-https://test.eagles.edu.vn/}
 SKIP_VERIFY=${SKIP_VERIFY:-0}
@@ -24,14 +22,12 @@ usage() {
 case "${1:-}" in
     admin)
         MIRROR_LABEL=admin
-        MIRROR_PUBLIC_ROOT=$ADMIN_ROOT
-        MIRROR_RUNTIME_ROOT=$ADMIN_RUNTIME_ROOT
+        MIRROR_ROOT=$ADMIN_ROOT
         MIRROR_URL=$ADMIN_URL
         ;;
     test)
         MIRROR_LABEL=test
-        MIRROR_PUBLIC_ROOT=$TEST_ROOT
-        MIRROR_RUNTIME_ROOT=$TEST_RUNTIME_ROOT
+        MIRROR_ROOT=$TEST_ROOT
         MIRROR_URL=$TEST_URL
         ;;
     -h|--help)
@@ -69,13 +65,8 @@ case "$BROTLI_LEVEL" in
     *) echo "ERROR: BROTLI_LEVEL must be 0-11" >&2; exit 1 ;;
 esac
 
-if [ ! -d "$MIRROR_PUBLIC_ROOT" ]; then
-    echo "ERROR: public root does not exist: $MIRROR_PUBLIC_ROOT" >&2
-    exit 1
-fi
-
-if [ ! -d "$MIRROR_RUNTIME_ROOT/web-asset" ]; then
-    echo "ERROR: runtime web-asset root does not exist: $MIRROR_RUNTIME_ROOT/web-asset" >&2
+if [ ! -d "$MIRROR_ROOT" ]; then
+    echo "ERROR: public root does not exist: $MIRROR_ROOT" >&2
     exit 1
 fi
 
@@ -86,7 +77,7 @@ compress_root() {
     stats_file=$(mktemp)
     trap 'rm -f "$manifest" "$stats_file"' 0 1 2 3 15
 
-    find -L "$root" -type f \
+    find "$root" -type f \
         \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.mjs' \
            -o -name '*.json' -o -name '*.svg' -o -name '*.xml' \
            -o -name '*.txt' -o -name '*.webmanifest' \) \
@@ -116,14 +107,6 @@ compress_root() {
     done <"$manifest"
 
     rm -f "$manifest"
-
-    if [ "$files" -eq 0 ]; then
-        rm -f "$stats_file"
-        trap - 0 1 2 3 15
-        echo "ERROR: no eligible web assets found in $root" >&2
-        echo "       Run the mirror sync first or set the correct *_ROOT variable." >&2
-        return 1
-    fi
 
     echo "[$label] compression totals"
     printf '  %-12s %8s %14s %14s %14s\n' type files source gzip brotli
@@ -165,7 +148,7 @@ verify_encoding() {
     headers=$(mktemp)
     trap 'rm -f "$headers"' 0 1 2 3 15
 
-    if ! curl -sS --http2 \
+    if ! curl -sS --http2 --fail \
         -H "Accept-Encoding: $encoding" \
         -o /dev/null -D "$headers" "$url"; then
         echo "ERROR: request failed for $url with Accept-Encoding: $encoding" >&2
@@ -173,17 +156,6 @@ verify_encoding() {
         trap - 0 1 2 3 15
         return 1
     fi
-
-    status=$(awk 'NR == 1 { print $2; exit }' "$headers")
-    case "$status" in
-        2[0-9][0-9]|3[0-9][0-9]) ;;
-        *)
-            echo "ERROR: $url returned HTTP $status; cannot verify $expected negotiation" >&2
-            rm -f "$headers"
-            trap - 0 1 2 3 15
-            return 1
-            ;;
-    esac
 
     actual=$(awk 'BEGIN { IGNORECASE=1 } /^content-encoding:/ { gsub(/[\r ]/, "", $2); print tolower($2); exit }' "$headers")
     rm -f "$headers"
@@ -199,8 +171,7 @@ verify_encoding() {
 
 echo "Precompressing SIS web assets"
 echo "gzip level=$GZIP_LEVEL, Brotli level=$BROTLI_LEVEL"
-compress_root "$MIRROR_RUNTIME_ROOT/web-asset" "$MIRROR_LABEL sis/web-asset"
-compress_root "$MIRROR_PUBLIC_ROOT" "$MIRROR_LABEL public_html"
+compress_root "$MIRROR_ROOT" "$MIRROR_LABEL"
 
 if [ "$SKIP_VERIFY" = "1" ]; then
     echo "[verify] skipped because SKIP_VERIFY=1"

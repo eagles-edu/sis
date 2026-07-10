@@ -7170,9 +7170,9 @@ test("attendance main defaults to absent and admin child shows per-student stats
         studentNumber: 1001,
         profile: { fullName: "Student One", currentGrade: "Eggs & Chicks" },
         attendanceRecords: [
-          { id: "att-1", attendanceDate: attendanceFriday, status: "present", comments: "" },
-          { id: "att-2", attendanceDate: attendanceSaturday, status: "absent", comments: "" },
-          { id: "att-3", attendanceDate: attendanceSunday, status: "late", comments: "tardy 10m" },
+          { id: "att-1", attendanceDate: "2026-02-24", status: "present", comments: "" },
+          { id: "att-2", attendanceDate: "2026-02-25", status: "absent", comments: "" },
+          { id: "att-3", attendanceDate: "2026-02-26", status: "late", comments: "tardy 10m" },
         ],
         gradeRecords: [],
         parentReports: [],
@@ -7248,7 +7248,7 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.match(summaryText, /absent=1/i)
     assert.match(summaryText, /totalTardy=0 \(0\.0%\)/i)
   })
-  dom.window.document.getElementById("a_date").value = attendanceSunday
+  dom.window.document.getElementById("a_date").value = "2026-02-25"
   dom.window.document.getElementById("a_date").dispatchEvent(new dom.window.Event("change", { bubbles: true }))
   dom.window.document.getElementById("a_schoolYear").value = "2025-2026"
   dom.window.document.getElementById("a_quarter").value = "q3"
@@ -8236,14 +8236,6 @@ test("new profile form hydrates next student number and keeps floor at 100+", as
 test("table sort controls and column-click headers reorder grade/performance data", async () => {
   const xlsxExportPayloads = []
   const xlsxExportUrls = []
-  const attendanceSortReference = new Date()
-  const attendanceSortDaysSinceSaturday = (attendanceSortReference.getDay() + 1) % 7
-  const attendanceSortSaturday = isoDateOffset(
-    localIsoDate(),
-    -attendanceSortDaysSinceSaturday,
-  )
-  const attendanceSortDateA = attendanceSortSaturday
-  const attendanceSortDateB = isoDateOffset(attendanceSortSaturday, 1)
   const seededAssignmentTemplates = [
     {
       id: "seed-assignment-01",
@@ -8337,7 +8329,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
         attendanceRecords: [
           {
             id: "att-01",
-            attendanceDate: attendanceSortDateA,
+            attendanceDate: "2026-02-04",
             className: "Class A",
             quarter: "q1",
             status: "present",
@@ -8345,7 +8337,7 @@ test("table sort controls and column-click headers reorder grade/performance dat
           },
           {
             id: "att-02",
-            attendanceDate: attendanceSortDateB,
+            attendanceDate: "2026-02-05",
             className: "Class B",
             quarter: "q1",
             status: "absent",

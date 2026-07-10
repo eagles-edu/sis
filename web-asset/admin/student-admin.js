@@ -15452,9 +15452,6 @@
               state.dashboardSummary,
             );
             renderDashboardSummary(state.dashboardSummary);
-            setStatus(
-              "Dashboard API not available on current runtime. Showing fallback summary.",
-            );
             return;
           }
           throw error;
@@ -22215,11 +22212,14 @@
         });
 
         if (bootConfigTasks.length) {
-          scheduleIdleTaskSeries(bootConfigTasks, { timeout: 1500 });
+          bootConfigTasks.forEach((task) => scheduleIdleTask(task, 1500));
         }
 
         if (canReadData()) {
-          scheduleIdleTaskSeries([
+          const dataHydrationTasks = [
+            async () => {
+              await loadStudents();
+            },
             async () => {
               await loadDashboardSummary();
               renderHubConnectionStatus();
@@ -22231,9 +22231,6 @@
                 loadServiceControlStatus({ notify: false, paint: false }),
               ]);
             },
-            async () => {
-              await loadStudents();
-            },
             () => loadFilters().catch(handleError),
             () => loadDashboardStudents().catch(handleError),
             () => loadQueueHub({ notify: false }).catch(handleError),
@@ -22242,7 +22239,8 @@
                 showAll: state.incomingExerciseQueue.showAll,
               }).catch(handleError),
             () => loadExerciseTitles().catch(handleError),
-          ]);
+          ];
+          dataHydrationTasks.forEach((task) => scheduleIdleTask(task, 1500));
         }
         await applyParentTrackingDeepLinkFromLocation();
       }

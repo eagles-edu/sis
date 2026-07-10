@@ -162,7 +162,10 @@
     .settings-options-panel,
     .settings-mirror-panel {
     }
-
+  </style>
+  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
+  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
+  <style>
     body.admin-portal-page .wrap {
       box-sizing: border-box;
       margin-inline: auto;
@@ -189,8 +192,6 @@
       display: none !important;
     }
   </style>
-  <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
-  <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
 </head>
 
 <body class="admin-portal-page admin-auth-booting page">
@@ -200,11 +201,11 @@
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
-      <div class="panel hidden" id="authBootPanel" aria-live="polite">
+      <div class="panel hidden" id="authBootPanel" aria-live="polite" style="background-color: transparent; background-image: linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);">
         <h1>Loading Admin</h1>
         <p class="small">Checking your session...</p>
       </div>
-      <div class="panel" id="authPanel">
+      <div class="panel" id="authPanel" style="background-color: transparent; background-image: linear-gradient(180deg, rgba(83, 91, 100, 0.94) 0%, rgba(55, 63, 72, 0.96) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);">
       <h1>Student Admin Login</h1>
       <form id="loginForm" class="login-form" novalidate>
         <div class="form-row">

@@ -154,8 +154,9 @@ test(
           }, entry)
 
           assert.equal(result.body.top, 0, `${theme}/${entry.label}: body should start at viewport top`)
-          assert.ok(
-            result.body.bottom >= result.viewportHeight,
+          assert.equal(
+            result.body.bottom,
+            result.viewportHeight,
             `${theme}/${entry.label}: body should extend to viewport bottom`,
           )
           assert.ok(result.body.height >= result.viewportHeight, `${theme}/${entry.label}: body height should cover the viewport`)
