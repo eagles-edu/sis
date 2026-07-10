@@ -278,15 +278,15 @@ test(
         "none",
         "admin dark login wrap should not paint its own fill layer",
       )
-      assert.notEqual(
+      assert.equal(
         darkAuthSurface.authBackgroundImage,
         "none",
-        "admin dark login card should keep its own confined surface"
+        "admin dark login card should stay on the shared flat dark fill"
       )
       assert.equal(
         darkAuthSurface.authBackgroundColor,
-        "rgba(0, 0, 0, 0)",
-        "admin dark login card should render as a gradient surface rather than a flat fill"
+        "rgb(76, 76, 76)",
+        "admin dark login card should render as the shared flat dark fill"
       )
       const darkLinkColor = await page.locator("#authPanel .login-link").first().evaluate((node) => getComputedStyle(node).color)
       const darkLinkRgb = parseRgb(darkLinkColor)

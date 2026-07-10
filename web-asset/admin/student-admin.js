@@ -378,7 +378,7 @@
       }
 
       const SHARED_BUTTON_COPY_BY_ID = new Map([
-        ["overviewNewsQueueOpenBtn", ["Open Reports", "Open News Reports Page"]],
+        ["overviewNewsQueueOpenBtn", ["Open Reports", "Open Reports"]],
         ["attendanceLandingSaveAllBtn", ["Save All", "Save Level Attendance"]],
         ["assignmentAddItemBtn", ["Add Item", "Add Assignment Item"]],
         ["assignmentLoadTitlesBtn", ["Refresh Titles", "Refresh Exercise Titles"]],
@@ -2409,25 +2409,29 @@
         try {
           payload = await api(ADMIN_SERVICE_CONTROL_PATH);
         } catch (error) {
-          if (error && error.status === 404) {
+          if (error && (error.status === 401 || error.status === 403 || error.status === 404)) {
             state.serviceControl = {
               available: false,
               enabled: false,
               service: "exercise-mailer.service",
-              status: "unsupported",
+              status: error.status === 403 ? "forbidden" : error.status === 401 ? "unauthorized" : "unsupported",
               detail:
-                "Runtime service-control API is unavailable on this server build.",
+                error.status === 403 ?
+                  "Runtime service-control API is forbidden for this session."
+                : error.status === 401 ?
+                  "Runtime service-control API requires an authenticated admin session."
+                : "Runtime service-control API is unavailable on this server build.",
               checkedAt: nowClockStamp(),
               busy: false,
             };
-            if (paint) renderServiceControlCard();
+            renderServiceControlCard();
             if (notify) setStatus(state.serviceControl.detail, true);
             return;
           }
           throw error;
         }
         setServiceControlFromPayload(payload || {});
-        if (paint) renderServiceControlCard();
+        renderServiceControlCard();
         if (notify) {
           setStatus(`Service status: ${state.serviceControl.status}.`);
         }
@@ -6472,20 +6476,31 @@
         return state.systemLevels;
       }
 
+      function createSelectOption(value = "", text = "", selected = false) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = text;
+        if (selected) option.selected = true;
+        return option;
+      }
+
       function populateProfileLevelOptions() {
         const select = document.getElementById("f_currentGrade");
         if (!(select instanceof HTMLSelectElement)) return;
         const current = resolveSystemLevelName(select.value);
         const values = collectKnownLevelNames([current]);
-        select.innerHTML = '<option value="">Select level</option>';
+        const options = [createSelectOption("", "Select level")];
         values.forEach((levelName) => {
           if (!levelName) return;
-          const option = document.createElement("option");
-          option.value = levelName;
-          option.textContent = shortLevelLabel(levelName);
-          if (levelNamesMatch(option.value, current)) option.selected = true;
-          select.appendChild(option);
+          options.push(
+            createSelectOption(
+              levelName,
+              shortLevelLabel(levelName),
+              levelNamesMatch(levelName, current),
+            ),
+          );
         });
+        select.replaceChildren(...options);
       }
 
       function populateTableFilterLevelOptions(tableKey = "") {
@@ -6497,16 +6512,19 @@
           tableFilterValue(tableKey, "level"),
         );
         const levelValues = collectAttendanceLevelNames([selectedLevel]);
-        selectEl.innerHTML = '<option value="">Any</option>';
+        const options = [createSelectOption("", "Any")];
         levelValues.forEach((levelName) => {
           if (!levelName) return;
-          const option = document.createElement("option");
-          option.value = resolveSystemLevelName(levelName);
-          option.textContent = fullLevelLabel(levelName);
-          if (selectedLevel && levelNamesMatch(option.value, selectedLevel))
-            option.selected = true;
-          selectEl.appendChild(option);
+          const value = resolveSystemLevelName(levelName);
+          options.push(
+            createSelectOption(
+              value,
+              fullLevelLabel(levelName),
+              Boolean(selectedLevel && levelNamesMatch(value, selectedLevel)),
+            ),
+          );
         });
+        selectEl.replaceChildren(...options);
         if (!selectedLevel) selectEl.value = "";
       }
 
@@ -6543,31 +6561,37 @@
           );
         });
 
-        selectEl.innerHTML = '<option value="">All students</option>';
+        const options = [createSelectOption("", "All students")];
         let hasSelection = false;
         students.forEach((student) => {
-          const option = document.createElement("option");
-          option.value = tableFilterStudentOptionValue(student);
-          option.textContent = studentIdentityLabel(student, {
-            preferEnglish: true,
-            wrapName: true,
-            includeStudentNumber: true,
-          });
-          const optionLower = normalizeLower(option.value);
+          const value = tableFilterStudentOptionValue(student);
+          const optionLower = normalizeLower(value);
           const publicIdLower = normalizeLower(student?.eaglesId);
-          if (
+          const selected =
             selectedRef &&
-            (option.value === selectedRef ||
+            (value === selectedRef ||
               optionLower === selectedRefLower ||
-              publicIdLower === selectedRefLower)
+              publicIdLower === selectedRefLower);
+          if (
+            selected
           ) {
-            option.selected = true;
-            if (option.value && option.value !== selectedRef)
-              setTableFilterValue(tableKey, "studentRefId", option.value);
+            if (value && value !== selectedRef)
+              setTableFilterValue(tableKey, "studentRefId", value);
             hasSelection = true;
           }
-          selectEl.appendChild(option);
+          options.push(
+            createSelectOption(
+              value,
+              studentIdentityLabel(student, {
+                preferEnglish: true,
+                wrapName: true,
+                includeStudentNumber: true,
+              }),
+              Boolean(selected),
+            ),
+          );
         });
+        selectEl.replaceChildren(...options);
 
         if (!selectedRef) {
           selectEl.value = "";
@@ -8812,7 +8836,6 @@
       state.uiSettings = loadUiSettingsFromStorage();
       state.sisConfig = loadSisConfigFromStorage();
       applySisConfigToForm(state.sisConfig);
-      renderSchoolSetupAccessWarning();
       state.profileFormConfig = loadProfileFormConfigFromStorage();
       state.tableArchiveIndex = loadTableArchiveIndexFromStorage();
       state.performanceHoldIndex = loadPerformanceHoldIndexFromStorage();
@@ -9438,7 +9461,9 @@
         }
         renderSchoolBranding();
         renderSchoolSetupPanel();
-        renderSchoolSetupAccessWarning();
+        if (!document.body?.classList.contains("admin-auth-booting")) {
+          renderSchoolSetupAccessWarning();
+        }
         state.queueHub.panelOrder = normalizeQueueHubPanelOrder(
           state.uiSettings?.queueHub?.panelOrder || state.queueHub.panelOrder,
         );
@@ -10458,7 +10483,6 @@
         document.getElementById("app")?.classList.remove("hidden");
         setAuthBootstrapping(false);
         if (authStatusEl) authStatusEl.textContent = "";
-        renderSchoolSetupAccessWarning();
         startHubPolling();
         setActivePage(state.activePage || INITIAL_PAGE_SLUG, {
           syncUrl: shouldSyncPagePathInHistory(),
@@ -11857,6 +11881,7 @@
       function renderOverviewLineChart(weeklyRows = [], assignmentSummary = {}) {
         const svg = document.getElementById("overviewLineChart");
         if (!svg) return;
+        svg.setAttribute("aria-label", "Current assignment completion percent (Mon to today)");
         const rows = normalizeWeeklyAssignmentCompletion(weeklyRows);
 
         const width = 900;
@@ -12561,6 +12586,7 @@
         const svg = document.getElementById("overviewBarChart");
         const actionsEl = document.getElementById("overviewBarDetailActions");
         if (!svg || !actionsEl) return;
+        svg.setAttribute("aria-label", "Students versus current assignment completions by level");
         actionsEl.innerHTML = "";
 
         if (!levelRows.length) {
@@ -19019,7 +19045,7 @@
         updateTopSearchSortIndicators();
       }
 
-      function renderStudents() {
+      function renderStudents({ refreshLinkedControls = true } = {}) {
         const tbody = document.getElementById("studentRows");
         if (!(tbody instanceof HTMLElement)) return;
         tbody.innerHTML = "";
@@ -19053,9 +19079,11 @@
         state.topSearch.rows = visibleStudents;
         renderTopSearchResults(visibleStudents);
         applyUiSettings();
-        refreshAssignmentStudentOptions();
-        refreshAllTableSearchFilterControls();
-        refreshParentTrackingStudentOptions({ preserveStudentSelection: true });
+        if (refreshLinkedControls) {
+          refreshAssignmentStudentOptions();
+          refreshAllTableSearchFilterControls();
+          refreshParentTrackingStudentOptions({ preserveStudentSelection: true });
+        }
       }
 
       function profileFieldLabel(field = {}) {
@@ -20107,7 +20135,7 @@
         setStatus(`Deleted profile field: ${key}`);
       }
 
-      function clearStudentForm() {
+      function clearStudentForm({ refreshStudentList = true } = {}) {
         state.currentStudent = null;
         state.tableRows.attendance = [];
         state.tableRows.performance = [];
@@ -20142,7 +20170,7 @@
         renderProfileInfoLayout(null);
         setProfileMode(state.profileMode);
         updateOverviewStudentSummary();
-        renderStudents();
+        if (refreshStudentList) renderStudents();
       }
 
       function fillStudentForm(student) {
@@ -20497,7 +20525,7 @@
         await api(`/api/admin/students/${encodeURIComponent(id)}`, {
           method: "DELETE",
         });
-        clearStudentForm();
+        clearStudentForm({ refreshStudentList: false });
         setProfileMode("info");
         await loadFilters();
         await loadStudents();
@@ -22137,11 +22165,27 @@
         initializeParentTrackingScoreSelects();
         initializeParentTrackingScoreLegendPopovers();
         initializeButtonTooltips();
-        await loadRolePermissions();
-        await hydrateUiSettingsFromServer();
-        await loadAssignmentTemplatesFromServer({
-          migrateLegacy: true,
+
+        const bootConfigTasks = [];
+        if (canManagePermissions()) {
+          bootConfigTasks.push(async () => {
+            await loadRolePermissions();
+            showUserPanel();
+          });
+        }
+        if (canManageSettings()) {
+          bootConfigTasks.push(async () => {
+            await hydrateUiSettingsFromServer();
+            applyUiSettings();
+          });
+        }
+        bootConfigTasks.push(async () => {
+          await loadAssignmentTemplatesFromServer({
+            migrateLegacy: true,
+          });
+          renderAssignmentTemplates();
         });
+
         showUserPanel();
         applyUiSettings();
         renderAssignmentTemplates();
@@ -22154,16 +22198,42 @@
           state.adminUsers = [];
           renderUserRows();
         }
+        if (!canReadData()) {
+          state.students = [];
+          renderStudents();
+        }
+        renderAssignmentDraftItems();
+        renderParentTrackingTeacherOptions();
+        clearStudentForm({ refreshStudentList: false });
+        const nextPage =
+          isPageAllowedForCurrentRole(state.activePage) ?
+            normalizePageSlug(state.activePage)
+          : roleStartPage();
+        setActivePage(nextPage, {
+          syncUrl: shouldSyncPagePathInHistory(),
+          historyMode: "replace",
+        });
+
+        if (bootConfigTasks.length) {
+          scheduleIdleTaskSeries(bootConfigTasks, { timeout: 1500 });
+        }
+
         if (canReadData()) {
-          await loadDashboardSummary();
-          await Promise.all([
-            probeHubConnection({ notify: false, paint: false }),
-            loadServiceControlStatus({ notify: false, paint: false }),
-          ]);
-          renderHubConnectionStatus();
-          renderServiceControlCard();
-          await loadStudents();
           scheduleIdleTaskSeries([
+            async () => {
+              await loadDashboardSummary();
+              renderHubConnectionStatus();
+              renderServiceControlCard();
+            },
+            async () => {
+              await Promise.all([
+                probeHubConnection({ notify: false, paint: false }),
+                loadServiceControlStatus({ notify: false, paint: false }),
+              ]);
+            },
+            async () => {
+              await loadStudents();
+            },
             () => loadFilters().catch(handleError),
             () => loadDashboardStudents().catch(handleError),
             () => loadQueueHub({ notify: false }).catch(handleError),
@@ -22173,21 +22243,7 @@
               }).catch(handleError),
             () => loadExerciseTitles().catch(handleError),
           ]);
-        } else {
-          state.students = [];
-          renderStudents();
         }
-        renderAssignmentDraftItems();
-        renderParentTrackingTeacherOptions();
-        clearStudentForm();
-        const nextPage =
-          isPageAllowedForCurrentRole(state.activePage) ?
-            normalizePageSlug(state.activePage)
-          : roleStartPage();
-        setActivePage(nextPage, {
-          syncUrl: shouldSyncPagePathInHistory(),
-          historyMode: "replace",
-        });
         await applyParentTrackingDeepLinkFromLocation();
       }
 

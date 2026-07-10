@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Student portal for checking homework, news reports, attendance, grades, and performance updates.">
   <link rel="shortcut icon" href="/web-asset/student/favicon.ico?=v2">
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
@@ -11,6 +12,9 @@
   <script src="/web-asset/shared/portal-theme-state.js"></script>
   <script>
     window.SIS_PORTAL_THEME?.initTheme("light")
+  </script>
+  <script>
+    document.documentElement.dataset.studentAuthState = "booting";
   </script>
   <script type="module">
     import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
@@ -45,6 +49,16 @@
       margin-inline: auto;
       max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
       width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
+    }
+
+    html[data-student-auth-state="booting"] body.student-portal-page {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    html[data-student-auth-state="booting"] body.student-portal-page #loginPanel,
+    html[data-student-auth-state="booting"] body.student-portal-page #appPanel {
+      display: none !important;
     }
   </style>
   <title>Student Portal</title>
@@ -713,7 +727,7 @@
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="recommendations">Recommendations for Success</a>
       </nav>
       <div class="side-actions">
-        <button id="studentNavLogoutBtn" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh" aria-label="Đăng xuất khỏi cổng học sinh">Log Out</button>
+        <button id="studentNavLogoutBtn" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh">Log Out</button>
       </div>
     </aside>
 
@@ -743,9 +757,9 @@
               </span>
             </button>
             <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
-              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ" aria-label="Giảm cỡ chữ">A-</button>
-              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ" aria-label="Tăng cỡ chữ">A+</button>
-              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ" aria-label="Đặt lại cỡ chữ">Reset</button>
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
             </div>
           </div>
         </div>
@@ -772,12 +786,12 @@
             <p class="field-hint">Enter the current password for your account.</p>
           </div>
           <div class="login-actions">
-            <button id="loginBtn" class="portal-button portal-button-primary" type="submit" title="Đăng nhập vào cổng học sinh" aria-label="Đăng nhập vào cổng học sinh">Log In</button>
-            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset" title="Xóa nội dung đã nhập" aria-label="Xóa nội dung đã nhập">Clear</button>
+            <button id="loginBtn" class="portal-button portal-button-primary" type="submit" title="Đăng nhập vào cổng học sinh">Log In</button>
+            <button id="loginClearBtn" class="portal-button portal-button-warning" type="reset" title="Xóa nội dung đã nhập">Clear</button>
           </div>
         </form>
         <div class="login-links">
-          <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20portal%20password%20reset" title="Yêu cầu đặt lại mật khẩu" aria-label="Yêu cầu đặt lại mật khẩu">Reset password</a>
+          <a class="login-link" href="mailto:support@eagles.edu.vn?subject=Student%20portal%20password%20reset" title="Yêu cầu đặt lại mật khẩu">Reset password</a>
           <a class="login-link" href="tel:0937667818">0937&nbsp;667&nbsp;818</a>
         </div>
         <p id="loginStatus" class="status"></p>
@@ -787,7 +801,7 @@
         <section id="studentHomeCard" class="content" data-surface-role="content">
           <div class="portal-grid">
             <div id="studentHomeGrid" class="portal-col">
-              <h3 id="studentOverviewSummary" class="panel" data-surface-role="panel">Loading student dashboard...</h3>
+              <div id="studentOverviewSummary" class="panel" data-surface-role="panel">Loading student dashboard...</div>
 
               <section id="identityPanel" class="panel" data-surface-role="panel">
                 <div class="section-head">
@@ -796,8 +810,8 @@
                 </div>
                 <div class="portal-action-strip portal-action-strip--card">
                   <div class="portal-action-strip__actions">
-                    <button id="reloadBtn" type="button" class="portal-button portal-button-teal-refresh" title="Tải lại dữ liệu học sinh" aria-label="Tải lại dữ liệu học sinh">Refresh</button>
-                    <button id="logoutBtn" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh" aria-label="Đăng xuất khỏi cổng học sinh">Log Out</button>
+                    <button id="reloadBtn" type="button" class="portal-button portal-button-teal-refresh" title="Tải lại dữ liệu học sinh">Refresh</button>
+                    <button id="logoutBtn" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh">Log Out</button>
                   </div>
                 </div>
                 <p id="studentIdentity" class="hint">Loading student metrics...</p>
@@ -838,7 +852,7 @@
                   </div>
                   <div class="homework-card-content">
                     <h4 class="homework-content-title">Overdue items</h4>
-                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-info" type="button" title="Xem danh sách bài tập quá hạn" aria-label="Xem danh sách bài tập quá hạn">View Overdue</button>
+                    <button id="openPastDueHomeworkModalBtn" class="homework-modal-btn portal-button portal-button-info" type="button" title="Xem danh sách bài tập quá hạn">View Overdue</button>
                     <p id="pastDueHomeworkSummary" class="hint">No data yet.</p>
                   </div>
                 </div>
@@ -871,8 +885,8 @@
                     </table>
                   </div>
                   <div class="actions actions-2">
-                    <button id="openNewsPageBtn" type="button" class="portal-button portal-button-primary" title="Mở trang báo cáo tin tức" aria-label="Mở trang báo cáo tin tức">Open News</button>
-                    <button id="newsQueueRefreshBtn" type="button" class="portal-button portal-button-teal-refresh" title="Tải lại hàng chờ báo cáo tin tức" aria-label="Tải lại hàng chờ báo cáo tin tức">Refresh</button>
+                    <button id="openNewsPageBtn" type="button" class="portal-button portal-button-primary" title="Mở trang báo cáo tin tức">Open News</button>
+                    <button id="newsQueueRefreshBtn" type="button" class="portal-button portal-button-teal-refresh" title="Tải lại hàng chờ báo cáo tin tức">Refresh</button>
                   </div>
                 </div>
               </section>
@@ -897,7 +911,7 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pastDueHomeworkModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="pastDueHomeworkModalTitle">Bài tập chưa hoàn thành</h4>
-                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng danh sách bài tập quá hạn" aria-label="Đóng danh sách bài tập quá hạn">Close</button>
+                    <button id="closePastDueHomeworkModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng danh sách bài tập quá hạn">Close</button>
                   </div>
                   <table class="homework-modal-table">
                     <thead>
@@ -916,7 +930,7 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsComplianceModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="newsComplianceModalTitle">Check Report</h4>
-                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng cửa sổ kiểm tra báo cáo" aria-label="Đóng cửa sổ kiểm tra báo cáo">Close</button>
+                    <button id="closeNewsComplianceModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng cửa sổ kiểm tra báo cáo">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="newsComplianceModalSummary" class="hint">Draft saved.</p>
@@ -948,7 +962,7 @@
                     </div>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newsComplianceModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng cửa sổ kiểm tra báo cáo" aria-label="Đóng cửa sổ kiểm tra báo cáo">Close</button>
+                    <button id="newsComplianceModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng cửa sổ kiểm tra báo cáo">Close</button>
                   </div>
                 </div>
               </section>
@@ -958,7 +972,7 @@
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="reportAccessErrorModalTitle">Report access warning</h4>
-                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng cảnh báo truy cập báo cáo" aria-label="Đóng cảnh báo truy cập báo cáo">Close</button>
+                    <button id="closeReportAccessErrorModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng cảnh báo truy cập báo cáo">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="reportAccessErrorModalMessage">LINK doesn't MATCH STUDENT OR FAMILY ACCOUNT</p>
@@ -972,7 +986,7 @@
                 <div class="portal-modal-dialog submit-success-dialog" role="dialog" aria-modal="true" aria-labelledby="submitSuccessModalTitle">
                   <div class="portal-modal-head">
                     <h4 id="submitSuccessModalTitle">Successfully submitted</h4>
-                    <button id="closeSubmitSuccessModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng thông báo nộp bài thành công" aria-label="Đóng thông báo nộp bài thành công">Close</button>
+                    <button id="closeSubmitSuccessModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng thông báo nộp bài thành công">Close</button>
                   </div>
                   <div class="portal-modal-body submit-success-body">
                     <div class="submit-success-mark" aria-hidden="true">✓</div>
@@ -980,7 +994,7 @@
                     <p class="hint submit-success-copy">Confetti will keep celebrating until you close this message.</p>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="submitSuccessModalOkBtn" type="button" class="portal-button portal-button-primary" title="Xác nhận và đóng thông báo" aria-label="Xác nhận và đóng thông báo">OK</button>
+                    <button id="submitSuccessModalOkBtn" type="button" class="portal-button portal-button-primary" title="Xác nhận và đóng thông báo">OK</button>
                   </div>
                 </div>
               </section>
@@ -995,7 +1009,7 @@
                       <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
                       <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt portal-button-alt-nav" title="Xem báo cáo tiếp theo" aria-label="Xem báo cáo tiếp theo">&gt;</button>
                     </div>
-                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng trình xem báo cáo tin tức" aria-label="Đóng trình xem báo cáo tin tức">Close</button>
+                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng trình xem báo cáo tin tức">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="newsWeekSetModalMeta" class="hint">Open a week set to review and resubmit reports.</p>
@@ -1078,9 +1092,9 @@
                     </div>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-info" title="Kiểm tra báo cáo trước khi nộp" aria-label="Kiểm tra báo cáo trước khi nộp">Check</button>
-                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-primary" title="Nộp lại báo cáo tin tức" aria-label="Nộp lại báo cáo tin tức">Submit</button>
-                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng trình xem báo cáo tin tức" aria-label="Đóng trình xem báo cáo tin tức">Close</button>
+                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-info" title="Kiểm tra báo cáo trước khi nộp">Check</button>
+                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-primary" title="Nộp lại báo cáo tin tức">Submit</button>
+                    <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng trình xem báo cáo tin tức">Close</button>
                   </div>
                   <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
                 </div>
@@ -1130,7 +1144,7 @@
           <div class="section-head">
             <h2 id="studentDetailTitle">Student Detail</h2>
             <div class="actions">
-              <button id="studentDetailBackToMainBtn" type="button" class="portal-button portal-button-alt" title="Quay lại trang chính" aria-label="Quay lại trang chính">Back</button>
+              <button id="studentDetailBackToMainBtn" type="button" class="portal-button portal-button-alt" title="Quay lại trang chính">Back</button>
             </div>
           </div>
           <p id="studentDetailLead" class="detail-copy">Loading student detail...</p>
@@ -1166,8 +1180,8 @@
           <div class="section-head">
             <h2>Daily News Report</h2>
             <div class="news-actions">
-              <button id="backToHomeBtn" type="button" class="portal-button portal-button-alt" title="Quay lại trang chính" aria-label="Quay lại trang chính">Back</button>
-              <button id="logoutBtnNews" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh" aria-label="Đăng xuất khỏi cổng học sinh">Log Out</button>
+              <button id="backToHomeBtn" type="button" class="portal-button portal-button-alt" title="Quay lại trang chính">Back</button>
+              <button id="logoutBtnNews" type="button" class="portal-button portal-button-danger" title="Đăng xuất khỏi cổng học sinh">Log Out</button>
             </div>
           </div>
           <div class="news-layout">
@@ -1281,9 +1295,9 @@
                 </div>
 
                 <div class="field c12 actions student-news-form-actions">
-                  <button id="checkBtn" class="portal-button portal-button-info" type="button" title="Kiểm tra báo cáo trước khi nộp" aria-label="Kiểm tra báo cáo trước khi nộp">Check</button>
-                  <button id="submitBtn" class="portal-button portal-button-primary" type="button" aria-label="Nộp báo cáo tin tức" title="Nộp báo cáo tin tức">Submit</button>
-                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden" title="Xem chi tiết kiểm tra báo cáo" aria-label="Xem chi tiết kiểm tra báo cáo">View Details</button>
+                  <button id="checkBtn" class="portal-button portal-button-info" type="button" title="Kiểm tra báo cáo trước khi nộp">Check</button>
+                  <button id="submitBtn" class="portal-button portal-button-primary" type="button" title="Nộp báo cáo tin tức">Submit</button>
+                  <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden" title="Xem chi tiết kiểm tra báo cáo">View Details</button>
                 </div>
               </div>
               <p id="formStatus" class="status">Waiting for calendar window. </p>
@@ -1300,7 +1314,7 @@
           © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
         </p>
         <p class="hub-footer__action">
-          <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+          <a href="#top" id="back-top">Về đầu trang</a>
         </p>
       </footer>
     </main>
@@ -5136,6 +5150,7 @@
             start: date,
             end: addDateKeyDays(date, 1),
             allDay: true,
+            url: `#news-${date}`,
             classNames,
             extendedProps: {
               detail: [submittedClock ? `Submitted at ${submittedClock}` : "", detail]
@@ -5319,6 +5334,7 @@
             syncCalendarAlertDayCells();
           },
           eventClick(info) {
+            info.jsEvent?.preventDefault?.();
             const dateKey = t(info?.event?.startStr || info?.event?.start);
             if (!openNewsWeekSetModalByReportDate(dateKey)) {
               openNewsDate(dateKey);
@@ -5581,10 +5597,10 @@
         updateEnvBadge();
         if (INITIAL_AUTH_STATE && typeof INITIAL_AUTH_STATE === "object") {
           if (INITIAL_AUTH_STATE.authenticated) {
-            setAuthenticatedView(true);
             setGlobalStatus("Student session active.");
             if (handlePortalPostAuthRouteState()) return;
             await Promise.all([loadDashboard(), loadCalendar()]);
+            setAuthenticatedView(true);
             openReportAccessErrorModalIfNeeded();
             setFormStatus("Use Check Report to save a draft. Submit unlocks after MMR passes.");
           } else {
@@ -5596,10 +5612,10 @@
         setAuthenticatedView(false);
         try {
           await api(`${STUDENT_AUTH_PREFIX}/me`);
-          setAuthenticatedView(true);
           setGlobalStatus("Student session active.");
           if (handlePortalPostAuthRouteState()) return;
           await Promise.all([loadDashboard(), loadCalendar()]);
+          setAuthenticatedView(true);
           openReportAccessErrorModalIfNeeded();
           setFormStatus("Use Check Report to save a draft. Submit unlocks after MMR passes.");
         } catch (error) {

@@ -10,6 +10,7 @@ const ADMIN_JS_PATH = path.resolve(process.cwd(), "web-asset/admin/student-admin
 const ADMIN_HTML = fs.readFileSync(ADMIN_HTML_PATH, "utf8")
 const ADMIN_JS = fs.readFileSync(ADMIN_JS_PATH, "utf8")
 const ADMIN_HTML_STRIPPED_FOR_TEST = ADMIN_HTML
+  .replace(/<script\s+id="admin-app-loader">[\s\S]*?<\/script>/gi, "")
   .replace(/<link[\s\S]*?href="\/web-asset\/admin\/student-admin(?:\.min)?\.css(?:\?[^"]*)?"[\s\S]*?>/gi, "")
   .replace(/<script\s+src="\/web-asset\/admin\/student-admin(?:\.min)?\.js(?:\?[^"]*)?"\s+defer><\/script>/gi, "")
 const ADMIN_HTML_FOR_TEST = ADMIN_HTML_STRIPPED_FOR_TEST.replace(
@@ -7091,6 +7092,16 @@ test("overview level visuals apply brand colors on buttons, bars, and detail bor
 
 test("attendance main defaults to absent and admin child shows per-student stats", async () => {
   let dashboardCalls = 0
+  const attendanceSaturday = (() => {
+    const now = new Date()
+    const day = now.getDay()
+    const daysSinceSaturday = (day + 1) % 7
+    const candidate = new Date(now.getTime())
+    candidate.setDate(candidate.getDate() - daysSinceSaturday)
+    return localIsoDate(candidate)
+  })()
+  const attendanceSunday = isoDateOffset(attendanceSaturday, 1)
+  const attendanceFriday = isoDateOffset(attendanceSaturday, -1)
   const dom = await createAdminUiDom(async (resource, init = {}) => {
     const url = String(resource)
     void init
@@ -7280,6 +7291,9 @@ test("attendance main defaults to absent and admin child shows per-student stats
     assert.ok(riskLines.length > 0)
   })
   await waitFor(() => {
+    const rows = Array.from(dom.window.document.querySelectorAll("#attendanceRows tr"))
+    console.log("DEBUG attendanceRows count", rows.length)
+    console.log("DEBUG attendanceRows text", rows.map((row) => normalizeText(row.textContent || "")))
     const optionsMenu = dom.window.document.querySelector("#attendanceRows tr .row-options-menu")
     assert.ok(optionsMenu)
     const trigger = optionsMenu.querySelector(".row-options-trigger")

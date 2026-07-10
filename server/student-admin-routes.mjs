@@ -1239,6 +1239,80 @@ function setHtmlAttribute(html, name, value) {
   return html.replace(openingTagPattern, `<html$1 ${attributeName}="${attributeValue}">`)
 }
 
+function setBodyClass(html, className) {
+  const normalizedClassName = normalizeText(className)
+  const bodyClassPattern = /\sclass="[^"]*"/i
+  const openingTagPattern = /<body\b([^>]*)>/i
+  if (!normalizedClassName) return html
+  if (bodyClassPattern.test(html)) {
+    return html.replace(bodyClassPattern, ` class="${escapeHtml(normalizedClassName)}"`)
+  }
+  return html.replace(openingTagPattern, `<body$1 class="${escapeHtml(normalizedClassName)}">`)
+}
+
+function setInitialActivePageSection(html, pageSlug) {
+  const normalizedSlug = normalizeLower(pageSlug)
+  if (!ADMIN_PAGE_SECTION_SET.has(normalizedSlug)) return html
+  const sectionPattern = new RegExp(
+    `(<[^>]+data-page="${escapeRegex(normalizedSlug)}"[^>]*class=")([^"]*)(")`,
+    "i",
+  )
+  const hasSectionPattern = sectionPattern.test(html)
+  const alternateSectionPattern = new RegExp(
+    `(<[^>]+class=")([^"]*)("[^>]*data-page="${escapeRegex(normalizedSlug)}"[^>]*>)`,
+    "i",
+  )
+  if (!hasSectionPattern && alternateSectionPattern.test(html)) {
+    return html.replace(alternateSectionPattern, (_match, prefix, classNames, suffix) => {
+      const tokens = new Set(normalizeText(classNames).split(/\s+/u).filter(Boolean))
+      tokens.delete("hidden")
+      tokens.add("active")
+      return `${prefix}${Array.from(tokens).join(" ")}${suffix}`
+    })
+  }
+  if (!hasSectionPattern) return html
+  return html.replace(sectionPattern, (_match, prefix, classNames, suffix) => {
+    const tokens = new Set(normalizeText(classNames).split(/\s+/u).filter(Boolean))
+    tokens.add("active")
+    return `${prefix}${Array.from(tokens).join(" ")}${suffix}`
+  })
+}
+
+function setInitialAdminLayoutState(html, pageSlug) {
+  const normalizedSlug = normalizeLower(pageSlug)
+  if (!ADMIN_PAGE_SECTION_SET.has(normalizedSlug)) return html
+  const showStudentList = normalizedSlug === "student-admin"
+  const hideTopSearch = new Set([
+    "overview", "queue-hub", "attendance", "attendance-admin", "assignments",
+    "assignments-data", "grades", "grades-data", "parent-tracking", "performance-data",
+    "performance-engagement", "news-reports", "school-setup", "settings",
+  ]).has(normalizedSlug)
+  let nextHtml = html.replace(
+    /(<[^>]+\bclass=")([^"]*\bgrid-main\b[^"]*)("[^>]*>)/i,
+    (_match, prefix, classNames, suffix) => {
+      const tokens = new Set(normalizeText(classNames).split(/\s+/u).filter(Boolean))
+      if (showStudentList) tokens.delete("overview-full")
+      else tokens.add("overview-full")
+      return `${prefix}${Array.from(tokens).join(" ")}${suffix}`
+    },
+  )
+  const toggleById = (source, id, hidden) => source.replace(
+    new RegExp(`(<[^>]+\\bid="${escapeRegex(id)}"[^>]*>)`, "i"),
+    (_match, openingTag) => {
+      const classMatch = openingTag.match(/\bclass="([^"]*)"/i)
+      const tokens = new Set(normalizeText(classMatch?.[1]).split(/\s+/u).filter(Boolean))
+      if (hidden) tokens.add("hidden")
+      else tokens.delete("hidden")
+      const classValue = Array.from(tokens).join(" ")
+      if (classMatch) return openingTag.replace(classMatch[0], `class="${classValue}"`)
+      return openingTag.replace(/>$/, ` class="${classValue}">`)
+    },
+  )
+  nextHtml = toggleById(nextHtml, "studentListPanel", !showStudentList)
+  nextHtml = toggleById(nextHtml, "topControlsPanel", hideTopSearch)
+  return nextHtml
+}
+
 function buildAdminInitialAuthState(session = null) {
   if (!session || !normalizeText(session.username)) {
     return { authenticated: false }
@@ -1319,10 +1393,18 @@ function injectAdminRuntimeConfig(html, pageSlug, origin, initialAuthState = { a
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
 const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_ADMIN_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_ADMIN_API_PREFIX=${JSON.stringify(ADMIN_API_PREFIX)};window.__SIS_ADMIN_PAGE_PATH=${JSON.stringify(ADMIN_PAGE_PATH)};window.__SIS_ADMIN_PAGE_SLUG=${JSON.stringify(pageSlug || ADMIN_PAGE_DEFAULT_SLUG)};window.__SIS_ADMIN_PAGE_SECTIONS=${JSON.stringify(ADMIN_PAGE_SECTIONS)};window.__SIS_ADMIN_PERMISSION_ROLES=${JSON.stringify(ADMIN_PERMISSION_ROLES)};window.__SIS_ADMIN_PERMISSIONS_PATH=${JSON.stringify(ADMIN_PERMISSIONS_PATH)};window.__SIS_ADMIN_UI_SETTINGS_PATH=${JSON.stringify(ADMIN_UI_SETTINGS_PATH)};window.__SIS_ADMIN_DASHBOARD_PATH=${JSON.stringify(ADMIN_DASHBOARD_PATH)};window.__SIS_ADMIN_QUEUE_HUB_PATH=${JSON.stringify(ADMIN_QUEUE_HUB_PATH)};window.__SIS_ADMIN_NEWS_REPORTS_PATH=${JSON.stringify(ADMIN_NEWS_REPORTS_PATH)};window.__SIS_ADMIN_EXERCISE_TITLES_PATH=${JSON.stringify(ADMIN_EXERCISE_TITLES_PATH)};window.__SIS_ADMIN_NOTIFY_EMAIL_PATH=${JSON.stringify(ADMIN_NOTIFY_EMAIL_PATH)};window.__SIS_ADMIN_NOTIFY_BATCH_STATUS_PATH=${JSON.stringify(ADMIN_NOTIFY_BATCH_STATUS_PATH)};window.__SIS_ADMIN_INCOMING_EXERCISE_RESULTS_PATH=${JSON.stringify(ADMIN_INCOMING_EXERCISE_RESULTS_PATH)};window.__SIS_ADMIN_PROFILE_SUBMISSIONS_PATH=${JSON.stringify(ADMIN_PROFILE_SUBMISSIONS_PATH)};window.__SIS_ADMIN_RUNTIME_HEALTH_PATH=${JSON.stringify(ADMIN_RUNTIME_HEALTH_PATH)};window.__SIS_ADMIN_SIS_CONFIG_REPAIR_PATH=${JSON.stringify(ADMIN_SIS_CONFIG_REPAIR_PATH)};window.__SIS_ADMIN_SERVICE_CONTROL_PATH=${JSON.stringify(ADMIN_SERVICE_CONTROL_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH=${JSON.stringify(ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_CREATE_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_PATH)};window.__SIS_ADMIN_ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES=${JSON.stringify(ASSIGNMENT_ANNOUNCEMENT_PREVIEW_TTL_MINUTES)};window.__SIS_ADMIN_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-admin-auth-state", authStateName)
+  const bodyClassName =
+    normalizedAuthState.authenticated ?
+      "admin-portal-page page"
+    : "admin-portal-page admin-auth-booting page"
+  const htmlWithBodyClass = setBodyClass(htmlWithAuthState, bodyClassName)
+ const htmlWithInitialSection = normalizedAuthState.authenticated ?
+    setInitialAdminLayoutState(setInitialActivePageSection(htmlWithBodyClass, pageSlug), pageSlug)
+    : htmlWithBodyClass
   if (html.includes("</head>")) {
-    return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
+    return htmlWithInitialSection.replace("</head>", `  ${runtimeConfig}\n</head>`)
   }
-  return `${runtimeConfig}\n${htmlWithAuthState}`
+  return `${runtimeConfig}\n${htmlWithInitialSection}`
 }
 
 function injectParentRuntimeConfig(html, origin, initialAuthState = { authenticated: false }) {

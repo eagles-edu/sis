@@ -1140,7 +1140,7 @@ body.admin-portal-page .level-chip.panelbg-fly {
 body.admin-portal-page .level-chip.panelbg-key {
   --chip-bg: var(--portal-color-709e6795a7);
   --chip-border: #006475;
-  --chip-text: #fbffff;
+  --chip-text: #07212c;
 }
 body.admin-portal-page .level-chip.panelbg-pet {
   --chip-bg: var(--portal-color-9c1eaddb49);
@@ -1299,10 +1299,16 @@ body.admin-portal-page #authBootPanel {
   box-sizing: border-box;
   font-size: 1.02rem;
   line-height: 1.48;
-  margin-inline: auto;
-  margin-top: clamp(3rem, 5vw, 4rem);
   padding: clamp(28px, 3.6vw, 40px);
-  width: min(100%, var(--portal-login-panel-max-width));
+  width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+}
+body.admin-portal-page #authPanel,
+body.admin-portal-page #authBootPanel {
+  left: 50%;
+  position: fixed;
+  top: clamp(3rem, 5vw, 4rem);
+  transform: translateX(-50%);
+  z-index: 30;
 }
 html[data-theme="dark"] body.admin-portal-page #authPanel {
   background-color: transparent;
@@ -1551,8 +1557,8 @@ body.admin-portal-page.admin-auth-booting .wrap,
 html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap {
   box-sizing: border-box;
   margin-inline: auto;
-  max-inline-size: calc(var(--portal-login-panel-max-width) + 32px);
-  width: min(100%, calc(var(--portal-login-panel-max-width) + 32px));
+  max-inline-size: 1440px;
+  width: min(100%, 1440px);
 }
 html[data-admin-auth-state="unauthenticated"] body.admin-portal-page #authPanel,
 body.admin-portal-page.admin-auth-booting #authBootPanel,

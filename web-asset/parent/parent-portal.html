@@ -6612,9 +6612,13 @@
     async function hydratePortal(options = {}) {
       const initialUser =
         options && typeof options === "object" ? options.initialUser || null : null;
+      const revealAuthState =
+        !options || typeof options !== "object" || options.revealAuthState !== false;
       if (initialUser) {
         state.me = initialUser;
-        document.documentElement.dataset.parentAuthState = "authenticated";
+        if (revealAuthState) {
+          document.documentElement.dataset.parentAuthState = "authenticated";
+        }
         updateSessionBadge(
           state.me?.parentsId ?
           `Đã đăng nhập: ${state.me.parentsId}` :
@@ -6624,9 +6628,11 @@
       } else {
         const me = await api(`${PARENT_AUTH_PREFIX}/me`);
         state.me = me.user || null;
-        document.documentElement.dataset.parentAuthState = state.me?.parentsId ?
-          "authenticated" :
-          "unauthenticated";
+        if (revealAuthState) {
+          document.documentElement.dataset.parentAuthState = state.me?.parentsId ?
+            "authenticated" :
+            "unauthenticated";
+        }
         updateSessionBadge(
           state.me?.parentsId ?
           `Đã đăng nhập: ${state.me.parentsId}` :
@@ -6778,11 +6784,11 @@
         if (INITIAL_AUTH_STATE && typeof INITIAL_AUTH_STATE === "object") {
           if (INITIAL_AUTH_STATE.authenticated) {
             state.me = INITIAL_AUTH_STATE.user || null;
+            if (handlePortalPostAuthRouteState()) return;
+            await hydratePortal({ initialUser: state.me, revealAuthState: false });
             document.documentElement.dataset.parentAuthState = "authenticated";
             document.getElementById("loginCard").classList.add("hidden");
             setActivePortalView("dashboard");
-            if (handlePortalPostAuthRouteState()) return;
-            await hydratePortal({ initialUser: state.me });
             openReportAccessErrorModalIfNeeded();
             scheduleChipTooltipRefresh(document);
           } else {

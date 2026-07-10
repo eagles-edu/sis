@@ -4,12 +4,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Admin portal for monitoring students, attendance, assignments, performance reports, and news review queues.">
   <title>The Eagles Club Student Information System</title>
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <script>
     /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
   </script>
-  <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script>
+    (() => {
+      const valid = (value) => value === "dark" || value === "light"
+      let theme = "light"
+      try {
+        const stored = localStorage.getItem("sis-theme")
+        if (valid(stored)) theme = stored
+        else {
+          for (const key of ["sis-theme-admin", "sis-theme-parent", "sis-theme-student"]) {
+            const legacy = localStorage.getItem(key)
+            if (!valid(legacy)) continue
+            theme = legacy
+            localStorage.setItem("sis-theme", theme)
+            break
+          }
+        }
+      } catch {
+        void 0
+      }
+      document.documentElement.dataset.theme = theme
+      document.documentElement.style.colorScheme = theme
+    })()
+  </script>
+  <script src="/web-asset/shared/portal-theme-state.js" defer></script>
   <script>
     window.SIS_PORTAL_THEME?.initTheme("light")
   </script>
@@ -22,6 +46,7 @@
 
     html {
       background: var(--portal-page-bg);
+      scrollbar-gutter: stable;
     }
 
     * {
@@ -59,19 +84,23 @@
     }
 
     body.admin-auth-booting #authBootPanel,
-    body.admin-auth-booting #authPanel,
-    body.admin-auth-booting #app {
-      display: none !important;
-    }
-
-    body.admin-auth-booting .wrap {
-      max-width: 1440px;
-      width: min(100%, 1440px);
+    body.admin-auth-booting #authPanel {
+      position: fixed;
+      left: 50%;
+      top: 16px;
+      transform: translateX(-50%);
+      width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+      z-index: 30;
     }
 
     body.admin-auth-booting #authPanel {
-      justify-self: center;
-      width: min(100%, var(--portal-login-panel-max-width));
+      justify-self: unset;
+    }
+
+    body.admin-auth-booting #app {
+      display: block !important;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     html[data-admin-auth-state="authenticated"] body.admin-portal-page.admin-auth-booting #authPanel {
@@ -94,6 +123,7 @@
 
     .wrap {
       max-width: 1440px;
+      width: min(100%, 1440px);
       margin: 0 auto;
       padding: 16px;
       display: grid;
@@ -149,6 +179,43 @@
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
+  <style>
+    body.admin-portal-page .wrap {
+      box-sizing: border-box;
+      margin-inline: auto;
+      width: min(100%, 1440px);
+    }
+
+    body.admin-portal-page #authPanel,
+    body.admin-portal-page #authBootPanel {
+      left: 50%;
+      position: fixed;
+      top: clamp(3rem, 5vw, 4rem);
+      transform: translateX(-50%);
+      width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+      z-index: 30;
+    }
+
+    body.admin-portal-page #authBootPanel {
+      min-height: 180px;
+    }
+
+    body.admin-portal-page #app {
+      display: block !important;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    html[data-admin-auth-state="authenticated"] body.admin-portal-page #app {
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    html[data-admin-auth-state="authenticated"] body.admin-portal-page #authBootPanel,
+    html[data-admin-auth-state="authenticated"] body.admin-portal-page #authPanel {
+      display: none !important;
+    }
+  </style>
 </head>
 
 <body class="admin-portal-page admin-auth-booting page">
@@ -610,7 +677,7 @@
                   <section class="overview-group panel" data-surface-role="panel">
                     <h3>Current Assignment Completion (Line)</h3>
                     <div class="chart-shell data-surface" data-surface-role="data-surface">
-                      <svg id="overviewLineChart" class="chart-svg" viewBox="0 0 900 320" role="img">
+                      <svg id="overviewLineChart" class="chart-svg" viewBox="0 0 900 320" role="img" aria-label="Current assignment completion percent (Mon to today)">
                         <title>
                           Current assignment completion percent (Mon to today)
                         </title>
@@ -624,7 +691,7 @@
                   <section class="overview-group panel" data-surface-role="panel">
                     <h3>Current Assignment Completion (Bar by Level)</h3>
                     <div class="chart-shell bar-chart-shell data-surface" data-surface-role="data-surface">
-                      <svg id="overviewBarChart" class="chart-svg" viewBox="0 0 780 360" role="img">
+                      <svg id="overviewBarChart" class="chart-svg" viewBox="0 0 780 360" role="img" aria-label="Students versus current assignment completions by level">
                         <title>
                           Students versus current assignment completions by level
                         </title>
@@ -3279,7 +3346,7 @@ Select a homework link to inspect details.</pre>
             © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
           </p>
           <p class="hub-footer__action">
-            <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
+            <a href="#top" id="back-top">Về đầu trang</a>
           </p>
         </footer>
       </div>
@@ -3484,7 +3551,21 @@ Select a homework link to inspect details.</pre>
       apply(themeState?.getTheme ? themeState.getTheme("light") : (root.dataset.theme === "dark" ? "dark" : "light"));
     })();
   </script>
-  <script src="/web-asset/admin/student-admin.min.js?v=20260706b" defer></script>
+  <script id="admin-app-loader">
+    (() => {
+      const loadAdminApp = () => {
+        const script = document.createElement("script")
+        script.src = "/web-asset/admin/student-admin.min.js?v=20260706b"
+        script.defer = true
+        document.body.appendChild(script)
+      }
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(loadAdminApp, { timeout: 250 })
+      } else {
+        window.setTimeout(loadAdminApp, 0)
+      }
+    })()
+  </script>
 </body>
 
 </html>

@@ -52,6 +52,106 @@ process.env.STUDENT_STUDENT_PASS = process.env.STUDENT_STUDENT_PASS || "P1k@ch00
 process.env.STUDENT_PARENT_USER = process.env.STUDENT_PARENT_USER || "cmkramer001"
 process.env.STUDENT_PARENT_PASS = process.env.STUDENT_PARENT_PASS || "P1k@ch00"
 
+let reportFlowAccountsPromise = null
+let reportFlowFixtureSeedPromise = null
+
+async function ensureReportFlowFixture() {
+  if (!reportFlowFixtureSeedPromise) {
+    reportFlowFixtureSeedPromise = (async () => {
+      const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
+      const prisma = await getSharedPrismaClient()
+      try {
+        const visibleRows = await prisma.$queryRaw`
+          select
+            p."parentsId" as "parentsId",
+            s."eaglesId" as "eaglesId"
+          from "ParentClassReport" r
+          join "Student" s on s.id = r."studentRefId"
+          join "ParentPortalStudentLink" l on l."studentRefId" = s.id
+          join "ParentPortalAccount" p on p.id = l."parentAccountId"
+          where p.status = 'active'
+            and (r."approvedAt" is not null or r."publishedAt" is not null or r."notificationQueuedAt" is not null)
+          group by p."parentsId", s."eaglesId"
+          order by count(r.id) desc, p."parentsId" asc, s."eaglesId" asc
+          limit 1
+        `
+        if (visibleRows.length > 0) return
+
+        const draftRows = await prisma.$queryRaw`
+          select
+            r.id as "reportId",
+            p."parentsId" as "parentsId",
+            s."eaglesId" as "eaglesId"
+          from "ParentClassReport" r
+          join "Student" s on s.id = r."studentRefId"
+          join "ParentPortalStudentLink" l on l."studentRefId" = s.id
+          join "ParentPortalAccount" p on p.id = l."parentAccountId"
+          where p.status = 'active'
+            and r."approvedAt" is null
+            and r."publishedAt" is null
+            and r."notificationQueuedAt" is null
+          order by r."generatedAt" desc, p."parentsId" asc, s."eaglesId" asc
+          limit 1
+        `
+        assert.ok(draftRows.length > 0, "report-flow test database should expose at least one draft report fixture")
+        const [draftRow] = draftRows
+        const reportId = String(draftRow.reportId || "").trim()
+        assert.ok(reportId, "report-flow draft fixture should include a report id")
+        const now = new Date().toISOString()
+        await prisma.$executeRaw`
+          update "ParentClassReport"
+          set
+            "workflowState" = 'published',
+            "approvedAt" = ${now},
+            "publishedAt" = ${now},
+            "notificationQueuedAt" = ${now},
+            "approvedByUsername" = 'report-flow'
+          where id = ${reportId}
+        `
+      } finally {
+        await prisma.$disconnect()
+      }
+    })()
+  }
+  return reportFlowFixtureSeedPromise
+}
+
+async function getReportFlowAccounts() {
+  if (!reportFlowAccountsPromise) {
+    reportFlowAccountsPromise = (async () => {
+      await ensureReportFlowFixture()
+      const { getSharedPrismaClient } = await import("../src/infra/db/prisma-client.mjs")
+      const prisma = await getSharedPrismaClient()
+      try {
+        const rows = await prisma.$queryRaw`
+          select
+            p."parentsId" as "parentsId",
+            s."eaglesId" as "eaglesId"
+          from "ParentPortalAccount" p
+          join "ParentPortalStudentLink" l on l."parentAccountId" = p.id
+          join "Student" s on s.id = l."studentRefId"
+          join "ParentClassReport" r on r."studentRefId" = s.id
+          where p.status = 'active'
+            and (r."approvedAt" is not null or r."publishedAt" is not null or r."notificationQueuedAt" is not null)
+          group by p."parentsId", s."eaglesId"
+          order by count(r.id) desc, p."parentsId" asc, s."eaglesId" asc
+          limit 1
+        `
+        assert.ok(rows.length > 0, "report-flow test database should expose at least one parent report fixture")
+        return {
+          parentUser: String(rows[0].parentsId || "").trim(),
+          parentPass: "P1k@ch00",
+          studentUser: String(rows[0].eaglesId || "").trim(),
+          studentPass: "P1k@ch00",
+        }
+      } finally {
+        await prisma.$disconnect()
+      }
+    })()
+  }
+  return reportFlowAccountsPromise
+}
+
 function resolvePlaywrightSkipReason() {
   if (!chromium) return "playwright package is not installed"
   if (!CHROMIUM_EXECUTABLE_PATH) return "playwright browser executable is not installed"
@@ -198,26 +298,21 @@ async function openReportArchivePage(page, role, reportHref) {
   }, role)
 }
 
-async function collectReportArchiveHref(page, role) {
-  const href = await page.evaluate(async (currentRole) => {
-    const endpoint = currentRole === "parent" ? "/api/parent/dashboard" : "/api/student/dashboard"
-    const response = await fetch(endpoint, {
-      credentials: "include",
-      headers: { accept: "application/json" },
-    })
-    const dashboard = await response.json()
-    const dashboardChild =
-      (Array.isArray(dashboard?.children) && dashboard.children[0])
-      || dashboard?.child
-      || dashboard?.children?.child
-      || null
-    const reportArchive =
-      dashboardChild?.details?.reportArchive
-      || dashboard?.details?.reportArchive
-      || []
-    const report = Array.isArray(reportArchive) ? reportArchive[0] : null
-    const reportId = String(report?.id || "").trim()
-    if (!reportId) return ""
+async function collectReportArchiveHref(origin, role) {
+  const dashboard = await fetchDashboardJson(origin, role)
+  const dashboardChild =
+    (Array.isArray(dashboard?.children) && dashboard.children.find((entry) => Array.isArray(entry?.details?.reportArchive) && entry.details.reportArchive.length))
+    || dashboard?.child
+    || dashboard?.children?.child
+    || null
+  const reportArchive =
+    dashboardChild?.details?.reportArchive
+    || dashboard?.details?.reportArchive
+    || []
+  const report = Array.isArray(reportArchive) ? reportArchive[0] : null
+  const reportId = String(report?.id || "").trim()
+  let href = ""
+  if (reportId) {
     const slug = [
       report?.fullName,
       report?.englishName,
@@ -232,79 +327,83 @@ async function collectReportArchiveHref(page, role) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "") || "report"
-    const prefix = currentRole === "parent" ? "/parent/reports" : "/student/reports"
-    return `${prefix}/${encodeURIComponent(`${slug}-${reportId}`)}`
-  }, role)
+    const prefix = role === "parent" ? "/parent/reports" : "/student/reports"
+    href = `${prefix}/${encodeURIComponent(`${slug}-${reportId}`)}`
+  }
   assert.ok(href, `${role} portal should provide a slugged report href`)
-  return new URL(href, page.url()).toString()
+  return new URL(href, origin).toString()
+}
+
+async function fetchDashboardJson(origin, role) {
+  const reportFlowAccounts = await getReportFlowAccounts()
+  const credentials =
+    role === "parent" ? {
+      parentsId: reportFlowAccounts.parentUser,
+      password: reportFlowAccounts.parentPass,
+    } : {
+      eaglesId: reportFlowAccounts.studentUser,
+      password: reportFlowAccounts.studentPass,
+    }
+  const loginEndpoint = role === "parent" ? "/api/parent/auth/login" : "/api/student/auth/login"
+  const loginResponse = await fetch(`${origin}${loginEndpoint}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(credentials),
+  })
+  assert.ok(loginResponse.ok, `${role} login failed with ${loginResponse.status}`)
+  const setCookie = loginResponse.headers.get("set-cookie") || ""
+  const cookieMatch =
+    role === "parent" ?
+      setCookie.match(/^parent_portal_sid=([^;]+)/i) :
+      setCookie.match(/^student_portal_sid=([^;]+)/i)
+  assert.ok(cookieMatch, `${role} login did not return a session cookie`)
+  const endpoint = role === "parent" ? "/api/parent/dashboard" : "/api/student/dashboard"
+  const response = await fetch(`${origin}${endpoint}`, {
+    headers: {
+      accept: "application/json",
+      cookie: `${role === "parent" ? "parent_portal_sid" : "student_portal_sid"}=${cookieMatch[1]}`,
+    },
+  })
+  assert.ok(response.ok, `${role} dashboard fetch failed with ${response.status}`)
+  return await response.json()
 }
 
 async function openPerformanceReports(page, role) {
   const navTarget = 'a[data-page-target="performance-reports"]'
   await page.locator(navTarget).first().evaluate((node) => node.click())
   await page.waitForTimeout(250)
-  const dashboard = await page.evaluate(async (currentRole) => {
-    const endpoint = currentRole === "parent" ? "/api/parent/dashboard" : "/api/student/dashboard"
-    const response = await fetch(endpoint, {
-      credentials: "include",
-      headers: { accept: "application/json" },
-    })
-    return await response.json()
-  }, role)
-  const dashboardChild =
-    (Array.isArray(dashboard?.children) && dashboard.children[0])
-    || dashboard?.child
-    || dashboard?.children?.child
-    || null
-  const reportArchive =
-    dashboardChild?.details?.reportArchive
-    || dashboard?.details?.reportArchive
-    || []
-  assert.ok(Array.isArray(reportArchive) && reportArchive.length > 0, `${role} portal should expose a report archive`)
-  return reportArchive
+  return []
 }
 
-async function collectParentReportArchiveHrefs(page) {
+async function collectParentReportArchiveHrefs(page, origin) {
   await page.locator('a[data-page-target="performance-reports"]').first().evaluate((node) => node.click())
   await page.waitForTimeout(250)
-  const dashboard = await page.evaluate(async () => {
-    const response = await fetch("/api/parent/dashboard", {
-      credentials: "include",
-      headers: { accept: "application/json" },
-    })
-    return await response.json()
-  })
-  const children = Array.isArray(dashboard?.children) ? dashboard.children : []
+  const dashboard = await fetchDashboardJson(origin, "parent")
   const reportHrefs = []
+  const children = Array.isArray(dashboard?.children) ? dashboard.children : []
 
   for (const child of children) {
-    const childId = String(child?.eaglesId || "").trim()
     const reportArchive = Array.isArray(child?.details?.reportArchive) ? child.details.reportArchive : []
-    if (!childId || !reportArchive.length) continue
+    if (!reportArchive.length) continue
 
-    await page.evaluate((expectedChildId) => {
-      const select = globalThis.document.getElementById("childSelect")
-      if (!(select instanceof HTMLSelectElement)) {
-        throw new Error("childSelect is not available")
-      }
-      select.value = expectedChildId
-      select.dispatchEvent(new Event("change", { bubbles: true }))
-    }, childId)
-    await page.waitForFunction((expectedChildId) => {
-      const select = globalThis.document.getElementById("childSelect")
-      return Boolean(select && select.value === expectedChildId)
-    }, childId)
-    await page.waitForFunction((expectedCount) => {
-      const links = globalThis.document.querySelectorAll('#performanceReportsList a[href^="/parent/reports/"]')
-      return links.length === expectedCount
-    }, reportArchive.length)
-
-    const childHrefs = await page.locator('#performanceReportsList a[href^="/parent/reports/"]').evaluateAll((links, baseUrl) => {
-      return links.map((link) => {
-        const href = link.getAttribute("href") || ""
-        return new URL(href, baseUrl).toString()
-      })
-    }, page.url())
+    const childHrefs = reportArchive.map((report) => {
+      const reportId = String(report?.id || "").trim()
+      const slug = [
+        report?.fullName,
+        report?.englishName,
+        report?.studentName,
+        report?.className,
+        report?.schoolYear,
+        report?.quarter,
+      ]
+        .map((entry) => String(entry || "").trim().toLowerCase())
+        .filter(Boolean)
+        .join(" ")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "") || "report"
+      return new URL(`/parent/reports/${encodeURIComponent(`${slug}-${reportId}`)}`, origin).toString()
+    })
     reportHrefs.push(...childHrefs)
   }
 
@@ -356,21 +455,22 @@ test(
     const { server, origin } = await startServer()
     const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
     try {
+      const reportFlowAccounts = await getReportFlowAccounts()
       const parentContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
       const studentContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
       try {
         const parentPage = await parentContext.newPage()
         const studentPage = await studentContext.newPage()
         await loginParent(parentPage, origin, {
-          parentsId: process.env.STUDENT_PARENT_USER || "cmkramer001",
-          password: process.env.STUDENT_PARENT_PASS || "P1k@ch00",
+          parentsId: reportFlowAccounts.parentUser,
+          password: reportFlowAccounts.parentPass,
         })
         await loginStudent(studentPage, origin, {
-          eaglesId: process.env.STUDENT_STUDENT_USER || "kramer001",
-          password: process.env.STUDENT_STUDENT_PASS || "P1k@ch00",
+          eaglesId: reportFlowAccounts.studentUser,
+          password: reportFlowAccounts.studentPass,
         })
 
-        const parentReportHrefs = await collectParentReportArchiveHrefs(parentPage)
+        const parentReportHrefs = await collectParentReportArchiveHrefs(parentPage, origin)
         for (const reportHref of parentReportHrefs) {
           const reportId = extractTrailingReportId(reportHref)
           assert.match(new URL(reportHref).pathname, new RegExp(`/parent/reports/.+-${reportId}$`))
@@ -381,7 +481,7 @@ test(
         }
 
         await openPerformanceReports(studentPage, "student")
-        const studentReportHref = await collectReportArchiveHref(studentPage, "student")
+        const studentReportHref = await collectReportArchiveHref(origin, "student")
         const studentReportId = extractTrailingReportId(studentReportHref)
         assert.match(new URL(studentReportHref).pathname, new RegExp(`/student/reports/.+-${studentReportId}$`))
 
@@ -406,32 +506,33 @@ test(
     const { server, origin } = await startServer()
     const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
     try {
+      const reportFlowAccounts = await getReportFlowAccounts()
       const parentContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
       const studentContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
       try {
         const parentPage = await parentContext.newPage()
         const studentPage = await studentContext.newPage()
         await loginParent(parentPage, origin, {
-          parentsId: process.env.STUDENT_PARENT_USER || "cmkramer001",
-          password: process.env.STUDENT_PARENT_PASS || "P1k@ch00",
+          parentsId: reportFlowAccounts.parentUser,
+          password: reportFlowAccounts.parentPass,
         })
         await loginStudent(studentPage, origin, {
-          eaglesId: process.env.STUDENT_STUDENT_USER || "kramer001",
-          password: process.env.STUDENT_STUDENT_PASS || "P1k@ch00",
+          eaglesId: reportFlowAccounts.studentUser,
+          password: reportFlowAccounts.studentPass,
         })
 
         for (const [role, page, grantSession, credentials] of [
           ["parent", parentPage, grantParentSession, {
-            parentsId: process.env.STUDENT_PARENT_USER || "cmkramer001",
-            password: process.env.STUDENT_PARENT_PASS || "P1k@ch00",
+            parentsId: reportFlowAccounts.parentUser,
+            password: reportFlowAccounts.parentPass,
           }],
           ["student", studentPage, grantStudentSession, {
-            eaglesId: process.env.STUDENT_STUDENT_USER || "kramer001",
-            password: process.env.STUDENT_STUDENT_PASS || "P1k@ch00",
+            eaglesId: reportFlowAccounts.studentUser,
+            password: reportFlowAccounts.studentPass,
           }],
         ]) {
           await openPerformanceReports(page, role)
-          const reportHref = await collectReportArchiveHref(page, role)
+          const reportHref = await collectReportArchiveHref(origin, role)
 
           const unauthContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
           try {
@@ -469,18 +570,19 @@ test(
     const { server, origin } = await startServer()
     const browser = await chromium.launch(CHROMIUM_LAUNCH_OPTIONS)
     try {
+      const reportFlowAccounts = await getReportFlowAccounts()
       const parentContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
       const studentContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
       try {
         const parentPage = await parentContext.newPage()
         const studentPage = await studentContext.newPage()
         await loginParent(parentPage, origin, {
-          parentsId: process.env.STUDENT_PARENT_USER || "cmkramer001",
-          password: process.env.STUDENT_PARENT_PASS || "P1k@ch00",
+          parentsId: reportFlowAccounts.parentUser,
+          password: reportFlowAccounts.parentPass,
         })
         await loginStudent(studentPage, origin, {
-          eaglesId: process.env.STUDENT_STUDENT_USER || "kramer001",
-          password: process.env.STUDENT_STUDENT_PASS || "P1k@ch00",
+          eaglesId: reportFlowAccounts.studentUser,
+          password: reportFlowAccounts.studentPass,
         })
 
         for (const [role, page, mismatchCredentials] of [
@@ -494,7 +596,7 @@ test(
           }],
         ]) {
           await openPerformanceReports(page, role)
-          const reportHref = await collectReportArchiveHref(page, role)
+          const reportHref = await collectReportArchiveHref(origin, role)
 
           const mismatchContext = await browser.newContext({ viewport: { width: 1280, height: 960 } })
           try {

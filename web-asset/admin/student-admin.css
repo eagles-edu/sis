@@ -106,9 +106,6 @@
         font-family: var(--font-base, system-ui, -apple-system, sans-serif);
         margin: 0;
       }
-      body.admin-auth-booting .wrap {
-        padding-top: clamp(3rem, 5vw, 4rem);
-      }
       .app-sidebar,
       #authPanel,
       #appPageHeader,

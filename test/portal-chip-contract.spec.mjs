@@ -91,7 +91,7 @@ test("student and parent queue compact chip/button and datetime helpers stay ali
   )
   assert.match(
     sharedTheme,
-    /body\.(?:student|parent)-portal-page .*queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*28px;/i,
+    /body\.(?:student|parent)-portal-page .*queue-table-wrap table\.news-queue-table \.queue-row-btn[\s\S]*?min-height:\s*36px;/i,
   )
 })
 
