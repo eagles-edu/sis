@@ -8,14 +8,14 @@ const runtimeResyncScriptPath = path.resolve(process.cwd(), "tools/sis-runtime-r
 const restoreSnapshotScriptPath = path.resolve(process.cwd(), "tools/sis-full-restore-snapshot.sh")
 const moodleDeployScriptPath = path.resolve(process.cwd(), "tools/deploy-moodle-plugin.sh")
 const testRuntimeSyncScriptPath = path.resolve(process.cwd(), "tools/sync-and-restart-test-runtime.sh")
-const testMirrorNginxConfigPath = path.resolve(process.cwd(), "deploy/nginx/test.eagles.edu.vn.conf")
+const testNginxConfigPath = path.resolve(process.cwd(), "deploy/nginx/test.eagles.edu.vn.conf")
 
 const deployScript = fs.readFileSync(deployScriptPath, "utf8")
 const runtimeResyncScript = fs.readFileSync(runtimeResyncScriptPath, "utf8")
 const restoreSnapshotScript = fs.readFileSync(restoreSnapshotScriptPath, "utf8")
 const moodleDeployScript = fs.readFileSync(moodleDeployScriptPath, "utf8")
 const testRuntimeSyncScript = fs.readFileSync(testRuntimeSyncScriptPath, "utf8")
-const testMirrorNginxConfig = fs.readFileSync(testMirrorNginxConfigPath, "utf8")
+const testNginxConfig = fs.readFileSync(testNginxConfigPath, "utf8")
 
 test("deploy-api-safe mirrors runtime and public portal assets with delete semantics", () => {
   assert.match(deployScript, /PUBLIC_ADMIN_DIR=\"\$\{PUBLIC_ADMIN_DIR:-\$\{PUBLIC_ROOT\}\/sis-admin\}\"/)
@@ -191,30 +191,30 @@ test("sync-and-restart-test-runtime copies persisted admin UI settings into the 
   assert.match(testRuntimeSyncScript, /\$\{target_public_root\}\/web-asset\/images\/pet\.svg/)
 })
 
-test("test-mirror vhost enables fast gzip compression for HTML and static assets", () => {
-  assert.match(testMirrorNginxConfig, /gzip on;/)
-  assert.match(testMirrorNginxConfig, /gzip_static on;/)
-  assert.match(testMirrorNginxConfig, /gzip_min_length 128;/)
-  assert.match(testMirrorNginxConfig, /gzip_comp_level 4;/)
-  assert.match(testMirrorNginxConfig, /gzip_proxied any;/)
+test("test nginx enables strong gzip compression for HTML and static assets", () => {
+  assert.match(testNginxConfig, /gzip on;/)
+  assert.match(testNginxConfig, /gzip_static on;/)
+  assert.match(testNginxConfig, /gzip_min_length 128;/)
+  assert.match(testNginxConfig, /gzip_comp_level 9;/)
+  assert.match(testNginxConfig, /gzip_proxied any;/)
   assert.match(
-    testMirrorNginxConfig,
+    testNginxConfig,
     /gzip_types[\s\S]*text\/javascript[\s\S]*application\/xml\+rss[\s\S]*application\/manifest\+json/,
   )
-  assert.doesNotMatch(testMirrorNginxConfig, /gzip_types[\s\S]*text\/html/)
-  assert.doesNotMatch(testMirrorNginxConfig, /gzip_comp_level 9;/)
+  assert.doesNotMatch(testNginxConfig, /gzip_types[\s\S]*text\/html/)
+  assert.doesNotMatch(testNginxConfig, /gzip_comp_level 5;/)
 })
 
-test("test-mirror vhost enables fast Brotli compression for HTML and static assets", () => {
-  assert.match(testMirrorNginxConfig, /brotli on;/)
-  assert.match(testMirrorNginxConfig, /brotli_static on;/)
-  assert.match(testMirrorNginxConfig, /brotli_comp_level 4;/)
+test("test nginx enables brotli compression at maximum quality", () => {
+  assert.match(testNginxConfig, /brotli on;/)
+  assert.match(testNginxConfig, /brotli_static on;/)
+  assert.match(testNginxConfig, /brotli_comp_level 11;/)
   assert.match(
-    testMirrorNginxConfig,
+    testNginxConfig,
     /brotli_types[\s\S]*text\/javascript[\s\S]*application\/xml\+rss[\s\S]*application\/manifest\+json/,
   )
-  assert.doesNotMatch(testMirrorNginxConfig, /brotli_types[\s\S]*text\/html/)
-  assert.doesNotMatch(testMirrorNginxConfig, /brotli_comp_level 11;/)
+  assert.doesNotMatch(testNginxConfig, /brotli_types[\s\S]*text\/html/)
+  assert.doesNotMatch(testNginxConfig, /brotli_comp_level 5;/)
 })
 
 test("admin asset payloads stay below the Lighthouse reduction gates", () => {

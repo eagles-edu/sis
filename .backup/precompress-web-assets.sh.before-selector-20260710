@@ -1,0 +1,137 @@
+#!/usr/bin/env sh
+
+# Precompress static text assets after a SIS runtime/public sync.
+# Nginx serves the generated files through gzip_static and brotli_static.
+
+set -eu
+
+ADMIN_ROOT=${ADMIN_ROOT:-/home/admin.eagles.edu.vn/public_html}
+TEST_ROOT=${TEST_ROOT:-/home/test.eagles.edu.vn/public_html}
+ADMIN_URL=${ADMIN_URL:-https://admin.eagles.edu.vn/}
+TEST_URL=${TEST_URL:-https://test.eagles.edu.vn/}
+SKIP_VERIFY=${SKIP_VERIFY:-0}
+GZIP_LEVEL=${GZIP_LEVEL:-6}
+BROTLI_LEVEL=${BROTLI_LEVEL:-5}
+
+if ! command -v gzip >/dev/null 2>&1; then
+    echo "ERROR: gzip is required" >&2
+    exit 1
+fi
+
+if ! command -v brotli >/dev/null 2>&1; then
+    echo "ERROR: brotli is required; install it with: sudo apt-get install brotli" >&2
+    exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+    echo "ERROR: curl is required for negotiation checks" >&2
+    exit 1
+fi
+
+case "$GZIP_LEVEL" in
+    1|2|3|4|5|6|7|8|9) ;;
+    *) echo "ERROR: GZIP_LEVEL must be 1-9" >&2; exit 1 ;;
+esac
+
+case "$BROTLI_LEVEL" in
+    0|1|2|3|4|5|6|7|8|9|10|11) ;;
+    *) echo "ERROR: BROTLI_LEVEL must be 0-11" >&2; exit 1 ;;
+esac
+
+for root in "$ADMIN_ROOT" "$TEST_ROOT"; do
+    if [ ! -d "$root" ]; then
+        echo "ERROR: public root does not exist: $root" >&2
+        exit 1
+    fi
+done
+
+compress_root() {
+    root=$1
+    label=$2
+    manifest=$(mktemp)
+    trap 'rm -f "$manifest"' 0 1 2 3 15
+
+    find "$root" -type f \
+        \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.mjs' \
+           -o -name '*.json' -o -name '*.svg' -o -name '*.xml' \
+           -o -name '*.txt' -o -name '*.webmanifest' \) \
+        -print >"$manifest"
+
+    files=0
+    gzip_bytes=0
+    brotli_bytes=0
+    source_bytes=0
+
+    while IFS= read -r file; do
+        [ -n "$file" ] || continue
+
+        gzip -n -k -f -"$GZIP_LEVEL" -- "$file"
+        brotli -f -q "$BROTLI_LEVEL" -o "$file.br" -- "$file"
+
+        source_size=$(stat -c '%s' "$file")
+        gzip_size=$(stat -c '%s' "$file.gz")
+        brotli_size=$(stat -c '%s' "$file.br")
+        source_bytes=$((source_bytes + source_size))
+        gzip_bytes=$((gzip_bytes + gzip_size))
+        brotli_bytes=$((brotli_bytes + brotli_size))
+        files=$((files + 1))
+    done <"$manifest"
+
+    rm -f "$manifest"
+    trap - 0 1 2 3 15
+
+    if [ "$source_bytes" -gt 0 ]; then
+        gzip_pct=$((100 * gzip_bytes / source_bytes))
+        brotli_pct=$((100 * brotli_bytes / source_bytes))
+    else
+        gzip_pct=0
+        brotli_pct=0
+    fi
+
+    echo "[$label] files=$files source=${source_bytes}B gzip=${gzip_bytes}B (${gzip_pct}%) brotli=${brotli_bytes}B (${brotli_pct}%)"
+}
+
+verify_encoding() {
+    url=$1
+    encoding=$2
+    expected=$3
+    headers=$(mktemp)
+    trap 'rm -f "$headers"' 0 1 2 3 15
+
+    if ! curl -sS --http2 --fail \
+        -H "Accept-Encoding: $encoding" \
+        -o /dev/null -D "$headers" "$url"; then
+        echo "ERROR: request failed for $url with Accept-Encoding: $encoding" >&2
+        rm -f "$headers"
+        trap - 0 1 2 3 15
+        return 1
+    fi
+
+    actual=$(awk 'BEGIN { IGNORECASE=1 } /^content-encoding:/ { gsub(/[\r ]/, "", $2); print tolower($2); exit }' "$headers")
+    rm -f "$headers"
+    trap - 0 1 2 3 15
+
+    if [ "$actual" != "$expected" ]; then
+        echo "ERROR: $url expected Content-Encoding: $expected, got: ${actual:-none}" >&2
+        return 1
+    fi
+
+    echo "[verify] $url encoding=$expected OK"
+}
+
+echo "Precompressing SIS web assets"
+echo "gzip level=$GZIP_LEVEL, Brotli level=$BROTLI_LEVEL"
+compress_root "$ADMIN_ROOT" admin
+compress_root "$TEST_ROOT" test
+
+if [ "$SKIP_VERIFY" = "1" ]; then
+    echo "[verify] skipped because SKIP_VERIFY=1"
+    exit 0
+fi
+
+verify_encoding "$ADMIN_URL" br br
+verify_encoding "$ADMIN_URL" gzip gzip
+verify_encoding "$TEST_URL" br br
+verify_encoding "$TEST_URL" gzip gzip
+
+echo "Precompression and negotiation verification completed successfully"

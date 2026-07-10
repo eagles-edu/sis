@@ -41,25 +41,12 @@ server {
     default_type application/octet-stream;
 
     gzip on;
-    gzip_static on;
     gzip_disable "msie6";
     gzip_vary on;
-    gzip_http_version 1.1;
-    gzip_min_length 128;
-    gzip_comp_level 4;
+    gzip_min_length 256;
+    gzip_comp_level 5;
     gzip_proxied any;
-    gzip_types
-        text/plain
-        text/css
-        text/javascript
-        application/javascript
-        application/json
-        application/xml
-        application/xml+rss
-        application/atom+xml
-        application/manifest+json
-        text/xml
-        image/svg+xml;
+    gzip_types text/plain text/css application/javascript application/json application/xml text/xml image/svg+xml;
 
     # SSL certificates
     ssl_certificate /root/.acme.sh/admin.eagles.edu.vn_ecc/fullchain.cer;
@@ -103,6 +90,27 @@ server {
         expires 1h;
         add_header Cache-Control "public, max-age=3600, must-revalidate" always;
     }
+
+    # SIS admin UI served from static public_html deployment.
+    location = /admin {
+        include /etc/nginx/snippets/ielts-security-headers.conf;
+        expires off;
+        add_header Cache-Control "no-cache, must-revalidate" always;
+        try_files /sis-admin/student-admin.html =404;
+    }
+
+    location = /admin/ {
+        return 308 /admin$is_args$args;
+    }
+
+    location = /admin/students {
+        return 308 /admin$is_args$args;
+    }
+
+    location = /admin/students/ {
+        return 308 /admin$is_args$args;
+    }
+
 
     # HTML: revalidate on every navigation
     location ~* \.html$ {
@@ -193,21 +201,42 @@ server {
         return 308 /api/sis-admin/;
     }
 
-    location = /parent/portal {
+    location = /parent {
         proxy_hide_header Cache-Control;
         proxy_hide_header Pragma;
         proxy_hide_header Expires;
         add_header Cache-Control "no-cache, no-store, must-revalidate" always;
         add_header Pragma "no-cache" always;
         add_header Expires "0" always;
-        proxy_pass http://sis_api_upstream/parent/portal;
+        proxy_pass http://sis_api_upstream/parent;
         include /etc/nginx/snippets/sis-api-proxy-common.conf;
         proxy_read_timeout 120s;
         proxy_send_timeout 120s;
     }
 
+    location = /parent/ {
+        return 308 /parent;
+    }
+
+    location ^~ /parent/ {
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Pragma;
+        proxy_hide_header Expires;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        proxy_pass http://sis_api_upstream/parent;
+        include /etc/nginx/snippets/sis-api-proxy-common.conf;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+    }
+
+    location = /parent/portal {
+        return 308 /parent;
+    }
+
     location = /parent/portal/ {
-        return 308 /parent/portal;
+        return 308 /parent;
     }
 
     location ~ ^/api/parent/ {
@@ -233,6 +262,23 @@ server {
         include /etc/nginx/snippets/sis-api-proxy-common.conf;
         proxy_read_timeout 120s;
         proxy_send_timeout 120s;
+    }
+
+    location = /student {
+        proxy_hide_header Cache-Control;
+        proxy_hide_header Pragma;
+        proxy_hide_header Expires;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        proxy_pass http://sis_api_upstream/student;
+        include /etc/nginx/snippets/sis-api-proxy-common.conf;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+    }
+
+    location = /student/ {
+        return 308 /student;
     }
 
     location = /student/portal/ {
