@@ -39,6 +39,7 @@ test("live admin sync wrapper is pinned to the live admin host and refreshes Pri
   assert.match(liveScript, /LIVE_RUNTIME_ENV=.*production/)
   assert.match(liveScript, /backup-only/)
   assert.match(liveScript, /check-only/)
+  assert.match(liveScript, /full\|public\|restart-only\|boot-prep\|backup-only\|check-only/)
   assert.match(liveScript, /full/)
   assert.match(liveScript, /https:\/\/admin\.eagles\.edu\.vn\/\|200\|Cổng Thông Tin Sinh Viên\|/)
   assert.match(liveScript, /maintenance\.svg/)
@@ -48,16 +49,23 @@ test("live admin sync wrapper is pinned to the live admin host and refreshes Pri
   assert.match(liveScript, /verify_live_sync_whitelist/)
   assert.match(liveScript, /tools\/db-backup-failsafe\.mjs/)
   assert.match(liveScript, /backing up postgres into/)
-  assert.match(liveScript, /"postgresBackupDir": "\$\{db_snapshot_dir\}"/)
+  assert.match(liveScript, /"vhostSnapshotDir": "\$\{vhost_snapshot_dir\}"/)
+  assert.match(liveScript, /"databaseBackupDir": "\$\{LIVE_DATABASE_BACKUP_DIR\}"/)
+  assert.match(liveScript, /LIVE_NGINX_ENABLED_VHOST/)
+  assert.match(liveScript, /LIVE_LITESPEED_VHOST/)
   assert.match(liveScript, /sync_live_runtime_data_files\(\)/)
   assert.match(liveScript, /sync_live_public_html_index\(\)/)
   assert.match(liveScript, /verify_live_public_html_index\(\)/)
+  assert.match(liveScript, /target_rel\}" == "index\.html"/)
   assert.match(liveScript, /window\.__SIS_RUNTIME_ENV=.*window\.__SIS_ADMIN_PAGE_PATH=.*window\.__SIS_PARENT_PORTAL_PAGE_PATH=.*window\.__SIS_STUDENT_PORTAL_PAGE_PATH=/s)
   assert.match(liveScript, /runtime-data\/admin-ui-settings\.json/)
   assert.match(liveScript, /LIVE_PRESERVED_RUNTIME_FILES=\([\s\S]*"runtime-data\/admin-ui-settings\.json"/)
   assert.match(liveScript, /npm ci --no-audit --no-fund/)
   assert.match(liveScript, /refresh_runtime_prisma_client\(\)/)
   assert.match(liveScript, /npm run db:migrate:deploy/)
+  assert.match(liveScript, /immutable restore mismatch: \.env/)
+  assert.match(liveScript, /preserved immutable hash verified: \$\{rel_path\}/)
+  assert.match(liveScript, /allowed_runtime_paths.*runtime-data/s)
 })
 
 test("package scripts expose the live admin sync entrypoints", () => {
@@ -94,6 +102,22 @@ test("test and live sync wrappers share the same strict whitelist sources", () =
   assert.deepEqual(
     extractMapSources(testScript, "TEST_PUBLIC_WEBFILE_MAP"),
     extractMapSources(liveScript, "LIVE_PUBLIC_WEBFILE_MAP"),
+  )
+  assert.deepEqual(
+    extractQuotedEntries(testScript, "TEST_RUNTIME_WEBFILE_MAP"),
+    extractQuotedEntries(liveScript, "LIVE_RUNTIME_WEBFILE_MAP"),
+  )
+  assert.deepEqual(
+    extractQuotedEntries(testScript, "TEST_PUBLIC_WEBFILE_MAP"),
+    extractQuotedEntries(liveScript, "LIVE_PUBLIC_WEBFILE_MAP"),
+  )
+  assert.deepEqual(
+    extractQuotedEntries(testScript, "TEST_RUNTIME_CODE_DIRS"),
+    extractQuotedEntries(liveScript, "LIVE_RUNTIME_CODE_DIRS"),
+  )
+  assert.deepEqual(
+    extractQuotedEntries(testScript, "TEST_RUNTIME_CODE_FILES"),
+    extractQuotedEntries(liveScript, "LIVE_RUNTIME_CODE_FILES"),
   )
 })
 

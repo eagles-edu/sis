@@ -4,7 +4,7 @@ set -euo pipefail
 MODE="${1:-full}"
 
 case "${MODE}" in
-  full|backup-only|check-only)
+  full|public|restart-only|boot-prep|backup-only|check-only)
     ;;
   *)
     echo "Usage: $(basename "$0") [full|backup-only|check-only]" >&2
@@ -21,6 +21,9 @@ LIVE_RUNTIME_ENV="${SIS_LIVE_RUNTIME_ENV:-production}"
 LIVE_SERVICE="${SIS_LIVE_SERVICE:-exercise-mailer.service}"
 BACKUP_ROOT="${SIS_LIVE_BACKUP_ROOT:-/home/eagles/dockerz/backups/live-admin}"
 POSTGRES_BACKUP_DIR="${SIS_LIVE_POSTGRES_BACKUP_DIR:-/home/eagles/dockerz/backups/postgres}"
+LIVE_NGINX_ENABLED_VHOST="${SIS_LIVE_NGINX_ENABLED_VHOST:-/etc/nginx/sites-enabled/admin.eagles.edu.vn.conf}"
+LIVE_NGINX_AVAILABLE_VHOST="${SIS_LIVE_NGINX_AVAILABLE_VHOST:-/etc/nginx/sites-available/admin.eagles.edu.vn.conf}"
+LIVE_LITESPEED_VHOST="${SIS_LIVE_LITESPEED_VHOST:-/usr/local/lsws/conf/vhosts/admin.eagles.edu.vn/vhconf.conf}"
 LIVE_HEALTH_URL="${SIS_LIVE_HEALTH_URL:-http://127.0.0.1:8787/healthz}"
 CURL_BROWSER_USER_AGENT="${CURL_BROWSER_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36}"
 RSYNC_EXCLUDES=(
@@ -72,7 +75,6 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
   "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
-  "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
   "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
@@ -90,6 +92,7 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/images/ket.svg|web-asset/images/ket.svg"
   "web-asset/images/pet.svg|web-asset/images/pet.svg"
   "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
   "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
   "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
   "web-asset/icons/web-component/svgs/theme-sun.svg|web-asset/icons/web-component/svgs/theme-sun.svg"
@@ -119,13 +122,12 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/report-settings-island.mjs|web-asset/admin/report-settings-island.mjs"
   "web-asset/admin/school-setup-branding-island.mjs|web-asset/admin/school-setup-branding-island.mjs"
   "web-asset/admin/student-admin-bootstrap.mjs|web-asset/admin/student-admin-bootstrap.mjs"
+  "web-asset/parent/parent-portal.html|sis-parent/parent-portal.html"
+  "web-asset/student/student-portal.html|sis-student/student-portal.html"
   "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
   "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
   "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
-  "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
-  "web-asset/parent/parent-portal.html|sis-parent/parent-portal.html"
-  "web-asset/student/student-portal.html|sis-student/student-portal.html"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
   "web-asset/shared/portal-navigation.js|web-asset/shared/portal-navigation.js"
   "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
@@ -141,6 +143,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/images/ket.svg|web-asset/images/ket.svg"
   "web-asset/images/pet.svg|web-asset/images/pet.svg"
   "web-asset/images/favicon.ico|web-asset/images/favicon.ico"
+  "web-asset/admin/favicon.ico|web-asset/admin/favicon.ico"
   "web-asset/icons/web-component/svg-icon.js|web-asset/icons/web-component/svg-icon.js"
   "web-asset/icons/web-component/svgs/theme-moon.svg|web-asset/icons/web-component/svgs/theme-moon.svg"
   "web-asset/icons/web-component/svgs/theme-sun.svg|web-asset/icons/web-component/svgs/theme-sun.svg"
@@ -164,6 +167,8 @@ LIVE_ROUTE_MATRIX=(
 
 LIVE_WRITE_PREFIX=()
 PUBLIC_WRITE_PREFIX=()
+LIVE_BACKUP_BUNDLE_DIR=""
+LIVE_DATABASE_BACKUP_DIR=""
 
 if [[ ! -d "${LIVE_ROOT}" ]]; then
   echo "Live root not found: ${LIVE_ROOT}" >&2
@@ -406,6 +411,11 @@ check_whitelist_drift() {
   for entry in "${LIVE_PUBLIC_WEBFILE_MAP[@]}"; do
     local source_rel="${entry%%|*}"
     local target_rel="${entry#*|}"
+    # index.html is derived from portal-hub.html with the production origin and
+    # runtime-path injection. Its dedicated validator checks that contract.
+    if [[ "${target_rel}" == "index.html" ]]; then
+      continue
+    fi
     local source_hash
     local public_hash
     source_hash="$(sha256_or_missing "${SOURCE_ROOT}/${source_rel}")"
@@ -507,8 +517,13 @@ verify_live_public_html_index() {
 }
 
 verify_live_roots_cleared() {
+  local allowed_runtime_paths=("${LIVE_ROOT}/.env" "${LIVE_ROOT}/SIS_CONFIG.json")
+  if [[ -f "${LIVE_ROOT}/runtime-data/admin-ui-settings.json" ]]; then
+    allowed_runtime_paths+=("${LIVE_ROOT}/runtime-data")
+  fi
+
   log "verifying cleared live runtime root"
-  verify_cleared_root "${LIVE_ROOT}" "runtime root" "${LIVE_ROOT}/.env" "${LIVE_ROOT}/SIS_CONFIG.json"
+  verify_cleared_root "${LIVE_ROOT}" "runtime root" "${allowed_runtime_paths[@]}"
   log "verifying cleared live public root"
   verify_cleared_root "${PUBLIC_ROOT}" "public root"
 }
@@ -535,34 +550,65 @@ backup_live_state() {
   local bundle_dir="${BACKUP_ROOT}/live-admin-${timestamp}"
   local runtime_snapshot_dir="${bundle_dir}/runtime"
   local public_snapshot_dir="${bundle_dir}/public_html"
-  local db_snapshot_dir="${bundle_dir}/postgres"
+  local vhost_snapshot_dir="${bundle_dir}/vhost"
+  local db_snapshot_dir="${bundle_dir}/database"
   local live_env_path="${LIVE_ROOT}/.env"
-  local database_url
+  local database_url=""
   local db_backup_dir="${POSTGRES_BACKUP_DIR}"
-
-  database_url="$(read_env_value "${live_env_path}" "DATABASE_URL")"
-  if [[ -z "${database_url}" ]]; then
-    echo "Live DATABASE_URL missing from ${live_env_path}" >&2
-    return 1
-  fi
-
-  log "creating backup bundle at ${bundle_dir}"
-  mkdir -p "${runtime_snapshot_dir}" "${public_snapshot_dir}" "${db_snapshot_dir}"
-
-  log "backing up postgres into ${db_backup_dir}"
-  mkdir -p "${db_backup_dir}"
-  node "${REPO_ROOT}/tools/db-backup-failsafe.mjs" --output-dir "${db_backup_dir}" --database-url "${database_url}"
-
-  local db_latest_json="${db_backup_dir}/latest.json"
-  if [[ ! -f "${db_latest_json}" ]]; then
-    echo "database backup did not produce latest.json: ${db_latest_json}" >&2
-    return 1
-  fi
-
+  local db_latest_json=""
   local db_dump_path=""
   local db_checksum_path=""
   local db_metadata_path=""
-  IFS=$'\t' read -r db_dump_path db_checksum_path db_metadata_path <<EOF
+  local bundle_dump_path=""
+  local bundle_checksum_path=""
+  local bundle_metadata_path=""
+
+  LIVE_BACKUP_BUNDLE_DIR="${bundle_dir}"
+  LIVE_DATABASE_BACKUP_DIR="${db_snapshot_dir}"
+
+  log "creating backup bundle at ${bundle_dir}"
+  mkdir -p "${runtime_snapshot_dir}" "${public_snapshot_dir}" "${vhost_snapshot_dir}"
+
+  if [[ -d "${LIVE_ROOT}" ]]; then
+    rsync -a --delete --exclude='node_modules' --exclude='.git' --exclude='*.BAK-*' "${LIVE_ROOT}/" "${runtime_snapshot_dir}/"
+  fi
+  if [[ -d "${PUBLIC_ROOT}" ]]; then
+    rsync -a --delete --exclude='*.BAK-*' "${PUBLIC_ROOT}/" "${public_snapshot_dir}/"
+  fi
+
+  if [[ -e "${LIVE_NGINX_ENABLED_VHOST}" ]]; then
+    cp -aL "${LIVE_NGINX_ENABLED_VHOST}" "${vhost_snapshot_dir}/sites-enabled-admin.eagles.edu.vn.conf"
+  fi
+  if [[ -e "${LIVE_NGINX_AVAILABLE_VHOST}" ]]; then
+    cp -aL "${LIVE_NGINX_AVAILABLE_VHOST}" "${vhost_snapshot_dir}/sites-available-admin.eagles.edu.vn.conf"
+  fi
+  if [[ -e "${LIVE_LITESPEED_VHOST}" ]]; then
+    cp -aL "${LIVE_LITESPEED_VHOST}" "${vhost_snapshot_dir}/litespeed-admin.eagles.edu.vn.vhconf.conf"
+  fi
+  for repo_vhost_path in "${REPO_ROOT}/deploy/nginx/admin.eagles.edu.vn.conf" "${REPO_ROOT}/deploy/nginx/admin.eagles.edu.vn_ssl.conf" "${REPO_ROOT}/deploy/litespeed/admin.eagles.edu.vn.vhost.conf"; do
+    if [[ -e "${repo_vhost_path}" ]]; then
+      cp -a "${repo_vhost_path}" "${vhost_snapshot_dir}/repo-$(basename "${repo_vhost_path}")"
+    fi
+  done
+
+  if [[ "${MODE}" == "full" || "${MODE}" == "backup-only" ]]; then
+    database_url="$(read_env_value "${live_env_path}" "DATABASE_URL")"
+    if [[ -z "${database_url}" ]]; then
+      echo "Live DATABASE_URL missing from ${live_env_path}" >&2
+      return 1
+    fi
+
+    mkdir -p "${db_snapshot_dir}" "${db_backup_dir}"
+    log "backing up postgres into ${db_backup_dir}"
+    node "${REPO_ROOT}/tools/db-backup-failsafe.mjs" --output-dir "${db_backup_dir}" --database-url "${database_url}"
+
+    db_latest_json="${db_backup_dir}/latest.json"
+    if [[ ! -f "${db_latest_json}" ]]; then
+      echo "database backup did not produce latest.json: ${db_latest_json}" >&2
+      return 1
+    fi
+
+    IFS=$'\t' read -r db_dump_path db_checksum_path db_metadata_path <<EOF
 $(DB_LATEST_JSON="${db_latest_json}" node --input-type=module <<'NODE'
 import fs from "node:fs"
 const latest = JSON.parse(fs.readFileSync(process.env.DB_LATEST_JSON, "utf8"))
@@ -574,21 +620,22 @@ NODE
 )
 EOF
 
-  if [[ -z "${db_dump_path}" || ! -f "${db_dump_path}" ]]; then
-    echo "database dump missing from latest.json: ${db_dump_path}" >&2
-    return 1
-  fi
+    if [[ -z "${db_dump_path}" || ! -f "${db_dump_path}" ]]; then
+      echo "database dump missing from latest.json: ${db_dump_path}" >&2
+      return 1
+    fi
 
-  rsync -a --delete --exclude='node_modules' --exclude='.git' --exclude='*.BAK-*' "${LIVE_ROOT}/" "${runtime_snapshot_dir}/"
-  rsync -a --delete --exclude='*.BAK-*' "${PUBLIC_ROOT}/" "${public_snapshot_dir}/"
-
-  cp -a "${db_latest_json}" "${db_snapshot_dir}/latest.json"
-  cp -a "${db_dump_path}" "${db_snapshot_dir}/$(basename "${db_dump_path}")"
-  if [[ -f "${db_checksum_path}" ]]; then
-    cp -a "${db_checksum_path}" "${db_snapshot_dir}/$(basename "${db_checksum_path}")"
-  fi
-  if [[ -f "${db_metadata_path}" ]]; then
-    cp -a "${db_metadata_path}" "${db_snapshot_dir}/$(basename "${db_metadata_path}")"
+    cp -a "${db_latest_json}" "${db_snapshot_dir}/latest.json"
+    cp -a "${db_dump_path}" "${db_snapshot_dir}/$(basename "${db_dump_path}")"
+    bundle_dump_path="${db_snapshot_dir}/$(basename "${db_dump_path}")"
+    if [[ -f "${db_checksum_path}" ]]; then
+      cp -a "${db_checksum_path}" "${db_snapshot_dir}/$(basename "${db_checksum_path}")"
+      bundle_checksum_path="${db_snapshot_dir}/$(basename "${db_checksum_path}")"
+    fi
+    if [[ -f "${db_metadata_path}" ]]; then
+      cp -a "${db_metadata_path}" "${db_snapshot_dir}/$(basename "${db_metadata_path}")"
+      bundle_metadata_path="${db_snapshot_dir}/$(basename "${db_metadata_path}")"
+    fi
   fi
 
   cat > "${bundle_dir}/manifest.json" <<EOF
@@ -601,11 +648,15 @@ EOF
   "bundleDir": "${bundle_dir}",
   "runtimeSnapshotDir": "${runtime_snapshot_dir}",
   "publicSnapshotDir": "${public_snapshot_dir}",
-  "postgresBackupDir": "${db_snapshot_dir}",
+  "vhostSnapshotDir": "${vhost_snapshot_dir}",
+  "databaseBackupDir": "${LIVE_DATABASE_BACKUP_DIR}",
+  "databaseBackupRequired": $([[ "${MODE}" == "full" || "${MODE}" == "backup-only" ]] && echo true || echo false),
+  "databaseManagedByPrisma": true,
+  "mirrorPurgeLeavesDatabaseUntouched": true,
   "postgresLatestJson": "${db_snapshot_dir}/latest.json",
-  "postgresDumpPath": "${db_snapshot_dir}/$(basename "${db_dump_path}")",
-  "postgresChecksumPath": "${db_snapshot_dir}/$(basename "${db_checksum_path}")",
-  "postgresMetadataPath": "${db_snapshot_dir}/$(basename "${db_metadata_path}")"
+  "postgresDumpPath": "${bundle_dump_path}",
+  "postgresChecksumPath": "${bundle_checksum_path}",
+  "postgresMetadataPath": "${bundle_metadata_path}"
 }
 EOF
 
@@ -613,8 +664,15 @@ EOF
 }
 
 build_admin_assets() {
-  log "building admin assets before live sync"
-  (cd "${REPO_ROOT}" && npm run build:admin-assets)
+  case "${MODE}" in
+    full|public)
+      log "building admin assets before live sync"
+      (cd "${REPO_ROOT}" && npm run build:admin-assets)
+      ;;
+    restart-only|boot-prep)
+      log "skip admin asset build for mode=${MODE}"
+      ;;
+  esac
 }
 
 cleanup_live_backup_artifacts() {
@@ -742,12 +800,18 @@ ensure_live_dependencies() {
 wipe_live_target_contents() {
   local env_backup=""
   local runtime_file_backup_dir=""
+  local env_backup_sha=""
+  local env_restored_sha=""
+  local rel_path=""
+  local backup_sha=""
+  local restored_sha=""
   local restore_env=0
   local restore_runtime_files=0
 
   if [[ -f "${LIVE_ROOT}/.env" ]]; then
     env_backup="$(mktemp)"
     cp -a "${LIVE_ROOT}/.env" "${env_backup}"
+    env_backup_sha="$(sha256_or_missing "${env_backup}")"
     restore_env=1
   fi
 
@@ -765,6 +829,12 @@ wipe_live_target_contents() {
 
   if [[ "${restore_env}" -eq 1 ]]; then
     "${LIVE_WRITE_PREFIX[@]}" cp -a "${env_backup}" "${LIVE_ROOT}/.env"
+    env_restored_sha="$(sha256_or_missing "${LIVE_ROOT}/.env")"
+    if [[ "${env_backup_sha}" != "${env_restored_sha}" ]]; then
+      echo "immutable restore mismatch: .env" >&2
+      return 1
+    fi
+    log "preserved immutable hash verified: .env"
     rm -f "${env_backup}"
   fi
 
@@ -773,6 +843,13 @@ wipe_live_target_contents() {
       if [[ -f "${runtime_file_backup_dir}/${rel_path}" ]]; then
         "${LIVE_WRITE_PREFIX[@]}" mkdir -p "${LIVE_ROOT}/$(dirname "${rel_path}")"
         "${LIVE_WRITE_PREFIX[@]}" cp -a "${runtime_file_backup_dir}/${rel_path}" "${LIVE_ROOT}/${rel_path}"
+        backup_sha="$(sha256_or_missing "${runtime_file_backup_dir}/${rel_path}")"
+        restored_sha="$(sha256_or_missing "${LIVE_ROOT}/${rel_path}")"
+        if [[ "${backup_sha}" != "${restored_sha}" ]]; then
+          echo "immutable restore mismatch: ${rel_path}" >&2
+          return 1
+        fi
+        log "preserved immutable hash verified: ${rel_path}"
       fi
     done
   fi
@@ -792,8 +869,17 @@ pin_live_env_contract() {
 }
 
 refresh_runtime_prisma_client() {
+  ensure_live_dependencies
   log "refreshing Prisma client and applying migrations in ${LIVE_ROOT}"
   (cd "${LIVE_ROOT}" && npm run db:generate && npm run db:migrate:deploy)
+}
+
+should_refresh_prisma() {
+  [[ "${MODE}" == "full" || "${MODE}" == "restart-only" || "${MODE}" == "boot-prep" ]]
+}
+
+should_restart_runtime() {
+  [[ "${MODE}" != "boot-prep" ]]
 }
 
 restart_live_service() {
@@ -913,10 +999,9 @@ run_check_only() {
 }
 
 run_apply() {
-  log "file mirror only; git commit matching is not part of the live sync contract"
-  backup_live_state
+  log "file mirror sync; full mode includes a restorable live DB backup; git commit matching is not part of the contract"
   build_admin_assets
-  check_admin_asset_build_parity
+  backup_live_state
   wipe_live_target_contents
   verify_live_preserved_runtime_files
   verify_live_roots_cleared
@@ -924,19 +1009,31 @@ run_apply() {
   sync_live_runtime_data_files
   sync_live_runtime_assets
   cleanup_live_backup_artifacts
-  sync_live_public_assets
-  sync_live_public_html_index
-  ensure_live_dependencies
   pin_live_env_contract
-  refresh_runtime_prisma_client
-  restart_live_service
-  sleep 3
-  verify_live_sync_whitelist
-  verify_live_public_html_index
-  verify_live_routes
-  verify_portal_sync_proof
-  curl -fsS "${LIVE_HEALTH_URL}" >/dev/null
-  log "live admin sync complete"
+  if should_refresh_prisma; then
+    refresh_runtime_prisma_client
+  else
+    log "skip Prisma refresh for mode=${MODE}"
+  fi
+  if should_restart_runtime; then
+    restart_live_service
+    sleep 3
+    if [[ "${MODE}" != "boot-prep" ]]; then
+      sync_live_public_assets
+      sync_live_public_html_index
+    else
+      log "skip public_html sync for mode=boot-prep"
+      log "skip public web asset sync for mode=boot-prep"
+    fi
+    verify_live_sync_whitelist
+    verify_live_public_html_index
+    verify_live_routes
+    verify_portal_sync_proof
+    curl -fsS "${LIVE_HEALTH_URL}" >/dev/null
+  else
+    log "skip runtime restart and route probes for mode=${MODE}"
+  fi
+  log "completed mode=${MODE}"
 }
 
 case "${MODE}" in
@@ -946,7 +1043,7 @@ case "${MODE}" in
   backup-only)
     backup_live_state
     ;;
-  full)
+  full|public|restart-only|boot-prep)
     run_apply
     ;;
 esac

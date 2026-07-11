@@ -14,6 +14,7 @@ TEST_URL=${TEST_URL:-https://test.eagles.edu.vn/}
 SKIP_VERIFY=${SKIP_VERIFY:-0}
 GZIP_LEVEL=${GZIP_LEVEL:-6}
 BROTLI_LEVEL=${BROTLI_LEVEL:-5}
+CURL_BROWSER_USER_AGENT=${CURL_BROWSER_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36}
 
 usage() {
     echo "Usage: $0 admin|test"
@@ -165,7 +166,7 @@ verify_encoding() {
     headers=$(mktemp)
     trap 'rm -f "$headers"' 0 1 2 3 15
 
-    if ! curl -sS --http2 \
+    if ! curl -A "$CURL_BROWSER_USER_AGENT" -sS --http2 \
         -H "Accept-Encoding: $encoding" \
         -o /dev/null -D "$headers" "$url"; then
         echo "ERROR: request failed for $url with Accept-Encoding: $encoding" >&2

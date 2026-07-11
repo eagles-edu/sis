@@ -18,6 +18,11 @@ const STUDENT_PORTAL_HTML_FOR_TEST = STUDENT_PORTAL_HTML
   .replace(/<script src="\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js"><\/script>\s*/i, "")
   .replace(/<head>/i, `<head><style>${SHARED_THEME}</style>`)
 
+test("student portal uses the mirrored shared favicon", () => {
+  assert.match(STUDENT_PORTAL_HTML, /href="\/web-asset\/images\/favicon\.ico\?=v2"/)
+  assert.doesNotMatch(STUDENT_PORTAL_HTML, /\/web-asset\/student\/favicon\.ico/)
+})
+
 function jsonTextResponse(status, payload = {}) {
   return {
     status,

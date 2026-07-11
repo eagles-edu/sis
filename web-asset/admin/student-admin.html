@@ -34,7 +34,7 @@
     })()
   </script>
   <script src="/web-asset/shared/portal-theme-state.js" defer></script>
-  <script src="/web-asset/shared/portal-navigation.js"></script>
+  <script src="/web-asset/shared/portal-navigation.js" defer></script>
   <script>
     window.SIS_PORTAL_THEME?.initTheme("light")
   </script>
@@ -88,6 +88,16 @@
       display: block !important;
       visibility: hidden;
       pointer-events: none;
+    }
+
+    /* Keep the login form out of the first paint until the server-rendered
+       session state or the fallback auth probe has resolved. */
+    body.admin-auth-booting #authPanel {
+      display: none !important;
+    }
+
+    body.admin-auth-booting #authBootPanel {
+      display: grid !important;
     }
 
     html[data-admin-auth-state="authenticated"] body.admin-portal-page.admin-auth-booting #authPanel {
@@ -200,11 +210,11 @@
 
 <body class="admin-portal-page admin-auth-booting page" id="top">
   <div class="wrap">
+    <div class="header-bar portal-login-header" data-surface-role="content">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
     <div class="portal-login-shell" id="authShell">
-      <div class="header-bar portal-login-header">
-        <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
-        <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
-      </div>
       <div class="panel hidden" id="authBootPanel" aria-live="polite">
         <h1>Loading Admin</h1>
         <p class="small">Checking your session...</p>
