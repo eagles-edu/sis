@@ -501,6 +501,9 @@
           const currentOriginUrl = new URL(currentOrigin);
           const knownRuntimePorts = new Set(["8787", "8788"]);
           if (!isLoopbackHostname(currentOriginUrl.hostname)) return "";
+          // Dev runs on 8788. Keep the explicit runtime suffix on portal
+          // links so static and runtime-served pages use the same API origin.
+          if (currentOriginUrl.port === "8788") return currentOriginUrl.origin;
           if (knownRuntimePorts.has(currentOriginUrl.port)) return "";
           return "http://127.0.0.1:8788";
         }
@@ -547,7 +550,12 @@
         document.querySelectorAll("[data-portal-target]").forEach((link) => {
           const target = link.getAttribute("data-portal-target");
           if (target && portalPaths[target]) {
-            link.href = portalPaths[target];
+            const targetUrl = new URL(portalPaths[target], currentOrigin);
+            const apiOrigin = resolvePreviewApiOrigin();
+            if (apiOrigin && !targetUrl.searchParams.has("apiOrigin")) {
+              targetUrl.searchParams.set("apiOrigin", apiOrigin);
+            }
+            link.href = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
           } else if (target) {
             link.href = resolveFallbackHref(target);
           }

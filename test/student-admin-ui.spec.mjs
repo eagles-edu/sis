@@ -3629,6 +3629,11 @@ test("static preview path over http supports login when apiOrigin is explicit", 
     assert.equal(document.getElementById("authPanel").classList.contains("hidden"), true)
     assert.equal(document.getElementById("app").classList.contains("hidden"), false)
   })
+  assert.equal(
+    dom.window.sessionStorage.getItem("sis-admin-authenticated"),
+    "1",
+    "successful admin login should leave a reload-only auth UI hint",
+  )
 
   dom.window.close()
 })

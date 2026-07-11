@@ -19,8 +19,10 @@ test("portal hub falls back to the dev apiOrigin when runtime paths are unavaila
   assert.match(hubHtml, /student: "\/student"/)
   assert.match(hubHtml, /return "http:\/\/127\.0\.0\.1:8788";/)
   assert.match(hubHtml, /function inferLoopbackPreviewApiOrigin\(\)/)
+  assert.match(hubHtml, /currentOriginUrl\.port === "8788"\) return currentOriginUrl\.origin/)
   assert.match(hubHtml, /function resolvePreviewApiOrigin\(\)/)
   assert.match(hubHtml, /link\.href = resolveFallbackHref\(target\)/)
+  assert.match(hubHtml, /targetUrl\.searchParams\.set\("apiOrigin", apiOrigin\)/)
 })
 
 test("portal hub still honors explicit apiOrigin when one is provided", () => {

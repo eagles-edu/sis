@@ -38,6 +38,16 @@
   <script>
     window.SIS_PORTAL_THEME?.initTheme("light")
   </script>
+  <script>
+    // UI-only hint for static mirror reloads. The auth API remains authoritative.
+    try {
+      if (sessionStorage.getItem("sis-admin-authenticated") === "1") {
+        document.documentElement.dataset.adminAuthState = "authenticated"
+      }
+    } catch {
+      void 0
+    }
+  </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <style>
     :root {
@@ -92,12 +102,14 @@
 
     /* Keep the login form out of the first paint until the server-rendered
        session state or the fallback auth probe has resolved. */
+    /* Render the login form immediately for an unauthenticated first paint.
+       The auth probe can hide it later if a session is authenticated. */
     body.admin-auth-booting #authPanel {
-      display: none !important;
+      display: block !important;
     }
 
     body.admin-auth-booting #authBootPanel {
-      display: grid !important;
+      display: none !important;
     }
 
     html[data-admin-auth-state="authenticated"] body.admin-portal-page.admin-auth-booting #authPanel {
@@ -210,11 +222,11 @@
 
 <body class="admin-portal-page admin-auth-booting page" id="top">
   <div class="wrap">
-    <div class="header-bar portal-login-header" data-surface-role="content">
+    <div class="header-bar portal-login-header" role="banner" data-surface-role="content">
       <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
       <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
     </div>
-    <div class="portal-login-shell" id="authShell">
+    <div class="portal-login-shell" id="authShell" role="main">
       <div class="panel hidden" id="authBootPanel" aria-live="polite">
         <h1>Loading Admin</h1>
         <p class="small">Checking your session...</p>
@@ -379,7 +391,7 @@
                 <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
                 <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
               </a>
-              <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
+              <h1 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h1>
               <div class="app-header-actions">
                 <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome">
                   Hide Menu
@@ -449,7 +461,7 @@
             </div>
           </div>
           <div id="appSchoolSetupWarning" class="school-setup-access-warning hidden" data-school-setup-access-warning role="status" aria-live="polite"></div>
-          <div class="content" id="topControlsPanel" data-surface-role="content">
+          <div class="content hidden" id="topControlsPanel" data-surface-role="content">
             <div class="row">
               <div class="col-3">
                 <label for="searchQ">Search student</label>
@@ -531,8 +543,8 @@
             </div>
           </div>
 
-          <div class="grid-main">
-            <div class="panel" id="studentListPanel" data-surface-role="panel">
+          <div class="grid-main overview-full">
+            <div class="panel hidden" id="studentListPanel" data-surface-role="panel">
               <h2>Students</h2>
               <div class="list-box data-surface" data-surface-role="data-surface">
                 <table>
@@ -577,7 +589,7 @@
                   Profile, Attendance, Grades, or Reports.
                 </p>
               </div>
-              <div class="content page-section" data-page="overview" data-surface-role="content">
+              <div class="content page-section active" data-page="overview" data-surface-role="content">
                 <h2>Overview</h2>
                 <p class="small" id="overviewStudent">No student selected.</p>
                 <div class="overview-layout">
@@ -733,7 +745,7 @@ Chào {{name}}, đây là lời nhắc nhở rằng bài tập {{assignment}} đ
 Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Please complete it here: {{link}}.</textarea>
                       </div>
                     </div>
-                    <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                    <div class="table-scroll-wrap data-surface" id="overviewAssignmentTableWrap" data-surface-role="data-surface" tabindex="0" aria-label="Current assignment snapshot table">
                       <table>
                         <thead>
                           <tr>
@@ -775,7 +787,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                   </section>
                   <section class="overview-group panel" data-surface-role="panel">
                     <h3>Enrolled vs Attendance (Today)</h3>
-                    <div class="table-scroll-wrap data-surface" id="overviewClassTableWrap" data-surface-role="data-surface">
+                    <div class="table-scroll-wrap data-surface" id="overviewClassTableWrap" data-surface-role="data-surface" tabindex="0" aria-label="Enrolled versus attendance table">
                       <table>
                         <thead>
                           <tr>
@@ -856,7 +868,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         <span>News Reports</span>
                         <span class="small" id="overviewNewsQueueSummary">News report queue not loaded yet.</span>
                       </summary>
-                      <div class="table-scroll-wrap data-surface" data-surface-role="data-surface">
+                      <div class="table-scroll-wrap data-surface" data-surface-role="data-surface" tabindex="0" aria-label="News report review queue table">
                         <table>
                           <thead>
                             <tr>

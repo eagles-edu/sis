@@ -61,6 +61,7 @@
     "test:runtime:sync-restart": "tools/sync-and-restart-test-runtime.sh full",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "audit:lighthouse:admin": "node tools/lighthouse-admin-audit.mjs",
+    "audit:portal:coverage": "SIS_ENV_FILE=.env.dev node --test test/portal-audit-coverage.playwright.spec.mjs",
     "lint": "npm run lint:html && npm run lint:js && npm run lint:css",
     "lint:html": "html-validate web-asset/admin/student-admin.html web-asset/admin/portal-hub.html web-asset/parent/parent-portal.html web-asset/student/student-portal.html web-asset/student/fi.html",
     "lint:js": "eslint --config eslint.config.mjs server test tools --max-warnings=0",

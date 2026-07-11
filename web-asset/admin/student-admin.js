@@ -270,7 +270,7 @@
         const tooltipEl = document.createElement("div");
         tooltipEl.className = "admin-button-tooltip hidden";
         tooltipEl.setAttribute("role", "tooltip");
-        document.body.appendChild(tooltipEl);
+        (document.querySelector("main#appMain") || document.body).appendChild(tooltipEl);
         buttonTooltipRoot = tooltipEl;
         return tooltipEl;
       }
@@ -2777,7 +2777,7 @@
           ["Pre-A1 Starters", { color: "#FCAB15", className: "panelbg-starters" }],
           ["A1 Movers", { color: "#913198", className: "panelbg-mov" }],
           ["A2 Flyers", { color: "#b5d570", className: "panelbg-fly" }],
-          ["A2 KET", { color: "#038e9f", className: "panelbg-key", textColor: "#fbffff" }],
+          ["A2 KET", { color: "#038e9f", className: "panelbg-key", textColor: "#001a24" }],
           ["B1 PET", { color: "#cd1637", className: "panelbg-pet" }],
           ["B2+ IELTS", { color: "#b10128", className: "panelbg-ielts" }],
           ["C1+ TAYK", { color: "#980001", className: "panelbg-tayk" }],
@@ -10478,6 +10478,11 @@
         // The session is valid now, so release the boot gate immediately and
         // let the app shell paint instead of leaving a blank reload frame.
         document.documentElement.dataset.adminAuthState = "authenticated";
+        try {
+          sessionStorage.setItem("sis-admin-authenticated", "1");
+        } catch {
+          void 0;
+        }
         document.getElementById("authShell")?.classList.add("hidden");
         document.getElementById("authBootPanel")?.classList.add("hidden");
         document.getElementById("authPanel")?.classList.add("hidden");
@@ -10493,6 +10498,11 @@
 
       function showLogin() {
         document.documentElement.dataset.adminAuthState = "unauthenticated";
+        try {
+          sessionStorage.removeItem("sis-admin-authenticated");
+        } catch {
+          void 0;
+        }
         document.getElementById("authShell")?.classList.remove("hidden");
         setAuthBootstrapping(false);
         // Reveal the login panel only after the auth probe finishes unauthenticated.

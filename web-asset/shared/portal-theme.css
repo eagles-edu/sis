@@ -1300,7 +1300,7 @@ body.admin-portal-page #authBootPanel {
   font-size: 1.02rem;
   line-height: 1.48;
   padding: clamp(28px, 3.6vw, 40px);
-  width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+  width: min(100%, var(--portal-login-panel-max-width));
 }
 body.admin-portal-page #authPanel,
 body.admin-portal-page #authBootPanel {
@@ -1530,16 +1530,29 @@ html[data-student-auth-state="unauthenticated"] .portal-login-header,
 html[data-parent-auth-state="unauthenticated"] .portal-login-header,
 html[data-admin-auth-state="unauthenticated"] .portal-login-header,
 body.admin-portal-page.admin-auth-booting .portal-login-header {
+  box-sizing: border-box;
+  flex: 0 0 auto;
   margin-inline: auto;
   max-inline-size: var(--portal-login-panel-max-width);
   width: min(100%, var(--portal-login-panel-max-width));
 }
+/* Keep the shared header in the authenticated dashboard, but let it expand
+   to the dashboard content width after the login shell is removed. */
+html[data-admin-auth-state="authenticated"] body.admin-portal-page .portal-login-header {
+  display: flex;
+  max-inline-size: none;
+  width: 100%;
+}
 html[data-admin-auth-state="unauthenticated"] .portal-login-header,
 body.admin-portal-page.admin-auth-booting .portal-login-header,
+html[data-parent-auth-state="unauthenticated"] .portal-login-header,
+html[data-student-auth-state="unauthenticated"] .portal-login-header,
 html[data-admin-auth-state="unauthenticated"] .portal-login-footer,
-body.admin-portal-page.admin-auth-booting .portal-login-footer {
+body.admin-portal-page.admin-auth-booting .portal-login-footer,
+html[data-parent-auth-state="unauthenticated"] .portal-login-footer,
+html[data-student-auth-state="unauthenticated"] .portal-login-footer {
   min-inline-size: 0;
-  width: min(calc(100vw - 32px), var(--portal-login-panel-max-width));
+  width: min(100%, var(--portal-login-panel-max-width));
 }
 html[data-student-auth-state="unauthenticated"] .portal-login-footer,
 html[data-parent-auth-state="unauthenticated"] .portal-login-footer,
@@ -1549,6 +1562,20 @@ body.admin-portal-page.admin-auth-booting .portal-login-footer {
   margin-inline: auto;
   max-inline-size: var(--portal-login-panel-max-width);
   width: min(100%, var(--portal-login-panel-max-width));
+}
+@media (max-width: 430px) {
+  /* Keep the parent/student login stack at the requested 320px mobile cap;
+     portal-main padding supplies the remaining viewport gap. */
+  html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .portal-login-header,
+  html[data-student-auth-state="unauthenticated"] body.student-portal-page .portal-login-header,
+  html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard,
+  html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel,
+  html[data-parent-auth-state="unauthenticated"] body.parent-portal-page .portal-login-footer,
+  html[data-student-auth-state="unauthenticated"] body.student-portal-page .portal-login-footer {
+    max-inline-size: 320px;
+    margin-inline: auto !important;
+    width: min(320px, 100%);
+  }
 }
 html[data-student-auth-state="unauthenticated"] .portal-login-footer .hub-footer__copy,
 html[data-parent-auth-state="unauthenticated"] .portal-login-footer .hub-footer__copy {
@@ -10099,6 +10126,11 @@ body.student-portal-page div.header-bar {
   /*border: 1px solid rgb(255 255 255 / 18%);*/
   /*padding-block: 6px;
 padding-inline: calc(var(--hub-space-2) * 1.9);*/
+}
+/* The login header is a grid child of .wrap. Keep its containing width and
+   centering explicit so the generic header-bar reset cannot pin it left. */
+body.admin-portal-page .wrap > .portal-login-header {
+  margin-inline: auto !important;
 }
 @media (max-width: 430px) {
   body.admin-portal-page .portal-login-header {

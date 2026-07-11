@@ -1705,11 +1705,22 @@
         display: grid;
         gap: 12px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-flow: row;
       }
       .overview-group {
         display: grid;
         gap: 8px;
         min-width: 0;
+      }
+      #overviewStatsGrid {
+        min-height: 132px;
+      }
+      #overviewClassTableWrap,
+      #overviewAssignmentTableWrap {
+        min-height: 108px;
+      }
+      #overviewRiskStudents {
+        min-height: 180px;
       }
       .overview-group>details {
         min-width: 0;
@@ -2225,6 +2236,7 @@
         border: 1px solid var(--portal-border);
         border-radius: var(--radius-2);
         margin-top: 6px;
+        min-height: 286px;
         padding: 6px;
       }
       .chart-svg {

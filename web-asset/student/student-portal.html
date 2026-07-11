@@ -27,7 +27,8 @@
     }
   </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
-  <link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css">
+  <link rel="preload" href="/web-asset/vendor/tabulatorz/tabulator.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css"></noscript>
   <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
@@ -767,7 +768,7 @@
 
       <section class="panel" id="loginPanel" data-surface-role="panel">
         <div class="section-head">
-          <h2>STUDENT LOG-IN</h2>
+          <h1>STUDENT LOG-IN</h1>
           <div class="security-badge">
             <img class="security-badge__icon security-badge__icon--light" src="/web-asset/shared/secure-network.svg" alt="" aria-hidden="true">
             <img class="security-badge__icon security-badge__icon--dark" src="/web-asset/shared/secure-network-white.svg" alt="" aria-hidden="true">
