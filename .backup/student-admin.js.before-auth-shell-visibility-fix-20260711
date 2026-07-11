@@ -10478,7 +10478,6 @@
         // The session is valid now, so release the boot gate immediately and
         // let the app shell paint instead of leaving a blank reload frame.
         document.documentElement.dataset.adminAuthState = "authenticated";
-        document.getElementById("authShell")?.classList.add("hidden");
         document.getElementById("authBootPanel")?.classList.add("hidden");
         document.getElementById("authPanel")?.classList.add("hidden");
         document.getElementById("app")?.classList.remove("hidden");
@@ -10493,7 +10492,6 @@
 
       function showLogin() {
         document.documentElement.dataset.adminAuthState = "unauthenticated";
-        document.getElementById("authShell")?.classList.remove("hidden");
         setAuthBootstrapping(false);
         // Reveal the login panel only after the auth probe finishes unauthenticated.
         document.getElementById("authBootPanel")?.classList.add("hidden");

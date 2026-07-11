@@ -5071,24 +5071,6 @@
         state.newsSubmissionState = t(report?.submissionState);
         state.newsDateSatisfied = report?.dateSatisfied === true || Boolean(t(report?.dateSatisfiedAt));
         state.newsReportDateLocked = report?.reportDateLocked === true || Boolean(t(report?.reportDateLockedAt));
-        const reportCarriesValidation = Boolean(
-          report && typeof report === "object" && (
-            report.mmrFailedFields !== undefined ||
-            report.failedFields !== undefined ||
-            report.validationIssuesJson !== undefined ||
-            report.validation !== undefined ||
-            Array.isArray(report.requiredTasks) ||
-            Array.isArray(report.warningTasks)
-          )
-        );
-        if (
-          preserveExistingValidation &&
-          !reportCarriesValidation &&
-          (hasNewsFieldValidationErrors() || hasNewsWarnings())
-        ) {
-          setNewsComplianceModalCtaVisible(true);
-          return;
-        }
         const failedFromIssues = resolveFailedFieldMapFromCompliancePayload({
           failedFields: report?.mmrFailedFields,
           item: report,

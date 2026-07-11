@@ -529,7 +529,8 @@ body.parent-portal-page .portal-col,body.student-portal-page .portal-col{align-c
 body.parent-portal-page .identity-item,body.student-portal-page .identity-item{align-content:start;background:var(--portal-surface-card)!important;border:1px solid var(--portal-border)!important;border-radius:var(--radius-2);display:grid;gap:5px;min-height:70px;padding:10px}
 body.parent-portal-page .detail-list,body.student-portal-page .detail-list{display:grid;gap:10px}
 body.parent-portal-page .detail-item,body.student-portal-page .detail-item{background:var(--portal-surface-card)!important;border:1px solid var(--portal-border)!important;display:grid;gap:6px;padding:10px}
-body.parent-portal-page .detail-item.portal-theme-card.warn,body.student-portal-page .detail-item.portal-theme-card.warn{background:#740191!important;border-color:#480178!important}
+body.parent-portal-page .detail-item.portal-theme-card.warn,body.student-portal-page .detail-item.portal-theme-card.warn{background:var(--portal-status-warn-bg)!important;border-color:var(--portal-status-warn-border)!important;color:var(--portal-status-warn-text)}
+body.parent-portal-page .detail-item.portal-theme-card.warn .detail-item-head strong,body.student-portal-page .detail-item.portal-theme-card.warn .detail-item-head strong{color:var(--portal-status-warn-text)!important}
 body.parent-portal-page .detail-item.portal-theme-card.bad,body.student-portal-page .detail-item.portal-theme-card.bad{background:var(--portal-status-bad-bg)!important;border-color:var(--portal-status-bad-border)!important}
 body.parent-portal-page .detail-item.portal-theme-card.good,body.student-portal-page .detail-item.portal-theme-card.good{background:var(--portal-status-good-bg)!important;border-color:var(--portal-status-good-border)!important}
 body.parent-portal-page .detail-copy,body.student-portal-page .detail-copy{color:var(--ink-soft);font-size:.92rem;line-height:1.45;margin:0}
@@ -602,6 +603,9 @@ body.parent-portal-page .grade-quarter-picker-btn.is-current,body.student-portal
 body.parent-portal-page .grade-quarter-picker-btn.is-active,
 body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"],body.student-portal-page .grade-quarter-picker-btn.is-active,
 body.student-portal-page .grade-quarter-picker-btn[aria-pressed="true"]{background:var(--portal-button-amber-stroke)!important;border-color:var(--portal-button-amber-ink)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--portal-button-amber-stroke) 48%,transparent),inset 0 0 0 1px hsla(0,0%,100%,.32);color:var(--secondary-color)!important;font-weight:950;transform:translateY(-1px)}
+body.parent-portal-page .grade-quarter-picker-btn.is-active .grade-quarter-picker-btn-sub,
+body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"] .grade-quarter-picker-btn-sub,body.student-portal-page .grade-quarter-picker-btn.is-active .grade-quarter-picker-btn-sub,
+body.student-portal-page .grade-quarter-picker-btn[aria-pressed="true"] .grade-quarter-picker-btn-sub{color:inherit;opacity:1}
 body.parent-portal-page .grade-quarter-picker-btn:focus-visible,body.student-portal-page .grade-quarter-picker-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 body.parent-portal-page .grade-quarter-picker-btn-label,body.student-portal-page .grade-quarter-picker-btn-label{display:block;font-size:.84rem;font-weight:900;line-height:1.05;text-align:center}
 body.parent-portal-page .grade-quarter-picker-btn-sub,body.student-portal-page .grade-quarter-picker-btn-sub{display:block;font-size:.62rem;font-weight:800;line-height:1.05;opacity:.8;text-align:center;text-transform:none}
@@ -1237,6 +1241,9 @@ html[data-theme="dark"] body.student-portal-page .identity-label{color:var(--por
 html[data-theme="dark"] body.parent-portal-page .detail-meta,
 html[data-theme="dark"] body.parent-portal-page .detail-note,html[data-theme="dark"] body.student-portal-page .detail-meta,
 html[data-theme="dark"] body.student-portal-page .detail-note{color:var(--portal-dark-text-soft)}
+html[data-theme="dark"] body.parent-portal-page .detail-item.portal-theme-card.warn .detail-meta,
+html[data-theme="dark"] body.parent-portal-page .detail-item.portal-theme-card.warn .detail-note,html[data-theme="dark"] body.student-portal-page .detail-item.portal-theme-card.warn .detail-meta,
+html[data-theme="dark"] body.student-portal-page .detail-item.portal-theme-card.warn .detail-note{color:var(--portal-status-warn-text)!important}
 html[data-theme="dark"] body.parent-portal-page .report-block,html[data-theme="dark"] body.parent-portal-page .report-head-card{background:var(--portal-dark-surface-support)!important;border-color:var(--portal-dark-border-strong)!important;color:var(--portal-dark-text)!important}html[data-theme="dark"] body.parent-portal-page .report-archive-item{--report-archive-accent:rgba(242,138,149,.72);--report-archive-border:var(--portal-dark-border-strong);background:var(--portal-dark-surface-support)!important;border-color:var(--report-archive-border)!important;color:var(--portal-dark-text)!important}html[data-theme="dark"] body.parent-portal-page .report-archive-item.is-outstanding{--report-archive-border:rgba(242,138,149,.34);background:var(--portal-dark-surface-support)!important;border-color:var(--report-archive-border)!important;border-inline-start-color:var(--report-archive-accent)!important}html[data-theme="dark"] body.parent-portal-page .report-archive-link{background:transparent!important;border-color:transparent!important;color:var(--portal-dark-link)!important}
 html[data-theme="dark"] body.parent-portal-page .report-archive-link:focus-visible,html[data-theme="dark"] body.parent-portal-page .report-archive-link:hover{color:var(--portal-dark-link-hover)!important}html[data-theme="dark"] body.parent-portal-page .report-archive-link:active{color:var(--portal-dark-link-active)!important}
 html[data-theme="dark"] body.parent-portal-page .report-block h5,

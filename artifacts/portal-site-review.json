@@ -37,7 +37,7 @@
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -344,12 +344,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -357,7 +357,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2711
+              "height": 2460
             },
             ".wrap": {
               "selector": ".wrap",
@@ -369,7 +369,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2663
+              "height": 2412
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -381,7 +381,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2501
+              "height": 2380
             },
             ".panel": {
               "selector": ".panel",
@@ -485,17 +485,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -503,17 +492,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -529,12 +507,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -542,7 +520,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3525
+              "height": 3395
             },
             ".wrap": {
               "selector": ".wrap",
@@ -554,7 +532,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3477
+              "height": 3347
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -659,17 +637,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -677,17 +644,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -703,12 +659,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -716,7 +672,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3604
+              "height": 3474
             },
             ".wrap": {
               "selector": ".wrap",
@@ -728,7 +684,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3556
+              "height": 3426
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -848,17 +804,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -866,17 +811,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -892,12 +826,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -917,7 +851,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 817
+              "height": 687
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1022,17 +956,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -1040,17 +963,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -1066,12 +978,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -1079,7 +991,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1234
+              "height": 1104
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1091,7 +1003,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1186
+              "height": 1056
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1196,17 +1108,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -1214,17 +1115,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -1240,12 +1130,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -1253,7 +1143,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1303
+              "height": 1173
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1265,7 +1155,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1255
+              "height": 1125
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1370,17 +1260,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -1388,17 +1267,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -1414,12 +1282,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -1439,7 +1307,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 934
+              "height": 804
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1544,17 +1412,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -1562,17 +1419,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -1588,12 +1434,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -1613,7 +1459,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 825
+              "height": 695
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1718,17 +1564,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -1736,17 +1571,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -1762,12 +1586,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -1775,7 +1599,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1472
+              "height": 1342
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1787,7 +1611,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1424
+              "height": 1294
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1892,17 +1716,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -1910,17 +1723,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -2022,12 +1824,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -2035,7 +1837,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3945
+              "height": 3815
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2047,7 +1849,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3897
+              "height": 3767
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2171,17 +1973,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -2189,17 +1980,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -2215,12 +1995,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -2228,7 +2008,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2204
+              "height": 2074
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2240,7 +2020,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2156
+              "height": 2026
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2355,12 +2135,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -2380,7 +2160,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 823
+              "height": 693
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2485,17 +2265,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -2503,17 +2272,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -2529,12 +2287,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -2542,7 +2300,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8199
+              "height": 8069
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2554,7 +2312,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8151
+              "height": 8021
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2659,17 +2417,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -2677,17 +2424,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -2703,12 +2439,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -2716,7 +2452,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1848
+              "height": 1718
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2728,7 +2464,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1800
+              "height": 1670
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2848,17 +2584,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -2866,17 +2591,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -2892,12 +2606,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -2905,7 +2619,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1170
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2917,7 +2631,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1122
+              "height": 992
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3037,17 +2751,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -3055,17 +2758,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -3201,12 +2893,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -3214,7 +2906,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1708
+              "height": 1578
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3226,7 +2918,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1660
+              "height": 1530
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3365,17 +3057,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -3383,17 +3064,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             },
@@ -3420,12 +3090,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -3433,7 +3103,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2946
+              "height": 2816
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3445,7 +3115,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2898
+              "height": 2768
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3561,17 +3231,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -3579,17 +3238,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -3605,12 +3253,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -3618,7 +3266,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1196
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3630,7 +3278,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1148
+              "height": 1018
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3735,17 +3383,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -3753,17 +3390,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -3779,12 +3405,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -3792,7 +3418,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2412
+              "height": 2282
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3804,7 +3430,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2364
+              "height": 2234
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3909,17 +3535,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -3927,17 +3542,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -3953,12 +3557,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -3966,7 +3570,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2546
+              "height": 2416
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3978,7 +3582,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2498
+              "height": 2368
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -4117,17 +3721,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -4135,17 +3728,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             },
@@ -4270,12 +3852,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "light",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(232, 238, 244)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(133, 162, 198, 0.24) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(115, 136, 163, 0.2) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -4283,7 +3865,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2204
+              "height": 2074
             },
             ".wrap": {
               "selector": ".wrap",
@@ -4295,7 +3877,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2156
+              "height": 2026
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -4456,30 +4038,7 @@
             },
             ".news-review-note-line.fixed": null
           },
-          "modalAxe": [
-            {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                }
-              ]
-            }
-          ],
+          "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(250, 252, 255)",
             "color": "rgb(0, 0, 0)",
@@ -4986,7 +4545,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1570
+              "height": 1490
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5116,7 +4675,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1570
+              "height": 1490
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5246,7 +4805,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1570
+              "height": 2731
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5376,7 +4935,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1570
+              "height": 1554
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5506,7 +5065,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1114
+              "height": 1245
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -5518,7 +5077,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1348,
-              "height": 269
+              "height": 480
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
@@ -5530,7 +5089,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1348,
-              "height": 269
+              "height": 480
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -5620,31 +5179,31 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1100
+              "height": 1821
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "flex",
               "width": 1348,
-              "height": 269
+              "height": 1002
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "block",
+              "display": "flex",
               "width": 1348,
-              "height": 269
+              "height": 1002
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -5713,7 +5272,23 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": []
+          "axe": [
+            {
+              "id": "role-img-alt",
+              "impact": "serious",
+              "help": "[role=\"img\"] elements must have alternative text",
+              "nodes": [
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                },
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                }
+              ]
+            }
+          ]
         },
         {
           "newsModal": true,
@@ -5798,11 +5373,11 @@
               "help": "[role=\"img\"] elements must have alternative text",
               "nodes": [
                 {
-                  "target": ".fc-icon-chevron-left",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 },
                 {
-                  "target": ".fc-icon-chevron-right",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]
@@ -5865,11 +5440,11 @@
               "help": "[role=\"img\"] elements must have alternative text",
               "nodes": [
                 {
-                  "target": ".fc-icon-chevron-left",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 },
                 {
-                  "target": ".fc-icon-chevron-right",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]
@@ -6170,7 +5745,7 @@
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -6477,12 +6052,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -6490,7 +6065,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3043
+              "height": 2913
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6502,7 +6077,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2995
+              "height": 2865
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6618,17 +6193,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -6636,17 +6200,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -6662,12 +6215,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -6675,7 +6228,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3525
+              "height": 3395
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6687,7 +6240,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3477
+              "height": 3347
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6792,17 +6345,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -6810,17 +6352,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -6836,12 +6367,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -6849,7 +6380,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3604
+              "height": 3474
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6861,7 +6392,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3556
+              "height": 3426
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6981,17 +6512,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -6999,17 +6519,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -7025,12 +6534,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -7050,7 +6559,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 817
+              "height": 687
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7155,17 +6664,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -7173,17 +6671,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -7199,12 +6686,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -7212,7 +6699,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1234
+              "height": 1104
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7224,7 +6711,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1186
+              "height": 1056
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7329,17 +6816,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -7347,17 +6823,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -7373,12 +6838,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -7386,7 +6851,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1303
+              "height": 1173
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7398,7 +6863,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1255
+              "height": 1125
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7503,17 +6968,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -7521,17 +6975,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -7547,12 +6990,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -7572,7 +7015,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 934
+              "height": 804
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7692,17 +7135,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -7710,17 +7142,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -7736,12 +7157,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -7761,7 +7182,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 825
+              "height": 695
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7866,17 +7287,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -7884,17 +7294,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -7910,12 +7309,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -7923,7 +7322,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2615
+              "height": 1342
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7935,7 +7334,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2567
+              "height": 1294
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7947,7 +7346,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2405
+              "height": 1262
             },
             ".panel": {
               "selector": ".panel",
@@ -7995,7 +7394,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 1086
+              "height": 497
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -8006,8 +7405,8 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 664,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -8040,17 +7439,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -8058,17 +7446,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -8170,12 +7547,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -8183,7 +7560,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3945
+              "height": 3815
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8195,7 +7572,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3897
+              "height": 3767
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8319,17 +7696,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -8337,17 +7703,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -8363,12 +7718,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -8376,7 +7731,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2204
+              "height": 2074
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8388,7 +7743,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2156
+              "height": 2026
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8503,12 +7858,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -8528,7 +7883,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 823
+              "height": 693
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8633,17 +7988,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -8651,17 +7995,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -8677,12 +8010,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -8690,7 +8023,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8199
+              "height": 8069
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8702,7 +8035,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8151
+              "height": 8021
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8807,17 +8140,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -8825,17 +8147,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -8851,12 +8162,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -8864,7 +8175,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1848
+              "height": 1718
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8876,7 +8187,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1800
+              "height": 1670
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8996,17 +8307,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -9014,17 +8314,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -9040,12 +8329,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -9053,7 +8342,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1170
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9065,7 +8354,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1122
+              "height": 992
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9185,17 +8474,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -9203,17 +8481,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -9349,12 +8616,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -9362,7 +8629,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1708
+              "height": 1578
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9374,7 +8641,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1660
+              "height": 1530
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9513,17 +8780,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -9531,17 +8787,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             },
@@ -9568,12 +8813,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -9581,7 +8826,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2946
+              "height": 2816
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9593,7 +8838,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2898
+              "height": 2768
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9709,17 +8954,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -9727,17 +8961,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -9753,12 +8976,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -9766,7 +8989,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1196
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9778,7 +9001,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1148
+              "height": 1018
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9883,17 +9106,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -9901,17 +9113,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -9927,12 +9128,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -9940,7 +9141,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2412
+              "height": 2282
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9952,7 +9153,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2364
+              "height": 2234
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -10057,17 +9258,6 @@
           },
           "axe": [
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -10075,17 +9265,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -10101,12 +9280,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -10114,7 +9293,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2546
+              "height": 2416
             },
             ".wrap": {
               "selector": ".wrap",
@@ -10126,7 +9305,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2498
+              "height": 2368
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -10265,17 +9444,6 @@
               ]
             },
             {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
               "id": "page-has-heading-one",
               "impact": "moderate",
               "help": "Page should contain a level-one heading",
@@ -10283,17 +9451,6 @@
                 {
                   "target": "html",
                   "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             },
@@ -10418,12 +9575,12 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © The E"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
               "selector": "body",
-              "id": "",
+              "id": "top",
               "className": "admin-portal-page page",
               "bg": "rgb(0, 0, 0)",
               "bgImage": "radial-gradient(900px 420px at -10% -18%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 60%), radial-gradient(880px 420px at 112% -20%, rgba(140, 238, 255, 0.06) 0%, rgba(0, 0, 0, 0) 58%), linear-gradient(rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 42%)",
@@ -10431,7 +9588,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2204
+              "height": 2074
             },
             ".wrap": {
               "selector": ".wrap",
@@ -10443,7 +9600,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2156
+              "height": 2026
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -10604,30 +9761,7 @@
             },
             ".news-review-note-line.fixed": null
           },
-          "modalAxe": [
-            {
-              "id": "landmark-no-duplicate-contentinfo",
-              "impact": "moderate",
-              "help": "Document should not have more than one contentinfo landmark",
-              "nodes": [
-                {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  Document has more than one contentinfo landmark"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                }
-              ]
-            }
-          ],
+          "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(76, 76, 76)",
             "color": "rgb(251, 255, 255)",
@@ -11134,7 +10268,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1572
+              "height": 1492
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11264,7 +10398,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1572
+              "height": 1492
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11394,7 +10528,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1572
+              "height": 2733
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11524,7 +10658,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1572
+              "height": 1556
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11654,7 +10788,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1116
+              "height": 1245
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -11666,7 +10800,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1348,
-              "height": 271
+              "height": 480
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
@@ -11678,7 +10812,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1348,
-              "height": 271
+              "height": 480
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -11768,31 +10902,31 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1100
+              "height": 1823
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "flex",
               "width": 1348,
-              "height": 271
+              "height": 1004
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "block",
+              "display": "flex",
               "width": 1348,
-              "height": 271
+              "height": 1004
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -11861,7 +10995,23 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": []
+          "axe": [
+            {
+              "id": "role-img-alt",
+              "impact": "serious",
+              "help": "[role=\"img\"] elements must have alternative text",
+              "nodes": [
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                },
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                }
+              ]
+            }
+          ]
         },
         {
           "newsModal": true,
@@ -11946,11 +11096,11 @@
               "help": "[role=\"img\"] elements must have alternative text",
               "nodes": [
                 {
-                  "target": ".fc-icon-chevron-left",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 },
                 {
-                  "target": ".fc-icon-chevron-right",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]
@@ -12013,11 +11163,11 @@
               "help": "[role=\"img\"] elements must have alternative text",
               "nodes": [
                 {
-                  "target": ".fc-icon-chevron-left",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 },
                 {
-                  "target": ".fc-icon-chevron-right",
+                  "target": "#calendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
                   "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
                 }
               ]

@@ -189,10 +189,6 @@
     html[data-admin-auth-state="authenticated"] body.admin-portal-page #authPanel {
       display: none !important;
     }
-
-    html[data-admin-auth-state="authenticated"] body.admin-portal-page #authShell {
-      display: none !important;
-    }
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">

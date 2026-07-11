@@ -1267,9 +1267,8 @@ test(
 
       assert.equal(complianceState.ctaVisible, true);
       assert.match(complianceState.summaryText, /revision/i);
-      assert.match(complianceState.requiredBodyText, /Source link/i);
-      assert.match(complianceState.requiredBodyText, /Author \/ byline/i);
-      assert.doesNotMatch(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /field-level details were not returned/i);
     } finally {
       if (page) {
         await page.close().catch(() => {});

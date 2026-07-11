@@ -56,7 +56,7 @@ test("portal pages load the shared portal theme stylesheet", () => {
     const html = fs.readFileSync(path.resolve(rootDir, relPath), "utf8")
     assert.match(
       html,
-      /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css(?:\?v=[^"]+)?">/,
+      /<link rel="stylesheet" href="\/web-asset\/shared\/portal-theme\.min\.css">/,
       `${label} should link the shared portal theme`,
     )
   }

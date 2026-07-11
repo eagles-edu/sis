@@ -3341,13 +3341,8 @@ body.parent-portal-page .detail-item {
 }
 body.student-portal-page .detail-item.portal-theme-card.warn,
 body.parent-portal-page .detail-item.portal-theme-card.warn {
-  background: var(--portal-status-warn-bg) !important;
-  border-color: var(--portal-status-warn-border) !important;
-  color: var(--portal-status-warn-text);
-}
-body.student-portal-page .detail-item.portal-theme-card.warn .detail-item-head strong,
-body.parent-portal-page .detail-item.portal-theme-card.warn .detail-item-head strong {
-  color: var(--portal-status-warn-text) !important;
+  background: #740191 !important;
+  border-color: #480178 !important;
 }
 body.student-portal-page .detail-item.portal-theme-card.bad,
 body.parent-portal-page .detail-item.portal-theme-card.bad {
@@ -3862,13 +3857,6 @@ body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"] {
   color: var(--secondary-color) !important;
   font-weight: 950;
   transform: translateY(-1px);
-}
-body.student-portal-page .grade-quarter-picker-btn.is-active .grade-quarter-picker-btn-sub,
-body.student-portal-page .grade-quarter-picker-btn[aria-pressed="true"] .grade-quarter-picker-btn-sub,
-body.parent-portal-page .grade-quarter-picker-btn.is-active .grade-quarter-picker-btn-sub,
-body.parent-portal-page .grade-quarter-picker-btn[aria-pressed="true"] .grade-quarter-picker-btn-sub {
-  color: inherit;
-  opacity: 1;
 }
 body.student-portal-page .grade-quarter-picker-btn:focus-visible,
 body.parent-portal-page .grade-quarter-picker-btn:focus-visible {
@@ -7228,12 +7216,6 @@ html[data-theme="dark"] body.parent-portal-page .detail-meta,
 html[data-theme="dark"] body.student-portal-page .detail-note,
 html[data-theme="dark"] body.parent-portal-page .detail-note {
   color: var(--portal-dark-text-soft);
-}
-html[data-theme="dark"] body.student-portal-page .detail-item.portal-theme-card.warn .detail-meta,
-html[data-theme="dark"] body.student-portal-page .detail-item.portal-theme-card.warn .detail-note,
-html[data-theme="dark"] body.parent-portal-page .detail-item.portal-theme-card.warn .detail-meta,
-html[data-theme="dark"] body.parent-portal-page .detail-item.portal-theme-card.warn .detail-note {
-  color: var(--portal-status-warn-text) !important;
 }
 html[data-theme="dark"] body.parent-portal-page .report-head-card,
 html[data-theme="dark"] body.parent-portal-page .report-block {

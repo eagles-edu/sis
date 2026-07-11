@@ -600,12 +600,12 @@ test(
             h: Math.round(box.height),
           }
         }
-        const headerControls = Array.from(globalThis.document.querySelectorAll("#appPageHeader button")).map((node) => {
+        const headerLinks = Array.from(globalThis.document.querySelectorAll("div.header-bar a")).map((node) => {
           if (!(node instanceof globalThis.HTMLElement)) return null
           const box = node.getBoundingClientRect()
           return { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width) }
         }).filter(Boolean)
-        const footerNodes = Array.from(globalThis.document.querySelectorAll(".hub-footer:not(#authFooter) > p")).map((node) => {
+        const footerNodes = Array.from(globalThis.document.querySelectorAll(".hub-footer > p")).map((node) => {
           if (!(node instanceof globalThis.HTMLElement)) return null
           const box = node.getBoundingClientRect()
           return { x: Math.round(box.x), y: Math.round(box.y), w: Math.round(box.width) }
@@ -613,11 +613,11 @@ test(
         return {
           viewportWidth: globalThis.window.innerWidth,
           scrollWidth: globalThis.document.documentElement.scrollWidth,
-          header: rect("#appPageHeader"),
+          header: rect("div.header-bar"),
           page: rect('.page-section[data-page="performance-data"]'),
           toolbar: rect('.page-section[data-page="performance-data"] .table-toolbar'),
-          footer: rect(".hub-footer:not(#authFooter)"),
-          headerControls,
+          footer: rect(".hub-footer"),
+          headerLinks,
           footerNodes,
         }
       })
@@ -625,7 +625,8 @@ test(
       assert.equal(layout.viewportWidth, 320)
       assert.ok(layout.scrollWidth <= 322, `page should not horizontally overflow at 320px (got ${layout.scrollWidth})`)
       assert.ok(layout.header && layout.header.h >= 40, "header bar should stay readable on mobile")
-      assert.ok(layout.headerControls.length >= 2, "app header should still expose its controls")
+      assert.ok(layout.headerLinks.length >= 2, "header should still expose both contact links")
+      assert.notEqual(layout.headerLinks[0].y, layout.headerLinks[1].y, "header links should stack or wrap on mobile")
       assert.ok(layout.page && layout.page.w <= 320, "page section should fit the mobile viewport")
       assert.ok(layout.toolbar && layout.toolbar.w <= 320, "toolbar should stay within the mobile viewport")
       assert.ok(layout.footer && layout.footer.h >= 70, "footer should remain readable on mobile")

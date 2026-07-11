@@ -34,7 +34,6 @@
     })()
   </script>
   <script src="/web-asset/shared/portal-theme-state.js" defer></script>
-  <script src="/web-asset/shared/portal-navigation.js"></script>
   <script>
     window.SIS_PORTAL_THEME?.initTheme("light")
   </script>
@@ -189,16 +188,12 @@
     html[data-admin-auth-state="authenticated"] body.admin-portal-page #authPanel {
       display: none !important;
     }
-
-    html[data-admin-auth-state="authenticated"] body.admin-portal-page #authShell {
-      display: none !important;
-    }
   </style>
   <link rel="preload" href="/web-asset/admin/student-admin.min.css?v=20260530a" as="style">
   <link rel="stylesheet" href="/web-asset/admin/student-admin.min.css?v=20260530a">
 </head>
 
-<body class="admin-portal-page admin-auth-booting page" id="top">
+<body class="admin-portal-page admin-auth-booting page">
   <div class="wrap">
     <div class="portal-login-shell" id="authShell">
       <div class="header-bar portal-login-header">

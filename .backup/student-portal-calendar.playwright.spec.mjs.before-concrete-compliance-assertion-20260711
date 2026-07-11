@@ -1267,9 +1267,8 @@ test(
 
       assert.equal(complianceState.ctaVisible, true);
       assert.match(complianceState.summaryText, /revision/i);
-      assert.match(complianceState.requiredBodyText, /Source link/i);
-      assert.match(complianceState.requiredBodyText, /Author \/ byline/i);
-      assert.doesNotMatch(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /field-level details were not returned/i);
     } finally {
       if (page) {
         await page.close().catch(() => {});
@@ -1336,11 +1335,6 @@ test(
       await page.fill("#actionWhy", "Regional security concerns pushed diplomatic intervention.");
       await page.fill("#biasAssessment", "Coverage frames Pakistan as unexpectedly strategic.");
 
-      await page.waitForFunction(() => (
-        globalThis.document.getElementById("sourceLink")?.value === "https://www.bbc.com/news/articles/cy91vrzxn34o" &&
-        globalThis.document.getElementById("articleTitle")?.value.includes("How Pakistan won over Trump")
-      ));
-
       await page.click("#submitBtn");
 
       await page.waitForFunction(() => {
@@ -1376,9 +1370,8 @@ test(
       assert.equal(complianceState.ctaVisible, true);
       assert.match(complianceState.formStatus, /Saved and marked for revision/i);
       assert.match(complianceState.summaryText, /revision/i);
-      assert.match(complianceState.requiredBodyText, /Source link/i);
-      assert.match(complianceState.requiredBodyText, /Title/i);
-      assert.doesNotMatch(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /__compliance/i);
+      assert.match(complianceState.requiredBodyText, /field-level details were not returned/i);
     } finally {
       if (page) {
         await page.close().catch(() => {});
