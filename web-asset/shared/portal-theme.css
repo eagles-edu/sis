@@ -544,6 +544,12 @@ body {
   margin: 0;
   min-height: 100%;
 }
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
 body {
   -webkit-tap-highlight-color: transparent;
   background: var(--portal-page-bg);
@@ -1254,7 +1260,7 @@ body.admin-portal-page {
   --menu-header-bg: var(--portal-neutral-support-light);
   --menu-link-active-bg: color-mix(in srgb, var(--portal-neutral-card-light) 20%, var(--portal-button-teal-fill-hover) 80%);
   --menu-link-active-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-button-teal-stroke) 90%);
-  --menu-link-active-text: #073f37;
+  --menu-link-active-text: var(--secondary-color);
   --menu-link-bg: var(--portal-neutral-card-light);
   --menu-link-hover-bg: color-mix(in srgb, var(--portal-neutral-card-light) 24%, var(--portal-action-blue-top) 76%);
   --menu-link-hover-border: color-mix(in srgb, var(--portal-border-strong) 12%, var(--portal-action-blue-border) 88%);
@@ -3000,7 +3006,7 @@ body.parent-portal-page {
   --menu-header-bg: var(--portal-neutral-support-light);
   --menu-link-active-bg: color-mix(in srgb, var(--portal-neutral-card-light) 20%, var(--portal-button-teal-fill-hover) 80%);
   --menu-link-active-border: color-mix(in srgb, var(--portal-border-strong) 10%, var(--portal-button-teal-stroke) 90%);
-  --menu-link-active-text: #073f37;
+  --menu-link-active-text: var(--secondary-color);
   --menu-link-hover-bg: color-mix(in srgb, var(--portal-neutral-card-light) 24%, var(--portal-action-blue-top) 76%);
   --menu-link-hover-border: color-mix(in srgb, var(--portal-border-strong) 12%, var(--portal-action-blue-border) 88%);
   --menu-link-hover-text: #051f44;
@@ -4383,7 +4389,7 @@ html[data-theme="dark"] body.admin-portal-page {
   --menu-button-active-bg: color-mix(in srgb, var(--portal-dark-surface-support) 16%, var(--portal-button-teal-fill-hover) 84%);
   --menu-button-active-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #7ee6d9 90%);
   --menu-button-active-text: #f0fffc;
-  --menu-button-bg: color-mix(in srgb, var(--portal-dark-surface-support) 86%, #ffffff 14%);
+  --menu-button-bg: color-mix(in srgb, var(--portal-dark-surface-support) 100%, #ffffff 0);
   --menu-button-border: color-mix(in srgb, var(--portal-dark-border-strong) 28%, #8fb7ff 72%);
   --menu-button-hover-bg: color-mix(in srgb, var(--portal-dark-surface-support) 12%, var(--portal-action-blue-top) 88%);
   --menu-button-hover-border: color-mix(in srgb, var(--portal-dark-border-strong) 10%, #a7c8ff 90%);
@@ -8290,8 +8296,7 @@ html[data-theme="dark"] body.portal-hub-page .theme-toggle__icon {
   text-align: left;
   text-transform: uppercase;
   width: 100%;
-
-transition:
+  transition:
     background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -8547,40 +8552,52 @@ body.admin-portal-page .menu-groups {
   gap: 12px;
 }
 body.admin-portal-page .menu-group {
-  background: var(--portal-surface-card);
-  border-color: var(--portal-border);
-  border-radius: var(--radius-3);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 html[data-theme="dark"] body.admin-portal-page .menu-group {
-  background: var(--portal-dark-surface-card);
-  border-color: var(--portal-dark-border);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
+body.admin-portal-page .menu-link.menu-link-top,
 body.admin-portal-page .menu-group-btn {
   align-items: center;
-  background: var(--menu-button-bg);
-  border: 1px solid var(--menu-button-border);
+  appearance: none;
+  background: var(--menu-link-bg);
+  border: 1px solid var(--menu-border);
   border-radius: var(--radius-2);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: none;
   box-sizing: border-box;
-  color: var(--menu-button-text);
+  color: var(--portal-role-text);
   display: flex;
-  font-size: 11px;
-  font-weight: 800;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
   gap: 10px;
-  letter-spacing: 0.08em;
+  justify-content: space-between;
   min-height: 44px;
-  padding: 12px 14px;
+  padding: 8px 10px;
+  position: relative;
   text-align: left;
-  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
   width: 100%;
 }
+body.admin-portal-page .menu-link.menu-link-top:hover,
+body.admin-portal-page .menu-link.menu-link-top:focus-visible,
 body.admin-portal-page .menu-group-btn:hover,
 body.admin-portal-page .menu-group-btn:focus-visible {
-  background: var(--menu-button-hover-bg);
-  border-color: var(--menu-button-hover-border);
-  color: var(--menu-button-hover-text);
+  background: var(--menu-link-hover-bg);
+  border-color: var(--menu-link-hover-border);
+  color: var(--menu-link-hover-text);
   outline: none;
   transform: translateY(-1px);
 
@@ -8588,33 +8605,39 @@ box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.24),
     0 10px 22px rgba(12, 21, 40, 0.16);
 }
+body.admin-portal-page .menu-link.menu-link-top:active,
 body.admin-portal-page .menu-group-btn:active {
-  background: var(--menu-button-pressed-bg);
-  border-color: var(--menu-button-pressed-border);
-  color: var(--menu-button-pressed-text);
+  background: var(--menu-link-pressed-bg);
+  border-color: var(--menu-link-pressed-border);
+  color: var(--menu-link-pressed-text);
   transform: translateY(0);
 
 box-shadow:
     inset 0 1px 2px rgba(0, 0, 0, 0.16),
-    0 0 0 1px color-mix(in srgb, var(--menu-button-pressed-border) 72%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--menu-link-pressed-border) 70%, transparent);
 }
+html[data-theme="dark"] body.admin-portal-page .menu-link.menu-link-top,
 html[data-theme="dark"] body.admin-portal-page .menu-group-btn {
-  background: var(--menu-button-bg);
-  border-color: var(--menu-button-border);
-  color: var(--menu-button-text);
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
 }
+html[data-theme="dark"] body.admin-portal-page .menu-link.menu-link-top:hover,
+html[data-theme="dark"] body.admin-portal-page .menu-link.menu-link-top:focus-visible,
 html[data-theme="dark"] body.admin-portal-page .menu-group-btn:hover,
 html[data-theme="dark"] body.admin-portal-page .menu-group-btn:focus-visible {
-  background: var(--menu-button-hover-bg);
+  background: var(--menu-link-hover-bg);
 }
 body.admin-portal-page .menu-group.expanded .menu-group-btn {
-  background: var(--menu-button-active-bg);
-  border-color: var(--menu-button-active-border);
-  color: var(--menu-button-active-text);
-
-box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.26),
-    0 0 0 1px color-mix(in srgb, var(--menu-button-active-border) 72%, transparent);
+  background: var(--menu-link-bg);
+  border-color: var(--menu-border);
+  color: var(--portal-role-text);
+  box-shadow: none;
+}
+html[data-theme="dark"] body.admin-portal-page .menu-group.expanded .menu-group-btn {
+  background: var(--portal-dark-surface-support);
+  border-color: var(--portal-dark-border);
+  color: var(--portal-dark-text);
 }
 body.admin-portal-page .menu-group-links {
   background: var(--portal-role-data-surface-bg);
@@ -8623,6 +8646,24 @@ body.admin-portal-page .menu-group-links {
 }
 html[data-theme="dark"] body.admin-portal-page .menu-group-links {
   background: var(--portal-dark-surface-support);
+}
+body.admin-portal-page .menu-group-btn::after {
+  background: currentColor;
+  content: "";
+  display: block;
+  flex: 0 0 16px;
+  block-size: 16px;
+  inline-size: 16px;
+  margin: 0 0 0 auto;
+  mask: url("/web-asset/images/caret-down.svg") center / contain no-repeat;
+  -webkit-mask: url("/web-asset/images/caret-down.svg") center / contain no-repeat;
+  opacity: 0.72;
+  position: static;
+  transform: none;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+body.admin-portal-page .menu-group.expanded .menu-group-btn::after {
+  transform: rotate(180deg);
 }
 body.admin-portal-page .menu-link {
   align-items: center;
@@ -8637,8 +8678,7 @@ body.admin-portal-page .menu-link {
   min-height: 40px;
   padding: 8px 10px;
   text-decoration: none;
-
-transition:
+  transition:
     background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -8658,8 +8698,7 @@ body.admin-portal-page .menu-link.active {
   border-color: var(--menu-link-active-border);
   color: var(--menu-link-active-text);
   font-weight: 800;
-
-box-shadow:
+  box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.32),
     0 0 0 1px color-mix(in srgb, var(--menu-link-active-border) 68%, transparent);
 }

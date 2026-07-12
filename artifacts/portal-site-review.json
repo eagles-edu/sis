@@ -6,17 +6,17 @@
       "links": [
         {
           "text": "Nhân viên Admin Điểm danh, Kết quả học tập, Bài tập về nhà ↗",
-          "href": "/admin",
+          "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "portalTarget": "admin"
         },
         {
           "text": "Phụ huynh Family Thông tin học tập, liên hệ ↗",
-          "href": "/parent",
+          "href": "/parent?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "portalTarget": "parent"
         },
         {
           "text": "Học sinh Student Bài học, điểm, tiến độ ↗",
-          "href": "/student",
+          "href": "/student?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "portalTarget": "student"
         }
       ],
@@ -25,7 +25,7 @@
           "index": 0,
           "link": {
             "text": "Nhân viên Admin Điểm danh, Kết quả học tập, Bài tập về nhà ↗",
-            "href": "/admin",
+            "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "portalTarget": "admin"
           },
           "state": {
@@ -45,7 +45,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1760
+              "height": 3448
             },
             ".portal-card": null,
             ".panel": {
@@ -63,36 +63,13 @@
           },
           "axe": [
             {
-              "id": "landmark-one-main",
+              "id": "landmark-contentinfo-is-top-level",
               "impact": "moderate",
-              "help": "Document should have one main landmark",
+              "help": "Contentinfo landmark should not be contained in another landmark",
               "nodes": [
                 {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Document does not have a main landmark"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                },
-                {
-                  "target": "#authPanel > h1",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                },
-                {
-                  "target": ".form-row:nth-child(1)",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                },
-                {
-                  "target": ".form-row:nth-child(2)",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                  "target": "#authFooter",
+                  "failureSummary": "Fix any of the following:\n  The null landmark is contained in another landmark."
                 }
               ]
             }
@@ -102,7 +79,7 @@
           "index": 1,
           "link": {
             "text": "Phụ huynh Family Thông tin học tập, liên hệ ↗",
-            "href": "/parent",
+            "href": "/parent?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "portalTarget": "parent"
           },
           "state": {
@@ -138,25 +115,13 @@
               "height": 578
             }
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 2,
           "link": {
             "text": "Học sinh Student Bài học, điểm, tiến độ ↗",
-            "href": "/student",
+            "href": "/student?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "portalTarget": "student"
           },
           "state": {
@@ -192,19 +157,7 @@
               "height": 578
             }
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         }
       ]
     },
@@ -357,7 +310,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2460
+              "height": 2858
             },
             ".wrap": {
               "selector": ".wrap",
@@ -369,7 +322,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2412
+              "height": 2810
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -381,7 +334,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2380
+              "height": 2726
             },
             ".panel": {
               "selector": ".panel",
@@ -472,30 +425,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "td:nth-child(1) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -520,7 +450,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3395
+              "height": 3447
             },
             ".wrap": {
               "selector": ".wrap",
@@ -532,7 +462,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3347
+              "height": 3399
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -635,19 +565,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -672,7 +590,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3474
+              "height": 3337
             },
             ".wrap": {
               "selector": ".wrap",
@@ -684,7 +602,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3426
+              "height": 3289
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -696,7 +614,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3394
+              "height": 3205
             },
             ".panel": {
               "selector": ".panel",
@@ -787,34 +705,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -851,7 +742,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 687
+              "height": 739
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -954,19 +845,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -991,7 +870,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1104
+              "height": 1141
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1003,7 +882,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1056
+              "height": 1093
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1015,7 +894,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1024
+              "height": 1009
             },
             ".panel": {
               "selector": ".panel",
@@ -1106,19 +985,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -1143,7 +1010,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1173
+              "height": 1225
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1155,7 +1022,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1125
+              "height": 1177
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1258,19 +1125,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -1307,7 +1162,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 804
+              "height": 856
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1410,19 +1265,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -1459,7 +1302,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 695
+              "height": 747
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1562,19 +1405,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -1599,7 +1430,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1342
+              "height": 1394
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1611,7 +1442,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1294
+              "height": 1346
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1714,19 +1545,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -1837,7 +1656,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3815
+              "height": 3867
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1849,7 +1668,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3767
+              "height": 3819
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1971,17 +1790,6 @@
                   "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
                 }
               ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
             }
           ]
         },
@@ -2008,7 +1816,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2074
+              "height": 2126
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2020,7 +1828,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2026
+              "height": 2078
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2160,7 +1968,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 693
+              "height": 745
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2263,19 +2071,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -2300,7 +2096,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8069
+              "height": 8121
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2312,7 +2108,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8021
+              "height": 8073
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2415,19 +2211,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -2452,7 +2236,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1718
+              "height": 1581
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2464,7 +2248,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1670
+              "height": 1533
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2476,7 +2260,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1638
+              "height": 1449
             },
             ".panel": {
               "selector": ".panel",
@@ -2567,34 +2351,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -2631,7 +2388,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 992
+              "height": 1044
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2734,34 +2491,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -2906,7 +2636,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1578
+              "height": 1630
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2918,7 +2648,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1530
+              "height": 1582
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3023,29 +2753,6 @@
           },
           "axe": [
             {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "tr:nth-child(1) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(4) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(9) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(10) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
               "id": "label",
               "impact": "critical",
               "help": "Form elements must have labels",
@@ -3053,17 +2760,6 @@
                 {
                   "target": "#importFile",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
                 }
               ]
             },
@@ -3103,7 +2799,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2816
+              "height": 2868
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3115,7 +2811,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2768
+              "height": 2820
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3229,17 +2925,6 @@
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
                 }
               ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
             }
           ]
         },
@@ -3266,7 +2951,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1100
+              "height": 1118
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3278,7 +2963,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1018
+              "height": 1070
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3381,19 +3066,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -3418,7 +3091,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2282
+              "height": 2334
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3430,7 +3103,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2234
+              "height": 2286
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3533,19 +3206,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -3570,7 +3231,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2416
+              "height": 2468
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3582,7 +3243,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2368
+              "height": 2420
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3721,17 +3382,6 @@
               ]
             },
             {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
               "id": "select-name",
               "impact": "critical",
               "help": "Select element must have an accessible name",
@@ -3865,7 +3515,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2074
+              "height": 2126
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3877,7 +3527,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2026
+              "height": 2078
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -4051,9 +3701,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "rgba(0, 0, 0, 0)",
-            "bgImage": "none",
-            "color": "rgb(0, 0, 0)"
+            "bg": "",
+            "bgImage": "",
+            "color": ""
           }
         }
       ]
@@ -5714,17 +5364,17 @@
       "links": [
         {
           "text": "Nhân viên Admin Điểm danh, Kết quả học tập, Bài tập về nhà ↗",
-          "href": "/admin",
+          "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "portalTarget": "admin"
         },
         {
           "text": "Phụ huynh Family Thông tin học tập, liên hệ ↗",
-          "href": "/parent",
+          "href": "/parent?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "portalTarget": "parent"
         },
         {
           "text": "Học sinh Student Bài học, điểm, tiến độ ↗",
-          "href": "/student",
+          "href": "/student?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
           "portalTarget": "student"
         }
       ],
@@ -5733,7 +5383,7 @@
           "index": 0,
           "link": {
             "text": "Nhân viên Admin Điểm danh, Kết quả học tập, Bài tập về nhà ↗",
-            "href": "/admin",
+            "href": "/admin?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "portalTarget": "admin"
           },
           "state": {
@@ -5753,7 +5403,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1760
+              "height": 3448
             },
             ".portal-card": null,
             ".panel": {
@@ -5771,36 +5421,13 @@
           },
           "axe": [
             {
-              "id": "landmark-one-main",
+              "id": "landmark-contentinfo-is-top-level",
               "impact": "moderate",
-              "help": "Document should have one main landmark",
+              "help": "Contentinfo landmark should not be contained in another landmark",
               "nodes": [
                 {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Document does not have a main landmark"
-                }
-              ]
-            },
-            {
-              "id": "region",
-              "impact": "moderate",
-              "help": "All page content should be contained by landmarks",
-              "nodes": [
-                {
-                  "target": ".header-bar",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                },
-                {
-                  "target": "#authPanel > h1",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                },
-                {
-                  "target": ".form-row:nth-child(1)",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
-                },
-                {
-                  "target": ".form-row:nth-child(2)",
-                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                  "target": "#authFooter",
+                  "failureSummary": "Fix any of the following:\n  The null landmark is contained in another landmark."
                 }
               ]
             }
@@ -5810,7 +5437,7 @@
           "index": 1,
           "link": {
             "text": "Phụ huynh Family Thông tin học tập, liên hệ ↗",
-            "href": "/parent",
+            "href": "/parent?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "portalTarget": "parent"
           },
           "state": {
@@ -5846,25 +5473,13 @@
               "height": 580
             }
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 2,
           "link": {
             "text": "Học sinh Student Bài học, điểm, tiến độ ↗",
-            "href": "/student",
+            "href": "/student?apiOrigin=http%3A%2F%2F127.0.0.1%3A8788",
             "portalTarget": "student"
           },
           "state": {
@@ -5900,19 +5515,7 @@
               "height": 580
             }
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         }
       ]
     },
@@ -6052,7 +5655,7 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. School "
           },
           "surfaces": {
             "body": {
@@ -6065,7 +5668,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2913
+              "height": 2799
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6077,7 +5680,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2865
+              "height": 2751
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6089,7 +5692,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2833
+              "height": 2667
             },
             ".panel": {
               "selector": ".panel",
@@ -6180,30 +5783,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "td:nth-child(1) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -6228,7 +5808,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3395
+              "height": 3447
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6240,7 +5820,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3347
+              "height": 3399
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6343,19 +5923,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -6380,7 +5948,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3474
+              "height": 3526
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6392,7 +5960,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3426
+              "height": 3478
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6495,34 +6063,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -6559,7 +6100,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 687
+              "height": 739
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6662,19 +6203,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -6699,7 +6228,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1104
+              "height": 1156
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6711,7 +6240,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1056
+              "height": 1108
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6814,19 +6343,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -6851,7 +6368,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1173
+              "height": 1225
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6863,7 +6380,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1125
+              "height": 1177
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6966,19 +6483,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -7015,7 +6520,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 804
+              "height": 856
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7133,17 +6638,6 @@
                   "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.4 (foreground color: #ff7b72, background color: #4c4c4c, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
                 }
               ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
             }
           ]
         },
@@ -7182,7 +6676,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 695
+              "height": 747
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7285,19 +6779,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -7322,7 +6804,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1342
+              "height": 1394
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7334,7 +6816,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1294
+              "height": 1346
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7437,19 +6919,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -7560,7 +7030,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3815
+              "height": 3867
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7572,7 +7042,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3767
+              "height": 3819
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7694,17 +7164,6 @@
                   "failureSummary": "Fix all of the following:\n  Only title used to generate label for form element"
                 }
               ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
             }
           ]
         },
@@ -7731,7 +7190,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2074
+              "height": 2126
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7743,7 +7202,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2026
+              "height": 2078
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7883,7 +7342,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 693
+              "height": 745
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7986,19 +7445,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -8023,7 +7470,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8069
+              "height": 8121
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8035,7 +7482,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8021
+              "height": 8073
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8138,19 +7585,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -8175,7 +7610,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1718
+              "height": 1770
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8187,7 +7622,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1670
+              "height": 1722
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8290,34 +7725,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -8354,7 +7762,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 992
+              "height": 1044
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8457,34 +7865,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": ".top-search-row:nth-child(5) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": ".top-search-row:nth-child(11) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -8629,7 +8010,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1578
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8641,7 +8022,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1530
+              "height": 859
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8653,7 +8034,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1498
+              "height": 775
             },
             ".panel": {
               "selector": ".panel",
@@ -8746,29 +8127,6 @@
           },
           "axe": [
             {
-              "id": "color-contrast",
-              "impact": "serious",
-              "help": "Elements must meet minimum color contrast ratio thresholds",
-              "nodes": [
-                {
-                  "target": "tr:nth-child(1) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(4) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(9) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                },
-                {
-                  "target": "tr:nth-child(10) > td:nth-child(4) > .panelbg-key.level-chip-standard.level-chip",
-                  "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.87 (foreground color: #fbffff, background color: #038e9f, font size: 8.3pt (11px), font weight: bold). Expected contrast ratio of 4.5:1"
-                }
-              ]
-            },
-            {
               "id": "label",
               "impact": "critical",
               "help": "Form elements must have labels",
@@ -8776,17 +8134,6 @@
                 {
                   "target": "#importFile",
                   "failureSummary": "Fix any of the following:\n  Element does not have an implicit (wrapped) <label>\n  Element does not have an explicit <label>\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute\n  Element has no placeholder attribute\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
-                }
-              ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
                 }
               ]
             },
@@ -8826,7 +8173,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2816
+              "height": 2868
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8838,7 +8185,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2768
+              "height": 2820
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8952,17 +8299,6 @@
                   "failureSummary": "Fix any of the following:\n  Heading order invalid"
                 }
               ]
-            },
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
             }
           ]
         },
@@ -8989,7 +8325,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1100
+              "height": 1118
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9001,7 +8337,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1018
+              "height": 1070
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9104,19 +8440,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -9141,7 +8465,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2282
+              "height": 2334
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9153,7 +8477,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2234
+              "height": 2286
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9256,19 +8580,7 @@
             ".news-review-note-line.fixed": null,
             "#reloadBtn": null
           },
-          "axe": [
-            {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "link": {
@@ -9293,7 +8605,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2416
+              "height": 2468
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9305,7 +8617,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2368
+              "height": 2420
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9444,17 +8756,6 @@
               ]
             },
             {
-              "id": "page-has-heading-one",
-              "impact": "moderate",
-              "help": "Page should contain a level-one heading",
-              "nodes": [
-                {
-                  "target": "html",
-                  "failureSummary": "Fix all of the following:\n  Page must have a level-one heading"
-                }
-              ]
-            },
-            {
               "id": "select-name",
               "impact": "critical",
               "help": "Select element must have an accessible name",
@@ -9588,7 +8889,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2074
+              "height": 2126
             },
             ".wrap": {
               "selector": ".wrap",
@@ -9600,7 +8901,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2026
+              "height": 2078
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9774,9 +9075,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "rgb(82, 82, 82)",
-            "bgImage": "none",
-            "color": "rgb(229, 245, 255)"
+            "bg": "",
+            "bgImage": "",
+            "color": ""
           }
         }
       ]

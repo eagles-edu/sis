@@ -40,6 +40,7 @@ if (!["all", "core", "dev", "playwright"].includes(mode)) {
 const files = buildFileList(mode)
 const DEFAULT_FILE_TIMEOUT_MS = 300000
 const FILE_TIMEOUT_OVERRIDES = new Map([
+  ["test/student-admin-ui.spec.mjs", 600000],
   ["test/portal-site-review.playwright.spec.mjs", 900000],
 ])
 

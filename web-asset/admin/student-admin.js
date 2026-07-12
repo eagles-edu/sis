@@ -18,6 +18,8 @@
         systemLevels: [],
         activeLevelDetail: null,
         runtimeHealth: null,
+        runtimeHealthFetchedAt: 0,
+        runtimeHealthRequest: null,
         sisConfigRepairBusy: false,
         hubConnection: {
           state: "pending",
@@ -2543,20 +2545,33 @@
       }
 
       async function loadRuntimeHealthSnapshotFromAdminApi(controller) {
-        const endpoint = resolveApiUrl(ADMIN_RUNTIME_HEALTH_PATH);
-        const response = await fetch(endpoint, {
-          method: "GET",
-          cache: "no-store",
-          credentials: "include",
-          signal: controller?.signal,
-        });
-        if (!response.ok) return false;
-        const body = await response.json().catch(() => null);
-        if (!body || typeof body !== "object") return false;
-        state.runtimeHealth = body;
-        renderOverviewRuntimeRestartButton();
-        renderSystemHealthPanel();
-        return true;
+        const now = Date.now();
+        if (state.runtimeHealthRequest) return state.runtimeHealthRequest;
+        if (state.runtimeHealth && now - state.runtimeHealthFetchedAt < 5000) return true;
+
+        const request = (async () => {
+          const endpoint = resolveApiUrl(ADMIN_RUNTIME_HEALTH_PATH);
+          const response = await fetch(endpoint, {
+            method: "GET",
+            cache: "no-store",
+            credentials: "include",
+            signal: controller?.signal,
+          });
+          if (!response.ok) return false;
+          const body = await response.json().catch(() => null);
+          if (!body || typeof body !== "object") return false;
+          state.runtimeHealth = body;
+          state.runtimeHealthFetchedAt = Date.now();
+          renderOverviewRuntimeRestartButton();
+          renderSystemHealthPanel();
+          return true;
+        })();
+        state.runtimeHealthRequest = request;
+        try {
+          return await request;
+        } finally {
+          if (state.runtimeHealthRequest === request) state.runtimeHealthRequest = null;
+        }
       }
 
       async function probeHubConnection({ notify = false, paint = true } = {}) {
@@ -2640,10 +2655,24 @@
           window.clearInterval(state.hubPollTimer);
           state.hubPollTimer = null;
         }
-        probeHubConnection({ notify: false }).catch(() => {});
-        state.hubPollTimer = window.setInterval(() => {
+        const runProbe = () => {
+          if (!state.hubPollTimer) return;
           probeHubConnection({ notify: false }).catch(() => {});
-        }, 30000);
+        };
+        state.hubPollTimer = window.setInterval(runProbe, 30000);
+        const scheduleProbe = () => {
+          const runWhenIdle = () => runProbe();
+          if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(runWhenIdle, { timeout: 2000 });
+          } else {
+            window.setTimeout(runWhenIdle, 0);
+          }
+        };
+        if (IS_JSDOM_ENV || document.readyState === "complete") {
+          scheduleProbe();
+        } else {
+          window.addEventListener("load", scheduleProbe, { once: true });
+        }
       }
 
       function stopHubPolling() {
@@ -9995,8 +10024,10 @@
       function updateMenuExpansion(activeGroup) {
         document.querySelectorAll("[data-menu-group]").forEach((groupEl) => {
           const groupName = normalizeText(groupEl.getAttribute("data-menu-group"));
-          if (groupName === activeGroup) groupEl.classList.add("expanded");
+          const expanded = groupName === activeGroup;
+          if (expanded) groupEl.classList.add("expanded");
           else groupEl.classList.remove("expanded");
+          groupEl.querySelector("[data-menu-toggle]")?.setAttribute("aria-expanded", String(expanded));
         });
       }
 
@@ -22269,6 +22300,7 @@
           if (!groupName || !parentGroup) return;
           if (parentGroup.classList.contains("expanded")) {
             parentGroup.classList.remove("expanded");
+            toggleBtn.setAttribute("aria-expanded", "false");
             return;
           }
           updateMenuExpansion(groupName);

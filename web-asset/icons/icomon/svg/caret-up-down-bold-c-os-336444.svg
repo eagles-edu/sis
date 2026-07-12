@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Icon: caret-up-down-bold
+  Set: Phosphor
+  Author: Phosphor Icons (https://github.com/phosphor-icons/core)
+  License: MIT (https://github.com/phosphor-icons/core/blob/main/LICENSE)
+  Source: https://iconify.design
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 256 256"
+     width="256"
+     height="256">
+  <title>Up and Down Arrow Icon</title>
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+             xmlns:dc="http://purl.org/dc/elements/1.1/"
+             xmlns:cc="http://creativecommons.org/ns#">
+      <cc:Work rdf:about="">
+        <dc:title>Up and Down Arrow Icon</dc:title>
+        <dc:description>A minimalistic icon featuring an upward and downward arrow, ideal for representing navigation, scrolling, or directional actions in user interfaces and web designs.</dc:description>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Phosphor Icons</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:source>https://github.com/phosphor-icons/core</dc:source>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Phosphor Icons</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <cc:license rdf:resource="https://github.com/phosphor-icons/core/blob/main/LICENSE"/>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>up-arrow</rdf:li>
+            <rdf:li>down-arrow</rdf:li>
+            <rdf:li>navigation-icon</rdf:li>
+            <rdf:li>scroll-icon</rdf:li>
+            <rdf:li>direction-icon</rdf:li>
+            <rdf:li>arrow-symbol</rdf:li>
+            <rdf:li>UI-icon</rdf:li>
+            <rdf:li>UX-design</rdf:li>
+            <rdf:li>interface-element</rdf:li>
+            <rdf:li>minimal-arrow</rdf:li>
+            <rdf:li>black-arrow</rdf:li>
+            <rdf:li>vertical-navigation</rdf:li>
+            <rdf:li>up-and-down</rdf:li>
+            <rdf:li>arrow-pair</rdf:li>
+            <rdf:li>simple-arrows</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License rdf:about="https://github.com/phosphor-icons/core/blob/main/LICENSE">
+        <dc:title>MIT (MIT)</dc:title>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <path fill="currentColor" d="M184.49 167.51a12 12 0 0 1 0 17l-48 48a12 12 0 0 1-17 0l-48-48a12 12 0 0 1 17-17L128 207l39.51-39.52a12 12 0 0 1 16.98.03m-96-79L128 49l39.51 39.52a12 12 0 0 0 17-17l-48-48a12 12 0 0 0-17 0l-48 48a12 12 0 0 0 17 17Z"/>
+</svg>

@@ -198,7 +198,6 @@ function createAssignmentTemplateApiStore(initialTemplates = []) {
 async function createAdminUiDom(fetchHandler, url = "http://127.0.0.1/admin", options = {}) {
   const dom = new JSDOM(ADMIN_HTML_FOR_TEST, {
     runScripts: "dangerously",
-    resources: "usable",
     pretendToBeVisual: true,
     url,
     beforeParse(window) {

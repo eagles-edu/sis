@@ -43,6 +43,8 @@ test("live admin sync wrapper is pinned to the live admin host and refreshes Pri
   assert.match(liveScript, /full/)
   assert.match(liveScript, /https:\/\/admin\.eagles\.edu\.vn\/\|200\|Cổng Thông Tin Sinh Viên\|/)
   assert.match(liveScript, /maintenance\.svg/)
+  assert.match(liveScript, /web-asset\/images\/caret-down\.svg\|web-asset\/images\/caret-down\.svg/)
+  assert.match(testScript, /web-asset\/images\/caret-down\.svg\|web-asset\/images\/caret-down\.svg/)
   assert.match(liveScript, /emptying live runtime root/)
   assert.match(liveScript, /emptying live public root/)
   assert.match(liveScript, /verify_live_roots_cleared/)

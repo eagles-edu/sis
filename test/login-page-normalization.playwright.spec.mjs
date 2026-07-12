@@ -158,7 +158,7 @@ test(
       assert.ok(rects.loginPanel.y >= 40 && rects.loginPanel.y <= 180, "student login: top margin should be compact")
       assert.ok(rects.loginPanel.w <= 560, "student login: login panel should stay centered and narrow")
       assert.ok(
-        (await page.locator("#loginPanel h2").evaluate((node) => parseFloat(getComputedStyle(node).fontSize))) >= 22,
+        (await page.locator("#loginPanel :is(h1, h2)").evaluate((node) => parseFloat(getComputedStyle(node).fontSize))) >= 22,
         "student login: title should be larger for readability",
       )
       assert.ok(
@@ -195,7 +195,7 @@ test(
       assert.ok(rects.loginCard.y >= 40 && rects.loginCard.y <= 180, "parent login: top margin should be compact")
       assert.ok(rects.loginCard.w <= 560, "parent login: login card should stay centered and narrow")
       assert.ok(
-        (await page.locator("#loginCard h2").evaluate((node) => parseFloat(getComputedStyle(node).fontSize))) >= 22,
+        (await page.locator("#loginCard :is(h1, h2)").evaluate((node) => parseFloat(getComputedStyle(node).fontSize))) >= 22,
         "parent login: title should be larger for readability",
       )
       assert.ok(

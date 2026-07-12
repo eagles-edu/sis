@@ -19,21 +19,25 @@ test("bidirectional portal sync script supports both sync directions", () => {
 test("bidirectional portal sync script tracks admin html/css/js, shared theme CSS, plus parent and student portal files", () => {
   assert.match(
     scriptSource,
-    /PORTAL_KEYS=\(admin_html admin_css admin_js shared_css shared_css_min parent_html student_html\)/,
+    /PORTAL_KEYS=\(admin_html admin_css admin_js admin_critical_css shared_css shared_css_min caret_down_svg parent_html student_html\)/,
   )
   assert.match(scriptSource, /DEV_REL\[admin_html\]="web-asset\/admin\/student-admin\.html"/)
   assert.match(scriptSource, /DEV_REL\[admin_css\]="web-asset\/admin\/student-admin\.css"/)
   assert.match(scriptSource, /DEV_REL\[admin_js\]="web-asset\/admin\/student-admin\.js"/)
+  assert.match(scriptSource, /DEV_REL\[admin_critical_css\]="web-asset\/admin\/student-admin\.critical\.css"/)
   assert.match(scriptSource, /DEV_REL\[shared_css\]="web-asset\/shared\/portal-theme\.css"/)
   assert.match(scriptSource, /DEV_REL\[shared_css_min\]="web-asset\/shared\/portal-theme\.min\.css"/)
+  assert.match(scriptSource, /DEV_REL\[caret_down_svg\]="web-asset\/images\/caret-down\.svg"/)
   assert.match(scriptSource, /DEV_REL\[parent_html\]="web-asset\/parent\/parent-portal\.html"/)
   assert.match(scriptSource, /DEV_REL\[student_html\]="web-asset\/student\/student-portal\.html"/)
 
   assert.match(scriptSource, /PUBLIC_REL\[admin_html\]="sis-admin\/student-admin\.html"/)
   assert.match(scriptSource, /PUBLIC_REL\[admin_css\]="web-asset\/admin\/student-admin\.css"/)
   assert.match(scriptSource, /PUBLIC_REL\[admin_js\]="web-asset\/admin\/student-admin\.js"/)
+  assert.match(scriptSource, /PUBLIC_REL\[admin_critical_css\]="web-asset\/admin\/student-admin\.critical\.css"/)
   assert.match(scriptSource, /PUBLIC_REL\[shared_css\]="web-asset\/shared\/portal-theme\.css"/)
   assert.match(scriptSource, /PUBLIC_REL\[shared_css_min\]="web-asset\/shared\/portal-theme\.min\.css"/)
+  assert.match(scriptSource, /PUBLIC_REL\[caret_down_svg\]="web-asset\/images\/caret-down\.svg"/)
   assert.match(scriptSource, /PUBLIC_REL\[parent_html\]="sis-parent\/parent-portal\.html"/)
   assert.match(scriptSource, /PUBLIC_REL\[student_html\]="sis-student\/student-portal\.html"/)
 })
