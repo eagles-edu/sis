@@ -62,6 +62,19 @@ test("portal pages load the shared portal theme stylesheet", () => {
   }
 })
 
+test("student admin loads shared theme state before its inline toggle wiring", () => {
+  assert.match(
+    adminPortal,
+    /<script src="\/web-asset\/shared\/portal-theme-state\.js"><\/script>[\s\S]*?const themeState = window\.SIS_PORTAL_THEME/,
+    "student-admin.html must expose shared theme state before its inline toggle handler runs"
+  )
+  assert.doesNotMatch(
+    adminPortal,
+    /<script src="\/web-asset\/shared\/portal-theme-state\.js" defer>/,
+    "student-admin.html must not defer the state script used by its inline toggle handler"
+  )
+})
+
 test("portal home links use canonical runtime routes", () => {
   assert.match(
     parentPortal,

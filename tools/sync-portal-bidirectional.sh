@@ -38,6 +38,7 @@ Tracked files:
   - web-asset/admin/student-admin.html
   - web-asset/admin/student-admin.css
   - web-asset/admin/student-admin.js
+  - web-asset/admin/student-admin.critical.css
   - web-asset/shared/portal-theme.css
   - web-asset/shared/portal-theme.min.css
   - web-asset/parent/parent-portal.html
@@ -126,11 +127,12 @@ fi
 declare -A DEV_REL=()
 declare -A LIVE_REL=()
 declare -A PUBLIC_REL=()
-PORTAL_KEYS=(admin_html admin_css admin_js shared_css shared_css_min parent_html student_html)
+PORTAL_KEYS=(admin_html admin_css admin_js admin_critical_css shared_css shared_css_min parent_html student_html)
 
 DEV_REL[admin_html]="web-asset/admin/student-admin.html"
 DEV_REL[admin_css]="web-asset/admin/student-admin.css"
 DEV_REL[admin_js]="web-asset/admin/student-admin.js"
+DEV_REL[admin_critical_css]="web-asset/admin/student-admin.critical.css"
 DEV_REL[shared_css]="web-asset/shared/portal-theme.css"
 DEV_REL[shared_css_min]="web-asset/shared/portal-theme.min.css"
 DEV_REL[parent_html]="web-asset/parent/parent-portal.html"
@@ -139,6 +141,7 @@ DEV_REL[student_html]="web-asset/student/student-portal.html"
 LIVE_REL[admin_html]="web-asset/admin/student-admin.html"
 LIVE_REL[admin_css]="web-asset/admin/student-admin.css"
 LIVE_REL[admin_js]="web-asset/admin/student-admin.js"
+LIVE_REL[admin_critical_css]="web-asset/admin/student-admin.critical.css"
 LIVE_REL[shared_css]="web-asset/shared/portal-theme.css"
 LIVE_REL[shared_css_min]="web-asset/shared/portal-theme.min.css"
 LIVE_REL[parent_html]="web-asset/parent/parent-portal.html"
@@ -147,6 +150,7 @@ LIVE_REL[student_html]="web-asset/student/student-portal.html"
 PUBLIC_REL[admin_html]="sis-admin/student-admin.html"
 PUBLIC_REL[admin_css]="web-asset/admin/student-admin.css"
 PUBLIC_REL[admin_js]="web-asset/admin/student-admin.js"
+PUBLIC_REL[admin_critical_css]="web-asset/admin/student-admin.critical.css"
 PUBLIC_REL[shared_css]="web-asset/shared/portal-theme.css"
 PUBLIC_REL[shared_css_min]="web-asset/shared/portal-theme.min.css"
 PUBLIC_REL[parent_html]="sis-parent/parent-portal.html"

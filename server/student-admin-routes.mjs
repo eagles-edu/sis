@@ -1256,6 +1256,16 @@ function setBodyClass(html, className) {
 function setInitialActivePageSection(html, pageSlug) {
   const normalizedSlug = normalizeLower(pageSlug)
   if (!ADMIN_PAGE_SECTION_SET.has(normalizedSlug)) return html
+  html = html.replace(/<[^>]+>/g, (openingTag) => {
+    if (!/\bdata-page="[^\"]*"/i.test(openingTag)) return openingTag
+    const classMatch = openingTag.match(/\bclass="([^"]*)"/i)
+    if (!classMatch || !/\bpage-section\b/i.test(classMatch[1])) return openingTag
+    const classNames = classMatch[1]
+      .split(/\s+/u)
+      .filter((className) => className && className !== "active")
+      .join(" ")
+    return openingTag.replace(classMatch[0], `class="${classNames}"`)
+  })
   const sectionPattern = new RegExp(
     `(<[^>]+data-page="${escapeRegex(normalizedSlug)}"[^>]*class=")([^"]*)(")`,
     "i",

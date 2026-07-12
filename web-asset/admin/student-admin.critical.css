@@ -1,0 +1,522 @@
+
+body.student-portal-page #loginPanel,
+body.parent-portal-page #loginCard,
+body.admin-portal-page #authPanel,
+body.admin-portal-page #authBootPanel {
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-border-strong);
+  border-radius: var(--radius-2);
+  box-sizing: border-box;
+  font-size: 1.02rem;
+  line-height: 1.48;
+  padding: clamp(28px, 3.6vw, 40px);
+  width: min(100%, var(--portal-login-panel-max-width));
+}
+body.admin-portal-page #authPanel,
+body.admin-portal-page #authBootPanel {
+  left: 50%;
+  position: fixed;
+  top: clamp(3rem, 5vw, 4rem);
+  transform: translateX(-50%);
+  z-index: 30;
+}
+html[data-theme="dark"] body.admin-portal-page #authPanel {
+  background-color: transparent;
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+
+background-image:
+    linear-gradient(
+      180deg,
+      rgba(45, 45, 45, 0.94) 0%,
+      rgba(59, 60, 62, 0.94) 48%,
+      rgba(76, 76, 76, 0.96) 100%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);
+}
+html[data-theme="dark"] body.admin-portal-page #authBootPanel {
+  background-color: transparent;
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+
+background-image:
+    linear-gradient(
+      180deg,
+      rgba(45, 45, 45, 0.94) 0%,
+      rgba(59, 60, 62, 0.94) 48%,
+      rgba(76, 76, 76, 0.96) 100%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 48%);
+}
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page .wrap,
+body.admin-portal-page.admin-auth-booting .wrap,
+body.admin-portal-page.admin-auth-booting #authBootPanel {
+  background: transparent !important;
+  background-image: none !important;
+}
+body.student-portal-page #loginPanel #loginForm,
+body.parent-portal-page #loginCard .login-form {
+  gap: 0;
+  margin-inline: auto;
+  width: min(100%, var(--portal-login-form-max-width));
+}
+body.admin-portal-page #authPanel .row {
+  grid-template-columns: 1fr;
+}
+body.admin-portal-page #authBootPanel {
+  align-content: center;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  min-height: 180px;
+  text-align: center;
+}
+body.admin-portal-page #authBootPanel .small {
+  margin: 0;
+}
+body.student-portal-page #loginPanel :is(input, select, textarea),
+body.parent-portal-page #loginCard :is(input, select, textarea),
+body.admin-portal-page #authPanel :is(input, select, textarea) {
+  font-size: 0.98rem;
+  min-height: 48px;
+  padding: 12px 14px;
+}
+body.student-portal-page #loginPanel button,
+body.parent-portal-page #loginCard button,
+body.admin-portal-page #authPanel button:not(.portal-button) {
+  font-size: 1rem;
+  margin: .75rem 0 .125rem 0;
+  min-height: 50px;
+  padding: 13px 16px;
+}
+body.admin-portal-page #authPanel .actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+body.admin-portal-page #authPanel .actions-2 > * {
+  flex: 1 1 calc(50% - 6px);
+}
+body.student-portal-page #loginPanel .login-links,
+body.parent-portal-page #loginCard .login-links,
+body.admin-portal-page #authPanel .login-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  margin-top: 14px;
+}
+body.student-portal-page #loginPanel .login-actions,
+body.parent-portal-page #loginCard .login-actions,
+body.admin-portal-page #authPanel .login-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+body.student-portal-page #loginPanel .login-actions > *,
+body.parent-portal-page #loginCard .login-actions > *,
+body.admin-portal-page #authPanel .login-actions > * {
+  flex: 1 1 160px;
+}
+body.student-portal-page #loginPanel .login-link,
+body.parent-portal-page #loginCard .login-link,
+body.admin-portal-page #authPanel .login-link {
+  color: var(--portal-login-link);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 1rem;
+  text-decoration: none;
+}
+body.student-portal-page #loginPanel .login-link:hover,
+body.parent-portal-page #loginCard .login-link:hover,
+body.admin-portal-page #authPanel .login-link:hover,
+body.student-portal-page #loginPanel .login-link:focus-visible,
+body.parent-portal-page #loginCard .login-link:focus-visible,
+body.admin-portal-page #authPanel .login-link:focus-visible {
+  text-decoration: underline;
+}
+body.admin-portal-page .portal-login-shell #authBootPanel,
+body.admin-portal-page .portal-login-shell #authPanel {
+  left: auto;
+  margin-inline: 0;
+  position: relative;
+  top: auto;
+  transform: none;
+  width: 100%;
+  z-index: auto;
+}
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page #authPanel,
+body.admin-portal-page.admin-auth-booting #authBootPanel,
+html[data-parent-auth-state="unauthenticated"] body.parent-portal-page #loginCard,
+html[data-student-auth-state="unauthenticated"] body.student-portal-page #loginPanel {
+  margin-top: 0;
+}
+html[data-admin-auth-state="unauthenticated"] body.admin-portal-page #authPanel {
+  left: auto;
+  margin-inline: auto;
+  position: relative;
+  top: auto;
+  transform: none;
+  z-index: auto;
+}
+body.admin-portal-page :where(.profile-info-toolbar h3,
+  .profile-editor-toolbar h3,
+  .page-section[data-page="profile"] > h2,
+  .profile-summary-name,
+  .profile-summary-chip-value,
+  .profile-info-group h4,
+  .profile-field-group h3,
+  .profile-info-value,
+  #profileTabStatus) {
+  color: var(--portal-text);
+}
+body.admin-portal-page #topSearchResultsPanel .top-search-results-title,
+body.admin-portal-page #topSearchResultsPanel #topSearchCount {
+  color: var(--portal-text);
+}
+body.admin-portal-page #topSearchResultsPanel th[data-top-search-sort]:focus {
+  outline: 2px solid var(--portal-control-border);
+  outline-offset: -2px;
+}
+body.admin-portal-page #topSearchResultsPanel th.sort-active-asc::after,
+body.admin-portal-page #topSearchResultsPanel th.sort-active-desc::after {
+  color: var(--portal-status-info-text);
+}
+body.admin-portal-page #topSearchRows tr.top-search-row:hover > td,
+body.admin-portal-page #topSearchRows tr.top-search-row:focus-within > td,
+body.admin-portal-page #topSearchRows tr.top-search-row.active > td,
+body.admin-portal-page #topSearchRows tr.top-search-row[aria-selected="true"] > td {
+  background: var(--portal-status-info-bg);
+  color: var(--portal-text);
+}
+html[data-theme="dark"] body.admin-portal-page :where(.profile-info-toolbar h3,
+  .profile-editor-toolbar h3,
+  .page-section[data-page="profile"] > h2,
+  .profile-summary-name,
+  .profile-summary-chip-value,
+  .profile-info-group h4,
+  .profile-field-group h3,
+  .profile-info-value,
+  #profileTabStatus) {
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel .top-search-results-title,
+html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel #topSearchCount {
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel th[data-top-search-sort]:focus {
+  outline: 2px solid var(--portal-status-info-border);
+  outline-offset: -2px;
+}
+html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel th.sort-active-asc::after,
+html[data-theme="dark"] body.admin-portal-page #topSearchResultsPanel th.sort-active-desc::after {
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row:hover > td,
+html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row:focus-within > td {
+  background: var(--portal-neutral-support-dark);
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row.active > td,
+html[data-theme="dark"] body.admin-portal-page #topSearchRows tr.top-search-row[aria-selected="true"] > td {
+  background: var(--portal-neutral-table-dark);
+  color: var(--portal-dark-text);
+}
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn),
+body.admin-portal-page .link-btn {
+  align-items: center;
+  background: #f1f5ff;
+  border: 1px solid #9bb5df;
+  border-radius: var(--radius-2);
+  box-sizing: border-box;
+  color: #214072;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 48px;
+  text-align: center;
+  text-decoration: none;
+}
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):hover:not(:disabled),
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):focus-visible,
+body.admin-portal-page .link-btn:hover:not(:disabled),
+body.admin-portal-page .link-btn:focus-visible {
+  background: #f3f8ff;
+  border-color: #9bb5df;
+  box-shadow: 0 8px 16px rgba(19, 35, 61, 0.12);
+  outline: none;
+  transform: translateY(-1px);
+}
+body.admin-portal-page button:not(.portal-button):not(.distribution-modal-button):not(.floating-menu-btn):not(.nav-overlay):not(.nav-scrim):not(.btn-refresh):not(.btn-edit):not(.btn-delete):not(.portal-action-btn):not(.portal-theme-toggle):not(.menu-group-btn):not(.menu-toggle-btn):not(.app-header-menu-toggle):not(.tabulator-entry-btn):not(.grade-chart-period-btn):not(.pt-score-legend-btn):not(.bar-detail-action-btn):not(.header-action-btn):not([data-text-zoom-action]):not(#adminThemeToggle):not(#menuToggleBtn):not(#floatingMenuBtn):not(#newsReviewViewerCloseBtn):not(#newsReviewViewerPrevBtn):not(#newsReviewViewerNextBtn):not(#parentQueueCloseBtn):not(#gradeChartModalCloseBtn):disabled,
+body.admin-portal-page .link-btn:disabled {
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.64;
+  transform: none;
+}
+html[data-theme="dark"] body.student-portal-page #loginPanel,
+html[data-theme="dark"] body.parent-portal-page #loginCard,
+html[data-theme="dark"] body.admin-portal-page #authPanel,
+html[data-theme="dark"] body.admin-portal-page #authBootPanel {
+  background: #4c4c4c;
+  border-color: var(--portal-dark-border-strong);
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.admin-portal-page #authPanel,
+html[data-theme="dark"] body.admin-portal-page #authBootPanel {
+  background: #4c4c4c !important;
+}
+html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm,
+html[data-theme="dark"] body.parent-portal-page #loginCard .login-form {
+  grid-template-columns: 1fr;
+  margin-inline: auto;
+}
+html[data-theme="dark"] body.student-portal-page #loginPanel #loginForm>.field,
+html[data-theme="dark"] body.parent-portal-page #loginCard .login-form>.field {
+  grid-column: 1;
+}
+html[data-theme="dark"] body.student-portal-page :where(#loginPanel, #loginPanel #loginForm, #loginPanel input, #loginPanel select, #loginPanel textarea),
+html[data-theme="dark"] body.parent-portal-page :where(#loginCard, #loginCard .login-form, #loginCard input, #loginCard select, #loginCard textarea),
+html[data-theme="dark"] body.admin-portal-page :where(#authPanel, #authPanel input, #authPanel select, #authPanel textarea) {
+  color: var(--portal-dark-text);
+}
+html[data-theme="dark"] body.student-portal-page #loginPanel,
+html[data-theme="dark"] body.parent-portal-page #loginCard,
+html[data-theme="dark"] body.admin-portal-page #authPanel {
+  font-size: 1.05rem;
+  line-height: 1.52;
+}
+html[data-theme="dark"] body.student-portal-page :where(#loginPanel input, #loginPanel select, #loginPanel textarea),
+html[data-theme="dark"] body.parent-portal-page :where(#loginCard input, #loginCard select, #loginCard textarea),
+html[data-theme="dark"] body.admin-portal-page :where(#authPanel input, #authPanel select, #authPanel textarea) {
+  background: var(--portal-dark-field-bg);
+  border-color: var(--portal-dark-field-border);
+  color: var(--portal-dark-field-text);
+}
+html[data-theme="dark"] body.student-portal-page :where(#loginPanel input, #loginPanel select, #loginPanel textarea)::placeholder,
+html[data-theme="dark"] body.parent-portal-page :where(#loginCard input, #loginCard select, #loginCard textarea)::placeholder,
+html[data-theme="dark"] body.admin-portal-page :where(#authPanel input, #authPanel select, #authPanel textarea)::placeholder {
+  color: var(--portal-dark-field-placeholder);
+}
+html[data-theme="dark"] body.student-portal-page #loginPanel .login-link,
+html[data-theme="dark"] body.parent-portal-page #loginCard .login-link,
+html[data-theme="dark"] body.admin-portal-page #authPanel .login-link {
+  color: var(--portal-dark-link);
+}
+html[data-theme="dark"] body.student-portal-page #loginPanel :is(h1, h2),
+html[data-theme="dark"] body.parent-portal-page #loginCard :is(h1, h2),
+html[data-theme="dark"] body.admin-portal-page #authPanel :is(h1, h2) {
+  color: var(--portal-dark-text);
+}
+body.student-portal-page #loginPanel :is(h1, h2),
+body.parent-portal-page #loginCard :is(h1, h2),
+body.admin-portal-page #authPanel :is(h1, h2) {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.95rem);
+  line-height: 1.12;
+  margin-bottom: 18px;
+}
+body.student-portal-page #loginPanel :is(label, .small, .muted, .login-link),
+body.parent-portal-page #loginCard :is(label, .small, .muted, .login-link),
+body.admin-portal-page #authPanel :is(label, .small, .muted, .login-link) {
+  line-height: 1.4;
+}
+body.student-portal-page #loginPanel label,
+body.parent-portal-page #loginCard label,
+body.admin-portal-page #authPanel label {
+  font-size: 0.98rem;
+  margin-bottom: 8px;
+  margin-top: 1rem;
+}
+body.student-portal-page #loginPanel .small,
+body.parent-portal-page #loginCard .small,
+body.admin-portal-page #authPanel .small,
+body.admin-portal-page #authBootPanel .small,
+body.student-portal-page #loginPanel .muted,
+body.parent-portal-page #loginCard .muted,
+body.admin-portal-page #authPanel .muted {
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+body.student-portal-page #loginPanel p,
+body.parent-portal-page #loginCard p,
+body.admin-portal-page #authPanel p,
+body.admin-portal-page #authBootPanel p {
+  margin: 0 0 12px;
+}
+body.student-portal-page #loginPanel .login-links,
+body.parent-portal-page #loginCard .login-links,
+body.admin-portal-page #authPanel .login-links {
+  margin-bottom: 4px;
+}
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review label,
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review .small,
+html[data-theme="dark"] body.admin-portal-page #newsReviewViewerStatus,
+html[data-theme="dark"] body.admin-portal-page .news-review-viewer-review textarea {
+  color: var(--portal-dark-text);
+}
+body.admin-portal-page .performance-data-list .section-title,
+body.admin-portal-page #performanceStagedSection .section-title,
+body.admin-portal-page #performanceQueueSection .section-title {
+  color: var(--portal-text);
+}
+html[data-theme="dark"] body.admin-portal-page .performance-data-list .section-title,
+html[data-theme="dark"] body.admin-portal-page #performanceStagedSection .section-title,
+html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section-title {
+  color: var(--portal-dark-text);
+}
+
+      .app-sidebar,
+      #authPanel,
+      #appPageHeader,
+      #topControlsPanel,
+      #studentListPanel,
+      .page-section,
+      #status,
+      #parentQueueModal .queue-modal-card {
+        zoom: var(--sis-global-text-zoom, 1);
+      }
+      #authPanel {
+        margin: 0 auto;
+        margin-top: clamp(3rem, 5vw, 4rem);
+        padding: 20px;
+      }
+      #profileTabStatus {
+        font-size: 13px;
+      }
+      #studentListPanel hr {
+        border-style: solid !important;
+        border-width: 1px 0 0 !important;
+        border-top: 1px solid var(--border-strong) !important;
+        margin: 12px 0 !important;
+      }
+      html[data-theme="dark"] body.admin-portal-page #studentListPanel hr {
+        border-top-color: var(--portal-dark-border-strong) !important;
+      }
+      #topSearchCount {
+        margin: 0;
+      }
+      #topSearchRows tr.top-search-row {
+        cursor: pointer;
+      }
+      #topSearchResultsPanel th[data-top-search-sort] {
+        cursor: pointer;
+        padding-right: 18px;
+        position: relative;
+        user-select: none;
+      }
+      #topSearchResultsPanel th.sort-active-asc::after,
+      #topSearchResultsPanel th.sort-active-desc::after {
+        font-size: 10px;
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      #topSearchResultsPanel th.sort-active-asc::after {
+        content: "▲";
+      }
+      #topSearchResultsPanel th.sort-active-desc::after {
+        content: "▼";
+      }
+      #overviewStatsGrid {
+        min-height: 132px;
+      }
+      #overviewClassTableWrap,
+      #overviewAssignmentTableWrap {
+        min-height: 108px;
+      }
+      #overviewRiskStudents {
+        min-height: 180px;
+      }
+      #levelDetailPanel .table-scroll-wrap table {
+        min-width: 760px;
+      }
+      #levelDetailRows td {
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
+      #hubStatusMeta {
+        font-family: ui-monospace, "SF Mono", menlo, consolas, monospace;
+        margin-top: 4px;
+      }
+      #pt_actionHelperStatus {
+        margin-top: 2px;
+      }
+      .parent-tracking-grid #pt_outstandingRows td {
+        vertical-align: top;
+      }
+      #performanceQueueDetails summary,
+      #overviewIncomingExerciseDetails summary {
+        align-items: center;
+        color: var(--ink);
+        cursor: pointer;
+        display: flex;
+        font-weight: 700;
+        gap: 8px;
+        justify-content: space-between;
+        list-style: none;
+      }
+      #performanceQueueDetails summary::-webkit-details-marker,
+      #overviewIncomingExerciseDetails summary::-webkit-details-marker {
+        display: none;
+      }
+      #overviewIncomingExerciseActionStatus {
+        margin-top: 4px;
+        overflow-wrap: anywhere;
+      }
+      #overviewClassTableWrap table {
+        min-width: 420px;
+      }
+      #overviewIncomingExerciseDetails .table-scroll-wrap table {
+        min-width: 980px;
+      }
+      #performanceQueueDetails .table-scroll-wrap table {
+        min-width: 760px;
+      }
+      #overviewClassRows td,
+      #overviewIncomingExerciseRows td,
+      #performanceQueueRows td {
+        overflow-wrap: anywhere;
+      }
+      #status {
+        color: var(--ink-muted);
+        font-size: 12px;
+        min-height: 28px;
+        white-space: pre-wrap;
+      }
+      @media (max-width: 820px) {
+        #globalTextZoomControls {
+          gap: 4px;
+        }
+        #performanceQueueDetails summary,
+        #overviewIncomingExerciseDetails summary {
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        #performanceQueueSummary,
+        #overviewIncomingExerciseSummary {
+          width: 100%;
+        }
+        #overviewClassTableWrap table {
+          min-width: 360px;
+        }
+        #overviewIncomingExerciseDetails .table-scroll-wrap table {
+          min-width: 820px;
+        }
+        #performanceQueueDetails .table-scroll-wrap table {
+          min-width: 680px;
+        }
+        #levelDetailPanel .actions,
+        #overviewIncomingExerciseSection .actions,
+        #performanceQueueSection .actions {
+          grid-template-columns: 1fr;
+        }
+      }
+      html[data-theme="dark"] body.admin-portal-page .chart-legend,
+      html[data-theme="dark"] body.admin-portal-page .bar-chart-shell .small,
+      html[data-theme="dark"] body.admin-portal-page #overviewRiskStudents {
+        color: var(--portal-support-message);
+      }

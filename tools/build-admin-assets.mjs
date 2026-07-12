@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url"
 
 import cssnano from "cssnano"
 import postcss from "postcss"
+import { extractCriticalCss } from "./extract-critical-css.mjs"
 
 const require = createRequire(import.meta.url)
 const { minify: uglifyMinify } = require("uglify-js")
@@ -32,6 +33,15 @@ const ADMIN_ASSET_TASKS = [
     output: path.join(REPO_ROOT, "web-asset/shared/portal-theme.min.css"),
   },
 ]
+
+const CRITICAL_CSS_TASK = {
+  html: path.join(REPO_ROOT, "web-asset/admin/student-admin.html"),
+  sources: [
+    path.join(REPO_ROOT, "web-asset/shared/portal-theme.css"),
+    path.join(REPO_ROOT, "web-asset/admin/student-admin.css"),
+  ],
+  output: path.join(REPO_ROOT, "web-asset/admin/student-admin.critical.css"),
+}
 
 const ADMIN_ASSET_SHARED_DEPENDENCIES = [
   path.join(REPO_ROOT, "package.json"),
@@ -166,6 +176,19 @@ async function main() {
   const checkOnly = args.has("--check")
   const changedFiles = []
   const staleFiles = []
+
+  const criticalHtml = await fs.readFile(CRITICAL_CSS_TASK.html, "utf8")
+  const criticalResults = []
+  for (const sourcePath of CRITICAL_CSS_TASK.sources) {
+    criticalResults.push(extractCriticalCss(await fs.readFile(sourcePath, "utf8"), criticalHtml))
+  }
+  const criticalCss = `${criticalResults.map((result) => result.css).filter(Boolean).join("\n")}\n`
+  if (checkOnly) {
+    const current = await readFileIfExists(CRITICAL_CSS_TASK.output)
+    if (current !== criticalCss) staleFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.output))
+  } else if (await writeFileIfChanged(CRITICAL_CSS_TASK.output, criticalCss)) {
+    changedFiles.push(path.relative(REPO_ROOT, CRITICAL_CSS_TASK.output))
+  }
 
   for (const task of ADMIN_ASSET_TASKS) {
     const dependencyPaths = [task.source, ...ADMIN_ASSET_SHARED_DEPENDENCIES]
