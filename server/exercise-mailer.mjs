@@ -265,6 +265,15 @@ const DOCS_URL_PREFIX = "/docs"
 const DOCS_PUBLIC_ROOT = path.resolve(process.cwd(), "docs")
 const WEB_ASSET_URL_PREFIX = "/web-asset"
 const WEB_ASSET_PUBLIC_ROOT = path.resolve(process.cwd(), "web-asset")
+const ROBOTS_TXT_BODY = [
+  "User-agent: *",
+  "Disallow: /admin",
+  "Disallow: /parent",
+  "Disallow: /student",
+  "Disallow: /api/",
+  "Disallow: /docs/",
+  "",
+].join("\n")
 /** @type {Readonly<Record<string, string>>} */
 const STATIC_MIME_TYPES = Object.freeze({
   ".css": "text/css; charset=utf-8",
@@ -276,6 +285,7 @@ const STATIC_MIME_TYPES = Object.freeze({
   ".jpg": "image/jpeg",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
   ".mmd": "text/plain; charset=utf-8",
@@ -1604,6 +1614,16 @@ function createTransport() {
 async function handleRequest(request, response, transporter) {
   const { method } = request
   const url = new URL(request.url || "", `http://${request.headers.host || "localhost"}`)
+
+  if ((method === "GET" || method === "HEAD") && url.pathname === "/robots.txt") {
+    response.writeHead(200, {
+      "Cache-Control": "public, max-age=3600",
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Length": String(Buffer.byteLength(ROBOTS_TXT_BODY)),
+    })
+    response.end(method === "HEAD" ? undefined : ROBOTS_TXT_BODY)
+    return
+  }
 
   const webAssetHandled = handleWebAssetStaticRequest(request, response, url.pathname)
   if (webAssetHandled) return

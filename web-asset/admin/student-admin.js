@@ -2201,23 +2201,6 @@
           return item;
         };
 
-        if (gridEl) {
-          const measureGrid = document.createElement("div");
-          measureGrid.className = gridEl.className;
-          measureGrid.style.position = "absolute";
-          measureGrid.style.visibility = "hidden";
-          measureGrid.style.pointerEvents = "none";
-          measureGrid.style.left = "-99999px";
-          measureGrid.style.top = "0";
-          measureGrid.style.width = `${Math.ceil(gridEl.getBoundingClientRect().width)}px`;
-          checks.forEach((check) => {
-            measureGrid.appendChild(buildCheckCard(check));
-          });
-          document.body.appendChild(measureGrid);
-          gridEl.style.minHeight = `${Math.ceil(measureGrid.getBoundingClientRect().height)}px`;
-          measureGrid.remove();
-        }
-
         rowsEl.innerHTML = "";
 
         checks.forEach((check) => {

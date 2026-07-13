@@ -373,6 +373,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
   "web-asset/admin/student-admin.critical.css|web-asset/admin/student-admin.critical.css"
   "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/admin/student-admin.min.js.map|web-asset/admin/student-admin.min.js.map"
   "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
@@ -402,11 +403,14 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
   "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.css|web-asset/vendor/tabulatorz/tabulator.min.css"
+  "web-asset/vendor/tabulatorz/tabulator.min.css.map|web-asset/vendor/tabulatorz/tabulator.min.css.map"
   "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
+  "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
 )
 
 TEST_PUBLIC_WEBFILE_MAP=(
+  "robots.txt|robots.txt"
   "web-asset/admin/student-admin.html|sis-admin/student-admin.html"
   "web-asset/admin/student-enrollment.html|sis-admin/student-enrollment.html"
   "web-asset/admin/portal-hub.html|sis-admin/portal-hub.html"
@@ -428,6 +432,7 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
   "web-asset/admin/student-admin.critical.css|web-asset/admin/student-admin.critical.css"
   "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/admin/student-admin.min.js.map|web-asset/admin/student-admin.min.js.map"
   "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
   "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
   "web-asset/shared/portal-theme-state.js|web-asset/shared/portal-theme-state.js"
@@ -454,6 +459,10 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/icons/web-component/svgs/joggling-triangles.svg|web-asset/icons/web-component/svgs/joggling-triangles.svg"
   "web-asset/icons/web-component/svgs/spiral.svg|web-asset/icons/web-component/svgs/spiral.svg"
   "web-asset/vendor/fullcalendar/index.global.min.js|web-asset/vendor/fullcalendar/index.global.min.js"
+  "web-asset/vendor/tabulatorz/tabulator.min.css|web-asset/vendor/tabulatorz/tabulator.min.css"
+  "web-asset/vendor/tabulatorz/tabulator.min.css.map|web-asset/vendor/tabulatorz/tabulator.min.css.map"
+  "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
+  "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
 )
 

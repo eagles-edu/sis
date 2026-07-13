@@ -323,6 +323,7 @@ test("portal pages fail closed on local theme ownership outside the explicit str
       /\/\*\s*portal-critical-theme:start\s*\*\/[\s\S]*?\/\*\s*portal-critical-theme:end\s*\*\//gs,
     ]],
   [adminPortalPath, [
+      /\/\* ADMIN_CRITICAL_CSS_START \*\/[\s\S]*?\/\* ADMIN_CRITICAL_CSS_END \*\//gs,
     /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*scrollbar-gutter:\s*stable;\s*\}/gs,
       /body\s*\{\s*margin:\s*0;\s*min-height:\s*100vh;\s*font-family:\s*var\(--font-base,\s*system-ui,\s*-apple-system,\s*sans-serif\);\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /:root\s*\{\s*--font-base:[\s\S]*?\}/gs,
