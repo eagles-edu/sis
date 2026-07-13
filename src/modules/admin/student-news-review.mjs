@@ -500,6 +500,9 @@ function mapStudentNewsReportRow(row = {}) {
     actionWhat: normalizeText(row?.actionWhat),
     actionWhy: normalizeText(row?.actionWhy),
     biasAssessment,
+    vocabulary: row?.vocabularyJson === undefined || row?.vocabularyJson === null
+      ? null
+      : Array.isArray(row.vocabularyJson) ? row.vocabularyJson : [],
     submittedAt: parseDateOrNull(row?.submittedAt)?.toISOString?.() || "",
     reviewStatus,
     awaitingReReview,
@@ -690,6 +693,7 @@ function buildStudentNewsReviewSelect({ includeReviewFields = true } = {}) {
     actionWhat: true,
     actionWhy: true,
     biasAssessment: true,
+    vocabularyJson: true,
     submittedAt: true,
     submissionState: true,
     student: {

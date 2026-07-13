@@ -1098,6 +1098,12 @@
                     <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng trình xem báo cáo tin tức">Close</button>
                   </div>
                   <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
+                  <section class="news-review-vocabulary" aria-label="Vocabulary">
+                    <strong>Vocabulary</strong>
+                    <div id="newsWeekSetModalVocabularyRows" class="news-vocabulary-rows"></div>
+                    <button id="addNewsWeekSetModalVocabularyRowBtn" type="button" class="portal-button portal-button-alt">Add Word</button>
+                    <hr>
+                  </section>
                 </div>
               </section>
 
@@ -1295,6 +1301,12 @@
                   <textarea id="biasAssessment"></textarea>
                 </div>
 
+                <div id="newsVocabularyField" class="field c12 news-vocabulary-field">
+                  <label>III. Vocabulary (minimum 7 words)</label>
+                  <div id="newsVocabularyRows" class="news-vocabulary-rows"></div>
+                  <button id="addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-alt">Add Word</button>
+                </div>
+
                 <div class="field c12 actions student-news-form-actions">
                   <button id="checkBtn" class="portal-button portal-button-info" type="button" title="Kiểm tra báo cáo trước khi nộp">Check</button>
                   <button id="submitBtn" class="portal-button portal-button-primary" type="button" title="Nộp báo cáo tin tức">Submit</button>
@@ -1417,6 +1429,11 @@
         "actionWhat",
         "actionWhy",
         "biasAssessment",
+        "vocabulary",
+      ];
+      const NEWS_VOCABULARY_PARTS_OF_SPEECH = [
+        "adjective", "noun", "verb", "adverb", "conjunction", "preposition",
+        "determiner", "pronoun", "interjection", "phrase", "idiom", "clause",
       ];
       const NEWS_GENERIC_COMPLIANCE_FIELD_ID = "__compliance";
       const NEWS_COMPLIANCE_NOTE_START = "[[SIS-COMPLIANCE-V1]]";
@@ -4789,13 +4806,15 @@
         }
         const submitBtn = field("newsWeekSetModalSubmitBtn");
         if (submitBtn instanceof HTMLButtonElement) {
-          submitBtn.disabled = !canEdit;
+          submitBtn.disabled = !canEdit || active?.currentMmrPassed !== true;
           submitBtn.textContent = pendingAction === "submit" ? "Submitting..." : "Submit";
         }
         Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
           const input = newsViewerFieldElement(fieldKey);
           if (input) input.disabled = !canEdit;
         });
+        Array.from(document.querySelectorAll("#newsWeekSetModalVocabularyRows input, #newsWeekSetModalVocabularyRows select, #newsWeekSetModalVocabularyRows textarea, #newsWeekSetModalVocabularyRows .news-vocabulary-remove"))
+          .forEach((input) => { input.disabled = !canEdit; });
       }
 
       function renderNewsWeekSetViewer() {
@@ -4823,6 +4842,7 @@
         Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
           setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
         });
+        renderVocabularyRows(field("newsWeekSetModalVocabularyRows"), active?.vocabulary || []);
         renderNewsWeekSetViewerFeedback(active || {});
         syncNewsWeekSetViewerControls();
       }
@@ -5019,6 +5039,61 @@
         el.value = t(value);
       }
 
+      function vocabularyRowHtml(index, removable = false) {
+        const options = NEWS_VOCABULARY_PARTS_OF_SPEECH.map((part) => `<option value="${part}">${part}</option>`).join("");
+        return `<div class="news-vocabulary-row" data-news-vocabulary-row="${index}">
+          <select data-vocabulary-field="partOfSpeech" aria-label="Part of speech" required><option value="">Part of speech</option>${options}</select>
+          <input type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" required>
+          <input type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
+          <input type="text" data-vocabulary-field="syllabication" placeholder="Syllabication (stress marked)" aria-label="Syllabication with stressed syllable marked" required>
+          <textarea data-vocabulary-field="definition" rows="2" placeholder="Definition" aria-label="Definition" required></textarea>
+          ${removable ? '<button type="button" class="portal-button portal-button-alt news-vocabulary-remove">Remove</button>' : ""}
+        </div>`;
+      }
+
+      function renderVocabularyRows(container, rows = []) {
+        if (!container) return;
+        const source = Array.isArray(rows) ? rows : [];
+        const count = Math.max(7, source.length);
+        container.innerHTML = Array.from({ length: count }, (_, index) => vocabularyRowHtml(index, index >= 7)).join("");
+        Array.from(container.querySelectorAll("[data-news-vocabulary-row]")).forEach((rowEl, index) => {
+          const row = source[index] || {};
+          ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
+            const input = rowEl.querySelector(`[data-vocabulary-field="${key}"]`);
+            if (input) input.value = t(row?.[key]);
+          });
+          rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
+            rowEl.remove();
+            renumberVocabularyRows(container);
+          });
+        });
+      }
+
+      function renumberVocabularyRows(container) {
+        Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((row, index) => {
+          row.setAttribute("data-news-vocabulary-row", String(index));
+          const remove = row.querySelector(".news-vocabulary-remove");
+          if (remove) remove.hidden = index < 7;
+        });
+      }
+
+      function addVocabularyRow(container) {
+        if (!container) return;
+        const index = container.querySelectorAll("[data-news-vocabulary-row]").length;
+        container.insertAdjacentHTML("beforeend", vocabularyRowHtml(index, true));
+        const row = container.lastElementChild;
+        row?.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
+          row.remove();
+          renumberVocabularyRows(container);
+        });
+      }
+
+      function readVocabularyRows(container) {
+        return Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || [])
+          .map((row) => Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])))
+          .filter((row) => Object.values(row).some(Boolean));
+      }
+
       function reportPayload() {
         return {
           reportDate: t(field("reportDate")?.value),
@@ -5033,6 +5108,7 @@
           actionWhat: t(field("actionWhat")?.value),
           actionWhy: t(field("actionWhy")?.value),
           biasAssessment: t(field("biasAssessment")?.value),
+          vocabulary: readVocabularyRows(field("newsVocabularyRows")),
         };
       }
 
@@ -5051,6 +5127,7 @@
           actionWhat: readNewsViewerFieldValue("actionWhat"),
           actionWhy: readNewsViewerFieldValue("actionWhy"),
           biasAssessment: readNewsViewerFieldValue("biasAssessment"),
+          vocabulary: readVocabularyRows(field("newsWeekSetModalVocabularyRows")),
         };
       }
 
@@ -5068,6 +5145,7 @@
         setInputValue("actionWhat", report?.actionWhat);
         setInputValue("actionWhy", report?.actionWhy);
         setInputValue("biasAssessment", report?.biasAssessment);
+        renderVocabularyRows(field("newsVocabularyRows"), report?.vocabulary || []);
         state.newsCurrentMmrPassed = report?.currentMmrPassed === true;
         state.newsSubmissionState = t(report?.submissionState);
         state.newsDateSatisfied = report?.dateSatisfied === true || Boolean(t(report?.dateSatisfiedAt));
@@ -5433,6 +5511,7 @@
 
       function markNewsDraftDirty() {
         if (!t(field("reportDate")?.value)) return;
+        state.newsCurrentMmrPassed = false;
         updateSubmitAvailability();
       }
       async function loadDashboard() {
@@ -5861,6 +5940,21 @@
       field("newsWeekSetModalSubmitBtn")?.addEventListener("click", () => {
         submitNewsWeekSetModalCurrentItem().catch(handleError);
       });
+      field("newsWeekSetModal")?.addEventListener("input", (event) => {
+        if (!event.target?.matches?.("input, select, textarea")) return;
+        const active = newsWeekSetViewerCurrentItem();
+        if (!active) return;
+        active.currentMmrPassed = false;
+        syncNewsWeekSetViewerControls();
+      });
+      field("addNewsVocabularyRowBtn")?.addEventListener("click", () => {
+        addVocabularyRow(field("newsVocabularyRows"));
+      });
+      field("addNewsWeekSetModalVocabularyRowBtn")?.addEventListener("click", () => {
+        addVocabularyRow(field("newsWeekSetModalVocabularyRows"));
+      });
+      renderVocabularyRows(field("newsVocabularyRows"));
+      renderVocabularyRows(field("newsWeekSetModalVocabularyRows"));
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));
       field("studentTextZoomUpBtn")?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP));
       field("studentTextZoomResetBtn")?.addEventListener("click", () => applyPortalTextZoom(TEXT_ZOOM_DEFAULT));

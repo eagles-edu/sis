@@ -430,6 +430,13 @@ function normalizeStudentNewsPayload(payload = {}) {
     actionWhat: clampText(payload?.actionWhat, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhat).value,
     actionWhy: clampText(payload?.actionWhy, STUDENT_NEWS_FIELD_MAX_LENGTHS.actionWhy).value,
     biasAssessment: clampText(payload?.biasAssessment, STUDENT_NEWS_FIELD_MAX_LENGTHS.biasAssessment).value,
+    vocabulary: Array.isArray(payload?.vocabulary) ? payload.vocabulary.slice(0, 100).map((row) => ({
+      partOfSpeech: normalizeText(row?.partOfSpeech).toLowerCase(),
+      english: clampText(row?.english, 240).value,
+      vietnamese: clampText(row?.vietnamese, 240).value,
+      syllabication: clampText(row?.syllabication, 240).value,
+      definition: clampText(row?.definition, 1000).value,
+    })) : [],
     reportDateText: normalizeText(payload?.reportDate),
   }
 }
@@ -463,6 +470,9 @@ function buildStudentNewsValidationPayload(report = {}) {
     actionWhat: normalizeText(report?.actionWhat),
     actionWhy: normalizeText(report?.actionWhy),
     biasAssessment: normalizeText(report?.biasAssessment),
+    vocabulary: report?.vocabulary === null || report?.vocabulary === undefined
+      ? null
+      : Array.isArray(report.vocabulary) ? report.vocabulary : [],
   }
 }
 
@@ -553,6 +563,7 @@ async function findExistingStudentNewsReport(prisma, studentRefId, reportDateDat
     submissionState: true,
     reviewedAt: true,
     reviewedByUsername: true,
+    vocabularyJson: true,
   }
 
   /** @type {Record<string, unknown> | null} */
@@ -765,6 +776,9 @@ export function mapStudentNewsReportRow(row = {}) {
     actionWhat: normalizeText(row?.actionWhat),
     actionWhy: normalizeText(row?.actionWhy),
     biasAssessment,
+    vocabulary: row?.vocabularyJson === undefined || row?.vocabularyJson === null
+      ? null
+      : Array.isArray(row.vocabularyJson) ? row.vocabularyJson : [],
     submissionState,
     draftCheckedAt: parseDateOrNull(row?.draftCheckedAt)?.toISOString?.() || "",
     mmrPassedAt: parseDateOrNull(row?.mmrPassedAt)?.toISOString?.() || "",
@@ -986,6 +1000,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     actionWhat,
     actionWhy,
     biasAssessment,
+    vocabulary,
     reportDateText,
   } = normalizedPayload
 
@@ -1010,6 +1025,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     actionWhat,
     actionWhy,
     biasAssessment,
+    vocabulary,
   }
   const [minimumRequirements, compliance] = await Promise.all([
     evaluateStudentNewsMinimumRequirements(validationPayload, { validationConfig }),
@@ -1126,6 +1142,7 @@ async function persistStudentNewsReport(studentRefId, payload = {}, { now = new 
     actionWhat,
     actionWhy,
     biasAssessment: normalizeNullableText(biasAssessment),
+    vocabularyJson: vocabulary,
     submittedAt,
     submissionState,
     draftCheckedAt,

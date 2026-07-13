@@ -1186,6 +1186,9 @@ test("news review modal supports student-scoped navigation and modal review acti
     assert.equal(viewer.classList.contains("hidden"), false)
     assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Policy update 7/i)
     assert.match(normalizeText(document.getElementById("newsReviewViewerBody").textContent), /Revise|Submitted/i)
+    assert.ok(document.querySelector(".news-review-vocabulary"))
+    assert.equal(document.querySelectorAll(".news-review-vocabulary-row input").length, 4)
+    assert.equal(document.querySelector(".news-review-vocabulary-definition").getAttribute("placeholder"), "Definition")
     assert.match(normalizeText(document.getElementById("newsReviewViewerStatus").textContent), /Opened week set/i)
     assert.equal(normalizeText(document.getElementById("newsReviewViewerIndex").textContent), "1 / 7")
   })
@@ -2101,6 +2104,23 @@ test("overview news queue buttons route and refresh through the island", async (
     assert.match(
       normalizeText(dom.window.document.getElementById("overviewNewsQueueSummary").textContent),
       /total=1/i,
+    )
+    assert.equal(
+      dom.window.document.getElementById("overviewNewsQueueDetails").open,
+      false,
+    )
+  })
+
+  dom.window.document.getElementById("overviewNewsQueueShowAllBtn").click()
+
+  await waitFor(() => {
+    assert.match(
+      normalizeText(dom.window.document.getElementById("overviewNewsQueueSummary").textContent),
+      /total=1 \| showing=1/i,
+    )
+    assert.match(
+      normalizeText(dom.window.document.getElementById("overviewNewsQueueRows").textContent),
+      /Student One/i,
     )
   })
 
@@ -5749,7 +5769,7 @@ test("overview anonymous exercise submissions panel renders and supports show-al
   await waitFor(() => {
     assert.ok(incomingCalls.some((url) => url.includes("showAll=1")))
     assert.match(document.getElementById("overviewIncomingExerciseRows").textContent || "", /Resolved Listening Quiz/i)
-    assert.equal(document.getElementById("overviewIncomingExerciseExpandBtn").textContent, "Show Active Only")
+    assert.equal(document.getElementById("overviewIncomingExerciseExpandBtn").textContent, "Active Only")
   })
 
   const rows = Array.from(document.querySelectorAll("#overviewIncomingExerciseRows tr"))

@@ -3291,6 +3291,46 @@
       .news-review-viewer-review label {
         margin-bottom: 0;
       }
+      .news-review-vocabulary {
+        display: grid;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 10px;
+      }
+      .news-review-vocabulary > strong {
+        color: var(--ink);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .news-review-vocabulary-row {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .news-review-vocabulary input,
+      .news-review-vocabulary-definition {
+        min-width: 0;
+      }
+      .news-review-vocabulary-definition {
+        width: 100%;
+      }
+      .news-review-vocabulary hr {
+        border: 0;
+        border-top: 1px solid var(--portal-border);
+        margin: 0;
+        width: 100%;
+      }
+      .news-review-vocabulary-row {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+      .news-review-vocabulary-row span {
+        color: var(--ink);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
       .parent-queue-report-hero {
         background: var(--portal-surface-support);
         border: 1px solid var(--portal-border);
@@ -3341,6 +3381,9 @@
         }
         .news-review-viewer-grid {
           grid-template-columns: 1fr;
+        }
+        .news-review-vocabulary-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         .permission-page-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3595,6 +3638,9 @@
         }
       }
       @media (max-width: 560px) {
+        .news-review-vocabulary-row {
+          grid-template-columns: 1fr;
+        }
         .text-zoom-controls .global-text-label {
           display: none;
         }

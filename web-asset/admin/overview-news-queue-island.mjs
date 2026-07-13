@@ -3,7 +3,16 @@ export function initOverviewNewsQueueIsland({
   onOverviewNewsQueueRefresh,
   onOverviewNewsQueueOpen,
   onOverviewNewsQueueQueueHub,
+  onOverviewNewsQueueShowAll,
 } = {}) {
+  document?.getElementById("overviewNewsQueueShowAllBtn")?.addEventListener(
+    "click",
+    () => {
+      if (typeof onOverviewNewsQueueShowAll === "function") {
+        onOverviewNewsQueueShowAll();
+      }
+    },
+  );
   document?.getElementById("overviewNewsQueueRefreshBtn")?.addEventListener(
     "click",
     () => {

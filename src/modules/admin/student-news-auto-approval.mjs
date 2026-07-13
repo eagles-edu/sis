@@ -339,6 +339,7 @@ export function buildStudentNewsAutoApprovalSelect() {
     actionWhat: true,
     actionWhy: true,
     biasAssessment: true,
+    vocabularyJson: true,
     submissionState: true,
     submittedAt: true,
     firstSubmittedAt: true,

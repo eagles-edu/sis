@@ -138,6 +138,7 @@
         },
         queueHub: {
           loaded: false,
+          overviewNewsQueueShowAll: false,
           generatedAt: "",
           panelOrder: [
             "queued-performance-reports",
@@ -7752,7 +7753,23 @@
         </div>
         ${complianceBlockHtml}
       `;
-        syncNewsReviewViewerControls(report);
+        const vocabularySection = document.getElementById("newsReviewViewerVocabulary");
+        if (vocabularySection) {
+          const vocabulary = Array.isArray(report?.vocabulary) ? report.vocabulary : [];
+          vocabularySection.innerHTML = `
+            <strong>Vocabulary</strong>
+            ${vocabulary.length ? vocabulary.map((row) => `
+              <div class="news-review-vocabulary-row">
+                <span>${escapeHtml(normalizeText(row?.partOfSpeech))}</span>
+                <span>${escapeHtml(normalizeText(row?.english))}</span>
+                <span>${escapeHtml(normalizeText(row?.vietnamese))}</span>
+                <span>${escapeHtml(normalizeText(row?.syllabication))}</span>
+                <span>${escapeHtml(normalizeText(row?.definition))}</span>
+              </div>`).join("") : '<p class="small">No vocabulary saved.</p>'}
+            <hr>
+          `;
+        }
+      syncNewsReviewViewerControls(report);
       }
 
       function closeNewsReviewViewer() {
@@ -10610,6 +10627,7 @@
         };
         state.queueHub = {
           loaded: false,
+          overviewNewsQueueShowAll: false,
           generatedAt: "",
           panelOrder: normalizeQueueHubPanelOrder(
             DEFAULT_UI_SETTINGS.queueHub.panelOrder,
@@ -13209,8 +13227,8 @@
         summaryEl.textContent = `statuses=${statusLabel} | total=${state.incomingExerciseQueue.total} | showing=${visibleCount}`;
         expandBtn.textContent =
           state.incomingExerciseQueue.showAll ?
-            "Show Active Only"
-          : "Show All Statuses";
+            "Active Only"
+          : "All Statuses";
         if (detailsEl && !detailsEl.open) detailsEl.open = false;
 
         rowsEl.innerHTML = "";
@@ -13296,21 +13314,35 @@
           Number.isFinite(Number(sourcePanel?.total)) ?
             Number(sourcePanel.total)
           : items.length;
-        const visible = Math.min(items.length, 25);
+        const currentWeekStart = newsReviewWeekStartIso(localIsoDate(new Date()));
+        const currentWeekItems = items.filter(
+          (item) => normalizeText(item?.weekStart) === currentWeekStart,
+        );
+        const showAll = Boolean(state.queueHub.overviewNewsQueueShowAll);
+        const displayItems = showAll ? items : currentWeekItems;
+        const visible = Math.min(displayItems.length, 25);
         summaryEl.textContent =
           items.length ?
-            `total=${total} | showing=${visible}`
+            showAll ?
+              `total=${total} | showing=${visible}`
+            : `total=${total} | current week=${visible}`
           : "No news report queue rows.";
-        if (detailsEl && !detailsEl.open && items.length) detailsEl.open = true;
+        const showAllBtn = document.getElementById("overviewNewsQueueShowAllBtn");
+        if (showAllBtn) {
+          showAllBtn.textContent = showAll ? "Show Current Week" : "Show All Pending";
+          showAllBtn.setAttribute("aria-pressed", showAll ? "true" : "false");
+        }
 
         rowsEl.innerHTML = "";
-        if (!items.length) {
+        if (!displayItems.length) {
           rowsEl.innerHTML =
-            '<tr><td colspan="7">No news report queue rows.</td></tr>';
+            items.length && !showAll ?
+              '<tr><td colspan="7">No current-week rows. Use Show All Pending to view older pending reports.</td></tr>'
+            : '<tr><td colspan="7">No news report queue rows.</td></tr>';
           return;
         }
 
-        items.slice(0, 25).forEach((item) => {
+        displayItems.slice(0, 25).forEach((item) => {
           const setStatus = newsReviewAdminSetStatusToken(item);
           const setAction = normalizeText(
             item?.setAction || newsReviewWeekSetActionToken(item),
@@ -24419,6 +24451,13 @@
 
       function bindOverviewNewsQueueIslandFallback() {
         document
+          .getElementById("overviewNewsQueueShowAllBtn")
+          ?.addEventListener("click", () => {
+            state.queueHub.overviewNewsQueueShowAll =
+              !state.queueHub.overviewNewsQueueShowAll;
+            renderOverviewNewsQueueSection();
+          });
+        document
           .getElementById("overviewNewsQueueRefreshBtn")
           ?.addEventListener("click", () => {
             loadQueueHub({ notify: true }).catch(handleError);
@@ -24478,6 +24517,11 @@
               },
               onOverviewNewsQueueQueueHub() {
                 setActivePage("queue-hub");
+              },
+              onOverviewNewsQueueShowAll() {
+                state.queueHub.overviewNewsQueueShowAll =
+                  !state.queueHub.overviewNewsQueueShowAll;
+                renderOverviewNewsQueueSection();
               },
             }),
           )

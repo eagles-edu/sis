@@ -154,6 +154,54 @@ const STUDENT_NEWS_DEFAULT_THRESHOLDS = Object.freeze({
   articleDateline: 0.7,
   leadSynopsis: 0.5,
 })
+const STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH = Object.freeze([
+  "adjective",
+  "noun",
+  "verb",
+  "adverb",
+  "conjunction",
+  "preposition",
+  "determiner",
+  "pronoun",
+  "interjection",
+  "phrase",
+  "idiom",
+  "clause",
+])
+
+function normalizeStudentNewsVocabulary(value) {
+  const rows = Array.isArray(value) ? value : []
+  return rows.slice(0, 100).map((row) => ({
+    partOfSpeech: normalizeLower(row?.partOfSpeech),
+    english: normalizeText(row?.english),
+    vietnamese: normalizeText(row?.vietnamese),
+    syllabication: normalizeText(row?.syllabication),
+    definition: normalizeText(row?.definition),
+  }))
+}
+
+function evaluateStudentNewsVocabulary(value) {
+  if (value === undefined || value === null) return { passed: true, message: "", count: 0 }
+  const rows = normalizeStudentNewsVocabulary(value)
+  const populated = rows.filter((row) => Object.values(row).some(Boolean))
+  const incomplete = populated.find((row) =>
+    !STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH.includes(row.partOfSpeech)
+    || !row.english
+    || !row.vietnamese
+    || !row.syllabication
+    || !row.definition
+  )
+  if (incomplete || populated.length < 7) {
+    return {
+      passed: false,
+      message: incomplete
+        ? "Every vocabulary row requires part of speech, English, Vietnamese, syllabication, and definition."
+        : "At least 7 complete vocabulary rows are required.",
+      count: populated.length,
+    }
+  }
+  return { passed: true, message: "", count: populated.length }
+}
 
 /**
  * @param {unknown} value
@@ -1660,6 +1708,14 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
       threshold: 1,
     }
   }
+  const vocabularyValidation = evaluateStudentNewsVocabulary(payload?.vocabulary)
+  if (!vocabularyValidation.passed) {
+    failedFields.vocabulary = {
+      message: vocabularyValidation.message,
+      score: vocabularyValidation.count,
+      threshold: 7,
+    }
+  }
 
   return {
     passed: Object.keys(failedFields).length === 0,
@@ -1668,6 +1724,8 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
     config,
   }
 }
+
+export { evaluateStudentNewsVocabulary, normalizeStudentNewsVocabulary }
 
 /**
  * @param {Record<string, unknown> | null | undefined} [payload]

@@ -1376,7 +1376,7 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                       </div>
                       <div class="actions actions-2">
                         <button id="overviewIncomingExerciseExpandBtn" type="button" class="portal-button portal-button-alt">
-                          Show All Statuses
+                          All Statuses
                         </button>
                         <button id="overviewIncomingExerciseRefreshBtn" type="button" class="portal-button portal-button-teal-refresh">
                           Reload Queue
@@ -1415,6 +1415,9 @@ Hi {{name}}, this is a reminder that {{assignment}} is due on {{dueDate}}. Pleas
                         </table>
                       </div>
                       <div class="actions actions-3">
+                        <button id="overviewNewsQueueShowAllBtn" type="button" class="portal-button portal-button-alt" aria-pressed="false">
+                          Show All Pending
+                        </button>
                         <button id="overviewNewsQueueOpenBtn" type="button" class="portal-button portal-button-primary">
                           Open News Reports Page
                         </button>
@@ -4034,6 +4037,17 @@ Select a homework link to inspect details.</pre>
         <textarea id="newsReviewViewerNote" class="card" data-surface-role="card" rows="3" placeholder="Save note with approve/revision action"></textarea>
       </div>
       <p class="small" id="newsReviewViewerStatus">Viewer is ready.</p>
+      <section id="newsReviewViewerVocabulary" class="news-review-vocabulary card" data-surface-role="card" aria-label="Vocabulary">
+        <strong>Vocabulary</strong>
+        <div class="news-review-vocabulary-row">
+          <input class="card" data-surface-role="card" type="text" placeholder="Part of speech" aria-label="Part of speech">
+          <input class="card" data-surface-role="card" type="text" placeholder="English" aria-label="English">
+          <input class="card" data-surface-role="card" type="text" placeholder="Vietnamese" aria-label="Vietnamese">
+          <input class="card" data-surface-role="card" type="text" placeholder="Syllabication" aria-label="Syllabication">
+        </div>
+        <textarea class="card news-review-vocabulary-definition" data-surface-role="card" rows="2" placeholder="Definition" aria-label="Definition"></textarea>
+        <hr>
+      </section>
     </div>
   </div>
 

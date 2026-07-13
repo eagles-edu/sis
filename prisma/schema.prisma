@@ -440,6 +440,7 @@ model StudentNewsReport {
   actionWhat    String
   actionWhy     String
   biasAssessment String?
+  vocabularyJson Json?
   submissionState String @default("submitted")
   draftCheckedAt DateTime?
   mmrPassedAt DateTime?

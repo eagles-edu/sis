@@ -5118,6 +5118,63 @@ body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
   padding-inline: 28px;
   white-space: nowrap;
 }
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary {
+  background: var(--portal-surface-card);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--radius-2);
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+}
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary > strong {
+  color: var(--portal-text);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary input,
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary hr {
+  border: 0;
+  border-top: 1px solid var(--portal-border);
+  margin: 0;
+  width: 100%;
+}
+body.student-portal-page .news-vocabulary-field {
+  display: grid;
+  gap: 8px;
+}
+body.student-portal-page .news-vocabulary-rows {
+  display: grid;
+  gap: 8px;
+}
+body.student-portal-page .news-vocabulary-row {
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1.25fr 1.25fr 1.5fr;
+}
+body.student-portal-page .news-vocabulary-row textarea {
+  grid-column: 1 / -1;
+}
+body.student-portal-page .news-vocabulary-row .news-vocabulary-remove {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+body.student-portal-page .news-vocabulary-field > .portal-button,
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary > .portal-button {
+  justify-self: start;
+}
 @media (max-width: 820px) {
 
   body.student-portal-page #newsWeekSetModal .queue-modal-header,
@@ -5134,6 +5191,13 @@ body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
   }
 }
 @media (max-width: 640px) {
+
+  body.student-portal-page .news-vocabulary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.student-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   body.student-portal-page #newsWeekSetModal .queue-modal-header,
   body.parent-portal-page #newsWeekSetModal .queue-modal-header {
@@ -5156,6 +5220,15 @@ body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
     min-height: 48px;
     min-width: 132px;
     padding-inline: 22px;
+  }
+}
+@media (max-width: 420px) {
+
+  body.student-portal-page .news-vocabulary-row {
+    grid-template-columns: 1fr;
+  }
+  body.student-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+    grid-template-columns: 1fr;
   }
 }
 body.student-portal-page .toolbar,
