@@ -1213,7 +1213,7 @@
                 <p><b>New Words</b> from your news reports are collected here. You can edit each entry, sort your list, and study from a clean
                 dictionary-style version of your new academic vocabulary.</p>
               </div>
-              <img src="/web-asset/icons/icomon/web-component/svgs/joggling-capsules.svg" alt="Animated vocabulary study illustration" width="175" height="175">
+              <img src="/web-asset/icons/svg/water-ripples.svg" alt="Animated vocabulary study illustration" width="100" height="100">
             </div>
           </details>
           <div class="panel new-words-tools" data-surface-role="panel">
@@ -5149,7 +5149,7 @@
       const NEWS_VOCABULARY_LOOKUPS = Object.freeze([
         ["LD", (term) => `https://www.ldoceonline.com/dictionary/${term.replace(/%20/gu, "-")}`],
         ["GT", (term) => `https://translate.google.com/?sl=en&tl=vi&text=${term}&op=translate`],
-        ["WH", (term) => `https://www.wordhelp.com/definitions/english/?q=${term}`],
+        ["WH", (term) => `https://www.wordhelp.com/syllables/english/?q=${term}`],
       ]);
 
       function normalizeVocabularyLookupTerm(value) {
@@ -5326,6 +5326,13 @@
               ${dictionaryPlural(word.english, word.partOfSpeech) ? `<span class="new-word-entry-plural">(<em>plural</em> ${escapeHtml(dictionaryPlural(word.english, word.partOfSpeech))})</span>` : ""}
               <span class="new-word-entry-vietnamese">vi: ${escapeHtml(t(word.vietnamese))}</span>
               <button type="button" class="portal-button portal-button-primary new-word-edit">Edit</button>
+              <details class="news-vocabulary-row-menu new-word-entry-menu">
+                <summary class="news-vocabulary-row-dots" aria-label="Open new word actions">⋮</summary>
+                <div class="news-vocabulary-row-menu-panel">
+                  <button type="button" class="portal-button portal-button-affirm new-word-save">Save</button>
+                  <button type="button" class="portal-button portal-button-warning new-word-close">Close</button>
+                </div>
+              </details>
             </div>
             <p class="new-word-entry-definition">${escapeHtml(dictionaryDefinition(word.definition))}</p>
           </article>`).join("") : '<p class="hint new-words-empty">No new words yet. Add a word or complete a news report vocabulary row.</p>';
@@ -5348,6 +5355,13 @@
             rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
               state.newWords = state.newWords.filter((candidate) => candidate !== word);
               renderNewWordsRows();
+            });
+            rowEl.querySelector(".new-word-close")?.addEventListener("click", () => {
+              state.newWords = state.newWords.filter((candidate) => candidate !== word);
+              renderNewWordsRows();
+            });
+            rowEl.querySelector(".new-word-save")?.addEventListener("click", () => {
+              saveNewWords().catch(handleError);
             });
             rowEl.querySelector(".new-word-edit")?.addEventListener("click", () => {
               word.__editing = true;
