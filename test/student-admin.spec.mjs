@@ -1368,7 +1368,7 @@ test("GET /student returns student portal HTML with runtime config", async () =>
   assert.match(html, /id="portalStatus" class="status"/i)
   assert.match(html, /\/web-asset\/vendor\/fullcalendar\/index\.global\.min\.js/i)
   assert.match(html, /buttonText:\s*"Your View"/i)
-  assert.match(html, /II\.E\.i\./i)
+  assert.match(html, /7\. Who or what \(actor\) was doing news action\?/i)
   assert.match(html, /__SIS_STUDENT_DASHBOARD_PATH/i)
   assert.match(html, /__SIS_STUDENT_NEWS_REPORTS_PATH/i)
   assert.match(html, /__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH/i)

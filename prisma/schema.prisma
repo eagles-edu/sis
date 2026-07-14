@@ -466,6 +466,26 @@ model StudentNewsReport {
   @@index([reviewedAt])
 }
 
+model StudentNewWord {
+  id                String   @id @default(cuid())
+  studentRefId      String
+  englishKey        String
+  partOfSpeech      String
+  english           String
+  vietnamese        String
+  syllabication     String
+  definition        String
+  syllableCount     Int      @default(0)
+  sourceReportDate  DateTime?
+  sourceReportId    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([studentRefId, englishKey])
+  @@index([studentRefId, sourceReportDate])
+  @@index([studentRefId, partOfSpeech])
+}
+
 model StudentEnrollmentPeriod {
   id                    String                    @id @default(cuid())
   studentRefId          String

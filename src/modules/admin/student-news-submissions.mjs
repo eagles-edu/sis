@@ -47,6 +47,19 @@ function normalizeLower(value) {
   return normalizeText(value).toLowerCase()
 }
 
+function normalizeSyllabication(value) {
+  const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" }
+  return normalizeText(value).split("-").filter(Boolean).map((part) => {
+    const stressed = /[A-Z]/u.test(part)
+    const chars = Array.from(part.toLocaleLowerCase("en-US"))
+    if (stressed && !chars.some((char) => /[áéíóúý]/u.test(char))) {
+      const vowelIndex = chars.findIndex((char) => vowels[char])
+      if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]]
+    }
+    return chars.join("")
+  }).join("-")
+}
+
 /**
  * @param {unknown} value
  * @returns {string | null}
@@ -434,7 +447,7 @@ function normalizeStudentNewsPayload(payload = {}) {
       partOfSpeech: normalizeText(row?.partOfSpeech).toLowerCase(),
       english: clampText(row?.english, 240).value,
       vietnamese: clampText(row?.vietnamese, 240).value,
-      syllabication: clampText(row?.syllabication, 240).value,
+      syllabication: normalizeSyllabication(clampText(row?.syllabication, 240).value),
       definition: clampText(row?.definition, 1000).value,
     })) : [],
     reportDateText: normalizeText(payload?.reportDate),

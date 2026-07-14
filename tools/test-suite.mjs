@@ -33,11 +33,25 @@ function buildFileList(mode) {
 
 const mode = (process.argv[2] || "all").trim()
 if (!["all", "core", "dev", "playwright"].includes(mode)) {
-  console.error(`usage: node tools/test-suite.mjs [all|core|dev|playwright]`)
+  console.error(`usage: node tools/test-suite.mjs [all|core|dev|playwright] [--from <number>]`)
   process.exit(2)
 }
 
-const files = buildFileList(mode)
+const fromArgumentIndex = process.argv.indexOf("--from")
+const positionalFrom = process.argv[3] && !process.argv[3].startsWith("-") ? process.argv[3] : ""
+const fromText = fromArgumentIndex >= 0 ? process.argv[fromArgumentIndex + 1] : positionalFrom
+const fromPosition = fromText ? Number.parseInt(fromText, 10) : 1
+if (!Number.isInteger(fromPosition) || fromPosition < 1) {
+  console.error(`usage: node tools/test-suite.mjs [all|core|dev|playwright] [--from <number>]`)
+  process.exit(2)
+}
+
+const allFiles = buildFileList(mode)
+if (fromPosition > allFiles.length) {
+  console.error(`test start position ${fromPosition} is outside the ${allFiles.length}-file ${mode} suite`)
+  process.exit(2)
+}
+const files = allFiles.slice(fromPosition - 1)
 const DEFAULT_FILE_TIMEOUT_MS = 300000
 const FILE_TIMEOUT_OVERRIDES = new Map([
   ["test/student-admin-ui.spec.mjs", 600000],
@@ -54,7 +68,7 @@ function resolveFileTimeoutMs(filePath) {
 
 let exitCode = 0
 for (const [index, filePath] of files.entries()) {
-  const position = `${index + 1}/${files.length}`
+  const position = `${index + fromPosition}/${allFiles.length}`
   const fileTimeoutMs = resolveFileTimeoutMs(filePath)
   console.log(`[test-suite:${mode}] ${position} start ${filePath}`)
   const result = spawnSync(process.execPath, ["--test", filePath], {

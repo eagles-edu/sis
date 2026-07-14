@@ -2579,7 +2579,10 @@
               probeResult.body
             : {};
           if (probeConfig.mode === "healthz") {
-            state.runtimeHealth = body;
+            const hasRuntimeHealthPayload =
+              body.runtimeSelfHeal && typeof body.runtimeSelfHeal === "object" ||
+              body.studentAdminRuntime && typeof body.studentAdminRuntime === "object";
+            if (hasRuntimeHealthPayload) state.runtimeHealth = body;
             renderOverviewRuntimeRestartButton();
             renderSystemHealthPanel();
             if (canManageUsers()) {
@@ -2923,6 +2926,7 @@
 
       function defaultNewsReportValidationSettings() {
         return {
+          vocabularyMinimumWords: 5,
           defaultSources: {
             cnn: true,
             bbc: true,
@@ -2965,6 +2969,9 @@
           };
         });
         return {
+          vocabularyMinimumWords: Number.isFinite(Number(source?.vocabularyMinimumWords))
+            ? Math.max(1, Math.min(100, Math.trunc(Number(source.vocabularyMinimumWords))))
+            : fallback.vocabularyMinimumWords,
           defaultSources: {
             cnn: defaults.cnn !== false,
             bbc: defaults.bbc !== false,
@@ -7730,26 +7737,26 @@
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Status</strong>${newsReviewStatusChipHtml(report?.reviewStatus)}</div>
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Student</strong><span>${escapeHtml(studentLabel)}</span></div>
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Level</strong><span>${escapeHtml(fullLevelLabel(student?.level || report?.level || ""))}</span></div>
-          <div class="news-review-viewer-block card" data-surface-role="card"><strong>Report Date</strong><span>${escapeHtml(formatDate(report?.reportDate))}</span></div>
+          <div class="news-review-viewer-block card" data-surface-role="card"><strong>1. Report Date</strong><span>${escapeHtml(formatDate(report?.reportDate))}</span></div>
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Reviewed</strong><span>${escapeHtml(formatDateTime(report?.reviewedAt || report?.submittedAt || ""))} ${normalizeText(report?.reviewedByUsername) ? `| ${escapeHtml(normalizeText(report?.reviewedByUsername))}` : ""}</span></div>
           <div class="news-review-viewer-block card" data-surface-role="card"><strong>Mode</strong><span>${escapeHtml(fieldModeHint)}</span></div>
         </div>
         <div class="news-review-viewer-grid">
-          ${renderInput("newsReviewViewerSourceLink", "Source", report?.sourceLink || "", "url", "https://...")}
-          ${renderInput("newsReviewViewerArticleTitle", "Article", report?.articleTitle || "")}
-          ${renderInput("newsReviewViewerByline", "Byline", report?.byline || "")}
-          ${renderInput("newsReviewViewerArticleDateline", "Dateline", report?.articleDateline || "")}
+          ${renderInput("newsReviewViewerSourceLink", "2. Source: Full article link", report?.sourceLink || "", "url", "https://...")}
+          ${renderInput("newsReviewViewerArticleTitle", "3. Full article title", report?.articleTitle || "")}
+          ${renderInput("newsReviewViewerByline", "4. Byline", report?.byline || "")}
+          ${renderInput("newsReviewViewerArticleDateline", "5. Article dateline / publication date", report?.articleDateline || "")}
         </div>
-        ${renderTextarea("newsReviewViewerLeadSynopsis", "Lead Synopsis", report?.leadSynopsis || "", 4)}
+        ${renderTextarea("newsReviewViewerLeadSynopsis", "6. Lead synopsis", report?.leadSynopsis || "", 4)}
         <div class="news-review-viewer-grid">
-          ${renderInput("newsReviewViewerActionActor", "Action Actor", report?.actionActor || "")}
-          ${renderInput("newsReviewViewerActionAffected", "Action Affected", report?.actionAffected || "")}
-          ${renderInput("newsReviewViewerActionWhere", "Action Where", report?.actionWhere || "")}
-          ${renderTextarea("newsReviewViewerActionWhat", "Action What", report?.actionWhat || "", 3)}
+          ${renderInput("newsReviewViewerActionActor", "7. News action actor", report?.actionActor || "")}
+          ${renderInput("newsReviewViewerActionAffected", "8. Who or what was affected", report?.actionAffected || "")}
+          ${renderInput("newsReviewViewerActionWhere", "9. News action location", report?.actionWhere || "")}
+          ${renderTextarea("newsReviewViewerActionWhat", "10. Current news action", report?.actionWhat || "", 3)}
         </div>
         <div class="news-review-viewer-grid">
-          ${renderTextarea("newsReviewViewerActionWhy", "Action Why", report?.actionWhy || "", 3)}
-          ${renderTextarea("newsReviewViewerBiasAssessment", "Bias Assessment", report?.biasAssessment || "", 3)}
+          ${renderTextarea("newsReviewViewerActionWhy", "11. Why or how the news action happened", report?.actionWhy || "", 3)}
+          ${renderTextarea("newsReviewViewerBiasAssessment", "12. Bias, agenda, spin, or prevarication explanation", report?.biasAssessment || "", 3)}
         </div>
         ${complianceBlockHtml}
       `;
@@ -7757,14 +7764,14 @@
         if (vocabularySection) {
           const vocabulary = Array.isArray(report?.vocabulary) ? report.vocabulary : [];
           vocabularySection.innerHTML = `
-            <strong>Vocabulary</strong>
+            <strong>13. Vocabulary</strong>
             ${vocabulary.length ? vocabulary.map((row) => `
               <div class="news-review-vocabulary-row">
                 <span>${escapeHtml(normalizeText(row?.partOfSpeech))}</span>
                 <span>${escapeHtml(normalizeText(row?.english))}</span>
                 <span>${escapeHtml(normalizeText(row?.vietnamese))}</span>
                 <span>${escapeHtml(normalizeText(row?.syllabication))}</span>
-                <span>${escapeHtml(normalizeText(row?.definition))}</span>
+                <span class="news-review-vocabulary-definition">${escapeHtml(normalizeText(row?.definition))}</span>
               </div>`).join("") : '<p class="small">No vocabulary saved.</p>'}
             <hr>
           `;
@@ -9025,6 +9032,7 @@
         fallbackValidation = newsReportValidationState(),
       } = {}) {
         const fallback = normalizeNewsReportValidationSettings(fallbackValidation);
+        const vocabularyMinimumEl = document.getElementById("schoolSetupNewsVocabularyMinimum");
         const readToggle = (id, fallbackValue = false) =>
           document.getElementById(id) instanceof HTMLInputElement ?
             document.getElementById(id).checked
@@ -9042,6 +9050,9 @@
           };
         });
         return normalizeNewsReportValidationSettings({
+          vocabularyMinimumWords: vocabularyMinimumEl instanceof HTMLInputElement
+            ? vocabularyMinimumEl.value
+            : fallback.vocabularyMinimumWords,
           defaultSources: {
             cnn: readToggle(
               "schoolSetupNewsSourceDefaultCnn",
@@ -9261,6 +9272,10 @@
         }
         if (defaultBbcEl instanceof HTMLInputElement) {
           defaultBbcEl.checked = normalizedNewsValidation.defaultSources.bbc === true;
+        }
+        const vocabularyMinimumEl = document.getElementById("schoolSetupNewsVocabularyMinimum");
+        if (vocabularyMinimumEl instanceof HTMLInputElement) {
+          vocabularyMinimumEl.value = String(normalizedNewsValidation.vocabularyMinimumWords);
         }
         Array.from({ length: 8 }, (_, index) => {
           const n = index + 1;

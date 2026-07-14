@@ -22,6 +22,10 @@ import {
   saveStudentNewsReport,
 } from "./student-admin-store.mjs"
 import {
+  listStudentNewWords,
+  saveStudentNewWords,
+} from "../src/modules/admin/student-new-words.mjs"
+import {
   deleteStudent,
   importStudentsFromRows,
   saveStudent,
@@ -240,6 +244,7 @@ const STUDENT_DASHBOARD_PATH = `${STUDENT_API_PREFIX}/dashboard`
 const STUDENT_NEWS_REPORTS_PATH = `${STUDENT_API_PREFIX}/news-reports`
 const STUDENT_NEWS_REPORTS_CHECK_PATH = `${STUDENT_API_PREFIX}/news-reports/check`
 const STUDENT_NEWS_CALENDAR_PATH = `${STUDENT_API_PREFIX}/news-reports/calendar`
+const STUDENT_NEW_WORDS_PATH = `${STUDENT_API_PREFIX}/new-words`
 const STUDENT_REPORT_PAGE_PREFIX = `${STUDENT_PORTAL_PAGE_PATH}/reports`
 const GENERIC_REPORT_ACCESS_PAGE_PREFIX = "/reports/access"
 const REPORT_EVENT_EMAIL_OPEN_PATH = "/api/report-events/email-open.gif"
@@ -470,6 +475,7 @@ const STUDENT_NEWS_VALIDATION_THRESHOLDS = Object.freeze({
   articleDateline: 0.7,
   leadSynopsis: 0.5,
 })
+const STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM = 5
 const NEWS_AWAITING_RE_REVIEW_MARKER = "[[SIS-AWAITING-RE-REVIEW]]"
 
 function resolveNewsStatusColor(status) {
@@ -614,8 +620,12 @@ function resolveStudentNewsValidationConfigFromSettings() {
     normalizeLower(process.env.STUDENT_NEWS_VALIDATION_DISABLED)
   )
   const settingsValidationDisabled = rawValidation?.enabled === false
+  const vocabularyMinimumWords = Number.isFinite(Number(rawValidation?.vocabularyMinimumWords))
+    ? Math.max(1, Math.min(100, Math.trunc(Number(rawValidation.vocabularyMinimumWords))))
+    : STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM
   return {
     enabled: !(envValidationDisabled || settingsValidationDisabled),
+    vocabularyMinimumWords,
     allowedDomains: uniqueDomains.length
       ? uniqueDomains
       : [
@@ -1488,7 +1498,7 @@ function injectStudentPortalRuntimeConfig(html, origin, initialAuthState = { aut
   const normalizedAuthState =
     initialAuthState && typeof initialAuthState === "object" ? initialAuthState : { authenticated: false }
   const authStateName = normalizedAuthState.authenticated ? "authenticated" : "unauthenticated"
-  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
+  const runtimeConfig = `<script>window.__SIS_RUNTIME_ENV=${JSON.stringify(process.env.NODE_ENV || "development")};window.__SIS_STUDENT_API_ORIGIN=${JSON.stringify(origin || "")};window.__SIS_STUDENT_API_PREFIX=${JSON.stringify(STUDENT_API_PREFIX)};window.__SIS_STUDENT_AUTH_PREFIX=${JSON.stringify(STUDENT_AUTH_PREFIX)};window.__SIS_STUDENT_DASHBOARD_PATH=${JSON.stringify(STUDENT_DASHBOARD_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_PATH)};window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH=${JSON.stringify(STUDENT_NEWS_REPORTS_CHECK_PATH)};window.__SIS_STUDENT_NEWS_CALENDAR_PATH=${JSON.stringify(STUDENT_NEWS_CALENDAR_PATH)};window.__SIS_STUDENT_NEW_WORDS_PATH=${JSON.stringify(STUDENT_NEW_WORDS_PATH)};window.__SIS_STUDENT_REPORT_PAGE_PREFIX=${JSON.stringify(STUDENT_REPORT_PAGE_PREFIX)};window.__SIS_STUDENT_INITIAL_AUTH__=${JSON.stringify(normalizedAuthState)};</script>`
   const htmlWithAuthState = setHtmlAttribute(html, "data-student-auth-state", authStateName)
   if (html.includes("</head>")) {
     return htmlWithAuthState.replace("</head>", `  ${runtimeConfig}\n</head>`)
@@ -7590,7 +7600,21 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const data = await listStudentNewsCalendar(studentRefId, {
       days: url.searchParams.get("days") || "30",
     })
-    sendJson(response, 200, data)
+    sendJson(response, 200, {
+      ...data,
+      validationConfig: resolveStudentNewsValidationConfigFromSettings(),
+    })
+    return true
+  }
+
+  if (method === "GET" && pathname === STUDENT_NEW_WORDS_PATH) {
+    sendJson(response, 200, await listStudentNewWords(studentRefId))
+    return true
+  }
+
+  if (method === "PUT" && pathname === STUDENT_NEW_WORDS_PATH) {
+    const payload = await parseBody(request)
+    sendJson(response, 200, await saveStudentNewWords(studentRefId, payload?.items))
     return true
   }
 
@@ -7598,7 +7622,10 @@ async function handleStudentApiRequest(request, response, pathname, url) {
     const data = await listStudentNewsCalendar(studentRefId, {
       days: url.searchParams.get("days") || "30",
     })
-    sendJson(response, 200, data)
+    sendJson(response, 200, {
+      ...data,
+      validationConfig: resolveStudentNewsValidationConfigFromSettings(),
+    })
     return true
   }
 

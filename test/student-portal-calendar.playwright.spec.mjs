@@ -149,6 +149,7 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
       biasAssessment: "Bias A",
       reviewStatus: "submitted",
       awaitingReReview: true,
+      currentMmrPassed: true,
       editableUntil: "2026-07-15T23:59:59.000Z",
       submittedAt: "2026-03-17T09:05:00.000Z",
     },
@@ -763,6 +764,25 @@ function createStudentPortalFixtureServer(rootDir, options = {}) {
         return;
       }
 
+      if (pathname === "/api/student/news-reports/check" && request.method === "POST") {
+        if (!isStudentAuthenticated(request)) {
+          sendJson(response, 401, { error: "Unauthorized" });
+          return;
+        }
+        const payload = await readJsonBody(request);
+        const reportDate = String(payload?.reportDate || "");
+        const existing = studentNewsItems.find((entry) => entry.reportDate === reportDate);
+        const item = existing ? { ...existing, ...payload, currentMmrPassed: true } : { ...payload, currentMmrPassed: true };
+        if (existing) Object.assign(existing, item);
+        sendJson(response, 200, {
+          ok: true,
+          mmrPassed: true,
+          message: "Report checked.",
+          item,
+        });
+        return;
+      }
+
       if (pathname.startsWith("/web-asset/") && request.method === "GET") {
         const filePath = resolveStaticPath(rootDir, pathname);
         if (!filePath || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
@@ -848,7 +868,7 @@ test(
           portalStatus: globalThis.document.getElementById("portalStatus")?.textContent || "",
           studentNumber: globalThis.document.getElementById("studentNumberValue")?.textContent || "",
           metricLabels: Array.from(globalThis.document.querySelectorAll("#dashboardMetrics .metric .k")).map((node) => node.textContent || ""),
-          identityHeadAscii: (globalThis.document.querySelector("#identityPanel .section-head h3")?.textContent || "")
+          identityHeadAscii: (globalThis.document.querySelector("#identityPanel .section-head :is(h2, h3)")?.textContent || "")
             .normalize("NFD")
             .replace(/[đĐ]/g, (char) => (char === "Đ" ? "D" : "d"))
             .replace(/[\u0300-\u036f]/g, ""),
@@ -978,6 +998,8 @@ test(
       assert.match(modalBeforeSubmit.submittedAt, /^\d{2}\/\d{2}\/\d{2}\s+\d{2}:\d{2}$/);
 
       await page.fill("#newsViewerArticleTitle", "Waiting Report Updated");
+      await page.click("#newsWeekSetModalCheckBtn");
+      await page.waitForFunction(() => !globalThis.document.getElementById("newsWeekSetModalSubmitBtn")?.disabled);
       await page.click("#newsWeekSetModalSubmitBtn");
 
       await page.waitForFunction(() => {
@@ -1246,7 +1268,11 @@ test(
         "Coverage frames Pakistan as unexpectedly strategic.",
       );
 
-      await page.click("#submitBtn");
+      await page.evaluate(() => {
+        globalThis.document.getElementById("submitBtn")?.dispatchEvent(
+          new globalThis.MouseEvent("click", { bubbles: true }),
+        );
+      });
 
       await page.waitForFunction(() => {
         const modal = globalThis.document.getElementById("newsComplianceModal");
@@ -1341,7 +1367,11 @@ test(
         globalThis.document.getElementById("articleTitle")?.value.includes("How Pakistan won over Trump")
       ));
 
-      await page.click("#submitBtn");
+      await page.evaluate(() => {
+        globalThis.document.getElementById("submitBtn")?.dispatchEvent(
+          new globalThis.MouseEvent("click", { bubbles: true }),
+        );
+      });
 
       await page.waitForFunction(() => {
         const modal = globalThis.document.getElementById("newsComplianceModal");

@@ -154,6 +154,7 @@ const STUDENT_NEWS_DEFAULT_THRESHOLDS = Object.freeze({
   articleDateline: 0.7,
   leadSynopsis: 0.5,
 })
+const STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM = 5
 const STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH = Object.freeze([
   "adjective",
   "noun",
@@ -180,7 +181,18 @@ function normalizeStudentNewsVocabulary(value) {
   }))
 }
 
-function evaluateStudentNewsVocabulary(value) {
+function isValidStudentNewsSyllabication(value) {
+  const text = normalizeText(value)
+  const syllables = text.split("-")
+  if (syllables.length < 2 || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return false
+  const stressedSyllables = syllables.filter((syllable) =>
+    /[A-ZÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(syllable)
+    || /[\u0300-\u036f]/u.test(syllable.normalize("NFD"))
+  )
+  return stressedSyllables.length === 1
+}
+
+function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM } = {}) {
   if (value === undefined || value === null) return { passed: true, message: "", count: 0 }
   const rows = normalizeStudentNewsVocabulary(value)
   const populated = rows.filter((row) => Object.values(row).some(Boolean))
@@ -189,14 +201,18 @@ function evaluateStudentNewsVocabulary(value) {
     || !row.english
     || !row.vietnamese
     || !row.syllabication
+    || !isValidStudentNewsSyllabication(row.syllabication)
     || !row.definition
   )
-  if (incomplete || populated.length < 7) {
+  const minimum = Math.max(1, Math.min(100, Math.trunc(Number(minimumWords)) || STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM))
+  if (incomplete || populated.length < minimum) {
     return {
       passed: false,
-      message: incomplete
+      message: incomplete && incomplete.syllabication && !isValidStudentNewsSyllabication(incomplete.syllabication)
+        ? "Syllabication must use hyphen-separated syllables with stress marked, for example po-tá-to or po-TA-to."
+        : incomplete
         ? "Every vocabulary row requires part of speech, English, Vietnamese, syllabication, and definition."
-        : "At least 7 complete vocabulary rows are required.",
+        : `At least ${minimum} complete vocabulary rows are required.`,
       count: populated.length,
     }
   }
@@ -304,6 +320,9 @@ function normalizeStudentNewsValidationConfig(config = {}) {
   }
   return {
     enabled,
+    vocabularyMinimumWords: Number.isFinite(Number(source?.vocabularyMinimumWords))
+      ? Math.max(1, Math.min(100, Math.trunc(Number(source.vocabularyMinimumWords))))
+      : STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM,
     allowedDomains,
     thresholds: {
       articleTitle: Number.isFinite(thresholds.articleTitle)
@@ -1708,12 +1727,14 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
       threshold: 1,
     }
   }
-  const vocabularyValidation = evaluateStudentNewsVocabulary(payload?.vocabulary)
+  const vocabularyValidation = evaluateStudentNewsVocabulary(payload?.vocabulary, {
+    minimumWords: config.vocabularyMinimumWords,
+  })
   if (!vocabularyValidation.passed) {
     failedFields.vocabulary = {
       message: vocabularyValidation.message,
       score: vocabularyValidation.count,
-      threshold: 7,
+      threshold: config.vocabularyMinimumWords,
     }
   }
 
@@ -1725,7 +1746,11 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
   }
 }
 
-export { evaluateStudentNewsVocabulary, normalizeStudentNewsVocabulary }
+export {
+  evaluateStudentNewsVocabulary,
+  isValidStudentNewsSyllabication,
+  normalizeStudentNewsVocabulary,
+}
 
 /**
  * @param {Record<string, unknown> | null | undefined} [payload]

@@ -45,7 +45,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3448
+              "height": 3427
             },
             ".portal-card": null,
             ".panel": {
@@ -63,13 +63,36 @@
           },
           "axe": [
             {
-              "id": "landmark-contentinfo-is-top-level",
+              "id": "landmark-one-main",
               "impact": "moderate",
-              "help": "Contentinfo landmark should not be contained in another landmark",
+              "help": "Document should have one main landmark",
               "nodes": [
                 {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  The null landmark is contained in another landmark."
+                  "target": "html",
+                  "failureSummary": "Fix all of the following:\n  Document does not have a main landmark"
+                }
+              ]
+            },
+            {
+              "id": "region",
+              "impact": "moderate",
+              "help": "All page content should be contained by landmarks",
+              "nodes": [
+                {
+                  "target": "#authPanel > h1",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                },
+                {
+                  "target": ".form-row:nth-child(1)",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                },
+                {
+                  "target": ".form-row:nth-child(2)",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                },
+                {
+                  "target": ".login-links",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -128,7 +151,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -310,7 +333,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2858
+              "height": 2716
             },
             ".wrap": {
               "selector": ".wrap",
@@ -322,7 +345,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2810
+              "height": 2668
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -334,7 +357,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2726
+              "height": 2605
             },
             ".panel": {
               "selector": ".panel",
@@ -450,7 +473,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3447
+              "height": 3426
             },
             ".wrap": {
               "selector": ".wrap",
@@ -462,7 +485,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3399
+              "height": 3378
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -590,7 +613,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3337
+              "height": 3316
             },
             ".wrap": {
               "selector": ".wrap",
@@ -602,7 +625,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3289
+              "height": 3268
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -742,7 +765,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 739
+              "height": 718
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -870,7 +893,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1141
+              "height": 1135
             },
             ".wrap": {
               "selector": ".wrap",
@@ -882,7 +905,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1093
+              "height": 1087
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -894,7 +917,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1009
+              "height": 1024
             },
             ".panel": {
               "selector": ".panel",
@@ -1010,7 +1033,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1225
+              "height": 1204
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1022,7 +1045,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1177
+              "height": 1156
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1162,7 +1185,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 856
+              "height": 835
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1302,7 +1325,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 747
+              "height": 726
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1430,7 +1453,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1394
+              "height": 1373
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1442,7 +1465,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1346
+              "height": 1325
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1656,7 +1679,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3867
+              "height": 3846
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1668,7 +1691,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3819
+              "height": 3798
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1816,7 +1839,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2105
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1828,7 +1851,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2057
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1968,7 +1991,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 745
+              "height": 741
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1980,7 +2003,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 661
+              "height": 678
             },
             ".panel": {
               "selector": ".panel",
@@ -2096,7 +2119,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 8121
+              "height": 8206
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2108,7 +2131,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 8073
+              "height": 8158
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2120,7 +2143,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 7989
+              "height": 8095
             },
             ".panel": {
               "selector": ".panel",
@@ -2236,7 +2259,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1581
+              "height": 1749
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2248,7 +2271,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1533
+              "height": 1701
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2260,7 +2283,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1449
+              "height": 1638
             },
             ".panel": {
               "selector": ".panel",
@@ -2388,7 +2411,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1044
+              "height": 1023
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2636,7 +2659,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1630
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2648,7 +2671,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1582
+              "height": 838
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2660,7 +2683,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1498
+              "height": 775
             },
             ".panel": {
               "selector": ".panel",
@@ -2799,7 +2822,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2868
+              "height": 2936
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2811,7 +2834,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2820
+              "height": 2888
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2823,7 +2846,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2736
+              "height": 2825
             },
             ".panel": {
               "selector": ".panel",
@@ -2951,7 +2974,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1118
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2963,7 +2986,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1070
+              "height": 1049
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3091,7 +3114,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2334
+              "height": 2313
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3103,7 +3126,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2286
+              "height": 2265
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3231,7 +3254,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2468
+              "height": 2447
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3243,7 +3266,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2420
+              "height": 2399
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3515,7 +3538,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2105
             },
             ".wrap": {
               "selector": ".wrap",
@@ -3527,7 +3550,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2057
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -3674,25 +3697,14 @@
               "width": 932,
               "height": 75
             },
-            ".news-review-note-line.pending": {
-              "selector": ".news-review-note-line.pending",
-              "id": "",
-              "className": "news-review-note-line pending",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(124, 18, 29)",
-              "border": "rgb(124, 18, 29)",
-              "display": "block",
-              "width": 912,
-              "height": 57
-            },
+            ".news-review-note-line.pending": null,
             ".news-review-note-line.fixed": null
           },
           "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(250, 252, 255)",
             "color": "rgb(0, 0, 0)",
-            "text": "Report IDcmqwalgxl0000pjg0cis4wj70"
+            "text": "Report IDcmrk5h4x50004sdg06rvy5yhh"
           }
         },
         {
@@ -3701,9 +3713,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgba(0, 0, 0, 0)",
+            "bgImage": "none",
+            "color": "rgb(0, 0, 0)"
           }
         }
       ]
@@ -3715,7 +3727,7 @@
         "bodyClass": "student-points-page",
         "title": "Student Points Management",
         "htmlTheme": "light",
-        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-272025"
+        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-282025"
       },
       "pointsSurfaces": {
         "body": {
@@ -3883,6 +3895,12 @@
           "viewTarget": "news"
         },
         {
+          "text": "New Words",
+          "href": "#newWordsPageCard",
+          "pageTarget": "new-words",
+          "viewTarget": "home"
+        },
+        {
           "text": "Current Homework",
           "href": "#studentDetailPageCard",
           "pageTarget": "current-homework",
@@ -3926,7 +3944,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4032,19 +4050,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "heading-order",
-              "impact": "moderate",
-              "help": "Heading levels should only increase by one",
-              "nodes": [
-                {
-                  "target": "#identityPanel > .section-head > h3",
-                  "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 1,
@@ -4052,7 +4058,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4065,7 +4071,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 3087
+              "height": 3673
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -4182,7 +4188,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4195,31 +4201,31 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 1490
+              "height": 1100
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "flex",
-              "width": 1348,
-              "height": 743
+              "display": "block",
+              "width": 0,
+              "height": 0
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(241, 244, 248)",
               "bgImage": "none",
               "color": "rgb(0, 0, 0)",
               "border": "rgba(115, 136, 163, 0.96)",
-              "display": "flex",
-              "width": 1348,
-              "height": 743
+              "display": "block",
+              "width": 0,
+              "height": 0
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -4288,23 +4294,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 3,
@@ -4312,7 +4302,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4442,7 +4432,137 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "top",
+              "className": "student-portal-page",
+              "bg": "rgb(232, 238, 244)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 1440,
+              "height": 1490
+            },
+            ".calendar-shell": {
+              "selector": ".calendar-shell",
+              "id": "studentDetailCalendarGrid",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "bg": "rgb(241, 244, 248)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "flex",
+              "width": 1348,
+              "height": 743
+            },
+            ".detail-calendar-shell": {
+              "selector": ".detail-calendar-shell",
+              "id": "studentDetailCalendarGrid",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "bg": "rgb(241, 244, 248)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "flex",
+              "width": 1348,
+              "height": 743
+            },
+            ".homework-square": {
+              "selector": ".homework-square",
+              "id": "pastDueHomeworkBadge",
+              "className": "homework-square is-clear",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "linear-gradient(color(srgb 0.878431 0.940549 0.913255) 0px, rgb(252, 253, 255) 100%)",
+              "color": "rgb(0, 0, 0)",
+              "border": "color(srgb 0.768627 0.888941 0.82651)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".field-validation-message": null,
+            ".status.bad": null,
+            ".status.ok": null,
+            "#newsWeekSetModal .portal-modal-dialog": {
+              "selector": "#newsWeekSetModal .portal-modal-dialog",
+              "id": "",
+              "className": "portal-modal-dialog",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(202, 215, 234)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsWeekSetModal .portal-modal-backdrop": {
+              "selector": "#newsWeekSetModal .portal-modal-backdrop",
+              "id": "newsWeekSetModalBackdrop",
+              "className": "portal-modal-backdrop",
+              "bg": "rgba(13, 22, 34, 0.58)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(0, 0, 0)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsViewerSourceLink": {
+              "selector": "#newsViewerSourceLink",
+              "id": "newsViewerSourceLink",
+              "className": "",
+              "bg": "rgb(241, 244, 248)",
+              "bgImage": "none",
+              "color": "rgb(43, 43, 43)",
+              "border": "rgba(115, 136, 163, 0.96)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsComplianceModal .portal-modal-dialog": {
+              "selector": "#newsComplianceModal .portal-modal-dialog",
+              "id": "",
+              "className": "portal-modal-dialog",
+              "bg": "rgb(251, 255, 255)",
+              "bgImage": "none",
+              "color": "rgb(0, 0, 0)",
+              "border": "rgb(202, 215, 234)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsComplianceModal .field-validation-message": null,
+            "#newsComplianceModal .status.bad": null,
+            "#newsComplianceModal .status.ok": null
+          },
+          "axe": [
+            {
+              "id": "role-img-alt",
+              "impact": "serious",
+              "help": "[role=\"img\"] elements must have alternative text",
+              "nodes": [
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                },
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "state": {
+            "bodyClass": "student-portal-page",
+            "title": "Student Portal",
+            "htmlTheme": "light",
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4567,12 +4687,12 @@
           ]
         },
         {
-          "index": 5,
+          "index": 6,
           "state": {
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4697,12 +4817,12 @@
           ]
         },
         {
-          "index": 6,
+          "index": 7,
           "state": {
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4811,12 +4931,12 @@
           "axe": []
         },
         {
-          "index": 7,
+          "index": 8,
           "state": {
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "light",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -4965,19 +5085,19 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "grid",
               "width": 726,
-              "height": 1006
+              "height": 1066
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
               "id": "closeNewsWeekSetModalBtn",
-              "className": "portal-modal-close portal-button portal-button-warning",
+              "className": "portal-modal-close portal-button portal-button-warning hidden",
               "bg": "rgb(123, 76, 213)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgb(64, 34, 127)",
-              "display": "flex",
-              "width": 176,
-              "height": 52
+              "display": "none",
+              "width": 0,
+              "height": 0
             },
             "#newsViewerSourceLink": {
               "selector": "#newsViewerSourceLink",
@@ -5403,7 +5523,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3448
+              "height": 3427
             },
             ".portal-card": null,
             ".panel": {
@@ -5421,13 +5541,36 @@
           },
           "axe": [
             {
-              "id": "landmark-contentinfo-is-top-level",
+              "id": "landmark-one-main",
               "impact": "moderate",
-              "help": "Contentinfo landmark should not be contained in another landmark",
+              "help": "Document should have one main landmark",
               "nodes": [
                 {
-                  "target": "#authFooter",
-                  "failureSummary": "Fix any of the following:\n  The null landmark is contained in another landmark."
+                  "target": "html",
+                  "failureSummary": "Fix all of the following:\n  Document does not have a main landmark"
+                }
+              ]
+            },
+            {
+              "id": "region",
+              "impact": "moderate",
+              "help": "All page content should be contained by landmarks",
+              "nodes": [
+                {
+                  "target": "#authPanel > h1",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                },
+                {
+                  "target": ".form-row:nth-child(1)",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                },
+                {
+                  "target": ".form-row:nth-child(2)",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+                },
+                {
+                  "target": ".login-links",
+                  "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
                 }
               ]
             }
@@ -5486,7 +5629,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -5655,7 +5798,7 @@
             "bodyClass": "admin-portal-page page",
             "title": "The Eagles Club Student Information System",
             "htmlTheme": "dark",
-            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. School "
+            "bodyText": "0937‑667‑818 eagles.edu.vn Loading Admin Checking your session... Student Admin Login Username Password Login Clear Reset password 0937 667 818 Session-based secure login is required for all admin API operations. © 2012–"
           },
           "surfaces": {
             "body": {
@@ -5668,7 +5811,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2799
+              "height": 3132
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5680,7 +5823,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2751
+              "height": 3084
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5692,7 +5835,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2667
+              "height": 3021
             },
             ".panel": {
               "selector": ".panel",
@@ -5808,7 +5951,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3447
+              "height": 3426
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5820,7 +5963,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3399
+              "height": 3378
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5948,7 +6091,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3526
+              "height": 3505
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5960,7 +6103,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3478
+              "height": 3457
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6100,7 +6243,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 739
+              "height": 718
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6228,7 +6371,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1156
+              "height": 1135
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6240,7 +6383,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1108
+              "height": 1087
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6368,7 +6511,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1225
+              "height": 1204
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6380,7 +6523,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1177
+              "height": 1156
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6520,7 +6663,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 856
+              "height": 835
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6676,7 +6819,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 747
+              "height": 726
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6804,7 +6947,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1394
+              "height": 1373
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6816,7 +6959,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1346
+              "height": 1325
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7030,7 +7173,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3867
+              "height": 3846
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7042,7 +7185,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3819
+              "height": 3798
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7190,7 +7333,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2105
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7202,7 +7345,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2057
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7342,7 +7485,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 745
+              "height": 741
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7354,7 +7497,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 661
+              "height": 678
             },
             ".panel": {
               "selector": ".panel",
@@ -7470,7 +7613,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 8121
+              "height": 8206
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7482,7 +7625,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 8073
+              "height": 8158
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7494,7 +7637,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 7989
+              "height": 8095
             },
             ".panel": {
               "selector": ".panel",
@@ -7610,7 +7753,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1770
+              "height": 1749
             },
             ".wrap": {
               "selector": ".wrap",
@@ -7622,7 +7765,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1722
+              "height": 1701
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -7762,7 +7905,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1044
+              "height": 1023
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8022,7 +8165,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 859
+              "height": 838
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8173,7 +8316,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2868
+              "height": 2936
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8185,7 +8328,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2820
+              "height": 2888
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8197,7 +8340,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2736
+              "height": 2825
             },
             ".panel": {
               "selector": ".panel",
@@ -8325,7 +8468,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1118
+              "height": 1100
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8337,7 +8480,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1070
+              "height": 1049
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8465,7 +8608,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2334
+              "height": 2313
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8477,7 +8620,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2286
+              "height": 2265
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8605,7 +8748,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2468
+              "height": 2447
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8617,7 +8760,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2420
+              "height": 2399
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8889,7 +9032,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2126
+              "height": 2105
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8901,7 +9044,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2078
+              "height": 2057
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -9048,25 +9191,14 @@
               "width": 932,
               "height": 75
             },
-            ".news-review-note-line.pending": {
-              "selector": ".news-review-note-line.pending",
-              "id": "",
-              "className": "news-review-note-line pending",
-              "bg": "rgba(0, 0, 0, 0)",
-              "bgImage": "none",
-              "color": "rgb(251, 255, 255)",
-              "border": "rgb(251, 255, 255)",
-              "display": "block",
-              "width": 912,
-              "height": 57
-            },
+            ".news-review-note-line.pending": null,
             ".news-review-note-line.fixed": null
           },
           "modalAxe": [],
           "viewerBlock": {
             "bg": "rgb(76, 76, 76)",
             "color": "rgb(251, 255, 255)",
-            "text": "Report IDcmqwalgxl0000pjg0cis4wj70"
+            "text": "Report IDcmrk5h4x50004sdg06rvy5yhh"
           }
         },
         {
@@ -9075,9 +9207,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgb(82, 82, 82)",
+            "bgImage": "none",
+            "color": "rgb(229, 245, 255)"
           }
         }
       ]
@@ -9089,7 +9221,7 @@
         "bodyClass": "student-points-page",
         "title": "Student Points Management",
         "htmlTheme": "dark",
-        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-272025"
+        "bodyText": "Points Management School YTD trend + student point ledger controls. Admin session active. Username Password Sign In Reset password 0937 667 818 Start Date End Date Refresh Chart Logout 0326597129 2025-08-012025-09-282025"
       },
       "pointsSurfaces": {
         "body": {
@@ -9257,6 +9389,12 @@
           "viewTarget": "news"
         },
         {
+          "text": "New Words",
+          "href": "#newWordsPageCard",
+          "pageTarget": "new-words",
+          "viewTarget": "home"
+        },
+        {
           "text": "Current Homework",
           "href": "#studentDetailPageCard",
           "pageTarget": "current-homework",
@@ -9300,7 +9438,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -9406,19 +9544,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "heading-order",
-              "impact": "moderate",
-              "help": "Heading levels should only increase by one",
-              "nodes": [
-                {
-                  "target": "#identityPanel > .section-head > h3",
-                  "failureSummary": "Fix any of the following:\n  Heading order invalid"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 1,
@@ -9426,7 +9552,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -9439,7 +9565,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 3088
+              "height": 3673
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -9556,7 +9682,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -9569,31 +9695,31 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 1492
+              "height": 1100
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "flex",
-              "width": 1348,
-              "height": 745
+              "display": "block",
+              "width": 0,
+              "height": 0
             },
             ".detail-calendar-shell": {
               "selector": ".detail-calendar-shell",
               "id": "studentDetailCalendarGrid",
-              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "className": "calendar-shell detail-calendar-shell",
               "bg": "rgb(59, 60, 62)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgba(255, 255, 255, 0.42)",
-              "display": "flex",
-              "width": 1348,
-              "height": 745
+              "display": "block",
+              "width": 0,
+              "height": 0
             },
             ".homework-square": {
               "selector": ".homework-square",
@@ -9662,23 +9788,7 @@
             "#newsComplianceModal .status.bad": null,
             "#newsComplianceModal .status.ok": null
           },
-          "axe": [
-            {
-              "id": "role-img-alt",
-              "impact": "serious",
-              "help": "[role=\"img\"] elements must have alternative text",
-              "nodes": [
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                },
-                {
-                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
-                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
-                }
-              ]
-            }
-          ]
+          "axe": []
         },
         {
           "index": 3,
@@ -9686,7 +9796,7 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -9816,7 +9926,137 @@
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
+          },
+          "surfaces": {
+            "body": {
+              "selector": "body",
+              "id": "top",
+              "className": "student-portal-page",
+              "bg": "rgb(0, 0, 0)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "block",
+              "width": 1440,
+              "height": 1492
+            },
+            ".calendar-shell": {
+              "selector": ".calendar-shell",
+              "id": "studentDetailCalendarGrid",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "flex",
+              "width": 1348,
+              "height": 745
+            },
+            ".detail-calendar-shell": {
+              "selector": ".detail-calendar-shell",
+              "id": "studentDetailCalendarGrid",
+              "className": "calendar-shell detail-calendar-shell fc fc-media-screen fc-direction-ltr fc-theme-standard",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "flex",
+              "width": 1348,
+              "height": 745
+            },
+            ".homework-square": {
+              "selector": ".homework-square",
+              "id": "pastDueHomeworkBadge",
+              "className": "homework-square is-clear",
+              "bg": "rgba(0, 0, 0, 0)",
+              "bgImage": "linear-gradient(color(srgb 0.284863 0.343608 0.309569) 0px, rgb(76, 76, 76) 100%)",
+              "color": "rgb(251, 255, 255)",
+              "border": "color(srgb 0.271686 0.389176 0.321098)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            ".field-validation-message": null,
+            ".status.bad": null,
+            ".status.ok": null,
+            "#newsWeekSetModal .portal-modal-dialog": {
+              "selector": "#newsWeekSetModal .portal-modal-dialog",
+              "id": "",
+              "className": "portal-modal-dialog",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsWeekSetModal .portal-modal-backdrop": {
+              "selector": "#newsWeekSetModal .portal-modal-backdrop",
+              "id": "newsWeekSetModalBackdrop",
+              "className": "portal-modal-backdrop",
+              "bg": "rgba(13, 22, 34, 0.58)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(251, 255, 255)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsViewerSourceLink": {
+              "selector": "#newsViewerSourceLink",
+              "id": "newsViewerSourceLink",
+              "className": "",
+              "bg": "rgb(39, 44, 47)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgb(174, 183, 197)",
+              "display": "block",
+              "width": 0,
+              "height": 0
+            },
+            "#newsComplianceModal .portal-modal-dialog": {
+              "selector": "#newsComplianceModal .portal-modal-dialog",
+              "id": "",
+              "className": "portal-modal-dialog",
+              "bg": "rgb(59, 60, 62)",
+              "bgImage": "none",
+              "color": "rgb(251, 255, 255)",
+              "border": "rgba(255, 255, 255, 0.42)",
+              "display": "grid",
+              "width": 0,
+              "height": 0
+            },
+            "#newsComplianceModal .field-validation-message": null,
+            "#newsComplianceModal .status.bad": null,
+            "#newsComplianceModal .status.ok": null
+          },
+          "axe": [
+            {
+              "id": "role-img-alt",
+              "impact": "serious",
+              "help": "[role=\"img\"] elements must have alternative text",
+              "nodes": [
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-prev-button.fc-button[title=\"Previous month\"] > .fc-icon-chevron-left.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                },
+                {
+                  "target": "#studentDetailCalendarGrid > .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr > .fc-toolbar-chunk:nth-child(1) > .fc-button-group > .fc-next-button.fc-button[title=\"Next month\"] > .fc-icon-chevron-right.fc-icon[role=\"img\"]",
+                  "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "state": {
+            "bodyClass": "student-portal-page",
+            "title": "Student Portal",
+            "htmlTheme": "dark",
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -9941,12 +10181,12 @@
           ]
         },
         {
-          "index": 5,
+          "index": 6,
           "state": {
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -10071,12 +10311,12 @@
           ]
         },
         {
-          "index": 6,
+          "index": 7,
           "state": {
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -10185,12 +10425,12 @@
           "axe": []
         },
         {
-          "index": 7,
+          "index": 8,
           "state": {
             "bodyClass": "student-portal-page",
             "title": "Student Portal",
             "htmlTheme": "dark",
-            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success Log Out 093"
+            "bodyText": "Student Dashboard English learning and daily media reports Home News Reports New Words Current Homework Past Due Homework Attendance Calendar SYTD Performance Reports SYTD Archive Grades YTD Recommendations for Success L"
           },
           "surfaces": {
             "body": {
@@ -10339,19 +10579,19 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "grid",
               "width": 726,
-              "height": 1006
+              "height": 1066
             },
             "#newsWeekSetModal .portal-modal-close": {
               "selector": "#newsWeekSetModal .portal-modal-close",
               "id": "closeNewsWeekSetModalBtn",
-              "className": "portal-modal-close portal-button portal-button-warning",
+              "className": "portal-modal-close portal-button portal-button-warning hidden",
               "bg": "rgb(123, 76, 213)",
               "bgImage": "none",
               "color": "rgb(251, 255, 255)",
               "border": "rgb(64, 34, 127)",
-              "display": "flex",
-              "width": 176,
-              "height": 52
+              "display": "none",
+              "width": 0,
+              "height": 0
             },
             "#newsViewerSourceLink": {
               "selector": "#newsViewerSourceLink",

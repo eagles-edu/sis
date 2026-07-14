@@ -720,6 +720,7 @@
       <nav class="side-links">
         <a class="side-link active" href="#studentHomeCard" data-view-target="home" data-page-target="home">Home</a>
         <a class="side-link" href="#newsPageCard" data-view-target="news" data-page-target="news">News Reports</a>
+        <a class="side-link" href="#newWordsPageCard" data-view-target="home" data-page-target="new-words">New Words</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="current-homework">Current Homework</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="past-due-homework">Past Due Homework</a>
         <a class="side-link" href="#studentDetailPageCard" data-view-target="home" data-page-target="attendance-calendar">Attendance Calendar SYTD</a>
@@ -968,6 +969,22 @@
                 </div>
               </section>
 
+              <section id="newNewsFormConfirmModal" class="portal-modal news-new-form-modal hidden">
+                <div class="portal-modal-backdrop" id="newNewsFormConfirmModalBackdrop"></div>
+                <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newNewsFormConfirmModalTitle">
+                  <div class="portal-modal-head">
+                    <h4 id="newNewsFormConfirmModalTitle">Start a new media report? / Bắt đầu báo cáo mới?</h4>
+                  </div>
+                  <div class="portal-modal-body">
+                    <p class="hint">You have unsaved work. Save it before starting a new form, or ignore it and lose it.<br>Bạn có dữ liệu chưa lưu. Hãy lưu trước khi tạo biểu mẫu mới, hoặc bỏ qua để mất dữ liệu.</p>
+                  </div>
+                  <div class="portal-modal-actions">
+                    <button id="newNewsFormSaveBtn" type="button" class="portal-button portal-button-affirm">Save &amp; New Form / Lưu và tạo biểu mẫu mới</button>
+                    <button id="newNewsFormIgnoreBtn" type="button" class="portal-button portal-button-danger">Ignore &amp; New Form / Bỏ qua và tạo biểu mẫu mới</button>
+                  </div>
+                </div>
+              </section>
+
               <section id="reportAccessErrorModal" class="portal-modal hidden">
                 <div class="portal-modal-backdrop" id="reportAccessErrorModalBackdrop"></div>
                 <div class="portal-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reportAccessErrorModalTitle">
@@ -1010,13 +1027,13 @@
                       <span id="newsWeekSetModalIndex" class="hint">0 / 0</span>
                       <button id="newsWeekSetModalNextBtn" type="button" class="portal-button portal-button-alt portal-button-alt-nav" title="Xem báo cáo tiếp theo" aria-label="Xem báo cáo tiếp theo">&gt;</button>
                     </div>
-                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning" type="button" title="Đóng trình xem báo cáo tin tức">Close</button>
+                    <button id="closeNewsWeekSetModalBtn" class="portal-modal-close portal-button portal-button-warning hidden" type="button" title="Đóng trình xem báo cáo tin tức">Close</button>
                   </div>
                   <div class="portal-modal-body">
                     <p id="newsWeekSetModalMeta" class="hint">Open a week set to review and resubmit reports.</p>
                     <div class="row">
                       <div class="field c4">
-                        <label for="newsViewerReportDate">Report Date</label>
+                        <label for="newsViewerReportDate">1. Report Date</label>
                         <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
                       </div>
                       <div class="field c4">
@@ -1047,63 +1064,64 @@
                     </div>
                     <div class="row">
                       <div class="field c12">
-                        <label for="newsViewerSourceLink">I. Source: link to article</label>
+                        <label for="newsViewerSourceLink">2. Source: Paste the full link to this article</label>
                         <input id="newsViewerSourceLink" type="url" placeholder="https://...">
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerArticleTitle">II.A. Title</label>
+                        <label for="newsViewerArticleTitle">3. Paste the full article Title</label>
                         <input id="newsViewerArticleTitle" type="text" maxlength="240">
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerByline">II.B. Byline (author)</label>
+                        <label for="newsViewerByline">4. Paste Byline (author; IF NONE, enter CNN or BBC)</label>
                         <input id="newsViewerByline" type="text" maxlength="240">
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerArticleDateline">II.C. Article Dateline / Publication Date</label>
+                        <label for="newsViewerArticleDateline">5. Article Dateline / Publication Date</label>
                         <input id="newsViewerArticleDateline" type="text">
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerLeadSynopsis">II.D. Lead Synopsis</label>
+                        <label for="newsViewerLeadSynopsis">6. Paste Lead Synopsis (first paragraph of article)</label>
                         <textarea id="newsViewerLeadSynopsis"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionActor">II.E.i. Who/what was doing action/news</label>
+                        <label for="newsViewerActionActor">7. Who or what (actor) was doing news action?</label>
                         <textarea id="newsViewerActionActor"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionAffected">II.E.ii. Who/what received/was affected</label>
+                        <label for="newsViewerActionAffected">8. Who or what (actor) received/was affected by the news action?</label>
                         <textarea id="newsViewerActionAffected"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionWhere">II.E.iii. Where is the action/news</label>
+                        <label for="newsViewerActionWhere">9. Where did this news action take place?</label>
                         <textarea id="newsViewerActionWhere"></textarea>
                       </div>
                       <div class="field c6">
-                        <label for="newsViewerActionWhat">II.E.iv. What action/news</label>
+                        <label for="newsViewerActionWhat">10. Describe the current news action (i.e., what happened)?</label>
                         <textarea id="newsViewerActionWhat"></textarea>
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerActionWhy">II.E.v. Why was action/news happening</label>
+                        <label for="newsViewerActionWhy">11. Why or how did the news action happen?</label>
                         <textarea id="newsViewerActionWhy"></textarea>
                       </div>
                       <div class="field c12">
-                        <label for="newsViewerBiasAssessment">II.F. Bias/agendum/spin/prevarication? Explain</label>
+                        <label for="newsViewerBiasAssessment">12. Do you suspect the article was written with bias, agenda, spin, or prevarication? Explain why or why not.</label>
                         <textarea id="newsViewerBiasAssessment"></textarea>
                       </div>
                     </div>
                   </div>
-                  <div class="portal-modal-actions">
-                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-info" title="Kiểm tra báo cáo trước khi nộp">Check</button>
-                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-primary" title="Nộp lại báo cáo tin tức">Submit</button>
+                  <section class="news-review-vocabulary" aria-label="Vocabulary">
+                    <strong>13. Vocabulary</strong>
+                    <div id="newsWeekSetModalVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
+                    <div class="news-vocabulary-add-actions">
+                      <button id="addNewsWeekSetModalVocabularyRowBtn" type="button" class="portal-button portal-button-affirm">Add Word</button>
+                    </div>
+                  </section>
+                  <div class="portal-modal-actions student-news-form-actions">
+                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-affirm" title="Kiểm tra báo cáo trước khi nộp">Check</button>
+                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-affirm" title="Nộp lại báo cáo tin tức">Submit</button>
                     <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng trình xem báo cáo tin tức">Close</button>
                   </div>
                   <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
-                  <section class="news-review-vocabulary" aria-label="Vocabulary">
-                    <strong>Vocabulary</strong>
-                    <div id="newsWeekSetModalVocabularyRows" class="news-vocabulary-rows"></div>
-                    <button id="addNewsWeekSetModalVocabularyRowBtn" type="button" class="portal-button portal-button-alt">Add Word</button>
-                    <hr>
-                  </section>
                 </div>
               </section>
 
@@ -1183,6 +1201,55 @@
           </div>
         </section>
 
+        <section id="newWordsPageCard" class="content hidden" data-surface-role="content">
+          <div class="section-head new-words-page-head bm015">
+            <h2>New Words Section</h2>
+          </div>
+          <details class="panel new-words-intro">
+            <summary>Read Instructions</summary>
+            <div class="new-words-intro-body">
+              <div>
+                <h3>Build your personal dictionary</h3>
+                <p><b>New Words</b> from your news reports are collected here. You can edit each entry, sort your list, and study from a clean
+                dictionary-style version of your new academic vocabulary.</p>
+              </div>
+              <img src="/web-asset/icons/icomon/web-component/svgs/joggling-capsules.svg" alt="Animated vocabulary study illustration" width="175" height="175">
+            </div>
+          </details>
+          <div class="panel new-words-tools" data-surface-role="panel">
+            <label for="newWordsSort">Sort by</label>
+            <select id="newWordsSort">
+              <option value="date-desc">Date added</option>
+              <option value="alpha">Alphabetical</option>
+              <option value="part-of-speech">Part of speech</option>
+              <option value="syllables">Number of syllables</option>
+              <option value="random">Random</option>
+            </select>
+            <label for="newWordsPageSize">Words per page</label>
+            <select id="newWordsPageSize">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="all">All</option>
+            </select>
+            <span id="newWordsSummary" class="hint" aria-live="polite">No words loaded.</span>
+          </div>
+          <div id="newWordsRows" class="news-vocabulary-rows new-words-rows vocabulary-edit-surface"></div>
+          <div class="new-words-add-actions">
+            <button id="newWordsAddOneBtn" type="button" class="portal-button portal-button-primary">Add 1 Word</button>
+            <button id="newWordsAddFiveBtn" type="button" class="portal-button portal-button-primary">Add 5 Words</button>
+          </div>
+          <div class="new-words-save-actions">
+            <button id="newWordsSaveBtn" type="button" class="portal-button portal-button-affirm">Save Changes</button>
+          </div>
+          <div class="new-words-pagination">
+            <button id="newWordsPrevBtn" type="button" class="portal-button portal-button-alt">Previous</button>
+            <span id="newWordsPageStatus" class="hint">Page 0 / 0</span>
+            <button id="newWordsNextBtn" type="button" class="portal-button portal-button-alt">Next</button>
+          </div>
+          <a class="new-words-back-top" href="#top">Back to top</a>
+        </section>
+
         <section id="newsPageCard" class="content hidden" data-surface-role="content">
           <div class="section-head">
             <h2>Daily News Report</h2>
@@ -1237,79 +1304,87 @@
             </section>
 
             <section id="newsReportFormCard" class="panel" data-surface-role="panel">
-              <h2>Media Report Form</h2>
+              <div class="section-head news-report-form-head">
+                <h2>Media Report Form</h2>
+                <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary" title="Start a new media report">Biểu mẫu mới</button>
+              </div>
               <div class="row">
                 <div class="field c3">
-                  <label for="reportDate">Report Date</label>
+                  <label for="reportDate">1. Report Date</label>
                   <input id="reportDate" type="date" readonly aria-readonly="true">
                 </div>
               </div>
 
               <div class="row">
                 <div class="field c12">
-                  <label for="sourceLink">I. Source: link to article</label>
+                  <label for="sourceLink">2. Source: Paste the full link to this
+                  article:</label>
                   <input id="sourceLink" type="url" placeholder="https://...">
                 </div>
 
                 <div class="field c12">
-                  <label for="articleTitle">II.A. Title</label>
+                  <label for="articleTitle">3. Paste the full article Title</label>
                   <input type="text" id="articleTitle" maxlength="240">
                 </div>
 
                 <div class="field c6">
-                  <label for="byline">II.B. Byline (author)</label>
+                  <label for="byline">4. Paste Byline (author; IF NONE, enter CNN or BBC)</label>
                   <input type="text" id="byline" maxlength="240">
                 </div>
 
                 <div class="field c6">
-                  <label for="articleDateline">II.C. Article Dateline / Publication Date</label>
+                  <label for="articleDateline">5. Article Dateline / Publication Date</label>
                   <input type="text" id="articleDateline" placeholder="March 12, 2026">
                 </div>
 
                 <div class="field c12">
-                  <label for="leadSynopsis">II.D. Lead Synopsis</label>
+                  <label for="leadSynopsis">6. Paste Lead Synopsis (first paragraph of article)</label>
                   <textarea id="leadSynopsis"></textarea>
                 </div>
 
                 <div class="field c6">
-                  <label for="actionActor">II.E.i. Who/what was doing action/news</label>
+                  <label for="actionActor">7. Who or what (actor) was doing news action?</label>
                   <textarea id="actionActor"></textarea>
                 </div>
 
                 <div class="field c6">
-                  <label for="actionAffected">II.E.ii. Who/what received/was affected</label>
+                  <label for="actionAffected">8. Who or what (actor) received/was affected by the news action?</label>
                   <textarea id="actionAffected"></textarea>
                 </div>
 
                 <div class="field c6">
-                  <label for="actionWhere">II.E.iii. Where is the action/news</label>
+                  <label for="actionWhere">9. Where did this news action
+                  take place (enter city/town/region, country, and continent)?</label>
                   <textarea id="actionWhere"></textarea>
                 </div>
 
                 <div class="field c6">
-                  <label for="actionWhat">II.E.iv. What action/news</label>
+                  <label for="actionWhat">10. Describe the current news
+                  action (i.e., what happened)?</label>
                   <textarea id="actionWhat"></textarea>
                 </div>
 
                 <div class="field c12">
-                  <label for="actionWhy">II.E.v. Why was action/news happening</label>
+                  <label for="actionWhy">11. Why or how did the news action happen?</label>
                   <textarea id="actionWhy"></textarea>
                 </div>
 
                 <div class="field c12">
-                  <label for="biasAssessment">II.F. Bias/agendum/spin/prevarication? Explain</label>
+                  <label for="biasAssessment">12. Do you suspect the article
+                  was written with bias, agenda, spin, or prevarication?
+                  Explain why or why not.</label>
                   <textarea id="biasAssessment"></textarea>
                 </div>
 
                 <div id="newsVocabularyField" class="field c12 news-vocabulary-field">
-                  <label>III. Vocabulary (minimum 7 words)</label>
-                  <div id="newsVocabularyRows" class="news-vocabulary-rows"></div>
-                  <button id="addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-alt">Add Word</button>
+                  <label id="newsVocabularyLabel">13. Vocabulary (minimum 5 words)</label>
+                  <div id="newsVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
+                  <button id="addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-affirm">Add Word</button>
                 </div>
 
                 <div class="field c12 actions student-news-form-actions">
-                  <button id="checkBtn" class="portal-button portal-button-info" type="button" title="Kiểm tra báo cáo trước khi nộp">Check</button>
-                  <button id="submitBtn" class="portal-button portal-button-primary" type="button" title="Nộp báo cáo tin tức">Submit</button>
+                  <button id="checkBtn" class="portal-button portal-button-affirm" type="button" title="Kiểm tra báo cáo trước khi nộp">Check</button>
+                  <button id="submitBtn" class="portal-button portal-button-affirm" type="button" title="Nộp báo cáo tin tức">Submit</button>
                   <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden" title="Xem chi tiết kiểm tra báo cáo">View Details</button>
                 </div>
               </div>
@@ -1342,6 +1417,7 @@
       const STUDENT_NEWS_REPORTS_PATH = window.__SIS_STUDENT_NEWS_REPORTS_PATH || "/api/student/news-reports";
       const STUDENT_NEWS_REPORTS_CHECK_PATH = window.__SIS_STUDENT_NEWS_REPORTS_CHECK_PATH || "/api/student/news-reports/check";
       const STUDENT_NEWS_CALENDAR_PATH = window.__SIS_STUDENT_NEWS_CALENDAR_PATH || "/api/student/news-reports/calendar";
+      const STUDENT_NEW_WORDS_PATH = window.__SIS_STUDENT_NEW_WORDS_PATH || "/api/student/new-words";
       const RUNTIME_ENV = (window.__SIS_RUNTIME_ENV || "").toLowerCase() || "development";
       const PORTAL_TIME_ZONE = "Asia/Ho_Chi_Minh";
       const STUDENT_API_ORIGIN = resolveStudentApiOrigin();
@@ -1379,10 +1455,18 @@
         newsWarningFields: {},
         newsWarningTasks: [],
         newsCurrentMmrPassed: false,
+        newsFormDirty: false,
+        newsVocabularyMinimumWords: 5,
+        newWords: [],
+        newWordsLoaded: false,
+        newWordsSort: "date-desc",
+        newWordsPageSize: "10",
+        newWordsPage: 1,
         newsSubmissionState: "",
         newsDateSatisfied: false,
         newsReportDateLocked: false,
         newsComplianceModalOpen: false,
+        newNewsFormConfirmModalOpen: false,
         newsComplianceSummary: "",
         submitSuccessModalOpen: false,
         submitSuccessConfettiBuilt: false,
@@ -1405,6 +1489,7 @@
         "performance-reports",
         "grades-ytd",
         "recommendations",
+        "new-words",
       ]);
 
       function t(v) {
@@ -2106,7 +2191,7 @@
       function hoistPortalModals() {
         const host = document.body;
         if (!host) return;
-        ["pastDueHomeworkModal", "newsComplianceModal", "reportAccessErrorModal", "submitSuccessModal", "newsWeekSetModal"].forEach((id) => {
+        ["pastDueHomeworkModal", "newsComplianceModal", "newNewsFormConfirmModal", "reportAccessErrorModal", "submitSuccessModal", "newsWeekSetModal"].forEach((id) => {
           const modal = field(id);
           if (!modal || modal.parentElement === host) return;
           host.appendChild(modal);
@@ -3192,6 +3277,7 @@
         const hasOpenModal =
           state.pastDueModalOpen ||
           state.newsComplianceModalOpen ||
+          state.newNewsFormConfirmModalOpen ||
           state.reportAccessModalOpen ||
           state.submitSuccessModalOpen ||
           state.newsWeekSetModalOpen;
@@ -4100,15 +4186,18 @@
         if (!authenticated) {
           field("studentHomeCard")?.classList.add("hidden");
           field("studentDetailPageCard")?.classList.add("hidden");
+          field("newWordsPageCard")?.classList.add("hidden");
           field("newsPageCard")?.classList.add("hidden");
           updateActiveStudentNav();
           return;
         }
         const showNews = state.activeView === "news";
         const showHome = !showNews && state.activePage === "home";
-        const showDetail = !showNews && state.activePage !== "home";
+        const showNewWords = !showNews && state.activePage === "new-words";
+        const showDetail = !showNews && !showNewWords && state.activePage !== "home";
         field("studentHomeCard")?.classList.toggle("hidden", !showHome);
         field("studentDetailPageCard")?.classList.toggle("hidden", !showDetail);
+        field("newWordsPageCard")?.classList.toggle("hidden", !showNewWords);
         field("newsPageCard")?.classList.toggle("hidden", !showNews);
         updateActiveStudentNav();
         if (showNews) {
@@ -4128,6 +4217,13 @@
           requestAnimationFrame(() => {
             renderStudentDetailPage();
             state.detailCalendar?.updateSize?.();
+            window.SISPortalNav?.scrollPageTop?.();
+          });
+        }
+        if (showNewWords) {
+          requestAnimationFrame(() => {
+            if (!state.newWordsLoaded) loadNewWords().catch(handleError);
+            else renderNewWordsRows();
             window.SISPortalNav?.scrollPageTop?.();
           });
         }
@@ -4414,6 +4510,7 @@
           submittedAt: t(entry?.submittedAt),
           reviewStatus: normalizeNewsReviewStatusToken(entry?.reviewStatus),
           awaitingReReview: entry?.awaitingReReview === true,
+          currentMmrPassed: entry?.currentMmrPassed === true,
           editableUntil: t(entry?.editableUntil),
         };
       }
@@ -5039,6 +5136,79 @@
         el.value = t(value);
       }
 
+      function vocabularyMinimumWords() {
+        const value = Number.parseInt(String(state.newsVocabularyMinimumWords), 10);
+        return Number.isFinite(value) ? Math.max(1, Math.min(100, value)) : 5;
+      }
+
+      function renderVocabularyMinimumLabel() {
+        const label = field("newsVocabularyLabel");
+        if (label) label.textContent = `13. Vocabulary (minimum ${vocabularyMinimumWords()} words)`;
+      }
+
+      const NEWS_VOCABULARY_LOOKUPS = Object.freeze([
+        ["LD", (term) => `https://www.ldoceonline.com/dictionary/${term.replace(/%20/gu, "-")}`],
+        ["GT", (term) => `https://translate.google.com/?sl=en&tl=vi&text=${term}&op=translate`],
+        ["WH", (term) => `https://www.wordhelp.com/definitions/english/?q=${term}`],
+      ]);
+
+      function normalizeVocabularyLookupTerm(value) {
+        return String(value || "")
+          .normalize("NFC")
+          .replace(/[\u0000-\u001F\u007F]/gu, " ")
+          .trim()
+          .replace(/[’‘]/gu, "'")
+          .replace(/[‐‑‒–—―]/gu, "-")
+          .replace(/[^\p{L}\p{N}\s'\-]/gu, " ")
+          .replace(/\s+/gu, " ")
+          .trim();
+      }
+
+      function normalizeSyllabication(value) {
+        const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
+        return t(value).split("-").filter(Boolean).map((part) => {
+          const stressed = /[A-Z]/u.test(part);
+          const chars = Array.from(part.toLocaleLowerCase("en-US"));
+          if (stressed && !chars.some((char) => /[áéíóúý]/u.test(char))) {
+            const vowelIndex = chars.findIndex((char) => vowels[char]);
+            if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]];
+          }
+          return chars.join("");
+        }).join("-");
+      }
+
+      function vocabularyLookupUrl(label, english) {
+        const term = normalizeVocabularyLookupTerm(english);
+        if (!term) return "";
+        const lookup = NEWS_VOCABULARY_LOOKUPS.find(([key]) => key === label);
+        return lookup ? lookup[1](encodeURIComponent(term)) : "";
+      }
+
+      function bindVocabularyLookupButtons(rowEl) {
+        rowEl?.querySelectorAll("[data-vocabulary-lookup]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const url = vocabularyLookupUrl(
+              button.getAttribute("data-vocabulary-lookup"),
+              rowEl.querySelector('[data-vocabulary-field="english"]')?.value,
+            );
+            if (url) window.open(url, "_blank", "noopener,noreferrer");
+          });
+        });
+      }
+
+      function autoResizeVocabularyDefinition(textarea) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return;
+        textarea.style.height = "auto";
+        textarea.style.height = `${Math.max(48, textarea.scrollHeight)}px`;
+      }
+
+      function bindVocabularyDefinitionAutosize(rowEl) {
+        const textarea = rowEl?.querySelector('[data-vocabulary-field="definition"]');
+        if (!(textarea instanceof HTMLTextAreaElement)) return;
+        textarea.addEventListener("input", () => autoResizeVocabularyDefinition(textarea));
+        autoResizeVocabularyDefinition(textarea);
+      }
+
       function vocabularyRowHtml(index, removable = false) {
         const options = NEWS_VOCABULARY_PARTS_OF_SPEECH.map((part) => `<option value="${part}">${part}</option>`).join("");
         return `<div class="news-vocabulary-row" data-news-vocabulary-row="${index}">
@@ -5046,26 +5216,39 @@
           <input type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" required>
           <input type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
           <input type="text" data-vocabulary-field="syllabication" placeholder="Syllabication (stress marked)" aria-label="Syllabication with stressed syllable marked" required>
-          <textarea data-vocabulary-field="definition" rows="2" placeholder="Definition" aria-label="Definition" required></textarea>
-          ${removable ? '<button type="button" class="portal-button portal-button-alt news-vocabulary-remove">Remove</button>' : ""}
+          <div class="news-vocabulary-definition-row">
+            <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
+              ${NEWS_VOCABULARY_LOOKUPS.map(([label]) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" aria-label="${label} lookup">${label}</button>`).join("")}
+            </div>
+            <textarea data-vocabulary-field="definition" rows="1" placeholder="Definition" aria-label="Definition" required></textarea>
+            ${removable ? `<details class="news-vocabulary-row-menu">
+              <summary class="news-vocabulary-row-dots" aria-label="Open vocabulary row actions">⋮</summary>
+              <div class="news-vocabulary-row-menu-panel">
+                <button type="button" class="portal-button portal-button-danger news-vocabulary-remove">Remove</button>
+              </div>
+            </details>` : '<span class="news-vocabulary-row-dots" aria-hidden="true">⋮</span>'}
+          </div>
         </div>`;
       }
 
       function renderVocabularyRows(container, rows = []) {
         if (!container) return;
         const source = Array.isArray(rows) ? rows : [];
-        const count = Math.max(7, source.length);
-        container.innerHTML = Array.from({ length: count }, (_, index) => vocabularyRowHtml(index, index >= 7)).join("");
+        const minimum = vocabularyMinimumWords();
+        const count = Math.max(minimum, source.length);
+        container.innerHTML = Array.from({ length: count }, (_, index) => vocabularyRowHtml(index, index >= minimum)).join("");
         Array.from(container.querySelectorAll("[data-news-vocabulary-row]")).forEach((rowEl, index) => {
           const row = source[index] || {};
           ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
             const input = rowEl.querySelector(`[data-vocabulary-field="${key}"]`);
-            if (input) input.value = t(row?.[key]);
+            if (input) input.value = key === "syllabication" ? normalizeSyllabication(row?.[key]) : t(row?.[key]);
           });
+          bindVocabularyDefinitionAutosize(rowEl);
           rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
             rowEl.remove();
             renumberVocabularyRows(container);
           });
+          bindVocabularyLookupButtons(rowEl);
         });
       }
 
@@ -5073,7 +5256,7 @@
         Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((row, index) => {
           row.setAttribute("data-news-vocabulary-row", String(index));
           const remove = row.querySelector(".news-vocabulary-remove");
-          if (remove) remove.hidden = index < 7;
+          if (remove) remove.hidden = index < vocabularyMinimumWords();
         });
       }
 
@@ -5082,6 +5265,8 @@
         const index = container.querySelectorAll("[data-news-vocabulary-row]").length;
         container.insertAdjacentHTML("beforeend", vocabularyRowHtml(index, true));
         const row = container.lastElementChild;
+        bindVocabularyLookupButtons(row);
+        bindVocabularyDefinitionAutosize(row);
         row?.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
           row.remove();
           renumberVocabularyRows(container);
@@ -5090,8 +5275,127 @@
 
       function readVocabularyRows(container) {
         return Array.from(container?.querySelectorAll("[data-news-vocabulary-row]") || [])
-          .map((row) => Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])))
+          .map((row) => Object.fromEntries(["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].map((key) => [key, key === "syllabication" ? normalizeSyllabication(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(row.querySelector(`[data-vocabulary-field="${key}"]`)?.value)])))
           .filter((row) => Object.values(row).some(Boolean));
+      }
+
+      function sortedNewWords() {
+        const words = Array.isArray(state.newWords) ? [...state.newWords] : [];
+        if (state.newWordsSort === "random") {
+          return words.sort(() => Math.random() - 0.5);
+        }
+        return words.sort((left, right) => {
+          if (state.newWordsSort === "alpha") return t(left.english).localeCompare(t(right.english), undefined, { sensitivity: "base" });
+          if (state.newWordsSort === "part-of-speech") return t(left.partOfSpeech).localeCompare(t(right.partOfSpeech)) || t(left.english).localeCompare(t(right.english));
+          if (state.newWordsSort === "syllables") return (Number(left.syllableCount) || 0) - (Number(right.syllableCount) || 0) || t(left.english).localeCompare(t(right.english));
+          return t(right.sourceReportDate || right.updatedAt).localeCompare(t(left.sourceReportDate || left.updatedAt)) || t(left.english).localeCompare(t(right.english));
+        });
+      }
+
+      function dictionaryPlural(english, partOfSpeech) {
+        const word = t(english);
+        if (t(partOfSpeech).toLowerCase() !== "noun" || !word) return "";
+        if (/[^aeiou]y$/iu.test(word)) return `${word.slice(0, -1)}ies`;
+        if (/(s|x|z|ch|sh)$/iu.test(word)) return `${word}es`;
+        if (/o$/iu.test(word)) return `${word}es`;
+        return `${word}s`;
+      }
+
+      function dictionaryDefinition(definition) {
+        const value = t(definition) || "No definition yet.";
+        return /^\d+\.\s/u.test(value) ? value : `1. ${value}`;
+      }
+
+      function renderNewWordsRows() {
+        const container = field("newWordsRows");
+        if (!container) return;
+        const words = sortedNewWords();
+        const pageSize = state.newWordsPageSize === "all" ? words.length || 1 : Math.max(1, Number.parseInt(state.newWordsPageSize, 10) || 10);
+        const totalPages = Math.max(1, Math.ceil(words.length / pageSize));
+        state.newWordsPage = Math.min(Math.max(1, state.newWordsPage), totalPages);
+        const start = (state.newWordsPage - 1) * pageSize;
+        container.innerHTML = words.length ? words.map((word, index) => word.__editing === true ? vocabularyRowHtml(index, true) : `
+          <article class="new-word-entry" data-new-word-index="${index}">
+            <div class="new-word-entry-head">
+              <strong>${escapeHtml(t(word.english) || "New word")}</strong>
+              <span class="new-word-entry-pronunciation">/${escapeHtml(normalizeSyllabication(word.syllabication))}/</span>
+              <strong class="new-word-entry-part-of-speech">${escapeHtml(t(word.partOfSpeech))}</strong>
+              ${dictionaryPlural(word.english, word.partOfSpeech) ? `<span class="new-word-entry-plural">(<em>plural</em> ${escapeHtml(dictionaryPlural(word.english, word.partOfSpeech))})</span>` : ""}
+              <span class="new-word-entry-vietnamese">vi: ${escapeHtml(t(word.vietnamese))}</span>
+              <button type="button" class="portal-button portal-button-primary new-word-edit">Edit</button>
+            </div>
+            <p class="new-word-entry-definition">${escapeHtml(dictionaryDefinition(word.definition))}</p>
+          </article>`).join("") : '<p class="hint new-words-empty">No new words yet. Add a word or complete a news report vocabulary row.</p>';
+        Array.from(container.querySelectorAll("[data-news-vocabulary-row]")).forEach((rowEl, index) => {
+          rowEl.setAttribute("data-new-word-index", String(index));
+        });
+        if (words.length) {
+          Array.from(container.querySelectorAll("[data-new-word-index]")).forEach((rowEl, index) => {
+            const word = words[index] || {};
+            const editing = word.__editing === true;
+            if (editing) {
+              ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
+                const input = rowEl.querySelector(`[data-vocabulary-field="${key}"]`);
+                if (input) input.value = key === "syllabication" ? normalizeSyllabication(word[key]) : t(word[key]);
+              });
+              bindVocabularyLookupButtons(rowEl);
+              bindVocabularyDefinitionAutosize(rowEl);
+            }
+            rowEl.hidden = state.newWordsPageSize !== "all" && (index < start || index >= start + pageSize);
+            rowEl.querySelector(".news-vocabulary-remove")?.addEventListener("click", () => {
+              state.newWords = state.newWords.filter((candidate) => candidate !== word);
+              renderNewWordsRows();
+            });
+            rowEl.querySelector(".new-word-edit")?.addEventListener("click", () => {
+              word.__editing = true;
+              renderNewWordsRows();
+            });
+          });
+        }
+        field("newWordsSummary").textContent = `${words.length} word${words.length === 1 ? "" : "s"}`;
+        field("newWordsPageStatus").textContent = `Page ${words.length ? state.newWordsPage : 0} / ${words.length ? totalPages : 0}`;
+        field("newWordsPrevBtn").disabled = state.newWordsPage <= 1;
+        field("newWordsNextBtn").disabled = state.newWordsPage >= totalPages;
+      }
+
+      async function loadNewWords() {
+        const data = await api(STUDENT_NEW_WORDS_PATH);
+        state.newWords = Array.isArray(data?.items) ? data.items : [];
+        state.newWordsLoaded = true;
+        renderNewWordsRows();
+      }
+
+      async function saveNewWords() {
+        const words = sortedNewWords();
+        Array.from(field("newWordsRows")?.querySelectorAll("[data-news-vocabulary-row]") || []).forEach((rowEl, index) => {
+          const sourceIndex = Number.parseInt(rowEl.getAttribute("data-new-word-index"), 10);
+          const word = words[sourceIndex];
+          if (!word) return;
+          ["partOfSpeech", "english", "vietnamese", "syllabication", "definition"].forEach((key) => {
+            word[key] = key === "syllabication" ? normalizeSyllabication(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value) : t(rowEl.querySelector(`[data-vocabulary-field="${key}"]`)?.value);
+          });
+          delete word.__editing;
+        });
+        const rows = state.newWords.map((word) => ({
+          id: t(word.id),
+          partOfSpeech: t(word.partOfSpeech),
+          english: t(word.english),
+          vietnamese: t(word.vietnamese),
+          syllabication: t(word.syllabication),
+          definition: t(word.definition),
+        })).filter((word) => Object.values(word).some(Boolean));
+        const data = await api(STUDENT_NEW_WORDS_PATH, { method: "PUT", body: { items: rows } });
+        state.newWords = Array.isArray(data?.items) ? data.items : [];
+        state.newWordsLoaded = true;
+        renderNewWordsRows();
+        setGlobalStatus("New words saved.");
+      }
+
+      function addNewWords(count = 1) {
+        const amount = Math.max(1, Math.min(5, Number(count) || 1));
+        for (let index = 0; index < amount; index += 1) state.newWords.push({ __editing: true });
+        state.newWordsPageSize = "all";
+        renderNewWordsRows();
       }
 
       function reportPayload() {
@@ -5147,6 +5451,7 @@
         setInputValue("biasAssessment", report?.biasAssessment);
         renderVocabularyRows(field("newsVocabularyRows"), report?.vocabulary || []);
         state.newsCurrentMmrPassed = report?.currentMmrPassed === true;
+        state.newsFormDirty = false;
         state.newsSubmissionState = t(report?.submissionState);
         state.newsDateSatisfied = report?.dateSatisfied === true || Boolean(t(report?.dateSatisfiedAt));
         state.newsReportDateLocked = report?.reportDateLocked === true || Boolean(t(report?.reportDateLockedAt));
@@ -5511,8 +5816,56 @@
 
       function markNewsDraftDirty() {
         if (!t(field("reportDate")?.value)) return;
+        state.newsFormDirty = true;
         state.newsCurrentMmrPassed = false;
         updateSubmitAvailability();
+      }
+
+      function clearNewsReportForm() {
+        NEWS_FORM_FIELD_IDS
+          .filter((fieldId) => fieldId !== "vocabulary")
+          .forEach((fieldId) => setInputValue(fieldId, ""));
+        renderVocabularyRows(field("newsVocabularyRows"), []);
+        applyNewsFieldValidationUi({}, [], {}, []);
+        state.newsCurrentMmrPassed = false;
+        state.newsFormDirty = false;
+        state.newsSubmissionState = "";
+        state.newsDateSatisfied = false;
+        state.newsReportDateLocked = false;
+        setNewsComplianceModalOpen(false);
+        setFormStatus("New form ready. / Biểu mẫu mới đã sẵn sàng.", false, false);
+        updateSubmitAvailability();
+      }
+
+      function requestNewNewsReportForm() {
+        if (!state.newsFormDirty) {
+          clearNewsReportForm();
+          return;
+        }
+        const modal = field("newNewsFormConfirmModal");
+        state.newNewsFormConfirmModalOpen = true;
+        modal?.classList.remove("hidden");
+        syncPortalModalBodyState();
+      }
+
+      function closeNewNewsFormConfirmModal() {
+        state.newNewsFormConfirmModalOpen = false;
+        field("newNewsFormConfirmModal")?.classList.add("hidden");
+        syncPortalModalBodyState();
+      }
+
+      async function saveNewsWorkAndStartNewForm() {
+        const saveButton = field("newNewsFormSaveBtn");
+        if (saveButton instanceof HTMLButtonElement) saveButton.disabled = true;
+        try {
+          closeNewNewsFormConfirmModal();
+          await checkReport();
+          clearNewsReportForm();
+        } catch (error) {
+          handleError(error);
+        } finally {
+          if (saveButton instanceof HTMLButtonElement) saveButton.disabled = false;
+        }
       }
       async function loadDashboard() {
         state.dashboard = await api(STUDENT_DASHBOARD_PATH);
@@ -5522,6 +5875,8 @@
       }
       async function loadCalendar(options = {}) {
         const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=60`);
+        state.newsVocabularyMinimumWords = Number.parseInt(String(data?.validationConfig?.vocabularyMinimumWords), 10) || 5;
+        renderVocabularyMinimumLabel();
         state.window = data?.window || null;
         state.calendarRows = Array.isArray(data?.calendar) ? data.calendar : [];
         state.newsItems = Array.isArray(data?.items) ? data.items : [];
@@ -5907,9 +6262,19 @@
       field("closeNewsComplianceModalBtn")?.addEventListener("click", () => {
         setNewsComplianceModalOpen(false);
       });
-      field("newsComplianceModalCloseActionBtn")?.addEventListener("click", () => {
-        setNewsComplianceModalOpen(false);
-      });
+          field("newsComplianceModalCloseActionBtn")?.addEventListener("click", () => {
+            setNewsComplianceModalOpen(false);
+          });
+          field("newNewsFormBtn")?.addEventListener("click", () => {
+            requestNewNewsReportForm();
+          });
+          field("newNewsFormIgnoreBtn")?.addEventListener("click", () => {
+            closeNewNewsFormConfirmModal();
+            clearNewsReportForm();
+          });
+          field("newNewsFormSaveBtn")?.addEventListener("click", () => {
+            saveNewsWorkAndStartNewForm();
+          });
       field("submitSuccessModalBackdrop")?.addEventListener("click", () => {
         setSubmitSuccessModalOpen(false);
       });
@@ -5947,12 +6312,42 @@
         active.currentMmrPassed = false;
         syncNewsWeekSetViewerControls();
       });
-      field("addNewsVocabularyRowBtn")?.addEventListener("click", () => {
-        addVocabularyRow(field("newsVocabularyRows"));
-      });
-      field("addNewsWeekSetModalVocabularyRowBtn")?.addEventListener("click", () => {
-        addVocabularyRow(field("newsWeekSetModalVocabularyRows"));
-      });
+          field("addNewsVocabularyRowBtn")?.addEventListener("click", () => {
+            addVocabularyRow(field("newsVocabularyRows"));
+            markNewsDraftDirty();
+          });
+          field("newsVocabularyRows")?.addEventListener("input", () => {
+            markNewsDraftDirty();
+          });
+          field("newsVocabularyRows")?.addEventListener("change", () => {
+            markNewsDraftDirty();
+          });
+          field("addNewsWeekSetModalVocabularyRowBtn")?.addEventListener("click", () => {
+            addVocabularyRow(field("newsWeekSetModalVocabularyRows"));
+          });
+          field("newWordsSaveBtn")?.addEventListener("click", () => {
+            saveNewWords().catch(handleError);
+          });
+          field("newWordsAddOneBtn")?.addEventListener("click", () => addNewWords(1));
+          field("newWordsAddFiveBtn")?.addEventListener("click", () => addNewWords(5));
+          field("newWordsSort")?.addEventListener("change", (event) => {
+            state.newWordsSort = t(event.target?.value) || "date-desc";
+            state.newWordsPage = 1;
+            renderNewWordsRows();
+          });
+          field("newWordsPageSize")?.addEventListener("change", (event) => {
+            state.newWordsPageSize = t(event.target?.value) || "10";
+            state.newWordsPage = 1;
+            renderNewWordsRows();
+          });
+          field("newWordsPrevBtn")?.addEventListener("click", () => {
+            state.newWordsPage = Math.max(1, state.newWordsPage - 1);
+            renderNewWordsRows();
+          });
+          field("newWordsNextBtn")?.addEventListener("click", () => {
+            state.newWordsPage += 1;
+            renderNewWordsRows();
+          });
       renderVocabularyRows(field("newsVocabularyRows"));
       renderVocabularyRows(field("newsWeekSetModalVocabularyRows"));
       field("studentTextZoomDownBtn")?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP));

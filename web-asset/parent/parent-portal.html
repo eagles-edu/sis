@@ -531,7 +531,7 @@
                   <p id="newsWeekSetModalMeta" class="hint">Mở một tuần báo cáo để xem các bài đã nộp.</p>
                   <div class="row">
                     <div class="field c4">
-                      <label for="newsViewerReportDate">Ngày báo cáo</label>
+                      <label for="newsViewerReportDate">1. Ngày báo cáo</label>
                       <input id="newsViewerReportDate" type="date" readonly aria-readonly="true">
                     </div>
                     <div class="field c4">
@@ -545,49 +545,54 @@
                   </div>
                   <div class="row">
                     <div class="field c12">
-                      <label for="newsViewerSourceLink">I. Nguồn: liên kết bài báo</label>
+                      <label for="newsViewerSourceLink">2. Nguồn: dán liên kết đầy đủ của bài báo</label>
                       <input id="newsViewerSourceLink" type="url" readonly aria-readonly="true">
                     </div>
                     <div class="field c12">
-                      <label for="newsViewerArticleTitle">II.A. Tiêu đề</label>
+                      <label for="newsViewerArticleTitle">3. Dán tiêu đề đầy đủ của bài báo</label>
                       <input id="newsViewerArticleTitle" type="text" readonly aria-readonly="true">
                     </div>
                     <div class="field c6">
-                      <label for="newsViewerByline">II.B. Tác giả (byline)</label>
+                      <label for="newsViewerByline">4. Dán tác giả (byline; nếu không có, nhập CNN hoặc BBC)</label>
                       <input id="newsViewerByline" type="text" readonly aria-readonly="true">
                     </div>
                     <div class="field c6">
-                      <label for="newsViewerArticleDateline">II.C. Mốc thời gian (dateline) / Ngày đăng</label>
+                      <label for="newsViewerArticleDateline">5. Mốc thời gian (dateline) / Ngày đăng</label>
                       <input id="newsViewerArticleDateline" type="text" readonly aria-readonly="true">
                     </div>
                     <div class="field c12">
-                      <label for="newsViewerLeadSynopsis">II.D. Tóm tắt mở bài</label>
+                      <label for="newsViewerLeadSynopsis">6. Dán tóm tắt mở bài (đoạn đầu của bài báo)</label>
                       <textarea id="newsViewerLeadSynopsis" readonly aria-readonly="true"></textarea>
                     </div>
                     <div class="field c6">
-                      <label for="newsViewerActionActor">II.E.i. Ai/cái gì thực hiện hành động/tin tức</label>
+                      <label for="newsViewerActionActor">7. Ai hoặc cái gì thực hiện hành động tin tức?</label>
                       <textarea id="newsViewerActionActor" readonly aria-readonly="true"></textarea>
                     </div>
                     <div class="field c6">
-                      <label for="newsViewerActionAffected">II.E.ii. Ai/cái gì bị tác động</label>
+                      <label for="newsViewerActionAffected">8. Ai hoặc cái gì nhận chịu tác động của hành động tin tức?</label>
                       <textarea id="newsViewerActionAffected" readonly aria-readonly="true"></textarea>
                     </div>
                     <div class="field c6">
-                      <label for="newsViewerActionWhere">II.E.iii. Hành động/tin tức xảy ra ở đâu</label>
+                      <label for="newsViewerActionWhere">9. Hành động tin tức xảy ra ở đâu?</label>
                       <textarea id="newsViewerActionWhere" readonly aria-readonly="true"></textarea>
                     </div>
                     <div class="field c6">
-                      <label for="newsViewerActionWhat">II.E.iv. Hành động/tin tức là gì</label>
+                      <label for="newsViewerActionWhat">10. Mô tả hành động tin tức hiện tại (đã xảy ra điều gì)?</label>
                       <textarea id="newsViewerActionWhat" readonly aria-readonly="true"></textarea>
                     </div>
                     <div class="field c12">
-                      <label for="newsViewerActionWhy">II.E.v. Vì sao hành động/tin tức xảy ra</label>
+                      <label for="newsViewerActionWhy">11. Vì sao hoặc bằng cách nào hành động tin tức xảy ra?</label>
                       <textarea id="newsViewerActionWhy" readonly aria-readonly="true"></textarea>
                     </div>
                     <div class="field c12">
-                      <label for="newsViewerBiasAssessment">II.F. Thiên kiến/chủ đích/định hướng? Giải thích</label>
+                      <label for="newsViewerBiasAssessment">12. Bạn có nghi ngờ bài báo có thiên kiến, chủ đích, định hướng hoặc xuyên tạc không? Hãy giải thích.</label>
                       <textarea id="newsViewerBiasAssessment" readonly aria-readonly="true"></textarea>
                     </div>
+                    <section id="newsWeekSetModalVocabulary" class="news-review-vocabulary" aria-label="Vocabulary">
+                      <strong>13. Từ vựng</strong>
+                      <div id="newsWeekSetModalVocabularyRows" class="news-review-vocabulary-rows"></div>
+                      <hr>
+                    </section>
                   </div>
                 </div>
                 <div class="portal-modal-actions">
@@ -823,7 +828,7 @@
         </section>
 
         <div class="draft-actions" id="draftActions">
-          <button id="saveDraftBtn" type="button" class="portal-button portal-button-alt" title="Lưu bản nháp hồ sơ" aria-label="Lưu bản nháp hồ sơ">Lưu nháp</button>
+          <button id="saveDraftBtn" type="button" class="portal-button portal-button-affirm" title="Lưu bản nháp hồ sơ" aria-label="Lưu bản nháp hồ sơ">Lưu nháp</button>
           <button id="submitReviewBtn" type="button" class="portal-button portal-button-primary" title="Gửi hồ sơ để duyệt" aria-label="Gửi hồ sơ để duyệt">
             Gửi duyệt
           </button>
@@ -5432,6 +5437,18 @@
       Object.keys(NEWS_VIEWER_MODAL_FIELD_IDS).forEach((fieldKey) => {
         setNewsViewerFieldValue(fieldKey, active?.[fieldKey] || "");
       });
+      const vocabularyRows = document.getElementById("newsWeekSetModalVocabularyRows");
+      if (vocabularyRows) {
+        const vocabulary = Array.isArray(active?.vocabulary) ? active.vocabulary : [];
+        vocabularyRows.innerHTML = vocabulary.length ? vocabulary.map((row) => `
+          <div class="news-review-vocabulary-row">
+            <span>${escapeHtml(normalizeText(row?.partOfSpeech))}</span>
+            <span>${escapeHtml(normalizeText(row?.english))}</span>
+            <span>${escapeHtml(normalizeText(row?.vietnamese))}</span>
+            <span>${escapeHtml(normalizeText(row?.syllabication))}</span>
+            <span class="news-review-vocabulary-definition">${escapeHtml(normalizeText(row?.definition))}</span>
+          </div>`).join("") : '<p class="small">No vocabulary saved.</p>';
+      }
       syncNewsWeekSetViewerControls();
       scheduleChipTooltipRefresh(document.getElementById("newsWeekSetModal") || document);
     }

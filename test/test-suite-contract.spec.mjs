@@ -15,3 +15,10 @@ test("test suite runner gives portal-site-review a longer per-file timeout", () 
   assert.match(script, /function resolveFileTimeoutMs\(filePath\) \{/)
   assert.match(script, /return FILE_TIMEOUT_OVERRIDES.get\(filePath\) \|\| DEFAULT_FILE_TIMEOUT_MS/)
 })
+
+test("test suite runner supports resuming from a numbered file", () => {
+  assert.match(script, /--from <number>/)
+  assert.match(script, /const fromPosition = fromText \? Number\.parseInt\(fromText, 10\) : 1/)
+  assert.match(script, /const files = allFiles\.slice\(fromPosition - 1\)/)
+  assert.match(script, /\$\{index \+ fromPosition\}\/\$\{allFiles\.length\}/)
+})

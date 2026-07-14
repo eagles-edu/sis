@@ -326,42 +326,6 @@
           transform: scale(1.2);
         }
       }
-      button.btn-delete:not(.portal-button) {
-        --btn-active-shadow: var(--portal-button-shadow-active);
-        --btn-hover-shadow: var(--portal-button-shadow-hover);
-        --btn-ripple-color: var(--portal-color-1a725bdb9a);
-        background: var(--portal-button-red-fill);
-        border-color: var(--portal-button-red-stroke);
-        color: var(--portal-button-red-ink);
-      }
-      button.btn-edit:not(.portal-button) {
-        --btn-active-shadow: var(--portal-button-shadow-active);
-        --btn-hover-shadow: var(--portal-button-shadow-hover);
-        --btn-ripple-color: var(--portal-color-2774a5c299);
-        background: var(--portal-button-green-fill);
-        border-color: var(--portal-button-green-stroke);
-        color: var(--portal-button-green-ink);
-      }
-      button.btn-refresh:not(.portal-button) {
-        --btn-active-shadow: var(--portal-button-shadow-active);
-        --btn-hover-shadow: var(--portal-button-shadow-hover);
-        --btn-ripple-color: var(--portal-color-41b1689b86);
-        background: var(--portal-button-teal-fill);
-        border-color: var(--portal-button-teal-stroke);
-        color: var(--portal-button-teal-ink);
-      }
-      button:is(.btn-refresh, .btn-edit, .btn-delete):not(.portal-button) {
-        align-items: center;
-        display: inline-flex;
-        font-size: var(--admin-action-btn-font-size);
-        inline-size: min(100%, var(--admin-action-btn-min-inline));
-        justify-content: center;
-        max-inline-size: min(100%, var(--admin-action-btn-min-inline));
-        min-height: var(--portal-button-min-block);
-        min-width: min(100%, var(--admin-action-btn-min-inline));
-        padding: 0 var(--admin-action-btn-inline-padding);
-        white-space: nowrap;
-      }
       .text-zoom-controls button {
         inline-size: auto !important;
         max-inline-size: none !important;
@@ -3324,12 +3288,15 @@
       .news-review-vocabulary-row {
         display: grid;
         gap: 8px;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
       .news-review-vocabulary-row span {
         color: var(--ink);
         font-size: 12px;
         overflow-wrap: anywhere;
+      }
+      .news-review-vocabulary-row .news-review-vocabulary-definition {
+        grid-column: 1 / -1;
       }
       .parent-queue-report-hero {
         background: var(--portal-surface-support);
