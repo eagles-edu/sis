@@ -333,7 +333,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2716
+              "height": 2837
             },
             ".wrap": {
               "selector": ".wrap",
@@ -345,7 +345,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2668
+              "height": 2789
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -357,7 +357,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2605
+              "height": 2726
             },
             ".panel": {
               "selector": ".panel",
@@ -2659,7 +2659,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1100
+              "height": 1609
             },
             ".wrap": {
               "selector": ".wrap",
@@ -2671,7 +2671,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 838
+              "height": 1561
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -2683,7 +2683,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 775
+              "height": 1498
             },
             ".panel": {
               "selector": ".panel",
@@ -5811,7 +5811,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3132
+              "height": 2716
             },
             ".wrap": {
               "selector": ".wrap",
@@ -5823,7 +5823,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3084
+              "height": 2668
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -5835,7 +5835,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3021
+              "height": 2605
             },
             ".panel": {
               "selector": ".panel",
@@ -6091,7 +6091,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3505
+              "height": 3316
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6103,7 +6103,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3457
+              "height": 3268
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6115,7 +6115,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3394
+              "height": 3205
             },
             ".panel": {
               "selector": ".panel",
@@ -8153,7 +8153,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1100
+              "height": 1609
             },
             ".wrap": {
               "selector": ".wrap",
@@ -8165,7 +8165,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 838
+              "height": 1561
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -8177,7 +8177,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 775
+              "height": 1498
             },
             ".panel": {
               "selector": ".panel",

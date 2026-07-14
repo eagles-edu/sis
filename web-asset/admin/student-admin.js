@@ -14920,7 +14920,7 @@
           const selected = isParentQueueItemSelected(item.id);
           const held = normalizeLower(item.status) === "hold";
           tr.innerHTML = `
-          <td><input type="checkbox" data-performance-queue-select="${escapeHtml(item.id)}"${selected ? " checked" : ""}></td>
+          <td><input type="checkbox" name="performanceQueueSelect_${sanitizeDomIdPart(item.id)}" data-performance-queue-select="${escapeHtml(item.id)}"${selected ? " checked" : ""}></td>
           <td><label class="small" for="queue_hold_${sanitizeDomIdPart(item.id)}">Hold</label><input type="checkbox" id="queue_hold_${sanitizeDomIdPart(item.id)}" data-performance-queue-hold="${escapeHtml(item.id)}"${held ? " checked" : ""}></td>
           <td>${escapeHtml(formatDateTime(item.queuedAt))}</td>
           <td><a href="#" class="queue-row-link" data-queue-open="${escapeHtml(item.id)}">${escapeHtml(eaglesId || "(missing id)")}</a></td>

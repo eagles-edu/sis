@@ -1526,17 +1526,17 @@
               <div class="action-cell-layout">
                 <div class="action-stack">
                   <div class="action-grid">
-                  <select data-action aria-label="Enrollment action">
+                  <select name="enrollmentAction" data-action aria-label="Enrollment action">
                     <option value="" selected disabled>Select action</option>
                     <option value="change-level">Change level</option>
                     <option value="promote">Promote</option>
                     <option value="unenroll">Unenroll</option>
                   </select>
-                  <select data-level aria-label="Target level"></select>
-                  <select data-reason aria-label="Unenrollment reason"></select>
+                  <select name="enrollmentTargetLevel" data-level aria-label="Target level"></select>
+                  <select name="enrollmentUnenrollmentReason" data-reason aria-label="Unenrollment reason"></select>
                   <button type="button" class="portal-button portal-button-affirm" data-apply>Apply</button>
                   <div class="action-comment-row">
-                    <textarea data-comment class="comment-input action-comment" rows="1" placeholder="Comment" aria-label="Enrollment comment"></textarea>
+                    <textarea name="enrollmentComment" data-comment class="comment-input action-comment" rows="1" placeholder="Comment" aria-label="Enrollment comment"></textarea>
                     ${historyRailHtml(row)}
                   </div>
                 </div>

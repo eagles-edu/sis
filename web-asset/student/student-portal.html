@@ -1377,7 +1377,7 @@
                 </div>
 
                 <div id="newsVocabularyField" class="field c12 news-vocabulary-field">
-                  <label id="newsVocabularyLabel">13. Vocabulary (minimum 5 words)</label>
+                  <label for="addNewsVocabularyRowBtn">13. Vocabulary (minimum 5 words)</label>
                   <div id="newsVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
                   <button id="addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-affirm">Add Word</button>
                 </div>
@@ -5209,18 +5209,21 @@
         autoResizeVocabularyDefinition(textarea);
       }
 
+      let vocabularyRowUid = 0;
+
       function vocabularyRowHtml(index, removable = false) {
+        const rowUid = `${index}-${++vocabularyRowUid}`;
         const options = NEWS_VOCABULARY_PARTS_OF_SPEECH.map((part) => `<option value="${part}">${part}</option>`).join("");
         return `<div class="news-vocabulary-row" data-news-vocabulary-row="${index}">
-          <select data-vocabulary-field="partOfSpeech" aria-label="Part of speech" required><option value="">Part of speech</option>${options}</select>
-          <input type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" required>
-          <input type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
-          <input type="text" data-vocabulary-field="syllabication" placeholder="Syllabication (stress marked)" aria-label="Syllabication with stressed syllable marked" required>
+          <select name="vocabularyPartOfSpeech-${rowUid}" data-vocabulary-field="partOfSpeech" aria-label="Part of speech" required><option value="">Part of speech</option>${options}</select>
+          <input name="vocabularyEnglish-${rowUid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" required>
+          <input name="vocabularyVietnamese-${rowUid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
+          <input name="vocabularySyllabication-${rowUid}" type="text" data-vocabulary-field="syllabication" placeholder="Syllabication (stress marked)" aria-label="Syllabication with stressed syllable marked" required>
           <div class="news-vocabulary-definition-row">
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
               ${NEWS_VOCABULARY_LOOKUPS.map(([label]) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" aria-label="${label} lookup">${label}</button>`).join("")}
             </div>
-            <textarea data-vocabulary-field="definition" rows="1" placeholder="Definition" aria-label="Definition" required></textarea>
+            <textarea name="vocabularyDefinition-${rowUid}" data-vocabulary-field="definition" rows="1" placeholder="Definition" aria-label="Definition" required></textarea>
             ${removable ? `<details class="news-vocabulary-row-menu">
               <summary class="news-vocabulary-row-dots" aria-label="Open vocabulary row actions">⋮</summary>
               <div class="news-vocabulary-row-menu-panel">
