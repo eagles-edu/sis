@@ -88,8 +88,9 @@ crontab_write() {
 
 mkdir -p "${LOG_DIR}"
 CRON_LOG="${LOG_DIR}/sis-config-repair-cron.log"
+RUNNER="${RUNTIME_ROOT}/tools/run-sis-config-repair-cron.sh"
 MARKER="# sis-config-repair"
-CRON_CMD="cd ${RUNTIME_ROOT} && DOTENV_CONFIG_PATH=${ENV_FILE} ${NODE_BIN} -r dotenv/config tools/sis-config-repair.mjs >> ${CRON_LOG} 2>&1"
+CRON_CMD="${RUNNER} ${RUNTIME_ROOT} ${ENV_FILE} ${NODE_BIN} ${CRON_LOG}"
 ENTRY="${SCHEDULE} ${CRON_CMD} ${MARKER}"
 
 if [[ ${CHECK_ONLY} -eq 1 ]]; then

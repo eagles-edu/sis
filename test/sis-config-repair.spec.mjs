@@ -7,13 +7,14 @@ import test from "node:test"
 
 const cronScriptPath = path.resolve(process.cwd(), "tools/install-sis-config-cron.sh")
 const repairScriptPath = path.resolve(process.cwd(), "tools/sis-config-repair.mjs")
+const runnerScriptPath = path.resolve(process.cwd(), "tools/run-sis-config-repair-cron.sh")
 
 test("install-sis-config-cron.sh check-only output includes an explicit node binary path", () => {
   const output = execFileSync(cronScriptPath, ["--check-only"], {
     encoding: "utf8",
   })
 
-  assert.match(output, /cd .*sis && DOTENV_CONFIG_PATH=.* \/.*node -r dotenv\/config tools\/sis-config-repair\.mjs >> .*sis-config-repair-cron\.log 2>&1 # sis-config-repair/)
+  assert.match(output, /\/tools\/run-sis-config-repair-cron\.sh .* \/.*node .*sis-config-repair-cron\.log # sis-config-repair/)
 })
 
 test("install-sis-config-cron.sh reports an error when node cannot be resolved", () => {
@@ -100,4 +101,38 @@ test("sis-config-repair.mjs logs an ISO timestamp prefix on successful sync", as
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
   }
+})
+
+test("sis-config-repair cron runner prefixes every line and rotates at 10 MiB", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "sis-config-repair-rotation-"))
+  const logPath = path.join(tempDir, "sis-config-repair-cron.log")
+  const fakeNode = path.join(tempDir, "fake-node.sh")
+  fs.writeFileSync(fakeNode, "#!/usr/bin/env bash\nprintf '%s\\n' success failure >&2\nexit 7\n", { mode: 0o755 })
+  fs.writeFileSync(logPath, "x".repeat(10 * 1024 * 1024), "utf8")
+
+  try {
+    const result = execFileSync(runnerScriptPath, [process.cwd(), "/nonexistent.env", fakeNode, logPath], {
+      encoding: "utf8",
+      timeout: 10000,
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+    assert.fail(`expected runner failure, got ${result}`)
+  } catch (error) {
+    assert.equal(error.status, 7)
+  }
+
+  assert.equal(fs.statSync(`${logPath}.1`).size, 10 * 1024 * 1024)
+  const current = fs.readFileSync(logPath, "utf8")
+  assert.match(current, /^\[\d{4}-\d{2}-\d{2}T[^\]]+\+\d{2}:\d{2}\] success$/m)
+  assert.match(current, /^\[\d{4}-\d{2}-\d{2}T[^\]]+\+\d{2}:\d{2}\] failure$/m)
+
+  fs.writeFileSync(`${logPath}.1`, "old", "utf8")
+  fs.writeFileSync(logPath, "x".repeat(10 * 1024 * 1024), "utf8")
+  try {
+    execFileSync(runnerScriptPath, [process.cwd(), "/nonexistent.env", fakeNode, logPath], { timeout: 10000 })
+  } catch (error) {
+    assert.equal(error.status, 7)
+  }
+  assert.equal(fs.readFileSync(`${logPath}.1`, "utf8"), "x".repeat(10 * 1024 * 1024))
+  fs.rmSync(tempDir, { recursive: true, force: true })
 })

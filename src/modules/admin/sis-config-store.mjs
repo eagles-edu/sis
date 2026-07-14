@@ -277,8 +277,8 @@ function assertValidRuntimeDatabaseUrl({
   )
   error.statusCode = 500
   error.filePath = filePath
-  error.line = location?.line || 0
-  error.column = location?.column || 0
+  error.line = location ? location.line || 0 : 0
+  error.column = location ? location.column || 0 : 0
   error.source = source
   throw error
 }
@@ -359,9 +359,9 @@ function normalizeSchoolSetupQuarters(value) {
   const entries = Array.isArray(value) ? value : []
   return entries
     .map((entry) => {
-      const quarter = normalizeLower(entry?.quarter)
-      const startDate = normalizeText(entry?.startDate).slice(0, 10)
-      const endDate = normalizeText(entry?.endDate).slice(0, 10)
+      const quarter = normalizeLower(entry ? entry.quarter : "")
+      const startDate = normalizeText(entry ? entry.startDate : "").slice(0, 10)
+      const endDate = normalizeText(entry ? entry.endDate : "").slice(0, 10)
       if (!quarter || !startDate || !endDate) return null
       return { quarter, startDate, endDate }
     })
@@ -374,7 +374,7 @@ function defaultLevelTileStyle(levelName = "") {
   const theme = typeof themeEntry === "string" ? null : (themeEntry || null)
   return {
     title: DEFAULT_LEVEL_TILE_LABEL_BY_LEVEL.get(normalized) || normalizeText(levelName),
-    bgColor: normalizeText(theme?.color),
+    bgColor: normalizeText(theme ? theme.color : ""),
     imageDataUrl: DEFAULT_LEVEL_TILE_IMAGE_PATH_BY_LEVEL.get(normalized) || DEFAULT_SCHOOL_LOGO_IMAGE_PATH,
   }
 }
@@ -629,7 +629,7 @@ function parseJsonFile(filePath) {
  * @returns {string}
  */
 function backupCorruptJsonFileIfNeeded(filePath, snapshot) {
-  if (!snapshot?.exists) return ""
+  if (!snapshot || !snapshot.exists) return ""
   if (isPlainObject(snapshot.parsed) && !snapshot.error) return ""
   const backupPath = `${filePath}.BAK-${backupStamp()}-${process.pid}`
   fs.copyFileSync(filePath, backupPath)
@@ -764,14 +764,14 @@ export async function getSisConfigMirrorHealthSnapshot() {
   return {
     file: {
       present: filePresent,
-      source: fileLoaded?.source || "missing",
-      updatedAt: normalizeText(fileLoaded?.updatedAt),
+      source: fileLoaded ? fileLoaded.source || "missing" : "missing",
+      updatedAt: normalizeText(fileLoaded ? fileLoaded.updatedAt : ""),
       error: errorMessage(fileSnapshot.error),
     },
     db: {
       present: dbPresent,
-      source: dbSnapshot?.source || "missing",
-      updatedAt: normalizeText(dbSnapshot?.updatedAt),
+      source: dbSnapshot ? dbSnapshot.source || "missing" : "missing",
+      updatedAt: normalizeText(dbSnapshot ? dbSnapshot.updatedAt : ""),
       error: "",
     },
     synced: fileVsDbSynced,
