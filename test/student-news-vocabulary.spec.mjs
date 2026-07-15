@@ -164,7 +164,10 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
 })
 
 test("new form persistence protects edits made before a report date exists", () => {
-  const dirtyFunction = STUDENT_HTML.match(/function markNewsDraftDirty\(\) \{[\s\S]*?\n      \}/)?.[0] || ""
+  const dirtyFunction =
+    STUDENT_HTML.match(
+      /function markNewsDraftDirty\(\) \{[\s\S]*?\n{6}\}/,
+    )?.[0] || ""
   assert.match(dirtyFunction, /state\.newsFormDirty = true/)
   assert.doesNotMatch(dirtyFunction, /reportDate/)
   assert.match(STUDENT_HTML, /newNewsFormBtn[\s\S]*requestNewNewsReportForm\(\)/)
