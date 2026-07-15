@@ -167,7 +167,7 @@
         </div>
         <div class="field c4">
           <label for="loginBtn">&nbsp;</label>
-          <button id="loginBtn" class="portal-button portal-button-primary" type="button">Sign In</button>
+          <button id="loginBtn" class="portal-button portal-button-primary" type="button" title="Sign in to load student points" aria-label="Sign in to load student points">Sign In</button>
         </div>
       </div>
       <div class="login-links">
@@ -189,11 +189,11 @@
           </div>
           <div class="field c3">
             <label>
-            <button id="refreshChartBtn" type="button" class="portal-button portal-button-teal-refresh">Refresh Chart</button>&nbsp;</label>
+            <button id="refreshChartBtn" type="button" class="portal-button portal-button-teal-refresh" title="Reload the points chart from current records" aria-label="Reload the points chart from current records">Refresh Chart</button>&nbsp;</label>
           </div>
           <div class="field c3">
             <label>
-            <button id="logoutBtn" type="button" class="portal-button portal-button-danger">Logout</button>&nbsp;</label>
+            <button id="logoutBtn" type="button" class="portal-button portal-button-danger" title="Sign out of the student points admin" aria-label="Sign out of the student points admin">Logout</button>&nbsp;</label>
           </div>
         </div>
         <div class="chart-wrap panel">
@@ -238,12 +238,12 @@
           <table>
             <thead>
               <tr>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="studentNumber">#</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="eaglesId">Eagles ID</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="fullName">Name</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="level">Level</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="totalPoints">Points</button></th>
-                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="lastActivityAt">Last Activity</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="studentNumber" title="Sort the table by student number" aria-label="Sort the table by student number">#</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="eaglesId" title="Sort the table by Eagles ID" aria-label="Sort the table by Eagles ID">Eagles ID</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="fullName" title="Sort the table by student name" aria-label="Sort the table by student name">Name</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="level" title="Sort the table by class level" aria-label="Sort the table by class level">Level</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="totalPoints" title="Sort the table by total points" aria-label="Sort the table by total points">Points</button></th>
+                <th scope="col"><button type="button" class="portal-button portal-button-info" data-sort="lastActivityAt" title="Sort the table by most recent activity" aria-label="Sort the table by most recent activity">Last Activity</button></th>
                 <th scope="col">Action</th>
               </tr>
             </thead>
@@ -404,8 +404,8 @@
             <td>${Number(row.totalPoints || 0)}</td>
             <td>${t(row.lastActivityAt).slice(0, 10) || "-"}</td>
             <td>
-              <button type="button" class="portal-button portal-button-info" data-open-ledger="${t(row.studentRefId)}">Ledger</button>
-              <button type="button" class="portal-button portal-button-affirm" data-edit-total="${t(row.studentRefId)}">Set Total</button>
+              <button type="button" class="portal-button portal-button-info" title="Open the selected student's points ledger" aria-label="Open the selected student's points ledger" data-open-ledger="${t(row.studentRefId)}">Ledger</button>
+              <button type="button" class="portal-button portal-button-affirm" title="Set the selected student's points total" aria-label="Set the selected student's points total" data-edit-total="${t(row.studentRefId)}">Set Total</button>
             </td>
           `;
           tr.querySelector(`[data-open-ledger="${row.studentRefId}"]`)?.addEventListener("click", () => {

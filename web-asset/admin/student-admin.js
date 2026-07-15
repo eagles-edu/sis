@@ -254,8 +254,7 @@
       let activeButtonTooltip = null;
       let buttonTooltipRoot = null;
       let buttonTooltipBound = false;
-      const BUTTON_TOOLTIP_SELECTOR =
-        'button:not([data-button-tooltip="off"]):not(.history-rail__button):not(.top-search-open-btn)';
+      const BUTTON_TOOLTIP_SELECTOR = 'button:not([data-button-tooltip="off"])';
 
       function tooltipTextForButton(buttonEl) {
         if (!(buttonEl instanceof HTMLButtonElement)) return "";
@@ -403,6 +402,17 @@
         ["settingsResetBtn", ["Reset Settings", "Reset Settings"]],
         ["schoolSetupAutoFillBtn", ["Auto Fill", "Auto Fill School Setup"]],
         ["schoolSetupResetBtn", ["Reset Setup", "Reset School Setup"]],
+        ["parentQueueCloseBtn", ["Close", "Close the parent report review window"]],
+        ["parentQueueHoldBtn", ["Hold", "Hold this parent report for later review"]],
+        ["parentQueueEditBtn", ["Edit", "Edit this parent report before sending"]],
+        ["parentQueueRequeueBtn", ["Requeue", "Return this report to the sending queue"]],
+        ["parentQueueSendAllBtn", ["Send All", "Send all queued parent reports"]],
+        ["newsReviewViewerCloseBtn", ["Close", "Close the news report review window"]],
+        ["newsReviewViewerEditBtn", ["Edit", "Edit the selected news report"]],
+        ["newsReviewViewerSaveBtn", ["Save", "Save changes to the selected news report"]],
+        ["newsReviewViewerApproveBtn", ["Approve", "Approve the selected news report"]],
+        ["newsReviewViewerRevisionBtn", ["Request Revision", "Send the selected news report back for revision"]],
+        ["gradeChartModalCloseBtn", ["Close", "Close the grade chart window"]],
       ]);
 
       function applySharedButtonCopy(button) {
@@ -7490,7 +7500,7 @@
           <td data-label="Action">${newsReviewSetActionChipHtml(setAction)}</td>
           <td data-label="Status">${newsReviewStatusChipHtml(rowStatus)}</td>
           <td data-label="Latest Submission">${escapeHtml(formatDateTime(item?.latestSubmittedAt || ""))}<br><span class="small">${escapeHtml(normalizeText(item?.latestReviewedByUsername || "-"))}</span></td>
-          <td data-label="Open"><button type="button" class="queue-row-btn portal-button portal-button-info portal-button-open-week-set" data-news-review-open-week-set="${escapeHtml(weekSetId)}" data-news-review-open-report="${escapeHtml(normalizeText(item?.latestReportId))}">Open Week Set</button></td>
+          <td data-label="Open"><button type="button" class="queue-row-btn portal-button portal-button-info portal-button-open-week-set" data-button-tooltip="Open the reports belonging to this week set" data-news-review-open-week-set="${escapeHtml(weekSetId)}" data-news-review-open-report="${escapeHtml(normalizeText(item?.latestReportId))}">Open Week Set</button></td>
         `;
           rowsEl.appendChild(row);
         });
@@ -17434,7 +17444,7 @@
               `<h4 class="grade-chart-lane-title">${escapeHtml(lane.label)}</h4>` +
               `<div class="grade-chart-lane-actions">` +
               `<p class="grade-chart-lane-metrics">Rows ${lane.rows.length} | Avg ${averageLabel}</p>` +
-              `<button type="button" class="grade-chart-expand-btn" data-grade-chart-open="${escapeHtml(lane.key)}">Open</button>` +
+              `<button type="button" class="grade-chart-expand-btn portal-button portal-button-info" title="Open the detailed grade chart for this level" aria-label="Open the detailed grade chart for this level" data-grade-chart-open="${escapeHtml(lane.key)}">Open</button>` +
               `</div>` +
               `</div>` +
               `<div class="grade-chart-svg-wrap">${sparkline}</div>` +
@@ -17848,7 +17858,7 @@
             <a href="${escapeHtml(deepLink)}" data-pt-open-assignment="${escapeHtml(rowId)}" class="assignment-item-link">${escapeHtml(assignmentName)}</a>
           </td>
           <td>${forceLateStatus ? "Late / Pending" : (isGradeRecordCompleted(record) ? "Completed" : "Pending")}</td>
-          <td><button type="button" class="parent-tracking-link-btn" data-pt-view-assignment="${escapeHtml(rowId)}">View details</button></td>
+          <td><button type="button" class="parent-tracking-link-btn portal-button portal-button-info" title="Open assignment details and parent tracking" aria-label="Open assignment details and parent tracking" data-pt-view-assignment="${escapeHtml(rowId)}">View details</button></td>
         `;
 
           const link = tr.querySelector(`[data-pt-open-assignment="${rowId}"]`);
@@ -19092,7 +19102,7 @@
           <td>${escapeHtml(fullName)}</td>
           <td>${escapeHtml(englishName)}</td>
           <td>${levelBadgeHtml(levelName, { variant: "standard" })}</td>
-          <td><button type="button" class="portal-button portal-button-info top-search-open-btn" data-button-tooltip="off">Open Profile</button></td>
+          <td><button type="button" class="portal-button portal-button-info top-search-open-btn" data-button-tooltip="Open the selected student profile">Open Profile</button></td>
         `;
           const open = (event) => {
             if (event) event.stopPropagation();

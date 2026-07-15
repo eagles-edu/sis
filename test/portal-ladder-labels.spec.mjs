@@ -5,10 +5,9 @@ import test from "node:test"
 
 const rootDir = process.cwd()
 const hubHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/admin/portal-hub.html"), "utf8")
-const studentAdminHtml = fs.readFileSync(
-  path.resolve(rootDir, "web-asset/admin/student-admin.html"),
-  "utf8",
-)
+const studentAdminHtml = fs
+  .readFileSync(path.resolve(rootDir, "web-asset/admin/student-admin.html"), "utf8")
+  .replace(/\s+/g, " ")
 const studentAdminJs = fs.readFileSync(
   path.resolve(rootDir, "web-asset/admin/student-admin.js"),
   "utf8",

@@ -979,8 +979,8 @@
                     <p class="hint">You have unsaved work. Save it before starting a new form, or ignore it and lose it.<br>Bạn có dữ liệu chưa lưu. Hãy lưu trước khi tạo biểu mẫu mới, hoặc bỏ qua để mất dữ liệu.</p>
                   </div>
                   <div class="portal-modal-actions">
-                    <button id="newNewsFormSaveBtn" type="button" class="portal-button portal-button-affirm">Save &amp; New Form / Lưu và tạo biểu mẫu mới</button>
-                    <button id="newNewsFormIgnoreBtn" type="button" class="portal-button portal-button-danger">Ignore &amp; New Form / Bỏ qua và tạo biểu mẫu mới</button>
+                    <button id="newNewsFormSaveBtn" type="button" class="portal-button portal-button-affirm" title="Lưu bản nháp hiện tại rồi mở biểu mẫu báo cáo mới" aria-label="Lưu bản nháp hiện tại rồi mở biểu mẫu báo cáo mới">Save &amp; New</button>
+                    <button id="newNewsFormIgnoreBtn" type="button" class="portal-button portal-button-danger" title="Bỏ bản nháp hiện tại rồi mở biểu mẫu báo cáo mới" aria-label="Bỏ bản nháp hiện tại rồi mở biểu mẫu báo cáo mới">Discard &amp; New</button>
                   </div>
                 </div>
               </section>
@@ -1113,12 +1113,12 @@
                     <strong>13. Vocabulary</strong>
                     <div id="newsWeekSetModalVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
                     <div class="news-vocabulary-add-actions">
-                      <button id="addNewsWeekSetModalVocabularyRowBtn" type="button" class="portal-button portal-button-affirm">Add Word</button>
+                      <button id="addNewsWeekSetModalVocabularyRowBtn" type="button" class="portal-button portal-button-affirm" title="Thêm một dòng từ vựng vào báo cáo tin tức" aria-label="Thêm một dòng từ vựng vào báo cáo tin tức">Add Word</button>
                     </div>
                   </section>
                   <div class="portal-modal-actions student-news-form-actions">
-                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-affirm" title="Kiểm tra báo cáo trước khi nộp">Check</button>
-                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-affirm" title="Nộp lại báo cáo tin tức">Submit</button>
+                    <button id="newsWeekSetModalCheckBtn" type="button" class="portal-button portal-button-info" title="Kiểm tra các trường của báo cáo đang xem và chỉ ra nội dung cần sửa" aria-label="Kiểm tra các trường của báo cáo đang xem và chỉ ra nội dung cần sửa">Check</button>
+                    <button id="newsWeekSetModalSubmitBtn" type="button" class="portal-button portal-button-primary" title="Nộp lại báo cáo đang xem sau khi kiểm tra đạt yêu cầu" aria-label="Nộp lại báo cáo đang xem sau khi kiểm tra đạt yêu cầu">Submit</button>
                     <button id="newsWeekSetModalCloseActionBtn" type="button" class="portal-button portal-button-warning" title="Đóng trình xem báo cáo tin tức">Close</button>
                   </div>
                   <p id="newsWeekSetModalStatus" class="hint">Viewer is ready.</p>
@@ -1214,9 +1214,9 @@
                 dictionary-style version of your new academic vocabulary.</p>
               </div>
               <svg class="new-words-intro-illustration" viewBox="0 0 24 24" aria-label="Animated vocabulary study illustration" role="img" width="100" height="100" stroke="currentColor" stroke-width="2" fill="none">
-                <circle cx="12" cy="12" r="1"><animate id="water_ripples_one" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11" /><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0" /></circle>
-                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11" /><animate attributeName="opacity" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0" /></circle>
-                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11" /><animate attributeName="opacity" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0" /></circle>
+                <circle cx="12" cy="12" r="1"><animate id="water_ripples_one" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
               </svg>
             </div>
           </details>
@@ -1240,16 +1240,16 @@
           </div>
           <div id="newWordsRows" class="news-vocabulary-rows new-words-rows vocabulary-edit-surface"></div>
           <div class="new-words-add-actions">
-            <button id="newWordsAddOneBtn" type="button" class="portal-button portal-button-primary">Add 1 Word</button>
-            <button id="newWordsAddFiveBtn" type="button" class="portal-button portal-button-primary">Add 5 Words</button>
+            <button id="newWordsAddOneBtn" type="button" class="portal-button portal-button-primary" title="Thêm một mục từ vựng vào danh sách học tập" aria-label="Thêm một mục từ vựng vào danh sách học tập">Add 1 Word</button>
+            <button id="newWordsAddFiveBtn" type="button" class="portal-button portal-button-primary" title="Thêm năm mục từ vựng vào danh sách học tập" aria-label="Thêm năm mục từ vựng vào danh sách học tập">Add 5 Words</button>
           </div>
           <div class="new-words-save-actions">
-            <button id="newWordsSaveBtn" type="button" class="portal-button portal-button-affirm">Save Changes</button>
+            <button id="newWordsSaveBtn" type="button" class="portal-button portal-button-affirm" title="Lưu các thay đổi trong danh sách từ vựng của bạn" aria-label="Lưu các thay đổi trong danh sách từ vựng của bạn">Save Changes</button>
           </div>
           <div class="new-words-pagination">
-            <button id="newWordsPrevBtn" type="button" class="portal-button portal-button-alt">Previous</button>
+            <button id="newWordsPrevBtn" type="button" class="portal-button portal-button-alt" title="Xem trang từ vựng liền trước" aria-label="Xem trang từ vựng liền trước">Previous</button>
             <span id="newWordsPageStatus" class="hint">Page 0 / 0</span>
-            <button id="newWordsNextBtn" type="button" class="portal-button portal-button-alt">Next</button>
+            <button id="newWordsNextBtn" type="button" class="portal-button portal-button-alt" title="Xem trang từ vựng liền sau" aria-label="Xem trang từ vựng liền sau">Next</button>
           </div>
           <a class="new-words-back-top" href="#top">Back to top</a>
         </section>
@@ -1310,7 +1310,7 @@
             <section id="newsReportFormCard" class="panel" data-surface-role="panel">
               <div class="section-head news-report-form-head">
                 <h2>Media Report Form</h2>
-                <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary" title="Start a new media report">Biểu mẫu mới</button>
+                <button id="newNewsFormBtn" type="button" class="portal-button portal-button-primary" title="Bắt đầu một biểu mẫu báo cáo tin tức mới">Biểu mẫu mới</button>
               </div>
               <div class="row">
                 <div class="field c3">
@@ -1382,13 +1382,14 @@
 
                 <div id="newsVocabularyField" class="field c12 news-vocabulary-field">
                   <label for="addNewsVocabularyRowBtn">13. Vocabulary (minimum 5 words)</label>
+                  <p class="hint">Do: keep compounds exact, such as <code>air-strike</code>. For extra points, split a multi-syllable compound part, such as <code>air-con-di-tion-ing</code>. Do not add stress to a compound just because it is hyphenated.</p>
                   <div id="newsVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
-                  <button id="addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-affirm">Add Word</button>
+                  <button id="addNewsVocabularyRowBtn" type="button" class="portal-button portal-button-affirm" title="Thêm một dòng từ vựng mới vào báo cáo tin tức này" aria-label="Thêm một dòng từ vựng mới vào báo cáo tin tức này">Add Word</button>
                 </div>
 
                 <div class="field c12 actions student-news-form-actions">
-                  <button id="checkBtn" class="portal-button portal-button-affirm" type="button" title="Kiểm tra báo cáo trước khi nộp">Check</button>
-                  <button id="submitBtn" class="portal-button portal-button-affirm" type="button" title="Nộp báo cáo tin tức">Submit</button>
+                  <button id="checkBtn" class="portal-button portal-button-info" type="button" title="Kiểm tra từng trường bắt buộc và chỉ ra chính xác nội dung cần sửa trước khi nộp" aria-label="Kiểm tra từng trường bắt buộc và chỉ ra chính xác nội dung cần sửa trước khi nộp">Check</button>
+                  <button id="submitBtn" class="portal-button portal-button-primary" type="button" title="Nộp báo cáo tin tức sau khi tất cả trường bắt buộc đã đạt yêu cầu" aria-label="Nộp báo cáo tin tức sau khi tất cả trường bắt buộc đã đạt yêu cầu">Submit</button>
                   <button id="openNewsComplianceModalBtn" type="button" class="portal-button portal-button-info hidden" title="Xem chi tiết kiểm tra báo cáo">View Details</button>
                 </div>
               </div>
@@ -1575,6 +1576,7 @@
       }
 
       function newsFormFieldContainer(fieldId = "") {
+        if (t(fieldId) === "vocabulary") return document.getElementById("newsVocabularyField");
         return newsFormFieldElement(fieldId)?.closest(".field") || null;
       }
 
@@ -1588,13 +1590,25 @@
             source[fieldKey] && typeof source[fieldKey] === "object" ?
             source[fieldKey] :
             {};
-          map[normalizedKey] = {
-            message: t(entry.message),
-            score: Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
-            threshold: Number.isFinite(Number(entry.threshold)) ?
-              Number(entry.threshold) :
-              null,
-          };
+        map[normalizedKey] = {
+          message: t(entry.message),
+          score: Number.isFinite(Number(entry.score)) ? Number(entry.score) : null,
+          threshold: Number.isFinite(Number(entry.threshold)) ?
+            Number(entry.threshold) :
+            null,
+          rowErrors: Array.isArray(entry.rowErrors) ? entry.rowErrors.map((row) => ({
+            index: Number.isInteger(Number(row?.index)) ? Number(row.index) : -1,
+            english: t(row?.english),
+            message: t(row?.message),
+            fields: Array.isArray(row?.fields) ? row.fields.map((field) => t(field)).filter(Boolean) : [],
+          })).filter((row) => row.index >= 0 && row.message) : [],
+          rowWarnings: Array.isArray(entry.rowWarnings) ? entry.rowWarnings.map((row) => ({
+            index: Number.isInteger(Number(row?.index)) ? Number(row.index) : -1,
+            english: t(row?.english),
+              message: t(row?.message),
+              fields: Array.isArray(row?.fields) ? row.fields.map((field) => t(field)).filter(Boolean) : [],
+          })).filter((row) => row.index >= 0 && row.message) : [],
+        };
         });
         return map;
       }
@@ -1711,7 +1725,9 @@
       }
 
       function resolveFailedFieldMapFromCompliancePayload(payloadBody = {}) {
-        const direct = normalizeFailedFieldMap(payloadBody?.failedFields || {});
+        const direct = normalizeFailedFieldMap(
+          payloadBody?.failedFields || payloadBody?.mmrFailedFields || payloadBody?.item?.failedFields || payloadBody?.item?.mmrFailedFields || {},
+        );
         if (Object.keys(direct).length) return direct;
         const failedArray = failedFieldMapFromFieldKeys(payloadBody?.failedFields);
         if (Object.keys(failedArray).length) return failedArray;
@@ -1775,6 +1791,12 @@
           const helpEl = document.getElementById(`newsValidationHelp-${fieldId}`);
           if (helpEl) helpEl.remove();
         });
+        document.querySelectorAll("#newsVocabularyRows .news-vocabulary-row").forEach((row) => {
+          row.querySelectorAll(".field-validation-message, [data-vocabulary-field].is-invalid").forEach((element) => {
+            element.classList.remove("is-invalid");
+            if (element.classList.contains("field-validation-message")) element.remove();
+          });
+        });
       }
 
       function hasNewsWarnings() {
@@ -1827,6 +1849,21 @@
           helpEl.className = "field-validation-message";
           helpEl.textContent = messageParts.join(" | ");
           container.appendChild(helpEl);
+          if (fieldId === "vocabulary" && Array.isArray(detail.rowErrors)) {
+            detail.rowErrors.forEach((rowError) => {
+              const row = document.querySelector(`#newsVocabularyRows [data-news-vocabulary-row="${rowError.index}"]`);
+              if (!row) return;
+              (Array.isArray(rowError.fields) ? rowError.fields : []).forEach((fieldKey) => {
+                row.querySelector(`[data-vocabulary-field="${fieldKey}"]`)?.classList.add("is-invalid");
+              });
+              const rowHelp = document.createElement("p");
+              rowHelp.className = "field-validation-message news-vocabulary-row-validation-message";
+              rowHelp.textContent = rowError.english
+                ? `Entry \"${rowError.english}\": ${rowError.message}`
+                : rowError.message;
+              row.appendChild(rowHelp);
+            });
+          }
         });
       }
 
@@ -1868,13 +1905,31 @@
         if (normalizedField === "actionWhat") return "Main action is unclear";
         if (normalizedField === "actionWhy") return "Reason is unclear";
         if (normalizedField === "biasAssessment") return "Bias check needs more detail";
+        if (normalizedField === "vocabulary") {
+          const errors = Array.isArray(entry?.rowErrors) ? entry.rowErrors : [];
+          const warnings = Array.isArray(entry?.rowWarnings) ? entry.rowWarnings : [];
+          const rows = errors.length ? errors : warnings;
+          if (errors.length) return rows[0]?.english
+            ? `Entry \"${rows[0].english}\" needs a specific vocabulary fix`
+            : "Vocabulary entry needs a specific fix";
+          return rows.length && rows[0].english
+            ? `Entry \"${rows[0].english}\" has an optional syllabication improvement`
+            : "Vocabulary entry has an optional improvement";
+        }
         return t(entry?.message) || "This part needs fixing";
       }
 
       function studentFriendlyFeedbackFix(fieldKey = "", task = {}, entry = {}) {
+        const normalizedField = t(fieldKey);
+        if (normalizedField === "vocabulary" && ((Array.isArray(entry?.rowErrors) && entry.rowErrors.length) || (Array.isArray(entry?.rowWarnings) && entry.rowWarnings.length))) {
+          const rows = Array.isArray(entry?.rowErrors) && entry.rowErrors.length ? entry.rowErrors : entry.rowWarnings;
+          return rows
+            .map((row) => row.english ? `Entry \"${row.english}\": ${row.message}` : row.message)
+            .filter(Boolean)
+            .join(" ");
+        }
         const steps = Array.isArray(task?.steps) ? task.steps.map((step) => t(step)).filter(Boolean) : [];
         if (steps.length) return steps.join(" ");
-        const normalizedField = t(fieldKey);
         if (normalizedField === "sourceLink")
           return "Open the article page, copy the full article web address, and paste that exact link.";
         if (normalizedField === "articleTitle")
@@ -1897,6 +1952,9 @@
           return "Write one clear sentence explaining why it happened.";
         if (normalizedField === "biasAssessment")
           return "Explain simply if the article sounds balanced or one-sided, and say why.";
+        if (normalizedField === "vocabulary") {
+          return "Complete every vocabulary row and correct its syllabication.";
+        }
         return t(entry?.message) || "Update this part and check again.";
       }
 
@@ -3597,11 +3655,9 @@
           const viewTarget = normalizeLower(link.getAttribute("data-view-target"));
           const pageTarget = normalizeStudentPage(link.getAttribute("data-page-target"));
           const shouldBeActive =
-            viewTarget === "news" ?
-            state.activeView === "news" :
-            state.activeView === "home" ?
-            pageTarget === state.activePage :
-            pageTarget === "home";
+            state.activeView === "news" ?
+            viewTarget === "news" :
+            viewTarget === "home" && pageTarget === state.activePage;
           link.classList.toggle("active", shouldBeActive);
         });
       }
@@ -5039,6 +5095,10 @@
           const latestHtml = formatQueueLatestSubmissionHtml(item?.latestSubmittedAt, latestDate);
           return `<tr data-news-week-set-id="${weekSetId}">\n            <td>${escapeHtml(formatPortalWeekRange(item?.weekStart, item?.weekEnd))}</td>\n            <td>${escapeHtml(`${reportCount}/${weeklyMinimumNewsReports()}`)}</td>\n            <td>${newsWeekSetStatusChipHtml(statusToken)}</td>\n            <td>${latestHtml}</td>\n            <td><button type="button" class="queue-row-btn portal-button portal-button-info portal-button-open-week-set" data-open-news-week-set="${weekSetId}" data-open-news-report-date="${escapeHtml(latestDate)}">Open Week Set</button></td>\n          </tr>`;
         }).join("");
+        body.querySelectorAll(".queue-row-btn").forEach((button) => {
+          button.title = "Mở các báo cáo tin tức thuộc tuần này để xem chi tiết";
+          button.setAttribute("aria-label", button.title);
+        });
       }
 
       function renderNewsQueue() {
@@ -5172,9 +5232,13 @@
         const vowels = { a: "á", e: "é", i: "í", o: "ó", u: "ú", y: "ý" };
         return t(value).split("-").filter(Boolean).map((part) => {
           const stressed = /[A-Z]/u.test(part);
+          const rawChars = Array.from(part);
           const chars = Array.from(part.toLocaleLowerCase("en-US"));
           if (stressed && !chars.some((char) => /[áéíóúý]/u.test(char))) {
-            const vowelIndex = chars.findIndex((char) => vowels[char]);
+            const uppercaseVowelIndex = rawChars.findIndex((char) => /[AEIOUY]/u.test(char));
+            const vowelIndex = uppercaseVowelIndex >= 0
+              ? uppercaseVowelIndex
+              : chars.findIndex((char) => vowels[char]);
             if (vowelIndex >= 0) chars[vowelIndex] = vowels[chars[vowelIndex]];
           }
           return chars.join("");
@@ -5219,23 +5283,23 @@
         const rowUid = `${index}-${++vocabularyRowUid}`;
         const options = NEWS_VOCABULARY_PARTS_OF_SPEECH.map((part) => `<option value="${part}">${part}</option>`).join("");
         const newWordMenuActions = menuActions === "new-word" ? `
-                <button type="button" class="portal-button portal-button-affirm new-word-save">Save</button>
-                <button type="button" class="portal-button portal-button-warning new-word-close">Close</button>` : "";
+                <button type="button" class="portal-button portal-button-affirm new-word-save" title="Lưu mục từ vựng đang chỉnh sửa" aria-label="Lưu mục từ vựng đang chỉnh sửa">Save</button>
+                <button type="button" class="portal-button portal-button-warning new-word-close" title="Đóng trình chỉnh sửa từ vựng mà không lưu" aria-label="Đóng trình chỉnh sửa từ vựng mà không lưu">Close</button>` : "";
         return `<div class="news-vocabulary-row" data-news-vocabulary-row="${index}">
           <select name="vocabularyPartOfSpeech-${rowUid}" data-vocabulary-field="partOfSpeech" aria-label="Part of speech" required><option value="">Part of speech</option>${options}</select>
           <input name="vocabularyEnglish-${rowUid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" required>
           <input name="vocabularyVietnamese-${rowUid}" type="text" data-vocabulary-field="vietnamese" placeholder="Word/phrase VI" aria-label="Word or phrase in Vietnamese" required>
-          <input name="vocabularySyllabication-${rowUid}" type="text" data-vocabulary-field="syllabication" placeholder="Syllabication (stress marked)" aria-label="Syllabication with stressed syllable marked" required>
+          <input name="vocabularySyllabication-${rowUid}" type="text" data-vocabulary-field="syllabication" placeholder="Do: air-strike | Extra: air-con-di-tion-ing" aria-label="Syllabication: keep compounds exact; optionally split multi-syllable compound parts for extra points" required>
           <div class="news-vocabulary-definition-row">
             <div class="news-vocabulary-lookups" aria-label="Vocabulary lookup links">
-              ${NEWS_VOCABULARY_LOOKUPS.map(([label]) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" aria-label="${label} lookup">${label}</button>`).join("")}
+              ${NEWS_VOCABULARY_LOOKUPS.map(([label]) => `<button type="button" class="portal-button external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup" data-vocabulary-lookup="${label}" title="Tra cứu trường ${label} để hoàn thiện mục từ vựng từ nguồn phù hợp" aria-label="Tra cứu trường ${label} để hoàn thiện mục từ vựng từ nguồn phù hợp">${label}</button>`).join("")}
             </div>
             <textarea name="vocabularyDefinition-${rowUid}" data-vocabulary-field="definition" rows="1" placeholder="Definition" aria-label="Definition" required></textarea>
             ${removable ? `<details class="news-vocabulary-row-menu">
               <summary class="news-vocabulary-row-dots" aria-label="Open vocabulary row actions">⋮</summary>
               <div class="news-vocabulary-row-menu-panel">
                 ${newWordMenuActions}
-                <button type="button" class="portal-button portal-button-danger news-vocabulary-remove">Remove</button>
+                <button type="button" class="portal-button portal-button-danger news-vocabulary-remove" title="Xóa mục từ vựng này khỏi báo cáo" aria-label="Xóa mục từ vựng này khỏi báo cáo">Remove</button>
               </div>
             </details>` : '<span class="news-vocabulary-row-dots" aria-hidden="true">⋮</span>'}
           </div>
@@ -5333,7 +5397,7 @@
               <strong class="new-word-entry-part-of-speech">${escapeHtml(t(word.partOfSpeech))}</strong>
               ${dictionaryPlural(word.english, word.partOfSpeech) ? `<span class="new-word-entry-plural">(<em>plural</em> ${escapeHtml(dictionaryPlural(word.english, word.partOfSpeech))})</span>` : ""}
               <span class="new-word-entry-vietnamese">vi: ${escapeHtml(t(word.vietnamese))}</span>
-              <button type="button" class="portal-button portal-button-primary new-word-edit">Edit</button>
+              <button type="button" class="portal-button portal-button-primary new-word-edit" title="Mở mục từ vựng này để chỉnh sửa" aria-label="Mở mục từ vựng này để chỉnh sửa">Edit</button>
             </div>
             <p class="new-word-entry-definition">${escapeHtml(dictionaryDefinition(word.definition))}</p>
           </article>`).join("") : '<p class="hint new-words-empty">No new words yet. Add a word or complete a news report vocabulary row.</p>';
@@ -5990,7 +6054,8 @@
             Array.isArray(saved?.warningTasks) ? saved.warningTasks : [],
           );
           setFormStatus(t(saved?.message) || "Report saved.", false, true);
-          if (saved?.item) applyOpenReport(saved.item);
+          clearNewsReportForm();
+          setFormStatus(t(saved?.message) || "Report submitted successfully. A new blank form is ready.", false, true);
           await Promise.all([loadDashboard(), loadCalendar()]);
           if (reopenReportDate) {
             openNewsWeekSetModalByReportDate(reopenReportDate, {

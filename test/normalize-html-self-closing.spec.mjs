@@ -25,6 +25,13 @@ test("normalizeHtmlSelfClosingMarkup removes spaced self-closing void tags", () 
   assert.equal(normalized, '<meta charset="utf-8">\n<link rel="preload" href="/style.css" as="style">\n')
 })
 
+test("normalizeHtmlSelfClosingMarkup preserves markup between svg tags", () => {
+  const source = '<meta charset="utf-8" />\n<svg><path d="M0 0" /></svg>\n<img src="logo.png" />\n'
+  const normalized = normalizeHtmlSelfClosingMarkup(source)
+
+  assert.equal(normalized, '<meta charset="utf-8">\n<svg><path d="M0 0" /></svg>\n<img src="logo.png">\n')
+})
+
 test("normalizeHtmlSelfClosingFiles rewrites html targets in place", async () => {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "sis-html-normalizer-"))
   try {

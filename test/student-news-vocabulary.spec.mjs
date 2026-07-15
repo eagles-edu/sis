@@ -37,12 +37,59 @@ test("student news vocabulary minimum is configurable", () => {
   assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 6 }).passed, true)
 })
 
-test("syllabication requires hyphenated syllables with one marked stress", () => {
+test("student news vocabulary reports the offending entry", () => {
+  const result = evaluateStudentNewsVocabulary([
+    {
+      partOfSpeech: "phrase",
+      english: "in the morning",
+      vietnamese: "vào buổi sáng",
+      syllabication: "in the morn-ing",
+      definition: "During the morning.",
+    },
+  ])
+  assert.equal(result.passed, false)
+  assert.match(result.message, /in the morning/)
+  assert.equal(result.rowErrors[0].index, 0)
+  assert.match(result.rowErrors[0].message, /do mark one stress/)
+})
+
+test("compound vocabulary passes required validation but can earn an extra-points warning", async () => {
+  const { evaluateStudentNewsCompliance } = await import("../src/modules/admin/student-news-compliance.mjs")
+  const payload = {
+    sourceLink: "https://www.bbc.com/news/articles/cy91vrzxn34o",
+    articleTitle: "How Pakistan won over Trump to become an unlikely mediator in the Iran war",
+    byline: "Caroline Davies",
+    articleDateline: "9 hours ago",
+    leadSynopsis: "Pakistan became an unlikely mediator.",
+    actionActor: "Pakistan",
+    actionAffected: "Iran",
+    actionWhere: "Iran",
+    actionWhat: "Pakistan acted as a mediator.",
+    actionWhy: "The parties needed a mediator.",
+    biasAssessment: "The article uses neutral wording and presents more than one viewpoint.",
+    vocabulary: [{
+      partOfSpeech: "noun",
+      english: "air-conditioning",
+      vietnamese: "điều hòa không khí",
+      syllabication: "air-conditioning",
+      definition: "A system for cooling air.",
+    }],
+  }
+  const result = await evaluateStudentNewsCompliance(payload, { validationConfig: { vocabularyMinimumWords: 1 } })
+  assert.equal(result.failedFields.vocabulary, undefined)
+  assert.match(result.warningFields.vocabulary.message, /extra points/)
+})
+
+test("syllabication requires stress only for multisyllabic words inside phrases", () => {
   assert.equal(isValidStudentNewsSyllabication("po-tá-to"), true)
   assert.equal(isValidStudentNewsSyllabication("po-TA-to"), true)
-  assert.equal(isValidStudentNewsSyllabication("potato"), false)
-  assert.equal(isValidStudentNewsSyllabication("po-ta-to"), false)
-  assert.equal(isValidStudentNewsSyllabication("PO-TÁ-to"), false)
+  assert.equal(isValidStudentNewsSyllabication("po-ta-to"), true)
+  assert.equal(isValidStudentNewsSyllabication("word"), true)
+  assert.equal(isValidStudentNewsSyllabication("air strike"), true)
+  assert.equal(isValidStudentNewsSyllabication("air-strike"), true)
+  assert.equal(isValidStudentNewsSyllabication("in the MÓRN-ing"), true)
+  assert.equal(isValidStudentNewsSyllabication("potato"), true)
+  assert.equal(isValidStudentNewsSyllabication("in the morn-ing"), false)
 })
 
 test("student vocabulary rows provide lookup controls for initial and added rows", () => {
@@ -59,6 +106,12 @@ test("student vocabulary rows provide lookup controls for initial and added rows
   assert.match(STUDENT_HTML, /external-link-turquoise portal-button-external-link-turquoise news-vocabulary-lookup/)
   assert.doesNotMatch(STUDENT_HTML, /news-vocabulary-lookup[^>]*>↗/)
   assert.match(STUDENT_HTML, /rows="1" placeholder="Definition"/)
+  assert.match(STUDENT_HTML, /keep compounds exact/)
+  assert.match(STUDENT_HTML, /placeholder="Do: air-strike \| Extra: air-con-di-tion-ing"/)
+  assert.match(STUDENT_HTML, /news-vocabulary-row-validation-message/)
+  assert.match(STUDENT_HTML, /row\.querySelector\(`\[data-vocabulary-field="\$\{fieldKey\}"\]`\)\?\.classList\.add\("is-invalid"\)/)
+  assert.match(SHARED_THEME, /news-vocabulary-row \[data-vocabulary-field\]\.is-invalid/)
+  assert.match(STUDENT_HTML, /if \(t\(fieldId\) === "vocabulary"\) return document\.getElementById\("newsVocabularyField"\)/)
   assert.match(STUDENT_HTML, /news-vocabulary-row-dots.*>⋮</)
   assert.match(SHARED_THEME, /news-vocabulary-definition-row textarea \{[\s\S]*block-size: 48px/)
   assert.match(STUDENT_HTML, /autoResizeVocabularyDefinition\(textarea\)/)
@@ -124,10 +177,15 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
   assert.match(STUDENT_HTML, /querySelector\("\.new-word-close"\)/)
   assert.match(STUDENT_HTML, /id="newNewsFormBtn"/)
   assert.match(STUDENT_HTML, /id="newNewsFormConfirmModal"/)
+  assert.match(STUDENT_HTML, /id="checkBtn" class="portal-button portal-button-info"[^>]*title="Kiểm tra từng trường bắt buộc/)
+  assert.match(STUDENT_HTML, /id="submitBtn" class="portal-button portal-button-primary"[^>]*title="Nộp báo cáo tin tức sau khi/)
   assert.match(STUDENT_HTML, /id="newNewsFormSaveBtn"[^>]*portal-button-affirm/)
   assert.match(STUDENT_HTML, /id="newNewsFormIgnoreBtn"[^>]*portal-button-danger/)
   assert.match(STUDENT_HTML, /state\.newsFormDirty = true/)
   assert.match(STUDENT_HTML, /await checkReport\(\);\s*clearNewsReportForm\(\)/)
+  assert.match(STUDENT_HTML, /if \(saved\?\.complianceFailed === true\)[\s\S]*?clearNewsReportForm\(\);[\s\S]*?await Promise\.all\(\[loadDashboard\(\), loadCalendar\(\)\]\)/)
+  assert.match(STUDENT_HTML, /state\.activeView === "news" \?[\s\S]*?viewTarget === "news" :[\s\S]*?viewTarget === "home" && pageTarget === state\.activePage/)
+  assert.match(SHARED_THEME, /new-word-entry-head > \.new-word-entry-part-of-speech \{\s*color: #fbffff;/)
   assert.match(STUDENT_HTML, /<details class="panel new-words-intro">/)
   assert.doesNotMatch(STUDENT_HTML, /new-words-intro" open/)
   assert.match(STUDENT_HTML, /class="new-words-intro-illustration"[\s\S]*water_ripples_one/)
@@ -166,7 +224,7 @@ test("student New Words page exposes editable, sortable, paginated vocabulary", 
 test("new form persistence protects edits made before a report date exists", () => {
   const dirtyFunction =
     STUDENT_HTML.match(
-      /function markNewsDraftDirty\(\) \{[\s\S]*?\n{6}\}/,
+      /function markNewsDraftDirty\(\) \{[\s\S]*?\n\s*\}/,
     )?.[0] || ""
   assert.match(dirtyFunction, /state\.newsFormDirty = true/)
   assert.doesNotMatch(dirtyFunction, /reportDate/)

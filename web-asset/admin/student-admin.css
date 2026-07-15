@@ -2255,7 +2255,7 @@
         --portal-button-inline-padding: 10px;
         --portal-button-line-height: 1.1;
         --portal-button-max-inline: none;
-        --portal-button-min-block: 40px;
+        --portal-button-min-block: 48px;
         --portal-button-min-inline: 160px;
         font-variant-numeric: tabular-nums;
         inline-size: auto;
@@ -2796,6 +2796,16 @@
         border-color: var(--portal-ods-accent-border);
         box-shadow: 0 10px 24px var(--portal-color-b0e4f2e1c7);
         transform: translateY(-1px);
+      }
+      .performance-engagement-day-card:active:not(:disabled) {
+        box-shadow: var(--portal-button-shadow-active);
+        transform: translateY(1px);
+      }
+      .performance-engagement-day-card:disabled,
+      .performance-engagement-day-card.is-disabled {
+        cursor: not-allowed;
+        opacity: .64;
+        pointer-events: none;
       }
       .performance-engagement-day-card strong {
         font-size: 14px;

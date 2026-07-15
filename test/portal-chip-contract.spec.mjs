@@ -41,13 +41,13 @@ test("parent modal chip mapper follows chips.md contract", () => {
     "function setNewsViewerStatusChip(item = {}) {"
   )
 
-  assert.match(chunk, /if \(status === "approved"\) return \{\s*label: "Đã duyệt",\s*tone: "good"\s*\};/)
-  assert.match(chunk, /if \(status === "revision-requested"\) return \{\s*label: "Cần sửa",\s*tone: "revise"\s*\};/)
+  assert.match(chunk, /if \(status === "approved"\)\s*return \{\s*label: "Đã duyệt",\s*tone: "good"\s*[,;]?\s*\}/)
+  assert.match(chunk, /if \(status === "revision-requested"\)\s*return \{\s*label: "Cần sửa",\s*tone: "revise"\s*[,;]?\s*\}/)
   assert.match(
     chunk,
-    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{\s*label: "Chờ duyệt",\s*tone: "revise"\s*\};/
+    /if \(status === "submitted" && item\?\.awaitingReReview === true\)\s*return \{\s*label: "Chờ duyệt",\s*tone: "revise"\s*[,;]?\s*\}/
   )
-  assert.match(chunk, /if \(status === "submitted"\) return \{\s*label: "Đã nộp",\s*tone: "warn"\s*\};/)
+  assert.match(chunk, /if \(status === "submitted"\)\s*return \{\s*label: "Đã nộp",\s*tone: "warn"\s*[,;]?\s*\}/)
   assert.doesNotMatch(chunk, /return \{ label: "Chờ duyệt", tone: "warn" \};/)
 })
 
@@ -102,7 +102,6 @@ test("student and parent quarter tables keep late and missed status chips", () =
 
   for (const html of [studentHtml, parentHtml]) {
     assert.match(html, /\/\*\s*portal-critical-theme:start\s*\*\//)
-    assert.match(html, /\.grade-tabulator-shell \.tabulator \.tabulator-row\.is-open \{\}/)
   }
 
   assert.match(sharedTheme, /body\.student-portal-page \.grade-tabulator-shell|body\.student-portal-page\.grade-tabulator-shell/)

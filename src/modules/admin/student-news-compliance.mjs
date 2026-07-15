@@ -183,8 +183,13 @@ function normalizeStudentNewsVocabulary(value) {
 
 function isValidStudentNewsSyllabication(value) {
   const text = normalizeText(value)
-  const syllables = text.split("-")
-  if (syllables.length < 2 || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return false
+  const words = text.split(/\s+/u).filter(Boolean)
+  const syllables = words.flatMap((word) => word.split("-").filter(Boolean))
+  if (!syllables.length || syllables.some((syllable) => !/^\p{L}+$/u.test(syllable))) return false
+  // Stress is required only for a multi-syllabic word inside a phrase. Plain
+  // one-syllable phrases and closed/compound hyphenated words are accepted.
+  const phraseHasMultisyllabicWord = words.length > 1 && words.some((word) => word.includes("-"))
+  if (!phraseHasMultisyllabicWord) return true
   const stressedSyllables = syllables.filter((syllable) =>
     /[A-ZÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃẼĨÕŨ]/u.test(syllable)
     || /[\u0300-\u036f]/u.test(syllable.normalize("NFD"))
@@ -192,31 +197,81 @@ function isValidStudentNewsSyllabication(value) {
   return stressedSyllables.length === 1
 }
 
+function studentNewsVocabularyRowError(row, index) {
+  const missing = []
+  if (!STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH.includes(row.partOfSpeech)) missing.push("part of speech")
+  if (!row.english) missing.push("English")
+  if (!row.vietnamese) missing.push("Vietnamese")
+  if (!row.syllabication) missing.push("syllabication")
+  else if (!isValidStudentNewsSyllabication(row.syllabication)) {
+    const entryLabel = row.english ? `\"${row.english}\"` : "this entry"
+    return {
+      index,
+      english: row.english,
+      fields: ["syllabication"],
+      message: `Entry ${index + 1} (${entryLabel}) has invalid syllabication: do mark one stressed syllable on the multi-syllabic word in the phrase (for example, in the MÓRN-ing); do not add stress to a one-syllable phrase or compound word such as air-strike.`,
+    }
+  }
+  if (!row.definition) missing.push("definition")
+  if (!missing.length) return null
+  const entryLabel = row.english ? `\"${row.english}\"` : "blank entry"
+  return {
+    index,
+    english: row.english,
+    fields: missing.map((field) => ({
+      "part of speech": "partOfSpeech",
+      English: "english",
+      Vietnamese: "vietnamese",
+      syllabication: "syllabication",
+      definition: "definition",
+    }[field])).filter(Boolean),
+    message: `Entry ${index + 1} (${entryLabel}) is incomplete: add ${missing.join(", ")}.`,
+  }
+}
+
+function countStudentNewsVowelGroups(value) {
+  return (normalizeLower(value).match(/[aeiouy]+/gu) || []).length
+}
+
+function findStudentNewsVocabularyExtraPointWarnings(value) {
+  return normalizeStudentNewsVocabulary(value)
+    .map((row, index) => {
+      const english = normalizeText(row.english)
+      const syllabication = normalizeText(row.syllabication)
+      if (!english || !syllabication || !english.includes("-") || normalizeLower(english) !== normalizeLower(syllabication)) return null
+      const compoundParts = english.split("-").filter(Boolean)
+      const multisyllabicPart = compoundParts.find((part) => countStudentNewsVowelGroups(part) > 1)
+      if (!multisyllabicPart) return null
+      return {
+        index,
+        english,
+        message: `Entry ${index + 1} ("${english}") passes as a compound, but split "${multisyllabicPart}" at its dictionary syllable boundaries for extra points.`,
+      }
+    })
+    .filter(Boolean)
+}
+
 function evaluateStudentNewsVocabulary(value, { minimumWords = STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM } = {}) {
   if (value === undefined || value === null) return { passed: true, message: "", count: 0 }
   const rows = normalizeStudentNewsVocabulary(value)
-  const populated = rows.filter((row) => Object.values(row).some(Boolean))
-  const incomplete = populated.find((row) =>
-    !STUDENT_NEWS_VOCABULARY_PARTS_OF_SPEECH.includes(row.partOfSpeech)
-    || !row.english
-    || !row.vietnamese
-    || !row.syllabication
-    || !isValidStudentNewsSyllabication(row.syllabication)
-    || !row.definition
-  )
+  const populated = rows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => Object.values(row).some(Boolean))
+  const rowErrors = populated
+    .map(({ row, index }) => studentNewsVocabularyRowError(row, index))
+    .filter(Boolean)
   const minimum = Math.max(1, Math.min(100, Math.trunc(Number(minimumWords)) || STUDENT_NEWS_DEFAULT_VOCABULARY_MINIMUM))
-  if (incomplete || populated.length < minimum) {
+  if (rowErrors.length || populated.length < minimum) {
     return {
       passed: false,
-      message: incomplete && incomplete.syllabication && !isValidStudentNewsSyllabication(incomplete.syllabication)
-        ? "Syllabication must use hyphen-separated syllables with stress marked, for example po-tá-to or po-TA-to."
-        : incomplete
-        ? "Every vocabulary row requires part of speech, English, Vietnamese, syllabication, and definition."
+      message: rowErrors.length
+        ? rowErrors.map((entry) => entry.message).join(" ")
         : `At least ${minimum} complete vocabulary rows are required.`,
       count: populated.length,
+      rowErrors,
     }
   }
-  return { passed: true, message: "", count: populated.length }
+  return { passed: true, message: "", count: populated.length, rowErrors: [] }
 }
 
 /**
@@ -1377,6 +1432,18 @@ function buildStudentNewsFieldRevisionTask(fieldKey = "", context = {}) {
       criterion: "Must be at least one sentence.",
     }
   }
+  if (fieldKey === "vocabulary") {
+    return {
+      field: fieldKey,
+      label: "Vocabulary",
+      steps: [
+        "Complete every vocabulary row with part of speech, English, Vietnamese, syllabication, and definition.",
+        "Do mark one stress only when a space-separated phrase contains a hyphenated multi-syllable word, such as in the MÓRN-ing; do not add stress to one-syllable phrases or compound words such as air-strike.",
+        "Save again after correcting the named entry and its highlighted field.",
+      ],
+      criterion: "Every vocabulary row must be complete and use valid syllabication.",
+    }
+  }
   return {
     field: fieldKey,
     label: STUDENT_NEWS_FIELD_LABELS[fieldKey] || fieldKey,
@@ -1735,6 +1802,7 @@ export function evaluateStudentNewsMinimumRequirements(payload = {}, options = {
       message: vocabularyValidation.message,
       score: vocabularyValidation.count,
       threshold: config.vocabularyMinimumWords,
+      rowErrors: vocabularyValidation.rowErrors || [],
     }
   }
 
@@ -2082,8 +2150,28 @@ export async function evaluateStudentNewsCompliance(payload = {}, options = {}) 
     }
   }
 
+  const vocabularyRowWarnings = findStudentNewsVocabularyExtraPointWarnings(payload?.vocabulary)
+  if (vocabularyRowWarnings.length) {
+    warningFields.vocabulary = {
+      message: "Vocabulary is complete, but a multi-syllable part of a compound can be split for extra points.",
+      score: 0,
+      threshold: 1,
+      rowWarnings: vocabularyRowWarnings,
+    }
+  }
   const revisionTasks = buildTasksFromFailedFields(failedFields, allowedDomains)
   const warningTasks = buildTasksFromFailedFields(warningFields, allowedDomains)
+  if (vocabularyRowWarnings.length) {
+    warningTasks.push({
+      field: "vocabulary",
+      label: "Vocabulary extra points",
+      steps: [
+        "Keep the compound form as entered to satisfy required validation.",
+        "For extra points, split the multi-syllable part into syllables.",
+      ],
+      criterion: "Optional: show syllable boundaries for multi-syllable compound parts.",
+    })
+  }
   return {
     passed: Object.keys(failedFields).length === 0,
     failedFields,

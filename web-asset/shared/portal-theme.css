@@ -977,6 +977,7 @@ summary.portal-button.portal-button-immutable-chrome {
     min-inline-size: 100%;
   }
 }
+
 .portal-chip,
 a.portal-chip,
 button.portal-chip {
@@ -1405,7 +1406,7 @@ body.parent-portal-page #loginCard button,
 body.admin-portal-page #authPanel button:not(.portal-button) {
   font-size: 1rem;
   margin: .75rem 0 .125rem 0;
-  min-height: 50px;
+  min-height: 48px;
   padding: 13px 16px;
 }
 body.admin-portal-page #authPanel .actions {
@@ -2886,6 +2887,7 @@ body.parent-portal-page .field.is-invalid label {
 }
 body.student-portal-page .field.is-invalid input,
 body.student-portal-page .field.is-invalid textarea,
+body.student-portal-page .news-vocabulary-row [data-vocabulary-field].is-invalid,
 body.parent-portal-page .field.is-invalid input,
 body.parent-portal-page .field.is-invalid textarea {
   background: var(--portal-status-bad-bg);
@@ -3364,8 +3366,9 @@ body.parent-portal-page #portalCard>.portal-grid {
 body.student-portal-page .identity-item,
 body.parent-portal-page .identity-item {
   align-content: start;
-  background: var(--portal-surface-card) !important;
-  border: 1px solid var(--portal-border) !important;
+  background: var(--portal-role-card-bg) !important;
+  border: 1px solid var(--portal-role-border) !important;
+  color: var(--portal-role-text);
   border-radius: var(--radius-2);
   display: grid;
   gap: 5px;
@@ -3991,9 +3994,9 @@ body.parent-portal-page .quarter-board-card.is-current {
 body.student-portal-page .quarter-board-head,
 body.parent-portal-page .quarter-board-head {
   align-items: flex-start;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
   justify-content: space-between;
 }
 body.student-portal-page .quarter-board-title,
@@ -4320,8 +4323,6 @@ body.parent-portal-page .draft-actions {
   position: sticky;
 }
 body:is(.parent-portal-page, .student-portal-page) :is(
-  #backToDashboardBtn,
-  #saveDraftBtn,
   #parentTextZoomDownBtn,
   #parentTextZoomUpBtn,
   #parentTextZoomResetBtn,
@@ -4332,6 +4333,20 @@ body:is(.parent-portal-page, .student-portal-page) :is(
   #studentTextZoomResetBtn
 ) {
   min-height: 2.25rem;
+}
+body.parent-portal-page #childPageCard .toolbar-actions,
+body.parent-portal-page #draftActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+body.parent-portal-page #childPageCard .toolbar-actions > .portal-button,
+body.parent-portal-page #draftActions > .portal-button {
+  flex: 0 1 var(--portal-button-inline);
+  inline-size: var(--portal-button-inline);
+  max-inline-size: var(--portal-button-inline);
+  min-block-size: var(--portal-button-min-block);
+  min-inline-size: var(--portal-button-inline);
 }
 body.parent-portal-page :where(.portal-modal, #newsWeekSetModal, #performanceReportModal) :where(input, textarea, select)::placeholder {
   color: var(--portal-field-placeholder);
@@ -4676,7 +4691,6 @@ html[data-theme="dark"] body.parent-portal-page .report-section,
 html[data-theme="dark"] body.parent-portal-page .report-card,
 html[data-theme="dark"] body.parent-portal-page .calendar-shell,
 html[data-theme="dark"] body.parent-portal-page .student-profile-card,
-html[data-theme="dark"] body.parent-portal-page .identity-item,
 html[data-theme="dark"] body.parent-portal-page .profile-group,
 html[data-theme="dark"] body.parent-portal-page .field-row.locked,
 html[data-theme="dark"] body.parent-portal-page .field-row.edited,
@@ -5333,7 +5347,7 @@ body.student-portal-page .new-word-entry-head > .new-word-entry-pronunciation {
   font-family: ui-monospace, Courier, monospace;
 }
 body.student-portal-page .new-word-entry-head > .new-word-entry-part-of-speech {
-  color: var(--portal-text);
+  color: #fbffff;
   font-weight: 800;
 }
 body.student-portal-page .new-word-entry-head > .new-word-entry-plural em {
@@ -5916,6 +5930,7 @@ body.parent-portal-page .portal-action-strip__actions {
   margin-bottom: 1.25rem;
   width: 100%;
 }
+
 body.portal-hub-page .portal-action-strip--card,
 body.student-portal-page .portal-action-strip--card,
 body.parent-portal-page .portal-action-strip--card {
@@ -5985,7 +6000,7 @@ body.parent-portal-page :is(button, a).portal-action-btn {
   font-weight: 800;
   justify-content: center;
   letter-spacing: 0.01em;
-  min-height: 46px;
+  min-height: 48px;
   padding: 10px 16px;
   text-align: center;
   text-decoration: none;
@@ -10934,4 +10949,23 @@ body.student-portal-page .header-bar a:hover {
 }
 .bm015 {
   margin-bottom: 1rem!important;
+}
+
+/* Final grouped-action normalization: compact buttons, 12px gap, natural
+ * wrapping, and no mobile full-width stretch when two actions are present. */
+body.admin-portal-page :is(.actions, .login-actions, .portal-modal-actions, .row > .grid-actions):has(> .portal-button + .portal-button),
+body.student-portal-page :is(.actions, .login-actions, .portal-modal-actions, .student-news-form-actions, .new-words-pagination, .new-words-add-actions, .portal-action-strip__actions):has(> .portal-button + .portal-button),
+body.parent-portal-page :is(.actions, .login-actions, .portal-modal-actions, .portal-action-strip__actions):has(> .portal-button + .portal-button) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+}
+
+body.admin-portal-page :is(.actions, .login-actions, .portal-modal-actions, .row > .grid-actions):has(> .portal-button + .portal-button) > .portal-button,
+body.student-portal-page :is(.actions, .login-actions, .portal-modal-actions, .student-news-form-actions, .new-words-pagination, .new-words-add-actions, .portal-action-strip__actions):has(> .portal-button + .portal-button) > .portal-button,
+body.parent-portal-page :is(.actions, .login-actions, .portal-modal-actions, .portal-action-strip__actions):has(> .portal-button + .portal-button) > .portal-button {
+  flex: 0 1 var(--portal-button-inline) !important;
+  inline-size: var(--portal-button-inline) !important;
+  max-inline-size: var(--portal-button-inline) !important;
+  min-inline-size: var(--portal-button-inline) !important;
 }

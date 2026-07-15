@@ -107,7 +107,7 @@
           },
           "state": {
             "bodyClass": "parent-portal-page",
-            "title": "Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club",
+            "title": "Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles",
             "htmlTheme": "light",
             "bodyText": "Bảng điều khiển dành cho phụ huynh Tổng quan kết quả học tập của học sinh Trang chủ Báo cáo tin tức Chỉnh sửa hồ sơ học sinh Bài tập về nhà hiện tại Bài tập về nhà quá hạn Điểm danh lớp học (SYTD) Điểm danh lớp học: Lưu "
           },
@@ -5585,7 +5585,7 @@
           },
           "state": {
             "bodyClass": "parent-portal-page",
-            "title": "Bảng điều khiển cổng thông tin dành cho phụ huynh - The Eagles Club",
+            "title": "Trang chủ dành cho phụ huynh - Câu lạc bộ Eagles",
             "htmlTheme": "dark",
             "bodyText": "Bảng điều khiển dành cho phụ huynh Tổng quan kết quả học tập của học sinh Trang chủ Báo cáo tin tức Chỉnh sửa hồ sơ học sinh Bài tập về nhà hiện tại Bài tập về nhà quá hạn Điểm danh lớp học (SYTD) Điểm danh lớp học: Lưu "
           },
@@ -6091,7 +6091,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 3337
+              "height": 3526
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6103,7 +6103,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 3289
+              "height": 3478
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6115,7 +6115,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 3205
+              "height": 3394
             },
             ".panel": {
               "selector": ".panel",

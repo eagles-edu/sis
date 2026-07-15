@@ -263,7 +263,10 @@ async function createParentPortalDom(fetchHandler, url, options = {}) {
 }
 
 test("parent portal dark theme keeps identity, metric, profile, and homework surfaces on the dark card hierarchy", () => {
-  assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.identity-item,/)
+  assert.match(
+    SHARED_THEME,
+    /body\.parent-portal-page \.identity-item,body\.student-portal-page \.identity-item\{[\s\S]*?background:var\(--portal-role-card-bg\)!important;[\s\S]*?border:1px solid var\(--portal-role-border\)!important;/,
+  )
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.metric,/)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.profile-group,/)
   assert.match(SHARED_THEME, /html\[data-theme="dark"\] body\.parent-portal-page \.field-row\.locked,/)

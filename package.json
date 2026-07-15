@@ -61,6 +61,7 @@
     "runtimes:restart": "tools/sync-and-restart-runtimes.sh restart-only",
     "worker:async-side-effects": "node tools/async-side-effects-worker.mjs",
     "test:runtime:sync-restart": "tools/sync-and-restart-test-runtime.sh full",
+    "test:runtime:sync-restart:precompress": "tools/sync-and-precompress-test-runtime.sh",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "audit:lighthouse:admin": "node tools/lighthouse-admin-audit.mjs",
     "audit:portal:coverage": "SIS_ENV_FILE=.env.dev node --test test/portal-audit-coverage.playwright.spec.mjs",

@@ -1454,7 +1454,7 @@ box-shadow:
             <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
               Menu
             </button>
-            <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden">
+            <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden" title="Restart the local runtime after a safe health check" aria-label="Restart the local runtime after a safe health check">
               Self-Heal Runtime
             </button>
             <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
@@ -1462,41 +1462,41 @@ box-shadow:
                 <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <mask id="theme_moon_cutout">
-                      <rect width="24" height="24" fill="#fff" />
-                      <circle cx="12.95" cy="7.95" r="10.1" fill="#000" />
+                      <rect width="24" height="24" fill="#fff">
+                      <circle cx="12.95" cy="7.95" r="10.1" fill="#000">
                     </mask>
                   </defs>
                   <g fill="currentColor">
                     <circle cx="10.8" cy="13.2" r="10.3" mask="url(#theme_moon_cutout)">
-                      <animateTransform attributeName="transform" dur="4.8s" repeatCount="indefinite" type="rotate" values="-2 12 12;2 12 12;-2 12 12" />
+                      <animateTransform attributeName="transform" dur="4.8s" repeatCount="indefinite" type="rotate" values="-2 12 12;2 12 12;-2 12 12">
                     </circle>
                     <path d="M17.65 3.75L18.62 6.68L21.7 6.68L19.21 8.49L20.16 11.42L17.65 9.6L15.14 11.42L16.09 8.49L13.6 6.68L16.68 6.68L17.65 3.75Z" opacity="0.95">
-                      <animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" values="0.3;0.92;0.3" />
+                      <animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" values="0.3;0.92;0.3">
                     </path>
                     <path d="M9.95 8L10.62 10.02L12.75 10.02L11.03 11.27L11.69 13.28L9.95 12.02L8.22 13.28L8.88 11.27L7.15 10.02L9.28 10.02L9.95 8Z" opacity="0.78">
-                      <animate attributeName="opacity" begin="0.35s" dur="2.2s" repeatCount="indefinite" values="0.24;0.82;0.24" />
+                      <animate attributeName="opacity" begin="0.35s" dur="2.2s" repeatCount="indefinite" values="0.24;0.82;0.24">
                     </path>
                   </g>
                 </svg>
                 <svg class="portal-theme-toggle__icon-sun" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <g stroke="currentColor" stroke-linecap="round" stroke-width="1.8">
                     <g opacity="0.92">
-                      <animateTransform attributeName="transform" dur="14s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" />
-                      <path d="M12 1.75V4.25" />
-                      <path d="M12 19.75V22.25" />
-                      <path d="M1.75 12H4.25" />
-                      <path d="M19.75 12H22.25" />
-                      <path d="M4.75 4.75L6.52 6.52" />
-                      <path d="M17.48 17.48L19.25 19.25" />
-                      <path d="M17.48 6.52L19.25 4.75" />
-                      <path d="M4.75 19.25L6.52 17.48" />
+                      <animateTransform attributeName="transform" dur="14s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12">
+                      <path d="M12 1.75V4.25">
+                      <path d="M12 19.75V22.25">
+                      <path d="M1.75 12H4.25">
+                      <path d="M19.75 12H22.25">
+                      <path d="M4.75 4.75L6.52 6.52">
+                      <path d="M17.48 17.48L19.25 19.25">
+                      <path d="M17.48 6.52L19.25 4.75">
+                      <path d="M4.75 19.25L6.52 17.48">
                     </g>
                     <circle cx="12" cy="12" fill="currentColor" r="4.6">
-                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="4.15;4.8;4.15" />
+                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="4.15;4.8;4.15">
                     </circle>
                     <circle cx="12" cy="12" opacity="0.24" r="7.1">
-                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="6.1;7.9;6.1" />
-                      <animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0.24;0.08;0.24" />
+                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="6.1;7.9;6.1">
+                      <animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0.24;0.08;0.24">
                     </circle>
                   </g>
                 </svg>
@@ -1530,12 +1530,12 @@ box-shadow:
       </div>
       <section class="control-card portal-theme-panel">
         <div class="periods" id="periodButtons" role="toolbar" aria-label="Period range">
-          <button type="button" class="period-btn portal-button portal-button-alt" data-period="week">Week</button>
-          <button type="button" class="period-btn portal-button portal-button-alt" data-period="quarter">Quarter</button>
-          <button type="button" class="period-btn portal-button portal-button-alt" data-period="qtd">QTD</button>
-          <button type="button" class="period-btn portal-button portal-button-alt" data-period="sytd">SYTD</button>
-          <button type="button" class="period-btn portal-button portal-button-alt" data-period="archive">Archive</button>
-          <button type="button" class="period-btn portal-button portal-button-alt" data-period="custom">Custom</button>
+          <button type="button" class="period-btn portal-button portal-button-alt" data-period="week" title="Show grades for the selected week set" aria-label="Show grades for the selected week set">Week</button>
+          <button type="button" class="period-btn portal-button portal-button-alt" data-period="quarter" title="Show grades for the selected quarter" aria-label="Show grades for the selected quarter">Quarter</button>
+          <button type="button" class="period-btn portal-button portal-button-alt" data-period="qtd" title="Show quarter-to-date grades" aria-label="Show quarter-to-date grades">QTD</button>
+          <button type="button" class="period-btn portal-button portal-button-alt" data-period="sytd" title="Show school-year-to-date grades" aria-label="Show school-year-to-date grades">SYTD</button>
+          <button type="button" class="period-btn portal-button portal-button-alt" data-period="archive" title="Show archived grade records" aria-label="Show archived grade records">Archive</button>
+          <button type="button" class="period-btn portal-button portal-button-alt" data-period="custom" title="Choose a custom grade date range" aria-label="Choose a custom grade date range">Custom</button>
         </div>
         <div class="control-grid">
           <div class="field">
@@ -1617,9 +1617,9 @@ box-shadow:
         <div class="grid-head">
           <p class="grid-title">Interactive Matrix</p>
           <div class="grid-actions">
-            <button class="btn subtle portal-button portal-button-info" id="tableModalBtn" type="button">Open table modal</button>
-            <button class="btn subtle portal-button portal-button-alt" id="toggleCompactBtn" type="button">Dense rows: Off</button>
-            <button class="btn subtle portal-button portal-button-warning" id="resetColumnsBtn" type="button">Reset columns</button>
+            <button class="btn subtle portal-button portal-button-info" id="tableModalBtn" type="button" title="Open the full grade table in a separate view" aria-label="Open the full grade table in a separate view">Open table modal</button>
+            <button class="btn subtle portal-button portal-button-alt" id="toggleCompactBtn" type="button" title="Switch between comfortable and dense table rows" aria-label="Switch between comfortable and dense table rows">Dense rows: Off</button>
+            <button class="btn subtle portal-button portal-button-warning" id="resetColumnsBtn" type="button" title="Restore the default grade table columns" aria-label="Restore the default grade table columns">Reset columns</button>
           </div>
         </div>
         <div id="gradeGrid" class="portal-theme-table-shell"></div>

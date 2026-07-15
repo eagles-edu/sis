@@ -20,7 +20,32 @@ const DEFAULT_TARGETS = ["web-asset", path.join("dev", "tabulatorz", "test", "e2
  * @returns {string}
  */
 export function normalizeHtmlSelfClosingMarkup(source) {
-  return source.replace(/ \/>/g, ">")
+  const svgTagPattern = /<\/?svg\b[^>]*>/gi
+  let normalized = ""
+  let cursor = 0
+  let svgDepth = 0
+
+  for (const match of source.matchAll(svgTagPattern)) {
+    const tagStart = match.index ?? cursor
+    const tag = match[0]
+    if (svgDepth === 0) {
+      normalized += source.slice(cursor, tagStart).replace(/ \/>/g, ">")
+    } else {
+      normalized += source.slice(cursor, tagStart)
+    }
+    normalized += tag
+    cursor = tagStart + tag.length
+
+    if (/^<svg\b/i.test(tag) && !/\/\s*>$/.test(tag)) {
+      svgDepth += 1
+    } else if (/^<\/svg\b/i.test(tag)) {
+      svgDepth = Math.max(0, svgDepth - 1)
+    }
+  }
+
+  const trailing = source.slice(cursor)
+  normalized += svgDepth === 0 ? trailing.replace(/ \/>/g, ">") : trailing
+  return normalized
 }
 
 /**

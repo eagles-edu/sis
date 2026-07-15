@@ -151,7 +151,7 @@
     select,
     button,
     textarea {
-      min-height: 46px;
+      min-height: 48px;
       padding: 10px 12px;
     }
 
@@ -814,7 +814,7 @@
               </div>
             </nav>
             <div class="sidebar-actions">
-              <button id="logoutBtn" type="button" class="portal-button portal-button-danger hidden">Logout</button>
+              <button id="logoutBtn" type="button" class="portal-button portal-button-danger hidden" title="Sign out of the enrollment admin" aria-label="Sign out of the enrollment admin">Logout</button>
             </div>
           </aside>
 
@@ -917,7 +917,7 @@
                   </div>
                 </div>
                 <div class="grid-actions">
-                  <button id="refreshBtn" type="button" class="portal-button portal-button-teal-refresh">Refresh</button>
+                  <button id="refreshBtn" type="button" class="portal-button portal-button-teal-refresh" title="Reload the enrollment list and current filters" aria-label="Reload the enrollment list and current filters">Refresh</button>
                 </div>
               </div>
             </section>
@@ -951,7 +951,7 @@
               <p class="enrollment-history-modal__kicker">History</p>
               <h2 id="enrollmentHistoryModalTitle" class="enrollment-history-modal__title">Student history note</h2>
             </div>
-            <button type="button" class="portal-button portal-button-immutable-chrome enrollment-history-modal__close"
+            <button type="button" class="portal-button portal-button-immutable-chrome enrollment-history-modal__close" title="Close the enrollment history window" aria-label="Close the enrollment history window"
             data-history-close tabindex="-1">Close</button>
           </div>
           <p id="enrollmentHistoryModalSummary" class="enrollment-history-modal__summary"></p>
