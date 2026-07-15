@@ -5239,6 +5239,7 @@ body.student-portal-page .new-words-page-head {
   align-items: center;
 }
 body.student-portal-page .new-words-intro {
+  background: var(--portal-surface-panel);
   margin-bottom: 8px;
   overflow: hidden;
 }
@@ -5268,11 +5269,15 @@ body.student-portal-page .new-words-intro-body p {
   margin-top: 6px;
   max-width: 68ch;
 }
-body.student-portal-page .new-words-intro-body img {
+body.student-portal-page .new-words-intro-body .new-words-intro-illustration {
   aspect-ratio: 1;
+  color: #B50010;
   justify-self: end;
   max-width: 100px;
   width: 100%;
+}
+html[data-theme="dark"] body.student-portal-page .new-words-intro-body .new-words-intro-illustration {
+  color: #EDB144;
 }
 body.student-portal-page .new-words-tools {
   align-items: end;
@@ -5296,7 +5301,7 @@ body.student-portal-page .new-words-empty {
   padding: 14px;
 }
 body.student-portal-page .new-word-entry {
-  background: var(--portal-surface-card);
+  background: var(--portal-surface-panel);
   border: 1px solid var(--portal-border);
   border-radius: var(--radius-2);
   display: grid;
@@ -5310,9 +5315,13 @@ body.student-portal-page .new-word-entry-head {
   gap: 6px;
 }
 body.student-portal-page .new-word-entry-head strong {
+  color: #B50010;
   font-family: ui-monospace, Courier, monospace;
-  font-size: 1.18rem;
+  font-size: 1.38rem;
   overflow-wrap: anywhere;
+}
+html[data-theme="dark"] body.student-portal-page .new-word-entry-head strong {
+  color: #EDB144;
 }
 body.student-portal-page .new-word-entry-head > span {
   color: var(--portal-text-muted);
@@ -5580,7 +5589,7 @@ body.student-portal-page #newsWeekSetModal .news-review-vocabulary > .portal-but
   body.student-portal-page .new-words-intro-body {
     grid-template-columns: 1fr;
   }
-  body.student-portal-page .new-words-intro-body img {
+  body.student-portal-page .new-words-intro-body .new-words-intro-illustration {
     justify-self: end;
     max-width: 100px;
   }
@@ -10602,10 +10611,10 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 .noborder {
   border: none;
 }
-body.portal-hub-page div.header-bar,
-body.admin-portal-page div.header-bar,
-body.parent-portal-page div.header-bar,
-body.student-portal-page div.header-bar {
+body.portal-hub-page .header-bar,
+body.admin-portal-page .header-bar,
+body.parent-portal-page .header-bar,
+body.student-portal-page .header-bar {
   background: var(--portal-header-bar-fill);
   border-radius: var(--radius-2);
   box-sizing: border-box;

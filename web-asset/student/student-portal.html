@@ -1213,7 +1213,11 @@
                 <p><b>New Words</b> from your news reports are collected here. You can edit each entry, sort your list, and study from a clean
                 dictionary-style version of your new academic vocabulary.</p>
               </div>
-              <img src="/web-asset/icons/svg/water-ripples.svg" alt="Animated vocabulary study illustration" width="100" height="100">
+              <svg class="new-words-intro-illustration" viewBox="0 0 24 24" aria-label="Animated vocabulary study illustration" role="img" width="100" height="100" stroke="currentColor" stroke-width="2" fill="none">
+                <circle cx="12" cy="12" r="1"><animate id="water_ripples_one" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11" /><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0" /></circle>
+                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11" /><animate attributeName="opacity" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0" /></circle>
+                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11" /><animate attributeName="opacity" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0" /></circle>
+              </svg>
             </div>
           </details>
           <div class="panel new-words-tools" data-surface-role="panel">
@@ -5211,9 +5215,12 @@
 
       let vocabularyRowUid = 0;
 
-      function vocabularyRowHtml(index, removable = false) {
+      function vocabularyRowHtml(index, removable = false, menuActions = "remove") {
         const rowUid = `${index}-${++vocabularyRowUid}`;
         const options = NEWS_VOCABULARY_PARTS_OF_SPEECH.map((part) => `<option value="${part}">${part}</option>`).join("");
+        const newWordMenuActions = menuActions === "new-word" ? `
+                <button type="button" class="portal-button portal-button-affirm new-word-save">Save</button>
+                <button type="button" class="portal-button portal-button-warning new-word-close">Close</button>` : "";
         return `<div class="news-vocabulary-row" data-news-vocabulary-row="${index}">
           <select name="vocabularyPartOfSpeech-${rowUid}" data-vocabulary-field="partOfSpeech" aria-label="Part of speech" required><option value="">Part of speech</option>${options}</select>
           <input name="vocabularyEnglish-${rowUid}" type="text" data-vocabulary-field="english" placeholder="Word/phrase EN" aria-label="Word or phrase in English" required>
@@ -5227,6 +5234,7 @@
             ${removable ? `<details class="news-vocabulary-row-menu">
               <summary class="news-vocabulary-row-dots" aria-label="Open vocabulary row actions">⋮</summary>
               <div class="news-vocabulary-row-menu-panel">
+                ${newWordMenuActions}
                 <button type="button" class="portal-button portal-button-danger news-vocabulary-remove">Remove</button>
               </div>
             </details>` : '<span class="news-vocabulary-row-dots" aria-hidden="true">⋮</span>'}
@@ -5317,7 +5325,7 @@
         const totalPages = Math.max(1, Math.ceil(words.length / pageSize));
         state.newWordsPage = Math.min(Math.max(1, state.newWordsPage), totalPages);
         const start = (state.newWordsPage - 1) * pageSize;
-        container.innerHTML = words.length ? words.map((word, index) => word.__editing === true ? vocabularyRowHtml(index, true) : `
+        container.innerHTML = words.length ? words.map((word, index) => word.__editing === true ? vocabularyRowHtml(index, true, "new-word") : `
           <article class="new-word-entry" data-new-word-index="${index}">
             <div class="new-word-entry-head">
               <strong>${escapeHtml(t(word.english) || "New word")}</strong>
@@ -5326,13 +5334,6 @@
               ${dictionaryPlural(word.english, word.partOfSpeech) ? `<span class="new-word-entry-plural">(<em>plural</em> ${escapeHtml(dictionaryPlural(word.english, word.partOfSpeech))})</span>` : ""}
               <span class="new-word-entry-vietnamese">vi: ${escapeHtml(t(word.vietnamese))}</span>
               <button type="button" class="portal-button portal-button-primary new-word-edit">Edit</button>
-              <details class="news-vocabulary-row-menu new-word-entry-menu">
-                <summary class="news-vocabulary-row-dots" aria-label="Open new word actions">⋮</summary>
-                <div class="news-vocabulary-row-menu-panel">
-                  <button type="button" class="portal-button portal-button-affirm new-word-save">Save</button>
-                  <button type="button" class="portal-button portal-button-warning new-word-close">Close</button>
-                </div>
-              </details>
             </div>
             <p class="new-word-entry-definition">${escapeHtml(dictionaryDefinition(word.definition))}</p>
           </article>`).join("") : '<p class="hint new-words-empty">No new words yet. Add a word or complete a news report vocabulary row.</p>';
@@ -5832,7 +5833,6 @@
       }
 
       function markNewsDraftDirty() {
-        if (!t(field("reportDate")?.value)) return;
         state.newsFormDirty = true;
         state.newsCurrentMmrPassed = false;
         updateSubmitAvailability();

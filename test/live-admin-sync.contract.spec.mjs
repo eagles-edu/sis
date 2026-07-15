@@ -9,6 +9,7 @@ const testScript = fs.readFileSync(path.join(rootDir, "tools/sync-and-restart-te
 const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8"))
 const liveLinksDoc = fs.readFileSync(path.join(rootDir, "docs/Live portal links.md"), "utf8")
 const liveNginxConf = fs.readFileSync(path.join(rootDir, "deploy/nginx/admin.eagles.edu.vn.conf"), "utf8")
+const TEST_ONLY_SYNC_SOURCES = new Set(["web-asset/icons/svg/water-ripples.svg"])
 
 function extractMapSources(script, mapName) {
   const match = script.match(new RegExp(`${mapName}=\\(([^]*?)\\n\\)`, "m"))
@@ -92,25 +93,25 @@ test("live nginx config mirrors the test parent route shape", () => {
   assert.match(liveNginxConf, /location = \/parent\/portal \{\s+return 308 \/parent;/s)
 })
 
-test("test and live sync wrappers share the same strict whitelist sources", () => {
+test("test and live sync wrappers share the same strict whitelist sources except test-only assets", () => {
   assert.match(testScript, /web-asset\/admin\/report-card\.html\|web-asset\/admin\/report-card\.html/)
   assert.match(liveScript, /web-asset\/admin\/report-card\.html\|web-asset\/admin\/report-card\.html/)
   assert.match(testScript, /web-asset\/admin\/portal-hub\.html\|index\.html/)
   assert.match(liveScript, /web-asset\/admin\/portal-hub\.html\|index\.html/)
   assert.deepEqual(
-    extractMapSources(testScript, "TEST_RUNTIME_WEBFILE_MAP"),
+    extractMapSources(testScript, "TEST_RUNTIME_WEBFILE_MAP").filter((source) => !TEST_ONLY_SYNC_SOURCES.has(source)),
     extractMapSources(liveScript, "LIVE_RUNTIME_WEBFILE_MAP"),
   )
   assert.deepEqual(
-    extractMapSources(testScript, "TEST_PUBLIC_WEBFILE_MAP"),
+    extractMapSources(testScript, "TEST_PUBLIC_WEBFILE_MAP").filter((source) => !TEST_ONLY_SYNC_SOURCES.has(source)),
     extractMapSources(liveScript, "LIVE_PUBLIC_WEBFILE_MAP"),
   )
   assert.deepEqual(
-    extractQuotedEntries(testScript, "TEST_RUNTIME_WEBFILE_MAP"),
+    extractQuotedEntries(testScript, "TEST_RUNTIME_WEBFILE_MAP").filter((entry) => !TEST_ONLY_SYNC_SOURCES.has(entry.split("|")[0])),
     extractQuotedEntries(liveScript, "LIVE_RUNTIME_WEBFILE_MAP"),
   )
   assert.deepEqual(
-    extractQuotedEntries(testScript, "TEST_PUBLIC_WEBFILE_MAP"),
+    extractQuotedEntries(testScript, "TEST_PUBLIC_WEBFILE_MAP").filter((entry) => !TEST_ONLY_SYNC_SOURCES.has(entry.split("|")[0])),
     extractQuotedEntries(liveScript, "LIVE_PUBLIC_WEBFILE_MAP"),
   )
   assert.deepEqual(
