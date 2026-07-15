@@ -604,47 +604,11 @@ html[data-theme="dark"] body.admin-portal-page #performanceQueueSection .section
       }
 
       body {
-        background: var(--portal-page-bg);
-        color: var(--portal-text);
-        font-family: var(--font-base, system-ui, -apple-system, sans-serif);
         margin: 0;
         min-height: 100vh;
-      }
-
-      body.admin-portal-page.page {
-        background-attachment: fixed;
-        background-color: var(--portal-page-bg);
-
-        background-image:
-          radial-gradient(
-            900px 420px at -10% -18%,
-            rgba(133, 162, 198, 0.24) 0%,
-            transparent 60%
-          ),
-          radial-gradient(
-            880px 420px at 112% -20%,
-            rgba(115, 136, 163, 0.2) 0%,
-            transparent 58%
-          ),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 42%);
-      }
-
-      html[data-theme="dark"] body.admin-portal-page.page {
-        background-attachment: fixed;
-        background-color: var(--portal-dark-page-bg);
-
-        background-image:
-          radial-gradient(
-            900px 420px at -10% -18%,
-            rgba(255, 255, 255, 0.08) 0%,
-            transparent 60%
-          ),
-          radial-gradient(
-            880px 420px at 112% -20%,
-            rgba(140, 238, 255, 0.06) 0%,
-            transparent 58%
-          ),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 42%);
+        font-family: var(--font-base, system-ui, -apple-system, sans-serif);
+        background: var(--portal-page-bg);
+        color: var(--portal-text);
       }
 
       .hidden {

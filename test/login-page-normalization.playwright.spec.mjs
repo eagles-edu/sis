@@ -267,7 +267,11 @@ test(
           authBackgroundImage: authStyle ? authStyle.backgroundImage : "",
         }
       })
-      assert.notEqual(darkAuthSurface.bodyBackgroundImage, "none", "admin dark login should keep the page gradient")
+      assert.equal(
+        darkAuthSurface.bodyBackgroundImage,
+        "none",
+        "admin dark login should use the shared flat page background",
+      )
       assert.equal(
         darkAuthSurface.wrapBackgroundColor,
         "rgba(0, 0, 0, 0)",

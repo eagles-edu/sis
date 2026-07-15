@@ -75,6 +75,7 @@
     "test:mirror:test": "SIS_ENV_FILE=.env.test node tools/test-suite.mjs all",
     "test:mirror:live": "SIS_ENV_FILE=.env node tools/test-suite.mjs all",
     "test:portal-chip-contract": "node --test test/portal-chip-contract.spec.mjs",
+    "test:file:diagnose": "node tools/test-file-diagnostics.mjs",
     "test:redis": "node tools/test-redis.mjs",
     "test:session-store": "node --test test/student-admin-session-store.spec.mjs",
     "test:watch": "node --test --watch test/*.spec.mjs",

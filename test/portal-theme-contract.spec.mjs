@@ -78,12 +78,12 @@ test("student admin loads shared theme state before its inline toggle wiring", (
 test("portal home links use canonical runtime routes", () => {
   assert.match(
     parentPortal,
-    /<a class="brand-logo-wrap brand-logo-wrap--sm" href="\/parent" aria-label="Go to parent home">/,
+    /<a\s+class="brand-logo-wrap brand-logo-wrap--sm"\s+href="\/parent"\s+aria-label="Go to parent home"\s*>/,
     "parent portal should link its logo to /parent",
   )
   assert.match(
     studentPortal,
-    /<a class="brand-logo-wrap brand-logo-wrap--sm" href="\/student" aria-label="Go to student home">/,
+    /<a\s+class="brand-logo-wrap brand-logo-wrap--sm"\s+href="\/student"\s+aria-label="Go to student home"\s*>/,
     "student portal should link its logo to /student",
   )
 })
@@ -183,8 +183,8 @@ test("repo app pages do not define raw theme colors in inline style or script bl
     [
       path.resolve(rootDir, "web-asset/admin/student-admin.html"),
       [
-        /html\[data-theme="dark"\]\s+body\.admin-portal-page\.page\s*\{[\s\S]*?background-attachment:\s*fixed;\s*\}/gs,
-        /body\.admin-portal-page\.page\s*\{[\s\S]*?background-attachment:\s*fixed;\s*\}/gs,
+        /html\[data-theme="dark"\]\s+body\.admin-portal-page\.page\s*\{[\s\S]*?background-image:[\s\S]*?\}\s*/gs,
+        /body\.admin-portal-page\.page\s*\{[\s\S]*?background-image:[\s\S]*?\}\s*/gs,
       ],
     ],
     [
@@ -285,12 +285,12 @@ test("portal-facing pages route every raw color literal through the shared theme
 test("security badges use the white secure-network asset in dark mode", () => {
   assert.match(
     parentPortal,
-    /security-badge__icon security-badge__icon--dark" src="\/web-asset\/shared\/secure-network-white\.svg"/,
+    /security-badge__icon security-badge__icon--dark"\s+src="\/web-asset\/shared\/secure-network-white\.svg"/,
     "parent portal should reference the white security icon variant",
   )
   assert.match(
     studentPortal,
-    /security-badge__icon security-badge__icon--dark" src="\/web-asset\/shared\/secure-network-white\.svg"/,
+    /security-badge__icon security-badge__icon--dark"\s+src="\/web-asset\/shared\/secure-network-white\.svg"/,
     "student portal should reference the white security icon variant",
   )
   assert.match(
@@ -327,8 +327,8 @@ test("portal pages fail closed on local theme ownership outside the explicit str
     /html\s*\{\s*background:\s*var\(--portal-page-bg\);\s*scrollbar-gutter:\s*stable;\s*\}/gs,
       /body\s*\{\s*margin:\s*0;\s*min-height:\s*100vh;\s*font-family:\s*var\(--font-base,\s*system-ui,\s*-apple-system,\s*sans-serif\);\s*background:\s*var\(--portal-page-bg\);\s*color:\s*var\(--portal-text\);\s*\}/gs,
       /:root\s*\{\s*--font-base:[\s\S]*?\}/gs,
-      /html\[data-theme="dark"\]\s+body\.admin-portal-page\.page\s*\{[\s\S]*?background-attachment:\s*fixed;\s*\}/gs,
-      /body\.admin-portal-page\.page\s*\{[\s\S]*?background-attachment:\s*fixed;\s*\}/gs,
+      /html\[data-theme="dark"\]\s+body\.admin-portal-page\.page\s*\{[\s\S]*?background-image:[\s\S]*?\}\s*/gs,
+      /body\.admin-portal-page\.page\s*\{[\s\S]*?background-image:[\s\S]*?\}\s*/gs,
       /body\.admin-auth-booting\s*#authBootPanel\s*\{\s*display:\s*grid;\s*\}/gs,
       /body\.admin-auth-booting\s*#authPanel,\s*body\.admin-auth-booting\s*#app\s*\{\s*display:\s*none\s*!important;\s*\}/gs,
       /html\[data-admin-auth-state\]\s*body\.admin-portal-page\.admin-auth-booting\s*#authBootPanel\s*\{\s*display:\s*none\s*!important;\s*\}/gs,
@@ -499,7 +499,7 @@ test("shared portal theme keeps unauthenticated header bars aligned to the login
 test("parent identity panel keeps the chooser at the top of the same panel", () => {
   assert.match(
     parentPortal,
-    /<section class="panel" id="identityPanel"[^>]*>[\s\S]*?<div id="quickLinksPanel" class="portal-action-strip"[\s\S]*?<p id="studentIdentity" class="hint">/s,
+    /<section\s+class="panel"\s+id="identityPanel"[^>]*>[\s\S]*?<div\s+id="quickLinksPanel"\s+class="portal-action-strip"[\s\S]*?<p\s+id="studentIdentity"\s+class="hint"\s*>/s,
     "the chooser should sit inside the identity panel before the identity rows",
   )
 })

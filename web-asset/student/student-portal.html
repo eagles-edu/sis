@@ -1581,6 +1581,7 @@
       }
 
       function normalizeFailedFieldMap(value = {}) {
+        if (Array.isArray(value)) return {};
         const source = value && typeof value === "object" ? value : {};
         const map = {};
         Object.keys(source).forEach((fieldKey) => {
@@ -6053,9 +6054,12 @@
             normalizeFailedFieldMap(saved?.warningFields || {}),
             Array.isArray(saved?.warningTasks) ? saved.warningTasks : [],
           );
-          setFormStatus(t(saved?.message) || "Report saved.", false, true);
-          clearNewsReportForm();
-          setFormStatus(t(saved?.message) || "Report submitted successfully. A new blank form is ready.", false, true);
+          if (reopenReportDate) {
+            setFormStatus(t(saved?.message) || "Report saved.", false, true);
+          } else {
+            clearNewsReportForm();
+            setFormStatus(t(saved?.message) || "Report submitted successfully. A new blank form is ready.", false, true);
+          }
           await Promise.all([loadDashboard(), loadCalendar()]);
           if (reopenReportDate) {
             openNewsWeekSetModalByReportDate(reopenReportDate, {
