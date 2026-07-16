@@ -10149,6 +10149,7 @@
         if (slug === "assignments" || slug === "assignments-data") {
           refreshAssignmentStudentOptions();
           renderAssignmentLevelTiles();
+          loadExerciseTitles().catch(handleError);
         }
         if (slug === "performance-data") {
           loadParentReportQueue({ showAll: state.parentReportQueue.showAll }).catch(
@@ -22248,6 +22249,10 @@
       }
 
       function scheduleAfterFirstPaint(task, timeout = 2000) {
+        if (IS_JSDOM_ENV) {
+          void Promise.resolve().then(task).catch(handleError);
+          return;
+        }
         const afterPaint = () => scheduleIdleTask(task, timeout);
         if (typeof window.requestAnimationFrame === "function") {
           window.requestAnimationFrame(() => window.requestAnimationFrame(afterPaint));
@@ -24595,6 +24600,9 @@
       updateArchiveToggleButtons();
       renderHubConnectionStatus();
       renderServiceControlCard();
+      if (!isStaticAdminPreviewMode() || ADMIN_API_ORIGIN) {
+        probeHubConnection({ notify: false }).catch(() => {});
+      }
       scheduleIdleTaskSeries([
         () => {
           renderProfileFormLayout();

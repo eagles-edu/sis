@@ -5464,3 +5464,33 @@ file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:455
 
 SyntaxError: Unexpected token '?'
     at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:455
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:455
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:455
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:455
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
+file:///home/eagles/dockerz/sis/src/modules/admin/sis-config-store.mjs:455
+      candidate.adminSessionTtlSeconds ?? process.env.STUDENT_ADMIN_SESSION_TTL_SECONDS,
+                                        ^
+
+SyntaxError: Unexpected token '?'
+    at Loader.moduleStrategy (internal/modules/esm/translators.js:133:18)
