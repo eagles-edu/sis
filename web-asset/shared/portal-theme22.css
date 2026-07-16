@@ -4327,6 +4327,7 @@ body:is(.parent-portal-page, .student-portal-page) :is(
   #parentTextZoomUpBtn,
   #parentTextZoomResetBtn,
   #studentDetailBackToMainBtn,
+  #backToHomeBtn,
   #studentTextZoomDownBtn,
   #studentTextZoomUpBtn,
   #studentTextZoomResetBtn
@@ -5095,6 +5096,7 @@ body.student-portal-page .news-actions {
 }
 body.student-portal-page .news-actions > .portal-button {
   min-block-size: var(--portal-button-min-block);
+  min-height: var(--portal-button-min-block);
 }
 @media (min-width: 640px) {
   body.student-portal-page .news-actions {
@@ -5369,7 +5371,6 @@ body.student-portal-page .student-new-words-lightbox-dialog {
   border: 1px solid #cad7ea;
   border-radius: 12px;
   box-shadow: 0 22px 50px rgba(8, 18, 40, 0.22);
-  box-sizing: border-box;
   display: grid;
   gap: 12px;
   max-height: calc(100vh - 36px);
@@ -5502,58 +5503,56 @@ body.student-portal-page .new-words-empty {
   margin: 0;
   padding: 14px;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry {
+body.student-portal-page .new-word-entry {
   background: var(--portal-surface-panel);
   border: 1px solid var(--portal-border);
   border-radius: var(--radius-2);
   display: grid;
   gap: 4px;
-  grid-template-columns: none;
   padding: 12px 14px;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head {
+body.student-portal-page .new-word-entry-head {
   align-items: flex-start;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
+body.student-portal-page .new-word-entry-head strong {
   color: #B50010;
   font-family: ui-monospace, Courier, monospace;
   font-size: 1.38rem;
   overflow-wrap: anywhere;
 }
-html[data-theme="dark"] body.student-portal-page .new-word-entry-head strong,
-html[data-theme="dark"] :where(body.admin-portal-page, body.parent-portal-page) .new-word-entry-head strong {
+html[data-theme="dark"] body.student-portal-page .new-word-entry-head strong {
   color: #EDB144;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > span {
+body.student-portal-page .new-word-entry-head > span {
   color: var(--portal-text-muted);
   font-family: ui-monospace, Courier, monospace;
   font-size: 1.18rem;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-pronunciation {
+body.student-portal-page .new-word-entry-head > .new-word-entry-pronunciation {
   color: var(--portal-text);
   font-family: ui-monospace, Courier, monospace;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-part-of-speech {
+body.student-portal-page .new-word-entry-head > .new-word-entry-part-of-speech {
   color: #fbffff;
   font-weight: 800;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-plural em {
+body.student-portal-page .new-word-entry-head > .new-word-entry-plural em {
   font-weight: 700;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-vietnamese {
+body.student-portal-page .new-word-entry-head > .new-word-entry-vietnamese {
   margin-inline-end: auto;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head .new-word-edit {
+body.student-portal-page .new-word-entry-head .new-word-edit {
   --portal-button-min-block: 36px;
   --portal-button-min-inline: 72px;
   --portal-button-max-inline: 72px;
   block-size: 36px;
   margin-inline-start: auto;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-definition {
+body.student-portal-page .new-word-entry-definition {
   font-family: ui-monospace, Courier, monospace;
   font-size: 1.08rem;
   margin: 0;

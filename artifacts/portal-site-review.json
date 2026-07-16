@@ -333,7 +333,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2858
+              "height": 3169
             },
             ".wrap": {
               "selector": ".wrap",
@@ -345,7 +345,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2810
+              "height": 3121
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -357,7 +357,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2726
+              "height": 3037
             },
             ".panel": {
               "selector": ".panel",
@@ -1453,7 +1453,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 1394
+              "height": 2537
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1465,7 +1465,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 1346
+              "height": 2489
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1477,7 +1477,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 1262
+              "height": 2405
             },
             ".panel": {
               "selector": ".panel",
@@ -1525,7 +1525,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1363,
-              "height": 497
+              "height": 1086
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1536,8 +1536,8 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
-              "width": 664,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -3704,7 +3704,7 @@
           "viewerBlock": {
             "bg": "rgb(250, 252, 255)",
             "color": "rgb(0, 0, 0)",
-            "text": "Report IDcmrk5h4x50004sdg06rvy5yhh"
+            "text": "Report IDcmrm0nzm30000ayg0hzkm4x8z"
           }
         },
         {
@@ -3713,9 +3713,9 @@
             "text": "Grades Data"
           },
           "gradeChartEmpty": {
-            "bg": "",
-            "bgImage": "",
-            "color": ""
+            "bg": "rgba(0, 0, 0, 0)",
+            "bgImage": "none",
+            "color": "rgb(0, 0, 0)"
           }
         }
       ]
@@ -4071,7 +4071,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1440,
-              "height": 3708
+              "height": 3747
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",
@@ -6947,7 +6947,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 1394
+              "height": 2537
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6959,7 +6959,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 1346
+              "height": 2489
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6971,7 +6971,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 1262
+              "height": 2405
             },
             ".panel": {
               "selector": ".panel",
@@ -7019,7 +7019,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 497
+              "height": 1086
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7030,8 +7030,8 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 664,
-              "height": 19
+              "width": 0,
+              "height": 0
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -9198,7 +9198,7 @@
           "viewerBlock": {
             "bg": "rgb(76, 76, 76)",
             "color": "rgb(251, 255, 255)",
-            "text": "Report IDcmrk5h4x50004sdg06rvy5yhh"
+            "text": "Report IDcmrm0nzm30000ayg0hzkm4x8z"
           }
         },
         {
@@ -9565,7 +9565,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1440,
-              "height": 3708
+              "height": 3747
             },
             ".calendar-shell": {
               "selector": ".calendar-shell",

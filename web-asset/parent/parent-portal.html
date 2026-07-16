@@ -6668,13 +6668,15 @@
               vocabulary
                 .map(
                   (row) => `
-          <div class="news-review-vocabulary-row">
-            <span>${escapeHtml(normalizeText(row?.partOfSpeech))}</span>
-            <span>${escapeHtml(normalizeText(row?.english))}</span>
-            <span>${escapeHtml(normalizeText(row?.vietnamese))}</span>
-            <span>${escapeHtml(normalizeText(row?.syllabication))}</span>
-            <span class="news-review-vocabulary-definition">${escapeHtml(normalizeText(row?.definition))}</span>
-          </div>`,
+          <article class="new-word-entry">
+            <div class="new-word-entry-head">
+              <strong>${escapeHtml(normalizeText(row?.english) || "New word")}</strong>
+              <span class="new-word-entry-pronunciation">/${escapeHtml(normalizeText(row?.syllabication))}/</span>
+              <strong class="new-word-entry-part-of-speech">${escapeHtml(normalizeText(row?.partOfSpeech))}</strong>
+              <span class="new-word-entry-vietnamese">vi: ${escapeHtml(normalizeText(row?.vietnamese))}</span>
+            </div>
+            <p class="new-word-entry-definition news-review-vocabulary-definition">${escapeHtml(normalizeText(row?.definition))}</p>
+          </article>`,
                 )
                 .join("")
             : '<p class="small">No vocabulary saved.</p>'

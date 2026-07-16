@@ -1,3 +1,5 @@
+/** @format */
+
 import js from "@eslint/js"
 import globals from "globals"
 
@@ -22,7 +24,12 @@ export default [
   { ignores },
   js.configs.recommended,
   {
-    files: ["server/**/*.mjs", "src/**/*.mjs", "test/**/*.mjs", "tools/**/*.mjs"],
+    files: [
+      "server/**/*.mjs",
+      "src/**/*.mjs",
+      "test/**/*.mjs",
+      "tools/**/*.mjs",
+    ],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: "module",

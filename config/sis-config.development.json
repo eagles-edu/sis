@@ -30,112 +30,67 @@
       "letterGradeRanges": [
         {
           "letter": "A",
-          "minPercent": 93,
-          "maxPercent": 100
+          "maxPercent": 100,
+          "minPercent": 93
         },
         {
           "letter": "B",
-          "minPercent": 85,
-          "maxPercent": 92.99
+          "maxPercent": 92.99,
+          "minPercent": 85
         },
         {
           "letter": "C",
-          "minPercent": 77,
-          "maxPercent": 84.99
+          "maxPercent": 84.99,
+          "minPercent": 77
         },
         {
           "letter": "D",
-          "minPercent": 70,
-          "maxPercent": 76.99
+          "maxPercent": 76.99,
+          "minPercent": 70
         },
         {
           "letter": "F",
-          "minPercent": 0,
-          "maxPercent": 69.99
+          "maxPercent": 69.99,
+          "minPercent": 0
         }
       ],
       "schoolSetupState": "ok"
     },
     "schoolProfile": {
       "schoolName": "The Eagles Club",
-      "bilingualTextVi": "",
-      "bilingualTextEn": "",
-      "motto": "",
-      "mission": "Persist settings across live upgrades",
-      "values": "The Eagles American English Club giá trị cốt lõi\n\nĐể thực hiện sứ mệnh này, Eagles American English Club được hướng dẫn bởi những giá trị cốt lõi sau và mong đợi những kết quả sau:\n\nTập trung vào thành viên: \nThe Eagles American English Club tiếp cận việc giảng dạy với trọng tâm là tập trung vào thành viên, xem xét nhu cầu, sở thích và mục tiêu của mỗi thành viên; The Eagles American English Club cũng thừa nhận rằng tất cả học sinh đều không giống nhau và việc điều chỉnh thường xuyên là cần thiết và mong muốn để đáp ứng đầy đủ các nhu cầu của học sinh. Chương trình giảng dạy tập trung vào thành viên nhằm trao quyền cho các thành viên, cho phép họ định hình nền giáo dục của mình thông qua các lựa chọn sáng suốt.\n\nTăng trưởng cá nhân: Sử dụng thông tin liên lạc rõ ràng, chúng tôi nhất quán thúc đẩy sự phát triển trí tuệ và cá nhân của các thành viên bằng cách thấm nhuần tầm quan trọng của tính tự lập, tư duy phản biện và phân tích, giải quyết vấn đề, làm việc theo nhóm, sử dụng công nghệ thông tin giáo dục và tiếp xúc rộng rãi với các vấn đề quan trọng trong thế giới thực như kinh tế toàn cầu, biến đổi khí hậu và ô nhiễm.\n\nHọc bổng: The Eagles American English Club tin rằng các thành viên và nhân viên nên phát triển và nắm vững các kỹ năng giáo dục giúp họ trở thành những người học tập suốt đời; những kỹ năng này bao gồm lắng nghe tích cực, ghi chú, lập kế hoạch trước, sắp xếp thứ tự ưu tiên cho bài tập ở trường, quản lý thời gian và trách nhiệm cá nhân để học tập và ôn tập hiệu quả.\n\n      - Học Cambridge\n      - Học IELTS\n      - Học TOEIC\n\nNăng lực: Chúng tôi phát triển và duy trì “Chương trình tiếng Anh được quản lý của Câu lạc bộ Eagles™ (TECMEP),” trong đó chuẩn bị cho tất cả các thành viên đầy đủ và năng lực cho tương lai giáo dục trong nước và quốc tế và cơ hội kinh doanh.\n\nNuôi dưỡng: The Eagles American English Club cố gắng cung cấp một môi trường lớp học thoải mái, an toàn và kích thích với công nghệ thích hợp nuôi dưỡng các thành viên và giảng viên của chúng tôi phát triển về trí tuệ, xã hội và cá nhân.\n\nTrách nhiệm: The Eagles American English Club khuyến khích sự minh bạch và nhất quán trong việc ra quyết định giáo dục của chúng tôi thông qua một quá trình hội nghị chuyên môn được chia sẻ dựa trên nghiên cứu giáo dục, được đánh giá ngang hàng và tương tác giữa giảng viên, nhân viên và sinh viên.\n\nHợp tác: The Eagles American English Club thúc đẩy mối quan hệ hợp tác cộng tác giữa học sinh, phụ huynh và nhân viên; thúc đẩy tinh thần tự lập suốt đời, học tập trải nghiệm, tự học, phục vụ cộng đồng, trách nhiệm xã hội và ý thức văn hóa.",
-      "address": "28 đường số 30, Phường Bình Trị Đông B Quận Bình Tân Thành phố Hồ Chí Minh Hồ Chí Minh Việt Nam\n\nNew format 2026\n28 Đường Số 30, Phường An Lạc, Thành Phố Hồ Chí Minh 71906",
+      "bilingualTextVi": "Vietnamese text block",
+      "bilingualTextEn": "English text block",
+      "motto": "Serious English",
+      "mission": "Sứ Mệnh",
+      "values": "The Eagles American English Club giá trị cốt lõi",
+      "address": "28 Đường Số 30, Phường An Lạc, Thành Phố Hồ Chí Minh 71906",
       "phone": "0937667818",
-      "publicSite": "https",
-      "privateLessonSite": "",
-      "webPresence": "",
-      "socialIm": "Zalo 84937667818",
-      "businessTaxId": "",
-      "timeFormat": "",
-      "timeZone": "",
-      "googleMapsEmbedIframe": "",
-      "logoDataUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiID8+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB3aWR0aD0iMzYwcHQiIGhlaWdodD0iMzYwcHQiIHZpZXdCb3g9IjAgMCAzNjAgMzYwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+DQo8ZyBpZD0iIzAwMjc2OGZmIj4NCjxwYXRoIGZpbGw9IiMwMDI3NjgiIG9wYWNpdHk9IjEuMDAiIGQ9IiBNIDAuMDAgMC4wMCBMIDE4Mi44NSAwLjAwIEMgMTgyLjg0IDI2LjUxIDE4Mi44NSA1My4wMyAxODIuODQgNzkuNTQgQyAxNzUuOTkgNzMuMDIgMTY4LjExIDY3LjYwIDE1OS43MSA2My4yNyBDIDE1Ni42MCA2MS41OCAxNTMuMDUgNjEuMTcgMTQ5LjYwIDYwLjc1IEMgMTUxLjUxIDYzLjU3IDE1My4zOSA2Ni41MiAxNTMuNDAgNzAuMDUgQyAxNDkuNDUgNjguOTEgMTQ1LjY5IDY3LjA5IDE0Mi41MiA2NC40NSBDIDEyOC4zMSA1My4wNSAxMTQuNzMgNDAuOTEgMTAwLjc1IDI5LjI0IEMgOTUuMjMgMjQuNTkgODguMDcgMjIuNDMgODAuOTkgMjEuNzMgQyA3Mi42NCAyMC44NSA2NC4yMyAyMS41MSA1NS44NiAyMS43MCBDIDQyLjE3IDIyLjc4IDI4Ljc1IDI1LjkzIDE1LjUxIDI5LjQ2IEMgMTMuMTQgMzAuMDAgMTEuMTkgMzEuNDkgOS4zMSAzMi45NiBDIDE2LjIxIDM2LjY5IDI0LjE3IDM3LjQ4IDMxLjQyIDQwLjMxIEMgNDAuNDcgNDMuNjYgNDkuNTggNDguOTcgNTQuMzEgNTcuNzIgQyA1Ni4zMCA2MS4xNyA1Ni42OSA2NS4xNyA1Ny4wMyA2OS4wNSBDIDU3LjMwIDcyLjQyIDU5LjAxIDc1LjQ0IDYwLjgzIDc4LjIwIEMgNjYuMDIgODUuODEgNzIuNzMgOTIuMjcgODAuMDYgOTcuNzkgQyA4MC4wOCAxMDIuMTQgNzkuOTMgMTA2LjU4IDgxLjIwIDExMC43OSBDIDg0LjI1IDEyMS40OCA4OS4wNiAxMzEuNjAgOTQuODkgMTQxLjA1IEMgMTA0LjUyIDE1Ni41NyAxMTYuNDAgMTcwLjc5IDEzMC41MyAxODIuNDIgQyAxNDIuODkgMTkyLjYyIDE1Ny4zMiAyMDAuNjEgMTczLjA1IDIwNC4xMSBDIDE3NS42NSAyMDQuNDQgMTc2Ljc5IDIwNi45OCAxNzguMjUgMjA4LjgwIEMgMTcwLjE5IDIxMi40MCAxNjAuNTMgMjE0LjU5IDE1Mi4xNCAyMTAuODAgQyAxNDQuNjUgMjA2Ljc5IDE0MC4yMSAxOTguNTAgMTMxLjgwIDE5NS45MCBDIDEzMS4wMiAxOTcuOTIgMTMwLjI4IDE5OS45NSAxMjkuNTUgMjAxLjk5IEMgMTIyLjU5IDIwMC43OCAxMTUuMTcgMjAxLjM2IDEwOC45MiAyMDQuODcgQyAxMDQuNjkgMjA2Ljk5IDEwMS40OSAyMTAuNTggOTguNzMgMjE0LjM0IEMgMTA3LjI0IDIxNi43NCAxMTUuMDUgMjIwLjkzIDEyMi43OCAyMjUuMTIgQyAxMjUuOTggMjI2Ljk0IDEyOS42MSAyMjguMTEgMTMyLjQyIDIzMC41NiBDIDEzNS41NCAyMzMuOTYgMTM2Ljc0IDIzOC42OSAxNDAuMDggMjQxLjk1IEMgMTQ2Ljk0IDI0OS4wMiAxNTUuOTYgMjUzLjY4IDE2Mi4xOSAyNjEuNDMgQyAxNTkuNDMgMjYxLjQ3IDE1Ni42NyAyNjEuNDkgMTUzLjkyIDI2MS41NyBDIDE2MS45OSAyNjkuMzYgMTczLjA1IDI3Mi4yNCAxODIuODQgMjc3LjExIEMgMTgyLjg2IDI4Ni4xNiAxODIuODMgMjk1LjIyIDE4Mi44NiAzMDQuMjcgQyAxODIuMzEgMzA0LjQyIDE4MS4yMSAzMDQuNzAgMTgwLjY2IDMwNC44NCBDIDE4MS40MiAzMDUuNjcgMTgyLjE2IDMwNi41MyAxODIuOTUgMzA3LjM0IEMgMTgyLjcxIDMyNC44OSAxODIuOTEgMzQyLjQ1IDE4Mi44NCAzNjAuMDAgTCAwLjAwIDM2MC4wMCBMIDAuMDAgMC4wMCBNIDQwLjU2IDIxOS4yNyBDIDM4LjI0IDIyNi4zOCAzNS45NyAyMzMuNTEgMzMuNzIgMjQwLjY0IEMgMjYuMTEgMjQwLjYwIDE4LjUxIDI0MC41OSAxMC45MCAyNDAuNTUgQyAxNy4xMCAyNDQuOTQgMjMuMjkgMjQ5LjM2IDI5LjQ2IDI1My44MCBDIDI2Ljk5IDI2MC45NyAyNC42NyAyNjguMTkgMjIuMjUgMjc1LjM5IEMgMjguNDQgMjcxLjAwIDM0LjMyIDI2NS45MyA0MC44MyAyNjIuMTIgQyA0Ny4wMiAyNjYuMjkgNTIuOTIgMjcwLjkwIDU4Ljk3IDI3NS4yOCBDIDU2LjU2IDI2OC4xMiA1NC4yNiAyNjAuOTIgNTEuNzYgMjUzLjc4IEMgNTcuOTQgMjQ5LjM0IDY0LjEwIDI0NC44NiA3MC4zNiAyNDAuNTIgQyA2Mi43NSAyNDAuNTggNTUuMTMgMjQwLjU5IDQ3LjUyIDI0MC42NyBDIDQ1LjE4IDIzMy41NCA0My4wNCAyMjYuMzUgNDAuNTYgMjE5LjI3IE0gOTkuOTkgMjc1LjQxIEMgOTcuNjYgMjgyLjU2IDk1LjQxIDI4OS43NCA5My4wOSAyOTYuOTAgQyA4NS40OCAyOTYuODAgNzcuODYgMjk2Ljg4IDcwLjI1IDI5Ni43NyBDIDc2LjQ1IDMwMS4xOCA4Mi42MiAzMDUuNjUgODguODQgMzEwLjAzIEMgODYuNDAgMzE3LjIzIDg0LjEwIDMyNC40OCA4MS42MSAzMzEuNjYgQyA4Ny43MSAzMjcuMTAgOTMuOTEgMzIyLjY2IDEwMC4wMyAzMTguMTEgQyAxMDYuMTUgMzIyLjYyIDExMi4zMSAzMjcuMDggMTE4LjQ0IDMzMS41OCBDIDExNS45MSAzMjQuNDIgMTEzLjYzIDMxNy4xOCAxMTEuMTcgMzEwLjAxIEMgMTE3LjM2IDMwNS42MiAxMjMuNTIgMzAxLjIwIDEyOS42NyAyOTYuNzcgQyAxMjIuMDggMjk2Ljg1IDExNC40OSAyOTYuODIgMTA2LjkwIDI5Ni45MCBDIDEwNC41OCAyODkuNzQgMTAyLjM1IDI4Mi41NiA5OS45OSAyNzUuNDEgWiIgLz4NCjwvZz4NCjxnIGlkPSIjZTAxNzJhZmYiPg0KPHBhdGggZmlsbD0iI2UwMTcyYSIgb3BhY2l0eT0iMS4wMCIgZD0iIE0gMTgyLjg1IDAuMDAgTCAzNjAuMDAgMC4wMCBMIDM2MC4wMCAzNjAuMDAgTCAxODIuODQgMzYwLjAwIEMgMTgyLjkxIDM0Mi40NSAxODIuNzEgMzI0Ljg5IDE4Mi45NSAzMDcuMzQgQyAxODkuMTMgMzExLjY3IDE5Ny4xMiAzMTIuNDYgMjA0LjM2IDMxMC44MCBDIDIwNy4zOCAzMTUuNzkgMjExLjY4IDMxOS44NCAyMTYuODMgMzIyLjYwIEMgMjE2LjU2IDMyMC42MyAyMTUuMDcgMzE4LjQ3IDIxNi40MyAzMTYuNjEgQyAyMTguMTMgMzEzLjQwIDIyMC42OSAzMTAuNzEgMjIzLjU3IDMwOC41MiBDIDIyNC41MCAzMDcuODQgMjI1LjU0IDMwNi45NSAyMjYuNzkgMzA3LjQyIEMgMjMxLjQ3IDMwOC40NSAyMzUuOTYgMzEwLjIxIDI0MC40NSAzMTEuODkgQyAyMzguMTcgMzE1Ljk0IDIzMy4zMyAzMTkuNzQgMjM1LjIxIDMyNC45MyBDIDIzNi4yMCAzMjguOTUgMjQwLjE4IDMzMC44NSAyNDMuNzQgMzMyLjEyIEMgMjQzLjQ4IDMyOS43NCAyNDMuMDYgMzI3LjM1IDI0My4yNiAzMjQuOTUgQyAyNDMuNjEgMzIyLjE5IDI0NS42NiAzMjAuMTEgMjQ3LjIwIDMxNy45NSBDIDI0OC4wOCAzMjAuOTkgMjQ4LjgwIDMyNC4wNiAyNDkuNTUgMzI3LjE0IEMgMjUxLjcxIDMyMy44MSAyNTMuNTIgMzIwLjI4IDI1NS4zMSAzMTYuNzUgQyAyNTguNzAgMzIxLjEzIDI1Ny4zMiAzMjYuNjAgMjU2LjM3IDMzMS41NCBDIDI1OS44MSAzMjguMDIgMjYzLjk1IDMyNC4yNiAyNjQuMTcgMzE4Ljk3IEMgMjY0LjY3IDMxNS4yMCAyNjIuMjMgMzExLjczIDI1OS4wNSAzMDkuOTcgQyAyNTEuNDggMzA1LjU3IDI0Mi41OCAzMDQuNjggMjM0LjM1IDMwMi4wNSBDIDIzNy45NyAyOTguODcgMjQxLjgzIDI5NC44OCAyNDcuMDQgMjk1LjA1IEMgMjQ4Ljk4IDI5NC43OSAyNDkuOTEgMjk2Ljc0IDI1MC45NCAyOTguMDEgQyAyNTMuMTggMzAxLjQxIDI1NS40MiAzMDQuODUgMjU4LjM4IDMwNy43MSBDIDI1OC4zOSAzMDQuODYgMjU4LjM3IDMwMi4wMyAyNTguNDAgMjk5LjE5IEMgMjY0LjcxIDMwMy4yOSAyNjguNTMgMzEwLjQwIDI3NS42MCAzMTMuNDQgQyAyNzUuMTEgMzE2LjA4IDI3My42OCAzMTkuMDIgMjc1LjI4IDMyMS41NiBDIDI3Ni44MiAzMjQuODggMjgwLjM2IDMyNi4zNCAyODMuNDcgMzI3Ljc4IEMgMjgyLjgzIDMyMy45MSAyODIuNDggMzE5Ljk5IDI4Mi42OSAzMTYuMDYgQyAyODQuODEgMzE3LjgxIDI4Ni43MyAzMTkuNzggMjg4LjU4IDMyMS44MiBDIDI4OS40NyAzMTguODUgMjkwLjM2IDMxNS44OCAyOTEuNTEgMzEzLjAwIEMgMjkzLjU1IDMxNi4yOSAyOTMuNzkgMzIwLjE1IDI5My42NyAzMjMuOTIgQyAyOTYuNDcgMzIxLjUwIDI5OS45OCAzMTkuMDEgMzAwLjM3IDMxNS4wMCBDIDMwMC45MSAzMTAuNjMgMjk3Ljg1IDMwNi42NyAyOTQuMDQgMzA0LjkxIEMgMjg4LjkzIDMwMi4xMiAyODIuODggMzAzLjM3IDI3Ny41MCAzMDQuNTcgQyAyNzUuOTIgMzAxLjMwIDI3NC4xMyAyOTguMTMgMjcyLjEzIDI5NS4wOSBDIDI3NS4zNyAyOTQuNDggMjc4LjYyIDI5My44MyAyODEuODMgMjkzLjA1IEMgMjc4LjczIDI4Ny4zNyAyNzMuMjMgMjgzLjY3IDI2OS41NyAyNzguNDUgQyAyNjUuNTMgMjcyLjE5IDI2NS41OCAyNjMuMTQgMjcwLjU1IDI1Ny40MCBDIDI3My41OCAyNTQuMDcgMjc5LjA2IDI1NS4wNSAyODIuMDIgMjU3Ljk5IEMgMjg3LjUyIDI2My4wMiAyOTAuMjIgMjcwLjYzIDI5Ni44MyAyNzQuNTggQyAyOTYuNjYgMjcxLjA3IDI5Ni40MSAyNjcuMzkgMjk5LjA2IDI2NC42NCBDIDMwMS42MyAyNjYuMzMgMzA1LjExIDI2OC4yMCAzMDQuODkgMjcxLjgxIEMgMzA0LjExIDI3My41MyAzMDIuOTAgMjc1LjAxIDMwMS44NCAyNzYuNTYgQyAzMDYuMzggMjc0LjkzIDMxMy40NyAyNzMuMjkgMzEyLjkzIDI2Ny4wNSBDIDMxMi41MiAyNTkuNTQgMzE1LjkwIDI1Mi41MCAzMTUuNDQgMjQ1LjAwIEMgMzE1LjY0IDIzNi4xNCAzMTAuMTIgMjI4LjcxIDMwNS4xNyAyMjEuODggQyAyOTkuNjUgMjE0LjEyIDI5MS4xMyAyMDkuMTkgMjg1LjU1IDIwMS40OSBDIDI4NC4xNiAxOTkuNTQgMjgyLjcyIDE5Ny40MyAyODIuNTMgMTk0Ljk3IEMgMjgyLjgxIDE5Mi4yNSAyODQuMTggMTg5LjgxIDI4NS4zMyAxODcuMzggQyAyOTAuNDggMTc3LjI4IDI5Ny4yMSAxNjguMDcgMzA0LjI1IDE1OS4yMSBDIDMxOS42MiAxNDEuOTEgMzMyLjgyIDEyMi44NSAzNDUuNTIgMTAzLjU1IEMgMzQ3LjczIDEwMC4xOCAzNTAuMDkgOTYuMjMgMzQ4Ljk4IDkyLjAzIEMgMzQ3LjQ4IDg0LjE4IDM0MS41NyA3OC4zMiAzMzYuMDAgNzMuMDMgQyAzMjguMDYgNjUuMzkgMzE3LjYzIDYxLjEzIDMwNy4yOSA1Ny44NCBDIDMwNC4zMiA1Ni44NiAzMDEuMTggNTYuNTkgMjk4LjA3IDU2LjUwIEMgMjk5Ljc5IDYwLjc2IDMwMi40MSA2NC41NSAzMDQuNDQgNjguNjUgQyAyOTIuMTQgNjguODIgMjc5Ljg3IDY1Ljg0IDI2Ny41OCA2Ny43NSBDIDI2MS41OSA2OC4yMCAyNTUuODMgNzAuMTIgMjUwLjcxIDczLjIyIEMgMjU4LjM2IDc4LjAzIDI2Ny41MSA4MS42MSAyNzIuNDQgODkuNjQgQyAyNzQuMTIgOTIuMzcgMjc0Ljg3IDk2LjAyIDI3Mi44NSA5OC43OSBDIDI2OS42NCAxMDMuODEgMjYzLjA2IDEwNS45NyAyNjEuMTMgMTExLjk0IEMgMjYwLjQ0IDExNC42MCAyNTcuNjQgMTE1LjM3IDI1NS40NyAxMTYuNDUgQyAyNDguNDEgMTE5LjUzIDI0MS41OCAxMjMuNTkgMjM2LjUxIDEyOS40OCBDIDIzMS4xMCAxMzUuODcgMjI3Ljk2IDE0My43NiAyMjQuODQgMTUxLjQ0IEMgMjIxLjQ5IDE0Ni44MSAyMTkuMDUgMTQxLjY0IDIxNi40MSAxMzYuNjAgQyAyMDguMzUgMTIxLjAwIDIwMS4xNyAxMDQuOTAgMTkxLjgzIDkwLjAwIEMgMTg5LjM5IDg2LjA3IDE4Ni4xNSA4Mi43NCAxODIuODQgNzkuNTQgQyAxODIuODUgNTMuMDMgMTgyLjg0IDI2LjUxIDE4Mi44NSAwLjAwIFoiIC8+DQo8cGF0aCBmaWxsPSIjZTAxNzJhIiBvcGFjaXR5PSIxLjAwIiBkPSIgTSAxODIuODQgMjc3LjExIEMgMTg3LjI2IDI3OS40NyAxOTEuNjggMjgyLjMyIDE5NC40OSAyODYuNTkgQyAxOTYuNDYgMjg5LjY3IDE5Ny41MiAyOTMuNzAgMTk2LjIzIDI5Ny4yNCBDIDE5My40MCAzMDEuODEgMTg3LjY4IDMwMi45OCAxODIuODYgMzA0LjI3IEMgMTgyLjgzIDI5NS4yMiAxODIuODYgMjg2LjE2IDE4Mi44NCAyNzcuMTEgWiIgLz4NCjwvZz4NCjxnIGlkPSIjZmZmZmZmZmYiPg0KPHBhdGggZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMS4wMCIgZD0iIE0gMTUuNTEgMjkuNDYgQyAyOC43NSAyNS45MyA0Mi4xNyAyMi43OCA1NS44NiAyMS43MCBDIDY0LjIzIDIxLjUxIDcyLjY0IDIwLjg1IDgwLjk5IDIxLjczIEMgODguMDcgMjIuNDMgOTUuMjMgMjQuNTkgMTAwLjc1IDI5LjI0IEMgMTE0LjczIDQwLjkxIDEyOC4zMSA1My4wNSAxNDIuNTIgNjQuNDUgQyAxNDUuNjkgNjcuMDkgMTQ5LjQ1IDY4LjkxIDE1My40MCA3MC4wNSBDIDE1My4zOSA2Ni41MiAxNTEuNTEgNjMuNTcgMTQ5LjYwIDYwLjc1IEMgMTUzLjA1IDYxLjE3IDE1Ni42MCA2MS41OCAxNTkuNzEgNjMuMjcgQyAxNjguMTEgNjcuNjAgMTc1Ljk5IDczLjAyIDE4Mi44NCA3OS41NCBDIDE4Ni4xNSA4Mi43NCAxODkuMzkgODYuMDcgMTkxLjgzIDkwLjAwIEMgMjAxLjE3IDEwNC45MCAyMDguMzUgMTIxLjAwIDIxNi40MSAxMzYuNjAgQyAyMTkuMDUgMTQxLjY0IDIyMS40OSAxNDYuODEgMjI0Ljg0IDE1MS40NCBDIDIyNy45NiAxNDMuNzYgMjMxLjEwIDEzNS44NyAyMzYuNTEgMTI5LjQ4IEMgMjQxLjU4IDEyMy41OSAyNDguNDEgMTE5LjUzIDI1NS40NyAxMTYuNDUgQyAyNTcuNjQgMTE1LjM3IDI2MC40NCAxMTQuNjAgMjYxLjEzIDExMS45NCBDIDI2My4wNiAxMDUuOTcgMjY5LjY0IDEwMy44MSAyNzIuODUgOTguNzkgQyAyNzQuODcgOTYuMDIgMjc0LjEyIDkyLjM3IDI3Mi40NCA4OS42NCBDIDI2Ny41MSA4MS42MSAyNTguMzYgNzguMDMgMjUwLjcxIDczLjIyIEMgMjU1LjgzIDcwLjEyIDI2MS41OSA2OC4yMCAyNjcuNTggNjcuNzUgQyAyNzkuODcgNjUuODQgMjkyLjE0IDY4LjgyIDMwNC40NCA2OC42NSBDIDMwMi40MSA2NC41NSAyOTkuNzkgNjAuNzYgMjk4LjA3IDU2LjUwIEMgMzAxLjE4IDU2LjU5IDMwNC4zMiA1Ni44NiAzMDcuMjkgNTcuODQgQyAzMTcuNjMgNjEuMTMgMzI4LjA2IDY1LjM5IDMzNi4wMCA3My4wMyBDIDM0MS41NyA3OC4zMiAzNDcuNDggODQuMTggMzQ4Ljk4IDkyLjAzIEMgMzUwLjA5IDk2LjIzIDM0Ny43MyAxMDAuMTggMzQ1LjUyIDEwMy41NSBDIDMzMi44MiAxMjIuODUgMzE5LjYyIDE0MS45MSAzMDQuMjUgMTU5LjIxIEMgMjk3LjIxIDE2OC4wNyAyOTAuNDggMTc3LjI4IDI4NS4zMyAxODcuMzggQyAyODQuMTggMTg5LjgxIDI4Mi44MSAxOTIuMjUgMjgyLjUzIDE5NC45NyBDIDI4Mi43MiAxOTcuNDMgMjg0LjE2IDE5OS41NCAyODUuNTUgMjAxLjQ5IEMgMjkxLjEzIDIwOS4xOSAyOTkuNjUgMjE0LjEyIDMwNS4xNyAyMjEuODggQyAzMTAuMTIgMjI4LjcxIDMxNS42NCAyMzYuMTQgMzE1LjQ0IDI0NS4wMCBDIDMxNS45MCAyNTIuNTAgMzEyLjUyIDI1OS41NCAzMTIuOTMgMjY3LjA1IEMgMzEzLjQ3IDI3My4yOSAzMDYuMzggMjc0LjkzIDMwMS44NCAyNzYuNTYgQyAzMDIuOTAgMjc1LjAxIDMwNC4xMSAyNzMuNTMgMzA0Ljg5IDI3MS44MSBDIDMwNS4xMSAyNjguMjAgMzAxLjYzIDI2Ni4zMyAyOTkuMDYgMjY0LjY0IEMgMjk2LjQxIDI2Ny4zOSAyOTYuNjYgMjcxLjA3IDI5Ni44MyAyNzQuNTggQyAyOTAuMjIgMjcwLjYzIDI4Ny41MiAyNjMuMDIgMjgyLjAyIDI1Ny45OSBDIDI3OS4wNiAyNTUuMDUgMjczLjU4IDI1NC4wNyAyNzAuNTUgMjU3LjQwIEMgMjY1LjU4IDI2My4xNCAyNjUuNTMgMjcyLjE5IDI2OS41NyAyNzguNDUgQyAyNzMuMjMgMjgzLjY3IDI3OC43MyAyODcuMzcgMjgxLjgzIDI5My4wNSBDIDI3OC42MiAyOTMuODMgMjc1LjM3IDI5NC40OCAyNzIuMTMgMjk1LjA5IEMgMjc0LjEzIDI5OC4xMyAyNzUuOTIgMzAxLjMwIDI3Ny41MCAzMDQuNTcgQyAyODIuODggMzAzLjM3IDI4OC45MyAzMDIuMTIgMjk0LjA0IDMwNC45MSBDIDI5Ny44NSAzMDYuNjcgMzAwLjkxIDMxMC42MyAzMDAuMzcgMzE1LjAwIEMgMjk5Ljk4IDMxOS4wMSAyOTYuNDcgMzIxLjUwIDI5My42NyAzMjMuOTIgQyAyOTMuNzkgMzIwLjE1IDI5My41NSAzMTYuMjkgMjkxLjUxIDMxMy4wMCBDIDI5MC4zNiAzMTUuODggMjg5LjQ3IDMxOC44NSAyODguNTggMzIxLjgyIEMgMjg2LjczIDMxOS43OCAyODQuODEgMzE3LjgxIDI4Mi42OSAzMTYuMDYgQyAyODIuNDggMzE5Ljk5IDI4Mi44MyAzMjMuOTEgMjgzLjQ3IDMyNy43OCBDIDI4MC4zNiAzMjYuMzQgMjc2LjgyIDMyNC44OCAyNzUuMjggMzIxLjU2IEMgMjczLjY4IDMxOS4wMiAyNzUuMTEgMzE2LjA4IDI3NS42MCAzMTMuNDQgQyAyNjguNTMgMzEwLjQwIDI2NC43MSAzMDMuMjkgMjU4LjQwIDI5OS4xOSBDIDI1OC4zNyAzMDIuMDMgMjU4LjM5IDMwNC44NiAyNTguMzggMzA3LjcxIEMgMjU1LjQyIDMwNC44NSAyNTMuMTggMzAxLjQxIDI1MC45NCAyOTguMDEgQyAyNDkuOTEgMjk2Ljc0IDI0OC45OCAyOTQuNzkgMjQ3LjA0IDI5NS4wNSBDIDI0MS44MyAyOTQuODggMjM3Ljk3IDI5OC44NyAyMzQuMzUgMzAyLjA1IEMgMjQyLjU4IDMwNC42OCAyNTEuNDggMzA1LjU3IDI1OS4wNSAzMDkuOTcgQyAyNjIuMjMgMzExLjczIDI2NC42NyAzMTUuMjAgMjY0LjE3IDMxOC45NyBDIDI2My45NSAzMjQuMjYgMjU5LjgxIDMyOC4wMiAyNTYuMzcgMzMxLjU0IEMgMjU3LjMyIDMyNi42MCAyNTguNzAgMzIxLjEzIDI1NS4zMSAzMTYuNzUgQyAyNTMuNTIgMzIwLjI4IDI1MS43MSAzMjMuODEgMjQ5LjU1IDMyNy4xNCBDIDI0OC44MCAzMjQuMDYgMjQ4LjA4IDMyMC45OSAyNDcuMjAgMzE3Ljk1IEMgMjQ1LjY2IDMyMC4xMSAyNDMuNjEgMzIyLjE5IDI0My4yNiAzMjQuOTUgQyAyNDMuMDYgMzI3LjM1IDI0My40OCAzMjkuNzQgMjQzLjc0IDMzMi4xMiBDIDI0MC4xOCAzMzAuODUgMjM2LjIwIDMyOC45NSAyMzUuMjEgMzI0LjkzIEMgMjMzLjMzIDMxOS43NCAyMzguMTcgMzE1Ljk0IDI0MC40NSAzMTEuODkgQyAyMzUuOTYgMzEwLjIxIDIzMS40NyAzMDguNDUgMjI2Ljc5IDMwNy40MiBDIDIyNS41NCAzMDYuOTUgMjI0LjUwIDMwNy44NCAyMjMuNTcgMzA4LjUyIEMgMjIwLjY5IDMxMC43MSAyMTguMTMgMzEzLjQwIDIxNi40MyAzMTYuNjEgQyAyMTUuMDcgMzE4LjQ3IDIxNi41NiAzMjAuNjMgMjE2LjgzIDMyMi42MCBDIDIxMS42OCAzMTkuODQgMjA3LjM4IDMxNS43OSAyMDQuMzYgMzEwLjgwIEMgMTk3LjEyIDMxMi40NiAxODkuMTMgMzExLjY3IDE4Mi45NSAzMDcuMzQgQyAxODIuMTYgMzA2LjUzIDE4MS40MiAzMDUuNjcgMTgwLjY2IDMwNC44NCBDIDE4MS4yMSAzMDQuNzAgMTgyLjMxIDMwNC40MiAxODIuODYgMzA0LjI3IEMgMTg3LjY4IDMwMi45OCAxOTMuNDAgMzAxLjgxIDE5Ni4yMyAyOTcuMjQgQyAxOTcuNTIgMjkzLjcwIDE5Ni40NiAyODkuNjcgMTk0LjQ5IDI4Ni41OSBDIDE5MS42OCAyODIuMzIgMTg3LjI2IDI3OS40NyAxODIuODQgMjc3LjExIEMgMTczLjA1IDI3Mi4yNCAxNjEuOTkgMjY5LjM2IDE1My45MiAyNjEuNTcgQyAxNTYuNjcgMjYxLjQ5IDE1OS40MyAyNjEuNDcgMTYyLjE5IDI2MS40MyBDIDE1NS45NiAyNTMuNjggMTQ2Ljk0IDI0OS4wMiAxNDAuMDggMjQxLjk1IEMgMTM2Ljc0IDIzOC42OSAxMzUuNTQgMjMzLjk2IDEzMi40MiAyMzAuNTYgQyAxMjkuNjEgMjI4LjExIDEyNS45OCAyMjYuOTQgMTIyLjc4IDIyNS4xMiBDIDExNS4wNSAyMjAuOTMgMTA3LjI0IDIxNi43NCA5OC43MyAyMTQuMzQgQyAxMDEuNDkgMjEwLjU4IDEwNC42OSAyMDYuOTkgMTA4LjkyIDIwNC44NyBDIDExNS4xNyAyMDEuMzYgMTIyLjU5IDIwMC43OCAxMjkuNTUgMjAxLjk5IEMgMTMwLjI4IDE5OS45NSAxMzEuMDIgMTk3LjkyIDEzMS44MCAxOTUuOTAgQyAxNDAuMjEgMTk4LjUwIDE0NC42NSAyMDYuNzkgMTUyLjE0IDIxMC44MCBDIDE2MC41MyAyMTQuNTkgMTcwLjE5IDIxMi40MCAxNzguMjUgMjA4LjgwIEMgMTc2Ljc5IDIwNi45OCAxNzUuNjUgMjA0LjQ0IDE3My4wNSAyMDQuMTEgQyAxNTcuMzIgMjAwLjYxIDE0Mi44OSAxOTIuNjIgMTMwLjUzIDE4Mi40MiBDIDExNi40MCAxNzAuNzkgMTA0LjUyIDE1Ni41NyA5NC44OSAxNDEuMDUgQyA4OS4wNiAxMzEuNjAgODQuMjUgMTIxLjQ4IDgxLjIwIDExMC43OSBDIDc5LjkzIDEwNi41OCA4MC4wOCAxMDIuMTQgODAuMDYgOTcuNzkgQyA3Mi43MyA5Mi4yNyA2Ni4wMiA4NS44MSA2MC44MyA3OC4yMCBDIDU5LjAxIDc1LjQ0IDU3LjMwIDcyLjQyIDU3LjAzIDY5LjA1IEMgNTYuNjkgNjUuMTcgNTYuMzAgNjEuMTcgNTQuMzEgNTcuNzIgQyA0OS41OCA0OC45NyA0MC40NyA0My42NiAzMS40MiA0MC4zMSBDIDI0LjE3IDM3LjQ4IDE2LjIxIDM2LjY5IDkuMzEgMzIuOTYgQyAxMS4xOSAzMS40OSAxMy4xNCAzMC4wMCAxNS41MSAyOS40NiBaIiAvPg0KPHBhdGggZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMS4wMCIgZD0iIE0gNDAuNTYgMjE5LjI3IEMgNDMuMDQgMjI2LjM1IDQ1LjE4IDIzMy41NCA0Ny41MiAyNDAuNjcgQyA1NS4xMyAyNDAuNTkgNjIuNzUgMjQwLjU4IDcwLjM2IDI0MC41MiBDIDY0LjEwIDI0NC44NiA1Ny45NCAyNDkuMzQgNTEuNzYgMjUzLjc4IEMgNTQuMjYgMjYwLjkyIDU2LjU2IDI2OC4xMiA1OC45NyAyNzUuMjggQyA1Mi45MiAyNzAuOTAgNDcuMDIgMjY2LjI5IDQwLjgzIDI2Mi4xMiBDIDM0LjMyIDI2NS45MyAyOC40NCAyNzEuMDAgMjIuMjUgMjc1LjM5IEMgMjQuNjcgMjY4LjE5IDI2Ljk5IDI2MC45NyAyOS40NiAyNTMuODAgQyAyMy4yOSAyNDkuMzYgMTcuMTAgMjQ0Ljk0IDEwLjkwIDI0MC41NSBDIDE4LjUxIDI0MC41OSAyNi4xMSAyNDAuNjAgMzMuNzIgMjQwLjY0IEMgMzUuOTcgMjMzLjUxIDM4LjI0IDIyNi4zOCA0MC41NiAyMTkuMjcgWiIgLz4NCjxwYXRoIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjEuMDAiIGQ9IiBNIDk5Ljk5IDI3NS40MSBDIDEwMi4zNSAyODIuNTYgMTA0LjU4IDI4OS43NCAxMDYuOTAgMjk2LjkwIEMgMTE0LjQ5IDI5Ni44MiAxMjIuMDggMjk2Ljg1IDEyOS42NyAyOTYuNzcgQyAxMjMuNTIgMzAxLjIwIDExNy4zNiAzMDUuNjIgMTExLjE3IDMxMC4wMSBDIDExMy42MyAzMTcuMTggMTE1LjkxIDMyNC40MiAxMTguNDQgMzMxLjU4IEMgMTEyLjMxIDMyNy4wOCAxMDYuMTUgMzIyLjYyIDEwMC4wMyAzMTguMTEgQyA5My45MSAzMjIuNjYgODcuNzEgMzI3LjEwIDgxLjYxIDMzMS42NiBDIDg0LjEwIDMyNC40OCA4Ni40MCAzMTcuMjMgODguODQgMzEwLjAzIEMgODIuNjIgMzA1LjY1IDc2LjQ1IDMwMS4xOCA3MC4yNSAyOTYuNzcgQyA3Ny44NiAyOTYuODggODUuNDggMjk2LjgwIDkzLjA5IDI5Ni45MCBDIDk1LjQxIDI4OS43NCA5Ny42NiAyODIuNTYgOTkuOTkgMjc1LjQxIFoiIC8+DQo8L2c+DQo8L3N2Zz4NCg=="
+      "publicSite": "https://eagles.edu.vn",
+      "privateLessonSite": "https://anhngu.eagles.edu.vn",
+      "webPresence": "https://ielts.eagles.edu.vn",
+      "socialIm": "Zalo: 84937667818",
+      "businessTaxId": "0315358180",
+      "timeFormat": "24hr",
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "googleMapsEmbedIframe": "https://maps.example.invalid/embed",
+      "logoDataUrl": "web-asset/images/logo.svg"
     },
-    "newsReportValidation": {
-      "defaultSources": {
-        "cnn": true,
-        "bbc": true
-      },
-      "customSources": [
-        {
-          "enabled": false,
-          "domain": ""
-        },
-        {
-          "enabled": false,
-          "domain": ""
-        },
-        {
-          "enabled": false,
-          "domain": ""
-        },
-        {
-          "enabled": false,
-          "domain": ""
-        },
-        {
-          "enabled": false,
-          "domain": ""
-        },
-        {
-          "enabled": false,
-          "domain": ""
-        },
-        {
-          "enabled": false,
-          "domain": ""
-        },
-        {
-          "enabled": false,
-          "domain": ""
-        }
-      ]
-    },
+    "newsReportValidation": {},
     "queueHub": {
       "panelOrder": [
-        "queued-performance-reports",
-        "unmatched-exercise-submissions",
-        "current-assignments-pending",
-        "overdue-homework",
-        "attendance-risk",
-        "news-report-review",
-        "pending-profile-submissions"
+        "queued-performance-reports"
       ]
     },
     "levelTileStylesByLevel": {
-      "Eggs & Chicks": {
-        "title": "Eggs & Chicks",
-        "bgColor": "#e0162b",
-        "imageDataUrl": "web-asset/images/eggs-chicks.svg"
+      "A2 KET": {
+        "title": "A2 KET",
+        "bgColor": "#038e9f",
+        "imageDataUrl": "web-asset/images/ket.svg"
       },
-      "Pre-A1 Starters": {
-        "title": "Pre-A1 Starters",
-        "bgColor": "#FCAB15",
-        "imageDataUrl": "web-asset/images/starters.svg"
+      "B1 PET": {
+        "title": "B1 PET",
+        "bgColor": "#cd1637",
+        "imageDataUrl": "web-asset/images/pet.svg"
       },
       "A1 Movers": {
         "title": "A1 Movers",
@@ -147,15 +102,15 @@
         "bgColor": "#b5d570",
         "imageDataUrl": "web-asset/images/flyers.svg"
       },
-      "A2 KET": {
-        "title": "A2 KET",
-        "bgColor": "#038e9f",
-        "imageDataUrl": "web-asset/images/ket.svg"
+      "Eggs & Chicks": {
+        "title": "Eggs & Chicks",
+        "bgColor": "#e0162b",
+        "imageDataUrl": "web-asset/images/eggs-chicks.svg"
       },
-      "B1 PET": {
-        "title": "B1 PET",
-        "bgColor": "#cd1637",
-        "imageDataUrl": "web-asset/images/pet.svg"
+      "Pre-A1 Starters": {
+        "title": "Pre-A1 Starters",
+        "bgColor": "#FCAB15",
+        "imageDataUrl": "web-asset/images/starters.svg"
       }
     }
   },
@@ -174,6 +129,6 @@
     "autoApproveDelayHours": 16
   },
   "environment": "development",
-  "updatedAt": "2026-07-03T09:02:16.913Z",
+  "updatedAt": "2026-07-15T18:48:07.187Z",
   "updatedBy": "admin"
 }

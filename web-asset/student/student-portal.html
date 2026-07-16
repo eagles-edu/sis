@@ -536,14 +536,6 @@
       align-content: start;
     }
 
-    .news-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
     .calendar-range {
       margin: 6px 0 8px;
       font-size: 0.84rem;
@@ -1109,6 +1101,26 @@
                       </div>
                     </div>
                   </div>
+                  <details class="panel student-new-words-instructions">
+                    <summary>How to enter New Words</summary>
+                    <div class="student-new-words-instructions-body">
+                      <div class="student-new-words-instructions-copy">
+                        <p><strong>Follow this workflow for every entry:</strong></p>
+                        <ol>
+                          <li>Choose a useful word or phrase from the article and select its part of speech.</li>
+                          <li>Enter the English word or phrase, the Vietnamese meaning, and a clear definition.</li>
+                          <li>For a monosyllabic word, write the word whole in syllabication and do not add stress.</li>
+                          <li>For a phrase, keep the spaces between words. For a hyphenated compound, keep the exact hyphen, such as <code>air-strike</code>.</li>
+                          <li>If a phrase contains a hyphenated multisyllabic word, split that word and mark one stressed syllable, such as <code>in the MÓRN-ing</code>.</li>
+                          <li>For extra points, split a multisyllabic compound part, such as <code>air-con-di-tion-ing</code>.</li>
+                          <li>Complete at least five entries, select <strong>Check</strong>, and correct any highlighted fields.</li>
+                        </ol>
+                      </div>
+                      <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
+                        <img src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+                      </button>
+                    </div>
+                  </details>
                   <section class="news-review-vocabulary" aria-label="Vocabulary">
                     <strong>13. Vocabulary</strong>
                     <div id="newsWeekSetModalVocabularyRows" class="news-vocabulary-rows vocabulary-edit-surface"></div>
@@ -1208,16 +1220,31 @@
           <details class="panel new-words-intro">
             <summary>Read Instructions</summary>
             <div class="new-words-intro-body">
-              <div>
+              <div class="new-words-intro-copy">
                 <h3>Build your personal dictionary</h3>
                 <p><b>New Words</b> from your news reports are collected here. You can edit each entry, sort your list, and study from a clean
                 dictionary-style version of your new academic vocabulary.</p>
+                <div class="student-new-words-instructions-copy">
+                  <p><strong>Follow this workflow for every entry:</strong></p>
+                  <ol>
+                    <li>Choose a useful word or phrase from the article and select its part of speech.</li>
+                    <li>Enter the English word or phrase, the Vietnamese meaning, and a clear definition.</li>
+                    <li>For a monosyllabic word, write the word whole in syllabication and do not add stress.</li>
+                    <li>For a phrase, keep the spaces between words. For a hyphenated compound, keep the exact hyphen, such as <code>air-strike</code>.</li>
+                    <li>If a phrase contains a hyphenated multisyllabic word, split that word and mark one stressed syllable, such as <code>in the MÓRN-ing</code>.</li>
+                    <li>For extra points, split a multisyllabic compound part, such as <code>air-con-di-tion-ing</code>.</li>
+                    <li>Complete at least five entries, save your changes, and review the finished entry.</li>
+                  </ol>
+                </div>
+                <svg class="new-words-intro-illustration" viewBox="0 0 24 24" aria-label="Animated vocabulary study illustration" role="img" width="100" height="100" stroke="currentColor" stroke-width="2" fill="none">
+                  <circle cx="12" cy="12" r="1"><animate id="water_ripples_one" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                  <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                  <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
+                </svg>
               </div>
-              <svg class="new-words-intro-illustration" viewBox="0 0 24 24" aria-label="Animated vocabulary study illustration" role="img" width="100" height="100" stroke="currentColor" stroke-width="2" fill="none">
-                <circle cx="12" cy="12" r="1"><animate id="water_ripples_one" attributeName="r" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
-                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+1s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
-                <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_one.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
-              </svg>
+              <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
+                <img src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+              </button>
             </div>
           </details>
           <div class="panel new-words-tools" data-surface-role="panel">
@@ -1380,6 +1407,28 @@
                   <textarea id="biasAssessment"></textarea>
                 </div>
 
+                <div class="field c12">
+                  <details class="panel student-new-words-instructions">
+                    <summary>How to enter New Words</summary>
+                    <div class="student-new-words-instructions-body">
+                      <div class="student-new-words-instructions-copy">
+                        <p><strong>Follow this workflow for every entry:</strong></p>
+                        <ol>
+                          <li>Choose a useful word or phrase from the article and select its part of speech.</li>
+                          <li>Enter the English word or phrase, the Vietnamese meaning, and a clear definition.</li>
+                          <li>For a monosyllabic word, write the word whole in syllabication and do not add stress.</li>
+                          <li>For a phrase, keep the spaces between words. For a hyphenated compound, keep the exact hyphen, such as <code>air-strike</code>.</li>
+                          <li>If a phrase contains a hyphenated multisyllabic word, split that word and mark one stressed syllable, such as <code>in the MÓRN-ing</code>.</li>
+                          <li>For extra points, split a multisyllabic compound part, such as <code>air-con-di-tion-ing</code>.</li>
+                          <li>Complete at least five entries, select <strong>Check</strong>, and correct any highlighted fields.</li>
+                        </ol>
+                      </div>
+                      <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
+                        <img src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+                      </button>
+                    </div>
+                  </details>
+                </div>
                 <div id="newsVocabularyField" class="field c12 news-vocabulary-field">
                   <label for="addNewsVocabularyRowBtn">13. Vocabulary (minimum 5 words)</label>
                   <p class="hint">Do: keep compounds exact, such as <code>air-strike</code>. For extra points, split a multi-syllable compound part, such as <code>air-con-di-tion-ing</code>. Do not add stress to a compound just because it is hyphenated.</p>
@@ -1397,6 +1446,17 @@
             </section>
           </div>
         </section>
+      </section>
+
+      <section id="newWordsImageLightbox" class="student-new-words-lightbox hidden" aria-labelledby="newWordsImageLightboxTitle" aria-modal="true" role="dialog">
+        <div class="student-new-words-lightbox-backdrop" data-new-words-lightbox-close></div>
+        <div class="student-new-words-lightbox-dialog">
+          <div class="student-new-words-lightbox-head">
+            <h2 id="newWordsImageLightboxTitle">New Words Tool example</h2>
+            <button id="newWordsImageLightboxCloseBtn" class="portal-button portal-button-warning" type="button" data-new-words-lightbox-close aria-label="Close New Words Tool image">Close</button>
+          </div>
+          <img class="student-new-words-lightbox-image" src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+        </div>
       </section>
 
       <section class="content status-strip" data-surface-role="content">
@@ -1438,6 +1498,8 @@
         pastDueModalOpen: false,
         reportAccessModalOpen: false,
         newsWeekSetModalOpen: false,
+        newWordsLightboxOpen: false,
+        newWordsLightboxReturnFocus: null,
         calendarRows: [],
         newsItems: [],
         calendarAlertDates: new Set(),
@@ -2249,6 +2311,22 @@
 
       function field(id) {
         return document.getElementById(id);
+      }
+
+      function setNewWordsImageLightboxOpen(shouldOpen, returnFocus = null) {
+        const modal = field("newWordsImageLightbox");
+        if (!modal) return;
+        state.newWordsLightboxOpen = shouldOpen === true;
+        if (state.newWordsLightboxOpen) {
+          state.newWordsLightboxReturnFocus = returnFocus instanceof HTMLElement ? returnFocus : document.activeElement;
+          modal.classList.remove("hidden");
+          field("newWordsImageLightboxCloseBtn")?.focus();
+          return;
+        }
+        modal.classList.add("hidden");
+        const focusTarget = state.newWordsLightboxReturnFocus;
+        state.newWordsLightboxReturnFocus = null;
+        if (focusTarget instanceof HTMLElement && document.contains(focusTarget)) focusTarget.focus();
       }
 
       function hoistPortalModals() {
@@ -6302,6 +6380,10 @@
       });
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
+        if (state.newWordsLightboxOpen) {
+          setNewWordsImageLightboxOpen(false);
+          return;
+        }
         if (state.reportAccessModalOpen) {
           setReportAccessErrorModalOpen(false);
           clearReportAccessErrorMarker();
@@ -6390,6 +6472,16 @@
       });
       field("newsWeekSetModalSubmitBtn")?.addEventListener("click", () => {
         submitNewsWeekSetModalCurrentItem().catch(handleError);
+      });
+      document.querySelectorAll("[data-new-words-lightbox]").forEach((button) => {
+        button.addEventListener("click", () => {
+          setNewWordsImageLightboxOpen(true, button);
+        });
+      });
+      document.querySelectorAll("[data-new-words-lightbox-close]").forEach((button) => {
+        button.addEventListener("click", () => {
+          setNewWordsImageLightboxOpen(false);
+        });
       });
       field("newsWeekSetModal")?.addEventListener("input", (event) => {
         if (!event.target?.matches?.("input, select, textarea")) return;

@@ -224,7 +224,7 @@ test("student portal initial auth paints the dashboard without probing /me", asy
   assert.match(document.documentElement.getAttribute("data-student-auth-state") || "", /authenticated/i)
   assert.match(document.getElementById("globalStatus")?.textContent || "", /Student session active/i)
   assert.equal(document.querySelectorAll("#newsQueueCard details").length, 0)
-  assert.equal(document.querySelectorAll("#newsPageCard details").length, 0)
+  assert.equal(document.querySelectorAll("#newsPageQueueDetails details").length, 0)
   assert.equal(document.getElementById("newsQueueDetails")?.tagName, "DIV")
   assert.equal(document.getElementById("newsPageQueueDetails")?.tagName, "DIV")
 

@@ -6493,9 +6493,10 @@
           : []).map((entry) => entry?.level),
           ...(Array.isArray(state.systemLevels) ? state.systemLevels : []),
         ];
-        return sortLevelNames(
+        const knownLevels = sortLevelNames(
           attendanceLevels.filter((value) => Boolean(normalizeLevelName(value || ""))),
         );
+        return knownLevels.length ? knownLevels : sortLevelNames(DEFAULT_LEVEL_CATALOG);
       }
 
       function syncSystemLevelNames(extraValues = []) {
@@ -7776,13 +7777,15 @@
           vocabularySection.innerHTML = `
             <strong>13. Vocabulary</strong>
             ${vocabulary.length ? vocabulary.map((row) => `
-              <div class="news-review-vocabulary-row">
-                <span>${escapeHtml(normalizeText(row?.partOfSpeech))}</span>
-                <span>${escapeHtml(normalizeText(row?.english))}</span>
-                <span>${escapeHtml(normalizeText(row?.vietnamese))}</span>
-                <span>${escapeHtml(normalizeText(row?.syllabication))}</span>
-                <span class="news-review-vocabulary-definition">${escapeHtml(normalizeText(row?.definition))}</span>
-              </div>`).join("") : '<p class="small">No vocabulary saved.</p>'}
+              <article class="new-word-entry">
+                <div class="new-word-entry-head">
+                  <strong>${escapeHtml(normalizeText(row?.english) || "New word")}</strong>
+                  <span class="new-word-entry-pronunciation">/${escapeHtml(normalizeText(row?.syllabication))}/</span>
+                  <strong class="new-word-entry-part-of-speech">${escapeHtml(normalizeText(row?.partOfSpeech))}</strong>
+                  <span class="new-word-entry-vietnamese">vi: ${escapeHtml(normalizeText(row?.vietnamese))}</span>
+                </div>
+                <p class="new-word-entry-definition news-review-vocabulary-definition">${escapeHtml(normalizeText(row?.definition))}</p>
+              </article>`).join("") : '<p class="small">No vocabulary saved.</p>'}
             <hr>
           `;
         }
@@ -20482,6 +20485,9 @@
           includeUnenrolled,
         };
         state.students = studentsWithIdentity;
+        if (!qRaw && !levelRaw && !schoolRaw && !includeUnenrolled) {
+          state.dashboardStudents = state.students;
+        }
         syncSystemLevelNames(
           state.students.map((student) =>
             normalizeLevelName(student?.profile?.currentGrade || ""),
@@ -22241,10 +22247,18 @@
         runNext();
       }
 
+      function scheduleAfterFirstPaint(task, timeout = 2000) {
+        const afterPaint = () => scheduleIdleTask(task, timeout);
+        if (typeof window.requestAnimationFrame === "function") {
+          window.requestAnimationFrame(() => window.requestAnimationFrame(afterPaint));
+          return;
+        }
+        window.setTimeout(afterPaint, 0);
+      }
+
       async function bootAfterLogin() {
         initializeParentTrackingScoreSelects();
         initializeParentTrackingScoreLegendPopovers();
-        initializeButtonTooltips();
 
         const bootConfigTasks = [];
         if (canManagePermissions()) {
@@ -22273,7 +22287,7 @@
         renderAssignmentExerciseOptions();
         clearUserForm();
         if (canManageUsers()) {
-          void loadUsers().catch(handleError);
+          scheduleAfterFirstPaint(() => loadUsers().catch(handleError), 3000);
         } else {
           state.adminUsers = [];
           renderUserRows();
@@ -22295,7 +22309,7 @@
         });
 
         if (bootConfigTasks.length) {
-          bootConfigTasks.forEach((task) => scheduleIdleTask(task, 1500));
+          bootConfigTasks.forEach((task) => scheduleAfterFirstPaint(task, 2500));
         }
 
         if (canReadData()) {
@@ -22303,27 +22317,34 @@
             async () => {
               await loadStudents();
             },
-            async () => {
+            () => loadFilters().catch(handleError),
+          ];
+          if (state.activePage === "overview") {
+            dataHydrationTasks.push(async () => {
               await loadDashboardSummary();
               renderHubConnectionStatus();
               renderServiceControlCard();
-            },
-            async () => {
-              await Promise.all([
-                probeHubConnection({ notify: false, paint: false }),
-                loadServiceControlStatus({ notify: false, paint: false }),
-              ]);
-            },
-            () => loadFilters().catch(handleError),
-            () => loadDashboardStudents().catch(handleError),
-            () => loadQueueHub({ notify: false }).catch(handleError),
-            () =>
+            });
+            dataHydrationTasks.push(() => loadQueueHub({ notify: false }).catch(handleError));
+            dataHydrationTasks.push(() =>
               loadIncomingExerciseResults({
                 showAll: state.incomingExerciseQueue.showAll,
               }).catch(handleError),
-            () => loadExerciseTitles().catch(handleError),
-          ];
-          dataHydrationTasks.forEach((task) => scheduleIdleTask(task, 1500));
+            );
+          }
+          if (state.activePage === "assignments" || state.activePage === "assignments-data") {
+            dataHydrationTasks.push(() => loadExerciseTitles().catch(handleError));
+          }
+          dataHydrationTasks.forEach((task) => scheduleAfterFirstPaint(task, 2500));
+
+          scheduleAfterFirstPaint(
+            () =>
+              Promise.all([
+                probeHubConnection({ notify: false, paint: false }),
+                loadServiceControlStatus({ notify: false, paint: false }),
+              ]),
+            4000,
+          );
         }
         await applyParentTrackingDeepLinkFromLocation();
       }
@@ -24602,9 +24623,6 @@
         () => refreshParentTracking({ preserveStudentSelection: true }).catch(() => {}),
         () => refreshAttendanceLanding({ reloadRows: false }).catch(() => {}),
       ]);
-      if (!(isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN)) {
-        probeHubConnection({ notify: false }).catch(() => {});
-      }
       if (isStaticAdminPreviewMode() && !ADMIN_API_ORIGIN) {
         setAuthBootstrapping(true);
         showLogin();
