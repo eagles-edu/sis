@@ -5,7 +5,6 @@ set -euo pipefail
 SOURCE_ROOT="/home/eagles/dockerz/sis"
 RUNTIME_ROOT="/home/admin.eagles.edu.vn/sis"
 SERVICE_NAME="exercise-mailer.service"
-MAILER_PORT="${MAILER_PORT:-8787}"
 MODE="sync-on-mismatch"
 RESTART=1
 HEALTH_CHECK=1
@@ -95,7 +94,6 @@ cmd=(
   "${RESYNC_SCRIPT}"
   "--runtime-root" "${RUNTIME_ROOT}"
   "--service" "${SERVICE_NAME}"
-  "--mailer-port" "${MAILER_PORT}"
   "--scope" "html"
 )
 

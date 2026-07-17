@@ -333,7 +333,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 3169
+              "height": 2858
             },
             ".wrap": {
               "selector": ".wrap",
@@ -345,7 +345,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 3121
+              "height": 2810
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -357,7 +357,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 3037
+              "height": 2726
             },
             ".panel": {
               "selector": ".panel",
@@ -1453,7 +1453,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "block",
               "width": 1425,
-              "height": 2537
+              "height": 1394
             },
             ".wrap": {
               "selector": ".wrap",
@@ -1465,7 +1465,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1425,
-              "height": 2489
+              "height": 1346
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -1477,7 +1477,7 @@
               "border": "rgb(0, 0, 0)",
               "display": "grid",
               "width": 1393,
-              "height": 2405
+              "height": 1262
             },
             ".panel": {
               "selector": ".panel",
@@ -1525,7 +1525,7 @@
               "border": "rgba(115, 136, 163, 0.96)",
               "display": "block",
               "width": 1363,
-              "height": 1086
+              "height": 497
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -1536,8 +1536,8 @@
               "color": "rgb(0, 0, 0)",
               "border": "rgb(0, 0, 0)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 664,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",
@@ -6947,7 +6947,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "block",
               "width": 1425,
-              "height": 2537
+              "height": 1394
             },
             ".wrap": {
               "selector": ".wrap",
@@ -6959,7 +6959,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1425,
-              "height": 2489
+              "height": 1346
             },
             ".app-shell": {
               "selector": ".app-shell",
@@ -6971,7 +6971,7 @@
               "border": "rgb(251, 255, 255)",
               "display": "grid",
               "width": 1393,
-              "height": 2405
+              "height": 1262
             },
             ".panel": {
               "selector": ".panel",
@@ -7019,7 +7019,7 @@
               "border": "rgba(255, 255, 255, 0.42)",
               "display": "block",
               "width": 1363,
-              "height": 1086
+              "height": 497
             },
             ".grade-chart-empty": {
               "selector": ".grade-chart-empty",
@@ -7030,8 +7030,8 @@
               "color": "rgb(229, 245, 255)",
               "border": "rgba(255, 255, 255, 0.36)",
               "display": "block",
-              "width": 0,
-              "height": 0
+              "width": 664,
+              "height": 19
             },
             "#newsReviewViewerModal .queue-modal-card": {
               "selector": "#newsReviewViewerModal .queue-modal-card",

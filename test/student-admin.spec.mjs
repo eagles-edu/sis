@@ -1116,7 +1116,7 @@ test("GET /admin returns HTML UI", async () => {
   assert.match(responseHtml, /<span\s+class="portal-theme-toggle__icon"[^>]*id="adminThemeToggleIcon"[^>]*data-theme-icon="moon"/i)
   assert.match(responseHtml, /<svg\s+class="portal-theme-toggle__icon-moon"[\s\S]*?<svg\s+class="portal-theme-toggle__icon-sun"/i)
   assert.doesNotMatch(responseHtml, /<svg-icon\b/i)
-  assert.match(responseHtml, /requestIdleCallback\(loadAdminApp,\s*\{\s*timeout:\s*250\s*\}\)/i)
+  assert.match(responseHtml, /requestIdleCallback\(loadAdminApp,\s*\{\s*timeout:\s*50\s*\}\)/i)
   assert.doesNotMatch(responseHtml, /svg-icon\.js/i)
   assert.match(responseHtml, /href="\/admin"[^>]*data-page-link="overview"/i)
   assert.match(responseHtml, /href="\/admin\/queue-hub"[^>]*data-page-link="queue-hub"/i)

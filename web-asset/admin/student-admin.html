@@ -6706,7 +6706,7 @@ No family lookup yet.</pre>
           document.body.appendChild(script)
         }
         if (typeof window.requestIdleCallback === "function") {
-          window.requestIdleCallback(loadAdminApp, { timeout: 250 })
+          window.requestIdleCallback(loadAdminApp, { timeout: 50 })
         } else {
           window.setTimeout(loadAdminApp, 0)
         }

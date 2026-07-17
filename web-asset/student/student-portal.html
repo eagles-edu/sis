@@ -2350,8 +2350,11 @@
         const hostname = parsed.hostname.toLowerCase();
         const isLoopback = isLoopbackHostname(hostname);
         const env = RUNTIME_ENV;
-        if ((env === "development" || env === "test") && !isLoopback) {
+        if (env === "development" && !isLoopback) {
           throw new Error("Dev portal requires a loopback apiOrigin (http://127.0.0.1:<port>).");
+        }
+        if (env === "test" && !isLoopback && parsed.origin !== window.location.origin) {
+          throw new Error("Test portal requires a same-origin apiOrigin or a loopback test runtime.");
         }
         if (env !== "development" && env !== "test" && isLoopback) {
           throw new Error("Live portal cannot use loopback apiOrigin.");

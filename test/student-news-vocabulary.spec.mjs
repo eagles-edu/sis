@@ -32,6 +32,12 @@ test("student news vocabulary requires five complete rows", () => {
   assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(5)).count, 5)
 })
 
+test("student test runtime accepts its same-origin HTTPS API origin", () => {
+  assert.match(STUDENT_HTML, /if \(env === "development" && !isLoopback\)/)
+  assert.match(STUDENT_HTML, /if \(env === "test" && !isLoopback && parsed\.origin !== window\.location\.origin\)/)
+  assert.match(STUDENT_HTML, /if \(env !== "development" && env !== "test" && isLoopback\)/)
+})
+
 test("student news vocabulary minimum is configurable", () => {
   assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(5), { minimumWords: 6 }).passed, false)
   assert.equal(evaluateStudentNewsVocabulary(completeVocabularyRows(6), { minimumWords: 6 }).passed, true)
