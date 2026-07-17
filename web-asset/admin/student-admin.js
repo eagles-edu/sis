@@ -3638,13 +3638,13 @@
           labelEl.textContent = label;
         });
         document
-          .querySelectorAll('[data-text-zoom-action="decrease"]')
+          .querySelectorAll('#studentTextZoomDownBtn')
           .forEach((buttonEl) => {
             if (!(buttonEl instanceof HTMLButtonElement)) return;
             buttonEl.disabled = percent <= TEXT_ZOOM_MIN;
           });
         document
-          .querySelectorAll('[data-text-zoom-action="increase"]')
+          .querySelectorAll('#studentTextZoomUpBtn')
           .forEach((buttonEl) => {
             if (!(buttonEl instanceof HTMLButtonElement)) return;
             buttonEl.disabled = percent >= TEXT_ZOOM_MAX;
@@ -22278,12 +22278,30 @@
             applyUiSettings();
           });
         }
-        bootConfigTasks.push(async () => {
-          await loadAssignmentTemplatesFromServer({
-            migrateLegacy: true,
+        const activePage = normalizePageSlug(state.activePage);
+        const pageNeedsStudentList = new Set([
+          "student-admin",
+          "attendance",
+          "attendance-admin",
+          "assignments",
+          "assignments-data",
+          "grades",
+          "grades-data",
+          "grades-tabulator",
+          "parent-tracking",
+          "performance-data",
+          "performance-engagement",
+          "reports",
+        ]).has(activePage);
+        const pageNeedsFilters = pageNeedsStudentList || activePage === "news-reports";
+        if (activePage === "assignments" || activePage === "assignments-data") {
+          bootConfigTasks.push(async () => {
+            await loadAssignmentTemplatesFromServer({
+              migrateLegacy: true,
+            });
+            renderAssignmentTemplates();
           });
-          renderAssignmentTemplates();
-        });
+        }
 
         showUserPanel();
         applyUiSettings();
@@ -22291,7 +22309,7 @@
         renderAssignmentDraftItems();
         renderAssignmentExerciseOptions();
         clearUserForm();
-        if (canManageUsers()) {
+        if (canManageUsers() && activePage === "users") {
           scheduleAfterFirstPaint(() => loadUsers().catch(handleError), 3000);
         } else {
           state.adminUsers = [];
@@ -22318,13 +22336,14 @@
         }
 
         if (canReadData()) {
-          const dataHydrationTasks = [
-            async () => {
-              await loadStudents();
-            },
-            () => loadFilters().catch(handleError),
-          ];
-          if (state.activePage === "overview") {
+          const dataHydrationTasks = [];
+          if (pageNeedsStudentList) {
+            dataHydrationTasks.push(() => loadStudents());
+          }
+          if (pageNeedsFilters) {
+            dataHydrationTasks.push(() => loadFilters().catch(handleError));
+          }
+          if (activePage === "overview") {
             dataHydrationTasks.push(async () => {
               await loadDashboardSummary();
               renderHubConnectionStatus();
@@ -22784,9 +22803,13 @@
       document.addEventListener("click", (event) => {
         const target = event?.target;
         if (!(target instanceof Element)) return;
-        const buttonEl = target.closest("button[data-text-zoom-action]");
+        const buttonEl = target.closest("#studentTextZoomDownBtn, #studentTextZoomUpBtn, #studentTextZoomResetBtn");
         if (!(buttonEl instanceof HTMLButtonElement)) return;
-        const action = normalizeLower(buttonEl.getAttribute("data-text-zoom-action"));
+        const action = buttonEl.id === "studentTextZoomDownBtn"
+          ? "decrease"
+          : buttonEl.id === "studentTextZoomUpBtn"
+            ? "increase"
+            : "reset";
         if (!["decrease", "increase", "reset"].includes(action)) return;
         updateGlobalTextZoom(action);
       });

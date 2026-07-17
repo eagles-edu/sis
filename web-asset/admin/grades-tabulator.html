@@ -8,6 +8,16 @@
   <title>The Eagles Club SIS Grades Table</title>
   <link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css">
   <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
   <script>
     (() => {
@@ -417,7 +427,6 @@ box-shadow:
       min-width: 0;
   }
 
-    .app-header-menu-toggle,
     #overviewRuntimeRestartBtn {
       display: none !important;
   }
@@ -1232,18 +1241,6 @@ box-shadow:
         font-size: clamp(11px, 3.8vw, 14px);
     }
 
-      .menu-toggle-btn {
-        inline-size: auto;
-        min-inline-size: clamp(74px, 24vw, 102px);
-        padding-inline: 8px;
-    }
-
-      .app-header-menu-toggle {
-        display: inline-flex !important;
-        justify-self: end;
-        max-inline-size: 160px;
-    }
-
       .text-zoom-controls {
         justify-content: flex-start;
     }
@@ -1438,87 +1435,36 @@ box-shadow:
     </nav>
   </aside>
   <div class="wrap">
-    <div class="header-bar" data-surface-role="content">
+    <div class="header-bar portal-login-header" data-surface-role="content">
       <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
       <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
     </div>
     <main class="section-stack" id="appMain" data-surface-role="content">
-      <div class="content app-page-header" id="appPageHeader" data-surface-role="content">
-        <div class="app-brand-strip">
-          <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
-            <img id="appBrandLogo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
-            <span id="appBrandLogoFallback" class="app-brand-logo-fallback hidden">SIS</span>
-          </a>
-          <h2 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h2>
-          <div class="app-header-actions">
-            <button id="menuToggleBtn" type="button" class="menu-toggle-btn app-header-menu-toggle portal-button portal-button-immutable-chrome" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebarNav">
-              Menu
-            </button>
-            <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden" title="Restart the local runtime after a safe health check" aria-label="Restart the local runtime after a safe health check">
-              Self-Heal Runtime
-            </button>
-            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
-              <span class="portal-theme-toggle__icon" aria-hidden="true" id="adminThemeToggleIcon" data-theme-icon="moon">
-                <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <mask id="theme_moon_cutout">
-                      <rect width="24" height="24" fill="#fff">
-                      <circle cx="12.95" cy="7.95" r="10.1" fill="#000">
-                    </mask>
-                  </defs>
-                  <g fill="currentColor">
-                    <circle cx="10.8" cy="13.2" r="10.3" mask="url(#theme_moon_cutout)">
-                      <animateTransform attributeName="transform" dur="4.8s" repeatCount="indefinite" type="rotate" values="-2 12 12;2 12 12;-2 12 12">
-                    </circle>
-                    <path d="M17.65 3.75L18.62 6.68L21.7 6.68L19.21 8.49L20.16 11.42L17.65 9.6L15.14 11.42L16.09 8.49L13.6 6.68L16.68 6.68L17.65 3.75Z" opacity="0.95">
-                      <animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" values="0.3;0.92;0.3">
-                    </path>
-                    <path d="M9.95 8L10.62 10.02L12.75 10.02L11.03 11.27L11.69 13.28L9.95 12.02L8.22 13.28L8.88 11.27L7.15 10.02L9.28 10.02L9.95 8Z" opacity="0.78">
-                      <animate attributeName="opacity" begin="0.35s" dur="2.2s" repeatCount="indefinite" values="0.24;0.82;0.24">
-                    </path>
-                  </g>
-                </svg>
-                <svg class="portal-theme-toggle__icon-sun" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g stroke="currentColor" stroke-linecap="round" stroke-width="1.8">
-                    <g opacity="0.92">
-                      <animateTransform attributeName="transform" dur="14s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12">
-                      <path d="M12 1.75V4.25">
-                      <path d="M12 19.75V22.25">
-                      <path d="M1.75 12H4.25">
-                      <path d="M19.75 12H22.25">
-                      <path d="M4.75 4.75L6.52 6.52">
-                      <path d="M17.48 17.48L19.25 19.25">
-                      <path d="M17.48 6.52L19.25 4.75">
-                      <path d="M4.75 19.25L6.52 17.48">
-                    </g>
-                    <circle cx="12" cy="12" fill="currentColor" r="4.6">
-                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="4.15;4.8;4.15">
-                    </circle>
-                    <circle cx="12" cy="12" opacity="0.24" r="7.1">
-                      <animate attributeName="r" dur="2.8s" repeatCount="indefinite" values="6.1;7.9;6.1">
-                      <animate attributeName="opacity" dur="2.8s" repeatCount="indefinite" values="0.24;0.08;0.24">
-                    </circle>
-                  </g>
-                </svg>
+      <section class="content topbar" data-surface-role="content">
+        <div class="topbar-head">
+          <div class="brand-head">
+            <a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to student home">
+              <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+            </a>
+            <h1>THE EAGLES CLUB</h1>
+          </div>
+          <div class="header-actions">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+              <span class="portal-theme-toggle__icon" aria-hidden="true">
+                <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
               </span>
-              <span class="portal-theme-toggle__label" id="adminThemeToggleLabel">Dark</span>
             </button>
-            <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
-              <span class="small global-text-label">Global Text</span>
-              <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">
-                A-
-              </button>
-              <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="increase" aria-label="Increase global text size">
-                A+
-              </button>
-              <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning" data-text-zoom-action="reset" aria-label="Reset global text size">
-                Reset
-              </button>
-              <span class="zoom-label" id="globalTextZoomLabel" data-text-zoom-label>100%</span>
+            <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
             </div>
           </div>
         </div>
-        <p class="status is-warn hidden" id="schoolSetupWarning"></p>
+      </section>
+      <p class="status is-warn hidden" id="schoolSetupWarning"></p>
+      <div class="runtime-self-heal-panel">
+        <button id="overviewRuntimeRestartBtn" type="button" class="portal-button portal-button-primary hidden" title="Restart the local runtime after a safe health check" aria-label="Restart the local runtime after a safe health check">Self-Heal Runtime</button>
       </div>
 
     <div class="content" data-surface-role="content">
@@ -1626,6 +1572,9 @@ box-shadow:
         <p class="dim" id="rangeHint"></p>
       </section>
     </div>
+    <section class="content portal-prefooter" aria-label="Runtime environment" data-surface-role="content">
+      <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+    </section>
     <footer class="hub-footer" aria-label="Site footer">
       <p class="hub-footer__copy">
         © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
@@ -1740,9 +1689,9 @@ box-shadow:
       ])
       ;(() => {
         const root = document.documentElement
-        const themeToggle = document.getElementById("adminThemeToggle")
-        const themeIcon = document.getElementById("adminThemeToggleIcon")
-        const themeLabel = document.getElementById("adminThemeToggleLabel")
+        const themeToggle = document.getElementById("studentThemeToggle")
+        const themeIcon = document.getElementById("studentThemeToggleIcon")
+        const themeLabel = null
         const themeState = window.SIS_PORTAL_THEME
 
         function syncThemeToggle(theme) {
@@ -1750,7 +1699,7 @@ box-shadow:
           const isDark = theme === "dark"
           themeToggle.setAttribute("aria-pressed", String(isDark))
           themeToggle.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme")
-          themeIcon.setAttribute("data-theme-icon", isDark ? "sun" : "moon")
+          themeIcon.setAttribute("name", isDark ? "theme-sun" : "theme-moon")
           if (themeLabel) {
             themeLabel.textContent = isDark ? "Light" : "Dark"
           }
@@ -5237,16 +5186,7 @@ box-shadow:
       }
       function updateMenuToggleButtons() {
         const menuOpen = document.body.classList.contains("menu-open")
-        const menuToggleBtn = document.getElementById("menuToggleBtn")
         const floatingMenuBtn = document.getElementById("floatingMenuBtn")
-        if (menuToggleBtn) {
-          menuToggleBtn.textContent = menuOpen ? "Close Menu" : "Menu"
-          menuToggleBtn.setAttribute("aria-expanded", menuOpen ? "true" : "false")
-          menuToggleBtn.setAttribute(
-            "aria-label",
-            menuOpen ? "Close navigation menu" : "Open navigation menu",
-          )
-        }
         if (floatingMenuBtn) {
           floatingMenuBtn.setAttribute("aria-expanded", menuOpen ? "true" : "false")
           floatingMenuBtn.setAttribute(
@@ -5277,9 +5217,6 @@ box-shadow:
             })
           })
         document.getElementById("floatingMenuBtn")?.addEventListener("click", () => {
-          setMenuOpen(!document.body.classList.contains("menu-open"))
-        })
-        document.getElementById("menuToggleBtn")?.addEventListener("click", () => {
           setMenuOpen(!document.body.classList.contains("menu-open"))
         })
         document.getElementById("menuBackdrop")?.addEventListener("click", () => {
@@ -5341,6 +5278,6 @@ box-shadow:
       })
     })()
   </script>
+  <script src="/web-asset/shared/portal-environment.js"></script>
 </body>
-
 </html>

@@ -6,6 +6,16 @@
   <title>The Eagles Club Student Enrollment</title>
   <link href="/web-asset/admin/favicon.ico?=v2" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <script src="/web-asset/shared/portal-theme-state.js"></script>
+  <script type="module">
+    import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
+
+    if (!customElements.get("svg-icon")) {
+      svgIcon({
+        defaultSize: 28,
+        path: "/web-asset/icons/web-component/svgs/",
+      });
+    }
+  </script>
   <script>
     window.SIS_PORTAL_THEME?.initTheme("light")
   </script>
@@ -725,8 +735,9 @@
 </head>
   <body class="admin-portal-page page student-enrollment-page" id="top">
   <div class="wrap">
-    <div class="enrollment-shell content portal-center-column">
-      <div class="header-bar">
+  <span class="hidden">The Eagles Club Student Enrollment</span>
+  <div class="enrollment-shell content portal-center-column">
+      <div class="header-bar portal-login-header">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
@@ -819,57 +830,24 @@
           </aside>
 
           <main id="appMain" class="section-stack" aria-label="Enrollment workspace">
-            <section class="content app-page-header" aria-label="Enrollment page header" data-surface-role="content">
-              <div class="app-brand-strip">
-                <a class="app-brand-logo-wrap" id="appBrandLogoWrap" href="/admin" aria-label="Go to admin dashboard">
-                  <img id="appBrandLogo" src="data:," alt="School logo" class="hidden">
-                  <span id="appBrandLogoFallback" class="app-brand-logo-fallback">SIS</span>
-                </a>
-                <div class="app-brand-copy">
-                  <p class="app-brand-kicker">Administration</p>
-                  <h1 id="appSchoolName" class="app-school-name">THE EAGLES CLUB</h1>
-                  <!-- <p class="app-page-subtitle">
-                    Enrollment stays on its own page, but it follows the same admin portal chrome, theme controls, and data-surface contract.
-                  </p>-->
+            <section class="content topbar" data-surface-role="content">
+              <div class="topbar-head">
+                <div class="brand-head">
+                  <a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to student home">
+                    <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+                  </a>
+                  <h1>THE EAGLES CLUB</h1>
                 </div>
-                <div class="app-header-actions">
-                  <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="adminThemeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">
-                    <span class="portal-theme-toggle__icon" aria-hidden="true" id="adminThemeToggleIcon" data-theme-icon="moon">
-                      <svg class="portal-theme-toggle__icon-moon" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <mask id="enrollment_theme_moon_cutout">
-                            <rect width="24" height="24" fill="#fff"></rect>
-                            <circle cx="12.95" cy="7.95" r="10.1" fill="#000"></circle>
-                          </mask>
-                        </defs>
-                        <g fill="currentColor">
-                          <circle cx="10.8" cy="13.2" r="10.3" mask="url(#enrollment_theme_moon_cutout)"></circle>
-                          <path d="M17.65 3.75L18.62 6.68L21.7 6.68L19.21 8.49L20.16 11.42L17.65 9.6L15.14 11.42L16.09 8.49L13.6 6.68L16.68 6.68L17.65 3.75Z" opacity="0.95"></path>
-                          <path d="M9.95 8L10.62 10.02L12.75 10.02L11.03 11.27L11.69 13.28L9.95 12.02L8.22 13.28L8.88 11.27L7.15 10.02L9.28 10.02L9.95 8Z" opacity="0.78"></path>
-                        </g>
-                      </svg>
-                      <svg class="portal-theme-toggle__icon-sun" width="110%" height="110%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g stroke="currentColor" stroke-linecap="round" stroke-width="1.8">
-                          <path d="M12 1.75V4.25"></path>
-                          <path d="M12 19.75V22.25"></path>
-                          <path d="M1.75 12H4.25"></path>
-                          <path d="M19.75 12H22.25"></path>
-                          <path d="M4.75 4.75L6.52 6.52"></path>
-                          <path d="M17.48 17.48L19.25 19.25"></path>
-                          <path d="M17.48 6.52L19.25 4.75"></path>
-                          <path d="M4.75 19.25L6.52 17.48"></path>
-                          <circle cx="12" cy="12" fill="currentColor" r="4.6"></circle>
-                        </g>
-                      </svg>
+                <div class="header-actions">
+                  <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+                    <span class="portal-theme-toggle__icon" aria-hidden="true">
+                      <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
                     </span>
-                    <span class="portal-theme-toggle__label" id="adminThemeToggleLabel">Dark</span>
                   </button>
-                  <div class="text-zoom-controls" id="globalTextZoomControls" role="toolbar" aria-label="Global text size controls">
-                    <span class="global-text-label">Text</span>
-                    <button id="globalTextZoomDownBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="decrease" aria-label="Decrease global text size">A-</button>
-                    <button id="globalTextZoomUpBtn" type="button" class="portal-button portal-button-alt" data-text-zoom-action="increase" aria-label="Increase global text size">A+</button>
-                    <button id="globalTextZoomResetBtn" type="button" class="portal-button portal-button-warning" data-text-zoom-action="reset" aria-label="Reset global text size">100%</button>
-                    <span class="zoom-label" data-text-zoom-label>100%</span>
+                  <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+                    <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+                    <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+                    <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
                   </div>
                 </div>
               </div>
@@ -958,6 +936,9 @@
           <div id="enrollmentHistoryModalBody" class="enrollment-history-modal__list panel" data-surface-role="panel"></div>
         </section>
       </div>
+      <section class="content portal-prefooter" aria-label="Runtime environment" data-surface-role="content">
+        <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+      </section>
       <footer class="hub-footer" aria-label="Site footer">
         <p class="hub-footer__copy">
           © <span data-copyright-year="" data-start="2012"></span> The Eagles American English Club Ltd. All rights reserved.
@@ -1722,15 +1703,15 @@
 
       function syncThemeToggle() {
         const theme = window.SIS_PORTAL_THEME?.getTheme("light") || "light";
-        const button = document.getElementById("adminThemeToggle");
-        const icon = document.getElementById("adminThemeToggleIcon");
-        const label = document.getElementById("adminThemeToggleLabel");
+        const button = document.getElementById("studentThemeToggle");
+        const icon = document.getElementById("studentThemeToggleIcon");
+        const label = null;
         const dark = theme === "dark";
         if (button) {
           button.setAttribute("aria-pressed", dark ? "true" : "false");
           button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
         }
-        if (icon) icon.setAttribute("data-theme-icon", dark ? "sun" : "moon");
+        if (icon) icon.setAttribute("name", dark ? "theme-sun" : "theme-moon");
         if (label) label.textContent = dark ? "Light" : "Dark";
       }
 
@@ -1790,10 +1771,10 @@
         if (handleAuthError(error)) return;
         setStatus(error?.message || error, true);
       }));
-      document.querySelectorAll("[data-text-zoom-action]").forEach((buttonEl) => {
-        buttonEl.addEventListener("click", () => updateGlobalTextZoom(buttonEl.getAttribute("data-text-zoom-action") || ""));
+      [["studentTextZoomDownBtn", "decrease"], ["studentTextZoomUpBtn", "increase"], ["studentTextZoomResetBtn", "reset"]].forEach(([id, action]) => {
+        document.getElementById(id)?.addEventListener("click", () => updateGlobalTextZoom(action));
       });
-      document.getElementById("adminThemeToggle")?.addEventListener("click", () => {
+      document.getElementById("studentThemeToggle")?.addEventListener("click", () => {
         window.SIS_PORTAL_THEME?.toggleTheme("light");
         syncThemeToggle();
       });
@@ -1824,5 +1805,6 @@
       });
     })();
   </script>
+  <script src="/web-asset/shared/portal-environment.js"></script>
 </body>
 </html>

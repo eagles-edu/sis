@@ -362,29 +362,29 @@
   </div>
   <div class="portal-layout">
     <main class="shell">
-      <div class="header-bar" data-surface-role="content">
+      <div class="header-bar portal-login-header" data-surface-role="content">
         <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
         <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
       </div>
-      <section class="card hero" aria-labelledby="hub-title" data-surface-role="content">
-        <div class="hero-line">
-          <div class="hero-brand">
-            <a class="brand-logo-wrap brand-logo-wrap--lg" href="/admin" aria-label="Go to admin dashboard">
+      <section class="content topbar" data-surface-role="content">
+        <div class="topbar-head">
+          <div class="brand-head">
+            <a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to admin dashboard">
               <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
             </a>
-
-            <div class="hero-copy">
-              <h1 id="hub-title">The Eagles Club</h1>
-              <p>Hệ thống thông tin sinh viên</p>
-            </div>
+            <h1>THE EAGLES CLUB</h1>
           </div>
-          <div class="hero-actions">
-            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"
-              aria-label="Chuyển sang giao diện tối">
-              <span class="theme-toggle__icon" aria-hidden="true">
-                <svg-icon name="theme-moon" size="110%" data-theme-toggle-icon></svg-icon>
+          <div class="header-actions">
+            <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
+              <span class="portal-theme-toggle__icon" aria-hidden="true">
+                <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
               </span>
             </button>
+            <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+              <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+              <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+              <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
+            </div>
           </div>
         </div>
       </section>
@@ -440,6 +440,7 @@
           <a class="hub-prefooter__link portal-button portal-button-alt" href="mailto:admin@eagles.edu.vn">Gửi email hỗ trợ</a>
           <a class="hub-prefooter__link portal-button portal-button-alt" href="/admin">Mở admin portal</a>
         </nav>
+        <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
       </section>
 
       <footer class="hub-footer" aria-label="Site footer">
@@ -450,6 +451,7 @@
           <a href="#top" id="back-top" aria-label="Back to top">Về đầu trang</a>
         </p>
       </footer>
+      <script src="/web-asset/shared/portal-environment.js"></script>
       <script type="module">
         import svgIcon from "/web-asset/icons/web-component/svg-icon.js";
 
@@ -464,8 +466,8 @@
   <script>
       (() => {
         const root = document.documentElement;
-        const themeToggle = document.querySelector("[data-theme-toggle]");
-        const themeIcon = document.querySelector("[data-theme-toggle-icon]");
+        const themeToggle = document.getElementById("studentThemeToggle");
+        const themeIcon = document.getElementById("studentThemeToggleIcon");
         const themeState = window.SIS_PORTAL_THEME;
         const currentOrigin = window.location.origin;
         const query = new URLSearchParams(window.location.search || "");
@@ -567,6 +569,18 @@
         themeToggle?.addEventListener("click", () => {
           applyTheme(themeState?.toggleTheme ? themeState.toggleTheme("dark") : (getPreferredTheme() === "dark" ? "light" : "dark"));
         });
+        const textZoomKey = "sis.studentPortal.textZoomPct";
+        const applyTextZoom = (value) => {
+          const next = Math.min(120, Math.max(80, Number(value) || 100));
+          root.style.setProperty("--hub-phi", String(next / 100));
+          try { localStorage.setItem(textZoomKey, String(next)); } catch { void 0; }
+        };
+        let textZoom = 100;
+        try { textZoom = Number(localStorage.getItem(textZoomKey)) || 100; } catch { void 0; }
+        applyTextZoom(textZoom);
+        document.getElementById("studentTextZoomDownBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.max(80, textZoom - 5)));
+        document.getElementById("studentTextZoomUpBtn")?.addEventListener("click", () => applyTextZoom(textZoom = Math.min(120, textZoom + 5)));
+        document.getElementById("studentTextZoomResetBtn")?.addEventListener("click", () => applyTextZoom(textZoom = 100));
       })();
   </script>
 </body>

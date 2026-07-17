@@ -14,6 +14,7 @@ const TABULATOR_HTML = fs
   .replace(/<link[^>]*portal-theme\.min\.css[^>]*>\s*/i, "")
   .replace(/<script src="\.\.\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
   .replace(/<script src="\/web-asset\/vendor\/tabulatorz\/tabulator\.min\.js"><\/script>\s*/i, "")
+  .replace(/<script src="\/web-asset\/shared\/portal-environment\.js"><\/script>\s*/i, "")
 const SHARED_THEME_PATH = path.resolve(process.cwd(), "web-asset/shared/portal-theme.min.css")
 const SHARED_THEME = fs.readFileSync(SHARED_THEME_PATH, "utf8")
 const TABULATOR_HTML_FOR_TEST = TABULATOR_HTML.replace("</head>", `<style>${SHARED_THEME}</style></head>`)

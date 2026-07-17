@@ -5540,14 +5540,14 @@ html[data-theme="dark"] :where(body.admin-portal-page, body.parent-portal-page) 
   font-family: ui-monospace, Courier, monospace;
 }
 html:not([data-theme="dark"]) :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > strong.new-word-entry-part-of-speech {
-  color: #212121;
-  font-size: 1rem;
-  font-weight: 800;
+  color: #212121!important;
+  font-size: 1.28rem!important;
+  font-weight: 800!important;
 }
 html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > strong.new-word-entry-part-of-speech {
-  color: #fbffff;
-  font-size: 1rem;
-  font-weight: 800;
+  color: #fbffff!important;
+  font-size: 1.28rem!important;
+  font-weight: 800!important;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-plural em {
   font-weight: 700;
@@ -5679,7 +5679,7 @@ body.student-portal-page .news-vocabulary-row-dots {
   transform: translateY(-1px);
 }
 body.student-portal-page .news-vocabulary-row-menu {
-  align-self: stretch;
+  align-self: start;
   justify-self: end;
   min-inline-size: 28px;
   position: relative;
@@ -8207,6 +8207,7 @@ body.portal-hub-page .portal-layout {
 body.student-portal-page .portal-theme-toggle,
 body.parent-portal-page .portal-theme-toggle,
 body.admin-portal-page .portal-theme-toggle,
+body.portal-hub-page .portal-theme-toggle,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle,
 body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle {
@@ -8237,6 +8238,7 @@ transition:
 body.student-portal-page .portal-theme-toggle:hover,
 body.parent-portal-page .portal-theme-toggle:hover,
 body.admin-portal-page .portal-theme-toggle:hover,
+body.portal-hub-page .portal-theme-toggle:hover,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle:hover,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle:hover,
 body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:hover {
@@ -8246,6 +8248,7 @@ body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle
 body.student-portal-page .portal-theme-toggle:focus-visible,
 body.parent-portal-page .portal-theme-toggle:focus-visible,
 body.admin-portal-page .portal-theme-toggle:focus-visible,
+body.portal-hub-page .portal-theme-toggle:focus-visible,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle:focus-visible,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle:focus-visible,
 body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:focus-visible {
@@ -8255,6 +8258,7 @@ body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle
 body.student-portal-page .portal-theme-toggle__icon,
 body.parent-portal-page .portal-theme-toggle__icon,
 body.admin-portal-page .portal-theme-toggle__icon,
+body.portal-hub-page .portal-theme-toggle__icon,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle__icon,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle__icon,
 body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon {
@@ -8271,6 +8275,7 @@ body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle
 body.student-portal-page .portal-theme-toggle__icon svg-icon,
 body.parent-portal-page .portal-theme-toggle__icon svg-icon,
 body.admin-portal-page .portal-theme-toggle__icon svg-icon,
+body.portal-hub-page .portal-theme-toggle__icon svg-icon,
 body.student-portal-page .topbar .header-actions .portal-theme-toggle__icon svg-icon,
 body.parent-portal-page .hero .hero-actions .portal-theme-toggle__icon svg-icon,
 body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon svg-icon {
@@ -8292,6 +8297,7 @@ body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle
 html[data-theme="dark"] body.student-portal-page .portal-theme-toggle,
 html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle,
 html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle,
+html[data-theme="dark"] body.portal-hub-page .portal-theme-toggle,
 html[data-theme="dark"] body.student-portal-page .topbar .header-actions .portal-theme-toggle,
 html[data-theme="dark"] body.parent-portal-page .hero .hero-actions .portal-theme-toggle,
 html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle {
@@ -8302,6 +8308,7 @@ html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-acti
 html[data-theme="dark"] body.student-portal-page .portal-theme-toggle:hover,
 html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle:hover,
 html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle:hover,
+html[data-theme="dark"] body.portal-hub-page .portal-theme-toggle:hover,
 html[data-theme="dark"] body.student-portal-page .topbar .header-actions .portal-theme-toggle:hover,
 html[data-theme="dark"] body.parent-portal-page .hero .hero-actions .portal-theme-toggle:hover,
 html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle:hover {
@@ -8310,6 +8317,7 @@ html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-acti
 html[data-theme="dark"] body.student-portal-page .portal-theme-toggle__icon,
 html[data-theme="dark"] body.parent-portal-page .portal-theme-toggle__icon,
 html[data-theme="dark"] body.admin-portal-page .portal-theme-toggle__icon,
+html[data-theme="dark"] body.portal-hub-page .portal-theme-toggle__icon,
 html[data-theme="dark"] body.student-portal-page .topbar .header-actions .portal-theme-toggle__icon,
 html[data-theme="dark"] body.parent-portal-page .hero .hero-actions .portal-theme-toggle__icon,
 html[data-theme="dark"] body.admin-portal-page .app-page-header .app-header-actions .portal-theme-toggle__icon {
@@ -9710,6 +9718,21 @@ body.report-template-page .summary-card {
   min-width: 0;
   padding: 14px;
 }
+@media (max-width: 700px) {
+  /* Report cards are served in Admin, Parent, and Student modes. Keep the
+     summary readable and confine the intentionally wide rubric table to its
+     own horizontal scroller on narrow screens. */
+  body.report-template-page .summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.report-template-page .metric-table-wrap {
+    box-sizing: border-box;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
 .summary-label {
   color: var(--portal-data-label);
   font-size: 12px;
@@ -9820,6 +9843,9 @@ html[data-theme="dark"] .field-hint {
   gap: 6px;
   justify-content: flex-end;
   margin: 0;
+}
+body.parent-portal-page .text-zoom-controls {
+  zoom: calc(1 / var(--portal-text-zoom, 1));
 }
 .text-zoom-controls button,
 .text-zoom-controls button:not(.floating-menu-btn) {
@@ -10526,6 +10552,13 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
     margin: 12px auto;
     padding: 12px;
   }
+  /* Match the authenticated Parent/Student shell width: Admin's body scroll
+     gutter otherwise narrows .wrap and leaves the shared header short. */
+  body.admin-portal-page .wrap {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    padding: 16px;
+  }
   .hero,
   .topbar {
     padding-right: 12px;
@@ -10635,6 +10668,14 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
   }
   .text-zoom-controls {
     gap: 4px;
+  }
+  body.parent-portal-page .text-zoom-controls {
+    flex-wrap: wrap;
+    max-inline-size: 100%;
+  }
+  body.parent-portal-page .text-zoom-controls button {
+    min-width: 36px;
+    padding-inline: 5px;
   }
   .text-zoom-controls button:not(.floating-menu-btn):not(.nav-scrim),
   .text-zoom-controls button:not(.floating-menu-btn):not(.nav-overlay) {
@@ -10763,6 +10804,55 @@ html:not([data-theme="dark"]) body.portal-hub-page .resource-card--ielts .resour
 .hub-footer__action {
   margin-inline-start: auto;
 }
+.portal-prefooter {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  min-height: 1.5rem;
+  width: 100%;
+}
+.portal-prefooter .env-badge {
+  margin: 0;
+}
+.status-strip.portal-prefooter {
+  gap: var(--hub-space-1, 12px);
+  justify-content: space-between;
+}
+.status-strip.portal-prefooter .status {
+  margin: 0;
+  min-inline-size: 0;
+}
+.status-strip.portal-prefooter .env-badge {
+  margin-inline-start: auto;
+}
+body.portal-hub-page .hub-prefooter .env-badge {
+  justify-self: end;
+}
+.portal-prefooter__environment {
+  color: var(--ink-soft, var(--secondary-color));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  margin: 0;
+  text-align: right;
+}
+@media (max-width: 639px) {
+  :is(#studentTextZoomDownBtn, #studentTextZoomUpBtn) {
+    box-sizing: border-box;
+    flex: 0 0 44px !important;
+    inline-size: 44px !important;
+    max-inline-size: 44px !important;
+    min-inline-size: 44px !important;
+  }
+  #studentTextZoomResetBtn {
+    box-sizing: border-box;
+    flex: 0 0 56px !important;
+    inline-size: 56px !important;
+    max-inline-size: 56px !important;
+    min-inline-size: 56px !important;
+  }
+}
 .hub-footer a,
 .hub-footer a:visited,
 .hub-footer a:hover,
@@ -10873,6 +10963,23 @@ body.student-portal-page .header-bar a:hover {
   text-decoration-line: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
+}
+@media (max-width: 430px) {
+  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page) .header-bar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: .35rem;
+  }
+  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page) .header-bar a:first-child {
+    margin-inline-end: auto;
+  }
+  body:is(.portal-hub-page, .admin-portal-page, .parent-portal-page, .student-portal-page) .header-bar a:last-child {
+    flex-basis: 100%;
+    overflow-wrap: anywhere;
+    text-align: right;
+    white-space: normal;
+  }
 }
 
 /* Generated portal color registry: central SSOT for page-local color literals. */
@@ -11167,4 +11274,236 @@ body.parent-portal-page :is(.actions, .login-actions, .portal-modal-actions, .po
   inline-size: var(--portal-button-inline) !important;
   max-inline-size: var(--portal-button-inline) !important;
   min-inline-size: var(--portal-button-inline) !important;
+}
+
+/* Student news reporting starts as a one-column touch layout. Wider screens
+   progressively restore the denser form and viewer arrangements. */
+body.student-portal-page #newsReportFormCard .row,
+body.student-portal-page #newsWeekSetModal .row {
+  grid-template-columns: minmax(0, 1fr);
+}
+body.student-portal-page #newsReportFormCard .row > .field,
+body.student-portal-page #newsWeekSetModal .row > .field {
+  grid-column: 1 / -1;
+}
+body.student-portal-page #newsWeekSetModal {
+  padding: 8px;
+  place-items: stretch;
+}
+body.student-portal-page #newsWeekSetModal .portal-modal-dialog {
+  border-radius: 10px;
+  gap: 10px;
+  max-height: calc(100dvh - 16px);
+  padding: 12px;
+  width: 100%;
+}
+body.student-portal-page #newsWeekSetModal .queue-modal-header {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+  margin: -12px -12px 0;
+  padding: 12px;
+}
+body.student-portal-page #newsWeekSetModal .queue-modal-nav,
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav {
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+body.student-portal-page #newsWeekSetModal .queue-modal-nav > strong,
+body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav > strong {
+  flex-basis: 100%;
+  font-size: 15px;
+}
+body.student-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
+  inline-size: 100%;
+  margin-inline-start: 0;
+  min-inline-size: 0;
+  padding-inline: 12px;
+}
+body.student-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+body.student-portal-page #newsWeekSetModal .portal-modal-actions.student-news-form-actions,
+body.student-portal-page #newsReportFormCard .student-news-form-actions {
+  justify-content: stretch;
+}
+body.student-portal-page #newsWeekSetModal .portal-modal-actions.student-news-form-actions > .portal-button,
+body.student-portal-page #newsReportFormCard .student-news-form-actions > .portal-button {
+  flex: 1 1 100% !important;
+  inline-size: 100% !important;
+  max-inline-size: none !important;
+  min-inline-size: 0 !important;
+}
+
+@media (min-width: 641px) {
+  body.student-portal-page #newsWeekSetModal {
+    padding: 18px;
+    place-items: center;
+  }
+  body.student-portal-page #newsWeekSetModal .portal-modal-dialog {
+    border-radius: 12px;
+    max-height: calc(100vh - 36px);
+    padding: 16px;
+    width: min(760px, calc(100vw - 36px));
+  }
+  body.student-portal-page #newsWeekSetModal .queue-modal-header {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    margin: -16px -16px 0;
+    padding: 12px 14px;
+  }
+  body.student-portal-page #newsWeekSetModal .queue-modal-nav,
+  body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav {
+    flex-wrap: nowrap;
+    width: auto;
+  }
+  body.student-portal-page #newsWeekSetModal .queue-modal-nav > strong,
+  body.student-portal-page #newsWeekSetModal .news-week-set-modal-nav > strong {
+    flex-basis: auto;
+  }
+  body.student-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
+    inline-size: auto;
+    margin-inline-start: 10px;
+    min-inline-size: 132px;
+    padding-inline: 22px;
+  }
+  body.student-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.student-portal-page #newsWeekSetModal .portal-modal-actions.student-news-form-actions,
+  body.student-portal-page #newsReportFormCard .student-news-form-actions {
+    justify-content: flex-start;
+  }
+  body.student-portal-page #newsWeekSetModal .portal-modal-actions.student-news-form-actions > .portal-button,
+  body.student-portal-page #newsReportFormCard .student-news-form-actions > .portal-button {
+    flex: 0 1 var(--portal-button-inline) !important;
+    inline-size: var(--portal-button-inline) !important;
+    max-inline-size: var(--portal-button-inline) !important;
+    min-inline-size: var(--portal-button-inline) !important;
+  }
+}
+
+@media (min-width: 960px) {
+  body.student-portal-page #newsReportFormCard .row,
+  body.student-portal-page #newsWeekSetModal .row {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  body.student-portal-page #newsReportFormCard .c3 {
+    grid-column: span 3;
+  }
+  body.student-portal-page #newsReportFormCard .c4,
+  body.student-portal-page #newsWeekSetModal .c4 {
+    grid-column: span 4;
+  }
+  body.student-portal-page #newsReportFormCard .c6,
+  body.student-portal-page #newsWeekSetModal .c6 {
+    grid-column: span 6;
+  }
+  body.student-portal-page #newsReportFormCard .c12,
+  body.student-portal-page #newsWeekSetModal .c12 {
+    grid-column: span 12;
+  }
+  body.student-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Parent's read-only week-set viewer follows the same mobile-first shell. */
+body.parent-portal-page #newsWeekSetModal .row {
+  grid-template-columns: minmax(0, 1fr);
+}
+body.parent-portal-page #newsWeekSetModal .row > .field {
+  grid-column: 1 / -1;
+}
+body.parent-portal-page #newsWeekSetModal {
+  padding: 8px;
+  place-items: stretch;
+}
+body.parent-portal-page #newsWeekSetModal .portal-modal-dialog {
+  border-radius: 10px;
+  gap: 10px;
+  max-height: calc(100dvh - 16px);
+  padding: 12px;
+  width: 100%;
+}
+body.parent-portal-page #newsWeekSetModal .queue-modal-header {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
+  margin: -12px -12px 0;
+  padding: 12px;
+}
+body.parent-portal-page #newsWeekSetModal .queue-modal-nav {
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+body.parent-portal-page #newsWeekSetModal .queue-modal-nav > strong {
+  flex-basis: 100%;
+  font-size: 15px;
+}
+body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
+  inline-size: 100%;
+  margin-inline-start: 0;
+  min-inline-size: 0;
+  padding-inline: 12px;
+}
+body.parent-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 641px) {
+  body.parent-portal-page #newsWeekSetModal {
+    padding: 18px;
+    place-items: center;
+  }
+  body.parent-portal-page #newsWeekSetModal .portal-modal-dialog {
+    border-radius: 12px;
+    max-height: calc(100vh - 36px);
+    padding: 16px;
+    width: min(760px, calc(100vw - 36px));
+  }
+  body.parent-portal-page #newsWeekSetModal .queue-modal-header {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    margin: -16px -16px 0;
+    padding: 12px 14px;
+  }
+  body.parent-portal-page #newsWeekSetModal .queue-modal-nav {
+    flex-wrap: nowrap;
+    width: auto;
+  }
+  body.parent-portal-page #newsWeekSetModal .queue-modal-nav > strong {
+    flex-basis: auto;
+  }
+  body.parent-portal-page #newsWeekSetModal #closeNewsWeekSetModalBtn {
+    inline-size: auto;
+    margin-inline-start: 10px;
+    min-inline-size: 132px;
+    padding-inline: 22px;
+  }
+  body.parent-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  body.parent-portal-page #newsWeekSetModal .row {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  body.parent-portal-page #newsWeekSetModal .c4 {
+    grid-column: span 4;
+  }
+  body.parent-portal-page #newsWeekSetModal .c6 {
+    grid-column: span 6;
+  }
+  body.parent-portal-page #newsWeekSetModal .c12 {
+    grid-column: span 12;
+  }
+  body.parent-portal-page #newsWeekSetModal .news-review-vocabulary-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }

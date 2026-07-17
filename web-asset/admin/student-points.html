@@ -149,6 +149,20 @@
 
 <body class="student-points-page">
   <div class="app content portal-center-column">
+    <div class="header-bar portal-login-header" data-surface-role="content">
+      <a href="tel:0937667818">0937&#8209;667&#8209;818</a>
+      <a href="https://eagles.edu.vn" target="_blank" rel="noreferrer">eagles.edu.vn</a>
+    </div>
+    <section class="content topbar" data-surface-role="content">
+      <div class="topbar-head">
+        <div class="brand-head">
+          <a class="brand-logo-wrap brand-logo-wrap--sm" href="/admin" aria-label="Go to admin dashboard">
+            <img class="brand-logo" src="/web-asset/images/logo.svg" alt="The Eagles Club logo">
+          </a>
+          <h1>THE EAGLES CLUB</h1>
+        </div>
+      </div>
+    </section>
     <section class="card portal-theme-card">
       <h1 class="section-title">Points Management</h1>
       <p class="section-note">School YTD trend + student point ledger controls.</p>
@@ -590,6 +604,10 @@
       boot().catch(handleError);
     })();
   </script>
+  <div class="portal-prefooter" aria-label="Runtime environment">
+    <p class="portal-prefooter__environment" data-environment-prefooter></p>
+  </div>
+  <script src="/web-asset/shared/portal-environment.js"></script>
 </body>
 
 </html>

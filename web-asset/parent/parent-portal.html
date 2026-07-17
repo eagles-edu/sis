@@ -55,6 +55,7 @@
         box-sizing: border-box;
         display: grid;
         gap: 12px;
+        grid-template-columns: minmax(0, 1fr);
         margin: 0 auto;
         max-width: 1440px;
         padding: 16px;
@@ -411,17 +412,17 @@
             >eagles.edu.vn</a
           >
         </div>
-        <section class="content hero" data-surface-role="content">
-          <button
-            id="parentMenuBtn"
-            class="floating-menu-btn portal-button portal-button-immutable-chrome"
-            type="button"
-            title="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh"
-            aria-label="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh">
-            <span class="floating-menu-icon" aria-hidden="true"></span>
-          </button>
-          <div class="hero-line">
-            <div class="hero-brand">
+        <button
+          id="parentMenuBtn"
+          class="floating-menu-btn portal-button portal-button-immutable-chrome"
+          type="button"
+          title="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh"
+          aria-label="Mở menu điều hướng để chuyển giữa các khu vực của cổng phụ huynh">
+          <span class="floating-menu-icon" aria-hidden="true"></span>
+        </button>
+        <section class="content topbar" data-surface-role="content">
+          <div class="topbar-head">
+            <div class="brand-head">
               <a
                 class="brand-logo-wrap brand-logo-wrap--sm"
                 href="/parent"
@@ -431,55 +432,18 @@
                   src="/web-asset/images/logo.svg"
                   alt="The Eagles Club logo">
               </a>
-              <h1>Cổng phụ huynh</h1>
+              <h1>THE EAGLES CLUB</h1>
             </div>
-            <div class="hero-actions">
-              <span
-                id="envBadgeParent"
-                class="env-badge"
-                aria-live="polite"></span>
-              <button
-                class="portal-theme-toggle portal-button portal-button-immutable-chrome"
-                id="parentThemeToggle"
-                type="button"
-                aria-pressed="false"
-                title="Chuyển giữa giao diện sáng và tối của cổng phụ huynh"
-                aria-label="Chuyển sang giao diện tối">
+            <div class="header-actions">
+              <button class="portal-theme-toggle portal-button portal-button-immutable-chrome" id="studentThemeToggle" type="button" aria-pressed="false" title="Chuyển giao diện" aria-label="Chuyển sang giao diện tối">
                 <span class="portal-theme-toggle__icon" aria-hidden="true">
-                  <svg-icon
-                    name="theme-moon"
-                    size="110%"
-                    id="parentThemeToggleIcon"></svg-icon>
+                  <svg-icon name="theme-moon" size="110%" id="studentThemeToggleIcon"></svg-icon>
                 </span>
               </button>
-              <div
-                class="text-zoom-controls"
-                role="toolbar"
-                aria-label="Điều khiển cỡ chữ">
-                <button
-                  id="parentTextZoomDownBtn"
-                  type="button"
-                  class="portal-button portal-button-alt"
-                  title="Giảm cỡ chữ cho nội dung cổng phụ huynh"
-                  aria-label="A- — Giảm cỡ chữ">
-                  A-
-                </button>
-                <button
-                  id="parentTextZoomUpBtn"
-                  type="button"
-                  class="portal-button portal-button-alt"
-                  title="Tăng cỡ chữ cho nội dung cổng phụ huynh"
-                  aria-label="A+ — Tăng cỡ chữ">
-                  A+
-                </button>
-                <button
-                  id="parentTextZoomResetBtn"
-                  type="button"
-                  class="portal-button portal-button-warning"
-                  title="Đưa cỡ chữ về mức mặc định của cổng phụ huynh"
-                  aria-label="Đặt lại cỡ chữ">
-                  Đặt lại
-                </button>
+              <div class="text-zoom-controls" role="toolbar" aria-label="Global text size controls">
+                <button id="studentTextZoomDownBtn" type="button" class="portal-button portal-button-alt" title="Giảm cỡ chữ">A-</button>
+                <button id="studentTextZoomUpBtn" type="button" class="portal-button portal-button-alt" title="Tăng cỡ chữ">A+</button>
+                <button id="studentTextZoomResetBtn" type="button" class="portal-button portal-button-warning" title="Đặt lại cỡ chữ">Reset</button>
               </div>
             </div>
           </div>
@@ -1438,6 +1402,9 @@
 
           <p id="childPageStatus" class="status"></p>
         </section>
+        <section class="content portal-prefooter" aria-label="Môi trường runtime" data-surface-role="content">
+          <span id="envBadge" class="env-badge" data-environment-prefooter aria-live="polite"></span>
+        </section>
         <footer class="hub-footer portal-login-footer" aria-label="Chân trang">
           <p class="hub-footer__copy">
             © <span data-copyright-year="" data-start="2012"></span> The Eagles
@@ -1454,6 +1421,7 @@
 
     <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
     <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
+    <script src="/web-asset/shared/portal-environment.js"></script>
     <script>
       const DEFAULT_PARENT_API_PREFIX = "/api/parent"
       const PARENT_API_PREFIX = normalizePathPrefix(
@@ -8309,13 +8277,13 @@
         },
       })
       document
-        .getElementById("parentTextZoomDownBtn")
+        .getElementById("studentTextZoomDownBtn")
         ?.addEventListener("click", () => adjustPortalTextZoom(-TEXT_ZOOM_STEP))
       document
-        .getElementById("parentTextZoomUpBtn")
+        .getElementById("studentTextZoomUpBtn")
         ?.addEventListener("click", () => adjustPortalTextZoom(TEXT_ZOOM_STEP))
       document
-        .getElementById("parentTextZoomResetBtn")
+        .getElementById("studentTextZoomResetBtn")
         ?.addEventListener("click", () =>
           applyPortalTextZoom(TEXT_ZOOM_DEFAULT),
         )
@@ -8591,8 +8559,8 @@
     <script>
       ;(() => {
         const root = document.documentElement
-        const button = document.getElementById("parentThemeToggle")
-        const icon = document.getElementById("parentThemeToggleIcon")
+        const button = document.getElementById("studentThemeToggle")
+        const icon = document.getElementById("studentThemeToggleIcon")
         const themeState = window.SIS_PORTAL_THEME
 
         function sync(theme) {
