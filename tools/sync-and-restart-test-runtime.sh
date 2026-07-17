@@ -386,6 +386,7 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
   "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
+  "web-asset/images/new-words.png|web-asset/images/new-words.png"
   "web-asset/images/caret-down.svg|web-asset/images/caret-down.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -408,6 +409,23 @@ TEST_RUNTIME_WEBFILE_MAP=(
   "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
+)
+
+# Local portal changes are authored in REPO_ROOT. Keep this explicit parity
+# list next to the sync maps so a full test sync cannot silently omit a UI
+# source or its generated payload.
+TEST_LOCAL_UI_RUNTIME_PARITY_MAP=(
+  "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
+  "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
+  "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
+  "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
+  "web-asset/admin/student-admin.critical.css|web-asset/admin/student-admin.critical.css"
+  "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/admin/student-admin.min.js.map|web-asset/admin/student-admin.min.js.map"
+  "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
+  "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
+  "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
+  "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
 )
 
 TEST_PUBLIC_WEBFILE_MAP=(
@@ -444,6 +462,7 @@ TEST_PUBLIC_WEBFILE_MAP=(
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
   "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
+  "web-asset/images/new-words.png|web-asset/images/new-words.png"
   "web-asset/images/caret-down.svg|web-asset/images/caret-down.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -779,6 +798,30 @@ sync_test_runtime_assets() {
   sync_file_map "$REPO_ROOT" "$TEST_ROOT" TEST_RUNTIME_WEBFILE_MAP
 }
 
+verify_local_ui_runtime_parity() {
+  local entry=""
+  local source_rel=""
+  local target_rel=""
+  local source_hash=""
+  local target_hash=""
+
+  log "verifying local UI source parity in ${TEST_ROOT}"
+  for entry in "${TEST_LOCAL_UI_RUNTIME_PARITY_MAP[@]}"; do
+    source_rel="${entry%%|*}"
+    target_rel="${entry#*|}"
+    if [[ ! -f "${REPO_ROOT}/${source_rel}" || ! -f "${TEST_ROOT}/${target_rel}" ]]; then
+      echo "local UI parity file missing: ${source_rel} -> ${target_rel}" >&2
+      return 1
+    fi
+    source_hash="$(sha256sum "${REPO_ROOT}/${source_rel}" | awk '{print $1}')"
+    target_hash="$(sha256sum "${TEST_ROOT}/${target_rel}" | awk '{print $1}')"
+    if [[ "${source_hash}" != "${target_hash}" ]]; then
+      echo "local UI parity mismatch: ${source_rel} -> ${target_rel}" >&2
+      return 1
+    fi
+  done
+}
+
 cleanup_test_backup_artifacts() {
   if [[ ! -d "$TEST_ROOT" ]]; then
     log "skip backup artifact cleanup (test root missing)"
@@ -920,6 +963,7 @@ verify_test_public_assets() {
     "${target_public_root}/web-asset/shared/secure-network.svg"
     "${target_public_root}/web-asset/shared/secure-network-white.svg"
     "${target_public_root}/web-asset/images/logo.svg"
+    "${target_public_root}/web-asset/images/new-words.png"
     "${target_public_root}/web-asset/images/eggs-chicks.svg"
     "${target_public_root}/web-asset/images/starters.svg"
     "${target_public_root}/web-asset/images/movers.svg"
@@ -1077,6 +1121,7 @@ main() {
   run_sync
   log "syncing test runtime web assets into ${TEST_ROOT}"
   sync_test_runtime_assets
+  verify_local_ui_runtime_parity
   cleanup_test_backup_artifacts
   ensure_test_runtime_env_contract
   align_test_env_from_dev_source

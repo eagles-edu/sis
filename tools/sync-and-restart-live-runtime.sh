@@ -87,6 +87,7 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
   "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
+  "web-asset/images/new-words.png|web-asset/images/new-words.png"
   "web-asset/images/caret-down.svg|web-asset/images/caret-down.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -108,6 +109,22 @@ LIVE_RUNTIME_WEBFILE_MAP=(
   "web-asset/vendor/tabulatorz/tabulator.min.js|web-asset/vendor/tabulatorz/tabulator.min.js"
   "web-asset/vendor/tabulatorz/tabulator.min.js.map|web-asset/vendor/tabulatorz/tabulator.min.js.map"
   "web-asset/images/favicon.ico|favicon.ico"
+)
+
+# Keep the local portal UI source and generated payloads explicit so every
+# full live sync applies the same reviewed UI change set as the test mirror.
+LIVE_LOCAL_UI_RUNTIME_PARITY_MAP=(
+  "web-asset/admin/student-admin.html|web-asset/admin/student-admin.html"
+  "web-asset/admin/student-admin.css|web-asset/admin/student-admin.css"
+  "web-asset/admin/student-admin.js|web-asset/admin/student-admin.js"
+  "web-asset/admin/student-admin.min.css|web-asset/admin/student-admin.min.css"
+  "web-asset/admin/student-admin.critical.css|web-asset/admin/student-admin.critical.css"
+  "web-asset/admin/student-admin.min.js|web-asset/admin/student-admin.min.js"
+  "web-asset/admin/student-admin.min.js.map|web-asset/admin/student-admin.min.js.map"
+  "web-asset/parent/parent-portal.html|web-asset/parent/parent-portal.html"
+  "web-asset/student/student-portal.html|web-asset/student/student-portal.html"
+  "web-asset/shared/portal-theme.css|web-asset/shared/portal-theme.css"
+  "web-asset/shared/portal-theme.min.css|web-asset/shared/portal-theme.min.css"
 )
 
 LIVE_PUBLIC_WEBFILE_MAP=(
@@ -144,6 +161,7 @@ LIVE_PUBLIC_WEBFILE_MAP=(
   "web-asset/shared/secure-network.svg|web-asset/shared/secure-network.svg"
   "web-asset/shared/secure-network-white.svg|web-asset/shared/secure-network-white.svg"
   "web-asset/images/logo.svg|web-asset/images/logo.svg"
+  "web-asset/images/new-words.png|web-asset/images/new-words.png"
   "web-asset/images/caret-down.svg|web-asset/images/caret-down.svg"
   "web-asset/images/eggs-chicks.svg|web-asset/images/eggs-chicks.svg"
   "web-asset/images/starters.svg|web-asset/images/starters.svg"
@@ -746,6 +764,30 @@ sync_live_runtime_assets() {
   sync_file_map "${SOURCE_ROOT}" "${LIVE_ROOT}" LIVE_RUNTIME_WEBFILE_MAP
 }
 
+verify_local_ui_live_parity() {
+  local entry=""
+  local source_rel=""
+  local target_rel=""
+  local source_hash=""
+  local target_hash=""
+
+  log "verifying local UI source parity in ${LIVE_ROOT}"
+  for entry in "${LIVE_LOCAL_UI_RUNTIME_PARITY_MAP[@]}"; do
+    source_rel="${entry%%|*}"
+    target_rel="${entry#*|}"
+    if [[ ! -f "${SOURCE_ROOT}/${source_rel}" || ! -f "${LIVE_ROOT}/${target_rel}" ]]; then
+      echo "local UI live parity file missing: ${source_rel} -> ${target_rel}" >&2
+      return 1
+    fi
+    source_hash="$(sha256sum "${SOURCE_ROOT}/${source_rel}" | awk '{print $1}')"
+    target_hash="$(sha256sum "${LIVE_ROOT}/${target_rel}" | awk '{print $1}')"
+    if [[ "${source_hash}" != "${target_hash}" ]]; then
+      echo "local UI live parity mismatch: ${source_rel} -> ${target_rel}" >&2
+      return 1
+    fi
+  done
+}
+
 sync_live_public_assets() {
   local managed_paths=(
     "favicon.ico"
@@ -1021,6 +1063,7 @@ run_apply() {
   sync_runtime_code_trees
   sync_live_runtime_data_files
   sync_live_runtime_assets
+  verify_local_ui_live_parity
   cleanup_live_backup_artifacts
   pin_live_env_contract
   if should_refresh_prisma; then

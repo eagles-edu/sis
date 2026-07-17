@@ -30,6 +30,8 @@ This file is the short, always-loaded contract for agents in `/home/eagles/docke
 10. `development` mode is authoring mode: local dev config files are the source-of-truth and the DB mirror is repaired from them.
 11. `test` and `production` modes are mirror/repaired mode: deployed runtime `SIS_CONFIG.json` is reconciled with the DB mirror and the weaker side is repaired when the other side is valid.
 12. `config/sis-config.test.json` in the repo is a local test fixture path, not the deployed runtime immutable.
+14. Portal origin helper edits must preserve the complete local runtime set: `8786` test mirror, `8787` production/admin-live, and `8788` dev, in every portal helper and both inferred/explicit-origin paths. The portal fallback contract test must pass before reporting a portal change complete.
+13. Local portal UI tweaks are authored only in `/home/eagles/dockerz/sis`; every `full` test sync must rebuild generated admin assets, copy the source and generated UI payloads through the strict whitelist, and fail on source-to-test hash drift before restart. Never rely on a mirror-only UI edit surviving a later sync.
 
 ## Literal Instruction Terms
 

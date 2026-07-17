@@ -2383,7 +2383,8 @@
 
       function inferLoopbackPreviewApiOrigin() {
         const currentOriginUrl = new URL(window.location.origin)
-        const knownRuntimePorts = new Set(["8787", "8788"])
+        // Keep 8786 (test mirror), 8787 (production/admin-live), and 8788 (dev) in both origin lists below.
+        const knownRuntimePorts = new Set(["8786", "8787", "8788"])
         if (!isLoopbackHostname(currentOriginUrl.hostname)) return ""
         if (knownRuntimePorts.has(currentOriginUrl.port)) return ""
         return "http://127.0.0.1:8788"
@@ -2391,8 +2392,9 @@
 
       function normalizePreviewApiOrigin(rawOrigin) {
         const text = normalizeText(rawOrigin)
+        // This must match inferLoopbackPreviewApiOrigin: test refreshes use 8786.
         if (!text) return ""
-        const knownRuntimePorts = new Set(["8787", "8788"])
+        const knownRuntimePorts = new Set(["8786", "8787", "8788"])
         let parsed
         try {
           parsed = new URL(text, window.location.origin)

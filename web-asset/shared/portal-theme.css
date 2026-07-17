@@ -5455,7 +5455,7 @@ body.student-portal-page .new-words-intro > summary {
   text-align: left;
 }
 body.student-portal-page .new-words-intro-body {
-  align-items: center;
+  align-items: stretch;
   display: grid;
   gap: 8px;
   grid-template-columns: minmax(0, 1fr) minmax(120px, 175px);
@@ -5472,9 +5472,12 @@ body.student-portal-page .new-words-intro-body p {
   max-width: 68ch;
 }
 body.student-portal-page .new-words-intro-body .new-words-intro-illustration {
+  align-self: end;
   aspect-ratio: 1;
   color: #B50010;
   justify-self: end;
+  margin-block-end: 8px;
+  margin-inline-end: 8px;
   max-width: 100px;
   width: 100%;
 }
@@ -5512,7 +5515,7 @@ body.student-portal-page .new-words-empty {
   padding: 12px 14px;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head {
-  align-items: flex-start;
+  align-items: flex-end;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -5536,8 +5539,14 @@ html[data-theme="dark"] :where(body.admin-portal-page, body.parent-portal-page) 
   color: var(--portal-text);
   font-family: ui-monospace, Courier, monospace;
 }
-:where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-part-of-speech {
+html:not([data-theme="dark"]) :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > strong.new-word-entry-part-of-speech {
+  color: #212121;
+  font-size: 1rem;
+  font-weight: 800;
+}
+html[data-theme="dark"] :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > strong.new-word-entry-part-of-speech {
   color: #fbffff;
+  font-size: 1rem;
   font-weight: 800;
 }
 :where(body.student-portal-page, body.admin-portal-page, body.parent-portal-page) .new-word-entry-head > .new-word-entry-plural em {

@@ -10,6 +10,8 @@ const portalThemeCssPath = path.resolve(rootDir, "web-asset/shared/portal-theme.
 const portalThemeCss = fs.readFileSync(portalThemeCssPath, "utf8")
 const sharedThemeMinPath = path.resolve(rootDir, "web-asset/shared/portal-theme.min.css")
 const sharedThemeMin = fs.readFileSync(sharedThemeMinPath, "utf8")
+const parentPortalHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/parent/parent-portal.html"), "utf8")
+const studentPortalHtml = fs.readFileSync(path.resolve(rootDir, "web-asset/student/student-portal.html"), "utf8")
 
 test("portal hub falls back to the dev apiOrigin when runtime paths are unavailable", () => {
   assert.match(hubHtml, /const currentOrigin = window\.location\.origin/)
@@ -29,6 +31,17 @@ test("portal hub still honors explicit apiOrigin when one is provided", () => {
   assert.match(hubHtml, /const rawApiOrigin = query\.get\("apiOrigin"\)/)
   assert.match(hubHtml, /if \(rawApiOrigin\)/)
   assert.match(hubHtml, /return parsed\.origin/)
+})
+
+test("all portal origin resolvers preserve the test runtime port", () => {
+  for (const [name, html] of [
+    ["portal hub", hubHtml],
+    ["parent portal", parentPortalHtml],
+    ["student portal", studentPortalHtml],
+  ]) {
+    const portLists = html.match(/knownRuntimePorts = new Set\(\["8786", "8787", "8788"\]\)/g) || []
+    assert.equal(portLists.length, 2, `${name} must keep both origin helpers on test/preview/dev ports`)
+  }
 })
 
 test("portal hub panels stay on the shared portal surface tokens", () => {

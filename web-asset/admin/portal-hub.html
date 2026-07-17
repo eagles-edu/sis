@@ -499,7 +499,8 @@
 
         function inferLoopbackPreviewApiOrigin() {
           const currentOriginUrl = new URL(currentOrigin);
-          const knownRuntimePorts = new Set(["8787", "8788"]);
+          // Keep 8786 (test mirror), 8787 (production/admin-live), and 8788 (dev) in both origin lists below.
+          const knownRuntimePorts = new Set(["8786", "8787", "8788"]);
           if (!isLoopbackHostname(currentOriginUrl.hostname)) return "";
           // Dev runs on 8788. Keep the explicit runtime suffix on portal
           // links so static and runtime-served pages use the same API origin.
@@ -511,7 +512,8 @@
         function resolvePreviewApiOrigin() {
           const rawApiOrigin = query.get("apiOrigin");
           if (rawApiOrigin) {
-            const knownRuntimePorts = new Set(["8787", "8788"]);
+            // This must match inferLoopbackPreviewApiOrigin: test refreshes use 8786.
+            const knownRuntimePorts = new Set(["8786", "8787", "8788"]);
             try {
               const parsed = new URL(rawApiOrigin, currentOrigin);
               if (isLoopbackHostname(parsed.hostname) && !knownRuntimePorts.has(parsed.port)) {

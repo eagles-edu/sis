@@ -5535,7 +5535,11 @@ body.student-portal-page .new-word-entry-head > .new-word-entry-pronunciation {
   color: var(--portal-text);
   font-family: ui-monospace, Courier, monospace;
 }
-body.student-portal-page .new-word-entry-head > .new-word-entry-part-of-speech {
+html:not([data-theme="dark"]) body.student-portal-page .new-word-entry-head > .new-word-entry-part-of-speech {
+  color: #212121;
+  font-weight: 800;
+}
+html[data-theme="dark"] body.student-portal-page .new-word-entry-head > .new-word-entry-part-of-speech {
   color: #fbffff;
   font-weight: 800;
 }
