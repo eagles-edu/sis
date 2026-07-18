@@ -970,7 +970,10 @@ const expectedLocation = process.env.EXPECTED_LOCATION || ""
 const browser = await chromium.launch({ headless: true })
 
 try {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } })
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 1100 },
+    userAgent: process.env.CURL_BROWSER_USER_AGENT || undefined,
+  })
   const page = await context.newPage()
   const response = await page.goto(probeUrl, { waitUntil: "commit", timeout: 30000 })
 

@@ -1045,6 +1045,9 @@ test(
           /Current Homework/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || "")
         );
       });
+      await page.waitForFunction(() => Boolean(
+        globalThis.document.querySelector(".fc-event-homework-track:not(.fc-event-homework-overdue) .fc-event-title")
+      ));
       const assignmentPanels = await page.evaluate(() => ({
         primaryTitle: globalThis.document.getElementById("studentDetailPrimaryTitle")?.textContent || "",
         historyTitle: globalThis.document.getElementById("studentDetailHistoryTitle")?.textContent || "",
@@ -1074,6 +1077,9 @@ test(
         globalThis.document.querySelector('a[data-page-target="past-due-homework"]')?.click();
       });
       await page.waitForFunction(() => /Past Due Homework/i.test(globalThis.document.getElementById("studentDetailTitle")?.textContent || ""));
+      await page.waitForFunction(() => Boolean(
+        globalThis.document.querySelector(".fc-event-homework-overdue .fc-event-title")
+      ));
       const overdueEventState = await page.evaluate(() => {
         const title = globalThis.document.querySelector(".fc-event-homework-overdue .fc-event-title");
         const style = title ? globalThis.window.getComputedStyle(title) : null;

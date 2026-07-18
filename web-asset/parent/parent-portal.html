@@ -12,18 +12,6 @@
       content="The Eagles Club, cổng thông tin, kết quả học tập của học sinh, dành cho phụ huynh">
     <meta name="author" content="The Eagles American Club, Ltd.">
     <link rel="shortcut icon" href="../../favicon.ico?=v2">
-    <link
-      rel="preload"
-      href="/web-asset/vendor/tabulatorz/tabulator.min.css"
-      as="style"
-      onload="
-        this.onload = null
-        this.rel = 'stylesheet'
-      ">
-    <noscript>
-      <link rel="stylesheet"
-      href="/web-asset/vendor/tabulatorz/tabulator.min.css">
-    </noscript>
     <script>
       /* Shared portal theme state: canonical storage lives in portal-theme-state.js. */
     </script>
@@ -1419,8 +1407,6 @@
       </main>
     </div>
 
-    <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
-    <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
     <script src="/web-asset/shared/portal-environment.js"></script>
     <script>
       const DEFAULT_PARENT_API_PREFIX = "/api/parent"
@@ -2233,6 +2219,42 @@
         status: "",
         textZoomPct: TEXT_ZOOM_DEFAULT,
         detailGradeTable: null,
+      }
+      const portalAssetPromises = new Map()
+      const portalAssetUrls = {
+        fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js",
+        tabulator: "/web-asset/vendor/tabulatorz/tabulator.min.js",
+        tabulatorCss: "/web-asset/vendor/tabulatorz/tabulator.min.css",
+      }
+      function loadPortalAsset(name) {
+        if (name === "fullcalendar" && window.FullCalendar?.Calendar) return Promise.resolve()
+        if (name === "tabulator" && typeof window.Tabulator === "function") return Promise.resolve()
+        if (name === "tabulatorCss" && document.querySelector('link[data-portal-asset="tabulatorCss"]')) return Promise.resolve()
+        if (portalAssetPromises.has(name)) return portalAssetPromises.get(name)
+        const promise = new Promise((resolve, reject) => {
+          if (name === "tabulatorCss") {
+            const link = document.createElement("link")
+            link.rel = "stylesheet"
+            link.href = portalAssetUrls[name]
+            link.dataset.portalAsset = name
+            link.onload = () => resolve()
+            link.onerror = () => reject(new Error("Quarter grade table styles could not be loaded."))
+            document.head.append(link)
+            return
+          }
+          const script = document.createElement("script")
+          script.src = portalAssetUrls[name]
+          script.async = false
+          script.dataset.portalAsset = name
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error(name === "tabulator" ? "Quarter grade table assets could not be loaded." : "FullCalendar could not be loaded."))
+          document.head.append(script)
+        })
+        portalAssetPromises.set(name, promise)
+        return promise
+      }
+      function loadTabulatorAssets() {
+        return Promise.all([loadPortalAsset("tabulator"), loadPortalAsset("tabulatorCss")])
       }
       const INITIAL_AUTH_STATE = window.__SIS_PARENT_INITIAL_AUTH__
 
@@ -4020,10 +4042,12 @@
           return
         }
         if (typeof window.Tabulator !== "function") {
-          const empty = document.createElement("div")
-          empty.className = "detail-empty"
-          empty.textContent = "Quarter grade table assets could not be loaded."
-          target.append(empty)
+          target.innerHTML = "<div class='detail-empty'>Đang tải bảng điểm học kỳ...</div>"
+          loadTabulatorAssets().then(() => {
+            renderQuarterGradeBoard(target, quarterState)
+          }).catch((error) => {
+            target.innerHTML = `<div class='detail-empty'>${escapeHtml(error.message || "Quarter grade table assets could not be loaded.")}</div>`
+          })
           return
         }
         const shell = document.createElement("div")
@@ -7594,6 +7618,15 @@
           renderQuarterGradeBoard(grid, model.quarterBoard)
           return
         } else {
+          if (!window.FullCalendar?.Calendar) {
+            grid.innerHTML = "<div class='detail-empty'>Đang tải lịch...</div>"
+            loadPortalAsset("fullcalendar").then(() => {
+              renderPortalDetailPage()
+            }).catch((error) => {
+              grid.innerHTML = `<div class='detail-empty'>${escapeHtml(error.message || "Không tải được FullCalendar.")}</div>`
+            })
+            return
+          }
           state.detailGradeTable?.destroy?.()
           state.detailGradeTable = null
           const calendar = ensurePortalDetailCalendar()

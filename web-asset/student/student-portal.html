@@ -27,8 +27,6 @@
     }
   </script>
   <link rel="stylesheet" href="/web-asset/shared/portal-theme.min.css">
-  <link rel="preload" href="/web-asset/vendor/tabulatorz/tabulator.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/web-asset/vendor/tabulatorz/tabulator.min.css"></noscript>
   <script src="/web-asset/shared/portal-navigation.js"></script>
   <style>
     html {
@@ -1137,7 +1135,7 @@
                         <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_modal.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_modal.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
                       </svg>
                       <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
-                        <img src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+                        <img src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
                       </button>
                     </div>
                   </details>
@@ -1282,7 +1280,7 @@
                 </svg>
               </div>
               <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
-                <img src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+                <img src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
               </button>
             </div>
           </details>
@@ -1487,7 +1485,7 @@
                         <circle cx="12" cy="12" r="1"><animate attributeName="r" begin="water_ripples_news.begin+2s" dur="3s" repeatCount="indefinite" values="1; 11"><animate attributeName="opacity" begin="water_ripples_news.begin+2s" dur="3s" repeatCount="indefinite" values="1; 0"></circle>
                       </svg>
                       <button class="student-new-words-instructions-thumb" type="button" data-new-words-lightbox title="Open the New Words Tool image" aria-label="Open the New Words Tool image">
-                        <img src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, Vietnamese meaning, definition, and syllabication fields">
+                        <img src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, Vietnamese meaning, definition, and syllabication fields">
                       </button>
                     </div>
                   </details>
@@ -1518,7 +1516,7 @@
             <h2 id="newWordsImageLightboxTitle">New Words Tool example</h2>
             <button id="newWordsImageLightboxCloseBtn" class="portal-button portal-button-warning" type="button" data-new-words-lightbox-close aria-label="Close New Words Tool image">Close</button>
           </div>
-          <img class="student-new-words-lightbox-image" src="/web-asset/images/new-words.png" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
+          <img class="student-new-words-lightbox-image" src="/web-asset/images/new-words.png" width="1188" height="584" loading="lazy" decoding="async" alt="New Words Tool example showing part of speech, English word, Vietnamese word, definition, and syllabication fields">
         </div>
       </section>
 
@@ -1537,8 +1535,6 @@
     </main>
   </div>
 
-  <script src="/web-asset/vendor/fullcalendar/index.global.min.js"></script>
-  <script src="/web-asset/vendor/tabulatorz/tabulator.min.js"></script>
   <script src="/web-asset/shared/portal-environment.js"></script>
   <script>
     (() => {
@@ -1604,6 +1600,42 @@
         submitSuccessConfettiBuilt: false,
         detailGradeTable: null,
       };
+      const portalAssetPromises = new Map();
+      const portalAssetUrls = {
+        fullcalendar: "/web-asset/vendor/fullcalendar/index.global.min.js",
+        tabulator: "/web-asset/vendor/tabulatorz/tabulator.min.js",
+        tabulatorCss: "/web-asset/vendor/tabulatorz/tabulator.min.css",
+      };
+      function loadPortalAsset(name) {
+        if (name === "fullcalendar" && window.FullCalendar?.Calendar) return Promise.resolve();
+        if (name === "tabulator" && typeof window.Tabulator === "function") return Promise.resolve();
+        if (name === "tabulatorCss" && document.querySelector('link[data-portal-asset="tabulatorCss"]')) return Promise.resolve();
+        if (portalAssetPromises.has(name)) return portalAssetPromises.get(name);
+        const promise = new Promise((resolve, reject) => {
+          if (name === "tabulatorCss") {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = portalAssetUrls[name];
+            link.dataset.portalAsset = name;
+            link.onload = () => resolve();
+            link.onerror = () => reject(new Error("Quarter grade table styles could not be loaded."));
+            document.head.append(link);
+            return;
+          }
+          const script = document.createElement("script");
+          script.src = portalAssetUrls[name];
+          script.async = false;
+          script.dataset.portalAsset = name;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error(name === "tabulator" ? "Quarter grade table assets could not be loaded." : "FullCalendar could not be loaded."));
+          document.head.append(script);
+        });
+        portalAssetPromises.set(name, promise);
+        return promise;
+      }
+      function loadTabulatorAssets() {
+        return Promise.all([loadPortalAsset("tabulator"), loadPortalAsset("tabulatorCss")]);
+      }
       const INITIAL_AUTH_STATE = window.__SIS_STUDENT_INITIAL_AUTH__;
 
       function updateEnvBadge() {
@@ -3040,10 +3072,12 @@
           return;
         }
         if (typeof window.Tabulator !== "function") {
-          const empty = document.createElement("div");
-          empty.className = "detail-empty";
-          empty.textContent = "Quarter grade table assets could not be loaded.";
-          target.append(empty);
+          target.innerHTML = "<div class='detail-empty'>Loading quarter grade table...</div>";
+          loadTabulatorAssets().then(() => {
+            renderQuarterGradeBoard(target, quarterState);
+          }).catch((error) => {
+            target.innerHTML = `<div class='detail-empty'>${escapeHtml(error.message || "Quarter grade table assets could not be loaded.")}</div>`;
+          });
           return;
         }
         const shell = document.createElement("div");
@@ -4372,6 +4406,15 @@
           state.detailGradeTable?.destroy?.();
           state.detailGradeTable = null;
           renderQuarterGradeBoard(grid, model.quarterBoard);
+          return;
+        }
+        if (!window.FullCalendar?.Calendar) {
+          grid.innerHTML = "<div class='detail-empty'>Loading calendar...</div>";
+          loadPortalAsset("fullcalendar").then(() => {
+            renderStudentDetailPage();
+          }).catch((error) => {
+            grid.innerHTML = `<div class='detail-empty'>${escapeHtml(error.message || "FullCalendar could not be loaded.")}</div>`;
+          });
           return;
         }
         state.detailGradeTable?.destroy?.();
@@ -6011,6 +6054,18 @@
       }
 
       function renderCalendar(calendar = []) {
+        if (!window.FullCalendar?.Calendar) {
+          const grid = field("calendarGrid");
+          if (grid) {
+            grid.innerHTML = "<div class='calendar-empty'>Loading calendar...</div>";
+            loadPortalAsset("fullcalendar").then(() => {
+              renderCalendar(calendar);
+            }).catch((error) => {
+              grid.innerHTML = `<div class='calendar-empty'>${escapeHtml(error.message || "FullCalendar could not be loaded.")}</div>`;
+            });
+          }
+          return;
+        }
         const calendarView = ensureStudentCalendar();
         if (!calendarView) return;
         const {
@@ -6103,7 +6158,7 @@
         state.dashboard = await api(STUDENT_DASHBOARD_PATH);
         renderDashboard();
         renderStudentDetailPage();
-        renderCalendar(state.calendarRows);
+        if (state.activeView === "news") renderCalendar(state.calendarRows);
       }
       async function loadCalendar(options = {}) {
         const data = await api(`${STUDENT_NEWS_CALENDAR_PATH}?days=60`);
@@ -6113,8 +6168,9 @@
         state.calendarRows = Array.isArray(data?.calendar) ? data.calendar : [];
         state.newsItems = Array.isArray(data?.items) ? data.items : [];
         state.newsWeekSets = [];
+        renderNewsQueue();
         setInputValue("reportDate", t(data?.window?.reportDate));
-        renderCalendar(state.calendarRows);
+        if (state.activeView === "news") renderCalendar(state.calendarRows);
         applyOpenReport(data?.openReport || null, {
           preserveExistingValidation: options?.preserveValidation === true,
         });
