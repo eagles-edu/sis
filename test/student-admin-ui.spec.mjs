@@ -2400,6 +2400,21 @@ test("tracking data submenus are visible for admin and hidden for teacher", asyn
         assert.ok(submenu.querySelectorAll(`[data-page-link="${pageLink}"]`).length >= 1)
       })
     })
+
+    const teacherWriteControlIds = [
+      "attendanceSaveBtn",
+      "attendanceLandingSaveAllBtn",
+      "gradeSaveBtn",
+      "reportSaveBtn",
+      "reportGenerateBtn",
+      "pt_saveBtn",
+      "pt_queueSendBtn",
+    ]
+    teacherWriteControlIds.forEach((id) => {
+      const control = document.getElementById(id)
+      assert.ok(control, `${id} should exist for teacher data entry`)
+      assert.equal(control.disabled, false, `${id} should be enabled for teachers`)
+    })
   })
   teacherDom.window.document.getElementById("logoutBtn").click()
   await waitFor(() => {

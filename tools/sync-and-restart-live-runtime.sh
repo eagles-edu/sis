@@ -17,6 +17,8 @@ SOURCE_ROOT="${SIS_SOURCE_ROOT:-${REPO_ROOT}}"
 LIVE_ROOT="${SIS_LIVE_ROOT:-/home/admin.eagles.edu.vn/sis}"
 PUBLIC_ROOT="${SIS_LIVE_PUBLIC_ROOT:-/home/admin.eagles.edu.vn/public_html}"
 LIVE_ORIGIN="${SIS_LIVE_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
+LIVE_LIGHTHOUSE_ENABLED="${SIS_LIVE_LIGHTHOUSE_ENABLED:-0}"
+LIVE_LIGHTHOUSE_THRESHOLD="${SIS_SYNC_LIGHTHOUSE_THRESHOLD:-100}"
 LIVE_RUNTIME_ENV="${SIS_LIVE_RUNTIME_ENV:-production}"
 LIVE_SERVICE="${SIS_LIVE_SERVICE:-exercise-mailer.service}"
 BACKUP_ROOT="${SIS_LIVE_BACKUP_ROOT:-/home/eagles/dockerz/backups/live-admin}"
@@ -1044,6 +1046,15 @@ verify_live_routes() {
   done
 }
 
+verify_lighthouse_performance() {
+  if [[ "${LIVE_LIGHTHOUSE_ENABLED}" != "1" ]]; then
+    log "skip Lighthouse portal gate (SIS_SYNC_LIGHTHOUSE_ENABLED=${LIVE_LIGHTHOUSE_ENABLED})"
+    return 0
+  fi
+  log "verifying Lighthouse performance on ${LIVE_ORIGIN}"
+  (cd "${REPO_ROOT}" && LIGHTHOUSE_ORIGIN="${LIVE_ORIGIN}" LIGHTHOUSE_MIN_PERF_SCORE="${LIVE_LIGHTHOUSE_THRESHOLD}" npm run audit:lighthouse:portals)
+}
+
 run_check_only() {
   log "file mirror only; git commit matching is not part of the live sync contract"
   log "checking live whitelist drift"
@@ -1053,6 +1064,7 @@ run_check_only() {
   check_admin_asset_build_parity
   log "checking live route coverage"
   verify_live_routes
+  verify_lighthouse_performance
 }
 
 run_apply() {
@@ -1087,6 +1099,7 @@ run_apply() {
     verify_live_public_html_index
     verify_live_routes
     verify_portal_sync_proof
+    verify_lighthouse_performance
     curl -fsS "${LIVE_HEALTH_URL}" >/dev/null
   else
     log "skip runtime restart and route probes for mode=${MODE}"

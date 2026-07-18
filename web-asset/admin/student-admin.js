@@ -10271,6 +10271,7 @@
 
       function updateWriteAccessControls() {
         const writable = canWriteData();
+        const teacherDataEntryWrite = currentRoleName() === "teacher";
         const teacherParentTrackingWrite = currentRoleName() === "teacher";
         const ids = [
           "newBtn",
@@ -10296,6 +10297,18 @@
           if (!el) return;
           if (id === "pt_saveBtn" || id === "pt_queueSendBtn") {
             el.disabled = !(writable || teacherParentTrackingWrite);
+            return;
+          }
+          if (
+            [
+              "attendanceSaveBtn",
+              "attendanceLandingSaveAllBtn",
+              "gradeSaveBtn",
+              "reportSaveBtn",
+              "reportGenerateBtn",
+            ].includes(id)
+          ) {
+            el.disabled = !(writable || teacherDataEntryWrite);
             return;
           }
           el.disabled = !writable;

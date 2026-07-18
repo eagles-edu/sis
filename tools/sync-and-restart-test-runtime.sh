@@ -20,6 +20,8 @@ TEST_PUBLIC_HEALTH_URL="${SIS_TEST_PUBLIC_HEALTH_URL:-}"
 TEST_HEALTH_DELAY="${SIS_TEST_HEALTH_DELAY:-5}"
 TEST_NODE_BIN="${SIS_TEST_NODE_BIN:-/home/eagles/node-v20.19.4-linux-x64/bin/node}"
 TEST_PRIMARY_ORIGIN="${SIS_TEST_PRIMARY_ORIGIN:-https://test.eagles.edu.vn}"
+TEST_LIGHTHOUSE_ENABLED="${SIS_SYNC_LIGHTHOUSE_ENABLED:-1}"
+TEST_LIGHTHOUSE_THRESHOLD="${SIS_SYNC_LIGHTHOUSE_THRESHOLD:-100}"
 TEST_BACKUP_ROOT="${SIS_TEST_BACKUP_ROOT:-/home/eagles/dockerz/backups/test-runtime}"
 LIVE_ROOT_CANONICAL="${SIS_LIVE_ROOT_CANONICAL:-/home/admin.eagles.edu.vn/sis}"
 DEV_ROOT_CANONICAL="${SIS_DEV_ROOT_CANONICAL:-/home/eagles/dockerz/sis}"
@@ -156,6 +158,15 @@ verify_portal_sync_proof() {
     --source-root "${REPO_ROOT}" \
     --runtime-root "${TEST_ROOT}" \
     --public-root "${TEST_PUBLIC_ROOT}")
+}
+
+verify_lighthouse_performance() {
+  if [[ "${TEST_LIGHTHOUSE_ENABLED}" != "1" ]]; then
+    log "skip Lighthouse portal gate (SIS_SYNC_LIGHTHOUSE_ENABLED=${TEST_LIGHTHOUSE_ENABLED})"
+    return 0
+  fi
+  log "verifying Lighthouse performance on ${TEST_PRIMARY_ORIGIN}"
+  (cd "${REPO_ROOT}" && LIGHTHOUSE_ORIGIN="${TEST_PRIMARY_ORIGIN}" LIGHTHOUSE_MIN_PERF_SCORE="${TEST_LIGHTHOUSE_THRESHOLD}" npm run audit:lighthouse:portals)
 }
 
 sync_exact_file() {
@@ -1148,6 +1159,7 @@ main() {
     verify_test_public_assets
     verify_test_runtime_routes "$TEST_ROUTE_MATRIX"
     verify_portal_sync_proof
+    verify_lighthouse_performance
   else
     log "skip runtime restart and route probes for mode=${MODE}"
   fi

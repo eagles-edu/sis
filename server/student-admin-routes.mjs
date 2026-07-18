@@ -2467,6 +2467,7 @@ function canTeacherWriteDataEntryPath(pathname, method) {
   if (ADMIN_GRADES_PATH_RE.test(pathname)) return true
   if (ADMIN_REPORTS_PATH_RE.test(pathname)) return true
   if (ADMIN_REPORTS_GENERATE_PATH_RE.test(pathname)) return true
+  if (ADMIN_REPORTS_WORKFLOW_PATH_RE.test(pathname)) return true
   return false
 }
 

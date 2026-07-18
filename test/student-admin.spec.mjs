@@ -1977,6 +1977,20 @@ test("teacher can access parent-report save path and reaches store-disabled resp
   assert.match(body.error, /store is disabled/i)
 })
 
+test("teacher can submit a parent report for admin review and reaches store-disabled response", async () => {
+  const res = await fetchLocal(port, "/api/admin/students/abc/reports/report-abc/workflow", {
+    method: "POST",
+    headers: {
+      Cookie: teacherSessionCookie,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ action: "submit" }),
+  })
+  assert.equal(res.status, 503)
+  const body = await res.json()
+  assert.match(body.error, /store is disabled/i)
+})
+
 test("teacher can access attendance save path and reaches store-disabled response", async () => {
   const res = await fetchLocal(port, "/api/admin/students/abc/attendance", {
     method: "POST",

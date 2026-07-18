@@ -16,6 +16,9 @@ DEV_ROOT="${SIS_DEV_ROOT:-$REPO_ROOT}"
 LIVE_ROOT="${SIS_LIVE_ROOT:-/home/admin.eagles.edu.vn/sis}"
 LIVE_PORT="${SIS_LIVE_PORT:-8787}"
 DEV_PORT="${SIS_DEV_PORT:-8788}"
+LIVE_PRIMARY_ORIGIN="${SIS_LIVE_PRIMARY_ORIGIN:-https://admin.eagles.edu.vn}"
+LIGHTHOUSE_ENABLED="${SIS_LIVE_LIGHTHOUSE_ENABLED:-0}"
+LIGHTHOUSE_THRESHOLD="${SIS_SYNC_LIGHTHOUSE_THRESHOLD:-100}"
 DEV_PID_FILE="${SIS_DEV_PID_FILE:-$DEV_ROOT/runtime-data/dev-runtime.pid}"
 DEV_LOG_FILE="${SIS_DEV_LOG_FILE:-$DEV_ROOT/runtime-data/dev-runtime.log}"
 SIS_CONFIG_FILE_NAME="SIS_CONFIG.json"
@@ -262,6 +265,15 @@ fs.writeFileSync(pidFile, `${child.pid}\n`, "utf8")
 child.unref()
 NODE
 
+verify_lighthouse_performance() {
+  if [[ "${LIGHTHOUSE_ENABLED}" != "1" ]]; then
+    log "skip Lighthouse portal gate (SIS_LIVE_LIGHTHOUSE_ENABLED=${LIGHTHOUSE_ENABLED})"
+    return 0
+  fi
+  log "verifying Lighthouse performance on ${LIVE_PRIMARY_ORIGIN}"
+  (cd "${REPO_ROOT}" && LIGHTHOUSE_ORIGIN="${LIVE_PRIMARY_ORIGIN}" LIGHTHOUSE_MIN_PERF_SCORE="${LIGHTHOUSE_THRESHOLD}" npm run audit:lighthouse:portals)
+}
+
   local pid
   pid="$(tr -dc '0-9' < "$DEV_PID_FILE")"
   if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
@@ -297,6 +309,7 @@ main() {
   stop_dev_runtime
   refresh_dev_prisma_client
   start_dev_runtime
+  verify_lighthouse_performance
   log "completed mode=${MODE}"
 }
 

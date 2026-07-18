@@ -64,6 +64,7 @@
     "test:runtime:sync-restart:precompress": "tools/sync-and-precompress-test-runtime.sh",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "audit:lighthouse:admin": "node tools/lighthouse-admin-audit.mjs",
+    "audit:lighthouse:portals": "node tools/lighthouse-portal-audit.mjs",
     "audit:portal:coverage": "SIS_ENV_FILE=.env.dev node --test test/portal-audit-coverage.playwright.spec.mjs",
     "lint:html": "html-validate web-asset/admin/student-admin.html web-asset/admin/portal-hub.html web-asset/parent/parent-portal.html web-asset/student/student-portal.html web-asset/student/fi.html",
     "lint:js": "eslint --config eslint.config.mjs server test tools --max-warnings=0",
